@@ -18,14 +18,18 @@
         <Console name="stdout" target="SYSTEM_OUT">
             <PatternLayout pattern="%m%n" />
         </Console>
-        <RollingFile name="traffic_router_access" fileName="/opt/traffic_router/var/log/access.log" >
+        <RollingFile name="traffic_router_access"
+                     fileName="/opt/traffic_router/var/log/access.log"
+                     filePattern="/opt/traffic_router/var/log/access-%d{yyyyMMdd}.log" >
             <PatternLayout pattern="%m%n" />
             <Policies>
                 <SizeBasedTriggeringPolicy size="200MB" />
             </Policies>
             <DefaultRolloverStrategy max="10"/>
         </RollingFile>
-        <RollingFile name="traffic_router" fileName="/opt/traffic_router/var/log/traffic_router.log" >
+        <RollingFile name="traffic_router"
+                     fileName="/opt/traffic_router/var/log/traffic_router.log"
+                     filePattern="/opt/traffic_router/var/log/traffic_router-%d{yyyyMMdd}.log" >
             <Policies>
                 <SizeBasedTriggeringPolicy size="100MB" />
             </Policies>

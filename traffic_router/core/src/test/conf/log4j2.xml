@@ -18,7 +18,9 @@
         <Console name="stdout" target="SYSTEM_OUT">
             <PatternLayout pattern="%m%n" />
         </Console>
-        <RollingFile name="traffic_router_access" fileName="/opt/traffic_router/var/log/access.log" >
+        <RollingFile name="traffic_router_access"
+                     fileName="/opt/traffic_router/var/log/access.log"
+                     filePattern="/opt/traffic_router/var/log/access-%d{yyyyMMdd}.log" >
             <PatternLayout pattern="%m%n" />
             <Policies>
                 <SizeBasedTriggeringPolicy size="200MB" />
@@ -26,7 +28,9 @@
             <DefaultRolloverStrategy max="10"/>
             <ThresholdFilter level="INFO"/>
         </RollingFile>
-        <RollingFile name="traffic_router" fileName="${deploy.dir}/var/log/traffic_router.log" >
+        <RollingFile name="traffic_router"
+                     fileName="${deploy.dir}/var/log/traffic_router.log"
+                     filePattern="${deploy.dir}/var/log/traffic_router-%d{yyyyMMdd}.log" >
             <PatternLayout pattern="%-5p %d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%t] %c - %m%n" />
             <Policies>
                 <SizeBasedTriggeringPolicy size="100MB" />
