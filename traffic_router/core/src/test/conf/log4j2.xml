@@ -25,7 +25,7 @@
             <Policies>
                 <SizeBasedTriggeringPolicy size="200MB" />
             </Policies>
-            <DefaultRolloverStrategy max="10"/>
+            <DefaultRolloverStrategy max="10"/>d
             <ThresholdFilter level="INFO"/>
         </RollingFile>
         <RollingFile name="traffic_router"
