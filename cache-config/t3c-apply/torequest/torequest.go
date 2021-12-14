@@ -58,7 +58,6 @@ type TrafficOpsReq struct {
 	plugins map[string]bool // map of verified plugins
 
 	installedPkgs map[string]struct{} // map of packages which were installed by us.
-	pluginPkgs    map[string]struct{} // map of packages
 	changedFiles  []string            // list of config files which were changed
 
 	configFiles map[string]*ConfigFile
@@ -186,7 +185,6 @@ func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
 		plugins:       map[string]bool{},
 		configFiles:   map[string]*ConfigFile{},
 		installedPkgs: map[string]struct{}{},
-		pluginPkgs:    map[string]struct{}{},
 	}
 }
 
@@ -243,32 +241,6 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 	}
 
 	log.Infof("======== End processing config file: %s for service: %s ========\n", cfg.Name, cfg.Service)
-	return nil
-}
-
-// checkPlugin verifies ATS plugin requirements are satisfied.
-func (r *TrafficOpsReq) checkPlugin(plugin string) error {
-	// already verified
-	if r.plugins[plugin] == true {
-		return nil
-	}
-	pluginFile := filepath.Join(config.TSHome, "/libexec/trafficserver/", plugin)
-	pkgs, err := util.PackageInfo("pkg-provides", pluginFile)
-	if err != nil {
-		return errors.New("unable to verify plugin " + pluginFile + ": " + err.Error())
-	}
-	if len(pkgs) == 0 { // no package is installed that provides the plugin.
-		// TODO should this actually be "no package that provides this plugin found in Yum" ?
-		return errors.New(plugin + ": Package for plugin: " + plugin + ", is not installed.")
-	}
-
-	// TODO verify: this only checks packages that have been installed via Paramters, not any package on the system? Does this need to call util.PackageInfo("pkg-query" if it isn't in pkgs??
-	// TODO iterate over pkgs, because maybe one is installed that isn't the first
-	pkg := pkgs[0]
-	if _, ok := r.pkgs[pkg]; !ok {
-		return errors.New(plugin + ": Package for plugin: " + plugin + ", is not installed.")
-	}
-	r.pluginPkgs[pkg] = struct{}{}
 	return nil
 }
 
@@ -1073,7 +1045,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 		serviceNeeds = t3cutil.ServiceNeedsRestart
 	} else {
 		err := error(nil)
-		if serviceNeeds, err = checkReload(r.getPluginPackagesInstalled(), r.changedFiles); err != nil {
+		if serviceNeeds, err = checkReload(r.changedFiles); err != nil {
 			return errors.New("determining if service needs restarted - not reloading or restarting! : " + err.Error())
 		}
 	}
@@ -1145,16 +1117,6 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 		return nil
 	}
 	return nil
-}
-
-func (r *TrafficOpsReq) getPluginPackagesInstalled() []string {
-	installedPluginPkgs := []string{}
-	for pluginPkg, _ := range r.pluginPkgs {
-		if _, ok := r.installedPkgs[pluginPkg]; ok {
-			installedPluginPkgs = append(installedPluginPkgs, pluginPkg)
-		}
-	}
-	return installedPluginPkgs
 }
 
 func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {

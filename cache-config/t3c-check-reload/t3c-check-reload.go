@@ -65,29 +65,16 @@ func main() {
 	changedConfigFiles = StrMap(changedConfigFiles, strings.TrimSpace)
 	changedConfigFiles = StrRemoveIf(changedConfigFiles, StrIsEmpty)
 
-	// TODO determine if determining which installed packages were plugins should be part of this app's job?
-	// Probably not, because whatever told the installer to install them already knew that,
-	// we shouldn't re-calculate it.
-
-	pluginPackagesInstalled := strings.Split(changedCfg.InstalledPlugins, ",")
-	pluginPackagesInstalled = StrMap(pluginPackagesInstalled, strings.TrimSpace)
-	pluginPackagesInstalled = StrRemoveIf(pluginPackagesInstalled, StrIsEmpty)
-
 	// ATS restart is needed if:
 	// [x] 1. mode was badass
-	// [x] 2. any ATS Plugin was installed
-	// [x] 3. plugin.config or 50-ats.rules was changed
-	// [ ] 4. package 'trafficserver' was installed
+	// [x] 2. plugin.config or 50-ats.rules was changed
+	// [ ] 3. package 'trafficserver' was installed
 
 	// ATS reload is needed if:
 	// [ ] 1. new SSL keys were installed AND ssl_multicert.config was changed
 	// [ ] 2. any of the following were changed: url_sig*, uri_signing*, hdr_rw*, (plugin.config), (50-ats.rules),
 	//        ssl/*.cer, ssl/*.key, anything else in /trafficserver,
 	//
-
-	if len(pluginPackagesInstalled) > 0 {
-		ExitRestart()
-	}
 
 	for _, fileRequiringRestart := range configFilesRequiringRestart {
 		for _, changedPath := range changedConfigFiles {
@@ -118,8 +105,7 @@ func main() {
 }
 
 type ChangedCfg struct {
-	ChangedFiles     string `json:"changed_files"`
-	InstalledPlugins string `json:"installed_plugins"`
+	ChangedFiles string `json:"changed_files"`
 }
 
 // ExitRestart returns the "needs restart" message and exits.
@@ -168,5 +154,6 @@ func StrIsEmpty(str string) bool { return str == "" }
 func usageStr() string {
 	return `usage: t3c-check-reload [--help]
 Accepts json data from stdin in in the following format:
-{"changed_files":"<comma separated list of files>","installed_plugins":"<comma separated list of plugins>"}`
+{"changed_files":"<comma separated list of files>"}
+`
 }
