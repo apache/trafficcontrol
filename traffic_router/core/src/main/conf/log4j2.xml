@@ -25,7 +25,7 @@
             <Policies>
                 <SizeBasedTriggeringPolicy size="200MB" />
             </Policies>
-            <DefaultRolloverStrategy max="10"/>
+            <DefaultRolloverStrategy max="10" />
         </RollingFile>
         <RollingFile name="traffic_router"
                      fileName="${deploy.dir}/var/log/traffic_router.log"
@@ -37,11 +37,12 @@
     </Appenders>
     <Loggers>
         <Logger name="org.apache.traffic_control.traffic_router" level="INFO" />
+            <AppenderRef ref="traffic_router" />
         <Logger name="org.apache.traffic_control.traffic_router.core.access" level="INFO" >
-            <AppenderRef ref="ACCESS"/>
+            <AppenderRef ref="traffic_router_access" />
         </Logger>
-        <Root level="WARN" additivity="false">
-            <AppenderRef ref="console" />
+        <Root level="WARN" additivity="false" >
+            <AppenderRef ref="stdout" />
         </Root>
     </Loggers>
 </Configuration>
