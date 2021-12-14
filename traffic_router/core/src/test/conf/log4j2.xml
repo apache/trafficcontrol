@@ -19,8 +19,8 @@
             <PatternLayout pattern="%m%n" />
         </Console>
         <RollingFile name="traffic_router_access"
-                     fileName="/opt/traffic_router/var/log/access.log"
-                     filePattern="/opt/traffic_router/var/log/access-%d{yyyyMMdd}.log" >
+                     fileName="${deploy.dir}/var/log/access.log"
+                     filePattern="${deploy.dir}/var/log/access-%d{yyyy-MM-dd}.log" >
             <PatternLayout pattern="%m%n" />
             <Policies>
                 <SizeBasedTriggeringPolicy size="200MB" />
@@ -30,7 +30,7 @@
         </RollingFile>
         <RollingFile name="traffic_router"
                      fileName="${deploy.dir}/var/log/traffic_router.log"
-                     filePattern="${deploy.dir}/var/log/traffic_router-%d{yyyyMMdd}.log" >
+                     filePattern="${deploy.dir}/var/log/traffic_router-%d{yyyy-MM-dd}.log" >
             <PatternLayout pattern="%-5p %d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%t] %c - %m%n" />
             <Policies>
                 <SizeBasedTriggeringPolicy size="100MB" />
