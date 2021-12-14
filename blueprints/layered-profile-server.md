@@ -84,7 +84,7 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 
 - Modify JSON request and response for existing servers endpoints.
 
-#### API 5.0 GET
+#### API 4.0 GET
 - JSON **response** with the proposed change will look as follows:
 `/servers?id=5`
 ```JSON
@@ -108,7 +108,7 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 }
 ```
 
-#### API 5.0 POST/PUT
+#### API 4.0 POST/PUT
 JSON **request** with the proposed change will look as follows:
 
 `POST /servers `
@@ -147,13 +147,13 @@ returns a **400** **response** with
 {
   "alerts":[
    { 
-     "text":"cannot associate multiple profiles to a server with current API version but can be done via 6.0",
+     "text":"cannot associate multiple profiles to a server with current API version but can be done via 5.0",
      "level":"error"
    }
 ]}
 ```
 
-#### API 6.0 GET
+#### API 5.0 GET
 - JSON **response** with the proposed change will look as follows:
   `/servers?id=5`
 ```JSON
@@ -178,7 +178,7 @@ returns a **400** **response** with
 }
 ```
 
-#### API 6.0 POST/PUT
+#### API 5.0 POST/PUT
 JSON **request** with the proposed change will look as follows:
 
 `POST /servers `
@@ -240,9 +240,9 @@ The following table describes the top level `layered_profile` object for servers
 | order           | bigint               | required    | the order in which a profile is applied to a server      |
 
 **API constraints**
-- In API 5.0, GET /servers object profile and profileId fields to be arrays, but a PUT or POST with multiple values returns a 400 error. 
+- In API 4.0, GET /servers object profile and profileId fields to be arrays, but a PUT or POST with multiple values returns a 400 error. 
   The UI may or may not display a list (which can only add 1), the client implements handling multiple, and the API is documented to potentially return multiple and how their Parameters must be applied.
-- In API 6.0 (or possibly 5.0 in the following TC major version wherein API 4.0 is removed), this feature is actually implemented, and multiple profiles can be assigned, are displayed in the UI, etc.
+- In API 5.0 (or in the following TC major version wherein API 4.0 is removed), this feature is actually implemented, and multiple profiles can be assigned, are displayed in the UI, etc.
 
 The only disadvantage to splitting it across mulitple version is a little delay to get the feature deployed.
 But the advantage is that it solves both concerns: 
@@ -275,7 +275,6 @@ Foreign-key constraints:
 All profiles assigned to a given server will have the same values of:
 - type
 - cdn
-- routing_disabled
 If any of those differ within the same server, it's probably a mistake.
 
 ### ORT Impact
