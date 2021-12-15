@@ -30,6 +30,7 @@
         <RollingFile name="traffic_router"
                      fileName="${deploy.dir}/var/log/traffic_router.log"
                      filePattern="${deploy.dir}/var/log/traffic_router-%d{yyyy-MM-dd}.log" >
+            <PatternLayout pattern="%-5p %d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%t] %c - %m%n" />
             <Policies>
                 <SizeBasedTriggeringPolicy size="100MB" />
             </Policies>
