@@ -36,8 +36,9 @@
         </RollingFile>
     </Appenders>
     <Loggers>
-        <Logger name="org.apache.traffic_control.traffic_router" level="INFO" />
+        <Logger name="org.apache.traffic_control.traffic_router" level="INFO" >
             <AppenderRef ref="traffic_router" />
+        </Logger>
         <Logger name="org.apache.traffic_control.traffic_router.core.access" level="INFO" >
             <AppenderRef ref="traffic_router_access" />
         </Logger>
