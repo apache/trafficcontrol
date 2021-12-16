@@ -83,7 +83,8 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 **Existing Endpoints**
 
 - Modify JSON request and response for existing servers endpoints.
-
+- **_Note_**: All fields in the response structure for API 4.0/ 5.0 except `profileId`, `profileDesc` and `profile`, remain same. 
+  - In API 4.0/5.0 `profile` changes to `profiles` and in API 5.0 `profileId` and `profileDesc` are no longer part of response structure
 #### API 4.0 GET
 - JSON **response** with the proposed change will look as follows:
 `/servers?id=5`
@@ -91,10 +92,8 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 {
   "response": [{
     "id": 5,
-    ⋮
-    "profiles": ["MID"],
-    ⋮
-  }
+    "profiles": ["MID"]
+  }]
 }
 ```
 
@@ -103,8 +102,7 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 {
   "response": [{
       "profiles": ["MID"]
-      ⋮,
-  }
+  }]
 }
 ```
 
@@ -116,13 +114,7 @@ JSON **request** with the proposed change will look as follows:
 {
     "cachegroupId": 6,
     "cdnId": 2,
-    ⋮
-    "interfaces": [
-      ⋮
-    ],
-    ⋮
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"],
-    ⋮
+    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
 }
 ```
 
@@ -131,13 +123,7 @@ JSON **request** with the proposed change will look as follows:
 {
     "cachegroupId": 6,
     "cdnId": 2,
-    ⋮
-    "interfaces": [
-      ⋮
-    ],
-    ⋮
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"],
-    ⋮
+    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
 }
 ```
 
@@ -159,11 +145,9 @@ returns a **400** **response** with
 ```JSON
 {
   "response": [{
-  "id": 5,
-  ⋮
-  "profiles": ["MID", "AMIGA_123", "CDN_FOO"],
-  ⋮
-  }
+    "id": 5,
+    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+  }]
 }
 ```
 
@@ -171,10 +155,8 @@ returns a **400** **response** with
 ```JSON
 {
   "response": [{
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"],
-    ⋮
-  },
-  ⋮
+    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+  }]
 }
 ```
 
@@ -186,13 +168,7 @@ JSON **request** with the proposed change will look as follows:
 {
     "cachegroupId": 6,
     "cdnId": 2,
-    ⋮
-    "interfaces": [
-      ⋮
-    ],
-    ⋮
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"],
-    ⋮
+    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
 }
 ```
 
@@ -201,13 +177,7 @@ JSON **request** with the proposed change will look as follows:
 {
     "cachegroupId": 6,
     "cdnId": 2,
-    ⋮
-    "interfaces": [
-      ⋮
-    ],
-    ⋮
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"],
-    ⋮
+    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
 }
 ```
 
@@ -223,10 +193,8 @@ return following **response**
     "cachegroup": "CDN_in_a_Box_Mid",
     "cachegroupId": 6,
     "cdnId": 2,
-    ⋮
     "id": 5,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"],
-    ⋮
+    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
   }
 }
 ```
