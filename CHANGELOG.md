@@ -52,12 +52,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated Golang dependencies
 
 ### Deprecated
-- Deprecated the endpoints and docs associated with `api_capability`.
+- Deprecated the endpoints and docs associated with `/api_capability` and `/capabilities`.
 - The use of a seelog configuration file to configure Traffic Stats logging is deprecated, and logging configuration should instead be present in the `logs` property of the Traffic Stats configuration file (refer to documentation for details).
 
 ### Removed
 - Removed the `user_role` table.
 - The `traffic_ops.sh` shell profile no longer sets `GOPATH` or adds its `bin` folder to the `PATH`
+- `/capabilities` removed from Traffic Ops API version 4.
 
 ## [6.0.0] - 2021-08-30
 ### Added
