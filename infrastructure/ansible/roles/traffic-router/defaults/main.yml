@@ -146,6 +146,7 @@ tr_log4j2_opts: |
           <RollingFile name="traffic_router"
                        fileName="{{tr_log_dir}}/traffic_router.log"
                        filePattern="{{tr_log_dir}}/traffic_router-%d{yyyy-MM-dd}.log" >
+              <PatternLayout pattern="%-5p %d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%t] %c - %m%n" />
               <Policies>
                   <SizeBasedTriggeringPolicy size="100MB" />
               </Policies>
