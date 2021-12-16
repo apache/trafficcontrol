@@ -13,6 +13,4 @@
 #}
 # file deployed via ansible push, local edits are subject to be overwritten
 
-{% for line in tr_log4j_opts %}
-{{ line }}
-{% endfor %}
+{{ tr_log4j2_opts }}

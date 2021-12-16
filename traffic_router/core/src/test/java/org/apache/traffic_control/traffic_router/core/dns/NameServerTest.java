@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.xbill.DNS.*;
@@ -49,6 +50,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Header.class, NameServer.class, TrafficRouterManager.class, TrafficRouter.class, CacheRegister.class})
+@PowerMockIgnore("javax.management.*")
 public class NameServerTest {
     private NameServer nameServer;
     private InetAddress client;

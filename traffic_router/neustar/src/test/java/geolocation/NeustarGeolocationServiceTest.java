@@ -21,8 +21,8 @@ import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
 import com.maxmind.db.Reader;
 import com.quova.bff.reader.io.GPDatabaseReader;
 import com.quova.bff.reader.model.GeoPointResponse;
-import org.apache.log4j.Appender;
-import org.apache.log4j.LogManager;
+import org.apache.logging.log4j.Appender;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +47,7 @@ import static org.springframework.test.util.AssertionErrors.fail;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({NeustarGeolocationService.class, GPDatabaseReader.class, Reader.class})
+@PowerMockIgnore("javax.management.*")
 public class NeustarGeolocationServiceTest {
 	@Mock
 	File neustarDatabaseDirectory;
