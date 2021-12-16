@@ -18,7 +18,8 @@ package org.apache.traffic_control.traffic_router.core.secure;
 import org.apache.traffic_control.traffic_router.configuration.ConfigurationListener;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import org.apache.traffic_control.traffic_router.shared.CertificateData;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
@@ -31,7 +32,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class CertificatesPoller implements ConfigurationListener {
-	private static final Logger LOGGER = Logger.getLogger(CertificatesPoller.class);
+	private static final Logger LOGGER = LogManager.getLogger(CertificatesPoller.class);
 
 	private final ScheduledExecutorService executor;
 	private ScheduledFuture future;

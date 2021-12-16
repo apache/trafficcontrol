@@ -37,11 +37,11 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Fetcher {
-	private static final Logger LOGGER = Logger.getLogger(Fetcher.class);
+	private static final Logger LOGGER = LogManager.getLogger(Fetcher.class);
 	protected static final String GET_STR = "GET";
 	protected static final String POST_STR = "POST";
 	protected static final String UTF8_STR = "UTF-8";

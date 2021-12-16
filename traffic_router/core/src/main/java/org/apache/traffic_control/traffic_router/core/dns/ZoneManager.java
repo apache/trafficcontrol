@@ -51,7 +51,8 @@ import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.AAAARecord;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.CNAMERecord;
@@ -96,7 +97,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 
 public class ZoneManager extends Resolver {
-	private static final Logger LOGGER = Logger.getLogger(ZoneManager.class);
+	private static final Logger LOGGER = LogManager.getLogger(ZoneManager.class);
 
 	private final TrafficRouter trafficRouter;
 	private static LoadingCache<ZoneKey, Zone> dynamicZoneCache = null;

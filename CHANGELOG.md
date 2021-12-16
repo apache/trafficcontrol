@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## Unreleased
+### Changed
+- Updated `log4j` module in Traffic Router from version 1.2.17 to 2.16.0
+
 ## [6.0.1] - 2021-11-04
 ### Added
 - [#2770](https://github.com/apache/trafficcontrol/issues/2770) Added validation for httpBypassFqdn as hostname in Traffic Ops

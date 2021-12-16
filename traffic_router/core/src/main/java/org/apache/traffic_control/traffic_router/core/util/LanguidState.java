@@ -20,13 +20,14 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
 public class LanguidState {
-	private static final Logger LOGGER = Logger.getLogger(LanguidState.class);
+	private static final Logger LOGGER = LogManager.getLogger(LanguidState.class);
 	private boolean ready = false;
 	private TrafficRouterManager trafficRouterManager;
 	private int port = 0;

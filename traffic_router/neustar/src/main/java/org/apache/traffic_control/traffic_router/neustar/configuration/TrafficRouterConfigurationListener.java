@@ -16,7 +16,8 @@
 package org.apache.traffic_control.traffic_router.neustar.configuration;
 
 import org.apache.traffic_control.traffic_router.configuration.ConfigurationListener;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
@@ -26,7 +27,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class TrafficRouterConfigurationListener implements ConfigurationListener {
-	private final Logger logger = Logger.getLogger(TrafficRouterConfigurationListener.class);
+	private final Logger logger = LogManager.getLogger(TrafficRouterConfigurationListener.class);
 
 	@Autowired
 	private Environment environment;

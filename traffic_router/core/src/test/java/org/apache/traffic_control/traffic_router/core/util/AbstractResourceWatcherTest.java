@@ -24,7 +24,8 @@ import org.apache.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -46,7 +47,7 @@ import static org.junit.Assert.assertNull;
 @Category(IntegrationTest.class)
 public class AbstractResourceWatcherTest {
 
-    private static final Logger LOGGER = Logger.getLogger(org.apache.traffic_control.traffic_router.core.util.AbstractResourceWatcherTest.class);
+    private static final Logger LOGGER = LogManager.getLogger(org.apache.traffic_control.traffic_router.core.util.AbstractResourceWatcherTest.class);
 
     private FederationsWatcher federationsWatcher;
     private SteeringWatcher steeringWatcher;

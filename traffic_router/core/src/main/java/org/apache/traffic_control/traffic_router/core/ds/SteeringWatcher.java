@@ -16,10 +16,11 @@
 package org.apache.traffic_control.traffic_router.core.ds;
 
 import org.apache.traffic_control.traffic_router.core.util.AbstractResourceWatcher;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SteeringWatcher extends AbstractResourceWatcher {
-	private static final Logger LOGGER = Logger.getLogger(SteeringWatcher.class);
+	private static final Logger LOGGER = LogManager.getLogger(SteeringWatcher.class);
 	private SteeringRegistry steeringRegistry;
 
 	public static final String DEFAULT_STEERING_DATA_URL = "https://${toHostname}/api/2.0/steering";

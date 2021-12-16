@@ -35,14 +35,15 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
 public abstract class AbstractServiceUpdater {
-	private static final Logger LOGGER = Logger.getLogger(AbstractServiceUpdater.class);
+	private static final Logger LOGGER = LogManager.getLogger(AbstractServiceUpdater.class);
 
 	protected String dataBaseURL;
 	protected String defaultDatabaseURL;
