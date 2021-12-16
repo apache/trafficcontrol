@@ -60,12 +60,10 @@ type TrafficOpsReq struct {
 	installedPkgs map[string]struct{} // map of packages which were installed by us.
 	changedFiles  []string            // list of config files which were changed
 
-
-	configFiles          map[string]*ConfigFile
-	configFileWarnings   map[string][]string
+	configFiles        map[string]*ConfigFile
+	configFileWarnings map[string][]string
 
 	RestartData
-
 }
 
 type ShouldReloadRestart struct {
