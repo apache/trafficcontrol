@@ -33,7 +33,12 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from yaml import YAMLError
 
-from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS, ASF_YAML_FILE, APACHE_LICENSE_YAML, ENV_GITHUB_REF_NAME, GIT_AUTHOR_EMAIL_TEMPLATE, ENV_GIT_AUTHOR_NAME, SINGLE_PR_TEMPLATE_FILE, SINGLE_CONTRIBUTOR_TEMPLATE_FILE, PR_TEMPLATE_FILE, EMPTY_CONTRIB_LIST_LIST, EMPTY_LIST_OF_CONTRIBUTORS, CONGRATS, EXPIRE, ENV_GITHUB_REPOSITORY_OWNER
+from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, \
+	ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS, ASF_YAML_FILE, \
+	APACHE_LICENSE_YAML, ENV_GITHUB_REF_NAME, GIT_AUTHOR_EMAIL_TEMPLATE, ENV_GIT_AUTHOR_NAME, \
+	SINGLE_PR_TEMPLATE_FILE, SINGLE_CONTRIBUTOR_TEMPLATE_FILE, PR_TEMPLATE_FILE, \
+	EMPTY_CONTRIB_LIST_LIST, EMPTY_LIST_OF_CONTRIBUTORS, CONGRATS, EXPIRE, \
+	ENV_GITHUB_REPOSITORY_OWNER
 
 
 class TriageRoleAssigner:
@@ -67,17 +72,20 @@ class TriageRoleAssigner:
 		return repo
 
 	def get_committers(self) -> dict[str, None]:
-		committers: list[str] = sorted([user.login for user in self.repo.get_collaborators() if user.permissions.push])
+		committers: list[str] = sorted(
+			[user.login for user in self.repo.get_collaborators() if user.permissions.push])
 		committers_dict: dict[str, None] = {committer: None for committer in committers}
 		return committers_dict
 
-	def prs_by_contributor(self, since_day: date, today: date, committers: dict[str, None]) -> dict[NamedUser, list[(Issue, Issue)]]:
+	def prs_by_contributor(self, since_day: date, today: date, committers: dict[str, None]) -> dict[
+		NamedUser, list[(Issue, Issue)]]:
 		# Search for PRs and Issues on the parent repo if running on a fork
 		repo_name = self.repo.full_name if self.repo.parent is None else self.repo.parent.full_name
 
 		query: str = f'repo:{repo_name} is:issue linked:pr is:closed closed:{since_day}..{today}'
 		linked_issues: PaginatedList[Issue] = self.gh.search_issues(query=query)
-		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = dict[NamedUser, list[(Issue, Issue)]]()
+		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = dict[
+			NamedUser, list[(Issue, Issue)]]()
 		for linked_issue in linked_issues:
 			timeline: PaginatedList[TimelineEvent] = linked_issue.get_timeline()
 			pull_request: Optional[Issue] = None
@@ -89,13 +97,15 @@ class TriageRoleAssigner:
 				pr_text = event.raw_data['source']['issue']
 				if 'pull_request' not in pr_text:
 					continue
-				pull_request = Issue(self.repo._requester, event.raw_headers, pr_text, completed=True)
+				pull_request = Issue(self.repo._requester, event.raw_headers, pr_text,
+					completed=True)
 			# Skip unmerged PRs
 			if 'merged_at' not in pull_request.pull_request.raw_data:
 				continue
 			# Do not break, in case the Issue has ever been linked to more than 1 PR in the past
 			if pull_request is None:
-				raise Exception(f'Unable to find a linked Pull Request for Issue {self.repo.full_name}#{linked_issue.number}')
+				raise Exception(
+					f'Unable to find a linked Pull Request for Issue {self.repo.full_name}#{linked_issue.number}')
 			author: NamedUser = pull_request.user
 			if author.login in committers:
 				continue
@@ -104,7 +114,8 @@ class TriageRoleAssigner:
 			prs_by_contributor[author].append((pull_request, linked_issue))
 		return prs_by_contributor
 
-	def ones_who_meet_threshold(self, prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]]) -> dict[str, list[(Issue, Issue)]]:
+	def ones_who_meet_threshold(self, prs_by_contributor: dict[NamedUser,
+	list[(Issue, Issue)]]) -> dict[str, list[(Issue, Issue)]]:
 		prs_by_contributor: dict[str, list[(Issue, Issue)]] = {
 			# use only the username as the dict key
 			contributor.login: pull_requests
@@ -114,12 +125,14 @@ class TriageRoleAssigner:
 				key=lambda item: len(item[1]),
 				# highest commit count first
 				reverse=True)
-			# only include contributors who had at least self.minimum_commits Issue-closing Pull Requests merged in the past self.since_days_ago days
+			# only include contributors who had at least self.minimum_commits Issue-closing Pull
+			# Requests merged in the past self.since_days_ago days
 			if len(pull_requests) >= self.minimum_commits
 		}
 		return prs_by_contributor
 
-	def set_collaborators_in_asf_yaml(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], description: str):
+	def set_collaborators_in_asf_yaml(self, prs_by_contributor: dict[str, list[(Issue, Issue)]],
+			description: str):
 		collaborators: list[str] = [contributor for contributor in prs_by_contributor]
 		with open(ASF_YAML_FILE) as stream:
 			github_key: Final[str] = 'github'
@@ -134,13 +147,15 @@ class TriageRoleAssigner:
 		asf_yaml[github_key][collaborators_key] = collaborators
 
 		with open(os.path.join(os.path.dirname(__file__), APACHE_LICENSE_YAML)) as stream:
-			apache_license = stream.read().format(DESCRIPTION=description, ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago)
+			apache_license = stream.read().format(DESCRIPTION=description,
+				ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago)
 
 		with open(ASF_YAML_FILE, 'w') as stream:
 			stream.write(apache_license)
 			yaml.dump(asf_yaml, stream)
 
-	def push_changes(self, target_branch_name: str, source_branch_name: str, commit_message: str) -> Commit:
+	def push_changes(self, target_branch_name: str, source_branch_name: str,
+			commit_message: str) -> Commit:
 		target_branch: Branch = self.repo.get_branch(target_branch_name)
 		sha: str = target_branch.commit.sha
 		source_branch_ref: str = f'refs/heads/{source_branch_name}'
@@ -185,10 +200,12 @@ class TriageRoleAssigner:
 		return False
 
 	@staticmethod
-	def list_of_contributors(prs_by_contributor: dict[str, list[(Issue, Issue)]], today: date) -> tuple[str, str, str]:
+	def list_of_contributors(prs_by_contributor: dict[str, list[(Issue, Issue)]],
+			today: date) -> tuple[str, str, str]:
 		if len(prs_by_contributor) > 0:
 			joiner: str = ', ' if len(prs_by_contributor) > 2 else ' '
-			list_of_contributors: list[str] = [f'@{contributor}' for contributor in prs_by_contributor.keys()]
+			list_of_contributors: list[str] = [f'@{contributor}' for contributor in
+				prs_by_contributor.keys()]
 			if len(list_of_contributors) > 1:
 				list_of_contributors[-1] = f'and {list_of_contributors[-1]}'
 			list_of_contributors: str = joiner.join(list_of_contributors)
@@ -201,10 +218,12 @@ class TriageRoleAssigner:
 
 		return list_of_contributors, congrats, expire
 
-	def get_pr_body(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], since_day: date, today: date) -> str:
+	def get_pr_body(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], since_day: date,
+			today: date) -> str:
 		with open(os.path.join(os.path.dirname(__file__), SINGLE_PR_TEMPLATE_FILE)) as stream:
 			pr_line_template = stream.read()
-		with open(os.path.join(os.path.dirname(__file__), SINGLE_CONTRIBUTOR_TEMPLATE_FILE)) as stream:
+		with open(os.path.join(os.path.dirname(__file__),
+				SINGLE_CONTRIBUTOR_TEMPLATE_FILE)) as stream:
 			contrib_list_template = stream.read()
 		with open(os.path.join(os.path.dirname(__file__), PR_TEMPLATE_FILE)) as stream:
 			pr_template = stream.read()
@@ -213,16 +232,23 @@ class TriageRoleAssigner:
 		for contributor, pr_tuples in prs_by_contributor.items():
 			pr_list: str = ''
 			for pr, linked_issue in pr_tuples:
-				pr_line = pr_line_template.format(ISSUE_NUMBER=linked_issue.number, PR_NUMBER=pr.number)
+				pr_line = pr_line_template.format(ISSUE_NUMBER=linked_issue.number,
+					PR_NUMBER=pr.number)
 				pr_list += pr_line + '\n'
-			contrib_list: str = contrib_list_template.format(CONTRIBUTOR_USERNAME=contributor, CONTRIBUTION_COUNT=len(pr_tuples), PR_LIST=pr_list)
+			contrib_list: str = contrib_list_template.format(CONTRIBUTOR_USERNAME=contributor,
+				CONTRIBUTION_COUNT=len(pr_tuples), PR_LIST=pr_list)
 			contrib_list_list += contrib_list + '\n'
 		if contrib_list_list == '':
 			contrib_list_list = EMPTY_CONTRIB_LIST_LIST
 
-		list_of_contributors, congrats, expire = self.list_of_contributors(prs_by_contributor, today)
+		list_of_contributors, congrats, expire = self.list_of_contributors(prs_by_contributor,
+			today)
 
-		pr_body: str = pr_template.format(CONTRIB_LIST_LIST=contrib_list_list, MONTH=today.strftime('%B'), CONGRATS=congrats, LIST_OF_CONTRIBUTORS=list_of_contributors, EXPIRE=expire, ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago, SINCE_DAY=since_day, TODAY=today)
+		pr_body: str = pr_template.format(CONTRIB_LIST_LIST=contrib_list_list,
+			MONTH=today.strftime('%B'), CONGRATS=congrats,
+			LIST_OF_CONTRIBUTORS=list_of_contributors, EXPIRE=expire,
+			ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago,
+			SINCE_DAY=since_day, TODAY=today)
 		# If on a fork, do not ping users or reference Issues or Pull Requests
 		if self.repo.parent is not None:
 			pr_body = re.sub(r'@(?!trafficcontrol)([A-Za-z0-9]+)', r'＠\1', pr_body)
@@ -230,9 +256,11 @@ class TriageRoleAssigner:
 		print('Templated PR body')
 		return pr_body
 
-	def create_pr(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], commit_message: str, owner: str,
+	def create_pr(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], commit_message: str,
+			owner: str,
 			source_branch_name: str, target_branch: str, since_day: date, today: date) -> None:
-		prs: PaginatedList = self.gh.search_issues(f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
+		prs: PaginatedList = self.gh.search_issues(
+			f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
 		for list_item in prs:
 			pr: PullRequest = self.repo.get_pull(list_item.number)
 			if pr.head.ref != source_branch_name:
@@ -264,8 +292,10 @@ class TriageRoleAssigner:
 		committers: dict[str, None] = self.get_committers()
 		today: date = date.today()
 		since_day: date = today - timedelta(days=self.since_days_ago)
-		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = self.prs_by_contributor(since_day, today, committers)
-		prs_by_contributor: dict[str, list[(Issue, Issue)]] = self.ones_who_meet_threshold(prs_by_contributor)
+		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = self.prs_by_contributor(
+			since_day, today, committers)
+		prs_by_contributor: dict[str, list[(Issue, Issue)]] = self.ones_who_meet_threshold(
+			prs_by_contributor)
 		description: str = f'ATC Collaborators for {today.strftime("%B %Y")}'
 		self.set_collaborators_in_asf_yaml(prs_by_contributor, description)
 
@@ -276,4 +306,5 @@ class TriageRoleAssigner:
 			self.push_changes(target_branch_name, source_branch_name, commit_message)
 		self.repo.get_git_ref(f'heads/{source_branch_name}')
 		owner: str = self.get_repo_owner()
-		self.create_pr(prs_by_contributor, commit_message, owner, source_branch_name, target_branch_name, since_day, today)
+		self.create_pr(prs_by_contributor, commit_message, owner, source_branch_name,
+			target_branch_name, since_day, today)

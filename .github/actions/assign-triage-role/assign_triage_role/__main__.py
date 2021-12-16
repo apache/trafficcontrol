@@ -28,4 +28,5 @@ def main() -> None:
 	gh = Github(login_or_token=github_token)
 	TriageRoleAssigner(gh).run()
 
+
 main()

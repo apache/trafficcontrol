@@ -24,7 +24,8 @@ class TestTriageRoleAssigner(TestCase):
 		expected_list_of_contributors = 'no one'
 		expected_congrats = ''
 		expected_expire = ''
-		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(empty_prs_by_contributor, today)
+		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(
+			empty_prs_by_contributor, today)
 		self.assertEqual(expected_list_of_contributors, list_of_contributors)
 		self.assertEqual(expected_congrats, congrats)
 		self.assertEqual(expected_expire, expire)
@@ -33,7 +34,8 @@ class TestTriageRoleAssigner(TestCase):
 		expected_list_of_contributors = '@Namey Name'
 		expected_congrats = 'Congrats! '
 		expected_expire = 'These privileges will expire at the end of December.'
-		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(prs_by_contributor, today)
+		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(
+			prs_by_contributor, today)
 		self.assertEqual(expected_list_of_contributors, list_of_contributors)
 		self.assertEqual(expected_congrats, congrats)
 		self.assertEqual(expected_expire, expire)
@@ -42,7 +44,8 @@ class TestTriageRoleAssigner(TestCase):
 		expected_list_of_contributors = '@Namey Name and @A Contributor'
 		expected_congrats = 'Congrats! '
 		expected_expire = 'These privileges will expire at the end of December.'
-		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(prs_by_contributor, today)
+		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(
+			prs_by_contributor, today)
 		self.assertEqual(expected_list_of_contributors, list_of_contributors)
 		self.assertEqual(expected_congrats, congrats)
 		self.assertEqual(expected_expire, expire)
@@ -51,7 +54,8 @@ class TestTriageRoleAssigner(TestCase):
 		expected_list_of_contributors = '@Namey Name, @A Contributor, and @Someone Else'
 		expected_congrats = 'Congrats! '
 		expected_expire = 'These privileges will expire at the end of December.'
-		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(prs_by_contributor, today)
+		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(
+			prs_by_contributor, today)
 		self.assertEqual(expected_list_of_contributors, list_of_contributors)
 		self.assertEqual(expected_congrats, congrats)
 		self.assertEqual(expected_expire, expire)
