@@ -18,22 +18,22 @@ package toclientlib
 const apiBaseStr = "/api/"
 
 // APIBase returns the base API string for HTTP requests, such as /api/3.1.
-func (sn *TOClient) APIBase() string {
-	return apiBaseStr + sn.APIVersion()
+func (to *TOClient) APIBase() string {
+	return apiBaseStr + to.APIVersion()
 }
 
 // APIVersion is the version of the Traffic Ops API this client will use for requests.
 // If the client was created with any function except Login, or with UseLatestSupportedAPI false,
 // this will be LatestAPIVersion().
 // Otherwise, it will be the version dynamically determined to be the latest the Traffic Ops Server supports.
-func (sn *TOClient) APIVersion() string {
-	if sn.latestSupportedAPI != "" {
-		return sn.latestSupportedAPI
+func (to *TOClient) APIVersion() string {
+	if to.latestSupportedAPI != "" {
+		return to.latestSupportedAPI
 	}
-	return sn.LatestAPIVersion()
+	return to.LatestAPIVersion()
 }
 
 // LatestAPIVersion returns the latest Traffic Ops API version this client supports.
-func (sn *TOClient) LatestAPIVersion() string {
-	return sn.apiVersions[0]
+func (to *TOClient) LatestAPIVersion() string {
+	return to.apiVersions[0]
 }

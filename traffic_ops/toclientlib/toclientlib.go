@@ -481,6 +481,21 @@ func NewNoAuthClient(
 	}, apiVersions)
 }
 
+// Close closes all idle "kept-alive" connections in the client's connection
+// pool. Note that connections in use are unaffected by this call, so it's not
+// necessarily true that calling this method will leave the client with no open
+// connections.
+//
+// This will always return a nil error, the signature is just meant to conform
+// to io.Closer.
+func (to *TOClient) Close() error {
+	if to == nil {
+		return nil
+	}
+	to.Client.CloseIdleConnections()
+	return nil
+}
+
 // ErrIsNotImplemented checks that the given error stems from
 // ErrNotImplemented.
 // Caution: This method does not unwrap errors, and relies on the common
