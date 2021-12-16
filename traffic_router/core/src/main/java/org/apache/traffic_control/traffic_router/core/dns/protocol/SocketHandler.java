@@ -19,10 +19,10 @@ public interface SocketHandler extends Runnable {
     /**
      * Cleanup method for implementing classes that must also implement Runnable.run().
      */
-    public void cleanup();
+    void cleanup();
 
     /**
      * Cancel method for implementing classes that must also implement Runnable.run().
      */
-    public void cancel();
+    void cancel();
 }

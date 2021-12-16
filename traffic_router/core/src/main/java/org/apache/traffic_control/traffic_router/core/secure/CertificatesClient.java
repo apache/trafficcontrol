@@ -124,7 +124,7 @@ public class CertificatesClient {
 			}
 		}
 
-		return encodedPemItems.toArray(new String[encodedPemItems.size()]);
+		return encodedPemItems.toArray(new String[0]);
 	}
 
 	public void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {

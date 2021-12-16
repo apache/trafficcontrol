@@ -27,7 +27,7 @@
 # TRAFFIC_MONITORS # list of semicolon-delimited FQDN:port monitors. E.g. `monitor.foo.com:80;monitor2.bar.org:80`
 # ORIGIN_URI # origin server (e.g. hotair), used to create a delivery service
 
-export JAVA_HOME=/usr/java/jdk1.8.0_92/jre
+export JAVA_HOME="$(command -v java | xargs realpath | xargs dirname)/.."
 export CATALINA_PID=/opt/traffic_router/temp/tomcat.pid
 export CATALINA_HOME=/opt/tomcat
 export CATALINA_BASE=/opt/traffic_router

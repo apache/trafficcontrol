@@ -35,7 +35,7 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 	protected TrafficOpsUtils trafficOpsUtils;
 	private int timeout = 15000;
 
-	@SuppressWarnings("PMD")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public void configure(final JsonNode config) {
 		URL authUrl;
 		String credentials;
@@ -151,13 +151,12 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 		}
 
 		File databaseFile = null;
-		FileWriter fw;
 		try {
 			databaseFile = File.createTempFile(tmpPrefix, tmpSuffix);
-			fw = new FileWriter(databaseFile);
-			fw.write(jsonData);
-			fw.flush();
-			fw.close();
+			try (FileWriter fw = new FileWriter(databaseFile)) {
+				fw.write(jsonData);
+				fw.flush();
+			}
 		}
 		catch (IOException e) {
 			LOGGER.warn("Failed to create file from data received from '" + interpolatedUrl + "'");

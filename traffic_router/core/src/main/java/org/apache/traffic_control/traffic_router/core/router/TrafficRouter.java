@@ -86,7 +86,7 @@ import java.util.stream.Collectors;
 /**
  * TrafficRouter is the main router class that handles Traffic Router logic.
  */
-@SuppressWarnings({"PMD.TooManyFields", "PMD.ExcessivePublicCount"})
+@SuppressWarnings({"PMD.TooManyFields", "PMD.ExcessivePublicCount", "PMD.CyclomaticComplexity"})
 public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
 
@@ -351,7 +351,7 @@ public class TrafficRouter {
 			if (deliveryServiceId != null && !deliveryServiceId.isEmpty()) {
 				error = error.append(" for delivery service " + deliveryServiceId);
 			}
-			error = error.append(" falling back to " + MaxmindGeolocationService.class.getSimpleName());
+			error = error.append(" falling back to ").append(MaxmindGeolocationService.class.getSimpleName());
 			LOGGER.error(error);
 		}
 

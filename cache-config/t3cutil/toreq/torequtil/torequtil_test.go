@@ -22,6 +22,7 @@ package torequtil
 import (
 	"errors"
 	"net"
+	"net/http"
 	"strings"
 	"testing"
 )
@@ -66,5 +67,15 @@ func TestMaybeIPStr(t *testing.T) {
 	addr := &net.IPAddr{IP: net.ParseIP("192.0.2.1")}
 	if is := MaybeIPStr(addr); is != "192.0.2.1" {
 		t.Errorf("MaybeIPStr(nil) expected '192.0.2.1', actual '%v'", is)
+	}
+}
+
+func TestMaybeHdrStr(t *testing.T) {
+	if is := MaybeHdrStr(nil, "Age"); is != "" {
+		t.Errorf("MaybeHdrStr(nil) expected '', actual '%v'", is)
+	}
+	hdr := http.Header{"Age": {"1001"}}
+	if is := MaybeHdrStr(hdr, "Age"); is != "1001" {
+		t.Errorf("MaybeIPStr(val) expected '1001', actual '%v'", is)
 	}
 }

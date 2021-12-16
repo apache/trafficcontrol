@@ -16,6 +16,7 @@
 package org.apache.traffic_control.traffic_router.core.util;
 
 public class JsonUtilsException extends Exception {
+    private static final long serialVersionUID = 1L;
 
     public JsonUtilsException(final String reason) {
         super(reason);

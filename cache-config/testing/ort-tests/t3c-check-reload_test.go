@@ -16,143 +16,107 @@ package orttest
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 )
 
-type ChangedCfg struct {
-	ChangedFiles     string `json:"changed_files"`
-	InstalledPlugins string `json:"installed_plugins"`
-}
-
-type argsResults struct {
-	configs     ChangedCfg
-	mode        string
-	expected    string
-	expectedErr bool
-}
-
-func testCheckReload(t *testing.T, ae argsResults) {
-	config, err := json.Marshal(ae.configs)
-	if err != nil {
-		t.Errorf("failed to encode configs: %v", err)
-	}
-	out, code := t3cCheckReload(config)
-	out = strings.TrimSpace(out)
-	if !ae.expectedErr && code != 0 {
-		t.Fatalf("expected non-error exit code, actual: %d - output: %s", code, out)
-	}
-	if ae.expectedErr && code == 0 {
-		t.Fatal("expected check-reload to exit with an error, actual: no error")
-	}
-	if out != ae.expected {
-		t.Errorf("expected required action '%s', actual: '%s'", ae.expected, out)
-	}
-}
-
 func TestCheckReload(t *testing.T) {
+	type ChangedCfg struct {
+		ChangedFiles string `json:"changed_files"`
+	}
+
+	type argsResults struct {
+		configs     ChangedCfg
+		mode        string
+		expected    string
+		expectedErr bool
+	}
 
 	argsExpected := []argsResults{
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/etc/trafficserver/remap.config,/etc/trafficserver/parent.config",
-				InstalledPlugins: "",
+				ChangedFiles: "/etc/trafficserver/remap.config,/etc/trafficserver/parent.config",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/etc/trafficserver/anything.foo",
-				InstalledPlugins: "",
+				ChangedFiles: "/etc/trafficserver/anything.foo",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/opt/trafficserver/etc/trafficserver/anything.foo",
-				InstalledPlugins: "",
+				ChangedFiles: "/opt/trafficserver/etc/trafficserver/anything.foo",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/foo/bar/hdr_rw_foo.config",
-				InstalledPlugins: "",
+				ChangedFiles: "/foo/bar/hdr_rw_foo.config",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/foo/bar/uri_signing_dsname.config",
-				InstalledPlugins: "",
+				ChangedFiles: "/foo/bar/uri_signing_dsname.config",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/foo/bar/url_sig_dsname.config,foo",
-				InstalledPlugins: "",
+				ChangedFiles: "/foo/bar/url_sig_dsname.config,foo",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "plugin.config,foo",
-				InstalledPlugins: "",
+				ChangedFiles: "plugin.config,foo",
 			},
 			expected: "restart",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/etc/trafficserver/anything.foo",
-				InstalledPlugins: "anything",
-			},
-			expected: "restart",
-		},
-		{
-			configs: ChangedCfg{
-				ChangedFiles:     "",
-				InstalledPlugins: "anything",
-			},
-			expected: "restart",
-		},
-		{
-			configs: ChangedCfg{
-				ChangedFiles:     "",
-				InstalledPlugins: "anything,anythingelse",
-			},
-			expected: "restart",
-		},
-		{
-			configs: ChangedCfg{
-				ChangedFiles:     "/foo/bar/ssl_multicert.config",
-				InstalledPlugins: "",
+				ChangedFiles: "/foo/bar/ssl_multicert.config",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "foo",
-				InstalledPlugins: "",
+				ChangedFiles: "foo",
 			},
 			expected: "",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/foo/bar/baz.config",
-				InstalledPlugins: "",
+				ChangedFiles: "/foo/bar/baz.config",
 			},
 			expected: "",
 		},
 	}
 
 	for _, ae := range argsExpected {
-		testName := fmt.Sprintf("testing check-reload with changed files %+v and installed plugins %+v", ae.configs.ChangedFiles, ae.configs.InstalledPlugins)
-		t.Run(testName, func(t *testing.T) { testCheckReload(t, ae) })
-
+		config, err := json.Marshal(ae.configs)
+		if err != nil {
+			t.Errorf("Error: %s", err)
+		}
+		out, code := t3cCheckReload(config)
+		out = strings.TrimSpace(out)
+		if !ae.expectedErr && code != 0 {
+			t.Errorf("expected configs %+v would not error, actual: code %v output '%v'",
+				ae.configs.ChangedFiles, code, out)
+			continue
+		} else if ae.expectedErr && code == 0 {
+			t.Errorf("expected configs %+v would error, actual: no error",
+				ae.configs.ChangedFiles)
+			continue
+		}
+		if out != ae.expected {
+			t.Errorf("expected configs %+v would need '%v', actual: '%v'",
+				ae.configs.ChangedFiles, ae.expected, out)
+		}
 	}
 }
 

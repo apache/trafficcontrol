@@ -59,6 +59,7 @@ public class CidrAddress implements Comparable<CidrAddress> {
         this(address, address.getAddress().length * 8);
     }
 
+    @SuppressWarnings("PMD.CyclomaticComplexity")
     public CidrAddress(final InetAddress address, final int netmaskLength) throws NetworkNodeException {
         this.netmaskLength = netmaskLength;
         this.address = address;

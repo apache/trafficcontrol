@@ -18,6 +18,10 @@
 *************************
 Traffic Vault Util (Riak)
 *************************
+.. deprecated:: ATCv6
+	When support for the Riak backend is removed, support for this tool will
+	also be dropped.
+
 The ``traffic_vault_util`` tool - located at :file:`tools/traffic_vault_util.go` in the `Apache Traffic Control repository <https://github.com/apache/trafficcontrol>`_ - is used to view and modify the contents of a Traffic Vault Riak cluster. The tool contains basic operations to display the buckets, keys and values stored within Riak.
 
 .. note:: This tool does not apply to the PostgreSQL Traffic Vault backend.

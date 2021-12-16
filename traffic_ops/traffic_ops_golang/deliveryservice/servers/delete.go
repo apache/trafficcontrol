@@ -77,7 +77,7 @@ SELECT (
 // back to the user, and an error that must not be shown to the user. If the server is, in fact,
 // the last available edge or origin assigned to the Delivery Service, the "user error" will be
 // set to an appropriate, non-nil value.
-func checkLastAvailableEdgeOrOrigin(dsID, serverID int, usesMSO bool, tx *sql.Tx) (int, error, error) {
+func checkLastAvailableEdgeOrOrigin(dsID, serverID int, usesMSO, hasTopology bool, tx *sql.Tx) (int, error, error) {
 	var isLastEdge bool
 	var isLastOrigin bool
 	if tx == nil {
@@ -87,7 +87,7 @@ func checkLastAvailableEdgeOrOrigin(dsID, serverID int, usesMSO bool, tx *sql.Tx
 	if err != nil {
 		return http.StatusInternalServerError, nil, fmt.Errorf("checking if server #%d is the last one assigned to DS #%d: %v", serverID, dsID, err)
 	}
-	if isLastEdge {
+	if isLastEdge && !hasTopology {
 		return http.StatusConflict, fmt.Errorf("removing server #%d from active Delivery Service #%d would leave it with no REPORTED/ONLINE EDGE servers", serverID, dsID), nil
 	}
 	if usesMSO && isLastOrigin {
@@ -151,7 +151,8 @@ func deleteDSS(w http.ResponseWriter, r *http.Request) {
 
 	if *ds.Active {
 		usesMSO := ds.MultiSiteOrigin == nil || *ds.MultiSiteOrigin
-		errCode, userErr, sysErr = checkLastAvailableEdgeOrOrigin(dsID, serverID, usesMSO, tx)
+		hasTopology := ds.Topology != nil
+		errCode, userErr, sysErr = checkLastAvailableEdgeOrOrigin(dsID, serverID, usesMSO, hasTopology, tx)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return

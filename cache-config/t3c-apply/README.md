@@ -42,6 +42,8 @@ t3c-apply [-2AbceFhIknopsSvW] [-a service-action] [-f \<all|reval|none\>] [-g \<
 
 [\-\-help]
 
+[\-\-version]
+
 # DESCRIPTION
 
 The t3c-apply command is a transliteration of traffic_ops_ort.pl script to the go language. It is designed to replace the traffic_ops_ort.pl perl script and it is used to apply configuration from Traffic Control, stored in Traffic Ops, to the cache.
@@ -93,6 +95,10 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
 
                     Whether to set the records.config via header to the ATS
                     release from the RPM. Default true.
+
+-E, -\-version
+
+                    Print version information and exit.
 
 -f, -\-files=value  [all | reval]
 

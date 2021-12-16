@@ -15,9 +15,11 @@
 
 package org.apache.traffic_control.traffic_router.core.ds;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.traffic_control.traffic_router.core.hash.DefaultHashable;
 import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Objects;
 
 public class SteeringTarget extends DefaultHashable {
 
@@ -106,19 +108,18 @@ public class SteeringTarget extends DefaultHashable {
 	}
 
 	@Override
-	@SuppressWarnings("PMD")
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		SteeringTarget target = (SteeringTarget) o;
+		final SteeringTarget target = (SteeringTarget) o;
 
-		if (weight != target.weight) return false;
-		if (order != target.order) return false;
-		if (geoOrder != target.geoOrder) return false;
-		if (latitude != target.latitude) return false;
-		if (longitude != target.longitude) return false;
-		return deliveryService != null ? deliveryService.equals(target.deliveryService) : target.deliveryService == null;
+		if (weight != target.weight ||
+				order != target.order ||
+				geoOrder != target.geoOrder ||
+				latitude != target.latitude ||
+				longitude != target.longitude) return false;
+		return Objects.equals(deliveryService, target.deliveryService);
 
 	}
 

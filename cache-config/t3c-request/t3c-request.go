@@ -29,8 +29,16 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
+// Version is the application version.
+// This is overwritten by the build with the current project version.
+var Version = "0.4"
+
+// GitRevision is the git revision the application was built from.
+// This is overwritten by the build with the current project version.
+var GitRevision = "nogit"
+
 func main() {
-	cfg, err := config.InitConfig()
+	cfg, err := config.InitConfig(Version, GitRevision)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err.Error())
 		os.Exit(1)
@@ -44,7 +52,7 @@ func main() {
 		cfg.TOPass,
 		cfg.TOInsecure,
 		cfg.TOTimeoutMS,
-		cfg.UserAgent,
+		cfg.UserAgent(),
 	)
 	if err != nil {
 		log.Errorf("%s\n", err)

@@ -40,6 +40,10 @@ t3c-preprocess - Traffic Control Cache Configuration preprocessor
 
 t3c-preprocess
 
+[\-\-help]
+
+[\-\-version]
+
 # DESCRIPTION
 
 The 't3c-preprocess' app preprocesses generated config files, replacing directives with relevant data.
@@ -63,6 +67,16 @@ The following directives will be replaced. These directives may be placed anywhe
 
     __RETURN__          is replaced with a newline character, and any whitespace before or after
                         it is removed.
+
+# OPTIONS
+
+-h, -\-help
+
+    Print usage information and exit
+
+-V, -\-version
+
+    Print version information and exit.
 
 # AUTHORS
 

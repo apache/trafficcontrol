@@ -53,34 +53,34 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
 
 # OPTIONS
 
--a, --set-reval-status
+-a, -\-set-reval-status
 
     [true | false] sets the servers revalidate status (required)
 
--H, --cache-host-name=value
+-H, -\-cache-host-name=value
 
     Host name of the cache to generate config for. Must be the
     server host name in Traffic Ops, not a URL, and not the FQDN
 
--h, --help
+-h, -\-help
 
     Print usage information and exit
 
--I, --traffic-ops-insecure
+-I, -\-traffic-ops-insecure
 
     [true | false] ignore certificate errors from Traffic Ops
 
--l, --login-dispersion=value
+-l, -\-login-dispersion=value
 
     [seconds] wait a random number of seconds between 0 and
     [seconds] before login to traffic ops, default 0
 
--P, --traffic-ops-password=value
+-P, -\-traffic-ops-password=value
 
     Traffic Ops password. Required. May also be set with the
     environment variable TO_PASS
 
--q, --set-update-status
+-q, -\-set-update-status
 
     [true | false] sets the servers update status (required)
 
@@ -90,18 +90,18 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
     ignored. If a fatal error occurs, the return code will be
     non-zero but no text will be output to stderr
 
--t, --traffic-ops-timeout-milliseconds=value
+-t, -\-traffic-ops-timeout-milliseconds=value
 
     Timeout in milli-seconds for Traffic Ops requests, default
     is 30000 [30000]
 
--u, --traffic-ops-url=value
+-u, -\-traffic-ops-url=value
 
     Traffic Ops URL. Must be the full URL, including the scheme.
     Required. May also be set with     the environment variable
     TO_URL
 
--U, --traffic-ops-user=value
+-U, -\-traffic-ops-user=value
 
     Traffic Ops username. Required. May also be set with the
     environment variable TO_USER
@@ -112,7 +112,7 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
     errors are logged. To log warnings, pass '-v'. To log info,
     pass '-vv'. To omit error logging, see '-s'.
 
--V, --version
+-V, -\-version
 
     Print the version and exit
 

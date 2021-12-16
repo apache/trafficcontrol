@@ -43,6 +43,8 @@ t3c-check-reload
 
 [\-\-help]
 
+[\-\-version]
+
 # DESCRIPTION
 
 The t3c-check-reload app takes json input from stdin.
@@ -62,11 +64,16 @@ Possible return values are:
 # JSON Format
 
     {"changed_files":"<list of files>","installed_plugins":"<list of plugins>"}
+
 # OPTIONS
--h, --help
+
+-h, -\-help
 
     Print usage information and exit
 
+-V, -\-version
+
+    Print version information and exit.
 
 # AUTHORS
 

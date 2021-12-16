@@ -19,11 +19,16 @@ import org.apache.traffic_control.traffic_router.secure.BindPrivateKey;
 import org.apache.traffic_control.traffic_router.secure.Pkcs1KeySpecDecoder;
 import org.xbill.DNS.*;
 
+import java.io.IOException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
@@ -35,7 +40,7 @@ import java.util.List;
 
 import static java.util.Base64.getMimeDecoder;
 
-@SuppressWarnings("PMD")
+@SuppressWarnings("PMD.ClassNamingConventions")
 public class ZoneTestRecords {
 	public static List<Record> records;
 
@@ -52,10 +57,10 @@ public class ZoneTestRecords {
 	public static KeyPair ksk2;
 	public static KeyPair zsk2;
 
-	static List<KeyPair> generateKeyPairs() throws Exception {
-		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+	static List<KeyPair> generateKeyPairs() throws NoSuchAlgorithmException, NoSuchProviderException {
+		final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
 		keyPairGenerator.initialize(2048, SecureRandom.getInstance("SHA1PRNG","SUN"));
-		List<KeyPair> keyPairs = new ArrayList<>();
+		final List<KeyPair> keyPairs = new ArrayList<>();
 		keyPairs.add(keyPairGenerator.generateKeyPair());
 		keyPairs.add(keyPairGenerator.generateKeyPair());
 		keyPairs.add(keyPairGenerator.generateKeyPair());
@@ -63,57 +68,57 @@ public class ZoneTestRecords {
 		return keyPairs;
 	}
 
-	private static KeyPair recreateKeyPair(String publicKey, String privateKey) throws Exception {
-		PrivateKey privateKeyCopy = new BindPrivateKey().decode(new String(getMimeDecoder().decode(privateKey)));
-		PublicKey publicKeyCopy = KeyFactory.getInstance("RSA").generatePublic(new Pkcs1KeySpecDecoder().decode(publicKey));
+	private static KeyPair recreateKeyPair(final String publicKey, final String privateKey) throws GeneralSecurityException, IOException {
+		final PrivateKey privateKeyCopy = new BindPrivateKey().decode(new String(getMimeDecoder().decode(privateKey)));
+		final PublicKey publicKeyCopy = KeyFactory.getInstance("RSA").generatePublic(new Pkcs1KeySpecDecoder().decode(publicKey));
 		return new KeyPair(publicKeyCopy, privateKeyCopy);
 	}
 
-	public static List<Record> generateZoneRecords(boolean makeNewKeyPairs) throws Exception {
+	public static List<Record> generateZoneRecords(final boolean makeNewKeyPairs) throws IOException, GeneralSecurityException {
 		start = new Date(System.currentTimeMillis() - (24 * 3600 * 1000));
 		expiration = new Date(System.currentTimeMillis() + (7 * 24 * 3600 * 1000));
 
 		origin = new Name("example.com.");
 
-		Duration tenYears = Duration.ofDays(3650);
-		Duration oneDay = Duration.ofDays(1);
-		Duration threeDays = Duration.ofDays(3);
-		Duration threeWeeks = Duration.ofDays(21);
+		final Duration tenYears = Duration.ofDays(3650);
+		final Duration oneDay = Duration.ofDays(1);
+		final Duration threeDays = Duration.ofDays(3);
+		final Duration threeWeeks = Duration.ofDays(21);
 
-		long oneHour = 3600;
-		Name nameServer1 = new Name("ns1.example.com.");
-		Name nameServer2 = new Name("ns2.example.com.");
+		final long oneHour = 3600;
+		final Name nameServer1 = new Name("ns1.example.com.");
+		final Name nameServer2 = new Name("ns2.example.com.");
 
-		Name adminEmail = new Name("admin.example.com.");
+		final Name adminEmail = new Name("admin.example.com.");
 
-		Name webServer = new Name("www.example.com.");
-		Name ftpServer = new Name("ftp.example.com.");
+		final Name webServer = new Name("www.example.com.");
+		final Name ftpServer = new Name("ftp.example.com.");
 
-		Name webMirror = new Name("mirror.www.example.com.");
-		Name ftpMirror = new Name("mirror.ftp.example.com.");
+		final Name webMirror = new Name("mirror.www.example.com.");
+		final Name ftpMirror = new Name("mirror.ftp.example.com.");
 
-		String txtRecord = new String("dead0123456789");
+		final String txtRecord = "dead0123456789";
 
 		records = new ArrayList<>(Arrays.asList(
-			new AAAARecord(webServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByName("2001:db8::5:6:7:8")),
-			new AAAARecord(ftpServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByName("2001:db8::12:34:56:78")),
+			new AAAARecord(webServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByAddress(new byte[]{32, 1, 13, -72, 0, 0, 0, 0, 0, 5, 0, 6, 0, 7, 0, 8})), // 2001:db8::5:6:7:8
+			new AAAARecord(ftpServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByAddress(new byte[]{32, 1, 13, -72, 0, 0, 0, 0, 0, 18, 0, 52, 0, 86, 0, 120})), // 2001:db8::12:34:56:78
 			new NSRecord(origin, DClass.IN, tenYears.getSeconds(), nameServer1),
 			new NSRecord(origin, DClass.IN, tenYears.getSeconds(), nameServer2),
 			new ARecord(webServer, DClass.IN, threeWeeks.getSeconds(), InetAddress.getByAddress(new byte[] {11, 22, 33, 44})),
 			new ARecord(webServer, DClass.IN, threeWeeks.getSeconds(), InetAddress.getByAddress(new byte[] {55, 66, 77, 88})),
 			new ARecord(ftpServer, DClass.IN, threeWeeks.getSeconds(), InetAddress.getByAddress(new byte[] {12, 34, 56, 78})),
 			new ARecord(ftpServer, DClass.IN, threeWeeks.getSeconds(), InetAddress.getByAddress(new byte[] {21, 43, 65, 87})),
-			new AAAARecord(webServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByName("2001:db8::4:3:2:1")),
+			new AAAARecord(webServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByAddress(new byte[]{32, 1, 13, -72, 0, 0, 0, 0, 0, 4, 0, 3, 0, 2, 0, 1})), // 2001:db8::4:3:2:1
 			new SOARecord(origin, DClass.IN, tenYears.getSeconds(), nameServer1,
 				adminEmail, 2016091400L, oneDay.getSeconds(), oneHour, threeWeeks.getSeconds(), threeDays.getSeconds()),
-			new AAAARecord(ftpServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByName("2001:db8::21:43:65:87")),
+			new AAAARecord(ftpServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByAddress(new byte[]{32, 1, 13, -72, 0, 0, 0, 0, 0, 33, 0, 67, 0, 101, 0, -121})), // 2001:db8::21:43:65:87
 			new CNAMERecord(webMirror, DClass.IN, tenYears.getSeconds(), webServer),
 			new CNAMERecord(ftpMirror, DClass.IN, tenYears.getSeconds(), ftpServer),
 			new TXTRecord(webServer, DClass.IN, tenYears.getSeconds(), txtRecord)
 		));
 
 		if (makeNewKeyPairs) {
-			List<KeyPair> keyPairs = generateKeyPairs();
+			final List<KeyPair> keyPairs = generateKeyPairs();
 			ksk1 = keyPairs.get(0);
 			zsk1 = keyPairs.get(1);
 			ksk2 = keyPairs.get(2);

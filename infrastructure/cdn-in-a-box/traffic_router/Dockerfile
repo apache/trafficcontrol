@@ -37,9 +37,9 @@ RUN dnf -y install epel-release && \
     dnf -y install jq git rpm-build net-tools iproute nc wget tar unzip \
           perl-JSON perl-WWW-Curl which make autoconf automake gcc gcc-c++ apr apr-devel \
           openssl openssl-devel bind-utils net-tools perl-JSON-PP gettext \
-          java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel tomcat-native && \
+          java-11-openjdk-headless java-11-openjdk-devel tomcat-native && \
     dnf -y clean all && \
-    ln -sfv $(realpath /usr/lib/jvm/java-1.8.0) /opt/java
+    ln -sfv $(realpath /usr/lib/jvm/java-11) /opt/java
 
 ADD $TRAFFIC_ROUTER_RPM /traffic_router.rpm
 ADD $TOMCAT_RPM /tomcat.rpm

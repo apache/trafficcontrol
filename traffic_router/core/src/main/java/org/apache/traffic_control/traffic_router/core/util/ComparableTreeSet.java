@@ -18,6 +18,7 @@ package org.apache.traffic_control.traffic_router.core.util;
 import java.util.TreeSet;
 
 public class ComparableTreeSet<E> extends TreeSet<E> implements Comparable<ComparableTreeSet<E>> {
+    private static final long serialVersionUID = 1L;
 
     @Override
     public int compareTo(final ComparableTreeSet<E> o) {

@@ -17,6 +17,7 @@ package org.apache.traffic_control.traffic_router.core.hash;
 
 import java.util.Arrays;
 
+@SuppressWarnings("PMD.ClassNamingConventions")
 public class NumberSearcher {
 	public static int findClosest(final Double[] numbers, final double target) {
 		final int index = Arrays.binarySearch(numbers, target);

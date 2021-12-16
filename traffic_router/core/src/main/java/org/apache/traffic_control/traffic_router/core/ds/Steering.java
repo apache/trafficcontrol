@@ -99,7 +99,6 @@ public class Steering {
 	}
 
 	@Override
-	@SuppressWarnings("PMD")
 	public int hashCode() {
 		int result = deliveryService != null ? deliveryService.hashCode() : 0;
 		result = 31 * result + (targets != null ? targets.hashCode() : 0);

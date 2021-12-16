@@ -70,6 +70,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -86,6 +88,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:

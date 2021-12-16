@@ -36,7 +36,6 @@ import (
 // GetAllConfigs gets all config files for cfg.CacheHostName.
 func GetAllConfigs(
 	toData *t3cutil.ConfigData,
-	appVersion string,
 	cfg config.Cfg,
 ) ([]t3cutil.ATSConfigFile, error) {
 	if toData.Server.HostName == nil {
@@ -50,7 +49,7 @@ func GetAllConfigs(
 	}
 
 	genTime := time.Now()
-	hdrCommentTxt := makeHeaderComment(*toData.Server.HostName, appVersion, toData.TrafficOpsURL, toData.TrafficOpsAddresses, genTime)
+	hdrCommentTxt := makeHeaderComment(*toData.Server.HostName, cfg.AppVersion(), toData.TrafficOpsURL, toData.TrafficOpsAddresses, genTime)
 
 	hasSSLMultiCertConfig := false
 	configs := []t3cutil.ATSConfigFile{}
