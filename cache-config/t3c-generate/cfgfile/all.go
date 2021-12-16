@@ -58,14 +58,22 @@ func GetAllConfigs(
 		if cfg.RevalOnly && fi.Name != atscfg.RegexRevalidateFileName {
 			continue
 		}
-		txt, contentType, secure, lineComment, err := GetConfigFile(toData, fi, hdrCommentTxt, cfg)
+		txt, contentType, secure, lineComment, warnings, err := GetConfigFile(toData, fi, hdrCommentTxt, cfg)
 		if err != nil {
 			return nil, errors.New("getting config file '" + fi.Name + "': " + err.Error())
 		}
 		if fi.Name == atscfg.SSLMultiCertConfigFileName {
 			hasSSLMultiCertConfig = true
 		}
-		configs = append(configs, t3cutil.ATSConfigFile{Name: fi.Name, Path: fi.Path, Text: txt, Secure: secure, ContentType: contentType, LineComment: lineComment})
+		configs = append(configs, t3cutil.ATSConfigFile{
+			Name:        fi.Name,
+			Path:        fi.Path,
+			Text:        txt,
+			Secure:      secure,
+			ContentType: contentType,
+			LineComment: lineComment,
+			Warnings:    warnings,
+		})
 	}
 
 	if hasSSLMultiCertConfig {

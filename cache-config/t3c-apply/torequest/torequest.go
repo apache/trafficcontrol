@@ -62,6 +62,7 @@ type TrafficOpsReq struct {
 	changedFiles  []string            // list of config files which were changed
 
 	configFiles          map[string]*ConfigFile
+	configFileWarnings   map[string][]string
 	TrafficCtlReload     bool   // a traffic_ctl_reload is required
 	SysCtlReload         bool   // a reload of the sysctl.conf is required
 	NtpdRestart          bool   // ntpd needs restarting
@@ -101,6 +102,7 @@ type ConfigFile struct {
 	Perm              os.FileMode // default file permissions
 	Uid               int         // owner uid, default is 0
 	Gid               int         // owner gid, default is 0
+	Warnings          []string
 }
 
 func (u UpdateStatus) String() string {
@@ -650,6 +652,7 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 	}
 
 	r.configFiles = map[string]*ConfigFile{}
+	r.configFileWarnings = map[string][]string{}
 	var mode os.FileMode
 	for _, file := range allFiles {
 		if file.Secure {
@@ -659,16 +662,38 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 		}
 
 		r.configFiles[file.Name] = &ConfigFile{
-			Name: file.Name,
-			Path: filepath.Join(file.Path, file.Name),
-			Dir:  file.Path,
-			Body: []byte(file.Text),
-			Uid:  atsUid,
-			Gid:  atsGid,
-			Perm: mode,
+			Name:     file.Name,
+			Path:     filepath.Join(file.Path, file.Name),
+			Dir:      file.Path,
+			Body:     []byte(file.Text),
+			Uid:      atsUid,
+			Gid:      atsGid,
+			Perm:     mode,
+			Warnings: file.Warnings,
+		}
+		for _, warn := range file.Warnings {
+			if warn == "" {
+				continue
+			}
+			if _, ok := r.configFileWarnings[file.Name]; ok {
+				r.configFileWarnings[file.Name] = append(r.configFileWarnings[file.Name], warn)
+			} else {
+				r.configFileWarnings[file.Name] = []string{warn}
+			}
 		}
 	}
+
 	return nil
+}
+
+func (r *TrafficOpsReq) PrintWarnings() {
+	log.Infoln("======== Summary of config warnings that may need attention. ========")
+	for file, warning := range r.configFileWarnings {
+		for _, warning := range warning {
+			log.Warnf("%s: %s", file, warning)
+		}
+	}
+	log.Infoln("======== End warning summary ========")
 }
 
 // GetHeaderComment looks up the tm.toolname parameter from traffic ops.
