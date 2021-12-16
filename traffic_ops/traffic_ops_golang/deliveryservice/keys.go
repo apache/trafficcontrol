@@ -136,6 +136,33 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, "Successfully added ssl keys for "+*req.DeliveryService)
 }
 
+// GetSSlKeyExpirationInformation gets expiration information for all SSL certificates.
+func GetSSlKeyExpirationInformation(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys expiration information from Traffic Vault: Traffic Vault is not configured"))
+		return
+	}
+
+	daysParam := 0
+	if days, ok := inf.IntParams["days"]; ok {
+		daysParam = days
+	}
+
+	expirationInfos, err := inf.Vault.GetExpirationInformation(inf.Tx.Tx, r.Context(), daysParam)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys expiration information from Traffic Vault: "+err.Error()))
+		return
+	}
+
+	api.WriteResp(w, r, expirationInfos)
+}
+
 // GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID. V15 includes expiration date.
 func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
@@ -201,7 +228,7 @@ func getSslKeys(inf *api.APIInfo, ctx context.Context) (tc.DeliveryServiceSSLKey
 		}
 
 		if keyObj.Certificate.Crt != "" && keyObj.Expiration.IsZero() {
-			exp, sans, err := parseExpirationAndSansFromCert([]byte(parsedCert.Crt), keyObj.Hostname)
+			exp, sans, err := ParseExpirationAndSansFromCert([]byte(parsedCert.Crt), keyObj.Hostname)
 			if err != nil {
 				return tc.DeliveryServiceSSLKeysV4{}, errors.New(xmlID + ": " + err.Error())
 			}
@@ -213,7 +240,8 @@ func getSslKeys(inf *api.APIInfo, ctx context.Context) (tc.DeliveryServiceSSLKey
 	return keyObj, nil
 }
 
-func parseExpirationAndSansFromCert(cert []byte, commonName string) (time.Time, []string, error) {
+// ParseExpirationAndSansFromCert returns the expiration and SANs from a certificate.
+func ParseExpirationAndSansFromCert(cert []byte, commonName string) (time.Time, []string, error) {
 	block, _ := pem.Decode(cert)
 	if block == nil {
 		return time.Time{}, []string{}, errors.New("Error decoding cert to parse expiration")

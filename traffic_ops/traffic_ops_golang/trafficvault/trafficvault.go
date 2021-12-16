@@ -42,6 +42,8 @@ type TrafficVault interface {
 	// the delivery service identified by the given xmlID. If version is empty,
 	// the implementation should return the latest version.
 	GetDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx, ctx context.Context) (tc.DeliveryServiceSSLKeysV15, bool, error)
+	// GetExpirationInformation retrieves the SSL key expiration information for all delivery services.
+	GetExpirationInformation(tx *sql.Tx, ctx context.Context, days int) ([]tc.SSLKeyExpirationInformation, error)
 	// PutDeliveryServiceSSLKeys stores the given SSL keys for a delivery service.
 	PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, ctx context.Context) error
 	// DeleteDeliveryServiceSSLKeys removes the SSL keys of the given version (or latest
