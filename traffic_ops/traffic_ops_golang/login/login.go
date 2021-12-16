@@ -107,12 +107,11 @@ Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 
 func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		defer r.Body.Close()
 		authenticated := false
 		form := auth.PasswordForm{}
 		if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
-			handleErrs(http.StatusBadRequest, err)
+			api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
 			return
 		}
 		if form.Username == "" || form.Password == "" {
@@ -189,7 +188,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
 			return
 		}
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
@@ -365,7 +364,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return selectedKey, nil
 		})
 		if err != nil {
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, errors.New("Error decoding token with message: "+err.Error()))
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Error decoding token with message: %w", err))
 			return
 		}
 
@@ -405,7 +404,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("encoding response: %w", err))
 			return
 		}
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
