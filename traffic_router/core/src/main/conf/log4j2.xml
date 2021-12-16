@@ -26,6 +26,7 @@
                 <SizeBasedTriggeringPolicy size="200MB" />
             </Policies>
             <DefaultRolloverStrategy max="10" />
+            <ThresholdFilter level="INFO" />
         </RollingFile>
         <RollingFile name="traffic_router"
                      fileName="${deploy.dir}/var/log/traffic_router.log"
@@ -34,6 +35,7 @@
             <Policies>
                 <SizeBasedTriggeringPolicy size="100MB" />
             </Policies>
+            <ThresholdFilter level="ALL" />
         </RollingFile>
     </Appenders>
     <Loggers>
