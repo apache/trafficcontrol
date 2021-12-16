@@ -15,7 +15,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Set;
@@ -23,7 +24,7 @@ import java.util.regex.Pattern;
 
 
 public class RegionalGeoRule {
-    private static final Logger LOGGER = Logger.getLogger(RegionalGeoRule.class);
+    private static final Logger LOGGER = LogManager.getLogger(RegionalGeoRule.class);
 
     public static final String WHITE_LIST_NODE_LOCATION = "w";
 

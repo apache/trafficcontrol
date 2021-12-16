@@ -18,7 +18,8 @@ package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 import java.net.InetAddress;
 import java.util.*;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.ExtendedFlags;
 import org.xbill.DNS.Flags;
@@ -47,7 +48,7 @@ public class NameServer {
 	private static final int FLAG_DNSSECOK = 1;
 	private static final int FLAG_SIGONLY = 2;
 
-	private static final Logger LOGGER = Logger.getLogger(NameServer.class);
+	private static final Logger LOGGER = LogManager.getLogger(NameServer.class);
 	private boolean ecsEnable = false;
 	private Set<DeliveryService> ecsEnabledDses = new HashSet<>();
 	/**

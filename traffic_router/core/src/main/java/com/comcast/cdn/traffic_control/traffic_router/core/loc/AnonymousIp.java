@@ -23,7 +23,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.InetAddresses;
 import com.maxmind.geoip2.model.AnonymousIpResponse;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
@@ -38,7 +39,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsExcepti
 
 public final class AnonymousIp {
 
-	private static final Logger LOGGER = Logger.getLogger(AnonymousIp.class);
+	private static final Logger LOGGER = LogManager.getLogger(AnonymousIp.class);
 
 	private static AnonymousIp currentConfig = new AnonymousIp();
 
@@ -222,12 +223,12 @@ public final class AnonymousIp {
 	@SuppressWarnings({ "PMD.CyclomaticComplexity" })
 	/*
 	 * Enforces the anonymous ip blocking policies
-	 * 
+	 *
 	 * If the Delivery Service has anonymous ip blocking enabled And the ip is
 	 * in the anonymous ip database The ip will be blocked if it matches a
 	 * policy defined in the config file
 	 */
-	public static void enforce(final TrafficRouter trafficRouter, final Request request, final DeliveryService deliveryService, final Cache cache, 
+	public static void enforce(final TrafficRouter trafficRouter, final Request request, final DeliveryService deliveryService, final Cache cache,
 		final HTTPRouteResult routeResult, final Track track) throws MalformedURLException {
 
 		final HTTPRequest httpRequest = HTTPRequest.class.cast(request);

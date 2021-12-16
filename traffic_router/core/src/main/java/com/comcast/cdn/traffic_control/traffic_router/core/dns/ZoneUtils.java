@@ -24,10 +24,11 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.xbill.DNS.Record;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ZoneUtils {
-	private static final Logger LOGGER = Logger.getLogger(ZoneUtils.class);
+	private static final Logger LOGGER = LogManager.getLogger(ZoneUtils.class);
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH");
 
 	protected static long getMaximumTTL(final List<Record> records) {

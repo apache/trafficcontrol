@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
-
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;

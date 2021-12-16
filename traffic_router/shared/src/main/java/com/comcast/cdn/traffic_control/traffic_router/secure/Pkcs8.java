@@ -15,7 +15,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.secure;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -24,7 +25,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
 public class Pkcs8 extends Pkcs {
-	private static final Logger LOGGER = Logger.getLogger(Pkcs8.class);
+	private static final Logger LOGGER = LogManager.getLogger(Pkcs8.class);
 	public static final String HEADER = "-----BEGIN PRIVATE KEY-----";
 	public static final String FOOTER = "-----END PRIVATE KEY-----";
 

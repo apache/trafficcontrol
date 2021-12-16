@@ -40,7 +40,8 @@ import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
@@ -59,7 +60,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.StringProtector;
 
 @SuppressWarnings({"PMD.TooManyFields","PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals", "PMD.ExcessivePublicCount"})
 public class DeliveryService {
-	protected static final Logger LOGGER = Logger.getLogger(DeliveryService.class);
+	protected static final Logger LOGGER = LogManager.getLogger(DeliveryService.class);
 	private final String id;
 	@JsonIgnore
 	private final JsonNode ttls;

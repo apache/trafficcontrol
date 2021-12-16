@@ -108,12 +108,12 @@ To install the Traffic Router Developer environment:
 #. Set the environment variable TRAFFIC_MONITOR_HOSTS to be a semicolon delimited list of Traffic Monitors that can be accessed during integration tests OR install the :file:`traffic_monitor.properties` file.
 #. Additional configuration is set using the below files:
 
-  * copy :file:`core/src/main/conf/dns.properties` to :file:`core/src/test/conf/`
-  * copy :file:`core/src/main/conf/http.properties` to :file:`core/src/test/conf/`
-  * copy :file:`core/src/main/conf/log4j.properties` to :file:`core/src/test/conf/`
-  * copy :file:`core/src/main/conf/traffic_monitor.properties` to :file:`core/src/test/conf/` and then edit the ``traffic_monitor.bootstrap.hosts`` property
-  * copy :file:`core/src/main/conf/traffic_ops.properties` to :file:`core/src/test/conf/` and then edit the credentials as appropriate for the Traffic Ops instance you will be using.
-  * Default configuration values now reside in :file:`core/src/main/webapp/WEB-INF/applicationContext.xml`
+	* copy :file:`core/src/main/conf/dns.properties` to :file:`core/src/test/conf/`
+	* copy :file:`core/src/main/conf/http.properties` to :file:`core/src/test/conf/`
+	* copy :file:`core/src/main/conf/log4j2.xml` to :file:`core/src/test/conf/`
+	* copy :file:`core/src/main/conf/traffic_monitor.properties` to :file:`core/src/test/conf/` and then edit the ``traffic_monitor.bootstrap.hosts`` property
+	* copy :file:`core/src/main/conf/traffic_ops.properties` to :file:`core/src/test/conf/` and then edit the credentials as appropriate for the Traffic Ops instance you will be using.
+	* Default configuration values now reside in :file:`core/src/main/webapp/WEB-INF/applicationContext.xml`
 
   	.. note:: These values may be overridden by creating and/or modifying the property files listed in :file:`core/src/main/resources/applicationProperties.xml`
 

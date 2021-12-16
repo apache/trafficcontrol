@@ -24,12 +24,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.Channels;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.WireParseException;
 
 public class TCP extends AbstractProtocol {
-    private static final Logger LOGGER = Logger.getLogger(TCP.class);
+    private static final Logger LOGGER = LogManager.getLogger(TCP.class);
     private int readTimeout = 3000; // default
 
     private ServerSocket serverSocket;

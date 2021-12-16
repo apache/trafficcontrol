@@ -25,7 +25,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
@@ -34,7 +35,7 @@ import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
  */
 public class CacheLocation extends Location {
 
-	public static final Logger LOGGER = Logger.getLogger(CacheLocation.class);
+	public static final Logger LOGGER = LogManager.getLogger(CacheLocation.class);
 
 	private final Map<String, Cache> caches;
 	private List<String> backupCacheGroups = null;
@@ -49,7 +50,7 @@ public class CacheLocation extends Location {
 
 	/**
 	 * Creates a CacheLocation with the specified ID at the specified location.
-	 * 
+	 *
 	 * @param id
 	 *            the id of the location
 	 * @param geolocation
@@ -65,7 +66,7 @@ public class CacheLocation extends Location {
 
 	/**
 	 * Creates a CacheLocation with the specified ID at the specified location.
-	 * 
+	 *
 	 * @param id
 	 *            the id of the location
 	 * @param geolocation
@@ -100,7 +101,7 @@ public class CacheLocation extends Location {
 
 	/**
 	 * Adds the specified cache to this location.
-	 * 
+	 *
 	 * @param cache
 	 *            the cache to add
 	 */
@@ -146,7 +147,7 @@ public class CacheLocation extends Location {
 
 	/**
 	 * Retrieves the specified {@link Cache} from the location.
-	 * 
+	 *
 	 * @param id
 	 *            the ID for the desired <code>Cache</code>
 	 * @return the cache or <code>null</code> if the cache doesn't exist
@@ -157,7 +158,7 @@ public class CacheLocation extends Location {
 
 	/**
 	 * Retrieves the {@link Set} of caches at this location.
-	 * 
+	 *
 	 * @return the caches
 	 */
 	public List<Cache> getCaches() {
@@ -166,7 +167,7 @@ public class CacheLocation extends Location {
 
 	/**
 	 * Gets backupCacheGroups.
-	 * 
+	 *
 	 * @return the backupCacheGroups
 	 */
 	public List<String> getBackupCacheGroups() {
@@ -175,7 +176,7 @@ public class CacheLocation extends Location {
 
 	/**
 	 * Tests useClosestGeoOnBackupFailure.
-	 * 
+	 *
 	 * @return useClosestGeoOnBackupFailure
 	 */
 	public boolean isUseClosestGeoLoc() {
@@ -184,7 +185,7 @@ public class CacheLocation extends Location {
 
 	/**
 	 * Determines if the specified {@link Cache} exists at this location.
-	 * 
+	 *
 	 * @param id
 	 *            the <code>Cache</code> to check
 	 * @return true if the <code>Cache</code> is at this location, false otherwise

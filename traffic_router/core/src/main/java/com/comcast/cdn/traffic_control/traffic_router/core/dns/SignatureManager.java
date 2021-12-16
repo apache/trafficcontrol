@@ -35,7 +35,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.DSRecord;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
@@ -47,7 +48,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.ProtectedFetcher
 
 
 public final class SignatureManager {
-	private static final Logger LOGGER = Logger.getLogger(SignatureManager.class);
+	private static final Logger LOGGER = LogManager.getLogger(SignatureManager.class);
 	private int expirationMultiplier;
 	private CacheRegister cacheRegister;
 	private static ScheduledExecutorService keyMaintenanceExecutor;

@@ -15,7 +15,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.secure;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -29,7 +30,7 @@ import java.util.Map;
 import static java.util.Base64.getDecoder;
 
 public class BindPrivateKey {
-	private static final Logger LOGGER = Logger.getLogger(BindPrivateKey.class);
+	private static final Logger LOGGER = LogManager.getLogger(BindPrivateKey.class);
 
 	private BigInteger decodeBigInt(final String s) {
 		return new BigInteger(1, getDecoder().decode(s.getBytes()));

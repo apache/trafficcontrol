@@ -21,6 +21,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.xbill.DNS.*;
@@ -39,6 +40,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Random.class, Header.class, DNSAccessEventBuilder.class, System.class, DNSAccessRecord.class})
+@PowerMockIgnore("javax.management.*")
 public class DNSAccessEventBuilderTest {
 
     private InetAddress client;

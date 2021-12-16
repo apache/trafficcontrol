@@ -34,7 +34,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHttpClient;
@@ -51,7 +52,7 @@ import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
  *
  */
 public class PeriodicResourceUpdater {
-	private static final Logger LOGGER = Logger.getLogger(PeriodicResourceUpdater.class);
+	private static final Logger LOGGER = LogManager.getLogger(PeriodicResourceUpdater.class);
 
 	private AsyncHttpClient asyncHttpClient;
 	protected String databaseLocation;

@@ -164,7 +164,7 @@ For the most part, the configuration files and :term:`Parameters` used by Traffi
 	|                            |                                           | when the ``traffic_router`` service is started. It primarily consists of command |                                                    |
 	|                            |                                           | line settings for the Java process                                               |                                                    |
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
-	| log4j.properties           | various parameters                        | Configuration of ``log4j`` is documented on                                      | N/A                                                |
+	| log4j2.xml                 | various parameters                        | Configuration of ``log4j`` is documented on                                      | N/A                                                |
 	|                            |                                           | `their site <http://logging.apache.org/log4j/2.x/index.html>`_; adjust as needed |                                                    |
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	| server.xml                 | various parameters                        | Traffic Router specific configuration for Apache Tomcat. See the Apache Tomcat   | N/A                                                |
@@ -189,11 +189,11 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	+=========================================+==============================+=======================================================================================================================================+
 	| location                                | dns.zone                     | Location to store the DNS zone files in the local file system of Traffic Router.                                                      |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| location                                | http-log4j.properties        | Location to find the log4j.properties file for Traffic Router.                                                                        |
+	| location                                | http-log4j2.xml              | Location to find the log4j2.xml file for Traffic Router.                                                                              |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| location                                | dns-log4j.properties         | Location to find the dns-log4j.properties file for Traffic Router.                                                                    |
+	| location                                | dns-log4j2.xml               | Location to find the dns-log4j2.xml file for Traffic Router.                                                                          |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| location                                | geolocation.properties       | Location to find the log4j.properties file for Traffic Router.                                                                        |
+	| location                                | geolocation.properties       | Location to find the log4j2.xml file for Traffic Router.                                                                              |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| CDN_name                                | rascal-config.txt            | The human readable name of the CDN for this :term:`Profile`.                                                                          |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -881,7 +881,7 @@ The following is an example of the command line parameters set in :file:`/opt/tr
 
 	CATALINA_OPTS="\
 	-server -Xms2g -Xmx8g \
-	-Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties \
+	-Dlog4j.configurationFile=$CATALINA_BASE/conf/log4j2.xml \
 	-Djava.library.path=/usr/lib64 \
 	-XX:+UseG1GC \
 	-XX:+UnlockExperimentalVMOptions \

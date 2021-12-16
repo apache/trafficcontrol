@@ -16,7 +16,8 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,7 +38,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 @Category(IntegrationTest.class)
 public class StatelessTrafficRouterTest {
-	private static final Logger LOGGER = Logger.getLogger(StatelessTrafficRouterTest.class);
+	private static final Logger LOGGER = LogManager.getLogger(StatelessTrafficRouterTest.class);
 	private TrafficRouterManager trafficRouterManager;
 	private GeolocationDatabaseUpdater geolocationDatabaseUpdater;
 	private NetworkUpdater networkUpdater;

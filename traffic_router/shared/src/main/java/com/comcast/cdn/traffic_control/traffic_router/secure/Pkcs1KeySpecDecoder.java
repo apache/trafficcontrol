@@ -15,10 +15,11 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.secure;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1SequenceParser;
-import org.bouncycastle.asn1.ASN1Integer;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -37,7 +38,7 @@ public class Pkcs1KeySpecDecoder {
 
 	static final int PRIVATE_SEQUENCE_LENGTH = 9;
 	static final int PUBLIC_SEQUENCE_LENGTH = 2;
-	private static final Logger LOGGER = Logger.getLogger(Pkcs1KeySpecDecoder.class);
+	private static final Logger LOGGER = LogManager.getLogger(Pkcs1KeySpecDecoder.class);
 
 	public KeySpec decode(final String data) throws IOException, GeneralSecurityException {
 		final String pemData = data.replaceAll(HEADER, "").replaceAll(FOOTER, "").replaceAll("\\s", "");

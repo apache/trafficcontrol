@@ -23,6 +23,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -46,6 +47,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Date.class, HTTPAccessEventBuilder.class, HTTPAccessRecord.class, System.class})
+@PowerMockIgnore("javax.management.*")
 public class HTTPAccessEventBuilderTest {
     private HttpServletRequest request;
 
@@ -159,7 +161,7 @@ public class HTTPAccessEventBuilderTest {
 
         assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 rhi=- url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=ERROR rloc=\"-\" rdtl=- rerr=\"RuntimeException: you're doing it wrong\" rgb=\"-\" pssc=302 ttms=0.456 rurl=\"http://example.com/hereitis/index.html?foo=bar\" rurls=\"-\" uas=\"null\" rh=\"-\""));
     }
-    
+
     @Test
     public void itRecordsMissResultDetails() throws Exception {
         when(System.nanoTime()).thenReturn(100000101L, 100789000L);

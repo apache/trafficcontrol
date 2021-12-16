@@ -18,13 +18,14 @@ package com.comcast.cdn.traffic_control.traffic_router.core.config;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Iterator;
 import java.util.List;
 
 public class CertificateChecker {
-	private final static Logger LOGGER = Logger.getLogger(CertificateChecker.class);
+	private final static Logger LOGGER = LogManager.getLogger(CertificateChecker.class);
 
 	public String getDeliveryServiceType(final JsonNode deliveryServiceJson) {
 		final JsonNode matchsets = deliveryServiceJson.get("matchsets");

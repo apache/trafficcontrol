@@ -29,7 +29,8 @@ import java.util.Properties;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
@@ -41,7 +42,7 @@ import org.springframework.context.event.ContextClosedEvent;
 
 @SuppressWarnings("PMD.TooManyFields")
 public class TrafficMonitorWatcher implements ApplicationListener<ApplicationContextEvent> {
-	private static final Logger LOGGER = Logger.getLogger(TrafficMonitorWatcher.class);
+	private static final Logger LOGGER = LogManager.getLogger(TrafficMonitorWatcher.class);
 
 	private String stateUrl;
 	private String configUrl;

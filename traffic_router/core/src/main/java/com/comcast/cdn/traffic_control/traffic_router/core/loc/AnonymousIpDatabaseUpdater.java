@@ -14,14 +14,15 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
-
 @SuppressWarnings({ "PMD.AvoidDuplicateLiterals" })
 public class AnonymousIpDatabaseUpdater extends AbstractServiceUpdater {
-    private static final Logger LOGGER = Logger.getLogger(AnonymousIpDatabaseUpdater.class);
+    private static final Logger LOGGER = LogManager.getLogger(AnonymousIpDatabaseUpdater.class);
 
 	private AnonymousIpDatabaseService anonymousIpDatabaseService;
 

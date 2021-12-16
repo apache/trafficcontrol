@@ -17,11 +17,12 @@ package com.comcast.cdn.traffic_control.traffic_router.core;
 
 import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificates;
 import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
@@ -36,7 +37,7 @@ import static org.springframework.util.SocketUtils.findAvailableTcpPort;
 import static org.springframework.util.SocketUtils.findAvailableUdpPort;
 
 public class TestBase {
-	private static final Logger LOGGER = Logger.getLogger(TestBase.class);
+	private static final Logger LOGGER = LogManager.getLogger(TestBase.class);
 	public static final String monitorPropertiesPath = "src/test/conf/traffic_monitor.properties";
 	private static ApplicationContext context;
 
@@ -60,9 +61,9 @@ public class TestBase {
 			e.printStackTrace();
 		}
 
-		ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{ISO8601} [%-5p] %c{4}: %m%n"));
-		LogManager.getRootLogger().addAppender(consoleAppender);
-		LogManager.getRootLogger().setLevel(Level.WARN);
+		ConsoleAppender consoleAppender = ConsoleAppender.newBuilder().setLayout(PatternLayout.newBuilder().withPattern("%d{ISO8601} [%-5p] %c{4}: %m%n").build()).build();
+		LoggerContext.getContext().getRootLogger().addAppender(consoleAppender);
+		LoggerContext.getContext().getRootLogger().setLevel(Level.INFO);
 
 		LOGGER.warn("Initializing context before running integration tests");
 		context = new FileSystemXmlApplicationContext("src/main/webapp/WEB-INF/applicationContext.xml");

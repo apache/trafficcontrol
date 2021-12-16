@@ -23,6 +23,7 @@ import org.xbill.DNS.Record;
 
 public class SignedZoneKey extends ZoneKey {
 	private Calendar signatureExpiration;
+
 	private Calendar kskExpiration;
 	private Calendar zskExpiration;
 

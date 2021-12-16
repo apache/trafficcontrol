@@ -18,7 +18,8 @@ package com.comcast.cdn.traffic_control.traffic_router.protocol;
 import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.secure.HandshakeData;
 import com.comcast.cdn.traffic_control.traffic_router.secure.KeyManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.jni.SSL;
 import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.NioEndpoint;
@@ -34,7 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class RouterNioEndpoint extends NioEndpoint {
-	private static final Logger LOGGER = Logger.getLogger(RouterNioEndpoint.class);
+	private static final Logger LOGGER = LogManager.getLogger(RouterNioEndpoint.class);
 	private String protocols;
 
 	// Grabs the aliases from our custom certificate registry, creates a sslHostConfig for them
@@ -169,4 +170,3 @@ public class RouterNioEndpoint extends NioEndpoint {
 	}
 
 }
-

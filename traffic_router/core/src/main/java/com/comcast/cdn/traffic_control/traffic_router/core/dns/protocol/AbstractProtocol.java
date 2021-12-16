@@ -18,7 +18,8 @@ package com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessEventBuilder;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.Rcode;
 import org.xbill.DNS.Section;
@@ -29,8 +30,8 @@ import java.util.concurrent.*;
 
 @SuppressWarnings("PMD.MoreThanOneLogger")
 public abstract class AbstractProtocol implements Protocol {
-    private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
-    private static final Logger LOGGER = Logger.getLogger(AbstractProtocol.class);
+    private static final Logger ACCESS = LogManager.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
+    private static final Logger LOGGER = LogManager.getLogger(AbstractProtocol.class);
 
     private static final int NUM_SECTIONS = 4;
     protected boolean shutdownRequested;
@@ -42,7 +43,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     /**
      * Gets executorService.
-     * 
+     *
      * @return the executorService
      */
     public ThreadPoolExecutor getExecutorService() {
@@ -51,7 +52,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     /**
      * Gets nameServer.
-     * 
+     *
      * @return the nameServer
      */
     public NameServer getNameServer() {
@@ -60,7 +61,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     /**
      * Sets executorService.
-     * 
+     *
      * @param executorService
      *            the executorService to set
      */
@@ -70,7 +71,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     /**
      * Sets nameServer.
-     * 
+     *
      * @param nameServer
      *            the nameServer to set
      */
@@ -87,7 +88,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     /**
      * Returns the maximum length of the response.
-     * 
+     *
      * @param request
      *
      * @return the maximum length in bytes
@@ -96,7 +97,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     /**
      * Gets shutdownRequested.
-     * 
+     *
      * @return the shutdownRequested
      */
     protected boolean isShutdownRequested() {
@@ -105,7 +106,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     /**
      * Queries the DNS nameServer and returns the response.
-     * 
+     *
      * @param client
      *            the IP address of the client
      * @param request
@@ -140,7 +141,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     /**
      * Submits a request handler to be executed.
-     * 
+     *
      * @param job
      *            the handler to be executed
      */

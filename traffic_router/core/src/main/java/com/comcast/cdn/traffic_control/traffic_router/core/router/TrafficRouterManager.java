@@ -23,7 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
@@ -35,7 +36,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
 
 public class TrafficRouterManager implements ApplicationListener<ContextRefreshedEvent> {
-	private static final Logger LOGGER = Logger.getLogger(TrafficRouterManager.class);
+	private static final Logger LOGGER = LogManager.getLogger(TrafficRouterManager.class);
 
 	public static final int DEFAULT_API_PORT = 3333;
 	public static final int DEFAULT_SECURE_API_PORT = 0; // Must be set through server.xml properties

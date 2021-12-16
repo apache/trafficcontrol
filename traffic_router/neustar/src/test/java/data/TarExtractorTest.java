@@ -18,9 +18,9 @@ package data;
 import com.comcast.cdn.traffic_control.traffic_router.neustar.data.TarExtractor;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PatternLayout;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,6 +48,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({TarExtractor.class, File.class, TarArchiveInputStream.class})
+@PowerMockIgnore("javax.management.*")
 public class TarExtractorTest {
 
 	@Before

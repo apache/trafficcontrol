@@ -34,7 +34,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Fetcher.class, URL.class, InputStreamReader.class})
-@PowerMockIgnore("javax.net.ssl.*")
+@PowerMockIgnore({"javax.net.ssl.*", "javax.management.*"})
 public class FetcherTest {
 
     @Test
