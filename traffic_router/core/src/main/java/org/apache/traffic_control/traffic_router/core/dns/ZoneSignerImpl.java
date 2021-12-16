@@ -15,7 +15,8 @@
 
 package org.apache.traffic_control.traffic_router.core.dns;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.DNSKEYRecord;
 import org.xbill.DNS.DNSSEC;
 import org.xbill.DNS.DSRecord;
@@ -47,7 +48,7 @@ import static java.util.stream.Collectors.toList;
 import static org.xbill.DNS.DClass.IN;
 
 public class ZoneSignerImpl implements ZoneSigner {
-	private final static Logger LOGGER = Logger.getLogger(ZoneSignerImpl.class);
+	private final static Logger LOGGER = LogManager.getLogger(ZoneSignerImpl.class);
 
 	private Stream<Record> toRRStream(final RRset rrSet) {
 		final Iterable<Record> iterable = () -> rrSet.rrs(false);

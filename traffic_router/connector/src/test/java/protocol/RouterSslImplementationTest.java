@@ -24,6 +24,7 @@ import org.apache.tomcat.util.net.SSLUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.api.mockito.PowerMockito;
@@ -35,6 +36,7 @@ import static org.hamcrest.Matchers.instanceOf;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({RouterSslImplementation.class, SSLHostConfigCertificate.class, RouterSslUtil.class})
+@PowerMockIgnore("javax.management.*")
 public class RouterSslImplementationTest {
 	SSLSession sslSession = PowerMockito.mock(SSLSession.class);
 	SSLHostConfig sslHostConfig = PowerMockito.mock(SSLHostConfig.class);

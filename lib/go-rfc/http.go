@@ -40,6 +40,7 @@ const (
 	Server             = "Server"              // RFC7231§7.4.2
 	UserAgent          = "User-Agent"          // RFC7231§5.5.3
 	Vary               = "Vary"                // RFC7231§7.1.4
+	Age                = "Age"                 // RFC7234§5.1
 )
 
 // These are (some) valid values for content encoding and MIME types, for

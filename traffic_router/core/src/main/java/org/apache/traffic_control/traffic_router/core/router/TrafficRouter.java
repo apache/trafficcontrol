@@ -56,7 +56,8 @@ import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
 import org.apache.traffic_control.traffic_router.geolocation.GeolocationException;
 import org.apache.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -88,7 +89,7 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings({"PMD.TooManyFields", "PMD.ExcessivePublicCount", "PMD.CyclomaticComplexity"})
 public class TrafficRouter {
-	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
+	public static final Logger LOGGER = LogManager.getLogger(TrafficRouter.class);
 
 	/**
 	 * This is an HTTP Header the value of which, if present in a client HTTP request, should be

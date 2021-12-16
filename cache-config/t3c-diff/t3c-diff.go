@@ -34,8 +34,19 @@ import (
 	"github.com/pborman/getopt/v2"
 )
 
+const AppName = "t3c-diff"
+
+// Version is the application version.
+// This is overwritten by the build with the current project version.
+var Version = "0.4"
+
+// GitRevision is the git revision the application was built from.
+// This is overwritten by the build with the current project version.
+var GitRevision = "nogit"
+
 func main() {
 	help := getopt.BoolLong("help", 'h', "Print usage info and exit")
+	version := getopt.BoolLong("version", 'V', "Print version information and exit")
 	lineComment := getopt.StringLong("line_comment", 'l', "#", "Comment symbol")
 	mode := getopt.IntLong("file-mode", 'm', 0644, "file mode default is 644")
 	fa := getopt.StringLong("file-a", 'a', "", "first diff file")
@@ -46,6 +57,9 @@ func main() {
 
 	if *help {
 		log.Errorln(usageStr)
+		os.Exit(0)
+	} else if *version {
+		fmt.Println(t3cutil.VersionStr(AppName, Version, GitRevision))
 		os.Exit(0)
 	}
 

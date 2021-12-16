@@ -42,6 +42,8 @@ t3c-request [-hIprv] [-D \<config|update-status|packages|chkconfig|system-info|s
 
 [\-\-help]
 
+[\-\-version]
+
 # DESCRIPTION
 
   The t3c-request app is used get update status, package information, linux

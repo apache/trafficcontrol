@@ -43,6 +43,8 @@ t3c-check-refs [-c directory] [-d location] [-e location] [-f files] [-i locatio
 
 [\-\-help]
 
+[\-\-version]
+
 ## DESCRIPTION
 
 The t3c-check-refs app will read an ATS formatted plugin.config or remap.config
@@ -89,6 +91,10 @@ supplied, t3c-check-refs reads its config file input from stdin.
     Log verbosity. Logging is output to stderr. By default,
     errors are logged. To log warnings, pass '-v'. To log info,
     pass '-vv'. To omit error logging, see '-s'.
+
+-V, -\-version
+
+    Print version information and exit.
 
 ## EXIT CODES
 

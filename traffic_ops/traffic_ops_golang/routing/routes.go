@@ -130,6 +130,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		 * 4.x API
 		 */
 
+		// SSL Keys
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `sslkey_expirations/?$`, deliveryservice.GetSSlKeyExpirationInformation, auth.PrivLevelAdmin, []string{"SSL-KEY-EXPIRATION:READ"}, Authenticated, nil, 41357729075},
+
 		// CDN lock
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdn_locks/?$`, cdn_lock.Read, auth.PrivLevelReadOnly, []string{"CDN:READ"}, Authenticated, nil, 4134390561},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cdn_locks/?$`, cdn_lock.Create, auth.PrivLevelOperations, []string{"CDN-LOCK:CREATE", "CDN:READ"}, Authenticated, nil, 4134390562},

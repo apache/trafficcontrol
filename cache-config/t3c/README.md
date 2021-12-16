@@ -38,8 +38,11 @@ t3c - Traffic Control Cache Configuration tools
 
 # SYNOPSIS
 
-t3c [\-\-help]
-    \<command\> [\<args\>]
+t3c \<command\> [\<args\>]
+
+[\-\-help]
+
+[\-\-version]
 
 # DESCRIPTION
 
@@ -51,8 +54,13 @@ The latest version and documentation can be found at https://github.com/apache/t
 
 # OPTIONS
 
-\-\-help
+-h, -\-help
+
     Prints the synopsis and usage information.
+
+-V, -\-version
+
+    Print the version and exit
 
 # COMMANDS
 

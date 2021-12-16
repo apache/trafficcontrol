@@ -19,9 +19,13 @@
 
 # Emulated Vault - Background
 
+!!! Deprecated
+  Since this tool is meant specifically to emulate the deprecated Riak backend
+  for Traffic Vault, it will be removed when support for that backend is.
+
 The emulated_vault module supplies a HTTP server mimicking RIAK behavior for usage as traffic-control vault.
 It may be used in order to replace RIAK traffic_vault, as it is much more simple to install.
-The server may use different type of persistent storage (e.g. file-system), using the proper adapter. 
+The server may use different type of persistent storage (e.g. file-system), using the proper adapter.
 The resiliency of the stored keys is derived from the resiliency of the underlying storage.
 
 # Installation
@@ -43,7 +47,7 @@ Before doing that, you would probably need to adjust the opt/emulated_vault/conf
 1. Changing the db-path to one you have access to
 2. Disable ssl (just to make it easier)
 
-Additionally, the vault-debug script is also available to work against the DB with command line. 
+Additionally, the vault-debug script is also available to work against the DB with command line.
 It is mostly useful when developing a new adapter.
 
 # Contact

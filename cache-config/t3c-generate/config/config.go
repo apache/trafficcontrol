@@ -26,6 +26,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -34,8 +35,6 @@ import (
 )
 
 const AppName = "t3c-generate"
-const Version = "0.3"
-const AppVersion = AppName + "/" + Version
 
 const ExitCodeSuccess = 0
 const ExitCodeErrGeneric = 1
@@ -59,6 +58,8 @@ type Cfg struct {
 	ParentComments     bool
 	DefaultEnableH2    bool
 	DefaultTLSVersions []atscfg.TLSVersion
+	Version            string
+	GitRevision        string
 }
 
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
@@ -67,8 +68,10 @@ func (cfg Cfg) InfoLog() log.LogLocation    { return log.LogLocation(cfg.LogLoca
 func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationDebug) }
 func (cfg Cfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // app doesn't use the event logger.
 
+func (cfg Cfg) AppVersion() string { return t3cutil.VersionStr(AppName, cfg.Version, cfg.GitRevision) }
+
 // GetCfg gets the application configuration, from arguments and environment variables.
-func GetCfg() (Cfg, error) {
+func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	version := getopt.BoolLong("version", 'V', "Print version information and exit.")
 	listPlugins := getopt.BoolLong("list-plugins", 'l', "Print the list of plugins.")
 	help := getopt.BoolLong("help", 'h', "Print usage information and exit")
@@ -86,7 +89,8 @@ func GetCfg() (Cfg, error) {
 	getopt.Parse()
 
 	if *version {
-		fmt.Println(AppName + " v" + Version)
+		cfg := &Cfg{Version: appVersion, GitRevision: gitRevision}
+		fmt.Println(cfg.AppVersion())
 		os.Exit(0)
 	} else if *help {
 		getopt.PrintUsage(os.Stdout)
@@ -145,6 +149,8 @@ func GetCfg() (Cfg, error) {
 		ParentComments:     !(*disableParentConfigComments),
 		DefaultEnableH2:    *defaultEnableH2,
 		DefaultTLSVersions: defaultTLSVersions,
+		Version:            appVersion,
+		GitRevision:        gitRevision,
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
