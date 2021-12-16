@@ -20,7 +20,6 @@ package poller
  */
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -39,7 +38,7 @@ func init() {
 
 func httpGlobalInit(cfg config.Config, appData config.StaticAppData) interface{} {
 	sharedClient := &http.Client{
-		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
+		Transport: &http.Transport{},
 		Timeout:   cfg.HTTPTimeout,
 	}
 	return &HTTPPollGlobalCtx{
