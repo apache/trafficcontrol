@@ -27,7 +27,7 @@ from github import TimelineEvent
 from github.Branch import Branch
 from github.Commit import Commit
 from github.ContentFile import ContentFile
-from github.GithubException import BadCredentialsException, GithubException, UnknownObjectException
+from github.GithubException import GithubException, UnknownObjectException
 from github.InputGitAuthor import InputGitAuthor
 from github.Issue import Issue
 from github.Label import Label
@@ -38,8 +38,8 @@ from github.PullRequest import PullRequest
 from github.Repository import Repository
 from yaml import YAMLError
 
-from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, \
-	ASF_YAML_FILE, APACHE_LICENSE_YAML, GIT_AUTHOR_EMAIL_TEMPLATE, SINGLE_PR_TEMPLATE_FILE, \
+from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ASF_YAML_FILE, \
+	APACHE_LICENSE_YAML, GIT_AUTHOR_EMAIL_TEMPLATE, SINGLE_PR_TEMPLATE_FILE, \
 	SINGLE_CONTRIBUTOR_TEMPLATE_FILE, PR_TEMPLATE_FILE, EMPTY_CONTRIB_LIST_LIST, \
 	EMPTY_LIST_OF_CONTRIBUTORS, CONGRATS, EXPIRE, GITHUB_REPOSITORY, GIT_AUTHOR_NAME, \
 	GITHUB_REPOSITORY_OWNER, MINIMUM_COMMITS, SINCE_DAYS_AGO, GITHUB_REF_NAME
@@ -79,12 +79,7 @@ class TriageRoleAssigner:
 		"""
 		Returns a Repository instance for the repository whose name is specified.
 		"""
-		try:
-			repo: Repository = self.github.get_repo(repo_name)
-		except BadCredentialsException:
-			print(f'Credentials from {ENV_GITHUB_TOKEN} were bad.', file=sys.stderr)
-			sys.exit(1)
-		return repo
+		return self.github.get_repo(repo_name)
 
 	def get_committers(self) -> set[str]:
 		"""
