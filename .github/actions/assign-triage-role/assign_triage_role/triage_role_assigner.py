@@ -143,7 +143,7 @@ class TriageRoleAssigner(Github):
 		}
 
 	def set_collaborators_in_asf_yaml(self, prs_by_contributor: dict[str, list[(Issue, Issue)]],
-			description: str):
+			description: str) -> None:
 		"""
 		Writes the list of collaborators to .asf.yaml
 		"""
@@ -244,7 +244,7 @@ class TriageRoleAssigner(Github):
 		return contributors, congrats, expire
 
 	@staticmethod
-	def remove_comments(pr_body: str):
+	def remove_comments(pr_body: str) -> str:
 		"""
 		Removes comments from the Pull Request body
 		"""
@@ -266,8 +266,8 @@ class TriageRoleAssigner(Github):
 				encoding='utf-8') as stream:
 			pr_template = stream.read()
 
-		def contrib_list(contributor, pr_tuples):
-			pr_list: str = '\n'.join(
+		def contrib_list(contributor, pr_tuples) -> str:
+			pr_list = '\n'.join(
 				pr_line_template.format(ISSUE_NUMBER=linked_issue.number, PR_NUMBER=pr.number
 				) for pr, linked_issue in pr_tuples)
 			return contrib_list_template.format(CONTRIBUTOR_USERNAME=contributor,
