@@ -287,18 +287,17 @@ class TriageRoleAssigner:
 				encoding='utf-8') as stream:
 			pr_template = stream.read()
 
-		contrib_list_list: str = str()
-		for contributor, pr_tuples in prs_by_contributor.items():
-			pr_list: str = ''
-			for pr, linked_issue in pr_tuples:
-				pr_line = pr_line_template.format(ISSUE_NUMBER=linked_issue.number,
-					PR_NUMBER=pr.number)
-				pr_list += pr_line + '\n'
-			contrib_list: str = contrib_list_template.format(CONTRIBUTOR_USERNAME=contributor,
+		def contrib_list(contributor, pr_tuples):
+			pr_list: str = '\n'.join(
+				pr_line_template.format(ISSUE_NUMBER=linked_issue.number, PR_NUMBER=pr.number
+				) for pr, linked_issue in pr_tuples)
+			return contrib_list_template.format(CONTRIBUTOR_USERNAME=contributor,
 				CONTRIBUTION_COUNT=len(pr_tuples), PR_LIST=pr_list)
-			contrib_list_list += contrib_list + '\n'
-		if contrib_list_list == '':
-			contrib_list_list = EMPTY_CONTRIB_LIST_LIST
+
+		contrib_list_list: str = '\n'.join(
+			contrib_list(contributor, pr_tuples
+			) for contributor, pr_tuples in prs_by_contributor.items()
+		) if len(prs_by_contributor) > 0 else EMPTY_CONTRIB_LIST_LIST
 
 		list_of_contributors, congrats, expire = self.list_of_contributors(prs_by_contributor,
 			self.today)
