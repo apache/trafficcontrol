@@ -97,7 +97,7 @@ class TriageRoleAssigner:
 		try:
 			repo: Repository = self.github.get_repo(repo_name)
 		except BadCredentialsException:
-			print(f'Credentials from {ENV_GITHUB_TOKEN} were bad.')
+			print(f'Credentials from {ENV_GITHUB_TOKEN} were bad.', file=sys.stderr)
 			sys.exit(1)
 		return repo
 
@@ -335,7 +335,7 @@ class TriageRoleAssigner:
 			if pull_request.head.ref != source_branch_name:
 				continue
 			print(f'Pull request for branch {source_branch_name} already exists:\n'
-			      f'{pull_request.html_url}')
+			      f'{pull_request.html_url}', file=sys.stderr)
 			return
 
 		pr_body: str = self.get_pr_body(prs_by_contributor)
@@ -351,7 +351,7 @@ class TriageRoleAssigner:
 			process_label: Label = self.repo.get_label('process')
 			pull_request.add_to_labels(collaborators_label, process_label)
 		except UnknownObjectException:
-			print('Unable to find a label named "collaborators".')
+			print('Unable to find a label named "collaborators".', file=sys.stderr)
 		print(f'Created pull request {pull_request.html_url}')
 
 	def get_repo_owner(self) -> str:
