@@ -17,6 +17,7 @@ import os
 import re
 import sys
 from datetime import date, timedelta
+from http.client import NOT_FOUND
 from typing import Optional, Final
 from xml.dom import minidom
 from xml.dom.minidom import Node, Element
@@ -244,8 +245,7 @@ class TriageRoleAssigner:
 			self.get_repo_file_contents(branch)
 			return True
 		except GithubException as e:
-			message = e.data.get('message')
-			if not re.match(r'No commit found for the ref', message):
+			if e.status != NOT_FOUND:
 				raise e
 		return False
 
