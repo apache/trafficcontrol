@@ -43,7 +43,7 @@ export class UpdateStatusComponent implements OnInit {
 	}
 
 	/** The possible statuses of a server. */
-	public statuses = new Promise(resolve => resolve(new Array<Status>()));
+	public statuses = new Array<Status>();
 	/** The ID of the current status of the server, or null if the servers have disparate statuses. */
 	public currentStatus: null | number = null;
 
@@ -74,10 +74,13 @@ export class UpdateStatusComponent implements OnInit {
 	 * Sets up the necessary data to complete the form.
 	 */
 	public ngOnInit(): void {
-		this.statuses = this.api.getStatuses().catch(
+		this.api.getStatuses().then(
+			ss => {
+				this.statuses = ss;
+			}
+		).catch(
 			e => {
 				console.error("Failed to get Statuses:", e);
-				return [];
 			}
 		);
 		if (this.servers.length < 1) {

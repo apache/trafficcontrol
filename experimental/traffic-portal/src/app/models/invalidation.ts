@@ -26,7 +26,7 @@ export interface InvalidationJob {
 	 * A regular expression that matches content to be "invalidated" or
 	 * "revalidated".
 	 */
-	assetURL: RegExp;
+	assetUrl: RegExp;
 	/**
 	 * The name of the user that created the Job.
 	 */
