@@ -45,7 +45,7 @@ from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE,
 	GITHUB_REPOSITORY_OWNER, MINIMUM_COMMITS, SINCE_DAYS_AGO, GITHUB_REF_NAME
 
 
-class TriageRoleAssigner:
+class TriageRoleAssigner(Github):
 	"""
 	Triage Role Assigner
 	"""
@@ -57,8 +57,8 @@ class TriageRoleAssigner:
 	target_branch_name: str
 	owner: str
 
-	def __init__(self, github: Github) -> None:
-		self.github = github
+	def __init__(self, *args, **kwargs) -> None:
+		super().__init__(*args, **kwargs)
 		repo_name = GITHUB_REPOSITORY
 		self.repo = self.get_repo(repo_name)
 
@@ -74,12 +74,6 @@ class TriageRoleAssigner:
 		Gets a date :var self.since_days_ago: before :var self.day:
 		"""
 		return self.today - timedelta(days=self.since_days_ago)
-
-	def get_repo(self, repo_name: str) -> Repository:
-		"""
-		Returns a Repository instance for the repository whose name is specified.
-		"""
-		return self.github.get_repo(repo_name)
 
 	def get_committers(self) -> set[str]:
 		"""
@@ -98,7 +92,7 @@ class TriageRoleAssigner:
 
 		query = (f'repo:{repo_name} is:issue linked:pr is:closed closed:'
 		         f'{self.since_day()}..{self.today}')
-		linked_issues = self.github.search_issues(query=query)
+		linked_issues = self.search_issues(query=query)
 		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = {}
 		for linked_issue in linked_issues:
 			timeline = linked_issue.get_timeline()
@@ -305,7 +299,7 @@ class TriageRoleAssigner:
 		"""
 		Submits a Pull Request
 		"""
-		pull_requests = self.github.search_issues(
+		pull_requests = self.search_issues(
 			f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
 		for list_item in pull_requests:
 			pull_request = self.repo.get_pull(list_item.number)
