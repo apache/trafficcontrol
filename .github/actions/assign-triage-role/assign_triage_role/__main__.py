@@ -22,17 +22,10 @@ from assign_triage_role.constants import ENV_GITHUB_TOKEN
 from assign_triage_role.triage_role_assigner import TriageRoleAssigner
 
 
-def main() -> None:
-	"""
-	Main function of Assign Triage Role
-	"""
-	try:
-		github_token: str = os.environ[ENV_GITHUB_TOKEN]
-	except KeyError:
-		print(f'Environment variable {ENV_GITHUB_TOKEN} must be defined.')
-		sys.exit(1)
-	github = Github(login_or_token=github_token)
-	TriageRoleAssigner(github).run()
-
-
-main()
+try:
+	github_token: str = os.environ[ENV_GITHUB_TOKEN]
+except KeyError:
+	print(f'Environment variable {ENV_GITHUB_TOKEN} must be defined.')
+	sys.exit(1)
+github = Github(login_or_token=github_token)
+TriageRoleAssigner(github).run()
