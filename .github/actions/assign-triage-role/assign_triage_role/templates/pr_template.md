@@ -21,8 +21,6 @@ This PR uses [`.asf.yaml`](https://s.apache.org/asfyamltriage) to assign the Git
 - Other: [`.asf.yaml`](https://github.com/apache/trafficcontrol/blob/master/.asf.yaml)
 
 ## What is the best way to verify this PR?
-If your PR has tests (and most should), provide the steps needed to run the tests.
-If not, please provide step-by-step instructions to test the PR manually and explain why your PR does not need tests. -->
 Verify that the fixed Issues listed above are linked to [PRs from the past {SINCE_DAYS_AGO} days](https://github.com/apache/trafficcontrol/pulls?q=is:pr+linked:issue+merged:{SINCE_DAY}..{TODAY})
 
 ## PR submission checklist
