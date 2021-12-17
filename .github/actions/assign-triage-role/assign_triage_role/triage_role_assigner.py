@@ -107,13 +107,13 @@ class TriageRoleAssigner(Github):
 					continue
 				pull_request = Issue(self.repo.__getattribute__('_requester'), event.raw_headers,
 					pr_text, completed=True)
-			# Skip unmerged PRs
-			if 'merged_at' not in pull_request.pull_request.raw_data:
-				continue
 			# Do not break, in case the Issue has ever been linked to more than 1 PR in the past
 			if pull_request is None:
 				raise Exception(
 					f'Unable to find a linked Pull Request for Issue {self.repo.full_name}#{linked_issue.number}')
+			# Skip unmerged PRs
+			if 'merged_at' not in pull_request.pull_request.raw_data:
+				continue
 			author = pull_request.user
 			if author.login in committers:
 				continue
