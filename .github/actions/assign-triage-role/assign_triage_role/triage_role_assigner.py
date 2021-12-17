@@ -51,6 +51,9 @@ class TriageRoleAssigner:
 	repo: Repository
 	minimum_commits: int
 	since_days_ago: int
+	today: date
+	target_branch_name: str
+	owner: str
 
 	def __init__(self, gh: Github) -> None:
 		self.gh = gh
@@ -59,6 +62,16 @@ class TriageRoleAssigner:
 
 		self.minimum_commits = int(self.getenv(ENV_MINIMUM_COMMITS))
 		self.since_days_ago = int(self.getenv(ENV_SINCE_DAYS_AGO))
+		self.today = date.today()
+
+		self.target_branch_name = self.getenv(ENV_GITHUB_REF_NAME)
+		self.owner = self.get_repo_owner()
+
+	def since_day(self) -> date:
+		"""
+		Gets a date :var self.since_days_ago: before :var self.day:
+		"""
+		return self.today - timedelta(days=self.since_days_ago)
 
 	@staticmethod
 	def getenv(env_name: str) -> str:
@@ -94,16 +107,17 @@ class TriageRoleAssigner:
 		committers_dict: dict[str, None] = {committer: None for committer in committers}
 		return committers_dict
 
-	def prs_by_contributor(self, since_day: date, today: date, committers: dict[str, None]) -> dict[
+	def prs_by_contributor(self, committers: dict[str, None]) -> dict[
 		NamedUser, list[(Issue, Issue)]]:
 		"""
 		Returns a dict of Pull Requests, associated by committer, within the last
-		:var since_day: days of :var today:.
+		:var self.since_day: days of :var self.today:.
 		"""
 		# Search for PRs and Issues on the parent repo if running on a fork
 		repo_name = self.repo.full_name if self.repo.parent is None else self.repo.parent.full_name
 
-		query: str = f'repo:{repo_name} is:issue linked:pr is:closed closed:{since_day}..{today}'
+		query: str = (f'repo:{repo_name} is:issue linked:pr is:closed closed:'
+		              f'{self.since_day()}..{self.today}')
 		linked_issues: PaginatedList[Issue] = self.gh.search_issues(query=query)
 		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = dict[
 			NamedUser, list[(Issue, Issue)]]()
@@ -183,12 +197,11 @@ class TriageRoleAssigner:
 			stream.write(apache_license)
 			yaml.dump(asf_yaml, stream)
 
-	def push_changes(self, target_branch_name: str, source_branch_name: str,
-			commit_message: str) -> Commit:
+	def push_changes(self, source_branch_name: str, commit_message: str) -> Commit:
 		"""
 		Commits the changes to the remote
 		"""
-		target_branch: Branch = self.repo.get_branch(target_branch_name)
+		target_branch: Branch = self.repo.get_branch(self.target_branch_name)
 		sha: str = target_branch.commit.sha
 		source_branch_ref: str = f'refs/heads/{source_branch_name}'
 		self.repo.create_git_ref(source_branch_ref, sha)
@@ -260,8 +273,7 @@ class TriageRoleAssigner:
 
 		return list_of_contributors, congrats, expire
 
-	def get_pr_body(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], since_day: date,
-			today: date) -> str:
+	def get_pr_body(self, prs_by_contributor: dict[str, list[(Issue, Issue)]]) -> str:
 		"""
 		Renders the Pull Request template
 		"""
@@ -289,13 +301,13 @@ class TriageRoleAssigner:
 			contrib_list_list = EMPTY_CONTRIB_LIST_LIST
 
 		list_of_contributors, congrats, expire = self.list_of_contributors(prs_by_contributor,
-			today)
+			self.today)
 
 		pr_body: str = pr_template.format(CONTRIB_LIST_LIST=contrib_list_list,
-			MONTH=today.strftime('%B'), CONGRATS=congrats,
+			MONTH=self.today.strftime('%B'), CONGRATS=congrats,
 			LIST_OF_CONTRIBUTORS=list_of_contributors, EXPIRE=expire,
 			ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago,
-			SINCE_DAY=since_day, TODAY=today)
+			SINCE_DAY=self.since_day(), TODAY=self.today)
 		# If on a fork, do not ping users or reference Issues or Pull Requests
 		if self.repo.parent is not None:
 			pr_body = re.sub(r'@(?!trafficcontrol)([A-Za-z0-9]+)', r'＠\1', pr_body)
@@ -304,8 +316,7 @@ class TriageRoleAssigner:
 		return pr_body
 
 	def create_pr(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], commit_message: str,
-			owner: str,
-			source_branch_name: str, target_branch: str, since_day: date, today: date) -> None:
+			source_branch_name: str) -> None:
 		"""
 		Submits a Pull Request
 		"""
@@ -318,12 +329,12 @@ class TriageRoleAssigner:
 			print(f'Pull request for branch {source_branch_name} already exists:\n{pr.html_url}')
 			return
 
-		pr_body: str = self.get_pr_body(prs_by_contributor, since_day, today)
+		pr_body: str = self.get_pr_body(prs_by_contributor)
 		pr: PullRequest = self.repo.create_pull(
 			title=commit_message,
 			body=pr_body,
-			head=f'{owner}:{source_branch_name}',
-			base=target_branch,
+			head=f'{self.owner}:{source_branch_name}',
+			base=self.target_branch_name,
 			maintainer_can_modify=True,
 		)
 		try:
@@ -347,21 +358,16 @@ class TriageRoleAssigner:
 		Runs ths Triage Role Assigner
 		"""
 		committers: dict[str, None] = self.get_committers()
-		today: date = date.today()
-		since_day: date = today - timedelta(days=self.since_days_ago)
 		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = self.prs_by_contributor(
-			since_day, today, committers)
+			committers)
 		prs_by_contributor: dict[str, list[(Issue, Issue)]] = self.ones_who_meet_threshold(
 			prs_by_contributor)
-		description: str = f'ATC Collaborators for {today.strftime("%B %Y")}'
+		description: str = f'ATC Collaborators for {self.today.strftime("%B %Y")}'
 		self.set_collaborators_in_asf_yaml(prs_by_contributor, description)
 
-		source_branch_name: Final[str] = f'collaborators-{today.strftime("%Y-%m")}'
+		source_branch_name: Final[str] = f'collaborators-{self.today.strftime("%Y-%m")}'
 		commit_message: str = description
-		target_branch_name: str = self.getenv(ENV_GITHUB_REF_NAME)
 		if not self.branch_exists(source_branch_name):
-			self.push_changes(target_branch_name, source_branch_name, commit_message)
+			self.push_changes(source_branch_name, commit_message)
 		self.repo.get_git_ref(f'heads/{source_branch_name}')
-		owner: str = self.get_repo_owner()
-		self.create_pr(prs_by_contributor, commit_message, owner, source_branch_name,
-			target_branch_name, since_day, today)
+		self.create_pr(prs_by_contributor, commit_message, source_branch_name)
