@@ -41,9 +41,6 @@ github.com/dchest/siphash
 # github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210816181553-5444fa50b93d
 ## explicit; go 1.13
 github.com/decred/dcrd/dcrec/secp256k1/v4
-# github.com/dgrijalva/jwt-go v3.2.1-0.20190620180102-5e25c22bd5d6+incompatible
-## explicit
-github.com/dgrijalva/jwt-go
 # github.com/fsnotify/fsnotify v1.5.1
 ## explicit; go 1.13
 github.com/fsnotify/fsnotify

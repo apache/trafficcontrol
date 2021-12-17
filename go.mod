@@ -26,7 +26,6 @@ require (
 	github.com/basho/riak-go-client v1.7.1-0.20170327205844-5587c16e0b8b
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
 	github.com/dchest/siphash v1.2.2
-	github.com/dgrijalva/jwt-go v3.2.1-0.20190620180102-5e25c22bd5d6+incompatible
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/go-acme/lego v2.7.2+incompatible
 	github.com/go-ldap/ldap/v3 v3.4.1
