@@ -1,3 +1,6 @@
+"""
+Test the Triage Role Assigner
+"""
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,8 +19,15 @@ from unittest import TestCase
 from assign_triage_role.triage_role_assigner import TriageRoleAssigner
 
 
-class TestTriageRoleAssigner(TestCase):
+class TestTriageRoleAssigner(TestCase):  # pylint: disable=unused-variable
+	"""
+	Tests for the Triage Role Assigner
+	"""
+
 	def test_list_of_contributors(self) -> None:
+		"""
+		Test TriageRoleAssigner.list_of_contributors()
+		"""
 		today = date.fromisoformat('2021-12-10')
 
 		empty_prs_by_contributor = {}

@@ -1,3 +1,6 @@
+"""
+Assign Triage Role
+"""
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -20,6 +23,9 @@ from assign_triage_role.triage_role_assigner import TriageRoleAssigner
 
 
 def main() -> None:
+	"""
+	Main function of Assign Triage Role
+	"""
 	try:
 		github_token: str = os.environ[ENV_GITHUB_TOKEN]
 	except KeyError:

@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+"""
+Assign Triage Role
+"""
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -42,6 +44,9 @@ from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE,
 
 
 class TriageRoleAssigner:
+	"""
+	Triage Role Assigner
+	"""
 	gh: Github
 	repo: Repository
 	minimum_commits: int
@@ -57,13 +62,22 @@ class TriageRoleAssigner:
 
 	@staticmethod
 	def getenv(env_name: str) -> str:
+		"""
+		Gets the value of an environment variable
+		"""
 		return os.environ[env_name]
 
 	def get_repo_name(self) -> str:
+		"""
+		Returns the name of the repository given by the GITHUB_REPOSITORY environment variable.
+		"""
 		repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY)
 		return repo_name
 
 	def get_repo(self, repo_name: str) -> Repository:
+		"""
+		Returns a Repository instance for the repository whose name is specified.
+		"""
 		try:
 			repo: Repository = self.gh.get_repo(repo_name)
 		except BadCredentialsException:
@@ -72,6 +86,9 @@ class TriageRoleAssigner:
 		return repo
 
 	def get_committers(self) -> dict[str, None]:
+		"""
+		Gets a dict whose keys are the usernames of committers
+		"""
 		committers: list[str] = sorted(
 			[user.login for user in self.repo.get_collaborators() if user.permissions.push])
 		committers_dict: dict[str, None] = {committer: None for committer in committers}
@@ -79,6 +96,10 @@ class TriageRoleAssigner:
 
 	def prs_by_contributor(self, since_day: date, today: date, committers: dict[str, None]) -> dict[
 		NamedUser, list[(Issue, Issue)]]:
+		"""
+		Returns a dict of Pull Requests, associated by committer, within the last
+		:var since_day: days of :var today:.
+		"""
 		# Search for PRs and Issues on the parent repo if running on a fork
 		repo_name = self.repo.full_name if self.repo.parent is None else self.repo.parent.full_name
 
@@ -116,6 +137,10 @@ class TriageRoleAssigner:
 
 	def ones_who_meet_threshold(self, prs_by_contributor: dict[NamedUser,
 	list[(Issue, Issue)]]) -> dict[str, list[(Issue, Issue)]]:
+		"""
+		Returns a dict of contributors who had at least self.minimum_commits Issue-closing Pull
+		Requests merged in the past self.since_days_ago days
+		"""
 		prs_by_contributor: dict[str, list[(Issue, Issue)]] = {
 			# use only the username as the dict key
 			contributor.login: pull_requests
@@ -133,6 +158,9 @@ class TriageRoleAssigner:
 
 	def set_collaborators_in_asf_yaml(self, prs_by_contributor: dict[str, list[(Issue, Issue)]],
 			description: str):
+		"""
+		Writes the list of collaborators to .asf.yaml
+		"""
 		collaborators: list[str] = [contributor for contributor in prs_by_contributor]
 		with open(ASF_YAML_FILE) as stream:
 			github_key: Final[str] = 'github'
@@ -156,6 +184,9 @@ class TriageRoleAssigner:
 
 	def push_changes(self, target_branch_name: str, source_branch_name: str,
 			commit_message: str) -> Commit:
+		"""
+		Commits the changes to the remote
+		"""
 		target_branch: Branch = self.repo.get_branch(target_branch_name)
 		sha: str = target_branch.commit.sha
 		source_branch_ref: str = f'refs/heads/{source_branch_name}'
@@ -186,10 +217,16 @@ class TriageRoleAssigner:
 		return commit
 
 	def get_repo_file_contents(self, branch: str) -> str:
+		"""
+		Uses the GitHub API to get the contents of .asf.yaml
+		"""
 		return self.repo.get_contents(ASF_YAML_FILE,
 			f'refs/heads/{branch}').decoded_content.rstrip().decode()
 
 	def branch_exists(self, branch: str) -> bool:
+		"""
+		Checks if a remote branch already exists
+		"""
 		try:
 			self.get_repo_file_contents(branch)
 			return True
@@ -202,6 +239,10 @@ class TriageRoleAssigner:
 	@staticmethod
 	def list_of_contributors(prs_by_contributor: dict[str, list[(Issue, Issue)]],
 			today: date) -> tuple[str, str, str]:
+		"""
+		Returns a list of contributors in a tuple, along with :var congrats: and :var expire:,
+		whose values depend on the length of that list.
+		"""
 		if len(prs_by_contributor) > 0:
 			joiner: str = ', ' if len(prs_by_contributor) > 2 else ' '
 			list_of_contributors: list[str] = [f'@{contributor}' for contributor in
@@ -220,6 +261,9 @@ class TriageRoleAssigner:
 
 	def get_pr_body(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], since_day: date,
 			today: date) -> str:
+		"""
+		Renders the Pull Request template
+		"""
 		with open(os.path.join(os.path.dirname(__file__), SINGLE_PR_TEMPLATE_FILE)) as stream:
 			pr_line_template = stream.read()
 		with open(os.path.join(os.path.dirname(__file__),
@@ -259,6 +303,9 @@ class TriageRoleAssigner:
 	def create_pr(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], commit_message: str,
 			owner: str,
 			source_branch_name: str, target_branch: str, since_day: date, today: date) -> None:
+		"""
+		Submits a Pull Request
+		"""
 		prs: PaginatedList = self.gh.search_issues(
 			f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
 		for list_item in prs:
@@ -285,10 +332,17 @@ class TriageRoleAssigner:
 		print(f'Created pull request {pr.html_url}')
 
 	def get_repo_owner(self) -> str:
+		"""
+		Returns the name of the repository owner given by the GITHUB_REPOSITORY_OWNER environment
+		variable.
+		"""
 		repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY_OWNER)
 		return repo_name
 
 	def run(self) -> None:
+		"""
+		Runs ths Triage Role Assigner
+		"""
 		committers: dict[str, None] = self.get_committers()
 		today: date = date.today()
 		since_day: date = today - timedelta(days=self.since_days_ago)
