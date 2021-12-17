@@ -23,18 +23,13 @@ from xml.dom import minidom
 from xml.dom.minidom import Node, Element
 
 import yaml
-from github import TimelineEvent
-from github.Branch import Branch
 from github.Commit import Commit
 from github.ContentFile import ContentFile
 from github.GithubException import GithubException, UnknownObjectException
 from github.InputGitAuthor import InputGitAuthor
 from github.Issue import Issue
-from github.Label import Label
 from github.MainClass import Github
 from github.NamedUser import NamedUser
-from github.PaginatedList import PaginatedList
-from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ASF_YAML_FILE, \
@@ -48,7 +43,6 @@ class TriageRoleAssigner(Github):
 	"""
 	Triage Role Assigner
 	"""
-	github: Github
 	repo: Repository
 	minimum_commits: int
 	since_days_ago: int
