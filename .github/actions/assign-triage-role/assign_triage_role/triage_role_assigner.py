@@ -18,6 +18,8 @@ import re
 import sys
 from datetime import date, timedelta
 from typing import Optional, Final
+from xml.dom import minidom
+from xml.dom.minidom import Node, Element
 
 import yaml
 from github import TimelineEvent
@@ -270,6 +272,15 @@ class TriageRoleAssigner:
 
 		return list_of_contributors, congrats, expire
 
+	@staticmethod
+	def remove_comments(pr_body: str):
+		"""
+		Removes comments from the Pull Request body
+		"""
+		body: Element = minidom.parseString(f'<body>{pr_body}</body>').firstChild
+		return ''.join([node.toxml()
+			for node in body.childNodes if node.nodeType != Node.COMMENT_NODE])
+
 	def get_pr_body(self, prs_by_contributor: dict[str, list[(Issue, Issue)]]) -> str:
 		"""
 		Renders the Pull Request template
@@ -308,6 +319,7 @@ class TriageRoleAssigner:
 		if self.repo.parent is not None:
 			pr_body = re.sub(r'@(?!trafficcontrol)([A-Za-z0-9]+)', r'＠\1', pr_body)
 			pr_body = re.sub(r'#([0-9])', r'⌗\1', pr_body)
+		pr_body = self.remove_comments(pr_body)
 		print('Templated PR body')
 		return pr_body
 

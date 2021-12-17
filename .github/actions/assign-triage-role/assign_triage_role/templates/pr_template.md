@@ -18,7 +18,7 @@ This PR uses [`.asf.yaml`](https://s.apache.org/asfyamltriage) to assign the Git
 * Assign a user to an Issue (note that non-committers must first comment on an Issue before they can be assigned to it)
 * Add a user as a Reviewer of a Pull Request, which will send a request to them to review it
 * Mark Issues and Pull Requests as a duplicate
-<hr>
+<hr/>
 {EXPIRE} If you want to be an Apache Traffic Control collaborator next month:
 
 1. Read our [contribution guidelines](https://github.com/apache/trafficcontrol/blob/master/CONTRIBUTING.md)
@@ -26,7 +26,7 @@ This PR uses [`.asf.yaml`](https://s.apache.org/asfyamltriage) to assign the Git
 3. Get coding! For questions on how to contribute, you can reach the ATC community on
     - The `#traffic-control` channel of the ASF Slack ([invite link](https://s.apache.org/tc-slack-request))
     - The ATC Dev [mailing list](https://trafficcontrol.apache.org/mailing_lists) ([archives](https://lists.apache.org/list?dev@trafficcontrol.apache.org:lte=5y:))
-<!-- **^ Add meaningful description above** --><hr>
+<!-- **^ Add meaningful description above** --><hr/>
 
 ## Which Traffic Control components are affected by this PR?
 <!-- Please delete all components from this list that are NOT affected by this PR.
