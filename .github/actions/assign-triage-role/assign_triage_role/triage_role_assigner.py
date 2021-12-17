@@ -59,7 +59,7 @@ class TriageRoleAssigner:
 
 	def __init__(self, github: Github) -> None:
 		self.github = github
-		repo_name: str = GITHUB_REPOSITORY
+		repo_name = GITHUB_REPOSITORY
 		self.repo = self.get_repo(repo_name)
 
 		self.minimum_commits = int(MINIMUM_COMMITS)
@@ -96,12 +96,12 @@ class TriageRoleAssigner:
 		# Search for PRs and Issues on the parent repo if running on a fork
 		repo_name = self.repo.full_name if self.repo.parent is None else self.repo.parent.full_name
 
-		query: str = (f'repo:{repo_name} is:issue linked:pr is:closed closed:'
-		              f'{self.since_day()}..{self.today}')
-		linked_issues: PaginatedList[Issue] = self.github.search_issues(query=query)
+		query = (f'repo:{repo_name} is:issue linked:pr is:closed closed:'
+		         f'{self.since_day()}..{self.today}')
+		linked_issues = self.github.search_issues(query=query)
 		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = {}
 		for linked_issue in linked_issues:
-			timeline: PaginatedList[TimelineEvent] = linked_issue.get_timeline()
+			timeline = linked_issue.get_timeline()
 			pull_request: Optional[Issue] = None
 			for event in timeline:
 				if event.id is not None:
@@ -120,7 +120,7 @@ class TriageRoleAssigner:
 			if pull_request is None:
 				raise Exception(
 					f'Unable to find a linked Pull Request for Issue {self.repo.full_name}#{linked_issue.number}')
-			author: NamedUser = pull_request.user
+			author = pull_request.user
 			if author.login in committers:
 				continue
 			if author not in prs_by_contributor:
@@ -179,9 +179,9 @@ class TriageRoleAssigner:
 		"""
 		Commits the changes to the remote
 		"""
-		target_branch: Branch = self.repo.get_branch(self.target_branch_name)
-		sha: str = target_branch.commit.sha
-		source_branch_ref: str = f'refs/heads/{source_branch_name}'
+		target_branch = self.repo.get_branch(self.target_branch_name)
+		sha = target_branch.commit.sha
+		source_branch_ref = f'refs/heads/{source_branch_name}'
 		self.repo.create_git_ref(source_branch_ref, sha)
 		print(f'Created branch {source_branch_name}')
 
@@ -197,7 +197,7 @@ class TriageRoleAssigner:
 		}
 		try:
 			git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=GIT_AUTHOR_NAME)
-			author: InputGitAuthor = InputGitAuthor(name=GIT_AUTHOR_NAME, email=git_author_email)
+			author = InputGitAuthor(name=GIT_AUTHOR_NAME, email=git_author_email)
 			kwargs['author'] = author
 			kwargs['committer'] = author
 		except KeyError:
@@ -234,20 +234,20 @@ class TriageRoleAssigner:
 		whose values depend on the length of that list.
 		"""
 		if len(prs_by_contributor) > 0:
-			joiner: str = ', ' if len(prs_by_contributor) > 2 else ' '
-			list_of_contributors: list[str] = [f'@{contributor}' for contributor in
+			joiner = ', ' if len(prs_by_contributor) > 2 else ' '
+			list_of_contributors = [f'@{contributor}' for contributor in
 				prs_by_contributor.keys()]
 			if len(list_of_contributors) > 1:
 				list_of_contributors[-1] = f'and {list_of_contributors[-1]}'
-			list_of_contributors: str = joiner.join(list_of_contributors)
-			congrats: str = CONGRATS
-			expire: str = EXPIRE.format(MONTH=today.strftime('%B'))
+			contributors = joiner.join(list_of_contributors)
+			congrats = CONGRATS
+			expire = EXPIRE.format(MONTH=today.strftime('%B'))
 		else:
-			list_of_contributors: str = EMPTY_LIST_OF_CONTRIBUTORS
-			congrats: str = ''
-			expire: str = ''
+			contributors = EMPTY_LIST_OF_CONTRIBUTORS
+			congrats = ''
+			expire = ''
 
-		return list_of_contributors, congrats, expire
+		return contributors, congrats, expire
 
 	@staticmethod
 	def remove_comments(pr_body: str):
@@ -279,7 +279,7 @@ class TriageRoleAssigner:
 			return contrib_list_template.format(CONTRIBUTOR_USERNAME=contributor,
 				CONTRIBUTION_COUNT=len(pr_tuples), PR_LIST=pr_list)
 
-		contrib_list_list: str = '\n'.join(
+		contrib_list_list = '\n'.join(
 			contrib_list(contributor, pr_tuples
 			) for contributor, pr_tuples in prs_by_contributor.items()
 		) if len(prs_by_contributor) > 0 else EMPTY_CONTRIB_LIST_LIST
@@ -287,7 +287,7 @@ class TriageRoleAssigner:
 		list_of_contributors, congrats, expire = self.list_of_contributors(prs_by_contributor,
 			self.today)
 
-		pr_body: str = pr_template.format(CONTRIB_LIST_LIST=contrib_list_list,
+		pr_body = pr_template.format(CONTRIB_LIST_LIST=contrib_list_list,
 			MONTH=self.today.strftime('%B'), CONGRATS=congrats,
 			LIST_OF_CONTRIBUTORS=list_of_contributors, EXPIRE=expire,
 			ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago,
@@ -305,18 +305,18 @@ class TriageRoleAssigner:
 		"""
 		Submits a Pull Request
 		"""
-		pull_requests: PaginatedList = self.github.search_issues(
+		pull_requests = self.github.search_issues(
 			f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
 		for list_item in pull_requests:
-			pull_request: PullRequest = self.repo.get_pull(list_item.number)
+			pull_request = self.repo.get_pull(list_item.number)
 			if pull_request.head.ref != source_branch_name:
 				continue
 			print(f'Pull request for branch {source_branch_name} already exists:\n'
 			      f'{pull_request.html_url}', file=sys.stderr)
 			return
 
-		pr_body: str = self.get_pr_body(prs_by_contributor)
-		pull_request: PullRequest = self.repo.create_pull(
+		pr_body = self.get_pr_body(prs_by_contributor)
+		pull_request = self.repo.create_pull(
 			title=commit_message,
 			body=pr_body,
 			head=f'{self.owner}:{source_branch_name}',
@@ -324,8 +324,8 @@ class TriageRoleAssigner:
 			maintainer_can_modify=True,
 		)
 		try:
-			collaborators_label: Label = self.repo.get_label('collaborators')
-			process_label: Label = self.repo.get_label('process')
+			collaborators_label = self.repo.get_label('collaborators')
+			process_label = self.repo.get_label('process')
 			pull_request.add_to_labels(collaborators_label, process_label)
 		except UnknownObjectException:
 			print('Unable to find a label named "collaborators".', file=sys.stderr)
@@ -335,16 +335,13 @@ class TriageRoleAssigner:
 		"""
 		Runs ths Triage Role Assigner
 		"""
-		committers: set[str] = self.get_committers()
-		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = self.prs_by_contributor(
-			committers)
-		prs_by_contributor: dict[str, list[(Issue, Issue)]] = self.ones_who_meet_threshold(
-			prs_by_contributor)
-		description: str = f'ATC Collaborators for {self.today.strftime("%B %Y")}'
+		committers = self.get_committers()
+		prs_by_contributor = self.ones_who_meet_threshold(self.prs_by_contributor(committers))
+		description = f'ATC Collaborators for {self.today.strftime("%B %Y")}'
 		self.set_collaborators_in_asf_yaml(prs_by_contributor, description)
 
 		source_branch_name: Final[str] = f'collaborators-{self.today.strftime("%Y-%m")}'
-		commit_message: str = description
+		commit_message = description
 		if not self.branch_exists(source_branch_name):
 			self.push_changes(source_branch_name, commit_message)
 		self.repo.get_git_ref(f'heads/{source_branch_name}')
