@@ -238,8 +238,8 @@ class TriageRoleAssigner(Github):
 		Removes comments from the Pull Request body
 		"""
 		body: Element = minidom.parseString(f"<body>{pr_body}</body>").firstChild
-		return "".join([node.toxml()
-			for node in body.childNodes if node.nodeType != Node.COMMENT_NODE])
+		return "".join(node.toxml()
+			for node in body.childNodes if node.nodeType != Node.COMMENT_NODE)
 
 	def get_pr_body(self, prs_by_contributor: dict[str, list[(Issue, Issue)]]) -> str:
 		"""
