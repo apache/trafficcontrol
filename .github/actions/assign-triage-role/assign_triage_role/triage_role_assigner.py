@@ -98,16 +98,13 @@ class TriageRoleAssigner:
 			sys.exit(1)
 		return repo
 
-	def get_committers(self) -> dict[str, None]:
+	def get_committers(self) -> set[str]:
 		"""
 		Gets a dict whose keys are the usernames of committers
 		"""
-		committers: list[str] = sorted(
-			[user.login for user in self.repo.get_collaborators() if user.permissions.push])
-		committers_dict: dict[str, None] = {committer: None for committer in committers}
-		return committers_dict
+		return {user.login for user in self.repo.get_collaborators() if user.permissions.push}
 
-	def prs_by_contributor(self, committers: dict[str, None]) -> dict[
+	def prs_by_contributor(self, committers: set[str]) -> dict[
 		NamedUser, list[(Issue, Issue)]]:
 		"""
 		Returns a dict of Pull Requests, associated by committer, within the last
@@ -132,8 +129,8 @@ class TriageRoleAssigner:
 				pr_text = event.raw_data['source']['issue']
 				if 'pull_request' not in pr_text:
 					continue
-				pull_request = Issue(self.repo.__getattribute__('_requester'), event.raw_headers, pr_text,
-					completed=True)
+				pull_request = Issue(self.repo.__getattribute__('_requester'), event.raw_headers,
+					pr_text, completed=True)
 			# Skip unmerged PRs
 			if 'merged_at' not in pull_request.pull_request.raw_data:
 				continue
@@ -357,7 +354,7 @@ class TriageRoleAssigner:
 		"""
 		Runs ths Triage Role Assigner
 		"""
-		committers: dict[str, None] = self.get_committers()
+		committers: set[str] = self.get_committers()
 		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = self.prs_by_contributor(
 			committers)
 		prs_by_contributor: dict[str, list[(Issue, Issue)]] = self.ones_who_meet_threshold(
