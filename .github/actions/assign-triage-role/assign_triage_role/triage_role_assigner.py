@@ -36,7 +36,6 @@ from github.NamedUser import NamedUser
 from github.PaginatedList import PaginatedList
 from github.PullRequest import PullRequest
 from github.Repository import Repository
-from yaml import YAMLError
 
 from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ASF_YAML_FILE, \
 	APACHE_LICENSE_YAML, GIT_AUTHOR_EMAIL_TEMPLATE, SINGLE_PR_TEMPLATE_FILE, \
@@ -151,11 +150,7 @@ class TriageRoleAssigner(Github):
 		with open(ASF_YAML_FILE, encoding="utf-8") as stream:
 			github_key: Final[str] = "github"
 			collaborators_key: Final[str] = "collaborators"
-			try:
-				asf_yaml: dict[str, dict] = yaml.safe_load(stream)
-			except YAMLError as e:
-				print(f"Could not load YAML file {ASF_YAML_FILE}: {e}")
-				sys.exit(1)
+			asf_yaml: dict[str, dict] = yaml.safe_load(stream)
 		if github_key not in asf_yaml:
 			asf_yaml[github_key]: dict[str, dict]() = {}
 		asf_yaml[github_key][collaborators_key] = collaborators

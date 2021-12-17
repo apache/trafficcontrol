@@ -16,12 +16,16 @@ Assign Triage Role
 import sys
 
 from github import BadCredentialsException
+from yaml import YAMLError
 
-from assign_triage_role.constants import GITHUB_TOKEN, ENV_GITHUB_TOKEN
+from assign_triage_role.constants import GITHUB_TOKEN, ENV_GITHUB_TOKEN, ASF_YAML_FILE
 from assign_triage_role.triage_role_assigner import TriageRoleAssigner
 
 try:
 	TriageRoleAssigner(login_or_token=GITHUB_TOKEN).run()
-except BadCredentialsException:
-	print(f"Credentials from {ENV_GITHUB_TOKEN} were bad.", file=sys.stderr)
+except BadCredentialsException as e:
+	print(f"Credentials from {ENV_GITHUB_TOKEN} were bad: {e}", file=sys.stderr)
+	sys.exit(1)
+except YAMLError as e:
+	print(f"Could not load YAML file {ASF_YAML_FILE}: {e}", file=sys.stderr)
 	sys.exit(1)
