@@ -132,7 +132,7 @@ class TriageRoleAssigner:
 				pr_text = event.raw_data['source']['issue']
 				if 'pull_request' not in pr_text:
 					continue
-				pull_request = Issue(self.repo._requester, event.raw_headers, pr_text,
+				pull_request = Issue(self.repo.__getattribute__('_requester'), event.raw_headers, pr_text,
 					completed=True)
 			# Skip unmerged PRs
 			if 'merged_at' not in pull_request.pull_request.raw_data:
