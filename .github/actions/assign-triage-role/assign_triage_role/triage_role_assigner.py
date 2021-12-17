@@ -76,7 +76,7 @@ class TriageRoleAssigner(Github):
 
 	def get_committers(self) -> set[str]:
 		"""
-		Gets a dict whose keys are the usernames of committers
+		Gets a set of committer usernames
 		"""
 		return {user.login for user in self.repo.get_collaborators() if user.permissions.push}
 
