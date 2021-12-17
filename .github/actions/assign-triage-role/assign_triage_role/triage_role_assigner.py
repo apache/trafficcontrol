@@ -175,7 +175,7 @@ class TriageRoleAssigner:
 		"""
 		Writes the list of collaborators to .asf.yaml
 		"""
-		collaborators: list[str] = [contributor for contributor in prs_by_contributor]
+		collaborators: list[str] = list(prs_by_contributor)
 		with open(ASF_YAML_FILE, encoding='utf-8') as stream:
 			github_key: Final[str] = 'github'
 			collaborators_key: Final[str] = 'collaborators'
