@@ -180,22 +180,22 @@ The Router Ultimate Test Harness should include a load test for HTTP-routed Deli
 
 ##### Load Test Options
 
-Option                 | Description | Delivery Service Type | Default
----------------------- | ----------- | --------------------- | -------
-IPv4 TR addresses only | Test IPv4 Traffic Router addresses only | HTTP, DNS | False
-IPv6 TR addresses only | Test IPv6 Traffic Router addresses only | HTTP, DNS | False
-CDN name               | The name of a CDN to search for Delivery Services | HTTP, DNS | all
-Delivery Service name  | The name (XMLID) of a Delivery Service to use for tests | HTTP, DNS | None
-Traffic Router name    | Instead of iterating through Traffic Routers, test only a specific Traffic Router, identified by hostname. | HTTP, DNS | all
-Client IP address      | If provided, Traffic Router will use the value of the `X-MM-Client-IP` request header as the IP address that Traffic Router's geolocation considers. This option should you specify such an IP address. | HTTP, DNS | None
-Use coverage zone map | Whether to use an IP address from the Traffic Router's Coverage Zone File | HTTP, DNS | False
-Coverage zone location  | The coverage zone location to use (implies *Use coverage zone map*) | HTTP, DNS | None
-*Requests per second* threshold | The minimum number of requests per second a Traffic Router must successfully respond to | HTTP, DNS | 8000 for HTTP, 7200 for DNS
-Benchmark time | The duration of each load test, in seconds | HTTP, DNS | 300
-Thread count | The number of threads to spawn for each test | HTTP, DNS | 12
-Path count | The number of paths to generate for use in requests to Delivery Services | HTTP | 10000
-Maximum path length | The maximum string length for each generated path | HTTP | 100
-Use location header | Whether the HTTP HTTP Delivery service should redirect the user or server the routing information as a JSON response. | HTTP | True
+| Option                          | Description                                                                                                                                                                                             | Delivery Service Type | Default                     |
+|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------|-----------------------------|
+| IPv4 TR addresses only          | Test IPv4 Traffic Router addresses only                                                                                                                                                                 | HTTP, DNS             | False                       |
+| IPv6 TR addresses only          | Test IPv6 Traffic Router addresses only                                                                                                                                                                 | HTTP, DNS             | False                       |
+| CDN name                        | The name of a CDN to search for Delivery Services                                                                                                                                                       | HTTP, DNS             | all                         |
+| Delivery Service name           | The name (XMLID) of a Delivery Service to use for tests                                                                                                                                                 | HTTP, DNS             | None                        |
+| Traffic Router name             | Instead of iterating through Traffic Routers, test only a specific Traffic Router, identified by hostname.                                                                                              | HTTP, DNS             | all                         |
+| Client IP address               | If provided, Traffic Router will use the value of the `X-MM-Client-IP` request header as the IP address that Traffic Router's geolocation considers. This option should you specify such an IP address. | HTTP, DNS             | None                        |
+| Use coverage zone map           | Whether to use an IP address from the Traffic Router's Coverage Zone File                                                                                                                               | HTTP, DNS             | False                       |
+| Coverage zone location          | The coverage zone location to use (implies *Use coverage zone map*)                                                                                                                                     | HTTP, DNS             | None                        |
+| *Requests per second* threshold | The minimum number of requests per second a Traffic Router must successfully respond to                                                                                                                 | HTTP, DNS             | 8000 for HTTP, 7200 for DNS |
+| Benchmark time                  | The duration of each load test, in seconds                                                                                                                                                              | HTTP, DNS             | 300                         |
+| Thread count                    | The number of threads to spawn for each test                                                                                                                                                            | HTTP, DNS             | 12                          |
+| Path count                      | The number of paths to generate for use in requests to Delivery Services                                                                                                                                | HTTP                  | 10000                       |
+| Maximum path length             | The maximum string length for each generated path                                                                                                                                                       | HTTP                  | 100                         |
+| Use location header             | Whether the HTTP HTTP Delivery service should redirect the user or server the routing information as a JSON response.                                                                                   | HTTP                  | True                        |
 
 #### Other Tests
 
