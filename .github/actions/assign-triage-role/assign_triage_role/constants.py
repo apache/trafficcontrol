@@ -13,7 +13,8 @@ Assign Triage Role
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Final
+import os
+from typing import Final, Optional
 
 ENV_GIT_AUTHOR_NAME: Final[str] = 'GIT_AUTHOR_NAME'
 ENV_GITHUB_REPOSITORY: Final[str] = 'GITHUB_REPOSITORY'
@@ -34,3 +35,22 @@ EXPIRE: Final[str] = 'These privileges will expire at the end of {MONTH}.'
 EMPTY_LIST_OF_CONTRIBUTORS: Final[str] = 'no one'
 PR_TEMPLATE_FILE: Final[str] = 'templates/pr_template.md'
 APACHE_LICENSE_YAML: Final[str] = 'templates/apache_license.yml'
+
+
+def getenv(env_name: str) -> str:
+	"""
+	Gets environment variable :param env_name:
+	"""
+	env_var: Optional[str, None] = os.environ.get(env_name)
+	if env_var is None:
+		raise NameError(f'Environment variable {env_name} is not defined')
+	return env_var
+
+
+GIT_AUTHOR_NAME: Final[str] = getenv(ENV_GIT_AUTHOR_NAME)
+GITHUB_REPOSITORY: Final[str] = getenv(ENV_GITHUB_REPOSITORY)
+GITHUB_REPOSITORY_OWNER: Final[str] = getenv(ENV_GITHUB_REPOSITORY_OWNER)
+GITHUB_TOKEN: Final[str] = getenv(ENV_GITHUB_TOKEN)
+GITHUB_REF_NAME: Final[str] = getenv(ENV_GITHUB_REF_NAME)
+MINIMUM_COMMITS: Final[str] = getenv(ENV_MINIMUM_COMMITS)
+SINCE_DAYS_AGO: Final[str] = getenv(ENV_SINCE_DAYS_AGO)

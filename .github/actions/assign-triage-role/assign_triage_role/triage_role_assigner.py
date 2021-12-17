@@ -39,11 +39,10 @@ from github.Repository import Repository
 from yaml import YAMLError
 
 from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, \
-	ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS, ASF_YAML_FILE, \
-	APACHE_LICENSE_YAML, ENV_GITHUB_REF_NAME, GIT_AUTHOR_EMAIL_TEMPLATE, ENV_GIT_AUTHOR_NAME, \
-	SINGLE_PR_TEMPLATE_FILE, SINGLE_CONTRIBUTOR_TEMPLATE_FILE, PR_TEMPLATE_FILE, \
-	EMPTY_CONTRIB_LIST_LIST, EMPTY_LIST_OF_CONTRIBUTORS, CONGRATS, EXPIRE, \
-	ENV_GITHUB_REPOSITORY_OWNER
+	ASF_YAML_FILE, APACHE_LICENSE_YAML, GIT_AUTHOR_EMAIL_TEMPLATE, SINGLE_PR_TEMPLATE_FILE, \
+	SINGLE_CONTRIBUTOR_TEMPLATE_FILE, PR_TEMPLATE_FILE, EMPTY_CONTRIB_LIST_LIST, \
+	EMPTY_LIST_OF_CONTRIBUTORS, CONGRATS, EXPIRE, GITHUB_REPOSITORY, GIT_AUTHOR_NAME, \
+	GITHUB_REPOSITORY_OWNER, MINIMUM_COMMITS, SINCE_DAYS_AGO, GITHUB_REF_NAME
 
 
 class TriageRoleAssigner:
@@ -60,35 +59,21 @@ class TriageRoleAssigner:
 
 	def __init__(self, github: Github) -> None:
 		self.github = github
-		repo_name: str = self.get_repo_name()
+		repo_name: str = GITHUB_REPOSITORY
 		self.repo = self.get_repo(repo_name)
 
-		self.minimum_commits = int(self.getenv(ENV_MINIMUM_COMMITS))
-		self.since_days_ago = int(self.getenv(ENV_SINCE_DAYS_AGO))
+		self.minimum_commits = int(MINIMUM_COMMITS)
+		self.since_days_ago = int(SINCE_DAYS_AGO)
 		self.today = date.today()
 
-		self.target_branch_name = self.getenv(ENV_GITHUB_REF_NAME)
-		self.owner = self.get_repo_owner()
+		self.target_branch_name = GITHUB_REF_NAME
+		self.owner = GITHUB_REPOSITORY_OWNER
 
 	def since_day(self) -> date:
 		"""
 		Gets a date :var self.since_days_ago: before :var self.day:
 		"""
 		return self.today - timedelta(days=self.since_days_ago)
-
-	@staticmethod
-	def getenv(env_name: str) -> str:
-		"""
-		Gets the value of an environment variable
-		"""
-		return os.environ[env_name]
-
-	def get_repo_name(self) -> str:
-		"""
-		Returns the name of the repository given by the GITHUB_REPOSITORY environment variable.
-		"""
-		repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY)
-		return repo_name
 
 	def get_repo(self, repo_name: str) -> Repository:
 		"""
@@ -216,9 +201,8 @@ class TriageRoleAssigner:
 			'branch': source_branch_name,
 		}
 		try:
-			git_author_name = self.getenv(ENV_GIT_AUTHOR_NAME)
-			git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=git_author_name)
-			author: InputGitAuthor = InputGitAuthor(name=git_author_name, email=git_author_email)
+			git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=GIT_AUTHOR_NAME)
+			author: InputGitAuthor = InputGitAuthor(name=GIT_AUTHOR_NAME, email=git_author_email)
 			kwargs['author'] = author
 			kwargs['committer'] = author
 		except KeyError:
@@ -351,14 +335,6 @@ class TriageRoleAssigner:
 		except UnknownObjectException:
 			print('Unable to find a label named "collaborators".', file=sys.stderr)
 		print(f'Created pull request {pull_request.html_url}')
-
-	def get_repo_owner(self) -> str:
-		"""
-		Returns the name of the repository owner given by the GITHUB_REPOSITORY_OWNER environment
-		variable.
-		"""
-		repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY_OWNER)
-		return repo_name
 
 	def run(self) -> None:
 		"""

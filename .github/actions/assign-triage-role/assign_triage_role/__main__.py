@@ -13,19 +13,12 @@ Assign Triage Role
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import os
 import sys
 
 from github.MainClass import Github
 
-from assign_triage_role.constants import ENV_GITHUB_TOKEN
+from assign_triage_role.constants import GITHUB_TOKEN
 from assign_triage_role.triage_role_assigner import TriageRoleAssigner
 
-
-try:
-	github_token: str = os.environ[ENV_GITHUB_TOKEN]
-except KeyError:
-	print(f'Environment variable {ENV_GITHUB_TOKEN} must be defined.')
-	sys.exit(1)
-github = Github(login_or_token=github_token)
+github = Github(login_or_token=GITHUB_TOKEN)
 TriageRoleAssigner(github).run()
