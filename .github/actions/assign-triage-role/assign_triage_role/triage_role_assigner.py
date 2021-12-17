@@ -154,7 +154,7 @@ class TriageRoleAssigner:
 		Returns a dict of contributors who had at least self.minimum_commits Issue-closing Pull
 		Requests merged in the past self.since_days_ago days
 		"""
-		prs_by_contributor: dict[str, list[(Issue, Issue)]] = {
+		return {
 			# use only the username as the dict key
 			contributor.login: pull_requests
 			# sort contributors by commit count
@@ -167,7 +167,6 @@ class TriageRoleAssigner:
 			# Requests merged in the past self.since_days_ago days
 			if len(pull_requests) >= self.minimum_commits
 		}
-		return prs_by_contributor
 
 	def set_collaborators_in_asf_yaml(self, prs_by_contributor: dict[str, list[(Issue, Issue)]],
 			description: str):
