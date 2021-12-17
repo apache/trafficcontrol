@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Vault: Added additional flag to TV Riak (Deprecated) Util
 
 ### Fixed
+- [#6411](https://github.com/apache/trafficcontrol/pull/6411) Removes invalid 'ALL cdn' options from TP
 - [#6197](https://github.com/apache/trafficcontrol/issues/6197) - TO `/deliveryservices/:id/routing` makes requests to all TRs instead of by CDN.
 - Fixed Traffic Router crs/stats to prevent overflow and to correctly record the time used in averages.
 - [#6209](https://github.com/apache/trafficcontrol/pull/6209) Updated Traffic Router to use Java 11 to compile and run
