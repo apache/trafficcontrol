@@ -18,7 +18,7 @@
 
 	<artifactId>traffic_router</artifactId>
 	<groupId>org.apache.traffic_control.traffic_router</groupId>
-	<version>6.0.1</version>
+	<version>6.0.2</version>
 	<packaging>pom</packaging>
 	<name>traffic_router</name>
 
