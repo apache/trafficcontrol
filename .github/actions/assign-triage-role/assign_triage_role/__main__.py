@@ -31,8 +31,8 @@ def main() -> None:
 	except KeyError:
 		print(f'Environment variable {ENV_GITHUB_TOKEN} must be defined.')
 		sys.exit(1)
-	gh = Github(login_or_token=github_token)
-	TriageRoleAssigner(gh).run()
+	github = Github(login_or_token=github_token)
+	TriageRoleAssigner(github).run()
 
 
 main()

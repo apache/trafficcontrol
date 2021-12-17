@@ -47,7 +47,7 @@ class TriageRoleAssigner:
 	"""
 	Triage Role Assigner
 	"""
-	gh: Github
+	github: Github
 	repo: Repository
 	minimum_commits: int
 	since_days_ago: int
@@ -55,8 +55,8 @@ class TriageRoleAssigner:
 	target_branch_name: str
 	owner: str
 
-	def __init__(self, gh: Github) -> None:
-		self.gh = gh
+	def __init__(self, github: Github) -> None:
+		self.github = github
 		repo_name: str = self.get_repo_name()
 		self.repo = self.get_repo(repo_name)
 
@@ -92,7 +92,7 @@ class TriageRoleAssigner:
 		Returns a Repository instance for the repository whose name is specified.
 		"""
 		try:
-			repo: Repository = self.gh.get_repo(repo_name)
+			repo: Repository = self.github.get_repo(repo_name)
 		except BadCredentialsException:
 			print(f'Credentials from {ENV_GITHUB_TOKEN} were bad.')
 			sys.exit(1)
@@ -118,7 +118,7 @@ class TriageRoleAssigner:
 
 		query: str = (f'repo:{repo_name} is:issue linked:pr is:closed closed:'
 		              f'{self.since_day()}..{self.today}')
-		linked_issues: PaginatedList[Issue] = self.gh.search_issues(query=query)
+		linked_issues: PaginatedList[Issue] = self.github.search_issues(query=query)
 		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = dict[
 			NamedUser, list[(Issue, Issue)]]()
 		for linked_issue in linked_issues:
@@ -319,17 +319,18 @@ class TriageRoleAssigner:
 		"""
 		Submits a Pull Request
 		"""
-		prs: PaginatedList = self.gh.search_issues(
+		pull_requests: PaginatedList = self.github.search_issues(
 			f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
-		for list_item in prs:
-			pr: PullRequest = self.repo.get_pull(list_item.number)
-			if pr.head.ref != source_branch_name:
+		for list_item in pull_requests:
+			pull_request: PullRequest = self.repo.get_pull(list_item.number)
+			if pull_request.head.ref != source_branch_name:
 				continue
-			print(f'Pull request for branch {source_branch_name} already exists:\n{pr.html_url}')
+			print(f'Pull request for branch {source_branch_name} already exists:\n'
+			      f'{pull_request.html_url}')
 			return
 
 		pr_body: str = self.get_pr_body(prs_by_contributor)
-		pr: PullRequest = self.repo.create_pull(
+		pull_request: PullRequest = self.repo.create_pull(
 			title=commit_message,
 			body=pr_body,
 			head=f'{self.owner}:{source_branch_name}',
@@ -339,10 +340,10 @@ class TriageRoleAssigner:
 		try:
 			collaborators_label: Label = self.repo.get_label('collaborators')
 			process_label: Label = self.repo.get_label('process')
-			pr.add_to_labels(collaborators_label, process_label)
+			pull_request.add_to_labels(collaborators_label, process_label)
 		except UnknownObjectException:
 			print('Unable to find a label named "collaborators".')
-		print(f'Created pull request {pr.html_url}')
+		print(f'Created pull request {pull_request.html_url}')
 
 	def get_repo_owner(self) -> str:
 		"""
