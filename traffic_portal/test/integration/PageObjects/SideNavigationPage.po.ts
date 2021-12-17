@@ -36,7 +36,7 @@ export class SideNavigationPage extends BasePage{
     private lnkDeliveryServices = element(by.xpath("//a[@href='/#!/delivery-services']"));
     private lnkDeliveryServiceRequest = element(by.xpath("//a[@href='/#!/delivery-service-requests']"));
     private lnkServiceCategories = element(by.xpath("//a[@href='/#!/service-categories']"));
-    private lnkCertExpirations = element(by.xpath("//a[@href='/#!/cert-expirations']"));
+    private lnkCertExpirations = element(by.id("cert-expirations"));
     //Navigation for Users Admin
     private propUserAdmin  = "//div[@id='sidebar-menu']//a[contains(text(),'User Admin')]"
     private mnuUserAdmin = element(by.xpath( this.propUserAdmin ))

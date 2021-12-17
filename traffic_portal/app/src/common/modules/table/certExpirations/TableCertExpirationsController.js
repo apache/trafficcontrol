@@ -17,11 +17,12 @@
  * under the License.
  */
 
-var TableCertExpirationsController = function(tableName, certExpirations, filter, $document, $scope, $state, $filter, locationUtils, certExpirationsService) {
+var TableCertExpirationsController = function(tableName, certExpirations, dsXmlToIdMap, filter, $document, $scope, $state, $filter, locationUtils, certExpirationsService) {
 
-    let table;
+	let table;
 
 	$scope.certExpirations = certExpirations;
+	$scope.dsXmlToIdMap = dsXmlToIdMap;
 	$scope.days;
 
 	$scope.editCertExpirations = function(dsId) {
@@ -46,9 +47,9 @@ var TableCertExpirationsController = function(tableName, certExpirations, filter
 		}
 	}
 
-    $scope.refresh = function() {
-        $state.reload(); // reloads all the resolves for the view
-    };
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
 
 	/** Toggles the visibility of a column that has the ID provided as 'col'. */
 	$scope.toggleVisibility = function(col) {
@@ -125,7 +126,7 @@ var TableCertExpirationsController = function(tableName, certExpirations, filter
 		onRowClicked: function(params) {
 			const selection = window.getSelection().toString();
 			if(selection === "" || selection === $scope.mouseDownSelectionText) {
-				locationUtils.navigateToPath('/delivery-services/' + params.data.deliveryservice_id + '/ssl-keys');
+				locationUtils.navigateToPath('/delivery-services/' + $scope.dsXmlToIdMap[params.data.deliveryservice] + '/ssl-keys');
 				// Event is outside the digest cycle, so we need to trigger one.
 				$scope.$apply();
 			}
@@ -313,5 +314,5 @@ var TableCertExpirationsController = function(tableName, certExpirations, filter
 
 };
 
-TableCertExpirationsController.$inject = ['tableName', 'certExpirations', 'filter', '$document', '$scope', '$state', '$filter', 'locationUtils', 'certExpirationsService'];
+TableCertExpirationsController.$inject = ['tableName', 'certExpirations', 'dsXmlToIdMap', 'filter', '$document', '$scope', '$state', '$filter', 'locationUtils', 'certExpirationsService'];
 module.exports = TableCertExpirationsController;

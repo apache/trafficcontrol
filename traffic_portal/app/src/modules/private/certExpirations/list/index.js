@@ -35,6 +35,16 @@ module.exports = angular.module('trafficPortal.private.certExpirations.list', []
 							},
 							filter: function() {
 								return null;
+							},
+							deliveryservices: function(deliveryServiceService) {
+								return deliveryServiceService.getDeliveryServices();
+							},
+							dsXmlToIdMap: function (deliveryservices) {
+								var result = {};
+								for (i in deliveryservices) {
+									result[deliveryservices[i].xmlId] = deliveryservices[i].id;
+								}
+								return result;
 							}
 						}
 					}
