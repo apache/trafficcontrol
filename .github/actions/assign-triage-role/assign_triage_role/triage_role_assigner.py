@@ -162,7 +162,7 @@ class TriageRoleAssigner:
 		Writes the list of collaborators to .asf.yaml
 		"""
 		collaborators: list[str] = [contributor for contributor in prs_by_contributor]
-		with open(ASF_YAML_FILE) as stream:
+		with open(ASF_YAML_FILE, encoding='utf-8') as stream:
 			github_key: Final[str] = 'github'
 			collaborators_key: Final[str] = 'collaborators'
 			try:
@@ -174,11 +174,12 @@ class TriageRoleAssigner:
 			asf_yaml[github_key] = dict[str, dict]()
 		asf_yaml[github_key][collaborators_key] = collaborators
 
-		with open(os.path.join(os.path.dirname(__file__), APACHE_LICENSE_YAML)) as stream:
+		with open(os.path.join(os.path.dirname(__file__), APACHE_LICENSE_YAML),
+				encoding='utf-8') as stream:
 			apache_license = stream.read().format(DESCRIPTION=description,
 				ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago)
 
-		with open(ASF_YAML_FILE, 'w') as stream:
+		with open(ASF_YAML_FILE, 'w', encoding='utf-8') as stream:
 			stream.write(apache_license)
 			yaml.dump(asf_yaml, stream)
 
@@ -193,7 +194,7 @@ class TriageRoleAssigner:
 		self.repo.create_git_ref(source_branch_ref, sha)
 		print(f'Created branch {source_branch_name}')
 
-		with open(ASF_YAML_FILE) as stream:
+		with open(ASF_YAML_FILE, encoding='utf-8') as stream:
 			asf_yaml = stream.read()
 
 		asf_yaml_contentfile: ContentFile = self.repo.get_contents(ASF_YAML_FILE, source_branch_ref)
@@ -264,12 +265,14 @@ class TriageRoleAssigner:
 		"""
 		Renders the Pull Request template
 		"""
-		with open(os.path.join(os.path.dirname(__file__), SINGLE_PR_TEMPLATE_FILE)) as stream:
+		with open(os.path.join(os.path.dirname(__file__), SINGLE_PR_TEMPLATE_FILE),
+				encoding='utf-8') as stream:
 			pr_line_template = stream.read()
 		with open(os.path.join(os.path.dirname(__file__),
-				SINGLE_CONTRIBUTOR_TEMPLATE_FILE)) as stream:
+				SINGLE_CONTRIBUTOR_TEMPLATE_FILE), encoding='utf-8') as stream:
 			contrib_list_template = stream.read()
-		with open(os.path.join(os.path.dirname(__file__), PR_TEMPLATE_FILE)) as stream:
+		with open(os.path.join(os.path.dirname(__file__), PR_TEMPLATE_FILE),
+				encoding='utf-8') as stream:
 			pr_template = stream.read()
 
 		contrib_list_list: str = str()

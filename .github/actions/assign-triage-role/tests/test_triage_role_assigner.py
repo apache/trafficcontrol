@@ -19,7 +19,7 @@ from unittest import TestCase
 from assign_triage_role.triage_role_assigner import TriageRoleAssigner
 
 
-class TestTriageRoleAssigner(TestCase):  # pylint: disable=unused-variable
+class TestTriageRoleAssigner(TestCase):
 	"""
 	Tests for the Triage Role Assigner
 	"""
