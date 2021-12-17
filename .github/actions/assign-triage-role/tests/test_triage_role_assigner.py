@@ -28,42 +28,42 @@ class TestTriageRoleAssigner(TestCase):
 		"""
 		Test TriageRoleAssigner.list_of_contributors()
 		"""
-		today = date.fromisoformat('2021-12-10')
+		today = date.fromisoformat("2021-12-10")
 
 		empty_prs_by_contributor = {}
-		expected_list_of_contributors = 'no one'
-		expected_congrats = ''
-		expected_expire = ''
+		expected_list_of_contributors = "no one"
+		expected_congrats = ""
+		expected_expire = ""
 		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(
 			empty_prs_by_contributor, today)
 		self.assertEqual(expected_list_of_contributors, list_of_contributors)
 		self.assertEqual(expected_congrats, congrats)
 		self.assertEqual(expected_expire, expire)
 
-		prs_by_contributor = {'Namey Name': []}
-		expected_list_of_contributors = '@Namey Name'
-		expected_congrats = 'Congrats! '
-		expected_expire = 'These privileges will expire at the end of December.'
+		prs_by_contributor = {"Namey Name": []}
+		expected_list_of_contributors = "@Namey Name"
+		expected_congrats = "Congrats! "
+		expected_expire = "These privileges will expire at the end of December."
 		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(
 			prs_by_contributor, today)
 		self.assertEqual(expected_list_of_contributors, list_of_contributors)
 		self.assertEqual(expected_congrats, congrats)
 		self.assertEqual(expected_expire, expire)
 
-		prs_by_contributor = {'Namey Name': [], 'A Contributor': []}
-		expected_list_of_contributors = '@Namey Name and @A Contributor'
-		expected_congrats = 'Congrats! '
-		expected_expire = 'These privileges will expire at the end of December.'
+		prs_by_contributor = {"Namey Name": [], "A Contributor": []}
+		expected_list_of_contributors = "@Namey Name and @A Contributor"
+		expected_congrats = "Congrats! "
+		expected_expire = "These privileges will expire at the end of December."
 		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(
 			prs_by_contributor, today)
 		self.assertEqual(expected_list_of_contributors, list_of_contributors)
 		self.assertEqual(expected_congrats, congrats)
 		self.assertEqual(expected_expire, expire)
 
-		prs_by_contributor = {'Namey Name': [], 'A Contributor': [], 'Someone Else': []}
-		expected_list_of_contributors = '@Namey Name, @A Contributor, and @Someone Else'
-		expected_congrats = 'Congrats! '
-		expected_expire = 'These privileges will expire at the end of December.'
+		prs_by_contributor = {"Namey Name": [], "A Contributor": [], "Someone Else": []}
+		expected_list_of_contributors = "@Namey Name, @A Contributor, and @Someone Else"
+		expected_congrats = "Congrats! "
+		expected_expire = "These privileges will expire at the end of December."
 		list_of_contributors, congrats, expire = TriageRoleAssigner.list_of_contributors(
 			prs_by_contributor, today)
 		self.assertEqual(expected_list_of_contributors, list_of_contributors)

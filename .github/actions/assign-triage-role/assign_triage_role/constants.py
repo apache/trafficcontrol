@@ -16,25 +16,25 @@ Assign Triage Role
 import os
 from typing import Final, Optional
 
-ENV_GIT_AUTHOR_NAME: Final[str] = 'GIT_AUTHOR_NAME'
-ENV_GITHUB_REPOSITORY: Final[str] = 'GITHUB_REPOSITORY'
-ENV_GITHUB_REPOSITORY_OWNER: Final[str] = 'GITHUB_REPOSITORY_OWNER'
-ENV_GITHUB_TOKEN: Final[str] = 'GITHUB_TOKEN'
-ENV_GITHUB_REF_NAME: Final[str] = 'GITHUB_REF_NAME'
-ENV_MINIMUM_COMMITS: Final[str] = 'MINIMUM_COMMITS'
-ENV_SINCE_DAYS_AGO: Final[str] = 'SINCE_DAYS_AGO'
+ENV_GIT_AUTHOR_NAME: Final[str] = "GIT_AUTHOR_NAME"
+ENV_GITHUB_REPOSITORY: Final[str] = "GITHUB_REPOSITORY"
+ENV_GITHUB_REPOSITORY_OWNER: Final[str] = "GITHUB_REPOSITORY_OWNER"
+ENV_GITHUB_TOKEN: Final[str] = "GITHUB_TOKEN"
+ENV_GITHUB_REF_NAME: Final[str] = "GITHUB_REF_NAME"
+ENV_MINIMUM_COMMITS: Final[str] = "MINIMUM_COMMITS"
+ENV_SINCE_DAYS_AGO: Final[str] = "SINCE_DAYS_AGO"
 
-GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE: Final[str] = 'cross-referenced'
-GIT_AUTHOR_EMAIL_TEMPLATE: Final[str] = '{git_author_name}@users.noreply.github.com'
-ASF_YAML_FILE: Final[str] = '.asf.yaml'
-SINGLE_PR_TEMPLATE_FILE: Final[str] = 'templates/single_pr.md'
-SINGLE_CONTRIBUTOR_TEMPLATE_FILE: Final[str] = 'templates/single_contributor.md'
-EMPTY_CONTRIB_LIST_LIST: Final[str] = '(None)'
-CONGRATS: Final[str] = 'Congrats! '
-EXPIRE: Final[str] = 'These privileges will expire at the end of {MONTH}.'
-EMPTY_LIST_OF_CONTRIBUTORS: Final[str] = 'no one'
-PR_TEMPLATE_FILE: Final[str] = 'templates/pr_template.md'
-APACHE_LICENSE_YAML: Final[str] = 'templates/apache_license.yml'
+GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE: Final[str] = "cross-referenced"
+GIT_AUTHOR_EMAIL_TEMPLATE: Final[str] = "{git_author_name}@users.noreply.github.com"
+ASF_YAML_FILE: Final[str] = ".asf.yaml"
+SINGLE_PR_TEMPLATE_FILE: Final[str] = "templates/single_pr.md"
+SINGLE_CONTRIBUTOR_TEMPLATE_FILE: Final[str] = "templates/single_contributor.md"
+EMPTY_CONTRIB_LIST_LIST: Final[str] = "(None)"
+CONGRATS: Final[str] = "Congrats! "
+EXPIRE: Final[str] = "These privileges will expire at the end of {MONTH}."
+EMPTY_LIST_OF_CONTRIBUTORS: Final[str] = "no one"
+PR_TEMPLATE_FILE: Final[str] = "templates/pr_template.md"
+APACHE_LICENSE_YAML: Final[str] = "templates/apache_license.yml"
 
 
 def getenv(env_name: str) -> str:
@@ -43,7 +43,7 @@ def getenv(env_name: str) -> str:
 	"""
 	env_var: Optional[str, None] = os.environ.get(env_name)
 	if env_var is None:
-		raise NameError(f'Environment variable {env_name} is not defined')
+		raise NameError(f"Environment variable {env_name} is not defined")
 	return env_var
 
 

@@ -23,5 +23,5 @@ from assign_triage_role.triage_role_assigner import TriageRoleAssigner
 try:
 	TriageRoleAssigner(login_or_token=GITHUB_TOKEN).run()
 except BadCredentialsException:
-	print(f'Credentials from {ENV_GITHUB_TOKEN} were bad.', file=sys.stderr)
+	print(f"Credentials from {ENV_GITHUB_TOKEN} were bad.", file=sys.stderr)
 	sys.exit(1)
