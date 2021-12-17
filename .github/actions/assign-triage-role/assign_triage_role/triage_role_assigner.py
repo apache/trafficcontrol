@@ -119,8 +119,7 @@ class TriageRoleAssigner:
 		query: str = (f'repo:{repo_name} is:issue linked:pr is:closed closed:'
 		              f'{self.since_day()}..{self.today}')
 		linked_issues: PaginatedList[Issue] = self.github.search_issues(query=query)
-		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = dict[
-			NamedUser, list[(Issue, Issue)]]()
+		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = {}
 		for linked_issue in linked_issues:
 			timeline: PaginatedList[TimelineEvent] = linked_issue.get_timeline()
 			pull_request: Optional[Issue] = None
@@ -145,7 +144,7 @@ class TriageRoleAssigner:
 			if author.login in committers:
 				continue
 			if author not in prs_by_contributor:
-				prs_by_contributor[author] = list[(Issue, Issue)]()
+				prs_by_contributor[author] = []
 			prs_by_contributor[author].append((pull_request, linked_issue))
 		return prs_by_contributor
 
@@ -185,7 +184,7 @@ class TriageRoleAssigner:
 				print(f'Could not load YAML file {ASF_YAML_FILE}: {e}')
 				sys.exit(1)
 		if github_key not in asf_yaml:
-			asf_yaml[github_key] = dict[str, dict]()
+			asf_yaml[github_key]: dict[str, dict]() = {}
 		asf_yaml[github_key][collaborators_key] = collaborators
 
 		with open(os.path.join(os.path.dirname(__file__), APACHE_LICENSE_YAML),
