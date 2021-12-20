@@ -18,7 +18,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>5.1.4</version>
+		<version>5.1.5</version>
 	</parent>
 
 	<artifactId>ROOT</artifactId>
