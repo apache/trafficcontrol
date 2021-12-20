@@ -343,7 +343,7 @@ func parseNumericStat(value interface{}) (uint64, error) {
 		if value.(int64) < 0 {
 			return 0, errors.New("value was negative")
 		}
-		return uint64(value.(uint64)), nil
+		return value.(uint64), nil
 	case float64:
 		if value.(float64) > math.MaxUint64 || value.(float64) < 0 {
 			return 0, errors.New("value out of range for uint64")
@@ -356,7 +356,7 @@ func parseNumericStat(value interface{}) (uint64, error) {
 		return uint64(value.(float64)), nil
 	case string:
 		if statVal, err := strconv.ParseUint(value.(string), 10, 64); err != nil {
-			return 0, fmt.Errorf("Could not parse '%v' to uint64: %v", value, err)
+			return 0, fmt.Errorf("could not parse '%v' to uint64: %v", value, err)
 		} else {
 			return statVal, nil
 		}
@@ -421,17 +421,17 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 
 			switch statParts[len(statParts)-1] {
 			case "status_2xx":
-				dsStat.Status2xx = parsedStat
+				dsStat.Status2xx += parsedStat
 			case "status_3xx":
-				dsStat.Status3xx = parsedStat
+				dsStat.Status3xx += parsedStat
 			case "status_4xx":
-				dsStat.Status4xx = parsedStat
+				dsStat.Status4xx += parsedStat
 			case "status_5xx":
-				dsStat.Status5xx = parsedStat
+				dsStat.Status5xx += parsedStat
 			case "out_bytes":
-				dsStat.OutBytes = parsedStat
+				dsStat.OutBytes += parsedStat
 			case "in_bytes":
-				dsStat.InBytes = parsedStat
+				dsStat.InBytes += parsedStat
 			default:
 				err = fmt.Errorf("Unknown stat '%s'", statParts[len(statParts)-1])
 				log.Infof("precomputing cache %s stat %s value %v error %v", cacheName, stat, value, err)
