@@ -95,7 +95,7 @@ class TriageRoleAssigner(Github):
 					continue
 				if event.event != GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE:
 					continue
-				pr_text = event.raw_data["source"]["issue"]
+				pr_text: dict[str] = event.raw_data["source"]["issue"]
 				if "pull_request" not in pr_text:
 					continue
 				pull_request = Issue(self.repo.__getattribute__("_requester"), event.raw_headers,
@@ -255,7 +255,7 @@ class TriageRoleAssigner(Github):
 				encoding="utf-8") as stream:
 			pr_template = stream.read()
 
-		def contrib_list(contributor, pr_tuples) -> str:
+		def contrib_list(contributor: str, pr_tuples: list[(Issue, Issue)]) -> str:
 			pr_list = "\n".join(
 				pr_line_template.format(ISSUE_NUMBER=linked_issue.number, PR_NUMBER=pr.number
 				) for pr, linked_issue in pr_tuples)
