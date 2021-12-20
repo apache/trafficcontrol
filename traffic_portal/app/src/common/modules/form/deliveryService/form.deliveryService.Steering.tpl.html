@@ -405,7 +405,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="geoLimitCountries" name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" maxlength="255" pattern="[A-Z]+(,[A-Z]+)*">
+                            <input id="geoLimitCountries" name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" maxlength="255" pattern="(\[[A-Z]+(,[A-Z]+)*\]|[A-Z]+(,[A-Z]+)*)">
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.geoLimitCountries, 'maxlength')">Too Long</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">
                                 <h3 ng-if="open()">Current Value</h3>
