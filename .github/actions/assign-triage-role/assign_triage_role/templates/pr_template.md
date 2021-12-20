@@ -4,7 +4,7 @@ This PR uses [`.asf.yaml`](https://s.apache.org/asfyamltriage) to assign the Git
 
 {CONGRATS} For the month of {MONTH}, {LIST_OF_CONTRIBUTORS} will have the ability to
 * Apply labels to Issues and Pull Requests
-* Assign a user to an Issue (note that non-committers must first comment on an Issue before they can be assigned to it)
+* Assign a user to an Issue (note that non-committers can be assigned to an Issue after commenting on it)
 * Add a user as a Reviewer of a Pull Request, which will send a request to them to review it
 * Mark Issues and Pull Requests as a duplicate
 <hr/>
