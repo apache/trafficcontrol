@@ -54,6 +54,7 @@ func TestDeliveryServices(t *testing.T) {
 			t.Run("Create and retrieve SSL keys for a Delivery Service", DeliveryServiceSSLKeys)
 		}
 
+		t.Run("Create a Delivery Service with geo limit countries", CreateTestDeliveryServiceWithGeoLimitCountries)
 		t.Run("Create a Delivery Service with the removed Long Description 2 and 3 fields", CreateTestDeliveryServiceWithLongDescFields)
 		t.Run("Update a Delivery Service, setting its removed Long Description 2 and 3 fields", UpdateTestDeliveryServiceWithLongDescFields)
 		t.Run("Getting unmodified Delivery Services using the If-Modified-Since header", GetTestDeliveryServicesIMS)
@@ -96,6 +97,64 @@ func TestDeliveryServices(t *testing.T) {
 		t.Run("Create/ Update/ Delete delivery services with locks", CUDDeliveryServiceWithLocks)
 		t.Run("TLS Versions property", addTLSVersionsToDeliveryService)
 	})
+}
+
+func CreateTestDeliveryServiceWithGeoLimitCountries(t *testing.T) {
+
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatalf("no deliveryservices to run the test on, quitting")
+	}
+
+	cdn := createBlankCDN("geoLimitCDN", t)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "HTTP")
+	types, _, err := TOSession.GetTypes(opts)
+	if err != nil {
+		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
+	}
+	if len(types.Response) < 1 {
+		t.Fatal("expected at least one type")
+	}
+	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "geo-limit-countries-test-ds-name", "edge", "https://test-geo-limit.com", "geo-limit-countries-test-ds-xml-id")
+	customDS.Protocol = util.IntPtr(0)
+	customDS.GeoLimit = util.IntPtr(2)
+	customDS.GeoLimitCountries = util.StrPtr("[US   ,CA]")
+
+	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
+	if err != nil {
+		t.Error("expected an error while creating a new ds for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("expected 1 response in return of a create DS request, but got %d", len(resp.Response))
+	}
+	if resp.Response[0].GeoLimitCountries == nil {
+		t.Fatalf("got nothing in geo limit countries")
+	}
+	if *resp.Response[0].GeoLimitCountries != "US,CA" {
+		t.Errorf("expected geo limit countries: US,CA; actual: %s", *resp.Response[0].GeoLimitCountries)
+	}
+
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", *customDS.XMLID)
+	deliveryServices, _, err := TOSession.GetDeliveryServices(opts)
+	if err != nil {
+		t.Fatalf("couldn't get ds: %v", err)
+	}
+	if len(deliveryServices.Response) != 1 {
+		t.Fatal("couldn't get exactly one ds in the response, quitting")
+	}
+	dsID := deliveryServices.Response[0].ID
+	// Try to update a ds on a CDN that another user has a hard lock on -> this should fail
+	customDS.GeoLimitCountries = util.StrPtr("[US   ,CA,12]")
+	_, _, err = TOSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while updating geo limit countries of a ds with an invalid country code, but got nothing")
+	}
+
+	_, _, err = TOSession.DeleteDeliveryService(*dsID, client.NewRequestOptions())
+	if err != nil {
+		t.Errorf("expected no error while deleting ds, but got %v", err)
+	}
 }
 
 func CUDDeliveryServiceWithLocks(t *testing.T) {

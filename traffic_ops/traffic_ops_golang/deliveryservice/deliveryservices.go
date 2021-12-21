@@ -1371,6 +1371,25 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 				return nil
 			},
 		)),
+		"geoLimitCountries": validation.Validate(ds.GeoLimitCountries, validation.By(
+			func(value interface{}) error {
+				geoLimitCountries, ok := value.(*string)
+				if !ok {
+					return fmt.Errorf("must be a string or an array of strings, got: %T", value)
+				}
+				if geoLimitCountries != nil && *geoLimitCountries != "" {
+
+					countyCodes := strings.Split(*geoLimitCountries, ",")
+					var IsLetter = regexp.MustCompile(`^[A-Z]+$`).MatchString
+					for _, cc := range countyCodes {
+						if !IsLetter(cc) {
+							return fmt.Errorf("country codes can only contain alphabets")
+						}
+					}
+				}
+				return nil
+			},
+		)),
 	})
 	if err := validateTopologyFields(ds); err != nil {
 		errs = append(errs, err)
