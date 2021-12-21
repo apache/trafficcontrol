@@ -289,7 +289,7 @@ AND d.active = true
 				ds.GeoLimitRedirectURL = &geoLimitRedirectURL.String // No Valid check - empty string, if null
 			}
 			if geoLimitCountries.Valid {
-				if geoLimitCountries.String[0] == '[' && geoLimitCountries.String[len(geoLimitCountries.String)-1] == ']' {
+				if geoLimitCountries.String != "" && geoLimitCountries.String[0] == '[' && geoLimitCountries.String[len(geoLimitCountries.String)-1] == ']' {
 					geoLimitCountries.String = geoLimitCountries.String[1 : len(geoLimitCountries.String)-1]
 				}
 				for _, code := range strings.Split(geoLimitCountries.String, ",") {
