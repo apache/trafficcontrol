@@ -122,7 +122,7 @@ func CreateTestDeliveryServiceWithGeoLimitCountries(t *testing.T) {
 
 	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	if err != nil {
-		t.Error("expected an error while creating a new ds for a CDN for which a hard lock is held by another user, but got nothing")
+		t.Errorf("expected no error while creating a new ds, but got %v", err)
 	}
 	if len(resp.Response) != 1 {
 		t.Fatalf("expected 1 response in return of a create DS request, but got %d", len(resp.Response))
@@ -144,7 +144,6 @@ func CreateTestDeliveryServiceWithGeoLimitCountries(t *testing.T) {
 		t.Fatal("couldn't get exactly one ds in the response, quitting")
 	}
 	dsID := deliveryServices.Response[0].ID
-	// Try to update a ds on a CDN that another user has a hard lock on -> this should fail
 	customDS.GeoLimitCountries = util.StrPtr("[US   ,CA,12]")
 	_, _, err = TOSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
 	if err == nil {
