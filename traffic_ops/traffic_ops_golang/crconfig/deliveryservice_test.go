@@ -232,7 +232,7 @@ func TestMakeDSesGeoLimit(t *testing.T) {
 	MockGetServerProfileParams(mock, expectedParams, cdn)
 	MockGetDSRegexesDomains(mock, expectedMatchsets, expectedDomains, cdn)
 	MockGetStaticDNSEntries(mock, expectedStaticDNSEntries, cdn)
-	MockMakeDSes(mock, expected, cdn, "[US,CA]")
+	MockMakeDSes(mock, expected, cdn, "US,CA")
 	mock.ExpectCommit()
 
 	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
@@ -263,7 +263,7 @@ func TestMakeDSesGeoLimit(t *testing.T) {
 		}
 		for i, countryCode := range ds.GeoEnabled {
 			if countryCode != actualDS.GeoEnabled[i] {
-				t.Errorf("mismatch in geo enabled countries of expected DS and actual DS")
+				t.Errorf("mismatch in geo enabled countries of expected DS and actual DS, expected: %s, actual: %s", countryCode, actualDS.GeoEnabled[i])
 			}
 		}
 	}
