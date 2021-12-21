@@ -31,6 +31,14 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
+// Version is the application version.
+// This is overwritten by the build with the current project version.
+var Version = "0.4"
+
+// GitRevision is the git revision the application was built from.
+// This is overwritten by the build with the current project version.
+var GitRevision = "nogit"
+
 // exit codes
 const (
 	Success           = 0
@@ -66,7 +74,7 @@ const LockFileRetryTimeout = time.Minute
 func main() {
 	var syncdsUpdate torequest.UpdateStatus
 	var lock util.FileLock
-	cfg, err := config.GetCfg()
+	cfg, err := config.GetCfg(Version, GitRevision)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(ConfigError)

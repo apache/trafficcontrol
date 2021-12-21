@@ -42,14 +42,14 @@ CATALINA_PID="$CATALINA_BASE/temp/tomcat.pid"
 CATALINA_OPTS="\
   -server -Xms2g -Xmx8g \
   -Djava.library.path=/usr/lib64:$CATALINA_BASE/lib:$CATALINA_HOME/lib \
-  -Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties \
+  -Dlog4j.configurationFile=$CATALINA_BASE/conf/log4j2.xml \
   -Dorg.apache.catalina.connector.Response.ENFORCE_ENCODING_IN_GET_WRITER=false \
   -XX:+UseG1GC \
   -XX:+UnlockExperimentalVMOptions \
   -XX:InitiatingHeapOccupancyPercent=30"
 
 if [[ "$TR_DEBUG_ENABLE" == true ]]; then
-    export JPDA_OPTS="-agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n";
+    export JPDA_OPTS="-agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n";
     longer_dns_timeout;
 fi;
 

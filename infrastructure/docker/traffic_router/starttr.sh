@@ -23,14 +23,14 @@
 # Therefore it is important to keep this script up to date with any changes that are
 # made to traffic_router/build/build_rpm.sh and traffic_router/build/pom.xml
 
-export JAVA_HOME=/usr/java/jdk1.8.0_92/jre
+export JAVA_HOME="$(command -v java | xargs realpath | xargs dirname)/.."
 export CATALINA_PID=/opt/traffic_router/temp/tomcat.pid
 export CATALINA_HOME=/opt/tomcat
 export CATALINA_BASE=/opt/traffic_router
 export CATALINA_OUT=/opt/tomcat/logs/catalina.log
 export CATALINA_OPTS="\
   -server -Xms512m -Xmx1g \
-  -Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties \
+  -Dlog4j.configurationFile=$CATALINA_BASE/conf/log4j2.xml \
   -Djava.library.path=/usr/lib64 \
   -Dorg.apache.catalina.connector.Response.ENFORCE_ENCODING_IN_GET_WRITER=false \
   -XX:+UseG1GC \

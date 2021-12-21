@@ -38,6 +38,9 @@ func (sl *StoppableListener) Accept() (net.Conn, error) {
 		//Check for the channel being closed
 		select {
 		case <-sl.stop:
+			if err == nil {
+        			newConn.Close()
+    			}
 			return nil, StoppedError
 		default:
 			//If the channel is still open, continue as normal

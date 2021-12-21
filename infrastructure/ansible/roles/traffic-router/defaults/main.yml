@@ -26,7 +26,7 @@ tr_tomcat_base_dir: '/opt/tomcat'
 tr_tomcat_logs_dir: "{{ tr_tomcat_base_dir }}/logs"
 
 # JAVA_HOME to use in order to specify the desired JRE
-tr_java_home_dir: '/usr/lib/jvm/jre'
+tr_java_home_dir: '/usr/lib/jvm/jre-11-openjdk'
 
 # Remove any locally cached copy of a CRConfig
 tr_purge_crconfig_cache: False
@@ -55,7 +55,7 @@ tr_catalina_opts:
   - "-server"
   - "-Xms2g"
   - "-Xmx{{ [(ansible_memtotal_mb * (tr_java_heap_max_percent/100))|int, tr_java_heap_max_mb]|min }}m"
-  - "-Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties"
+  - "-Dlog4j.configurationFile=$CATALINA_BASE/conf/log4j2.xml"
   - "-Djava.library.path=/usr/lib64"
   - "-Dorg.apache.catalina.connector.Response.ENFORCE_ENCODING_IN_GET_WRITER=false"
   - "-XX:+UseG1GC"
@@ -126,35 +126,45 @@ tr_cache_health_json_refresh_period: 1000
 tr_cache_config_json: "{{tr_db_dir}}/cr-config.json"
 tr_cache_config_json_refresh_period: 60000
 
-# log4j.properties
-tr_log4j_opts:
-  - "# ACCESS is set to be a Syslog Appender"
-  - log4j.appender.ACCESS=org.apache.log4j.DailyRollingFileAppender
-  - "log4j.appender.ACCESS.File={{tr_log_dir}}/access.log"
-  - log4j.appender.ACCESS.DatePattern='.'yyyy-MM-dd-HH
-  -
-  - "# ACCESS uses PatternLayout."
-  - log4j.appender.ACCESS.layout=org.apache.log4j.PatternLayout
-  - log4j.appender.ACCESS.layout.ConversionPattern=%m%n
-  - log4j.appender.ACCESS.threshold=INFO
-  -
-  - log4j.appender.A1=org.apache.log4j.RollingFileAppender
-  - "log4j.appender.A1.file={{tr_log_dir}}/traffic_router.log"
-  - log4j.appender.A1.maxFileSize=100MB
-  -
-  - "# A1 uses PatternLayout."
-  - log4j.appender.A1.layout=org.apache.log4j.PatternLayout
-  - log4j.appender.A1.layout.ConversionPattern=%-5p %d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%t] %c - %m%n
-  - log4j.appender.A1.threshold=ALL
-  -
-  - "# Set root logger level to DEBUG and its only appender to A1."
-  - "# Valid levels are: ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, NONE"
-  - log4j.rootLogger=WARN, A1
-  -
-  - "# Set application logger levels"
-  - log4j.logger.org.apache.traffic_control.traffic_router=INFO
-  - log4j.logger.org.apache.traffic_control.traffic_router.core.access=INFO, ACCESS
-  - log4j.additivity.org.apache.traffic_control.traffic_router.core.access=false
+# log4j2.xml
+tr_log4j2_opts: |
+  <Configuration>
+      <Appenders>
+          <Console name="stdout" target="SYSTEM_OUT">
+              <PatternLayout pattern="%m%n" />
+          </Console>
+          <RollingFile name="traffic_router_access"
+                       fileName="{{tr_log_dir}}/access.log"
+                       filePattern="{{tr_log_dir}}/access-%d{yyyy-MM-dd}.log" >
+              <PatternLayout pattern="%m%n" />
+              <Policies>
+                  <SizeBasedTriggeringPolicy size="200MB" />
+              </Policies>
+              <DefaultRolloverStrategy max="10" />
+              <ThresholdFilter level="INFO" />
+          </RollingFile>
+          <RollingFile name="traffic_router"
+                       fileName="{{tr_log_dir}}/traffic_router.log"
+                       filePattern="{{tr_log_dir}}/traffic_router-%d{yyyy-MM-dd}.log" >
+              <PatternLayout pattern="%-5p %d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%t] %c - %m%n" />
+              <Policies>
+                  <SizeBasedTriggeringPolicy size="100MB" />
+              </Policies>
+              <ThresholdFilter level="ALL" />
+          </RollingFile>
+      </Appenders>
+      <Loggers>
+          <Logger name="org.apache.traffic_control.traffic_router" level="INFO" additivity="false" >
+              <AppenderRef ref="traffic_router" />
+          </Logger>
+          <Logger name="org.apache.traffic_control.traffic_router.core.access" level="INFO" additivity="false" >
+              <AppenderRef ref="traffic_router_access" />
+          </Logger>
+          <Root level="WARN" additivity="false" >
+              <AppenderRef ref="stdout" />
+          </Root>
+      </Loggers>
+  </Configuration>
 
 # logging.properties
 tr_logging_opts:

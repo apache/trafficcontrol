@@ -27,7 +27,8 @@ import org.apache.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.management.Attribute;
 import javax.management.ObjectName;
@@ -38,7 +39,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class CertificatesPublisher {
-	private final static Logger LOGGER = Logger.getLogger(CertificatesPublisher.class);
+	private final static Logger LOGGER = LogManager.getLogger(CertificatesPublisher.class);
 	private JsonNode deliveryServicesJson;
 	private List<DeliveryService> deliveryServices = new ArrayList<>();
 	private boolean running = true;

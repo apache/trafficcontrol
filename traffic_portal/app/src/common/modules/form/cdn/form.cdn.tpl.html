@@ -24,8 +24,8 @@ under the License.
             <li class="active">{{cdnName}}</li>
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
-            <button name="diffCDNbtn" class="btn btn-primary" title="Diff CDN Snapshot" ng-click="viewConfig()"><i class="fa fa-camera"></i>&nbsp;&nbsp;Diff CDN Config Snapshot</button>
-            <div class="btn-group" role="group" uib-dropdown is-open="queue.isopen">
+            <button ng-show="cdn.name != 'ALL'" name="diffCDNbtn" class="btn btn-primary" title="Diff CDN Snapshot" ng-click="viewConfig()"><i class="fa fa-camera"></i>&nbsp;&nbsp;Diff CDN Config Snapshot</button>
+            <div ng-show="cdn.name != 'ALL'" class="btn-group" role="group" uib-dropdown is-open="queue.isopen">
                 <button type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     Queue Updates&nbsp;
                     <span class="caret"></span>
@@ -41,10 +41,10 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
-                    <li role="menuitem"><a ng-click="manageFederations()">Manage Federations</a></li>
-                    <li class="divider"></li>
-                    <li role="menuitem"><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
+                    <li ng-show="cdn.name != 'ALL'" role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
+                    <li ng-show="cdn.name != 'ALL'" role="menuitem"><a ng-click="manageFederations()">Manage Federations</a></li>
+                    <li ng-show="cdn.name != 'ALL'" class="divider"></li>
+                    <li ng-show="cdn.name != 'ALL'" role="menuitem"><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
                     <li role="menuitem"><a ng-click="viewProfiles()">View Profiles</a></li>
                     <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
                     <li class="divider"></li>

@@ -15,19 +15,21 @@
 
 package org.apache.traffic_control.traffic_router.core.loc;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 
 public class RegionalGeoRule {
-    private static final Logger LOGGER = Logger.getLogger(RegionalGeoRule.class);
+    private static final Logger LOGGER = LogManager.getLogger(RegionalGeoRule.class);
 
     public static final String WHITE_LIST_NODE_LOCATION = "w";
 
-    public static enum PostalsType {
+    public enum PostalsType {
         EXCLUDE, INCLUDE, UNDEFINED
     }
 
@@ -98,7 +100,7 @@ public class RegionalGeoRule {
 
         try {
             final NetworkNode nn = whiteListRoot.getNetwork(ip);
-            if (nn.getLoc() == WHITE_LIST_NODE_LOCATION) {
+            if (Objects.equals(nn.getLoc(), WHITE_LIST_NODE_LOCATION)) {
                 return true;
             }
         } catch (NetworkNodeException e) {

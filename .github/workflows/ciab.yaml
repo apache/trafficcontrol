@@ -85,6 +85,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 5
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -101,6 +103,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 5
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -117,6 +121,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 5
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -133,6 +139,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 5
       - name: Cache node modules
         uses: actions/cache@v2
         with:
@@ -156,6 +164,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 5
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
@@ -179,6 +189,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 5
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -195,6 +207,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 5
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -211,6 +225,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 5
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -268,6 +284,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 5
       - name: Cache Alpine Docker image
         uses: actions/cache@v2
         with:

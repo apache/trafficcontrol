@@ -558,7 +558,7 @@ func (tbl *pgURLSigKeyTable) validate() []string {
 }
 
 type pgURISignKeyRecord struct {
-	Keys            map[string]tc.URISignerKeyset
+	Keys            tc.JWKSMap
 	DeliveryService string
 	pgCommonRecord
 }

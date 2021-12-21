@@ -21,12 +21,17 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-log"
+
 	"github.com/pborman/getopt/v2"
 )
+
+const AppName = "t3c-check-refs"
 
 type Cfg struct {
 	CommandArgs            []string
@@ -37,12 +42,16 @@ type Cfg struct {
 	TrafficServerConfigDir string
 	TrafficServerPluginDir string
 	FilesAdding            map[string]struct{}
+	Version                string
+	GitRevision            string
 }
 
 var (
 	defaultATSConfigDir = "/opt/trafficserver/etc/trafficserver"
 	defaultATSPluginDir = "/opt/trafficserver/libexec/trafficserver"
 )
+
+func (cfg Cfg) AppVersion() string { return t3cutil.VersionStr(AppName, cfg.Version, cfg.GitRevision) }
 
 func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationDebug) }
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationError) }
@@ -57,7 +66,8 @@ func Usage() {
 }
 
 // InitConfig() intializes the configuration variables and loggers.
-func InitConfig() (Cfg, error) {
+func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
+	versionPtr := getopt.BoolLong("version", 'V', "Print version information and exit.")
 	atsConfigDirPtr := getopt.StringLong("trafficserver-config-dir", 'c', defaultATSConfigDir, "directory where ATS config files are stored.")
 	atsPluginDirPtr := getopt.StringLong("trafficserver-plugin-dir", 'p', defaultATSPluginDir, "directory where ATS plugins are stored.")
 	filesAdding := getopt.StringLong("files-adding", 'f', "", "comma-delimited list of file names being added, to not fail to verify if they don't already exist.")
@@ -69,6 +79,11 @@ func InitConfig() (Cfg, error) {
 
 	if *helpPtr == true {
 		Usage()
+		os.Exit(0)
+	} else if *versionPtr {
+		cfg := &Cfg{Version: appVersion, GitRevision: gitRevision}
+		fmt.Println(cfg.AppVersion())
+		os.Exit(0)
 	}
 
 	logLocationError := log.LogLocationStderr
@@ -109,6 +124,8 @@ func InitConfig() (Cfg, error) {
 		TrafficServerConfigDir: *atsConfigDirPtr,
 		TrafficServerPluginDir: *atsPluginDirPtr,
 		FilesAdding:            filesAddingSet,
+		Version:                appVersion,
+		GitRevision:            gitRevision,
 	}
 
 	if err := log.InitCfg(cfg); err != nil {

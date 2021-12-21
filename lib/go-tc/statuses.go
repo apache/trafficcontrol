@@ -65,7 +65,7 @@ type Status struct {
 // StatusNullable is a nullable single Status response for Update and Create to
 // depict what changed.
 type StatusNullable struct {
-	Description *string    `json:"description"`
+	Description *string    `json:"description" db:"description"`
 	ID          *int       `json:"id" db:"id"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        *string    `json:"name" db:"name"`

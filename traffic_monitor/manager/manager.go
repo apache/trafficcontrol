@@ -112,7 +112,6 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		combinedStates,
 		toData,
 		cachesChangedForStatMgr,
-		errorCount,
 		cfg,
 		monitorConfig,
 		events,

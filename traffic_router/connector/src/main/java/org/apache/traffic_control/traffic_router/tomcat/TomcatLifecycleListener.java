@@ -21,7 +21,8 @@ import org.apache.traffic_control.traffic_router.shared.DeliveryServiceCertifica
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleListener;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 
 import javax.management.MBeanServer;
@@ -29,7 +30,7 @@ import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 
 public class TomcatLifecycleListener implements LifecycleListener {
-	private static final Logger log = Logger.getLogger(LifecycleListener.class);
+	private static final Logger log = LogManager.getLogger(LifecycleListener.class);
 	private CertificateDataListener certificateDataListener = new CertificateDataListener();
 
 	@Override

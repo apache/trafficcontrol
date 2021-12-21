@@ -36,7 +36,7 @@ func (r *TCData) DeleteTestStaticDNSEntries(t *testing.T) {
 		// Retrieve the StaticDNSEntries by name so we can get the id for the Update
 		resp, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host)
 		if err != nil {
-			t.Errorf("cannot GET StaticDNSEntries by name: %v - %v", staticDNSEntry.Host, err)
+			t.Errorf("cannot GET StaticDNSEntries by name: %s - %v", staticDNSEntry.Host, err)
 		}
 		if len(resp) > 0 {
 			respStaticDNSEntry := resp[0]
@@ -49,7 +49,7 @@ func (r *TCData) DeleteTestStaticDNSEntries(t *testing.T) {
 			// Retrieve the StaticDNSEntry to see if it got deleted
 			staticDNSEntries, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host)
 			if err != nil {
-				t.Errorf("error deleting StaticDNSEntrie name: %s", err.Error())
+				t.Errorf("error deleting StaticDNSEntrie name: %v", err)
 			}
 			if len(staticDNSEntries) > 0 {
 				t.Errorf("expected StaticDNSEntry name: %s to be deleted", staticDNSEntry.Host)

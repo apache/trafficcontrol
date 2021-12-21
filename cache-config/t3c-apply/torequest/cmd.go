@@ -334,11 +334,10 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 }
 
 // checkReload is a helper for the sub-command t3c-check-reload.
-func checkReload(pluginPackagesInstalled []string, changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
-	log.Infof("t3c-check-reload calling with pluginPackagesInstalled '%v' changedConfigFiles '%v'\n", pluginPackagesInstalled, changedConfigFiles)
+func checkReload(changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
+	log.Infof("t3c-check-reload calling with changedConfigFiles '%v'\n", changedConfigFiles)
 
 	changedFiles := []byte(strings.Join(changedConfigFiles, ","))
-	installedPlugins := []byte(strings.Join(pluginPackagesInstalled, ","))
 
 	cmd := exec.Command(`t3c-check-reload`)
 	outBuf := bytes.Buffer{}
@@ -359,10 +358,6 @@ func checkReload(pluginPackagesInstalled []string, changedConfigFiles []string) 
 		return t3cutil.ServiceNeedsInvalid, errors.New("writing opening json to input: " + err.Error())
 	} else if _, err := stdinPipe.Write(changedFiles); err != nil {
 		return t3cutil.ServiceNeedsInvalid, errors.New("writing changed files to input: " + err.Error())
-	} else if _, err := stdinPipe.Write([]byte(`","installed_plugins":"`)); err != nil {
-		return t3cutil.ServiceNeedsInvalid, errors.New("writing installed_plugins key to input: " + err.Error())
-	} else if _, err := stdinPipe.Write(installedPlugins); err != nil {
-		return t3cutil.ServiceNeedsInvalid, errors.New("writing plugins to input: " + err.Error())
 	} else if _, err := stdinPipe.Write([]byte(`"}`)); err != nil {
 		return t3cutil.ServiceNeedsInvalid, errors.New("writing closing json input: " + err.Error())
 	} else if err := stdinPipe.Close(); err != nil {

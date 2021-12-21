@@ -31,10 +31,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.traffic_control.traffic_router.core.hash.DefaultHashable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Node extends DefaultHashable {
-	private static final Logger LOGGER = Logger.getLogger(Node.class);
+	private static final Logger LOGGER = LogManager.getLogger(Node.class);
 	private static final int REPLICAS = 1000;
 
 	public enum IPVersions {

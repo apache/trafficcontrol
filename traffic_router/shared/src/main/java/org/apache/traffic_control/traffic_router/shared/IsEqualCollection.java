@@ -22,21 +22,20 @@ import org.hamcrest.core.IsEqual;
 
 import java.util.Collection;
 
-@SuppressWarnings("PMD")
-public class IsEqualCollection<T> extends IsEqual<T> {
+final public class IsEqualCollection<T> extends IsEqual<T> {
 	private final Object expectedValue;
 
-	private IsEqualCollection(T equalArg) {
+	private IsEqualCollection(final T equalArg) {
 		super(equalArg);
 		expectedValue = equalArg;
 	}
 
-	private void describeItems(Description description, Object value) {
+	private void describeItems(final Description description, final Object value) {
 		if (value instanceof Collection) {
-			Object[] items = ((Collection) value).toArray();
+			final Object[] items = ((Collection) value).toArray();
 
 			description.appendText("\n{");
-			for (Object item : items) {
+			for (final Object item : items) {
 				description.appendText("\n\t");
 				description.appendText(item.toString());
 			}
@@ -45,7 +44,7 @@ public class IsEqualCollection<T> extends IsEqual<T> {
 	}
 
 	@Override
-	public void describeTo(Description description) {
+	public void describeTo(final Description description) {
 		if (expectedValue instanceof Collection) {
 			description.appendText("all of the following in order\n");
 			describeItems(description,expectedValue);
@@ -56,7 +55,7 @@ public class IsEqualCollection<T> extends IsEqual<T> {
 	}
 
 	@Override
-	public void describeMismatch(Object actualValue, Description mismatchDescription) {
+	public void describeMismatch(final Object actualValue, final Description mismatchDescription) {
 		if (actualValue instanceof Collection) {
 			mismatchDescription.appendText("had the items\n");
 			describeItems(mismatchDescription, actualValue);
@@ -67,7 +66,7 @@ public class IsEqualCollection<T> extends IsEqual<T> {
 	}
 
 	@Factory
-	public static <T> Matcher<T> equalTo(T operand) {
+	public static <T> Matcher<T> equalTo(final T operand) {
 		return new IsEqualCollection<>(operand);
 	}
 }

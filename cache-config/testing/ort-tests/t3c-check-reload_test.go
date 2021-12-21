@@ -24,8 +24,7 @@ import (
 
 func TestCheckReload(t *testing.T) {
 	type ChangedCfg struct {
-		ChangedFiles     string `json:"changed_files"`
-		InstalledPlugins string `json:"installed_plugins"`
+		ChangedFiles string `json:"changed_files"`
 	}
 
 	type argsResults struct {
@@ -38,92 +37,61 @@ func TestCheckReload(t *testing.T) {
 	argsExpected := []argsResults{
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/etc/trafficserver/remap.config,/etc/trafficserver/parent.config",
-				InstalledPlugins: "",
+				ChangedFiles: "/etc/trafficserver/remap.config,/etc/trafficserver/parent.config",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/etc/trafficserver/anything.foo",
-				InstalledPlugins: "",
+				ChangedFiles: "/etc/trafficserver/anything.foo",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/opt/trafficserver/etc/trafficserver/anything.foo",
-				InstalledPlugins: "",
+				ChangedFiles: "/opt/trafficserver/etc/trafficserver/anything.foo",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/foo/bar/hdr_rw_foo.config",
-				InstalledPlugins: "",
+				ChangedFiles: "/foo/bar/hdr_rw_foo.config",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/foo/bar/uri_signing_dsname.config",
-				InstalledPlugins: "",
+				ChangedFiles: "/foo/bar/uri_signing_dsname.config",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/foo/bar/url_sig_dsname.config,foo",
-				InstalledPlugins: "",
+				ChangedFiles: "/foo/bar/url_sig_dsname.config,foo",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "plugin.config,foo",
-				InstalledPlugins: "",
+				ChangedFiles: "plugin.config,foo",
 			},
 			expected: "restart",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/etc/trafficserver/anything.foo",
-				InstalledPlugins: "anything",
-			},
-			expected: "restart",
-		},
-		{
-			configs: ChangedCfg{
-				ChangedFiles:     "",
-				InstalledPlugins: "anything",
-			},
-			expected: "restart",
-		},
-		{
-			configs: ChangedCfg{
-				ChangedFiles:     "",
-				InstalledPlugins: "anything,anythingelse",
-			},
-			expected: "restart",
-		},
-		{
-			configs: ChangedCfg{
-				ChangedFiles:     "/foo/bar/ssl_multicert.config",
-				InstalledPlugins: "",
+				ChangedFiles: "/foo/bar/ssl_multicert.config",
 			},
 			expected: "reload",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "foo",
-				InstalledPlugins: "",
+				ChangedFiles: "foo",
 			},
 			expected: "",
 		},
 		{
 			configs: ChangedCfg{
-				ChangedFiles:     "/foo/bar/baz.config",
-				InstalledPlugins: "",
+				ChangedFiles: "/foo/bar/baz.config",
 			},
 			expected: "",
 		},
@@ -137,17 +105,17 @@ func TestCheckReload(t *testing.T) {
 		out, code := t3cCheckReload(config)
 		out = strings.TrimSpace(out)
 		if !ae.expectedErr && code != 0 {
-			t.Errorf("expected configs %+v packages %+v would not error, actual: code %v output '%v'",
-				ae.configs.ChangedFiles, ae.configs.InstalledPlugins, code, out)
+			t.Errorf("expected configs %+v would not error, actual: code %v output '%v'",
+				ae.configs.ChangedFiles, code, out)
 			continue
 		} else if ae.expectedErr && code == 0 {
-			t.Errorf("expected configs %+v packages %+v would error, actual: no error",
-				ae.configs.ChangedFiles, ae.configs.InstalledPlugins)
+			t.Errorf("expected configs %+v would error, actual: no error",
+				ae.configs.ChangedFiles)
 			continue
 		}
 		if out != ae.expected {
-			t.Errorf("expected configs %+v packages %+v would need '%v', actual: '%v'",
-				ae.configs.ChangedFiles, ae.configs.InstalledPlugins, ae.expected, out)
+			t.Errorf("expected configs %+v would need '%v', actual: '%v'",
+				ae.configs.ChangedFiles, ae.expected, out)
 		}
 	}
 }

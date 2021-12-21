@@ -20,13 +20,26 @@ package main
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"fmt"
 	"os"
 	"os/exec"
 	"syscall" // TODO change to x/unix ?
 
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-log"
+
 	"github.com/pborman/getopt/v2"
 )
+
+const AppName = "t3c-check"
+
+// Version is the application version.
+// This is overwritten by the build with the current project version.
+var Version = "0.4"
+
+// GitRevision is the git revision the application was built from.
+// This is overwritten by the build with the current project version.
+var GitRevision = "nogit"
 
 var commands = map[string]struct{}{
 	"apply":      struct{}{},
@@ -47,10 +60,14 @@ const ExitCodeCommandLookupErr = 5
 
 func main() {
 	flagHelp := getopt.BoolLong("help", 'h', "Print usage information and exit")
+	flagVersion := getopt.BoolLong("version", 'V', "Print version information and exit.")
 	getopt.Parse()
 	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
 	if *flagHelp {
 		log.Errorln(usageStr())
+		os.Exit(ExitCodeSuccess)
+	} else if *flagVersion {
+		fmt.Println(t3cutil.VersionStr(AppName, Version, GitRevision))
 		os.Exit(ExitCodeSuccess)
 	}
 

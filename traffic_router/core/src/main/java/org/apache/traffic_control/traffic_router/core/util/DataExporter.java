@@ -28,7 +28,8 @@ import java.util.Properties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.cache.CacheStats;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.core.edge.Cache;
 import org.apache.traffic_control.traffic_router.core.edge.CacheLocation;
@@ -36,18 +37,17 @@ import org.apache.traffic_control.traffic_router.core.edge.CacheRegister;
 import org.apache.traffic_control.traffic_router.core.edge.InetRecord;
 import org.apache.traffic_control.traffic_router.core.edge.Location;
 import org.apache.traffic_control.traffic_router.core.edge.PropertiesAndCaches;
-import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
-import org.apache.traffic_control.traffic_router.geolocation.GeolocationException;
 import org.apache.traffic_control.traffic_router.core.loc.NetworkNode;
 import org.apache.traffic_control.traffic_router.core.loc.NetworkNodeException;
+import org.apache.traffic_control.traffic_router.core.router.StatTracker;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
-import org.apache.traffic_control.traffic_router.core.router.StatTracker;
 import org.apache.traffic_control.traffic_router.core.status.model.CacheModel;
-
+import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
+import org.apache.traffic_control.traffic_router.geolocation.GeolocationException;
 
 public class DataExporter {
-	private static final Logger LOGGER = Logger.getLogger(DataExporter.class);
+	private static final Logger LOGGER = LogManager.getLogger(DataExporter.class);
 	private static final String NOT_FOUND_MESSAGE = "not found";
 
 	private TrafficRouterManager trafficRouterManager;
@@ -74,7 +74,7 @@ public class DataExporter {
 
 		final Properties props = new Properties();
 
-		try (final InputStream stream = getClass().getResourceAsStream("/version.prop")){
+		try (InputStream stream = getClass().getResourceAsStream("/version.prop")){
 			props.load(stream);
 		} catch (IOException e) {
 			LOGGER.warn(e,e);

@@ -21,9 +21,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import sun.security.rsa.RSAPrivateCrtKeyImpl;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -31,6 +31,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.RSAPrivateCrtKeySpec;
 
 import static java.util.Base64.getEncoder;
@@ -43,6 +44,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(BindPrivateKey.class)
+@PowerMockIgnore("javax.management.*")
 public class BindPrivateKeyTest {
 	private String privateKeyString;
 	private PrivateKey privateKey;
@@ -57,7 +59,7 @@ public class BindPrivateKeyTest {
 		keyPairGenerator.initialize(2048, SecureRandom.getInstance("SHA1PRNG","SUN"));
 		KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-		RSAPrivateCrtKeyImpl privateCrtKey = (RSAPrivateCrtKeyImpl) keyPair.getPrivate();
+		RSAPrivateCrtKey privateCrtKey = (RSAPrivateCrtKey) keyPair.getPrivate();
 
 		privateKeyString = "Private-key-format: v1.2\n" +
 			"Algorithm: 5 (RSASHA1)\n" +

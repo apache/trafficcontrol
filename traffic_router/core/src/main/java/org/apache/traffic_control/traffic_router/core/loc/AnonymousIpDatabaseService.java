@@ -18,7 +18,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
@@ -26,7 +27,7 @@ import com.maxmind.geoip2.model.AnonymousIpResponse;
 
 @SuppressWarnings({ "PMD.AvoidDuplicateLiterals" })
 public class AnonymousIpDatabaseService {
-	private static final Logger LOGGER = Logger.getLogger(AnonymousIpDatabaseService.class);
+	private static final Logger LOGGER = LogManager.getLogger(AnonymousIpDatabaseService.class);
 
 	private boolean initialized = false;
 	private File databaseFile;
@@ -41,9 +42,8 @@ public class AnonymousIpDatabaseService {
 		}
 
 		if (databaseFile != null) {
-			final DatabaseReader reader = createDatabaseReader(databaseFile);
-			if (reader != null) {
-				databaseReader = reader;
+			databaseReader = createDatabaseReader(databaseFile);
+			if (databaseReader != null) {
 				initialized = true;
 			} else {
 				throw new IOException("Could not create database reader");

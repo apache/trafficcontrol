@@ -18,7 +18,8 @@ package org.apache.traffic_control.traffic_router.core.dns.protocol;
 import org.apache.traffic_control.traffic_router.core.dns.DNSAccessEventBuilder;
 import org.apache.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import org.apache.traffic_control.traffic_router.core.dns.NameServer;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.Rcode;
 import org.xbill.DNS.Section;
@@ -29,8 +30,8 @@ import java.util.concurrent.*;
 
 @SuppressWarnings("PMD.MoreThanOneLogger")
 public abstract class AbstractProtocol implements Protocol {
-    private static final Logger ACCESS = Logger.getLogger("org.apache.traffic_control.traffic_router.core.access");
-    private static final Logger LOGGER = Logger.getLogger(AbstractProtocol.class);
+    private static final Logger ACCESS = LogManager.getLogger("org.apache.traffic_control.traffic_router.core.access");
+    private static final Logger LOGGER = LogManager.getLogger(AbstractProtocol.class);
 
     private static final int NUM_SECTIONS = 4;
     protected boolean shutdownRequested;

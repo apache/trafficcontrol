@@ -42,6 +42,8 @@ t3c-diff \<file-a\> \<file-a\>
 
 [\-\-help]
 
+[\-\-version]
+
 # DESCRIPTION
 
 The t3c-diff application compares configuration files with semantic context, omitting comments and other semantically irrelevant text.
@@ -58,9 +60,13 @@ if the file being created or deleted is semantically empty.
 
 # OPTIONS
 
--h, --help
+-h, -\-help
 
     Print usage info and exit.
+
+-V, -\-version
+
+    Print version information and exit.
 
 # AUTHORS
 

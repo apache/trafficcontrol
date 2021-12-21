@@ -22,7 +22,8 @@ import org.apache.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.quova.bff.reader.exception.AddressNotFoundException;
 import com.quova.bff.reader.io.GPDatabaseReader;
 import com.quova.bff.reader.model.GeoPointResponse;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +33,7 @@ import java.net.InetAddress;
 
 @Component
 public class NeustarGeolocationService implements GeolocationService {
-	private static final Logger LOGGER = Logger.getLogger(NeustarGeolocationService.class);
+	private static final Logger LOGGER = LogManager.getLogger(NeustarGeolocationService.class);
 	private GPDatabaseReader databaseReader;
 
 	@Autowired

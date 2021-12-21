@@ -16,5 +16,5 @@
 package org.apache.traffic_control.traffic_router.core.util;
 
 public interface ResourceUrl {
-	public String nextUrl();
+	String nextUrl();
 }

@@ -24,12 +24,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.Channels;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.WireParseException;
 
 public class TCP extends AbstractProtocol {
-    private static final Logger LOGGER = Logger.getLogger(TCP.class);
+    private static final Logger LOGGER = LogManager.getLogger(TCP.class);
     private int readTimeout = 3000; // default
 
     private ServerSocket serverSocket;
@@ -46,9 +47,9 @@ public class TCP extends AbstractProtocol {
     @Override
     public void run() {
         while (!isShutdownRequested()) {
+            final TCPSocketHandler handler;
             try {
-                final Socket socket = getServerSocket().accept();
-                final TCPSocketHandler handler = new TCPSocketHandler(socket);
+                handler = new TCPSocketHandler(getServerSocket().accept());
                 submit(handler);
             } catch (final IOException e) {
 				LOGGER.warn("error: " + e);
@@ -95,13 +96,13 @@ public class TCP extends AbstractProtocol {
                 return;
             }
 
-            try {
+            try (InputStream iis = Channels.newInputStream(Channels.newChannel(socket.getInputStream()));
+                 DataInputStream is = new DataInputStream(iis);
+                 DataOutputStream os = new DataOutputStream(socket.getOutputStream())
+            ) {
                 socket.setSoTimeout(getReadTimeout());
                 final InetAddress client = socket.getInetAddress();
 
-                final InputStream iis = Channels.newInputStream(Channels.newChannel(socket.getInputStream()));
-                final DataInputStream is = new DataInputStream(iis);
-                final DataOutputStream os = new DataOutputStream(socket.getOutputStream());
                 final int length = is.readUnsignedShort();
                 final byte[] request = new byte[length];
                 is.readFully(request);

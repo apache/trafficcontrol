@@ -35,14 +35,15 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
 public abstract class AbstractServiceUpdater {
-	private static final Logger LOGGER = Logger.getLogger(AbstractServiceUpdater.class);
+	private static final Logger LOGGER = LogManager.getLogger(AbstractServiceUpdater.class);
 
 	protected String dataBaseURL;
 	protected String defaultDatabaseURL;
@@ -361,24 +362,19 @@ public abstract class AbstractServiceUpdater {
 			}
 		}
 
-		InputStream in = conn.getInputStream();
-		eTag = conn.getHeaderField("ETag");
-
-		if (conn.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-			LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingDb.lastModified()));
-			return existingDb;
-		}
-
-		if (sourceCompressed) {
-			in = new GZIPInputStream(in);
-		}
-
 		final File outputFile = File.createTempFile(tmpPrefix, tmpSuffix);
-		final OutputStream out = new FileOutputStream(outputFile);
+		try (InputStream in = conn.getInputStream();
+			 OutputStream out = new FileOutputStream(outputFile)
+		) {
+			eTag = conn.getHeaderField("ETag");
 
-		IOUtils.copy(in, out);
-		IOUtils.closeQuietly(in);
-		IOUtils.closeQuietly(out);
+			if (conn.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
+				LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingDb.lastModified()));
+				return existingDb;
+			}
+
+			IOUtils.copy(sourceCompressed ? new GZIPInputStream(in) : in, out);
+		}
 
 		return outputFile;
 	}

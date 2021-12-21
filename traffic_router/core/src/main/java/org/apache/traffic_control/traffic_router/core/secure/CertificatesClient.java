@@ -21,7 +21,8 @@ import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import org.apache.traffic_control.traffic_router.shared.CertificateData;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import java.util.Base64;
 import java.util.List;
 
 public class CertificatesClient {
-	private static final Logger LOGGER = Logger.getLogger(CertificatesClient.class);
+	private static final Logger LOGGER = LogManager.getLogger(CertificatesClient.class);
 	private TrafficOpsUtils trafficOpsUtils;
 	private static final String PEM_FOOTER_PREFIX = "-----END";
 	private long lastValidfetchTimestamp = 0L;
@@ -124,7 +125,7 @@ public class CertificatesClient {
 			}
 		}
 
-		return encodedPemItems.toArray(new String[encodedPemItems.size()]);
+		return encodedPemItems.toArray(new String[0]);
 	}
 
 	public void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {

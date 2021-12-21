@@ -1,3 +1,5 @@
+package tcdata
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +15,6 @@
    limitations under the License.
 */
 
-package tcdata
-
 import (
 	"fmt"
 	"testing"
@@ -27,7 +27,7 @@ func (r *TCData) CreateTestCacheGroupParameters(t *testing.T) {
 	firstCacheGroup := r.TestData.CacheGroups[0]
 	cacheGroupResp, _, err := TOSession.GetCacheGroupNullableByName(*firstCacheGroup.Name)
 	if err != nil {
-		t.Errorf("cannot GET Cache Group by name: %v - %v", firstCacheGroup.Name, err)
+		t.Errorf("cannot GET Cache Group by name: %s - %v", *firstCacheGroup.Name, err)
 	}
 	if cacheGroupResp == nil {
 		t.Fatal("Cache Groups response should not be nil")
@@ -37,7 +37,7 @@ func (r *TCData) CreateTestCacheGroupParameters(t *testing.T) {
 	firstParameter := r.TestData.Parameters[0]
 	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		t.Errorf("cannot GET Parameter by name: %s - %v", firstParameter.Name, err)
 	}
 	if paramResp == nil {
 		t.Fatal("Parameter response should not be nil")
@@ -74,7 +74,7 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 
 	parameters, _, err := TOSession.GetCacheGroupParametersByQueryParams(cgp.CacheGroupID, queryParams)
 	if err != nil {
-		t.Errorf("error deleting Parameter name: %s", err.Error())
+		t.Errorf("error deleting Parameter name: %v", err)
 	}
 	if parameters == nil {
 		t.Fatal("Cache Group Parameters response should not be nil")

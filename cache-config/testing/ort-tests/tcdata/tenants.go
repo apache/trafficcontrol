@@ -46,7 +46,7 @@ func (r *TCData) DeleteTestTenants(t *testing.T) {
 	if _, err := TOSession.DeleteTenant(strconv.Itoa(tenant1.ID)); err == nil {
 		t.Fatalf("%s has child tenants -- should not be able to delete", t1)
 	} else if !strings.Contains(err.Error(), expectedChildDeleteErrMsg) {
-		t.Errorf("expected error: %s;  got %s", expectedChildDeleteErrMsg, err.Error())
+		t.Errorf("expected error: %s;  got %v", expectedChildDeleteErrMsg, err)
 	}
 
 	deletedTenants := map[string]struct{}{}

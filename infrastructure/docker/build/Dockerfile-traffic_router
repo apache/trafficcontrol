@@ -46,8 +46,8 @@ FROM common-dependencies AS traffic-router
 RUN	yum -y install \
 		which  \
 		curl \
-		java-1.8.0-openjdk \
-		java-1.8.0-openjdk-devel && \
+		java-11-openjdk \
+		java-11-openjdk-devel && \
 	yum -y clean all
 
 ENV JAVA_HOME=/usr/lib/jvm/java

@@ -35,6 +35,8 @@ import (
 	"github.com/pborman/getopt/v2"
 )
 
+const AppName = "t3c-apply"
+
 var TSHome string = "/opt/trafficserver"
 
 const DefaultTSConfigDir = "/opt/trafficserver/etc/trafficserver"
@@ -112,7 +114,11 @@ type Cfg struct {
 	IgnoreUpdateFlag  bool
 	NoUnsetUpdateFlag bool
 	UpdateIPAllow     bool
+	Version           string
+	GitRevision       string
 }
+
+func (cfg Cfg) AppVersion() string { return t3cutil.VersionStr(AppName, cfg.Version, cfg.GitRevision) }
 
 type UseGitFlag string
 
@@ -213,10 +219,11 @@ func GetTSPackageHome() string {
 	return tsHome
 }
 
-func GetCfg() (Cfg, error) {
+func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	var err error
 	toInfoLog := []string{}
 
+	version := getopt.BoolLong("version", 'E', "Print version information and exit.")
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 	retriesPtr := getopt.IntLong("num-retries", 'r', 3, "[number] retry connection to Traffic Ops URL [number] times, default is 3")
 	reverseProxyDisablePtr := getopt.BoolLong("reverse-proxy-disable", 'p', "[false | true] bypass the reverse proxy even if one has been configured default is false")
@@ -228,7 +235,7 @@ func GetCfg() (Cfg, error) {
 	toPassPtr := getopt.StringLong("traffic-ops-password", 'P', "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS")
 	tsHomePtr := getopt.StringLong("trafficserver-home", 'R', "", "Trafficserver Package directory. May also be set with the environment variable TS_HOME")
 	dnsLocalBindPtr := getopt.BoolLong("dns-local-bind", 'b', "[true | false] whether to use the server's Service Addresses to set the ATS DNS local bind address")
-	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
+	help := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	useGitStr := getopt.StringLong("git", 'g', "auto", "Create and use a git repo in the config directory. Options are yes, no, and auto. If yes, create and use. If auto, use if it exist. Default is auto.")
 	noCachePtr := getopt.BoolLong("no-cache", 'n', "Whether to not use a cache and make conditional requests to Traffic Ops")
 	syncdsUpdatesIPAllowPtr := getopt.BoolLong("syncds-updates-ipallow", 'S', "Whether syncds mode will update ipallow. This exists because ATS had a bug where reloading after changing ipallow would block everything. Default is false.")
@@ -400,10 +407,13 @@ If any of the related flags are also set, they override the mode's default behav
 	toUser := *toUserPtr
 	toPass := *toPassPtr
 	dnsLocalBind := *dnsLocalBindPtr
-	help := *helpPtr
 	maxmindLocation := *maxmindLocationPtr
 
-	if help {
+	if *version {
+		cfg := &Cfg{Version: appVersion, GitRevision: gitRevision}
+		fmt.Println(cfg.AppVersion())
+		os.Exit(0)
+	} else if *help {
 		Usage()
 		return Cfg{}, nil
 	}
@@ -515,6 +525,8 @@ If any of the related flags are also set, they override the mode's default behav
 		InstallPackages:   *installPackagesPtr,
 		IgnoreUpdateFlag:  *ignoreUpdateFlagPtr,
 		NoUnsetUpdateFlag: *noUnsetUpdateFlagPtr,
+		Version:           appVersion,
+		GitRevision:       gitRevision,
 	}
 
 	if err = log.InitCfg(cfg); err != nil {

@@ -42,6 +42,8 @@ t3c-check \<command\> [\<args\>]
 
 [\-\-help]
 
+[\-\-version]
+
 # DESCRIPTION
 
 The t3c-check application has commands for checking things about new config files, such as
@@ -60,6 +62,15 @@ t3c-check-reload
 t3c-check-refs
 
     Check if a config file's referenced plugins and files are valid
+
+# OPTIONS
+-h, -\-help
+
+    Print usage information and exit
+
+-V, -\-version
+
+    Print version information and exit.
 
 # AUTHORS
 

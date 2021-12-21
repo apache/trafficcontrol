@@ -86,7 +86,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-pmd-plugin</artifactId>
-				<version>3.6</version>
+				<version>3.14.0</version>
 				<executions>
 					<execution>
 						<id>PMD</id>
@@ -182,7 +182,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.19.1</version>
 				<configuration>
-					<argLine>-XX:-UseSplitVerifier -Djava.library.path=${java.library.path}</argLine>
+					<argLine>-Djava.library.path=${java.library.path}</argLine>
 					<excludedGroups>org.apache.traffic_control.traffic_router.core.util.IntegrationTest,org.apache.traffic_control.traffic_router.core.util.ExternalTest</excludedGroups>
 				</configuration>
 			</plugin>
@@ -265,8 +265,8 @@
 		</dependency>
 
 		<dependency>
-            <groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
 			<version>${log4j.version}</version>
         </dependency>
 

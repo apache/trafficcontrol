@@ -28,6 +28,63 @@ import (
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
+func TestServerUpdateStatusLastAssigned(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServiceCategories, Topologies, DeliveryServices}, func() {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("hostName", "atlanta-edge-01")
+		resp, _, err := TOSession.GetServers(opts)
+		if err != nil {
+			t.Fatalf("cannot get server by hostname: %v", err)
+		}
+		if len(resp.Response) != 1 {
+			t.Fatalf("Expected a server named 'atlanta-edge-01' to exist")
+		}
+		edge := resp.Response[0]
+		opts = client.NewRequestOptions()
+		opts.QueryParameters.Set("xmlId", "ds-top")
+		dsResp, _, err := TOSession.GetDeliveryServices(opts)
+		if err != nil {
+			t.Fatalf("cannot get delivery service by xmlId: %v", err)
+		}
+		if len(resp.Response) != 1 {
+			t.Fatalf("Expected one delivery service with xmlId 'ds-top' to exist")
+		}
+		// temporarily unassign the topology in order to assign an EDGE
+		ds := dsResp.Response[0]
+		tmpTop := *ds.Topology
+		ds.Topology = nil
+		ds.FirstHeaderRewrite = nil
+		ds.LastHeaderRewrite = nil
+		ds.InnerHeaderRewrite = nil
+		_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
+		if err != nil {
+			t.Fatalf("cannot update delivery service 'ds-top': %v", err)
+		}
+		_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*edge.ID}, true, client.RequestOptions{})
+		if err != nil {
+			t.Fatalf("cannot create delivery service server: %v", err)
+		}
+		// reassign the topology
+		ds.Topology = &tmpTop
+		_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
+		if err != nil {
+			t.Fatalf("cannot update delivery service 'ds-top': %v", err)
+		}
+		// attempt to set the edge to OFFLINE
+		_, _, err = TOSession.UpdateServerStatus(*edge.ID, tc.ServerPutStatus{
+			Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
+			OfflineReason: util.StrPtr("testing")}, client.RequestOptions{})
+		if err != nil {
+			t.Errorf("setting edge to OFFLINE when it's the only edge assigned to a topology-based delivery service - expected: no error, actual: %v", err)
+		}
+		// remove EDGE assignment
+		_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{}, true, client.RequestOptions{})
+		if err != nil {
+			t.Errorf("removing delivery service servers from topology-based delivery service - expected: no error, actual: %v", err)
+		}
+	})
+}
+
 func TestServerUpdateStatus(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
 		//TODO: DON'T hard-code server hostnames!

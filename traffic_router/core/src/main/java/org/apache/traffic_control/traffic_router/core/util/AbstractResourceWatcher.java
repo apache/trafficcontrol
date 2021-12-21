@@ -18,7 +18,8 @@ package org.apache.traffic_control.traffic_router.core.util;
 import org.apache.traffic_control.traffic_router.core.config.WatcherConfig;
 import org.apache.traffic_control.traffic_router.core.loc.AbstractServiceUpdater;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileReader;
@@ -27,7 +28,7 @@ import java.io.IOException;
 import java.net.URL;
 
 public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
-	private static final Logger LOGGER = Logger.getLogger(AbstractResourceWatcher.class);
+	private static final Logger LOGGER = LogManager.getLogger(AbstractResourceWatcher.class);
 
 	private URL authorizationUrl;
 	private String postData;
@@ -35,7 +36,7 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 	protected TrafficOpsUtils trafficOpsUtils;
 	private int timeout = 15000;
 
-	@SuppressWarnings("PMD")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public void configure(final JsonNode config) {
 		URL authUrl;
 		String credentials;
@@ -151,13 +152,12 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 		}
 
 		File databaseFile = null;
-		FileWriter fw;
 		try {
 			databaseFile = File.createTempFile(tmpPrefix, tmpSuffix);
-			fw = new FileWriter(databaseFile);
-			fw.write(jsonData);
-			fw.flush();
-			fw.close();
+			try (FileWriter fw = new FileWriter(databaseFile)) {
+				fw.write(jsonData);
+				fw.flush();
+			}
 		}
 		catch (IOException e) {
 			LOGGER.warn("Failed to create file from data received from '" + interpolatedUrl + "'");

@@ -22,8 +22,6 @@ import (
 // TestDirs tests that the t3c rpm creates directories that t3c-apply requires to run.
 // Right now, that's just /var/lib/trafficcontrol-cache-config, but in the future it may include others like /var/log/trafficcontrol-cache-config or /etc/trafficcontrol-cache-config.
 func TestDirs(t *testing.T) {
-	t.Logf("------------- Starting TestDirs ---------------")
-
 	requiredDirs := []string{
 		`/var/lib/trafficcontrol-cache-config`,
 	}
@@ -31,15 +29,13 @@ func TestDirs(t *testing.T) {
 	for _, dir := range requiredDirs {
 		dirInf, err := os.Stat(dir)
 		if os.IsNotExist(err) {
-			t.Errorf("directory '%v' must exist for t3c-apply to run successfully, expected: exists, actual: not found", dir)
+			t.Errorf("directory '%s' must exist for t3c-apply to run successfully, expected: exists, actual: not found", dir)
 		} else if err != nil {
-			t.Errorf("checking if directory '%v' exists, expected: no error, actual: %v", dir, err)
+			t.Errorf("checking if directory '%s' exists, expected: no error, actual: %v", dir, err)
 		} else if !dirInf.IsDir() {
-			t.Errorf("directory '%v' must exist for t3c-apply to run successfully, expected: exists, actual: is a file, not a directory", dir)
+			t.Errorf("directory '%s' must exist for t3c-apply to run successfully, expected: exists, actual: is a file, not a directory", dir)
 		} else {
-			t.Logf("successfully verified '%v' exists and is a directory", dir)
+			t.Logf("successfully verified '%s' exists and is a directory", dir)
 		}
 	}
-
-	t.Logf("------------- End of TestDirs ---------------")
 }

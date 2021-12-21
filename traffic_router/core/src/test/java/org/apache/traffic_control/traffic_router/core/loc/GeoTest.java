@@ -16,7 +16,8 @@
 package org.apache.traffic_control.traffic_router.core.loc;
 
 import org.apache.traffic_control.traffic_router.core.util.IntegrationTest;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -30,7 +31,7 @@ import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
 
 @Category(IntegrationTest.class)
 public class GeoTest {
-	private static final Logger LOGGER = Logger.getLogger(GeoTest.class);
+	private static final Logger LOGGER = LogManager.getLogger(GeoTest.class);
 
 	private GeolocationDatabaseUpdater geolocationDatabaseUpdater;
 	private MaxmindGeolocationService maxmindGeolocationService;

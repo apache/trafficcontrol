@@ -16,7 +16,8 @@
 package org.apache.traffic_control.traffic_router.secure;
 
 import org.apache.traffic_control.traffic_router.shared.CertificateData;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPrivateCrtKey;
 
 import java.math.BigInteger;
@@ -32,7 +33,7 @@ import java.util.List;
 
 @SuppressWarnings({"PMD.CyclomaticComplexity"})
 public class CertificateDataConverter {
-	private static final Logger log = Logger.getLogger(CertificateDataConverter.class);
+	private static final Logger log = LogManager.getLogger(CertificateDataConverter.class);
 
 	private PrivateKeyDecoder privateKeyDecoder = new PrivateKeyDecoder();
 	private CertificateDecoder certificateDecoder = new CertificateDecoder();
@@ -59,7 +60,7 @@ public class CertificateDataConverter {
 			}
 			if (hostMatch && modMatch) {
 				return new HandshakeData(certificateData.getDeliveryservice(), certificateData.getHostname(),
-						x509Chain.toArray(new X509Certificate[x509Chain.size()]), privateKey);
+						x509Chain.toArray(new X509Certificate[0]), privateKey);
 			}
 			else if (!hostMatch) {
 				log.warn("Service name doesn't match the subject of the certificate = "+certificateData.getHostname());

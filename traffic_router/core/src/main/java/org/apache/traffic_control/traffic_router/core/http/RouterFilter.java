@@ -22,7 +22,8 @@ import org.apache.traffic_control.traffic_router.core.router.StatTracker;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import org.apache.traffic_control.traffic_router.geolocation.GeolocationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -38,7 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class RouterFilter extends OncePerRequestFilter {
-	private static final Logger ACCESS = Logger.getLogger("org.apache.traffic_control.traffic_router.core.access");
+	private static final Logger ACCESS = LogManager.getLogger("org.apache.traffic_control.traffic_router.core.access");
 	public static final String REDIRECT_QUERY_PARAM = "trred";
 	private static final String HEAD = "HEAD";
 

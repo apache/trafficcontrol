@@ -38,7 +38,7 @@ func (r *TCData) CreateTestTypes(t *testing.T) {
 	for _, typ := range r.TestData.Types {
 		foundTypes, _, err := TOSession.GetTypeByName(typ.Name)
 		if err == nil && len(foundTypes) > 0 {
-			t.Logf("Type %v already exists (%v match(es))", typ.Name, len(foundTypes))
+			t.Logf("Type %s already exists (%d match(es))", typ.Name, len(foundTypes))
 			continue
 		}
 
@@ -67,13 +67,13 @@ func (r *TCData) DeleteTestTypes(t *testing.T) {
 			t.Errorf("unable to close connection to db, error: %v", err)
 		}
 	}()
-	dbDeleteTemplate := "DELETE FROM type WHERE name='%v';"
+	dbDeleteTemplate := "DELETE FROM type WHERE name='%s';"
 
 	for _, typ := range r.TestData.Types {
 		// Retrieve the Type by name so we can get the id for the Update
 		resp, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil || len(resp) == 0 {
-			t.Fatalf("cannot GET Type by name: %v - %v", typ.Name, err)
+			t.Fatalf("cannot GET Type by name: %s - %v", typ.Name, err)
 		}
 		respType := resp[0]
 

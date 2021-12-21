@@ -18,7 +18,8 @@ package org.apache.traffic_control.traffic_router.protocol;
 import org.apache.traffic_control.traffic_router.secure.CertificateRegistry;
 import org.apache.traffic_control.traffic_router.secure.HandshakeData;
 import org.apache.traffic_control.traffic_router.secure.KeyManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.jni.SSL;
 import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.NioEndpoint;
@@ -34,7 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class RouterNioEndpoint extends NioEndpoint {
-	private static final Logger LOGGER = Logger.getLogger(RouterNioEndpoint.class);
+	private static final Logger LOGGER = LogManager.getLogger(RouterNioEndpoint.class);
 	private String protocols;
 
 	// Grabs the aliases from our custom certificate registry, creates a sslHostConfig for them
@@ -125,39 +126,6 @@ public class RouterNioEndpoint extends NioEndpoint {
 	@Override
 	protected SSLHostConfig getSSLHostConfig(final String sniHostName){
 		return super.getSSLHostConfig(sniHostName == null ? null : sniHostName.toLowerCase());
-	}
-
-	@Override
-	protected SocketProcessorBase<NioChannel> createSocketProcessor(
-			final SocketWrapperBase<NioChannel> socketWrapper, final SocketEvent event){
-		return new RouterSocketProcessor(socketWrapper, event);
-	}
-
-	/**
-	 * This class is the equivalent of the Worker, but will simply use in an
-	 * external Executor thread pool.
-	 */
-	protected class RouterSocketProcessor extends SocketProcessor {
-
-		public RouterSocketProcessor(final SocketWrapperBase<NioChannel> socketWrapper, final SocketEvent event){
-			super(socketWrapper, event);
-		}
-
-		/* This override has been added as a temporary hack to resolve an issue in Tomcat.
-		Once the issue has been corrected in Tomcat then this can be removed. The
-		'SSL.getLastErrorNumber()' removes an unwanted error condition from the error stack
-		in those cases where some error condition has caused the socket to get closed and
-		then the processor was put back on the processor stack for reuse in a future connection.
-		*/
-		@Override
-		protected void doRun(){
-			final SocketWrapperBase<NioChannel> localWrapper = socketWrapper;
-			final NioChannel socket = localWrapper.getSocket();
-			super.doRun();
-			if (!socket.isOpen()){
-				SSL.getLastErrorNumber();
-			}
-		}
 	}
 
 	public String getProtocols() {

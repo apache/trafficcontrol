@@ -84,10 +84,14 @@ var (
 	Base64 = validation.NewStringRule(govalidator.IsBase64, "must be encoded in Base64")
 	// DataURI validates if a string is a valid base64-encoded data URI
 	DataURI = validation.NewStringRule(govalidator.IsDataURI, "must be a Base64-encoded data URI")
+	// E164 validates if a string is a valid ISO3166 Alpha 2 country code
+	E164 = validation.NewStringRule(isE164Number, "must be a valid E164 number")
 	// CountryCode2 validates if a string is a valid ISO3166 Alpha 2 country code
 	CountryCode2 = validation.NewStringRule(govalidator.IsISO3166Alpha2, "must be a valid two-letter country code")
 	// CountryCode3 validates if a string is a valid ISO3166 Alpha 3 country code
 	CountryCode3 = validation.NewStringRule(govalidator.IsISO3166Alpha3, "must be a valid three-letter country code")
+	// CurrencyCode validates if a string is a valid IsISO4217 currency code.
+	CurrencyCode = validation.NewStringRule(govalidator.IsISO4217, "must be valid ISO 4217 currency code")
 	// DialString validates if a string is a valid dial string that can be passed to Dial()
 	DialString = validation.NewStringRule(govalidator.IsDialString, "must be a valid dial string")
 	// MAC validates if a string is a MAC address
@@ -98,6 +102,10 @@ var (
 	IPv4 = validation.NewStringRule(govalidator.IsIPv4, "must be a valid IPv4 address")
 	// IPv6 validates if a string is a valid version 6 IP address
 	IPv6 = validation.NewStringRule(govalidator.IsIPv6, "must be a valid IPv6 address")
+	// Subdomain validates if a string is valid subdomain
+	Subdomain = validation.NewStringRule(isSubdomain, "must be a valid subdomain")
+	// Domain validates if a string is valid domain
+	Domain = validation.NewStringRule(isDomain, "must be a valid domain")
 	// DNSName validates if a string is valid DNS name
 	DNSName = validation.NewStringRule(govalidator.IsDNSName, "must be a valid DNS name")
 	// Host validates if a string is a valid IP (both v4 and v6) or a valid DNS name
@@ -118,6 +126,14 @@ var (
 
 var (
 	reDigit = regexp.MustCompile("^[0-9]+$")
+	// Subdomain regex source: https://stackoverflow.com/a/7933253
+	reSubdomain = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?$`)
+	// E164 regex source: https://stackoverflow.com/a/23299989
+	reE164 = regexp.MustCompile(`^\+?[1-9]\d{1,14}$`)
+	// Domain regex source: https://stackoverflow.com/a/7933253
+	// Slightly modified: Removed 255 max length validation since Go regex does not
+	// support lookarounds. More info: https://stackoverflow.com/a/38935027
+	reDomain = regexp.MustCompile(`^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{1,63}| xn--[a-z0-9]{1,59})$`)
 )
 
 func isISBN(value string) bool {
@@ -126,6 +142,22 @@ func isISBN(value string) bool {
 
 func isDigit(value string) bool {
 	return reDigit.MatchString(value)
+}
+
+func isE164Number(value string) bool {
+	return reE164.MatchString(value)
+}
+
+func isSubdomain(value string) bool {
+	return reSubdomain.MatchString(value)
+}
+
+func isDomain(value string) bool {
+	if len(value) > 255 {
+		return false
+	}
+
+	return reDomain.MatchString(value)
 }
 
 func isUTFNumeric(value string) bool {
