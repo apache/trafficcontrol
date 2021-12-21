@@ -643,7 +643,7 @@ type DeliveryServiceNullableFieldsV11 struct {
 	// countries within which the Delivery Service's content ought to be made
 	// available. This has no effect if GeoLimit is not a pointer to exactly the
 	// value 2.
-	GeoLimitCountries *string `json:"geoLimitCountries" db:"geo_limit_countries"`
+	GeoLimitCountries *interface{} `json:"geoLimitCountries" db:"geo_limit_countries"`
 	// GeoLimitRedirectURL is a URL to which clients will be redirected if their
 	// access to the Delivery Service's content is blocked by GeoLimit rules.
 	GeoLimitRedirectURL *string `json:"geoLimitRedirectURL" db:"geolimit_redirect_url"`

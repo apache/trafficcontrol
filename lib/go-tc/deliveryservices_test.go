@@ -412,7 +412,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	firstHeaderRewrite := "firstHeaderRewrite"
 	fqPacingRate := 1337
 	geoLimit := 2
-	geoLimitCountries := "geo,Limit,Countries"
+	var geoLimitCountries interface{} = "geo,Limit,Countries"
 	geoLimitRedirectURL := "wss://geoLimitRedirectURL"
 	geoProvider := 1
 	globalMaxMBPS := -72485

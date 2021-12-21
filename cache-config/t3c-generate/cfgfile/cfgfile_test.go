@@ -185,6 +185,7 @@ func randDS() *atscfg.DeliveryService {
 	deepCachingTypeNever := tc.DeepCachingTypeNever
 	dsTypeHTTP := tc.DSTypeHTTP
 	protocol := tc.DSProtocolHTTP
+	var geoLimitCountries interface{}
 	ds := atscfg.DeliveryService{}
 	ds.EcsEnabled = *randBool()
 	ds.RangeSliceBlockSize = randInt()
@@ -214,7 +215,7 @@ func randDS() *atscfg.DeliveryService {
 	ds.DSCP = randInt()
 	ds.EdgeHeaderRewrite = randStr()
 	ds.GeoLimit = randInt()
-	ds.GeoLimitCountries = randStr()
+	ds.GeoLimitCountries = &geoLimitCountries
 	ds.GeoLimitRedirectURL = randStr()
 	ds.GeoProvider = randInt()
 	ds.GlobalMaxMBPS = randInt()

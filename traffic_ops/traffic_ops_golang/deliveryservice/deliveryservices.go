@@ -1330,7 +1330,9 @@ func requiredIfMatchesTypeName(patterns []string, typeName string) func(interfac
 var validTLSVersionPattern = regexp.MustCompile(`^\d+\.\d+$`)
 
 func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
-	sanitize(ds)
+	if err := sanitize(ds); err != nil {
+		return err
+	}
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
 	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
@@ -1371,26 +1373,10 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 				return nil
 			},
 		)),
-		"geoLimitCountries": validation.Validate(ds.GeoLimitCountries, validation.By(
-			func(value interface{}) error {
-				geoLimitCountries, ok := value.(*string)
-				if !ok {
-					return fmt.Errorf("must be a string or an array of strings, got: %T", value)
-				}
-				if geoLimitCountries != nil && *geoLimitCountries != "" {
-
-					countyCodes := strings.Split(*geoLimitCountries, ",")
-					var IsLetter = regexp.MustCompile(`^[A-Z]+$`).MatchString
-					for _, cc := range countyCodes {
-						if !IsLetter(cc) {
-							return fmt.Errorf("country codes can only contain alphabets")
-						}
-					}
-				}
-				return nil
-			},
-		)),
 	})
+	if err := validateGeoLimitCountries(ds); err != nil {
+		errs = append(errs, err)
+	}
 	if err := validateTopologyFields(ds); err != nil {
 		errs = append(errs, err)
 	}
@@ -1401,6 +1387,29 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 		return nil
 	}
 	return util.JoinErrs(errs)
+}
+
+func validateGeoLimitCountries(ds *tc.DeliveryServiceV4) error {
+	var IsLetter = regexp.MustCompile(`^[A-Z]+$`).MatchString
+	if ds.GeoLimitCountries == nil {
+		return nil
+	}
+	value := *ds.GeoLimitCountries
+	geoLimitCountries, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("must be a string or an array of strings, got: %T", value)
+	}
+	if geoLimitCountries != "" {
+		countyCodes := strings.Split(geoLimitCountries, ",")
+		for _, cc := range countyCodes {
+			if !IsLetter(cc) {
+				return fmt.Errorf("country codes can only contain alphabets")
+			}
+		}
+	} else {
+		ds.GeoLimitCountries = nil
+	}
+	return nil
 }
 
 func validateTopologyFields(ds *tc.DeliveryServiceV4) error {
@@ -2155,16 +2164,32 @@ func setNilIfEmpty(ptrs ...**string) {
 	}
 }
 
-func sanitize(ds *tc.DeliveryServiceV4) {
+func sanitize(ds *tc.DeliveryServiceV4) error {
 	if ds.GeoLimitCountries != nil {
 		geo := *ds.GeoLimitCountries
-		if len(geo) > 1 {
-			if geo[0] == '[' && geo[len(geo)-1] == ']' {
-				geo = geo[1 : len(geo)-1]
-				ds.GeoLimitCountries = &geo
+		geoLimitCountriesArray, ok := geo.([]interface{})
+		if !ok {
+			geoString, ok := geo.(string)
+			if !ok {
+				ds.GeoLimitCountries = nil
+				return errors.New("individual country codes in geoLimitCountries can only be strings")
+			} else {
+				*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(geoString, " ", "", -1))
 			}
+		} else {
+			gArray := make([]string, 0)
+			for _, g := range geoLimitCountriesArray {
+				countryCode, ok := g.(string)
+				if !ok {
+					ds.GeoLimitCountries = nil
+					return errors.New("individual country codes in geoLimitCountries can only be strings")
+				} else {
+					countryCode = strings.ToUpper(strings.Replace(countryCode, " ", "", -1))
+					gArray = append(gArray, countryCode)
+				}
+			}
+			*ds.GeoLimitCountries = strings.Join(gArray, ",")
 		}
-		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
 	}
 	if ds.ProfileID != nil && *ds.ProfileID == -1 {
 		ds.ProfileID = nil
@@ -2200,6 +2225,7 @@ func sanitize(ds *tc.DeliveryServiceV4) {
 	if ds.MaxRequestHeaderBytes == nil {
 		ds.MaxRequestHeaderBytes = util.IntPtr(tc.DefaultMaxRequestHeaderBytes)
 	}
+	return nil
 }
 
 // SelectDeliveryServicesQuery is a PostgreSQL query used to fetch Delivery
