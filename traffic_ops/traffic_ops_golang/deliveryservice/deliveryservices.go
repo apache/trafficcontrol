@@ -2138,6 +2138,11 @@ func setNilIfEmpty(ptrs ...**string) {
 
 func sanitize(ds *tc.DeliveryServiceV4) {
 	if ds.GeoLimitCountries != nil {
+		geo := *ds.GeoLimitCountries
+		if geo[0] == '[' && geo[len(geo)-1] == ']' {
+			geo = geo[1 : len(geo)-1]
+			ds.GeoLimitCountries = &geo
+		}
 		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
 	}
 	if ds.ProfileID != nil && *ds.ProfileID == -1 {
