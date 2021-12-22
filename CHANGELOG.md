@@ -37,7 +37,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6367](https://github.com/apache/trafficcontrol/issues/6367) - Fix PUT `user/current` to work with v4 User Roles and Permissions
 
 ### Changed
-- Updated `log4j` module in Traffic Router from version 1.2.17 to 2.17.0
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
 - [#6179](https://github.com/apache/trafficcontrol/issues/6179) Updated the Traffic Ops rpm to include the `ToDnssecRefresh` binary and make the `trafops_dnssec_refresh` cron job use it
 - Traffic Portal no longer uses `ruby compass` to compile sass and now uses `dart-sass`.
@@ -53,6 +52,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Removed
 - Removed the `user_role` table.
 - The `traffic_ops.sh` shell profile no longer sets `GOPATH` or adds its `bin` folder to the `PATH`
+
+## [6.0.2] - 2021-12-17
+### Changed
+- Updated `log4j` module in Traffic Router from version 1.2.17 to 2.17.0
 
 ## [6.0.1] - 2021-11-04
 ### Added
