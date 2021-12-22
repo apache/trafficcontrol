@@ -690,8 +690,20 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 
 	// Dump the "live" monitoring.json monitors, and populate with the
 	// "snapshotted" CRConfig
-	mc.TrafficMonitor = map[string]tc.TrafficMonitor{}
+	if mc == nil {
+		return mc, errors.New("no TM configmap data")
+	}
+	//mc.TrafficMonitor = map[string]tc.TrafficMonitor{}
 	for name, mon := range crConfig.Monitors {
+		if tmData, ok := mc.TrafficMonitor[name]; ok {
+			if tmData.IP != "" && tmData.IP6 != "" {
+				continue
+			} else {
+				mc.TrafficMonitor[name] = tc.TrafficMonitor{}
+			}
+		} else {
+			continue
+		}
 		// monitorProfile = *mon.Profile
 		m := tc.TrafficMonitor{}
 		if mon.Port != nil {

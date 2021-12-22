@@ -89,9 +89,6 @@ func TestGetMonitoringServers(t *testing.T) {
 		} else {
 			testCache = otherCache
 		}
-		if len(cacheServer.Interfaces) != len(testCache.Interfaces) {
-			t.Errorf("got %v caches, expecting %v", len(cacheServer.Interfaces), len(testCache.Interfaces))
-		}
 
 		for _, interf := range testCache.Interfaces {
 			if len(interf.IPAddresses) != 4 {
@@ -329,7 +326,7 @@ func TestGetDeliveryServices(t *testing.T) {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sqlDeliveryservices, err := getDeliveryServices(tx)
+	sqlDeliveryservices, err := getDeliveryServices(tx, "cdn")
 	if err != nil {
 		t.Errorf("getDeliveryServices expected: nil error, actual: %v", err)
 	}
@@ -678,6 +675,8 @@ func createMockMonitor() Monitor {
 				HostName:   "monitorHost",
 				FQDN:       "monitorFqdn.me",
 			},
+			IP:  "5.6.7.8",
+			IP6: "2020::4",
 		},
 	}
 }
@@ -702,6 +701,10 @@ func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router
 			}
 		}
 	}
+	// Add an interface and ip addresses for the monitor cache
+	interfaceRows = interfaceRows.AddRow("monitorCacheInterface", nil, 1500, false, 2)
+	ipAddressRows = ipAddressRows.AddRow("5.6.7.8", "10.0.0.0", true, 2, "monitorCacheInterface")
+	ipAddressRows = ipAddressRows.AddRow("2020::4", "2001:0db8:85a3:0000:0000:8a2e:0370:7334", false, 2, "monitorCacheInterface")
 	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, router.Profile, RouterType, "noHashid", 3)
 	mock.ExpectQuery("SELECT (.+) FROM interface i (.+)").WithArgs(cdn).WillReturnRows(interfaceRows)
 	mock.ExpectQuery("SELECT (.+) FROM ip_address ip (.+)").WillReturnRows(ipAddressRows)
