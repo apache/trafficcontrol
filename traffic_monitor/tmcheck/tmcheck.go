@@ -43,8 +43,7 @@ const TrafficMonitorStatsPath = "/publish/Stats"
 
 func getClient() *http.Client {
 	return &http.Client{
-		Transport: &http.Transport{},
-		Timeout:   RequestTimeout,
+		Timeout: RequestTimeout,
 	}
 }
 
