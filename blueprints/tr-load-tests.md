@@ -163,7 +163,7 @@ Instructions for using the Traffic Router Ultimate Test Harness should be added 
         - information about Traffic Router-type Servers in those CDNs
         - Type information
         - Delivery Service information
-    - Documentation of each CLI option
+    - Documentation of each option
     - Example commands
 
 ### Testing Impact
@@ -196,6 +196,26 @@ The Router Ultimate Test Harness should include a load test for HTTP-routed Deli
 | Path count                      | The number of paths to generate for use in requests to Delivery Services                                                                                                                                | HTTP                  | 10000                       |
 | Maximum path length             | The maximum string length for each generated path                                                                                                                                                       | HTTP                  | 100                         |
 | Use location header             | Whether the HTTP HTTP Delivery service should redirect the user or server the routing information as a JSON response.                                                                                   | HTTP                  | True                        |
+
+These options will be structured in a config file:
+
+```jsonc
+{
+    "all": {
+        "cdn_name": "Kabletown"
+    },
+    "http": {
+        "ipv4_only": true,
+        /* more options */
+        "path_count": 5000
+    },
+    "dns": {
+        "delivery_service_name": "static"
+    }
+}
+```
+
+Options that should apply to a specific type of test should go under a key named that test type, while options applying to all tests can go under the `"all"` key.
 
 #### Other Tests
 
