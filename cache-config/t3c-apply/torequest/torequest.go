@@ -222,6 +222,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 	// perform plugin verification
 	if cfg.Name == "remap.config" || cfg.Name == "plugin.config" {
 		if err := checkRefs(r.Cfg, cfg.Body, filesAdding); err != nil {
+			r.configFileWarnings[cfg.Name] = append(r.configFileWarnings[cfg.Name], "failed to verify '"+cfg.Name+"': "+err.Error())
 			return errors.New("failed to verify '" + cfg.Name + "': " + err.Error())
 		}
 		log.Infoln("Successfully verified plugins used by '" + cfg.Name + "'")
@@ -646,11 +647,7 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 			if warn == "" {
 				continue
 			}
-			if _, ok := r.configFileWarnings[file.Name]; ok {
-				r.configFileWarnings[file.Name] = append(r.configFileWarnings[file.Name], warn)
-			} else {
-				r.configFileWarnings[file.Name] = []string{warn}
-			}
+			r.configFileWarnings[file.Name] = append(r.configFileWarnings[file.Name], warn)
 		}
 	}
 
