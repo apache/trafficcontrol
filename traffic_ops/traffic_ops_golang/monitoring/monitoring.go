@@ -304,9 +304,9 @@ AND cdn.name = $3
 						if ip == nil {
 							continue
 						}
-						if ip.To4() != nil {
+						if ipStr == "" && ip.To4() != nil {
 							ipStr = ipAddress.Address
-						} else if ip.To16() != nil {
+						} else if ipStr6 == "" && ip.To16() != nil {
 							ipStr6 = ipAddress.Address
 						}
 						if ipStr != "" && ipStr6 != "" {
@@ -318,8 +318,6 @@ AND cdn.name = $3
 						break
 					}
 				}
-			} else {
-				fmt.Println(interfacesByNameAndServer)
 			}
 			monitors = append(monitors, Monitor{
 				BasicServer: BasicServer{
