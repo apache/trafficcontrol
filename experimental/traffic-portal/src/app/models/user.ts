@@ -56,7 +56,7 @@ export interface User {
 	/** The integral, unique identifier of the Role the user has. */
 	role?:            number;
 	/** The user's Role. */
-	roleName?:        string;
+	rolename?:        string;
 	/** The state or province within which the user lives/is based. */
 	stateOrProvince?: string;
 	/** The Tenant to which the user belongs. */
@@ -67,6 +67,71 @@ export interface User {
 	uid?:             number;
 	/** The user's username. */
 	username:         string;
+}
+
+/**
+ * CurrentUser represents a "current user" (mostly as seen in API *responses* -
+ * request structures are subtly different in a few ways). This differs from a
+ * `User` in a few key ways, most notably `rolename` vs `roleName`.
+ */
+export interface CurrentUser {
+	addressLine1: string | null;
+	addressLine2: string | null;
+	city: string | null;
+	confirmLocalPasswd?: string | null;
+	company: string | null;
+	country: string | null;
+	email: string;
+	fullName: string | null;
+	gid: number | null;
+	id: number;
+	lastUpdated: Date;
+	localPasswd?: string | null;
+	localUser: boolean;
+	newUser: boolean;
+	phoneNumber: string | null;
+	postalCode: string | null;
+	publicSshKey: string | null;
+	role: number;
+	roleName: string;
+	stateOrProvince: string | null;
+	tenant: string;
+	tenantId: number;
+	uid: number | null;
+	username: string;
+}
+
+/**
+ * Gets a new `CurrentUser` to use as a default structure.
+ *
+ * @returns A valid `CurrentUser` - but one that will absolutely fail validation
+ * server-side for several reasons. Should not be used directly.
+ */
+export function newCurrentUser(): CurrentUser {
+	return {
+		addressLine1: null,
+		addressLine2: null,
+		city: null,
+		company: null,
+		country: null,
+		email: "",
+		fullName: "",
+		gid: null,
+		id: -1,
+		lastUpdated: new Date(),
+		localUser: true,
+		newUser: false,
+		phoneNumber: null,
+		postalCode: null,
+		publicSshKey: null,
+		role: -1,
+		roleName: "",
+		stateOrProvince: null,
+		tenant: "",
+		tenantId: -1,
+		uid: null,
+		username: "",
+	};
 }
 
 

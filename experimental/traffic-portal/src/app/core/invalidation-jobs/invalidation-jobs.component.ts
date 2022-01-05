@@ -108,7 +108,11 @@ export class InvalidationJobsComponent implements OnInit {
 		if (isNaN(ttl)) {
 			throw new Error(`Invalid TTL: "${tmp[1]}" (job id: ${j.id})`);
 		}
-		return new Date(j.startTime.getTime() + ttl * 60 * 60 * 1000);
+		// I don't know why this is necessary, because Date.getTime *says* it
+		// returns a number, but if you take away the type of `start` here, it
+		// fails to compile.
+		const start: number = j.startTime.getTime();
+		return new Date(start + ttl * 60 * 60 * 1000);
 	}
 
 	/**

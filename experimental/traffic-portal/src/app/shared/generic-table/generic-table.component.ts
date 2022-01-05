@@ -14,28 +14,27 @@
 
 import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, ViewChild } from "@angular/core";
 import { Router } from "@angular/router";
-import {
+import { BehaviorSubject, Subscription } from "rxjs";
+
+import type {
 	CellContextMenuEvent,
 	ColDef,
 	ColGroupDef,
+	Column,
 	ColumnApi,
 	CsvExportParams,
 	GridApi,
 	GridOptions,
 	GridReadyEvent,
 	ITooltipParams,
-	RowNode } from "ag-grid-community";
-import { BehaviorSubject, Subscription } from "rxjs";
-
+	RowNode
+} from "ag-grid-community";
 import {faCaretDown, faColumns, faDownload} from "@fortawesome/free-solid-svg-icons";
 
 import { fuzzyScore } from "src/app/utils";
 import { BooleanFilterComponent } from "../table-components/boolean-filter/boolean-filter.component";
 import { SSHCellRendererComponent } from "../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import { UpdateCellRendererComponent } from "../table-components/update-cell-renderer/update-cell-renderer.component";
-
-/** Tables can display any of this kind of data. */
-type TableData = Record<string, string | number | bigint | Date | boolean | RegExp | null>;
 
 /** A context menu action that acts on a single row only. */
 interface ContextMenuSingleAction<T> {
@@ -118,10 +117,10 @@ export interface ContextMenuActionEvent<T> {
 	styleUrls: ["./generic-table.component.scss"],
 	templateUrl: "./generic-table.component.html",
 })
-export class GenericTableComponent implements OnInit, OnDestroy {
+export class GenericTableComponent<T> implements OnInit, OnDestroy {
 
 	/** Rows for the table */
-	@Input() public data: Array<TableData> = [];
+	@Input() public data: Array<T> = [];
 	/** Column and column group definitions. */
 	@Input() public cols: Array<ColDef | ColGroupDef> = [];
 	/** Optionally provide fuzzy search text. */
@@ -129,16 +128,16 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	/** Optionally a context to load from localstorage. Providing a unique value for this allows for persistent filter, sort, etc. */
 	@Input() public context: string | undefined;
 	/** Optionally a set of context menu items. If not given, the context menu is disabled. */
-	@Input() public contextMenuItems: Array<ContextMenuItem<unknown>> = [];
+	@Input() public contextMenuItems: Array<ContextMenuItem<T>> = [];
 	/** Emits when context menu actions are clicked. Type safety is the host's responsibility! */
-	@Output() public contextMenuAction = new EventEmitter<ContextMenuActionEvent<unknown>>();
+	@Output() public contextMenuAction = new EventEmitter<ContextMenuActionEvent<T>>();
 	/**
 	 * Checks if a context menu item is an action.
 	 *
 	 * @param i The menu item to check.
 	 * @returns 'true' if 'i' is an action, 'false' if it's a link.
 	 */
-	public isAction<T>(i: ContextMenuItem<T>): i is ContextMenuAction<T> {
+	public isAction(i: ContextMenuItem<T>): i is ContextMenuAction<T> {
 		return Object.prototype.hasOwnProperty.call(i, "action");
 	}
 
@@ -159,7 +158,7 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	}
 
 	/** This holds a reference to the table's selected data, which is emitted on context menu action clicks. */
-	public selected: unknown;
+	public selected: T | null = null;
 
 	/** Holds a subscription for the fuzzySearch input if one was provided (otherwise 'null') */
 	private fuzzySubscription: Subscription|null = null;
@@ -209,11 +208,21 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	/**
 	 * All currently selected rows.
 	 */
-	public get fullSelection(): Array<unknown> {
+	public get fullSelection(): Array<T> {
 		if (!this.gridAPI) {
 			return [];
 		}
 		return this.gridAPI.getSelectedRows();
+	}
+
+	/**
+	 * All column definitions (regardless of whether or not they're visible).
+	 */
+	public get columns(): Array<Column> {
+		if (!this.columnAPI) {
+			return [];
+		}
+		return this.columnAPI.getAllColumns() ?? [];
 	}
 
 	/**
@@ -503,7 +512,10 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	 * @param a The action to check.
 	 * @returns Whether or not `a` should be disabled.
 	 */
-	public isDisabled(a: ContextMenuAction<unknown>): boolean {
+	public isDisabled(a: ContextMenuAction<T>): boolean {
+		if (!this.selected) {
+			throw new Error("cannot check if a context menu is disabled for a selection when there is no selection");
+		}
 		if (!a.multiRow && this.selectionCount > 1) {
 			return true;
 		}
@@ -523,7 +535,10 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	 * @param multi If 'true' the emitted data will be all rows currently selected, otherwise only the item on which the user right-clicked.
 	 * @param e The mouse event that triggered this handler.
 	 */
-	public emitContextMenuAction(action: string, multi: boolean, e: MouseEvent): void {
+	public emitContextMenuAction(action: string, multi: boolean | undefined, e: MouseEvent): void {
+		if (!this.selected) {
+			throw new Error("nothing selected, cannot emit context menu action");
+		}
 		e.stopPropagation();
 		if (multi) {
 			this.contextMenuAction.emit({

@@ -336,7 +336,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 					} catch (e) {
 						console.error(e);
 						const nativeBypassElement = document.getElementById("bypass-loc") as HTMLInputElement;
-						nativeBypassElement.setCustomValidity(e.message);
+						nativeBypassElement.setCustomValidity(e instanceof Error ? e.message : String(e));
 						nativeBypassElement.reportValidity();
 						nativeBypassElement.value = "";
 						nativeBypassElement.setCustomValidity("");

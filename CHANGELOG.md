@@ -5,7 +5,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
-- [#2770](https://github.com/apache/trafficcontrol/issues/2770) Added validation for httpBypassFqdn as hostname in Traffic Ops
 - Added permission based roles for better access control.
 - [#5674](https://github.com/apache/trafficcontrol/issues/5674) Added new query parameters `cdn` and `maxRevalDurationDays` to the `GET /api/x/jobs` Traffic Ops API to filter by CDN name and within the start_time window defined by the `maxRevalDurationDays` GLOBAL profile parameter, respectively.
 - Added a new Traffic Ops cdn.conf option -- `disable_auto_cert_deletion` -- in order to optionally prevent the automatic deletion of certificates for delivery services that no longer exist whenever a CDN snapshot is taken.
@@ -24,27 +23,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Vault: Added additional flag to TV Riak (Deprecated) Util
 
 ### Fixed
-- [#6197](https://github.com/apache/trafficcontrol/issues/6197) - TO `/deliveryservices/:id/routing` makes requests to all TRs instead of by CDN.
+- [#6411](https://github.com/apache/trafficcontrol/pull/6411) Removes invalid 'ALL cdn' options from TP
 - Fixed Traffic Router crs/stats to prevent overflow and to correctly record the time used in averages.
 - [#6209](https://github.com/apache/trafficcontrol/pull/6209) Updated Traffic Router to use Java 11 to compile and run
 - [#5893](https://github.com/apache/trafficcontrol/issues/5893) - A self signed certificate is created when an HTTPS delivery service is created or an HTTP delivery service is updated to HTTPS.
-- [#6125](https://github.com/apache/trafficcontrol/issues/6125) - Fix `/cdns/{name}/federations?id=#` to search for CDN.
 - [#6255](https://github.com/apache/trafficcontrol/issues/6255) - Unreadable Prod Mode CDN Notifications in Traffic Portal
+- [#6378](https://github.com/apache/trafficcontrol/issues/6378) - Cannot update or delete Cache Groups with null latitude and longitude.
 - Fixed broken `GET /cdns/routing` Traffic Ops API
 - [#6259](https://github.com/apache/trafficcontrol/issues/6259) - Traffic Portal No Longer Allows Spaces in Server Object "Router Port Name"
 - [#6392](https://github.com/apache/trafficcontrol/issues/6392) - Traffic Ops prevents assigning ORG servers to topology-based delivery services (as well as a number of other valid operations being prohibited by "last server assigned to DS" validations which don't apply to topology-based delivery services)
 - [#6175](https://github.com/apache/trafficcontrol/issues/6175) - POST request to /api/4.0/phys_locations accepts mismatch values for regionName.
-- [#6285](https://github.com/apache/trafficcontrol/issues/6285) - The Traffic Ops Postinstall script will work in CentOS 7, even if Python 3 is installed
-- [#5373](https://github.com/apache/trafficcontrol/issues/5373) - Traffic Monitor logs not consistent
+- Fixed Traffic Monitor parsing stats_over_http output so that multiple stats for the same underlying delivery service (when the delivery service has more than 1 regex) are properly summed together. This makes the resulting data more accurate in addition to fixing the "new stat is lower than last stat" warnings.
 - Traffic Ops: Sanitize username before executing LDAP query
 - [#6367](https://github.com/apache/trafficcontrol/issues/6367) - Fix PUT `user/current` to work with v4 User Roles and Permissions
 
 ### Changed
-- Updated `log4j` module in Traffic Router from version 1.2.17 to 2.16.0
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
 - [#6179](https://github.com/apache/trafficcontrol/issues/6179) Updated the Traffic Ops rpm to include the `ToDnssecRefresh` binary and make the `trafops_dnssec_refresh` cron job use it
-- Changed the DNSSEC refresh Traffic Ops API to only create a new change log entry if any keys were actually refreshed or an error occurred (in order to reduce changelog noise)
-- [#5927](https://github.com/apache/trafficcontrol/issues/5927) Updated CDN-in-a-Box to not run a Riak container by default but instead only run it if the optional flag is provided.
 - Traffic Portal no longer uses `ruby compass` to compile sass and now uses `dart-sass`.
 - Changed Invalidation Jobs throughout (TO, TP, T3C, etc.) to account for the ability to do both REFRESH and REFETCH requests for resources.
 - The `admin` Role is now always guaranteed to exist, and can't be deleted or modified.
@@ -58,6 +53,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Removed
 - Removed the `user_role` table.
 - The `traffic_ops.sh` shell profile no longer sets `GOPATH` or adds its `bin` folder to the `PATH`
+
+## [6.0.2] - 2021-12-17
+### Changed
+- Updated `log4j` module in Traffic Router from version 1.2.17 to 2.17.0
+
+## [6.0.1] - 2021-11-04
+### Added
+- [#2770](https://github.com/apache/trafficcontrol/issues/2770) Added validation for httpBypassFqdn as hostname in Traffic Ops
+
+### Fixed
+- [#6125](https://github.com/apache/trafficcontrol/issues/6125) - Fix `/cdns/{name}/federations?id=#` to search for CDN.
+- [#6285](https://github.com/apache/trafficcontrol/issues/6285) - The Traffic Ops Postinstall script will work in CentOS 7, even if Python 3 is installed
+- [#5373](https://github.com/apache/trafficcontrol/issues/5373) - Traffic Monitor logs not consistent
+- [#6197](https://github.com/apache/trafficcontrol/issues/6197) - TO `/deliveryservices/:id/routing` makes requests to all TRs instead of by CDN.
+
+### Changed
+- [#5927](https://github.com/apache/trafficcontrol/issues/5927) Updated CDN-in-a-Box to not run a Riak container by default but instead only run it if the optional flag is provided.
+- Changed the DNSSEC refresh Traffic Ops API to only create a new change log entry if any keys were actually refreshed or an error occurred (in order to reduce changelog noise)
 
 ## [6.0.0] - 2021-08-30
 ### Added

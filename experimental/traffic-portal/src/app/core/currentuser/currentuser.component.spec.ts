@@ -19,7 +19,7 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { UserService } from "src/app/shared/api";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { User } from "../../models";
+import { newCurrentUser } from "../../models";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import { CurrentuserComponent } from "./currentuser.component";
 
@@ -59,20 +59,12 @@ describe("CurrentuserComponent", () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(CurrentuserComponent);
 		component = fixture.componentInstance;
-		component.currentUser = {
-			id: 1,
-			newUser: false,
-			username: "test"
-		} as User;
+		component.currentUser = newCurrentUser();
 		fixture.detectChanges();
 	});
 
 	it("should create", () => {
-		component.currentUser = {
-			id: 1,
-			newUser: false,
-			username: "test"
-		} as User;
+		component.currentUser = newCurrentUser();
 		expect(component).toBeTruthy();
 	});
 

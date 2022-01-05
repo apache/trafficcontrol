@@ -32,6 +32,7 @@ import (
 
 func TestCacheGroups(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies}, func() {
+		ReadUpdateTestCacheGroupWithNullLatLong(t)
 		GetTestCacheGroupsIMS(t)
 		GetTestCacheGroupsByNameIMS(t)
 		GetTestCacheGroupsByShortNameIMS(t)
@@ -60,6 +61,33 @@ func TestCacheGroups(t *testing.T) {
 		DeleteTestCacheGroupsByInvalidId(t)
 		UpdateCachegroupWithLocks(t)
 	})
+}
+
+func ReadUpdateTestCacheGroupWithNullLatLong(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Add("name", "nullLatLongCG")
+	resp, _, err := TOSession.GetCacheGroups(opts)
+	if err != nil {
+		t.Fatalf("expected no error GETting cachegroups, but got %v", err)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("expected just one cachegroup, but got %d", len(resp.Response))
+	}
+	cg := resp.Response[0]
+	if cg.ID == nil {
+		t.Fatalf("got nil ID")
+	}
+	if cg.Latitude == nil || cg.Longitude == nil {
+		t.Fatalf("expected lat/long to be not nil")
+	}
+	if *cg.Latitude != 0 || *cg.Longitude != 0 {
+		t.Errorf("expected lat/long to be 0 and 0, but got %f and %f", *cg.Latitude, *cg.Longitude)
+	}
+	cg.FallbackToClosest = util.BoolPtr(false)
+	_, _, err = TOSession.UpdateCacheGroup(*cg.ID, cg, client.NewRequestOptions())
+	if err != nil {
+		t.Errorf("expected no error updating a cachegroup with null lat/long, but got %v", err)
+	}
 }
 
 func UpdateCachegroupWithLocks(t *testing.T) {

@@ -279,6 +279,12 @@ func (cg TOCacheGroup) Validate() error {
 //to be added to the struct
 func (cg *TOCacheGroup) Create() (error, error, int) {
 
+	if cg.Latitude == nil {
+		cg.Latitude = util.FloatPtr(0.0)
+	}
+	if cg.Longitude == nil {
+		cg.Longitude = util.FloatPtr(0.0)
+	}
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
 	}
@@ -618,6 +624,13 @@ LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.i
 
 //The TOCacheGroup implementation of the Updater interface
 func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
+
+	if cg.Latitude == nil {
+		cg.Latitude = util.FloatPtr(0.0)
+	}
+	if cg.Longitude == nil {
+		cg.Longitude = util.FloatPtr(0.0)
+	}
 
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
