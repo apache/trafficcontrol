@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCertExpirationsController = function(tableName, certExpirations, dsXmlToIdMap, filter, $document, $scope, $state, $filter, locationUtils, certExpirationsService, dateUtils) {
+var TableCertExpirationsController = function(tableName, certExpirations, dsXmlToIdMap, filter, $document, $scope, $state, $filter, locationUtils) {
 
 	/** All of the expiration fields converted to actual Dates */
 	$scope.certExpirations = certExpirations.map(
@@ -65,8 +65,7 @@ var TableCertExpirationsController = function(tableName, certExpirations, dsXmlT
 			headerName: "Expiration",
 			field: "expiration",
 			hide: false,
-			filter: "agDateColumnFilter",
-			valueFormatter: dateCellFormatter
+			filter: "agDateColumnFilter"
 		},
 		{
 			headerName: "Federated",
@@ -91,5 +90,5 @@ var TableCertExpirationsController = function(tableName, certExpirations, dsXmlT
 
 };
 
-TableCertExpirationsController.$inject = ['tableName', 'certExpirations', 'dsXmlToIdMap', 'filter', '$document', '$scope', '$state', '$filter', 'locationUtils', 'certExpirationsService', 'dateUtils'];
+TableCertExpirationsController.$inject = ['tableName', 'certExpirations', 'dsXmlToIdMap', 'filter', '$document', '$scope', '$state', '$filter', 'locationUtils'];
 module.exports = TableCertExpirationsController;

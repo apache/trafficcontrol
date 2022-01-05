@@ -29,17 +29,6 @@ var CertExpirationsService = function($http, ENV) {
             }
         )
     };
-
-	this.getCertExpirationsDaysLimit = function(days) {
-		return $http.get(ENV.api.unstable + 'sslkey_expirations?days=' + days).then(
-			function (result) {
-				return result.data.response;
-			},
-			function (err) {
-				throw err;
-			}
-		)
-	};
 };
 
 CertExpirationsService.$inject = ['$http', 'ENV'];
