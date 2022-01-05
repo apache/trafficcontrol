@@ -31,7 +31,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6285](https://github.com/apache/trafficcontrol/issues/6285) - The Traffic Ops Postinstall script will work in CentOS 7, even if Python 3 is installed
 - [#5373](https://github.com/apache/trafficcontrol/issues/5373) - Traffic Monitor logs not consistent
 - Traffic Ops: Sanitize username before executing LDAP query
-
+- [#5118](https://github.com/apache/trafficcontrol/issues/5118) - Added support for Kafka to Traffic Stats
 ### Changed
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
 - [#6179](https://github.com/apache/trafficcontrol/issues/6179) Updated the Traffic Ops rpm to include the `ToDnssecRefresh` binary and make the `trafops_dnssec_refresh` cron job use it
