@@ -83,63 +83,10 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 **Existing Endpoints**
 
 - Modify JSON request and response for existing servers endpoints.
-- **_Note_**: All fields in the response structure for API 4.0/ 5.0 except `profileId`, `profileDesc` and `profile`, remain same. 
-  - In API 4.0/5.0 `profile` changes to `profiles` and in API 5.0 `profileId` and `profileDesc` are no longer part of response structure
+- **_Note_**: All fields in the response structure for API 4.0 except `profileId`, `profileDesc` and `profile`, remain same. 
+  - In API 4.0 `profile` changes to `profiles` and `profileId` and `profileDesc` are no longer part of response structure
+
 #### API 4.0 GET
-- JSON **response** with the proposed change will look as follows:
-`/servers?id=5`
-```JSON
-{
-  "response": [{
-    "id": 5,
-    "profiles": ["MID"]
-  }]
-}
-```
-
-`/servers`
-```JSON
-{
-  "response": [{
-      "profiles": ["MID"]
-  }]
-}
-```
-
-#### API 4.0 POST/PUT
-JSON **request** with the proposed change will look as follows:
-
-`POST /servers `
-```JSON
-{
-    "cachegroupId": 6,
-    "cdnId": 2,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
-}
-```
-
-`PUT /servers/5`
-```JSON
-{
-    "cachegroupId": 6,
-    "cdnId": 2,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
-}
-```
-
-returns a **400** **response** with
-
-```JSON
-{
-  "alerts":[
-   { 
-     "text":"cannot associate multiple profiles to a server with current API version but can be done via 5.0",
-     "level":"error"
-   }
-]}
-```
-
-#### API 5.0 GET
 - JSON **response** with the proposed change will look as follows:
   `/servers?id=5`
 ```JSON
@@ -160,7 +107,7 @@ returns a **400** **response** with
 }
 ```
 
-#### API 5.0 POST/PUT
+#### API 4.0 POST/PUT
 JSON **request** with the proposed change will look as follows:
 
 `POST /servers `
@@ -204,20 +151,15 @@ The following table describes the top level `layered_profile` object for servers
 | field           | type                 | optionality | description                                              |
 | ----------------| ---------------------| ----------- | ---------------------------------------------------------|
 | server          | bigint               | required    | the server id associated with a given profile            |
-| profiles        | text                 | required    | the profile names associated with a server               |
+| profiles        | text []              | required    | the profile names associated with a server               |
 | order           | bigint               | required    | the order in which a profile is applied to a server      |
 
 **API constraints**
-- In API 4.0, GET /servers object profile and profileId fields to be arrays, but a PUT or POST with multiple values returns a 400 error. 
-  The UI may or may not display a list (which can only add 1), the client implements handling multiple, and the API is documented to potentially return multiple and how their Parameters must be applied.
-- In API 5.0 (or in the following TC major version wherein API 4.0 is removed), this feature is actually implemented, and multiple profiles can be assigned, are displayed in the UI, etc.
-
-The only disadvantage to splitting it across mulitple version is a little delay to get the feature deployed.
-But the advantage is that it solves both concerns: 
-- clients on supported APIs are never given 4xx errors even after the feature is in-use
-- we never return or apply partial data that could produce wrong results in production
-
-- Add `Profiles` key to API endpoints for Server objects (and ProfileNames, ProfileIDs)
+- In API 4.0, 
+  - GET `/servers` object, `profiles` field is an array, 
+  - and a PUT or POST `/servers` allows multiple profiles to be assigned, and displayed in the UI, etc.
+    The UI may or may not display a list (which can only add 1), but the client implements handling multiple, and the API is documented to potentially return multiple and how their parameters must be applied.
+- Add `Profiles` key to API endpoints for Server objects
 
 #### Client Impact
 - Existing Go client methods will be updated for the `/servers` endpoints in order to write TO API tests for the exising endpoints.
