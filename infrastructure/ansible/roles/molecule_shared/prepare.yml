@@ -74,13 +74,6 @@
       openssl_certificate:
         csr_path: "{{ server_csr_path }}"
         force: yes
-        issuer:
-          CN: CDNLAB.invalid
-          C: US
-          ST: Colorado
-          L: Denver
-          O: Molecule Testing
-          OU: CDN
         path: "{{ server_crt_path }}"
         privatekey_path: "{{ server_private_key_path }}"
         provider: ownca
