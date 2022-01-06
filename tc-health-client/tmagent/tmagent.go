@@ -38,7 +38,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/tc-health-client/config"
 	"github.com/apache/trafficcontrol/tc-health-client/util"
-	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
 	"github.com/apache/trafficcontrol/traffic_monitor/tmclient"
 	"gopkg.in/yaml.v2"
 )
@@ -237,11 +236,11 @@ func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
 
 // Queries a traffic monitor that is monitoring the trafficserver instance running on a host to
 // obtain the availability, health, of a parent used by trafficserver.
-func (c *ParentInfo) GetCacheStatuses() (map[tc.CacheName]datareq.CacheStatus, error) {
+func (c *ParentInfo) GetCacheStatuses() (tc.CRStates, error) {
 
 	tmHostName, err := c.findATrafficMonitor()
 	if err != nil {
-		return nil, errors.New("finding a trafficmonitor: " + err.Error())
+		return tc.CRStates{}, errors.New("finding a trafficmonitor: " + err.Error())
 	}
 	tmc := tmclient.New("http://"+tmHostName, config.GetRequestTimeout())
 
@@ -250,7 +249,7 @@ func (c *ParentInfo) GetCacheStatuses() (map[tc.CacheName]datareq.CacheStatus, e
 		tmc.Transport = &http.Transport{Proxy: http.ProxyURL(c.Cfg.ParsedProxyURL)}
 	}
 
-	return tmc.CacheStatuses()
+	return tmc.CRStates(true)
 }
 
 // The main polling function that keeps the parents list current if
@@ -311,7 +310,8 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 		}
 
 		// read traffic manager cache statuses.
-		caches, err := c.GetCacheStatuses()
+		_c, err := c.GetCacheStatuses()
+		caches := _c.Caches
 		if err != nil {
 			log.Errorf("error in TrafficMonitor polling: %s\n", err.Error())
 			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
@@ -327,13 +327,17 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 			hostName := string(k)
 			cs, ok := c.Parents[hostName]
 			if ok {
-				tmAvailable := *v.CombinedAvailable
+				tmAvailable := v.IsAvailable
 				if cs.available(c.Cfg.ReasonCode) != tmAvailable {
 					// do not mark down if the configuration disables mark downs.
 					if !c.Cfg.EnableActiveMarkdowns && !tmAvailable {
 						log.Infof("TM reports that %s is not available and should be marked DOWN but, mark downs are disabled by configuration", hostName)
 					} else {
-						if err = c.markParent(cs.Fqdn, *v.Status, tmAvailable); err != nil {
+						// See issue #6448, the status field used in api/cache-status is not
+						// available in the publish/CrStates endpoint.  For now, will not
+						// use it.
+						//if err = c.markParent(cs.Fqdn, *v.Status, tmAvailable); err != nil {
+						if err = c.markParent(cs.Fqdn, tmAvailable); err != nil {
 							log.Errorln(err.Error())
 						}
 					}
@@ -445,7 +449,10 @@ func parseFqdn(fqdn string) string {
 
 // used to mark a parent as up or down in the trafficserver HostStatus
 // subsystem.
-func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool) error {
+//
+// TODO see issue #6448, add cacheStatus back when available in CrStates
+//func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool) error {
+func (c *ParentInfo) markParent(fqdn string, available bool) error {
 	hostName := parseFqdn(fqdn)
 	tc := filepath.Join(c.TrafficServerBinDir, TrafficCtl)
 	reason := c.Cfg.ReasonCode
@@ -477,9 +484,13 @@ func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool)
 	c.Parents[hostName] = pv
 
 	if !available {
-		log.Infof("marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
+		// TODO see issue 6448, add cacheStatus back when available in CrStates
+		// log.Infof("marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
+		log.Infof("marked parent %s DOWN", hostName)
 	} else {
-		log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
+		// TODO see issue #6448, add cacheStatus back when available in CrStates
+		//log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
+		log.Infof("marked parent %s UP", hostName)
 	}
 	return nil
 }
