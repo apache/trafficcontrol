@@ -677,8 +677,7 @@ func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error)
 }
 
 // CreateMonitorConfig modifies the passed TrafficMonitorConfigMap to add the
-// Traffic Monitors and Delivery Services found in a CDN Snapshot, and wipe out
-// all of those that already existed in the configuration map.
+// Traffic Monitors and Delivery Services found in a CDN Snapshot
 func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
 	// Dump the "live" monitoring.json monitors, and populate with the
 	// "snapshotted" CRConfig
