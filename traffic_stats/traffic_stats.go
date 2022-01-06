@@ -95,6 +95,7 @@ type StartupConfig struct {
 	ToUser                      string   `json:"toUser"`
 	ToPasswd                    string   `json:"toPasswd"`
 	ToURL                       string   `json:"toUrl"`
+	EnableInflux                bool     `json:"enableInflux"`
 	InfluxUser                  string   `json:"influxUser"`
 	InfluxPassword              string   `json:"influxPassword"`
 	InfluxURLs                  []string `json:"influxUrls"`
@@ -118,11 +119,11 @@ type KafkaConfig struct {
 	Enable        bool   `json:"enable"`
 	Brokers       string `json:"brokers"`
 	Topic         string `json:"topic"`
-	RequiredAcks  int    `json:"required_acks"`
-	EnableTls     bool   `json:"enable_tls"`
-	RootCA        string `json:"root_ca"`
-	ClientCert    string `json:"client_cert"`
-	ClientCertKey string `json:"client_cert_key"`
+	RequiredAcks  int    `json:"requiredAcks"`
+	EnableTls     bool   `json:"enableTls"`
+	RootCA        string `json:"rootCA"`
+	ClientCert    string `json:"clientCert"`
+	ClientCertKey string `json:"clientCertKey"`
 }
 
 type KafkaCluster struct {
@@ -317,6 +318,9 @@ func main() {
 }
 
 func startShutdown(c *KafkaCluster) {
+	if c == nil {
+		return
+	}
 	go func() {
 		log.Infof("Starting cluster shutdown, closing producer and client")
 		if err := (*c.producer).Close(); err != nil {
@@ -505,6 +509,10 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 		}
 		useSeelog = false
 		warn("No logging configuration found in configuration file - default logging to stderr will be used")
+	}
+
+	if config.EnableInflux == false {
+		return config, nil
 	}
 
 	if len(config.InfluxURLs) == 0 {
@@ -1039,6 +1047,9 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 }
 
 func sendMetrics(config StartupConfig, bps influx.BatchPoints, retry bool) {
+	if config.EnableInflux == false {
+		return
+	}
 	influxClient, err := influxConnect(config)
 	if err != nil {
 		if retry {
