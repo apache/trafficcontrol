@@ -111,6 +111,10 @@
 				<os>
 					<name>linux</name>
 				</os>
+				<property>
+					<name>skiprpms</name>
+					<value>false</value>
+				</property>
 			</activation>
 			<build>
 				<finalName>traffic_router</finalName>

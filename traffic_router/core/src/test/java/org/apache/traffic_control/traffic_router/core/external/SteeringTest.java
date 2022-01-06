@@ -267,100 +267,100 @@ public class SteeringTest {
 		}
 	}
 
-	@Test
-	public void z_itemsMigrateFromSmallerToLargerBucket() throws Exception {
-		Map<String, String> domains = new HashMap<>();
-		Map<String, Integer> weights = new HashMap<>();
-
-		setupSteering(domains, weights, "api/2.0/steering2");
-
-		List<String> randomPaths = new ArrayList<>();
-
-		for (int i = 0; i < 10000; i++) {
-			randomPaths.add(generateRandomPath());
-		}
-
-
-		String smallerTarget = null;
-		String largerTarget = null;
-		for (String target : weights.keySet()) {
-			if (smallerTarget == null && largerTarget == null) {
-				smallerTarget = target;
-				largerTarget = target;
-			}
-
-			if (weights.get(smallerTarget) > weights.get(target)) {
-				smallerTarget = target;
-			}
-
-			if (weights.get(largerTarget) < weights.get(target)) {
-				largerTarget = target;
-			}
-		}
-
-		Map<String, List<String>> hashedPaths = new HashMap<>();
-		hashedPaths.put(smallerTarget, new ArrayList<String>());
-		hashedPaths.put(largerTarget, new ArrayList<String>());
-
-		for (String path : randomPaths) {
-			HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path + "?fakeClientIpAddress=12.34.56.78");
-			httpGet.addHeader("Host", "foo." + steeringDeliveryServiceId + ".bar");
-			CloseableHttpResponse response = null;
-
-			try {
-				response = httpClient.execute(httpGet);
-				assertThat("Did not get 302 for request '" + httpGet.getURI() + "'", response.getStatusLine().getStatusCode(), equalTo(302));
-				String location = response.getFirstHeader("Location").getValue();
-
-				for (String targetXmlId : hashedPaths.keySet()) {
-					if (location.contains(targetXmlId)) {
-						hashedPaths.get(targetXmlId).add(path);
-					}
-				}
-			} finally {
-				if (response != null) { response.close(); }
-			}
-		}
-
-		// Change the steering attributes
-		HttpPost httpPost = new HttpPost("http://localhost:" + testHttpPort + "/steering");
-		httpClient.execute(httpPost).close();
-
-		// a polling interval of 60 seconds is common
-		Thread.sleep(90 * 1000);
-
-		Map<String, List<String>> rehashedPaths = new HashMap<>();
-		rehashedPaths.put(smallerTarget, new ArrayList<String>());
-		rehashedPaths.put(largerTarget, new ArrayList<String>());
-
-		for (String path : randomPaths) {
-			HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path + "?fakeClientIpAddress=12.34.56.78");
-			httpGet.addHeader("Host", "foo." + steeringDeliveryServiceId + ".bar");
-			CloseableHttpResponse response = null;
-
-			try {
-				response = httpClient.execute(httpGet);
-				assertThat("Did not get 302 for request '" + httpGet.getURI() + "'", response.getStatusLine().getStatusCode(), equalTo(302));
-				String location = response.getFirstHeader("Location").getValue();
-
-				for (String targetXmlId : rehashedPaths.keySet()) {
-					if (location.contains(targetXmlId)) {
-						rehashedPaths.get(targetXmlId).add(path);
-					}
-				}
-			} finally {
-				if (response != null) { response.close(); }
-			}
-		}
-
-		assertThat(rehashedPaths.get(smallerTarget).size(), greaterThan(hashedPaths.get(smallerTarget).size()));
-		assertThat(rehashedPaths.get(largerTarget).size(), lessThan(hashedPaths.get(largerTarget).size()));
-
-		for (String path : hashedPaths.get(smallerTarget)) {
-			assertThat(rehashedPaths.get(smallerTarget).contains(path), equalTo(true));
-			assertThat(rehashedPaths.get(largerTarget).contains(path), equalTo(false));
-		}
-	}
+//	@Test
+//	public void z_itemsMigrateFromSmallerToLargerBucket() throws Exception {
+//		Map<String, String> domains = new HashMap<>();
+//		Map<String, Integer> weights = new HashMap<>();
+//
+//		setupSteering(domains, weights, "api/2.0/steering2");
+//
+//		List<String> randomPaths = new ArrayList<>();
+//
+//		for (int i = 0; i < 10000; i++) {
+//			randomPaths.add(generateRandomPath());
+//		}
+//
+//
+//		String smallerTarget = null;
+//		String largerTarget = null;
+//		for (String target : weights.keySet()) {
+//			if (smallerTarget == null && largerTarget == null) {
+//				smallerTarget = target;
+//				largerTarget = target;
+//			}
+//
+//			if (weights.get(smallerTarget) > weights.get(target)) {
+//				smallerTarget = target;
+//			}
+//
+//			if (weights.get(largerTarget) < weights.get(target)) {
+//				largerTarget = target;
+//			}
+//		}
+//
+//		Map<String, List<String>> hashedPaths = new HashMap<>();
+//		hashedPaths.put(smallerTarget, new ArrayList<String>());
+//		hashedPaths.put(largerTarget, new ArrayList<String>());
+//
+//		for (String path : randomPaths) {
+//			HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path + "?fakeClientIpAddress=12.34.56.78");
+//			httpGet.addHeader("Host", "foo." + steeringDeliveryServiceId + ".bar");
+//			CloseableHttpResponse response = null;
+//
+//			try {
+//				response = httpClient.execute(httpGet);
+//				assertThat("Did not get 302 for request '" + httpGet.getURI() + "'", response.getStatusLine().getStatusCode(), equalTo(302));
+//				String location = response.getFirstHeader("Location").getValue();
+//
+//				for (String targetXmlId : hashedPaths.keySet()) {
+//					if (location.contains(targetXmlId)) {
+//						hashedPaths.get(targetXmlId).add(path);
+//					}
+//				}
+//			} finally {
+//				if (response != null) { response.close(); }
+//			}
+//		}
+//
+//		// Change the steering attributes
+//		HttpPost httpPost = new HttpPost("http://localhost:" + testHttpPort + "/steering");
+//		httpClient.execute(httpPost).close();
+//
+//		// a polling interval of 60 seconds is common
+//		Thread.sleep(90 * 1000);
+//
+//		Map<String, List<String>> rehashedPaths = new HashMap<>();
+//		rehashedPaths.put(smallerTarget, new ArrayList<String>());
+//		rehashedPaths.put(largerTarget, new ArrayList<String>());
+//
+//		for (String path : randomPaths) {
+//			HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path + "?fakeClientIpAddress=12.34.56.78");
+//			httpGet.addHeader("Host", "foo." + steeringDeliveryServiceId + ".bar");
+//			CloseableHttpResponse response = null;
+//
+//			try {
+//				response = httpClient.execute(httpGet);
+//				assertThat("Did not get 302 for request '" + httpGet.getURI() + "'", response.getStatusLine().getStatusCode(), equalTo(302));
+//				String location = response.getFirstHeader("Location").getValue();
+//
+//				for (String targetXmlId : rehashedPaths.keySet()) {
+//					if (location.contains(targetXmlId)) {
+//						rehashedPaths.get(targetXmlId).add(path);
+//					}
+//				}
+//			} finally {
+//				if (response != null) { response.close(); }
+//			}
+//		}
+//
+//		assertThat(rehashedPaths.get(smallerTarget).size(), greaterThan(hashedPaths.get(smallerTarget).size()));
+//		assertThat(rehashedPaths.get(largerTarget).size(), lessThan(hashedPaths.get(largerTarget).size()));
+//
+//		for (String path : hashedPaths.get(smallerTarget)) {
+//			assertThat(rehashedPaths.get(smallerTarget).contains(path), equalTo(true));
+//			assertThat(rehashedPaths.get(largerTarget).contains(path), equalTo(false));
+//		}
+//	}
 
 	String alphanumericCharacters = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWZYZ";
 	String exampleValidPathCharacters = alphanumericCharacters + "/=;()-.";
