@@ -13,6 +13,30 @@ limitations under the License.
 -->
 <tp-header title="{{deliveryservice ? deliveryservice.displayName : 'Loading'}} - Content Invalidation Jobs"></tp-header>
 <ul>
-	<li *ngFor="let j of jobs" [hidden]="endDate(j) < now"><code>{{j.assetUrl}}</code> (active from <time [dateTime]="j.startTime">{{j.startTime | date:'medium'}}</time> to <time [dateTime]="endDate(j)">{{endDate(j) | date:'medium'}})</time></li>
+	<li *ngFor="let j of jobs">
+		<code>{{j.assetUrl}}</code> (active from <time [dateTime]="j.startTime">{{j.startTime | date:'medium'}}</time> to <time [dateTime]="endDate(j)">{{endDate(j) | date:'medium'}})</time>
+		<button
+			mat-icon-button
+			type="button"
+			color="accent"
+			title="edit this content invalidation job"
+			aria-label="edit this content invalidation job"
+			[disabled]="j.startTime <= now"
+			(click)="editJob(j)"
+		>
+			<fa-icon [icon]="editIcon"></fa-icon>
+		</button>
+		<button
+			mat-icon-button
+			type="button"
+			color="warn"
+			title="delete this content invalidation job"
+			aria-label="delete this content invalidation job"
+			[disabled]="isInProgress(j)"
+			(click)="deleteJob(j.id)"
+		>
+			<fa-icon [icon]="deleteIcon"></fa-icon>
+		</button>
+	</li>
 </ul>
 <button mat-fab type="button" id="new" title="Create a new content invalidation job for this Delivery Service" (click)="newJob()"><fa-icon [icon]="addIcon"></fa-icon></button>
