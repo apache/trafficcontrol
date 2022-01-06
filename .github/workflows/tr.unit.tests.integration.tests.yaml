@@ -25,7 +25,7 @@ on:
   push:
     paths:
       - .github/actions/tr-unit-and-integration-tests/**
-      - .github/workflows/tr.unit.tests.yaml
+      - .github/workflows/tr.unit.tests.integration.tests.yaml
       - traffic_router/**
   create:
   pull_request:
