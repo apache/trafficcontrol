@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed Traffic Monitor parsing stats_over_http output so that multiple stats for the same underlying delivery service (when the delivery service has more than 1 regex) are properly summed together. This makes the resulting data more accurate in addition to fixing the "new stat is lower than last stat" warnings.
 - Traffic Ops: Sanitize username before executing LDAP query
 - [#6367](https://github.com/apache/trafficcontrol/issues/6367) - Fix PUT `user/current` to work with v4 User Roles and Permissions
+- [#6266](https://github.com/apache/trafficcontrol/issues/6266) - Removed postgresql13-devel requirement for traffic_ops
 
 ### Changed
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
