@@ -23,7 +23,7 @@ var TableCertExpirationsController = function(tableName, certExpirations, dsXmlT
 	$scope.certExpirations = certExpirations.map(
 		function(x) {
 			// need to convert this to a date object for ag-grid filter to work properly
-			x.expiration = new Date(x.expiration.replace("+00", "Z"));
+			x.expiration = new Date(x.expiration);
 			return x;
 		});
 
