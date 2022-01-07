@@ -31,7 +31,6 @@ CHANGELOG$, Docs
 # These files cannot contain comments, so no header can be added.
 # They are nevertheless covered by the Apache license.
 ^go\.sum$, Apache-2.0
-^vendor/modules\.txt$, Apache-2.0
 \.project$, Apache-2.0
 \.cfg$, Apache-2.0
 \.json$, Apache-2.0

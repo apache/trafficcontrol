@@ -38,8 +38,6 @@ RUN apk add --no-cache --update git gcc
 
 RUN go install github.com/jstemmer/go-junit-report@latest
 
-COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
-
 # integration source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./traffic_ops/toclientlib/ /go/src/github.com/apache/trafficcontrol/traffic_ops/toclientlib/

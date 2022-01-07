@@ -75,6 +75,7 @@ require (
 	github.com/nxadm/tail v1.4.8 // indirect
 	go.uber.org/atomic v1.6.0 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/tools v0.1.8 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect

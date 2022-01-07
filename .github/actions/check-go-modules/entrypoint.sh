@@ -32,32 +32,6 @@ vendor_dependencies() {
 	go mod vendor
 }
 
-check_vendored_deps() {
-	status_output="$(git status --porcelain  -- vendor)"
-	if [[ "$(<<<"$status_output" sed '/^$/d' | wc -l)" -eq 0 ]]; then
-		echo 'No deleted, modified, or untracked vendor files were found.' | colored_text "$green_fg"
-		return
-	fi
-
-	declare -A porcelain_symbols
-	porcelain_symbols[' D']=deleted
-	porcelain_symbols[' M']=modified
-	porcelain_symbols[??]=untracked
-
-	for symbol in "${!porcelain_symbols[@]}"; do
-		output_of_type="$(<<<"$status_output" grep "^${symbol} " || true)"
-		file_count="$(<<<"$output_of_type" sed '/^$/d' | wc -l)"
-		file_type="${porcelain_symbols[$symbol]}"
-		if [[ "$file_count" -eq 0 ]]; then
-			continue
-		fi
-		echo "${file_count} ${file_type} files were found:" | colored_text "$red_fg"
-		<<<"$output_of_type" sed "s/^${symbol} //"
-		echo
-	done
-	exit_code=1
-}
-
 check_go_file() {
 	go_file="$1"
 	if git diff --exit-code -- "$go_file"; then
@@ -73,7 +47,6 @@ export GOPATH="${HOME}/go"
 exit_code=0
 declare -A command_exists
 command_exists[vendor_dependencies]=1
-command_exists[check_vendored_deps]=1
 command_exists[check_go_file]=1
 requested_command="$1"
 shift

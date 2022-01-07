@@ -36,8 +36,6 @@ on:
       - traffic_ops/traffic_ops_golang/**.go
       - cache-config/**.go
       - cache-config/testing/**
-      - vendor/**.go
-      - vendor/modules.txt
       - .github/actions/build-ats-test-rpm/**
       - .github/actions/fetch-github-branch-sha/**
       - .github/actions/cache-config-integration-tests/**
@@ -55,8 +53,6 @@ on:
       - traffic_ops/traffic_ops_golang/**.go
       - cache-config/**.go
       - cache-config/testing/**
-      - vendor/**.go
-      - vendor/modules.txt
       - .github/actions/build-ats-test-rpm/**
       - .github/actions/fetch-github-branch-sha/**
       - .github/actions/cache-config-integration-tests/**
