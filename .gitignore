@@ -41,13 +41,6 @@ traffic_stats/traffic_stats
 traffic_router/*/*.log
 traffic_router/*.log
 traffic_router/core/src/test/conf/*.properties
-vendor/**/appveyor.yml
-vendor/**/.gitattributes
-vendor/**/.gitignore
-vendor/**/.gitmodules
-vendor/golang.org/
-vendor/**/*.sh
-vendor/**/.travis.yml
 .dbInfo
 /dist
 *.pyc
@@ -82,3 +75,6 @@ __debug_bin
 ./traffic_ops_golang
 # Created by TP/TO docker integration tests
 junit/
+
+# Vendored Go dependencies
+vendor/
