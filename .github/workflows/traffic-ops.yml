@@ -35,8 +35,6 @@ on:
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
-      - vendor/**.go
-      - vendor/modules.txt
   create:
   pull_request:
     paths:
@@ -51,8 +49,6 @@ on:
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
-      - vendor/**.go
-      - vendor/modules.txt
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
