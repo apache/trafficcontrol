@@ -245,7 +245,8 @@ type DeliveryServiceV40 struct {
 
 	// TLSVersions is the list of explicitly supported TLS versions for cache
 	// servers serving the Delivery Service's content.
-	TLSVersions []string `json:"tlsVersions" db:"tls_versions"`
+	TLSVersions           []string               `json:"tlsVersions" db:"tls_versions"`
+	GeoLimitCountriesList *GeoLimitCountriesType `json:"geoLimitCountriesList"`
 }
 
 // DeliveryServiceV4 is a Delivery Service as it appears in version 4 of the
@@ -577,6 +578,36 @@ type DeliveryServiceNullableV11 struct {
 	DeliveryServiceRemovedFieldsV11
 }
 
+type GeoLimitCountriesType []string
+
+func (g *GeoLimitCountriesType) UnmarshalJSON(data []byte) error {
+	var err error
+	var initial = make([]string, 0)
+	var initialStr string
+	if err = json.Unmarshal(data, &initial); err != nil {
+		if err = json.Unmarshal(data, &initialStr); err != nil {
+			return err
+		}
+		if strings.Contains(initialStr, ",") {
+			return errors.New("array of strings need to be passed in as an array, and not a string")
+		}
+		initial = append(initial, initialStr)
+	}
+
+	if initial == nil || len(initial) == 0 {
+		g = nil
+		return nil
+	}
+	*g = initial
+	return nil
+
+}
+
+func (g GeoLimitCountriesType) MarshalJSON() ([]byte, error) {
+	arr := ([]string)(g)
+	return json.Marshal(arr)
+}
+
 // DeliveryServiceNullableFieldsV11 contains properties that Delivery Services
 // as they appeared in Traffic Ops API v1.1 had, AND were not removed by ANY
 // later API version.
@@ -643,7 +674,7 @@ type DeliveryServiceNullableFieldsV11 struct {
 	// countries within which the Delivery Service's content ought to be made
 	// available. This has no effect if GeoLimit is not a pointer to exactly the
 	// value 2.
-	GeoLimitCountries *interface{} `json:"geoLimitCountries" db:"geo_limit_countries"`
+	GeoLimitCountries *string `json:"geoLimitCountries" db:"geo_limit_countries"`
 	// GeoLimitRedirectURL is a URL to which clients will be redirected if their
 	// access to the Delivery Service's content is blocked by GeoLimit rules.
 	GeoLimitRedirectURL *string `json:"geoLimitRedirectURL" db:"geolimit_redirect_url"`
@@ -837,6 +868,12 @@ func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 
 // UpgradeToV4 converts the 3.x DS to a 4.x DS.
 func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
+	var geo GeoLimitCountriesType
+	if ds.GeoLimitCountries != nil {
+		str := *ds.GeoLimitCountries
+		geo = make([]string, 0)
+		geo = strings.Split(str, ",")
+	}
 	return DeliveryServiceV4{
 		DeliveryServiceFieldsV31:         ds.DeliveryServiceFieldsV31,
 		DeliveryServiceFieldsV30:         ds.DeliveryServiceFieldsV30,
@@ -845,6 +882,7 @@ func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
 		DeliveryServiceFieldsV13:         ds.DeliveryServiceFieldsV13,
 		DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
 		TLSVersions:                      nil,
+		GeoLimitCountriesList:            &geo,
 	}
 }
 

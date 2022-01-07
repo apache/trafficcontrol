@@ -288,6 +288,12 @@ When `Geo Limit`_ is being used with this Delivery Service (and is set to exactl
 	|                  |                                                                           | country code - one should exist for each allowed country code                                  |
 	+------------------+---------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
 
+.. _ds-geo-limit-countries-list:
+
+Geo Limit Countries List
+------------------------
+When `Geo Limit`_ is being used with this Delivery Service (and is set to exactly ``2``), this is optionally a list of country codes to which access to content provided by the Delivery Service will be restricted. This can either be a single string representing a country code, or an array of strings. When creating a Delivery Service with this field or modifying the Geo Limit Countries List field on an existing Delivery Service, any amount of whitespace between country codes is permissible, as it will be removed on submission, but responses from the :ref:`to-api` should never include such whitespace.
+
 .. _ds-geo-limit-redirect-url:
 
 Geo Limit Redirect URL

@@ -211,7 +211,11 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
-
+	if ds.GeoLimitCountriesList != nil {
+		arr := ([]string)(*ds.GeoLimitCountriesList)
+		str := strings.Join(arr, ",")
+		ds.GeoLimitCountries = &str
+	}
 	res, status, userErr, sysErr := createV40(w, r, inf, ds, true)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
@@ -593,7 +597,6 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 
 	returnable := []interface{}{}
 	dses, userErr, sysErr, errCode, maxTime := readGetDeliveryServices(h, ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User, useIMS)
-
 	if sysErr != nil {
 		sysErr = errors.New("reading dses: " + sysErr.Error())
 		errCode = http.StatusInternalServerError
@@ -606,7 +609,9 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
 		case version.Major > 3:
-			returnable = append(returnable, ds.RemoveLD1AndLD2())
+			dsV4 := ds.RemoveLD1AndLD2()
+			dsV4.GeoLimitCountries = nil
+			returnable = append(returnable, dsV4)
 		case version.Major > 2 && version.Minor >= 1:
 			returnable = append(returnable, ds.DowngradeToV3())
 		case version.Major > 2:
@@ -704,6 +709,11 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
+	}
+	if ds.GeoLimitCountriesList != nil {
+		arr := ([]string)(*ds.GeoLimitCountriesList)
+		str := strings.Join(arr, ",")
+		ds.GeoLimitCountries = &str
 	}
 	ds.ID = &id
 	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, id)
@@ -1391,23 +1401,19 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 
 func validateGeoLimitCountries(ds *tc.DeliveryServiceV4) error {
 	var IsLetter = regexp.MustCompile(`^[A-Z]+$`).MatchString
-	if ds.GeoLimitCountries == nil {
+	if ds.GeoLimitCountriesList == nil {
 		return nil
 	}
-	value := *ds.GeoLimitCountries
-	geoLimitCountries, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("must be a string or an array of strings, got: %T", value)
-	}
-	if geoLimitCountries != "" {
-		countyCodes := strings.Split(geoLimitCountries, ",")
-		for _, cc := range countyCodes {
-			if !IsLetter(cc) {
+	value := *ds.GeoLimitCountriesList
+	if value != nil {
+		countryCodes := ([]string)(value)
+		for _, cc := range countryCodes {
+			if cc != "" && !IsLetter(cc) {
 				return fmt.Errorf("country codes can only contain alphabets")
 			}
 		}
 	} else {
-		ds.GeoLimitCountries = nil
+		ds.GeoLimitCountriesList = nil
 	}
 	return nil
 }
@@ -1758,6 +1764,11 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			return nil, nil, fmt.Errorf("getting delivery services: %v", err), http.StatusInternalServerError
 		}
 
+		if ds.GeoLimitCountries != nil {
+			str := *ds.GeoLimitCountries
+			geo := strings.Split(str, ",")
+			ds.GeoLimitCountriesList = (*tc.GeoLimitCountriesType)(&geo)
+		}
 		ds.ConsistentHashQueryParams = []string{}
 		if len(dsQueryParams) >= 0 {
 			// ensure unique and in consistent order
@@ -2165,31 +2176,16 @@ func setNilIfEmpty(ptrs ...**string) {
 }
 
 func sanitize(ds *tc.DeliveryServiceV4) error {
-	if ds.GeoLimitCountries != nil {
-		geo := *ds.GeoLimitCountries
-		geoLimitCountriesArray, ok := geo.([]interface{})
-		if !ok {
-			geoString, ok := geo.(string)
-			if !ok {
-				ds.GeoLimitCountries = nil
-				return errors.New("individual country codes in geoLimitCountries can only be strings")
-			} else {
-				*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(geoString, " ", "", -1))
-			}
-		} else {
-			gArray := make([]string, 0)
-			for _, g := range geoLimitCountriesArray {
-				countryCode, ok := g.(string)
-				if !ok {
-					ds.GeoLimitCountries = nil
-					return errors.New("individual country codes in geoLimitCountries can only be strings")
-				} else {
-					countryCode = strings.ToUpper(strings.Replace(countryCode, " ", "", -1))
-					gArray = append(gArray, countryCode)
-				}
-			}
-			*ds.GeoLimitCountries = strings.Join(gArray, ",")
+	if ds.GeoLimitCountriesList != nil {
+		geo := ([]string)(*ds.GeoLimitCountriesList)
+		for i, _ := range geo {
+			geo[i] = strings.ToUpper(strings.Replace(geo[i], " ", "", -1))
 		}
+		ds.GeoLimitCountriesList = (*tc.GeoLimitCountriesType)(&geo)
+	}
+	if ds.GeoLimitCountries != nil {
+		str := strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
+		ds.GeoLimitCountries = &str
 	}
 	if ds.ProfileID != nil && *ds.ProfileID == -1 {
 		ds.ProfileID = nil
