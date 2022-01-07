@@ -22,13 +22,14 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func main() {
@@ -114,6 +115,8 @@ func updateNewClientUsage(appDir string) error {
 			if !strings.HasSuffix(path, `.go`) {
 				return nil // skip anything not a go file.
 			}
+			// TODO: evaluate if this is still necessary now that we're not
+			// vendoring.
 			if strings.Contains(path, `/vendor/`) {
 				return nil // skip vendored code
 			}
