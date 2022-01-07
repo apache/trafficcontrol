@@ -536,6 +536,10 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 }
 
 func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
+	if config.EnableInflux == false {
+		info("Skipping daily stats since InfluxDB is not enabled")
+		return
+	}
 	infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
 	if runningConfig.LastSummaryTime.Day() != now.Day() {
 		startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
