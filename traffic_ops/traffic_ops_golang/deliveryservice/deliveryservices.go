@@ -610,7 +610,6 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 		// NOTE: it's required to handle minor version cases in a descending >= manner
 		case version.Major > 3:
 			dsV4 := ds.RemoveLD1AndLD2()
-			dsV4.GeoLimitCountries = nil
 			returnable = append(returnable, dsV4)
 		case version.Major > 2 && version.Minor >= 1:
 			returnable = append(returnable, ds.DowngradeToV3())
