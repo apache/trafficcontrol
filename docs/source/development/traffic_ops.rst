@@ -88,7 +88,7 @@ Go Program Requirements
 .. |install-go-link| replace:: Go :atc-go-version:`_` or later
 .. _install-go-link: http://golang.org/doc/install
 
-All Go code dependencies are managed through the :atc-file:`go.mod`, :atc-file:`go.sum`, and :atc-file:`vendor/modules.txt` files. With the exception of ``golang.org/x`` packages (see :ref:`below <dev-traffic-ops-golang-x>`), module dependencies in :atc-file:`vendor/` are tracked in Git and should thus be available without any extra work - and any new dependencies should be properly "vendored" into that same, top-level directory. No other :atc-file:`vendor/` directories exist, as Go modules only supports a single vendor directory.
+All Go code dependencies are managed through the :atc-file:`go.mod` and :atc-file:`go.sum` files. To download the dependencies, run ``go mod vendor``.
 
 .. _dev-traffic-ops-golang-x:
 
@@ -165,13 +165,11 @@ Traffic Ops Project Tree Overview
 		- swaggerdocs/ A currently abandoned attempt at defining the :ref:`to-api` using `Swagger <https://swagger.io/>`_ - it may be picked up again at some point in the (distant) future
 		- tenant/ - Contains utilities for dealing with :term:`Tenantable <Tenant>` resources, particularly for checking for permissions
 		- tocookie/ - Defines the method of generating the ``mojolicious`` cookie used by Traffic Ops for authentication
-		- vendor/ - contains "vendored" Go packages from third party sources
 
 	- v1-client - The official Traffic Ops Go client package for working with the version 1 :ref:`to-api`.
 	- v2-client - The official Traffic Ops Go client package for working with the version 2 :ref:`to-api`.
 	- v3-client - The official Traffic Ops Go client package for working with the version 3 :ref:`to-api`.
 	- v4-client - The official Traffic Ops Go client package for working with the version 4 :ref:`to-api`.
-	- vendor/ - contains "vendored" Go packages from third party sources
 
 .. _database-management:
 
