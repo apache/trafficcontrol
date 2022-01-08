@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6175](https://github.com/apache/trafficcontrol/issues/6175) - POST request to /api/4.0/phys_locations accepts mismatch values for regionName.
 - Fixed Traffic Monitor parsing stats_over_http output so that multiple stats for the same underlying delivery service (when the delivery service has more than 1 regex) are properly summed together. This makes the resulting data more accurate in addition to fixing the "new stat is lower than last stat" warnings.
 - Traffic Ops: Sanitize username before executing LDAP query
+- [#6457](https://github.com/apache/trafficcontrol/issues/6457) - Fix broken user registration and password reset, due to the last_authenticated value being null.
 - [#6367](https://github.com/apache/trafficcontrol/issues/6367) - Fix PUT `user/current` to work with v4 User Roles and Permissions
 - [#6266](https://github.com/apache/trafficcontrol/issues/6266) - Removed postgresql13-devel requirement for traffic_ops
 - [#6446](https://github.com/apache/trafficcontrol/issues/6446) - Revert Traffic Router rollover file pattern to the one previously used in `log4j.properties` with Log4j 1.2
