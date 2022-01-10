@@ -211,11 +211,6 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
-	if ds.GeoLimitCountriesList != nil {
-		arr := ([]string)(*ds.GeoLimitCountriesList)
-		str := strings.Join(arr, ",")
-		ds.GeoLimitCountries = &str
-	}
 	res, status, userErr, sysErr := createV40(w, r, inf, ds, true)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
@@ -307,6 +302,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	tx := inf.Tx.Tx
 	ds := tc.DeliveryServiceV4(dsV40)
 	err := Validate(tx, &ds)
+	var geoLimitCountries string
 	if err != nil {
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
@@ -331,6 +327,10 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	if userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
+	if ds.GeoLimitCountries != nil {
+		geo := ([]string)(*ds.GeoLimitCountries)
+		geoLimitCountries = strings.Join(geo, ",")
+	}
 	var resultRows *sql.Rows
 	if omitExtraLongDescFields {
 		if ds.LongDesc1 != nil || ds.LongDesc2 != nil {
@@ -353,7 +353,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 			&ds.EdgeHeaderRewrite,
 			&ds.GeoLimitRedirectURL,
 			&ds.GeoLimit,
-			&ds.GeoLimitCountries,
+			&geoLimitCountries,
 			&ds.GeoProvider,
 			&ds.GlobalMaxMBPS,
 			&ds.GlobalMaxTPS,
@@ -413,7 +413,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 			&ds.EdgeHeaderRewrite,
 			&ds.GeoLimitRedirectURL,
 			&ds.GeoLimit,
-			&ds.GeoLimitCountries,
+			&geoLimitCountries,
 			&ds.GeoProvider,
 			&ds.GlobalMaxMBPS,
 			&ds.GlobalMaxTPS,
@@ -709,11 +709,6 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
-	if ds.GeoLimitCountriesList != nil {
-		arr := ([]string)(*ds.GeoLimitCountriesList)
-		str := strings.Join(arr, ",")
-		ds.GeoLimitCountries = &str
-	}
 	ds.ID = &id
 	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, id)
 	if err != nil {
@@ -922,6 +917,11 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 		}
 	}
 
+	var geoLimitCountries string
+	if ds.GeoLimitCountries != nil {
+		geo := ([]string)(*ds.GeoLimitCountries)
+		geoLimitCountries = strings.Join(geo, ",")
+	}
 	var resultRows *sql.Rows
 	if omitExtraLongDescFields {
 		if ds.LongDesc1 != nil || ds.LongDesc2 != nil {
@@ -942,7 +942,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 			&ds.EdgeHeaderRewrite,
 			&ds.GeoLimitRedirectURL,
 			&ds.GeoLimit,
-			&ds.GeoLimitCountries,
+			&geoLimitCountries,
 			&ds.GeoProvider,
 			&ds.GlobalMaxMBPS,
 			&ds.GlobalMaxTPS,
@@ -1002,7 +1002,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 			&ds.EdgeHeaderRewrite,
 			&ds.GeoLimitRedirectURL,
 			&ds.GeoLimit,
-			&ds.GeoLimitCountries,
+			&geoLimitCountries,
 			&ds.GeoProvider,
 			&ds.GlobalMaxMBPS,
 			&ds.GlobalMaxTPS,
@@ -1400,10 +1400,10 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 
 func validateGeoLimitCountries(ds *tc.DeliveryServiceV4) error {
 	var IsLetter = regexp.MustCompile(`^[A-Z]+$`).MatchString
-	if ds.GeoLimitCountriesList == nil {
+	if ds.GeoLimitCountries == nil {
 		return nil
 	}
-	value := *ds.GeoLimitCountriesList
+	value := *ds.GeoLimitCountries
 	if value != nil {
 		countryCodes := ([]string)(value)
 		for _, cc := range countryCodes {
@@ -1412,7 +1412,7 @@ func validateGeoLimitCountries(ds *tc.DeliveryServiceV4) error {
 			}
 		}
 	} else {
-		ds.GeoLimitCountriesList = nil
+		ds.GeoLimitCountries = nil
 	}
 	return nil
 }
@@ -1685,6 +1685,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 	// ensure json generated from this slice won't come out as `null` if empty
 	dsQueryParams := []string{}
 
+	geoLimitCountries := util.StrPtr("")
 	for rows.Next() {
 		ds := tc.DeliveryServiceV4{}
 		cdnDomain := ""
@@ -1707,7 +1708,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.FirstHeaderRewrite,
 			&ds.GeoLimitRedirectURL,
 			&ds.GeoLimit,
-			&ds.GeoLimitCountries,
+			&geoLimitCountries,
 			&ds.GeoProvider,
 			&ds.GlobalMaxMBPS,
 			&ds.GlobalMaxTPS,
@@ -1763,10 +1764,9 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			return nil, nil, fmt.Errorf("getting delivery services: %v", err), http.StatusInternalServerError
 		}
 
-		if ds.GeoLimitCountries != nil {
-			str := *ds.GeoLimitCountries
-			geo := strings.Split(str, ",")
-			ds.GeoLimitCountriesList = (*tc.GeoLimitCountriesType)(&geo)
+		if geoLimitCountries != nil && *geoLimitCountries != "" {
+			geo := strings.Split(*geoLimitCountries, ",")
+			ds.GeoLimitCountries = (*tc.GeoLimitCountriesType)(&geo)
 		}
 		ds.ConsistentHashQueryParams = []string{}
 		if len(dsQueryParams) >= 0 {
@@ -2175,16 +2175,12 @@ func setNilIfEmpty(ptrs ...**string) {
 }
 
 func sanitize(ds *tc.DeliveryServiceV4) error {
-	if ds.GeoLimitCountriesList != nil {
-		geo := ([]string)(*ds.GeoLimitCountriesList)
+	if ds.GeoLimitCountries != nil {
+		geo := ([]string)(*ds.GeoLimitCountries)
 		for i, _ := range geo {
 			geo[i] = strings.ToUpper(strings.Replace(geo[i], " ", "", -1))
 		}
-		ds.GeoLimitCountriesList = (*tc.GeoLimitCountriesType)(&geo)
-	}
-	if ds.GeoLimitCountries != nil {
-		str := strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
-		ds.GeoLimitCountries = &str
+		ds.GeoLimitCountries = (*tc.GeoLimitCountriesType)(&geo)
 	}
 	if ds.ProfileID != nil && *ds.ProfileID == -1 {
 		ds.ProfileID = nil

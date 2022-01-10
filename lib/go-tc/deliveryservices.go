@@ -245,8 +245,8 @@ type DeliveryServiceV40 struct {
 
 	// TLSVersions is the list of explicitly supported TLS versions for cache
 	// servers serving the Delivery Service's content.
-	TLSVersions           []string               `json:"tlsVersions" db:"tls_versions"`
-	GeoLimitCountriesList *GeoLimitCountriesType `json:"geoLimitCountriesList"`
+	TLSVersions       []string               `json:"tlsVersions" db:"tls_versions"`
+	GeoLimitCountries *GeoLimitCountriesType `json:"geoLimitCountries"`
 }
 
 // DeliveryServiceV4 is a Delivery Service as it appears in version 4 of the
@@ -844,6 +844,12 @@ func (ds *DeliveryServiceV4) RemoveLD1AndLD2() DeliveryServiceV4 {
 
 // DowngradeToV3 converts the 4.x DS to a 3.x DS.
 func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
+	nullableFields := ds.DeliveryServiceNullableFieldsV11
+	if ds.GeoLimitCountries != nil {
+		geoLimitCountries := ([]string)(*ds.GeoLimitCountries)
+		geo := strings.Join(geoLimitCountries, ",")
+		nullableFields.GeoLimitCountries = &geo
+	}
 	return DeliveryServiceNullableV30{
 		DeliveryServiceV30: DeliveryServiceV30{
 			DeliveryServiceNullableV15: DeliveryServiceNullableV15{
@@ -851,7 +857,7 @@ func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 					DeliveryServiceNullableV13: DeliveryServiceNullableV13{
 						DeliveryServiceNullableV12: DeliveryServiceNullableV12{
 							DeliveryServiceNullableV11: DeliveryServiceNullableV11{
-								DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
+								DeliveryServiceNullableFieldsV11: nullableFields,
 							},
 						},
 						DeliveryServiceFieldsV13: ds.DeliveryServiceFieldsV13,
@@ -882,7 +888,7 @@ func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
 		DeliveryServiceFieldsV13:         ds.DeliveryServiceFieldsV13,
 		DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
 		TLSVersions:                      nil,
-		GeoLimitCountriesList:            &geo,
+		GeoLimitCountries:                &geo,
 	}
 }
 
