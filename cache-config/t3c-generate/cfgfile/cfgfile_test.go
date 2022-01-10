@@ -214,7 +214,7 @@ func randDS() *atscfg.DeliveryService {
 	ds.DSCP = randInt()
 	ds.EdgeHeaderRewrite = randStr()
 	ds.GeoLimit = randInt()
-	ds.GeoLimitCountries = nil
+	ds.GeoLimitCountries = randStr()
 	ds.GeoLimitRedirectURL = randStr()
 	ds.GeoProvider = randInt()
 	ds.GlobalMaxMBPS = randInt()
