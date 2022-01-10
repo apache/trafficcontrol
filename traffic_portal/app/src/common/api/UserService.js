@@ -83,12 +83,26 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
     };
 
     // todo: change to use query param when it is supported
-    this.updateUser = function(user) {
-        return $http.put(ENV.api.unstable + "users/" + user.id, user).then(
+    this.updateUser = function(userData) {
+        // We should be using PUT 'user/current' to update the current user
+        // Use PUT `users` only if the current user is not the same as the user being update
+        let path = 'users/' + userData.id;
+        if (userModel.user.id === userData.id) {
+            path = 'user/current';
+            var userObject = {
+              user: userData
+            };
+            userData = userObject;
+        }
+        return $http.put(ENV.api.unstable + path, userData).then(
             function(result) {
-                if (userModel.user.id === user.id) {
+                if (userData.user != undefined) {
+                    userData = userData.user;
+                }
+                console.log(userData);
+                if (userModel.user.id === userData.id) {
                     // if you are updating the currently logged in user...
-                    userModel.setUser(user);
+                    userModel.setUser(userData);
                 }
                 messageModel.setMessages(result.data.alerts, false);
                 return result;
