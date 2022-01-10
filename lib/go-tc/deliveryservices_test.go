@@ -413,7 +413,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	firstHeaderRewrite := "firstHeaderRewrite"
 	fqPacingRate := 1337
 	geoLimit := 2
-	geoLimitCountries := []string{"geo","Limit","Countries"}
+	geoLimitCountries := []string{"geo", "Limit", "Countries"}
 	geo := (GeoLimitCountriesType)(geoLimitCountries)
 	geoStr := strings.Join(geoLimitCountries, ",")
 	geoLimitRedirectURL := "wss://geoLimitRedirectURL"
