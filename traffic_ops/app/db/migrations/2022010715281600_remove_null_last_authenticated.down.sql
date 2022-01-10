@@ -14,7 +14,3 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
-UPDATE public.tm_user
-SET last_authenticated = NULL
-WHERE last_authenticated = '1970-01-01 00:00:00.000000';

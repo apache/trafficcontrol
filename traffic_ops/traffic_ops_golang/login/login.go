@@ -234,7 +234,7 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		_, dbErr := db.Exec(UpdateLoginTimeQuery, username)
 		if dbErr != nil {
-			log.Errorf("unable to update authentication time for a given user: %s\n", dbErr.Error())
+			dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", username, dbErr)
 			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
 			return
 		}
@@ -378,14 +378,13 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			log.Errorf("checking local user: %s\n", err.Error())
 		}
 
-		_, dbErr := db.Exec(UpdateLoginTimeQuery, form.Username)
-		if dbErr != nil {
-			log.Errorf("unable to update authentication time for a given user: %s\n", dbErr.Error())
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
-			return
-		}
-
 		if userAllowed && authenticated {
+			_, dbErr := db.Exec(UpdateLoginTimeQuery, form.Username)
+			if dbErr != nil {
+				dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", form.Username, dbErr)
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
+				return
+			}
 			httpCookie := tocookie.GetCookie(userId, defaultCookieDuration, cfg.Secrets[0])
 			http.SetCookie(w, httpCookie)
 			resp = struct {

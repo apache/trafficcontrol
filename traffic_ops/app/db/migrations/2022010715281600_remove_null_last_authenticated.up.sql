@@ -16,5 +16,5 @@
  */
 
 UPDATE public.tm_user
-SET last_authenticated = '1970-01-01 00:00:00.000000'
+SET last_authenticated = now()
 WHERE last_authenticated IS NULL;

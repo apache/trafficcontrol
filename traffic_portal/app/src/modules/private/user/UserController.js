@@ -51,7 +51,7 @@ var UserController = function($scope, $state, $location, $uibModal, formUtils, l
     $scope.user = userModel.user;
 
     $scope.confirmSave = function(user, usernameField) {
-        if (usernameField == undefined) {
+        if (usernameField === undefined) {
             usernameField = user.username;
         }
         if (usernameField.$dirty) {
