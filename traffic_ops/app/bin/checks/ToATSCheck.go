@@ -33,7 +33,7 @@ import (
 	"time"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 	"github.com/romana/rlog"
 )
 
