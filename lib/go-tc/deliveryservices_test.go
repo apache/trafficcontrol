@@ -16,6 +16,7 @@ package tc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -412,7 +413,9 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	firstHeaderRewrite := "firstHeaderRewrite"
 	fqPacingRate := 1337
 	geoLimit := 2
-	geoLimitCountries := "geo,Limit,Countries"
+	geoLimitCountries := []string{"geo","Limit","Countries"}
+	geo := (GeoLimitCountriesType)(geoLimitCountries)
+	geoStr := strings.Join(geoLimitCountries, ",")
 	geoLimitRedirectURL := "wss://geoLimitRedirectURL"
 	geoProvider := 1
 	globalMaxMBPS := -72485
@@ -484,7 +487,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	newDS.FirstHeaderRewrite = &firstHeaderRewrite
 	newDS.FQPacingRate = &fqPacingRate
 	newDS.GeoLimit = &geoLimit
-	newDS.GeoLimitCountries = &geoLimitCountries
+	newDS.GeoLimitCountries = &geo
 	newDS.GeoLimitRedirectURL = &geoLimitRedirectURL
 	newDS.GeoProvider = &geoProvider
 	newDS.GlobalMaxMBPS = &globalMaxMBPS
@@ -560,7 +563,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 									EdgeHeaderRewrite:        &edgeHeaderRewrite,
 									ExampleURLs:              exampleURLs,
 									GeoLimit:                 &geoLimit,
-									GeoLimitCountries:        &geoLimitCountries,
+									GeoLimitCountries:        &geoStr,
 									GeoLimitRedirectURL:      &geoLimitRedirectURL,
 									GeoProvider:              &geoProvider,
 									GlobalMaxMBPS:            &globalMaxMBPS,
