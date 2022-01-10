@@ -84,9 +84,7 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
 
     this.updateCurrentUser = function(user) {
         // We should be using PUT 'user/current' to update the current user
-        var currUser = {
-            user: user
-        };
+        const currUser = { user };
         return $http.put(ENV.api.unstable + 'user/current', currUser).then(
             function(result) {
                 userModel.setUser(user);
