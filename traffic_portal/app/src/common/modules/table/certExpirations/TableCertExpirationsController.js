@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCertExpirationsController = function(tableName, certExpirations, dsXmlToIdMap, filter, $document, $scope, $state, $filter, locationUtils) {
+var TableCertExpirationsController = function(tableName, certExpirations, $scope, locationUtils, deliveryServiceService) {
 
 	/** All of the expiration fields converted to actual Dates */
 	$scope.certExpirations = certExpirations.map(
@@ -27,7 +27,12 @@ var TableCertExpirationsController = function(tableName, certExpirations, dsXmlT
 			return x;
 		});
 
-	$scope.dsXmlToIdMap = dsXmlToIdMap;
+	let getDsXmlToIdMap = function() {
+		deliveryServiceService.getDeliveryServices()
+			.then(function(deliveryservices) {
+				$scope.dsXmlToIdMap = new Map(deliveryservices.map(ds=>[ds.xmlId, ds.id]));
+			});
+	};
 
 	$scope.editCertExpirations = function(dsId) {
 		locationUtils.navigateToPath('/delivery-services/' + dsId + '/ssl-keys');
@@ -79,16 +84,20 @@ var TableCertExpirationsController = function(tableName, certExpirations, dsXmlT
 	$scope.gridOptions = {
 		onRowClick: function(params) {
 			const selection = window.getSelection().toString();
-			if(selection === "" || selection === $scope.mouseDownSelectionText) {
-				locationUtils.navigateToPath('/delivery-services/' + $scope.dsXmlToIdMap[params.data.deliveryservice] + '/ssl-keys');
+			if(!selection) {
+				locationUtils.navigateToPath('/delivery-services/' + $scope.dsXmlToIdMap.get(params.data.deliveryservice) + '/ssl-keys');
 				// Event is outside the digest cycle, so we need to trigger one.
 				$scope.$apply();
 			}
-			$scope.mouseDownSelectionText = "";
 		}
 	};
 
+	let init = function () {
+		getDsXmlToIdMap();
+	};
+	init();
+
 };
 
-TableCertExpirationsController.$inject = ['tableName', 'certExpirations', 'dsXmlToIdMap', 'filter', '$document', '$scope', '$state', '$filter', 'locationUtils'];
+TableCertExpirationsController.$inject = ['tableName', 'certExpirations', '$scope', 'locationUtils', 'deliveryServiceService'];
 module.exports = TableCertExpirationsController;
