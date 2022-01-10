@@ -80,6 +80,31 @@ initBuildArea() {
 	go build -v -o ToDnssecRefresh -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
 								{ echo "Could not build ToDnssecRefresh binary"; return 1;})
 
+	# compile ToATSCheck.go
+	(cd app/bin/checks
+	go build ToATSCheck.go -v -o ToATSCheck -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
+								{ echo "Could not build ToATSCheck binary"; return 1;})
+	
+	# compile ToCheck.go
+	(cd app/bin/checks
+	go build ToCheck.go -v -o ToCheck -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
+								{ echo "Could not build ToCheck binary"; return 1;})
+
+	# compile ToDSCPCheck.go
+	(cd app/bin/checks
+	go build ToDSCPCheck.go -v -o ToDSCPCheck -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
+								{ echo "Could not build ToDSCPCheck binary"; return 1;})
+
+	# compile ToFQDNCheck.go
+	(cd app/bin/checks
+	go build ToFQDNCheck.go -v -o ToFQDNCheck -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
+								{ echo "Could not build ToFQDNCheck binary"; return 1;})
+
+	# compile ToPingCheck.go
+	(cd app/bin/checks
+	go build ToPingCheck.go -v -o ToPingCheck -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
+								{ echo "Could not build ToPingCheck binary"; return 1;})
+
 	# compile db/reencrypt
 		(cd app/db/reencrypt
 	go build -v -o reencrypt || \
