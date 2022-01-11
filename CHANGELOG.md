@@ -48,6 +48,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6376](https://github.com/apache/trafficcontrol/issues/6376) Updated TO/TM so that TM doesn't overwrite monitoring snapshot data with CR config snapshot data.
 - Updated `t3c-apply` to reduce mutable state in `TrafficOpsReq` struct.
 - Updated Golang dependencies
+- [#6506](https://github.com/apache/trafficcontrol/pull/6506) - Updated `jackson-databind` and `jackson-annotations` Traffic Router dependencies to version 2.13.1
 
 ### Deprecated
 - Deprecated the endpoints and docs associated with `api_capability`.
