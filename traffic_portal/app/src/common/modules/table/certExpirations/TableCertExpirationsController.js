@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCertExpirationsController = function(tableName, certExpirations, $scope, locationUtils, deliveryServiceService) {
+var TableCertExpirationsController = function(tableName, certExpirations, $scope, locationUtils, deliveryservices) {
 
 	/** All of the expiration fields converted to actual Dates */
 	$scope.certExpirations = certExpirations.map(
@@ -27,12 +27,7 @@ var TableCertExpirationsController = function(tableName, certExpirations, $scope
 			return x;
 		});
 
-	let getDsXmlToIdMap = function() {
-		deliveryServiceService.getDeliveryServices()
-			.then(function(deliveryservices) {
-				$scope.dsXmlToIdMap = new Map(deliveryservices.map(ds=>[ds.xmlId, ds.id]));
-			});
-	};
+	$scope.dsXmlToIdMap = new Map(deliveryservices.map(ds=>[ds.xmlId, ds.id]));
 
 	$scope.editCertExpirations = function(dsId) {
 		locationUtils.navigateToPath('/delivery-services/' + dsId + '/ssl-keys');
@@ -92,12 +87,7 @@ var TableCertExpirationsController = function(tableName, certExpirations, $scope
 		}
 	};
 
-	let init = function () {
-		getDsXmlToIdMap();
-	};
-	init();
-
 };
 
-TableCertExpirationsController.$inject = ['tableName', 'certExpirations', '$scope', 'locationUtils', 'deliveryServiceService'];
+TableCertExpirationsController.$inject = ['tableName', 'certExpirations', '$scope', 'locationUtils', 'deliveryservices'];
 module.exports = TableCertExpirationsController;

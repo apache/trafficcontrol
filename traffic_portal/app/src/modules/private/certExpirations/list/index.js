@@ -32,6 +32,9 @@ module.exports = angular.module('trafficPortal.private.certExpirations.list', []
 							},
 							tableName: function() {
 								return 'cert-expirations';
+							},
+							deliveryservices: function(deliveryServiceService) {
+								return deliveryServiceService.getDeliveryServices();
 							}
 						}
 					}

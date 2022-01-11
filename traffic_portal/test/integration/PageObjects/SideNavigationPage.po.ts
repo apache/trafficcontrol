@@ -158,7 +158,7 @@ export class SideNavigationPage extends BasePage{
         await browser.actions().mouseMove(this.lnkServiceCategories).perform();
         await browser.actions().click(this.lnkServiceCategories).perform();
     }
-    // NavigateToCertExpirationsPage verifies that the link to the Certificate Expirations page is clickable.
+    /** NavigateToCertExpirationsPage verifies that the link to the Certificate Expirations page is clickable. */
     public async NavigateToCertExpirationsPage(): Promise<void>{
         return this.lnkCertExpirations.click();
     }
