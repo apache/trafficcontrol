@@ -105,14 +105,14 @@ export class NewInvalidationJobDialogComponent {
 			this.startTime.setValue(startTime);
 			this.ttl.setValue(parseInt(this.job.parameters.split(":")[1], 10));
 			const regexp = this.job.assetUrl.split("/").slice(3).join("/") || "/";
-			console.log("setting regexp value from", this.job.assetUrl, "to", regexp);
 			this.regexp.setValue(regexp);
+		} else {
+			this.startDate.setDate(this.startDate.getDate()+1);
+			this.startMinTime = timeStringFromDate(this.startMin);
+			this.startTime.setValue(this.startMinTime);
 		}
 
 		this.dsID = data.dsID;
-		this.startDate.setDate(this.startDate.getDate()+1);
-		this.startMinTime = timeStringFromDate(this.startMin);
-		this.startTime.setValue(this.startMinTime);
 	}
 
 	/**
