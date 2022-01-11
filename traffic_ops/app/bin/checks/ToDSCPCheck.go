@@ -369,15 +369,15 @@ func main() {
 
 	// Make TO API call for server details
 	var servers []tc.Server
-	servers, _, err = session.GetServers()
+	servers, _, err = session.GetServers(nil)
 	if err != nil {
 		rlog.Criticalf("An error occurred while getting servers: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Make TO API call for delivery service details
-	var deliveryservices []tc.DeliveryService
-	deliveryservices, _, err = session.GetDeliveryServices()
+	var deliveryservices []tc.DeliveryServiceNullable
+	deliveryservices, _, err = session.GetDeliveryServicesNullable()
 	if err != nil {
 		rlog.Criticalf("An error occurred while getting delivery services: %v\n", err)
 		os.Exit(1)
@@ -401,8 +401,8 @@ func main() {
 	ds_matchlist := make(map[string][]tc.DeliveryServiceMatch)
 	ds_types := make(map[string]tc.DSType)
 	for _, ds := range deliveryservices {
-		ds_matchlist[ds.XMLID] = ds.MatchList
-		ds_types[ds.XMLID] = ds.Type
+		ds_matchlist[*ds.XMLID] = *ds.MatchList
+		ds_types[*ds.XMLID] = *ds.Type
 	}
 
 	for _, server := range servers {
@@ -555,24 +555,24 @@ func main() {
 				}
 
 				for _, service := range services {
-					xmlID = service.XMLID
-					if service.Active == false {
+					xmlID = *service.XMLID
+					if *service.Active == false {
 						rlog.Infof("Skipping ds=%s active=false", xmlID)
 						continue
-					} else if service.DSCP == 0 {
+					} else if *service.DSCP == 0 {
 						// routers may override with default mark in this case
 						rlog.Infof("Skipping ds=%s dscp=0", xmlID)
 						continue
-					} else if service.CheckPath == "" {
+					} else if *service.CheckPath == "" {
 						rlog.Infof("Skipping ds=%s no check path set", xmlID)
 						continue
 					}
-					if matched, _ := regexp.Match(`^/`, []byte(service.CheckPath)); matched == false {
+					if matched, _ := regexp.Match(`^/`, []byte(*service.CheckPath)); matched == false {
 						//prepend leading slash if missing
-						service.CheckPath = "/" + service.CheckPath
+						*service.CheckPath = "/" + *service.CheckPath
 					}
-					protocol = service.Protocol
-					conf_dscp = strconv.Itoa(service.DSCP)
+					protocol = *service.Protocol
+					conf_dscp = strconv.Itoa(*service.DSCP)
 					check_path := service.CheckPath
 					routing_name := service.RoutingName
 					rlog.Infof("checking ds=%s server=%s cdn=%s dscp=%s", xmlID, s.fqdn, s.cdn, conf_dscp)
@@ -588,7 +588,7 @@ func main() {
 									rlog.Error(err)
 								}
 								if matched == true {
-									host_header = routing_name + host_header + cdn_map[s.cdn]
+									host_header = *routing_name + host_header + cdn_map[s.cdn]
 								} else {
 									host_header = s.name + host_header + cdn_map[s.cdn]
 								}
@@ -601,12 +601,12 @@ func main() {
 					if doV4 {
 						// do IPv4 stuff
 						v6flag = false
-						cap_dscp = protocol_picker(s, check_ip4, host_header, check_path, v6flag)
+						cap_dscp = protocol_picker(s, check_ip4, host_header, *check_path, v6flag)
 						success := check_result(conf_dscp, cap_dscp)
 						if success == false {
 							// retry to be sure - something like out-of-order packets may have been an issue
 							rlog.Info("first IPv4 check failed - retrying")
-							cap_dscp = protocol_picker(s, check_ip4, host_header, check_path, v6flag)
+							cap_dscp = protocol_picker(s, check_ip4, host_header, *check_path, v6flag)
 							success = check_result(conf_dscp, cap_dscp)
 						}
 						if success == false {
@@ -628,12 +628,12 @@ func main() {
 					if doV6 {
 						// do IPv6 stuff
 						v6flag = true
-						cap_dscp = protocol_picker(s, check_ip6, host_header, check_path, v6flag)
+						cap_dscp = protocol_picker(s, check_ip6, host_header, *check_path, v6flag)
 						success := check_result(conf_dscp, cap_dscp)
 						if success == false {
 							// retry to be sure - something like out-of-order packets may have been an issue
 							rlog.Info("first IPv6 check failed - retrying")
-							cap_dscp = protocol_picker(s, check_ip6, host_header, check_path, v6flag)
+							cap_dscp = protocol_picker(s, check_ip6, host_header, *check_path, v6flag)
 							success = check_result(conf_dscp, cap_dscp)
 						}
 						if success == false {

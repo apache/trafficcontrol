@@ -53,6 +53,8 @@ RUN	yum -y install \
 		tar && \
 	yum -y clean all
 
+RUN dnf --enablerepo=powertools -y install libpcap-devel
+
 COPY GO_VERSION /
 RUN go_version=$(cat /GO_VERSION) && \
 	curl -Lo go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \

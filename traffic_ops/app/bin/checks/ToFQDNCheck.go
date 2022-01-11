@@ -241,7 +241,7 @@ func main() {
 
 	// Make TO API call for server details
 	var servers []tc.Server
-	servers, _, err = session.GetServers()
+	servers, _, err = session.GetServers(nil)
 	if err != nil {
 		rlog.Criticalf("An error occurred while getting servers: %v\n", err)
 		os.Exit(1)
