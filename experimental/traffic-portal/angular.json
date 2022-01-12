@@ -23,6 +23,12 @@
 						"allowedCommonJsDependencies": [
 							"chart.js"
 						],
+						"optimization": true,
+						"sourceMap": true,
+						"namedChunks": false,
+						"extractLicenses": true,
+						"vendorChunk": true,
+						"buildOptimizer": true,
 						"outputPath": "dist/traffic-portal/browser",
 						"index": "src/index.html",
 						"main": "src/main.ts",

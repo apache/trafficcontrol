@@ -232,6 +232,13 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
+		_, dbErr := db.Exec(UpdateLoginTimeQuery, username)
+		if dbErr != nil {
+			dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", username, dbErr)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
+			return
+		}
+
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		api.WriteAndLogErr(w, r, append(respBts, '\n'))
 
@@ -372,6 +379,12 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		if userAllowed && authenticated {
+			_, dbErr := db.Exec(UpdateLoginTimeQuery, form.Username)
+			if dbErr != nil {
+				dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", form.Username, dbErr)
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
+				return
+			}
 			httpCookie := tocookie.GetCookie(userId, defaultCookieDuration, cfg.Secrets[0])
 			http.SetCookie(w, httpCookie)
 			resp = struct {
