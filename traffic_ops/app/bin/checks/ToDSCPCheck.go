@@ -564,14 +564,14 @@ func main() {
 
 				for _, service := range services {
 					xmlID = *service.XMLID
-					if *service.Active == false {
+					if service.Active == nil || *service.Active == false {
 						rlog.Infof("Skipping ds=%s active=false", xmlID)
 						continue
-					} else if *service.DSCP == 0 {
+					} else if service.DSCP == nil || *service.DSCP == 0 {
 						// routers may override with default mark in this case
 						rlog.Infof("Skipping ds=%s dscp=0", xmlID)
 						continue
-					} else if *service.CheckPath == "" {
+					} else if service.CheckPath == nil || *service.CheckPath == "" {
 						rlog.Infof("Skipping ds=%s no check path set", xmlID)
 						continue
 					}
