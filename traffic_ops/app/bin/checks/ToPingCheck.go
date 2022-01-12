@@ -306,7 +306,7 @@ func main() {
 			}
 			s.ilo = strings.Split(*server.ILOIPAddress, "/")[0]
 			s.cdn = *server.CDNName
-			s.mtu = server.Interfaces[0].MTU
+			s.mtu = int(*server.Interfaces[0].MTU)
 			rlog.Infof("Next server=%s status=%s", s.fqdn, s.status)
 			if *confSyslog {
 				log.Printf("Next server=%s status=%s", s.fqdn, s.status)

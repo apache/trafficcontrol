@@ -379,8 +379,16 @@ func main() {
 			statusData.Value = &defaulStatusValue
 			s.fqdn = s.name + "." + *server.DomainName
 			s.iface = server.Interfaces[0].Name
-			s.ip4 = strings.Split(server.IP4Address, "/")[0]
-			s.ip6 = strings.Split(server.IP6Address, "/")[0]
+			for _, interf := range server.Interfaces {
+				for _, addr := range interf.IPAddresses {
+					if s.ip4 == "" && strings.Count(addr.Address, ":") == 0 {
+						s.ip4 = strings.Split(addr.Address, "/")[0]
+					}
+					if s.ip6 == "" && strings.Count(addr.Address, ":") > 0 {
+						s.ip6 = strings.Split(addr.Address, "/")[0]
+					}
+				}
+			}
 			s.file = *confPath + "/" + s.fqdn + "_chr.dat"
 			s.cdn = *server.CDNName
 			rlog.Infof("Next server=%s status=%s", s.fqdn, s.status)
