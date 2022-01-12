@@ -327,10 +327,8 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	if userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
-	if ds.GeoLimitCountries != nil {
-		geo := ([]string)(*ds.GeoLimitCountries)
-		geoLimitCountries = strings.Join(geo, ",")
-	}
+	geo := ([]string)(ds.GeoLimitCountries)
+	geoLimitCountries = strings.Join(geo, ",")
 	var resultRows *sql.Rows
 	if omitExtraLongDescFields {
 		if ds.LongDesc1 != nil || ds.LongDesc2 != nil {
@@ -609,8 +607,7 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
 		case version.Major > 3:
-			dsV4 := ds.RemoveLD1AndLD2()
-			returnable = append(returnable, dsV4)
+			returnable = append(returnable, ds.RemoveLD1AndLD2())
 		case version.Major > 2 && version.Minor >= 1:
 			returnable = append(returnable, ds.DowngradeToV3())
 		case version.Major > 2:
@@ -919,7 +916,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 
 	var geoLimitCountries string
 	if ds.GeoLimitCountries != nil {
-		geo := ([]string)(*ds.GeoLimitCountries)
+		geo := ([]string)(ds.GeoLimitCountries)
 		geoLimitCountries = strings.Join(geo, ",")
 	}
 	var resultRows *sql.Rows
@@ -1339,9 +1336,7 @@ func requiredIfMatchesTypeName(patterns []string, typeName string) func(interfac
 var validTLSVersionPattern = regexp.MustCompile(`^\d+\.\d+$`)
 
 func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
-	if err := sanitize(ds); err != nil {
-		return err
-	}
+	sanitize(ds)
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
 	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
@@ -1403,16 +1398,11 @@ func validateGeoLimitCountries(ds *tc.DeliveryServiceV4) error {
 	if ds.GeoLimitCountries == nil {
 		return nil
 	}
-	value := *ds.GeoLimitCountries
-	if value != nil {
-		countryCodes := ([]string)(value)
-		for _, cc := range countryCodes {
-			if cc != "" && !IsLetter(cc) {
-				return fmt.Errorf("country codes can only contain alphabets")
-			}
+	countryCodes := ([]string)(ds.GeoLimitCountries)
+	for _, cc := range countryCodes {
+		if cc != "" && !IsLetter(cc) {
+			return fmt.Errorf("country codes can only contain alphabets")
 		}
-	} else {
-		ds.GeoLimitCountries = nil
 	}
 	return nil
 }
@@ -1766,7 +1756,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 
 		if geoLimitCountries != nil && *geoLimitCountries != "" {
 			geo := strings.Split(*geoLimitCountries, ",")
-			ds.GeoLimitCountries = (*tc.GeoLimitCountriesType)(&geo)
+			ds.GeoLimitCountries = geo
 		}
 		ds.ConsistentHashQueryParams = []string{}
 		if len(dsQueryParams) >= 0 {
@@ -2174,13 +2164,13 @@ func setNilIfEmpty(ptrs ...**string) {
 	}
 }
 
-func sanitize(ds *tc.DeliveryServiceV4) error {
+func sanitize(ds *tc.DeliveryServiceV4) {
 	if ds.GeoLimitCountries != nil {
-		geo := ([]string)(*ds.GeoLimitCountries)
+		geo := ([]string)(ds.GeoLimitCountries)
 		for i, _ := range geo {
 			geo[i] = strings.ToUpper(strings.Replace(geo[i], " ", "", -1))
 		}
-		ds.GeoLimitCountries = (*tc.GeoLimitCountriesType)(&geo)
+		ds.GeoLimitCountries = geo
 	}
 	if ds.ProfileID != nil && *ds.ProfileID == -1 {
 		ds.ProfileID = nil
@@ -2216,7 +2206,6 @@ func sanitize(ds *tc.DeliveryServiceV4) error {
 	if ds.MaxRequestHeaderBytes == nil {
 		ds.MaxRequestHeaderBytes = util.IntPtr(tc.DefaultMaxRequestHeaderBytes)
 	}
-	return nil
 }
 
 // SelectDeliveryServicesQuery is a PostgreSQL query used to fetch Delivery

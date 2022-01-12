@@ -487,7 +487,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	newDS.FirstHeaderRewrite = &firstHeaderRewrite
 	newDS.FQPacingRate = &fqPacingRate
 	newDS.GeoLimit = &geoLimit
-	newDS.GeoLimitCountries = &geo
+	newDS.GeoLimitCountries = geo
 	newDS.GeoLimitRedirectURL = &geoLimitRedirectURL
 	newDS.GeoProvider = &geoProvider
 	newDS.GlobalMaxMBPS = &globalMaxMBPS

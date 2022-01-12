@@ -118,8 +118,8 @@ func CreateTestDeliveryServiceWithGeoLimitCountries(t *testing.T) {
 	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "geo-limit-countries-test-ds-name", "edge", "https://test-geo-limit.com", "geo-limit-countries-test-ds-xml-id")
 	customDS.Protocol = util.IntPtr(0)
 	customDS.GeoLimit = util.IntPtr(2)
-	geoLimitCountries := []string{"US   ", "CA"}
-	customDS.GeoLimitCountries = (*tc.GeoLimitCountriesType)(&geoLimitCountries)
+	//geoLimitCountries := []string{"US   ", "CA"}
+	customDS.GeoLimitCountries = []string{"US   ", "CA"}
 
 	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	if err != nil {
@@ -131,7 +131,7 @@ func CreateTestDeliveryServiceWithGeoLimitCountries(t *testing.T) {
 	if resp.Response[0].GeoLimitCountries == nil {
 		t.Fatalf("got nothing in geo limit countries")
 	}
-	arr := ([]string)(*resp.Response[0].GeoLimitCountries)
+	arr := ([]string)(resp.Response[0].GeoLimitCountries)
 	if len(arr) != 2 || arr[0] != "US" || arr[1] != "CA" {
 		t.Errorf("expected geo limit countries: US,CA; actual: %s", arr)
 	}
@@ -145,8 +145,7 @@ func CreateTestDeliveryServiceWithGeoLimitCountries(t *testing.T) {
 		t.Fatal("couldn't get exactly one ds in the response, quitting")
 	}
 	dsID := deliveryServices.Response[0].ID
-	geoLimitCountries = []string{"US   ", "CA", "12"}
-	customDS.GeoLimitCountries = (*tc.GeoLimitCountriesType)(&geoLimitCountries)
+	customDS.GeoLimitCountries = []string{"US   ", "CA", "12"}
 	_, _, err = TOSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected an error while updating geo limit countries of a ds with an invalid country code, but got nothing")
