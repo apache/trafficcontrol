@@ -19,8 +19,8 @@ limitations under the License.
 			mat-icon-button
 			type="button"
 			color="accent"
-			title="edit this content invalidation job"
-			aria-label="edit this content invalidation job"
+			title="Edit this content invalidation job"
+			aria-label="Edit this content invalidation job"
 			[disabled]="j.startTime <= now"
 			(click)="editJob(j)"
 		>
@@ -30,8 +30,8 @@ limitations under the License.
 			mat-icon-button
 			type="button"
 			color="warn"
-			title="delete this content invalidation job"
-			aria-label="delete this content invalidation job"
+			title="Delete this content invalidation job"
+			aria-label="Delete this content invalidation job"
 			[disabled]="isInProgress(j)"
 			(click)="deleteJob(j.id)"
 		>
