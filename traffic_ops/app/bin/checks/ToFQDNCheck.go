@@ -98,7 +98,7 @@ func contains(s []net.IP, i net.IP) bool {
 	return false
 }
 
-func (s *Server) check_dns(server tc.Server) string {
+func (s *Server) check_dns(server tc.ServerV30) string {
 	var dnsrr []net.IP
 	var tcrr []net.IP
 	s.failcount = 0
@@ -106,9 +106,17 @@ func (s *Server) check_dns(server tc.Server) string {
 	if *confSyslog {
 		log.Printf("checking forward records for %v", s.fqdn)
 	}
-	s.cdn = server.CDNName
-	s.ip4 = strings.Split(server.IPAddress, "/")[0]
-	s.ip6 = strings.Split(server.IP6Address, "/")[0]
+	s.cdn = *server.CDNName
+	for _, interf := range server.Interfaces {
+		for _, addr := range interf.IPAddresses {
+			if s.ip4 == "" && strings.Count(addr.Address, ":") == 0 {
+				s.ip4 = strings.Split(addr.Address, "/")[0]
+			}
+			if s.ip6 == "" && strings.Count(addr.Address, ":") > 0 {
+				s.ip6 = strings.Split(addr.Address, "/")[0]
+			}
+		}
+	}
 	if s.ip4 != "" {
 		tcrr = append(tcrr, net.ParseIP(s.ip4))
 	}
@@ -240,14 +248,14 @@ func main() {
 	}
 
 	// Make TO API call for server details
-	var servers []tc.Server
-	servers, _, err = session.GetServers(nil)
+	var servers tc.ServersV3Response
+	servers, _, err = session.GetServersWithHdr(nil, nil)
 	if err != nil {
 		rlog.Criticalf("An error occurred while getting servers: %v\n", err)
 		os.Exit(1)
 	}
 
-	for _, server := range servers {
+	for _, server := range servers.Response {
 		re, err := regexp.Compile("^(MID|EDGE).*")
 		if err != nil {
 			rlog.Error("supplied exclusion regex does not compile:", err)
@@ -261,12 +269,12 @@ func main() {
 					rlog.Error("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
-				if !re_inc.MatchString(server.HostName) {
+				if !re_inc.MatchString(*server.HostName) {
 					rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
 					continue
 				}
 			}
-			if *confCdn != "all" && *confCdn != server.CDNName {
+			if *confCdn != "all" && *confCdn != *server.CDNName {
 				rlog.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
 				continue
 			}
@@ -276,12 +284,12 @@ func main() {
 					rlog.Error("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
-				if re.MatchString(server.HostName) {
+				if re.MatchString(*server.HostName) {
 					rlog.Debugf("%s matches the provided exclude regex, skipping", server.HostName)
 					continue
 				}
 			}
-			s := NewServer(server.ID, server.HostName, server.Status, -1)
+			s := NewServer(*server.ID, *server.HostName, *server.Status, -1)
 			defaulStatusValue := -1
 			var statusData tc.ServercheckRequestNullable
 			var msg string
@@ -289,7 +297,7 @@ func main() {
 			statusData.Name = confName
 			statusData.HostName = &s.name
 			statusData.Value = &defaulStatusValue
-			s.fqdn = s.name + "." + server.DomainName
+			s.fqdn = s.name + "." + *server.DomainName
 			rlog.Infof("Next server=%s status=%s", s.fqdn, s.status)
 			if *confSyslog {
 				log.Printf("Next server=%s status=%s", s.fqdn, s.status)

@@ -107,7 +107,7 @@ func main() {
 	}
 
 	// Make TO API call for server details
-	server, _, err := session.GetServerDetailsByHostName(*confHost)
+	server, _, err := session.GetServerDetailsByHostNameWithHdr(*confHost, nil)
 	if err != nil {
 		rlog.Criticalf("An error occurred while getting servers: %v\n", err)
 		os.Exit(1)

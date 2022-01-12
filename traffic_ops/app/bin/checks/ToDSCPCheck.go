@@ -368,16 +368,16 @@ func main() {
 	}
 
 	// Make TO API call for server details
-	var servers []tc.Server
-	servers, _, err = session.GetServers(nil)
+	var servers tc.ServersV3Response
+	servers, _, err = session.GetServersWithHdr(nil, nil)
 	if err != nil {
 		rlog.Criticalf("An error occurred while getting servers: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Make TO API call for delivery service details
-	var deliveryservices []tc.DeliveryServiceNullable
-	deliveryservices, _, err = session.GetDeliveryServicesNullable()
+	var deliveryservices []tc.DeliveryServiceNullableV30
+	deliveryservices, _, err = session.GetDeliveryServicesV30WithHdr(nil, nil)
 	if err != nil {
 		rlog.Criticalf("An error occurred while getting delivery services: %v\n", err)
 		os.Exit(1)
@@ -405,7 +405,7 @@ func main() {
 		ds_types[*ds.XMLID] = *ds.Type
 	}
 
-	for _, server := range servers {
+	for _, server := range servers.Response {
 		re, err := regexp.Compile("^EDGE.*")
 		if err != nil {
 			rlog.Error("supplied exclusion regex does not compile:", err)
@@ -419,12 +419,12 @@ func main() {
 					rlog.Error("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
-				if !re_inc.MatchString(server.HostName) {
+				if !re_inc.MatchString(*server.HostName) {
 					rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
 					continue
 				}
 			}
-			if *confCdn != "all" && *confCdn != server.CDNName {
+			if *confCdn != "all" && *confCdn != *server.CDNName {
 				rlog.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
 				continue
 			}
@@ -434,12 +434,12 @@ func main() {
 					rlog.Error("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
-				if re.MatchString(server.HostName) {
+				if re.MatchString(*server.HostName) {
 					rlog.Debugf("%s matches the provided exclude regex, skipping", server.HostName)
 					continue
 				}
 			}
-			s := NewServer(server.ID, server.HostName, server.Status, -1)
+			s := NewServer(*server.ID, *server.HostName, *server.Status, -1)
 			doV4 := false //default
 			doV6 := false //default
 			defaulStatusValue := -1
@@ -448,20 +448,28 @@ func main() {
 			statusData.Name = confName
 			statusData.HostName = &s.name
 			statusData.Value = &defaulStatusValue
-			s.fqdn = s.name + "." + server.DomainName
+			s.fqdn = s.name + "." + *server.DomainName
 			rlog.Infof("Next server=%s status=%s", s.fqdn, s.status)
 			if *confSyslog {
 				log.Printf("Next server=%s status=%s", s.fqdn, s.status)
 			}
 			if (s.status == "REPORTED" || s.status == "ADMIN_DOWN") && *confReset != true {
 				s.failcount = 0
-				s.cdn = server.CDNName
-				s.httpPort = strconv.Itoa(server.TCPPort)
-				s.httpsPort = strconv.Itoa(server.HTTPSPort)
-				s.ip4 = strings.Split(server.IPAddress, "/")[0]
-				s.ip6 = strings.Split(server.IP6Address, "/")[0]
+				s.cdn = *server.CDNName
+				s.httpPort = strconv.Itoa(*server.TCPPort)
+				s.httpsPort = strconv.Itoa(*server.HTTPSPort)
+				for _, interf := range server.Interfaces {
+					for _, addr := range interf.IPAddresses {
+						if s.ip4 == "" && strings.Count(addr.Address, ":") == 0 {
+							s.ip4 = strings.Split(addr.Address, "/")[0]
+						}
+						if s.ip6 == "" && strings.Count(addr.Address, ":") > 0 {
+							s.ip6 = strings.Split(addr.Address, "/")[0]
+						}
+					}
+				}
 				rlog.Debugf("Ports for %s: http=%s https=%s", s.name, http_port, https_port)
-				services, _, err := session.GetDeliveryServicesByServer(s.id)
+				services, _, err := session.GetDeliveryServicesByServerV30WithHdr(s.id, nil)
 				if err != nil {
 					rlog.Error("Error getting delivery services from TO:", err)
 					os.Exit(1)

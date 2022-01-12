@@ -329,14 +329,14 @@ func main() {
 	}
 
 	// Make TO API call for server details
-	var servers []tc.Server
-	servers, _, err = session.GetServers(nil)
+	var servers tc.ServersV3Response
+	servers, _, err = session.GetServersWithHdr(nil, nil)
 	if err != nil {
 		rlog.Criticalf("An error occurred while getting servers: %v\n", err)
 		os.Exit(1)
 	}
 
-	for _, server := range servers {
+	for _, server := range servers.Response {
 		re, err := regexp.Compile("^(MID|EDGE).*")
 		if err != nil {
 			rlog.Error("supplied exclusion regex does not compile:", err)
@@ -350,12 +350,12 @@ func main() {
 					rlog.Error("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
-				if !re_inc.MatchString(server.HostName) {
+				if !re_inc.MatchString(*server.HostName) {
 					rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
 					continue
 				}
 			}
-			if *confCdn != "all" && *confCdn != server.CDNName {
+			if *confCdn != "all" && *confCdn != *server.CDNName {
 				rlog.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
 				continue
 			}
@@ -365,24 +365,24 @@ func main() {
 					rlog.Error("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
-				if re.MatchString(server.HostName) {
+				if re.MatchString(*server.HostName) {
 					rlog.Debugf("%s matches the provided exclude regex, skipping", server.HostName)
 					continue
 				}
 			}
-			s := NewServer(server.ID, server.HostName, server.Status)
+			s := NewServer(*server.ID, *server.HostName, *server.Status)
 			defaulStatusValue := -1
 			var statusData tc.ServercheckRequestNullable
 			statusData.ID = &s.id
 			statusData.Name = confName
 			statusData.HostName = &s.name
 			statusData.Value = &defaulStatusValue
-			s.fqdn = s.name + "." + server.DomainName
-			s.iface = server.InterfaceName
-			s.ip4 = strings.Split(server.IPAddress, "/")[0]
+			s.fqdn = s.name + "." + *server.DomainName
+			s.iface = server.Interfaces[0].Name
+			s.ip4 = strings.Split(server.IP4Address, "/")[0]
 			s.ip6 = strings.Split(server.IP6Address, "/")[0]
 			s.file = *confPath + "/" + s.fqdn + "_chr.dat"
-			s.cdn = server.CDNName
+			s.cdn = *server.CDNName
 			rlog.Infof("Next server=%s status=%s", s.fqdn, s.status)
 
 			if *confSyslog {
