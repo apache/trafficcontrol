@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [5.1.6] - 2022-01-12
 - [#6446](https://github.com/apache/trafficcontrol/issues/6446) - Revert Traffic Router rollover file pattern to the one previously used in `log4j.properties` with Log4j 1.2
+- [#6506](https://github.com/apache/trafficcontrol/pull/6506) - Updated `jackson-databind` and `jackson-annotations` Traffic Router dependencies to version 2.13.1
 
 ## [5.1.5] - 2021-12-20
 - Updated `log4j` module in Traffic Router from version 1.2.17 to 2.17.0
