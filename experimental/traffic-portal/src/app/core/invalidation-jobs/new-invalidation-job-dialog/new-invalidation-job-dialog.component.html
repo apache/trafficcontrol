@@ -26,7 +26,7 @@ limitations under the License.
 		</mat-form-field>
 		<mat-form-field appearance="fill">
 			<mat-label>Content Pattern to Invalidate</mat-label>
-			<input matInput type="text" name="regexp" [formControl]="regexp" required customvalidity [valid]='regexpIsValid'/>
+			<input matInput type="text" name="regexp" [formControl]="regexp" required [customvalidity]='regexpIsValid'/>
 			<mat-hint>A regular expression. Matching request paths will be invalidated</mat-hint>
 		</mat-form-field>
 		<mat-form-field appearance="fill">
