@@ -35,7 +35,6 @@ import {
 import {PhysicalLocationService} from "./api/PhysicalLocationService";
 import {CurrentUserService} from "./currentUser/current-user.service";
 import {CustomvalidityDirective} from "./validation/customvalidity.directive";
-import {OpenableDirective} from "./openable/openable.directive";
 import {SSHCellRendererComponent} from "./table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import {UpdateCellRendererComponent} from "./table-components/update-cell-renderer/update-cell-renderer.component";
 import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-filter.component";
@@ -55,7 +54,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		UpdateCellRendererComponent,
 		CustomvalidityDirective,
 		LinechartDirective,
-		OpenableDirective,
 		SSHCellRendererComponent,
 	],
 	exports: [
@@ -67,7 +65,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		UpdateCellRendererComponent,
 		CustomvalidityDirective,
 		LinechartDirective,
-		OpenableDirective
 	],
 	imports: [
 		AppUIModule,

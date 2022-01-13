@@ -23,7 +23,6 @@ import {DeliveryServiceService, InvalidationJobService, UserService} from "src/a
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { CustomvalidityDirective } from "../../shared/validation/customvalidity.directive";
-import { OpenableDirective } from "../../shared/openable/openable.directive";
 import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob, JobType } from "../../models";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
@@ -64,7 +63,6 @@ describe("InvalidationJobsComponent", () => {
 			declarations: [
 				InvalidationJobsComponent,
 				TpHeaderComponent,
-				OpenableDirective,
 				CustomvalidityDirective
 			],
 			imports: [
