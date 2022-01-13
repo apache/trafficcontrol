@@ -53,13 +53,10 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		GenericTableComponent,
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
-
 		CustomvalidityDirective,
 		LinechartDirective,
-		OpenableDirective
-	],
-	entryComponents: [
-		SSHCellRendererComponent
+		OpenableDirective,
+		SSHCellRendererComponent,
 	],
 	exports: [
 		AlertComponent,
@@ -68,7 +65,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		GenericTableComponent,
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
-
 		CustomvalidityDirective,
 		LinechartDirective,
 		OpenableDirective
@@ -79,8 +75,8 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		RouterModule
 	],
 	providers: [
-		{multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor},
-		{multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor},
+		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },
+		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
 		AlertService,
 		CacheGroupService,
 		CDNService,
@@ -92,6 +88,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		ServerService,
 		TypeService,
 		UserService
-	],
+	]
 })
 export class SharedModule { }
