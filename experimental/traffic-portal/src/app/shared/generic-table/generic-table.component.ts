@@ -582,7 +582,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	 */
 	public selectAll(de?: boolean): void {
 		if (!this.gridAPI) {
-			console.error("Cannot de-select: no grid API handle");
+			console.error("Cannot (de-)select: no grid API handle");
 			return;
 		}
 

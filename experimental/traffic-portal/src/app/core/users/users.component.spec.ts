@@ -17,10 +17,10 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { User } from "../../models";
-import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
-import {LoadingComponent} from "../../shared/loading/loading.component";
-import {UserService} from "../../shared/api";
+import type { User } from "src/app/models";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+import { LoadingComponent } from "src/app/shared/loading/loading.component";
+import { UserService } from "src/app/shared/api";
 import { UsersComponent } from "./users.component";
 
 describe("UsersComponent", () => {
@@ -68,6 +68,80 @@ describe("UsersComponent", () => {
 
 	it("should exist", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("can tell if a user has a location", () => {
+		const u: User = {
+			city: "Townsville",
+			country: "Countryland",
+			id: -1,
+			newUser: false,
+			postalCode: "00000",
+			stateOrProvince: "Provincia",
+			username: "test"
+		};
+		expect(component.userHasLocation(u)).toBeTrue();
+		u.city = null;
+		expect(component.userHasLocation(u)).toBeTrue();
+		u.stateOrProvince = null;
+		expect(component.userHasLocation(u)).toBeTrue();
+		u.country = null;
+		expect(component.userHasLocation(u)).toBeTrue();
+		u.postalCode = null;
+		expect(component.userHasLocation(u)).toBeFalse();
+		u.country = "Countryland";
+		expect(component.userHasLocation(u)).toBeTrue();
+		u.country = null;
+		u.stateOrProvince = "Provincia";
+		expect(component.userHasLocation(u)).toBeTrue();
+		u.stateOrProvince = null;
+		u.city = "Townsville";
+		expect(component.userHasLocation(u)).toBeTrue();
+	});
+
+	it("builds user location strings", () => {
+		const u: User = {
+			city: "Townsville",
+			country: "Countryland",
+			id: -1,
+			newUser: false,
+			postalCode: "00000",
+			stateOrProvince: "Provincia",
+			username: "test"
+		};
+		expect(component.userLocationString(u)).toBe("Townsville, Provincia, Countryland, 00000");
+		u.city = null;
+		expect(component.userLocationString(u)).toBe("Provincia, Countryland, 00000");
+		u.stateOrProvince = null;
+		expect(component.userLocationString(u)).toBe("Countryland, 00000");
+		u.country = null;
+		expect(component.userLocationString(u)).toBe("00000");
+		u.postalCode = null;
+		expect(component.userLocationString(u)).toBeNull();
+		u.country = "Countryland";
+		expect(component.userLocationString(u)).toBe("Countryland");
+		u.country = null;
+		u.stateOrProvince = "Provincia";
+		expect(component.userLocationString(u)).toBe("Provincia");
+		u.stateOrProvince = null;
+		u.city = "Townsville";
+		expect(component.userLocationString(u)).toBe("Townsville");
+	});
+
+	it("searches fuzz-ily", ()=>{
+		const u = {
+			id: -1,
+			newUser: false,
+			username: "test"
+		};
+		expect(component.fuzzControl.value).toBe("");
+		expect(component.fuzzy(u)).toBeTrue();
+		component.fuzzControl.setValue(`${u.username}z`);
+		expect(component.fuzzy(u)).toBeFalse();
+		component.fuzzControl.setValue(u.username);
+		expect(component.fuzzy(u)).toBeTrue();
+		component.fuzzControl.setValue(`${u.username[0]}${u.username.slice(-1)[0]}`);
+		expect(component.fuzzy(u)).toBeTrue();
 	});
 
 	afterAll(() => {

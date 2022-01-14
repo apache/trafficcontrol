@@ -49,19 +49,32 @@ describe("AlertComponent", () => {
 
 	it("should load simple alerts", async () => {
 		const levels: Array<AlertLevel> = ["error", "warning", "info", "success"];
+		let snackBars;
+		let snackBar;
 		for (const errLevel of levels) {
 			const msg = `An alert at the '${errLevel}' level`;
 			service.newAlert(errLevel, msg);
 
-			let snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
+			snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
 			expect(snackBars.length).toBe(1);
 
-			const snackBar = await loader.getHarness(MatSnackBarHarness);
+			snackBar = await loader.getHarness(MatSnackBarHarness);
 			expect(await snackBar.getMessage()).toBe(msg);
 
 			fixture.componentInstance.clear();
 			snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
 			expect(snackBars.length).toBe(0);
 		}
+		service.newAlert({level: "info", text: ""});
+
+		snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
+		expect(snackBars.length).toBe(1);
+
+		snackBar = await loader.getHarness(MatSnackBarHarness);
+		expect(await snackBar.getMessage()).toBe("Unknown");
+
+		fixture.componentInstance.clear();
+		snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
+		expect(snackBars.length).toBe(0);
 	});
 });

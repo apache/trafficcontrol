@@ -108,7 +108,7 @@ describe("InvalidationJobsComponent", () => {
 		j.startTime = new Date(component.now);
 		j.startTime.setMinutes(j.startTime.getMinutes()-30);
 		expect(component.isInProgress(j)).toBeTrue();
-		j.startTime = new Date();
+		j.startTime.setMinutes(j.startTime.getMinutes()+31);
 		expect(component.isInProgress(j)).toBeFalse();
 	});
 

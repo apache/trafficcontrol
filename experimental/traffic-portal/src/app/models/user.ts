@@ -17,17 +17,17 @@
  */
 export interface User {
 	/** Line one of the user's address. */
-	addressLine1?:    string;
+	addressLine1?:    string | null;
 	/** Line two of the user's address. */
-	addressLine2?:    string;
+	addressLine2?:    string | null;
 	/** The city in which the user lives/is based. */
-	city?:            string;
+	city?:            string | null;
 	/** The company for which the user works. */
-	company?:         string;
+	company?:         string | null;
 	/** A confirmation field for the user's password - this has no known effect, but we set it anyway on password update. */
 	confirmLocalPasswd?: string;
 	/** The country in which the user lives/is based. */
-	country?:         string;
+	country?:         string | null;
 	/** The user's email address. */
 	email?:           string;
 	/** The user's full name. */
@@ -48,17 +48,17 @@ export interface User {
 	 */
 	newUser:          boolean;
 	/** The user's phone number. */
-	phoneNumber?:     string;
+	phoneNumber?:     string | null;
 	/** The postal code where the user lives/is based. */
-	postalCode?:      string;
+	postalCode?:      string | null;
 	/** The user's public SSH key. */
-	publicSshKey?:    string;
+	publicSshKey?:    string | null;
 	/** The integral, unique identifier of the Role the user has. */
 	role?:            number;
 	/** The user's Role. */
 	rolename?:        string;
 	/** The state or province within which the user lives/is based. */
-	stateOrProvince?: string;
+	stateOrProvince?: string | null;
 	/** The Tenant to which the user belongs. */
 	tenant?:          string;
 	/** An integral, unique identifier for the Tenant to which the user belongs. */

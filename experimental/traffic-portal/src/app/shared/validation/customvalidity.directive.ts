@@ -13,7 +13,7 @@
 */
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from "@angular/core";
 
-import { Observable, of, Subscription } from "rxjs";
+import type { Observable, Subscription } from "rxjs";
 
 /**
  * CustomvalidityDirective decorates inputs, adding custom validity messages to
@@ -28,10 +28,10 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 	 * the input changes. An empty string signifies "valid", whereas any other
 	 * string should be a description of why the input is invalid.
 	 */
-	@Input() public customvalidity: Observable<string> = of("");
+	@Input() public customvalidity!: Observable<string>;
 
 	/** A subscription for the 'validity' input. */
-	private subscription: Subscription | null = null;
+	private subscription!: Subscription;
 
 	/**
 	 * Constructor.
@@ -63,9 +63,7 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 	 * Cleans up subscription after the element is destroyed.
 	 */
 	public ngOnDestroy(): void {
-		if (this.subscription) {
-			this.subscription.unsubscribe();
-		}
+		this.subscription.unsubscribe();
 	}
 
 }

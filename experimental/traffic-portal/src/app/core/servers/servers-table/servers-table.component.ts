@@ -27,7 +27,7 @@ import { ContextMenuActionEvent, ContextMenuItem } from "../../../shared/generic
 /**
  * AugmentedServer has fields that give direct access to its service addresses without needing to recalculate them.
  */
-interface AugmentedServer extends Server {
+export interface AugmentedServer extends Server {
 	/** The server's IPv4 service address */
 	ipv4Address: string;
 	/** The server's IPv6 service address */
@@ -40,7 +40,7 @@ interface AugmentedServer extends Server {
  * @param s The server to convert.
  * @returns The converted server.
  */
-function augment(s: Server): AugmentedServer {
+export function augment(s: Server): AugmentedServer {
 	const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
 	let inf: Interface;
 	try {
@@ -74,7 +74,7 @@ function augment(s: Server): AugmentedServer {
  * @param data The server to check.
  * @returns Whether or not 'data' is a Cache Server.
  */
-function serverIsCache(data: AugmentedServer): boolean {
+export function serverIsCache(data: AugmentedServer): boolean {
 	if (!data || !data.type) {
 		return false;
 	}

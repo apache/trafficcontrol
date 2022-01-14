@@ -58,7 +58,7 @@ export class AlertService {
 	 */
 	public newAlert(levelOrAlert: AlertLevel | Alert, text?: string): void {
 		if (typeof levelOrAlert === "string") {
-			if (text === null || text === undefined) {
+			if (text === undefined) {
 				throw new Error("Can't pass raw level without raw text!");
 			}
 			this.alertsSubject.next({level: levelOrAlert, text});

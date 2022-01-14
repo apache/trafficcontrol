@@ -59,9 +59,6 @@ export class AlertComponent implements OnDestroy {
 						case "error":
 							console.error("alert: ", a.text);
 							break;
-						default:
-							console.log("unknown alert: ", a.text);
-							break;
 					}
 					this.snackBar.open(a.text, "dismiss", {duration: this.duration, verticalPosition: "top"});
 				}

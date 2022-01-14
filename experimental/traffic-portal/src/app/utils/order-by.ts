@@ -84,16 +84,12 @@ export function orderBy<T extends any>(value: Array<T>, property: string | Array
 
 		for (const p of props) {
 
-			let aProp;
-			let bProp;
-
-
 			let bail = false;
-			if (!a.hasOwnProperty(p)) {
+			if (!Object.prototype.hasOwnProperty.call(a, p)) {
 				console.error("object", a, `has no property "${p}"!`);
 				bail = true;
 			}
-			if (!b.hasOwnProperty(p)) {
+			if (!Object.prototype.hasOwnProperty.call(b, p)) {
 				console.error("object", b, `has no property "${p}"!`);
 				bail = true;
 			}
@@ -102,13 +98,8 @@ export function orderBy<T extends any>(value: Array<T>, property: string | Array
 				return 0;
 			}
 
-			try {
-				aProp = a[p];
-				bProp = b[p];
-			} catch (e) {
-				console.error(e);
-				return 0;
-			}
+			const aProp = a[p];
+			const bProp = b[p];
 
 			let result: number;
 			try {

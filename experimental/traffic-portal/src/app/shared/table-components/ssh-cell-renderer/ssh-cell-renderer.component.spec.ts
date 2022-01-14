@@ -14,6 +14,7 @@
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
+import type { ICellRendererParams } from "ag-grid-community";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { SSHCellRendererComponent } from "./ssh-cell-renderer.component";
@@ -41,5 +42,23 @@ describe("SshCellRendererComponent", () => {
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("initializes", () => {
+		component.agInit({value: "192.0.2.1"} as ICellRendererParams);
+		expect(component.value).toBe("192.0.2.1");
+
+		component.agInit({value: "192.0.2.2"} as ICellRendererParams);
+		expect(component.value).toBe("192.0.2.2");
+	});
+
+	it("refreshes", () => {
+		let ret = component.refresh({value: "192.0.2.1"} as ICellRendererParams);
+		expect(ret).toBeTrue();
+		expect(component.value).toBe("192.0.2.1");
+
+		ret = component.refresh({value: "192.0.2.2"} as ICellRendererParams);
+		expect(ret).toBeTrue();
+		expect(component.value).toBe("192.0.2.2");
 	});
 });
