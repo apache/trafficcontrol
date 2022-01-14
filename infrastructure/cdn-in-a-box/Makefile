@@ -48,7 +48,6 @@ SPECIAL_SAUCE := $(TC_VERSION)-$(BUILD_NUMBER).el$(RHEL_VERSION).x86_64.rpm
 SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-1.el$(RHEL_VERSION).noarch.rpm
 SPECIAL_SYRUP := $(ATS_VERSION).el$(RHEL_VERSION).x86_64.rpm
 
-ATS_SOURCE := $(wildcard $(TC_DIR)/cache-config/testing/docker/trafficserver/**)
 TO_SOURCE := $(wildcard $(TC_DIR)/traffic_ops/**)
 TO_SOURCE += $(wildcard $(TC_DIR)/traffic_ops_db/**)
 ORT_SOURCE:= $(wildcard $(TC_DIR)/cache-config/**)
@@ -179,7 +178,7 @@ $(ORT_RPM_ABSOLUTE): $(ORT_DIST_RPM)
 	cp -f "$?" "$@"
 
 # Dist rpms
-$(ATS_DIST_RPM): $(ATS_SOURCE)
+$(ATS_DIST_RPM):
 	docker-compose -f $(TC_DIR)/cache-config/testing/docker/docker-compose-ats-build.yml build --parallel trafficserver_build && docker-compose -f $(TC_DIR)/cache-config/testing/docker/docker-compose-ats-build.yml run --rm trafficserver_build
 
 $(TM_DIST_RPM): $(TM_SOURCE)
