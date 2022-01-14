@@ -53,12 +53,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6506](https://github.com/apache/trafficcontrol/pull/6506) - Updated `jackson-databind` and `jackson-annotations` Traffic Router dependencies to version 2.13.1
 
 ### Deprecated
-- Deprecated the endpoints and docs associated with `api_capability`.
+- Deprecated the endpoints and docs associated with `/api_capability` and `/capabilities`.
 - The use of a seelog configuration file to configure Traffic Stats logging is deprecated, and logging configuration should instead be present in the `logs` property of the Traffic Stats configuration file (refer to documentation for details).
 
 ### Removed
 - Removed the `user_role` table.
 - The `traffic_ops.sh` shell profile no longer sets `GOPATH` or adds its `bin` folder to the `PATH`
+- `/capabilities` removed from Traffic Ops API version 4.
 
 ## [6.0.2] - 2021-12-17
 ### Changed
