@@ -21,6 +21,7 @@ package main
 
 import (
 	"os"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/tc-health-client/config"
@@ -31,6 +32,14 @@ const (
 	Success      = 0
 	ConfigError  = 166
 	RunTimeError = 167
+	PidFile      = "/run/tc-health-client.pid"
+)
+
+// the BuildTimestamp and Version are set via ld flags
+// when the RPM is built, see build/build_rpm.sh
+var (
+	BuildTimestamp = ""
+	Version        = ""
 )
 
 func main() {
@@ -38,9 +47,8 @@ func main() {
 	if err != nil {
 		log.Errorln(err.Error())
 		os.Exit(ConfigError)
-	} else {
-		log.Infoln("Startup complete, the config has been loaded")
 	}
+
 	if helpflag { // user used --help option
 		os.Exit(Success)
 	}
@@ -51,6 +59,15 @@ func main() {
 		log.Errorf("startup could not initialize parent info, check that trafficserver is running: %s\n", err.Error())
 		os.Exit(RunTimeError)
 	}
+
+	pid := os.Getpid()
+	err = os.WriteFile(PidFile, []byte(strconv.Itoa(pid)), 0644)
+	if err != nil {
+		log.Errorf("could not write the process id to %s: %s", PidFile, err.Error())
+		os.Exit(RunTimeError)
+	}
+
+	log.Infof("startup complete, version: %s, built: %s\n", Version, BuildTimestamp)
 
 	tmInfo.PollAndUpdateCacheStatus()
 }

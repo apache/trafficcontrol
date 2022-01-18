@@ -351,6 +351,15 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 						}
 					}
 				}
+				// if the host is available clear the unavailable poll count if not 0.
+				if cs.available(c.Cfg.ReasonCode) && tmAvailable {
+					if cs.UnavailablePollCount > 0 {
+						log.Debugf("resetting the UnavailablePollCount for %s from %d to 0",
+							hostName, cs.UnavailablePollCount)
+						cs.UnavailablePollCount = 0
+						c.Parents[hostName] = cs
+					}
+				}
 			}
 		}
 

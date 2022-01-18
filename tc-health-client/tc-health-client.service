@@ -25,6 +25,7 @@ Requires=trafficserver.service
 ExecStart=/usr/bin/tc-health-client -vv
 Restart=always
 RestartSec=5
+PIDFile=/run/tc-health-client.pid
 
 [Install]
 WantedBy=trafficserver.service
