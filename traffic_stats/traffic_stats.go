@@ -26,7 +26,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/Shopify/sarama"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -43,6 +42,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
+	"github.com/Shopify/sarama"
 	"github.com/cihub/seelog"
 	influx "github.com/influxdata/influxdb/client/v2"
 )
@@ -95,7 +95,7 @@ type StartupConfig struct {
 	ToUser                      string   `json:"toUser"`
 	ToPasswd                    string   `json:"toPasswd"`
 	ToURL                       string   `json:"toUrl"`
-	EnableInflux                bool     `json:"enableInflux"`
+	DisableInflux               bool     `json:"disableInflux"`
 	InfluxUser                  string   `json:"influxUser"`
 	InfluxPassword              string   `json:"influxPassword"`
 	InfluxURLs                  []string `json:"influxUrls"`
@@ -136,6 +136,21 @@ type KafkaJSON struct {
 	Tags   map[string]string      `json:"tags"`
 	Fields map[string]interface{} `json:"fields"`
 	Time   time.Time              `json:"time"`
+}
+
+type DataExporter interface {
+	ExportData(config StartupConfig, bps influx.BatchPoints, retry bool)
+}
+
+func (c *KafkaCluster) ExportData(config StartupConfig, bps influx.BatchPoints, retry bool) {
+	err := publishToKafka(config, bps, c)
+	if err != nil {
+		log.Errorln("Unable to export to Kafka", err)
+	}
+}
+
+func (influx StartupConfig) ExportData(config StartupConfig, bps influx.BatchPoints, retry bool) {
+	sendMetrics(config, bps, retry)
 }
 
 var useSeelog bool = true
@@ -259,6 +274,16 @@ func main() {
 	hupChan := make(chan os.Signal, 1)
 	signal.Notify(hupChan, syscall.SIGHUP)
 
+	dataExporters := []DataExporter{}
+
+	if config.KafkaConfig.Enable == true && c != nil {
+		dataExporters = append(dataExporters, c)
+	}
+
+	if config.DisableInflux == false {
+		dataExporters = append(dataExporters, config)
+	}
+
 	for {
 		select {
 		case <-hupChan:
@@ -273,19 +298,17 @@ func main() {
 		case <-termChan:
 			info("Shutdown Request Received - Sending stored metrics then quitting")
 			for _, val := range Bps {
-				if c != nil {
-					publishToKafka(config, val, c)
+				for _, dataExporter := range dataExporters {
+					dataExporter.ExportData(config, val, false)
 				}
-				sendMetrics(config, val, false)
 			}
 			startShutdown(c)
 			os.Exit(0)
 		case <-tickers.Publish:
 			for key, val := range Bps {
-				if c != nil {
-					go publishToKafka(config, val, c)
+				for _, dataExporter := range dataExporters {
+					go dataExporter.ExportData(config, val, true)
 				}
-				go sendMetrics(config, val, true)
 				delete(Bps, key)
 			}
 		case runningConfig = <-configChan:
@@ -321,17 +344,16 @@ func startShutdown(c *KafkaCluster) {
 	if c == nil {
 		return
 	}
-	go func() {
-		log.Infof("Starting cluster shutdown, closing producer and client")
-		if err := (*c.producer).Close(); err != nil {
-			log.Warnf("Error closing producer for cluster:  %v", err)
-		}
-		if err := (*c.client).Close(); err != nil {
-			log.Warnf("Error closing client for cluster:  %v", err)
-		}
-		c.producer = nil
-		log.Infof("Finished cluster shutdown")
-	}()
+
+	log.Infof("Starting cluster shutdown, closing producer and client")
+	if err := (*c.producer).Close(); err != nil {
+		log.Warnf("Error closing producer for cluster:  %v", err)
+	}
+	if err := (*c.client).Close(); err != nil {
+		log.Warnf("Error closing client for cluster:  %v", err)
+	}
+	c.producer = nil
+	log.Infof("Finished cluster shutdown")
 }
 
 func TlsConfig(config KafkaConfig) (*tls.Config, error) {
@@ -429,14 +451,15 @@ func publishToKafka(config StartupConfig, bps influx.BatchPoints, c *KafkaCluste
 
 		message, err := json.Marshal(KafkaJSON)
 
+		if err != nil {
+			return err
+		}
+
 		topic := config.KafkaConfig.Topic
 
 		input <- &sarama.ProducerMessage{
 			Topic: topic,
 			Value: sarama.StringEncoder(message),
-		}
-		if err != nil {
-			return err
 		}
 	}
 	return nil
@@ -511,7 +534,7 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 		warn("No logging configuration found in configuration file - default logging to stderr will be used")
 	}
 
-	if config.EnableInflux == false {
+	if config.DisableInflux == true {
 		return config, nil
 	}
 
@@ -536,7 +559,7 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 }
 
 func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
-	if config.EnableInflux == false {
+	if config.DisableInflux == true {
 		info("Skipping daily stats since InfluxDB is not enabled")
 		return
 	}
@@ -1051,9 +1074,6 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 }
 
 func sendMetrics(config StartupConfig, bps influx.BatchPoints, retry bool) {
-	if config.EnableInflux == false {
-		return
-	}
 	influxClient, err := influxConnect(config)
 	if err != nil {
 		if retry {
