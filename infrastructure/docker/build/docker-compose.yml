@@ -25,7 +25,7 @@ services:
     command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
 
   source:
-    image: apache/traffic_source_tarballer:master
+    image: apache/traffic_source_tarballer:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-source
       context: ../../..
@@ -35,7 +35,7 @@ services:
       - ../../..:/trafficcontrol:z
 
   traffic_monitor_build:
-    image: apache/traffic_monitor_builder:master
+    image: apache/traffic_monitor_builder:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
       context: ../../..
@@ -45,7 +45,7 @@ services:
       - ../../..:/trafficcontrol:z
 
   traffic_ops_build:
-    image: apache/traffic_ops_builder:master
+    image: apache/traffic_ops_builder:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops
       context: ../../..
@@ -55,7 +55,7 @@ services:
       - ../../..:/trafficcontrol:z
 
   cache-config_build:
-    image: apache/trafficcontrol-cache-config_builder:master
+    image: apache/trafficcontrol-cache-config_builder:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-cache-config
       context: ../../..
@@ -65,7 +65,7 @@ services:
       - ../../..:/trafficcontrol:z
 
   tc-health-client_build:
-    image: apache/trafficcontrol-tc-health-client_builder:master
+    image: apache/trafficcontrol-tc-health-client_builder:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-tc-health-client
       context: ../../..
@@ -75,7 +75,7 @@ services:
       - ../../..:/trafficcontrol:z
 
   traffic_portal_build:
-    image: apache/traffic_portal_builder:master
+    image: apache/traffic_portal_builder:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
       context: ../../..
@@ -86,7 +86,7 @@ services:
       - ../../../.npm:/root/.npm:z
 
   traffic_router_build:
-    image: apache/traffic_router_builder:master
+    image: apache/traffic_router_builder:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_router
       context: ../../..
@@ -97,7 +97,7 @@ services:
       - ../../../.m2:/root/.m2:z
 
   traffic_stats_build:
-    image: apache/traffic_stats_builder:master
+    image: apache/traffic_stats_builder:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats
       context: ../../..
@@ -107,7 +107,7 @@ services:
       - ../../..:/trafficcontrol:z
 
   grove_build:
-    image: apache/traffic_grove_builder:master
+    image: apache/traffic_grove_builder:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-grove
       context: ../../..
@@ -117,7 +117,7 @@ services:
       - ../../..:/trafficcontrol:z
 
   grovetccfg_build:
-    image: apache/traffic_grovetccfg_builder:master
+    image: apache/traffic_grovetccfg_builder:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-grovetccfg
       context: ../../..
@@ -127,7 +127,7 @@ services:
       - ../../..:/trafficcontrol:z
 
   docs:
-    image: apache/traffic_docs_builder:master
+    image: apache/traffic_docs_builder:6.1.x
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-docs
       context: ../../..
