@@ -228,6 +228,10 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 		log.Infoln("Successfully verified plugins used by '" + cfg.Name + "'")
 	}
 
+	if strings.HasSuffix(cfg.Name, ".cer") {
+		checkCert(cfg.Body)
+	}
+
 	changeNeeded, err := diff(r.Cfg, cfg.Body, cfg.Path, r.Cfg.ReportOnly, cfg.Perm)
 
 	if err != nil {
