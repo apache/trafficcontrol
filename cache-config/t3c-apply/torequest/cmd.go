@@ -344,9 +344,9 @@ func checkCert(c []byte) {
 		log.Warnf("error parsing certificate %s", err)
 	}
 	if cert.NotAfter.Unix() < time.Now().Unix() {
-		log.Warnf("Certificate expired %s: ", cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
+		log.Warnf("Certificate expired %s ", cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
 	} else {
-		log.Infof("Certificate valid until %s: ", cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
+		log.Infof("Certificate valid until %s ", cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
 	}
 }
 
