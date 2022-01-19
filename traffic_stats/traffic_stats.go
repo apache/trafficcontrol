@@ -149,8 +149,11 @@ func (c *KafkaCluster) ExportData(config StartupConfig, bps influx.BatchPoints, 
 	}
 }
 
-func (influx StartupConfig) ExportData(config StartupConfig, bps influx.BatchPoints, retry bool) {
+func (influx InfluxClient) ExportData(config StartupConfig, bps influx.BatchPoints, retry bool) {
 	sendMetrics(config, bps, retry)
+}
+
+type InfluxClient struct {
 }
 
 var useSeelog bool = true
@@ -276,12 +279,13 @@ func main() {
 
 	dataExporters := []DataExporter{}
 
-	if config.KafkaConfig.Enable == true && c != nil {
+	if config.KafkaConfig.Enable && c != nil {
 		dataExporters = append(dataExporters, c)
 	}
 
-	if config.DisableInflux == false {
-		dataExporters = append(dataExporters, config)
+	if !config.DisableInflux {
+		influx := InfluxClient{}
+		dataExporters = append(dataExporters, influx)
 	}
 
 	for {
@@ -357,7 +361,7 @@ func startShutdown(c *KafkaCluster) {
 }
 
 func TlsConfig(config KafkaConfig) (*tls.Config, error) {
-	if config.EnableTls == false {
+	if config.EnableTls {
 		return nil, nil
 	}
 	c := &tls.Config{}
@@ -397,7 +401,7 @@ func TlsConfig(config KafkaConfig) (*tls.Config, error) {
 
 func newKakfaCluster(config KafkaConfig) *KafkaCluster {
 
-	if config.Enable == false {
+	if !config.Enable {
 		return nil
 	}
 
@@ -534,7 +538,7 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 		warn("No logging configuration found in configuration file - default logging to stderr will be used")
 	}
 
-	if config.DisableInflux == true {
+	if config.DisableInflux {
 		return config, nil
 	}
 
@@ -559,7 +563,7 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 }
 
 func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
-	if config.DisableInflux == true {
+	if config.DisableInflux {
 		info("Skipping daily stats since InfluxDB is not enabled")
 		return
 	}
