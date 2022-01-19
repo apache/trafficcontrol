@@ -66,6 +66,9 @@ tr_java_opts:
   - "-Djava.security.egd=file:/dev/./urandom"
 
 # server.xml
+tr_connector_opts:
+  maxConnections: 4000
+
 tr_connector_default:
   protocol: 'org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol'
   maxThreads: 10000
@@ -92,6 +95,7 @@ tr_connectors:
     portAttribute: 'ApiPort'
   - port: 443
     protocol: "{{tr_connector_default.protocol}}"
+    maxConnections: "{{tr_connector_opts.maxConnections}}"
     maxThreads: "{{tr_connector_default.maxThreads}}"
     connectionTimeout: "{{tr_connector_default.connectionTimeout}}"
     mbeanPath: "{{tr_connector_default.mbeanPath}}"
