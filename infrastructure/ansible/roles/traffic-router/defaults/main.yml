@@ -138,7 +138,8 @@ tr_log4j2_opts: |
                        filePattern="{{tr_log_dir}}/access.log.%d{MM-dd-yyyy}-%2i" >
               <PatternLayout pattern="%m%n" />
               <Policies>
-                  <CronTriggeringPolicy schedule="0 0 * * * ?"/>
+                  <SizeBasedTriggeringPolicy size="200MB" />
+                  <CronTriggeringPolicy schedule="0 0 * * * ?" />
               </Policies>
               <DefaultRolloverStrategy max="50" />
               <ThresholdFilter level="INFO" />
