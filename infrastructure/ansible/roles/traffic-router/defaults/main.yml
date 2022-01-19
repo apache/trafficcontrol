@@ -140,7 +140,7 @@ tr_log4j2_opts: |
               <Policies>
                   <SizeBasedTriggeringPolicy size="200MB" />
               </Policies>
-              <DefaultRolloverStrategy max="10" />
+              <DefaultRolloverStrategy max="50" />
               <ThresholdFilter level="INFO" />
           </RollingFile>
           <RollingFile name="traffic_router"
