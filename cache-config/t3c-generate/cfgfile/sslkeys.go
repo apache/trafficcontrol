@@ -20,6 +20,7 @@ package cfgfile
  */
 
 import (
+	"crypto/tls"
 	"encoding/base64"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -59,6 +60,8 @@ func GetSSLCertsAndKeyFiles(toData *t3cutil.ConfigData) ([]t3cutil.ATSConfigFile
 			key = append(key, '\n') // it's going to be a file, needs a trailing newline to be POSIX-compliant.
 		}
 
+		CheckKeyPair(key, cert, string(dsName))
+
 		certName, keyName := atscfg.GetSSLMultiCertDotConfigCertAndKeyName(dsName, ds)
 
 		keyFile := t3cutil.ATSConfigFile{}
@@ -79,4 +82,11 @@ func GetSSLCertsAndKeyFiles(toData *t3cutil.ConfigData) ([]t3cutil.ATSConfigFile
 	}
 
 	return configs, nil
+}
+
+func CheckKeyPair(keyPem []byte, certPem []byte, ds string) {
+	_, err := tls.X509KeyPair(certPem, keyPem)
+	if err != nil {
+		log.Warnf("Issue with keypair for %s: %s", ds, err)
+	}
 }
