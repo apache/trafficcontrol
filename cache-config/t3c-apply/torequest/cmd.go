@@ -23,7 +23,9 @@ package torequest
 
 import (
 	"bytes"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -32,6 +34,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -331,6 +334,20 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 	logSubApp(`t3c-check-refs stdout`, stdOut)
 	logSubApp(`t3c-check-refs stderr`, stdErr)
 	return nil
+}
+
+//checkCert checks the validity of the ssl certificate
+func checkCert(c []byte) {
+	block, _ := pem.Decode(c)
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		log.Warnf("error parsing certificate %s", err)
+	}
+	if cert.NotAfter.Unix() < time.Now().Unix() {
+		log.Warnf("Certificate expired %s: ", cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
+	} else {
+		log.Infof("Certificate valid until %s: ", cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
+	}
 }
 
 // checkReload is a helper for the sub-command t3c-check-reload.
