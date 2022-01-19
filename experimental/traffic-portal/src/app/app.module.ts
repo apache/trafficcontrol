@@ -32,6 +32,7 @@ import {AppUIModule} from "./app.ui.module";
 import {SharedModule} from "./shared/shared.module";
 import {AuthenticatedGuard} from "./guards/authenticated-guard.service";
 import { ResetPasswordDialogComponent } from "./login/reset-password-dialog/reset-password-dialog.component";
+import { APIModule } from "./api";
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -69,7 +70,8 @@ Chart.plugins.register({
 		AppRoutingModule,
 		HttpClientModule,
 		AppUIModule,
-		SharedModule
+		SharedModule,
+		APIModule
 	],
 	providers: [
 		AuthenticatedGuard
