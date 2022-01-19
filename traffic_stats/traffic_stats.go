@@ -361,7 +361,7 @@ func startShutdown(c *KafkaCluster) {
 }
 
 func TlsConfig(config KafkaConfig) (*tls.Config, error) {
-	if config.EnableTls {
+	if !config.EnableTls {
 		return nil, nil
 	}
 	c := &tls.Config{}
