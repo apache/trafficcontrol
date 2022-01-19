@@ -111,3 +111,5 @@ riak_search_queue_high_watermark_purge_strategy: purge_one
 riak_cluster_job_yokozuna_query: enabled
 riak_tls_protocols_tlsv1: 'off'
 riak_tls_protocols_tlsv1_1: 'on'
+riak_erlang_distribution_port_range_minimum: 0
+riak_erlang_distribution_port_range_maximum: 0

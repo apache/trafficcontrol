@@ -22,20 +22,15 @@
     fixed_profile_name: "{{ Target_ds.profileName | default(dl_ds_default_ds.profileName) | default() }}"
     ds_suffix: "{{ Target_ds.profileNameSuffix | default(dl_ds_default_ds.profileNameSuffix) | default() }}"
 
-
 - name: Get All Profiles
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
     method: GET
   register: get_all_profiles
-
-- name: Get All Parameters per Profile
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item }}/parameters"
-    method: GET
-  vars:
-    profile_query: "response.id"
-  with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
+  no_log: true
+  retries: 10
+  delay: 10
+  until: get_all_profiles['status']|default(0) == 200
 
 - name: Create Delivery Services
   uri:
@@ -45,6 +40,9 @@
   with_indexed_items: "{{ dl_ds_merged_ds_template }}"
   register: create_ds_out
   failed_when: (create_ds_out.status == 400 and create_ds_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_out.status > 400 and create_ds_out.status < 600)
+  no_log: true
+  retries: 10
+  delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     profile_query: "[?type == `DS_PROFILE` && cdn == `{{ Target_cdn_id }}` && {% if (item.1.profileName | default(dl_ds_default_ds.profileName) | default(omit) ) != omit %}{{ profile_name_subquery }}{% else %}{{ profile_suffix_subquery }}{% endif %}].id | [0]"
@@ -55,7 +53,7 @@
     tenant_id: "{{ get_all_tenants.json.response | json_query(tenant_query) }}"
     type_query: "[?useInTable == `deliveryservice` && name == `{{ item.1.typeName | default(dl_ds_default_ds.typeName) | default(omit) }}`].id | [0]"
     type_id: "{{ get_all_types.json.response | json_query(type_query) }}"
-    computed_origin_url: "http://ds{{ item.0 }}-{{ groups['fakeorigin'] | first }}"
+    computed_origin_url: "http://ds{{ item.0 }}-{{ dl_hosts_fakeorigin | first }}"
     computed_xmlid: "{{ item.1.uniqueKey }}-{{ Target_cdn_delegation | lower }}"
     target_xmlId: "{{ item.1.xmlId | default(computed_xmlid) }}"
     has_mso_server_profiles: "{{ (item.1.eligible_mso_server_profile_names | default(dl_ds_default_ds.eligible_mso_server_profile_names)) | length > 0 }}"
@@ -119,11 +117,20 @@
     body:
       cdn: Target_cdn_id
   register: get_all_ds_cdn
+  no_log: true
+  retries: 10
+  delay: 10
+  until: get_all_ds_cdn['status']|default(0) == 200
 
 - name: you have to call get once for Riak/TO to work right before you can add certs
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/name/{{ Target_cdn_name }}/sslkeys"
     method: GET
+  no_log: true
+  retries: 10
+  delay: 10
+  register: initialize_riak_results
+  until: initialize_riak_results['status']|default(0) == 200
 
 - name: Assign Servers to Delivery Services - Grove
   uri:
@@ -132,9 +139,14 @@
     body:
       serverNames: "{{ get_all_servers.json.response | to_json | from_json | json_query(server_query) }}"
   with_indexed_items: "{{ dl_ds_merged_ds_template }}"
-  when: serveFromGrove
+  when:
+    - dl_hosts_grove | length > 0
+    - serveFromGrove
   register: create_ds_assignment_out
   failed_when: (create_ds_assignment_out.status == 400 and create_ds_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_assignment_out.status > 400 and create_ds_assignment_out.status < 600)
+  no_log: true
+  retries: 10
+  delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     server_query: "[?type == `EDGE` && ({{ profile_filter }})].hostName"
@@ -154,6 +166,9 @@
   when: serveFromATS
   register: create_ds_assignment_out
   failed_when: (create_ds_assignment_out.status == 400 and create_ds_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_assignment_out.status > 400 and create_ds_assignment_out.status < 600)
+  no_log: true
+  retries: 10
+  delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     server_query: "[?type == `EDGE` && ({{ profile_filter }})].hostName"

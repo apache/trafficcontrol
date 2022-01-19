@@ -21,6 +21,6 @@
       return_content: yes
       body_format: json
       status_code: 200,400
-      timeout: 120
+      timeout: 600
       headers:
         Cookie: "{{ dl_mojo_token.set_cookie | default(omit) }}"
