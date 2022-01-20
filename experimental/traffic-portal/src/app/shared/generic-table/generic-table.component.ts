@@ -513,10 +513,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	 * @returns Whether or not `a` should be disabled.
 	 */
 	public isDisabled(a: ContextMenuAction<T>): boolean {
-		if (!this.selected) {
-			throw new Error("cannot check if a context menu is disabled for a selection when there is no selection");
-		}
-		if (!a.multiRow && this.selectionCount > 1) {
+		if (!this.selected || (!a.multiRow && this.selectionCount > 1)) {
 			return true;
 		}
 		if (a.disabled) {

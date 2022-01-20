@@ -55,9 +55,9 @@ describe("GenericTableComponent", () => {
 		expect(component.filter({} as RowNode)).toBeTrue();
 	});
 
-	it("throws an error trying to check if a context menu item is disabled with no selection", () => {
-		expect(()=>component.isDisabled({action: "anything", name: "whatever"})).toThrow();
-		expect(()=>component.isDisabled({action: "anything", disabled: ()=>false, name: "who cares"})).toThrow();
+	it("always says a context menu item is disabled with no selection", () => {
+		expect(component.isDisabled({action: "anything", name: "whatever"})).toBeTrue();
+		expect(component.isDisabled({action: "anything", disabled: ()=>false, name: "who cares"})).toBeTrue();
 	});
 
 	it("throws an error trying to emit a context menu action with no selection", ()=>{
