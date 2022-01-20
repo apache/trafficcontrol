@@ -20,7 +20,7 @@ import { faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
 
 import { APITestingModule } from "src/app/api/testing";
 import { defaultServer } from "src/app/models";
-import { CacheGroupService, ProfileService, TypeService } from "src/app/shared/api";
+import { ProfileService, TypeService } from "src/app/shared/api";
 import { PhysicalLocationService } from "src/app/shared/api/PhysicalLocationService";
 
 import { ServerDetailsComponent } from "./server-details.component";
@@ -30,9 +30,7 @@ describe("ServerDetailsComponent", () => {
 	let fixture: ComponentFixture<ServerDetailsComponent>;
 
 	beforeEach(async () => {
-		const mockAPIService = jasmine.createSpyObj(["getCacheGroups",
-			"getProfiles", "getTypes", "getPhysicalLocations", "getServerTypes"]);
-		mockAPIService.getCacheGroups.and.returnValue(new Promise(r => r([])));
+		const mockAPIService = jasmine.createSpyObj(["getProfiles", "getTypes", "getPhysicalLocations", "getServerTypes"]);
 		mockAPIService.getProfiles.and.returnValue(new Promise(r => r([])));
 		mockAPIService.getPhysicalLocations.and.returnValues(new Promise(r => r([])));
 		mockAPIService.getServerTypes.and.returnValues(new Promise(r => r([])));
@@ -41,7 +39,6 @@ describe("ServerDetailsComponent", () => {
 			declarations: [ ServerDetailsComponent ],
 			imports: [ HttpClientModule, RouterTestingModule, FormsModule, ReactiveFormsModule, APITestingModule ],
 			 providers: [
-				 { provide: CacheGroupService, useValue: mockAPIService },
 				 { provide: TypeService, useValue: mockAPIService },
 				 { provide: PhysicalLocationService, useValue: mockAPIService },
 				 { provide: ProfileService, useValue: mockAPIService }

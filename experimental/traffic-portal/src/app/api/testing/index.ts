@@ -1,11 +1,9 @@
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { CDNService, ServerService } from "..";
+import { CacheGroupService, CDNService, ServerService } from "..";
 import { ServerService as TestingServerService } from "./server.service";
 import { CDNService as TestingCDNService } from "./cdn.service";
-
-export * from "./cdn.service";
-export * from "./server.service";
+import { CacheGroupService as TestingCacheGroupService } from "./cache-group.service";
 
 /**
  * The API Testing Module provides mock services that allow components to use
@@ -17,6 +15,7 @@ export * from "./server.service";
 		CommonModule
 	],
 	providers: [
+		{provide: CacheGroupService, useClass: TestingCacheGroupService},
 		{provide: CDNService, useClass: TestingCDNService},
 		{provide: ServerService, useClass: TestingServerService}
 	]

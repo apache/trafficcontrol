@@ -25,7 +25,6 @@ import {GenericTableComponent} from "./generic-table/generic-table.component";
 import {LinechartDirective} from "./charts/linechart.directive";
 import {AlertService} from "./alert/alert.service";
 import {
-	CacheGroupService,
 	DeliveryServiceService,
 	InvalidationJobService,
 	ProfileService,
@@ -75,7 +74,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
 		AlertService,
-		CacheGroupService,
 		CurrentUserService,
 		DeliveryServiceService,
 		InvalidationJobService,

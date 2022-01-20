@@ -16,7 +16,8 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import {CacheGroupService} from "../../../shared/api";
+import { APITestingModule } from "src/app/api/testing";
+
 import { CacheGroupTableComponent } from "./cache-group-table.component";
 
 describe("CacheGroupTableComponent", () => {
@@ -24,13 +25,14 @@ describe("CacheGroupTableComponent", () => {
 	let fixture: ComponentFixture<CacheGroupTableComponent>;
 
 	beforeEach(async () => {
-		const mockAPIService = jasmine.createSpyObj(["getCacheGroups"]);
 		await TestBed.configureTestingModule({
 			declarations: [ CacheGroupTableComponent ],
-			imports: [ReactiveFormsModule, HttpClientModule, RouterTestingModule],
-			providers: [
-				{ provide: CacheGroupService, useValue: mockAPIService }
-			]
+			imports: [
+				APITestingModule,
+				HttpClientModule,
+				ReactiveFormsModule,
+				RouterTestingModule
+			],
 		})
 			.compileComponents();
 	});

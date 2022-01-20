@@ -18,7 +18,7 @@ import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 
 import { CacheGroup } from "src/app/models/cache-groups";
-import { CacheGroupService } from "src/app/shared/api";
+import { CacheGroupService } from "src/app/api";
 import { ContextMenuActionEvent, ContextMenuItem } from "../../../shared/generic-table/generic-table.component";
 
 /**
