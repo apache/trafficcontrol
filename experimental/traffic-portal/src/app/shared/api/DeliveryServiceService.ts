@@ -266,7 +266,8 @@ export class DeliveryServiceService extends APIService {
 		);
 	}
 
-	public async getDSKBPS(d: string, s: Date, e: Date, i: string, u: boolean, dataOnly: true): Promise<Array<DataPoint>>;
+	public async getDSKBPS(
+		d: string, start: Date, end: Date, interval: string, useMids: boolean, dataOnly: true): Promise<Array<DataPoint>>;
 	public async getDSKBPS(d: string, start: Date, end: Date, interval: string, useMids: boolean, dataOnly?: false): Promise<DataResponse>;
 	/**
 	 * Retrieves Delivery Service throughput statistics for a given time period, averaged over a given

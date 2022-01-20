@@ -92,12 +92,7 @@ export class DsCardComponent implements OnInit {
 	public healthy = 0;
 
 	/** Bandwidth chart data. */
-	public chartData: Subject<Array<DataSet | null>>;
-
-	/** Bandwidth data at the Mid-tier level. */
-	private readonly midBandwidthData: DataSet;
-	/** Bandwidth data at the Edge-tier level. */
-	private readonly edgeBandwidthData: DataSet;
+	public chartData: Subject<[DataSet]>;
 
 	/** This must be a member to have access in the template. */
 	public protocolToString = protocolToString;
@@ -154,23 +149,7 @@ export class DsCardComponent implements OnInit {
 		this.utilized = 0;
 		this.loaded = false;
 		this.open = false;
-		this.chartData = new Subject<Array<DataSet | null>>();
-
-		this.edgeBandwidthData = {
-			borderColor: "#3CBA9F",
-			data: new Array<DataPoint>(),
-			fill: true,
-			fillColor: "#3CBA9F",
-			label: "Edge-tier Bandwidth"
-		};
-
-		this.midBandwidthData = {
-			borderColor: "#BA3C57",
-			data: new Array<DataPoint>(),
-			fill: true,
-			fillColor: "#BA3C57",
-			label: "Mid-tier Bandwidth"
-		};
+		this.chartData = new Subject<[DataSet]>();
 
 		this.graphDataLoaded = false;
 	}
@@ -231,49 +210,48 @@ export class DsCardComponent implements OnInit {
 			this.open = false;
 			this.graphDataLoaded = false;
 			this.loaded = false;
-			this.chartData.next([]);
+			this.chartData.next([{
+				borderColor: "#3CBA9F",
+				data: new Array<DataPoint>(),
+				fill: true,
+				fillColor: "#3CBA9F",
+				label: "Edge-tier Bandwidth"
+			}]);
 		}
 	}
 
 	/**
 	 * Requests new data for the charts from the API and loads it.
 	 */
-	private loadChart(): void {
+	private async loadChart(): Promise<void> {
 		const xmlID = this.deliveryService.xmlId;
-		this.dsAPI.getDSKBPS(xmlID, this.today, this.now, "1m", false, true).then(
-			data => {
-				for (const d of data) {
-					if (d.y === null) {
-						continue;
-					}
-					this.edgeBandwidthData.data.push(d);
+		try {
+			const data = await this.dsAPI.getDSKBPS(xmlID, this.today, this.now, "1m", false, true);
+			const chartData = {
+				borderColor: "#3CBA9F",
+				data: new Array<DataPoint>(),
+				fill: true,
+				fillColor: "#3CBA9F",
+				label: "Edge-tier Bandwidth"
+			};
+			for (const d of data) {
+				if (d.y === null) {
+					continue;
 				}
-				this.chartData.next([this.edgeBandwidthData, this.midBandwidthData]);
-				this.graphDataLoaded = true;
-			},
-			e => {
-				this.graphDataLoaded = true;
-				this.chartData.next([null, this.midBandwidthData]);
-				console.error(`Failed getting edge KBPS for DS '${xmlID}':`, e);
+				chartData.data.push(d);
 			}
-		);
-
-		this.dsAPI.getDSKBPS(xmlID, this.today, this.now, "1m", true, true).then(
-			data => {
-				for (const d of data) {
-					if (d.y === null) {
-						continue;
-					}
-					this.midBandwidthData.data.push(d);
-				}
-				this.chartData.next([this.edgeBandwidthData, this.midBandwidthData]);
-				this.graphDataLoaded = true;
-			},
-			e => {
-				this.chartData.next([this.edgeBandwidthData, null]);
-				this.graphDataLoaded = true;
-				console.error(`Failed getting mid KBPS for DS '${xmlID}':`, e);
-			}
-		);
+			this.chartData.next([chartData]);
+			this.graphDataLoaded = true;
+		} catch (e) {
+			this.graphDataLoaded = true;
+			this.chartData.next([{
+				borderColor: "#3CBA9F",
+				data: new Array<DataPoint>(),
+				fill: true,
+				fillColor: "#3CBA9F",
+				label: "Edge-tier Bandwidth"
+			}]);
+			console.error(`Failed getting edge KBPS for DS '${xmlID}':`, e);
+		}
 	}
 }
