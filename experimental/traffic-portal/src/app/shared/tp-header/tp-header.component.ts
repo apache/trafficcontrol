@@ -51,14 +51,10 @@ export class TpHeaderComponent implements OnInit {
 	 * Handles when the user clicks the "Logout" button by using the API to
 	 * invalidate their session before redirecting them to the login page.
 	 */
-	public logout(): void {
-		this.api.logout().then(
-			r => {
-				if (!r) {
-					console.warn("Failed to log out - clearing user data anyway!");
-				}
-				this.auth.logout();
-			}
-		);
+	public async logout(): Promise<void> {
+		if (!(await this.api.logout())) {
+			console.warn("Failed to log out - clearing user data anyway!");
+		}
+		this.auth.logout();
 	}
 }
