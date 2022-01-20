@@ -24,9 +24,6 @@ import {TpHeaderComponent} from "./tp-header/tp-header.component";
 import {GenericTableComponent} from "./generic-table/generic-table.component";
 import {LinechartDirective} from "./charts/linechart.directive";
 import {AlertService} from "./alert/alert.service";
-import {
-	UserService
-} from "./api";
 import {PhysicalLocationService} from "./api/PhysicalLocationService";
 import {CurrentUserService} from "./currentUser/current-user.service";
 import {CustomvalidityDirective} from "./validation/customvalidity.directive";
@@ -72,7 +69,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		AlertService,
 		CurrentUserService,
 		PhysicalLocationService,
-		UserService
 	]
 })
 export class SharedModule { }

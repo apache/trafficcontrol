@@ -16,11 +16,11 @@ import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { UserService } from "src/app/shared/api";
-
+import { APITestingModule } from "src/app/api/testing";
+import { newCurrentUser } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { newCurrentUser } from "../../models";
-import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+
 import { CurrentuserComponent } from "./currentuser.component";
 
 describe("CurrentuserComponent", () => {
@@ -28,15 +28,8 @@ describe("CurrentuserComponent", () => {
 	let fixture: ComponentFixture<CurrentuserComponent>;
 
 	beforeEach(waitForAsync(() => {
-		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["getCurrentUser", "getCapabilities",
 			"getLoggedIn", "setUser", "hasPermission", "logout", "updateCurrentUser", "login", "logout"]);
-		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
-		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
-			id: 0,
-			newUser: false,
-			username: "test"
-		})));
 
 		TestBed.configureTestingModule({
 			declarations: [
@@ -44,12 +37,12 @@ describe("CurrentuserComponent", () => {
 				TpHeaderComponent
 			],
 			imports: [
+				APITestingModule,
 				HttpClientModule,
 				RouterTestingModule,
 				MatDialogModule
 			],
 			providers: [
-				{ provide: UserService, useValue: mockAPIService},
 				{ provide: CurrentUserService, useValue: mockCurrentUserService},
 			]
 		});

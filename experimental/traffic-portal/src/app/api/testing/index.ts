@@ -7,7 +7,8 @@ import {
 	InvalidationJobService,
 	ProfileService,
 	ServerService,
-	TypeService
+	TypeService,
+	UserService
 } from "..";
 import { CacheGroupService as TestingCacheGroupService } from "./cache-group.service";
 import { CDNService as TestingCDNService } from "./cdn.service";
@@ -16,6 +17,7 @@ import { InvalidationJobService as TestingInvalidationJobService } from "./inval
 import { ProfileService as TestingProfileService } from "./profile.service";
 import { ServerService as TestingServerService } from "./server.service";
 import { TypeService as TestingTypeService } from "./type.service";
+import { UserService as TestingUserService } from "./user.service";
 
 /**
  * The API Testing Module provides mock services that allow components to use
@@ -34,6 +36,7 @@ import { TypeService as TestingTypeService } from "./type.service";
 		{provide: ProfileService, useClass: TestingProfileService},
 		{provide: ServerService, useClass: TestingServerService},
 		{provide: TypeService, useClass: TestingTypeService},
+		{provide: UserService, useClass: TestingUserService}
 	]
 })
 export class APITestingModule { }

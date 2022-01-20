@@ -20,7 +20,7 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 import type { User } from "src/app/models";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
-import { UserService } from "src/app/shared/api";
+import { APITestingModule } from "src/app/api/testing";
 import { UsersComponent } from "./users.component";
 
 describe("UsersComponent", () => {
@@ -29,14 +29,6 @@ describe("UsersComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getUsers", "getRoles", "getCurrentUser"]);
-		mockAPIService.getUsers.and.returnValue(new Promise(resolve => resolve([])));
-		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
-		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
-			id: 0,
-			newUser: false,
-			username: "test"
-		} as User)));
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
 
@@ -47,13 +39,13 @@ describe("UsersComponent", () => {
 				TpHeaderComponent,
 			],
 			imports: [
+				APITestingModule,
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
 				RouterTestingModule
 			],
 			providers: [
-				{ provide: UserService, useValue: mockAPIService },
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
 		});

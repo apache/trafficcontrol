@@ -16,10 +16,10 @@ import { FormControl } from "@angular/forms";
 
 import { BehaviorSubject, Observable } from "rxjs";
 
+import { UserService } from "src/app/api";
+import type { Role, User } from "src/app/models";
+import { orderBy } from "src/app/utils";
 import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
-import { Role, User } from "../../models";
-import { UserService } from "../../shared/api";
-import { orderBy } from "../../utils";
 
 /**
  * UsersComponent is the controller for the "users" page.

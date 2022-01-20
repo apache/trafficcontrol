@@ -25,11 +25,10 @@ import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
-import { UserService } from "src/app/shared/api";
-
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { Protocol } from "../../models";
-import { TpHeaderComponent } from "../../shared/tp-header/tp-header.component";
+import { Protocol } from "src/app/models";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+
 import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
 
@@ -40,15 +39,8 @@ describe("NewDeliveryServiceComponent", () => {
 
 	beforeEach(async () => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
-		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
-		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
-			id: 0,
-			newUser: false,
-			username: "test"
-		})));
 
 		await TestBed.configureTestingModule({
 			declarations: [
@@ -67,7 +59,6 @@ describe("NewDeliveryServiceComponent", () => {
 				MatRadioModule
 			],
 			providers: [
-				{provide: UserService, useValue: mockAPIService},
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
 		}).compileComponents();

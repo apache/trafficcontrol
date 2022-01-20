@@ -18,11 +18,10 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { MatDialogModule } from "@angular/material/dialog";
 
 import { APITestingModule } from "src/app/api/testing";
-import { UserService} from "src/app/shared/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { CustomvalidityDirective } from "src/app/shared/validation/customvalidity.directive";
 import { JobType } from "src/app/models";
-import {TpHeaderComponent} from "src/app/shared/tp-header/tp-header.component";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
@@ -32,7 +31,6 @@ describe("InvalidationJobsComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getUsers"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 
 		TestBed.configureTestingModule({
@@ -50,7 +48,6 @@ describe("InvalidationJobsComponent", () => {
 				MatDialogModule
 			],
 			providers: [
-				{ provide: UserService, useValue: mockAPIService },
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
 		});

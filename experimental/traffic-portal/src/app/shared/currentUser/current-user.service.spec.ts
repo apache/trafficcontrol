@@ -13,9 +13,10 @@
 */
 import { TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
-import {UserService} from "src/app/shared/api";
-import {newCurrentUser, User} from "src/app/models";
-import { LoginComponent } from "../../login/login.component";
+
+import { APITestingModule } from "src/app/api/testing";
+import { newCurrentUser, User } from "src/app/models";
+import { LoginComponent } from "src/app/login/login.component";
 
 import { CurrentUserService } from "./current-user.service";
 
@@ -23,16 +24,17 @@ describe("CurrentUserService", () => {
 	let service: CurrentUserService;
 
 	beforeEach(() => {
-		const mockAPIService = jasmine.createSpyObj(["getRoles", "updateCurrentUser", "getCurrentUser", "saveCurrentUser"]);
+		const mockAPIService = jasmine.createSpyObj(["updateCurrentUser", "getCurrentUser", "saveCurrentUser"]);
 		mockAPIService.getCurrentUser.and.returnValue(new Promise<User>(resolve => resolve(
 			{id: 1, newUser: false, role: 1, username: "name"}
 		)));
-		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
 		TestBed.configureTestingModule({
-			imports: [RouterTestingModule.withRoutes([{component: LoginComponent, path: "login"}])],
+			imports: [
+				APITestingModule,
+				RouterTestingModule.withRoutes([{component: LoginComponent, path: "login"}])
+			],
 			providers: [
 				CurrentUserService,
-				{provide: UserService, useValue: mockAPIService}
 			]
 		});
 		service = TestBed.inject(CurrentUserService);

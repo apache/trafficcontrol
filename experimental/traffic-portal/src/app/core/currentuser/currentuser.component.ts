@@ -15,10 +15,11 @@ import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
-import { UserService } from "src/app/shared/api";
 
-import { CurrentUser } from "src/app/models";
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
+import { UserService } from "src/app/api";
+import type { CurrentUser } from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+
 import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-password-dialog.component";
 
 /**

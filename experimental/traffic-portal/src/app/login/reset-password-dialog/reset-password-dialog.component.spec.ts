@@ -15,7 +15,7 @@ import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogRef } from "@angular/material/dialog";
 
-import { UserService } from "src/app/shared/api/UserService";
+import { APITestingModule } from "src/app/api/testing";
 
 import { ResetPasswordDialogComponent } from "./reset-password-dialog.component";
 
@@ -24,17 +24,18 @@ describe("ResetPasswordDialogComponent", () => {
 	let fixture: ComponentFixture<ResetPasswordDialogComponent>;
 
 	beforeEach(async () => {
-		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		await TestBed.configureTestingModule({
 			declarations: [ ResetPasswordDialogComponent ],
-			imports: [HttpClientModule],
+			imports: [
+				APITestingModule,
+				HttpClientModule
+			],
 			providers: [
 				// The controller doesn't pass any arguments or check the return
 				// value of `close` - this literally needs to do nothing but be
 				// callable.
 				// eslint-disable-next-line @typescript-eslint/no-empty-function
 				{ provide: MatDialogRef, useValue: {close: (): void => {}} },
-				{ provide: UserService, useValue: mockCurrentUserService }
 			]
 		})
 			.compileComponents();

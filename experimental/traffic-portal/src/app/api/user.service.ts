@@ -15,9 +15,9 @@
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Role, User, Capability, CurrentUser, newCurrentUser } from "../../models/user";
+import { Role, User, Capability, CurrentUser, newCurrentUser } from "src/app/models";
 
-import { APIService } from "./APIService";
+import { APIService } from "./base-api.service";
 
 /**
  * UserService exposes API functionality related to Users, Roles and Capabilities.
@@ -25,11 +25,6 @@ import { APIService } from "./APIService";
 @Injectable()
 export class UserService extends APIService {
 
-	/**
-	 * Injects the Angular HTTP client service into the parent constructor.
-	 *
-	 * @param http The Angular HTTP client service.
-	 */
 	constructor(http: HttpClient) {
 		super(http);
 	}
@@ -208,6 +203,9 @@ export class UserService extends APIService {
 	public async getCapabilities (): Promise<Array<Capability>>;
 	/**
 	 * Fetches one or all Capabilities from Traffic Ops.
+	 *
+	 * @deprecated "Capabilities" are deprecated in favor of Permissions.
+	 * "Capabilities" are removed from API v4 and later.
 	 *
 	 * @param name Optionally, the name of a single Capability which will be fetched
 	 * @throws {TypeError} When called with an improper argument.

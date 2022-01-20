@@ -15,8 +15,9 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
+import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import {UserService} from "../api";
+
 import { TpHeaderComponent } from "./tp-header.component";
 
 describe("TpHeaderComponent", () => {
@@ -24,14 +25,12 @@ describe("TpHeaderComponent", () => {
 	let fixture: ComponentFixture<TpHeaderComponent>;
 
 	beforeEach(waitForAsync(() => {
-		const mockAPIService = jasmine.createSpyObj(["getUsers"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		TestBed.configureTestingModule({
 			declarations: [ TpHeaderComponent ],
-			imports: [ HttpClientModule, RouterTestingModule ],
+			imports: [ APITestingModule, HttpClientModule, RouterTestingModule ],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: UserService, useValue: mockAPIService}
 			]
 		})
 			.compileComponents();

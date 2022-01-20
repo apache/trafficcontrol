@@ -11,10 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {EventEmitter, Injectable} from "@angular/core";
+import { EventEmitter, Injectable } from "@angular/core";
 import { Router } from "@angular/router";
-import {UserService} from "src/app/shared/api";
-import { Capability, CurrentUser } from "../../models";
+
+import { UserService } from "src/app/api";
+import type { Capability, CurrentUser } from "src/app/models";
 
 /**
  * This service keeps track of the currently authenticated user.

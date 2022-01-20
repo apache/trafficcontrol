@@ -25,23 +25,23 @@ export interface User {
 	/** The company for which the user works. */
 	company?:         string | null;
 	/** A confirmation field for the user's password - this has no known effect, but we set it anyway on password update. */
-	confirmLocalPasswd?: string;
+	confirmLocalPasswd?: string | null;
 	/** The country in which the user lives/is based. */
 	country?:         string | null;
 	/** The user's email address. */
-	email?:           string;
+	email?:           string | null;
 	/** The user's full name. */
-	fullName?:        string;
+	fullName?:        string | null;
 	/** legacy field with no purpose. */
-	gid?:             number;
+	gid?:             number | null;
 	/** An integral, unique identifier for the user. */
 	id:               number;
 	/** The date/time at which the user was last updated. */
-	lastUpdated?:     Date;
+	lastUpdated?:     Date | null;
 	/** The user's password - this should only be populated on update, and only if updating the password. */
-	localPasswd?:     string;
+	localPasswd?:     string | null;
 	/** legacy field with no purpose. */
-	localUser?:       boolean;
+	localUser?:       boolean | null;
 	/**
 	 * Whether (false) or not (true) the user has reset their password after
 	 * registration.
@@ -56,15 +56,15 @@ export interface User {
 	/** The integral, unique identifier of the Role the user has. */
 	role?:            number;
 	/** The user's Role. */
-	rolename?:        string;
+	rolename?:        string | null;
 	/** The state or province within which the user lives/is based. */
 	stateOrProvince?: string | null;
 	/** The Tenant to which the user belongs. */
-	tenant?:          string;
+	tenant?:          string | null;
 	/** An integral, unique identifier for the Tenant to which the user belongs. */
 	tenantId?:        number;
 	/** legacy field with no purpose. */
-	uid?:             number;
+	uid?:             number | null;
 	/** The user's username. */
 	username:         string;
 }

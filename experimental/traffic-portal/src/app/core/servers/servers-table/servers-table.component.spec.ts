@@ -18,7 +18,6 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import { UserService } from "src/app/shared/api";
 import { defaultServer, Server } from "src/app/models";
 import { APITestingModule } from "src/app/api/testing";
 import { augment, AugmentedServer, serverIsCache, ServersTableComponent } from "./servers-table.component";
@@ -29,14 +28,11 @@ describe("ServersTableComponent", () => {
 	let fixture: ComponentFixture<ServersTableComponent>;
 
 	beforeEach(waitForAsync(() => {
-		const mockAPIService = jasmine.createSpyObj(["getServers", "getUsers"]);
-		mockAPIService.getServers.and.returnValue(new Promise(r => r([])));
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		TestBed.configureTestingModule({
 			declarations: [ ServersTableComponent, TpHeaderComponent ],
 			imports: [HttpClientModule, RouterTestingModule, APITestingModule],
 			providers: [
-				{ provide: UserService, useValue: mockAPIService },
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
 		})

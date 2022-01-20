@@ -18,7 +18,6 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
 import { DeliveryService } from "src/app/models";
-import { UserService } from "src/app/shared/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
@@ -35,8 +34,6 @@ describe("DashboardComponent", () => {
 	beforeEach(waitForAsync(() => {
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"],
 			{capabilities: new Set<string>()});
-
-		const mockAlertService = jasmine.createSpyObj(["newAlert"]);
 
 		TestBed.configureTestingModule({
 			declarations: [
@@ -55,8 +52,7 @@ describe("DashboardComponent", () => {
 			],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: AlertService, useValue: mockAlertService },
-				{ provide: UserService, useValue: mockCurrentUserService }
+				AlertService,
 			]
 		});
 		TestBed.compileComponents();

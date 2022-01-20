@@ -19,9 +19,7 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
-// import { DeliveryService, GeoLimit, GeoProvider, TPSData } from "src/app/models";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import { UserService } from "src/app/shared/api";
 import { AlertService } from "src/app/shared/alert/alert.service";
 
 import { DeliveryserviceComponent } from "./deliveryservice.component";
@@ -33,8 +31,6 @@ describe("DeliveryserviceComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getUsers"]);
-		const mockAlertService = jasmine.createSpyObj(["newAlert"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 
 		TestBed.configureTestingModule({
@@ -51,9 +47,8 @@ describe("DeliveryserviceComponent", () => {
 				RouterTestingModule
 			],
 			providers: [
-				{ provide: AlertService, useValue: mockAlertService },
+				AlertService,
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: UserService, useValue: mockAPIService }
 			]
 		});
 		TestBed.compileComponents();
