@@ -39,20 +39,14 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 
 	/** Initializes the validity state of the element. */
 	public ngAfterViewInit(): void {
-		if (!this.element.nativeElement) {
-			console.warn("Use of DOM directive in non-DOM context!");
-			return;
-		}
-
 		this.subscription = this.customvalidity.subscribe(
 			s => {
 				if (s) {
 					this.element.nativeElement.setCustomValidity(s);
 					this.element.nativeElement.reportValidity();
+				} else {
+					this.element.nativeElement.setCustomValidity("");
 				}
-			},
-			e => {
-				console.error(e);
 			}
 		);
 		this.element.nativeElement.addEventListener("input", () => this.element.nativeElement.setCustomValidity(""));
