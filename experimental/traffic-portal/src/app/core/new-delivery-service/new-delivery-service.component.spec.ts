@@ -20,15 +20,16 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
 import { MatRadioModule } from "@angular/material/radio";
 import { MatStepperModule } from "@angular/material/stepper";
-import {MatStepperHarness} from "@angular/material/stepper/testing";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import { MatStepperHarness } from "@angular/material/stepper/testing";
+import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import {CDNService, DeliveryServiceService, UserService} from "src/app/shared/api";
+import { APITestingModule } from "src/app/api/testing";
+import { DeliveryServiceService, UserService } from "src/app/shared/api";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { Protocol } from "../../models";
-import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
+import { TpHeaderComponent } from "../../shared/tp-header/tp-header.component";
 import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
 
@@ -55,6 +56,7 @@ describe("NewDeliveryServiceComponent", () => {
 				TpHeaderComponent
 			],
 			imports: [
+				APITestingModule,
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
@@ -66,7 +68,6 @@ describe("NewDeliveryServiceComponent", () => {
 			],
 			providers: [
 				{provide: DeliveryServiceService, useValue: mockAPIService},
-				{provide: CDNService, useValue: mockAPIService},
 				{provide: UserService, useValue: mockAPIService},
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]

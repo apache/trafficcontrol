@@ -26,7 +26,6 @@ import {LinechartDirective} from "./charts/linechart.directive";
 import {AlertService} from "./alert/alert.service";
 import {
 	CacheGroupService,
-	CDNService,
 	DeliveryServiceService,
 	InvalidationJobService,
 	ProfileService,
@@ -77,7 +76,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
 		AlertService,
 		CacheGroupService,
-		CDNService,
 		CurrentUserService,
 		DeliveryServiceService,
 		InvalidationJobService,

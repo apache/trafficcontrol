@@ -16,7 +16,8 @@ import { FormControl } from "@angular/forms";
 import type { MatStepper } from "@angular/material/stepper";
 import { Router } from "@angular/router";
 
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
+import { CDNService } from "src/app/api";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import {
 	bypassable,
 	CDN,
@@ -27,7 +28,7 @@ import {
 	Type
 } from "../../models";
 import { User } from "../../models/user";
-import { CDNService, DeliveryServiceService } from "../../shared/api";
+import { DeliveryServiceService } from "../../shared/api";
 
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s

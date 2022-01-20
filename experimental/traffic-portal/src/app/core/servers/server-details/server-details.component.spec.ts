@@ -20,7 +20,7 @@ import { faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
 
 import { APITestingModule } from "src/app/api/testing";
 import { defaultServer } from "src/app/models";
-import { CacheGroupService, CDNService, ProfileService, TypeService } from "src/app/shared/api";
+import { CacheGroupService, ProfileService, TypeService } from "src/app/shared/api";
 import { PhysicalLocationService } from "src/app/shared/api/PhysicalLocationService";
 
 import { ServerDetailsComponent } from "./server-details.component";
@@ -30,14 +30,11 @@ describe("ServerDetailsComponent", () => {
 	let fixture: ComponentFixture<ServerDetailsComponent>;
 
 	beforeEach(async () => {
-		const mockAPIService = jasmine.createSpyObj(["getServers", "getCacheGroups", "getCDNs",
-			"getProfiles", "getTypes", "getPhysicalLocations", "getStatuses", "getServerTypes"]);
+		const mockAPIService = jasmine.createSpyObj(["getCacheGroups",
+			"getProfiles", "getTypes", "getPhysicalLocations", "getServerTypes"]);
 		mockAPIService.getCacheGroups.and.returnValue(new Promise(r => r([])));
-		mockAPIService.getCDNs.and.returnValue(new Promise(r => r([])));
-		mockAPIService.getStatuses.and.returnValue(new Promise(r => r([])));
 		mockAPIService.getProfiles.and.returnValue(new Promise(r => r([])));
 		mockAPIService.getPhysicalLocations.and.returnValues(new Promise(r => r([])));
-		mockAPIService.getServers.and.returnValues(new Promise(r => r([])));
 		mockAPIService.getServerTypes.and.returnValues(new Promise(r => r([])));
 
 		await TestBed.configureTestingModule({
@@ -45,7 +42,6 @@ describe("ServerDetailsComponent", () => {
 			imports: [ HttpClientModule, RouterTestingModule, FormsModule, ReactiveFormsModule, APITestingModule ],
 			 providers: [
 				 { provide: CacheGroupService, useValue: mockAPIService },
-				 { provide: CDNService, useValue: mockAPIService },
 				 { provide: TypeService, useValue: mockAPIService },
 				 { provide: PhysicalLocationService, useValue: mockAPIService },
 				 { provide: ProfileService, useValue: mockAPIService }

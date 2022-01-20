@@ -11,18 +11,39 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { CDN } from "../../models";
-import { APIService } from "./APIService";
-
+import { CDN } from "src/app/models";
 
 /**
  * CDNService expose API functionality relating to CDNs.
  */
 @Injectable()
-export class CDNService extends APIService {
+export class CDNService {
+
+	private readonly cdns = new Map([
+		[
+			"ALL",
+			{
+				dnssecEnabled: false,
+				domainName: "-",
+				id: 1,
+				lastUpdated: new Date(),
+				name: "ALL"
+			}
+		],
+		[
+			"test",
+			{
+				dnssecEnabled: false,
+				domainName: "mycdn.test.test",
+				id: 1,
+				lastUpdated: new Date(),
+				name: "test"
+			}
+		]
+	]);
+
 	public async getCDNs(id: number): Promise<CDN>;
 	public async getCDNs(): Promise<Map<string, CDN>>;
 	/**
@@ -34,38 +55,13 @@ export class CDNService extends APIService {
 	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
 	 */
 	public async getCDNs(id?: number): Promise<Map<string, CDN> | CDN> {
-		const path = "cdns";
-		if (id) {
-			return this.get<[CDN]>(path, undefined, {id: String(id)}).toPromise().then(
-				r => r[0]
-			).catch(
-				e => {
-					console.error(`Failed to get CDN #${id}`, e);
-					return {
-						dnssecEnabled: false,
-						domainName: "",
-						id: -1,
-						name: "",
-					};
-				}
-			);
-		}
-		return this.get<Array<CDN>>(path).toPromise().then(
-			r => new Map<string, CDN>(r.map(c=>[c.name, c]))
-		).catch(
-			e => {
-				console.error("Failed to get CDNs:", e);
-				return new Map();
+		if (id !== undefined) {
+			const cdn = Array.from(this.cdns.values()).filter(c=>c.id===id)[0];
+			if (!cdn) {
+				throw new Error(`no such CDN #${id}`);
 			}
-		);
-	}
-
-	/**
-	 * Injects the Angular HTTP client service into the parent constructor.
-	 *
-	 * @param http The Angular HTTP client service.
-	 */
-	constructor(http: HttpClient) {
-		super(http);
+			return cdn;
+		}
+		return this.cdns;
 	}
 }

@@ -1,8 +1,10 @@
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { ServerService } from "../server.service";
+import { CDNService, ServerService } from "..";
 import { ServerService as TestingServerService } from "./server.service";
+import { CDNService as TestingCDNService } from "./cdn.service";
 
+export * from "./cdn.service";
 export * from "./server.service";
 
 /**
@@ -14,6 +16,9 @@ export * from "./server.service";
 	imports: [
 		CommonModule
 	],
-	providers: [{provide: ServerService, useClass: TestingServerService}]
+	providers: [
+		{provide: CDNService, useClass: TestingCDNService},
+		{provide: ServerService, useClass: TestingServerService}
+	]
 })
 export class APITestingModule { }

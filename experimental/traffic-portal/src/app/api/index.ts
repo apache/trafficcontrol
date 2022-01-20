@@ -1,7 +1,9 @@
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { CDNService } from "./cdn.service";
 import { ServerService } from "./server.service";
 
+export * from "./cdn.service";
 export * from "./server.service";
 
 /**
@@ -12,6 +14,9 @@ export * from "./server.service";
 	imports: [
 		CommonModule
 	],
-	providers: [ServerService]
+	providers: [
+		CDNService,
+		ServerService
+	]
 })
 export class APIModule { }
