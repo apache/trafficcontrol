@@ -27,7 +27,6 @@ import {AlertService} from "./alert/alert.service";
 import {
 	InvalidationJobService,
 	ProfileService,
-	TypeService,
 	UserService
 } from "./api";
 import {PhysicalLocationService} from "./api/PhysicalLocationService";
@@ -77,7 +76,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		InvalidationJobService,
 		PhysicalLocationService,
 		ProfileService,
-		TypeService,
 		UserService
 	]
 })
