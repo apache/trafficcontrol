@@ -13,10 +13,10 @@
 # limitations under the License.
 #
 - name: Install fakeOrigin
-  yum:
+  package:
     name: "{{ fo_pkg_name }}"
     state: installed
-    update_cache : yes
+    update_cache: true
     lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
   notify: Restart fakeOrigin
@@ -35,4 +35,4 @@
 - name: Enable fakeOrigin on startup
   systemd:
     name: fakeOrigin
-    enabled: yes
+    enabled: true

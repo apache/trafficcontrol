@@ -25,16 +25,20 @@ describe("workspace-project App", () => {
 	});
 
 	it("should allow login", async done => {
-		await page.usernameInput.sendKeys("admin");
-		await page.passwordInput.sendKeys("twelve12");
+		// TODO: put this in a config somewhere
+		await Promise.all([
+			page.usernameInput.sendKeys("admin"),
+			page.passwordInput.sendKeys("twelve12")
+		]);
 		await page.loginButton.click();
+		const loggedInURL = `${browser.baseUrl}core`;
 		try {
-			await browser.wait(until.urlIs(browser.baseUrl), 1000);
+			await browser.wait(until.urlIs(loggedInURL), 1000);
 		} catch(e) {
 			done.fail(`page did not navigate after login: ${e}`);
 			return;
 		}
-		expect(browser.getCurrentUrl()).toBe(browser.baseUrl);
+		expect(browser.getCurrentUrl()).toBe(loggedInURL);
 		done();
 	});
 

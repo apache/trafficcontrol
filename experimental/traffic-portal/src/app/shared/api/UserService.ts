@@ -15,7 +15,7 @@
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Role, User, Capability } from "../../models/user";
+import { Role, User, Capability, CurrentUser, newCurrentUser } from "../../models/user";
 
 import { APIService } from "./APIService";
 
@@ -82,9 +82,9 @@ export class UserService extends APIService {
 	 *
 	 * @returns A `User` object representing the current user.
 	 */
-	public async getCurrentUser(): Promise<User> {
+	public async getCurrentUser(): Promise<CurrentUser> {
 		const path = "user/current";
-		return this.get<User>(path).toPromise().then(
+		return this.get<CurrentUser>(path).toPromise().then(
 			r => {
 				r.lastUpdated = new Date((r.lastUpdated as unknown as string).replace("+00", "Z"));
 				return r;
@@ -92,11 +92,7 @@ export class UserService extends APIService {
 		).catch(
 			e => {
 				console.error("Failed to get current user:", e);
-				return {
-					id: -1,
-					newUser: false,
-					username: ""
-				};
+				return newCurrentUser();
 			}
 		);
 	}
@@ -107,9 +103,9 @@ export class UserService extends APIService {
 	 * @param user The new form of the user.
 	 * @returns whether or not the request was successful.
 	 */
-	public async updateCurrentUser(user: User): Promise<boolean> {
+	public async updateCurrentUser(user: CurrentUser): Promise<boolean> {
 		const path = "user/current";
-		return this.put<User>(path, {user}).toPromise().then(
+		return this.put<CurrentUser>(path, {user}).toPromise().then(
 			() => true,
 			() => false
 		);
@@ -239,6 +235,15 @@ export class UserService extends APIService {
 				return [];
 			}
 		);
+	}
+
+	/**
+	 * Requests a password reset for a user.
+	 *
+	 * @param email The email of the user for whom to reset a password.
+	 */
+	public async resetPassword(email: string): Promise<void> {
+		await this.post("user/reset_password", {email}).toPromise();
 	}
 
 }

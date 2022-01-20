@@ -53,7 +53,7 @@ const VALID_IPV6 = /^((((((([\da-fA-F]{1,4})):){6})((((([\da-fA-F]{1,4})):(([\da
 /**
  * A regular expression that matches a valid hostname
  */
-const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])*(\.[A-z\d]([A-z0-9\-]*[A-z0-9])*)*$/;
+const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])?(\.[A-z\d]([A-z0-9\-]*[A-z0-9])?)*$/;
 
 /**
  * NewDeliveryServiceComponent is the controller for the new Delivery Service
@@ -336,7 +336,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 					} catch (e) {
 						console.error(e);
 						const nativeBypassElement = document.getElementById("bypass-loc") as HTMLInputElement;
-						nativeBypassElement.setCustomValidity(e.message);
+						nativeBypassElement.setCustomValidity(e instanceof Error ? e.message : String(e));
 						nativeBypassElement.reportValidity();
 						nativeBypassElement.value = "";
 						nativeBypassElement.setCustomValidity("");

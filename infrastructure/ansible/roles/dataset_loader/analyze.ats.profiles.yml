@@ -1,0 +1,505 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- hosts: localhost
+  connection: local
+  gather_facts: No
+
+  module_defaults:
+    uri:
+      validate_certs: no
+      follow_redirects: all
+      return_content: yes
+      body_format: json
+      status_code: 200,400
+      timeout: 600
+      headers:
+        Cookie: "{{ dl_mojo_token.set_cookie | default(omit) }}"
+
+  vars:
+    exclution_file_path: "{{ playbook_dir }}/parameter.diff.exclusions.yml"
+
+    # Vars from the role defaults just so that things render properly
+    Target_cdn_delegation: foo
+    dl_anonymous_ip_url: foo
+    dl_anonymous_db_url: foo
+    dl_shallow_czf_url: foo
+    Target_cdn_delegation_fqdn: foo
+    dl_geolocation_url: foo
+    Target_cdn_name: foo
+    dl_allow_ip4: 1.1.1.1
+    dl_allow_ip6: ::1
+    cache_hardware_profile_index:
+      0: 0
+    Target_hardware_profile:
+      value:
+        ram_cache_size: 0
+        primary_network_interface: eth0
+        network_bandwidth_limit: 100
+        dl_ds_reserved_bandwidth_percentage: 10
+        load_avg_limit: 10
+    target_xmlId: foo
+    dl_hosts_fakeorigin:
+      - foo
+    dl_atsec_ram_cache_max_obj_size_mb: 0
+    Target_hardware_profile_cache_disk_letters: foo
+    Target_hardware_profile_cache_disk_prefix: foo
+    Target_hardware_profile_ram_disk_letters: foo
+    Target_hardware_profile_ram_disk_prefix: foo
+
+    # Copypasta prevention
+    drop_value_query: "[].{configFile: configFile, name: name}"
+    drop_configFile_query: "[].{name: name, value: value}"
+    drop_value_regex: "([^ ]+ [^ ]+) (?:[^ ]+ .+)$"
+    target_host_fqdn: "{{ override_target_host_fqdn | default(((target_host_discovery|default({})).results|default({}))|to_json|from_json|json_query('[?rc == `0`].item|[0]')) }}"
+    base_host_fqdn: "{{ override_base_host_fqdn | default((base_host_discovery.results|default({}))|to_json|from_json|json_query('[?rc == `0`].item|[0]')) }}"
+    profile_id_query: "response[?name == `{{ profile_name }}`].id |[0]"
+    target_profile_id: "{{ get_all_profiles.stdout | from_json | json_query(profile_id_query) }}"
+    remap_path_query: "[?configFile == `remap.config` && name == `location` ].value|[0]"
+    trailing_slash: "{{ '/' if remap_path[-1] != '/' else '' }}"
+    parameter_filter_query: "[?!({% for e in parameter_diff_exclusions %}(contains(configFile,`{{ e.configFile }}`) && contains(name,`{{ e.name }}`)){%- if not loop.last %} || {% endif -%}{% endfor %})]"
+    scrub_query: "response[].{configFile: configFile,name: name,value: value}"
+    dl_ats_version_query: "[?configFile == `package` && name == `trafficserver` ].value|[0]"
+    host_stdout_filter_query: "[?item == `{{ host_fqdn }}`].stdout | [0]"
+    param_to_record: "{{ item.name }} {{ item.value }}"
+    item_valdrop: "{{ [item] | to_json | from_json | json_query(drop_value_query) }}"
+    base_value_query: "[?configFile == `{{ item.configFile }}` && name == `{{ item.name }}`].value | [0]"
+    outdiff:
+      configFile: "{{ item.configFile }}"
+      name: "{{ item.name }}"
+      value:
+        dataset_loader: "{{ base_value }}"
+        traffic_ops: "{{ item.value }}"
+
+  vars_files:
+    - defaults/main.yml
+    - "{{ exclution_file_path }}"
+
+  tasks:
+  - name: Get Data
+    block:
+    - name: Get TO Data
+      block:
+      - name: Get TO Cookie
+        uri:
+          url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/user/login"
+          method: POST
+          body: '{ "u":"{{ dl_to_user }}", "p":"{{ dl_to_user_password }}" }'
+          headers:
+            Content-Type: "application/x-www-form-urlencoded"
+        register: dl_mojo_token
+        no_log: true
+        retries: 10
+        delay: 10
+
+      # https://github.com/ansible/ansible/issues/50300
+      #- name: Get All Profiles
+      #  uri:
+      #    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
+      #    method: GET
+      #  register: get_all_profiles
+      #  no_log: true
+      #  retries: 10
+      #  delay: 10
+      #  until: get_all_profiles['status']|default(0) == 200
+
+      - name: Get all Profiles - with curl workaround
+        command: "curl -X GET -Lsk --fail -b '{{ dl_mojo_token.set_cookie }}' '{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles'"
+        args:
+          warn: no
+        register: get_all_profiles
+        changed_when: false
+        no_log: true
+        retries: 10
+        delay: 10
+
+      - name: Assert we have valid profiles to work with
+        assert:
+          that: "{{ item.test }}"
+          fail_msg: "{{ item.fail_msg }}"
+          quiet: yes
+        vars:
+          profile_names_query: "response[].name"
+          profile_names: "{{ get_all_profiles.stdout | from_json | json_query(profile_names_query) }}"
+        loop_control:
+          label: "{{ item.label }}"
+        with_items:
+          - test: TARGET_PROFILE in profile_names
+            fail_msg: "Target Profile '{{ TARGET_PROFILE }}' could not be located in TrafficOps"
+            label: Check Target Profile Existance
+          - test: BASE_PROFILE in profile_names
+            fail_msg: "Base Profile '{{ BASE_PROFILE }}' could not be located in TrafficOps"
+            label: Check Base Profile Existance
+
+      - name: Get Target Profile Parameters to diff
+        uri:
+          url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ TARGET_PROFILE }}/parameters"
+          method: GET
+        register: get_target_profile_parameters
+        no_log: true
+        retries: 10
+        delay: 10
+        until: get_target_profile_parameters['status']|default(0) == 200
+
+      - name: Get Base Profile Parameters to diff
+        uri:
+          url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ BASE_PROFILE }}/parameters"
+          method: GET
+        register: get_base_profile_parameters
+        no_log: true
+        retries: 10
+        delay: 10
+        until: get_base_profile_parameters['status']|default(0) == 200
+
+    - name: Get ATS defaults - Target
+      block:
+      - name: Get Servers with Target Profile
+        uri:
+          url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/servers?profileId={{ target_profile_id }}"
+          method: GET
+        register: get_servers_with_target_profile
+        no_log: true
+        retries: 10
+        delay: 10
+        until: get_target_profile_parameters['status']|default(0) == 200
+        vars:
+          profile_name: "{{ TARGET_PROFILE }}"
+        when: override_target_host_fqdn is not defined
+
+      - name: Ensure Servers are attached to the target profile
+        assert:
+          that:
+            - (get_servers_with_target_profile.json.response | default([])) | length > 0
+          fail_msg: "There are no servers attached to the target profile '{{ TARGET_PROFILE }}' in TrafficOps"
+          quiet: yes
+        when: override_target_host_fqdn is not defined
+
+      - name: Find hosts that respond with TrafficServer installed - Target
+        command: "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o Loglevel=ERROR -o BatchMode=yes -o ConnectTimeout=5 {{ dl_to_user }}@{{ item }} (/usr/sbin/pidof trafficserver || /usr/sbin/pidof traffic_server) >/dev/null && rpm -q trafficserver"
+        with_items: "{{ (get_servers_with_target_profile.json.response|to_json|from_json|json_query('[].join(`.`,[hostName, domainName])')|default([])) if override_target_host_fqdn is not defined else [override_target_host_fqdn] }}"
+        register: target_host_discovery
+        changed_when: false
+        ignore_errors: yes
+        when: (target_host_discovery|default(default_rc)).rc != 0
+        vars:
+          default_rc:
+            rc: 1
+
+      - name: Record the ATS version reported by the chosen host
+        set_fact:
+          target_ats_version: "{{ target_host_discovery.results | json_query(host_stdout_filter_query) }}"
+        vars:
+          host_fqdn: "{{ target_host_fqdn }}"
+
+      - name: Ensure at least one attached server to the target profile are valid
+        assert:
+          that:
+            - (target_host_discovery.results|json_query('[?rc == `0`].item')) | length > 0
+          fail_msg: "Of the servers attached to target profile '{{ TARGET_PROFILE }}' none are reachable, have ATS installed, and are running an ATS process"
+          success_msg: "Eligible target profile host found: {{ target_host_fqdn }}"
+
+      - name: Get defaults for ATS on target configuration
+        command: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o Loglevel=ERROR -o BatchMode=yes -o ConnectTimeout=5 {{ dl_to_user }}@{{ target_host_fqdn }} {{ remap_path }}{{ trailing_slash }}../../bin/traffic_ctl config defaults --records
+        register: target_ats_defaults
+        changed_when: false
+        vars:
+          remap_path: "{{ get_target_profile_parameters.json.response | to_json | from_json | json_query(remap_path_query) }}"
+
+    - name: Get ATS defaults - Base
+      block:
+      - name: Get Servers with Base Profile
+        uri:
+          url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/servers?profileId={{ target_profile_id }}"
+          method: GET
+        register: get_servers_with_base_profile
+        no_log: true
+        retries: 10
+        delay: 10
+        until: get_target_profile_parameters['status']|default(0) == 200
+        vars:
+          profile_name: "{{ BASE_PROFILE }}"
+        when: override_base_host_fqdn is not defined
+
+      - name: Ensure Servers are attached to the base profile
+        assert:
+          that:
+            - (get_servers_with_base_profile.json.response | default([])) | length > 0
+          fail_msg: "There are no servers attached to the base profile '{{ BASE_PROFILE }}' in TrafficOps"
+          quiet: yes
+        when: override_base_host_fqdn is not defined
+
+      - name: Find hosts that respond with TrafficServer installed - Base
+        command: "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o Loglevel=ERROR -o BatchMode=yes -o ConnectTimeout=5 {{ dl_to_user }}@{{ item }} (/usr/sbin/pidof trafficserver || /usr/sbin/pidof traffic_server) >/dev/null && rpm -q trafficserver"
+        with_items: "{{ (get_servers_with_base_profile.json.response|to_json|from_json|json_query('[].join(`.`,[hostName, domainName])')|default([])) if override_base_host_fqdn is not defined else [override_base_host_fqdn] }}"
+        register: base_host_discovery
+        changed_when: false
+        ignore_errors: yes
+        when: (base_host_discovery|default(default_rc)).rc != 0
+        vars:
+          default_rc:
+            rc: 1
+
+      - name: Record the ATS version reported by the chosen host
+        set_fact:
+          base_ats_version: "{{ base_host_discovery.results | json_query(host_stdout_filter_query) }}"
+        vars:
+          host_fqdn: "{{ base_host_fqdn }}"
+
+      - name: Ensure at least one attached server to the base profile are valid
+        assert:
+          that:
+            - (base_host_discovery.results|json_query('[?rc == `0`].item')) | length > 0
+          fail_msg: "Of the servers attached to base profile '{{ BASE_PROFILE }}' none are reachable, have ATS installed, and are running an ATS process"
+          success_msg: "Eligible base profile host found: {{ base_host_fqdn }}"
+
+      - name: Get defaults for ATS on base profile configuration
+        command: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o Loglevel=ERROR -o BatchMode=yes -o ConnectTimeout=5 {{ dl_to_user }}@{{ base_host_fqdn }} {{ remap_path }}{{ trailing_slash }}../../bin/traffic_ctl config defaults --records
+        register: base_ats_defaults
+        changed_when: false
+        vars:
+          remap_path: "{{ get_target_profile_parameters.json.response | to_json | from_json | json_query(remap_path_query) }}"
+
+    - name: Process TO Data
+      block:
+      - name: Scrub out the target runtime fields that break the diff
+        set_fact:
+          dl_ats_version: "{{ get_target_profile_parameters.json.response | to_json | from_json | json_query(dl_ats_version_query) }}"
+          target_params: "{{ get_target_profile_parameters.json | to_json | from_json | json_query(scrub_query) | sort(attribute='name,configFile,value') }}"
+
+      - name: Get Target Default Params for comparison
+        set_fact:
+          dsl_params_target: "{{ tiers[target_profile_tier] | sort(attribute='name,configFile,value') }}"
+        vars:
+          target_profile_description_query: "response[?name == `{{ TARGET_PROFILE | lower }}`].description|[0]"
+          target_profile_description: "{{ get_all_profiles.stdout | lower | to_json | from_json | json_query(target_profile_description_query) }}"
+          target_profile_tier: "{{ 'edge_params' if ('edge' in (TARGET_PROFILE | lower)) or ('edge' in target_profile_description) else 'mid_params' }}"
+          tiers:
+            edge_params: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.edge.common + dl_ds_default_profile_layers.ats.edge['v'+dl_ds_ats_major_version] }}"
+            mid_params: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.mid.common + dl_ds_default_profile_layers.ats.mid['v'+dl_ds_ats_major_version] }}"
+
+      - name: Scrub out the base runtime fields that break the diff
+        set_fact:
+          dl_ats_version: "{{ get_base_profile_parameters.json.response | to_json | from_json | json_query(dl_ats_version_query) }}"
+          base_params: "{{ get_base_profile_parameters.json | to_json | from_json | json_query(scrub_query) | sort(attribute='name,configFile,value') }}"
+
+      - name: Get Base Default Params for comparison
+        set_fact:
+          dsl_params_base: "{{ tiers[target_profile_tier] | sort(attribute='name,configFile,value') }}"
+        vars:
+          target_profile_description_query: "response[?name == `{{ BASE_PROFILE | lower }}`].description|[0]"
+          target_profile_description: "{{ get_all_profiles.stdout | lower | to_json | from_json | json_query(target_profile_description_query) }}"
+          target_profile_tier: "{{ 'edge_params' if ('edge' in (BASE_PROFILE | lower)) or ('edge' in target_profile_description) else 'mid_params' }}"
+          tiers:
+            edge_params: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.edge.common + dl_ds_default_profile_layers.ats.edge['v'+dl_ds_ats_major_version] }}"
+            mid_params: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.mid.common + dl_ds_default_profile_layers.ats.mid['v'+dl_ds_ats_major_version] }}"
+
+  - name: Generate Profile Parameter Diff - Target
+    block:
+    - name: Compute diff
+      set_fact:
+        params_missing_from_target_set: "{{ dsl_params_target | difference(target_params) | to_json | from_json | json_query(parameter_filter_query) }}"
+        params_missing_from_dsl_set_in_target: "{{ target_params | difference(dsl_params_target) | to_json | from_json | json_query(parameter_filter_query) }}"
+        params_missing_from_target_set_valdrop: "{{ dsl_params_target | difference(target_params) | to_json | from_json | json_query(parameter_filter_query) | to_json | from_json | json_query(drop_value_query) }}"
+        params_missing_from_dsl_set_in_target_valdrop: "{{ target_params | difference(dsl_params_target) | to_json | from_json | json_query(parameter_filter_query) | to_json | from_json | json_query(drop_value_query) }}"
+
+    - name: Process diff - dsl -> target
+      set_fact:
+        params_missing_from_target_in_dsl: "{{ ((params_missing_from_target_in_dsl | default([])) + [item]) if item_valdrop|intersect(params_missing_from_target_set_valdrop) == [] else ((params_missing_from_target_in_dsl | default([])) + []) }}"
+        params_changed_from_target_set_in_dsl: "{{ ((params_changed_from_target_set_in_dsl | default([])) + [item]) if item_valdrop|intersect(params_missing_from_target_set_valdrop) != [] else ((params_changed_from_target_set_in_dsl | default([])) + []) }}"
+      with_items: "{{ params_missing_from_dsl_set_in_target }}"
+
+    - name: Process diff - target -> dsl
+      set_fact:
+        params_missing_from_dsl_in_target: "{{ ((params_missing_from_dsl_in_target | default([])) + [item]) if item_valdrop|intersect(params_missing_from_dsl_set_in_target_valdrop) == [] else ((params_missing_from_dsl_in_target | default([])) + []) }}"
+        params_changed_from_dsl_set_in_target: "{{ ((params_changed_from_dsl_set_in_target | default([])) + [item]) if item_valdrop|intersect(params_missing_from_dsl_set_in_target_valdrop) != [] else ((params_changed_from_dsl_set_in_target | default([])) + []) }}"
+      with_items: "{{ params_missing_from_target_set }}"
+
+    - name: Render the differences in a more useful way
+      set_fact:
+        param_differences_in_target: "{{ (param_differences_in_target | default([])) + [outdiff] }}"
+      with_items: "{{ params_changed_from_target_set_in_dsl }}"
+      vars:
+        base_value: "{{ params_changed_from_dsl_set_in_target | to_json | from_json | json_query(base_value_query) }}"
+
+  - name: Generate Profile Parameter Diff - Base
+    block:
+    - name: Compute diff
+      set_fact:
+        params_missing_from_base_set: "{{ dsl_params_base | difference(base_params) | to_json | from_json | json_query(parameter_filter_query) }}"
+        params_missing_from_dsl_set_in_target_in_base: "{{ base_params | difference(dsl_params_base) | to_json | from_json | json_query(parameter_filter_query) }}"
+        params_missing_from_base_set_valdrop: "{{ dsl_params_base | difference(base_params) | to_json | from_json | json_query(parameter_filter_query) | to_json | from_json | json_query(drop_value_query) }}"
+        params_missing_from_dsl_set_in_target_in_base_valdrop: "{{ base_params | difference(dsl_params_base) | to_json | from_json | json_query(parameter_filter_query) | to_json | from_json | json_query(drop_value_query) }}"
+
+    - name: Process diff - defaults -> base
+      set_fact:
+        params_missing_from_base_in_dsl: "{{ ((params_missing_from_base_in_dsl | default([])) + [item]) if item_valdrop|intersect(params_missing_from_base_set_valdrop) == [] else ((params_missing_from_base_in_dsl | default([])) + []) }}"
+        params_changed_from_base_set_in_dsl: "{{ ((params_changed_from_base_set_in_dsl | default([])) + [item]) if item_valdrop|intersect(params_missing_from_base_set_valdrop) != [] else ((params_changed_from_base_set_in_dsl | default([])) + []) }}"
+      with_items: "{{ params_missing_from_dsl_set_in_target_in_base }}"
+
+    - name: Process diff - base -> defaults
+      set_fact:
+        params_missing_from_dsl_in_base: "{{ ((params_missing_from_dsl_in_base | default([])) + [item]) if item_valdrop|intersect(params_missing_from_dsl_set_in_target_in_base_valdrop) == [] else ((params_missing_from_dsl_in_base | default([])) + []) }}"
+        params_changed_from_dsl_set_in_base: "{{ ((params_changed_from_dsl_set_in_base | default([])) + [item]) if item_valdrop|intersect(params_missing_from_dsl_set_in_target_in_base_valdrop) != [] else ((params_changed_from_dsl_set_in_base | default([])) + []) }}"
+      with_items: "{{ params_missing_from_base_set }}"
+
+    - name: Render the differences in a more useful way
+      set_fact:
+        param_differences_in_base: "{{ (param_differences_in_base | default([])) + [outdiff] }}"
+      with_items: "{{ params_changed_from_base_set_in_dsl }}"
+      vars:
+        base_value: "{{ params_changed_from_dsl_set_in_base | to_json | from_json | json_query(base_value_query) }}"
+
+  - name: Generate ATS Default Diff
+    block:
+      - name: Compute Diff
+        set_fact:
+          defaults_missing_from_base_ats: "{{ base_ats_defaults.stdout_lines | difference(target_ats_defaults.stdout_lines) }}"
+          defaults_missing_from_target_ats: "{{ target_ats_defaults.stdout_lines | difference(base_ats_defaults.stdout_lines) }}"
+          defaults_missing_from_base_ats_valdrop: "{{ (base_ats_defaults.stdout_lines | difference(target_ats_defaults.stdout_lines)) | map('regex_replace',drop_value_regex,'\\1') | list }}"
+          defaults_missing_from_target_ats_valdrop: "{{ (target_ats_defaults.stdout_lines | difference(base_ats_defaults.stdout_lines)) | map('regex_replace',drop_value_regex,'\\1') | list }}"
+
+      - name: Process diff - base -> target
+        set_fact:
+          ats_defaults_missing_from_target: "{{ ((ats_defaults_missing_from_target | default([])) + [item]) if ([item_valdrop_ats])|intersect(defaults_missing_from_target_ats_valdrop) == [] else ((ats_defaults_missing_from_target | default([])) + []) }}"
+          ats_defaults_changed_from_target: "{{ ((ats_defaults_changed_from_target | default([])) + [item]) if ([item_valdrop_ats])|intersect(defaults_missing_from_target_ats_valdrop) != [] else ((ats_defaults_changed_from_target | default([])) + []) }}"
+        with_items: "{{ defaults_missing_from_base_ats }}"
+        vars:
+          item_valdrop_ats: "{{ item | regex_replace(drop_value_regex,'\\1') }}"
+
+      - name: Process diff - target -> base
+        set_fact:
+          ats_defaults_missing_from_base: "{{ ((ats_defaults_missing_from_base | default([])) + [item]) if ([item_valdrop_ats])|intersect(defaults_missing_from_base_ats_valdrop) == [] else ((ats_defaults_missing_from_base | default([])) + []) }}"
+          ats_defaults_changed_from_base: "{{ ((ats_defaults_changed_from_base | default([])) + [item]) if ([item_valdrop_ats])|intersect(defaults_missing_from_base_ats_valdrop) != [] else ((ats_defaults_changed_from_base | default([])) + []) }}"
+        with_items: "{{ defaults_missing_from_target_ats }}"
+        vars:
+          item_valdrop_ats: "{{ item | regex_replace(drop_value_regex,'\\1') }}"
+
+      - name: Render the differences in a more useful way
+        set_fact:
+          ats_default_differences_between_base_and_target: "{{ (ats_default_differences_between_base_and_target | default([])) + [outdiff_ats] }}"
+        with_items: "{{ ats_defaults_changed_from_target | default([]) }}"
+        vars:
+          item_valdrop_ats: "{{ item | regex_replace(drop_value_regex,'\\1') }}"
+          base_regex: "^{{ item_valdrop_ats }}.*$"
+          base_value: "{{ params_changed_from_dsl_set_in_target | to_json | from_json | json_query(base_value_query) }}"
+          outdiff_ats:
+            base_value: "{{ item }}"
+            target_value: "{{ ats_defaults_changed_from_base | select('match', base_regex) | first }}"
+
+  - name: Get Redundant parameters for cleanup
+    block:
+    - name: Compute redundant target parameters against TO
+      set_fact:
+        redundant_target_parameters: "{{ ((redundant_target_parameters | default([])) + [item]) if ([param_to_record] | intersect(target_ats_defaults.stdout_lines) != []) else (redundant_target_parameters | default([])) + [] }}"
+      with_items: "{{ target_params | to_json | from_json | json_query(parameter_filter_query) }}"
+      loop_control:
+        label: "configFile: {{ item.configFile }}, name: {{ item.name }}"
+
+    - name: Compute redundant base parameters against TO
+      set_fact:
+        redundant_base_parameters: "{{ ((redundant_base_parameters | default([])) + [item]) if ([param_to_record] | intersect(base_ats_defaults.stdout_lines) != []) else (redundant_base_parameters | default([])) + [] }}"
+      with_items: "{{ base_params | to_json | from_json | json_query(parameter_filter_query) }}"
+      loop_control:
+        label: "configFile: {{ item.configFile }}, name: {{ item.name }}"
+
+    - name: Compute redundant dataset loader parameters against target
+      set_fact:
+        redundant_target_parameters_dsl: "{{ ((redundant_target_parameters_dsl | default([])) + [item]) if ([param_to_record] | intersect(target_ats_defaults.stdout_lines) != []) else (redundant_target_parameters_dsl | default([])) + [] }}"
+      with_items: "{{ dsl_params_target | to_json | from_json | json_query(parameter_filter_query) }}"
+      loop_control:
+        label: "configFile: {{ item.configFile }}, name: {{ item.name }}"
+
+    - name: Compute redundant dataset loader parameters against base
+      set_fact:
+        redundant_base_parameters_dsl: "{{ ((redundant_base_parameters_dsl | default([])) + [item]) if ([param_to_record] | intersect(base_ats_defaults.stdout_lines) != []) else (redundant_base_parameters_dsl | default([])) + [] }}"
+      with_items: "{{ dsl_params_base| to_json | from_json | json_query(parameter_filter_query) }}"
+      loop_control:
+        label: "configFile: {{ item.configFile }}, name: {{ item.name }}"
+
+    - name: Process redundant and changed default parameters
+      set_fact:
+        redundant_parameters_with_target_params_and_defaults_included_in_traffic_ops: "{{ redundant_target_parameters | default([]) }}"
+        redundant_parameters_with_target_params_and_defaults_included_in_dataset_loader: "{{ (redundant_target_parameters_dsl | default([])) | intersect(target_params) }}"
+        redundant_parameters_with_base_params_and_defaults_included_in_traffic_ops: "{{ redundant_base_parameters | default([]) }}"
+        redundant_parameters_with_base_params_and_defaults_included_in_dataset_loader: "{{ (redundant_base_parameters_dsl | default([])) | intersect(base_params) }}"
+        redundant_parameters_in_both_base_and_target: "{{ (redundant_target_parameters | default([])) | intersect((redundant_base_parameters | default([]))) }}"
+        redundant_parameters_in_both_base_and_target_in_dataset_loader: "{{ ((redundant_base_parameters_dsl | default([])) | intersect(base_params) | default([])) | intersect(((redundant_target_parameters_dsl | default([])) | intersect(target_params) | default([]))) }}"
+
+    - name: Process changed values between base and target without redundancy
+      set_fact:
+        parameter_values_changed_from_base_to_target: "{{ base_params | intersect(target_params) | difference(redundant_parameters_in_both_base_and_target) | difference(redundant_parameters_with_base_params_and_defaults_included_in_traffic_ops) }}"
+        parameter_values_changed_from_target_to_base: "{{ target_params | intersect(base_params) | difference(redundant_parameters_in_both_base_and_target) | difference(redundant_parameters_with_target_params_and_defaults_included_in_traffic_ops) }}"
+
+    - name: Process missing parameter redundancy - target
+      set_fact:
+        params_missing_from_target_in_dataset_loader: "{{ ((params_missing_from_target_in_dataset_loader | default([])) + [item]) if ([param_to_record])|intersect(target_ats_defaults.stdout_lines) == [] else ((params_missing_from_target_in_dataset_loader | default([])) + []) }}"
+      with_items: "{{ params_missing_from_dsl_in_target | default([]) | difference(parameter_values_changed_from_target_to_base) }}"
+
+    - name: Process missing parameter redundancy - dataset_loader/target
+      set_fact:
+        params_missing_from_dataset_loader_in_target: "{{ ((params_missing_from_dataset_loader_in_target | default([])) + [item]) if ([param_to_record])|intersect(target_ats_defaults.stdout_lines) == [] else ((params_missing_from_dataset_loader_in_target | default([])) + []) }}"
+      with_items: "{{ params_missing_from_dsl_in_target | default([]) | difference(parameter_values_changed_from_base_to_target) }}"
+
+    - name: Process missing parameter redundancy - base
+      set_fact:
+        params_missing_from_base_in_dataset_loader: "{{ ((params_missing_from_base_in_dataset_loader | default([])) + [item]) if ([param_to_record])|intersect(base_ats_defaults.stdout_lines) == [] else ((params_missing_from_base_in_dataset_loader | default([])) + []) }}"
+      with_items: "{{ params_missing_from_dsl_in_base | default([]) | difference(parameter_values_changed_from_target_to_base) }}"
+
+    - name: Process missing parameter redundancy - dataset_loader/base
+      set_fact:
+        params_missing_from_dataset_loader_in_base: "{{ ((params_missing_from_dataset_loader_in_base | default([])) + [item]) if ([param_to_record])|intersect(base_ats_defaults.stdout_lines) == [] else ((params_missing_from_dataset_loader_in_base | default([])) + []) }}"
+      with_items: "{{ params_missing_from_base_in_dsl | default([]) | difference(parameter_values_changed_from_base_to_target) }}"
+
+  - name: Render output to file
+    copy:
+      content: "{{ output | to_nice_json(indent=2) }}"
+      dest: "{{ output_path | default(default_output_path) }}"
+      mode: 0600
+    vars:
+      default_output_path: "{{ playbook_dir }}/ats_profile_diff_output.json"
+      output:
+        target_profile: "{{ TARGET_PROFILE }}"
+        base_profile: "{{ BASE_PROFILE }}"
+        target_host: "{{ target_host_fqdn }}"
+        base_host: "{{ base_host_fqdn }}"
+        target_ats_version: "{{ target_ats_version }}"
+        base_ats_version: "{{ base_ats_version }}"
+        traffic_ops:
+          redundant_parameters_with_target_params_and_defaults_included_in_traffic_ops_only: "{{ redundant_parameters_with_target_params_and_defaults_included_in_traffic_ops | difference(redundant_parameters_in_both_base_and_target) }}"
+          redundant_parameters_with_base_params_and_defaults_included_in_traffic_ops_only: "{{ redundant_parameters_with_base_params_and_defaults_included_in_traffic_ops | difference(redundant_parameters_in_both_base_and_target) }}"
+          redundant_parameters_in_both_base_and_target_in_traffic_ops: "{{ redundant_parameters_in_both_base_and_target }}"
+        dataset_loader:
+          param_value_differences_between_dataset_loader_and_target: "{{ param_differences_in_target | default([]) }}"
+          param_value_differences_between_dataset_loader_and_base: "{{ param_differences_in_base | default([]) }}"
+          params_missing_from_target_in_dataset_loader: "{{ params_missing_from_target_in_dataset_loader | default([]) }}"
+          params_missing_from_dataset_loader_in_target: "{{ params_missing_from_dataset_loader_in_target | default([]) }}"
+          params_missing_from_base_in_dataset_loader: "{{ params_missing_from_base_in_dataset_loader | default([]) }}"
+          params_missing_from_dataset_loader_in_base: "{{ params_missing_from_dataset_loader_in_base | default([]) }}"
+          redundant_parameters_with_target_params_and_defaults_included_in_dataset_loader_only: "{{ redundant_parameters_with_target_params_and_defaults_included_in_dataset_loader | difference(redundant_parameters_in_both_base_and_target_in_dataset_loader) | default([]) }}"
+          redundant_parameters_with_base_params_and_defaults_included_in_dataset_loader_only: "{{ redundant_parameters_with_base_params_and_defaults_included_in_dataset_loader | difference(redundant_parameters_in_both_base_and_target_in_dataset_loader) | default([]) }}"
+          redundant_parameters_in_both_base_and_target_in_dataset_loader: "{{ redundant_parameters_in_both_base_and_target_in_dataset_loader }}"
+        ats:
+          ats_default_differences_between_base_and_target_between_base_and_target: "{{ ats_default_differences_between_base_and_target | default([]) }}"
+          ats_defaults_missing_from_target_in_base: "{{ ats_defaults_missing_from_target | default([]) }}"
+          ats_defaults_missing_from_base_in_target: "{{ ats_defaults_missing_from_base | default([]) }}"
+
+  - name: Render current dataset loader values as plain diff
+    copy:
+      content: "{{ output | to_nice_yaml(indent=2) }}"
+      dest: "{{ output_path | default(default_output_path) }}"
+      mode: 0600
+    vars:
+      default_output_path: "{{ playbook_dir }}/ats_profile_diff_output.yml"
+      output: "{{ dsl_params_target | sort(attribute='configFile,name,value') }}"

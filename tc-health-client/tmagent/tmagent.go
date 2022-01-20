@@ -38,7 +38,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/tc-health-client/config"
 	"github.com/apache/trafficcontrol/tc-health-client/util"
-	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
 	"github.com/apache/trafficcontrol/traffic_monitor/tmclient"
 	"gopkg.in/yaml.v2"
 )
@@ -79,10 +78,12 @@ type FailOver struct {
 // the trafficserver 'HostStatus' fields that are necessary to interface
 // with the trafficserver 'traffic_ctl' command.
 type ParentStatus struct {
-	Fqdn         string
-	ActiveReason bool
-	LocalReason  bool
-	ManualReason bool
+	Fqdn                 string
+	ActiveReason         bool
+	LocalReason          bool
+	ManualReason         bool
+	LastTmPoll           int64
+	UnavailablePollCount int
 }
 
 // used to get the overall parent availablity from the
@@ -237,11 +238,11 @@ func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
 
 // Queries a traffic monitor that is monitoring the trafficserver instance running on a host to
 // obtain the availability, health, of a parent used by trafficserver.
-func (c *ParentInfo) GetCacheStatuses() (map[tc.CacheName]datareq.CacheStatus, error) {
+func (c *ParentInfo) GetCacheStatuses() (tc.CRStates, error) {
 
 	tmHostName, err := c.findATrafficMonitor()
 	if err != nil {
-		return nil, errors.New("finding a trafficmonitor: " + err.Error())
+		return tc.CRStates{}, errors.New("finding a trafficmonitor: " + err.Error())
 	}
 	tmc := tmclient.New("http://"+tmHostName, config.GetRequestTimeout())
 
@@ -250,7 +251,7 @@ func (c *ParentInfo) GetCacheStatuses() (map[tc.CacheName]datareq.CacheStatus, e
 		tmc.Transport = &http.Transport{Proxy: http.ProxyURL(c.Cfg.ParsedProxyURL)}
 	}
 
-	return tmc.CacheStatuses()
+	return tmc.CRStates(true)
 }
 
 // The main polling function that keeps the parents list current if
@@ -263,10 +264,10 @@ func (c *ParentInfo) GetCacheStatuses() (map[tc.CacheName]datareq.CacheStatus, e
 // the status that trafficmonitor health protocol has determined for a parent.
 func (c *ParentInfo) PollAndUpdateCacheStatus() {
 	cycleCount := 0
-	pollingInterval := config.GetTMPollingInterval()
 	log.Infoln("polling started")
 
 	for {
+		pollingInterval := config.GetTMPollingInterval()
 		// check for config file updates
 		newCfg := config.Cfg{
 			HealthClientConfigFile: c.Cfg.HealthClientConfigFile,
@@ -311,7 +312,12 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 		}
 
 		// read traffic manager cache statuses.
-		caches, err := c.GetCacheStatuses()
+		_c, err := c.GetCacheStatuses()
+
+		// get the current poll time
+		now := time.Now().Unix()
+
+		caches := _c.Caches
 		if err != nil {
 			log.Errorf("error in TrafficMonitor polling: %s\n", err.Error())
 			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
@@ -327,13 +333,20 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 			hostName := string(k)
 			cs, ok := c.Parents[hostName]
 			if ok {
-				tmAvailable := *v.CombinedAvailable
+				// update the polling time
+				cs.LastTmPoll = now
+				c.Parents[hostName] = cs
+				tmAvailable := v.IsAvailable
 				if cs.available(c.Cfg.ReasonCode) != tmAvailable {
 					// do not mark down if the configuration disables mark downs.
 					if !c.Cfg.EnableActiveMarkdowns && !tmAvailable {
 						log.Infof("TM reports that %s is not available and should be marked DOWN but, mark downs are disabled by configuration", hostName)
 					} else {
-						if err = c.markParent(cs.Fqdn, *v.Status, tmAvailable); err != nil {
+						// See issue #6448, the status field used in api/cache-status is not
+						// available in the publish/CrStates endpoint.  For now, will not
+						// use it.
+						//if err = c.markParent(cs.Fqdn, *v.Status, tmAvailable); err != nil {
+						if err = c.markParent(cs.Fqdn, tmAvailable); err != nil {
 							log.Errorln(err.Error())
 						}
 					}
@@ -443,12 +456,10 @@ func parseFqdn(fqdn string) string {
 	return hostName
 }
 
-// used to mark a parent as up or down in the trafficserver HostStatus
-// subsystem.
-func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool) error {
-	hostName := parseFqdn(fqdn)
-	tc := filepath.Join(c.TrafficServerBinDir, TrafficCtl)
+func (c *ParentInfo) execTrafficCtl(fqdn string, available bool) error {
 	reason := c.Cfg.ReasonCode
+	tc := filepath.Join(c.TrafficServerBinDir, TrafficCtl)
+
 	var status string
 	if available {
 		status = "up"
@@ -465,23 +476,81 @@ func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool)
 	if err != nil {
 		return errors.New("marking " + fqdn + " " + status + ": " + TrafficCtl + " error: " + err.Error())
 	}
+
+	return nil
+}
+
+// used to mark a parent as up or down in the trafficserver HostStatus
+// subsystem.
+//
+// TODO see issue #6448, add cacheStatus back when available in CrStates
+//func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool) error {
+func (c *ParentInfo) markParent(fqdn string, available bool) error {
+	var hostAvailable bool
+	var err error
+	hostName := parseFqdn(fqdn)
+
+	log.Debugf("fqdn: %s, available: %v", fqdn, available)
+
 	pv, ok := c.Parents[hostName]
 	if ok {
-		switch reason {
-		case "active":
-			pv.ActiveReason = available
-		case "local":
-			pv.LocalReason = available
+		activeReason := pv.ActiveReason
+		localReason := pv.LocalReason
+		unavailablePollCount := pv.UnavailablePollCount
+
+		log.Debugf("hostName: %s, UnavailablePollCount: %d, available: %v", hostName, unavailablePollCount, available)
+
+		if !available { // unavailable
+			unavailablePollCount += 1
+			if unavailablePollCount < c.Cfg.UnavailablePollThreshold {
+				log.Infof("TM indicates %s is unavailable but the UnavailablePollThreshold has not been reached", hostName)
+				hostAvailable = true
+			} else {
+				// marking the host down
+				err = c.execTrafficCtl(fqdn, available)
+				if err != nil {
+					log.Errorln(err.Error())
+				}
+				if err == nil {
+					// TODO see issue 6448, add cacheStatus back when available in CrStates
+					// log.Infof("marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
+					hostAvailable = false
+					log.Infof("marked parent %s DOWN", hostName)
+				}
+			}
+		} else { // available
+			// marking the host up
+			err = c.execTrafficCtl(fqdn, available)
+			if err == nil {
+				hostAvailable = true
+				// reset the unavilable poll count
+				unavailablePollCount = 0
+				// TODO see issue #6448, add cacheStatus back when available in CrStates
+				//log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
+				log.Infof("marked parent %s UP", hostName)
+			} else {
+				hostAvailable = false
+			}
+		}
+
+		// update parent info
+		if err == nil {
+			reason := c.Cfg.ReasonCode
+			switch reason {
+			case "active":
+				activeReason = hostAvailable
+			case "local":
+				localReason = hostAvailable
+			}
+			// save updates
+			pv.ActiveReason = activeReason
+			pv.LocalReason = localReason
+			pv.UnavailablePollCount = unavailablePollCount
+			c.Parents[hostName] = pv
+			log.Debugf("Updated parent status: %v", pv)
 		}
 	}
-	c.Parents[hostName] = pv
-
-	if !available {
-		log.Infof("marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
-	} else {
-		log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
-	}
-	return nil
+	return err
 }
 
 // reads the current parent statuses from the trafficserver HostStatus
@@ -534,10 +603,12 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 						}
 					}
 					pstat := ParentStatus{
-						Fqdn:         fqdn,
-						ActiveReason: activeReason,
-						LocalReason:  localReason,
-						ManualReason: manualReason,
+						Fqdn:                 fqdn,
+						ActiveReason:         activeReason,
+						LocalReason:          localReason,
+						ManualReason:         manualReason,
+						LastTmPoll:           0,
+						UnavailablePollCount: 0,
 					}
 					hostName = parseFqdn(fqdn)
 					pv, ok := parentStatus[hostName]
@@ -551,6 +622,8 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 						available := pstat.available(c.Cfg.ReasonCode)
 						if pv.available(c.Cfg.ReasonCode) != available {
 							log.Infof("host status for '%s' has changed to %s\n", hostName, pstat.Status())
+							pstat.LastTmPoll = pv.LastTmPoll
+							pstat.UnavailablePollCount = pv.UnavailablePollCount
 							parentStatus[hostName] = pstat
 						}
 					}
@@ -616,10 +689,12 @@ func (c *ParentInfo) readParentConfig(parentStatus map[string]ParentStatus) erro
 						// already exist.
 						if !ok {
 							pstat := ParentStatus{
-								Fqdn:         strings.TrimSpace(fqdn),
-								ActiveReason: true,
-								LocalReason:  true,
-								ManualReason: true,
+								Fqdn:                 strings.TrimSpace(fqdn),
+								ActiveReason:         true,
+								LocalReason:          true,
+								ManualReason:         true,
+								LastTmPoll:           0,
+								UnavailablePollCount: 0,
 							}
 							parentStatus[hostName] = pstat
 							log.Debugf("added Host '%s' from %s to the parents map\n", hostName, fn)
@@ -704,10 +779,12 @@ func (c *ParentInfo) readStrategies(parentStatus map[string]ParentStatus) error 
 		_, ok := parentStatus[hostName]
 		if !ok {
 			pstat := ParentStatus{
-				Fqdn:         strings.TrimSpace(fqdn),
-				ActiveReason: true,
-				LocalReason:  true,
-				ManualReason: true,
+				Fqdn:                 strings.TrimSpace(fqdn),
+				ActiveReason:         true,
+				LocalReason:          true,
+				ManualReason:         true,
+				LastTmPoll:           0,
+				UnavailablePollCount: 0,
 			}
 			parentStatus[hostName] = pstat
 			log.Debugf("added Host '%s' from %s to the parents map\n", hostName, fn)

@@ -1,0 +1,127 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+driver:
+  name: docker
+lint: |
+  set -e
+  yamllint -c ../molecule_shared/.yamllint .
+  ansible-lint -c ../molecule_shared/.ansible-lint .
+
+dependency:
+  name: shell
+  command: ansible-playbook -i localhost ${MOLECULE_VERBOSITY} ../molecule_shared/dependency.yml
+
+platforms:
+  - name: todb-1.testlab.invalid
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-centos7}-ansible:latest
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    privileged: true
+    pre_build_image: true
+    tmpfs:
+      - /run
+      - /tmp
+    groups:
+      - docker_hosts
+      - traffic_opsdb
+      - traffic_opsdb-primary
+    capabilities:
+      - SYS_ADMIN
+    exposed_ports:
+      - 5432
+    networks:
+      - name: molecule_todb_triad
+    volumes:
+      - ${MOLECULE_EPHEMERAL_DIRECTORY}:/molecule
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    docker_networks:
+      - name: molecule_todb_triad
+        enable_ipv6: true
+        force: true
+        driver: bridge
+        ipam_driver: default
+        ipam_config:
+          - subnet: 172.16.240.0/24
+          - subnet: "fc01:9400:1000:9::/64"
+  - name: todb-2.testlab.invalid
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-centos7}-ansible:latest
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    privileged: true
+    pre_build_image: true
+    tmpfs:
+      - /run
+      - /tmp
+    groups:
+      - docker_hosts
+      - traffic_opsdb
+      - traffic_opsdb-standby
+    capabilities:
+      - SYS_ADMIN
+    exposed_ports:
+      - 5432
+    networks:
+      - name: molecule_todb_triad
+    volumes:
+      - ${MOLECULE_EPHEMERAL_DIRECTORY}:/molecule
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+  - name: todb-3.testlab.invalid
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-centos7}-ansible:latest
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    privileged: true
+    pre_build_image: true
+    tmpfs:
+      - /run
+      - /tmp
+    groups:
+      - docker_hosts
+      - traffic_opsdb
+      - traffic_opsdb-replicas
+    capabilities:
+      - SYS_ADMIN
+    exposed_ports:
+      - 5432
+    networks:
+      - name: molecule_todb_triad
+    volumes:
+      - ${MOLECULE_EPHEMERAL_DIRECTORY}:/molecule
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+
+provisioner:
+  name: ansible
+  playbooks:
+    prepare: "../../../molecule_shared/prepare.yml"
+  log: true
+  config_options:
+    defaults:
+      verbosity: 3
+  inventory:
+    group_vars:
+      docker-hosts:
+        docker_storage_driver: vfs
+    host_vars:
+      todb-1.testlab.invalid:
+        cdn: ALL
+        component: traffic_opsdb
+        ansible_host: todb-1.testlab.invalid
+      todb-2.testlab.invalid:
+        cdn: ALL
+        component: traffic_opsdb
+        ansible_host: todb-2.testlab.invalid
+      todb-3.testlab.invalid:
+        cdn: ALL
+        component: traffic_opsdb
+        ansible_host: todb-3.testlab.invalid
+
+verifier:
+  name: ansible

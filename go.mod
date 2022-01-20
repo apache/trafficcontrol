@@ -47,9 +47,9 @@ require (
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/pkg/errors v0.9.1
 	go.etcd.io/bbolt v1.3.6
-	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
-	golang.org/x/net v0.0.0-20211209124913-491a49abca63
-	golang.org/x/sys v0.0.0-20211209171907-798191bca915
+	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
+	golang.org/x/net v0.0.0-20220105145211-5b0dc2dfae98
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )

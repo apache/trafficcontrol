@@ -232,6 +232,13 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
+		_, dbErr := db.Exec(UpdateLoginTimeQuery, username)
+		if dbErr != nil {
+			dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", username, dbErr)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
+			return
+		}
+
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		api.WriteAndLogErr(w, r, append(respBts, '\n'))
 
@@ -299,7 +306,6 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		defer r.Body.Close()
 		resp := struct {
 			tc.Alerts
@@ -314,7 +320,17 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}{}
 
 		if err := json.NewDecoder(r.Body).Decode(&parameters); err != nil {
-			handleErrs(http.StatusBadRequest, err)
+			api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
+			return
+		}
+
+		matched, err := VerifyUrlOnWhiteList(parameters.AuthCodeTokenUrl, cfg.ConfigTrafficOpsGolang.WhitelistedOAuthUrls)
+		if err != nil {
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+			return
+		}
+		if !matched {
+			api.HandleErr(w, r, nil, http.StatusForbidden, nil, errors.New("Key URL from token is not included in the whitelisted urls. Received: "+parameters.AuthCodeTokenUrl))
 			return
 		}
 
@@ -330,7 +346,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(parameters.ClientId+":"+cfg.OAuthClientSecret))) // per RFC6749 section 2.3.1
 		}
 		if err != nil {
-			log.Errorf("obtaining token using code from oauth provider: %s", err.Error())
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("obtaining token using code from oauth provider: %w", err))
 			return
 		}
 
@@ -339,7 +355,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 		response, err := client.Do(req)
 		if err != nil {
-			log.Errorf("getting an http client: %s", err.Error())
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("getting an http client: %w", err))
 			return
 		}
 		defer response.Body.Close()
@@ -370,8 +386,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		if encodedToken == "" {
-			log.Errorf("Token not found in request but is required")
-			handleErrs(http.StatusBadRequest, errors.New("Token not found in request but is required"))
+			api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("Token not found in request but is required"), nil)
 			return
 		}
 
@@ -381,8 +396,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			jwt.WithJWKSetFetcher(jwksFetcher),
 		)
 		if err != nil {
-			handleErrs(http.StatusInternalServerError, errors.New("Error decoding token with message: "+err.Error()))
-			log.Errorf("Error decoding token: %s\n", err.Error())
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, errors.New("Error decoding token with message: "+err.Error()))
 			return
 		}
 
@@ -401,6 +415,12 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		if userAllowed {
+			_, dbErr := db.Exec(UpdateLoginTimeQuery, form.Username)
+			if dbErr != nil {
+				dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", form.Username, dbErr)
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
+				return
+			}
 			httpCookie := tocookie.GetCookie(userId, defaultCookieDuration, cfg.Secrets[0])
 			http.SetCookie(w, httpCookie)
 			resp = struct {
@@ -414,7 +434,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
 			return
 		}
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)

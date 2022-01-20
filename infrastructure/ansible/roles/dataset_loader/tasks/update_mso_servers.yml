@@ -16,14 +16,9 @@
     mso_server_ip: "{{ (mso_server_ip | default([]) ) + [ '127.'+(cdnDelegationIndex[Target_cdn_delegation]|string)+'.'+(item.value|string)+'.'+((Target_mso_ds.0 + 1)|string) ] }}"
   with_dict: "{{ foIndex }}"
 
-- name: Distribute Eligible MSO Profiles Among Servers
-  command: "{{ role_path }}/files/selection.set.py {{ Target_mso_ds.1.eligible_mso_server_profile_names | unique | sort | join(',') | quote }} {{ mso_server_ip | unique | sort | join(',') | quote }} denormalize"
-  register: mso_server_profiles_out
-  changed_when: false
-
-- name: Convert MSO Profile distribution to something more usable
+- name: Associate eligible MSO profiles to hosts
   set_fact:
-    mso_server_profiles: "{{ mso_server_profiles_out.stdout | from_json }}"
+    mso_server_profiles: "{{ Target_mso_ds.1.eligible_mso_server_profile_names | unique | sort | associate_round_robin(mso_server_ip | unique | sort) | denormalize_association }}"
 
 # NOTE: THIS BREAKS IDEMPOTENCY
 - name: Update Applicable MSO Parent Servers
@@ -74,6 +69,9 @@
     routerPortName: "{{ item.routerPortName }}"
   register: create_server_out
   failed_when: (create_server_out.status == 400 and create_server_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_server_out.status > 400 and create_server_out.status < 600)
+  no_log: true
+  retries: 10
+  delay: 10
 
 - name: Assign Servers to Delivery Services - MSO
   uri:
@@ -82,6 +80,9 @@
     body: "{{ lookup('template', 'deliveryserviceserver.j2') }}"
   register: create_ds_assignment_out
   failed_when: (create_ds_assignment_out.status == 400 and create_ds_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_assignment_out.status > 400 and create_ds_assignment_out.status < 600 and create_ds_assignment_out.status != 500)
+  no_log: true
+  retries: 10
+  delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     computed_xmlid: "{{ Target_mso_ds.1.uniqueKey }}-{{ Target_cdn_delegation | lower }}"

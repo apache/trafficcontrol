@@ -258,7 +258,7 @@ class TOSession(RestApiSession):
 	def get_api_capabilities(self, query_params=None):
 		"""
 		Get all API-capability mappings
-		:ref:`to-api-api_capabilities`
+		:ref:`to-api-v3-api_capabilities`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -434,7 +434,7 @@ class TOSession(RestApiSession):
 	def get_capabilities(self, query_params=None):
 		"""
 		Retrieves capabilities
-		:ref:`to-api-capabilities`
+		:ref:`to-api-v3-capabilities`
 		:param query_params: See API page for more information on accepted parameters
 		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]

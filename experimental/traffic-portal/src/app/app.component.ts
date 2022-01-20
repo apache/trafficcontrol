@@ -15,7 +15,7 @@
 import { Component, OnInit } from "@angular/core";
 import {Router} from "@angular/router";
 
-import { User } from "src/app/models";
+import { CurrentUser } from "src/app/models";
 import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
 /**
@@ -31,7 +31,7 @@ export class AppComponent implements OnInit {
 	public title = "Traffic Portal";
 
 	/** The currently logged-in user */
-	public currentUser: User | null = null;
+	public currentUser: CurrentUser | null = null;
 
 	/**
 	 * Constructor.

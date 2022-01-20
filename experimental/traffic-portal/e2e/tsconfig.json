@@ -1,8 +1,14 @@
 {
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
-		"outDir": "../out-tsc/e2e",
+		"allowUnreachableCode": false,
+		"allowUnusedLabels": false,
 		"module": "commonjs",
+		"noImplicitReturns": true,
+		"noImplicitOverride": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"outDir": "../out-tsc/e2e",
 		"strict": true,
 		"target": "es2018",
 		"types": [

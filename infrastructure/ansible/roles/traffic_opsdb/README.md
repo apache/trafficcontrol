@@ -49,11 +49,7 @@ Example Playbook
   tasks:
     - name: Load environment specific vars
       include_vars:
-        file: "{{ lookup('env', 'PWD') }}/ansible/vars.yml"
-
-    - name: Load environment specific vault
-      include_vars:
-        file: "{{ lookup('env', 'PWD') }}/ansible/vault"
+        file: "{{ lookup('env', 'PWD') }}/ansible/vars.json"
       no_log: true
 
     - name: Deploy Traffic_opsdb
@@ -69,11 +65,7 @@ Example Playbook
   tasks:
     - name: Load environment specific vars
       include_vars:
-        file: "{{ lookup('env', 'PWD') }}/ansible/vars.yml"
-
-    - name: Load environment specific vault
-      include_vars:
-        file: "{{ lookup('env', 'PWD') }}/ansible/vault"
+        file: "{{ lookup('env', 'PWD') }}/ansible/vars.json"
       no_log: true
 
     - name: Initialize Traffic_opsdb

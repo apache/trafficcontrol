@@ -43,32 +43,34 @@ var tmPollingInterval time.Duration
 var toRequestTimeout time.Duration
 
 const (
-	DefaultConfigFile             = "/etc/trafficcontrol/tc-health-client.json"
-	DefaultLogDirectory           = "/var/log/trafficcontrol"
-	DefaultLogFile                = "tc-health-client.log"
-	DefaultTrafficServerConfigDir = "/opt/trafficserver/etc/trafficserver"
-	DefaultTrafficServerBinDir    = "/opt/trafficserver/bin"
-	DefaultTmUpdateCycles         = 10
+	DefaultConfigFile               = "/etc/trafficcontrol/tc-health-client.json"
+	DefaultLogDirectory             = "/var/log/trafficcontrol"
+	DefaultLogFile                  = "tc-health-client.log"
+	DefaultTrafficServerConfigDir   = "/opt/trafficserver/etc/trafficserver"
+	DefaultTrafficServerBinDir      = "/opt/trafficserver/bin"
+	DefaultTmUpdateCycles           = 10
+	DefaultUnavailablePollThreshold = 2
 )
 
 type Cfg struct {
-	CDNName                 string          `json:"cdn-name"`
-	EnableActiveMarkdowns   bool            `json:"enable-active-markdowns"`
-	ReasonCode              string          `json:"reason-code"`
-	TOCredentialFile        string          `json:"to-credential-file"`
-	TORequestTimeOutSeconds string          `json:"to-request-timeout-seconds"`
-	TOPass                  string          `json:"to-pass"`
-	TOUrl                   string          `json:"to-url"`
-	TOUser                  string          `json:"to-user"`
-	TmProxyURL              string          `json:"tm-proxy-url"`
-	TmPollIntervalSeconds   string          `json:"tm-poll-interval-seconds"`
-	TmUpdateCycles          int             `json:"tm-update-cycles"`
-	TrafficServerConfigDir  string          `json:"trafficserver-config-dir"`
-	TrafficServerBinDir     string          `json:"trafficserver-bin-dir"`
-	TrafficMonitors         map[string]bool `json:"trafficmonitors,omitempty"`
-	HealthClientConfigFile  util.ConfigFile
-	CredentialFile          util.ConfigFile
-	ParsedProxyURL          *url.URL
+	CDNName                  string          `json:"cdn-name"`
+	EnableActiveMarkdowns    bool            `json:"enable-active-markdowns"`
+	ReasonCode               string          `json:"reason-code"`
+	TOCredentialFile         string          `json:"to-credential-file"`
+	TORequestTimeOutSeconds  string          `json:"to-request-timeout-seconds"`
+	TOPass                   string          `json:"to-pass"`
+	TOUrl                    string          `json:"to-url"`
+	TOUser                   string          `json:"to-user"`
+	TmProxyURL               string          `json:"tm-proxy-url"`
+	TmPollIntervalSeconds    string          `json:"tm-poll-interval-seconds"`
+	TmUpdateCycles           int             `json:"tm-update-cycles"`
+	UnavailablePollThreshold int             `json:"unavailable-poll-threshold"`
+	TrafficServerConfigDir   string          `json:"trafficserver-config-dir"`
+	TrafficServerBinDir      string          `json:"trafficserver-bin-dir"`
+	TrafficMonitors          map[string]bool `json:"trafficmonitors,omitempty"`
+	HealthClientConfigFile   util.ConfigFile
+	CredentialFile           util.ConfigFile
+	ParsedProxyURL           *url.URL
 }
 
 type LogCfg struct {
@@ -324,6 +326,9 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 		if cfg.TmUpdateCycles == 0 {
 			cfg.TmUpdateCycles = DefaultTmUpdateCycles
 		}
+		if cfg.UnavailablePollThreshold == 0 {
+			cfg.UnavailablePollThreshold = DefaultUnavailablePollThreshold
+		}
 
 		cfg.HealthClientConfigFile.LastModifyTime = modTime
 
@@ -362,6 +367,7 @@ func UpdateConfig(cfg *Cfg, newCfg *Cfg) {
 	cfg.TOUser = newCfg.TOUser
 	cfg.TmPollIntervalSeconds = newCfg.TmPollIntervalSeconds
 	cfg.TmUpdateCycles = newCfg.TmUpdateCycles
+	cfg.UnavailablePollThreshold = newCfg.UnavailablePollThreshold
 	cfg.TrafficServerConfigDir = newCfg.TrafficServerConfigDir
 	cfg.TrafficServerBinDir = newCfg.TrafficServerBinDir
 	cfg.TrafficMonitors = newCfg.TrafficMonitors

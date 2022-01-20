@@ -13,27 +13,39 @@
 # limitations under the License.
 #
 
-#determine postgres major and minor versions
+# determine postgres major and minor versions
 pg_major_version: "{% if postgresql_version is defined and postgresql_version != omit %}{{ (postgresql_version | string).split('.')[0]}}{% else %}9{% endif %}"
 valid_major_version: "{% if pg_major_version | int == 0 %}false{% else %}true{% endif %}"
 
 pg_minor_version: "{% if postgresql_version is defined and postgresql_version != omit %}{{ (postgresql_version | string).split('.')[1]}}{% else %}6{% endif %}"
 valid_minor_version: "{% if pg_minor_version | int == 0 %}false{% else %}true{% endif %}"
 
-pg_build_num: "{% if postgresql_version is defined and pg_major_version | int < 10 and postgresql_version != omit %}{{ (postgresql_version | string).split('.')[2]}}{% else %}11{% endif %}"
+pg_build_num: >-
+  {%- if postgresql_version is defined and pg_major_version | int < 10 and postgresql_version != omit -%}{{ (postgresql_version | string).split('.')[2]}}
+  {%- else -%}13{%- endif -%}
 valid_build_version: "{% if pg_major_version | int < 10 and pg_build_num | int == 0 %}false{% else %}true{% endif %}"
 
-#postgres bin PATH
-pg_bin_path: "{% if pg_major_version | int < 10 %}/usr/pgsql-{{pg_major_version}}.{{pg_minor_version}}/bin{%else%}/usr/pgsql-{{pg_major_version}}/bin{%endif%}"
+# postgres bin PATH
+pg_bin_path: >-
+  {%- if pg_major_version | int < 10 -%}/usr/pgsql-{{pg_major_version}}.{{pg_minor_version}}/bin
+  {%- else -%}/usr/pgsql-{{pg_major_version}}/bin{%- endif -%}
 
-#postgres initdb shell command based on version
-pgdb_init_command: "{% if pg_major_version | int < 10 %}/usr/pgsql-{{pg_major_version}}.{{pg_minor_version}}/bin/initdb -D '{{ postgresql_datadir }}'{%else%}/usr/pgsql-{{pg_major_version}}/bin/initdb -D '{{ postgresql_datadir }}'{%endif%}"
+# postgres initdb shell command based on version
+pgdb_init_command: >-
+  {%- if pg_major_version | int < 10 -%}/usr/pgsql-{{pg_major_version}}.{{pg_minor_version}}/bin/initdb -D '{{ postgresql_datadir }}'
+  {%- else -%}/usr/pgsql-{{pg_major_version}}/bin/initdb -D '{{ postgresql_datadir }}'{%- endif -%}
 
-#postgres systemd service path
-pg_service_path:  "{% if pg_major_version | int < 10 %}/usr/lib/systemd/system/postgresql-{{pg_major_version}}.{{pg_minor_version}}.service{%else%}/usr/lib/systemd/system/postgresql-{{pg_major_version}}.service{%endif%}"
+# postgres systemd service path
+pg_service_path: >-
+  {%- if pg_major_version | int < 10 -%}/usr/lib/systemd/system/postgresql-{{pg_major_version}}.{{pg_minor_version}}.service
+  {%- else -%}/usr/lib/systemd/system/postgresql-{{pg_major_version}}.service{%- endif -%}
 
-#postgres profile.d path
-pg_profile_path: "{% if pg_major_version | int < 10 %}/etc/profile.d/postgres{{pg_major_version}}{{pg_minor_version}}-bin.sh{%else%}/etc/profile.d/postgres{{pg_major_version}}-bin.sh{%endif%}"
+# postgres profile.d path
+pg_profile_path: >-
+  {%- if pg_major_version | int < 10 -%}/etc/profile.d/postgres{{pg_major_version}}{{pg_minor_version}}-bin.sh
+  {%- else -%}/etc/profile.d/postgres{{pg_major_version}}-bin.sh{%- endif -%}
 
-#postgres service name based
-pg_service_name: "{% if pg_major_version | int < 10 %}postgresql-{{pg_major_version}}.{{pg_minor_version}}{%else%}postgresql-{{pg_major_version}}{%endif%}"
+# postgres service name based
+pg_service_name: >-
+  {%- if pg_major_version | int < 10 -%}postgresql-{{pg_major_version}}.{{pg_minor_version}}
+  {%- else -%}postgresql-{{pg_major_version}}{%- endif -%}
