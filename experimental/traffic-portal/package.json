@@ -14,6 +14,7 @@
   "engineStrict": true,
   "scripts": {
     "ng": "ng",
+    "doc": "find ./src/ -name '*.ts' | grep -v 'spec.ts' | xargs typedoc --includeVersion --entryPoints",
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
@@ -84,6 +85,7 @@
     "karma-jasmine-html-reporter": "^1.5.0",
     "protractor": "~7.0.0",
     "ts-node": "~8.3.0",
+    "typedoc": "^0.22.11",
     "typescript": "^4.5.4"
   }
 }
