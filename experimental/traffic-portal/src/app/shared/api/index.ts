@@ -13,5 +13,4 @@
 */
 
 export * from "./InvalidationJobService";
-export * from "./ProfileService";
 export * from "./UserService";

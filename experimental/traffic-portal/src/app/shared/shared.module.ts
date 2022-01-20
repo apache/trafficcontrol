@@ -26,7 +26,6 @@ import {LinechartDirective} from "./charts/linechart.directive";
 import {AlertService} from "./alert/alert.service";
 import {
 	InvalidationJobService,
-	ProfileService,
 	UserService
 } from "./api";
 import {PhysicalLocationService} from "./api/PhysicalLocationService";
@@ -75,7 +74,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		CurrentUserService,
 		InvalidationJobService,
 		PhysicalLocationService,
-		ProfileService,
 		UserService
 	]
 })
