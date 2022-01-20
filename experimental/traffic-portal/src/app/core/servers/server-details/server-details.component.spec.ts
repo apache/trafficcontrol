@@ -20,7 +20,6 @@ import { faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
 
 import { APITestingModule } from "src/app/api/testing";
 import { defaultServer } from "src/app/models";
-import { PhysicalLocationService } from "src/app/shared/api/PhysicalLocationService";
 
 import { ServerDetailsComponent } from "./server-details.component";
 
@@ -29,15 +28,9 @@ describe("ServerDetailsComponent", () => {
 	let fixture: ComponentFixture<ServerDetailsComponent>;
 
 	beforeEach(async () => {
-		const mockAPIService = jasmine.createSpyObj(["getPhysicalLocations"]);
-		mockAPIService.getPhysicalLocations.and.returnValues(new Promise(r => r([])));
-
 		await TestBed.configureTestingModule({
 			declarations: [ ServerDetailsComponent ],
 			imports: [ HttpClientModule, RouterTestingModule, FormsModule, ReactiveFormsModule, APITestingModule ],
-			 providers: [
-				 { provide: PhysicalLocationService, useValue: mockAPIService },
-			 ]
 		}).compileComponents();
 	});
 

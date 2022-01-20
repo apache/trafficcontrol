@@ -14,8 +14,8 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { PhysicalLocation } from "../../models";
-import { APIService } from "./APIService";
+import type { PhysicalLocation } from "src/app/models";
+import { APIService } from "./base-api.service";
 
 /**
  * PhysicalLocationService exposes API functionality relating to PhysicalLocations.
@@ -51,11 +51,6 @@ export class PhysicalLocationService extends APIService {
 		return prom;
 	}
 
-	/**
-	 * Injects the Angular HTTP client service into the parent constructor.
-	 *
-	 * @param http The Angular HTTP client service.
-	 */
 	constructor(http: HttpClient) {
 		super(http);
 	}
