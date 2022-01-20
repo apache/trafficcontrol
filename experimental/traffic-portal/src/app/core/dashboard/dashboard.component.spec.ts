@@ -18,13 +18,14 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
 import { DeliveryService } from "src/app/models";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
-import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import { LoadingComponent } from "src/app/shared/loading/loading.component";
 import { AlertService } from "src/app/shared/alert/alert.service";
+import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { LoadingComponent } from "src/app/shared/loading/loading.component";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 
 import { DsCardComponent } from "../ds-card/ds-card.component";
+
 import { DashboardComponent } from "./dashboard.component";
 
 describe("DashboardComponent", () => {

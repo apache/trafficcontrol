@@ -15,7 +15,7 @@
 import { HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import type { Role, User, Capability, CurrentUser } from "../../models/user";
+import type { Role, User, Capability, CurrentUser } from "src/app/models";
 
 /**
  * UserService exposes API functionality related to Users, Roles and Capabilities.

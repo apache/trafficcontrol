@@ -17,6 +17,7 @@ import { RouterTestingModule } from "@angular/router/testing";
 import type { ICellRendererParams } from "ag-grid-community";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+
 import { SSHCellRendererComponent } from "./ssh-cell-renderer.component";
 
 describe("SshCellRendererComponent", () => {

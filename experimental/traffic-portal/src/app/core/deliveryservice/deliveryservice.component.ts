@@ -11,16 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { faBroom } from "@fortawesome/free-solid-svg-icons";
-
 import { Subject } from "rxjs";
 
 import { DeliveryServiceService } from "src/app/api";
-import { DataPoint, DataSet, DeliveryService } from "../../models";
-import {AlertService} from "../../shared/alert/alert.service";
+import type { DataPoint, DataSet, DeliveryService } from "src/app/models";
+import { AlertService } from "src/app/shared/alert/alert.service";
 
 /**
  * DeliveryserviceComponent is the controller for a single Delivery Service's

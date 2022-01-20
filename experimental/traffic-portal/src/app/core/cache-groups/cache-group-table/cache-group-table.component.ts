@@ -12,14 +12,14 @@
 * limitations under the License.
 */
 
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 
-import { CacheGroup } from "src/app/models/cache-groups";
 import { CacheGroupService } from "src/app/api";
-import { ContextMenuActionEvent, ContextMenuItem } from "../../../shared/generic-table/generic-table.component";
+import type { CacheGroup } from "src/app/models";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 
 /**
  * CacheGroupTableComponent is the controller for the "Cache Groups" table.

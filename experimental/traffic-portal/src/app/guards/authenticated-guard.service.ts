@@ -11,9 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {Injectable} from "@angular/core";
-import {CanActivate, CanLoad } from "@angular/router";
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
+import { Injectable } from "@angular/core";
+import { CanActivate, CanLoad } from "@angular/router";
+
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 /**
  * AuthenticationGuard ensures that the user is logged in.

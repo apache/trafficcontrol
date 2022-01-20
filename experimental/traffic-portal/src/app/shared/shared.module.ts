@@ -11,26 +11,26 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { NgModule } from "@angular/core";
-import { HTTP_INTERCEPTORS } from "@angular/common/http";
 import { CommonModule } from "@angular/common";
+import { HTTP_INTERCEPTORS } from "@angular/common/http";
+import { NgModule } from "@angular/core";
 import { RouterModule } from "@angular/router";
 
 import { AppUIModule } from "src/app/app.ui.module";
 
 import { AlertComponent } from "./alert/alert.component";
-import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { AlertService } from "./alert/alert.service";
-import { BooleanFilterComponent } from "./table-components/boolean-filter/boolean-filter.component";
-import { CurrentUserService } from "./currentUser/current-user.service";
-import { CustomvalidityDirective } from "./validation/customvalidity.directive";
-import { ErrorInterceptor } from "./interceptor/error.interceptor";
-import { GenericTableComponent } from "./generic-table/generic-table.component";
 import { LinechartDirective } from "./charts/linechart.directive";
+import { CurrentUserService } from "./currentUser/current-user.service";
+import { GenericTableComponent } from "./generic-table/generic-table.component";
+import { AlertInterceptor } from "./interceptor/alerts.interceptor";
+import { ErrorInterceptor } from "./interceptor/error.interceptor";
 import { LoadingComponent } from "./loading/loading.component";
+import { BooleanFilterComponent } from "./table-components/boolean-filter/boolean-filter.component";
 import { SSHCellRendererComponent } from "./table-components/ssh-cell-renderer/ssh-cell-renderer.component";
-import { TpHeaderComponent } from "./tp-header/tp-header.component";
 import { UpdateCellRendererComponent } from "./table-components/update-cell-renderer/update-cell-renderer.component";
+import { TpHeaderComponent } from "./tp-header/tp-header.component";
+import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 
 /**
  * SharedModule contains common code that modules can import independently.

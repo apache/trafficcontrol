@@ -15,10 +15,10 @@ import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { DeliveryServiceService } from "src/app/api";
 import type { DeliveryService } from "src/app/models";
-import { orderBy, fuzzyScore } from "src/app/utils";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { orderBy, fuzzyScore } from "src/app/utils/index";
 
 /**
  * DashboardComponent is the controller for the dashboard, where a user sees all

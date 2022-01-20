@@ -15,8 +15,8 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
 import type { CDN } from "src/app/models";
-import { APIService } from "./base-api.service";
 
+import { APIService } from "./base-api.service";
 
 /**
  * CDNService expose API functionality relating to CDNs.

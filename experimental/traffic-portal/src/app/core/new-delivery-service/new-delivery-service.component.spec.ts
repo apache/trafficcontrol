@@ -12,8 +12,8 @@
 * limitations under the License.
 */
 
-import {HarnessLoader, parallel} from "@angular/cdk/testing";
-import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
+import { HarnessLoader, parallel } from "@angular/cdk/testing";
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
@@ -25,12 +25,11 @@ import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { Protocol } from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 
 import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
-
 
 describe("NewDeliveryServiceComponent", () => {
 	let component: NewDeliveryServiceComponent;

@@ -13,7 +13,6 @@
 */
 
 import { HttpClient, HttpHeaders } from "@angular/common/http";
-
 import type { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 

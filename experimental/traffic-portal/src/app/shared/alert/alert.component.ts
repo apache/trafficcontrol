@@ -11,8 +11,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { MatSnackBar } from "@angular/material/snack-bar";
 import { Component, OnDestroy } from "@angular/core";
+import { MatSnackBar } from "@angular/material/snack-bar";
 import { Subscription } from "rxjs";
 
 import { AlertService } from "./alert.service";

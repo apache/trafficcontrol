@@ -16,12 +16,12 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
+import { APITestingModule } from "src/app/api/testing";
+import { defaultServer, Server } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import { defaultServer, Server } from "src/app/models";
-import { APITestingModule } from "src/app/api/testing";
-import { augment, AugmentedServer, serverIsCache, ServersTableComponent } from "./servers-table.component";
 
+import { augment, AugmentedServer, serverIsCache, ServersTableComponent } from "./servers-table.component";
 
 describe("ServersTableComponent", () => {
 	let component: ServersTableComponent;

@@ -13,7 +13,9 @@
 */
 import { ElementRef } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
+
 import type { DataSet } from "src/app/models";
+
 import { LinechartDirective } from "./linechart.directive";
 
 describe("LinechartDirective", () => {

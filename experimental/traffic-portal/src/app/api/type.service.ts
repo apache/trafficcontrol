@@ -15,6 +15,7 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
 import type { Type } from "src/app/models";
+
 import { APIService } from "./base-api.service";
 
 /** The allowed values for the 'useInTables' query parameter of GET requests to /types. */

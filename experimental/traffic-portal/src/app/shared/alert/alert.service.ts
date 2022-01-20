@@ -12,10 +12,9 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
+import { BehaviorSubject, type Observable } from "rxjs";
 
-import { BehaviorSubject, Observable } from "rxjs";
-
-import { Alert, AlertLevel } from "../../models/alert.model";
+import type { Alert, AlertLevel } from "src/app/models/alert.model";
 
 /**
  * This class is responsible for populating an alerts Observable that can be

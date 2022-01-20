@@ -17,13 +17,12 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
-import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 import { AlertService } from "src/app/shared/alert/alert.service";
+import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 
 import { DeliveryserviceComponent } from "./deliveryservice.component";
-
 
 describe("DeliveryserviceComponent", () => {
 	let component: DeliveryserviceComponent;

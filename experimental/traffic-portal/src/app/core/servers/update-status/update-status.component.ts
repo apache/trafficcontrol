@@ -11,10 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from "@angular/core";
+import { Component, EventEmitter, HostListener, Input, type OnInit, Output } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { Server, Status } from "src/app/models";
+
 import { ServerService } from "src/app/api/server.service";
+import type { Server, Status } from "src/app/models";
 
 /**
  * UpdateStatusComponent is the controller for the "Update Server Status" dialog box.

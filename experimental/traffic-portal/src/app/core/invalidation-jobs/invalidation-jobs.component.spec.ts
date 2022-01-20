@@ -14,14 +14,14 @@
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { RouterTestingModule } from "@angular/router/testing";
 import { MatDialogModule } from "@angular/material/dialog";
+import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { CustomvalidityDirective } from "src/app/shared/validation/customvalidity.directive";
 import { JobType } from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+import { CustomvalidityDirective } from "src/app/shared/validation/customvalidity.directive";
 
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 

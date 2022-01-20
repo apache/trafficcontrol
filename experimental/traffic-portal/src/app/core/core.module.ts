@@ -11,26 +11,27 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
-import {RouterModule, Routes} from "@angular/router";
-import {CommonModule} from "@angular/common";
-import {AppUIModule} from "../app.ui.module";
-import {SharedModule} from "../shared/shared.module";
-import {AuthenticatedGuard} from "../guards/authenticated-guard.service";
-import {InvalidationJobsComponent} from "./invalidation-jobs/invalidation-jobs.component";
-import {UsersComponent} from "./users/users.component";
-import {ServerDetailsComponent} from "./servers/server-details/server-details.component";
-import {ServersTableComponent} from "./servers/servers-table/servers-table.component";
-import {UpdateStatusComponent} from "./servers/update-status/update-status.component";
-import {DeliveryserviceComponent} from "./deliveryservice/deliveryservice.component";
-import {NewDeliveryServiceComponent} from "./new-delivery-service/new-delivery-service.component";
-import {DashboardComponent} from "./dashboard/dashboard.component";
-import {CacheGroupTableComponent} from "./cache-groups/cache-group-table/cache-group-table.component";
-import {CurrentuserComponent} from "./currentuser/currentuser.component";
-import {UpdatePasswordDialogComponent} from "./currentuser/update-password-dialog/update-password-dialog.component";
-import {DsCardComponent} from "./ds-card/ds-card.component";
-import {NewInvalidationJobDialogComponent} from "./invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
+import { RouterModule, Routes } from "@angular/router";
 
+import { AppUIModule } from "../app.ui.module";
+import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
+import { SharedModule } from "../shared/shared.module";
+
+import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
+import { CurrentuserComponent } from "./currentuser/currentuser.component";
+import { UpdatePasswordDialogComponent } from "./currentuser/update-password-dialog/update-password-dialog.component";
+import { DashboardComponent } from "./dashboard/dashboard.component";
+import { DeliveryserviceComponent } from "./deliveryservice/deliveryservice.component";
+import { DsCardComponent } from "./ds-card/ds-card.component";
+import { InvalidationJobsComponent } from "./invalidation-jobs/invalidation-jobs.component";
+import { NewInvalidationJobDialogComponent } from "./invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
+import { NewDeliveryServiceComponent } from "./new-delivery-service/new-delivery-service.component";
+import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
+import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
+import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
+import { UsersComponent } from "./users/users.component";
 
 const routes: Routes = [
 	{ canActivate: [AuthenticatedGuard], component: DashboardComponent, path: "" },

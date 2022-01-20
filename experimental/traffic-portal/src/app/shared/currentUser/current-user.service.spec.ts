@@ -15,8 +15,8 @@ import { TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
-import { newCurrentUser, User } from "src/app/models";
 import { LoginComponent } from "src/app/login/login.component";
+import { newCurrentUser, User } from "src/app/models";
 
 import { CurrentUserService } from "./current-user.service";
 

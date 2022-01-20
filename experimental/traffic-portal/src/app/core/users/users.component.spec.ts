@@ -16,11 +16,12 @@ import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import type { User } from "src/app/models";
-import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import { LoadingComponent } from "src/app/shared/loading/loading.component";
 import { APITestingModule } from "src/app/api/testing";
+import type { User } from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { LoadingComponent } from "src/app/shared/loading/loading.component";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+
 import { UsersComponent } from "./users.component";
 
 describe("UsersComponent", () => {

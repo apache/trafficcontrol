@@ -15,8 +15,8 @@ import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
-import { APITestingModule } from "src/app/api/testing";
 
+import { APITestingModule } from "src/app/api/testing";
 import { User } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 

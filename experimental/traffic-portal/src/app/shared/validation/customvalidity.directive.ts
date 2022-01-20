@@ -12,7 +12,6 @@
 * limitations under the License.
 */
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from "@angular/core";
-
 import type { Observable, Subscription } from "rxjs";
 
 /**

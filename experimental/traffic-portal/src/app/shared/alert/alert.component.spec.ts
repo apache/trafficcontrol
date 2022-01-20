@@ -11,16 +11,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {TestBed, ComponentFixture} from "@angular/core/testing";
-import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
-import {MatSnackBarHarness} from "@angular/material/snack-bar/testing";
-import {HarnessLoader} from "@angular/cdk/testing";
-import {MatSnackBarModule} from "@angular/material/snack-bar";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import { HarnessLoader } from "@angular/cdk/testing";
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
+import { TestBed, ComponentFixture } from "@angular/core/testing";
+import { MatSnackBarModule } from "@angular/material/snack-bar";
+import { MatSnackBarHarness}  from "@angular/material/snack-bar/testing";
+import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 
-import { AlertLevel } from "../../models/alert.model";
-import { AlertService } from "./alert.service";
+import type { AlertLevel } from "src/app/models";
+
 import { AlertComponent } from "./alert.component";
+import { AlertService } from "./alert.service";
 
 describe("AlertComponent", () => {
 	let component: AlertComponent;

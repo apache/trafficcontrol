@@ -14,7 +14,7 @@
 
 import { Injectable } from "@angular/core";
 
-import type { Server, Servercheck, Status } from "../../models";
+import type { Server, Servercheck, Status } from "src/app/models";
 
 /**
  * Generates a `Servercheck` for a given `server`.

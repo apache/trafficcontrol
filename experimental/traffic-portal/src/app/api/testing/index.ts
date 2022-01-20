@@ -1,5 +1,6 @@
-import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { NgModule } from "@angular/core";
+
 import {
 	CacheGroupService,
 	CDNService,
@@ -11,6 +12,7 @@ import {
 	TypeService,
 	UserService
 } from "..";
+
 import { CacheGroupService as TestingCacheGroupService } from "./cache-group.service";
 import { CDNService as TestingCDNService } from "./cdn.service";
 import { DeliveryServiceService as TestingDeliveryServiceService } from "./delivery-service.service";

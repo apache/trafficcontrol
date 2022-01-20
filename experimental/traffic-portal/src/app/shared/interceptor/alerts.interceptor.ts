@@ -11,14 +11,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from "@angular/common/http";
+import type { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-
-import { Observable } from "rxjs";
+import type { Observable } from "rxjs";
 import { tap } from "rxjs/operators";
-import {AlertService} from "../alert/alert.service";
-import {Alert} from "../../models/alert.model";
 
+import type { Alert } from "src/app/models/alert.model";
+
+import { AlertService } from "../alert/alert.service";
 
 /**
  * This class intercepts any and all alerts contained in API responses and

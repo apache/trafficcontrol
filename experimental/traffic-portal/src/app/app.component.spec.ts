@@ -14,10 +14,11 @@
 
 import { HttpClientModule } from "@angular/common/http";
 import { TestBed, waitForAsync } from "@angular/core/testing";
-import { RouterTestingModule } from "@angular/router/testing";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
+import { RouterTestingModule } from "@angular/router/testing";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+
 import { AppComponent } from "./app.component";
 
 describe("AppComponent", () => {

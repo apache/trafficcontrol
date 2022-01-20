@@ -11,13 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from "@angular/core";
 
+import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from "@angular/core";
+import { Chart } from "chart.js"; // TODO: use plotly instead for WebGL-capabale browsers?
 import { from, Observable, Subscription } from "rxjs";
 
-import { Chart } from "chart.js"; // TODO: use plotly instead for WebGL-capabale browsers?
-
-import { DataSet } from "../../models/data";
+import type { DataSet } from "src/app/models/data";
 
 /**
  * LinechartDirective decorates canvases by creating a rendering context for
@@ -151,7 +150,6 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 			this.opts.data = {datasets: [], labels: []};
 		}
 	}
-
 
 	/**
 	 * Loads a new Chart.

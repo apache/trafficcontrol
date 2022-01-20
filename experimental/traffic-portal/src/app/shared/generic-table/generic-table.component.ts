@@ -12,10 +12,19 @@
 * limitations under the License.
 */
 
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, ViewChild } from "@angular/core";
+import {
+	Component,
+	type ElementRef,
+	EventEmitter,
+	HostListener,
+	Input,
+	type OnDestroy,
+	type OnInit,
+	Output,
+	ViewChild
+} from "@angular/core";
 import { Router } from "@angular/router";
-import { BehaviorSubject, Subscription } from "rxjs";
-
+import { faCaretDown, faColumns, faDownload } from "@fortawesome/free-solid-svg-icons";
 import type {
 	CellContextMenuEvent,
 	ColDef,
@@ -29,9 +38,10 @@ import type {
 	ITooltipParams,
 	RowNode
 } from "ag-grid-community";
-import {faCaretDown, faColumns, faDownload} from "@fortawesome/free-solid-svg-icons";
+import { BehaviorSubject, Subscription } from "rxjs";
 
 import { fuzzyScore } from "src/app/utils";
+
 import { BooleanFilterComponent } from "../table-components/boolean-filter/boolean-filter.component";
 import { SSHCellRendererComponent } from "../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import { UpdateCellRendererComponent } from "../table-components/update-cell-renderer/update-cell-renderer.component";
@@ -570,7 +580,6 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 
 		this.gridAPI.exportDataAsCsv(params);
 	}
-
 
 	/**
 	 * Select or de-select all rows.

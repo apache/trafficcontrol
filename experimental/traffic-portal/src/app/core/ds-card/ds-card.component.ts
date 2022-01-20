@@ -11,16 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input, OnInit } from "@angular/core";
 import { trigger, style, animate, transition } from "@angular/animations";
-
+import { Component, Input, OnInit } from "@angular/core";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
-
 import { Subject } from "rxjs";
 
 import { DeliveryServiceService } from "src/app/api";
 import { DataPoint, DataSet, DeliveryService, GeoProvider, protocolToString } from "src/app/models";
-
 
 /**
  * DsCardComponent is a component for displaying information about a Delivery

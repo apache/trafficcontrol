@@ -14,13 +14,13 @@
 
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
-import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
+import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 
-import { CacheGroup, CDN, DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
-import { IP, IP_WITH_CIDR } from "src/app/utils";
 import { ServerService } from "src/app/api/server.service";
+import { CacheGroup, CDN, DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
+import { IP, IP_WITH_CIDR } from "src/app/utils";
 
 /**
  * ServerDetailsComponent is the controller for a server's "details" page.

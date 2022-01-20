@@ -1,7 +1,8 @@
-import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { CDNService } from "./cdn.service";
+import { NgModule } from "@angular/core";
+
 import { CacheGroupService } from "./cache-group.service";
+import { CDNService } from "./cdn.service";
 import { DeliveryServiceService } from "./delivery-service.service";
 import { InvalidationJobService } from "./invalidation-job.service";
 import { PhysicalLocationService } from "./physical-location.service";

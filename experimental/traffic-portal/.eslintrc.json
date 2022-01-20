@@ -200,6 +200,8 @@
 					"error"
 				],
 				"@typescript-eslint/typedef": "off",
+				"jsdoc/no-types": "error",
+				"jsdoc/require-description": "error",
 				"jsdoc/require-jsdoc": [
 					"error",
 					{
@@ -217,7 +219,8 @@
 						},
 						"checkConstructors": false,
 						"checkGetters": true,
-						"checkSetters": true
+						"checkSetters": true,
+						"enableFixer": false
 					}
 				],
 				"@typescript-eslint/unbound-method": "error",
@@ -232,7 +235,61 @@
 					"1tbs"
 				],
 				"class-methods-use-this": "off",
-				"import/order": "error",
+				"import/export": "error",
+				"import/first": "error",
+				"import/newline-after-import": "error",
+				"import/no-cycle": [
+					"error",
+					{
+						"ignoreExternal": true
+					}
+				],
+				"import/no-self-import": "error",
+				"import/no-useless-path-segments": [
+					"error",
+					{
+						"commonjs": true,
+						"noUselessIndex": true
+					}
+				],
+				"import/order": [
+					"error",
+					{
+						"alphabetize": {"order": "asc"},
+						"groups": [
+							"builtin",
+							"external",
+							"internal",
+							"parent",
+							"sibling"
+						],
+						"pathGroups": [
+							{
+								"group": "builtin",
+								"pattern": "zone.js/**/*",
+								"position": "before"
+							},
+							{
+								"group": "external",
+								"pattern": "(@(angular|fortawesome)|chart.js|rxjs)*/**/*",
+								"position": "before"
+							},
+							{
+								"group": "internal",
+								"pattern": "src/**/*"
+							}
+						],
+						"pathGroupsExcludedImportTypes": [
+							"zone.js/**/*",
+							"@angular*/**/*",
+							"@fortawesome*/**/*",
+							"chart.js",
+							"rxjs"
+						],
+						"newlines-between": "always",
+						"warnOnUnassignedImports": true
+					}
+				],
 				"linebreak-style": [
 					"error",
 					"unix"
@@ -249,8 +306,27 @@
 						"capIsConstructor": false
 					}
 				],
+				"no-multiple-empty-lines": [
+					"error",
+					{
+						"max": 1,
+						"maxBOF": 0,
+						"maxEOF": 0
+					}
+				],
 				"no-new-func": "error",
 				"no-redeclare": "off",
+				"no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"message": "Going up more than one directory for an import is overly complex; use an import path that starts with 'src/' instead",
+								"group": ["../../*"]
+							}
+						]
+					}
+				],
 				"no-return-await": "error",
 				"no-sparse-arrays": "error",
 				"no-template-curly-in-string": "error",

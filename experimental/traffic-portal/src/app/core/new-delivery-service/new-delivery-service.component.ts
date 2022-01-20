@@ -17,7 +17,6 @@ import type { MatStepper } from "@angular/material/stepper";
 import { Router } from "@angular/router";
 
 import { CDNService, DeliveryServiceService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import {
 	bypassable,
 	CDN,
@@ -28,6 +27,7 @@ import {
 	Type,
 	User
 } from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s

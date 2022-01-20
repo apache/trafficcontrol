@@ -15,7 +15,6 @@ import { Injectable } from "@angular/core";
 
 import type { CacheGroup } from "src/app/models";
 
-
 /**
  * CDNService expose API functionality relating to CDNs.
  */

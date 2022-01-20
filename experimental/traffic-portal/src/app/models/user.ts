@@ -134,7 +134,6 @@ export function newCurrentUser(): CurrentUser {
 	};
 }
 
-
 /**
  * Represents a role that a user may have
  */
