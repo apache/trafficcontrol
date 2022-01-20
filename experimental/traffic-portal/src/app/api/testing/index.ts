@@ -1,5 +1,9 @@
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { ServerService } from "../server.service";
+import { ServerService as TestingServerService } from "./server.service";
+
+export * from "./server.service";
 
 /**
  * The API Testing Module provides mock services that allow components to use
@@ -10,5 +14,6 @@ import { CommonModule } from "@angular/common";
 	imports: [
 		CommonModule
 	],
+	providers: [{provide: ServerService, useClass: TestingServerService}]
 })
 export class APITestingModule { }

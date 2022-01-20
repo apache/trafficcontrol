@@ -1,5 +1,8 @@
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { ServerService } from "./server.service";
+
+export * from "./server.service";
 
 /**
  * The API Module contains all logic used to access the Traffic Ops API.
@@ -9,5 +12,6 @@ import { CommonModule } from "@angular/common";
 	imports: [
 		CommonModule
 	],
+	providers: [ServerService]
 })
 export class APIModule { }

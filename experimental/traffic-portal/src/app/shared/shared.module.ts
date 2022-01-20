@@ -30,7 +30,8 @@ import {
 	DeliveryServiceService,
 	InvalidationJobService,
 	ProfileService,
-	ServerService, TypeService, UserService
+	TypeService,
+	UserService
 } from "./api";
 import {PhysicalLocationService} from "./api/PhysicalLocationService";
 import {CurrentUserService} from "./currentUser/current-user.service";
@@ -82,7 +83,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		InvalidationJobService,
 		PhysicalLocationService,
 		ProfileService,
-		ServerService,
 		TypeService,
 		UserService
 	]

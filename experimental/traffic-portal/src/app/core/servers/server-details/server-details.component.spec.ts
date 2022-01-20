@@ -17,10 +17,12 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 import { faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
-import { defaultServer } from "src/app/models";
 
-import {CacheGroupService, CDNService, ProfileService, ServerService, TypeService} from "../../../shared/api";
-import {PhysicalLocationService} from "../../../shared/api/PhysicalLocationService";
+import { APITestingModule } from "src/app/api/testing";
+import { defaultServer } from "src/app/models";
+import { CacheGroupService, CDNService, ProfileService, TypeService } from "src/app/shared/api";
+import { PhysicalLocationService } from "src/app/shared/api/PhysicalLocationService";
+
 import { ServerDetailsComponent } from "./server-details.component";
 
 describe("ServerDetailsComponent", () => {
@@ -40,9 +42,8 @@ describe("ServerDetailsComponent", () => {
 
 		await TestBed.configureTestingModule({
 			declarations: [ ServerDetailsComponent ],
-			imports: [ HttpClientModule, RouterTestingModule, FormsModule, ReactiveFormsModule ],
+			imports: [ HttpClientModule, RouterTestingModule, FormsModule, ReactiveFormsModule, APITestingModule ],
 			 providers: [
-				 { provide: ServerService, useValue: mockAPIService },
 				 { provide: CacheGroupService, useValue: mockAPIService },
 				 { provide: CDNService, useValue: mockAPIService },
 				 { provide: TypeService, useValue: mockAPIService },

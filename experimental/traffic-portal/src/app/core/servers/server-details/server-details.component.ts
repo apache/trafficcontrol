@@ -17,9 +17,10 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
 import { CacheGroup, CDN, DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
-import { CacheGroupService, CDNService, ProfileService, ServerService, TypeService } from "src/app/shared/api";
+import { CacheGroupService, CDNService, ProfileService, TypeService } from "src/app/shared/api";
 import { IP, IP_WITH_CIDR } from "src/app/utils";
 import { PhysicalLocationService } from "src/app/shared/api/PhysicalLocationService";
+import { ServerService } from "src/app/api/server.service";
 
 /**
  * ServerDetailsComponent is the controller for a server's "details" page.

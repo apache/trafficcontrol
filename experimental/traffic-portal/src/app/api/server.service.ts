@@ -15,9 +15,9 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { defaultServer, Server, Servercheck, Status } from "../../models";
+import { defaultServer, Server, Servercheck, Status } from "src/app/models";
 
-import { APIService } from "./APIService";
+import { APIService } from "./base-apiservice.service";
 
 /**
  * Shared mapping for massaging Status requests.

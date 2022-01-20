@@ -19,10 +19,10 @@ import { ITooltipParams } from "ag-grid-community";
 
 import { BehaviorSubject } from "rxjs";
 
-import { Interface, Server } from "../../../models/server";
-import { ServerService } from "../../../shared/api";
-import { IPV4, serviceInterface } from "../../../utils";
-import { ContextMenuActionEvent, ContextMenuItem } from "../../../shared/generic-table/generic-table.component";
+import { ServerService } from "src/app/api";
+import { Interface, Server } from "src/app/models/server";
+import { IPV4, serviceInterface } from "src/app/utils";
+import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 
 /**
  * AugmentedServer has fields that give direct access to its service addresses without needing to recalculate them.

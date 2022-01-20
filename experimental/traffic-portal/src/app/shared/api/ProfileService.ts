@@ -49,7 +49,7 @@ function profileMap(p: Profile): Profile {
 }
 
 /**
- * ServerService exposes API functionality related to Servers.
+ * ProfileService exposes API functionality related to Profiles.
  */
 @Injectable()
 export class ProfileService extends APIService {

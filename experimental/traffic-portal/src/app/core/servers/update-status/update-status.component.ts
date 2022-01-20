@@ -14,7 +14,7 @@
 import { Component, EventEmitter, HostListener, Input, OnInit, Output } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { Server, Status } from "src/app/models";
-import { ServerService } from "src/app/shared/api";
+import { ServerService } from "src/app/api/server.service";
 
 /**
  * UpdateStatusComponent is the controller for the "Update Server Status" dialog box.
