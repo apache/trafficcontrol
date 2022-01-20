@@ -47,7 +47,6 @@ require (
 	github.com/onsi/gomega v1.17.0
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.7.0 // indirect
 	go.etcd.io/bbolt v1.3.6
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	golang.org/x/net v0.0.0-20220105145211-5b0dc2dfae98
@@ -83,9 +82,7 @@ require (
 
 require (
 	github.com/Shopify/sarama v1.27.2
-	github.com/andybalholm/brotli v1.0.1 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/valyala/fasthttp v1.19.0 // indirect
 )
 
 require (
@@ -93,14 +90,11 @@ require (
 	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
-	github.com/gofiber/fiber/v2 v2.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/jcmturner/gofork v1.0.0 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a // indirect
 	gopkg.in/jcmturner/aescts.v1 v1.0.1 // indirect
 	gopkg.in/jcmturner/dnsutils.v1 v1.0.1 // indirect
 	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
