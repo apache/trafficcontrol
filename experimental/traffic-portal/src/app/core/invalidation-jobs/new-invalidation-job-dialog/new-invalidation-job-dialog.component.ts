@@ -16,8 +16,8 @@ import { FormControl } from "@angular/forms";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { Subject } from "rxjs";
 
+import { InvalidationJobService } from "src/app/api";
 import type { InvalidationJob } from "src/app/models";
-import { InvalidationJobService } from "src/app/shared/api";
 
 /**
  * Gets the time part of a Date as a string.

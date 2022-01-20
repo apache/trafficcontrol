@@ -12,12 +12,9 @@
 * limitations under the License.
 */
 
-import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { DeliveryService, InvalidationJob, NewInvalidationJob, User } from "../../models";
-
-import { APIService } from "./APIService";
+import { DeliveryService, InvalidationJob, JobType, NewInvalidationJob, User } from "src/app/models";
 
 /**
  * JobOpts defines the options that can be passed to getInvalidationJobs.
@@ -39,16 +36,10 @@ interface JobOpts {
  * InvalidationJobService exposes API functionality related to Content Invalidation Jobs.
  */
 @Injectable()
-export class InvalidationJobService extends APIService {
+export class InvalidationJobService {
 
-	/**
-	 * Injects the Angular HTTP client service into the parent constructor.
-	 *
-	 * @param http The Angular HTTP client service.
-	 */
-	constructor(http: HttpClient) {
-		super(http);
-	}
+	private readonly jobs = new Array<InvalidationJob>();
+	private idCounter = 0;
 
 	/**
 	 * Fetches all invalidation jobs that match the passed criteria.
@@ -57,41 +48,27 @@ export class InvalidationJobService extends APIService {
 	 * @returns The request Jobs.
 	 */
 	public async getInvalidationJobs(opts?: JobOpts): Promise<Array<InvalidationJob>> {
-		const path = "jobs";
-		const params: Record<string, string> = {};
+		let ret = this.jobs;
 		if (opts) {
 			if (opts.id) {
-				params.id = String(opts.id);
+				ret = ret.filter(j=>j.id===opts.id);
 			}
 			if (opts.dsID) {
-				params.dsId = String(opts.dsID);
+				// TODO: implement this
+				throw new Error("filtering by dsID not implemented in testing services");
 			}
 			if (opts.userId) {
-				params.userId = String(opts.userId);
+				// TODO: implement this
+				throw new Error("filtering by userId not implemented in testing services");
 			}
-			if (opts.deliveryService && opts.deliveryService.id) {
-				params.dsId = String(opts.deliveryService.id);
+			if (opts.deliveryService && opts.deliveryService.xmlId) {
+				ret = ret.filter(j=>j.deliveryService === opts.deliveryService?.xmlId);
 			}
-			if (opts.user && opts.user.id) {
-				params.userId = String(opts.user.id);
+			if (opts.user) {
+				ret = ret.filter(j=>j.createdBy === opts.user?.username);
 			}
 		}
-		return this.get<Array<InvalidationJob>>(path, undefined, params).toPromise().then(
-			js => {
-				const jobs = new Array<InvalidationJob>();
-				for (const j of js) {
-					const tmp = String(j.startTime).replace(" ", "T").replace("+00", "Z");
-					j.startTime = new Date(tmp);
-					jobs.push(j);
-				}
-				return jobs;
-			}
-		).catch(
-			e => {
-				console.error("Failed to get Invalidation Jobs:", e);
-				return [];
-			}
-		);
+		return ret;
 	}
 
 	/**
@@ -101,11 +78,20 @@ export class InvalidationJobService extends APIService {
 	 * @returns whether or not creation succeeded.
 	 */
 	public async createInvalidationJob(job: NewInvalidationJob): Promise<boolean> {
-		const path = "jobs";
-		return this.post(path, job).toPromise().then(
-			() => true,
-			() => false
-		);
+		if (typeof job.deliveryService === "number") {
+			throw new Error("creating Jobs by Delivery Service ID is not implemented in testing services; use the XMLID");
+		}
+		this.jobs.push({
+			// Yes, this is ill-formed.
+			assetUrl: job.regex,
+			createdBy: "test-admin",
+			deliveryService: job.deliveryService,
+			id: ++this.idCounter,
+			keyword: JobType.PURGE,
+			parameters: typeof job.ttl === "string" ? job.ttl : `${job.ttl}h`,
+			startTime: job.startTime instanceof Date ? job.startTime : new Date(job.startTime)
+		});
+		return true;
 	}
 
 	/**
@@ -115,7 +101,12 @@ export class InvalidationJobService extends APIService {
 	 * @returns The edited Job as returned by the server.
 	 */
 	public async updateInvalidationJob(job: InvalidationJob): Promise<InvalidationJob> {
-		return this.put<InvalidationJob>("jobs", job, {id: String(job.id)}).toPromise();
+		const idx = this.jobs.findIndex(j=>j.id===job.id);
+		if (idx < 0) {
+			throw new Error(`no such Job: #${job.id}`);
+		}
+		this.jobs[idx] = job;
+		return job;
 	}
 
 	/**
@@ -125,6 +116,10 @@ export class InvalidationJobService extends APIService {
 	 * @returns The deleted Job.
 	 */
 	public async deleteInvalidationJob(id: number): Promise<InvalidationJob> {
-		return this.delete<InvalidationJob>("jobs", undefined, {id: String(id)}).toPromise();
+		const idx = this.jobs.findIndex(j=>j.id===id);
+		if (idx < 0) {
+			throw new Error(`no such Job: #${id}`);
+		}
+		return this.jobs.splice(idx, 1)[0];
 	}
 }

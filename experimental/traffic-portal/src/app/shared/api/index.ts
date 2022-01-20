@@ -12,5 +12,4 @@
 * limitations under the License.
 */
 
-export * from "./InvalidationJobService";
 export * from "./UserService";

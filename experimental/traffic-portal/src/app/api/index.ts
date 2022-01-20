@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { CDNService } from "./cdn.service";
 import { CacheGroupService } from "./cache-group.service";
 import { DeliveryServiceService } from "./delivery-service.service";
+import { InvalidationJobService } from "./invalidation-job.service";
 import { ProfileService } from "./profile.service";
 import { ServerService } from "./server.service";
 import { TypeService } from "./type.service";
@@ -10,6 +11,7 @@ import { TypeService } from "./type.service";
 export * from "./cache-group.service";
 export * from "./cdn.service";
 export * from "./delivery-service.service";
+export * from "./invalidation-job.service";
 export * from "./profile.service";
 export * from "./type.service";
 export * from "./server.service";
@@ -26,6 +28,7 @@ export * from "./server.service";
 		CacheGroupService,
 		CDNService,
 		DeliveryServiceService,
+		InvalidationJobService,
 		ProfileService,
 		ServerService,
 		TypeService,

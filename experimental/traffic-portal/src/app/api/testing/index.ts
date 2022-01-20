@@ -4,6 +4,7 @@ import {
 	CacheGroupService,
 	CDNService,
 	DeliveryServiceService,
+	InvalidationJobService,
 	ProfileService,
 	ServerService,
 	TypeService
@@ -11,6 +12,7 @@ import {
 import { CacheGroupService as TestingCacheGroupService } from "./cache-group.service";
 import { CDNService as TestingCDNService } from "./cdn.service";
 import { DeliveryServiceService as TestingDeliveryServiceService } from "./delivery-service.service";
+import { InvalidationJobService as TestingInvalidationJobService } from "./invalidation-job.service";
 import { ProfileService as TestingProfileService } from "./profile.service";
 import { ServerService as TestingServerService } from "./server.service";
 import { TypeService as TestingTypeService } from "./type.service";
@@ -28,6 +30,7 @@ import { TypeService as TestingTypeService } from "./type.service";
 		{provide: CacheGroupService, useClass: TestingCacheGroupService},
 		{provide: CDNService, useClass: TestingCDNService},
 		{provide: DeliveryServiceService, useClass: TestingDeliveryServiceService},
+		{provide: InvalidationJobService, useClass: TestingInvalidationJobService},
 		{provide: ProfileService, useClass: TestingProfileService},
 		{provide: ServerService, useClass: TestingServerService},
 		{provide: TypeService, useClass: TestingTypeService},

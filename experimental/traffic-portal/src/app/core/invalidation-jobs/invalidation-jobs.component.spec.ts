@@ -17,13 +17,11 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 import { MatDialogModule } from "@angular/material/dialog";
 
-import { of } from "rxjs";
-
 import { APITestingModule } from "src/app/api/testing";
-import { InvalidationJobService, UserService} from "src/app/shared/api";
+import { UserService} from "src/app/shared/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { CustomvalidityDirective } from "src/app/shared/validation/customvalidity.directive";
-import { InvalidationJob, JobType } from "src/app/models";
+import { JobType } from "src/app/models";
 import {TpHeaderComponent} from "src/app/shared/tp-header/tp-header.component";
 
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
@@ -34,11 +32,8 @@ describe("InvalidationJobsComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getInvalidationJobs"]);
+		const mockAPIService = jasmine.createSpyObj(["getUsers"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
-		mockAPIService.getInvalidationJobs.and.returnValue(of({
-			startTime: new Date(),
-		} as InvalidationJob));
 
 		TestBed.configureTestingModule({
 			declarations: [
@@ -55,7 +50,6 @@ describe("InvalidationJobsComponent", () => {
 				MatDialogModule
 			],
 			providers: [
-				{ provide: InvalidationJobService, useValue: mockAPIService },
 				{ provide: UserService, useValue: mockAPIService },
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]

@@ -15,7 +15,8 @@ import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
-import {InvalidationJobService} from "../../../shared/api";
+import { APITestingModule } from "src/app/api/testing";
+
 import { NewInvalidationJobDialogComponent, sanitizedRegExpString, timeStringFromDate } from "./new-invalidation-job-dialog.component";
 
 describe("NewInvalidationJobDialogComponent", () => {
@@ -23,19 +24,18 @@ describe("NewInvalidationJobDialogComponent", () => {
 	let fixture: ComponentFixture<NewInvalidationJobDialogComponent>;
 
 	beforeEach(async () => {
-		const mockAPIService = jasmine.createSpyObj(["getInvalidationJobs"]);
 		await TestBed.configureTestingModule({
 			declarations: [ NewInvalidationJobDialogComponent ],
 			imports: [
 				MatDialogModule,
-				HttpClientModule
+				HttpClientModule,
+				APITestingModule
 			],
 			providers: [
 				{provide: MatDialogRef, useValue: {close: (): void => {
 					console.log("dialog closed");
 				}}},
 				{provide: MAT_DIALOG_DATA, useValue: {dsID: -1}},
-				{ provide: InvalidationJobService, useValue: mockAPIService}
 			]
 		}).compileComponents();
 	});
