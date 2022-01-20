@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -28,7 +29,6 @@ import (
 )
 
 func TestT3cGit(t *testing.T) {
-	t.Logf("------------- Starting TestT3cGit ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -36,23 +36,23 @@ func TestT3cGit(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		if err := util.RMGit(test_config_dir); err != nil {
+		if err := util.RMGit(TestConfigDir); err != nil {
 			t.Fatalf("removing existing git directory: %v", err)
 		}
 
 		// run badass and check config files.
-		err := t3cUpdateGit("atlanta-edge-03", "badass")
+		err := t3cUpdateGit(DefaultCacheHostName, "badass")
 		if err != nil {
-			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
+			t.Fatalf("t3c badass failed: %v", err)
 		}
-		for _, v := range testFiles {
-			bfn := base_line_dir + "/" + v
+		for _, v := range TestFiles {
+			bfn := filepath.Join(BaselineConfigDir, v)
 			if !util.FileExists(bfn) {
-				t.Fatalf("ERROR: missing baseline config file, %s,  needed for tests", bfn)
+				t.Fatalf("missing baseline config file, '%s' needed for tests", bfn)
 			}
-			tfn := test_config_dir + "/" + v
+			tfn := filepath.Join(TestConfigDir, v)
 			if !util.FileExists(tfn) {
-				t.Fatalf("ERROR: missing the expected config file, %s", tfn)
+				t.Fatalf("missing the expected config file, %s", tfn)
 			}
 
 			diffStr, err := util.DiffFiles(bfn, tfn)
@@ -65,29 +65,28 @@ func TestT3cGit(t *testing.T) {
 			}
 		}
 
-		gitLog, err := gitLogOneline(test_config_dir)
+		gitLog, err := gitLogOneline(TestConfigDir)
 		if err != nil {
 			t.Fatalf("getting git log: %v", err)
 		}
 
-		numCommits, err := gitNumCommits(test_config_dir)
+		numCommits, err := gitNumCommits(TestConfigDir)
 		if err != nil {
-			t.Errorf("ERROR: checking number of git commits: %v\n", err)
+			t.Errorf("checking number of git commits: %v", err)
 		} else if numCommits != 3 {
 			// expecting 3 commits: initial commit, startup commit of preexisting files, and the post-run commit.
-			t.Errorf("ERROR: git commits expected >=3 actual %v\n%v", numCommits, gitLog)
+			t.Errorf("git commits expected >=3 actual: %d - git log: %s", numCommits, gitLog)
 
 			for i := 0; i < numCommits; i++ {
-				showTxt, err := gitShow(i, test_config_dir)
+				showTxt, err := gitShow(i, TestConfigDir)
 				if err != nil {
-					t.Errorf("git show: %v\n", err)
+					t.Errorf("git show: %v", err)
 				} else {
-					t.Logf("git HEAD~%v: %v\n\n\n", i, showTxt)
+					t.Logf("git HEAD~%d: %v", i, showTxt)
 				}
 			}
 		}
 	})
-	t.Logf("------------- End of TestT3cGit ---------------")
 }
 
 func gitNumCommits(dir string) (int, error) {
@@ -95,11 +94,11 @@ func gitNumCommits(dir string) (int, error) {
 	cmd.Dir = dir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return 0, fmt.Errorf("git error: in dir '%v' returned err %v msg '%v'", dir, err, string(output))
+		return 0, fmt.Errorf("git error: in dir '%s' returned err %v msg '%s'", dir, err, string(output))
 	}
 	numChanges, err := strconv.Atoi(strings.TrimSpace(string(output)))
 	if err != nil {
-		return 0, fmt.Errorf("git error: in dir '%v' expected number, but got '%v'", dir, string(output))
+		return 0, fmt.Errorf("git error: in dir '%s' expected number, but got '%s'", dir, string(output))
 	}
 	return numChanges, nil
 }
@@ -109,7 +108,7 @@ func gitShow(n int, dir string) (string, error) {
 	cmd.Dir = dir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("git error: in dir '%v' returned err %v msg '%v'", dir, err, string(output))
+		return "", fmt.Errorf("git error: in dir '%s' returned err %v msg '%s'", dir, err, string(output))
 	}
 	return strings.TrimSpace(string(output)), nil
 }
@@ -119,7 +118,7 @@ func gitLogOneline(dir string) (string, error) {
 	cmd.Dir = dir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("git error: in dir '%v' returned err %v msg '%v'", dir, err, string(output))
+		return "", fmt.Errorf("git error: in dir '%s' returned err %v msg '%s'", dir, err, string(output))
 	}
 	return strings.TrimSpace(string(output)), nil
 }

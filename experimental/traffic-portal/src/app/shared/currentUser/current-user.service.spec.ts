@@ -14,7 +14,7 @@
 import { TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 import {UserService} from "src/app/shared/api";
-import {User} from "src/app/models";
+import {newCurrentUser, User} from "src/app/models";
 import { LoginComponent } from "../../login/login.component";
 
 import { CurrentUserService } from "./current-user.service";
@@ -50,6 +50,7 @@ describe("CurrentUserService", () => {
 	});
 
 	it("should update user data properly", () => {
+		const upd = new Date();
 		service.setUser(
 			{
 				addressLine1: "address line 1",
@@ -61,7 +62,7 @@ describe("CurrentUserService", () => {
 				fullName: "full name",
 				gid: 0,
 				id: 9000,
-				lastUpdated: new Date(),
+				lastUpdated: upd,
 				localUser: true,
 				newUser: false,
 				phoneNumber: "7",
@@ -81,8 +82,27 @@ describe("CurrentUserService", () => {
 		service.logout();
 		service.setUser(
 			{
+				addressLine1: null,
+				addressLine2: null,
+				city: null,
+				company: null,
+				country: null,
+				email: "different email",
+				fullName: "different full name",
+				gid: null,
 				id: 9001,
+				lastUpdated: new Date(upd.getTime()+1000),
+				localUser: false,
 				newUser: true,
+				phoneNumber: null,
+				postalCode: null,
+				publicSshKey: null,
+				role: 2,
+				roleName: "different role name",
+				stateOrProvince: null,
+				tenant: "different tenant",
+				tenantId: 1,
+				uid: null,
 				username: "test"
 			},
 			new Set()
@@ -91,49 +111,35 @@ describe("CurrentUserService", () => {
 		const u = service.currentUser;
 		expect(u).not.toBeNull();
 		if (u !== null) {
-			expect(u.addressLine1).toBeUndefined();
-			expect(u.addressLine2).toBeUndefined();
-			expect(u.city).toBeUndefined();
-			expect(u.company).toBeUndefined();
-			expect(u.country).toBeUndefined();
-			expect(u.email).toBeUndefined();
-			expect(u.fullName).toBeUndefined();
-			expect(u.gid).toBeUndefined();
+			expect(u.addressLine1).toBeNull();
+			expect(u.addressLine2).toBeNull();
+			expect(u.city).toBeNull();
+			expect(u.company).toBeNull();
+			expect(u.country).toBeNull();
+			expect(u.email).toBe("different email");
+			expect(u.fullName).toBe("different full name");
+			expect(u.gid).toBeNull();
 			expect(u.id).toEqual(9001);
-			expect(u.lastUpdated).toBeUndefined();
-			expect(u.localUser).toBeUndefined();
+			expect(u.lastUpdated).toEqual(new Date(upd.getTime()+1000));
+			expect(u.localUser).toBeFalse();
 			expect(u.newUser).toBeTrue();
-			expect(u.phoneNumber).toBeUndefined();
-			expect(u.postalCode).toBeUndefined();
-			expect(u.publicSshKey).toBeUndefined();
-			expect(u.role).toBeUndefined();
-			expect(u.roleName).toBeUndefined();
-			expect(u.stateOrProvince).toBeUndefined();
-			expect(u.tenant).toBeUndefined();
-			expect(u.tenantId).toBeUndefined();
-			expect(u.uid).toBeUndefined();
+			expect(u.phoneNumber).toBeNull();
+			expect(u.postalCode).toBeNull();
+			expect(u.publicSshKey).toBeNull();
+			expect(u.role).toEqual(2);
+			expect(u.roleName).toBe("different role name");
+			expect(u.stateOrProvince).toBeNull();
+			expect(u.tenant).toBe("different tenant");
+			expect(u.tenantId).toEqual(1);
+			expect(u.uid).toBeNull();
 			expect(u.username).toBe("test");
 		}
 	});
 
 	it("should update user permissions properly", () => {
-		service.setUser(
-			{
-				id: 9001,
-				newUser: true,
-				username: "test"
-			},
-			new Set(["a different permission"])
-		);
+		service.setUser(newCurrentUser(), new Set(["a different permission"]));
 		service.logout();
-		service.setUser(
-			{
-				id: 9001,
-				newUser: true,
-				username: "test"
-			},
-			new Set(["a permission"])
-		);
+		service.setUser(newCurrentUser(), new Set(["a permission"]));
 		expect(service.capabilities.has("a permission")).toBeTrue();
 		expect(service.hasPermission("a permission")).toBeTrue();
 		expect(service.capabilities.has("a different permission")).toBeFalse();

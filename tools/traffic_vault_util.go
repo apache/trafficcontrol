@@ -37,10 +37,13 @@ var vault_user string
 var vault_pass string
 var vault_action string
 var dry_run bool
+var insecure bool
 
-func connectToRiak(vault_ip string, vault_port uint) *riak.Cluster {
+func connectToRiak(vault_ip string, vault_port uint, insecure bool) *riak.Cluster {
+
 	tlsConfig := tls.Config{
-		InsecureSkipVerify: true,
+		ServerName:         vault_ip,
+		InsecureSkipVerify: insecure,
 	}
 
 	authOptions := riak.AuthOptions{
@@ -216,6 +219,7 @@ func init() {
 	flag.StringVar(&vault_pass, "vault_password", "", "Riak Password")
 	flag.StringVar(&vault_action, "vault_action", "", "Action: list_buckets|list_keys|list_values|convert_ssl_to_xmlid")
 	flag.BoolVar(&dry_run, "dry_run", false, "Do not perform writes")
+	flag.BoolVar(&insecure, "insecure", false, "Disable TLS certificate checks when connecting to cluster. Defaults to false")
 }
 
 func main() {
@@ -230,7 +234,7 @@ func main() {
 		log.Fatal("Must provide Traffic Vault IP or host")
 	}
 
-	cluster := connectToRiak(vault_ip, vault_port)
+	cluster := connectToRiak(vault_ip, vault_port, insecure)
 	defer func() {
 		if err := cluster.Stop(); err != nil {
 			log.Fatal(err.Error())

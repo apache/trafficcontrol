@@ -1,3 +1,7 @@
+// Package config provides tools to load and validate configuration data for the
+// t3c tests.
+package config
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,10 +21,6 @@
  * under the License.
  */
 
-// Package config provides tools to load and validate configuration data for
-// Traffic Ops API tests.
-package config
-
 import (
 	"encoding/json"
 	"fmt"
@@ -32,7 +32,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-// Config reflects the structure of the test-to-api.conf file
+// Config reflects the structure of the test-to-api.conf file. It also
+// implements github.com/apache/trafficcontrol/lib/go-log.Config for logging.
 type Config struct {
 	TrafficOps   TrafficOps   `json:"trafficOps"`
 	TrafficOpsDB TrafficOpsDB `json:"trafficOpsDB"`
@@ -40,87 +41,136 @@ type Config struct {
 	UseIMS       bool         `json:"use_ims"`
 }
 
-// TrafficOps - config section
+// TrafficOps is the section of a Config dealing with Traffic Ops-related
+// information.
 type TrafficOps struct {
-	// URL - The point to the Traffic Ops instance being tested
+	// URL is the URL of a Traffic Ops instance being used for the tests.
 	URL string `json:"URL" envconfig:"TO_URL"`
 
-	// UserPassword - The Traffic Ops test user password hitting the API
+	// UserPassword is the password of *all* users in the 'Users' property.
 	UserPassword string `json:"password" envconfig:"TO_USER_PASSWORD"`
 
-	// User - The Traffic Ops Users
+	// Users are the Traffic Ops users to be used in testing.
 	Users Users `json:"users"`
 
-	// Insecure - ignores insecure ssls certs that were self-generated
+	// Insecure instructs tests whether or not to skip certificate verification.
 	Insecure bool `json:"sslInsecure" envconfig:"SSL_INSECURE"`
 }
 
-// Users "users" section of the test-to-api.conf file
+// Users structures are the "users" section of the "trafficOps" section of the
+// testing configuration file, and are a collection of the usernames of  Traffic
+// Ops users that are used in testing.
 type Users struct {
 
-	// DisallowedUser - The Traffic Ops Disallowed user
+	// Disallowed is the username of a "disallowed" Traffic Ops user.
+	//
+	// Deprecated: This is unused in t3c tests, and may be removed in the
+	// future.
 	Disallowed string `json:"disallowed" envconfig:"TO_USER_DISALLOWED"`
 
-	// ReadOnly - The Traffic Ops Read Only user
+	// ReadOnly is the username of a Traffic Ops user with "read-only"
+	// Permissions.
+	//
+	// Deprecated: This is unused in t3c tests, and may be removed in the
+	// future.
 	ReadOnly string `json:"readOnly" envconfig:"TO_USER_READ_ONLY"`
 
-	// Operations - The Traffic Ops Operations user
+	// Operations is the username of a Traffic Ops user with "operations"-level
+	// Permissions.
+	//
+	// Deprecated: This is unused in t3c tests, and may be removed in the
+	// future.
 	Operations string `json:"operations" envconfig:"TO_USER_OPERATIONS"`
 
-	// AdminUser - The Traffic Ops Admin user
+	// Admin is the username of a Traffic Ops user with the special "admin"
+	// Role.
 	Admin string `json:"admin" envconfig:"TO_USER_ADMIN"`
 
-	// PortalUser - The Traffic Ops Portal user
+	// Portal is the username of a Traffic Ops user with "portal"-level
+	// Permissions.
+	//
+	// Deprecated: This is unused in t3c tests, and may be removed in the
+	// future.
 	Portal string `json:"portal" envconfig:"TO_USER_PORTAL"`
 
-	// FederationUser - The Traffic Ops Federation user
+	// Federation is the username of a Traffic Ops user with
+	// "federation"-level Permissions.
+	//
+	// Deprecated: This is unused in t3c tests, and may be removed in the
+	// future.
 	Federation string `json:"federation" envconfig:"TO_USER_FEDERATION"`
 
-	// Extension - The Traffic Ops Extension user
+	// Extension is the username of a Traffic Ops user allowed to manipulate
+	// extensions (i.e. creating new serverchecks).
+	//
+	// These tests currently use Traffic Ops API version 3.0, so the only
+	// username that can possibly work is literally "extension". This property
+	// MUST be configured to be "extension", or the tests will erroneously fail,
+	// no matter what "Priv Level" and/or Permissions you give the user!
 	Extension string `json:"extension" envconfig:"TO_USER_EXTENSION"`
 }
 
-// TrafficOpsDB - config section
+// TrafficOpsDB is the section of a Config dealing with Traffic Ops DB-related
+// information.
 type TrafficOpsDB struct {
-	// Name - Traffic Ops Database name where the test data will be setup
+	// Name is the name of a PostgreSQL database used by the testing Traffic Ops
+	// instance.
 	Name string `json:"dbname" envconfig:"TODB_NAME"`
 
-	// Hostname - Traffic Ops Database hostname where Postgres is running
+	// Hostname is the network hostname where the Traffic Ops database is
+	// running.
 	Hostname string `json:"hostname" envconfig:"TODB_HOSTNAME"`
 
-	// User - database user that Traffic Ops is using to point to the 'to_test' database
+	// User is the name of a PostgreSQL user/role that has permissions to
+	// manipulate the database identified in Name.
 	User string `json:"user" envconfig:"TODB_USER"`
 
-	// Password - database password for the User above
+	// Password is the password for the PostgreSQL user/role given in User.
 	Password string `json:"password" envconfig:"TODB_PASSWORD"`
 
-	// Port - Postgres port running that has the to_test schema
+	// Port is the port on which PostgreSQL listens for connections to the
+	// database used by the testing Traffic Ops instance.
 	Port string `json:"port" envconfig:"TODB_PORT"`
 
-	// DBType - will be 'Pg' by default but tells the Golang database driver
-	//          the database type
+	// DBType is a Go database/sql driver name to use when connecting to the
+	// Traffic Ops testing instance's database. This MUST be "Pg" (or
+	// omitted/blank/null, which uses the default value of "Pg").
+	//
+	// Deprecated: Since Traffic Ops 3.0, only PostgreSQL databases are
+	// supported, so this field has no purpose and will probably be removed at
+	// some point.
 	DBType string `json:"type" envconfig:"TODB_TYPE"`
 
-	// SSL - Flag that tells the database driver that the Postgres instances has TLS enabled
+	// SSL instructs the database driver that the PostgreSQL instance used by
+	// the tests requires SSL-secured connections.
 	SSL bool `json:"ssl" envconfig:"TODB_SSL"`
 
-	// Description - database description
+	// Description is a textual description of the database.
+	//
+	// Deprecated: This unused field serves no purpose, and will likely be
+	// removed in the future.
 	Description string `json:"description" envconfig:"TODB_DESCRIPTION"`
 }
 
-// Default - config section
+// Default represents the default values of a set of options that can be
+// overridden by command-line options.
 type Default struct {
-	Session            Session   `json:"session"`
-	Log                Locations `json:"logLocations"`
-	IncludeSystemTests bool      `json:"includeSystemTests"`
+	Session Session   `json:"session"`
+	Log     Locations `json:"logLocations"`
+	// IncludeSystemTests has no effect or known purpose.
+	//
+	// Deprecated: This field has no effect or known purpose.
+	IncludeSystemTests bool `json:"includeSystemTests"`
 }
 
-// Session - config section
+// Session contains default configuration options for authenticated sessions
+// with the Traffic Ops API.
 type Session struct {
 	TimeoutInSecs int `json:"timeoutInSecs" envconfig:"SESSION_TIMEOUT_IN_SECS"`
 }
 
-// Locations - reflects the structure of the database.conf file
+// Locations is a set of logging locations as defined by the
+// github.com/apache/trafficcontrol/lib/go-log package.
 type Locations struct {
 	Debug   string `json:"debug"`
 	Event   string `json:"event"`
@@ -129,26 +179,26 @@ type Locations struct {
 	Warning string `json:"warning"`
 }
 
-// LoadConfig - reads the config file into the Config struct
+// LoadConfig reads the given configuration file into a Config.
 func LoadConfig(confPath string) (Config, error) {
 	var cfg Config
 
 	confBytes, err := ioutil.ReadFile(confPath)
 	if err != nil {
-		return cfg, fmt.Errorf("failed to read CDN configuration: %v", err)
+		return cfg, fmt.Errorf("failed to read CDN configuration: %w", err)
 	}
 
 	err = json.Unmarshal(confBytes, &cfg)
 	if err != nil {
-		return cfg, fmt.Errorf("failed to parse configuration from '%s': %v", confPath, err)
+		return cfg, fmt.Errorf("failed to parse configuration from '%s': %w", confPath, err)
 	}
 
 	if err := validate(confPath, cfg); err != nil {
-		return cfg, fmt.Errorf("failed to validate configuration:\n%v", err)
+		return cfg, fmt.Errorf("failed to validate configuration: %w", err)
 	}
 
 	if err := envconfig.Process("traffic-ops-client-tests", &cfg); err != nil {
-		return cfg, fmt.Errorf("failed to parse configuration from environment: %v", err)
+		return cfg, fmt.Errorf("failed to parse configuration from environment: %w", err)
 	}
 
 	return cfg, nil
@@ -257,27 +307,32 @@ func getStructTag(thing interface{}, fieldName string) (string, bool) {
 	return tag, ok
 }
 
-// ErrorLog - critical messages
+// ErrorLog provides the location to which error-level messages should be
+// logged.
 func (c Config) ErrorLog() log.LogLocation {
 	return log.LogLocation(c.Default.Log.Error)
 }
 
-// WarningLog - warning messages
+// WarningLog provides the location to which warning-level messages should be
+// logged.
 func (c Config) WarningLog() log.LogLocation {
 	return log.LogLocation(c.Default.Log.Warning)
 }
 
-// InfoLog - information messages
+// InfoLog provides the location to which info-level messages should be
+// logged.
 func (c Config) InfoLog() log.LogLocation {
 	return log.LogLocation(c.Default.Log.Info)
 }
 
-// DebugLog - troubleshooting messages
+// DebugLog provides the location to which debug-level messages should be
+// logged.
 func (c Config) DebugLog() log.LogLocation {
 	return log.LogLocation(c.Default.Log.Debug)
 }
 
-// EventLog - access.log high level transactions
+// EventLog provides the location to which event-level messages should be
+// logged.
 func (c Config) EventLog() log.LogLocation {
 	return log.LogLocation(c.Default.Log.Event)
 }

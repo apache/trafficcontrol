@@ -1908,13 +1908,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 }
 
 const lastServerTypeOfDSesQuery = `
-SELECT ds.id, ds.multi_site_origin
+SELECT ds.id, ds.multi_site_origin, ds.topology
 FROM deliveryservice_server dss
 JOIN server s ON dss.server = s.id
 JOIN type t ON s.type = t.id
 JOIN deliveryservice ds ON dss.deliveryservice = ds.id
 WHERE t.name LIKE $1 AND ds.active
-GROUP BY ds.id, ds.multi_site_origin
+GROUP BY ds.id, ds.multi_site_origin, ds.topology
 HAVING COUNT(dss.server) = 1 AND $2 = ANY(ARRAY_AGG(dss.server));
 `
 
@@ -1941,16 +1941,17 @@ func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, serverType 
 	if err != nil {
 		return ids, fmt.Errorf("querying: %v", err)
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing rows from getActiveDeliveryServicesThatOnlyHaveThisServerAssigned")
 
 	for rows.Next() {
 		var dsID int
 		var mso bool
-		err = rows.Scan(&dsID, &mso)
+		var topology *string
+		err = rows.Scan(&dsID, &mso, &topology)
 		if err != nil {
 			return ids, fmt.Errorf("scanning: %v", err)
 		}
-		if isEdge || (isOrigin && mso) {
+		if (isEdge && topology == nil) || (isOrigin && mso) {
 			ids = append(ids, dsID)
 		}
 	}

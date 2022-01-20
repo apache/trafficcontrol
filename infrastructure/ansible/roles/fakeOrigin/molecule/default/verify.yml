@@ -1,0 +1,53 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Verify TODB setup
+  hosts: all
+  gather_facts: yes
+  become: yes
+
+  vars_files:
+    - "{{ molecule_ephemeral_directory }}/secret_varfile.json"
+
+  vars:
+    known_uri_paths:
+      - /DUPLICATE_HLS_ABR_LIVE/HLS_ABR_LIVE_1280x720-20000.m3u8
+      - /DUPLICATE_HLS_ABR_LIVE/HLS_ABR_LIVE_1920x1080-40000.m3u8
+      - /DUPLICATE_HLS_ABR_LIVE/HLS_ABR_LIVE.m3u8
+      - /DUPLICATE_HLS_ABR_LIVE/HLS_ABR_LIVE.meta.json
+      - /DUPLICATE_HLS_ABR_VOD/HLS_ABR_VOD_1280x720-20000.m3u8
+      - /DUPLICATE_HLS_ABR_VOD/HLS_ABR_VOD_1920x1080-40000.m3u8
+      - /DUPLICATE_HLS_ABR_VOD/HLS_ABR_VOD.m3u8
+      - /DUPLICATE_HLS_ABR_VOD/HLS_ABR_VOD.meta.json
+      - /HLS_ABR_LIVE/HLS_ABR_LIVE_1280x720-20000.m3u8
+      - /HLS_ABR_LIVE/HLS_ABR_LIVE_1920x1080-40000.m3u8
+      - /HLS_ABR_LIVE/HLS_ABR_LIVE.m3u8
+      - /HLS_ABR_LIVE/HLS_ABR_LIVE.meta.json
+      - /HLS_ABR_VOD/HLS_ABR_VOD_1280x720-20000.m3u8
+      - /HLS_ABR_VOD/HLS_ABR_VOD_1920x1080-40000.m3u8
+      - /HLS_ABR_VOD/HLS_ABR_VOD.m3u8
+      - /HLS_ABR_VOD/HLS_ABR_VOD.meta.json
+      - /HLS_EVENT/HLS_EVENT.m3u8
+      - /HLS_EVENT/HLS_EVENT.meta.json
+      - /HLS_LIVE/HLS_LIVE.m3u8
+      - /HLS_LIVE/HLS_LIVE.meta.json
+      - /HLS_VOD/HLS_VOD.m3u8
+      - /HLS_VOD/HLS_VOD.meta.json
+      - /SampleDir/kelloggs.mp4
+      - /SampleDir/LICENSE
+      - /SampleVideo/kelloggs.mp4
+
+  tasks:
+    - name: Ensure all assets are being served
+      shell: curl --no-keepalive --show-error -Lvs4 --connect-timeout 2 --fail -o /dev/null {{ (['http://localhost','https://fo.testlab.invalid'] | product(known_uri_paths) | map('join')) | join(' ') }} > /dev/null

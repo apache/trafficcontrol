@@ -99,9 +99,9 @@ echo "waiting $WAIT seconds for all containers to initialize."
 sleep $WAIT
 
 cp /ort-tests/tc-fixtures.json /tc-fixtures.json
-(touch test.log && tail -f test.log)&
+(touch test.log && chmod a+rw test.log && tail -f test.log)&
 
-go test -v -failfast -cfg=conf/docker-edge-cache.conf 2>&1 >> test.log
+go test --cfg=conf/docker-edge-cache.conf 2>&1 >> test.log
 if [[ $? != 0 ]]; then
   echo "ERROR: ORT tests failure"
   exit 3

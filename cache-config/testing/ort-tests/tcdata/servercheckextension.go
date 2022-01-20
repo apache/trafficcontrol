@@ -29,9 +29,9 @@ func (r *TCData) CreateTestServerCheckExtensions(t *testing.T) {
 
 	for _, ext := range r.TestData.ServerCheckExtensions {
 		resp, _, err := TOSession.CreateServerCheckExtension(ext)
-		t.Logf("Response: %v %v", *ext.Name, resp)
+		t.Logf("Response: %s %v", *ext.Name, resp)
 		if err != nil {
-			t.Errorf("could not create to_extension %v: %v", ext.Name, err)
+			t.Errorf("could not create to_extension %s: %v", *ext.Name, err)
 		}
 	}
 
@@ -92,15 +92,15 @@ func (r *TCData) DeleteTestServerCheckExtensions(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("expected to find to_extension %v", *ext.Name)
+			t.Errorf("expected to find to_extension %s", *ext.Name)
 		}
 	}
 
 	for _, id := range ids {
 		resp, _, err := TOSession.DeleteServerCheckExtension(id)
-		t.Logf("Response: %v %v", id, resp)
+		t.Logf("Response: %d %v", id, resp)
 		if err != nil {
-			t.Errorf("cannot delete to_extension: %v - %v", id, err)
+			t.Errorf("cannot delete to_extension: %d - %v", id, err)
 		}
 	}
 	extensions, _, err = TOSession.GetServerCheckExtensions()
@@ -117,7 +117,7 @@ func (r *TCData) DeleteTestServerCheckExtensions(t *testing.T) {
 			}
 		}
 		if found {
-			t.Errorf("to_extension %v should have been deleted", *ext.Name)
+			t.Errorf("to_extension %s should have been deleted", *ext.Name)
 		}
 	}
 

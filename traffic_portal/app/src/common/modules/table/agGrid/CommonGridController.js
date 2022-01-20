@@ -423,7 +423,7 @@ angular.module("trafficPortal.table").component("commonGridController", {
     templateUrl: "common/modules/table/agGrid/grid.tpl.html",
     controller: CommonGridController,
     bindings: {
-        title: "@",
+        tableTitle: "@",
         tableName: "@",
         options: "<",
         columns: "<",

@@ -130,6 +130,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		 * 4.x API
 		 */
 
+		// SSL Keys
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `sslkey_expirations/?$`, deliveryservice.GetSSlKeyExpirationInformation, auth.PrivLevelAdmin, []string{"SSL-KEY-EXPIRATION:READ"}, Authenticated, nil, 41357729075},
+
 		// CDN lock
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdn_locks/?$`, cdn_lock.Read, auth.PrivLevelReadOnly, []string{"CDN:READ"}, Authenticated, nil, 4134390561},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cdn_locks/?$`, cdn_lock.Create, auth.PrivLevelOperations, []string{"CDN-LOCK:CREATE", "CDN:READ"}, Authenticated, nil, 4134390562},
@@ -174,9 +177,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cachegroups/{id}/queue_update$`, cachegroup.QueueUpdates, auth.PrivLevelOperations, []string{"CACHE-GROUP:READ", "CDN:READ", "SERVER:READ", "SERVER:QUEUE"}, Authenticated, nil, 40716441103},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cachegroups/{id}/deliveryservices/?$`, cachegroup.DSPostHandlerV40, auth.PrivLevelOperations, []string{"CACHE-GROUP:UPDATE", "DELIVERY-SERVICE:UPDATE", "CACHE-GROUP:READ", "DELIVERY-SERVICE:READ"}, Authenticated, nil, 45202404313},
-
-		//Capabilities
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `capabilities/?$`, capabilities.Read, auth.PrivLevelReadOnly, []string{"CAPABILITY:READ"}, Authenticated, nil, 40081353},
 
 		//CDN
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/name/{name}/sslkeys/?$`, cdn.GetSSLKeys, auth.PrivLevelAdmin, []string{"DS-SECURITY-KEY:READ", "CDN:READ", "DELIVERY-SERVICE:READ"}, Authenticated, nil, 42785817723},

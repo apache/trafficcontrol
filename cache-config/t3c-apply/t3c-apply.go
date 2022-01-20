@@ -31,6 +31,14 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
+// Version is the application version.
+// This is overwritten by the build with the current project version.
+var Version = "0.4"
+
+// GitRevision is the git revision the application was built from.
+// This is overwritten by the build with the current project version.
+var GitRevision = "nogit"
+
 // exit codes
 const (
 	Success           = 0
@@ -59,19 +67,30 @@ func runSysctl(cfg config.Cfg) {
 	}
 }
 
+const LockFilePath = "/var/run/t3c.lock"
+const LockFileRetryInterval = time.Second
+const LockFileRetryTimeout = time.Minute
+
 func main() {
 	var syncdsUpdate torequest.UpdateStatus
 	var lock util.FileLock
-	cfg, err := config.GetCfg()
+	cfg, err := config.GetCfg(Version, GitRevision)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(ConfigError)
 	} else if cfg == (config.Cfg{}) { // user used the --help option
 		os.Exit(Success)
 	}
-	if !lock.GetLock("/var/run/t3c.lock") {
-		os.Exit(AlreadyRunning)
+
+	log.Infoln("Trying to acquire app lock")
+	for lockStart := time.Now(); !lock.GetLock(LockFilePath); {
+		if time.Since(lockStart) > LockFileRetryTimeout {
+			log.Errorf("Failed to get app lock after %v seconds, another instance is running, exiting without running\n", int(LockFileRetryTimeout/time.Second))
+			os.Exit(AlreadyRunning)
+		}
+		time.Sleep(LockFileRetryInterval)
 	}
+	log.Infoln("Acquired app lock")
 
 	if cfg.UseGit == config.UseGitYes {
 		err := util.EnsureConfigDirIsGitRepo(cfg)

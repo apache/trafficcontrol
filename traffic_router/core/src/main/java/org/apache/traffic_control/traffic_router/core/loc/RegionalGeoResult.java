@@ -17,7 +17,7 @@ package org.apache.traffic_control.traffic_router.core.loc;
 
 
 public class RegionalGeoResult {
-    public static enum RegionalGeoResultType {
+    public enum RegionalGeoResultType {
         ALLOWED, ALTERNATE_WITH_CACHE, ALTERNATE_WITHOUT_CACHE, DENIED
     }
 

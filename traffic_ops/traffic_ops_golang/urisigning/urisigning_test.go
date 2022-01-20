@@ -20,6 +20,7 @@ package urisigning
  */
 
 import (
+	"bytes"
 	"encoding/json"
 	"testing"
 
@@ -129,7 +130,7 @@ const (
 )
 
 func TestValidateURIKeyset(t *testing.T) {
-	var keyset map[string]tc.URISignerKeyset
+	var keyset tc.JWKSMap
 
 	// unmarshal a good URISignerKeyset
 	if err := json.Unmarshal([]byte(goodKeyset), &keyset); err != nil {
@@ -164,5 +165,15 @@ func TestValidateURIKeyset(t *testing.T) {
 	// now validate it, expect an erro due to missing a matching key kid to renewal_kid
 	if err := validateURIKeyset(keyset); err == nil {
 		t.Errorf("validateURIKeyset(): expected an error")
+	}
+}
+
+func TestEmptyURISigningKey(t *testing.T) {
+	buf, err := json.Marshal(emptyURISigningKey)
+	if err != nil {
+		t.Errorf(`failed to marshal empty URISingingKey`)
+	}
+	if !bytes.Equal([]byte(`{"renewal_kid":null,"keys":null}`), buf) {
+		t.Errorf(`unexpected JSON: %q`, buf)
 	}
 }

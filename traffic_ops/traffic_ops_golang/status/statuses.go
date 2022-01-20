@@ -20,7 +20,6 @@ package status
  */
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -39,7 +38,6 @@ import (
 type TOStatus struct {
 	api.APIInfoImpl `json:"-"`
 	tc.StatusNullable
-	SQLDescription sql.NullString `json:"-" db:"description"`
 }
 
 func (v *TOStatus) GetLastUpdated() (*time.Time, bool, error) {
@@ -112,12 +110,9 @@ func (st *TOStatus) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	}
 
 	for _, iStatus := range readVals {
-		status, ok := iStatus.(*TOStatus)
+		_, ok := iStatus.(*TOStatus)
 		if !ok {
 			return nil, nil, fmt.Errorf("TOStatus.Read: api.GenericRead returned unexpected type %T\n", iStatus), http.StatusInternalServerError, nil
-		}
-		if status.SQLDescription.Valid {
-			status.Description = &status.SQLDescription.String
 		}
 	}
 

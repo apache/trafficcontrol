@@ -105,6 +105,7 @@ Sample configuarion file:
     "tm-poll-interval-seconds": "60s",
     "tm-proxy-url", "http://sample-http-proxy.cdn.net:80",
     "tm-update-cycles": 5,
+    "unavailable-poll-threshold": 2,
     "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",
     "trafficserver-bin-dir": "/opt/trafficserver/bin",
   }
@@ -161,6 +162,12 @@ Sample configuarion file:
   Each time a polling cycle completes a count is incremented. When the count
   reaches **tm-update-cycles**, TrafficOps is polled for a new list of available
   TrafficMonitors for the CDN and the poll count is reset to 0.
+
+### unavailable-poll-threshold
+
+  This controls when an unhealthy parent is marked down.  An unhealthy parent
+  will be marked down when the number of consecutive polls reaches this threshold
+  with the parent reported as unhealthy.  The default threshold is 2.
 
 ### trafficserver-config-dir
 

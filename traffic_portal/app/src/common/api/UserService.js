@@ -82,14 +82,12 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
         );
     };
 
-    // todo: change to use query param when it is supported
-    this.updateUser = function(user) {
-        return $http.put(ENV.api.unstable + "users/" + user.id, user).then(
+    this.updateCurrentUser = function(user) {
+        // We should be using PUT 'user/current' to update the current user
+        const currUser = { user };
+        return $http.put(ENV.api.unstable + 'user/current', currUser).then(
             function(result) {
-                if (userModel.user.id === user.id) {
-                    // if you are updating the currently logged in user...
-                    userModel.setUser(user);
-                }
+                userModel.setUser(user);
                 messageModel.setMessages(result.data.alerts, false);
                 return result;
             },
@@ -98,6 +96,24 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
                 throw err;
             }
         );
+    };
+
+    // todo: change to use query param when it is supported
+    this.updateUser = function(user) {
+        if (userModel.user.id === user.id) {
+            return this.updateCurrentUser(user);
+        } else {
+            return $http.put(ENV.api.unstable + "users/" + user.id, user).then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, false);
+                    return result;
+                },
+                function(err) {
+                    messageModel.setMessages(err.data.alerts, false);
+                    throw err;
+                }
+            );
+        }
     };
 
     this.registerUser = function(registration) {

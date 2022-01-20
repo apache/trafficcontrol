@@ -58,17 +58,29 @@ type TrafficOpsReq struct {
 	plugins map[string]bool // map of verified plugins
 
 	installedPkgs map[string]struct{} // map of packages which were installed by us.
-	pluginPkgs    map[string]struct{} // map of packages
 	changedFiles  []string            // list of config files which were changed
 
-	configFiles          map[string]*ConfigFile
-	TrafficCtlReload     bool   // a traffic_ctl_reload is required
-	SysCtlReload         bool   // a reload of the sysctl.conf is required
-	NtpdRestart          bool   // ntpd needs restarting
-	TeakdRestart         bool   // a restart of teakd is required
-	TrafficServerRestart bool   // a trafficserver restart is required
-	RemapConfigReload    bool   // remap.config should be reloaded
-	unixTimeStr          string // unix time string at program startup.
+	configFiles map[string]*ConfigFile
+
+	RestartData
+}
+
+type ShouldReloadRestart struct {
+	ReloadRestart []FileRestartData
+}
+
+type FileRestartData struct {
+	Name string
+	RestartData
+}
+
+type RestartData struct {
+	TrafficCtlReload     bool // a traffic_ctl_reload is required
+	SysCtlReload         bool // a reload of the sysctl.conf is required
+	NtpdRestart          bool // ntpd needs restarting
+	TeakdRestart         bool // a restart of teakd is required
+	TrafficServerRestart bool // a trafficserver restart is required
+	RemapConfigReload    bool // remap.config should be reloaded
 }
 
 type ConfigFile struct {
@@ -167,16 +179,12 @@ func (r *TrafficOpsReq) DumpConfigFiles() {
 
 // NewTrafficOpsReq returns a new TrafficOpsReq object.
 func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
-	unixTimeString := strconv.FormatInt(time.Now().Unix(), 10)
-
 	return &TrafficOpsReq{
 		Cfg:           cfg,
 		pkgs:          map[string]bool{},
 		plugins:       map[string]bool{},
 		configFiles:   map[string]*ConfigFile{},
 		installedPkgs: map[string]struct{}{},
-		pluginPkgs:    map[string]struct{}{},
-		unixTimeStr:   unixTimeString,
 	}
 }
 
@@ -233,32 +241,6 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 	}
 
 	log.Infof("======== End processing config file: %s for service: %s ========\n", cfg.Name, cfg.Service)
-	return nil
-}
-
-// checkPlugin verifies ATS plugin requirements are satisfied.
-func (r *TrafficOpsReq) checkPlugin(plugin string) error {
-	// already verified
-	if r.plugins[plugin] == true {
-		return nil
-	}
-	pluginFile := filepath.Join(config.TSHome, "/libexec/trafficserver/", plugin)
-	pkgs, err := util.PackageInfo("pkg-provides", pluginFile)
-	if err != nil {
-		return errors.New("unable to verify plugin " + pluginFile + ": " + err.Error())
-	}
-	if len(pkgs) == 0 { // no package is installed that provides the plugin.
-		// TODO should this actually be "no package that provides this plugin found in Yum" ?
-		return errors.New(plugin + ": Package for plugin: " + plugin + ", is not installed.")
-	}
-
-	// TODO verify: this only checks packages that have been installed via Paramters, not any package on the system? Does this need to call util.PackageInfo("pkg-query" if it isn't in pkgs??
-	// TODO iterate over pkgs, because maybe one is installed that isn't the first
-	pkg := pkgs[0]
-	if _, ok := r.pkgs[pkg]; !ok {
-		return errors.New(plugin + ": Package for plugin: " + plugin + ", is not installed.")
-	}
-	r.pluginPkgs[pkg] = struct{}{}
 	return nil
 }
 
@@ -462,12 +444,12 @@ func (r *TrafficOpsReq) readCfgFile(cfg *ConfigFile, dir string) ([]byte, error)
 const configFileTempSuffix = `.tmp`
 
 // replaceCfgFile replaces an ATS configuration file with one from Traffic Ops.
-func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
+func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) (*FileRestartData, error) {
 	if r.Cfg.ReportOnly ||
 		(r.Cfg.Files != t3cutil.ApplyFilesFlagAll && r.Cfg.Files != t3cutil.ApplyFilesFlagReval) {
 		log.Infof("You elected not to replace %s with the version from Traffic Ops.\n", cfg.Name)
 		cfg.ChangeApplied = false
-		return nil
+		return &FileRestartData{Name: cfg.Name}, nil
 	}
 
 	tmpFileName := cfg.Path + configFileTempSuffix
@@ -479,18 +461,17 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 	// we'd end up with malformed files.
 
 	if _, err := util.WriteFileWithOwner(tmpFileName, cfg.Body, &cfg.Uid, &cfg.Gid, cfg.Perm); err != nil {
-		return errors.New("Failed to write temp config file '" + tmpFileName + "': " + err.Error())
+		return &FileRestartData{Name: cfg.Name}, errors.New("Failed to write temp config file '" + tmpFileName + "': " + err.Error())
 	}
 
 	log.Infof("Copying temp file '%s' to real '%s'\n", tmpFileName, cfg.Path)
 	if err := os.Rename(tmpFileName, cfg.Path); err != nil {
-		return errors.New("Failed to move temp '" + tmpFileName + "' to real '" + cfg.Path + "': " + err.Error())
+		return &FileRestartData{Name: cfg.Name}, errors.New("Failed to move temp '" + tmpFileName + "' to real '" + cfg.Path + "': " + err.Error())
 	}
 	cfg.ChangeApplied = true
 	r.changedFiles = append(r.changedFiles, cfg.Path)
 
-	r.RemapConfigReload = r.RemapConfigReload ||
-		cfg.RemapPluginConfig ||
+	remapConfigReload := cfg.RemapPluginConfig ||
 		cfg.Name == "remap.config" ||
 		strings.HasPrefix(cfg.Name, "bg_fetch") ||
 		strings.HasPrefix(cfg.Name, "hdr_rw_") ||
@@ -500,22 +481,30 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 		strings.HasPrefix(cfg.Name, "uri_signing") ||
 		strings.HasSuffix(cfg.Name, ".lua")
 
-	r.TrafficCtlReload = r.TrafficCtlReload ||
-		strings.HasSuffix(cfg.Dir, "trafficserver") ||
-		r.RemapConfigReload ||
+	trafficCtlReload := strings.HasSuffix(cfg.Dir, "trafficserver") ||
+		remapConfigReload ||
 		cfg.Name == "ssl_multicert.config" ||
 		cfg.Name == "records.config" ||
 		(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".cer")) ||
 		(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".key"))
 
-	r.TrafficServerRestart = r.TrafficServerRestart || (cfg.Name == "plugin.config")
-	r.NtpdRestart = r.NtpdRestart || (cfg.Name == "ntpd.conf")
-	r.SysCtlReload = r.SysCtlReload || (cfg.Name == "sysctl.conf")
+	trafficServerRestart := cfg.Name == "plugin.config"
+	ntpdRestart := cfg.Name == "ntpd.conf"
+	sysCtlReload := cfg.Name == "sysctl.conf"
 
-	log.Debugf("Reload state after %s: remap.config: %t reload: %t restart: %t ntpd: %t sysctl: %t", cfg.Name, r.RemapConfigReload, r.TrafficCtlReload, r.TrafficServerRestart, r.NtpdRestart, r.SysCtlReload)
+	log.Debugf("Reload state after %s: remap.config: %t reload: %t restart: %t ntpd: %t sysctl: %t", cfg.Name, remapConfigReload, trafficCtlReload, trafficServerRestart, ntpdRestart, sysCtlReload)
 
 	log.Debugf("Setting change applied for '%s'\n", cfg.Name)
-	return nil
+	return &FileRestartData{
+		Name: cfg.Name,
+		RestartData: RestartData{
+			TrafficCtlReload:     trafficCtlReload,
+			SysCtlReload:         sysCtlReload,
+			NtpdRestart:          ntpdRestart,
+			TrafficServerRestart: trafficServerRestart,
+			RemapConfigReload:    remapConfigReload,
+		},
+	}, nil
 }
 
 // CheckSystemServices is used to verify that packages installed
@@ -774,6 +763,20 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 	return updateStatus, nil
 }
 
+// CheckReloadRestart determines the final reload/restart state after all config files are processed.
+func (r *TrafficOpsReq) CheckReloadRestart(data []FileRestartData) RestartData {
+	rd := RestartData{}
+	for _, changedFile := range data {
+		rd.TrafficCtlReload = rd.TrafficCtlReload || changedFile.TrafficCtlReload
+		rd.SysCtlReload = rd.SysCtlReload || changedFile.SysCtlReload
+		rd.NtpdRestart = rd.NtpdRestart || changedFile.NtpdRestart
+		rd.TeakdRestart = rd.TeakdRestart || changedFile.TeakdRestart
+		rd.TrafficServerRestart = rd.TrafficServerRestart || changedFile.TrafficServerRestart
+		rd.RemapConfigReload = rd.RemapConfigReload || changedFile.RemapConfigReload
+	}
+	return rd
+}
+
 // ProcessConfigFiles processes all config files retrieved from Traffic Ops.
 func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 	var updateStatus UpdateStatus = UpdateTropsNotNeeded
@@ -811,6 +814,7 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 	}
 
 	changesRequired := 0
+	shouldRestartReload := ShouldReloadRestart{[]FileRestartData{}}
 
 	for _, cfg := range r.configFiles {
 		if cfg.ChangeNeeded &&
@@ -833,13 +837,16 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 				continue
 			} else {
 				log.Debugf("All Prereqs passed for replacing %s on disk with that in Traffic Ops.\n", cfg.Name)
-				err := r.replaceCfgFile(cfg)
+				reData, err := r.replaceCfgFile(cfg)
 				if err != nil {
 					log.Errorf("failed to replace the config file, '%s',  on disk with data in Traffic Ops.\n", cfg.Name)
 				}
+				shouldRestartReload.ReloadRestart = append(shouldRestartReload.ReloadRestart, *reData)
 			}
 		}
 	}
+
+	r.RestartData = r.CheckReloadRestart(shouldRestartReload.ReloadRestart)
 
 	if 0 < len(r.changedFiles) {
 		log.Infof("Final state: remap.config: %t reload: %t restart: %t ntpd: %t sysctl: %t", r.RemapConfigReload, r.TrafficCtlReload, r.TrafficServerRestart, r.NtpdRestart, r.SysCtlReload)
@@ -1038,7 +1045,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 		serviceNeeds = t3cutil.ServiceNeedsRestart
 	} else {
 		err := error(nil)
-		if serviceNeeds, err = checkReload(r.getPluginPackagesInstalled(), r.changedFiles); err != nil {
+		if serviceNeeds, err = checkReload(r.changedFiles); err != nil {
 			return errors.New("determining if service needs restarted - not reloading or restarting! : " + err.Error())
 		}
 	}
@@ -1110,16 +1117,6 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 		return nil
 	}
 	return nil
-}
-
-func (r *TrafficOpsReq) getPluginPackagesInstalled() []string {
-	installedPluginPkgs := []string{}
-	for pluginPkg, _ := range r.pluginPkgs {
-		if _, ok := r.installedPkgs[pluginPkg]; ok {
-			installedPluginPkgs = append(installedPluginPkgs, pluginPkg)
-		}
-	}
-	return installedPluginPkgs
 }
 
 func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {

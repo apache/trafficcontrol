@@ -49,7 +49,8 @@ import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.core.edge.Cache.DeliveryServiceReference;
 import org.apache.traffic_control.traffic_router.core.edge.Cache;
@@ -71,9 +72,9 @@ import org.apache.traffic_control.traffic_router.core.loc.AnonymousIp;
 import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpConfigUpdater;
 import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseUpdater;
 
-@SuppressWarnings("PMD.TooManyFields")
+@SuppressWarnings({"PMD.TooManyFields", "PMD.CyclomaticComplexity"})
 public class ConfigHandler {
-	private static final Logger LOGGER = Logger.getLogger(ConfigHandler.class);
+	private static final Logger LOGGER = LogManager.getLogger(ConfigHandler.class);
 
 	private static long lastSnapshotTimestamp = 0;
 	private static Object configSync = new Object();
@@ -592,7 +593,7 @@ public class ConfigHandler {
 				ds.setGeoRedirectFile(url.getFile());
 				//try select the ds by the redirect fake HTTPRequest
 				final DeliveryService rds = cacheRegister.getDeliveryService(req);
-				if (rds == null || rds.getId() != ds.getId()) {
+				if (rds == null || !Objects.equals(rds.getId(), ds.getId())) {
 					//the redirect url not belongs to this ds
 					ds.setGeoRedirectUrlType("NOT_DS_URL");
 					continue;

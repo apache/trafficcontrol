@@ -19,7 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.AddressNotFoundException;
@@ -30,7 +31,7 @@ import org.apache.traffic_control.traffic_router.geolocation.GeolocationExceptio
 import org.apache.traffic_control.traffic_router.geolocation.GeolocationService;
 
 public class MaxmindGeolocationService implements GeolocationService {
-	private static final Logger LOGGER = Logger.getLogger(MaxmindGeolocationService.class);
+	private static final Logger LOGGER = LogManager.getLogger(MaxmindGeolocationService.class);
 	private boolean initialized = false;
 	private DatabaseReader databaseReader;
 	private File databaseFile;
@@ -68,9 +69,8 @@ public class MaxmindGeolocationService implements GeolocationService {
 		}
 
 		if (databaseFile != null) {
-			final DatabaseReader reader = createDatabaseReader(databaseFile);
-			if (reader != null) {
-				databaseReader = reader;
+			databaseReader = createDatabaseReader(databaseFile);
+			if (databaseReader != null) {
 				initialized = true;
 			}
 		}

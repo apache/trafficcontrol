@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -36,6 +37,7 @@ func TestParameters(t *testing.T) {
 	//SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Portal, Config.TrafficOps.UserPassword)
 
 	WithObjs(t, []TCObj{Parameters}, func() {
+		GetTestSecureParameter(t)
 		GetTestParametersIMS(t)
 		GetTestParametersByConfigfile(t)
 		GetTestParametersByValue(t)
@@ -67,6 +69,75 @@ func TestParameters(t *testing.T) {
 		UpdateParametersEmptyName(t)
 		UpdateParametersEmptyConfigFile(t)
 	})
+}
+
+func GetTestSecureParameter(t *testing.T) {
+	tenantResp, _, err := TOSession.GetTenants(client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("couldn't get tenants: %v", err)
+	}
+	if len(tenantResp.Response) == 0 {
+		t.Fatalf("got no tenants in response")
+	}
+	param := tc.Parameter{
+		ConfigFile: string(tc.GlobalConfigFileName),
+		Name:       "test_secure_param",
+		Secure:     true,
+		Value:      "100",
+	}
+	_, _, err = TOSession.CreateParameter(param, client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("couldn't create secure parameter: %v", err)
+	}
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "test_secure_param")
+	resp, _, err := TOSession.GetParameters(opts)
+	if err != nil {
+		t.Fatalf("couldn't get param by name: %v", err)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("expected just one response, got %d", len(resp.Response))
+	}
+	if resp.Response[0].Value != "100" {
+		t.Errorf("expected value 100, but got %s", resp.Response[0].Value)
+	}
+
+	// Create a new user with operations level privileges
+	user1 := tc.UserV4{
+		Username:             "lock_user1",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		Role:                 "operations",
+	}
+	user1.Email = util.StrPtr("lockuseremail@domain.com")
+	user1.TenantID = tenantResp.Response[0].ID
+	user1.FullName = util.StrPtr("firstName LastName")
+	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not create test user with username: %s, err: %v", user1.Username, err)
+	}
+	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
+
+	// Establish a session with the newly created non admin level user
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	if err != nil {
+		t.Fatalf("could not login with user lock_user1: %v", err)
+	}
+	resp, _, err = userSession.GetParameters(opts)
+	if err != nil {
+		t.Fatalf("couldn't get param by name: %v", err)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("expected just one response, got %d", len(resp.Response))
+	}
+	if resp.Response[0].Value != "********" {
+		t.Errorf("expected value of secure param to be hidden, but got %s instead", resp.Response[0].Value)
+	}
+	_, _, err = TOSession.DeleteParameter(resp.Response[0].ID, client.NewRequestOptions())
+	if err != nil {
+		t.Errorf("failed to delete param: %v", err)
+	}
 }
 
 func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {

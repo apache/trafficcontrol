@@ -115,7 +115,7 @@ func (r *TCData) DeleteTestSteeringTargets(t *testing.T) {
 
 		_, _, err = SteeringUserSession.DeleteSteeringTarget(int(*st.DeliveryServiceID), int(*st.TargetID))
 		if err != nil {
-			t.Fatalf("deleting steering target: deleting: %+v", err)
+			t.Fatalf("deleting steering target: deleting: %v", err)
 		}
 	}
 
@@ -125,7 +125,7 @@ func (r *TCData) DeleteTestSteeringTargets(t *testing.T) {
 			t.Fatalf("deleting steering targets: getting steering target: %v", err)
 		}
 		if len(sts) != 0 {
-			t.Fatalf("deleting steering targets: after delete, getting steering target: expected 0 actual %+v", len(sts))
+			t.Fatalf("deleting steering targets: after delete, getting steering target: expected 0 actual %d", len(sts))
 		}
 	}
 }
@@ -138,7 +138,7 @@ func (r *TCData) SetupSteeringTargets(t *testing.T) {
 	toReqTimeout := time.Second * time.Duration(r.Config.Default.Session.TimeoutInSecs)
 	SteeringUserSession, _, err = client.LoginWithAgent(TOSession.URL, "steering", "pa$$word", true, "to-api-v1-client-tests/steering", true, toReqTimeout)
 	if err != nil {
-		t.Fatalf("failed to get log in with steering user: %v", err.Error())
+		t.Fatalf("failed to get log in with steering user: %v", err)
 	}
 
 	r.CreateTestSteeringTargets(t)

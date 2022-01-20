@@ -24,10 +24,11 @@ import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.xbill.DNS.Record;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ZoneUtils {
-	private static final Logger LOGGER = Logger.getLogger(ZoneUtils.class);
+	private static final Logger LOGGER = LogManager.getLogger(ZoneUtils.class);
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH");
 
 	protected static long getMaximumTTL(final List<Record> records) {
@@ -75,11 +76,11 @@ public class ZoneUtils {
 	protected static String getAdminString(final JsonNode jo, final String key, final String d, final String domain) {
 
 		if (jo == null) {
-			return new StringBuffer(d).append(".").append(domain).toString();
+			return new StringBuffer(d).append('.').append(domain).toString();
 		}
 
 		if (!jo.has(key)) {
-			return new StringBuffer(d).append(".").append(domain).toString();
+			return new StringBuffer(d).append('.').append(domain).toString();
 		}
 
 		// check for @ sign in string
@@ -87,7 +88,7 @@ public class ZoneUtils {
 		if (admin.contains("@")) {
 			admin = admin.replace("@",".");
 		} else {
-			admin = new StringBuffer(admin).append(".").append(domain).toString();
+			admin = new StringBuffer(admin).append('.').append(domain).toString();
 		}
 
 		return admin;

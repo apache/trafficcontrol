@@ -21,6 +21,7 @@ package login
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
@@ -121,7 +122,9 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		resp := struct {
 			tc.Alerts
 		}{}
-		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		defer cancelTx()
+		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, dbCtx)
 		if blockingErr != nil {
 			api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
 			return
@@ -130,7 +133,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			log.Errorf("checking local user: %s\n", err.Error())
 		}
 		if userAllowed {
-			authenticated, err, blockingErr = auth.CheckLocalUserPassword(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+			authenticated, err, blockingErr = auth.CheckLocalUserPassword(form, db, dbCtx)
 			if blockingErr != nil {
 				api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
 				return
@@ -151,13 +154,17 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
 				http.SetCookie(w, httpCookie)
 
-				//If all's well until here, then update last authenticated time
-				tx, txErr := db.Begin()
+				// If all's well until here, then update last authenticated time
+				tx, txErr := db.BeginTx(dbCtx, nil)
 				if txErr != nil {
 					api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("beginning transaction: %w", txErr))
 					return
 				}
-				defer tx.Commit()
+				defer func() {
+					if err := tx.Commit(); err != nil && err != sql.ErrTxDone {
+						log.Errorln("committing transaction: " + err.Error())
+					}
+				}()
 				_, dbErr := tx.Exec(UpdateLoginTimeQuery, form.Username)
 				if dbErr != nil {
 					log.Errorf("unable to update authentication time for a given user: %s\n", dbErr.Error())
@@ -225,6 +232,13 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
+		_, dbErr := db.Exec(UpdateLoginTimeQuery, username)
+		if dbErr != nil {
+			dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", username, dbErr)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
+			return
+		}
+
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		api.WriteAndLogErr(w, r, append(respBts, '\n'))
 
@@ -235,7 +249,6 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 // OauthLoginHandler accepts a JSON web token previously obtained from an OAuth provider, decodes it, validates it, authorizes the user against the database, and returns the login result as either an error or success message
 func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		defer r.Body.Close()
 		authenticated := false
 		resp := struct {
@@ -251,7 +264,17 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}{}
 
 		if err := json.NewDecoder(r.Body).Decode(&parameters); err != nil {
-			handleErrs(http.StatusBadRequest, err)
+			api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
+			return
+		}
+
+		matched, err := VerifyUrlOnWhiteList(parameters.AuthCodeTokenUrl, cfg.ConfigTrafficOpsGolang.WhitelistedOAuthUrls)
+		if err != nil {
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+			return
+		}
+		if !matched {
+			api.HandleErr(w, r, nil, http.StatusForbidden, nil, errors.New("Key URL from token is not included in the whitelisted urls. Received: "+parameters.AuthCodeTokenUrl))
 			return
 		}
 
@@ -267,7 +290,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(parameters.ClientId+":"+cfg.OAuthClientSecret))) // per RFC6749 section 2.3.1
 		}
 		if err != nil {
-			log.Errorf("obtaining token using code from oauth provider: %s", err.Error())
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("obtaining token using code from oauth provider: %w", err))
 			return
 		}
 
@@ -276,7 +299,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 		response, err := client.Do(req)
 		if err != nil {
-			log.Errorf("getting an http client: %s", err.Error())
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("getting an http client: %w", err))
 			return
 		}
 		defer response.Body.Close()
@@ -307,8 +330,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		if encodedToken == "" {
-			log.Errorf("Token not found in request but is required")
-			handleErrs(http.StatusBadRequest, errors.New("Token not found in request but is required"))
+			api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("Token not found in request but is required"), nil)
 			return
 		}
 
@@ -324,17 +346,18 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				return nil, errors.New("Key URL from token is not included in the whitelisted urls. Received: " + publicKeyUrl)
 			}
 
-			keys, err := jwk.FetchHTTP(publicKeyUrl)
+			keys, err := jwk.Fetch(context.TODO(), publicKeyUrl)
 			if err != nil {
 				return nil, errors.New("Error fetching JSON key set with message: " + err.Error())
 			}
 
-			keyById := keys.LookupKeyID(publicKeyId)
-			if len(keyById) == 0 {
+			keyById, ok := keys.LookupKeyID(publicKeyId)
+			if !ok {
 				return nil, errors.New("No public key found for id: " + publicKeyId + " at url: " + publicKeyUrl)
 			}
 
-			selectedKey, err := keyById[0].Materialize()
+			var selectedKey interface{}
+			err = keyById.Raw(&selectedKey)
 			if err != nil {
 				return nil, errors.New("Error materializing key from JSON key set with message: " + err.Error())
 			}
@@ -342,8 +365,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return selectedKey, nil
 		})
 		if err != nil {
-			handleErrs(http.StatusInternalServerError, errors.New("Error decoding token with message: "+err.Error()))
-			log.Errorf("Error decoding token: %s\n", err.Error())
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, errors.New("Error decoding token with message: "+err.Error()))
 			return
 		}
 
@@ -352,7 +374,9 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		userId := decodedToken.Claims.(jwt.MapClaims)["sub"].(string)
 		form.Username = userId
 
-		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		defer cancelTx()
+		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, dbCtx)
 		if blockingErr != nil {
 			api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
 			return
@@ -362,6 +386,12 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		if userAllowed && authenticated {
+			_, dbErr := db.Exec(UpdateLoginTimeQuery, form.Username)
+			if dbErr != nil {
+				dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", form.Username, dbErr)
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
+				return
+			}
 			httpCookie := tocookie.GetCookie(userId, defaultCookieDuration, cfg.Secrets[0])
 			http.SetCookie(w, httpCookie)
 			resp = struct {
@@ -375,7 +405,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
 			return
 		}
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)

@@ -57,7 +57,7 @@ func (r *TCData) DeleteTestDeliveryServices(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("DeliveryService not found in Traffic Ops: %v", *ds.XMLID)
+			t.Errorf("DeliveryService not found in Traffic Ops: %s", *ds.XMLID)
 			continue
 		}
 

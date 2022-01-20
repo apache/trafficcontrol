@@ -18,13 +18,15 @@ package org.apache.traffic_control.traffic_router.core.dns.protocol;
 import org.apache.traffic_control.traffic_router.core.dns.DNSAccessEventBuilder;
 import org.apache.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import org.apache.traffic_control.traffic_router.core.dns.NameServer;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.xbill.DNS.*;
@@ -41,7 +43,8 @@ import static org.powermock.api.mockito.PowerMockito.*;
 
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({AbstractProtocolTest.FakeAbstractProtocol.class, Logger.class, DNSAccessEventBuilder.class, Header.class, NameServer.class, DNSAccessRecord.class})
+@PrepareForTest({AbstractProtocolTest.FakeAbstractProtocol.class, Logger.class, LogManager.class, DNSAccessEventBuilder.class, Header.class, NameServer.class, DNSAccessRecord.class})
+@PowerMockIgnore("javax.management.*")
 public class AbstractProtocolTest {
     private static Logger accessLogger = mock(Logger.class);
     private NameServer nameServer;
@@ -74,8 +77,8 @@ public class AbstractProtocolTest {
         };
         when(System.currentTimeMillis()).then(currentTimeAnswer);
 
-        mockStatic(Logger.class);
-        when(Logger.getLogger("org.apache.traffic_control.traffic_router.core.access")).thenAnswer(invocation -> accessLogger);
+        mockStatic(LogManager.class);
+        when(LogManager.getLogger("org.apache.traffic_control.traffic_router.core.access")).thenAnswer(invocation -> accessLogger);
 
         header = new Header();
         header.setID(65535);

@@ -1,3 +1,5 @@
+package tcdata
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +15,11 @@
    limitations under the License.
 */
 
-package tcdata
-
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func (r *TCData) CreateTestDeliveryServicesRegexes(t *testing.T) {
@@ -33,9 +34,9 @@ func (r *TCData) CreateTestDeliveryServicesRegexes(t *testing.T) {
 		}
 	}()
 
-	dbRegexInsertTemplate := "INSERT INTO regex (pattern, type) VALUES ('%v', '%v');"
+	dbRegexInsertTemplate := "INSERT INTO regex (pattern, type) VALUES ('%s', %d);"
 	dbRegexQueryTemplate := "SELECT id FROM regex order by id desc limit 1;"
-	dbDSRegexInsertTemplate := "INSERT INTO deliveryservice_regex (deliveryservice, regex, set_number) VALUES ('%v', '%v', '%v');"
+	dbDSRegexInsertTemplate := "INSERT INTO deliveryservice_regex (deliveryservice, regex, set_number) VALUES (%d, %d, %d);"
 
 	for i, regex := range r.TestData.DeliveryServicesRegexes {
 		loadDSRegexIDs(t, &regex)
@@ -63,19 +64,19 @@ func (r *TCData) CreateTestDeliveryServicesRegexes(t *testing.T) {
 func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
 	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName)
 	if err != nil {
-		t.Fatalf("unable to get type by name %v: %v", test.TypeName, err)
+		t.Fatalf("unable to get type by name %s: %v", test.TypeName, err)
 	}
 	if len(dsTypes) < 1 {
-		t.Fatalf("could not find any types by name %v", test.TypeName)
+		t.Fatalf("could not find any types by name %s", test.TypeName)
 	}
 	test.Type = dsTypes[0].ID
 
 	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(test.DSName)
 	if err != nil {
-		t.Fatalf("unable to ds by xmlid %v: %v", test.DSName, err)
+		t.Fatalf("unable to ds by xmlid %s: %v", test.DSName, err)
 	}
 	if len(dses) != 1 {
-		t.Fatalf("unable to find ds by xmlid %v", test.DSName)
+		t.Fatalf("unable to find ds by xmlid %s", test.DSName)
 	}
 	test.DSID = *dses[0].ID
 }
@@ -95,12 +96,12 @@ func (r *TCData) DeleteTestDeliveryServicesRegexes(t *testing.T) {
 	for _, regex := range r.TestData.DeliveryServicesRegexes {
 		err = execSQL(db, fmt.Sprintf("DELETE FROM deliveryservice_regex WHERE deliveryservice = '%v' and regex ='%v';", regex.DSID, regex.ID))
 		if err != nil {
-			t.Fatalf("unable to delete deliveryservice_regex by regex %v and ds %v: %v", regex.ID, regex.DSID, err)
+			t.Fatalf("unable to delete deliveryservice_regex by regex %d and ds %d: %v", regex.ID, regex.DSID, err)
 		}
 
-		err := execSQL(db, fmt.Sprintf("DELETE FROM regex WHERE Id = '%v';", regex.ID))
+		err := execSQL(db, fmt.Sprintf("DELETE FROM regex WHERE id = %d;", regex.ID))
 		if err != nil {
-			t.Fatalf("unable to delete regex %v: %v", regex.ID, err)
+			t.Fatalf("unable to delete regex %d: %v", regex.ID, err)
 		}
 	}
 }

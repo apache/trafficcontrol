@@ -24,7 +24,7 @@ limitations under the License.
 </address>
 </main>
 
-<form *ngIf="editMode" ngNativeValidate (submit)="submitEdit($event)">
+<form *ngIf="editMode && editUser" ngNativeValidate (submit)="submitEdit($event)">
 	<mat-form-field style="grid-area: a-start;">
 		<mat-label>Username</mat-label>
 		<input matInput [(ngModel)]="editUser.username" name="username" type="text" required/>

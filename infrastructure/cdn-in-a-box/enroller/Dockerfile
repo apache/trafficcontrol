@@ -30,7 +30,8 @@ RUN go_version=$(cat /GO_VERSION) && \
     tar -C /usr/local -xvzf go.tar.gz && \
     ln -s /usr/local/go/bin/go /usr/bin/go && \
     rm go.tar.gz
-ENV GOPATH=/go
+ENV GOPATH=/go \
+    CGO_ENABLED=0
 
 FROM enroller-dependencies AS enroller-builder
 ARG ENROLLER_DEBUG_BUILD=false
@@ -48,7 +49,6 @@ RUN set -o errexit -o nounset; \
     go clean; \
     go mod vendor -v; \
     gcflags= ldflags=; \
-    tags='usergo netgo'; \
     if [ "$ENROLLER_DEBUG_BUILD" = true ]; then \
         apt-get install -y --no-install-recommends gcc libstdc++-9-dev; \
         echo 'Building Enroller without optimization or inlining'; \
@@ -57,7 +57,7 @@ RUN set -o errexit -o nounset; \
         echo 'Optimizing Enroller build'; \
         ldflags='-s -w'; \
     fi; \
-    go build -ldflags "$ldflags" -gcflags "$gcflags" -tags "$tags"
+    go build -ldflags "$ldflags" -gcflags "$gcflags"
 
 FROM enroller-dependencies as get-delve
 RUN go get github.com/go-delve/delve/cmd/dlv

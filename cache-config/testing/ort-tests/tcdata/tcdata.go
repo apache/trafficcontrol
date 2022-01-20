@@ -1,3 +1,9 @@
+// Package tcdata provides dynamic loading/unloading of ATC objects to/from a
+// Traffic Ops instance.
+//
+// This should ONLY be imported by tests, that's the library's only purpose.
+package tcdata
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +18,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-
-package tcdata
 
 import (
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/config"

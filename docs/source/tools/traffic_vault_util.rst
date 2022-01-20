@@ -18,6 +18,10 @@
 *************************
 Traffic Vault Util (Riak)
 *************************
+.. deprecated:: ATCv6
+	When support for the Riak backend is removed, support for this tool will
+	also be dropped.
+
 The ``traffic_vault_util`` tool - located at :file:`tools/traffic_vault_util.go` in the `Apache Traffic Control repository <https://github.com/apache/trafficcontrol>`_ - is used to view and modify the contents of a Traffic Vault Riak cluster. The tool contains basic operations to display the buckets, keys and values stored within Riak.
 
 .. note:: This tool does not apply to the PostgreSQL Traffic Vault backend.
@@ -28,7 +32,7 @@ The ``traffic_vault_util`` tool - located at :file:`tools/traffic_vault_util.go`
 
 Usage
 =====
-``traffic_vault_util [--dry_run] --vault_ip IP --vault_action ACTION [--vault_user USER] [--vault_password PASSWD] [--vault_port PORT]``
+``traffic_vault_util [--dry_run] --vault_ip IP --vault_action ACTION [--vault_user USER] [--vault_password PASSWD] [--vault_port PORT] [--insecure]``
 
 .. option:: --dry_run
 
@@ -68,5 +72,9 @@ Usage
 	An optional flag which, if given, specifies the name of the user as whom to connect to Riak.
 
 	.. warning:: Although this flag is optional, the utility will not work without it. It will try, but it will fail\ [1]_.
+
+.. option:: --insecure
+
+	An optional flag which, if given, specifies whether to utilize TLS certificate checks when establishing a connection. Defaults to false.
 
 .. [1] These problems are all tracked by `GitHub Issue #3261 <https://github.com/apache/trafficcontrol/issues/3261>`_.

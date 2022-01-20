@@ -113,7 +113,9 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                     return params;
                 },
                 collection: function() {
-                    return $scope.cdns;
+                    return $scope.cdns.filter(function(cdn) {
+                        return cdn.name != 'ALL';
+                    });
                 }
             }
         });
@@ -161,7 +163,9 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                     return params;
                 },
                 collection: function() {
-                    return $scope.cdns;
+                    return $scope.cdns.filter(function(cdn) {
+                        return cdn.name != 'ALL';
+                    });
                 }
             }
         });

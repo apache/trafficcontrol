@@ -16,7 +16,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
 import {InvalidationJobService} from "../../../shared/api";
-import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog.component";
+import { NewInvalidationJobDialogComponent, sanitizedRegExpString, timeStringFromDate } from "./new-invalidation-job-dialog.component";
 
 describe("NewInvalidationJobDialogComponent", () => {
 	let component: NewInvalidationJobDialogComponent;
@@ -34,7 +34,7 @@ describe("NewInvalidationJobDialogComponent", () => {
 				{provide: MatDialogRef, useValue: {close: (): void => {
 					console.log("dialog closed");
 				}}},
-				{provide: MAT_DIALOG_DATA, useValue: -1},
+				{provide: MAT_DIALOG_DATA, useValue: {dsID: -1}},
 				{ provide: InvalidationJobService, useValue: mockAPIService}
 			]
 		}).compileComponents();
@@ -48,5 +48,21 @@ describe("NewInvalidationJobDialogComponent", () => {
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+	});
+});
+
+describe("NewInvalidationJobDialogComponent utility functions", () => {
+	it("gets a time string from a Date", ()=>{
+		const d = new Date();
+		d.setHours(0);
+		d.setMinutes(0);
+		expect(timeStringFromDate(d)).toBe("00:00");
+		d.setHours(12);
+		d.setMinutes(34);
+		expect(timeStringFromDate(d)).toBe("12:34");
+	});
+	it("sanitizes regular expressions", ()=>{
+		expect(sanitizedRegExpString(/\/.+\/my\/path\.jpg/)).toBe("/.+/my/path\\.jpg");
+		expect(sanitizedRegExpString(new RegExp("\\/path\\/to\\/content\\/.+\\.m3u8"))).toBe("/path/to/content/.+\\.m3u8");
 	});
 });

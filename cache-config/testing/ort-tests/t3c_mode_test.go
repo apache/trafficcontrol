@@ -1,3 +1,4 @@
+// Package orttest provides testing for the t3c utility(ies).
 package orttest
 
 /*
@@ -15,37 +16,94 @@ package orttest
 */
 
 import (
-	"fmt"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strconv"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 )
 
-const TrafficServerOwner = "ats"
-
-var (
-	base_line_dir   = "baseline-configs"
-	test_config_dir = "/opt/trafficserver/etc/trafficserver"
-
-	testFiles = [8]string{
-		"astats.config",
-		"hdr_rw_first_ds-top.config",
-		"hosting.config",
-		"parent.config",
-		"records.config",
-		"remap.config",
-		"storage.config",
-		"volume.config",
+func verifyPluginConfigs(t *testing.T) {
+	err := runCheckRefs("/opt/trafficserver/etc/trafficserver/remap.config")
+	if err != nil {
+		t.Errorf("Plugin verification failed for remap.config: %v", err)
 	}
-)
+	err = runCheckRefs("/opt/trafficserver/etc/trafficserver/plugin.config")
+	if err != nil {
+		t.Errorf("Plugin verification failed for plugin.config: %v", err)
+	}
+
+}
+
+func verifyRemapConfigPlaced(t *testing.T) {
+	// remove the remap.config in preparation for running syncds
+	remap := filepath.Join(TestConfigDir, "remap.config")
+	err := os.Remove(remap)
+	if err != nil {
+		t.Fatalf("unable to remove %s: %v", remap, err)
+	}
+	// prepare for running syncds.
+	err = ExecTOUpdater(DefaultCacheHostName, false, true)
+	if err != nil {
+		t.Fatalf("queue updates failed: %v", err)
+	}
+
+	// remap.config is removed and atlanta-edge-03 should have
+	// queue updates enabled.  run t3c to verify a new remap.config
+	// is pulled down.
+	err = runApply(DefaultCacheHostName, "syncds")
+	if err != nil {
+		t.Fatalf("t3c syncds failed: %v", err)
+	}
+	if !util.FileExists(remap) {
+		t.Fatalf("syncds failed to pull down %s", remap)
+	}
+}
+
+// given a filename checks that the baseline and generated files diff clean and
+// that the generated files have the given user and owner group IDs
+func checkDiff(fName, atsUid, atsGid string, t *testing.T) {
+	bfn := filepath.Join(BaselineConfigDir, fName)
+	if !util.FileExists(bfn) {
+		t.Fatalf("missing baseline config file, %s,  needed for tests", bfn)
+	}
+	tfn := filepath.Join(TestConfigDir, fName)
+	if !util.FileExists(tfn) {
+		t.Fatalf("missing the expected config file, %s", tfn)
+	}
+
+	diffStr, err := util.DiffFiles(bfn, tfn)
+	if err != nil {
+		t.Fatalf("diffing %s and %s: %v", tfn, bfn, err)
+	} else if diffStr != "" {
+		t.Errorf("%s and %s differ: %v", tfn, bfn, diffStr)
+	} else {
+		t.Logf("%s and %s diff clean", tfn, bfn)
+	}
+
+	fileInfo, err := os.Stat(tfn)
+	if err != nil {
+		t.Errorf("Error getting stats on %s: %v", tfn, err)
+	} else {
+		if statStruct, ok := fileInfo.Sys().(*syscall.Stat_t); ok {
+			uid := strconv.Itoa(int(statStruct.Uid))
+			if uid != atsUid {
+				t.Errorf("Unexpected uid for file: %s: %s, expected %s", fName, uid, atsUid)
+			}
+			gid := strconv.Itoa(int(statStruct.Gid))
+			if gid != atsGid {
+				t.Errorf("Unexpected gid for file: %s: %s, expected %s", fName, gid, atsGid)
+			}
+		}
+	}
+}
 
 func TestT3cBadassAndSyncDs(t *testing.T) {
-	fmt.Println("------------- Starting TestT3cBadassAndSyncDs ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -58,28 +116,28 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		// TODO: remove this when running ATS is added to the test framework
 
 		if err := os.Rename(`/opt/trafficserver/bin/traffic_ctl`, `/opt/trafficserver/bin/traffic_ctl.real`); err != nil {
-			t.Fatal("temporarily moving traffic_ctl: " + err.Error())
+			t.Fatalf("temporarily moving traffic_ctl: %v", err)
 		}
 
 		fi, err := os.OpenFile(`/opt/trafficserver/bin/traffic_ctl`, os.O_RDWR|os.O_CREATE, 755)
 		if err != nil {
-			t.Fatal("creating temp no-op traffic_ctl file: " + err.Error())
+			t.Fatalf("creating temp no-op traffic_ctl file: %v", err)
 		}
 		if _, err := fi.WriteString(`#!/usr/bin/env bash` + "\n"); err != nil {
 			fi.Close()
-			t.Fatal("writing temp no-op traffic_ctl file: " + err.Error())
+			t.Fatalf("writing temp no-op traffic_ctl file: %v", err)
 		}
 		fi.Close()
 
 		defer func() {
 			if err := os.Rename(`/opt/trafficserver/bin/traffic_ctl.real`, `/opt/trafficserver/bin/traffic_ctl`); err != nil {
-				t.Fatal("moving real traffic_ctl back: " + err.Error())
+				t.Fatalf("moving real traffic_ctl back: %v", err)
 			}
 		}()
 
 		// run badass and check config files.
-		if err := runApply("atlanta-edge-03", "badass"); err != nil {
-			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
+		if err := runApply(DefaultCacheHostName, "badass"); err != nil {
+			t.Fatalf("t3c badass failed: %v", err)
 		}
 
 		// Use this for uid/gid file check
@@ -94,81 +152,13 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 			atsGid = atsUser.Gid
 		}
 
-		for _, v := range testFiles {
-			bfn := base_line_dir + "/" + v
-			if !util.FileExists(bfn) {
-				t.Fatalf("ERROR: missing baseline config file, %s,  needed for tests", bfn)
-			}
-			tfn := test_config_dir + "/" + v
-			if !util.FileExists(tfn) {
-				t.Fatalf("ERROR: missing the expected config file, %s", tfn)
-			}
-
-			diffStr, err := util.DiffFiles(bfn, tfn)
-			if err != nil {
-				t.Fatalf("diffing %s and %s: %v", tfn, bfn, err)
-			} else if diffStr != "" {
-				t.Errorf("%s and %s differ: %v", tfn, bfn, diffStr)
-			} else {
-				t.Logf("%s and %s diff clean", tfn, bfn)
-			}
-
-			fileInfo, err := os.Stat(tfn)
-			if err != nil {
-				t.Errorf("Error getting stats on %s: %v", tfn, err)
-			} else {
-				if statStruct, ok := fileInfo.Sys().(*syscall.Stat_t); ok {
-					uid := strconv.Itoa(int(statStruct.Uid))
-					if uid != atsUid {
-						t.Errorf("Unexpected uid for file: %s: %s, expected %s", v, uid, atsUid)
-					}
-					gid := strconv.Itoa(int(statStruct.Gid))
-					if gid != atsGid {
-						t.Errorf("Unexpected gid for file: %s: %s, expected %s", v, gid, atsGid)
-					}
-				}
-			}
+		for _, v := range TestFiles {
+			t.Run("check diff of "+v+" between baseline and badass-generated", func(t *testing.T) { checkDiff(v, atsUid, atsGid, t) })
 		}
 
 		time.Sleep(time.Second * 5)
 
-		fmt.Println("------------------------ Verify Plugin Configs ----------------")
-		err = runCheckRefs("/opt/trafficserver/etc/trafficserver/remap.config")
-		if err != nil {
-			t.Errorf("Plugin verification failed for remap.config: " + err.Error())
-		}
-		err = runCheckRefs("/opt/trafficserver/etc/trafficserver/plugin.config")
-		if err != nil {
-			t.Errorf("Plugin verification failed for plugin.config: " + err.Error())
-		}
-
-		fmt.Println("----------------- End of Verify Plugin Configs ----------------")
-
-		fmt.Println("------------------------ running SYNCDS Test ------------------")
-		// remove the remap.config in preparation for running syncds
-		remap := test_config_dir + "/remap.config"
-		err = os.Remove(remap)
-		if err != nil {
-			t.Fatalf("ERROR: unable to remove %s\n", remap)
-		}
-		// prepare for running syncds.
-		err = ExecTOUpdater("atlanta-edge-03", false, true)
-		if err != nil {
-			t.Fatalf("ERROR: queue updates failed: %v\n", err)
-		}
-
-		// remap.config is removed and atlanta-edge-03 should have
-		// queue updates enabled.  run t3c to verify a new remap.config
-		// is pulled down.
-		err = runApply("atlanta-edge-03", "syncds")
-		if err != nil {
-			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
-		}
-		if !util.FileExists(remap) {
-			t.Fatalf("ERROR: syncds failed to pull down %s\n", remap)
-		}
-		fmt.Println("------------------------ end SYNCDS Test ------------------")
-
+		t.Run("Verify Plugin Configs", verifyPluginConfigs)
+		t.Run("Verify remap.config placed as expected after SYNCDS run", verifyRemapConfigPlaced)
 	})
-	fmt.Println("------------- End of TestT3cBadassAndSyncDs ---------------")
 }
