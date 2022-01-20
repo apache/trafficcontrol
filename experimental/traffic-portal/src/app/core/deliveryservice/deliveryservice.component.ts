@@ -18,8 +18,8 @@ import { faBroom } from "@fortawesome/free-solid-svg-icons";
 
 import { Subject } from "rxjs";
 
+import { DeliveryServiceService } from "src/app/api";
 import { DataPoint, DataSet, DeliveryService } from "../../models";
-import { DeliveryServiceService } from "../../shared/api";
 import {AlertService} from "../../shared/alert/alert.service";
 
 /**

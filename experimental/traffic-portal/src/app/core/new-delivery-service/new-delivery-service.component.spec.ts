@@ -25,7 +25,7 @@ import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
-import { DeliveryServiceService, UserService } from "src/app/shared/api";
+import { UserService } from "src/app/shared/api";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { Protocol } from "../../models";
@@ -67,7 +67,6 @@ describe("NewDeliveryServiceComponent", () => {
 				MatRadioModule
 			],
 			providers: [
-				{provide: DeliveryServiceService, useValue: mockAPIService},
 				{provide: UserService, useValue: mockAPIService},
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]

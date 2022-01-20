@@ -16,8 +16,9 @@ import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { faPlus, faTrash, faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 
-import { defaultDeliveryService, DeliveryService, InvalidationJob } from "../../models";
-import { DeliveryServiceService, InvalidationJobService } from "../../shared/api";
+import { DeliveryServiceService } from "src/app/api";
+import { defaultDeliveryService, DeliveryService, InvalidationJob } from "src/app/models";
+import { InvalidationJobService } from "src/app/shared/api";
 import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 
 /**

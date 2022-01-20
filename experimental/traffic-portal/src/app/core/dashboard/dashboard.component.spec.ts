@@ -15,16 +15,17 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
-import {DeliveryServiceService, UserService} from "src/app/shared/api";
 
-
+import { APITestingModule } from "src/app/api/testing";
+import { DeliveryService } from "src/app/models";
+import { UserService } from "src/app/shared/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { LinechartDirective } from "../../shared/charts/linechart.directive";
-import { DeliveryService } from "../../models";
+import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+import { LoadingComponent } from "src/app/shared/loading/loading.component";
+import { AlertService } from "src/app/shared/alert/alert.service";
+
 import { DsCardComponent } from "../ds-card/ds-card.component";
-import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
-import {LoadingComponent} from "../../shared/loading/loading.component";
-import {AlertService} from "../../shared/alert/alert.service";
 import { DashboardComponent } from "./dashboard.component";
 
 describe("DashboardComponent", () => {
@@ -32,12 +33,10 @@ describe("DashboardComponent", () => {
 	let fixture: ComponentFixture<DashboardComponent>;
 
 	beforeEach(waitForAsync(() => {
-		const mockAPIService = jasmine.createSpyObj(["getDeliveryServices"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"],
 			{capabilities: new Set<string>()});
 
 		const mockAlertService = jasmine.createSpyObj(["newAlert"]);
-		mockAPIService.getDeliveryServices.and.returnValue(new Promise(resolve=>resolve([])));
 
 		TestBed.configureTestingModule({
 			declarations: [
@@ -48,6 +47,7 @@ describe("DashboardComponent", () => {
 				LinechartDirective
 			],
 			imports: [
+				APITestingModule,
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
@@ -55,9 +55,8 @@ describe("DashboardComponent", () => {
 			],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: DeliveryServiceService, useValue: mockAPIService },
-				{ provide: UserService, useValue: mockAPIService },
-				{ provide: AlertService, useValue: mockAlertService }
+				{ provide: AlertService, useValue: mockAlertService },
+				{ provide: UserService, useValue: mockCurrentUserService }
 			]
 		});
 		TestBed.compileComponents();

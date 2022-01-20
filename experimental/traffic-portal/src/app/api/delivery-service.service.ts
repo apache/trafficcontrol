@@ -25,8 +25,8 @@ import {
 	InvalidationJob,
 	TPSData,
 	Type
-} from "../../models";
-import { APIService } from "./APIService";
+} from "src/app/models";
+import { APIService } from "./base-api.service";
 
 /**
  * The type of a raw response returned from the API that has to be massaged

@@ -15,13 +15,11 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { of } from "rxjs";
+import { APITestingModule } from "src/app/api/testing";
+import type { DeliveryService } from "src/app/models";
+import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
+import { LoadingComponent } from "src/app/shared/loading/loading.component";
 
-
-import { LinechartDirective } from "../../shared/charts/linechart.directive";
-import { DeliveryService } from "../../models";
-import {LoadingComponent} from "../../shared/loading/loading.component";
-import {DeliveryServiceService} from "../../shared/api";
 import { DsCardComponent } from "./ds-card.component";
 
 describe("DsCardComponent", () => {
@@ -29,18 +27,6 @@ describe("DsCardComponent", () => {
 	let fixture: ComponentFixture<DsCardComponent>;
 
 	beforeEach(waitForAsync(() => {
-		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getDSKBPS", "getDSCapacity", "getDSHealth", "getDeliveryServices"]);
-		mockAPIService.getDSKBPS.and.returnValue(of([]), of([]));
-		mockAPIService.getDSCapacity.and.returnValue(of({
-			availablePercent: 34,
-			maintenance: 42,
-			utilized: 24
-		}));
-		mockAPIService.getDSHealth.and.returnValue(of({
-			totalOffline: 20,
-			totalOnline: 80
-		}));
 
 		TestBed.configureTestingModule({
 			declarations: [
@@ -49,12 +35,10 @@ describe("DsCardComponent", () => {
 				LinechartDirective
 			],
 			imports: [
+				APITestingModule,
 				HttpClientModule,
-				RouterTestingModule
+				RouterTestingModule,
 			],
-			providers: [
-				{ provide: DeliveryServiceService, useValue: mockAPIService }
-			]
 		});
 		TestBed.compileComponents();
 	}));

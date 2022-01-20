@@ -18,8 +18,8 @@ import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { Subject } from "rxjs";
 
-import { DataPoint, DataSet, DeliveryService, GeoProvider, protocolToString } from "../../models";
-import { DeliveryServiceService } from "../../shared/api";
+import { DeliveryServiceService } from "src/app/api";
+import { DataPoint, DataSet, DeliveryService, GeoProvider, protocolToString } from "src/app/models";
 
 
 /**

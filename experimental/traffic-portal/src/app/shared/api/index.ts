@@ -12,7 +12,6 @@
 * limitations under the License.
 */
 
-export * from "./DeliveryServiceService";
 export * from "./InvalidationJobService";
 export * from "./ProfileService";
 export * from "./TypeService";

@@ -3,9 +3,11 @@ import { CommonModule } from "@angular/common";
 import { CDNService } from "./cdn.service";
 import { ServerService } from "./server.service";
 import { CacheGroupService } from "./cache-group.service";
+import { DeliveryServiceService } from "./delivery-service.service";
 
 export * from "./cache-group.service";
 export * from "./cdn.service";
+export * from "./delivery-service.service";
 export * from "./server.service";
 
 /**
@@ -19,6 +21,7 @@ export * from "./server.service";
 	providers: [
 		CacheGroupService,
 		CDNService,
+		DeliveryServiceService,
 		ServerService
 	]
 })

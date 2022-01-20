@@ -18,13 +18,14 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { MatDialogModule } from "@angular/material/dialog";
 
 import { of } from "rxjs";
-import {DeliveryServiceService, InvalidationJobService, UserService} from "src/app/shared/api";
 
-
+import { APITestingModule } from "src/app/api/testing";
+import { InvalidationJobService, UserService} from "src/app/shared/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { CustomvalidityDirective } from "../../shared/validation/customvalidity.directive";
-import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob, JobType } from "../../models";
-import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
+import { CustomvalidityDirective } from "src/app/shared/validation/customvalidity.directive";
+import { InvalidationJob, JobType } from "src/app/models";
+import {TpHeaderComponent} from "src/app/shared/tp-header/tp-header.component";
+
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
 describe("InvalidationJobsComponent", () => {
@@ -33,31 +34,11 @@ describe("InvalidationJobsComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getInvalidationJobs", "getDeliveryServices"]);
+		const mockAPIService = jasmine.createSpyObj(["getInvalidationJobs"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		mockAPIService.getInvalidationJobs.and.returnValue(of({
 			startTime: new Date(),
 		} as InvalidationJob));
-		mockAPIService.getDeliveryServices.and.returnValue(of({
-			active: true,
-			anonymousBlockingEnabled: false,
-			cdnId: 0,
-			displayName: "test DS",
-			dscp: 0,
-			geoLimit: GeoLimit.NONE,
-			geoProvider: GeoProvider.MAX_MIND,
-			ipv6RoutingEnabled: true,
-			lastUpdated: new Date(),
-			logsEnabled: true,
-			longDesc: "A test Delivery Service for API mock-ups",
-			missLat: 0,
-			missLong: 0,
-			multiSiteOrigin: false,
-			regionalGeoBlocking: false,
-			routingName: "test-DS",
-			typeId: 0,
-			xmlId: "test-DS"
-		} as DeliveryService));
 
 		TestBed.configureTestingModule({
 			declarations: [
@@ -66,6 +47,7 @@ describe("InvalidationJobsComponent", () => {
 				CustomvalidityDirective
 			],
 			imports: [
+				APITestingModule,
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
@@ -74,7 +56,6 @@ describe("InvalidationJobsComponent", () => {
 			],
 			providers: [
 				{ provide: InvalidationJobService, useValue: mockAPIService },
-				{ provide: DeliveryServiceService, useValue: mockAPIService },
 				{ provide: UserService, useValue: mockAPIService },
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
