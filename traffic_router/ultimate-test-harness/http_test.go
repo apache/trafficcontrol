@@ -426,12 +426,6 @@ func generatePaths(pathCount, maxPathLength int) []string {
 	return paths
 }
 
-func BenchmarkHttpDSes(b *testing.B) {
-	fmt.Printf("count: %d\n", count)
-	count++
-	time.Sleep(time.Second * 3)
-}
-
 func getTrafficRouters(trafficRouterName string, cdnName tc.CDNName) ([]tc.ServerV40, error) {
 	requestOptions := client.RequestOptions{QueryParameters: url.Values{
 		"type":   {tc.RouterTypeName},
