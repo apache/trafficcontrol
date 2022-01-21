@@ -20,9 +20,10 @@ import { LinechartDirective } from "./linechart.directive";
 
 describe("LinechartDirective", () => {
 	let directive: LinechartDirective;
-	const dataSets = new BehaviorSubject<Array<DataSet | null>|null>(null);
+	let dataSets: BehaviorSubject<Array<DataSet | null> | null>;
 
 	beforeEach(()=>{
+		dataSets =  new BehaviorSubject<Array<DataSet | null>|null>(null);
 		directive = new LinechartDirective(new ElementRef(document.createElement("canvas")));
 		directive.chartDataSets = dataSets;
 		directive.ngAfterViewInit();
@@ -42,5 +43,9 @@ describe("LinechartDirective", () => {
 		dataSets.next([null, {data: [{x: 1, y: 2}], label: "label"}]);
 		dataSets.next([{data: [{x: 1, y: 2}, {x: 2, y: 4}], label: "label"}, null]);
 		dataSets.next(null);
+	});
+
+	it("handles errors in the data stream", () => {
+		dataSets.error(new Error("some kind of problem with the server"));
 	});
 });

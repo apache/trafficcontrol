@@ -12,9 +12,9 @@
 * limitations under the License.
 */
 
-import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from "@angular/core";
+import { type AfterViewInit, Directive, ElementRef, Input, type OnDestroy } from "@angular/core";
 import { Chart } from "chart.js"; // TODO: use plotly instead for WebGL-capabale browsers?
-import { from, Observable, Subscription } from "rxjs";
+import { from, type Observable, type Subscription } from "rxjs";
 
 import type { DataSet } from "src/app/models/data";
 
@@ -54,22 +54,14 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	/** Chart.js configuration options. */
 	private opts: Chart.ChartConfiguration = {};
 
-	/**
-	 * Constructor.
-	 */
 	constructor(private readonly element: ElementRef) { }
 
 	/**
 	 * Initializes the chart using the input data.
 	 */
 	public ngAfterViewInit(): void {
-		if (this.element.nativeElement === null) {
-			console.warn("Use of DOM directive in non-DOM context!");
-			return;
-		}
-
 		if (!(this.element.nativeElement instanceof HTMLCanvasElement)) {
-			throw new Error("[linechart] Directive can only be used on a canvas!");
+			throw new Error("[linechart] Directive can only be used on a canvas in a context where DOM access is allowed");
 		}
 
 		const ctx = this.element.nativeElement.getContext("2d", {alpha: false});
