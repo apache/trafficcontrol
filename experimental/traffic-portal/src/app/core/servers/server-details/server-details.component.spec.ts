@@ -38,6 +38,7 @@ describe("ServerDetailsComponent", () => {
 		fixture = TestBed.createComponent(ServerDetailsComponent);
 		component = fixture.componentInstance;
 		component.server = {...defaultServer};
+		component.server.interfaces = [];
 		fixture.detectChanges();
 	});
 

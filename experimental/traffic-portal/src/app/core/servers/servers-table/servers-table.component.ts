@@ -12,15 +12,15 @@
 * limitations under the License.
 */
 
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-import { ITooltipParams } from "ag-grid-community";
+import type { ITooltipParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 
 import { ServerService } from "src/app/api";
-import { Interface, Server } from "src/app/models/server";
-import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type { Interface, Server } from "src/app/models";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { IPV4, serviceInterface } from "src/app/utils";
 
 /**
