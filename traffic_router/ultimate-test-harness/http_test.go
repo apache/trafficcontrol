@@ -24,7 +24,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net"
 	"net/http"
@@ -36,7 +35,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	go_log "github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -152,7 +151,7 @@ func getCoverageZoneFile(czPollingURL string) (tc.CoverageZoneFile, error) {
 	if err != nil {
 		return czMap, fmt.Errorf("getting Coverage Zone File from URL %s: %s", czPollingURL, err.Error())
 	}
-	defer go_log.Close(czMapResponse.Body, "closing the Coverage Zone File response")
+	defer log.Close(czMapResponse.Body, "closing the Coverage Zone File response")
 	czMapBytes, err := ioutil.ReadAll(czMapResponse.Body)
 	if err != nil {
 		return czMap, fmt.Errorf("reading Coverage Zone File bytes: %s", err.Error())
@@ -251,13 +250,13 @@ func TestLoad(t *testing.T) {
 			}
 		}
 		if len(ipAddresses) < 1 {
-			log.Printf("need at least 1 monitored service address on an interface of Traffic Router '%s' to use it for benchmarks, but %d such addresses were found", *trafficRouter.HostName, len(ipAddresses))
+			log.Warnf("need at least 1 monitored service address on an interface of Traffic Router '%s' to use it for benchmarks, but %d such addresses were found", *trafficRouter.HostName, len(ipAddresses))
 			continue
 		}
 		dsTypeName := tc.DSTypeHTTP
 		httpDSes := getDSes(t, *trafficRouter.CDNID, dsTypeName, tc.DeliveryServiceName(*deliveryServiceName))
 		if len(httpDSes) < 1 {
-			log.Printf("at least 1 Delivery Service with type '%s' is required to run HTTP load tests on Traffic Router '%s', but %d were found", dsTypeName, *trafficRouter.HostName, len(httpDSes))
+			log.Warnf("at least 1 Delivery Service with type '%s' is required to run HTTP load tests on Traffic Router '%s', but %d were found", dsTypeName, *trafficRouter.HostName, len(httpDSes))
 		}
 		dsURL, err := url.Parse(httpDSes[0].ExampleURLs[0])
 		if err != nil {
