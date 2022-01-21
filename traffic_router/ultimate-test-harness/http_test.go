@@ -73,7 +73,7 @@ type IPAddressMap struct {
 
 type Benchmark struct {
 	RequestsPerSecondThreshold int
-	BenchmarkTime              int
+	BenchmarkSeconds           int
 	ThreadCount                int
 	ClientIP                   *string
 	PathCount                  int
@@ -291,7 +291,7 @@ func TestLoad(t *testing.T) {
 
 	benchmark := Benchmark{
 		RequestsPerSecondThreshold: *requestsPerSecondThreshold,
-		BenchmarkTime:              *benchmarkTime,
+		BenchmarkSeconds:           *benchmarkTime,
 		ThreadCount:                *threadCount,
 		PathCount:                  *pathCount,
 		MaxPathLength:              *maxPathLength,
@@ -343,7 +343,7 @@ func TestLoad(t *testing.T) {
 				protocol = "IPv4"
 			}
 			var passed string
-			requestsPerSecond := redirects / benchmark.BenchmarkTime
+			requestsPerSecond := redirects / benchmark.BenchmarkSeconds
 			if requestsPerSecond > benchmark.RequestsPerSecondThreshold {
 				passedTests++
 				passed = "Yes"
@@ -365,7 +365,7 @@ func TestLoad(t *testing.T) {
 
 func (b *Benchmark) Run(t *testing.T, redirectsChannel chan int, failuresChannel chan int, trafficRouterIndex int, trafficRouterURL string, ipAddressIndex int) {
 	paths := generatePaths(b.PathCount, b.MaxPathLength)
-	stopTime := time.Now().Add(time.Duration(b.BenchmarkTime) * time.Second)
+	stopTime := time.Now().Add(time.Duration(b.BenchmarkSeconds) * time.Second)
 	redirects, failures := 0, 0
 	var req *http.Request
 	var resp *http.Response
