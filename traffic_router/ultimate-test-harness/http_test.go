@@ -125,6 +125,8 @@ func init() {
 	threadCount = flag.Int("thread_count", 12, "the number of threads to use for each test")
 	pathCount = flag.Int("path_count", 10000, "the number of paths to generate for use in requests to Delivery Services")
 	maxPathLength = flag.Int("max_path_length", 100, "the maximum length for each generated path")
+
+	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
 }
 
 func getCoverageZoneURL(cdnName tc.CDNName) (string, error) {
