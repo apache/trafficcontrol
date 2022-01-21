@@ -40,4 +40,4 @@ done
 
 cat "$X509_CA_CERT_FULL_CHAIN_FILE" >> /etc/ssl/cert.pem
 
-./harness.test
+./ultimate-test-harness.test
