@@ -80,6 +80,7 @@
 				],
 				"@typescript-eslint/consistent-type-assertions": "error",
 				"@typescript-eslint/consistent-type-definitions": "error",
+				"@typescript-eslint/consistent-type-imports": "warn",
 				"@typescript-eslint/dot-notation": "error",
 				"@typescript-eslint/explicit-function-return-type": "error",
 				"@typescript-eslint/explicit-member-accessibility": [
@@ -161,6 +162,7 @@
 						"allowWithDecorator": true
 					}
 				],
+				"@typescript-eslint/no-duplicate-imports": ["error"],
 				"@typescript-eslint/no-dynamic-delete": "error",
 				"@typescript-eslint/no-floating-promises": "off",
 				"@typescript-eslint/no-inferrable-types": [
@@ -296,7 +298,7 @@
 				],
 				"no-bitwise": "off",
 				"no-duplicate-case": "error",
-				"no-duplicate-imports": "error",
+				"no-duplicate-imports": "off",
 				"no-else-return": "error",
 				"no-empty": "error",
 				"no-extra-bind": "error",
