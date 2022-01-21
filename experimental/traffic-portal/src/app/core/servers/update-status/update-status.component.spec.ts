@@ -12,8 +12,9 @@
 * limitations under the License.
 */
 import { HttpClientModule } from "@angular/common/http";
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed } from "@angular/core/testing";
 
+import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { defaultServer } from "src/app/models";
 
@@ -23,15 +24,11 @@ describe("UpdateStatusComponent", () => {
 	let component: UpdateStatusComponent;
 	let fixture: ComponentFixture<UpdateStatusComponent>;
 
-	beforeEach(async () => {
-		await TestBed.configureTestingModule({
+	beforeEach(() => {
+		TestBed.configureTestingModule({
 			declarations: [ UpdateStatusComponent ],
 			imports: [ HttpClientModule, APITestingModule ],
-		})
-			.compileComponents();
-	});
-
-	beforeEach(() => {
+		}).compileComponents();
 		fixture = TestBed.createComponent(UpdateStatusComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
@@ -85,5 +82,53 @@ describe("UpdateStatusComponent", () => {
 		expect(spy).toHaveBeenCalled();
 		component.closeOnEscape(new KeyboardEvent("keydown", {code: "Escape"}));
 		expect(spy).toHaveBeenCalledTimes(2);
+		component.closeOnEscape(new KeyboardEvent("keydown", {code: "Esc"}));
+		expect(spy).toHaveBeenCalledTimes(3);
+	});
+
+	it("knows if the user-selected status is an 'offline' status", () => {
+		expect(component.statusControl.value).toBeNull();
+		expect(component.isOffline).toBeFalse();
+
+		component.statusControl.setValue(undefined);
+		expect(component.isOffline).toBeFalse();
+
+		component.statusControl.setValue({name: "OFFLINE"});
+		expect(component.isOffline).toBeTrue();
+
+		component.statusControl.setValue({name: "some weird custom status"});
+		expect(component.isOffline).toBeTrue();
+
+		component.statusControl.setValue({name: "ONLINE"});
+		expect(component.isOffline).toBeFalse();
+
+		component.statusControl.setValue({name: "REPORTED"});
+		expect(component.isOffline).toBeFalse();
+	});
+
+	it("submits a request to update each server", async () => {
+		let isDone = true;
+		const spy = jasmine.createSpy("doneSubscription", (v: boolean): void => {
+			expect(v).toBe(isDone);
+		});
+		component.done.subscribe(spy);
+
+		const service = TestBed.inject(ServerService);
+		component.statusControl.setValue((await service.getStatuses()).find(s=>s.name==="ONLINE"));
+
+		const srv = await service.createServer({...defaultServer});
+		component.servers = [srv];
+		await component.submit(new SubmitEvent("submit"));
+		expect(spy).toHaveBeenCalled();
+
+		isDone = true;
+		component.statusControl.setValue((await service.getStatuses()).find(s=>s.name==="OFFLINE"));
+		await component.submit(new SubmitEvent("submit"));
+		expect(spy).toHaveBeenCalledTimes(2);
+
+		isDone = false;
+		component.statusControl.setValue({name: "no such status"});
+		await component.submit(new SubmitEvent("submit"));
+		expect(spy).toHaveBeenCalledTimes(3);
 	});
 });

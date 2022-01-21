@@ -242,12 +242,12 @@ export class ServerService {
 			id = server.id;
 		}
 
-		const srv = this.servers.filter(s=>s.id===id)[0];
+		const srv = this.servers.find(s=>s.id===id);
 		if (!srv) {
 			throw new Error(`no such Server: #${id}`);
 		}
 
-		const status = this.statuses.filter(s=>s.name===statusName)[0];
+		const status = this.statuses.find(s=>s.name===statusName);
 		if (!status) {
 			throw new Error(`no such Status: '${statusName}'`);
 		}
