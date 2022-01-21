@@ -337,17 +337,19 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 }
 
 //checkCert checks the validity of the ssl certificate
-func checkCert(c []byte) {
+func checkCert(c []byte) error {
 	block, _ := pem.Decode(c)
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		log.Warnf("error parsing certificate %s", err)
+		return err
 	}
 	if cert.NotAfter.Unix() < time.Now().Unix() {
-		log.Warnf("Certificate expired %s ", cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
+		err = errors.New("Certificate expired: " + cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
+		log.Warnf(err.Error())
 	} else {
 		log.Infof("Certificate valid until %s ", cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
 	}
+	return err
 }
 
 // checkReload is a helper for the sub-command t3c-check-reload.
