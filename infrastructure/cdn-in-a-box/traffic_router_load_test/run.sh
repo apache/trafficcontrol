@@ -25,19 +25,19 @@ do
 done
 
 set-dns.sh
-insert-self-into-dns.sh;
+insert-self-into-dns.sh
 source /to-access.sh
 
 # Source the CIAB-CA shared SSL environment
 until [[ -v 'X509_GENERATION_COMPLETE' ]]; do
-  echo 'Waiting on X509 vars to be defined';
-  sleep 1;
-  if [[ ! -e "$X509_CA_ENV_FILE" ]]; then
-    continue;
-  fi;
-  source "$X509_CA_ENV_FILE";
-done;
+	echo 'Waiting on X509 vars to be defined'
+	sleep 1
+	if [[ ! -e "$X509_CA_ENV_FILE" ]]; then
+		continue
+	fi
+	source "$X509_CA_ENV_FILE"
+done
 
-cat "$X509_CA_CERT_FULL_CHAIN_FILE" >> /etc/ssl/cert.pem;
+cat "$X509_CA_CERT_FULL_CHAIN_FILE" >> /etc/ssl/cert.pem
 
 ./harness.test
