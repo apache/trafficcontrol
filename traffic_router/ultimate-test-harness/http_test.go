@@ -147,7 +147,7 @@ func getCoverageZoneFile(czPollingURL string) (tc.CoverageZoneFile, error) {
 		return czMap, fmt.Errorf("creating HTTP request for URL %s: %s", czPollingURL, err.Error())
 	}
 	czMapRequest.Header.Set("User-Agent", UserAgent)
-	httpClient := http.Client{Timeout: 10 * time.Second, Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: toConfig.TOInsecure}}}
+	httpClient := http.Client{Timeout: time.Duration(toConfig.TOTimeout) * time.Second, Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: toConfig.TOInsecure}}}
 	czMapResponse, err := httpClient.Do(czMapRequest)
 	if err != nil {
 		return czMap, fmt.Errorf("getting Coverage Zone File from URL %s: %s", czPollingURL, err.Error())
