@@ -94,19 +94,25 @@ export class UserService {
 	 * @returns The entire HTTP response on success, or `null` on failure.
 	 */
 	public async login(uOrT: string, p?: string): Promise<HttpResponse<object> | null> {
-		if (p !== undefined && (uOrT !== "test-admin" || p !== this.testAdminPassword)) {
-			throw new Error("Invalid username or password.");
+		if (p !== undefined) {
+			if (uOrT !== this.testAdminUsername || p !== this.testAdminPassword) {
+				console.error("Invalid username or password.");
+				return null;
+			}
+			return new HttpResponse({body: {alerts: [{level: "success", text: "Successfully logged in."}]}, status: 200});
 		}
 		const email = this.tokens.get(uOrT);
 		if (email === undefined) {
-			throw new Error(`token '${uOrT}' did not match any set token for any user`);
+			console.error(`token '${uOrT}' did not match any set token for any user`);
+			return null;
 		}
 		const user = this.users.find(u=>u.email === email);
 		if (!user) {
-			throw new Error(`email '${email}' associated with token '${uOrT}' did not belong to any User`);
+			console.error(`email '${email}' associated with token '${uOrT}' did not belong to any User`);
+			return null;
 		}
 		this.tokens.delete(uOrT);
-		return new HttpResponse({body: {alerts: [{level: "success", text: "Successfully logged in."}]}});
+		return new HttpResponse({body: {alerts: [{level: "success", text: "Successfully logged in."}]}, status: 200});
 	}
 
 	/**
