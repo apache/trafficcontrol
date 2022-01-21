@@ -388,7 +388,7 @@ func (b *Benchmark) Run(t *testing.T, redirectsChannel chan int, failuresChannel
 		}
 		req.Host = trafficRouter.DSHost
 		resp, err = httpClient.Do(req)
-		if err == nil && resp.StatusCode >= http.StatusMultipleChoices && resp.StatusCode < http.StatusBadRequest {
+		if err == nil && resp.StatusCode == http.StatusFound {
 			redirects++
 		} else {
 			failures++
