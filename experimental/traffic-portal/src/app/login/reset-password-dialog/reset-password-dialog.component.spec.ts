@@ -12,9 +12,10 @@
 * limitations under the License.
 */
 import { HttpClientModule } from "@angular/common/http";
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogRef } from "@angular/material/dialog";
 
+import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 
 import { ResetPasswordDialogComponent } from "./reset-password-dialog.component";
@@ -49,5 +50,12 @@ describe("ResetPasswordDialogComponent", () => {
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("submits a password reset request", () => {
+		const spy = spyOn(TestBed.inject(UserService), "resetPassword");
+		expect(spy).not.toHaveBeenCalled();
+		component.submit(new SubmitEvent("submit"));
+		expect(spy).toHaveBeenCalled();
 	});
 });
