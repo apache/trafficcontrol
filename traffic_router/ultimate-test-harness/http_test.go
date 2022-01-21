@@ -135,7 +135,7 @@ func getCoverageZoneURL(cdnName tc.CDNName) (string, error) {
 	czPollingURLInterface, ok := snapshot.Response.Config[tc.CoverageZonePollingURL]
 	czPollingURL := czPollingURLInterface.(string)
 	if !ok {
-		return "", fmt.Errorf("parameters %s was not found in the Snapshot of CDN '%s'", tc.CoverageZonePollingURL, cdnName)
+		return "", fmt.Errorf("parameter %s was not found in the Snapshot of CDN '%s'", tc.CoverageZonePollingURL, cdnName)
 	}
 	return czPollingURL, nil
 }
