@@ -357,13 +357,8 @@ export class ServersTableComponent implements OnInit {
 	}
 
 	/** Reloads the servers table data. */
-	private reloadServers(): void {
-		this.servers = this.api.getServers().then(x=>x.map(augment)).catch(
-			e => {
-				console.error("Failed to reload servers:", e);
-				return [];
-			}
-		);
+	private async reloadServers(): Promise<void> {
+		this.servers = this.api.getServers().then(ss=>ss.map(augment));
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
@@ -376,37 +371,31 @@ export class ServersTableComponent implements OnInit {
 	 *
 	 * @param action The emitted context menu action event.
 	 */
-	public handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): void {
-		let observables;
+	public async handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): Promise<void> {
 		switch (action.action) {
 			case "viewDetails":
-				this.router.navigate(["/core/server", (action.data as AugmentedServer).id]);
+				if (action.data instanceof Array) {
+					throw new Error("'viewDetails' is a single-row action, but was called with multiple rows");
+				}
+				this.router.navigate(["/core/server", action.data.id]);
 				break;
 			case "updateStatus":
-				console.log("'Update Status' clicked - not yet implemented");
 				this.changeStatusServers = action.data instanceof Array ? action.data : [action.data];
 				this.changeStatusOpen = true;
 				break;
 			case "queue":
-				observables = (action.data as Array<AugmentedServer>).map(async s=>this.api.queueUpdates(s));
-				Promise.all(observables).then(
-					() => {
-						this.reloadServers();
-					}
-				);
+				const queueServers = action.data instanceof Array ? action.data : [action.data];
+				await Promise.all(queueServers.map(async s=>this.api.queueUpdates(s)));
+				await this.reloadServers();
 				break;
 			case "dequeue":
-				observables = (action.data as Array<AugmentedServer>).map(async s=>this.api.clearUpdates(s));
-				Promise.all(observables).then(
-					() => {
-						this.reloadServers();
-					}
-				);
+				const dequeueServers = action.data instanceof Array ? action.data : [action.data];
+				await Promise.all(dequeueServers.map(async s=>this.api.clearUpdates(s)));
+				await this.reloadServers();
 				break;
 			default:
-				console.error("unknown context menu item clicked:", action.action);
+				throw new Error(`unknown context menu item clicked: ${action.action}`);
 		}
-		console.log(action.action, "triggered with data:", action.data);
 	}
 
 	/**
