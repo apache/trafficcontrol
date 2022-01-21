@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import { CanActivate, CanLoad } from "@angular/router";
+import type { CanActivate, CanLoad } from "@angular/router";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
