@@ -654,17 +654,17 @@ This product bundles davecgh/go-spew, which is available under an ISC license.
 Refer to the above license for the full text.
 
 This product bundles eapache/go-resiliency, which is available under an MIT license.
-@/vendor/github.com/eapache/go-resiliency/*
+@vendor/github.com/eapache/go-resiliency/*
 ./vendor/github.com/eapache/go-resiliency/LICENSE
 Refer to the above license for the full text.
 
 This product bundles eapache/go-xerial-snappy, which is available under an MIT license.
-@/vendor/github.com/eapache/go-xerial-snappy/*
+@vendor/github.com/eapache/go-xerial-snappy/*
 ./vendor/github.com/eapache/go-xerial-snappy/LICENSE
 Refer to the above license for the full text.
 
 This product bundles eapache/queue, which is available under an MIT license.
-@/vendor/github.com/eapache/queue/*
+@vendor/github.com/eapache/queue/*
 ./vendor/github.com/eapache/queue/LICENSE
 Refer to the above license for the full text.
 
