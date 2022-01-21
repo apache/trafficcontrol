@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import { HttpClientModule } from "@angular/common/http";
-import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import { waitForAsync, type ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 import type { ICellRendererParams } from "ag-grid-community";
 
@@ -25,14 +25,17 @@ describe("SshCellRendererComponent", () => {
 	let fixture: ComponentFixture<SSHCellRendererComponent>;
 
 	beforeEach(waitForAsync(() => {
-		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
-		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
+		const mockCurrentUserService = jasmine.createSpyObj(
+			["updateCurrentUser", "login", "logout"],
+			{currentUser: {username: "test-admin"}}
+		);
+		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(true)));
+
 		TestBed.configureTestingModule({
 			declarations: [ SSHCellRendererComponent ],
 			imports: [HttpClientModule, RouterTestingModule],
 			providers: [ { provide: CurrentUserService, useValue: mockCurrentUserService} ]
-		})
-			.compileComponents();
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {
