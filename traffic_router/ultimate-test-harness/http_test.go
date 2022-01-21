@@ -147,7 +147,7 @@ func getCoverageZoneFile(czPollingURL string) (tc.CoverageZoneFile, error) {
 		return czMap, fmt.Errorf("creating HTTP request for URL %s: %s", czPollingURL, err.Error())
 	}
 	czMapRequest.Header.Set("User-Agent", UserAgent)
-	httpClient := http.Client{}
+	httpClient := http.Client{Timeout: 10 * time.Second}
 	czMapResponse, err := httpClient.Do(czMapRequest)
 	if err != nil {
 		return czMap, fmt.Errorf("getting Coverage Zone File from URL %s: %s", czPollingURL, err.Error())
@@ -374,6 +374,7 @@ func (b *Benchmark) Run(t *testing.T, redirectsChannel chan int, failuresChannel
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
+		Timeout: 10 * time.Second,
 	}
 	trafficRouter := b.TrafficRouters[trafficRouterIndex]
 	for time.Now().Before(stopTime) {
