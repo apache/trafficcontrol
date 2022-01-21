@@ -38,6 +38,8 @@ until [[ -v 'X509_GENERATION_COMPLETE' ]]; do
 	source "$X509_CA_ENV_FILE"
 done
 
-cat "$X509_CA_CERT_FULL_CHAIN_FILE" >> /etc/ssl/cert.pem
+# Copy the CIAB-CA certificate to the ca-certificates directory so it can be added to the trust store
+cp "$X509_CA_CERT_FULL_CHAIN_FILE" /usr/local/share/ca-certificates/
+update-ca-certificates
 
 ./ultimate-test-harness.test

@@ -50,7 +50,9 @@ RUN apk add --no-cache \
     # for to-access.sh
     bash \
     # contains dig, required by to-access.sh
-    bind-tools
+    bind-tools \
+    # to recognize the CDN in a Box CA certificate
+    ca-certificates
 
 WORKDIR /opt/load-test/app
 COPY --from=load-test-builder /go/src/github.com/apache/trafficcontrol/traffic_router/ultimate-test-harness .
