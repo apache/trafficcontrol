@@ -277,7 +277,7 @@ func GetVIPInterface(ts TrafficServer) ServerInterfaceInfo {
 // Deprecated: LegacyTrafficServer is deprecated.
 func (ts *TrafficServer) ToLegacyServer() LegacyTrafficServer {
 	vipInterface := GetVIPInterface(*ts)
-	ipv4, ipv6 := vipInterface.GetDefaultAddress()
+	ipv4, ipv6 := vipInterface.GetDefaultAddressOrCIDR()
 
 	return LegacyTrafficServer{
 		Profile:          ts.Profile,

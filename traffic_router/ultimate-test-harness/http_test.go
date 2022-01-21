@@ -245,7 +245,7 @@ func TestLoad(t *testing.T) {
 				log.Warnf("skipping server interface %s of Traffic Router %s because it is unmonitored", serverInterface.Name, *trafficRouter.HostName)
 				continue
 			}
-			ipv4, ipv6 := serverInterface.GetDefaultAddress()
+			ipv4, ipv6 := serverInterface.GetDefaultAddressOrCIDR()
 			if ipv4 != "" && !*ipv6Only {
 				ipAddresses = append(ipAddresses, ipv4)
 			}
