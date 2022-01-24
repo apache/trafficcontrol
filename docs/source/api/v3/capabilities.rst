@@ -18,8 +18,7 @@
 ****************
 ``capabilities``
 ****************
-
-.. deprecated:: ATCv7.0
+.. deprecated:: 3.1
 
 ``GET``
 =======

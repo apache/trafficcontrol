@@ -18,9 +18,9 @@
 *************
 Traffic Stats
 *************
-:dfn:`Traffic Stats` is a program written in `Go <http://golang.org>`_ that is used to acquire and store statistics about CDNs controlled by Traffic Control. Traffic Stats mines metrics from the :ref:`tm-api` and stores the data in `InfluxDB <http://influxdb.com>`_. Data is typically stored in InfluxDB on a short-term basis (30 days or less). The data from InfluxDB is then used to drive graphs created by `Grafana <http://grafana.org>`_ - which are linked to from :ref:`tp-overview` - as well as provide data exposed through the :ref:`to-api`. Traffic Stats performs two functions:
+:dfn:`Traffic Stats` is a program written in `Go <http://golang.org>`_ that is used to acquire and store statistics about CDNs controlled by Traffic Control. Traffic Stats mines metrics from the :ref:`tm-api` and stores the data in `InfluxDB <http://influxdb.com>`_ or `Kafka <https://kafka.apache.org/>`_. Data is typically stored in InfluxDB on a short-term basis (30 days or less), and Kafka data is available for consumption based on retention period. The data from InfluxDB is then used to drive graphs created by `Grafana <http://grafana.org>`_ - which are linked to from :ref:`tp-overview` - as well as provide data exposed through the :ref:`to-api`. Traffic Stats performs two functions:
 
-- Gathers statistics for Edge-tier :term:`cache servers` and :term:`Delivery Services` at a configurable interval (10 second default) from the :ref:`tm-api` and stores the data in InfluxDB
+- Gathers statistics for Edge-tier :term:`cache servers` and :term:`Delivery Services` at a configurable interval (10 second default) from the :ref:`tm-api` and stores the data in InfluxDB or Kafka
 - Summarizes all of the statistics once a day (around midnight UTC) and creates a daily report containing the Max :abbr:`Gbps (Gigabits per second)` Served and the Total Bytes Served.
 
 Statistics are stored in three different databases:
@@ -53,4 +53,6 @@ Cache Data is stored with `tags <https://influxdb.com/docs/v0.9/concepts/glossar
 
 Daily stats are stored by CDN.
 
-Traffic Stats does not influence overall CDN operation, but is required in order to display charts in :ref:`tp-overview`.
+When Kafka is enabled, Cache and Delivery Service statistics are sent through JSON format with optional TLS authentication.
+
+Traffic Stats does not influence overall CDN operation, but is required with InfluxDB enabled in order to display charts in :ref:`tp-overview`.

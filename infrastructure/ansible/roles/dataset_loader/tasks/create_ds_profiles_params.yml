@@ -29,6 +29,9 @@
     target_xmlId: "{{ Target_ds.xmlId | default(computed_xmlid) }}"
   register: create_profiles_out
   failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+  no_log: true
+  retries: 10
+  delay: 10
 
 - name: Create and Associate DS Parameters - Per CDN
   uri:
@@ -38,9 +41,13 @@
   with_items: "{{ dl_ds_merged_profile_cdntemplates | selectattr('type','equalto','DS_PROFILE') }}"
   when: ( (fixed_profile_name != '' and fixed_profile_name == item.name) or (ds_suffix != '' and item.name.endswith(ds_suffix)) )
   vars:
+    paramset: "{{ item.parameters | default([]) }}"
     cdn_query: "response[?name == '{{ item.cdn | default('ALL') }}'].id | [0]"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     computed_xmlid: "{{ Target_ds.uniqueKey }}-{{ Target_cdn_delegation | lower }}"
     target_xmlId: "{{ Target_ds.xmlId | default(computed_xmlid) }}"
   register: create_profiles_out
   failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+  no_log: true
+  retries: 10
+  delay: 10

@@ -46,15 +46,22 @@ was_active="unk"
 
 %pre
 
+set -x
+echo "###### in pre section ######"
+
 if [[ -f /etc/trafficcontrol/tc-health-client.json ]]; then
   active=`systemctl status tc-health-client | awk '/Active:/ {print $2}'`
-  if [[ ${active} = "active" ]]; then
-    ${was_active}="yes"
+  if [[ ${active} == "active" ]]; then
     systemctl stop tc-health-client
+    touch /run/tc-health-client.pid
   fi
 fi
 
 %install
+
+set -x
+echo "###### in install section ######"
+
 hcdir="tc-health-client"
 installdir="/usr/bin"
 mandir="/usr/share/man"
@@ -82,6 +89,9 @@ rm -rf ${RPM_BUILD_ROOT}
 
 %post
 
+set -x
+echo "###### in post section ######"
+
 # we want all the cache logs under /var/log/trafficcontrol
 if [[ ! -d /var/log/trafficcontrol ]]; then
   mkdir -p /var/log/trafficcontrol
@@ -91,7 +101,8 @@ fi
 # make sure the service unit file is loaded
 systemctl daemon-reload
 
-if [[ ${was_active} = "yes" ]]; then
+if [[ -f /run/tc-health-client.pid ]]; then
+  systemctl enable tc-health-client
   systemctl start tc-health-client
 fi
 
@@ -106,14 +117,21 @@ fi
 
 %preun
 
+set -x
+echo "###### in preun section ######"
+
 if [[ -f /etc/trafficcontrol/tc-health-client.json ]]; then
   active=`systemctl status tc-health-client | awk '/Active:/ {print $2}'`
-  if [[ ${active} = "active" ]]; then
+  if [[ ${active} == "active" ]]; then
     systemctl stop tc-health-client
+    touch /run/tc-health-client.pid
   fi
 fi
 
 %postun
+
+set -x
+echo "###### in postun section ######"
 
 # update whatis database, to remove tc-health-client data
 mandb_out="$(mandb 2>&1)"

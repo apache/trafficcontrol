@@ -1,0 +1,69 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Clone base config to match primary database
+  block:
+    - name: Stop existing instance
+      systemd:
+        name: "{{ pg_service_name }}"
+        state: stopped
+
+    - name: Remove host-unique config
+      file:
+        path: "{{ postgresql_datadir }}"
+        state: absent
+
+    - name: Recreate the postgres data directory
+      file:
+        state: directory
+        path: "{{ postgresql_datadir }}"
+        owner: "{{ postgresql_user }}"
+        group: "{{ postgresql_group }}"
+        mode: 0700
+
+    - name: Clone configuration from primary
+      command:
+        argv:
+          - pg_basebackup
+          - -d
+          - "host={{ (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) }} port={{ postgresql_port }} user={{ postgresql_replica_user }} password={{ postgresql_replica_user_password }}"  # noqa line-length
+          - -D
+          - "{{ postgresql_datadir }}"
+      become: true
+      become_user: "{{ postgresql_user }}"
+      no_log: true
+
+- name: Setup Secondary PostgreSQL Replication
+  template:
+    src: "templates/{{ _loop_ittr }}.j2"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0700
+    dest: "{{ postgresql_datadir }}/{{ _loop_ittr }}"
+  loop:
+    - recovery.conf
+  loop_control:
+    loop_var: _loop_ittr
+  vars:
+    postgresql_target_replication_parent: "{{ (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) }}"
+
+- name: Startup Secondary instance
+  systemd:
+    name: "{{ pg_service_name }}"
+    state: started
+
+- name: Wait for TODB to become available
+  wait_for:
+    port: "{{ postgresql_port }}"
+    delay: 3
+  changed_when: false

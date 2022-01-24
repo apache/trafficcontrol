@@ -1,0 +1,154 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Base TODB setup
+  hosts: all
+  gather_facts: yes
+  become: yes
+
+  vars_files:
+    - "{{ molecule_ephemeral_directory }}/secret_varfile.json"
+
+  vars:
+    postgresql_replica_user: to_replication
+    postgresql_admin_user: postgres
+    # postgresql_admin_user_password: from secret file
+    todb_username: trafficops
+    # todb_password: from secret file
+    tvdb_username: trafficvault
+    # tvdb_password: from secret file
+
+  tasks:
+    - name: Install Postgres Yum Repo - Stable
+      yum_repository:
+        name: "pgdg{{ item | replace('.','') }}"
+        description: "Manually added repository for Stable Postgresql - {{ item }}"
+        baseurl: "https://download.postgresql.org/pub/repos/yum/{{ item }}/redhat/rhel-$releasever-$basearch"
+        gpgcheck: yes
+        gpgkey: https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG
+        file: pgdg
+        reposdir: /etc/yum.repos.d
+      with_items:
+        - "13"
+        - "12"
+        - "11"
+        - "10"
+        - "9.6"
+        - "9.5"
+
+    - name: Install Postgres Yum Repo - Testing
+      yum_repository:
+        name: "pgdg{{ item | replace('.','') }}-updates-testing"
+        description: "Manually added repository for Testing Postgresql - {{ item }}"
+        baseurl: "https://download.postgresql.org/pub/repos/yum/testing/{{ item }}/redhat/rhel-$releasever-$basearch"
+        enabled: "{{ (enable_postgres_testing_repos | default(false)) | ternary('yes','no') }}"
+        gpgcheck: yes
+        gpgkey: https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG
+        file: pgdg
+        reposdir: /etc/yum.repos.d
+      with_items:
+        - "13"
+        - "12"
+        - "11"
+        - "10"
+        - "9.6"
+        - "9.5"
+
+    - name: Disable the builtin Centos8 Appstream rpms
+      command: dnf -qy module disable postgresql
+      when: ansible_distribution_file_variety == "RedHat" and ansible_distribution_major_version == "8"
+
+    - name: Create Postgres group
+      group:
+        name: "postgres"
+        gid: "1234"
+
+    - name: Create Postgres user
+      user:
+        name: "postgres"
+        shell: /bin/bash
+        group: "1234"
+        uid: "1234"
+
+    - name: Deploy Traffic_opsdb
+      import_role:
+        name: traffic_opsdb
+      vars:
+        install_traffic_opsdb: true
+
+- name: Deploy primary TODB
+  hosts: traffic_opsdb-primary
+
+  vars_files:
+    - "{{ molecule_ephemeral_directory }}/secret_varfile.json"
+
+  vars:
+    postgresql_replica_user: to_replication
+    postgresql_admin_user: postgres
+    # postgresql_admin_user_password: from secret file
+    todb_username: trafficops
+    # todb_password: from secret file
+    tvdb_username: trafficvault
+    # tvdb_password: from secret file
+
+  tasks:
+    - name: Initialize Traffic_opsdb
+      import_role:
+        name: traffic_opsdb
+      vars:
+        initialize_traffic_opsdb: true
+
+- name: Deploy standby TODB
+  hosts: traffic_opsdb-standby
+
+  vars_files:
+    - "{{ molecule_ephemeral_directory }}/secret_varfile.json"
+
+  vars:
+    postgresql_replica_user: to_replication
+    postgresql_admin_user: postgres
+    # postgresql_admin_user_password: from secret file
+    todb_username: trafficops
+    # todb_password: from secret file
+    tvdb_username: trafficvault
+    # tvdb_password: from secret file
+
+  tasks:
+    - name: Deploy Traffic_opsdb
+      import_role:
+        name: traffic_opsdb
+      vars:
+        enable_traffic_opsdb_standby: true
+
+- name: Deploy replica TODBs
+  hosts: traffic_opsdb-replicas
+
+  vars_files:
+    - "{{ molecule_ephemeral_directory }}/secret_varfile.json"
+
+  vars:
+    postgresql_replica_user: to_replication
+    postgresql_admin_user: postgres
+    # postgresql_admin_user_password: from secret file
+    todb_username: trafficops
+    # todb_password: from secret file
+    tvdb_username: trafficvault
+    # tvdb_password: from secret file
+
+  tasks:
+    - name: Deploy Traffic_opsdb
+      import_role:
+        name: traffic_opsdb
+      vars:
+        enable_traffic_opsdb_replica: true

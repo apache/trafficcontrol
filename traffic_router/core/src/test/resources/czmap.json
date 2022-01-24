@@ -1,7 +1,7 @@
 {
 	"coverageZones":
 	{
-		"cache-group-01":
+		"CDN_in_a_Box_Edge":
 		{
 			"network6":
 			[
@@ -12,7 +12,11 @@
 			[
 				"192.168.8.0/24",
 				"192.168.9.0/24"
-			]
+			],
+			"coordinates": {
+				"latitude": 38.897663,
+				"longitude": -77.036574
+			}
 		}
 	}
 }

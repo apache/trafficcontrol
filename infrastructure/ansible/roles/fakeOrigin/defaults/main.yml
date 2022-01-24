@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-install_fakeOrigin: false
-fo_pkg_name: "{% if fakeOrigin_version is defined and fakeOrigin_version != omit %}{{ 'fakeOrigin-'+fakeOrigin_version }}{% else %}fakeOrigin{% endif %}"
+install_fakeorigin: false
+fo_pkg_name: "{% if fakeorigin_version is defined and fakeorigin_version != omit %}{{ 'fakeOrigin-'+fakeorigin_version }}{% else %}fakeOrigin{% endif %}"
 
 # Installation location information
 fo_base_dir: /opt/fakeOrigin

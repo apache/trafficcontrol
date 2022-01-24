@@ -16,7 +16,7 @@
   systemd:
     name: "{{ pg_service_name }}"
     state: restarted
-    daemon_reload: yes
+    daemon_reload: true
   notify: Wait for TODB to become available
 
 - name: Wait for TODB to become available

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
+### Fixed
+- Update traffic_portal dependencies to mitigate `npm audit` issues.
+
+### Removed
+- Remove traffic_portal dependencies to mitigate `npm audit` issues, specifically `grunt-concurrent`, `grunt-contrib-concat`, `grunt-contrib-cssmin`, `grunt-contrib-jsmin`, `grunt-contrib-uglify`, `grunt-contrib-htmlmin`, `grunt-newer`, and `grunt-wiredep`
+
+## [6.1.0] - 2022-01-18
 ### Added
 - Added permission based roles for better access control.
 - [#5674](https://github.com/apache/trafficcontrol/issues/5674) Added new query parameters `cdn` and `maxRevalDurationDays` to the `GET /api/x/jobs` Traffic Ops API to filter by CDN name and within the start_time window defined by the `maxRevalDurationDays` GLOBAL profile parameter, respectively.
@@ -12,6 +19,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added a new Traffic Monitor configuration option -- `short_hostname_override` -- to traffic_monitor.cfg to allow overriding the system hostname that Traffic Monitor uses.
 - Added a new Traffic Monitor configuration option -- `stat_polling` (default: true) -- to traffic_monitor.cfg to disable stat polling.
 - A new Traffic Portal server command-line option `-c` to specify a configuration file, and the ability to set `log: null` to log to stdout (consult documentation for details).
+- Multiple improvements to Ansible roles as discussed at ApacheCon 2021
 - SANs information to the SSL key endpoint and Traffic Portal page.
 - Added definition for `heartbeat.polling.interval` for CDN Traffic Monitor config in API documentation.
 - New `pkg` script options, `-h`, `-s`, `-S`, and `-L`.
@@ -21,6 +29,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6032](https://github.com/apache/trafficcontrol/issues/6032) Add t3c setting mode 0600 for secure files
 - [#6405](https://github.com/apache/trafficcontrol/issues/6405) Added cache config version to all t3c apps and config file headers
 - Traffic Vault: Added additional flag to TV Riak (Deprecated) Util
+- Added Traffic Vault Postgres columns, a Traffic Ops API endpoint, and Traffic Portal page to show SSL certificate expiration information.
 
 ### Fixed
 - [#6411](https://github.com/apache/trafficcontrol/pull/6411) Removes invalid 'ALL cdn' options from TP
@@ -39,24 +48,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6367](https://github.com/apache/trafficcontrol/issues/6367) - Fix PUT `user/current` to work with v4 User Roles and Permissions
 - [#6266](https://github.com/apache/trafficcontrol/issues/6266) - Removed postgresql13-devel requirement for traffic_ops
 - [#6446](https://github.com/apache/trafficcontrol/issues/6446) - Revert Traffic Router rollover file pattern to the one previously used in `log4j.properties` with Log4j 1.2
+- [#5118](https://github.com/apache/trafficcontrol/issues/5118) - Added support for Kafka to Traffic Stats
 
 ### Changed
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
 - [#6179](https://github.com/apache/trafficcontrol/issues/6179) Updated the Traffic Ops rpm to include the `ToDnssecRefresh` binary and make the `trafops_dnssec_refresh` cron job use it
 - Traffic Portal no longer uses `ruby compass` to compile sass and now uses `dart-sass`.
 - Changed Invalidation Jobs throughout (TO, TP, T3C, etc.) to account for the ability to do both REFRESH and REFETCH requests for resources.
+- Changed the `maxConnections` value on Traffic Router, to prevent the thundering herd problem (TR).
 - The `admin` Role is now always guaranteed to exist, and can't be deleted or modified.
 - [#6376](https://github.com/apache/trafficcontrol/issues/6376) Updated TO/TM so that TM doesn't overwrite monitoring snapshot data with CR config snapshot data.
 - Updated `t3c-apply` to reduce mutable state in `TrafficOpsReq` struct.
 - Updated Golang dependencies
+- [#6506](https://github.com/apache/trafficcontrol/pull/6506) - Updated `jackson-databind` and `jackson-annotations` Traffic Router dependencies to version 2.13.1
 
 ### Deprecated
-- Deprecated the endpoints and docs associated with `api_capability`.
+- Deprecated the endpoints and docs associated with `/api_capability` and `/capabilities`.
 - The use of a seelog configuration file to configure Traffic Stats logging is deprecated, and logging configuration should instead be present in the `logs` property of the Traffic Stats configuration file (refer to documentation for details).
 
 ### Removed
 - Removed the `user_role` table.
 - The `traffic_ops.sh` shell profile no longer sets `GOPATH` or adds its `bin` folder to the `PATH`
+- `/capabilities` removed from Traffic Ops API version 4.
 
 ## [6.0.2] - 2021-12-17
 ### Changed

@@ -23,6 +23,39 @@ import (
 	"time"
 )
 
+// CoverageZonePollingPrefix is the prefix of all Names of Parameters used to define
+// coverage zone polling parameters.
+const CoverageZonePollingPrefix = "coveragezone.polling."
+
+const CoverageZonePollingURL = CoverageZonePollingPrefix + "url"
+
+type CoverageZoneLocation struct {
+	Network  []string `json:"network,omitempty"`
+	Network6 []string `json:"network6,omitempty"`
+}
+
+func (c *CoverageZoneLocation) GetFirstIPAddressOfType(isIPv4 bool) string {
+	var network []string
+	if isIPv4 {
+		network = c.Network
+	} else {
+		network = c.Network6
+	}
+	if len(network) < 1 {
+		return ""
+	}
+	return network[0]
+}
+
+// CoverageZoneFile is used for unmarshalling a Coverage Zone File.
+type CoverageZoneFile struct {
+	CoverageZones map[string]CoverageZoneLocation `json:"coverageZones,omitempty"`
+}
+
+// X_MM_CLIENT_IP is an optional HTTP header that causes Traffic Router to use its value
+// as the client IP address.
+const X_MM_CLIENT_IP = "X-MM-Client-IP"
+
 // SOA (Start of Authority record) defines the SOA record for the CDN's
 // top-level domain.
 type SOA struct {
@@ -244,7 +277,7 @@ func GetVIPInterface(ts TrafficServer) ServerInterfaceInfo {
 // Deprecated: LegacyTrafficServer is deprecated.
 func (ts *TrafficServer) ToLegacyServer() LegacyTrafficServer {
 	vipInterface := GetVIPInterface(*ts)
-	ipv4, ipv6 := vipInterface.GetDefaultAddress()
+	ipv4, ipv6 := vipInterface.GetDefaultAddressOrCIDR()
 
 	return LegacyTrafficServer{
 		Profile:          ts.Profile,

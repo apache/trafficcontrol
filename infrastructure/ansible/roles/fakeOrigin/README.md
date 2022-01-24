@@ -47,7 +47,7 @@ Example Playbook
     import_role:
       name: fakeOrigin
     vars:
-      install_fakeOrigin: true
+      install_fakeorigin: true
       fo_http_port: 80
       fo_https_port: 443
       fo_ssl_key_file: /etc/pki/tls/private/server.key.pem
