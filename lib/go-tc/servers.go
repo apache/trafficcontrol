@@ -132,15 +132,33 @@ type ServerInterfaceInfoV40 struct {
 	RouterPortName string `json:"routerPortName" db:"router_port_name"`
 }
 
-// GetDefaultAddress returns the IPv4 and IPv6 service addresses of the interface.
+// GetDefaultAddressOrCIDR returns the IPv4 and IPv6 service addresses of the interface.
 func (i *ServerInterfaceInfo) GetDefaultAddress() (string, string) {
-	var ipv4 string
-	var ipv6 string
+	ipv4, ipv6 := i.GetDefaultAddressOrCIDR()
+	address, _, err := net.ParseCIDR(ipv4)
+	if address != nil && err == nil {
+		ipv4 = address.String()
+	}
+	address, _, err = net.ParseCIDR(ipv6)
+	if address != nil && err == nil {
+		ipv6 = address.String()
+	}
+	return ipv4, ipv6
+}
+
+// GetDefaultAddressOrCIDR returns the IPv4 and IPv6 service addresses of the interface,
+// including a subnet, if one exists.
+func (i *ServerInterfaceInfo) GetDefaultAddressOrCIDR() (string, string) {
+	var ipv4, ipv6 string
+	var err error
 	for _, ip := range i.IPAddresses {
 		if ip.ServiceAddress {
-			address, _, err := net.ParseCIDR(ip.Address)
-			if err != nil || address == nil {
-				continue
+			address := net.ParseIP(ip.Address)
+			if address == nil {
+				address, _, err = net.ParseCIDR(ip.Address)
+				if err != nil || address == nil {
+					continue
+				}
 			}
 			if address.To4() != nil {
 				ipv4 = ip.Address
