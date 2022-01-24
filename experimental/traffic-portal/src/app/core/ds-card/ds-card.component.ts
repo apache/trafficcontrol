@@ -137,6 +137,7 @@ export class DsCardComponent implements OnInit {
 			multiSiteOrigin: false,
 			regionalGeoBlocking: false,
 			routingName: "",
+			tenantId: 1,
 			typeId: -1,
 			xmlId: "-1"
 		};

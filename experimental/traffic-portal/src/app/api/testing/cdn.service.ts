@@ -37,7 +37,7 @@ export class CDNService {
 			{
 				dnssecEnabled: false,
 				domainName: "mycdn.test.test",
-				id: 1,
+				id: 2,
 				lastUpdated: new Date(),
 				name: "test"
 			}
