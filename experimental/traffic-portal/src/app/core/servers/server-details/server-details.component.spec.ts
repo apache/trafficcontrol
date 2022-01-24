@@ -13,11 +13,12 @@
 */
 
 import { HttpClientModule } from "@angular/common/http";
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 import { faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
 
+import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { defaultServer } from "src/app/models";
 
@@ -30,15 +31,21 @@ describe("ServerDetailsComponent", () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ ServerDetailsComponent ],
-			imports: [ HttpClientModule, RouterTestingModule, FormsModule, ReactiveFormsModule, APITestingModule ],
+			imports: [
+				HttpClientModule,
+				RouterTestingModule.withRoutes([
+					{component: ServerDetailsComponent, path: "server/:id"},
+					{component: ServerDetailsComponent, path: "server/new"}
+				]),
+				FormsModule,
+				ReactiveFormsModule,
+				APITestingModule
+			],
 		}).compileComponents();
-	});
-
-	beforeEach(() => {
 		fixture = TestBed.createComponent(ServerDetailsComponent);
+		const service = TestBed.inject(ServerService);
 		component = fixture.componentInstance;
-		component.server = {...defaultServer};
-		component.server.interfaces = [];
+		component.server = await service.createServer({...defaultServer, interfaces: []});
 		fixture.detectChanges();
 	});
 
@@ -97,5 +104,33 @@ describe("ServerDetailsComponent", () => {
 		expect(component.isCache()).toBeFalse();
 		s.type = "RASCAL";
 		expect(component.isCache()).toBeFalse();
+	});
+
+	it("submits a server creation request", fakeAsync(() => {
+		const service = TestBed.inject(ServerService);
+		const spy = spyOn(service, "createServer");
+		spy.and.callThrough();
+		expect(spy).not.toHaveBeenCalled();
+		component.isNew = true;
+
+		component.submit(new Event("submit"));
+		tick();
+		expect(component.isNew).toBeFalse();
+		expect(component.server.id).toBeDefined();
+		expect(component.title).toContain("Server #");
+	}));
+
+	it("opens the 'change status' dialog", () => {
+		expect(component.changeStatusDialogOpen).toBeFalse();
+		component.changeStatus(new MouseEvent("click"));
+		expect(component.changeStatusDialogOpen).toBeTrue();
+		component.isNew = true;
+		expect(()=>component.changeStatus(new MouseEvent("click"))).toThrow();
+	});
+
+	it("closes the 'change status' dialog when done", () => {
+		component.changeStatusDialogOpen = true;
+		component.doneUpdatingStatus(true);
+		expect(component.changeStatusDialogOpen).toBeFalse();
 	});
 });
