@@ -145,6 +145,9 @@ func CreateTestDeliveryServiceWithGeoLimitCountries(t *testing.T) {
 		t.Fatal("couldn't get exactly one ds in the response, quitting")
 	}
 	dsID := deliveryServices.Response[0].ID
+	if dsID == nil {
+		t.Fatalf("got a delivery service with no ID")
+	}
 	customDS.GeoLimitCountries = []string{"US   ", "CA", "12"}
 	_, _, err = TOSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
 	if err == nil {

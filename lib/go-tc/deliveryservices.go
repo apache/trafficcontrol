@@ -578,10 +578,10 @@ type DeliveryServiceNullableV11 struct {
 	DeliveryServiceRemovedFieldsV11
 }
 
-// GeoLimitCountriesType is the type alias that is used to represent the GeoLimitCountries attribute of the DeliveryService struct
+// GeoLimitCountriesType is the type alias that is used to represent the GeoLimitCountries attribute of the DeliveryService struct.
 type GeoLimitCountriesType []string
 
-// UnmarshalJSON will unmarshal a byte slice into type GeoLimitCountriesType
+// UnmarshalJSON will unmarshal a byte slice into type GeoLimitCountriesType.
 func (g *GeoLimitCountriesType) UnmarshalJSON(data []byte) error {
 	var err error
 	var initial = make([]string, 0)
@@ -606,7 +606,7 @@ func (g *GeoLimitCountriesType) UnmarshalJSON(data []byte) error {
 
 }
 
-// MarshalJSON will marshal a GeoLimitCountriesType into a byte slice
+// MarshalJSON will marshal a GeoLimitCountriesType into a byte slice.
 func (g GeoLimitCountriesType) MarshalJSON() ([]byte, error) {
 	arr := ([]string)(g)
 	return json.Marshal(arr)
