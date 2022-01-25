@@ -1752,3 +1752,37 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 	}
 	return regionName, true, nil
 }
+
+//func aggDataforServerProfile() {
+//	var tx *sql.Tx
+//	var id, profile int
+//	var profileName string
+//	q := `SELECT id, profile FROM server`
+//	q1 := `SELECT name from profile where id=$1`
+//
+//	rows, err := tx.Query(q)
+//	if err != nil {
+//		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
+//	}
+//	defer log.Close(rows, "closing rows in AggDataforServerProfile")
+//
+//	for rows.Next() {
+//		if err := rows.Scan(&id, &profile); err != nil {
+//			fmt.Errorf("scanning server: " + err.Error())
+//		}
+//	}
+//
+//	rows1, err1 := tx.Query(q1, profile)
+//	if err1 != nil {
+//		fmt.Errorf("querying profiles by porfile_names: " + err1.Error())
+//	}
+//	defer log.Close(rows1, "closing rows in AggDataforServerProfile")
+//
+//	for rows1.Next() {
+//		if err := rows1.Scan(&profileName); err != nil {
+//			fmt.Errorf("scanning profile: " + err.Error())
+//		}
+//		profiles := append(profile)
+//	}
+//
+//}
