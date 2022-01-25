@@ -1,0 +1,69 @@
+# .ansible-lint
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+exclude_paths:
+- .github/**
+# parseable: true
+# quiet: true
+verbosity: 5
+
+# Mock modules or roles in order to pass ansible-playbook --syntax-check
+mock_modules:
+  - zuul_return
+  - fake_namespace.fake_collection.fake_module
+  # note the foo.bar is invalid as being neither a module or a collection
+mock_roles:
+  - mocked_role
+  - author.role_name  # old standalone galaxy role
+  - fake_namespace.fake_collection.fake_role  # role within a collection
+
+# Enable checking of loop variable prefixes in roles
+loop_var_prefix: "{role}_"
+
+use_default_rules: true
+# Load custom rules from this specific folder
+# rulesdir:
+#   - ./rule/directory/
+
+# This makes linter to fully ignore rules/tags listed below
+skip_list:
+  - skip_this_tag
+  - git-latest
+  - risky-file-permissions
+
+# Report only a subset of tags and fully ignore any others
+# tags:
+#   - var-spacing
+
+# This makes the linter display but not fail for rules/tags listed below:
+warn_list:
+  - skip_this_tag
+  - git-latest
+  - experimental  # experimental is included in the implicit list
+
+# Offline mode disables installation of requirements.yml
+offline: false
+
+# Define required Ansible's variables to satisfy syntax check
+extra_vars:
+  foo: bar
+  multiline_string_variable: |
+    line1
+    line2
+  complex_variable: ":{;\t$()"
+
+# Uncomment to enforce action validation with tasks, usually is not
+# needed as Ansible syntax check also covers it.
+# skip_action_validation: false

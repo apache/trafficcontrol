@@ -17,3 +17,9 @@
 
 - import_tasks: "{{ role_path }}/tasks/initialize_traffic_opsdb.yml"
   when: initialize_traffic_opsdb
+
+- import_tasks: "{{ role_path }}/tasks/standby_traffic_opsdb.yml"
+  when: enable_traffic_opsdb_standby
+
+- import_tasks: "{{ role_path }}/tasks/replicas_traffic_opsdb.yml"
+  when: enable_traffic_opsdb_replica

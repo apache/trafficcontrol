@@ -1,0 +1,118 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    lab_ssl_dir: "{{ lookup('env', 'PWD') }}/files/ssl/"
+    lab_ca_root_csr: "{{ lab_ssl_dir }}/lab.rootca.key.csr"
+    lab_ca_root_key: "{{ lab_ssl_dir }}/lab.rootca.key.pem"
+    lab_ca_root_crt: "{{ lab_ssl_dir }}/lab.rootca.crt"
+    lab_ca_int_csr: "{{ lab_ssl_dir }}/lab.intermediateca.csr"
+    lab_ca_int_key: "{{ lab_ssl_dir }}/lab.intermediateca.key.pem"
+    lab_ca_int_crt: "{{ lab_ssl_dir }}/lab.intermediateca.crt"
+    regenerate_root: true
+
+  tasks:
+    - name: Ensure SSL info directory exists
+      file:
+        state: directory
+        path: "{{ lookup('env', 'PWD') }}/files/ssl"
+
+    - name: Regenerate Lab Root CA Private key
+      openssl_privatekey:
+        path: "{{ lab_ca_root_key }}"
+        force: yes
+      when: regenerate_root is defined and (regenerate_root|bool == true) | default(false)
+
+    - name: Regenerate Lab Root CA CSR
+      openssl_csr:
+        basic_constraints:
+          - CA:TRUE
+        privatekey_path: "{{ lab_ca_root_key }}"
+        subject:
+          CN: CDNLAB.invalid
+          C: US
+          ST: Colorado
+          L: Denver
+          O: Molecule Testing
+          OU: CDN
+          emailAddress: ops@email.invalid
+        path: "{{ lab_ca_root_csr }}"
+        force: yes
+      when: regenerate_root is defined and (regenerate_root|bool == true) | default(false)
+
+    - name: Regenerate Lab Root CA Certificate
+      openssl_certificate:
+        csr_path: "{{ lab_ca_root_csr }}"
+        force: yes
+        issuer:
+          CN: CDNLAB.invalid
+          C: US
+          ST: Colorado
+          L: Denver
+          O: Molecule Testing
+          OU: CDN
+        path: "{{ lab_ca_root_crt }}"
+        privatekey_path: "{{ lab_ca_root_key }}"
+        provider: selfsigned
+      when: regenerate_root is defined and (regenerate_root|bool == true) | default(false)
+
+    - name: Generate Intermediate Signing CA Private keys
+      openssl_privatekey:
+        path: "{{ lab_ca_int_key }}"
+        force: yes
+      when: (regenerate_intermediate is defined and (regenerate_intermediate|bool == true)) or (regenerate_root is defined and (regenerate_root|bool == true)) | default(false)
+
+    - name: Generate Intermediate Signing CA CSRs
+      openssl_csr:
+        privatekey_path: "{{ lab_ca_int_key }}"
+        subject:
+          CN: "Lab Intermediate CA"
+          C: US
+          ST: Colorado
+          L: Denver
+          O: Molecule Testing
+          OU: CDN
+          emailAddress: ops@email.invalid
+        key_usage:
+          - digitalSignature
+          - keyCertSign
+        basic_constraints:
+          - CA:TRUE
+          - pathlen:0
+        path: "{{ lab_ca_int_csr }}"
+        force: yes
+      when: (regenerate_intermediate is defined and (regenerate_intermediate|bool == true)) or (regenerate_root is defined and (regenerate_root|bool == true)) | default(false)
+
+    - name: Generate Intermediate Signing CA Certificates
+      openssl_certificate:
+        csr_path: "{{ lab_ca_int_csr }}"
+        force: yes
+        issuer:
+          CN: CDNLAB.invalid
+          C: US
+          ST: Colorado
+          L: Denver
+          O: Molecule Testing
+          OU: CDN
+        path: "{{ lab_ca_int_crt }}"
+        privatekey_path: "{{ lab_ca_int_key }}"
+        provider: ownca
+        ownca_path: "{{ lab_ca_root_crt }}"
+        ownca_privatekey_path: "{{ lab_ca_root_key }}"
+      when: (regenerate_intermediate is defined and (regenerate_intermediate|bool == true)) or (regenerate_root is defined and (regenerate_root|bool == true)) | default(false)

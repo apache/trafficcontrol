@@ -76,7 +76,17 @@ export class InvalidationJobService extends APIService {
 				params.userId = String(opts.user.id);
 			}
 		}
-		return this.get<Array<InvalidationJob>>(path, undefined, params).toPromise().catch(
+		return this.get<Array<InvalidationJob>>(path, undefined, params).toPromise().then(
+			js => {
+				const jobs = new Array<InvalidationJob>();
+				for (const j of js) {
+					const tmp = String(j.startTime).replace(" ", "T").replace("+00", "Z");
+					j.startTime = new Date(tmp);
+					jobs.push(j);
+				}
+				return jobs;
+			}
+		).catch(
 			e => {
 				console.error("Failed to get Invalidation Jobs:", e);
 				return [];
@@ -96,5 +106,25 @@ export class InvalidationJobService extends APIService {
 			() => true,
 			() => false
 		);
+	}
+
+	/**
+	 * Updates a Job by replacing it with a new definition.
+	 *
+	 * @param job The new definition of the Job.
+	 * @returns The edited Job as returned by the server.
+	 */
+	public async updateInvalidationJob(job: InvalidationJob): Promise<InvalidationJob> {
+		return this.put<InvalidationJob>("jobs", job, {id: String(job.id)}).toPromise();
+	}
+
+	/**
+	 * Deletes a Job.
+	 *
+	 * @param id The ID of the Job to delete.
+	 * @returns The deleted Job.
+	 */
+	public async deleteInvalidationJob(id: number): Promise<InvalidationJob> {
+		return this.delete<InvalidationJob>("jobs", undefined, {id: String(id)}).toPromise();
 	}
 }

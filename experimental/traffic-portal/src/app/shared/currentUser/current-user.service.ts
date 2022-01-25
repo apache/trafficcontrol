@@ -163,4 +163,13 @@ export class CurrentUserService {
 		console.log("query params:", queryParams);
 		this.router.navigate(["/login"], {queryParams});
 	}
+
+	/**
+	 * Requests a password reset for a user.
+	 *
+	 * @param email The email of the user for whom to reset a password.
+	 */
+	 public async resetPassword(email: string): Promise<void> {
+		await this.api.resetPassword(email);
+	}
 }

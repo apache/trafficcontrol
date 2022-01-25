@@ -36,7 +36,7 @@ AutoReqProv:      no
 Requires:         cpanminus, expat-devel, libcurl, libpcap-devel, mkisofs, tar
 Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Digest-SHA1
 Requires:         libidn-devel, libcurl-devel, libcap
-Requires:         postgresql13 >= 13.2 , postgresql13-devel >= 13.2
+Requires:         postgresql13 >= 13.2
 Requires:         perl-JSON, perl-libwww-perl, perl-Test-CPAN-Meta, perl-WWW-Curl, perl-TermReadKey, perl-Crypt-ScryptKDF
 Requires:         python(abi)
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent

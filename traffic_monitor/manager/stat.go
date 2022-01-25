@@ -64,7 +64,6 @@ func StartStatHistoryManager(
 	combinedStates peer.CRStatesThreadsafe,
 	toData todata.TODataThreadsafe,
 	cachesChanged <-chan struct{},
-	errorCount threadsafe.Uint,
 	cfg config.Config,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
 	events health.ThreadsafeEvents,
@@ -97,7 +96,7 @@ func StartStatHistoryManager(
 		if haveCachesChanged() {
 			statUnpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
 		}
-		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, statUnpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, combineState, cfg.CachePollingProtocol)
+		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), dsStats, lastStatEndTimes, lastStatDurations, statUnpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, combineState, cfg.CachePollingProtocol)
 	}
 
 	go func() {
@@ -241,7 +240,6 @@ func processStatResults(
 	combinedStatesThreadsafe peer.CRStatesThreadsafe,
 	lastStats threadsafe.LastStats,
 	toData todata.TOData,
-	errorCount threadsafe.Uint,
 	dsStats threadsafe.DSStats,
 	lastStatEndTimes map[tc.CacheName]time.Time,
 	lastStatDurationsThreadsafe threadsafe.DurationMap,
@@ -307,15 +305,10 @@ func processStatResults(
 
 	lastStatsVal := lastStats.Get()
 	lastStatsCopy := lastStatsVal.Copy()
-	newDsStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStatsCopy, time.Now(), mc, events, localStates)
+	newDsStats := ds.CreateStats(precomputedData, toData, combinedStates, lastStatsCopy, mc, events, localStates)
 
-	if err != nil {
-		errorCount.Inc()
-		log.Errorf("getting deliveryservice: %v\n", err)
-	} else {
-		dsStats.Set(*newDsStats)
-		lastStats.Set(*lastStatsCopy)
-	}
+	dsStats.Set(*newDsStats)
+	lastStats.Set(*lastStatsCopy)
 
 	pollerName := "stat"
 	health.CalcAvailability(results, pollerName, &statResultHistoryThreadsafe, mc, toData, localCacheStatusThreadsafe, localStates, events, pollingProtocol)

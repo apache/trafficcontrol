@@ -24,7 +24,7 @@ import {DeliveryServiceService, InvalidationJobService, UserService} from "src/a
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { CustomvalidityDirective } from "../../shared/validation/customvalidity.directive";
 import { OpenableDirective } from "../../shared/openable/openable.directive";
-import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from "../../models";
+import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob, JobType } from "../../models";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
@@ -93,6 +93,25 @@ describe("InvalidationJobsComponent", () => {
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("determines in-progress state", ()=>{
+		const j = {
+			assetUrl: "",
+			createdBy: "",
+			deliveryService: "",
+			id: -1,
+			keyword: JobType.PURGE,
+			parameters: "TTL:1h",
+			startTime: new Date(component.now)
+		};
+		j.startTime.setDate(j.startTime.getDate()-1);
+		expect(component.isInProgress(j)).toBeFalse();
+		j.startTime = new Date(component.now);
+		j.startTime.setMinutes(j.startTime.getMinutes()-30);
+		expect(component.isInProgress(j)).toBeTrue();
+		j.startTime = new Date();
+		expect(component.isInProgress(j)).toBeFalse();
 	});
 
 	afterAll(() => {

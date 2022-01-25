@@ -1,0 +1,149 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- hosts: all
+  gather_facts: true
+
+  vars:
+    server_private_key_path: /etc/pki/tls/private/server.key.pem
+    server_csr_path: /etc/pki/tls/certs/server.csr
+    server_crt_path: /etc/pki/tls/certs/server.crt
+    ca_data_mapping:
+      - src: /molecule/files/ssl/lab.rootca.crt
+        dest: /etc/pki/ca-trust/source/anchors/lab.rootca.crt
+      - src: /molecule/files/ssl/lab.intermediateca.crt
+        dest: /etc/pki/ca-trust/source/anchors/lab.intermediateca.crt
+      - src: /molecule/files/ssl/lab.intermediateca.key.pem
+        dest: /etc/pki/tls/private/lab.intermediateca.key.pem
+
+  tasks:
+    - name: Dump all the hostvars to inspect later
+      debug:
+        var: hostvars
+        verbosity: 2
+
+    - name: Generate Server Private keys
+      openssl_privatekey:
+        path: "{{ server_private_key_path }}"
+        force: yes
+
+    - name: Generate a CSR
+      openssl_csr:
+        privatekey_path: "{{ server_private_key_path }}"
+        subject:
+          CN: "{{ additional_DNS_names | default(ansible_host) }}"
+          C: US
+          ST: Colorado
+          L: Denver
+          O: Molecule Testing
+          OU: CDN
+          emailAddress: ops@email.invalid
+        subject_alt_name: "{{ san_arr | difference(invalid_DNS) }}"
+        path: "{{ server_csr_path }}"
+        force: yes
+      vars:
+        san_arr:
+          - "IP:{{ default_ipv4.address | default('invalid.invalid') }}"
+          - "DNS:{{ ansible_host }}"
+          - "DNS:{{ additional_dns_names | default('invalid.invalid') }}"
+          - "{% if additional_dns_cnames is defined and len(additional_dns_cnames) > 0 %}{% for name in additional_dns_cnames %}DNS:{{ name }}{% endfor %}{% else %}DNS:invalid.invalid{% endif %}"
+        invalid_DNS:
+          - "DNS:invalid.invalid"
+          - "IP:invalid.invalid"
+
+    - name: Copy the main ssl files into each proper destination
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        remote_src: true
+      with_items: "{{ ca_data_mapping }}"
+
+    - name: Generate Server Certificates
+      openssl_certificate:
+        csr_path: "{{ server_csr_path }}"
+        force: yes
+        path: "{{ server_crt_path }}"
+        privatekey_path: "{{ server_private_key_path }}"
+        provider: ownca
+        ownca_path: "{{ int_ca_crt_path }}"
+        ownca_privatekey_path: "{{ int_ca_crt_key }}"
+      vars:
+        int_ca_crt_key: "{{ ca_data_mapping | to_json | from_json | json_query('[?contains(dest,`intermediateca.key`)].dest|[0]') }}"
+        int_ca_crt_path: "{{ ca_data_mapping | to_json | from_json | json_query('[?contains(dest,`intermediateca.crt`)].dest|[0]') }}"
+
+    - name: Ensure Server Certificate and Key have correct permissions
+      file:
+        path: "{{ item.dest }}"
+        mode: "{{ '0644' if item.dest is match('.*.crt') else '0700' }}"
+        state: file
+      with_items: "{{ ca_data_mapping + server_ssl_mapping }}"
+      vars:
+        server_ssl_mapping:
+          - dest: "{{ server_private_key_path }}"
+          - dest: "{{ server_crt_path }}"
+
+    - name: Ensure needed packages are installed
+      package:
+        name:
+          - ca-certificates
+          - createrepo
+          - crontabs
+        state: present
+        lock_timeout: 300
+        enablerepo: "{{ additional_yum_repos | default([]) }}"
+      retries: 5
+      delay: 5
+
+    - name: Update server trusts
+      command: /bin/update-ca-trust
+      retries: 10
+      delay: 10
+
+    - name: Populate yum repo data
+      command: "createrepo --update {{ item }}"
+      run_once: true
+      with_items:
+        - "/molecule/files/rpm/{{ ansible_distribution_major_version }}"
+        - "/molecule/files/srpm/{{ ansible_distribution_major_version }}"
+
+    - name: Create a cronjob to ensure the repo metadata stays in sync
+      cron:
+        name: Refresh molecule yum repo metadata
+        minute: '*/3'
+        job: "createrepo --update -C {{ item }}"
+      run_once: true
+      with_items:
+        - "/molecule/files/rpm/{{ ansible_distribution_major_version }}"
+        - "/molecule/files/srpm/{{ ansible_distribution_major_version }}"
+
+    - name: Add the molecule yum repos
+      yum_repository:
+        name: "{{ item.name }}"
+        description: The local molecule mounted ATC repo
+        baseurl: "file://{{ item.path }}"
+        gpgcheck: no
+        enabled: "{{ item.enabled }}"
+      with_items:
+        - name: molecule
+          path: "/molecule/files/rpm/{{ ansible_distribution_major_version }}"
+          enabled: yes
+        - name: molecule-src
+          path: "/molecule/files/srpm/{{ ansible_distribution_major_version }}"
+          enabled: no
+
+    - name: Ensure the yum metadata contains the new repos
+      shell: yum clean all && yum repolist
+      args:
+        warn: no
