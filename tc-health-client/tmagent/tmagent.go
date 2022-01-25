@@ -251,7 +251,7 @@ func (c *ParentInfo) GetCacheStatuses() (tc.CRStates, error) {
 		tmc.Transport = &http.Transport{Proxy: http.ProxyURL(c.Cfg.ParsedProxyURL)}
 	}
 
-	return tmc.CRStates(true)
+	return tmc.CRStates(false)
 }
 
 // The main polling function that keeps the parents list current if
