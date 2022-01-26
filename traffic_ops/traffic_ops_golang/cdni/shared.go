@@ -42,6 +42,11 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 
 	bearerToken := r.Header.Get("Authorization")
 
+	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
+		return
+	}
+
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(inf.Config.Cdni.JwtDecodingSecret), nil
