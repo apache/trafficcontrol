@@ -44,6 +44,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdn_lock"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnfederation"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdni"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnnotification"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/coordinate"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crconfig"
@@ -129,6 +130,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		/**
 		 * 4.x API
 		 */
+
+		// CDNI integration
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `OC/FCI/advertisement/?$`, cdni.GetCapabilities, auth.PrivLevelReadOnly, []string{"CDNI-CAPACITY:READ"}, Authenticated, nil, 541357729077},
 
 		// SSL Keys
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `sslkey_expirations/?$`, deliveryservice.GetSSlKeyExpirationInformation, auth.PrivLevelAdmin, []string{"SSL-KEY-EXPIRATION:READ"}, Authenticated, nil, 41357729075},
