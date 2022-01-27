@@ -538,7 +538,54 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 	if cdnID != *s.CDNID {
 		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, *s.ProfileID, *s.CDNID))
 	}
+	return errs
+}
 
+func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
+
+	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+
+	errs := tovalidate.ToErrors(validation.Errors{
+		"cachegroupId":   validation.Validate(s.CachegroupID, validation.NotNil),
+		"cdnId":          validation.Validate(s.CDNID, validation.NotNil),
+		"domainName":     validation.Validate(s.DomainName, validation.Required, noSpaces),
+		"hostName":       validation.Validate(s.HostName, validation.Required, noSpaces),
+		"physLocationId": validation.Validate(s.PhysLocationID, validation.NotNil),
+		"profileNames":   validation.Validate(s.Profiles, validation.NotNil),
+		"statusId":       validation.Validate(s.StatusID, validation.NotNil),
+		"typeId":         validation.Validate(s.TypeID, validation.NotNil),
+		"updPending":     validation.Validate(s.UpdPending, validation.NotNil),
+		"httpsPort":      validation.Validate(s.HTTPSPort, validation.By(tovalidate.IsValidPortNumber)),
+		"tcpPort":        validation.Validate(s.TCPPort, validation.By(tovalidate.IsValidPortNumber)),
+	})
+
+	if len(errs) > 0 {
+		return errs
+	}
+
+	if _, err := tc.ValidateTypeID(tx, s.TypeID, "server"); err != nil {
+		errs = append(errs, err)
+	}
+
+	if len(*s.Profiles) == 0 {
+		errs = append(errs, fmt.Errorf("no profiles exists"))
+	}
+
+	var cdnID int
+	if err := tx.QueryRow("SELECT cdn from profile WHERE name=$1", (*s.Profiles)[0]).Scan(&cdnID); err != nil {
+		log.Errorf("could not execute select cdnID from profile: %s\n", err)
+		if err == sql.ErrNoRows {
+			errs = append(errs, fmt.Errorf("no such profileId: '%d'", (*s.Profiles)[0]))
+		} else {
+			errs = append(errs, tc.DBError)
+		}
+		return errs
+	}
+
+	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
+	if cdnID != *s.CDNID {
+		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, (*s.Profiles)[0], *s.CDNID))
+	}
 	return errs
 }
 
@@ -679,7 +726,7 @@ func validateV4(s *tc.ServerV40, tx *sql.Tx) (string, error) {
 	if !serviceAddrV6Found && !serviceAddrV4Found {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
-	if errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...); errs != nil {
+	if errs = append(errs, validateCommonV40(&s.CommonServerPropertiesV40, tx)...); errs != nil {
 		return serviceInterface, util.JoinErrs(errs)
 	}
 	query := `
@@ -688,15 +735,14 @@ JOIN profile p on p.Id = s.Profile
 JOIN interface i on i.server = s.ID
 JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
 WHERE ip.service_address = true
-and p.id = $1
 `
 	var rows *sql.Rows
 	var err error
 	//ProfileID already validated
 	if s.ID != nil {
-		rows, err = tx.Query(query+" and s.id != $2", *s.ProfileID, *s.ID)
+		rows, err = tx.Query(query+" and s.id != $1", *s.ID)
 	} else {
-		rows, err = tx.Query(query, *s.ProfileID)
+		rows, err = tx.Query(query)
 	}
 	if err != nil {
 		errs = append(errs, errors.New("unable to determine service address uniqueness"))
@@ -1252,7 +1298,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 	return ids, nil, nil, http.StatusOK
 }
 
-func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error, error, int) {
+func checkTypeChangeSafety(server tc.CommonServerPropertiesV40, tx *sqlx.Tx) (error, error, int) {
 	// see if cdn or type changed
 	var cdnID int
 	var typeID int
@@ -1544,7 +1590,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerProperties, inf.Tx); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerPropertiesV40, inf.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
@@ -1862,7 +1908,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
+		if err := resultRows.StructScan(&server.CommonServerPropertiesV40); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
 			return
 		}

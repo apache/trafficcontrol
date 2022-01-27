@@ -210,8 +210,8 @@ func GetServerSSLData(
 ) ([]SSLData, []string, error) {
 	warnings := []string{}
 
-	if server.Profile == nil {
-		return nil, warnings, errors.New("this server missing Profile")
+	if server.Profiles == nil && len(*server.Profiles) == 0 {
+		return nil, warnings, errors.New("this server missing Profiles")
 	}
 
 	dsRegexes := makeDSRegexMap(dsRegexArr)

@@ -49,7 +49,7 @@ func MakeLogsXMLDotConfig(
 	}
 	warnings := []string{}
 
-	if server.Profile == nil {
+	if server.Profiles == nil && len(*server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 

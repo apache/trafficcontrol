@@ -150,7 +150,7 @@ func TestUpdateServer(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT ARRAY").WillReturnRows(dsrows)
 
-	s := tc.CommonServerProperties{
+	s := tc.CommonServerPropertiesV40{
 		CDNID:    &testServers[0].Server.CDNID,
 		FqdnTime: time.Time{},
 		TypeID:   &testServers[0].Server.TypeID,
@@ -464,9 +464,7 @@ func TestGetMidServers(t *testing.T) {
 		ts.OfflineReason,
 		ts.PhysLocation,
 		ts.PhysLocationID,
-		ts.Profile,
-		ts.ProfileDesc,
-		ts.ProfileID,
+		ts.Profiles,
 		ts.Rack,
 		ts.RevalPending,
 		ts.Status,
