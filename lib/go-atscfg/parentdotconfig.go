@@ -106,7 +106,7 @@ func MakeParentDotConfig(
 		return Cfg{}, makeErr(warnings, "server CDNName missing")
 	} else if server.Cachegroup == nil || *server.Cachegroup == "" {
 		return Cfg{}, makeErr(warnings, "server Cachegroup missing")
-	} else if server.Profile == nil || *server.Profile == "" {
+	} else if server.Profiles == nil && len(*server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server Profile missing")
 	} else if server.TCPPort == nil {
 		return Cfg{}, makeErr(warnings, "server TCPPort missing")
@@ -156,8 +156,8 @@ func MakeParentDotConfig(
 
 	// We only need parent.config params, don't need all the params on the server
 	serverParams := map[string]string{}
-	if server.Profile == nil || *server.Profile != "" { // TODO warn/error if false? Servers requires profiles
-		for name, val := range profileParentConfigParams[*server.Profile] {
+	if server.Profiles == nil || (*server.Profiles)[0] != "" { // TODO warn/error if false? Servers requires profiles
+		for name, val := range profileParentConfigParams[(*server.Profiles)[0]] {
 			if name == ParentConfigParamQStringHandling ||
 				name == ParentConfigParamAlgorithm ||
 				name == ParentConfigParamQString {
@@ -940,7 +940,7 @@ func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (profi
 		profileCache.Port = *sv.TCPPort
 	}
 	for _, param := range params {
-		if _, ok := param.ProfileNames[*sv.Profile]; !ok {
+		if _, ok := param.ProfileNames[(*sv.Profiles)[0]]; !ok {
 			continue
 		}
 		switch param.Name {
@@ -1374,9 +1374,6 @@ func getOriginServersAndProfileCaches(
 		} else if cgSv.TypeID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil TypeID, skipping!")
 			continue
-		} else if cgSv.ProfileID == nil {
-			warnings = append(warnings, "getting origin servers: got server with nil ProfileID, skipping!")
-			continue
 		} else if cgSv.CDNID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil CDNID, skipping!")
 			continue
@@ -1399,7 +1396,6 @@ func getOriginServersAndProfileCaches(
 			CacheGroupID: *cgSv.CachegroupID,
 			Status:       *cgSv.StatusID,
 			Type:         *cgSv.TypeID,
-			ProfileID:    ProfileID(*cgSv.ProfileID),
 			CDN:          *cgSv.CDNID,
 			TypeName:     cgSv.Type,
 			Domain:       *cgSv.DomainName,
@@ -1421,8 +1417,8 @@ func getOriginServersAndProfileCaches(
 		}
 
 		if _, profileCachesHasProfile := profileCaches[realCGServer.ProfileID]; !profileCachesHasProfile {
-			if profileCache, profileParamsHasProfile := profileParams[*cgSv.Profile]; !profileParamsHasProfile {
-				warnings = append(warnings, fmt.Sprintf("cachegroup has server with profile %+v but that profile has no parameters\n", *cgSv.ProfileID))
+			if profileCache, profileParamsHasProfile := profileParams[(*cgSv.Profiles)[0]]; !profileParamsHasProfile {
+				warnings = append(warnings, fmt.Sprintf("cachegroup has server with profile %+v but that profile has no parameters\n", (*cgSv.Profiles)[0]))
 				profileCaches[realCGServer.ProfileID] = defaultProfileCache()
 			} else {
 				profileCaches[realCGServer.ProfileID] = profileCache
@@ -1441,17 +1437,17 @@ func getParentConfigProfileParams(
 	warnings := []string{}
 	parentConfigServerCacheProfileParams := map[string]profileCache{} // map[profileName]ProfileCache
 	for _, cgServer := range cgServers {
-		if cgServer.Profile == nil {
-			warnings = append(warnings, "getting parent config profile params: server has nil profile, skipping!")
+		if cgServer.Profiles == nil {
+			warnings = append(warnings, "getting parent config profile params: server has nil profiles, skipping!")
 			continue
 		}
-		profileCache, ok := parentConfigServerCacheProfileParams[*cgServer.Profile]
+		profileCache, ok := parentConfigServerCacheProfileParams[(*cgServer.Profiles)[0]]
 		if !ok {
 			profileCache = defaultProfileCache()
 		}
-		params, ok := profileParentConfigParams[*cgServer.Profile]
+		params, ok := profileParentConfigParams[(*cgServer.Profiles)[0]]
 		if !ok {
-			parentConfigServerCacheProfileParams[*cgServer.Profile] = profileCache
+			parentConfigServerCacheProfileParams[(*cgServer.Profiles)[0]] = profileCache
 			continue
 		}
 		for name, val := range params {
@@ -1483,7 +1479,7 @@ func getParentConfigProfileParams(
 				profileCache.NotAParent = val != "false"
 			}
 		}
-		parentConfigServerCacheProfileParams[*cgServer.Profile] = profileCache
+		parentConfigServerCacheProfileParams[(*cgServer.Profiles)[0]] = profileCache
 	}
 	return parentConfigServerCacheProfileParams, warnings
 }

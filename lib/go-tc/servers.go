@@ -728,7 +728,7 @@ type CommonServerPropertiesV40 struct {
 	OfflineReason    *string              `json:"offlineReason" db:"offline_reason"`
 	PhysLocation     *string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID   *int                 `json:"physLocationId" db:"phys_location_id"`
-	Profiles         []string             `json:"profile" db:"profile"`
+	Profiles         *[]string            `json:"profile_name" db:"profile_name"`
 	Rack             *string              `json:"rack" db:"rack"`
 	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
 	Status           *string              `json:"status" db:"status"`
@@ -741,19 +741,18 @@ type CommonServerPropertiesV40 struct {
 	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-func GetCommonServerPropertiesFromV4() CommonServerProperties {
-	var s ServerNullableV40
+func (s ServerV40) GetCommonServerPropertiesFromV4() CommonServerProperties {
 	var tx *sql.Tx
 	var id int
 	var desc string
 	profileIDDescQuery := `
 		SELECT id, description from "profile" p WHERE p.name=$1
 	`
-	rows, err := tx.Query(profileIDDescQuery, s.Profiles[0])
+	rows, err := tx.Query(profileIDDescQuery, (*s.Profiles)[0])
 	if err != nil {
 		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
 	}
-	defer log.Close(rows, "closing rows in GetCommonServerPropertiesFromV4")
+	defer log.Close(rows, "closing rows in GetCommonServerPropertiesFromV4ToV3")
 
 	for rows.Next() {
 		if err := rows.Scan(&id, &desc); err != nil {
@@ -784,7 +783,7 @@ func GetCommonServerPropertiesFromV4() CommonServerProperties {
 		MgmtIPGateway:    s.MgmtIPGateway,
 		MgmtIPNetmask:    s.MgmtIPNetmask,
 		OfflineReason:    s.OfflineReason,
-		Profile:          &s.Profiles[0],
+		Profile:          &(*s.Profiles)[0],
 		ProfileDesc:      &desc,
 		ProfileID:        &id,
 		PhysLocation:     s.PhysLocation,
@@ -802,18 +801,25 @@ func GetCommonServerPropertiesFromV4() CommonServerProperties {
 	}
 }
 
-func GetCommonServerPropertiesForV4() CommonServerPropertiesV40 {
-	var s ServerNullableV2
+func (s ServerNullableV2) GetCommonServerPropertiesForV4() CommonServerPropertiesV40 {
+	return GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties)
+}
+
+func (s ServerV30) GetCommonServerPropertiesForV4() CommonServerPropertiesV40 {
+	return GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties)
+}
+
+func GetCommonServerPropertiesV40(id *int, properties CommonServerProperties) CommonServerPropertiesV40 {
 	var tx *sql.Tx
 	var profileNames []string
 	profileNameQuery := `
 		SELECT profile_name from "server_profile" sp WHERE sp.server_id=$1
 	`
-	rows, err := tx.Query(profileNameQuery, s.ID)
+	rows, err := tx.Query(profileNameQuery, id)
 	if err != nil {
 		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
 	}
-	defer log.Close(rows, "closing rows in GetCommonServerPropertiesForV4")
+	defer log.Close(rows, "closing rows in GetCommonServerPropertiesForV4FromV3")
 
 	for rows.Next() {
 		if err := rows.Scan(pq.Array(&profileNames)); err != nil {
@@ -822,41 +828,41 @@ func GetCommonServerPropertiesForV4() CommonServerPropertiesV40 {
 	}
 
 	return CommonServerPropertiesV40{
-		Cachegroup:       s.Cachegroup,
-		CachegroupID:     s.CachegroupID,
-		CDNID:            s.CDNID,
-		CDNName:          s.CDNName,
-		DeliveryServices: s.DeliveryServices,
-		DomainName:       s.DomainName,
-		FQDN:             s.FQDN,
-		FqdnTime:         s.FqdnTime,
-		GUID:             s.GUID,
-		HostName:         s.HostName,
-		HTTPSPort:        s.HTTPSPort,
-		ID:               s.ID,
-		ILOIPAddress:     s.ILOIPAddress,
-		ILOIPGateway:     s.ILOIPGateway,
-		ILOIPNetmask:     s.ILOIPNetmask,
-		ILOPassword:      s.ILOPassword,
-		ILOUsername:      s.ILOUsername,
-		LastUpdated:      s.LastUpdated,
-		MgmtIPAddress:    s.MgmtIPAddress,
-		MgmtIPGateway:    s.MgmtIPGateway,
-		MgmtIPNetmask:    s.MgmtIPNetmask,
-		OfflineReason:    s.OfflineReason,
-		Profiles:         profileNames,
-		PhysLocation:     s.PhysLocation,
-		PhysLocationID:   s.PhysLocationID,
-		Rack:             s.Rack,
-		RevalPending:     s.RevalPending,
-		Status:           s.Status,
-		StatusID:         s.StatusID,
-		TCPPort:          s.TCPPort,
-		Type:             s.Type,
-		TypeID:           s.TypeID,
-		UpdPending:       s.UpdPending,
-		XMPPID:           s.XMPPID,
-		XMPPPasswd:       s.XMPPPasswd,
+		Cachegroup:       properties.Cachegroup,
+		CachegroupID:     properties.CachegroupID,
+		CDNID:            properties.CDNID,
+		CDNName:          properties.CDNName,
+		DeliveryServices: properties.DeliveryServices,
+		DomainName:       properties.DomainName,
+		FQDN:             properties.FQDN,
+		FqdnTime:         properties.FqdnTime,
+		GUID:             properties.GUID,
+		HostName:         properties.HostName,
+		HTTPSPort:        properties.HTTPSPort,
+		ID:               properties.ID,
+		ILOIPAddress:     properties.ILOIPAddress,
+		ILOIPGateway:     properties.ILOIPGateway,
+		ILOIPNetmask:     properties.ILOIPNetmask,
+		ILOPassword:      properties.ILOPassword,
+		ILOUsername:      properties.ILOUsername,
+		LastUpdated:      properties.LastUpdated,
+		MgmtIPAddress:    properties.MgmtIPAddress,
+		MgmtIPGateway:    properties.MgmtIPGateway,
+		MgmtIPNetmask:    properties.MgmtIPNetmask,
+		OfflineReason:    properties.OfflineReason,
+		Profiles:         &profileNames,
+		PhysLocation:     properties.PhysLocation,
+		PhysLocationID:   properties.PhysLocationID,
+		Rack:             properties.Rack,
+		RevalPending:     properties.RevalPending,
+		Status:           properties.Status,
+		StatusID:         properties.StatusID,
+		TCPPort:          properties.TCPPort,
+		Type:             properties.Type,
+		TypeID:           properties.TypeID,
+		UpdPending:       properties.UpdPending,
+		XMPPID:           properties.XMPPID,
+		XMPPPasswd:       properties.XMPPPasswd,
 	}
 }
 
@@ -1088,7 +1094,7 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 // ServerV40 or newer structures.
 func (s ServerV30) UpgradeToV40() (ServerV40, error) {
 	upgraded := ServerV40{
-		CommonServerPropertiesV40: GetCommonServerPropertiesForV4(),
+		CommonServerPropertiesV40: s.GetCommonServerPropertiesForV4(),
 		StatusLastUpdated:         s.StatusLastUpdated,
 	}
 	infs, err := ToInterfacesV4(s.Interfaces, s.RouterHostName, s.RouterPortName)
@@ -1105,7 +1111,7 @@ func (s ServerV30) UpgradeToV40() (ServerV40, error) {
 //
 // Deprecated: Traffic Ops API version 2 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerNullableV40) UpgradeToV40() (ServerV40, error) {
+func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
 	ipv4IsService := false
 	if s.IPIsService != nil {
 		ipv4IsService = *s.IPIsService
@@ -1115,7 +1121,7 @@ func (s ServerNullableV40) UpgradeToV40() (ServerV40, error) {
 		ipv6IsService = *s.IP6IsService
 	}
 	upgraded := ServerV40{
-		CommonServerPropertiesV40: s.CommonServerPropertiesV40,
+		CommonServerPropertiesV40: s.GetCommonServerPropertiesForV4(),
 	}
 
 	infs, err := s.LegacyInterfaceDetails.ToInterfacesV4(ipv4IsService, ipv6IsService, s.RouterHostName, s.RouterPortName)
@@ -1211,7 +1217,7 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 		interfaces = append(interfaces, i)
 	}
 	serverV30 := ServerV30{
-		CommonServerProperties: GetCommonServerPropertiesFromV4(),
+		CommonServerProperties: s.GetCommonServerPropertiesFromV4(),
 		Interfaces:             interfaces,
 		StatusLastUpdated:      s.StatusLastUpdated,
 	}
@@ -1233,7 +1239,7 @@ func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
 	routerPortName := ""
 	legacyServer := ServerNullableV2{
 		ServerNullableV11: ServerNullableV11{
-			CommonServerProperties: GetCommonServerPropertiesFromV4(),
+			CommonServerProperties: s.GetCommonServerPropertiesFromV4(),
 		},
 		IPIsService:  new(bool),
 		IP6IsService: new(bool),
