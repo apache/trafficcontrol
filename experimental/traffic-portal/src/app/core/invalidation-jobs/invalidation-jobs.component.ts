@@ -11,13 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { faPlus, faTrash, faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
-import { defaultDeliveryService, DeliveryService, InvalidationJob } from "src/app/models";
+import { defaultDeliveryService, type DeliveryService, type InvalidationJob } from "src/app/models";
 
 import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 
