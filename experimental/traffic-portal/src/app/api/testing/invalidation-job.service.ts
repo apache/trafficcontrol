@@ -14,7 +14,11 @@
 
 import { Injectable } from "@angular/core";
 
-import { DeliveryService, InvalidationJob, JobType, NewInvalidationJob, User } from "src/app/models";
+import { type DeliveryService, type InvalidationJob, JobType, type NewInvalidationJob, type User } from "src/app/models";
+
+// This needs to be imported from above, because that's how the services are
+// specified in `providers`.
+import { DeliveryServiceService } from "..";
 
 /**
  * JobOpts defines the options that can be passed to getInvalidationJobs.
@@ -40,6 +44,8 @@ export class InvalidationJobService {
 
 	private readonly jobs = new Array<InvalidationJob>();
 	private idCounter = 0;
+
+	constructor(private readonly dsService: DeliveryServiceService) {}
 
 	/**
 	 * Fetches all invalidation jobs that match the passed criteria.
@@ -77,21 +83,29 @@ export class InvalidationJobService {
 	 * @param job The Job to create.
 	 * @returns whether or not creation succeeded.
 	 */
-	public async createInvalidationJob(job: NewInvalidationJob): Promise<boolean> {
+	public async createInvalidationJob(job: NewInvalidationJob): Promise<InvalidationJob> {
+		let deliveryService;
 		if (typeof job.deliveryService === "number") {
-			throw new Error("creating Jobs by Delivery Service ID is not implemented in testing services; use the XMLID");
+			const ds = (await this.dsService.getDeliveryServices()).find(d=>d.id === job.deliveryService);
+			if (!ds) {
+				throw new Error(`no such Delivery Service: #${job.deliveryService}`);
+			}
+			deliveryService = ds.xmlId;
+		} else {
+			deliveryService = job.deliveryService;
 		}
-		this.jobs.push({
+		const ret = {
 			// Yes, this is ill-formed.
 			assetUrl: job.regex,
 			createdBy: "test-admin",
-			deliveryService: job.deliveryService,
+			deliveryService,
 			id: ++this.idCounter,
 			keyword: JobType.PURGE,
 			parameters: typeof job.ttl === "string" ? job.ttl : `${job.ttl}h`,
 			startTime: job.startTime instanceof Date ? job.startTime : new Date(job.startTime)
-		});
-		return true;
+		};
+		this.jobs.push(ret);
+		return ret;
 	}
 
 	/**

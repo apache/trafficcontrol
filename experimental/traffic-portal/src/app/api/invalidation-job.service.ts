@@ -95,12 +95,9 @@ export class InvalidationJobService extends APIService {
 	 * @param job The Job to create.
 	 * @returns whether or not creation succeeded.
 	 */
-	public async createInvalidationJob(job: NewInvalidationJob): Promise<boolean> {
+	public async createInvalidationJob(job: NewInvalidationJob): Promise<InvalidationJob> {
 		const path = "jobs";
-		return this.post(path, job).toPromise().then(
-			() => true,
-			() => false
-		);
+		return this.post<InvalidationJob>(path, job).toPromise();
 	}
 
 	/**

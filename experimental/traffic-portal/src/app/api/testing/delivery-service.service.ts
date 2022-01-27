@@ -200,11 +200,11 @@ export class DeliveryServiceService {
 	 * @param ds The new Delivery Service object
 	 * @returns A boolean value indicating the success of the operation
 	 */
-	public async createDeliveryService(ds: DeliveryService): Promise<boolean> {
+	public async createDeliveryService(ds: DeliveryService): Promise<DeliveryService> {
 		ds.id = ++this.idCounter;
 		ds.lastUpdated = new Date();
 		this.deliveryServices.push(ds);
-		return true;
+		return ds;
 	}
 
 	/**

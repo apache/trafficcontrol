@@ -340,12 +340,8 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 		this.dsAPI.createDeliveryService(this.deliveryService).then(
 			v => {
-				if (v) {
-					console.log("New Delivery Service '%s' created", this.deliveryService.displayName);
-					this.router.navigate(["/"], {queryParams: {search: encodeURIComponent(this.deliveryService.displayName)}});
-				} else {
-					console.error("Failed to create deliveryService: ", this.deliveryService);
-				}
+				console.log("New Delivery Service '%s' created", v.displayName);
+				this.router.navigate(["/"], {queryParams: {search: encodeURIComponent(v.displayName)}});
 			}
 		);
 	}
