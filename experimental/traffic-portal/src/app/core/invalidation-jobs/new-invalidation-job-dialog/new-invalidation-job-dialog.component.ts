@@ -104,7 +104,7 @@ export class NewInvalidationJobDialogComponent {
 			this.startMinTime = startTime;
 			this.startTime.setValue(startTime);
 			this.ttl.setValue(parseInt(this.job.parameters.split(":")[1], 10));
-			const regexp = this.job.assetUrl.split("/").slice(3).join("/") || "/";
+			const regexp = this.job.assetUrl.split("/", 4).slice(3).join("/") || "/";
 			this.regexp.setValue(regexp);
 		} else {
 			this.startDate.setDate(this.startDate.getDate()+1);
@@ -162,7 +162,7 @@ export class NewInvalidationJobDialogComponent {
 	 *
 	 * @param event The form submission event, which must be .preventDefault'd.
 	 */
-	public onSubmit(event: Event): void {
+	public async onSubmit(event: Event): Promise<void> {
 		event.preventDefault();
 		event.stopPropagation();
 
@@ -170,8 +170,7 @@ export class NewInvalidationJobDialogComponent {
 		try {
 			re = new RegExp(this.regexp.value);
 		} catch (err) {
-			this.regexpIsValid.next(`Must be a valid regular expression! (${err})`);
-			return;
+			return this.regexpIsValid.next(`Must be a valid regular expression! (${err instanceof Error ? err.message : err})`);
 		}
 
 		const startTime = new Date(this.startDate);
@@ -180,8 +179,7 @@ export class NewInvalidationJobDialogComponent {
 		startTime.setMinutes(minutes);
 
 		if (this.job) {
-			this.editJob(this.job, re, startTime);
-			return;
+			return this.editJob(this.job, re, startTime);
 		}
 
 		const job = {
@@ -191,18 +189,12 @@ export class NewInvalidationJobDialogComponent {
 			ttl: this.ttl.value
 		};
 
-		this.jobAPI.createInvalidationJob(job).then(
-			r => {
-				if (r) {
-					this.dialogRef.close(true);
-				} else {
-					console.warn("failure");
-				}
-			},
-			err => {
-				console.error("error: ", err);
-			}
-		);
+		try {
+			await this.jobAPI.createInvalidationJob(job);
+			this.dialogRef.close(true);
+		} catch (err) {
+			console.error("error: ", err);
+		}
 	}
 
 	/**
