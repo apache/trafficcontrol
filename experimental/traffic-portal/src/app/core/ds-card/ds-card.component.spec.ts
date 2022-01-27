@@ -12,11 +12,12 @@
 * limitations under the License.
 */
 import { HttpClientModule } from "@angular/common/http";
-import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
+import { DeliveryServiceService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import type { DeliveryService } from "src/app/models";
+import { Protocol, protocolToString, defaultDeliveryService } from "src/app/models";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
 
@@ -25,10 +26,10 @@ import { DsCardComponent } from "./ds-card.component";
 describe("DsCardComponent", () => {
 	let component: DsCardComponent;
 	let fixture: ComponentFixture<DsCardComponent>;
+	let api: DeliveryServiceService;
 
-	beforeEach(waitForAsync(() => {
-
-		TestBed.configureTestingModule({
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
 			declarations: [
 				DsCardComponent,
 				LoadingComponent,
@@ -39,14 +40,11 @@ describe("DsCardComponent", () => {
 				HttpClientModule,
 				RouterTestingModule,
 			],
-		});
-		TestBed.compileComponents();
-	}));
-
-	beforeEach(() => {
+		}).compileComponents();
+		api = TestBed.inject(DeliveryServiceService);
 		fixture = TestBed.createComponent(DsCardComponent);
 		component = fixture.componentInstance;
-		component.deliveryService = {xmlId: "test-ds"} as DeliveryService;
+		component.deliveryService = await api.createDeliveryService({...defaultDeliveryService});
 		fixture.detectChanges();
 	});
 
@@ -54,11 +52,28 @@ describe("DsCardComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	afterAll(() => {
-		try{
-			TestBed.resetTestingModule();
-		} catch (e) {
-			console.error("error in DSCardComponent afterAll:", e);
-		}
+	it("renders protocol strings", () => {
+		expect(component.protocolString).toBe("");
+
+		component.deliveryService.protocol = Protocol.HTTP;
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
+		component.deliveryService.protocol = Protocol.HTTPS;
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
+		component.deliveryService.protocol = Protocol.HTTP_TO_HTTPS;
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
+		component.deliveryService.protocol = Protocol.HTTP_AND_HTTPS;
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
 	});
+
+	it("toggles its open state, and loads its data", fakeAsync(() => {
+		expect(component.open).toBeFalse();
+		component.toggle();
+		tick();
+		expect(component.open).toBeTrue();
+		expect(component.graphDataLoaded).toBeTrue();
+		component.toggle();
+		tick();
+		expect(component.open).toBeFalse();
+		expect(component.graphDataLoaded).toBeFalse();
+	}));
 });
