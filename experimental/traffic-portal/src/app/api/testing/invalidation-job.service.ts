@@ -60,8 +60,8 @@ export class InvalidationJobService {
 				ret = ret.filter(j=>j.id===opts.id);
 			}
 			if (opts.dsID) {
-				// TODO: implement this
-				throw new Error("filtering by dsID not implemented in testing services");
+				const ds = await this.dsService.getDeliveryServices(opts.dsID);
+				ret = ret.filter(j=>j.deliveryService === ds.xmlId);
 			}
 			if (opts.userId) {
 				// TODO: implement this
