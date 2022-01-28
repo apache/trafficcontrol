@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 
@@ -39,10 +39,12 @@ export class DashboardComponent implements OnInit {
 	 * The set of Delivery Services filtered according to the search box text.
 	 */
 	public get filteredDSes(): DeliveryService[] {
-		if (!this.deliveryServices) {
-			return [];
-		}
-		return this.deliveryServices.map(x => [x, fuzzyScore(x.displayName, this.fuzzControl.value)]).filter(x => x[1] !== Infinity).sort(
+		return this.deliveryServices.map(
+			x => [
+				x,
+				fuzzyScore(x.displayName.toLocaleLowerCase(), this.fuzzControl.value.toLocaleLowerCase())
+			]
+		).filter(x => x[1] !== Infinity).sort(
 			(a, b) => {
 				if (a[1] > b[1]) {
 					return 1;
