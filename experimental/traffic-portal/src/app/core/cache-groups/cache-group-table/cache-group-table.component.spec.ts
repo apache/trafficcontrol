@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import { HttpClientModule } from "@angular/common/http";
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed, fakeAsync } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
@@ -33,11 +33,7 @@ describe("CacheGroupTableComponent", () => {
 				ReactiveFormsModule,
 				RouterTestingModule
 			],
-		})
-			.compileComponents();
-	});
-
-	beforeEach(() => {
+		}).compileComponents();
 		fixture = TestBed.createComponent(CacheGroupTableComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
@@ -45,5 +41,15 @@ describe("CacheGroupTableComponent", () => {
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("emits the search box value", fakeAsync(() => {
+		component.fuzzControl.setValue("query");
+		component.updateURL();
+		expectAsync(component.fuzzySubject.toPromise()).toBeResolvedTo("query");
+	}));
+
+	it("doesn't throw errors when handling context menu events", () => {
+		expect(()=>component.handleContextMenu({action: "something", data: []})).not.toThrow();
 	});
 });

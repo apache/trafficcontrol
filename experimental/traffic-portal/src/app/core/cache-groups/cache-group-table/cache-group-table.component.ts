@@ -133,9 +133,6 @@ export class CacheGroupTableComponent implements OnInit {
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl = new FormControl("");
 
-	/**
-	 * Constructor.
-	 */
 	constructor(private readonly api: CacheGroupService, private readonly route: ActivatedRoute) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.cacheGroups = this.api.getCacheGroups();
@@ -143,16 +140,14 @@ export class CacheGroupTableComponent implements OnInit {
 
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
-		this.route.queryParamMap.toPromise().then(
+		this.route.queryParamMap.subscribe(
 			m => {
 				const search = m.get("search");
 				if (search) {
 					this.fuzzControl.setValue(decodeURIComponent(search));
-					this.fuzzySubject.next(search);
-					this.fuzzySubject.next(this.fuzzControl.value);
+					this.updateURL();
 				}
-			}
-		).catch(
+			},
 			e => {
 				console.error("Failed to get query parameters:", e);
 			}
