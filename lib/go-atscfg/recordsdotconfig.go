@@ -66,8 +66,8 @@ func MakeRecordsDotConfig(
 		opt = &RecordsConfigOpts{}
 	}
 	warnings := []string{}
-	if server.Profile == nil {
-		return Cfg{}, makeErr(warnings, "server profile missing")
+	if server.Profiles == nil && len(*server.Profiles) == 0 {
+		return Cfg{}, makeErr(warnings, "server missing profiles")
 	}
 
 	params, paramWarns := paramsToMap(filterParams(serverParams, RecordsFileName, "", "", "location"))

@@ -46,7 +46,7 @@ func MakeATSDotRules(
 		opt = &ATSDotRulesOpts{}
 	}
 	warnings := []string{}
-	if server.Profile == nil {
+	if server.Profiles == nil && len(*server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing Profile")
 	}
 
