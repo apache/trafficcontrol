@@ -62,6 +62,17 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 `
 
+const serversV4FromAndJoin = `
+FROM server AS s
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id
+JOIN server_profile sp ON sp.server = s.id
+`
+
 /* language=SQL */
 const dssTopologiesJoinSubquery = `
 (SELECT
@@ -155,6 +166,43 @@ const selectIDQuery = `
 SELECT
 	s.id
 ` + serversFromAndJoin
+
+const selectV4Query = `
+SELECT
+	cg.name AS cachegroup,
+	s.cachegroup AS cachegroup_id,
+	s.cdn_id,
+	cdn.name AS cdn_name,
+	s.domain_name,
+	s.guid,
+	s.host_name,
+	s.https_port,
+	s.id,
+	s.ilo_ip_address,
+	s.ilo_ip_gateway,
+	s.ilo_ip_netmask,
+	s.ilo_password,
+	s.ilo_username,
+	s.last_updated,
+	s.mgmt_ip_address,
+	s.mgmt_ip_gateway,
+	s.mgmt_ip_netmask,
+	s.offline_reason,
+	pl.name AS phys_location,
+	s.phys_location AS phys_location_id,
+	sp.profile_names AS profiles,
+	s.rack,
+	s.reval_pending,
+	st.name AS status,
+	s.status AS status_id,
+	s.tcp_port,
+	t.name AS server_type,
+	s.type AS server_type_id,
+	s.upd_pending AS upd_pending,
+	s.xmpp_id,
+	s.xmpp_passwd,
+	s.status_last_updated
+` + serversV4FromAndJoin
 
 const midWhereClause = `
 WHERE t.name = :cache_type_mid AND s.cachegroup IN (
@@ -252,6 +300,7 @@ INSERT INTO server (
 	type AS server_type_id,
 	upd_pending
 `
+
 const insertQueryV4 = `
 INSERT INTO server (
 	cachegroup,
@@ -471,6 +520,66 @@ RETURNING
 	profile AS profile_id,
 	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
 	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	rack,
+	reval_pending,
+	(SELECT name FROM status WHERE status.id=server.status) AS status,
+	status AS status_id,
+	tcp_port,
+	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
+	type AS server_type_id,
+	upd_pending,
+	status_last_updated
+`
+
+const updateQueryV4 = `
+UPDATE server SET
+	cachegroup=:cachegroup_id,
+	cdn_id=:cdn_id,
+	domain_name=:domain_name,
+	host_name=:host_name,
+	https_port=:https_port,
+	ilo_ip_address=:ilo_ip_address,
+	ilo_ip_netmask=:ilo_ip_netmask,
+	ilo_ip_gateway=:ilo_ip_gateway,
+	ilo_username=:ilo_username,
+	ilo_password=:ilo_password,
+	mgmt_ip_address=:mgmt_ip_address,
+	mgmt_ip_netmask=:mgmt_ip_netmask,
+	mgmt_ip_gateway=:mgmt_ip_gateway,
+	offline_reason=:offline_reason,
+	phys_location=:phys_location_id,
+	profile_names=:profile_names,
+	rack=:rack,
+	status=:status_id,
+	tcp_port=:tcp_port,
+	type=:server_type_id,
+	upd_pending=:upd_pending,
+	xmpp_passwd=:xmpp_passwd,
+	status_last_updated=:status_last_updated
+WHERE id=:id
+RETURNING
+	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
+	cachegroup AS cachegroup_id,
+	cdn_id,
+	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
+	domain_name,
+	guid,
+	host_name,
+	https_port,
+	id,
+	ilo_ip_address,
+	ilo_ip_gateway,
+	ilo_ip_netmask,
+	ilo_password,
+	ilo_username,
+	last_updated,
+	mgmt_ip_address,
+	mgmt_ip_gateway,
+	mgmt_ip_netmask,
+	offline_reason,
+	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
+	phys_location AS phys_location_id,
+	(SELECT profile_names FROM server_profile WHERE server_profile.server=server.id) AS profiles,
 	rack,
 	reval_pending,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
@@ -1073,7 +1182,13 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		log.Debugln("Non IMS request")
 	}
 
-	query := selectQuery + queryAddition + where + orderBy + pagination
+	var sQ string
+	if version.Major >= 4 {
+		sQ = selectV4Query
+	} else {
+		sQ = selectQuery
+	}
+	query := sQ + queryAddition + where + orderBy + pagination
 	// If you're looking to get the servers for a particular delivery service, make sure you're also querying the ORG servers from the deliveryservice_server table
 	if _, ok := params[`dsId`]; ok {
 		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + originServerQuery
@@ -1476,6 +1591,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	var server tc.ServerV40
 	var serverV3 tc.ServerV30
 	var statusLastUpdatedTime time.Time
+	var updateQ string
 	if inf.Version.Major >= 4 {
 		if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1620,7 +1736,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	rows, err := inf.Tx.NamedQuery(updateQuery, server)
+	if inf.Version.Major >= 4 {
+		updateQ = updateQueryV4
+	} else {
+		updateQ = updateQuery
+	}
+	rows, err := inf.Tx.NamedQuery(updateQ, server)
 	if err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
