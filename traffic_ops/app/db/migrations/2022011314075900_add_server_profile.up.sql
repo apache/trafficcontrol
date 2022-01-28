@@ -17,17 +17,13 @@
 
 CREATE TABLE IF NOT EXISTS public.server_profile (
                                                      server bigint NOT NULL,
-                                                     profile_name text[] NOT NULL,
-                                                     order bigint[] NOT NULL
-
-    CONSTRAINT pk_server_profile PRIMARY KEY(profile_name, server, order)
+                                                     profile_names text[] NOT NULL,
+                                                     priority bigint[] NOT NULL,
+    CONSTRAINT pk_server_profile PRIMARY KEY(profile_names, server, priority),
     CONSTRAINT fk_server_id FOREIGN KEY (server) REFERENCES server(id)
-    CONSTRAINT fk_profile_name FOREIGN KEY (profile_name) REFERENCES profile(name)
     );
 
-/*
-
-INSERT INTO public.server_profile(server_id, profile_name, order)
-SELECT id, profile FROM server
-
-*/
+INSERT into public.server_profile(server, profile_names, priority)
+    SELECT s.id, ARRAY [p.name], ARRAY [0]
+    FROM public.server AS s
+        JOIN public.profile p ON p.id=s.profile;

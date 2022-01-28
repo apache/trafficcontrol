@@ -728,7 +728,7 @@ type CommonServerPropertiesV40 struct {
 	OfflineReason    *string              `json:"offlineReason" db:"offline_reason"`
 	PhysLocation     *string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID   *int                 `json:"physLocationId" db:"phys_location_id"`
-	Profiles         *[]string            `json:"profile_name" db:"profile_name"`
+	Profiles         *[]string            `json:"profileNames" db:"profile_names"`
 	Rack             *string              `json:"rack" db:"rack"`
 	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
 	Status           *string              `json:"status" db:"status"`
@@ -752,7 +752,7 @@ func (s ServerV40) GetCommonServerPropertiesFromV4() CommonServerProperties {
 	if err != nil {
 		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
 	}
-	defer log.Close(rows, "closing rows in GetCommonServerPropertiesFromV4ToV3")
+	defer log.Close(rows, "closing rows in GetCommonServerPropertiesFromV4")
 
 	for rows.Next() {
 		if err := rows.Scan(&id, &desc); err != nil {
@@ -801,25 +801,17 @@ func (s ServerV40) GetCommonServerPropertiesFromV4() CommonServerProperties {
 	}
 }
 
-func (s ServerNullableV2) GetCommonServerPropertiesForV4() CommonServerPropertiesV40 {
-	return GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties)
-}
-
-func (s ServerV30) GetCommonServerPropertiesForV4() CommonServerPropertiesV40 {
-	return GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties)
-}
-
 func GetCommonServerPropertiesV40(id *int, properties CommonServerProperties) CommonServerPropertiesV40 {
 	var tx *sql.Tx
 	var profileNames []string
 	profileNameQuery := `
-		SELECT profile_name from "server_profile" sp WHERE sp.server_id=$1
+		SELECT profile_names from "server_profile" sp WHERE sp.server_id=$1
 	`
 	rows, err := tx.Query(profileNameQuery, id)
 	if err != nil {
 		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
 	}
-	defer log.Close(rows, "closing rows in GetCommonServerPropertiesForV4FromV3")
+	defer log.Close(rows, "closing rows in GetCommonServerPropertiesV40")
 
 	for rows.Next() {
 		if err := rows.Scan(pq.Array(&profileNames)); err != nil {
@@ -1094,7 +1086,7 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 // ServerV40 or newer structures.
 func (s ServerV30) UpgradeToV40() (ServerV40, error) {
 	upgraded := ServerV40{
-		CommonServerPropertiesV40: s.GetCommonServerPropertiesForV4(),
+		CommonServerPropertiesV40: GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties),
 		StatusLastUpdated:         s.StatusLastUpdated,
 	}
 	infs, err := ToInterfacesV4(s.Interfaces, s.RouterHostName, s.RouterPortName)
@@ -1121,7 +1113,7 @@ func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
 		ipv6IsService = *s.IP6IsService
 	}
 	upgraded := ServerV40{
-		CommonServerPropertiesV40: s.GetCommonServerPropertiesForV4(),
+		CommonServerPropertiesV40: GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties),
 	}
 
 	infs, err := s.LegacyInterfaceDetails.ToInterfacesV4(ipv4IsService, ipv6IsService, s.RouterHostName, s.RouterPortName)
