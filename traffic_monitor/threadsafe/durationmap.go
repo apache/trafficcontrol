@@ -34,7 +34,7 @@ type DurationMap struct {
 
 // CopyDurationMap copies this duration map.
 func CopyDurationMap(a map[tc.CacheName]time.Duration) map[tc.CacheName]time.Duration {
-	b := map[tc.CacheName]time.Duration{}
+	b := make(map[tc.CacheName]time.Duration, len(a))
 	for k, v := range a {
 		b[k] = v
 	}

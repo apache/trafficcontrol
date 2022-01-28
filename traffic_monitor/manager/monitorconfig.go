@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -122,9 +123,11 @@ func StartMonitorConfigManager(
 	monitorConfigPollChan <-chan poller.MonitorCfg,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
+	distributedPeerStates peer.CRStatesPeersThreadsafe,
 	statURLSubscriber chan<- poller.CachePollerConfig,
 	healthURLSubscriber chan<- poller.CachePollerConfig,
-	peerURLSubscriber chan<- poller.CachePollerConfig,
+	peerURLSubscriber chan<- poller.PeerPollerConfig,
+	distributedPeerURLSubscriber chan<- poller.PeerPollerConfig,
 	toIntervalSubscriber chan<- time.Duration,
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
@@ -137,9 +140,11 @@ func StartMonitorConfigManager(
 		monitorConfigPollChan,
 		localStates,
 		peerStates,
+		distributedPeerStates,
 		statURLSubscriber,
 		healthURLSubscriber,
 		peerURLSubscriber,
+		distributedPeerURLSubscriber,
 		toIntervalSubscriber,
 		cachesChangeSubscriber,
 		cfg,
@@ -192,9 +197,11 @@ func monitorConfigListen(
 	monitorConfigPollChan <-chan poller.MonitorCfg,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
+	distributedPeerStates peer.CRStatesPeersThreadsafe,
 	statURLSubscriber chan<- poller.CachePollerConfig,
 	healthURLSubscriber chan<- poller.CachePollerConfig,
-	peerURLSubscriber chan<- poller.CachePollerConfig,
+	peerURLSubscriber chan<- poller.PeerPollerConfig,
+	distributedPeerURLSubscriber chan<- poller.PeerPollerConfig,
 	toIntervalSubscriber chan<- time.Duration,
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
@@ -223,9 +230,7 @@ func monitorConfigListen(
 
 		healthURLs := map[string]poller.PollConfig{}
 		statURLs := map[string]poller.PollConfig{}
-		// TODO: if distributed = true, peers are only the TMs in the same cachegroup, while remotePeers will be peers from other cachegroups
-		peerURLs := map[string]poller.PollConfig{}
-		caches := map[string]string{}
+		peerURLs := map[string]poller.PeerPollConfig{}
 
 		intervals, err := getIntervals(monitorConfig, cfg, logMissingIntervalParams)
 		logMissingIntervalParams = false // only log missing parameters once
@@ -234,22 +239,31 @@ func monitorConfigListen(
 			continue
 		}
 
+		thisTMGroup, cacheGroupsToPoll, err := getCacheGroupsToPoll(cfg.DistributedPolling, staticAppData.Hostname, monitorConfig.TrafficMonitor, monitorConfig.TrafficServer)
+		if err != nil {
+			log.Errorf("getting cachegroups to poll: %s", err.Error())
+			continue
+		}
+		log.Debugf("this TM's cachegroup: %s, cachegroups to poll: %v", thisTMGroup, cacheGroupsToPoll)
 		for _, srv := range monitorConfig.TrafficServer {
-			caches[srv.HostName] = srv.ServerStatus
-
 			cacheName := tc.CacheName(srv.HostName)
 
 			srvStatus := tc.CacheStatusFromString(srv.ServerStatus)
 			if srvStatus == tc.CacheStatusOnline {
-				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: true, Ipv6Available: srv.IPv6() != "", Ipv4Available: srv.IPv4() != ""})
+				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: true, Ipv6Available: srv.IPv6() != "", Ipv4Available: srv.IPv4() != "", DirectlyPolled: false})
 				continue
 			}
-			if srvStatus == tc.CacheStatusOffline {
+			if srvStatus != tc.CacheStatusReported && srvStatus != tc.CacheStatusAdminDown {
 				continue
 			}
+			isDirectlyPolled := cacheGroupsToPoll[srv.CacheGroup]
 			// seed states with available = false until our polling cycle picks up a result
 			if _, exists := localStates.GetCache(cacheName); !exists {
-				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: false})
+				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: false, DirectlyPolled: isDirectlyPolled})
+			}
+
+			if !isDirectlyPolled {
+				continue
 			}
 
 			pollURLStr := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
@@ -286,25 +300,46 @@ func monitorConfigListen(
 		}
 
 		peerSet := map[tc.TrafficMonitorName]struct{}{}
+		tmsByGroup := make(map[string][]tc.TrafficMonitor)
 		for _, srv := range monitorConfig.TrafficMonitor {
-			if srv.HostName == staticAppData.Hostname {
+			if tc.CacheStatusFromString(srv.ServerStatus) != tc.CacheStatusOnline {
+				continue
+			}
+			tmsByGroup[srv.Location] = append(tmsByGroup[srv.Location], srv)
+		}
+
+		for _, srv := range monitorConfig.TrafficMonitor {
+			if srv.HostName == staticAppData.Hostname || (cfg.DistributedPolling && srv.Location != thisTMGroup) {
 				continue
 			}
 			if tc.CacheStatusFromString(srv.ServerStatus) != tc.CacheStatusOnline {
 				continue
 			}
 			// TODO: the URL should be config driven. -jse
-			url4 := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
-			url6 := fmt.Sprintf("http://[%s]:%d/publish/CrStates?raw", ipv6CIDRStrToAddr(srv.IP6), srv.Port)
-			peerURLs[srv.HostName] = poller.PollConfig{URL: url4, URLv6: url6, Host: srv.FQDN} // TODO determine timeout.
+			peerURL := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.FQDN, srv.Port)
+			peerURLs[srv.HostName] = poller.PeerPollConfig{URLs: []string{peerURL}}
 			peerSet[tc.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
+		distributedPeerURLs := make(map[string]poller.PeerPollConfig)
+		distributedPeerSet := make(map[tc.TrafficMonitorName]struct{}, len(tmsByGroup)-1)
+		for tmGroup, tms := range tmsByGroup {
+			if tmGroup == thisTMGroup {
+				continue
+			}
+			distributedPeerURLs[tmGroup] = poller.PeerPollConfig{URLs: getDistributedPeerURLs(tms)}
+			distributedPeerSet[tc.TrafficMonitorName(tmGroup)] = struct{}{}
+		}
+		distributedPeerStates.SetTimeout((intervals.Peer + cfg.HTTPTimeout) * 2)
+		distributedPeerStates.SetPeers(distributedPeerSet)
 
 		if cfg.StatPolling {
 			statURLSubscriber <- poller.CachePollerConfig{Urls: statURLs, PollingProtocol: cfg.CachePollingProtocol, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
 		}
 		healthURLSubscriber <- poller.CachePollerConfig{Urls: healthURLs, PollingProtocol: cfg.CachePollingProtocol, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
-		peerURLSubscriber <- poller.CachePollerConfig{Urls: peerURLs, PollingProtocol: cfg.PeerPollingProtocol, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
+		peerURLSubscriber <- poller.PeerPollerConfig{Urls: peerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
+		if cfg.DistributedPolling {
+			distributedPeerURLSubscriber <- poller.PeerPollerConfig{Urls: distributedPeerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
+		}
 		toIntervalSubscriber <- intervals.TO
 		peerStates.SetTimeout((intervals.Peer + cfg.HTTPTimeout) * 2)
 		peerStates.SetPeers(peerSet)
@@ -335,6 +370,68 @@ func monitorConfigListen(
 			}
 		}
 	}
+}
+
+// getCacheGroupsToPoll returns the name of this Traffic Monitor's cache group
+// and the set of cache groups it needs to poll.
+func getCacheGroupsToPoll(distributedPolling bool, hostname string, monitors map[string]tc.TrafficMonitor, caches map[string]tc.TrafficServer) (string, map[string]bool, error) {
+	// TODO: instead of just round-robin, TM groups should poll their closest cache groups
+	tmGroupSet := make(map[string]bool)
+	cacheGroupSet := make(map[string]bool)
+	tmGroupToPolledCacheGroups := make(map[string]map[string]bool)
+	thisTMGroup := ""
+
+	for _, tm := range monitors {
+		if tm.HostName == hostname {
+			thisTMGroup = tm.Location
+		}
+		if tc.CacheStatusFromString(tm.ServerStatus) == tc.CacheStatusOnline {
+			tmGroupSet[tm.Location] = true
+			if _, ok := tmGroupToPolledCacheGroups[tm.Location]; !ok {
+				tmGroupToPolledCacheGroups[tm.Location] = make(map[string]bool)
+			}
+		}
+	}
+	if thisTMGroup == "" {
+		return "", nil, fmt.Errorf("unable to find cache group for this Traffic Monitor (%s) in monitoring config snapshot", hostname)
+	}
+
+	for _, c := range caches {
+		status := tc.CacheStatusFromString(c.ServerStatus)
+		if status == tc.CacheStatusOnline || status == tc.CacheStatusReported || status == tc.CacheStatusAdminDown {
+			cacheGroupSet[c.CacheGroup] = true
+		}
+	}
+
+	if !distributedPolling {
+		return thisTMGroup, cacheGroupSet, nil
+	}
+
+	tmGroups := make([]string, 0, len(tmGroupSet))
+	for tg := range tmGroupSet {
+		tmGroups = append(tmGroups, tg)
+	}
+	sort.Strings(tmGroups)
+	cacheGroups := make([]string, 0, len(cacheGroupSet))
+	for cg := range cacheGroupSet {
+		cacheGroups = append(cacheGroups, cg)
+	}
+	sort.Strings(cacheGroups)
+	tmGroupCount := len(tmGroups)
+	tmi := 0
+	for _, c := range cacheGroups {
+		tmGroupToPolledCacheGroups[tmGroups[tmi]][c] = true
+		tmi = (tmi + 1) % tmGroupCount
+	}
+	return thisTMGroup, tmGroupToPolledCacheGroups[thisTMGroup], nil
+}
+
+func getDistributedPeerURLs(tms []tc.TrafficMonitor) []string {
+	peerURLs := make([]string, 0, len(tms))
+	for _, tm := range tms {
+		peerURLs = append(peerURLs, fmt.Sprintf("http://%s:%d/publish/CrStates?local", tm.FQDN, tm.Port))
+	}
+	return peerURLs
 }
 
 // createServerHealthPollURLs takes the template pollingURLStr, and replaces

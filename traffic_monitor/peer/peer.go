@@ -23,6 +23,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	jsoniter "github.com/json-iterator/go"
@@ -61,6 +62,7 @@ func (handler Handler) Handle(id string, r io.Reader, format string, reqTime tim
 	}
 
 	if err != nil {
+		log.Warnf("%s handler given error '%s'\n", id, err.Error())
 		result.Errors = append(result.Errors, err)
 	}
 

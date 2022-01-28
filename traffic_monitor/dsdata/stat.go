@@ -249,9 +249,9 @@ func (a Stat) Copy() *Stat {
 	b := &Stat{
 		CommonStats: a.CommonStats.Copy(),
 		TotalStats:  a.TotalStats,
-		CacheGroups: map[tc.CacheGroupName]*StatCacheStats{},
-		Types:       map[tc.CacheType]*StatCacheStats{},
-		Caches:      map[tc.CacheName]*StatCacheStats{},
+		CacheGroups: make(map[tc.CacheGroupName]*StatCacheStats, len(a.CacheGroups)),
+		Types:       make(map[tc.CacheType]*StatCacheStats, len(a.Types)),
+		Caches:      make(map[tc.CacheName]*StatCacheStats, len(a.Caches)),
 	}
 	for k, v := range a.CacheGroups {
 		b.CacheGroups[k] = v
@@ -378,9 +378,9 @@ type LastDSStat struct {
 // Copy performs a deep copy of this LastDSStat object.
 func (a LastDSStat) Copy() *LastDSStat {
 	b := &LastDSStat{
-		CacheGroups: map[tc.CacheGroupName]*LastStatsData{},
-		Type:        map[tc.CacheType]*LastStatsData{},
-		Caches:      map[tc.CacheName]*LastStatsData{},
+		CacheGroups: make(map[tc.CacheGroupName]*LastStatsData, len(a.CacheGroups)),
+		Type:        make(map[tc.CacheType]*LastStatsData, len(a.Type)),
+		Caches:      make(map[tc.CacheName]*LastStatsData, len(a.Caches)),
 		Total:       a.Total,
 		Available:   a.Available,
 	}
