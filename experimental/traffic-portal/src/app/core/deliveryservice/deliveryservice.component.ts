@@ -35,9 +35,6 @@ export class DeliveryserviceComponent implements OnInit {
 	/** The Delivery Service described by this component. */
 	public deliveryservice = {} as DeliveryService;
 
-	/** A map of the names of charts to whether or not they've been loaded. */
-	public loaded = new Map([["main", false], ["bandwidth", false]]);
-
 	/** Data for the bandwidth chart. */
 	public bandwidthData = new Subject<[DataSet]>();
 
@@ -87,7 +84,6 @@ export class DeliveryserviceComponent implements OnInit {
 		private readonly api: DeliveryServiceService,
 		private readonly alerts: AlertService
 	) {
-		this.bandwidthData = new Subject<[DataSet]>();
 		this.bandwidthData.next([{
 			backgroundColor: "#BA3C57",
 			borderColor: "#BA3C57",
@@ -103,12 +99,6 @@ export class DeliveryserviceComponent implements OnInit {
 	 * fetching data.
 	 */
 	public ngOnInit(): void {
-		const DSID = this.route.snapshot.paramMap.get("id");
-		if (!DSID) {
-			console.error("Missing route 'id' parameter");
-			return;
-		}
-
 		this.to.setUTCMilliseconds(0);
 		this.from = new Date(this.to.getFullYear(), this.to.getMonth(), this.to.getDate());
 
@@ -122,10 +112,15 @@ export class DeliveryserviceComponent implements OnInit {
 		const timeStr = String(this.to.getHours()).padStart(2, "0").concat(":", String(this.to.getMinutes()).padStart(2, "0"));
 		this.toTime = new FormControl(timeStr);
 
+		const DSID = this.route.snapshot.paramMap.get("id");
+		if (!DSID) {
+			console.error("Missing route 'id' parameter");
+			return;
+		}
+
 		this.api.getDeliveryServices(parseInt(DSID, 10)).then(
 			d => {
 				this.deliveryservice = d;
-				this.loaded.set("main", true);
 				this.loadBandwidth();
 				this.loadTPS();
 			}

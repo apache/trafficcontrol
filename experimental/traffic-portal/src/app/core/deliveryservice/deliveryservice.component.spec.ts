@@ -12,11 +12,13 @@
 * limitations under the License.
 */
 import { HttpClientModule } from "@angular/common/http";
-import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
+import { DeliveryServiceService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
+import { defaultDeliveryService } from "src/app/models";
 import { AlertService } from "src/app/shared/alert/alert.service";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
@@ -28,11 +30,11 @@ describe("DeliveryserviceComponent", () => {
 	let component: DeliveryserviceComponent;
 	let fixture: ComponentFixture<DeliveryserviceComponent>;
 
-	beforeEach(waitForAsync(() => {
+	beforeEach(async () => {
 		// mock the API
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 
-		TestBed.configureTestingModule({
+		await TestBed.configureTestingModule({
 			declarations: [
 				DeliveryserviceComponent,
 				TpHeaderComponent,
@@ -49,13 +51,13 @@ describe("DeliveryserviceComponent", () => {
 				AlertService,
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 			]
-		});
-		TestBed.compileComponents();
-	}));
+		}).compileComponents();
+		const dsService = TestBed.inject(DeliveryServiceService);
+		const ds = await dsService.createDeliveryService({...defaultDeliveryService});
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(DeliveryserviceComponent);
 		component = fixture.componentInstance;
+		component.deliveryservice = ds;
 		fixture.detectChanges();
 	});
 
@@ -63,11 +65,23 @@ describe("DeliveryserviceComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	afterAll(() => {
-		try{
-			TestBed.resetTestingModule();
-		} catch (e) {
-			console.error("error in DeliveryServiceComponent afterAll:", e);
-		}
-	});
+	it("loads TPS and bandwidth data charts", fakeAsync(() => {
+		component.toDate.setValue("2022-01-01");
+		component.fromDate.setValue("2022-01-01");
+		component.toTime.setValue("00:00");
+		component.fromTime.setValue("00:20");
+		component.newDateRange();
+		tick();
+		expectAsync(component.bandwidthData.toPromise().then(
+			ds => {
+				expect(ds.length).toBe(1);
+			}
+		)).toBeResolved();
+		expectAsync(component.tpsChartData.toPromise().then(
+			ds => {
+				expect(ds.length).toBe(5);
+			}
+		)).toBeResolved();
+	}));
+
 });
