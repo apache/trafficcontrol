@@ -217,6 +217,8 @@ func getServerConfigRemapDotConfigForMid(
 ) (string, []string, error) {
 	warnings := []string{}
 	midRemaps := map[string]string{}
+	preRemapLines := []string{}
+	postRemapLines := []string{}
 	for _, ds := range dses {
 		if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
@@ -289,13 +291,36 @@ func getServerConfigRemapDotConfigForMid(
 		if midRemap != "" {
 			midRemaps[remapFrom] = *ds.OrgServerFQDN + midRemap
 		}
+
+		// Any raw pre pend
+		if params, ok := dsConfigParamsMap["LastRawRemapPre"]; ok {
+			preRemapLines = append(preRemapLines, "# Pre Raw Remap for "+*ds.XMLID+"\n")
+			for _, param := range params {
+				preRemapLines = append(preRemapLines, param.Value+"\n")
+			}
+		}
+
+		// Any raw post pend
+		if params, ok := dsConfigParamsMap["LastRawRemapPost"]; ok {
+			postRemapLines = append(postRemapLines, "# Post Raw Remap for "+*ds.XMLID+"\n")
+			for _, param := range params {
+				postRemapLines = append(postRemapLines, param.Value+"\n")
+			}
+		}
 	}
 
 	textLines := []string{}
+
 	for originFQDN, midRemap := range midRemaps {
 		textLines = append(textLines, "map "+originFQDN+" "+midRemap+"\n")
 	}
 	sort.Strings(textLines)
+
+	// Prepend any pre remap lines
+	textLines = append(preRemapLines, textLines...)
+
+	// Append on any post raw remap lines
+	textLines = append(textLines, postRemapLines...)
 
 	text := header
 	text += strings.Join(textLines, "")

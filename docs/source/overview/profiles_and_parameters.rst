@@ -621,6 +621,11 @@ The following plugins have support for adding args with following parameter Conf
 	| cachekey.pparam        | cachekey.pparam     | ``-o``                       | ``@pparam=-o``                       |
 	+------------------------+---------------------+------------------------------+--------------------------------------+
 
+In order to support difficult configurations at MID/LAST, a
+:term:`Delivery Service` profile parameter is available with parameters
+``LastRawRemapPre`` and ``LastRawRemapPost``, config file ``remap.config``
+and Value the raw remap lines.  The Value in this parameter will be pre
+or post pended to the end of ``remap.config``.
 
 .. seealso:: For an explanation of the syntax of this configuration file, refer to `the Apache Traffic Server remap.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_.
 
