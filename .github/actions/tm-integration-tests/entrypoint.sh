@@ -155,7 +155,7 @@ EOF
 sleep 25s
 
 
-wait_for_endpoint "http://$TM_URI:$TM_PORT/api/version"
+wait_for_endpoint "http://$TM_URI:$TM_PORT/api/version?raw"
 
 cd ${test_dir}
 
