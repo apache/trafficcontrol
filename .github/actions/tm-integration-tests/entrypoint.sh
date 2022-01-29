@@ -23,7 +23,7 @@ function wait_for_endpoint() {
   while [ $(curl -Lsk --write-out "%{http_code}" "$1" -o /dev/null) -ne 200 ] ; do
     echo "Waiting for $1 to return a 200 OK"
     try=$(expr $try + 1)
-    if [[ $try -gt 10 ]]; then
+    if [[ $try -gt 5 ]]; then
       echo "Unable to get $1"
       exit 1
     fi
