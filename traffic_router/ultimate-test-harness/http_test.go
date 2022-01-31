@@ -1,4 +1,4 @@
-package main
+package ultimate_test_harness
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -48,14 +48,6 @@ const (
 	UserAgent = "Traffic Router Load Tests"
 )
 
-type TOConfig struct {
-	TOURL      string `required:"true" envconfig:"TO_URL"`
-	TOUser     string `required:"true" envconfig:"TO_USER"`
-	TOPassword string `required:"true" envconfig:"TO_PASSWORD"`
-	TOInsecure bool   `default:"true"  envconfig:"TO_INSECURE"`
-	TOTimeout  int    `default:"30"    envconfig:"TO_TIMEOUT"`
-}
-
 type TRDetails struct {
 	Hostname           string
 	IPAddresses        []string
@@ -81,19 +73,6 @@ type Benchmark struct {
 	DSType                     tc.Type
 	TrafficRouters             []TRDetails
 	CoverageZoneLocation       string
-}
-
-var (
-	toConfig  TOConfig
-	toSession *client.Session
-	count     int
-)
-
-func getTOConfig(t *testing.T) {
-	err := envconfig.Process("", &toConfig)
-	if err != nil {
-		t.Fatalf("reading configuration from the environment: %s", err.Error())
-	}
 }
 
 var ipv4Only *bool
@@ -149,7 +128,7 @@ func getCoverageZoneFile(czPollingURL string) (tc.CoverageZoneFile, error) {
 		return czMap, fmt.Errorf("creating HTTP request for URL %s: %s", czPollingURL, err.Error())
 	}
 	czMapRequest.Header.Set("User-Agent", UserAgent)
-	httpClient := http.Client{Timeout: time.Duration(toConfig.TOTimeout) * time.Second, Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: toConfig.TOInsecure}}}
+	httpClient := http.Client{Timeout: time.Duration(TOConfig.TOTimeout) * time.Second, Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: TOConfig.TOInsecure}}}
 	czMapResponse, err := httpClient.Do(czMapRequest)
 	if err != nil {
 		return czMap, fmt.Errorf("getting Coverage Zone File from URL %s: %s", czPollingURL, err.Error())
@@ -220,17 +199,11 @@ func TestLoad(t *testing.T) {
 		t.Errorf("settings flags 'test.v': %s", err.Error())
 	}
 	flag.Parse()
-	getTOConfig(t)
 
 	if *coverageZoneLocation != "" {
 		*useCoverageZone = true
 	}
 	ipAddressMaps := map[tc.CDNName]IPAddressMap{}
-
-	toSession, _, err = client.LoginWithAgent(toConfig.TOURL, toConfig.TOUser, toConfig.TOPassword, toConfig.TOInsecure, UserAgent, true, time.Second*time.Duration(toConfig.TOTimeout))
-	if err != nil {
-		t.Fatalf("logging into Traffic Ops server %s: %s", toConfig.TOURL, err.Error())
-	}
 
 	trafficRouters, err := getTrafficRouters(*trafficRouterName, tc.CDNName(*cdnName))
 	if err != nil {
@@ -442,7 +415,7 @@ func getTrafficRouters(trafficRouterName string, cdnName tc.CDNName) ([]tc.Serve
 		cdnRequestOptions := client.RequestOptions{QueryParameters: url.Values{
 			"name": {string(cdnName)},
 		}}
-		cdnResponse, _, err := toSession.GetCDNs(cdnRequestOptions)
+		cdnResponse, _, err := TOSession.GetCDNs(cdnRequestOptions)
 		if err != nil {
 			return nil, fmt.Errorf("requesting a CDN named '%s': %s", cdnName, err.Error())
 		}
@@ -452,7 +425,7 @@ func getTrafficRouters(trafficRouterName string, cdnName tc.CDNName) ([]tc.Serve
 		}
 		requestOptions.QueryParameters.Set("cdn", string(cdnName))
 	}
-	response, _, err := toSession.GetServers(requestOptions)
+	response, _, err := TOSession.GetServers(requestOptions)
 	if err != nil {
 		return nil, fmt.Errorf("requesting %s-status Traffic Routers: %s", requestOptions.QueryParameters["status"], err.Error())
 	}
@@ -467,7 +440,7 @@ func getDSes(t *testing.T, cdnId int, dsTypeName tc.DSType, dsName tc.DeliverySe
 	requestOptions := client.RequestOptions{QueryParameters: url.Values{"name": {dsTypeName.String()}}}
 	var dsType tc.Type
 	{
-		response, _, err := toSession.GetTypes(requestOptions)
+		response, _, err := TOSession.GetTypes(requestOptions)
 		if err != nil {
 			t.Fatalf("getting type %s: %s", requestOptions.QueryParameters["name"], err.Error())
 		}
@@ -486,7 +459,7 @@ func getDSes(t *testing.T, cdnId int, dsTypeName tc.DSType, dsName tc.DeliverySe
 	if dsName != "" {
 		requestOptions.QueryParameters.Set("xmlId", dsName.String())
 	}
-	response, _, err := toSession.GetDeliveryServices(requestOptions)
+	response, _, err := TOSession.GetDeliveryServices(requestOptions)
 	if err != nil {
 		t.Fatalf("getting Delivery Services with type '%s' (type ID %d): %s", dsType.Name, dsType.ID, err.Error())
 	}
