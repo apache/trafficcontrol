@@ -7916,31 +7916,29 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 7 {
-		t.Fatalf("expected 7 lines in comment, actual: '%v' count %v", txt, len(txtLines))
+	linesexp := 5
+
+	if len(txtLines) != linesexp {
+		t.Fatalf("expected %d lines in comment, actual: '%v' count %v", linesexp, txt, len(txtLines))
 	} else {
 		var commentstr string
 
-		commentstr = txtLines[1]
+		commentstr = txtLines[0]
 		if len(commentstr) == 0 || '#' != commentstr[0] {
 			t.Fatalf("expected [1] as comment, actual: \n'%v' got %v", txt, commentstr)
 		}
 
-		firststr := txtLines[2]
+		firststr := txtLines[1]
 		if !strings.Contains(firststr, "firstraw") {
-			t.Fatalf("expected [2] with 'firstraw', actual: '%v' got %v", txt, firststr)
+			t.Fatalf("expected [1] with 'firstraw', actual: '%v' got %v", txt, firststr)
 		}
-		commentstr = txtLines[len(txtLines)-3]
-		if len(commentstr) == 0 || '#' != commentstr[0] {
-			t.Fatalf("expected [-3] as comment, actual: '%v' got %v", txt, commentstr)
-		}
-		penstr := txtLines[len(txtLines)-2]
-		if !strings.Contains(penstr, "penraw") {
-			t.Fatalf("expected [-2] with 'penraw', actual: '%v' got %v", txt, penstr)
-		}
-		laststr := txtLines[len(txtLines)-1]
+		laststr := txtLines[len(txtLines)-2]
 		if !strings.Contains(laststr, "last") {
-			t.Fatalf("expected [-1] last with 'lastraw', actual: '%v' got %v", txt, laststr)
+			t.Fatalf("expected [-2] last with 'lastraw', actual: '%v' got %v", txt, laststr)
+		}
+		penstr := txtLines[len(txtLines)-1]
+		if !strings.Contains(penstr, "penraw") {
+			t.Fatalf("expected [-1] with 'penraw', actual: '%v' got %v", txt, penstr)
 		}
 	}
 }
