@@ -40,8 +40,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
-
-	"github.com/kelseyhightower/envconfig"
 )
 
 const (
@@ -63,53 +61,25 @@ type IPAddressMap struct {
 	Map   map[string]tc.CoverageZoneLocation
 }
 
-type Benchmark struct {
-	RequestsPerSecondThreshold int
-	BenchmarkSeconds           int
-	ThreadCount                int
-	ClientIP                   *string
-	PathCount                  int
-	MaxPathLength              int
-	DSType                     tc.Type
-	TrafficRouters             []TRDetails
-	CoverageZoneLocation       string
+type HTTPBenchmark struct {
+	Benchmark
+	ClientIP      *string
+	PathCount     int
+	MaxPathLength int
 }
 
-var ipv4Only *bool
-var ipv6Only *bool
-var cdnName *string
-var deliveryServiceName *string
-var trafficRouterName *string
-var clientIPAddress *string
-var useCoverageZone *bool
-var coverageZoneLocation *string
-var requestsPerSecondThreshold *int
-var benchmarkTime *int
-var threadCount *int
-var pathCount *int
-var maxPathLength *int
+var ClientIPAddress *string
+var PathCount *int
+var MaxPathLength *int
 
 func init() {
-	rand.Seed(time.Now().UnixNano())
-	ipv4Only = flag.Bool("4", false, "test IPv4 addresses only")
-	ipv6Only = flag.Bool("6", false, "test IPv4 addresses only")
-	cdnName = flag.String("cdn", "", "the name of a CDN to search for Delivery Services")
-	deliveryServiceName = flag.String("ds", "", "the name (XMLID) of a Delivery Service to use for tests")
-	trafficRouterName = flag.String("hostname", "", "the hostname of a Traffic Router to use")
-	clientIPAddress = flag.String("ip_address", "", "spoof your client IP address to Traffic Router's geolocation")
-	useCoverageZone = flag.Bool("coverage_zone", false, "whether to use an IP address from the Traffic Router's Coverage Zone File")
-	coverageZoneLocation = flag.String("coverage_zone_location", "", "the Coverage Zone location to use (implies coverage_zone=true)")
-	requestsPerSecondThreshold = flag.Int("requests_threshold", 8000, "the minimum number of requests per second a Traffic Router must successfully respond to")
-	benchmarkTime = flag.Int("benchmark_time", 10, "the duration of each load test in seconds")
-	threadCount = flag.Int("thread_count", 12, "the number of threads to use for each test")
-	pathCount = flag.Int("path_count", 10000, "the number of paths to generate for use in requests to Delivery Services")
-	maxPathLength = flag.Int("max_path_length", 100, "the maximum length for each generated path")
-
-	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
+	ClientIPAddress = flag.String("ip_address", "", "spoof your client IP address to Traffic Router's geolocation")
+	PathCount = flag.Int("path_count", 10000, "the number of paths to generate for use in requests to Delivery Services")
+	MaxPathLength = flag.Int("max_path_length", 100, "the maximum length for each generated path")
 }
 
 func getCoverageZoneURL(cdnName tc.CDNName) (string, error) {
-	snapshot, _, err := toSession.GetCRConfig(string(cdnName), client.RequestOptions{})
+	snapshot, _, err := TOSession.GetCRConfig(string(cdnName), client.RequestOptions{})
 	if err != nil {
 		return "", fmt.Errorf("getting the Snapshot of CDN '%s': %s", cdnName, err.Error())
 	}
@@ -193,88 +163,7 @@ func buildIPAddressMap(cdnName tc.CDNName) (IPAddressMap, error) {
 	return ipAddressMap, nil
 }
 
-func TestLoad(t *testing.T) {
-	var err error
-	if err = flag.Set("test.v", "true"); err != nil {
-		t.Errorf("settings flags 'test.v': %s", err.Error())
-	}
-	flag.Parse()
-
-	if *coverageZoneLocation != "" {
-		*useCoverageZone = true
-	}
-	ipAddressMaps := map[tc.CDNName]IPAddressMap{}
-
-	trafficRouters, err := getTrafficRouters(*trafficRouterName, tc.CDNName(*cdnName))
-	if err != nil {
-		t.Fatalf("could not get Traffic Routers: %s", err.Error())
-	}
-
-	var trafficRouterDetailsList []TRDetails
-	for _, trafficRouter := range trafficRouters {
-		var ipAddresses []string
-		for _, serverInterface := range trafficRouter.Interfaces {
-			if !serverInterface.Monitor {
-				log.Warnf("skipping server interface %s of Traffic Router %s because it is unmonitored", serverInterface.Name, *trafficRouter.HostName)
-				continue
-			}
-			ipv4, ipv6 := serverInterface.GetDefaultAddress()
-			if ipv4 != "" && !*ipv6Only {
-				ipAddresses = append(ipAddresses, ipv4)
-			}
-			if ipv6 != "" && !*ipv4Only {
-				ipAddresses = append(ipAddresses, "["+ipv6+"]")
-			}
-		}
-		if len(ipAddresses) < 1 {
-			log.Warnf("need at least 1 monitored service address on an interface of Traffic Router '%s' to use it for benchmarks, but %d such addresses were found", *trafficRouter.HostName, len(ipAddresses))
-			continue
-		}
-		dsTypeName := tc.DSTypeHTTP
-		httpDSes := getDSes(t, *trafficRouter.CDNID, dsTypeName, tc.DeliveryServiceName(*deliveryServiceName))
-		if len(httpDSes) < 1 {
-			log.Warnf("at least 1 Delivery Service with type '%s' is required to run HTTP load tests on Traffic Router '%s', but %d were found", dsTypeName, *trafficRouter.HostName, len(httpDSes))
-		}
-		dsURL, err := url.Parse(httpDSes[0].ExampleURLs[0])
-		if err != nil {
-			t.Fatalf("parsing Delivery Service URL %s: %s", dsURL, err.Error())
-		}
-		cdnName := tc.CDNName(*trafficRouter.CDNName)
-
-		trafficRouterDetails := TRDetails{
-			Hostname:    *trafficRouter.HostName,
-			IPAddresses: ipAddresses,
-			ClientIP:    *clientIPAddress,
-			Port:        *trafficRouter.TCPPort,
-			DSHost:      dsURL.Host,
-			CDNName:     cdnName,
-		}
-		if *useCoverageZone {
-			_, ok := ipAddressMaps[cdnName]
-			if !ok {
-				ipAddressMaps[cdnName], err = buildIPAddressMap(cdnName)
-				if err != nil {
-					t.Fatalf("building IP Address map for CDN '%s': %s", cdnName, err.Error())
-				}
-			}
-			trafficRouterDetails.ClientIPAddressMap = ipAddressMaps[cdnName]
-		}
-		trafficRouterDetailsList = append(trafficRouterDetailsList, trafficRouterDetails)
-	}
-	if len(trafficRouterDetailsList) < 1 {
-		t.Fatalf("no Traffic Router with at least 1 HTTP Delivery Service and at least 1 monitored service address was found")
-	}
-
-	benchmark := Benchmark{
-		RequestsPerSecondThreshold: *requestsPerSecondThreshold,
-		BenchmarkSeconds:           *benchmarkTime,
-		ThreadCount:                *threadCount,
-		PathCount:                  *pathCount,
-		MaxPathLength:              *maxPathLength,
-		TrafficRouters:             trafficRouterDetailsList,
-		CoverageZoneLocation:       *coverageZoneLocation,
-	}
-
+func RunHTTPBenchmarksAgainstTrafficRouters(t *testing.T, benchmark HTTPBenchmark) {
 	passedTests := 0
 	failedTests := 0
 
@@ -339,7 +228,7 @@ func TestLoad(t *testing.T) {
 	}
 }
 
-func (b *Benchmark) Run(t *testing.T, redirectsChannel chan int, failuresChannel chan int, trafficRouterIndex int, trafficRouterURL string, ipAddressIndex int) {
+func (b HTTPBenchmark) Run(t *testing.T, redirectsChannel chan int, failuresChannel chan int, trafficRouterIndex int, trafficRouterURL string, ipAddressIndex int) {
 	paths := generatePaths(b.PathCount, b.MaxPathLength)
 	stopTime := time.Now().Add(time.Duration(b.BenchmarkSeconds) * time.Second)
 	redirects, failures := 0, 0
@@ -373,6 +262,24 @@ func (b *Benchmark) Run(t *testing.T, redirectsChannel chan int, failuresChannel
 	}
 	redirectsChannel <- redirects
 	failuresChannel <- failures
+}
+
+func TestHTTPLoad(t *testing.T) {
+	var trafficRouterDetails = GetTrafficRouterDetails(t)
+
+	benchmark := HTTPBenchmark{
+		Benchmark: Benchmark{
+			RequestsPerSecondThreshold: *HTTPRequestsPerSecondThreshold,
+			BenchmarkSeconds:           *BenchTime,
+			ThreadCount:                *ThreadCount,
+			TrafficRouters:             trafficRouterDetails,
+			CoverageZoneLocation:       *CoverageZoneLocation,
+		},
+		PathCount:     *PathCount,
+		MaxPathLength: *MaxPathLength,
+	}
+
+	RunHTTPBenchmarksAgainstTrafficRouters(t, benchmark)
 }
 
 func generatePaths(pathCount, maxPathLength int) []string {
