@@ -57,6 +57,9 @@ services:
     ports: 
       - "443:443"
     build:
+      args:
+        - OS_DISTRO=${OS_DISTRO:-rockylinux}
+        - OS_VERSION=${OS_VERSION:-8}
       context: ../../..
       dockerfile: cache-config/testing/docker/traffic_ops/Dockerfile
     volumes:
@@ -82,7 +85,8 @@ services:
       - variables.env
     build:
       args:
-        RHEL_VERSION: ${RHEL_VERSION:-8}
+        - OS_DISTRO=${OS_DISTRO:-rockylinux}
+        - OS_VERSION=${OS_VERSION:-8}
       context: .
       dockerfile: ort_test/Dockerfile
     cap_add: ['SYS_ADMIN'] # necessary for hostname tests
