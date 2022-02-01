@@ -20,7 +20,7 @@
 # It doesn't do any of the complex things the Dockerfiles in infrastructure/docker or infrastructure/cdn-in-a-box do, like inserting itself into Traffic Ops.
 # It is designed for a very simple use case, where the complex orchestration of other Traffic Control components is done elsewhere (or manually).
 
-FROM centos:8
+FROM rockylinux:8
 MAINTAINER dev@trafficcontrol.apache.org
 
 ARG RPM=traffic_monitor.rpm

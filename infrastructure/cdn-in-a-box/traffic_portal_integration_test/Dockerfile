@@ -15,8 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as os-dependencies
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION} as os-dependencies
 ARG RHEL_VERSION=8
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
@@ -32,6 +34,8 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         bind-utils \
         # chromium and jq are in EPEL
         epel-release \
+        # find is required by to-access.sh
+        findutils \
         GConf2 \
         git \
         java-1.8.0-openjdk \

@@ -27,7 +27,7 @@ remote_ats_version() {
 	local gitbox_url=https://gitbox.apache.org/repos/asf
 	local repo="${project}.git"
 	local branch refs commit last_tag release
-	branch="$(grep 'ATS_VERSION=' "${script_dir}/../../../cache-config/testing/docker/docker-compose-ats-build.yml" | cut -d= -f2)"
+	branch="$(grep 'ATS_VERSION=' "${script_dir}/../../../cache-config/testing/docker/variables.env" | cut -d= -f2)"
 	refs="$(curl -fs "${gitbox_url}/${repo}/info/refs?service=git-upload-pack" |
 		sed -E 's/^00[0-9a-f]{2}//g' |
 		tr -d '\0')"

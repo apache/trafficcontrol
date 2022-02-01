@@ -17,10 +17,12 @@
 
 ############################################################
 # Dockerfile to build optional CiaB Socks Proxy
-# Based on CentOS 8
+# Based on Rocky Linux 8
 ############################################################
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION}
 ARG RHEL_VERSION=8
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
@@ -31,8 +33,8 @@ ARG DANTES_SRC=https://www.inet.no/dante/files/dante-1.4.2.tar.gz
 
 RUN dnf install -y net-tools bind-utils iproute wget curl automake autoconf gcc make && \
     curl -Ls -o /tmp/dante.tar.gz $DANTES_SRC && \
-    tar -C /usr/src -zxvpf $(find /tmp -type f -name dante\*) && \
-    cd $(find /usr/src -type d -name dante\*) && \
+    tar -C /usr/src -zxvpf /tmp/dante.tar.gz && \
+    cd /usr/src/dante* && \
     ./configure --prefix=/usr && \
     make -j 4 && \
     make install && \
