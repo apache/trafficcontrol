@@ -97,7 +97,7 @@ function atc {
 			echo "  connect Connect to a shell session inside a dev container";
 			echo "  exec    Run a command in a dev container";
 			echo "  ready   Check if the development environment is ready";
-			echo "  restart Retart up the development environment";
+			echo "  restart Restart the development environment";
 			echo "  start   Start up the development environment";
 			echo "  stop    Stop the development environment";
 			;;
@@ -109,7 +109,7 @@ function atc {
 			echo "  connect Connect to a shell session inside a dev container" >&2;
 			echo "  exec    Run a command in a dev container" >&2;
 			echo "  ready   Check if the development environment is ready" >&2;
-			echo "  restart Retart up the development environment" >&2;
+			echo "  restart Restart the development environment" >&2;
 			echo "  start   Start up the development environment" >&2;
 			echo "  stop    Stop the development environment" >&2;
 			return 2;;
