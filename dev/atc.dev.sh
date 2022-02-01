@@ -125,7 +125,7 @@ function t3c {
 	local dlv=();
 	if [[ ! -z "$TC_WAIT" ]]; then
 		dlv=(dlv --accept-multiclient --listen=:8081 --headless --api-version=2 debug --);
-	else;
+	else
 		dlv=(dlv --accept-multiclient --continue --listen=:8081 --headless --api-version=2 debug --);
 	fi
 	if [[ $# -lt 2 ]]; then
