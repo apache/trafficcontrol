@@ -17,11 +17,13 @@
 
 ############################################################
 # Dockerfile to build Traffic Ops container images
-# Based on CentOS 8
+# Based on Rocky Linux 8
 ############################################################
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as trafficops-dependencies
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION} as trafficops-dependencies
 ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available in later layers without needing to specify it again
 ENV RHEL_VERSION="$RHEL_VERSION"

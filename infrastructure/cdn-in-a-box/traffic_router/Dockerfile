@@ -16,11 +16,13 @@
 # under the License.
 ############################################################
 # Dockerfile to build Traffic Router 3.0
-# Based on CentOS 8
+# Based on Rocky Linux 8
 ############################################################
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION}
 ARG RHEL_VERSION=8
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \

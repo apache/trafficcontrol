@@ -16,8 +16,10 @@
 # under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as ats-common-dependencies
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION} as ats-common-dependencies
 ARG RHEL_VERSION=8
 
 MAINTAINER dev@trafficcontrol.apache.org
