@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM centos:8
+FROM rockylinux:8
 MAINTAINER dev@trafficcontrol.apache.org
 
 RUN dnf -y install golang git

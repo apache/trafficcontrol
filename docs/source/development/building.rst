@@ -20,7 +20,7 @@ Building Traffic Control
 ************************
 The build steps for Traffic Control components are all pretty much the same, despite that they are written in a variety of different languages and frameworks. This is accomplished by using Docker.
 
-.. note:: Currently, both listed methods of building Traffic Control components will produce ``*.rpm`` files, meaning that the support of these components is limited to RedHat-based distributions - and none of them are currently tested (or guaranteed to work) outside of CentOS 7 and CentOS 8, specifically.
+.. note:: Currently, both listed methods of building Traffic Control components will produce ``*.rpm`` files, meaning that the support of these components is limited to RedHat-based distributions - and none of them are currently tested (or guaranteed to work) outside of Rocky Linux 8 and CentOS 7, specifically.
 
 Downloading Traffic Control
 ===========================
@@ -57,7 +57,7 @@ Options
 
 .. option:: -8
 
-	Build RPMs targeting CentOS 8 (default).
+	Build RPMs targeting Rocky Linux 8 (default).
 
 	.. versionchanged:: ATCv6.0.0
 
@@ -165,29 +165,30 @@ Install the Dependencies
 
 .. table:: Build dependencies for Traffic Control
 
-	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| OS/Package Manager         | Common dependencies | :ref:`dev-traffic-monitor` | :ref:`dev-traffic-ops` | :ref:`dev-traffic-portal` | :ref:`dev-traffic-router` | :ref:`dev-traffic-stats` | Grove    | Grove TC Config (grovetccfg) | :ref:`Docs <docs-guide>` |
-	+============================+=====================+============================+========================+===========================+===========================+==========================+==========+==============================+==========================+
-	| macOS\ [#mac-jdk]_         | - rpm               | - go                       | - go                   | - npm                     | - maven                   | - go                     | - go     | - go                         | - python3                |
-	| (homebrew_)                |                     |                            |                        | - grunt-cli               |                           |                          |          |                              |                          |
-	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| CentOS\ [#centos-go]_,     | - git               |                            |                        | - epel-release            | - java-11-openjdk         |                          |          |                              | - python3-devel          |
-	| Red Hat,                   | - rpm-build         |                            |                        | - npm                     | - maven                   |                          |          |                              | - gcc                    |
-	| Fedora                     | - rsync             |                            |                        | - nodejs-grunt-cli        |                           |                          |          |                              | - make                   |
-	| (yum_)                     |                     |                            |                        |                           |                           |                          |          |                              |                          |
-	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| Arch Linux,                | - git               | - go                       | - go                   | - npm                     | - jdk11-openjdk           | - go                     | - go     | - go                         | - python-pip             |
-	| Manjaro                    | - rpm-tools         |                            |                        | - grunt-cli               | - maven                   |                          |          |                              | - python-sphinx          |
-	| (pacman_)                  | - diff              |                            |                        |                           |                           |                          |          |                              | - make                   |
-	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| Windows                    | - git               |                            |                        |                           | - curl                    |                          |          |                              |                          |
-	| (cygwin_)\ [#windeps]_     | - rpm-build         |                            |                        |                           |                           |                          |          |                              |                          |
-	|                            | - rsync             |                            |                        |                           |                           |                          |          |                              |                          |
-	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| Windows                    |                     | - golang                   | - golang               | - nodejs                  | - openjdk11               | - golang                 | - golang | - golang                     | - python                 |
-	| (chocolatey_)\ [#windeps]_ |                     |                            |                        |                           | - maven                   |                          |          |                              | - pip                    |
-	|                            |                     |                            |                        |                           |                           |                          |          |                              | - make                   |
-	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	+---------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| OS/Package Manager              | Common dependencies | :ref:`dev-traffic-monitor` | :ref:`dev-traffic-ops` | :ref:`dev-traffic-portal` | :ref:`dev-traffic-router` | :ref:`dev-traffic-stats` | Grove    | Grove TC Config (grovetccfg) | :ref:`Docs <docs-guide>` |
+	+=================================+=====================+============================+========================+===========================+===========================+==========================+==========+==============================+==========================+
+	| macOS\ [#mac-jdk]_              | - rpm               | - go                       | - go                   | - npm                     | - maven                   | - go                     | - go     | - go                         | - python3                |
+	| (homebrew_)                     |                     |                            |                        | - grunt-cli               |                           |                          |          |                              |                          |
+	+---------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| Rocky\ Linux\ [#rocky-go]_,     | - git               |                            |                        | - epel-release            | - java-11-openjdk         |                          |          |                              | - python3-devel          |
+	| Red Hat,                        | - rpm-build         |                            |                        | - npm                     | - maven                   |                          |          |                              | - gcc                    |
+	| Fedora,                         | - rsync             |                            |                        | - nodejs-grunt-cli        |                           |                          |          |                              | - make                   |
+	| CentOS                          |                     |                            |                        |                           |                           |                          |          |                              |                          |
+	| (yum_)                          |                     |                            |                        |                           |                           |                          |          |                              |                          |
+	+---------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| Arch Linux,                     | - git               | - go                       | - go                   | - npm                     | - jdk11-openjdk           | - go                     | - go     | - go                         | - python-pip             |
+	| Manjaro                         | - rpm-tools         |                            |                        | - grunt-cli               | - maven                   |                          |          |                              | - python-sphinx          |
+	| (pacman_)                       | - diff              |                            |                        |                           |                           |                          |          |                              | - make                   |
+	+---------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| Windows                         | - git               |                            |                        |                           | - curl                    |                          |          |                              |                          |
+	| (cygwin_)\ [#windeps]_          | - rpm-build         |                            |                        |                           |                           |                          |          |                              |                          |
+	|                                 | - rsync             |                            |                        |                           |                           |                          |          |                              |                          |
+	+---------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| Windows                         |                     | - golang                   | - golang               | - nodejs                  | - openjdk11               | - golang                 | - golang | - golang                     | - python                 |
+	| (chocolatey_)\ [#windeps]_      |                     |                            |                        |                           | - maven                   |                          |          |                              | - pip                    |
+	|                                 |                     |                            |                        |                           |                           |                          |          |                              | - make                   |
+	+---------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
 
 .. _homebrew:   https://brew.sh/
 .. _yum:        https://wiki.centos.org/PackageManagement/Yum
@@ -219,12 +220,12 @@ This is the equivalent of running
 
 If any component fails to build, no further component builds will be attempted.
 
-By default, the RPMs will be built targeting CentOS 7. CentOS 8 is also a supported build target. You can choose which CentOS version to build for (7, 8, etc.) by setting the ``RHEL_VERSION`` environment variable:
+By default, the RPMs will be built targeting Rocky Linux 8. CentOS 7 is also a supported build target. You can choose which RHEL version to build for (8, 7, etc.) by setting the ``RHEL_VERSION`` environment variable:
 
 .. code-block:: shell
-	:caption: Building RPMs that target CentOS 8 without the build host needing to be CentOS 8
+	:caption: Building RPMs that target CentOS 7 without the build host needing to be CentOS 7
 
-	export RHEL_VERSION=8
+	export RHEL_VERSION=7
 
 .. warning:: Although there are no known issues with natively-built RPMs, the official, supported method of building the RPMs is by using :ref:`pkg <pkg>` or :ref:`docker-compose <build-with-dc>`. Use natively-built RPMs at your own risk.
 
@@ -240,5 +241,5 @@ See instructions for :ref:`building the documentation <docs-build>`.
 .. [#optional-project] This project is "optional", which means that it cannot be built unless :option:`-o` is given.
 .. [#default-project] This is a default project, which will be built if ``pkg`` is run with no ``projects`` argument
 .. [#mac-jdk] If you are on macOS, you additionally need to :ref:`dev-tr-mac-jdk`.
-.. [#centos-go] If you are on CentOS, you need to `download Go directly <https://golang.org/dl/>`_ instead of using a package manager in order to get the latest Go version. For most users, the desired architecture is AMD64/x86_64.
+.. [#rocky-go] If you are on Rocky Linux, you need to `download Go directly <https://golang.org/dl/>`_ instead of using a package manager in order to get the latest Go version. For most users, the desired architecture is AMD64/x86_64.
 .. [#windeps] If you are on Windows, you need to install **both** the Cygwin packages and the Chocolatey packages in order to build the Apache Traffic Control RPMs natively.

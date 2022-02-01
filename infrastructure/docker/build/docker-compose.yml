@@ -30,6 +30,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-source
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
@@ -40,6 +42,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
@@ -50,6 +54,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
@@ -60,6 +66,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-cache-config
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
@@ -70,6 +78,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-tc-health-client
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
@@ -80,6 +90,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
@@ -91,6 +103,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_router
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
@@ -102,6 +116,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
@@ -112,6 +128,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-grove
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
@@ -122,6 +140,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-grovetccfg
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
@@ -132,6 +152,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-docs
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z
