@@ -49,6 +49,9 @@ on:
       - 'traffic_control/java/**'
       - 'cache-config/testing/**'
       - 'traffic_ops/testing/**'
+      - 'dev/**'
+      - 'Makefile'
+      - 'cache-config/Makefile'
   create:
   pull_request:
     paths-ignore:
@@ -76,6 +79,9 @@ on:
       - 'traffic_control/java/**'
       - 'cache-config/testing/**'
       - 'traffic_ops/testing/**'
+      - 'dev/**'
+      - 'Makefile'
+      - 'cache-config/Makefile'
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
