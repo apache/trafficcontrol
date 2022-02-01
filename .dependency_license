@@ -75,7 +75,6 @@ BUILD_NUMBER$, Apache-2.0
 
 # Demo certificates
 ssl\.(crt|key)$, Apache-2.0
-trafficrouter.dev.ciab.test.crt, Apache-2.0
 /keystore, Apache-2.0
 
 # Uncommentable files
