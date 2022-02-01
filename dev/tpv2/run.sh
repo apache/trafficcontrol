@@ -16,5 +16,5 @@
 set -o errexit
 
 cd "$TC/experimental/traffic-portal"
-npm install
+npm ci
 ./node_modules/.bin/ng serve --ssl --ssl-cert /server.crt --ssl-key /server.key --watch --progress --proxy-config "$TC/dev/tpv2/proxy.json" --port 443 --host "::0" --live-reload

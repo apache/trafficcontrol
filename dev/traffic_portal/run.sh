@@ -16,5 +16,5 @@
 set -o errexit
 
 cd "$TC/traffic_portal"
-npm install
+npm ci
 ./node_modules/.bin/grunt
