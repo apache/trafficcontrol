@@ -48,6 +48,8 @@ RUN dnf -y install epel-release && \
     fi && \
     dnf -y install              \
         brotli                  \
+        # find is required by to-access.sh
+        findutils               \
         GeoIP                   \
         git                     \
         groff-base              \

@@ -34,6 +34,8 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         bind-utils \
         # chromium and jq are in EPEL
         epel-release \
+        # find is required by to-access.sh
+        findutils \
         GConf2 \
         git \
         java-1.8.0-openjdk \

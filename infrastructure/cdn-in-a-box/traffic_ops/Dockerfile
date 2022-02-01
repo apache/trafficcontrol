@@ -48,6 +48,8 @@ RUN set -o nounset -o errexit && \
 	dnf -y $use_repo -- install postgresql13; \
 	dnf -y $enable_repo install \
 		bind-utils           \
+		# find is required by to-access.sh
+		findutils            \
 		gettext              \
 		# ip commands is used in set-to-ips-from-dns.sh
 		iproute              \

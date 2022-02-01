@@ -34,6 +34,8 @@ RUN dnf install -y epel-release && \
         jq \
         nmap-ncat \
         net-tools \
+        # find is required by to-access.sh
+        findutils \
         gettext \
         bind-utils \
         openssl && \

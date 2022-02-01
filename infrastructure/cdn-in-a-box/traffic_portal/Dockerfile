@@ -43,6 +43,8 @@ RUN dnf install -y epel-release && \
       jq \
       nodejs \
       openssl \
+      # find is required by to-access.sh
+      findutils \
       gettext \
       bind-utils \
       net-tools && \
