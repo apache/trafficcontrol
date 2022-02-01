@@ -215,7 +215,7 @@ Importing the :abbr:`CA (Certificate Authority)` certificate on Windows
 #. Restart all HTTPS clients (browsers, etc).
 
 Importing the :abbr:`CA (Certificate Authority)` certificate on Rocky Linux 8 (Linux)
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
 #. Copy the CIAB full chain :abbr:`CA (Certificate Authority)` certificate bundle from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt` to path :file:`/etc/pki/ca-trust/source/anchors/`.
 #. Run ``update-ca-trust-extract`` as the root user or with :manpage:`sudo(8)`.
 #. Restart all HTTPS clients (browsers, etc).
