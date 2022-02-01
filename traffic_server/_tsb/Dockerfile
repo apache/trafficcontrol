@@ -26,15 +26,13 @@ MAINTAINER dev@trafficcontrol.apache.org
 
 ### Common for all sub-component builds
 RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
-		rpm_gpg_key=RPM-GPG-KEY-centosofficial; \
 		yum install -y 'dnf-command(config-manager)'; \
 		yum config-manager --set-enabled powertools; \
 	else \
-		rpm_gpg_key="RPM-GPG-KEY-CentOS-${RHEL_VERSION%%.*}"; \
 		yum install -y deltarpm centos-release-scl-rh; \
 		yum-config-manager --enable rhel-server-rhscl-7-rpms; \
 	fi && \
-	rpm --import "/etc/pki/rpm-gpg/${rpm_gpg_key}" && \
+	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-* && \
 	rpm --import "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-${RHEL_VERSION%%.*}" && \
 	yum -y clean all && \
 	yum -y update ca-certificates && \
