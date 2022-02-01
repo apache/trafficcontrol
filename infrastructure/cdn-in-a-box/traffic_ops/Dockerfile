@@ -114,8 +114,8 @@ HEALTHCHECK --interval=10s --timeout=1s \
 
 FROM trafficops-dependencies as get-delve
 
-RUN dnf -y install git golang && \
-    go get -u github.com/go-delve/delve/cmd/dlv
+RUN dnf -y install golang && \
+    GOPROXY='https://proxy.golang.org' go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM trafficops AS trafficops-debug
 COPY --from=get-delve /root/go/bin /usr/bin
