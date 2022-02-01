@@ -18,7 +18,7 @@ FROM alpine:latest AS traffic-server-builder
 
 RUN apk add --no-cache build-base perl libexecinfo-dev pcre-dev libressl-dev libtool linux-headers openssl-dev zlib-dev
 ADD https://downloads.apache.org/trafficserver/trafficserver-9.1.0.tar.bz2 /
-RUN tar -xf trafficserver-9.1.0.tar.bz2 && cd trafficserver-9.1.0 && mkdir /ats && ./configure --prefix / --enable-experimental-plugins && make && make install && ls -R /ats
+RUN tar -xf trafficserver-9.1.0.tar.bz2 && cd trafficserver-9.1.0 && mkdir /ats && ./configure --prefix / --enable-experimental-plugins && make -j && make install && ls -R /ats
 
 FROM alpine:latest AS t3c-dev
 
