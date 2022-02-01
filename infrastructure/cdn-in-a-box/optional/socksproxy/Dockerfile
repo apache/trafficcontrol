@@ -33,8 +33,8 @@ ARG DANTES_SRC=https://www.inet.no/dante/files/dante-1.4.2.tar.gz
 
 RUN dnf install -y net-tools bind-utils iproute wget curl automake autoconf gcc make && \
     curl -Ls -o /tmp/dante.tar.gz $DANTES_SRC && \
-    tar -C /usr/src -zxvpf $(find /tmp -type f -name dante\*) && \
-    cd $(find /usr/src -type d -name dante\*) && \
+    tar -C /usr/src -zxvpf /tmp/dante.tar.gz && \
+    cd /usr/src/dante* && \
     ./configure --prefix=/usr && \
     make -j 4 && \
     make install && \
