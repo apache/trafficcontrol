@@ -17,7 +17,7 @@
 
 alias atc-start="docker-compose up -d --build";
 alias atc-build="docker-compose build";
-alias atc-stop="docker-compose down -v --remove-orphans";
+alias atc-stop="docker-compose kill && docker-compose down -v --remove-orphans";
 alias atc-restart="atc-stop && atc-start";
 
 function atc-ready {
