@@ -35,4 +35,4 @@ RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 COPY .pgpass /root/.pgpass
 RUN chmod 0600 /root/.pgpass
 
-ENTRYPOINT /root/go/src/github.com/apache/trafficcontrol/dev/traffic_ops/run.sh
+CMD /root/go/src/github.com/apache/trafficcontrol/dev/traffic_ops/run.sh

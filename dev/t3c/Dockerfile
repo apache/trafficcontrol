@@ -45,4 +45,4 @@ RUN apk add --no-cache make inotify-tools go pcre libexecinfo && \
 
 RUN echo "stats_over_http.so" >> /etc/trafficserver/plugin.config && echo "system_stats.so" >> /etc/trafficserver/plugin.config
 
-ENTRYPOINT /root/go/src/github.com/apache/trafficcontrol/dev/t3c/run.sh
+CMD /root/go/src/github.com/apache/trafficcontrol/dev/t3c/run.sh

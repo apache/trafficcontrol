@@ -20,4 +20,4 @@ EXPOSE 80 81
 RUN apk add --no-cache inotify-tools go && go install github.com/go-delve/delve/cmd/dlv@latest && ln -s /root/go/bin/dlv /usr/bin/dlv
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
-ENTRYPOINT /root/go/src/github.com/apache/trafficcontrol/dev/traffic_monitor/run.sh
+CMD /root/go/src/github.com/apache/trafficcontrol/dev/traffic_monitor/run.sh

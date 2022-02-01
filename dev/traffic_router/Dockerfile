@@ -25,4 +25,4 @@ RUN cd /opt && tar -xf tomcat.tgz && mv apache-tomcat-9.0.54 tomcat && rm /usr/s
 
 COPY settings.xml /usr/share/java/maven-3/conf/settings.xml
 
-ENTRYPOINT /root/go/src/github.com/apache/trafficcontrol/dev/traffic_router/run.sh
+CMD /root/go/src/github.com/apache/trafficcontrol/dev/traffic_router/run.sh

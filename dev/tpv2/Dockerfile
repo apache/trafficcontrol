@@ -30,4 +30,4 @@ EXPOSE 443
 
 COPY --from=certbuilder /server.key /server.crt /
 
-ENTRYPOINT /root/go/src/github.com/apache/trafficcontrol/dev/tpv2/run.sh
+CMD /root/go/src/github.com/apache/trafficcontrol/dev/tpv2/run.sh

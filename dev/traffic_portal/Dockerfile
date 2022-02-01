@@ -31,4 +31,4 @@ ENV TP_SERVER_CONFIG_FILE="$TC/dev/traffic_portal/config.js"
 RUN apk add --no-cache ruby ruby-dev gcc musl-dev make && gem update --system && gem install sass compass
 COPY --from=certbuilder /server.key /server.crt /
 
-ENTRYPOINT /root/go/src/github.com/apache/trafficcontrol/dev/traffic_portal/run.sh
+CMD /root/go/src/github.com/apache/trafficcontrol/dev/traffic_portal/run.sh
