@@ -23,13 +23,18 @@
 # The recommended minimum size for each block devices is 1G.
 # For example, `sudo modprobe brd rd_size=1048576 rd_nr=2`
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
-ARG RHEL_VERSION=8
+ARG OS_VERSION=8
+ARG OS_DISTRO=rockylinux
+FROM ${OS_DISTRO}:${OS_VERSION}
+ARG OS_VERSION
+ARG OS_DISTRO
 # Makes RHEL_VERSION available in later layers without needing to specify it again
-ENV RHEL_VERSION=$RHEL_VERSION
+ENV OS_VERSION=${OS_VERSION}
+ENV OS_DISTRO=${OS_DISTRO}
 MAINTAINER dev@trafficcontrol.apache.org
 EXPOSE 80 443
+
+RUN echo "Image Version: ${OS_DISTRO}:${OS_VERSION}"
 
 RUN yum install -y epel-release && yum repolist && \
   yum install -y initscripts git jq gcc lua && \
