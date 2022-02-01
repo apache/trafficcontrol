@@ -30,10 +30,7 @@ if [[ "$GITHUB_REF" == refs/pull/*/merge ]]; then
 else
 	files_changed="$(git diff --name-only HEAD~4 HEAD --)" # Files changed by the last 4 commits
 fi
-if <<<"$files_changed" grep '^GO_VERSION$' ||
-	{ [[ "$ATC_COMPONENT" == traffic_router ]] &&
-		<<<"$files_changed" grep '^infrastructure/docker/build/Dockerfile-traffic_router$'; };
-then
+if <<<"$files_changed" grep '^GO_VERSION$' -e '' || <<<"$files_changed" grep '^infrastructure/docker/build/'; then
 	pkg_command+=(-b)
 fi
 
