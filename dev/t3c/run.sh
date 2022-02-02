@@ -60,7 +60,7 @@ if [[ ! -f /usr/bin/tm-health-client ]]; then
 	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/tm-health-client/tm-health-client /usr/bin/
 fi
 
-traffic_server &
+su -c traffic_server ats &
 
 while inotifywait --exclude '.*(\.md|\.json|\.pl|\.rst|_test\.go|\.gitignore|__debug_bin|-logrotate|.service)$|^\./(build|t3c-check-refs/test-files|testing|t3util/testing|tm-health-client/(config|tmagent)/test_files)/.*' -e modify -r . ; do
 	T3C_PID="$(ps | grep t3c | grep -v grep | grep -v inotifywait | grep -v run.sh | tr -s ' ' | cut -d ' ' -f2)"
@@ -72,7 +72,7 @@ while inotifywait --exclude '.*(\.md|\.json|\.pl|\.rst|_test\.go|\.gitignore|__d
 		rm /var/trafficserver/server.lock;
 	fi
 	ps | grep traffic_server | grep -v grep | tr -s ' ' | cut -d ' ' -f2 | xargs kill
-	traffic_server &
+	su -c traffic_server ats &
 	# for whatever reason, without this the repeated call to inotifywait will
 	# sometimes lose track of th current directory. It spits out:
 	# Couldn't watch .: No such file or directory

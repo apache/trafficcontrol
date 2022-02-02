@@ -17,8 +17,8 @@
 FROM alpine:latest AS traffic-server-builder
 
 RUN apk add --no-cache build-base perl libexecinfo-dev pcre-dev libressl-dev libtool linux-headers openssl-dev zlib-dev
-ADD https://downloads.apache.org/trafficserver/trafficserver-9.1.0.tar.bz2 /
-RUN tar -xf trafficserver-9.1.0.tar.bz2 && cd trafficserver-9.1.0 && mkdir /ats && ./configure --prefix / --enable-experimental-plugins && make -j && make install && ls -R /ats
+ADD https://downloads.apache.org/trafficserver/trafficserver-9.1.1.tar.bz2 /
+RUN tar -xf trafficserver-9.1.1.tar.bz2 && cd trafficserver-9.1.1 && mkdir /ats && ./configure --prefix / --enable-experimental-plugins && make -j && make install && ls -R /ats
 
 FROM alpine:latest AS t3c-dev
 
@@ -43,6 +43,7 @@ RUN apk add --no-cache make inotify-tools go pcre libexecinfo && \
 	mkdir /lib64 && \
 	ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
+RUN addgroup ats && adduser -S -s /bin/ash -G ats ats && chown -R ats:ats /etc/trafficserver /var/trafficserver /share/trafficserver /var/log/trafficserver
 RUN echo "stats_over_http.so" >> /etc/trafficserver/plugin.config && echo "system_stats.so" >> /etc/trafficserver/plugin.config
 
 CMD /root/go/src/github.com/apache/trafficcontrol/dev/t3c/run.sh
