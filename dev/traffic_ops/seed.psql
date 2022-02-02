@@ -68,6 +68,14 @@ INSERT INTO parameter (
 	'rascal-config.txt',
 	'tm.polling.interval',
 	'2000'
+), (
+	'rascal.properties',
+	'health.polling.url',
+	'http://edge:8080/_stats?application=&inf.name=${interface_name}'
+), (
+	'rascal.properties',
+	'health.polling.format',
+	'stats_over_http'
 );
 
 INSERT INTO profile_parameter
@@ -76,6 +84,12 @@ FROM profile, parameter
 WHERE parameter.config_file = 'rascal-config.txt'
 AND parameter."name" LIKE '%.polling.%'
 AND profile."name" = 'RASCAL_TM_dev';
+
+INSERT INTO profile_parameter
+SELECT profile.id, parameter.id
+FROM profile, parameter
+WHERE parameter.config_file = 'rascal.properties'
+AND profile."name" = 'EDGE_dev';
 
 INSERT INTO division ("name") VALUES ('dev');
 INSERT INTO region (
