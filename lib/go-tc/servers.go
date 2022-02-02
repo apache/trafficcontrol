@@ -1121,15 +1121,55 @@ func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
 // operations t3c has done/needs to do. For most purposes, using Server
 // structures will be better - especially since the basic principle of this
 // type is predicated on a lie: that server host names are unique.
+//
+// Edits to this struct will require editing the custom MarshalJson function
+// for this type below
 type ServerUpdateStatus struct {
-	HostName           string `json:"host_name"`
-	UpdatePending      bool   `json:"upd_pending"`
-	RevalPending       bool   `json:"reval_pending"`
-	UseRevalPending    bool   `json:"use_reval_pending"`
-	HostId             int    `json:"host_id"`
-	Status             string `json:"status"`
-	ParentPending      bool   `json:"parent_pending"`
-	ParentRevalPending bool   `json:"parent_reval_pending"`
+	HostName             string    `json:"host_name"`
+	UpdatePending        bool      `json:"upd_pending"`
+	RevalPending         bool      `json:"reval_pending"`
+	UseRevalPending      bool      `json:"use_reval_pending"`
+	HostId               int       `json:"host_id"`
+	Status               string    `json:"status"`
+	ParentPending        bool      `json:"parent_pending"`
+	ParentRevalPending   bool      `json:"parent_reval_pending"`
+	ConfigUpdateTime     time.Time `json:"config_update_time"`
+	ConfigApplyTime      time.Time `json:"config_apply_time"`
+	RevalidateUpdateTime time.Time `json:"revalidate_update_time"`
+	RevalidateApplyTime  time.Time `json:"revalidate_apply_time"`
+}
+
+// MarshalJSON is a custom implementation to ensure the date format returned is a RFC3339 string (and not RFC3339Nano or something else)
+func (sus ServerUpdateStatus) MarshalJSON() ([]byte, error) {
+	formatTime := struct {
+		HostName             string `json:"host_name"`
+		UpdatePending        bool   `json:"upd_pending"`
+		RevalPending         bool   `json:"reval_pending"`
+		UseRevalPending      bool   `json:"use_reval_pending"`
+		HostId               int    `json:"host_id"`
+		Status               string `json:"status"`
+		ParentPending        bool   `json:"parent_pending"`
+		ParentRevalPending   bool   `json:"parent_reval_pending"`
+		ConfigUpdateTime     string `json:"config_update_time"`
+		ConfigApplyTime      string `json:"config_apply_time"`
+		RevalidateUpdateTime string `json:"revalidate_update_time"`
+		RevalidateApplyTime  string `json:"revalidate_apply_time"`
+	}{
+		HostName:             sus.HostName,
+		UpdatePending:        sus.UpdatePending,
+		RevalPending:         sus.RevalPending,
+		UseRevalPending:      sus.UseRevalPending,
+		HostId:               sus.HostId,
+		Status:               sus.Status,
+		ParentPending:        sus.ParentPending,
+		ParentRevalPending:   sus.ParentRevalPending,
+		ConfigUpdateTime:     sus.ConfigUpdateTime.Format(time.RFC3339Nano),
+		ConfigApplyTime:      sus.ConfigApplyTime.Format(time.RFC3339Nano),
+		RevalidateUpdateTime: sus.RevalidateUpdateTime.Format(time.RFC3339Nano),
+		RevalidateApplyTime:  sus.RevalidateApplyTime.Format(time.RFC3339Nano),
+	}
+
+	return json.Marshal(formatTime)
 }
 
 // ServerUpdateStatusResponseV40 is the type of a response from the Traffic

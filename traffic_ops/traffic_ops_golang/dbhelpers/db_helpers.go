@@ -1785,14 +1785,48 @@ DO UPDATE SET config_update_time = $2;`
 	return nil
 }
 
-func SetApplyUpdateForServer(tx *sql.Tx, serverID int64) error {
+func DequeueUpdateForServer(tx *sql.Tx, serverID int64) error {
 	query := `
 UPDATE server_config_update 
-SET config_apply_time = now()
+SET config_update_time = config_apply_time
 WHERE server_config_update.server_id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
 		return fmt.Errorf("applying config update for ServerID %d: %v", serverID, err)
+	}
+
+	return nil
+}
+
+func SetApplyUpdateForServer(tx *sql.Tx, serverID int64) error {
+	query := `
+UPDATE server_config_update 
+<<<<<<< HEAD
+<<<<<<< HEAD
+SET config_apply_time = now()
+=======
+SET server_config_update.config_apply_time = now()
+>>>>>>> 625762265... Continued cleanup for update and reval quueing and apply.
+=======
+SET config_apply_time = now()
+>>>>>>> 100d49c3c... Remove table clarification from update statements
+WHERE server_config_update.server_id = $1;`
+
+	if _, err := tx.Exec(query, serverID); err != nil {
+		return fmt.Errorf("applying config update for ServerID %d: %v", serverID, err)
+	}
+
+	return nil
+}
+
+func SetApplyUpdateForServerWithTime(tx *sql.Tx, serverID int64, applyUpdateTime time.Time) error {
+	query := `
+UPDATE server_config_update 
+SET config_apply_time = $2
+WHERE server_config_update.server_id = $1;`
+
+	if _, err := tx.Exec(query, serverID, applyUpdateTime); err != nil {
+		return fmt.Errorf("applying config update for ServerID %d with time %v: %v", serverID, applyUpdateTime, err)
 	}
 
 	return nil
@@ -1836,6 +1870,19 @@ WHERE server_config_update.server_id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
 		return fmt.Errorf("queueing reval update for ServerID %d: %v", serverID, err)
+	}
+
+	return nil
+}
+
+func SetApplyRevalForServerWithTime(tx *sql.Tx, serverID int64, applyRevalTime time.Time) error {
+	query := `
+UPDATE server_config_update 
+SET revalidate_apply_time = $2
+WHERE server_config_update.server_id = $1;`
+
+	if _, err := tx.Exec(query, serverID, applyRevalTime); err != nil {
+		return fmt.Errorf("applying config update for ServerID %d with time %v: %v", serverID, applyRevalTime, err)
 	}
 
 	return nil

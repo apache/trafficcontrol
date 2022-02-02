@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -52,10 +53,14 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool, opts Req
 // SetUpdateServerStatuses updates a server's queue status and/or reval status.
 // Either updateStatus or revalStatus may be nil, in which case that status
 // isn't updated (but not both, because that wouldn't do anything).
+//
+// Deprecated: Prefer to use SetUpdateServerStatusTimes
 func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool, revalStatus *bool, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
+	var alerts tc.Alerts
+
 	if updateStatus == nil && revalStatus == nil {
-		return tc.Alerts{}, reqInf, errors.New("either updateStatus or revalStatus must be non-nil; nothing to do")
+		return alerts, reqInf, errors.New("either updateStatus or revalStatus must be non-nil; nothing to do")
 	}
 
 	if opts.QueryParameters == nil {
@@ -76,7 +81,51 @@ func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool
 			opts.QueryParameters.Set("reval_updated", "false")
 		}
 	}
+
+	path := `/servers/` + url.PathEscape(serverName) + `/update`
+	reqInf, err := to.post(path, opts, nil, &alerts)
+	return alerts, reqInf, err
+}
+
+// SetUpdateServerStatusTimes updates a server's config queue status and/or reval status.
+// Each argument individually is optional, however at least one argument must not be nil.
+func (to *Session) SetUpdateServerStatusTimes(serverName string, configUpdateTime *time.Time, configApplyTime *time.Time, revalUpdateTime *time.Time, revalApplyTime *time.Time, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	var alerts tc.Alerts
+
+	if configUpdateTime == nil && configApplyTime == nil && revalUpdateTime == nil && revalApplyTime == nil {
+		return alerts, reqInf, errors.New("one must be non-nil (configUpdateTime, configApplyTime, revalUpdateTime, revalApplyTime); nothing to do")
+	}
+
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+
+	if configUpdateTime != nil {
+		cut := configUpdateTime.Format(time.RFC3339Nano)
+		if configUpdateTime != nil {
+			opts.QueryParameters.Set("config_update_time", cut)
+		}
+	}
+	if configApplyTime != nil {
+		cat := configApplyTime.Format(time.RFC3339Nano)
+		if configUpdateTime != nil {
+			opts.QueryParameters.Set("config_apply_time", cat)
+		}
+	}
+	if revalUpdateTime != nil {
+		rut := revalUpdateTime.Format(time.RFC3339Nano)
+		if configUpdateTime != nil {
+			opts.QueryParameters.Set("revalidate_update_time", rut)
+		}
+	}
+	if revalApplyTime != nil {
+		rat := revalApplyTime.Format(time.RFC3339Nano)
+		if configUpdateTime != nil {
+			opts.QueryParameters.Set("revalidate_apply_time", rat)
+		}
+	}
+
 	path := `/servers/` + url.PathEscape(serverName) + `/update`
 	reqInf, err := to.post(path, opts, nil, &alerts)
 	return alerts, reqInf, err

@@ -68,7 +68,7 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	if reqObj.Action == "queue" {
 		err = dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID)
 	} else {
-		err = dbhelpers.SetApplyUpdateForServer(inf.Tx.Tx, serverID)
+		err = dbhelpers.DequeueUpdateForServer(inf.Tx.Tx, serverID)
 	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("queueing updates: %v", err))

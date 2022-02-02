@@ -1490,6 +1490,18 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if server.RevalPending != nil && *server.RevalPending { // To continue to work with the legacy implementation and priority. However, consider bool RevalPending deprecated
+		if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	} else if server.RevalUpdateTime != nil {
+		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	}
+
 	where := `WHERE s.id = $1`
 	selquery := selectQuery + where
 	var srvr tc.ServerV40
@@ -1659,7 +1671,6 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server was created.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, srvr)
 

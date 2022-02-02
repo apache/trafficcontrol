@@ -136,7 +136,11 @@ SELECT
 		WHERE sta.base_server_id = s.id
 		AND sta.cdn_id = s.cdn_id
 		UNION SELECT COALESCE(BOOL_OR(ps.reval_pending), FALSE)
-	) AS parent_reval_pending
+	) AS parent_reval_pending,
+	COALESCE (scu.config_update_time, TIMESTAMPTZ 'epoch') AS config_update_time,
+	COALESCE (scu.config_apply_time, TIMESTAMPTZ 'epoch') AS config_apply_time,
+	COALESCE (scu.revalidate_update_time, TIMESTAMPTZ 'epoch') AS revalidate_update_time,
+	COALESCE (scu.revalidate_apply_time, TIMESTAMPTZ 'epoch') AS revalidate_apply_time
 	FROM use_reval_pending,
 		 server s
 LEFT OUTER JOIN server_config_update scu ON s.id = scu.server_id 
@@ -146,7 +150,7 @@ LEFT JOIN type ON type.id = s.type
 LEFT JOIN parentservers ps ON ps.cachegroup = cg.parent_cachegroup_id
 	AND ps.cdn_id = s.cdn_id
 WHERE s.host_name = $5
-GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, server_upd_pending, status.name
+GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, server_upd_pending, status.name, config_update_time, config_apply_time, revalidate_update_time, revalidate_apply_time
 ORDER BY s.id
 `
 
@@ -162,7 +166,7 @@ ORDER BY s.id
 	for rows.Next() {
 		var us tc.ServerUpdateStatus
 		var serverType string
-		if err := rows.Scan(&us.HostId, &us.HostName, &serverType, &us.RevalPending, &us.UseRevalPending, &us.UpdatePending, &us.Status, &us.ParentPending, &us.ParentRevalPending); err != nil {
+		if err := rows.Scan(&us.HostId, &us.HostName, &serverType, &us.RevalPending, &us.UseRevalPending, &us.UpdatePending, &us.Status, &us.ParentPending, &us.ParentRevalPending, &us.ConfigUpdateTime, &us.ConfigApplyTime, &us.RevalidateUpdateTime, &us.RevalidateApplyTime); err != nil {
 			log.Errorf("could not scan server update status: %s\n", err)
 			return nil, tc.DBError
 		}
