@@ -3,6 +3,6 @@
 	"password": "twelve12",
 	"url": "https://trafficops:443/",
 	"insecure": true,
-	"cdnName": "ALL",
+	"cdnName": "dev",
 	"httpListener": ":80"
 }

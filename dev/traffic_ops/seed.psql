@@ -31,6 +31,13 @@ INSERT INTO tm_user (
 )
 ON CONFLICT (username) DO NOTHING;
 
+INSERT INTO cdn (
+	"name",
+	domain_name
+) VALUES (
+	'dev',
+	'ciab.test'
+);
 INSERT INTO profile (
 	"name",
 	description,
@@ -40,12 +47,12 @@ INSERT INTO profile (
 	'RASCAL_TM_dev',
 	'dev TM Profile',
 	'TM_PROFILE',
-	(SELECT id FROM cdn WHERE "name" = 'ALL')
+	(SELECT id FROM cdn WHERE "name" = 'dev')
 ), (
 	'EDGE_dev',
 	'dev edge Profile',
 	'ATS_PROFILE',
-	(SELECT id FROM cdn WHERE "name" = 'ALL')
+	(SELECT id FROM cdn WHERE "name" = 'dev')
 );
 
 INSERT INTO parameter (
@@ -160,7 +167,7 @@ INSERT INTO "server" (
 	(SELECT id FROM "type" WHERE "name" = 'RASCAL'),
 	(SELECT id FROM status WHERE "name" = 'ONLINE'),
 	(SELECT id FROM profile WHERE "name"= 'RASCAL_TM_dev'),
-	(SELECT id FROM cdn WHERE "name" = 'ALL')
+	(SELECT id FROM cdn WHERE "name" = 'dev')
 ), (
 	'edge',
 	'dev.ciab.test',
@@ -171,7 +178,7 @@ INSERT INTO "server" (
 	(SELECT id FROM "type" WHERE "name" = 'EDGE'),
 	(SELECT id FROM status WHERE "name" = 'REPORTED'),
 	(SELECT id FROM profile WHERE "name"= 'EDGE_dev'),
-	(SELECT id FROM cdn WHERE "name" = 'ALL')
+	(SELECT id FROM cdn WHERE "name" = 'dev')
 );
 
 INSERT INTO interface (
@@ -220,7 +227,7 @@ INSERT INTO deliveryservice (
 	1,
 	0,
 	(SELECT id FROM "type" WHERE "name" = 'HTTP'),
-	(SELECT id FROM cdn WHERE "name" = 'ALL'),
+	(SELECT id FROM cdn WHERE "name" = 'dev'),
 	'dev',
 	(SELECT id FROM tenant WHERE "name" = 'root')
 );
