@@ -38,6 +38,17 @@ INSERT INTO cdn (
 	'dev',
 	'ciab.test'
 );
+
+INSERT INTO snapshot (
+	cdn,
+	crconfig,
+	monitoring
+) VALUES (
+	'dev',
+	'{"config":{"dnssec.enabled":"false","domain_name":"ciab.test"},"contentServers":{"edge":{"cacheGroup":"dev","fqdn":"edge.dev.ciab.test","hashCount":999,"hashId":"edge","httpsPort":443,"interfaceName":"eth0","ip":"129.0.0.2","ip6":"","locationId":"dev","port":80,"profile":"EDGE_dev","status":"REPORTED","type":"EDGE","routingDisabled":0}},"deliveryServices":{"dev":{"anonymousBlockingEnabled":"false","coverageZoneOnly":"false","deepCachingType":"NEVER","dispersion":{"limit":1,"shuffled":"true"},"domains":["dev.ciab.test"],"ecsEnabled":"false","geolocationProvider":"maxmindGeolocationService","ip6RoutingEnabled":"false","matchsets":[{"protocol":"HTTP","matchlist":[{"regex":".*\\\\.dev\\\\..*","match-type":"HOST"}]}],"protocol":{"acceptHttps":"false","redirectToHttps":"false"},"regionalGeoBlocking":"false","routingName":"cdn","soa":{"admin":"traffic_ops","expire":"604800","minimum":"30","refresh":"28800","retry":"7200"},"sslEnabled":"false","ttls":{"A":"","AAAA":"","NS":"3600","SOA":"86400"}}},"edgeLocations":{"dev":{"latitude":0,"longitude":0,"backupLocations":{"fallbackToClosest":"true"},"localizationMethods":["GEO","CZ","DEEP_CZ"]}},"monitors":{"trafficmonitor":{"fqdn":"trafficmonitor.dev.ciab.test","httpsPort":null,"ip":"129.0.0.1","ip6":"","location":"dev","port":80,"profile":"RASCAL_TM_dev","status":"ONLINE"}},"stats":{"CDN_name":"dev","date":1643833749,"tm_host":"","tm_user":"admin","tm_version":"development"}}',
+	'{"trafficServers":[{"profile":"EDGE_dev","status":"REPORTED","port":80,"cachegroup":"dev","hostname":"edge","fqdn":"edge.dev.ciab.test","interfaces":[{"ipAddresses":[{"address":"129.0.0.2","gateway":null,"serviceAddress":true}],"maxBandwidth":null,"monitor":true,"mtu":1500,"name":"eth0"}],"type":"EDGE","hashid":""}],"trafficMonitors":[{"profile":"RASCAL_TM_dev","status":"ONLINE","port":80,"cachegroup":"dev","hostname":"trafficmonitor","fqdn":"trafficmonitor.dev.ciab.test","ip":"129.0.0.1","ip6":""}],"cacheGroups":[{"name":"dev","coordinates":{"latitude":0,"longitude":0}}],"profiles":[{"name":"EDGE_dev","type":"EDGE","parameters":{"health.polling.format":"stats_over_http","health.polling.url":"http://edge:8080/_stats?application=\u0026inf.name=${interface_name}"}}],"deliveryServices":[{"xmlId":"dev","totalTpsThreshold":0,"status":"REPORTED","totalKbpsThreshold":0}],"config":{"health.polling.interval":6000,"heartbeat.polling.interval":3000,"peers.polling.interval":3000,"tm.polling.interval":2000}}'
+);
+
 INSERT INTO profile (
 	"name",
 	description,
