@@ -16,14 +16,18 @@ INSERT INTO tm_user (
 	tenant_id,
 	"role",
 	local_passwd,
-	confirm_local_passwd
+	confirm_local_passwd,
+	email,
+	full_name
 ) VALUES (
 	'admin',
 	(SELECT id FROM tenant WHERE "name" = 'root'),
 	(SELECT id FROM "role" WHERE "name" = 'admin'),
 	-- 'twelve12' encrypted with SCRYPT
 	'SCRYPT:16384:8:1:p0Bppp/6IBeYxSwdLuYddsdMLBU/BNSlLY6fSIF7H1XW4eTbNVeMPVm7TuTEG4FM8PbqLlVwi8sPy8ZJznAlaQ==:sRcHWGe43mm/uEmXTIw37GcLEQZTlWAdf4vJqK8f0MDh8P+8gXoNx+nxWyb3r/0Bh+yyg0g/dUvti/ePZJL+Jw==',
-	'SCRYPT:16384:8:1:p0Bppp/6IBeYxSwdLuYddsdMLBU/BNSlLY6fSIF7H1XW4eTbNVeMPVm7TuTEG4FM8PbqLlVwi8sPy8ZJznAlaQ==:sRcHWGe43mm/uEmXTIw37GcLEQZTlWAdf4vJqK8f0MDh8P+8gXoNx+nxWyb3r/0Bh+yyg0g/dUvti/ePZJL+Jw=='
+	'SCRYPT:16384:8:1:p0Bppp/6IBeYxSwdLuYddsdMLBU/BNSlLY6fSIF7H1XW4eTbNVeMPVm7TuTEG4FM8PbqLlVwi8sPy8ZJznAlaQ==:sRcHWGe43mm/uEmXTIw37GcLEQZTlWAdf4vJqK8f0MDh8P+8gXoNx+nxWyb3r/0Bh+yyg0g/dUvti/ePZJL+Jw==',
+	'admin@no-reply.atc.test',
+	'Development Admin User'
 )
 ON CONFLICT (username) DO NOTHING;
 
