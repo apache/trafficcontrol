@@ -21,7 +21,10 @@ EXPOSE 3053:53/tcp 3053:53/udp 3080:80 3443:443 3333:3333 2222:3443 5005:5005
 RUN apk add --no-cache openjdk11 inotify-tools maven && ln -s /usr/lib/jvm/java-11-openjdk/bin/jdb /bin/jdb
 
 ADD https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.43/bin/apache-tomcat-9.0.43.tar.gz /opt/tomcat.tgz
-RUN cd /opt && tar -xf tomcat.tgz && mv apache-tomcat-* tomcat && rm /usr/share/java/maven-3/conf/settings.xml
+RUN cd /opt && \
+	tar -xf tomcat.tgz && \
+	rm -rf tomcat.tgz tomcat/webapps/* tomcat/conf/web.xml tomcat/conf/server.xml tomcat/conf/logging.properties /usr/share/java/maven-3/conf/settings.xml && \
+	mv apache-tomcat-* tomcat
 
 COPY settings.xml /usr/share/java/maven-3/conf/settings.xml
 
