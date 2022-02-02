@@ -21,6 +21,7 @@ package manager
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 	"os"
 	"sort"
@@ -239,7 +240,13 @@ func monitorConfigListen(
 			continue
 		}
 
-		thisTMGroup, cacheGroupsToPoll, err := getCacheGroupsToPoll(cfg.DistributedPolling, staticAppData.Hostname, monitorConfig.TrafficMonitor, monitorConfig.TrafficServer)
+		thisTMGroup, cacheGroupsToPoll, err := getCacheGroupsToPoll(
+			cfg.DistributedPolling,
+			staticAppData.Hostname,
+			monitorConfig.TrafficMonitor,
+			monitorConfig.TrafficServer,
+			monitorConfig.CacheGroup,
+		)
 		if err != nil {
 			log.Errorf("getting cachegroups to poll: %s", err.Error())
 			continue
@@ -256,7 +263,7 @@ func monitorConfigListen(
 			if srvStatus != tc.CacheStatusReported && srvStatus != tc.CacheStatusAdminDown {
 				continue
 			}
-			isDirectlyPolled := cacheGroupsToPoll[srv.CacheGroup]
+			_, isDirectlyPolled := cacheGroupsToPoll[srv.CacheGroup]
 			// seed states with available = false until our polling cycle picks up a result
 			if _, exists := localStates.GetCache(cacheName); !exists {
 				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: false, DirectlyPolled: isDirectlyPolled})
@@ -374,11 +381,11 @@ func monitorConfigListen(
 
 // getCacheGroupsToPoll returns the name of this Traffic Monitor's cache group
 // and the set of cache groups it needs to poll.
-func getCacheGroupsToPoll(distributedPolling bool, hostname string, monitors map[string]tc.TrafficMonitor, caches map[string]tc.TrafficServer) (string, map[string]bool, error) {
-	// TODO: instead of just round-robin, TM groups should poll their closest cache groups
-	tmGroupSet := make(map[string]bool)
-	cacheGroupSet := make(map[string]bool)
-	tmGroupToPolledCacheGroups := make(map[string]map[string]bool)
+func getCacheGroupsToPoll(distributedPolling bool, hostname string, monitors map[string]tc.TrafficMonitor,
+	caches map[string]tc.TrafficServer, allCacheGroups map[string]tc.TMCacheGroup) (string, map[string]tc.TMCacheGroup, error) {
+	tmGroupSet := make(map[string]tc.TMCacheGroup)
+	cacheGroupSet := make(map[string]tc.TMCacheGroup)
+	tmGroupToPolledCacheGroups := make(map[string]map[string]tc.TMCacheGroup)
 	thisTMGroup := ""
 
 	for _, tm := range monitors {
@@ -386,9 +393,9 @@ func getCacheGroupsToPoll(distributedPolling bool, hostname string, monitors map
 			thisTMGroup = tm.Location
 		}
 		if tc.CacheStatusFromString(tm.ServerStatus) == tc.CacheStatusOnline {
-			tmGroupSet[tm.Location] = true
+			tmGroupSet[tm.Location] = allCacheGroups[tm.Location]
 			if _, ok := tmGroupToPolledCacheGroups[tm.Location]; !ok {
-				tmGroupToPolledCacheGroups[tm.Location] = make(map[string]bool)
+				tmGroupToPolledCacheGroups[tm.Location] = make(map[string]tc.TMCacheGroup)
 			}
 		}
 	}
@@ -399,7 +406,7 @@ func getCacheGroupsToPoll(distributedPolling bool, hostname string, monitors map
 	for _, c := range caches {
 		status := tc.CacheStatusFromString(c.ServerStatus)
 		if status == tc.CacheStatusOnline || status == tc.CacheStatusReported || status == tc.CacheStatusAdminDown {
-			cacheGroupSet[c.CacheGroup] = true
+			cacheGroupSet[c.CacheGroup] = allCacheGroups[c.CacheGroup]
 		}
 	}
 
@@ -412,18 +419,53 @@ func getCacheGroupsToPoll(distributedPolling bool, hostname string, monitors map
 		tmGroups = append(tmGroups, tg)
 	}
 	sort.Strings(tmGroups)
-	cacheGroups := make([]string, 0, len(cacheGroupSet))
+	cgs := make([]string, 0, len(cacheGroupSet))
 	for cg := range cacheGroupSet {
-		cacheGroups = append(cacheGroups, cg)
+		cgs = append(cgs, cg)
 	}
-	sort.Strings(cacheGroups)
+	sort.Strings(cgs)
 	tmGroupCount := len(tmGroups)
-	tmi := 0
-	for _, c := range cacheGroups {
-		tmGroupToPolledCacheGroups[tmGroups[tmi]][c] = true
-		tmi = (tmi + 1) % tmGroupCount
+	var closest string
+	for tmi := 0; len(cgs) > 0; tmi = (tmi + 1) % tmGroupCount {
+		tmGroup := tmGroups[tmi]
+		closest, cgs = findAndRemoveClosestCachegroup(cgs, allCacheGroups[tmGroup], allCacheGroups)
+		tmGroupToPolledCacheGroups[tmGroup][closest] = allCacheGroups[closest]
 	}
 	return thisTMGroup, tmGroupToPolledCacheGroups[thisTMGroup], nil
+}
+
+func findAndRemoveClosestCachegroup(remainingCacheGroups []string, target tc.TMCacheGroup, allCacheGroups map[string]tc.TMCacheGroup) (string, []string) {
+	shortestDistance := math.MaxFloat64
+	shortestIndex := -1
+	for i := 0; i < len(remainingCacheGroups); i++ {
+		distance := getDistance(target, allCacheGroups[remainingCacheGroups[i]])
+		if distance < shortestDistance {
+			shortestDistance = distance
+			shortestIndex = i
+		}
+	}
+	closest := remainingCacheGroups[shortestIndex]
+	remainingCacheGroups = append(remainingCacheGroups[:shortestIndex], remainingCacheGroups[shortestIndex+1:]...)
+	return closest, remainingCacheGroups
+}
+
+const meanEarthRadius = 6371.0
+const x = math.Pi / 180
+
+// toRadians converts degrees to radians.
+func toRadians(d float64) float64 {
+	return d * x
+}
+
+// getDistance gets the great circle distance in kilometers between x and y.
+func getDistance(x, y tc.TMCacheGroup) float64 {
+	dLat := toRadians(x.Coordinates.Latitude - y.Coordinates.Latitude)
+	dLong := toRadians(x.Coordinates.Longitude - y.Coordinates.Longitude)
+	a := (math.Sin(dLat/2) * math.Sin(dLat/2)) +
+		(math.Cos(toRadians(x.Coordinates.Latitude)) * math.Cos(toRadians(y.Coordinates.Latitude)) *
+			math.Sin(dLong/2) * math.Sin(dLong/2))
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	return meanEarthRadius * c
 }
 
 func getDistributedPeerURLs(tms []tc.TrafficMonitor) []string {
