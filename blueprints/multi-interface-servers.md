@@ -229,7 +229,6 @@ The resulting server table after migration should look like:
  type             | bigint                   |           | not null |
  status           | bigint                   |           | not null |
  offline_reason   | text                     |           |          |
- upd_pending      | boolean                  |           | not null | false
  profile          | bigint                   |           | not null |
  cdn_id           | bigint                   |           | not null |
  ilo_ip_address   | text                     |           |          |
@@ -245,7 +244,6 @@ The resulting server table after migration should look like:
  guid             | text                     |           |          |
  last_updated     | timestamp with time zone |           | not null | now()
  https_port       | bigint                   |           |          |
- reval_pending    | boolean                  |           | not null | false
 Indexes:
 	"idx_89709_primary" PRIMARY KEY, btree (id, cachegroup, type, status, profile)
 	"idx_89709_fk_cdn2" INDEX, btree (cdn_id)

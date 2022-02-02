@@ -106,11 +106,18 @@ type QueueUpdatesResp struct {
 
 func queueUpdates(tx *sql.Tx, cgID int, cdn tc.CDNName, queue bool) ([]tc.CacheName, error) {
 	q := `
-UPDATE server SET upd_pending = $1
-WHERE server.cachegroup = $2
-AND server.cdn_id = (select id from cdn where name = $3)
-RETURNING server.host_name
-`
+UPDATE server_config_update scu
+INNER JOIN server s
+SET scu.config_update_time = now()
+WHERE s.cachegroup = $2
+AND s.cdn_id = (select id from cdn where name = $3)
+RETURNING s.host_name`
+	// 	q := `
+	// UPDATE server SET upd_pending = $1
+	// WHERE server.cachegroup = $2
+	// AND server.cdn_id = (select id from cdn where name = $3)
+	// RETURNING server.host_name
+	// `
 	rows, err := tx.Query(q, queue, cgID, cdn)
 	if err != nil {
 		return nil, errors.New("querying queue updates: " + err.Error())
