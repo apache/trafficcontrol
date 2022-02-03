@@ -85,4 +85,4 @@ t3c-update/t3c-update: $(wildcard t3c-update/**/*.go) $(wildcard t3c-update/*.go
 	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
 
 debug: GO_FLAGS=--gcflags "all=-N -l"
-debug: all
+debug: $(TARGETS)
