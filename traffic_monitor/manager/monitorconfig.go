@@ -461,9 +461,9 @@ func toRadians(d float64) float64 {
 func getDistance(x, y tc.TMCacheGroup) float64 {
 	dLat := toRadians(x.Coordinates.Latitude - y.Coordinates.Latitude)
 	dLong := toRadians(x.Coordinates.Longitude - y.Coordinates.Longitude)
-	a := (math.Sin(dLat/2) * math.Sin(dLat/2)) +
+	a := math.Pow(math.Sin(dLat/2), 2) +
 		(math.Cos(toRadians(x.Coordinates.Latitude)) * math.Cos(toRadians(y.Coordinates.Latitude)) *
-			math.Sin(dLong/2) * math.Sin(dLong/2))
+			math.Pow(math.Sin(dLong/2), 2))
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 	return meanEarthRadius * c
 }
