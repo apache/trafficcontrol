@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Added Rocky Linux 8 support
+- Added permissions to the role form in traffic portal
 
 ## [6.1.0] - 2022-01-18
 ### Added
