@@ -20,44 +20,22 @@
 set -o errexit
 trap '[ $? -eq 0 ] && exit 0 || echo "Error on line ${LINENO} of ${0}"; exit 1' EXIT
 
+cd "$TC/tc-health-client"
+go build --gcflags "all=-N -l" .
 
 cd "$TC/cache-config"
 
 # Build area may contain non-debug binaries
 make clean && make -j debug
 
-if [[ ! -f /usr/bin/t3c ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/t3c/t3c /usr/bin/
-fi
-if [[ ! -f /usr/bin/t3c-apply ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/t3c-apply/t3c-apply /usr/bin/
-fi
-if [[ ! -f /usr/bin/t3c-check ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/t3c-check/t3c-check /usr/bin/
-fi
-if [[ ! -f /usr/bin/t3c-check-refs ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/t3c-check-refs/t3c-check-refs /usr/bin/
-fi
-if [[ ! -f /usr/bin/t3c-check-reload ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/t3c-check-reload/t3c-check-reload /usr/bin/
-fi
-if [[ ! -f /usr/bin/t3c-diff ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/t3c-diff/t3c-diff /usr/bin/
-fi
-if [[ ! -f /usr/bin/t3c-generate ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/t3c-generate/t3c-generate /usr/bin/
-fi
-if [[ ! -f /usr/bin/t3c-preprocess ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/t3c-preprocess/t3c-preprocess /usr/bin/
-fi
-if [[ ! -f /usr/bin/t3c-request ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/t3c-request/t3c-request /usr/bin/
-fi
-if [[ ! -f /usr/bin/t3c-update ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/t3c-update/t3c-update /usr/bin/
-fi
-if [[ ! -f /usr/bin/tm-health-client ]]; then
-	ln -s /root/go/src/github.com/apache/trafficcontrol/cache-config/tm-health-client/tm-health-client /usr/bin/
+for component in "t3c t3c-apply t3c-check t3c-check-refs t3c-check-reload t3c-diff t3c-generate t3c-preprocess t3c-request t3c-update"; do
+	if [[ ! -f "/usr/bin/$component" ]]; then
+		ln -s "$TC/cache-config/$component/$component" /usr/bin
+	fi
+done
+
+if [[ ! -f /usr/bin/tc-health-client ]]; then
+	ln -s "$TC/tc-health-client/tc-health-client" /usr/bin/
 fi
 
 su -c traffic_server ats &
