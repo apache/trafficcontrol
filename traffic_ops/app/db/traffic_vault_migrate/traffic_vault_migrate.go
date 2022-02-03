@@ -193,7 +193,7 @@ func main() {
 	} else {
 		err := fromSecret.fill(keyFile)
 		if err != nil {
-			log.Errorln(err)
+			log.Errorln("error reading " + keyFile + ": " + err.Error())
 			os.Exit(1)
 		}
 	}
@@ -449,16 +449,16 @@ func (s *Secrets) dump(directory string) {
 }
 func (s *Secrets) fill(directory string) error {
 	if err := readKeys(directory+"/sslkeys.json", &s.sslkeys); err != nil {
-		return err
+		return errors.New("sslkeys: " + err.Error())
 	}
 	if err := readKeys(directory+"/dnsseckeys.json", &s.dnssecKeys); err != nil {
-		return err
+		return errors.New("dnsseckeys: " + err.Error())
 	}
 	if err := readKeys(directory+"/urlkeys.json", &s.urlKeys); err != nil {
-		return err
+		return errors.New("urlkeys:" + err.Error())
 	}
 	if err := readKeys(directory+"/urikeys.json", &s.uriKeys); err != nil {
-		return err
+		return errors.New("urikeys:" + err.Error())
 	}
 	return nil
 }
