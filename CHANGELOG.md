@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Update traffic_portal dependencies to mitigate `npm audit` issues.
 - Fixed a cdn-in-a-box build issue when using `RHEL_VERSION=7`
+- Fixed the incorrect use of secure.port on TrafficRouter and corrected to the httpsPort value from the TR server configuration.
 
 ### Removed
 - Remove traffic_portal dependencies to mitigate `npm audit` issues, specifically `grunt-concurrent`, `grunt-contrib-concat`, `grunt-contrib-cssmin`, `grunt-contrib-jsmin`, `grunt-contrib-uglify`, `grunt-contrib-htmlmin`, `grunt-newer`, and `grunt-wiredep`
