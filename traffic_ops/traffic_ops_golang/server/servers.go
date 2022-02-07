@@ -1218,28 +1218,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		if s.ID == nil {
 			return nil, serverCount, nil, errors.New("found server with nil ID"), http.StatusInternalServerError, nil
 		}
-
-		//var sp []string
-		//sel := `SELECT profile_names FROM server_profile WHERE server=` + strconv.Itoa(*s.ID)
-		//fmt.Println(sel)
-		//errSP := tx.QueryRow(sel).Scan(pq.Array(&sp))
-		//if errSP != nil {
-		//	return nil, serverCount, nil, fmt.Errorf("querying for server_profile: %v", errSP), http.StatusInternalServerError, nil
-		//}
-		//s.Profiles = &sp
-		//rowsSP, errSP := tx.Query("SELECT profile_names from server_profile WHERE server = $1", *s.ID)
-		//if errSP != nil {
-		//	return nil, serverCount, nil, fmt.Errorf("querying for server_profiles: %v", errSP), http.StatusInternalServerError, nil
-		//}
-		//for rowsSP.Next() {
-		//	err := rowsSP.Scan(pq.Array(&s.Profiles))
-		//	if err != nil {
-		//		return nil, serverCount, nil, fmt.Errorf("scanning for server_profiles: %v", errSP), http.StatusInternalServerError, nil
-		//	}
-		//}
-		//defer rowsSP.Close()
-		//fmt.Println(s.Profiles)
-
 		if _, ok := servers[*s.ID]; ok {
 			return nil, serverCount, nil, fmt.Errorf("found more than one server with ID #%d", *s.ID), http.StatusInternalServerError, nil
 		}

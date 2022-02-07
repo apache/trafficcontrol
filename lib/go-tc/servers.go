@@ -728,7 +728,7 @@ type CommonServerPropertiesV40 struct {
 	OfflineReason    *string              `json:"offlineReason" db:"offline_reason"`
 	PhysLocation     *string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID   *int                 `json:"physLocationId" db:"phys_location_id"`
-	Profiles         *[]string            `json:"profileNames" db:"profile_names"`
+	Profiles         *pq.StringArray      `json:"profileNames" db:"profile_names"`
 	Rack             *string              `json:"rack" db:"rack"`
 	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
 	Status           *string              `json:"status" db:"status"`
@@ -803,7 +803,7 @@ func (s ServerV40) GetCommonServerPropertiesFromV4() CommonServerProperties {
 
 func GetCommonServerPropertiesV40(id *int, properties CommonServerProperties) CommonServerPropertiesV40 {
 	var tx *sql.Tx
-	var profileNames []string
+	var profileNames pq.StringArray
 	profileNameQuery := `
 		SELECT profile_names from "server_profile" sp WHERE sp.server_id=$1
 	`
