@@ -348,8 +348,8 @@ type pgSSLKeyTable struct {
 }
 
 func (tbl *pgSSLKeyTable) insertKeys(db *sql.DB) error {
-	queryBase := "INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES %s ON CONFLICT (deliveryservice,cdn,version) DO UPDATE SET data = EXCLUDED.data"
-	stride := 4
+	queryBase := "INSERT INTO sslkey (deliveryservice, data, cdn, version, provider) VALUES %s ON CONFLICT (deliveryservice,cdn,version) DO UPDATE SET data = EXCLUDED.data"
+	stride := 5
 	queryArgs := make([]interface{}, len(tbl.Records)*stride)
 	for i, record := range tbl.Records {
 		j := i * stride
@@ -358,8 +358,9 @@ func (tbl *pgSSLKeyTable) insertKeys(db *sql.DB) error {
 		queryArgs[j+1] = record.DataEncrypted
 		queryArgs[j+2] = record.CDN
 		queryArgs[j+3] = record.Version
+		queryArgs[j+4] = ""
 	}
-	return insertIntoTable(db, queryBase, 4, queryArgs)
+	return insertIntoTable(db, queryBase, stride, queryArgs)
 }
 func (tbl *pgSSLKeyTable) gatherKeys(db *sql.DB) error {
 	sz, err := getSize(db, "sslkey")
