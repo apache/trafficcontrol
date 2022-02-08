@@ -349,15 +349,15 @@ func startShutdown(c *KafkaCluster) {
 		return
 	}
 
-	log.Infof("Starting cluster shutdown, closing producer and client")
+	infof("Starting cluster shutdown, closing producer and client")
 	if err := (*c.producer).Close(); err != nil {
-		log.Warnf("Error closing producer for cluster:  %v", err)
+		warnf("Error closing producer for cluster:  %v", err)
 	}
 	if err := (*c.client).Close(); err != nil {
-		log.Warnf("Error closing client for cluster:  %v", err)
+		warnf("Error closing client for cluster:  %v", err)
 	}
 	c.producer = nil
-	log.Infof("Finished cluster shutdown")
+	infof("Finished cluster shutdown")
 }
 
 func TlsConfig(config KafkaConfig) (*tls.Config, error) {
@@ -366,7 +366,7 @@ func TlsConfig(config KafkaConfig) (*tls.Config, error) {
 	}
 	c := &tls.Config{}
 	if config.RootCA != "" {
-		log.Infof("Loading TLS root CA certificate from %s", config.RootCA)
+		infof("Loading TLS root CA certificate from %s", config.RootCA)
 		caCert, err := ioutil.ReadFile(config.RootCA)
 		if err != nil {
 			return nil, err
@@ -375,10 +375,10 @@ func TlsConfig(config KafkaConfig) (*tls.Config, error) {
 		caCertPool.AppendCertsFromPEM(caCert)
 		c.RootCAs = caCertPool
 	} else {
-		log.Warnf("No TLS root CA defined")
+		warnf("No TLS root CA defined")
 	}
 	if config.ClientCert != "" {
-		log.Infof("Loading TLS client certificate")
+		infof("Loading TLS client certificate")
 		if config.ClientCertKey == "" {
 			return nil, fmt.Errorf("client cert path defined without key path")
 		}
@@ -410,7 +410,7 @@ func newKakfaCluster(config KafkaConfig) *KafkaCluster {
 
 	tlsConfig, err := TlsConfig(config)
 	if err != nil {
-		log.Errorln("Unable to create TLS config", err)
+		errorln("Unable to create TLS config", err)
 		return nil
 	}
 
@@ -423,14 +423,14 @@ func newKakfaCluster(config KafkaConfig) *KafkaCluster {
 	cl, err := sarama.NewClient(brokers, sc)
 
 	if err != nil {
-		log.Errorln("Unable to create client", err)
+		errorln("Unable to create client", err)
 		return nil
 	}
 
 	p, err := sarama.NewAsyncProducerFromClient(cl)
 
 	if err != nil {
-		log.Errorln("Unable to create producer", err)
+		errorln("Unable to create producer", err)
 		return nil
 	}
 	c := &KafkaCluster{
