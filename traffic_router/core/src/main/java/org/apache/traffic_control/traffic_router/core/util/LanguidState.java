@@ -83,7 +83,7 @@ public class LanguidState {
 			trafficRouterManager.setApiPort(apiPort);
 		}
 
-		if (routerJson.has("httpsPort")) {
+		if (routerJson.hasNonNull("httpsPort")) {
 			setSecurePort(routerJson.get("httpsPort").asInt());
 		}
 
