@@ -741,14 +741,10 @@ type CommonServerPropertiesV40 struct {
 	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-func (s ServerV40) GetCommonServerPropertiesFromV4() CommonServerProperties {
-	var tx *sql.Tx
+func (s ServerV40) GetCommonServerPropertiesFromV4(tx *sql.Tx) CommonServerProperties {
 	var id int
 	var desc string
-	profileIDDescQuery := `
-		SELECT id, description from "profile" p WHERE p.name=$1
-	`
-	rows, err := tx.Query(profileIDDescQuery, (*s.Profiles)[0])
+	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (*s.Profiles)[0])
 	if err != nil {
 		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
 	}
@@ -801,13 +797,9 @@ func (s ServerV40) GetCommonServerPropertiesFromV4() CommonServerProperties {
 	}
 }
 
-func GetCommonServerPropertiesV40(id *int, properties CommonServerProperties) CommonServerPropertiesV40 {
-	var tx *sql.Tx
+func GetCommonServerPropertiesV40(id *int, properties CommonServerProperties, tx *sql.Tx) CommonServerPropertiesV40 {
 	var profileNames pq.StringArray
-	profileNameQuery := `
-		SELECT profile_names from "server_profile" sp WHERE sp.server_id=$1
-	`
-	rows, err := tx.Query(profileNameQuery, id)
+	rows, err := tx.Query("SELECT profile_names from server_profile AS sp WHERE sp.server_id=$1", id)
 	if err != nil {
 		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
 	}
@@ -1084,9 +1076,9 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 //
 // Deprecated: Traffic Ops API version 3 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerV30) UpgradeToV40() (ServerV40, error) {
+func (s ServerV30) UpgradeToV40(tx *sql.Tx) (ServerV40, error) {
 	upgraded := ServerV40{
-		CommonServerPropertiesV40: GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties),
+		CommonServerPropertiesV40: GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties, tx),
 		StatusLastUpdated:         s.StatusLastUpdated,
 	}
 	infs, err := ToInterfacesV4(s.Interfaces, s.RouterHostName, s.RouterPortName)
@@ -1103,7 +1095,7 @@ func (s ServerV30) UpgradeToV40() (ServerV40, error) {
 //
 // Deprecated: Traffic Ops API version 2 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
+func (s ServerNullableV2) UpgradeToV40(tx *sql.Tx) (ServerV40, error) {
 	ipv4IsService := false
 	if s.IPIsService != nil {
 		ipv4IsService = *s.IPIsService
@@ -1113,7 +1105,7 @@ func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
 		ipv6IsService = *s.IP6IsService
 	}
 	upgraded := ServerV40{
-		CommonServerPropertiesV40: GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties),
+		CommonServerPropertiesV40: GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties, tx),
 	}
 
 	infs, err := s.LegacyInterfaceDetails.ToInterfacesV4(ipv4IsService, ipv6IsService, s.RouterHostName, s.RouterPortName)
@@ -1189,7 +1181,7 @@ func (s *ServerV30) ToServerV2() (ServerNullableV2, error) {
 //
 // Deprecated: Traffic Ops API version 3 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
+func (s *ServerV40) ToServerV3FromV4(tx *sql.Tx) (ServerV30, error) {
 	routerHostName := ""
 	routerPortName := ""
 	interfaces := make([]ServerInterfaceInfo, 0)
@@ -1209,7 +1201,7 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 		interfaces = append(interfaces, i)
 	}
 	serverV30 := ServerV30{
-		CommonServerProperties: s.GetCommonServerPropertiesFromV4(),
+		CommonServerProperties: s.GetCommonServerPropertiesFromV4(tx),
 		Interfaces:             interfaces,
 		StatusLastUpdated:      s.StatusLastUpdated,
 	}
@@ -1226,12 +1218,12 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 //
 // Deprecated: Traffic Ops API version 2 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
+func (s *ServerV40) ToServerV2FromV4(tx *sql.Tx) (ServerNullableV2, error) {
 	routerHostName := ""
 	routerPortName := ""
 	legacyServer := ServerNullableV2{
 		ServerNullableV11: ServerNullableV11{
-			CommonServerProperties: s.GetCommonServerPropertiesFromV4(),
+			CommonServerProperties: s.GetCommonServerPropertiesFromV4(tx),
 		},
 		IPIsService:  new(bool),
 		IP6IsService: new(bool),
