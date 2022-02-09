@@ -86,7 +86,7 @@ func GetTrafficRouterDetails(t *testing.T) []TRDetails {
 		var ipAddresses []string
 		for _, serverInterface := range trafficRouter.Interfaces {
 			if !serverInterface.Monitor {
-				log.Warnf("skipping server interface %s of Traffic Router %s because it is unmonitored", serverInterface.Name, *trafficRouter.HostName)
+				log.Warnf("skipping server interface %s of Traffic Router %s because it is unmonitored\n", serverInterface.Name, *trafficRouter.HostName)
 				continue
 			}
 			ipv4, ipv6 := serverInterface.GetDefaultAddress()
@@ -98,13 +98,13 @@ func GetTrafficRouterDetails(t *testing.T) []TRDetails {
 			}
 		}
 		if len(ipAddresses) < 1 {
-			log.Warnf("need at least 1 monitored service address on an interface of Traffic Router '%s' to use it for benchmarks, but %d such addresses were found", *trafficRouter.HostName, len(ipAddresses))
+			log.Warnf("need at least 1 monitored service address on an interface of Traffic Router '%s' to use it for benchmarks, but %d such addresses were found\n", *trafficRouter.HostName, len(ipAddresses))
 			continue
 		}
 		dsTypeName := tc.DSTypeHTTP
 		httpDSes := getDSes(t, *trafficRouter.CDNID, dsTypeName, tc.DeliveryServiceName(*DeliveryServiceName))
 		if len(httpDSes) < 1 {
-			log.Warnf("at least 1 Delivery Service with type '%s' is required to run HTTP load tests on Traffic Router '%s', but %d were found", dsTypeName, *trafficRouter.HostName, len(httpDSes))
+			log.Warnf("at least 1 Delivery Service with type '%s' is required to run HTTP load tests on Traffic Router '%s', but %d were found\n", dsTypeName, *trafficRouter.HostName, len(httpDSes))
 		}
 		dsURL, err := url.Parse(httpDSes[0].ExampleURLs[0])
 		if err != nil {
