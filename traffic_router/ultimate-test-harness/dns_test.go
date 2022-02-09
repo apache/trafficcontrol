@@ -123,7 +123,7 @@ func (b DNSBenchmark) Run(t *testing.T, answersChannel chan int, failuresChannel
 }
 
 func TestDNSLoad(t *testing.T) {
-	var trafficRouterDetails []TRDetails = GetTrafficRouterDetails(t)
+	var trafficRouterDetails = GetTrafficRouterDetails(t)
 
 	benchmark := DNSBenchmark{Benchmark{
 		RequestsPerSecondThreshold: *DNSRequestsPerSecondThreshold,
