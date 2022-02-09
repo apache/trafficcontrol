@@ -29,5 +29,8 @@
 		"strictTemplates": true,
 		"strictInputTypes": true,
 		"strictNullInputTypes": false
-	}
+	},
+	"exclude": [
+		"src/app/testing/*.ts"
+	]
 }

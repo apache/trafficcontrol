@@ -14,9 +14,9 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { CacheGroup } from "src/app/models";
-import { APIService } from "./APIService";
+import type { CacheGroup } from "src/app/models";
 
+import { APIService } from "./base-api.service";
 
 /**
  * CDNService expose API functionality relating to CDNs.
@@ -90,11 +90,6 @@ export class CacheGroupService extends APIService {
 		);
 	}
 
-	/**
-	 * Injects the Angular HTTP client service into the parent constructor.
-	 *
-	 * @param http The Angular HTTP client service.
-	 */
 	constructor(http: HttpClient) {
 		super(http);
 	}

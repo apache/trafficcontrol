@@ -14,26 +14,40 @@
 import { TestBed } from "@angular/core/testing";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+
 import { AuthenticatedGuard } from "./authenticated-guard.service";
 
-describe("AuthenticationGuard", () => {
+describe("AuthenticatedGuard", () => {
 	let guard: AuthenticatedGuard;
+	let mockCurrentUserService: jasmine.SpyObj<CurrentUserService>;
+	let authPasses: boolean;
 
 	beforeEach(() => {
-		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		mockCurrentUserService = jasmine.createSpyObj(["fetchCurrentUser"]);
+		mockCurrentUserService.fetchCurrentUser.and.callFake(async ()=>authPasses);
 		TestBed.configureTestingModule({
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 				AuthenticatedGuard
 			]
 		});
-	});
-
-	beforeEach(() => {
+		authPasses = true;
 		guard = TestBed.inject(AuthenticatedGuard);
 	});
 
 	it("should be created", () => {
 		expect(guard).toBeTruthy();
+	});
+
+	it("checks activation criteria", async () => {
+		expect(await guard.canActivate()).toBeTrue();
+		authPasses = false;
+		expect(await guard.canActivate()).toBeFalse();
+	});
+
+	it("checks load criteria", async () => {
+		expect(await guard.canLoad()).toBeTrue();
+		authPasses = false;
+		expect(await guard.canLoad()).toBeFalse();
 	});
 });

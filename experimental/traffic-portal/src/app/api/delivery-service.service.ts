@@ -15,18 +15,19 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
 import {
-	DataPoint,
-	DataSet,
-	DataSetWithSummary,
+	type DataPoint,
+	type DataSet,
+	type DataSetWithSummary,
 	defaultDeliveryService,
-	DeliveryService,
-	DSCapacity,
-	DSHealth,
-	InvalidationJob,
-	TPSData,
-	Type
-} from "../../models";
-import { APIService } from "./APIService";
+	type DeliveryService,
+	type DSCapacity,
+	type DSHealth,
+	type InvalidationJob,
+	type TPSData,
+	type Type
+} from "src/app/models";
+
+import { APIService } from "./base-api.service";
 
 /**
  * The type of a raw response returned from the API that has to be massaged
@@ -211,12 +212,9 @@ export class DeliveryServiceService extends APIService {
 	 * @param ds The new Delivery Service object
 	 * @returns A boolean value indicating the success of the operation
 	 */
-	public async createDeliveryService(ds: DeliveryService): Promise<boolean> {
+	public async createDeliveryService(ds: DeliveryService): Promise<DeliveryService> {
 		const path = "deliveryservices";
-		return this.post<DeliveryService>(path, ds).toPromise().then(
-			() => true,
-			() => false
-		);
+		return this.post<DeliveryService>(path, ds).toPromise();
 	}
 
 	/**

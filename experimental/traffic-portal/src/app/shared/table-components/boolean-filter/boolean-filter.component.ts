@@ -40,7 +40,7 @@ export class BooleanFilterComponent implements AgFilterComponent {
 	public value = false;
 
 	/** Initialization parameters. */
-	private params: IFilterParams = null as unknown as IFilterParams;
+	private params!: IFilterParams;
 
 	/**
 	 * Called by AG-Grid to check if the filter is in effect.
@@ -71,14 +71,12 @@ export class BooleanFilterComponent implements AgFilterComponent {
 		switch (input) {
 			case "should":
 				if (event !== this.shouldFilter) {
-					console.log("setting should filter:", event);
 					this.shouldFilter = event;
 					this.params.filterChangedCallback();
 				}
 				break;
 			case "value":
 				if (event !== this.value) {
-					console.log("setting filter value:", event);
 					this.value = event;
 					this.params.filterChangedCallback();
 				}

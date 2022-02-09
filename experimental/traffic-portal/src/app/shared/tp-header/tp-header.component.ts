@@ -12,8 +12,9 @@
 * limitations under the License.
 */
 import { Component, Input, OnInit } from "@angular/core";
-import { UserService } from "src/app/shared/api";
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
+
+import { UserService } from "src/app/api";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -29,11 +30,6 @@ export class TpHeaderComponent implements OnInit {
 	 * The set of permissions available to the authenticated user.
 	 */
 	public permissions = new Set<string>();
-
-	/**
-	 * Holds a continuous subscription for the current user's permissions, in case they change.
-	 */
-	// private permissionSubscription: Subscription | undefined;
 
 	/**
 	 * The title to be used in the header.
@@ -55,14 +51,10 @@ export class TpHeaderComponent implements OnInit {
 	 * Handles when the user clicks the "Logout" button by using the API to
 	 * invalidate their session before redirecting them to the login page.
 	 */
-	public logout(): void {
-		this.api.logout().then(
-			r => {
-				if (!r) {
-					console.warn("Failed to log out - clearing user data anyway!");
-				}
-				this.auth.logout();
-			}
-		);
+	public async logout(): Promise<void> {
+		if (!(await this.api.logout())) {
+			console.warn("Failed to log out - clearing user data anyway!");
+		}
+		this.auth.logout();
 	}
 }
