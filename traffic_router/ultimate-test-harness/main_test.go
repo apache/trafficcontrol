@@ -56,8 +56,8 @@ var ThreadCount *int
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
-	IPv4Only = flag.Bool("4", false, "test IPv4 addresses only")
-	IPv6Only = flag.Bool("6", false, "test IPv4 addresses only")
+	IPv4Only = flag.Bool("ipv4only", false, "test IPv4 addresses only")
+	IPv6Only = flag.Bool("ipv6only", false, "test IPv4 addresses only")
 	CDNName = flag.String("cdn", "", "the name of a CDN to search for Delivery Services")
 	DeliveryServiceName = flag.String("ds", "", "the name (XMLID) of a Delivery Service to use for tests")
 	TrafficRouterName = flag.String("hostname", "", "the hostname of a Traffic Router to use")
