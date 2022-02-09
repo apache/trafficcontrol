@@ -104,7 +104,8 @@ func GetTrafficRouterDetails(t *testing.T) []TRDetails {
 		dsTypeName := tc.DSTypeHTTP
 		httpDSes := getDSes(t, *trafficRouter.CDNID, dsTypeName, tc.DeliveryServiceName(*DeliveryServiceName))
 		if len(httpDSes) < 1 {
-			log.Warnf("at least 1 Delivery Service with type '%s' is required to run HTTP load tests on Traffic Router '%s', but %d were found\n", dsTypeName, *trafficRouter.HostName, len(httpDSes))
+			t.Error("at least 1 Delivery Service with type '%s' is required to run HTTP load tests on Traffic Router '%s', but %d were found", dsTypeName, *trafficRouter.HostName, len(httpDSes))
+			continue
 		}
 		dsURL, err := url.Parse(httpDSes[0].ExampleURLs[0])
 		if err != nil {
