@@ -41,22 +41,21 @@ func RunDNSBenchmarksAgainstTrafficRouters(t *testing.T, benchmark DNSBenchmark)
 	fmt.Printf("Passing criteria: Routing at least %d requests per second\n", benchmark.RequestsPerSecondThreshold)
 	writer := tabwriter.NewWriter(os.Stdout, 20, 8, 1, '\t', tabwriter.AlignRight)
 	fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", "Traffic Router", "Protocol", "Delivery Service", "Passed?", "Requests Per Second", "Answers", "Failures")
-	for trafficRouterIndex, _ := range benchmark.TrafficRouters {
-		trafficRouter := &benchmark.TrafficRouters[trafficRouterIndex]
-		if trafficRouter.DSHost[len(trafficRouter.DSHost)-1] != '.' {
-			trafficRouter.DSHost += "."
+	for trafficRouterIndex, trafficRouter := range benchmark.TrafficRouters {
+		if (*trafficRouter).DSHost[len((*trafficRouter).DSHost)-1] != '.' {
+			(*trafficRouter).DSHost += "."
 		}
-		for ipAddressIndex, ipAddress := range trafficRouter.IPAddresses {
+		for ipAddressIndex, ipAddress := range (*trafficRouter).IPAddresses {
 			isIPv4 := strings.Contains(ipAddress, ".")
-			if trafficRouter.ClientIP == "" && trafficRouter.ClientIPAddressMap.Zones != nil {
+			if (*trafficRouter).ClientIP == "" && (*trafficRouter).ClientIPAddressMap.Zones != nil {
 				if benchmark.CoverageZoneLocation != "" {
-					location := trafficRouter.ClientIPAddressMap.Map[benchmark.CoverageZoneLocation]
-					trafficRouter.ClientIP = location.GetFirstIPAddressOfType(isIPv4)
+					location := (*trafficRouter).ClientIPAddressMap.Map[benchmark.CoverageZoneLocation]
+					(*trafficRouter).ClientIP = location.GetFirstIPAddressOfType(isIPv4)
 				}
-				if trafficRouter.ClientIP == "" {
-					for _, location := range trafficRouter.ClientIPAddressMap.Map {
-						trafficRouter.ClientIP = location.GetFirstIPAddressOfType(isIPv4)
-						if trafficRouter.ClientIP != "" {
+				if (*trafficRouter).ClientIP == "" {
+					for _, location := range (*trafficRouter).ClientIPAddressMap.Map {
+						(*trafficRouter).ClientIP = location.GetFirstIPAddressOfType(isIPv4)
+						if (*trafficRouter).ClientIP != "" {
 							break
 						}
 					}
@@ -89,7 +88,7 @@ func RunDNSBenchmarksAgainstTrafficRouters(t *testing.T, benchmark DNSBenchmark)
 				failedTests++
 				passed = "No"
 			}
-			fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%d\t%d\t%d\n", trafficRouter.Hostname, protocol, trafficRouter.DSHost, passed, requestsPerSecond, answers, failures)
+			fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%d\t%d\t%d\n", (*trafficRouter).Hostname, protocol, (*trafficRouter).DSHost, passed, requestsPerSecond, answers, failures)
 			writer.Flush()
 		}
 	}

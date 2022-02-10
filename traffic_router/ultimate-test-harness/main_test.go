@@ -38,7 +38,7 @@ type Benchmark struct {
 	BenchmarkSeconds           int
 	ThreadCount                int
 	DSType                     tc.Type
-	TrafficRouters             []TRDetails
+	TrafficRouters             []*TRDetails
 	CoverageZoneLocation       string
 }
 
@@ -71,9 +71,9 @@ func init() {
 	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
 }
 
-func GetTrafficRouterDetails(t *testing.T) []TRDetails {
+func GetTrafficRouterDetails(t *testing.T) []*TRDetails {
 	var err error
-	var trafficRouterDetails []TRDetails
+	var trafficRouterDetails []*TRDetails
 
 	ipAddressMaps := map[tc.CDNName]IPAddressMap{}
 
@@ -135,7 +135,7 @@ func GetTrafficRouterDetails(t *testing.T) []TRDetails {
 			}
 			singleTrafficRouterDetails.ClientIPAddressMap = ipAddressMaps[cdnName]
 		}
-		trafficRouterDetails = append(trafficRouterDetails, singleTrafficRouterDetails)
+		trafficRouterDetails = append(trafficRouterDetails, &singleTrafficRouterDetails)
 	}
 	if len(trafficRouterDetails) < 1 {
 		t.Fatalf("no Traffic Router with at least 1 HTTP Delivery Service and at least 1 monitored service address was found")
