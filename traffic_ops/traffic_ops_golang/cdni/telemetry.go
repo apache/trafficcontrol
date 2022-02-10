@@ -20,20 +20,18 @@ package cdni
  */
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/lib/pq"
-
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-func GetTelemetries(inf *api.APIInfo, ucdn string) (Capabilities, error) {
+func getTelemetries(inf *api.APIInfo, ucdn string) (Capabilities, error) {
 	capRows, err := inf.Tx.Tx.Query(CapabilityQuery, FciTelemetry, ucdn)
 	if err != nil {
 		return Capabilities{}, fmt.Errorf("querying capabilities: %w", err)
 	}
-	defer capRows.Close()
+	defer log.Close(capRows, "closing capabilities query")
 	capabilities := []CapabilityQueryResponse{}
 	for capRows.Next() {
 		var capability CapabilityQueryResponse
@@ -43,56 +41,40 @@ func GetTelemetries(inf *api.APIInfo, ucdn string) (Capabilities, error) {
 		capabilities = append(capabilities, capability)
 	}
 
+	footprintMap, err := getFootprintMap(inf.Tx.Tx)
+	if err != nil {
+		return Capabilities{}, err
+	}
+
+	telemetryMap, err := getTelemetriesMap(inf.Tx.Tx)
+	if err != nil {
+		return Capabilities{}, err
+	}
+
+	telemetryMetricMap, err := getTelemetryMetricsMap(inf.Tx.Tx)
+	if err != nil {
+		return Capabilities{}, err
+	}
+
 	fciCaps := Capabilities{}
 
 	for _, cap := range capabilities {
 		fciCap := Capability{}
-		footRows, err := inf.Tx.Tx.Query(FootprintQuery, cap.Id)
-		if err != nil {
-			return Capabilities{}, fmt.Errorf("querying footprints: %w", err)
+		fciCap.Footprints = footprintMap[cap.Id]
+		if fciCap.Footprints == nil {
+			fciCap.Footprints = []Footprint{}
 		}
-		defer footRows.Close()
-		footprints := []Footprint{}
-		for footRows.Next() {
-			var footprint Footprint
-			if err := footRows.Scan(&footprint.FootprintType, pq.Array(&footprint.FootprintValue)); err != nil {
-				return Capabilities{}, fmt.Errorf("scanning db rows: %w", err)
-			}
-			footprints = append(footprints, footprint)
-		}
-
-		fciCap.Footprints = footprints
-
-		rows, err := inf.Tx.Tx.Query(`SELECT id, type FROM cdni_telemetry WHERE capability_id = $1`, cap.Id)
-		if err != nil {
-			return Capabilities{}, errors.New("querying cdni telemetry: " + err.Error())
-		}
-		defer rows.Close()
 		returnList := []Telemetry{}
-		telemetryList := []Telemetry{}
-		for rows.Next() {
-			telemetry := Telemetry{}
-			if err := rows.Scan(&telemetry.Id, &telemetry.Type); err != nil {
-				return Capabilities{}, errors.New("scanning telemetry: " + err.Error())
-			}
-			telemetryList = append(telemetryList, telemetry)
+		telemetryList := telemetryMap[cap.Id]
+		if telemetryList == nil {
+			telemetryList = []Telemetry{}
 		}
 
 		for _, t := range telemetryList {
-			tmRows, err := inf.Tx.Tx.Query(`SELECT name, time_granularity, data_percentile, latency FROM cdni_telemetry_metrics WHERE telemetry_id = $1`, t.Id)
-			if err != nil {
-				return Capabilities{}, errors.New("querying cdni telemetry metrics: " + err.Error())
+			telemetryMetricsList := telemetryMetricMap[t.Id]
+			if telemetryMetricsList == nil {
+				telemetryMetricsList = []Metric{}
 			}
-			defer tmRows.Close()
-			telemetryMetricsList := []Metric{}
-			for tmRows.Next() {
-				metric := Metric{}
-				if err := tmRows.Scan(&metric.Name, &metric.TimeGranularity, &metric.DataPercentile, &metric.Latency); err != nil {
-					return Capabilities{}, errors.New("scanning telemetry metric: " + err.Error())
-				}
-				telemetryMetricsList = append(telemetryMetricsList, metric)
-			}
-
 			t.Metrics = telemetryMetricsList
 			returnList = append(returnList, t)
 		}
@@ -102,7 +84,7 @@ func GetTelemetries(inf *api.APIInfo, ucdn string) (Capabilities, error) {
 			CapabilityValue: TelemetryCapabilityValue{
 				Sources: returnList,
 			},
-			Footprints: footprints,
+			Footprints: fciCap.Footprints,
 		}
 
 		fciCaps.Capabilities = append(fciCaps.Capabilities, telemetry)

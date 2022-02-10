@@ -132,7 +132,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		 */
 
 		// CDNI integration
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `OC/FCI/advertisement/?$`, cdni.GetCapabilities, auth.PrivLevelReadOnly, []string{"CDNI-CAPACITY:READ"}, Authenticated, nil, 541357729077},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `OC/FCI/advertisement/?$`, Handler: cdni.GetCapabilities, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729077},
 
 		// SSL Keys
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `sslkey_expirations/?$`, deliveryservice.GetSSlKeyExpirationInformation, auth.PrivLevelAdmin, []string{"SSL-KEY-EXPIRATION:READ"}, Authenticated, nil, 41357729075},

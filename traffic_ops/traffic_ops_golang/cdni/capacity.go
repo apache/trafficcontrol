@@ -22,20 +22,16 @@ package cdni
 import (
 	"fmt"
 
-	"github.com/lib/pq"
-
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-const totalLimitsQuery = `SELECT limit_type, maximum_hard, maximum_soft, ctl.telemetry_id, ctl.telemetry_metric, t.id, t.type, tm.name FROM cdni_total_limits AS ctl LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name WHERE ctl.capability_id = $1`
-const hostLimitsQuery = `SELECT limit_type, maximum_hard, maximum_soft, chl.telemetry_id, chl.telemetry_metric, t.id, t.type, tm.name, host FROM cdni_host_limits AS chl LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name WHERE chl.capability_id = $1 ORDER BY host DESC`
-
-func GetCapacities(inf *api.APIInfo, ucdn string) (Capabilities, error) {
+func getCapacities(inf *api.APIInfo, ucdn string) (Capabilities, error) {
 	capRows, err := inf.Tx.Tx.Query(CapabilityQuery, FciCapacityLimits, ucdn)
 	if err != nil {
 		return Capabilities{}, fmt.Errorf("querying capabilities: %w", err)
 	}
-	defer capRows.Close()
+	defer log.Close(capRows, "closing capabilities query")
 	capabilities := []CapabilityQueryResponse{}
 	for capRows.Next() {
 		var capability CapabilityQueryResponse
@@ -45,54 +41,36 @@ func GetCapacities(inf *api.APIInfo, ucdn string) (Capabilities, error) {
 		capabilities = append(capabilities, capability)
 	}
 
+	footprintMap, err := getFootprintMap(inf.Tx.Tx)
+	if err != nil {
+		return Capabilities{}, err
+	}
+
+	totalLimitsMap, err := getTotalLimitsMap(inf.Tx.Tx)
+	if err != nil {
+		return Capabilities{}, err
+	}
+
+	hostLimitsMap, err := getHostLimitsMap(inf.Tx.Tx)
+	if err != nil {
+		return Capabilities{}, err
+	}
+
 	fciCaps := Capabilities{}
 
 	for _, cap := range capabilities {
 		fciCap := Capability{}
-		footRows, err := inf.Tx.Tx.Query(FootprintQuery, cap.Id)
-		if err != nil {
-			return Capabilities{}, fmt.Errorf("querying footprints: %w", err)
+		fciCap.Footprints = footprintMap[cap.Id]
+		if fciCap.Footprints == nil {
+			fciCap.Footprints = []Footprint{}
 		}
-		defer footRows.Close()
-		footprints := []Footprint{}
-		for footRows.Next() {
-			var footprint Footprint
-			if err := footRows.Scan(&footprint.FootprintType, pq.Array(&footprint.FootprintValue)); err != nil {
-				return Capabilities{}, fmt.Errorf("scanning db rows: %w", err)
-			}
-			footprints = append(footprints, footprint)
+		totalLimits := totalLimitsMap[cap.Id]
+		if totalLimits == nil {
+			totalLimits = []TotalLimitsQueryResponse{}
 		}
-
-		fciCap.Footprints = footprints
-
-		tlRows, err := inf.Tx.Tx.Query(totalLimitsQuery, cap.Id)
-		if err != nil {
-			return Capabilities{}, fmt.Errorf("querying total limits: %w", err)
-		}
-
-		defer tlRows.Close()
-		totalLimits := []TotalLimitsQueryResponse{}
-		for tlRows.Next() {
-			var totalLimit TotalLimitsQueryResponse
-			if err := tlRows.Scan(&totalLimit.LimitType, &totalLimit.MaximumHard, &totalLimit.MaximumSoft, &totalLimit.TelemetryId, &totalLimit.TelemetryMetic, &totalLimit.Id, &totalLimit.Type, &totalLimit.Name); err != nil {
-				return Capabilities{}, fmt.Errorf("scanning db rows: %w", err)
-			}
-			totalLimits = append(totalLimits, totalLimit)
-		}
-
-		hlRows, err := inf.Tx.Tx.Query(hostLimitsQuery, cap.Id)
-		if err != nil {
-			return Capabilities{}, fmt.Errorf("querying host limits: %w", err)
-		}
-
-		defer hlRows.Close()
-		hostLimits := []HostLimitsResponse{}
-		for hlRows.Next() {
-			var hostLimit HostLimitsResponse
-			if err := hlRows.Scan(&hostLimit.LimitType, &hostLimit.MaximumHard, &hostLimit.MaximumSoft, &hostLimit.TelemetryId, &hostLimit.TelemetryMetic, &hostLimit.Id, &hostLimit.Type, &hostLimit.Name, &hostLimit.Host); err != nil {
-				return Capabilities{}, fmt.Errorf("scanning db rows: %w", err)
-			}
-			hostLimits = append(hostLimits, hostLimit)
+		hostLimits := hostLimitsMap[cap.Id]
+		if hostLimits == nil {
+			hostLimits = []HostLimitsResponse{}
 		}
 
 		returnedTotalLimits := []Limit{}
@@ -155,7 +133,7 @@ func GetCapacities(inf *api.APIInfo, ucdn string) (Capabilities, error) {
 }
 
 type CapabilityQueryResponse struct {
-	Id   int64  `json:"id" db:"id"`
+	Id   int    `json:"id" db:"id"`
 	Type string `json:"type" db:"type"`
 	UCdn string `json:"ucdn" db:"ucdn"`
 }
@@ -170,6 +148,7 @@ type TotalLimitsQueryResponse struct {
 	Id             string `json:"id" db:"id"`
 	Type           string `json:"type" db:"type"`
 	Name           string `json:"name" db:"name"`
+	CapabilityId   int    `json:"-"`
 }
 type HostLimitsResponse struct {
 	Host string `json:"host" db:"host"`

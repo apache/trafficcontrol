@@ -20,17 +20,34 @@ package cdni
  */
 
 import (
+	"database/sql"
 	"errors"
+	"fmt"
+	"github.com/lib/pq"
 	"net/http"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
-
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 const CapabilityQuery = `SELECT id, type, ucdn FROM cdni_capabilities WHERE type = $1 AND ucdn = $2`
-const FootprintQuery = `SELECT footprint_type, footprint_value::text[] FROM cdni_footprints WHERE capability_id = $1`
+const AllFootprintQuery = `SELECT footprint_type, footprint_value::text[], capability_id FROM cdni_footprints`
+
+const totalLimitsQuery = `
+SELECT limit_type, maximum_hard, maximum_soft, ctl.telemetry_id, ctl.telemetry_metric, t.id, t.type, tm.name, ctl.capability_id 
+FROM cdni_total_limits AS ctl 
+LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id 
+LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name`
+
+const hostLimitsQuery = `
+SELECT limit_type, maximum_hard, maximum_soft, chl.telemetry_id, chl.telemetry_metric, t.id, t.type, tm.name, host, chl.capability_id 
+FROM cdni_host_limits AS chl 
+LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id 
+LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name 
+ORDER BY host DESC`
 
 func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -41,6 +58,10 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	bearerToken := r.Header.Get("Authorization")
+	if bearerToken == "" {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("bearer token header is required"), nil)
+		return
+	}
 
 	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
@@ -52,7 +73,7 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 		return []byte(inf.Config.Cdni.JwtDecodingSecret), nil
 	})
 	if err != nil {
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, errors.New("parsing claims"), nil)
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, fmt.Errorf("parsing claims: %w", err), nil)
 		return
 	}
 	if !token.Valid {
@@ -66,10 +87,22 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	for key, val := range claims {
 		switch key {
 		case "iss":
+			if _, ok := val.(string); !ok {
+				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("invalid token - iss (Issuer) must be a string"), nil)
+				return
+			}
 			ucdn = val.(string)
 		case "aud":
+			if _, ok := val.(string); !ok {
+				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("invalid token - aud (Audience) must be a string"), nil)
+				return
+			}
 			dcdn = val.(string)
 		case "exp":
+			if _, ok := val.(float64); !ok {
+				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("invalid token - exp (Expiration) must be a float64"), nil)
+				return
+			}
 			expirationFloat = val.(float64)
 		}
 	}
@@ -81,34 +114,159 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if dcdn != inf.Config.Cdni.DCdnId {
-		api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("invalid token"), nil)
+		api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("invalid token - incorrect dcdn"), nil)
 		return
 	}
 	if ucdn == "" {
-		api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("invalid token"), nil)
+		api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("invalid token - empty ucdn field"), nil)
 		return
 	}
 
-	capacities, err := GetCapacities(inf, ucdn)
+	capacities, err := getCapacities(inf, ucdn)
 	if err != nil {
 		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
 		return
 	}
 
-	telemetries, err := GetTelemetries(inf, ucdn)
+	telemetries, err := getTelemetries(inf, ucdn)
 	if err != nil {
 		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
 		return
 	}
 
 	fciCaps := Capabilities{}
-	capsList := []Capability{}
+	capsList := make([]Capability, 0, len(capacities.Capabilities)+len(telemetries.Capabilities))
 	capsList = append(capsList, capacities.Capabilities...)
 	capsList = append(capsList, telemetries.Capabilities...)
 
 	fciCaps.Capabilities = capsList
 
 	api.WriteRespRaw(w, r, fciCaps)
+}
+
+func getFootprintMap(tx *sql.Tx) (map[int][]Footprint, error) {
+	footRows, err := tx.Query(AllFootprintQuery)
+	if err != nil {
+		return nil, fmt.Errorf("querying footprints: %w", err)
+	}
+	defer log.Close(footRows, "closing foorpint query")
+	footprintMap := map[int][]Footprint{}
+	for footRows.Next() {
+		var footprint Footprint
+		if err := footRows.Scan(&footprint.FootprintType, pq.Array(&footprint.FootprintValue), &footprint.CapabilityId); err != nil {
+			return nil, fmt.Errorf("scanning db rows: %w", err)
+		}
+		val, ok := footprintMap[footprint.CapabilityId]
+		if !ok {
+			footprintMap[footprint.CapabilityId] = []Footprint{footprint}
+		} else {
+			val = append(val, footprint)
+			footprintMap[footprint.CapabilityId] = val
+		}
+	}
+
+	return footprintMap, nil
+}
+
+func getTotalLimitsMap(tx *sql.Tx) (map[int][]TotalLimitsQueryResponse, error) {
+	tlRows, err := tx.Query(totalLimitsQuery)
+	if err != nil {
+		return nil, fmt.Errorf("querying total limits: %w", err)
+	}
+
+	defer log.Close(tlRows, "closing total capacity limits query")
+	totalLimitsMap := map[int][]TotalLimitsQueryResponse{}
+	for tlRows.Next() {
+		var totalLimit TotalLimitsQueryResponse
+		if err := tlRows.Scan(&totalLimit.LimitType, &totalLimit.MaximumHard, &totalLimit.MaximumSoft, &totalLimit.TelemetryId, &totalLimit.TelemetryMetic, &totalLimit.Id, &totalLimit.Type, &totalLimit.Name, &totalLimit.CapabilityId); err != nil {
+			return nil, fmt.Errorf("scanning db rows: %w", err)
+		}
+
+		val, ok := totalLimitsMap[totalLimit.CapabilityId]
+		if !ok {
+			totalLimitsMap[totalLimit.CapabilityId] = []TotalLimitsQueryResponse{totalLimit}
+		} else {
+			val = append(val, totalLimit)
+			totalLimitsMap[totalLimit.CapabilityId] = val
+		}
+	}
+
+	return totalLimitsMap, nil
+}
+
+func getHostLimitsMap(tx *sql.Tx) (map[int][]HostLimitsResponse, error) {
+	hlRows, err := tx.Query(hostLimitsQuery)
+	if err != nil {
+		return nil, fmt.Errorf("querying host limits: %w", err)
+	}
+
+	defer log.Close(hlRows, "closing host capacity limits query")
+	hostLimitsMap := map[int][]HostLimitsResponse{}
+	for hlRows.Next() {
+		var hostLimit HostLimitsResponse
+		if err := hlRows.Scan(&hostLimit.LimitType, &hostLimit.MaximumHard, &hostLimit.MaximumSoft, &hostLimit.TelemetryId, &hostLimit.TelemetryMetic, &hostLimit.Id, &hostLimit.Type, &hostLimit.Name, &hostLimit.Host, &hostLimit.CapabilityId); err != nil {
+			return nil, fmt.Errorf("scanning db rows: %w", err)
+		}
+		val, ok := hostLimitsMap[hostLimit.CapabilityId]
+		if !ok {
+			hostLimitsMap[hostLimit.CapabilityId] = []HostLimitsResponse{hostLimit}
+		} else {
+			val = append(val, hostLimit)
+			hostLimitsMap[hostLimit.CapabilityId] = val
+		}
+	}
+
+	return hostLimitsMap, nil
+}
+
+func getTelemetriesMap(tx *sql.Tx) (map[int][]Telemetry, error) {
+	rows, err := tx.Query(`SELECT id, type, capability_id FROM cdni_telemetry`)
+	if err != nil {
+		return nil, errors.New("querying cdni telemetry: " + err.Error())
+	}
+	defer log.Close(rows, "closing telemetry query")
+
+	telemetryMap := map[int][]Telemetry{}
+	for rows.Next() {
+		telemetry := Telemetry{}
+		if err := rows.Scan(&telemetry.Id, &telemetry.Type, &telemetry.CapabilityId); err != nil {
+			return nil, errors.New("scanning telemetry: " + err.Error())
+		}
+		val, ok := telemetryMap[telemetry.CapabilityId]
+		if !ok {
+			telemetryMap[telemetry.CapabilityId] = []Telemetry{telemetry}
+		} else {
+			val = append(val, telemetry)
+			telemetryMap[telemetry.CapabilityId] = val
+		}
+	}
+
+	return telemetryMap, nil
+}
+
+func getTelemetryMetricsMap(tx *sql.Tx) (map[string][]Metric, error) {
+	tmRows, err := tx.Query(`SELECT name, time_granularity, data_percentile, latency, telemetry_id FROM cdni_telemetry_metrics`)
+	if err != nil {
+		return nil, errors.New("querying cdni telemetry metrics: " + err.Error())
+	}
+	defer log.Close(tmRows, "closing telemetry metrics query")
+
+	telemetryMetricMap := map[string][]Metric{}
+	for tmRows.Next() {
+		metric := Metric{}
+		if err := tmRows.Scan(&metric.Name, &metric.TimeGranularity, &metric.DataPercentile, &metric.Latency, &metric.TelemetryId); err != nil {
+			return nil, errors.New("scanning telemetry metric: " + err.Error())
+		}
+		val, ok := telemetryMetricMap[metric.TelemetryId]
+		if !ok {
+			telemetryMetricMap[metric.TelemetryId] = []Metric{metric}
+		} else {
+			val = append(val, metric)
+			telemetryMetricMap[metric.TelemetryId] = val
+		}
+	}
+
+	return telemetryMetricMap, nil
 }
 
 type Capabilities struct {
@@ -148,9 +306,10 @@ type TelemetryCapabilityValue struct {
 }
 
 type Telemetry struct {
-	Id      string              `json:"id"`
-	Type    TelemetrySourceType `json:"type"`
-	Metrics []Metric            `json:"metrics"`
+	Id           string              `json:"id"`
+	Type         TelemetrySourceType `json:"type"`
+	CapabilityId int                 `json:"-"`
+	Metrics      []Metric            `json:"metrics"`
 }
 
 type Metric struct {
@@ -158,11 +317,13 @@ type Metric struct {
 	TimeGranularity int    `json:"time-granularity"`
 	DataPercentile  int    `json:"data-percentile"`
 	Latency         int    `json:"latency"`
+	TelemetryId     string `json:"-"`
 }
 
 type Footprint struct {
 	FootprintType  FootprintType `json:"footprint-type" db:"footprint_type"`
 	FootprintValue []string      `json:"footprint-value" db:"footprint_value"`
+	CapabilityId   int           `json:"-"`
 }
 
 type CapacityLimitType string

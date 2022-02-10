@@ -37,7 +37,11 @@ Request Structure
 	|    Name         | Description                                                                                                                  |
 	+=================+==============================================================================================================================+
 	|  Authorization  | A :abbr:`JWT (JSON Web Token)` provided by the :abbr:`dCDN (Downstream Content Delivery Network)` to identify the            |
-	|                 | :abbr:`uCDN (Upstream Content Delivery Network)`                                                                             |
+	|                 | :abbr:`uCDN (Upstream Content Delivery Network)`. This token must include the following claims:                              |
+	|                 |                                                                                                                              |
+	|                 | - ``iss`` Issuer claim as a string key for the :abbr:`uCDN (Upstream Content Delivery Network)`                              |
+	|                 | - ``aud`` Audience claim as a string key for the :abbr:`dCDN (Downstream Content Delivery Network)`                          |
+	|                 | - ``exp`` Expiration claim as the expiration date as a Unix epoch timestamp (in seconds)                                     |
 	+-----------------+------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
