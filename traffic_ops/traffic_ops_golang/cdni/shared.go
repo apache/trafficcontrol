@@ -156,13 +156,8 @@ func getFootprintMap(tx *sql.Tx) (map[int][]Footprint, error) {
 		if err := footRows.Scan(&footprint.FootprintType, pq.Array(&footprint.FootprintValue), &footprint.CapabilityId); err != nil {
 			return nil, fmt.Errorf("scanning db rows: %w", err)
 		}
-		val, ok := footprintMap[footprint.CapabilityId]
-		if !ok {
-			footprintMap[footprint.CapabilityId] = []Footprint{footprint}
-		} else {
-			val = append(val, footprint)
-			footprintMap[footprint.CapabilityId] = val
-		}
+
+		footprintMap[footprint.CapabilityId] = append(footprintMap[footprint.CapabilityId], footprint)
 	}
 
 	return footprintMap, nil
@@ -182,13 +177,7 @@ func getTotalLimitsMap(tx *sql.Tx) (map[int][]TotalLimitsQueryResponse, error) {
 			return nil, fmt.Errorf("scanning db rows: %w", err)
 		}
 
-		val, ok := totalLimitsMap[totalLimit.CapabilityId]
-		if !ok {
-			totalLimitsMap[totalLimit.CapabilityId] = []TotalLimitsQueryResponse{totalLimit}
-		} else {
-			val = append(val, totalLimit)
-			totalLimitsMap[totalLimit.CapabilityId] = val
-		}
+		totalLimitsMap[totalLimit.CapabilityId] = append(totalLimitsMap[totalLimit.CapabilityId], totalLimit)
 	}
 
 	return totalLimitsMap, nil
@@ -207,13 +196,8 @@ func getHostLimitsMap(tx *sql.Tx) (map[int][]HostLimitsResponse, error) {
 		if err := hlRows.Scan(&hostLimit.LimitType, &hostLimit.MaximumHard, &hostLimit.MaximumSoft, &hostLimit.TelemetryId, &hostLimit.TelemetryMetic, &hostLimit.Id, &hostLimit.Type, &hostLimit.Name, &hostLimit.Host, &hostLimit.CapabilityId); err != nil {
 			return nil, fmt.Errorf("scanning db rows: %w", err)
 		}
-		val, ok := hostLimitsMap[hostLimit.CapabilityId]
-		if !ok {
-			hostLimitsMap[hostLimit.CapabilityId] = []HostLimitsResponse{hostLimit}
-		} else {
-			val = append(val, hostLimit)
-			hostLimitsMap[hostLimit.CapabilityId] = val
-		}
+
+		hostLimitsMap[hostLimit.CapabilityId] = append(hostLimitsMap[hostLimit.CapabilityId], hostLimit)
 	}
 
 	return hostLimitsMap, nil
@@ -232,13 +216,8 @@ func getTelemetriesMap(tx *sql.Tx) (map[int][]Telemetry, error) {
 		if err := rows.Scan(&telemetry.Id, &telemetry.Type, &telemetry.CapabilityId); err != nil {
 			return nil, errors.New("scanning telemetry: " + err.Error())
 		}
-		val, ok := telemetryMap[telemetry.CapabilityId]
-		if !ok {
-			telemetryMap[telemetry.CapabilityId] = []Telemetry{telemetry}
-		} else {
-			val = append(val, telemetry)
-			telemetryMap[telemetry.CapabilityId] = val
-		}
+
+		telemetryMap[telemetry.CapabilityId] = append(telemetryMap[telemetry.CapabilityId], telemetry)
 	}
 
 	return telemetryMap, nil
