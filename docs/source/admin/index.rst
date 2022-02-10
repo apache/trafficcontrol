@@ -52,3 +52,4 @@ Once everything is installed, you will need to configure the servers to talk to 
 	t3c/index.rst
 	traffic_vault.rst
 	quick_howto/index.rst
+	cdni.rst

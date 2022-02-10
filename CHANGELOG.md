@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
+### Added
+- Added a new Traffic Ops endpoint to `GET` capacity and telemetry data for CDNi integration.
+
 ### Fixed
 - Update traffic_portal dependencies to mitigate `npm audit` issues.
 - Fixed a cdn-in-a-box build issue when using `RHEL_VERSION=7`
