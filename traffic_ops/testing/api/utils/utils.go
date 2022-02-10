@@ -17,6 +17,9 @@ package utils
 
 import (
 	"encoding/json"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/stretchr/testify/assert"
 	"sort"
 	"testing"
 )
@@ -70,6 +73,61 @@ func Compare(t *testing.T, expected []string, alertsStrs []string) {
 				t.Errorf("\nExpected %s and \n Actual %v must match exactly", string(expectedFmt), string(errorsFmt))
 				break
 			}
+		}
+	}
+}
+
+type CkReqFunc func(*testing.T, toclientlib.ReqInf, interface{}, error)
+
+func CkRequest(c ...CkReqFunc) []CkReqFunc {
+	return c
+}
+
+func NoError() CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, err error) {
+		assert.NoError(t, err, "Expected no error, but got %v", err)
+	}
+}
+
+func HasError() CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, err error) {
+		switch resp := resp.(type) {
+		case tc.CacheGroupDetailResponse:
+			assert.Error(t, err, "Expected error - but got: %+v %+v", resp.Response, resp.Alerts)
+		case tc.CacheGroupsNullableResponse:
+			assert.Error(t, err, "Expected error - but got: %+v %+v", resp.Response, resp.Alerts)
+		case tc.Alerts:
+			assert.Error(t, err, "Expected error - but got: %+v", resp.Alerts)
+		default:
+			assert.Fail(t, "Failed to find response type")
+		}
+	}
+}
+
+func HasStatus(expectedStatus int) CkReqFunc {
+	return func(t *testing.T, reqInf toclientlib.ReqInf, _ interface{}, _ error) {
+		assert.Equal(t, expectedStatus, reqInf.StatusCode, "Expected Status Code %d, got %d", expectedStatus, reqInf.StatusCode)
+	}
+}
+
+func ResponseHasLength(expected int) CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ error) {
+		switch resp := resp.(type) {
+		case tc.CacheGroupsNullableResponse:
+			assert.Equal(t, len(resp.Response), expected, "Expected response object length %d, but got %d", expected, len(resp.Response))
+		default:
+			assert.Fail(t, "Failed to find response type")
+		}
+	}
+}
+
+func ResponseLengthGreaterOrEqual(expected int) CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ error) {
+		switch resp := resp.(type) {
+		case tc.CacheGroupsNullableResponse:
+			assert.GreaterOrEqual(t, len(resp.Response), expected, "Expected response object length %d, but got %d", expected, len(resp.Response))
+		default:
+			assert.Fail(t, "Failed to find response type")
 		}
 	}
 }
