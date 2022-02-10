@@ -26,6 +26,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const defaultMapCapacity = 8
+
 // CRStatesThreadsafe provides safe access for multiple goroutines to read a single Crstates object, with a single goroutine writer.
 // This could be made lock-free, if the performance was necessary
 // TODO add separate locks for Caches and DeliveryService maps?
@@ -36,7 +38,7 @@ type CRStatesThreadsafe struct {
 
 // NewCRStatesThreadsafe creates a new CRStatesThreadsafe object safe for multiple goroutine readers and a single writer.
 func NewCRStatesThreadsafe() CRStatesThreadsafe {
-	crs := tc.NewCRStates(8, 8)
+	crs := tc.NewCRStates(defaultMapCapacity, defaultMapCapacity)
 	return CRStatesThreadsafe{m: &sync.RWMutex{}, crStates: &crs}
 }
 
