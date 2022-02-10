@@ -236,13 +236,8 @@ func getTelemetryMetricsMap(tx *sql.Tx) (map[string][]Metric, error) {
 		if err := tmRows.Scan(&metric.Name, &metric.TimeGranularity, &metric.DataPercentile, &metric.Latency, &metric.TelemetryId); err != nil {
 			return nil, errors.New("scanning telemetry metric: " + err.Error())
 		}
-		val, ok := telemetryMetricMap[metric.TelemetryId]
-		if !ok {
-			telemetryMetricMap[metric.TelemetryId] = []Metric{metric}
-		} else {
-			val = append(val, metric)
-			telemetryMetricMap[metric.TelemetryId] = val
-		}
+
+		telemetryMetricMap[metric.TelemetryId] = append(telemetryMetricMap[metric.TelemetryId], metric)
 	}
 
 	return telemetryMetricMap, nil
