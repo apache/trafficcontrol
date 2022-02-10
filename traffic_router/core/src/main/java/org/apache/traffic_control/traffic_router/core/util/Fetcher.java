@@ -134,7 +134,16 @@ public class Fetcher {
 			connection.connect();
 
 		} catch (Exception e) {
-			LOGGER.error("Failed Http Request to " + http.getURL() + " Status " + http.getResponseCode());
+			String responseCode = "(none)";
+			try {
+				responseCode = String.valueOf(http.getResponseCode());
+
+			} catch (IOException e2) {
+				// Don't care
+				LOGGER.info("Exception during call attempt to http.getResponseCode()");
+			}
+
+			LOGGER.error("Failed Http Request to " + http.getURL() + " Status " + responseCode);
 			http.disconnect();
 		}
 
