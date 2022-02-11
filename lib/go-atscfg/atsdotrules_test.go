@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"github.com/lib/pq"
 	"strings"
 	"testing"
 
@@ -29,7 +30,7 @@ import (
 func TestMakeATSDotRules(t *testing.T) {
 	server := makeGenericServer()
 	serverProfile := "myProfile"
-	server.Profile = &serverProfile
+	server.Profiles = &pq.StringArray{serverProfile}
 
 	hdr := "myHeaderComment"
 

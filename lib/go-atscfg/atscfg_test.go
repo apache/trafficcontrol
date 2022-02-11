@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"github.com/lib/pq"
 	"strings"
 	"testing"
 
@@ -145,7 +146,6 @@ func setIPInfo(sv *Server, interfaceName string, ipAddress string, ip6Address st
 
 func makeGenericServer() *Server {
 	server := &Server{}
-	server.ProfileID = util.IntPtr(42)
 	server.CDNName = util.StrPtr("myCDN")
 	server.Cachegroup = util.StrPtr("cg0")
 	server.CachegroupID = util.IntPtr(422)
@@ -155,8 +155,7 @@ func makeGenericServer() *Server {
 	server.HTTPSPort = util.IntPtr(12443)
 	server.ID = util.IntPtr(44)
 	setIP(server, "192.168.2.1")
-	server.ProfileID = util.IntPtr(46)
-	server.Profile = util.StrPtr("serverprofile")
+	server.Profiles = &pq.StringArray{"serverprofile"}
 	server.TCPPort = util.IntPtr(80)
 	server.Type = "EDGE"
 	server.TypeID = util.IntPtr(91)
