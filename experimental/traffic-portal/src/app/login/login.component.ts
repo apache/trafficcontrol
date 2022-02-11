@@ -15,9 +15,10 @@ import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { Router, ActivatedRoute } from "@angular/router";
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
-import { ResetPasswordDialogComponent } from "./reset-password-dialog/reset-password-dialog.component";
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+
+import { ResetPasswordDialogComponent } from "./reset-password-dialog/reset-password-dialog.component";
 
 /**
  * LoginComponent is the controller for the user login form.

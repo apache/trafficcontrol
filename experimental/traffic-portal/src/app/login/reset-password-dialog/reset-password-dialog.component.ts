@@ -13,7 +13,8 @@
 */
 import { Component } from "@angular/core";
 import { MatDialogRef } from "@angular/material/dialog";
-import { UserService } from "src/app/shared/api";
+
+import { UserService } from "src/app/api";
 
 /**
  * The controller for the "reset password" dialog.

@@ -13,21 +13,20 @@
 */
 
 import { HttpClient, HttpHeaders } from "@angular/common/http";
-
-import { Observable } from "rxjs";
+import type { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-import { environment } from "../../../environments/environment";
+import { environment } from "src/environments/environment";
 
 /**
  * This is the base class from which all other API classes inherit.
  */
-export class APIService {
+export abstract class APIService {
 	/**
 	 * The API version used by the service(s) - this will be overridden by the
 	 * environment if a different API version is therein found.
 	 */
-	public apiVersion = "2.0";
+	public apiVersion = "3.0";
 
 	/**
 	 * Sends an HTTP DELETE request to the API.

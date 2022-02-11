@@ -62,6 +62,7 @@ type Config struct {
 	UseIMS                  bool                    `json:"use_ims"`
 	RoleBasedPermissions    bool                    `json:"role_based_permissions"`
 	DefaultCertificateInfo  *DefaultCertificateInfo `json:"default_certificate_info"`
+	Cdni                    *CdniConf               `json:"cdni"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -235,6 +236,11 @@ type ConfigInflux struct {
 	DSDBName    string `json:"deliveryservice_stats_db_name"`
 	CacheDBName string `json:"cache_stats_db_name"`
 	Secure      *bool  `json:"secure"`
+}
+
+type CdniConf struct {
+	DCdnId            string `json:"dcdn_id"`
+	JwtDecodingSecret string `json:"jwt_decoding_secret"`
 }
 
 // NewFakeConfig returns a fake Config struct with just enough data to view Routes.

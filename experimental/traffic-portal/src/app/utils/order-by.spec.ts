@@ -63,4 +63,25 @@ describe("orderBy", () => {
 		expect(output[1].foo).toEqual(2);
 		expect(output[2].foo).toEqual(1);
 	});
+
+	it("sorts null values to be last", ()=>{
+		let input = [{foo: 1}, {foo: -1}, {foo: null}];
+		let output = orderBy(input, "foo");
+		expect(output[0].foo).toBe(-1);
+		expect(output[1].foo).toBe(1);
+		expect(output[2].foo).toBeNull();
+
+		input = input.reverse();
+		output = orderBy(input, "foo");
+		expect(output[0].foo).toBe(-1);
+		expect(output[1].foo).toBe(1);
+		expect(output[2].foo).toBeNull();
+
+		input = [{foo: Infinity}, {foo: -Infinity}, {foo: null}, {foo: null}];
+		output = orderBy(input, "foo");
+		expect(output[0].foo).toBeNegativeInfinity();
+		expect(output[1].foo).toBePositiveInfinity();
+		expect(output[2].foo).toBeNull();
+		expect(output[3].foo).toBeNull();
+	});
 });

@@ -12,22 +12,21 @@
 * limitations under the License.
 */
 
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-import { ITooltipParams } from "ag-grid-community";
-
+import type { ITooltipParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 
-import { Interface, Server } from "../../../models/server";
-import { ServerService } from "../../../shared/api";
-import { IPV4, serviceInterface } from "../../../utils";
-import { ContextMenuActionEvent, ContextMenuItem } from "../../../shared/generic-table/generic-table.component";
+import { ServerService } from "src/app/api";
+import type { Interface, Server } from "src/app/models";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { IPV4, serviceInterface } from "src/app/utils";
 
 /**
  * AugmentedServer has fields that give direct access to its service addresses without needing to recalculate them.
  */
-interface AugmentedServer extends Server {
+export interface AugmentedServer extends Server {
 	/** The server's IPv4 service address */
 	ipv4Address: string;
 	/** The server's IPv6 service address */
@@ -40,7 +39,7 @@ interface AugmentedServer extends Server {
  * @param s The server to convert.
  * @returns The converted server.
  */
-function augment(s: Server): AugmentedServer {
+export function augment(s: Server): AugmentedServer {
 	const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
 	let inf: Interface;
 	try {
@@ -74,7 +73,7 @@ function augment(s: Server): AugmentedServer {
  * @param data The server to check.
  * @returns Whether or not 'data' is a Cache Server.
  */
-function serverIsCache(data: AugmentedServer): boolean {
+export function serverIsCache(data: AugmentedServer): boolean {
 	if (!data || !data.type) {
 		return false;
 	}
@@ -358,13 +357,8 @@ export class ServersTableComponent implements OnInit {
 	}
 
 	/** Reloads the servers table data. */
-	private reloadServers(): void {
-		this.servers = this.api.getServers().then(x=>x.map(augment)).catch(
-			e => {
-				console.error("Failed to reload servers:", e);
-				return [];
-			}
-		);
+	private async reloadServers(): Promise<void> {
+		this.servers = this.api.getServers().then(ss=>ss.map(augment));
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
@@ -377,37 +371,31 @@ export class ServersTableComponent implements OnInit {
 	 *
 	 * @param action The emitted context menu action event.
 	 */
-	public handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): void {
-		let observables;
+	public async handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): Promise<void> {
 		switch (action.action) {
 			case "viewDetails":
-				this.router.navigate(["/core/server", (action.data as AugmentedServer).id]);
+				if (action.data instanceof Array) {
+					throw new Error("'viewDetails' is a single-row action, but was called with multiple rows");
+				}
+				this.router.navigate(["/core/server", action.data.id]);
 				break;
 			case "updateStatus":
-				console.log("'Update Status' clicked - not yet implemented");
 				this.changeStatusServers = action.data instanceof Array ? action.data : [action.data];
 				this.changeStatusOpen = true;
 				break;
 			case "queue":
-				observables = (action.data as Array<AugmentedServer>).map(async s=>this.api.queueUpdates(s));
-				Promise.all(observables).then(
-					() => {
-						this.reloadServers();
-					}
-				);
+				const queueServers = action.data instanceof Array ? action.data : [action.data];
+				await Promise.all(queueServers.map(async s=>this.api.queueUpdates(s)));
+				await this.reloadServers();
 				break;
 			case "dequeue":
-				observables = (action.data as Array<AugmentedServer>).map(async s=>this.api.clearUpdates(s));
-				Promise.all(observables).then(
-					() => {
-						this.reloadServers();
-					}
-				);
+				const dequeueServers = action.data instanceof Array ? action.data : [action.data];
+				await Promise.all(dequeueServers.map(async s=>this.api.clearUpdates(s)));
+				await this.reloadServers();
 				break;
 			default:
-				console.error("unknown context menu item clicked:", action.action);
+				throw new Error(`unknown context menu item clicked: ${action.action}`);
 		}
-		console.log(action.action, "triggered with data:", action.data);
 	}
 
 	/**

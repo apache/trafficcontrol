@@ -23,7 +23,7 @@ import {
 	RangeRequestHandling,
 	rangeRequestHandlingToString
 } from "./deliveryservice";
-import { checkMap, Servercheck } from "./server";
+import { checkMap, type Servercheck } from "./server";
 
 describe("Cache Group utilities", () => {
 	it("converts localization methods to human-readable strings", () => {
