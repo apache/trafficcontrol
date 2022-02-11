@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -38,30 +39,32 @@ import (
 	"github.com/lib/pq"
 )
 
-const CapabilityQuery = `SELECT id, type, ucdn FROM cdni_capabilities WHERE type = $1 AND ucdn = $2`
-const AllFootprintQuery = `SELECT footprint_type, footprint_value::text[], capability_id FROM cdni_footprints`
+const (
+	CapabilityQuery   = `SELECT id, type, ucdn FROM cdni_capabilities WHERE type = $1 AND ucdn = $2`
+	AllFootprintQuery = `SELECT footprint_type, footprint_value::text[], capability_id FROM cdni_footprints`
 
-const totalLimitsQuery = `
+	totalLimitsQuery = `
 SELECT limit_type, maximum_hard, maximum_soft, ctl.telemetry_id, ctl.telemetry_metric, t.id, t.type, tm.name, ctl.capability_id 
 FROM cdni_total_limits AS ctl 
 LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id 
 LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name`
 
-const hostLimitsQuery = `
+	hostLimitsQuery = `
 SELECT limit_type, maximum_hard, maximum_soft, chl.telemetry_id, chl.telemetry_metric, t.id, t.type, tm.name, host, chl.capability_id 
 FROM cdni_host_limits AS chl 
 LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id 
 LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name 
 ORDER BY host DESC`
 
-const InsertCapabilityUpdateQuery = `INSERT INTO cdni_capability_updates (ucdn, data, async_status_id, request_type, host) VALUES ($1, $2, $3, $4, $5)`
-const SelectCapabilityUpdateQuery = `SELECT ucdn, data, async_status_id, request_type, host FROM cdni_capability_updates WHERE id = $1`
-const DeleteCapabilityUpdateQuery = `DELETE FROM cdni_capability_updates WHERE id = $1`
-const UpdateTotalLimitsByCapabilityAndLimitTypeQuery = `UPDATE cdni_total_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3`
-const UpdateHostLimitsByCapabilityAndLimitTypeQuery = `UPDATE cdni_host_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3 AND host = $4`
-const hostQuery = `SELECT count(*) FROM cdni_host_limits WHERE host = $1`
+	InsertCapabilityUpdateQuery                    = `INSERT INTO cdni_capability_updates (ucdn, data, async_status_id, request_type, host) VALUES ($1, $2, $3, $4, $5)`
+	SelectCapabilityUpdateQuery                    = `SELECT ucdn, data, async_status_id, request_type, host FROM cdni_capability_updates WHERE id = $1`
+	DeleteCapabilityUpdateQuery                    = `DELETE FROM cdni_capability_updates WHERE id = $1`
+	UpdateTotalLimitsByCapabilityAndLimitTypeQuery = `UPDATE cdni_total_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3`
+	UpdateHostLimitsByCapabilityAndLimitTypeQuery  = `UPDATE cdni_host_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3 AND host = $4`
+	hostQuery                                      = `SELECT count(*) FROM cdni_host_limits WHERE host = $1`
 
-const hostConfigLabel = "hostConfigUpdate"
+	hostConfigLabel = "hostConfigUpdate"
+)
 
 func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -71,18 +74,12 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	bearerToken := r.Header.Get("Authorization")
-	if bearerToken == "" {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("bearer token header is required"), nil)
-		return
-	}
-
 	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
 		return
 	}
 
-	ucdn, err := checkBearerToken(bearerToken, inf)
+	ucdn, err := checkBearerToken(r.Header.Get("Authorization"), inf)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -124,14 +121,12 @@ func PutHostConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bearerToken := r.Header.Get("Authorization")
-
 	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
 		return
 	}
 
-	ucdn, err := checkBearerToken(bearerToken, inf)
+	ucdn, err := checkBearerToken(r.Header.Get("Authorization"), inf)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -154,17 +149,18 @@ func PutHostConfiguration(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting async tx: %w", err))
 		return
 	}
+	logTx, err := db.Begin()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting log tx: %w", err))
+		return
+	}
+	defer logTx.Commit()
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(asyncTx, "CDNi host configuration update request received.")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-
-	//var typeToValueMap map[string]GenericRequestedLimits
-	//for _, hostUpdate := range genericHostRequest.HostMetadata.Metadata {
-	//	typeToValueMap[hostUpdate.Type] = hostUpdate.Value
-	//}
 
 	data := genericHostRequest.HostMetadata.Metadata
 
@@ -174,13 +170,16 @@ func PutHostConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	msg := "CDNi configuration update request received. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusId)
+	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, logTx)
+
 	var alerts tc.Alerts
 	alerts.AddAlert(tc.Alert{
-		Text:  "CDNi configuration update request received. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusId),
+		Text:  msg,
 		Level: tc.SuccessLevel.String(),
 	})
 
-	w.Header().Add("Location", api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
+	w.Header().Add(rfc.Location, api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 }
 
@@ -192,14 +191,12 @@ func PutConfiguration(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	bearerToken := r.Header.Get("Authorization")
-
 	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
 		return
 	}
 
-	ucdn, err := checkBearerToken(bearerToken, inf)
+	ucdn, err := checkBearerToken(r.Header.Get("Authorization"), inf)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -222,6 +219,12 @@ func PutConfiguration(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting async tx: %w", err))
 		return
 	}
+	logTx, err := db.Begin()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting log tx: %w", err))
+		return
+	}
+	defer logTx.Commit()
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(asyncTx, "CDNi configuration update request received.")
 	if userErr != nil || sysErr != nil {
@@ -237,13 +240,15 @@ func PutConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	msg := "CDNi configuration update request received. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusId)
+	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, logTx)
 	var alerts tc.Alerts
 	alerts.AddAlert(tc.Alert{
-		Text:  "CDNi configuration update request received. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusId),
+		Text:  msg,
 		Level: tc.SuccessLevel.String(),
 	})
 
-	w.Header().Add("Location", api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
+	w.Header().Add(rfc.Location, api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 }
 
@@ -269,12 +274,19 @@ func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logTx, err := db.Begin()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting log tx: %w", err))
+		return
+	}
+	defer logTx.Commit()
+
 	rows, err := inf.Tx.Tx.Query(SelectCapabilityUpdateQuery, reqId)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("querying for capability update request: %w", err))
 		return
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing capabilities update query")
 	var ucdn string
 	var data json.RawMessage
 	var host string
@@ -295,14 +307,16 @@ func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
 
 	if !approved {
 		if asyncErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "Requested configuration update has been denied.", asyncId, true); asyncErr != nil {
-			log.Errorf("updating async status for id %v: %v", asyncId, asyncErr)
+			log.Errorf("updating async status for id %d: %w", asyncId, asyncErr)
 		}
 		status, err := deleteCapabilityRequest(reqId, inf.Tx.Tx)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, status, nil, fmt.Errorf("deleting configuration request from queue: %w", err))
 			return
 		}
-		api.WriteResp(w, r, "Successfully denied configuration update request.")
+		msg := "Successfully denied configuration update request."
+		api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, inf.Tx.Tx)
+		api.WriteResp(w, r, msg)
 		return
 	}
 
@@ -374,7 +388,9 @@ func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, status, nil, fmt.Errorf("deleting capacity request from queue: %w", err))
 		return
 	}
-	api.WriteResp(w, r, "Successfully updated configuration.")
+	msg := "Successfully updated configuration."
+	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, logTx)
+	api.WriteResp(w, r, msg)
 }
 
 func getCapabilityIdFromFootprints(updatedData CapacityLimit, ucdn string, inf *api.APIInfo) (int, error) {
@@ -386,7 +402,7 @@ func getCapabilityIdFromFootprints(updatedData CapacityLimit, ucdn string, inf *
 		if err != nil {
 			return 0, fmt.Errorf("querying for capacity update request: %w", err)
 		}
-		defer rows.Close()
+		defer log.Close(rows, "closing footprints query")
 		var capabilityIds []int
 		rowCount := 0
 		for rows.Next() {
@@ -421,7 +437,7 @@ func getCapabilityIdFromFootprints(updatedData CapacityLimit, ucdn string, inf *
 		return 0, fmt.Errorf("no capabilities found that match all footprints: %v", updatedData.Footprints)
 	}
 	if len(potentialCapabilityIds) > 1 {
-		return 0, fmt.Errorf("more than 1 capabilities found that match all footprints: %v", updatedData.Footprints)
+		return 0, fmt.Errorf("more than 1 capability found that match all footprints: %v", updatedData.Footprints)
 	}
 	return potentialCapabilityIds[0], nil
 }
@@ -455,6 +471,10 @@ func validateHostExists(host string, tx *sql.Tx) (int, error, error) {
 }
 
 func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
+	if bearerToken == "" {
+		return "", errors.New("bearer token header is required")
+	}
+
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(inf.Config.Cdni.JwtDecodingSecret), nil

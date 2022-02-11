@@ -193,3 +193,13 @@ func IntSliceToMap(s []int) map[int]struct{} {
 	}
 	return m
 }
+
+// IntInArray returns whether i is one of the ints in list.
+func IntInArray(list []int, i int) bool {
+	for _, str := range list {
+		if str == i {
+			return true
+		}
+	}
+	return false
+}

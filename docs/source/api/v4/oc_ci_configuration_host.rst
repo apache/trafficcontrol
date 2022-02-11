@@ -25,7 +25,7 @@ Triggers an asynchronous task to update the configuration for the :abbr:`uCDN (U
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: CDNI:READ
+:Permissions Required: CDNI:UPDATE
 :Response Type:  Object
 :Headers Required: "Authorization"
 
@@ -56,7 +56,7 @@ Request Structure
 .. code-block:: http
 	:caption: Example /OC/CI/configuration Request
 
-	POST /api/4.0/acme_accounts HTTP/1.1
+	PUT /api/4.0/oc/ci/configuration/example.com HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
