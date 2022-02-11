@@ -20,8 +20,10 @@ package toreqold
  */
 
 import (
+	"database/sql"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 // serversToLatest converts a []tc.Server to []tc.ServerV30.
@@ -41,7 +43,9 @@ func serversToLatest(svs tc.ServersV3Response) ([]atscfg.Server, error) {
 // serverToLatest converts a tc.Server to tc.ServerV30.
 // This is necessary, because the old Traffic Ops client doesn't return the same type as the latest client.
 func serverToLatest(oldSv *tc.ServerV30) (*atscfg.Server, error) {
-	sv, err := oldSv.UpgradeToV40()
+	var tx *sql.Tx
+	cspV40 := dbhelpers.UpdateCommonServerPropertiesV40(oldSv.ID, oldSv.CommonServerProperties, tx)
+	sv, err := oldSv.UpgradeToV40(cspV40)
 	if err != nil {
 		return nil, err
 	}

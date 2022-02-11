@@ -21,6 +21,7 @@ package cfgfile
 
 import (
 	"bytes"
+	"github.com/lib/pq"
 	"math/rand"
 	"strings"
 	"testing"
@@ -311,9 +312,7 @@ func randServer() *atscfg.Server {
 	sv.OfflineReason = randStr()
 	sv.PhysLocation = randStr()
 	sv.PhysLocationID = randInt()
-	sv.Profile = randStr()
-	sv.ProfileDesc = randStr()
-	sv.ProfileID = randInt()
+	sv.Profiles = &pq.StringArray{*randStr()}
 	sv.Rack = randStr()
 	sv.RevalPending = randBool()
 	sv.Status = randStr()

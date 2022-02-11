@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"github.com/lib/pq"
 	"strings"
 	"testing"
 
@@ -31,7 +32,7 @@ func TestMakeDropQStringDotConfig(t *testing.T) {
 	profileName := "myProfile"
 
 	server := makeGenericServer()
-	server.Profile = &profileName
+	server.Profiles = &pq.StringArray{profileName}
 
 	params := []tc.Parameter{
 		{

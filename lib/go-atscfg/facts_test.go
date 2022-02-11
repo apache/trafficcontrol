@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"github.com/lib/pq"
 	"strings"
 	"testing"
 )
@@ -27,7 +28,7 @@ import (
 func TestMake12MFacts(t *testing.T) {
 	server := makeGenericServer()
 	profileName := "myProfile"
-	server.Profile = &profileName
+	server.Profiles = &pq.StringArray{profileName}
 
 	hdr := "myHeaderComment"
 
