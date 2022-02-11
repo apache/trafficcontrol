@@ -797,16 +797,16 @@ func (s ServerV40) GetCommonServerPropertiesFromV4(tx *sql.Tx) CommonServerPrope
 	}
 }
 
-func GetCommonServerPropertiesV40(id *int, properties CommonServerProperties, tx *sql.Tx) CommonServerPropertiesV40 {
+func UpdateCommonServerPropertiesV40(id *int, properties CommonServerProperties, tx *sql.Tx) CommonServerPropertiesV40 {
 	var profileNames pq.StringArray
-	rows, err := tx.Query("SELECT profile_names from server_profile AS sp WHERE sp.server_id=$1", id)
+	rows, err := tx.Query("UPDATE server_profile set profile_names=ARRAY[$1] WHERE server=$2 RETURNING profile_names", *properties.Profile, *id)
 	if err != nil {
-		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
+		fmt.Errorf("querying server_profile by porfile_names: " + err.Error())
 	}
-	defer log.Close(rows, "closing rows in GetCommonServerPropertiesV40")
+	defer log.Close(rows, "closing rows in UpdateCommonServerPropertiesV40")
 
 	for rows.Next() {
-		if err := rows.Scan(pq.Array(&profileNames)); err != nil {
+		if err := rows.Scan(&profileNames); err != nil {
 			fmt.Errorf("scanning server: " + err.Error())
 		}
 	}
@@ -1078,7 +1078,7 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 // ServerV40 or newer structures.
 func (s ServerV30) UpgradeToV40(tx *sql.Tx) (ServerV40, error) {
 	upgraded := ServerV40{
-		CommonServerPropertiesV40: GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties, tx),
+		CommonServerPropertiesV40: UpdateCommonServerPropertiesV40(s.ID, s.CommonServerProperties, tx),
 		StatusLastUpdated:         s.StatusLastUpdated,
 	}
 	infs, err := ToInterfacesV4(s.Interfaces, s.RouterHostName, s.RouterPortName)
@@ -1105,7 +1105,7 @@ func (s ServerNullableV2) UpgradeToV40(tx *sql.Tx) (ServerV40, error) {
 		ipv6IsService = *s.IP6IsService
 	}
 	upgraded := ServerV40{
-		CommonServerPropertiesV40: GetCommonServerPropertiesV40(s.ID, s.CommonServerProperties, tx),
+		CommonServerPropertiesV40: UpdateCommonServerPropertiesV40(s.ID, s.CommonServerProperties, tx),
 	}
 
 	infs, err := s.LegacyInterfaceDetails.ToInterfacesV4(ipv4IsService, ipv6IsService, s.RouterHostName, s.RouterPortName)

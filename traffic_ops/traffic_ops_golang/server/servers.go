@@ -447,7 +447,7 @@ UPDATE server SET
 	mgmt_ip_gateway=:mgmt_ip_gateway,
 	offline_reason=:offline_reason,
 	phys_location=:phys_location_id,
-	profile=:profile_id,
+	profile=(SELECT id from profile where name=(SELECT profile_names[1] from server_profile)),
 	rack=:rack,
 	status=:status_id,
 	tcp_port=:tcp_port,
@@ -478,69 +478,7 @@ RETURNING
 	offline_reason,
 	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
 	phys_location AS phys_location_id,
-	profile AS profile_id,
-	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
-	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
-	rack,
-	reval_pending,
-	(SELECT name FROM status WHERE status.id=server.status) AS status,
-	status AS status_id,
-	tcp_port,
-	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
-	type AS server_type_id,
-	upd_pending,
-	status_last_updated
-`
-
-const updateQueryV4 = `
-UPDATE server SET
-	cachegroup=:cachegroup_id,
-	cdn_id=:cdn_id,
-	domain_name=:domain_name,
-	host_name=:host_name,
-	https_port=:https_port,
-	ilo_ip_address=:ilo_ip_address,
-	ilo_ip_netmask=:ilo_ip_netmask,
-	ilo_ip_gateway=:ilo_ip_gateway,
-	ilo_username=:ilo_username,
-	ilo_password=:ilo_password,
-	mgmt_ip_address=:mgmt_ip_address,
-	mgmt_ip_netmask=:mgmt_ip_netmask,
-	mgmt_ip_gateway=:mgmt_ip_gateway,
-	offline_reason=:offline_reason,
-	phys_location=:phys_location_id,
-	profile_names=:profile_names,
-	rack=:rack,
-	status=:status_id,
-	tcp_port=:tcp_port,
-	type=:server_type_id,
-	upd_pending=:upd_pending,
-	xmpp_passwd=:xmpp_passwd,
-	status_last_updated=:status_last_updated
-WHERE id=:id
-RETURNING
-	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
-	cachegroup AS cachegroup_id,
-	cdn_id,
-	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
-	domain_name,
-	guid,
-	host_name,
-	https_port,
-	id,
-	ilo_ip_address,
-	ilo_ip_gateway,
-	ilo_ip_netmask,
-	ilo_password,
-	ilo_username,
-	last_updated,
-	mgmt_ip_address,
-	mgmt_ip_gateway,
-	mgmt_ip_netmask,
-	offline_reason,
-	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
-	phys_location AS phys_location_id,
-	(SELECT profile_names FROM server_profile WHERE server_profile.server=server.id) AS profiles,
+	(SELECT ARRAY[(SELECT name FROM profile WHERE profile.id=server.profile)]) AS profile_names,
 	rack,
 	reval_pending,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
@@ -1551,7 +1489,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	var server tc.ServerV40
 	var serverV3 tc.ServerV30
 	var statusLastUpdatedTime time.Time
-	var updateQ string
 	if inf.Version.Major >= 4 {
 		if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1570,6 +1507,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
+		UpdateServerProfiles(server.ID, server.Profiles, tx)
 	} else if inf.Version.Major >= 3 {
 		if err := json.NewDecoder(r.Body).Decode(&serverV3); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1696,12 +1634,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if inf.Version.Major >= 4 {
-		updateQ = updateQueryV4
-	} else {
-		updateQ = updateQuery
-	}
-	rows, err := inf.Tx.NamedQuery(updateQ, server)
+	rows, err := inf.Tx.NamedQuery(updateQuery, server)
 	if err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -2197,4 +2130,21 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+}
+
+// Updates server_profile table for PUT /servers/(id) API
+func UpdateServerProfiles(id *int, profile *pq.StringArray, tx *sql.Tx) {
+	var profileNames pq.StringArray
+	rows, err := tx.Query("UPDATE server_profile set profile_names=$1 WHERE server=$2 RETURNING profile_names", *profile, *id)
+	if err != nil {
+		fmt.Errorf("querying server_profile by porfile_names: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in UpdateServerProfiles")
+
+	for rows.Next() {
+		if err := rows.Scan(&profileNames); err != nil {
+			fmt.Errorf("scanning server: " + err.Error())
+		}
+	}
+	return
 }
