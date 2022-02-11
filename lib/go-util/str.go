@@ -52,6 +52,16 @@ func StrInArray(strs []string, s string) bool {
 	return false
 }
 
+// IntInArray returns whether i is one of the ints in list.
+func IntInArray(list []int, i int) bool {
+	for _, str := range list {
+		if str == i {
+			return true
+		}
+	}
+	return false
+}
+
 // RemoveStrFromArray removes a specific string from a string slice.
 func RemoveStrFromArray(strs []string, s string) []string {
 	newStrArray := []string{}

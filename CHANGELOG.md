@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [unreleased]
 ### Added
 - Added a new Traffic Ops endpoint to `GET` capacity and telemetry data for CDNi integration.
+- Added a Traffic Ops endpoints to `PUT` a requested configuration change for a full configuration or per host and an endpoint to approve or deny the request.
 
 ### Fixed
 - Update traffic_portal dependencies to mitigate `npm audit` issues.
