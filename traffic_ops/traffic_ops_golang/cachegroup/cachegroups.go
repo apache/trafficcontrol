@@ -676,6 +676,11 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
+	userErr = cg.ValidateTypeInTopology()
+	if userErr != nil {
+		return userErr, nil, http.StatusBadRequest
+	}
+
 	err := cg.ReqInfo.Tx.Tx.QueryRow(
 		UpdateQuery(),
 		cg.Name,
