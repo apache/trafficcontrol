@@ -1760,13 +1760,13 @@ func GetProfileID(sid *int) (pid *int) {
 
 	rows, err := tx.Query(q, *sid)
 	if err != nil {
-		fmt.Errorf("querying profile by server id: " + err.Error())
+		log.Errorf("querying profile by server id: " + err.Error())
 	}
 	defer log.Close(rows, "closing rows in GetProfileID")
 
 	for rows.Next() {
 		if err := rows.Scan(&pid); err != nil {
-			fmt.Errorf("scanning profile: " + err.Error())
+			log.Errorf("scanning profile: " + err.Error())
 		}
 	}
 	return
@@ -1779,13 +1779,13 @@ func GetProfileDescription(sid *int) (desc *string) {
 
 	rows, err := tx.Query(q, *sid)
 	if err != nil {
-		fmt.Errorf("querying profile by server id: " + err.Error())
+		log.Errorf("querying profile by server id: " + err.Error())
 	}
 	defer log.Close(rows, "closing rows in GetProfileDescription")
 
 	for rows.Next() {
 		if err := rows.Scan(&desc); err != nil {
-			fmt.Errorf("scanning profile: " + err.Error())
+			log.Errorf("scanning profile: " + err.Error())
 		}
 	}
 	return
@@ -1798,13 +1798,13 @@ func GetProfileName(pid *int) (pname *string) {
 
 	rows, err := tx.Query(q, *pid)
 	if err != nil {
-		fmt.Errorf("querying profile by profile id: " + err.Error())
+		log.Errorf("querying profile by profile id: " + err.Error())
 	}
 	defer log.Close(rows, "closing rows in GetProfileName")
 
 	for rows.Next() {
 		if err := rows.Scan(&pname); err != nil {
-			fmt.Errorf("scanning profile: " + err.Error())
+			log.Errorf("scanning profile: " + err.Error())
 		}
 	}
 	return
