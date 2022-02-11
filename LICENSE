@@ -722,3 +722,13 @@ This product bundles stretchr/testify, which is available under an MIT license.
 @vendor/github.com/stretchr/testify/*
 ./vendor/github.com/stretchr/testify/LICENSE
 Refer to the above license for the full text.
+
+This product bundles pmezard/go-difflib, which is available under an BSD-3-Clause license.
+@vendor/github.com/pmezard/go-difflib/*
+./vendor/github.com/pmezard/go-difflib/LICENSE
+Refer to the above license for the full text.
+
+This product bundles gopkg.in/yaml.v3, which is available under an MIT and Apache-2.0 license.
+@vendor/gopkg.in/yaml.v3/*
+./vendor/gopkg.in/yaml.v3/LICENSE
+Refer to the above license for the full text.
