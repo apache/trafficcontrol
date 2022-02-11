@@ -1753,36 +1753,130 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 	return regionName, true, nil
 }
 
-//func aggDataforServerProfile() {
-//	var tx *sql.Tx
-//	var id, profile int
-//	var profileName string
-//	q := `SELECT id, profile FROM server`
-//	q1 := `SELECT name from profile where id=$1`
-//
-//	rows, err := tx.Query(q)
-//	if err != nil {
-//		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
-//	}
-//	defer log.Close(rows, "closing rows in AggDataforServerProfile")
-//
-//	for rows.Next() {
-//		if err := rows.Scan(&id, &profile); err != nil {
-//			fmt.Errorf("scanning server: " + err.Error())
-//		}
-//	}
-//
-//	rows1, err1 := tx.Query(q1, profile)
-//	if err1 != nil {
-//		fmt.Errorf("querying profiles by porfile_names: " + err1.Error())
-//	}
-//	defer log.Close(rows1, "closing rows in AggDataforServerProfile")
-//
-//	for rows1.Next() {
-//		if err := rows1.Scan(&profileName); err != nil {
-//			fmt.Errorf("scanning profile: " + err.Error())
-//		}
-//		profiles := append(profile)
-//	}
-//
-//}
+// GetCommonServerPropertiesFromV4 converts CommonServerPropertiesV40 to CommonServerProperties struct
+func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) tc.CommonServerProperties {
+	var id int
+	var desc string
+	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (*s.Profiles)[0])
+	if err != nil {
+		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in GetCommonServerPropertiesFromV4")
+
+	for rows.Next() {
+		if err := rows.Scan(&id, &desc); err != nil {
+			fmt.Errorf("scanning server: " + err.Error())
+		}
+	}
+
+	return tc.CommonServerProperties{
+		Cachegroup:       s.Cachegroup,
+		CachegroupID:     s.CachegroupID,
+		CDNID:            s.CDNID,
+		CDNName:          s.CDNName,
+		DeliveryServices: s.DeliveryServices,
+		DomainName:       s.DomainName,
+		FQDN:             s.FQDN,
+		FqdnTime:         s.FqdnTime,
+		GUID:             s.GUID,
+		HostName:         s.HostName,
+		HTTPSPort:        s.HTTPSPort,
+		ID:               s.ID,
+		ILOIPAddress:     s.ILOIPAddress,
+		ILOIPGateway:     s.ILOIPGateway,
+		ILOIPNetmask:     s.ILOIPNetmask,
+		ILOPassword:      s.ILOPassword,
+		ILOUsername:      s.ILOUsername,
+		LastUpdated:      s.LastUpdated,
+		MgmtIPAddress:    s.MgmtIPAddress,
+		MgmtIPGateway:    s.MgmtIPGateway,
+		MgmtIPNetmask:    s.MgmtIPNetmask,
+		OfflineReason:    s.OfflineReason,
+		Profile:          &(*s.Profiles)[0],
+		ProfileDesc:      &desc,
+		ProfileID:        &id,
+		PhysLocation:     s.PhysLocation,
+		PhysLocationID:   s.PhysLocationID,
+		Rack:             s.Rack,
+		RevalPending:     s.RevalPending,
+		Status:           s.Status,
+		StatusID:         s.StatusID,
+		TCPPort:          s.TCPPort,
+		Type:             s.Type,
+		TypeID:           s.TypeID,
+		UpdPending:       s.UpdPending,
+		XMPPID:           s.XMPPID,
+		XMPPPasswd:       s.XMPPPasswd,
+	}
+}
+
+// UpdateCommonServerPropertiesV40 updates CommonServerPropertiesV40 struct
+func UpdateCommonServerPropertiesV40(id *int, properties tc.CommonServerProperties, tx *sql.Tx) tc.CommonServerPropertiesV40 {
+	var profileNames pq.StringArray
+	rows, err := tx.Query("UPDATE server_profile set profile_names=ARRAY[$1] WHERE server=$2 RETURNING profile_names", *properties.Profile, *id)
+	if err != nil {
+		fmt.Errorf("querying server_profile by porfile_names: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in UpdateCommonServerPropertiesV40")
+
+	for rows.Next() {
+		if err := rows.Scan(&profileNames); err != nil {
+			fmt.Errorf("scanning server: " + err.Error())
+		}
+	}
+
+	return tc.CommonServerPropertiesV40{
+		Cachegroup:       properties.Cachegroup,
+		CachegroupID:     properties.CachegroupID,
+		CDNID:            properties.CDNID,
+		CDNName:          properties.CDNName,
+		DeliveryServices: properties.DeliveryServices,
+		DomainName:       properties.DomainName,
+		FQDN:             properties.FQDN,
+		FqdnTime:         properties.FqdnTime,
+		GUID:             properties.GUID,
+		HostName:         properties.HostName,
+		HTTPSPort:        properties.HTTPSPort,
+		ID:               properties.ID,
+		ILOIPAddress:     properties.ILOIPAddress,
+		ILOIPGateway:     properties.ILOIPGateway,
+		ILOIPNetmask:     properties.ILOIPNetmask,
+		ILOPassword:      properties.ILOPassword,
+		ILOUsername:      properties.ILOUsername,
+		LastUpdated:      properties.LastUpdated,
+		MgmtIPAddress:    properties.MgmtIPAddress,
+		MgmtIPGateway:    properties.MgmtIPGateway,
+		MgmtIPNetmask:    properties.MgmtIPNetmask,
+		OfflineReason:    properties.OfflineReason,
+		Profiles:         &profileNames,
+		PhysLocation:     properties.PhysLocation,
+		PhysLocationID:   properties.PhysLocationID,
+		Rack:             properties.Rack,
+		RevalPending:     properties.RevalPending,
+		Status:           properties.Status,
+		StatusID:         properties.StatusID,
+		TCPPort:          properties.TCPPort,
+		Type:             properties.Type,
+		TypeID:           properties.TypeID,
+		UpdPending:       properties.UpdPending,
+		XMPPID:           properties.XMPPID,
+		XMPPPasswd:       properties.XMPPPasswd,
+	}
+}
+
+// UpdateServerProfiles updates server_profile table for PUT /servers/(id) API
+func UpdateServerProfiles(id *int, profile *pq.StringArray, tx *sql.Tx) {
+	var profileNames pq.StringArray
+	rows, err := tx.Query("UPDATE server_profile set profile_names=$1 WHERE server=$2 RETURNING profile_names", *profile, *id)
+	if err != nil {
+		fmt.Errorf("querying server_profile by porfile_names: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in UpdateServerProfiles")
+
+	for rows.Next() {
+		if err := rows.Scan(&profileNames); err != nil {
+			fmt.Errorf("scanning server: " + err.Error())
+		}
+	}
+	return
+}

@@ -923,7 +923,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	if version.Major >= 3 {
 		v3Servers := make([]tc.ServerV30, 0)
 		for _, server := range servers {
-			v3Server, err := server.ToServerV3FromV4(tx)
+			csp := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+			v3Server, err := server.ToServerV3FromV4(csp)
 			if err != nil {
 				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to V3 format: %v", err))
 				return
@@ -936,7 +937,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	legacyServers := make([]tc.ServerNullableV2, 0, len(servers))
 	for _, server := range servers {
-		legacyServer, err := server.ToServerV2FromV4(tx)
+		csp := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		legacyServer, err := server.ToServerV2FromV4(csp)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
 			return
@@ -1507,7 +1509,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		UpdateServerProfiles(server.ID, server.Profiles, tx)
+		dbhelpers.UpdateServerProfiles(server.ID, server.Profiles, tx)
 	} else if inf.Version.Major >= 3 {
 		if err := json.NewDecoder(r.Body).Decode(&serverV3); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1526,7 +1528,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		server, err = serverV3.UpgradeToV40(tx)
+		cspV40 := dbhelpers.UpdateCommonServerPropertiesV40(serverV3.ID, serverV3.CommonServerProperties, tx)
+		server, err = serverV3.UpgradeToV40(cspV40)
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V3 server to V4 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -1543,8 +1546,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-
-		server, err = legacyServer.UpgradeToV40(tx)
+		cspV40 := dbhelpers.UpdateCommonServerPropertiesV40(legacyServer.ID, legacyServer.CommonServerProperties, tx)
+		server, err = legacyServer.UpgradeToV40(cspV40)
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V2 server to V3 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -1677,7 +1680,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
 	} else {
-		v2Server, err := server.ToServerV2FromV4(tx)
+		csp := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		v2Server, err := server.ToServerV2FromV4(csp)
 		if err != nil {
 			sysErr = fmt.Errorf("converting valid v3 server to a v2 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -2120,8 +2124,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if inf.Version.Major >= 3 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
 	} else {
-
-		serverV2, err := server.ToServerV2FromV4(tx)
+		csp := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		serverV2, err := server.ToServerV2FromV4(csp)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 			return
@@ -2130,21 +2134,4 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
-}
-
-// Updates server_profile table for PUT /servers/(id) API
-func UpdateServerProfiles(id *int, profile *pq.StringArray, tx *sql.Tx) {
-	var profileNames pq.StringArray
-	rows, err := tx.Query("UPDATE server_profile set profile_names=$1 WHERE server=$2 RETURNING profile_names", *profile, *id)
-	if err != nil {
-		fmt.Errorf("querying server_profile by porfile_names: " + err.Error())
-	}
-	defer log.Close(rows, "closing rows in UpdateServerProfiles")
-
-	for rows.Next() {
-		if err := rows.Scan(&profileNames); err != nil {
-			fmt.Errorf("scanning server: " + err.Error())
-		}
-	}
-	return
 }
