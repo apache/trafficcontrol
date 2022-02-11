@@ -65,7 +65,7 @@ func init() {
 	CoverageZoneLocation = flag.String("coverage_zone_location", "", "the Coverage Zone location to use (implies coverage_zone=true)")
 	HTTPRequestsPerSecondThreshold = flag.Int("http_requests_threshold", 8000, "the minimum number of HTTP requests per second a Traffic Router must successfully respond to")
 	DNSRequestsPerSecondThreshold = flag.Int("dns_requests_threshold", 25000, "the minimum number of DNS requests per second a Traffic Router must successfully respond to")
-	BenchTime = flag.Int("benchmark_time", 10, "the duration of each load test in seconds")
+	BenchTime = flag.Int("benchmark_time", 15, "the duration of each load test in seconds")
 	ThreadCount = flag.Int("thread_count", 12, "the number of threads to use for each test")
 
 	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
