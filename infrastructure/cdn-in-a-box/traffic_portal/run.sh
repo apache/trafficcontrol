@@ -16,16 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
-NAME="Traffic Portal Application"
-NODE_BIN_DIR="/usr/bin"
-NODE_PATH="/opt/traffic_portal/node_modules"
-FOREVER_BIN_DIR="/opt/traffic_portal/node_modules/forever/bin"
-APPLICATION_PATH="/opt/traffic_portal/server.js"
-PIDFILE="/var/run/traffic_portal.pid"
-LOGFILE="/var/log/traffic_portal/traffic_portal.log"
-MIN_UPTIME="5000"
-SPIN_SLEEP_TIME="2000"
+INIT_DIR="/etc/init.d"
 
 set-dns.sh
 insert-self-into-dns.sh
@@ -75,13 +66,6 @@ mv $tmp $props
 to-enroll "tp" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 # Add node to the path for situations in which the environment is passed.
-PATH=$FOREVER_BIN_DIR:$NODE_BIN_DIR:$PATH
-forever \
-    --pidFile $PIDFILE \
-    -a \
-    -l $LOGFILE \
-    --minUptime $MIN_UPTIME \
-    --spinSleepTime $SPIN_SLEEP_TIME \
-    start $APPLICATION_PATH
+./$INIT_DIR/traffic_portal start
 
 tail -f /dev/null

@@ -1,30 +1,12 @@
 #!/bin/bash
 #
-# An init.d script for running a Node.js process as a service using Forever as
-# the process monitor. For more configuration options associated with Forever,
-# see: https://github.com/nodejitsu/forever
+# An init.d script for running a Node.js process as a service using PM2 as
+# the process monitor. For more configuration options associated with PM2,
+# see: https://github.com/
 #
 # This was written for Debian distributions such as Ubuntu, but should still
 # work on RedHat, Fedora, or other RPM-based distributions, since none of the
 # built-in service functions are used. So information is provided for both.
-#
-### BEGIN INIT INFO
-# Provides:             my-application
-# Required-Start:       $syslog $remote_fs
-# Required-Stop:        $syslog $remote_fs
-# Should-Start:         $local_fs
-# Should-Stop:          $local_fs
-# Default-Start:        2 3 4 5
-# Default-Stop:         0 1 6
-# Short-Description:    My Application
-# Description:          My Application
-### END INIT INFO
-#
-### BEGIN CHKCONFIG INFO
-# chkconfig: 2345 55 25
-# description: My Application
-### END CHKCONFIG INFO
-#
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -43,86 +25,50 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# An application name to display in echo text.
-# NAME="Traffic Portal Application"
-# The full path to the directory containing the node and forever binaries.
-# Set the NODE_PATH to the Node.js main node_modules directory.
-# The application startup Javascript file path.
-
-# Process ID file path.
-# Log file path.
-# Forever settings to prevent the application spinning if it fails on launch.
-# MIN_UPTIME="5000"
-# SPIN_SLEEP_TIME="2000"
- 
 NAME="Traffic Portal Application"
 NODE_BIN_DIR="/usr/bin"
 NODE_PATH="/opt/traffic_portal/node_modules"
-FOREVER_BIN_DIR="/opt/traffic_portal/node_modules/forever/bin"
+PM2_BIN_DIR="/opt/traffic_portal/node_modules/pm2/bin"
 APPLICATION_PATH="/opt/traffic_portal/server.js"
 PIDFILE="/var/run/traffic_portal.pid"
 LOGFILE="/var/log/traffic_portal/traffic_portal.log"
-MIN_UPTIME="5000"
-SPIN_SLEEP_TIME="2000"
- 
-# Add node to the path for situations in which the environment is passed.
-PATH=$FOREVER_BIN_DIR:$NODE_BIN_DIR:$PATH
-# Export all environment variables that must be visible for the Node.js
-# application process forked by Forever. It will not see any of the other
-# variables defined in this script.
+RESTART_TIME="2000"
+
+PATH=$PM2_BIN_DIR:$NODE_BIN_DIR:$PATH
 export NODE_PATH=$NODE_PATH
- 
+
 start() {
     echo "Starting $NAME"
-    # We're calling forever directly without using start-stop-daemon for the
-    # sake of simplicity when it comes to environment, and because this way
-    # the script will work whether it is executed directly or via the service
-    # utility.
-    #
-    # The minUptime and spinSleepTime settings stop Forever from thrashing if
-    # the application fails immediately on launch. This is generally necessary to
-    # avoid loading development servers to the point of failure every time
-    # someone makes an error in application initialization code, or bringing down
-    # production servers the same way if a database or other critical service
-    # suddenly becomes inaccessible.
-    #
-    # The pidfile contains the child process pid, not the forever process pid.
-    # We're only using it as a marker for whether or not the process is
-    # running.
-    #
-    # Note that redirecting the output to /dev/null (or anywhere) is necessary
-    # to make this script work if provisioning the service via Chef.
-    forever \
-      --pidFile $PIDFILE \
-      -a \
+    # The pidfile contains the child process pid, and is named of format [pidfile]-[pm2Id].pid
+  pm2 \
+      start "$APPLICATION_PATH" \
+      -p $PIDFILE \
       -l $LOGFILE \
-      --minUptime $MIN_UPTIME \
-      --spinSleepTime $SPIN_SLEEP_TIME \
-      start $APPLICATION_PATH 2>&1 > /dev/null &
+      --restart-delay $RESTART_TIME \
+      --time \
+      --name "$NAME"
     RETVAL=$?
 }
- 
+
 stop() {
-    if [ -f $PIDFILE ]; then
+    echo `pm2 list` | grep -q "$NAME"
+    if [ "$?" -eq "0" ]; then
         echo "Shutting down $NAME"
-        # Tell Forever to stop the process.
-        forever stop $APPLICATION_PATH 2>&1 > /dev/null
-        # Get rid of the pidfile, since Forever won't do that.
-        rm -f $PIDFILE
+        pm2 stop $APPLICATION_PATH
         RETVAL=$?
     else
         echo "$NAME is not running."
         RETVAL=0
     fi
 }
- 
+
 restart() {
     stop
     start
 }
- 
+
 status() {
-    echo `forever list` | grep -q "$APPLICATION_PATH"
+    echo `pm2 list` | grep -q "$NAME"
     if [ "$?" -eq "0" ]; then
         echo "$NAME is running."
         RETVAL=0
@@ -131,7 +77,7 @@ status() {
         RETVAL=3
     fi
 }
- 
+
 case "$1" in
     start)
         start
