@@ -114,7 +114,7 @@ func ResponseHasLength(expected int) CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ error) {
 		switch resp := resp.(type) {
 		case tc.CacheGroupsNullableResponse:
-			assert.Equal(t, len(resp.Response), expected, "Expected response object length %d, but got %d", expected, len(resp.Response))
+			assert.Equal(t, expected, len(resp.Response), "Expected response object length %d, but got %d", expected, len(resp.Response))
 		default:
 			assert.Fail(t, "Failed to find response type")
 		}
