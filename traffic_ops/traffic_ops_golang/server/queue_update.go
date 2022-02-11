@@ -24,16 +24,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-// QueueUpdateHandler implements an http handler that updates a server's
-// upd_pending value.
+// QueueUpdateHandler implements an http handler that sets or removes a server's
+// config update time value.
 func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
@@ -54,7 +55,6 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	serverID := int64(inf.IntParams["id"])
-	queue := reqObj.Action == "queue"
 	cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, serverID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
@@ -65,7 +65,12 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
-	ok, err := queueUpdate(inf.Tx.Tx, serverID, queue)
+	ok := false
+	if reqObj.Action == "queue" {
+		ok, err = queueUpdate(inf.Tx.Tx, serverID)
+	} else {
+		ok, err = dequeueUpdate(inf.Tx.Tx, serverID)
+	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("queueing updates: %v", err))
 		return
@@ -95,13 +100,34 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// queueUpdate sets the upd_pending column of a server to the value of queue. It
+// queueUpdate adds a record to record a config update. It
 // returns true if the identified server exists and was updated and false if no
 // server was updated either because it doesn't exist or there was an error.
-func queueUpdate(tx *sql.Tx, serverID int64, queue bool) (bool, error) {
-	const query = `UPDATE server SET upd_pending = $1 WHERE id = $2`
+func queueUpdate(tx *sql.Tx, serverID int64) (bool, error) {
+	const query = `
+INSERT INTO public.server_config_update (server_id, config_update_time)
+VALUES ($1, now())
+ON CONFLICT (server_id)
+DO UPDATE SET config_update_time = now();
+`
+	if result, err := tx.Exec(query, serverID); err != nil {
+		return false, fmt.Errorf("updating server table: %v", err)
+	} else if rc, err := result.RowsAffected(); err != nil {
+		return false, fmt.Errorf("checking rows updated: %v", err)
+	} else {
+		return rc == 1, nil
+	}
+}
 
-	if result, err := tx.Exec(query, queue, serverID); err != nil {
+// queueUpdate removes a record to record a config update. It
+// returns true if the identified server exists and was updated and false if no
+// server was updated either because it doesn't exist or there was an error.
+func dequeueUpdate(tx *sql.Tx, serverID int64) (bool, error) {
+	const query = `
+DELETE FROM public.server_config_update 
+WHERE server_id = $1;
+`
+	if result, err := tx.Exec(query, serverID); err != nil {
 		return false, fmt.Errorf("updating server table: %v", err)
 	} else if rc, err := result.RowsAffected(); err != nil {
 		return false, fmt.Errorf("checking rows updated: %v", err)

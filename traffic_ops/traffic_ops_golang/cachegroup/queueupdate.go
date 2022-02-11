@@ -32,6 +32,9 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
+const queue = "queue"
+const dequeue = "dequeue"
+
 func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
@@ -45,25 +48,13 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
-	if reqObj.Action != "queue" && reqObj.Action != "dequeue" {
+	if reqObj.Action != queue && reqObj.Action != dequeue {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
 		return
 	}
-	if reqObj.CDNID == nil && (reqObj.CDN == nil || *reqObj.CDN == "") {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn is a required field"), nil)
+	if reqObj.CDNID == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdnId is a required field"), nil)
 		return
-	}
-	if reqObj.CDNID != nil && (reqObj.CDN == nil || *reqObj.CDN == "") {
-		cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*reqObj.CDNID))
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+strconv.Itoa(int(*reqObj.CDNID))+"': "+err.Error()))
-			return
-		}
-		if !ok {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn "+strconv.Itoa(int(*reqObj.CDNID))+" does not exist"), nil)
-			return
-		}
-		reqObj.CDN = &cdn
 	}
 	cgID := inf.IntParams["id"]
 	cgName, ok, err := dbhelpers.GetCacheGroupNameFromID(inf.Tx.Tx, cgID)
@@ -74,13 +65,25 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(*reqObj.CDN), inf.User.UserName)
+
+	cdnName, _, sysErr := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*reqObj.CDNID))
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
-	queue := reqObj.Action == "queue"
-	updatedCaches, err := queueUpdates(inf.Tx.Tx, cgID, *reqObj.CDN, queue)
+
+	updatedCaches := []tc.CacheName{}
+	if reqObj.Action == queue {
+		updatedCaches, err = queueUpdates(inf.Tx.Tx, cgID, *reqObj.CDNID)
+	} else {
+		updatedCaches, err = dequeueUpdates(inf.Tx.Tx, cgID, *reqObj.CDNID)
+	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("queueing updates: "+err.Error()))
 		return
@@ -90,10 +93,10 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		CacheGroupName: cgName,
 		Action:         reqObj.Action,
 		ServerNames:    updatedCaches,
-		CDN:            *reqObj.CDN,
+		CDN:            cdnName,
 		CacheGroupID:   cgID,
 	})
-	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.Itoa(cgID)+", ACTION: "+strings.Title(reqObj.Action)+"d CacheGroup server updates to the "+string(*reqObj.CDN)+" CDN", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.Itoa(cgID)+", ACTION: "+strings.Title(reqObj.Action)+"d CacheGroup server updates to the "+string(cdnName)+" CDN", inf.User, inf.Tx.Tx)
 }
 
 type QueueUpdatesResp struct {
@@ -104,21 +107,37 @@ type QueueUpdatesResp struct {
 	CacheGroupID   int               `json:"cachegroupID"`
 }
 
-func queueUpdates(tx *sql.Tx, cgID int, cdn tc.CDNName, queue bool) ([]tc.CacheName, error) {
+func queueUpdates(tx *sql.Tx, cgID int, cdnID int) ([]tc.CacheName, error) {
 	q := `
-UPDATE server_config_update scu
-INNER JOIN server s
-SET scu.config_update_time = now()
-WHERE s.cachegroup = $2
-AND s.cdn_id = (select id from cdn where name = $3)
-RETURNING s.host_name`
-	// 	q := `
-	// UPDATE server SET upd_pending = $1
-	// WHERE server.cachegroup = $2
-	// AND server.cdn_id = (select id from cdn where name = $3)
-	// RETURNING server.host_name
-	// `
-	rows, err := tx.Query(q, queue, cgID, cdn)
+INSERT INTO public.server_config_update (server_id, config_update_time) 
+SELECT s.id, now() FROM "server" s WHERE s.cachegroup = $1 AND s.cdn_id = $2
+ON CONFLICT (server_id)
+DO UPDATE SET config_update_time = now()
+RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);
+	`
+	rows, err := tx.Query(q, cgID, cdnID)
+	if err != nil {
+		return nil, errors.New("querying : " + err.Error())
+	}
+	defer rows.Close()
+	names := []tc.CacheName{}
+	for rows.Next() {
+		name := ""
+		if err := rows.Scan(&name); err != nil {
+			return nil, errors.New("scanning queue updates: " + err.Error())
+		}
+		names = append(names, tc.CacheName(name))
+	}
+	return names, nil
+}
+
+func dequeueUpdates(tx *sql.Tx, cgID int, cdnID int) ([]tc.CacheName, error) {
+	q := `
+DELETE FROM public.server_config_update
+WHERE server_id IN (SELECT s.id FROM "server" s WHERE s.cachegroup = $1 AND s.cdn_id = $2)
+RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);
+`
+	rows, err := tx.Query(q, cgID, cdnID)
 	if err != nil {
 		return nil, errors.New("querying queue updates: " + err.Error())
 	}

@@ -19,10 +19,6 @@ package tc
  * under the License.
  */
 
-import (
-	"github.com/apache/trafficcontrol/lib/go-util"
-)
-
 // CacheGroupsResponse is a list of CacheGroups as a response.
 type CacheGroupsResponse struct {
 	Response []CacheGroup `json:"response"`
@@ -91,7 +87,6 @@ type CachegroupTrimmedName struct {
 // CachegroupQueueUpdatesRequest holds info relating to the
 // cachegroups/{{ID}}/queue_update TO route.
 type CachegroupQueueUpdatesRequest struct {
-	Action string           `json:"action"`
-	CDN    *CDNName         `json:"cdn"`
-	CDNID  *util.JSONIntStr `json:"cdnId"`
+	Action string `json:"action"`
+	CDNID  *int   `json:"cdnId"`
 }

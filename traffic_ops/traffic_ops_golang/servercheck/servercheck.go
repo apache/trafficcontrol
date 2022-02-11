@@ -37,14 +37,15 @@ const ServerCheck_Get_Endpoint = "GET /servercheck"
 
 const serverInfoQuery = `
 SELECT server.host_name AS hostName,
-       server.id AS id,
-       profile.name AS profile,
-       status.name AS adminState,
-       cachegroup.name AS cacheGroup,
-       type.name AS type,
-       server.upd_pending AS updPending,
-       server.reval_pending AS revalPending
+	server.id AS id,
+	profile.name AS profile,
+	status.name AS adminState,
+	cachegroup.name AS cacheGroup,
+	type.name AS type,
+	(COALESCE (scu.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (scu.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending,
+	(COALESCE (scu.revalidate_update_time, TIMESTAMPTZ 'epoch') - COALESCE (scu.revalidate_apply_time, TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS reval_pending
 FROM server
+LEFT OUTER JOIN server_config_update scu ON server.id = scu.server_id 
 LEFT JOIN profile ON server.profile = profile.id
 LEFT JOIN status ON server.status = status.id
 LEFT JOIN cachegroup ON server.cachegroup = cachegroup.id

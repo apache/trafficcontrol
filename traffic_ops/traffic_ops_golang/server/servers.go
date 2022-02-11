@@ -54,6 +54,7 @@ import (
 
 const serversFromAndJoin = `
 FROM server AS s
+LEFT OUTER JOIN server_config_update scu ON s.id = scu.server_id
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
@@ -139,13 +140,17 @@ SELECT
 	p.description AS profile_desc,
 	s.profile AS profile_id,
 	s.rack,
-	s.reval_pending,
+	(COALESCE (scu.revalidate_update_time, TIMESTAMPTZ 'epoch') - COALESCE (scu.revalidate_apply_time, TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS reval_pending,
+	COALESCE (scu.revalidate_update_time, TIMESTAMPTZ 'epoch') AS revalidate_update_time,
+	COALESCE (scu.revalidate_apply_time, TIMESTAMPTZ 'epoch') AS revalidate_apply_time,
 	st.name AS status,
 	s.status AS status_id,
 	s.tcp_port,
 	t.name AS server_type,
 	s.type AS server_type_id,
-	s.upd_pending AS upd_pending,
+	(COALESCE (scu.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (scu.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending,
+	COALESCE (scu.config_update_time, TIMESTAMPTZ 'epoch') AS config_update_time,
+	COALESCE (scu.config_apply_time, TIMESTAMPTZ 'epoch') AS config_apply_time,
 	s.xmpp_id,
 	s.xmpp_passwd,
 	s.status_last_updated
@@ -189,7 +194,6 @@ INSERT INTO server (
 	status,
 	tcp_port,
 	type,
-	upd_pending,
 	xmpp_id,
 	xmpp_passwd,
 	status_last_updated
@@ -214,43 +218,11 @@ INSERT INTO server (
 	:status_id,
 	:tcp_port,
 	:server_type_id,
-	:upd_pending,
 	:xmpp_id,
 	:xmpp_passwd,
 	:status_last_updated
 ) RETURNING
-	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
-	cachegroup AS cachegroup_id,
-	cdn_id,
-	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
-	domain_name,
-	guid,
-	host_name,
-	https_port,
-	id,
-	ilo_ip_address,
-	ilo_ip_gateway,
-	ilo_ip_netmask,
-	ilo_password,
-	ilo_username,
-	last_updated,
-	mgmt_ip_address,
-	mgmt_ip_gateway,
-	mgmt_ip_netmask,
-	offline_reason,
-	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
-	phys_location AS phys_location_id,
-	profile AS profile_id,
-	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
-	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
-	rack,
-	reval_pending,
-	(SELECT name FROM status WHERE status.id=server.status) AS status,
-	status AS status_id,
-	tcp_port,
-	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
-	type AS server_type_id,
-	upd_pending
+	id
 `
 const insertQueryV4 = `
 INSERT INTO server (
@@ -274,7 +246,6 @@ INSERT INTO server (
 	status,
 	tcp_port,
 	type,
-	upd_pending,
 	xmpp_id,
 	xmpp_passwd
 ) VALUES (
@@ -298,42 +269,10 @@ INSERT INTO server (
 	:status_id,
 	:tcp_port,
 	:server_type_id,
-	:upd_pending,
 	:xmpp_id,
 	:xmpp_passwd
 ) RETURNING
-	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
-	cachegroup AS cachegroup_id,
-	cdn_id,
-	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
-	domain_name,
-	guid,
-	host_name,
-	https_port,
-	id,
-	ilo_ip_address,
-	ilo_ip_gateway,
-	ilo_ip_netmask,
-	ilo_password,
-	ilo_username,
-	last_updated,
-	mgmt_ip_address,
-	mgmt_ip_gateway,
-	mgmt_ip_netmask,
-	offline_reason,
-	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
-	phys_location AS phys_location_id,
-	profile AS profile_id,
-	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
-	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
-	rack,
-	reval_pending,
-	(SELECT name FROM status WHERE status.id=server.status) AS status,
-	status AS status_id,
-	tcp_port,
-	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
-	type AS server_type_id,
-	upd_pending
+	id
 `
 
 const insertQuery = `
@@ -358,7 +297,6 @@ INSERT INTO server (
 	status,
 	tcp_port,
 	type,
-	upd_pending,
 	xmpp_id,
 	xmpp_passwd
 ) VALUES (
@@ -382,42 +320,10 @@ INSERT INTO server (
 	:status_id,
 	:tcp_port,
 	:server_type_id,
-	:upd_pending,
 	:xmpp_id,
 	:xmpp_passwd
 ) RETURNING
-	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
-	cachegroup AS cachegroup_id,
-	cdn_id,
-	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
-	domain_name,
-	guid,
-	host_name,
-	https_port,
-	id,
-	ilo_ip_address,
-	ilo_ip_gateway,
-	ilo_ip_netmask,
-	ilo_password,
-	ilo_username,
-	last_updated,
-	mgmt_ip_address,
-	mgmt_ip_gateway,
-	mgmt_ip_netmask,
-	offline_reason,
-	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
-	phys_location AS phys_location_id,
-	profile AS profile_id,
-	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
-	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
-	rack,
-	reval_pending,
-	(SELECT name FROM status WHERE status.id=server.status) AS status,
-	status AS status_id,
-	tcp_port,
-	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
-	type AS server_type_id,
-	upd_pending
+	id
 `
 
 const updateQuery = `
@@ -818,6 +724,39 @@ and p.id = $1
 	}
 
 	return serviceInterface, util.JoinErrs(errs)
+}
+
+func validateConfigUpdate(tx *sql.Tx, server tc.CommonServerProperties, now time.Time) (bool, error) {
+
+	if server.ConfigUpdateTime != nil {
+		if server.ConfigUpdateTime.Before(now) {
+			return false, fmt.Errorf("failed to add server. config update time cannot be in the past")
+		}
+		return true, nil
+	}
+
+	// Deprecated. UpdPending should be treated only as a fallback to the UpdateTime from above
+	if server.UpdPending != nil {
+		return *server.UpdPending, nil
+	}
+
+	return false, nil
+}
+
+func validateRevalUpdate(tx *sql.Tx, server tc.CommonServerProperties, now time.Time) (bool, error) {
+
+	if server.RevalUpdateTime != nil {
+		if server.RevalUpdateTime.Before(now) {
+			return false, fmt.Errorf("failed to add server. revalidate update time cannot be in the past")
+		}
+		return true, nil
+	}
+
+	// Deprecated. RevalPending should be treated only as a fallback to the UpdateTime from above
+	if server.RevalPending != nil {
+		return *server.RevalPending, nil
+	}
+	return false, nil
 }
 
 // Read is the handler for GET requests to /servers.
@@ -1637,32 +1576,44 @@ func Update(w http.ResponseWriter, r *http.Request) {
 func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	var server tc.ServerNullableV2
 
-	tx := inf.Tx.Tx
-
 	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	if server.ID != nil {
 		var prevID int
-		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		err := inf.Tx.Tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
 		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
 			return
 		}
 		if prevID != 0 {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
 			return
 		}
 	}
 
 	server.XMPPID = newUUID()
 
-	if err := validateV2(&server, tx); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+	if err := validateV2(&server, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
+
+	currentTime := time.Now()
+
+	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
@@ -1676,80 +1627,112 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
+
+	serverID, err := createServerV2(inf.Tx, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-	defer resultRows.Close()
-
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
-			return
-		}
-	}
-	if rowsAffected == 0 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("server create: no server was inserted, no id was returned"))
-		return
-	} else if rowsAffected > 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
 	ifaces, err := server.LegacyInterfaceDetails.ToInterfacesV4(*server.IPIsService, *server.IP6IsService, server.RouterHostName, server.RouterPortName)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+	}
+
+	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
-	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); err != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	if updatePending {
+		if server.ConfigUpdateTime != nil {
+			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		} else {
+			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		}
+	}
+
+	if revalPending {
+		if server.RevalUpdateTime != nil {
+			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		} else {
+			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		}
+	}
+
+	where := `WHERE s.id = $1`
+	selquery := selectQuery + where
+	var srvr tc.ServerNullableV2
+	if err := inf.Tx.QueryRowx(selquery, serverID).StructScan(&srvr); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
+
+	// TODO: Use returned values from SQL insert to ensure inserted values match
+	srvr.LegacyInterfaceDetails = server.LegacyInterfaceDetails
+	srvr.IPIsService = server.IPIsService
+	srvr.IP6IsService = server.IP6IsService
+	srvr.RouterHostName = server.RouterHostName
+	srvr.RouterPortName = server.RouterPortName
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server was created.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 
-	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *srvr.HostName, *srvr.DomainName, *srvr.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
 }
 
 func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	var server tc.ServerV30
 
-	tx := inf.Tx.Tx
-
 	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	if server.ID != nil {
 		var prevID int
-		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		err := inf.Tx.Tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
 		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
 			return
 		}
 		if prevID != 0 {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
 			return
 		}
 	}
 
 	server.XMPPID = newUUID()
-	_, err := validateV3(&server, tx)
+
+	_, err := validateV3(&server, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
+
+	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
 
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
@@ -1765,80 +1748,109 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resultRows, err := inf.Tx.NamedQuery(insertQueryV3, server)
+	serverID, err := createServerV3(inf.Tx, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-	defer resultRows.Close()
-
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
-			return
-		}
-	}
-	if rowsAffected == 0 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("server create: no server was inserted, no id was returned"))
-		return
-	} else if rowsAffected > 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
 	interfaces, err := tc.ToInterfacesV4(server.Interfaces, server.RouterHostName, server.RouterPortName)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 	}
-	userErr, sysErr, errCode := createInterfaces(*server.ID, interfaces, tx)
+	userErr, sysErr, errCode := createInterfaces(int(serverID), interfaces, inf.Tx.Tx)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+
+	if updatePending {
+		if server.ConfigUpdateTime != nil {
+			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		} else {
+			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		}
+	}
+
+	if revalPending {
+		if server.RevalUpdateTime != nil {
+			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		} else {
+			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		}
+	}
+
+	where := `WHERE s.id = $1`
+	selquery := selectQuery + where
+	var srvr tc.ServerV30
+	if err := inf.Tx.QueryRowx(selquery, serverID).StructScan(&srvr); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	// TODO: Use returned values from SQL insert to ensure inserted values match
+	srvr.Interfaces = server.Interfaces
+	srvr.RouterHostName = server.RouterHostName
+	srvr.RouterPortName = server.RouterPortName
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr)
 
-	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *srvr.HostName, *srvr.DomainName, *srvr.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
 }
 
 func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	var server tc.ServerV40
 
-	tx := inf.Tx.Tx
-
 	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
+
 	if server.ID != nil {
 		var prevID int
-		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
+		err := inf.Tx.Tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
 		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
 			return
 		}
 		if prevID != 0 {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
 			return
 		}
 	}
 
-	str := uuid.New().String()
-	server.XMPPID = &str
-	_, err := validateV4(&server, tx)
+	server.XMPPID = newUUID()
+
+	_, err := validateV4(&server, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
+
+	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
 
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
@@ -1854,41 +1866,134 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resultRows, err := inf.Tx.NamedQuery(insertQueryV4, server)
+	serverID, err := createServerV4(inf.Tx, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	defer resultRows.Close()
 
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
-			return
+	userErr, sysErr, errCode := createInterfaces(int(serverID), server.Interfaces, inf.Tx.Tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if updatePending {
+		if server.ConfigUpdateTime != nil {
+			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		} else {
+			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
 		}
 	}
-	if rowsAffected == 0 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("server create: no server was inserted, no id was returned"))
-		return
-	} else if rowsAffected > 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
+
+	if revalPending {
+		if server.RevalUpdateTime != nil {
+			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		} else {
+			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		}
+	}
+
+	where := `WHERE s.id = $1`
+	selquery := selectQuery + where
+	var srvr tc.ServerV40
+	if err := inf.Tx.QueryRowx(selquery, serverID).StructScan(&srvr); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 
-	userErr, sysErr, errCode := createInterfaces(*server.ID, server.Interfaces, tx)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
+	// TODO: Use returned values from SQL insert to ensure inserted values match
+	srvr.Interfaces = server.Interfaces
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr)
 
-	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *srvr.HostName, *srvr.DomainName, *srvr.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
+}
+
+func createServerV4(tx *sqlx.Tx, server tc.ServerV40) (int64, error) {
+	rows, err := tx.NamedQuery(insertQueryV4, server)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	rowsAffected := 0
+	var serverID int64
+	for rows.Next() {
+		rowsAffected++
+		if err := rows.Scan(&serverID); err != nil {
+			return 0, err
+		}
+	}
+
+	if rowsAffected == 0 {
+		return 0, errors.New("server create: no server was inserted, no id was returned")
+	} else if rowsAffected > 1 {
+		return 0, fmt.Errorf("too many ids returned from server insert: %d", rowsAffected)
+	}
+
+	return serverID, nil
+}
+
+func createServerV3(tx *sqlx.Tx, server tc.ServerV30) (int64, error) {
+	rows, err := tx.NamedQuery(insertQueryV3, server)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	rowsAffected := 0
+	var serverID int64
+	for rows.Next() {
+		rowsAffected++
+		if err := rows.Scan(&serverID); err != nil {
+			return 0, err
+		}
+	}
+
+	if rowsAffected == 0 {
+		return 0, errors.New("server create: no server was inserted, no id was returned")
+	} else if rowsAffected > 1 {
+		return 0, fmt.Errorf("too many ids returned from server insert: %d", rowsAffected)
+	}
+
+	return serverID, nil
+}
+
+func createServerV2(tx *sqlx.Tx, server tc.ServerNullableV2) (int64, error) {
+	rows, err := tx.NamedQuery(insertQuery, server)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	rowsAffected := 0
+	var serverID int64
+	for rows.Next() {
+		rowsAffected++
+		if err := rows.Scan(&serverID); err != nil {
+			return 0, err
+		}
+	}
+
+	if rowsAffected == 0 {
+		return 0, errors.New("server create: no server was inserted, no id was returned")
+	} else if rowsAffected > 1 {
+		return 0, fmt.Errorf("too many ids returned from server insert: %d", rowsAffected)
+	}
+
+	return serverID, nil
 }
 
 // Create is the handler for POST requests to /servers.

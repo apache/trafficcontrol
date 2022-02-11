@@ -197,8 +197,9 @@ SELECT c.id
 FROM cachegroup c
 JOIN topology_descendants td ON c."name" = td.cachegroup
 )
-UPDATE server
-SET upd_pending = TRUE
+INSERT INTO public.server_config_update (server_id, config_update_time)
+SELECT server.id, now()
+FROM server
 WHERE (server.cdn_id = $1
 	   AND server.cachegroup IN (
 			SELECT id
@@ -207,6 +208,8 @@ WHERE (server.cdn_id = $1
 				OR secondary_parent_cachegroup_id = $2
 			))
 		OR server.cachegroup IN (SELECT stc.id FROM server_topology_descendants stc)
+ON CONFLICT (server_id)
+DO UPDATE SET config_update_time = now();
 `
 	if _, err := tx.Exec(q, cdnID, parentCachegroupID); err != nil {
 		return errors.New("queueing updates on child caches: " + err.Error())

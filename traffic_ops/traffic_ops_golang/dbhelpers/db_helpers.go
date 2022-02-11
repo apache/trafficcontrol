@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -859,6 +860,7 @@ func CDNExists(cdnName string, tx *sql.Tx) (bool, error) {
 	return true, nil
 }
 
+// GetCDNNameFromID gets the CDN name from the given CDN ID.
 func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = $1`, id).Scan(&name); err != nil {
@@ -1751,4 +1753,64 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 		return regionName, false, fmt.Errorf("querying region name from ID: %w", err)
 	}
 	return regionName, true, nil
+}
+
+// queueUpdateForServer set the current config update time for the server to now
+func QueueUpdateForServer(tx *sql.Tx, serverID int64) error {
+	const query = `
+INSERT INTO public.server_config_update (server_id, config_update_time)
+VALUES ($1, now())
+ON CONFLICT (server_id)
+DO UPDATE SET config_update_time = now();
+	`
+	if _, err := tx.Exec(query, serverID); err != nil {
+		return fmt.Errorf("updating server table: %v", err)
+	}
+
+	return nil
+}
+
+// queueUpdateForServer set the current config update time for the server to now
+func QueueUpdateForServerWithTime(tx *sql.Tx, serverID int64, updateTime time.Time) error {
+	const query = `
+INSERT INTO public.server_config_update (server_id, config_update_time)
+VALUES ($1, $2)
+ON CONFLICT (server_id)
+DO UPDATE SET config_update_time = $2;
+	`
+	if _, err := tx.Exec(query, serverID, updateTime); err != nil {
+		return fmt.Errorf("updating server table: %v", err)
+	}
+
+	return nil
+}
+
+// queueUpdateForServer set the current reval update time for the server to now
+func QueueRevalForServer(tx *sql.Tx, serverID int64) error {
+	const query = `
+INSERT INTO public.server_config_update (server_id, revalidate_update_time)
+VALUES ($1, now())
+ON CONFLICT (server_id)
+DO UPDATE SET revalidate_update_time = now();
+	`
+	if _, err := tx.Exec(query, serverID); err != nil {
+		return fmt.Errorf("updating server table: %v", err)
+	}
+
+	return nil
+}
+
+// queueUpdateForServer set the current reval update time for the server to now
+func QueueRevalForServerWithTime(tx *sql.Tx, serverID int64, revalTime time.Time) error {
+	const query = `
+INSERT INTO public.server_config_update (server_id, revalidate_update_time)
+VALUES ($1, $2)
+ON CONFLICT (server_id)
+DO UPDATE SET revalidate_update_time = $2;
+	`
+	if _, err := tx.Exec(query, serverID, revalTime); err != nil {
+		return fmt.Errorf("updating server table: %v", err)
+	}
+
+	return nil
 }

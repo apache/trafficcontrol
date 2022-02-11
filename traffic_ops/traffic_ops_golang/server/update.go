@@ -20,7 +20,6 @@ package server
  */
 
 import (
-	"database/sql"
 	"errors"
 	"net/http"
 	"strconv"
@@ -31,7 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-// UpdateHandler implements an http handler that updates a server's upd_pending and reval_pending values.
+// UpdateHandler implements an http handler that updates a server's config update and reval times.
 func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id-or-name"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -41,31 +40,9 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	idOrName := inf.Params["id-or-name"]
-	id, err := strconv.Atoi(idOrName)
-	hostName := ""
-	if err == nil {
-		name, ok, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, id)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from id '"+idOrName+"': "+err.Error()))
-			return
-		} else if !ok {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server ID '"+idOrName+"' not found"), nil)
-			return
-		}
-		hostName = name
-		cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(id))
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-			return
-		}
-	} else {
-		hostName = idOrName
-		serverID, ok, err := dbhelpers.GetServerIDFromName(hostName, inf.Tx.Tx)
+	serverID, err := strconv.Atoi(idOrName)
+	if err != nil {
+		id, ok, err := dbhelpers.GetServerIDFromName(idOrName, inf.Tx.Tx)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server id from name '"+idOrName+"': "+err.Error()))
 			return
@@ -73,92 +50,71 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server name '"+idOrName+"' not found"), nil)
 			return
 		}
-		cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(serverID))
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-			return
-		}
+		serverID = id
+	}
+
+	cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(serverID))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
 	}
 
 	updated, hasUpdated := inf.Params["updated"]
 	revalUpdated, hasRevalUpdated := inf.Params["reval_updated"]
 	if !hasUpdated && !hasRevalUpdated {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Must pass at least one query paramter of 'updated' or 'reval_updated'"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must pass at least one query parameter of 'updated' or 'reval_updated'"), nil)
 		return
 	}
 	updated = strings.ToLower(updated)
 	revalUpdated = strings.ToLower(revalUpdated)
 
-	if hasUpdated && updated != `t` && updated != `true` && updated != `f` && updated != `false` {
+	if updated != `t` && updated != `true` && updated != `f` && updated != `false` {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'updated' must be 'true' or 'false'"), nil)
 		return
 	}
-	if hasRevalUpdated && revalUpdated != `t` && revalUpdated != `true` && revalUpdated != `f` && revalUpdated != `false` {
+	if revalUpdated != `t` && revalUpdated != `true` && revalUpdated != `f` && revalUpdated != `false` {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'reval_updated' must be 'true' or 'false'"), nil)
 		return
 	}
 
 	strToBool := func(s string) bool {
-		return !strings.HasPrefix(strings.ToLower(s), "f")
+		return !strings.HasPrefix(s, "f")
 	}
 
-	updatedPtr := (*bool)(nil)
 	if hasUpdated {
 		updatedBool := strToBool(updated)
-		updatedPtr = &updatedBool
-	}
-	revalUpdatedPtr := (*bool)(nil)
-	if hasRevalUpdated {
-		revalUpdatedBool := strToBool(revalUpdated)
-		revalUpdatedPtr = &revalUpdatedBool
+		if updatedBool {
+			if err = dbhelpers.QueueUpdateForServer(inf.Tx.Tx, int64(serverID)); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting update status: "+err.Error()))
+				return
+			}
+		}
 	}
 
-	if err := setUpdateStatuses(inf.Tx.Tx, hostName, updatedPtr, revalUpdatedPtr); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting updated statuses: "+err.Error()))
-		return
+	if hasRevalUpdated {
+		revalUpdatedBool := strToBool(revalUpdated)
+		if revalUpdatedBool {
+			if err = dbhelpers.QueueRevalForServer(inf.Tx.Tx, int64(serverID)); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting reval status: "+err.Error()))
+				return
+			}
+		}
 	}
+
+	hostName, _, _ := dbhelpers.GetServerNameFromID(inf.Tx.Tx, serverID)
 
 	respMsg := "successfully set server '" + hostName + "'"
 	if hasUpdated {
-		respMsg += " updated=" + strconv.FormatBool(strToBool(updated))
+		respMsg += " updated=" + updated
 	}
 	if hasRevalUpdated {
-		respMsg += " reval_updated=" + strconv.FormatBool(strToBool(revalUpdated))
+		respMsg += " reval_updated=" + revalUpdated
 	}
 
 	api.WriteAlerts(w, r, http.StatusOK, tc.CreateAlerts(tc.SuccessLevel, respMsg))
-}
-
-// setUpdateStatuses sets the upd_pending and reval_pending columns of a server.
-// If updatePending or revalPending is nil, that value is not changed.
-func setUpdateStatuses(tx *sql.Tx, hostName string, updatePending *bool, revalPending *bool) error {
-	if updatePending == nil && revalPending == nil {
-		return errors.New("either updatePending or revalPending must not be nil")
-	}
-	qry := `UPDATE server SET `
-	updateStrs := []string{}
-	nextI := 1
-	qryVals := []interface{}{}
-	if updatePending != nil {
-		updateStrs = append(updateStrs, `upd_pending = $`+strconv.Itoa(nextI))
-		nextI++
-		qryVals = append(qryVals, *updatePending)
-	}
-	if revalPending != nil {
-		updateStrs = append(updateStrs, `reval_pending = $`+strconv.Itoa(nextI))
-		nextI++
-		qryVals = append(qryVals, *revalPending)
-	}
-	qry += strings.Join(updateStrs, ", ") + ` WHERE host_name = $` + strconv.Itoa(nextI)
-	qryVals = append(qryVals, hostName)
-
-	if _, err := tx.Exec(qry, qryVals...); err != nil {
-		return errors.New("executing: " + err.Error())
-	}
-	return nil
 }

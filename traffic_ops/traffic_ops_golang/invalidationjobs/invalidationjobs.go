@@ -135,8 +135,10 @@ RETURNING
 	start_time as startTime
 `
 
-const revalQuery = `
-UPDATE server SET %s=TRUE
+const queueUpdateQuery = `
+INSERT INTO public.server_config_update (server_id, config_update_time)
+SELECT server.id, now()
+FROM server
 WHERE server.status NOT IN (
                              SELECT status.id
                              FROM status
@@ -155,8 +157,38 @@ WHERE server.status NOT IN (
      AND server.cdn_id  =  (
                              SELECT deliveryservice.cdn_id
                              FROM deliveryservice
-                             WHERE deliveryservice.%s=$1
+                             WHERE deliveryservice.id=$1
                            )
+ON CONFLICT (server_id)
+DO UPDATE SET config_update_time = now();
+`
+
+const queueRevalQuery = `
+INSERT INTO public.server_config_update (server_id, revalidate_update_time)
+SELECT server.id, now()
+FROM server
+WHERE server.status NOT IN (
+                             SELECT status.id
+                             FROM status
+                             WHERE name IN ('OFFLINE', 'PRE_PROD')
+                           )
+     AND server.profile IN (
+                             SELECT profile_parameter.profile
+                             FROM profile_parameter
+                             WHERE profile_parameter.parameter IN (
+                                                                    SELECT parameter.id
+                                                                    FROM parameter
+                                                                    WHERE parameter.name='location'
+                                                                     AND parameter.config_file='regex_revalidate.config'
+                                                                  )
+                           )
+     AND server.cdn_id  =  (
+                             SELECT deliveryservice.cdn_id
+                             FROM deliveryservice
+                             WHERE deliveryservice.id=$1
+                           )
+ON CONFLICT (server_id)
+DO UPDATE SET revalidate_update_time = now();
 `
 
 const updateQuery = `
@@ -1528,22 +1560,26 @@ func setRevalFlags(d interface{}, tx *sql.Tx) error {
 		useReval = "0"
 	}
 
-	col := "reval_pending"
-	if useReval == "0" {
-		col = "upd_pending"
-	}
-
-	var q string
+	deliveryServiceID := 0
+	var err error
 	switch t := d.(type) {
 	case uint:
-		q = fmt.Sprintf(revalQuery, col, "id")
+		deliveryServiceID = d.(int)
 	case string:
-		q = fmt.Sprintf(revalQuery, col, "xml_id")
+		deliveryServiceID, _, err = dbhelpers.GetDSIDFromXMLID(tx, d.(string))
+		if err != nil {
+			return fmt.Errorf("error retrieving server name for id: %v err: %v", d, err)
+		}
 	default:
-		return fmt.Errorf("Invalid type passed to 'setRevalFlags': %v", t)
+		return fmt.Errorf("invalid type passed to 'setRevalFlags': %v", t)
 	}
 
-	row = tx.QueryRow(q, d)
+	if useReval == "0" {
+		row = tx.QueryRow(queueUpdateQuery, deliveryServiceID)
+	} else {
+		row = tx.QueryRow(queueRevalQuery, deliveryServiceID)
+	}
+
 	if err := row.Scan(); err != nil && err != sql.ErrNoRows {
 		return err
 	}

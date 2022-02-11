@@ -50,9 +50,9 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cols := map[string]dbhelpers.WhereColumnInfo{
-		"cdnID":     {Column: "server.cdn_id", Checker: api.IsInt},
-		"typeID":    {Column: "server.type", Checker: nil},
-		"profileID": {Column: "server.profile", Checker: nil},
+		"cdnID":     {Column: "s.cdn_id", Checker: api.IsInt},
+		"typeID":    {Column: "s.type", Checker: nil},
+		"profileID": {Column: "s.profile", Checker: nil},
 	}
 
 	typeName := inf.Params["type"]
@@ -113,7 +113,8 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, cols)
+	// Ignore pagination to prevent possibility of not updating the entirity the requested CDN. Likewise, ignore orderby as nonessential.
+	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, cols)
 	if len(errs) > 0 {
 		errCode = http.StatusBadRequest
 		userErr = util.JoinErrs(errs)
@@ -121,10 +122,24 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := `UPDATE server SET upd_pending = :upd_pending`
-	query = query + where + orderBy + pagination
-	queryValues["upd_pending"] = reqObj.Action == "queue"
-	rowsAffected, err := queueUpdates(inf.Tx, queryValues, query)
+	query := ""
+	if reqObj.Action == "queue" {
+		query = `INSERT INTO public.server_config_update (server_id, config_update_time)
+SELECT s.id, now() 
+FROM public.server s`
+		query = query + where
+		query = query + `
+ON CONFLICT (server_id)
+DO UPDATE SET config_update_time = now()`
+	} else {
+		query = `DELETE FROM public.server_config_update
+WHERE server_id IN (SELECT s.id
+	FROM public.server s`
+		query = query + where
+		query = query + `)`
+	}
+
+	rowsAffected, err := queueUpdates(inf.Tx, query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("queueing updates: %v", err))
 		return
@@ -135,7 +150,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 }
 
 // queueUpdates is the helper function to queue/ dequeue updates on servers for a CDN, optionally filtered by type and/ or profile
-func queueUpdates(tx *sqlx.Tx, queryValues map[string]interface{}, query string) (int64, error) {
+func queueUpdates(tx *sqlx.Tx, query string, queryValues map[string]interface{}) (int64, error) {
 	result, err := tx.NamedExec(query, queryValues)
 	if err != nil {
 		return 0, errors.New("querying queue updates: " + err.Error())

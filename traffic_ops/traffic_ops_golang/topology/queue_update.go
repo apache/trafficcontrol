@@ -91,9 +91,17 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
-	if err := queueUpdates(inf.Tx.Tx, topologyName, reqObj.CDNID, reqObj.Action == "queue"); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Topology queueing updates: "+err.Error()))
-		return
+
+	if reqObj.Action == "queue" {
+		if err := queueUpdates(inf.Tx.Tx, topologyName, reqObj.CDNID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Topology queueing updates: "+err.Error()))
+			return
+		}
+	} else {
+		if err := dequeueUpdates(inf.Tx.Tx, topologyName, reqObj.CDNID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Topology queueing updates: "+err.Error()))
+			return
+		}
 	}
 
 	message := fmt.Sprintf("TOPOLOGY: %s, ACTION: Topology server updates %sd", topologyName, reqObj.Action)
@@ -101,18 +109,38 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, tc.TopologiesQueueUpdate{Action: reqObj.Action, CDNID: reqObj.CDNID, Topology: topologyName})
 }
 
-func queueUpdates(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64, queue bool) error {
+func queueUpdates(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64) error {
 	query := `
-UPDATE server s
-SET upd_pending = $1
-FROM cachegroup c, topology_cachegroup tc, cdn
-WHERE s.cachegroup = c.id
-AND c.name = tc.cachegroup
-AND tc.topology = $2
-AND s.cdn_id = $3
+INSERT INTO public.server_config_update (server_id, config_update_time)
+SELECT s.id, now()
+FROM "server" s
+INNER JOIN cachegroup c ON c.id =s.cachegroup 
+INNER JOIN topology_cachegroup tc ON tc.cachegroup = c."name"
+WHERE tc.topology = $1
+AND s.cdn_id = $2
+ON CONFLICT (server_id)
+DO UPDATE SET config_update_time = now();
 `
 	var err error
-	if _, err = tx.Exec(query, queue, topologyName, cdnId); err != nil {
+	if _, err = tx.Exec(query, topologyName, cdnId); err != nil {
+		err = fmt.Errorf("queueing updates: %s", err)
+	}
+	return err
+}
+
+func dequeueUpdates(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64) error {
+	query := `
+DELETE FROM public.server_config_update
+WHERE server_id IN (
+SELECT s.id 
+FROM "server" s
+INNER JOIN cachegroup c ON c.id =s.cachegroup 
+INNER JOIN topology_cachegroup tc ON tc.cachegroup = c."name"
+WHERE tc.topology = $1 
+AND s.cdn_id = $2);
+`
+	var err error
+	if _, err = tx.Exec(query, topologyName, cdnId); err != nil {
 		err = fmt.Errorf("queueing updates: %s", err)
 	}
 	return err

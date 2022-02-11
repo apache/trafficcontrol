@@ -780,7 +780,7 @@ s.status as status_id,
 s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
-s.upd_pending as upd_pending
+(COALESCE (scu.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (scu.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending
 `
 
 	queryFormatString := `
@@ -794,6 +794,7 @@ JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
+LEFT OUTER JOIN server_config_update scu ON s.id = scu.server_id
 WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
 
 	idRows, err := tx.Queryx(fmt.Sprintf(queryFormatString, ""), dsID)
