@@ -17,14 +17,12 @@ package v4
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -39,7 +37,7 @@ func TestCacheGroups(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies}, func() {
 
 		methodTests := map[string]map[string]struct {
-			endpointId     int
+			endpointId     func() int
 			clientSession  *client.Session
 			requestParams  map[string]string
 			requestBody    map[string]interface{}
@@ -48,82 +46,94 @@ func TestCacheGroups(t *testing.T) {
 		}{
 			"GET": {
 				"OK when VALID name parameter AND Lat/Long are 0": {
-					0, TOSession, map[string]string{"name": "nullLatLongCG"}, nil, nil,
+					nil, TOSession, map[string]string{"name": "nullLatLongCG"}, nil, nil,
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1), ValidateResponseFields()),
 				},
 				"NOT MODIFIED when NO CHANGES made": {
-					0, TOSession, nil, nil,
+					nil, TOSession, nil, nil,
 					http.Header{rfc.IfModifiedSince: {time.Now().AddDate(0, 0, 1).Format(time.RFC1123)}},
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"NOT MODIFIED when VALID name parameter when NO CHANGES made": {
-					0, TOSession, map[string]string{"name": "originCachegroup"}, nil,
+					nil, TOSession, map[string]string{"name": "originCachegroup"}, nil,
 					http.Header{rfc.IfModifiedSince: {time.Now().AddDate(0, 0, 1).Format(time.RFC1123)}},
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"NOT MODIFIED when VALID shortName parameter when NO CHANGES made": {
-					0, TOSession, map[string]string{"shortName": "mog1"}, nil,
+					nil, TOSession, map[string]string{"shortName": "mog1"}, nil,
 					http.Header{rfc.IfModifiedSince: {time.Now().AddDate(0, 0, 1).Format(time.RFC1123)}},
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					0, TOSession, nil, nil, nil,
+					nil, TOSession, nil, nil, nil,
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when VALID name parameter": {
-					0, TOSession, map[string]string{"name": "parentCachegroup"}, nil, nil,
+					nil, TOSession, map[string]string{"name": "parentCachegroup"}, nil, nil,
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						ValidateExpectedField("Name", "parentCachegroup")),
 				},
 				"OK when VALID shortName parameter": {
-					0, TOSession, map[string]string{"shortName": "pg2"}, nil, nil,
+					nil, TOSession, map[string]string{"shortName": "pg2"}, nil, nil,
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						ValidateExpectedField("ShortName", "pg2")),
 				},
-				// GetTestCacheGroupsByTopology(t)
-				// uses all topology test data // confirms cg exists in topology // loops thru top nodes
-				// topologyCachegroups(top tc.Topology)
-				//"OK when VALID topology parameter": {
-				//	0, TOSession, map[string]string{"topology": "mso-topology"}, nil, nil,
-				//	utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				//},
-				// GetTestPaginationSupportCg(t)
-				//"OK when VALID pagination parameters": {
-				//	0, TOSession, nil, nil, nil,
-				//	utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				//},
+				"OK when VALID topology parameter": {
+					nil, TOSession, map[string]string{"topology": "mso-topology"}, nil, nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 				"OK when VALID type parameter": {
-					0, TOSession, map[string]string{"type": fmt.Sprintf("%d", GetTypeId("ORG_LOC"))},
+					nil, TOSession, map[string]string{"type": "ORG_LOC"},
 					nil, nil,
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						ValidateExpectedField("TypeName", "ORG_LOC")),
 				},
 				"EMPTY RESPONSE when INVALID id parameter": {
-					0, TOSession, map[string]string{"id": "10000"}, nil, nil,
+					nil, TOSession, map[string]string{"id": "10000"}, nil, nil,
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 				"EMPTY RESPONSE when INVALID type parameter": {
-					0, TOSession, map[string]string{"type": "10000"}, nil, nil,
+					nil, TOSession, map[string]string{"type": "10000"}, nil, nil,
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
+				"FIRST RESULT when limit=1": {
+					nil, TOSession, map[string]string{"orderby": "id", "limit": "1"}, nil, nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), ValidatePagination("limit")),
+				},
+				"SECOND RESULT when offset=1": {
+					nil, TOSession, map[string]string{"orderby": "id", "limit": "1", "offset": "1"}, nil, nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), ValidatePagination("offset")),
+				},
+				"SECOND RESULT when page=2": {
+					nil, TOSession, map[string]string{"orderby": "id", "limit": "1", "page": "2"}, nil, nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), ValidatePagination("page")),
+				},
+				"BAD REQUEST when INVALID limit parameter": {
+					nil, TOSession, map[string]string{"limit": "-2"}, nil, nil,
+					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID offset parameter": {
+					nil, TOSession, map[string]string{"limit": "1", "offset": "0"}, nil, nil,
+					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID page parameter": {
+					nil, TOSession, map[string]string{"limit": "1", "page": "0"}, nil, nil,
+					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
 				"UNAUTHORIZED when not logged in": {
-					0, NoAuthTOSession, nil, nil, nil,
+					nil, NoAuthTOSession, nil, nil, nil,
 					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"POST": {
 				"UNAUTHORIZED when not logged in": {
-					0, NoAuthTOSession, nil, nil, nil,
+					nil, NoAuthTOSession, nil, nil, nil,
 					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"PUT": {
-				// UpdateTestCacheGroups(t)
-				// Change shortName, coordinates, localizationMethods // Adding Fallbacks to empty
-				// Adding additional Fallbacks // Removing Fallbacks
-				// verify fields arent nil // GET again and verify change
 				"OK when VALID request": {
-					GetCacheGroupId("cachegroup1"), TOSession, nil,
+					GetCacheGroupId(t, "cachegroup1"), TOSession, nil,
 					map[string]interface{}{
 						"latitude":            17.5,
 						"longitude":           17.5,
@@ -132,47 +142,46 @@ func TestCacheGroups(t *testing.T) {
 						"localizationMethods": []string{"CZ"},
 						"fallbacks":           []string{"fallback1"},
 						"typeName":            "EDGE_LOC",
-						"typeId":              GetTypeId("EDGE_LOC"),
+						"typeId":              -1,
 					},
 					nil,
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when updating Cache Group with null Lat/Long": {
-					GetCacheGroupId("nullLatLongCG"), TOSession, nil,
+					GetCacheGroupId(t, "nullLatLongCG"), TOSession, nil,
 					map[string]interface{}{
 						"name":      "nullLatLongCG",
 						"shortName": "null-ll",
 						"typeName":  "EDGE_LOC",
 						"fallbacks": []string{"fallback1"},
-						"typeId":    GetTypeId("EDGE_LOC"),
+						"typeId":    -1,
 					},
 					nil,
 					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
-				// Has issue when id omitted
 				"BAD REQUEST when updating type of cache group in topology": {
-					GetCacheGroupId("topology-edge-cg-01"), TOSession, nil,
+					GetCacheGroupId(t, "topology-edge-cg-01"), TOSession, nil,
 					map[string]interface{}{
-						"id":        GetCacheGroupId("topology-edge-cg-01"),
+						"id":        -1,
 						"latitude":  0,
 						"longitude": 0,
 						"name":      "topology-edge-cg-01",
 						"shortName": "te1",
-						"typeName":  "EDGE_LOC",
-						"typeId":    GetTypeId("MID_LOC"),
+						"typeName":  "MID_LOC",
+						"typeId":    -1,
 					},
 					nil,
 					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					GetCacheGroupId("parentCachegroup"), TOSession, nil,
+					GetCacheGroupId(t, "parentCachegroup"), TOSession, nil,
 					map[string]interface{}{
 						"latitude":  0,
 						"longitude": 0,
 						"name":      "parentCachegroup",
 						"shortName": "pg1",
 						"typeName":  "MID_LOC",
-						"typeId":    GetTypeId("MID_LOC"),
+						"typeId":    -1,
 					},
 					http.Header{
 						rfc.IfModifiedSince:   {time.Now().UTC().Add(-5 * time.Second).Format(time.RFC1123)},
@@ -181,50 +190,48 @@ func TestCacheGroups(t *testing.T) {
 					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IfMatch ETag Header": {
-					GetCacheGroupId("parentCachegroup2"), TOSession, nil,
+					GetCacheGroupId(t, "parentCachegroup2"), TOSession, nil,
 					map[string]interface{}{
 						"latitude":  0,
 						"longitude": 0,
 						"name":      "parentCachegroup2",
 						"shortName": "pg2",
 						"typeName":  "MID_LOC",
-						"typeId":    GetTypeId("MID_LOC"),
+						"typeId":    -1,
 					},
 					http.Header{
 						rfc.IfMatch: {rfc.ETag(time.Now().UTC().Add(-5 * time.Second))},
 					},
 					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
-				// UpdateCachegroupWithLocks(t) // GET CG // GET SRVRS w/ CG // GET CDN w/ ID FROM SRVRS // CREATE USER
-				// LOGIN w/ USER // CREATE CDN LOCK // UPDATE WITH OG USER -> expect error and 403 // UPDATE w/ NEW USER
-				// Expect no error // DELETE LOCK
-				//"FORBIDDEN when updating cache group when CDN LOCK exists": {
-				//	nil, TOSession, nil, nil, nil, nil,
-				//	utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
-				//},
 				"UNAUTHORIZED when not logged in": {
-					0, NoAuthTOSession, nil, nil, nil,
+					GetCacheGroupId(t, "cachegroup1"), NoAuthTOSession, nil, nil, nil,
 					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"DELETE": {
 				"NOT FOUND when INVALID id parameter": {
-					111111, TOSession, nil, nil, nil,
+					func() int { return 111111 }, TOSession, nil, nil, nil,
 					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"UNAUTHORIZED when not logged in": {
-					0, NoAuthTOSession, nil, nil, nil,
+					GetCacheGroupId(t, "cachegroup1"), NoAuthTOSession, nil, nil, nil,
 					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"GET AFTER CHANGES": {
 				"OK when changes were made ": {
-					0, TOSession, nil, nil,
+					nil, TOSession, nil, nil,
 					http.Header{
 						rfc.IfModifiedSince:   {time.Now().UTC().Add(-5 * time.Second).Format(time.RFC1123)},
 						rfc.IfUnmodifiedSince: {time.Now().UTC().Add(-5 * time.Second).Format(time.RFC1123)},
 					},
-					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusOK)),
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+			"CDNLOCK": {
+				"FORBIDDEN when updating cache group when CDN LOCK exists": {
+					nil, nil, nil, nil, nil, nil,
 				},
 			},
 		}
@@ -234,8 +241,14 @@ func TestCacheGroups(t *testing.T) {
 				for name, testCase := range testCases {
 					cg := tc.CacheGroupNullable{}
 					opts := client.NewRequestOptions()
+
 					if testCase.requestParams != nil {
 						for k, v := range testCase.requestParams {
+							if k == "type" {
+								if _, err := strconv.Atoi(v); err != nil {
+									v = strconv.Itoa(GetTypeId(t, v))
+								}
+							}
 							opts.QueryParameters.Add(k, v)
 						}
 					}
@@ -243,13 +256,23 @@ func TestCacheGroups(t *testing.T) {
 						opts.Header = testCase.requestHeaders
 					}
 					if testCase.requestBody != nil {
+						if _, ok := testCase.requestBody["id"]; ok {
+							testCase.requestBody["id"] = testCase.endpointId()
+						}
+						if typeId, ok := testCase.requestBody["typeId"]; ok {
+							if typeId == -1 {
+								if typeName, ok := testCase.requestBody["typeName"]; ok {
+									testCase.requestBody["typeId"] = GetTypeId(t, typeName.(string))
+								}
+							}
+						}
 						dat, _ := json.Marshal(testCase.requestBody)
 						err := json.Unmarshal(dat, &cg)
 						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 					}
 
 					switch method {
-					case "GET":
+					case "GET", "GET AFTER CHANGES":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.clientSession.GetCacheGroups(opts)
 							for _, check := range testCase.expectations {
@@ -265,17 +288,21 @@ func TestCacheGroups(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.clientSession.UpdateCacheGroup(testCase.endpointId, cg, opts)
+							resp, reqInf, err := testCase.clientSession.UpdateCacheGroup(testCase.endpointId(), cg, opts)
 							for _, check := range testCase.expectations {
 								check(t, reqInf, resp, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.clientSession.DeleteCacheGroup(testCase.endpointId, opts)
+							alerts, reqInf, err := testCase.clientSession.DeleteCacheGroup(testCase.endpointId(), opts)
 							for _, check := range testCase.expectations {
 								check(t, reqInf, alerts, err)
 							}
+						})
+					case "CDNLOCK":
+						t.Run(name, func(t *testing.T) {
+							UpdateCachegroupWithLocks(t)
 						})
 					}
 				}
@@ -287,17 +314,16 @@ func TestCacheGroups(t *testing.T) {
 func ValidateExpectedField(field string, expected string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ error) {
 		cgResp := resp.(tc.CacheGroupsNullableResponse)
-		require.GreaterOrEqual(t, len(cgResp.Response), 1, "Expected response object length %d, but got %d", 1, len(cgResp.Response))
 		cg := cgResp.Response[0]
 		switch field {
 		case "Name":
-			require.Equal(t, expected, *cg.Name, "Expected name to be %v, but got %v", expected, *cg.Name)
+			assert.Equal(t, expected, *cg.Name, "Expected name to be %v, but got %v", expected, *cg.Name)
 		case "ShortName":
-			require.Equal(t, expected, *cg.ShortName, "Expected shortName to be %v, but got %v", expected, *cg.ShortName)
+			assert.Equal(t, expected, *cg.ShortName, "Expected shortName to be %v, but got %v", expected, *cg.ShortName)
 		case "TypeName":
-			require.Equal(t, expected, *cg.Type, "Expected type to be %v, but got %v", expected, *cg.Type)
+			assert.Equal(t, expected, *cg.Type, "Expected type to be %v, but got %v", expected, *cg.Type)
 		default:
-			t.Errorf("Expected field: %v, does not exist in response", field)
+			assert.Fail(t, "Expected field: %v, does not exist in response", field)
 		}
 	}
 }
@@ -314,28 +340,56 @@ func ValidateResponseFields() utils.CkReqFunc {
 	}
 }
 
-func GetTypeId(typeName string) int {
+func ValidatePagination(paginationParam string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ error) {
+		assert := assert.New(t)
+		require := require.New(t)
+		paginationResp := resp.(tc.CacheGroupsNullableResponse)
 
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", typeName)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("orderby", "id")
+		respBase, _, err := TOSession.GetCacheGroups(opts)
+		require.NoError(err, "cannot get Cache Groups: %v - alerts: %+v", err, respBase.Alerts)
 
-	resp, _, _ := TOSession.GetTypes(opts)
-
-	typeId := resp.Response[0].ID
-
-	return typeId
+		cachegroup := respBase.Response
+		require.GreaterOrEqual(len(cachegroup), 3, "Need at least 3 Cache Groups in Traffic Ops to test pagination support, found: %d", len(cachegroup))
+		switch paginationParam {
+		case "limit:":
+			assert.Exactly(cachegroup[:1], paginationResp.Response, "expected GET Cachegroups with limit = 1 to return first result")
+		case "offset":
+			assert.Exactly(cachegroup[1:2], paginationResp.Response, "expected GET cachegroup with limit = 1, offset = 1 to return second result")
+		case "page":
+			assert.Exactly(cachegroup[1:2], paginationResp.Response, "expected GET cachegroup with limit = 1, page = 2 to return second result")
+		}
+	}
 }
 
-func GetCacheGroupId(cgName string) int {
-
+func GetTypeId(t *testing.T, typeName string) int {
+	require := require.New(t)
 	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", cgName)
+	opts.QueryParameters.Set("name", typeName)
+	resp, _, err := TOSession.GetTypes(opts)
 
-	resp, _, _ := TOSession.GetCacheGroups(opts)
+	require.NoError(err, "Get Types Request failed with error: %v", err)
+	require.Equal(1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
+	require.NotNil(&resp.Response[0].ID, "Expected id to not be nil")
 
-	cgId := resp.Response[0].ID
+	return resp.Response[0].ID
+}
 
-	return *cgId
+func GetCacheGroupId(t *testing.T, cacheGroupName string) func() int {
+	return func() int {
+		require := require.New(t)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", cacheGroupName)
+
+		resp, _, err := TOSession.GetCacheGroups(opts)
+		require.NoError(err, "Get Cache Groups Request failed with error: %v", err)
+		require.Equal(len(resp.Response), 1, "Expected response object length 1, but got %d", len(resp.Response))
+		require.NotNil(resp.Response[0].ID, "Expected id to not be nil")
+
+		return *resp.Response[0].ID
+	}
 }
 
 func UpdateCachegroupWithLocks(t *testing.T) {
@@ -347,13 +401,13 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Add("name", "cachegroup1")
 	cgResp, _, err := TOSession.GetCacheGroups(opts)
-	require.NotNil(err, "couldn't get cachegroup: %v", err)
-	require.Len(len(cgResp.Response), 1, "expected only one cachegroup in response, but got %d, quitting", len(cgResp.Response))
+	require.NoError(err, "couldn't get cachegroup: %v", err)
+	require.Equal(1, len(cgResp.Response), "expected only one cachegroup in response, but got %d, quitting", len(cgResp.Response))
 
 	opts.QueryParameters.Del("name")
 	opts.QueryParameters.Add("cachegroupName", "cachegroup1")
 	serversResp, _, err := TOSession.GetServers(opts)
-	require.NotNil(err, "couldn't get servers for cachegroup: %v", err)
+	require.NoError(err, "couldn't get servers for cachegroup: %v", err)
 
 	servers = serversResp.Response
 	require.GreaterOrEqual(len(servers), 1, "couldn't get a cachegroup with 1 or more servers assigned, quitting")
@@ -365,8 +419,8 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 		opts = client.RequestOptions{}
 		opts.QueryParameters.Add("id", strconv.Itoa(*server.CDNID))
 		cdnResp, _, err := TOSession.GetCDNs(opts)
-		require.NotNil(err, "couldn't get CDN: %v", err)
-		require.Len(len(cdnResp.Response), 1, "expected only one CDN in response, but got %d", len(cdnResp.Response))
+		require.NoError(err, "couldn't get CDN: %v", err)
+		require.Equal(1, len(cdnResp.Response), "expected only one CDN in response, but got %d", len(cdnResp.Response))
 
 		cdnName = cdnResp.Response[0].Name
 	}
@@ -383,13 +437,13 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 	user1.TenantID = 1
 	user1.FullName = util.StrPtr("firstName LastName")
 	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
-	require.NotNil(err, "could not create test user with username: %s. err: %v", user1.Username, err)
+	require.NoError(err, "could not create test user with username: %s. err: %v", user1.Username, err)
 
 	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
 
 	// Establish a session with the newly created non admin level user
 	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
-	require.NotNil(err, "could not login with user lock_user1: %v", err)
+	require.NoError(err, "could not login with user lock_user1: %v", err)
 
 	// Create a lock for this user
 	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
@@ -397,7 +451,7 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 		Message: util.StrPtr("test lock"),
 		Soft:    util.BoolPtr(false),
 	}, client.RequestOptions{})
-	require.NotNil(err, "couldn't create cdn lock: %v", err)
+	require.NoError(err, "couldn't create cdn lock: %v", err)
 
 	cg := cgResp.Response[0]
 
@@ -414,68 +468,6 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 	// Delete the lock
 	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdnName}}})
 	assert.NoError(err, "expected no error while deleting other user's lock using admin endpoint, but got %v", err)
-}
-
-func GetTestPaginationSupportCg(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetCacheGroups(opts)
-	require.NotNil(err, "cannot get Cache Groups: %v - alerts: %+v", err, resp.Alerts)
-
-	cachegroup := resp.Response
-	require.GreaterOrEqual(len(cachegroup), 3, "Need at least 3 Cache Groups in Traffic Ops to test pagination support, found: %d", len(cachegroup))
-
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	cachegroupWithLimit, _, err := TOSession.GetCacheGroups(opts)
-
-	if !reflect.DeepEqual(cachegroup[:1], cachegroupWithLimit.Response) {
-		t.Error("expected GET Cachegroups with limit = 1 to return first result")
-	}
-
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "1")
-	cachegroupsWithOffset, _, err := TOSession.GetCacheGroups(opts)
-	if !reflect.DeepEqual(cachegroup[1:2], cachegroupsWithOffset.Response) {
-		t.Error("expected GET cachegroup with limit = 1, offset = 1 to return second result")
-	}
-
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "2")
-	cachegroupWithPage, _, err := TOSession.GetCacheGroups(opts)
-	if !reflect.DeepEqual(cachegroup[1:2], cachegroupWithPage.Response) {
-		t.Error("expected GET cachegroup with limit = 1, page = 2 to return second result")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "-2")
-	resp, _, err = TOSession.GetCacheGroups(opts)
-	assert.NotNil(err, "expected GET cachegroup to return an error when limit is not bigger than -1")
-	if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
-		t.Errorf("expected GET cachegroup to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "0")
-	resp, _, err = TOSession.GetCacheGroups(opts)
-	assert.NotNil(err, "expected GET cachegroup to return an error when offset is not a positive integer")
-	if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET cachegroup to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "0")
-	resp, _, err = TOSession.GetCacheGroups(opts)
-	assert.NotNil(err, "expected GET cachegroup to return an error when page is not a positive integer")
-	if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET cachegroup to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
 }
 
 func CreateTestCacheGroups(t *testing.T) {
