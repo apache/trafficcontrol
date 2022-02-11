@@ -583,7 +583,7 @@ func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
 	if err := tx.QueryRow("SELECT cdn from profile WHERE name=$1", (*s.Profiles)[0]).Scan(&cdnID); err != nil {
 		log.Errorf("could not execute select cdnID from profile: %s\n", err)
 		if err == sql.ErrNoRows {
-			errs = append(errs, fmt.Errorf("no such profileId: '%d'", (*s.Profiles)[0]))
+			errs = append(errs, fmt.Errorf("no such profileId: '%v'", (*s.Profiles)[0]))
 		} else {
 			errs = append(errs, tc.DBError)
 		}
@@ -592,7 +592,7 @@ func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
 
 	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
 	if cdnID != *s.CDNID {
-		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, (*s.Profiles)[0], *s.CDNID))
+		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%v' does not match Server CDN '%d'", cdnID, (*s.Profiles)[0], *s.CDNID))
 	}
 	return errs
 }

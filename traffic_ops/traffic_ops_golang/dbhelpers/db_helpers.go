@@ -1753,19 +1753,76 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 	return regionName, true, nil
 }
 
+// GetProfileID gets profile ID for a given server
+func GetProfileID(sid *int) (pid *int) {
+	var tx *sql.Tx
+	q := `SELECT profile FROM server where id=$1`
+
+	rows, err := tx.Query(q, *sid)
+	if err != nil {
+		fmt.Errorf("querying profile by server id: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in GetProfileID")
+
+	for rows.Next() {
+		if err := rows.Scan(&pid); err != nil {
+			fmt.Errorf("scanning profile: " + err.Error())
+		}
+	}
+	return
+}
+
+// GetProfileDescription gets profile ID for a given server
+func GetProfileDescription(sid *int) (desc *string) {
+	var tx *sql.Tx
+	q := `SELECT description from profile where id=(SELECT profile FROM server where id=$1)`
+
+	rows, err := tx.Query(q, *sid)
+	if err != nil {
+		fmt.Errorf("querying profile by server id: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in GetProfileDescription")
+
+	for rows.Next() {
+		if err := rows.Scan(&desc); err != nil {
+			fmt.Errorf("scanning profile: " + err.Error())
+		}
+	}
+	return
+}
+
+// GetProfileName gets profile Name from a profileID
+func GetProfileName(pid *int) (pname *string) {
+	var tx *sql.Tx
+	q := `SELECT name FROM profile where id=$1`
+
+	rows, err := tx.Query(q, *pid)
+	if err != nil {
+		fmt.Errorf("querying profile by profile id: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in GetProfileName")
+
+	for rows.Next() {
+		if err := rows.Scan(&pname); err != nil {
+			fmt.Errorf("scanning profile: " + err.Error())
+		}
+	}
+	return
+}
+
 // GetCommonServerPropertiesFromV4 converts CommonServerPropertiesV40 to CommonServerProperties struct
 func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) tc.CommonServerProperties {
 	var id int
 	var desc string
 	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (*s.Profiles)[0])
 	if err != nil {
-		fmt.Errorf("querying profiles by porfile_names: " + err.Error())
+		log.Errorf("querying profile id and description by profile_names: " + err.Error())
 	}
 	defer log.Close(rows, "closing rows in GetCommonServerPropertiesFromV4")
 
 	for rows.Next() {
 		if err := rows.Scan(&id, &desc); err != nil {
-			fmt.Errorf("scanning server: " + err.Error())
+			log.Errorf("scanning profile: " + err.Error())
 		}
 	}
 
@@ -1815,13 +1872,13 @@ func UpdateCommonServerPropertiesV40(id *int, properties tc.CommonServerProperti
 	var profileNames pq.StringArray
 	rows, err := tx.Query("UPDATE server_profile set profile_names=ARRAY[$1] WHERE server=$2 RETURNING profile_names", *properties.Profile, *id)
 	if err != nil {
-		fmt.Errorf("querying server_profile by porfile_names: " + err.Error())
+		log.Errorf("querying server_profile by profile_names: " + err.Error())
 	}
 	defer log.Close(rows, "closing rows in UpdateCommonServerPropertiesV40")
 
 	for rows.Next() {
 		if err := rows.Scan(&profileNames); err != nil {
-			fmt.Errorf("scanning server: " + err.Error())
+			log.Errorf("scanning server_profile: " + err.Error())
 		}
 	}
 
@@ -1869,13 +1926,13 @@ func UpdateServerProfiles(id *int, profile *pq.StringArray, tx *sql.Tx) {
 	var profileNames pq.StringArray
 	rows, err := tx.Query("UPDATE server_profile set profile_names=$1 WHERE server=$2 RETURNING profile_names", *profile, *id)
 	if err != nil {
-		fmt.Errorf("querying server_profile by porfile_names: " + err.Error())
+		log.Errorf("querying server_profile by profile_names: " + err.Error())
 	}
 	defer log.Close(rows, "closing rows in UpdateServerProfiles")
 
 	for rows.Next() {
 		if err := rows.Scan(&profileNames); err != nil {
-			fmt.Errorf("scanning server: " + err.Error())
+			log.Errorf("scanning server_profile: " + err.Error())
 		}
 	}
 	return
