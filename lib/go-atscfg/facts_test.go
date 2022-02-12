@@ -20,9 +20,10 @@ package atscfg
  */
 
 import (
-	"github.com/lib/pq"
 	"strings"
 	"testing"
+
+	"github.com/lib/pq"
 )
 
 func TestMake12MFacts(t *testing.T) {

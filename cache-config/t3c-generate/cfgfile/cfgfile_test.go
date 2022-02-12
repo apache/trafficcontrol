@@ -21,7 +21,6 @@ package cfgfile
 
 import (
 	"bytes"
-	"github.com/lib/pq"
 	"math/rand"
 	"strings"
 	"testing"
@@ -32,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/lib/pq"
 )
 
 func TestWriteConfigs(t *testing.T) {

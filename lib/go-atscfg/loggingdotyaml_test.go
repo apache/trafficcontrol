@@ -24,6 +24,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lib/pq"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -32,7 +33,7 @@ func TestMakeLoggingDotYAML(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.Profile = &profileName
+	server.Profiles = &pq.StringArray{profileName}
 
 	params := makeParamsFromMap("serverProfile", LoggingYAMLFileName, map[string]string{
 		"LogFormat.Name":           "myFormatName",
@@ -101,7 +102,7 @@ func TestMakeLoggingDotYAMLMultiFormat(t *testing.T) {
 	})
 
 	server := makeGenericServer()
-	server.Profile = &profileName
+	server.Profiles = &pq.StringArray{profileName}
 
 	cfg, err := MakeLoggingDotYAML(server, paramData, &LoggingDotYAMLOpts{HdrComment: hdr})
 	if err != nil {

@@ -20,11 +20,11 @@ package atscfg
  */
 
 import (
-	"github.com/lib/pq"
 	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/lib/pq"
 )
 
 func TestMakeDropQStringDotConfig(t *testing.T) {
