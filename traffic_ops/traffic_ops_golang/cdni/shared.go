@@ -32,7 +32,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 	"github.com/dgrijalva/jwt-go"
@@ -307,7 +306,7 @@ func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
 
 	if !approved {
 		if asyncErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "Requested configuration update has been denied.", asyncId, true); asyncErr != nil {
-			log.Errorf("updating async status for id %d: %w", asyncId, asyncErr)
+			log.Errorf("updating async status for id %d: %s", asyncId, asyncErr.Error())
 		}
 		status, err := deleteCapabilityRequest(reqId, inf.Tx.Tx)
 		if err != nil {
@@ -394,52 +393,53 @@ func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCapabilityIdFromFootprints(updatedData CapacityLimit, ucdn string, inf *api.APIInfo) (int, error) {
-	var potentialCapabilityIds []int
-	for _, footprint := range updatedData.Footprints {
-		selectQuery := `SELECT footprint_type, footprint_value, capability_id FROM cdni_footprints WHERE ucdn = $1 AND footprint_type = $2 AND footprint_value = `
-		valuesAsQuery := "ARRAY['" + strings.Join(footprint.FootprintValue, "','") + "']"
-		rows, err := inf.Tx.Tx.Query(selectQuery+valuesAsQuery, ucdn, footprint.FootprintType)
-		if err != nil {
-			return 0, fmt.Errorf("querying for capacity update request: %w", err)
-		}
-		defer log.Close(rows, "closing footprints query")
-		var capabilityIds []int
-		rowCount := 0
-		for rows.Next() {
-			var capabilityId int
-			var footprint Footprint
-			if err := rows.Scan(&footprint.FootprintType, pq.Array(&footprint.FootprintValue), &capabilityId); err != nil {
-				return 0, fmt.Errorf("scanning db rows: %w", err)
-			}
-			rowCount++
-			capabilityIds = append(capabilityIds, capabilityId)
-		}
+	tableAbbr := ""
+	selectClause := ""
+	whereClause := ""
+	var queryParams []interface{}
+	paramCount := 1
 
-		if rowCount == 0 {
-			return 0, fmt.Errorf("no capabilities found for footprint: %v, %v", footprint.FootprintType, footprint.FootprintValue)
+	for i, footprint := range updatedData.Footprints {
+		if i == 0 {
+			tableAbbr = "f"
+			selectClause = "SELECT " + tableAbbr + ".capability_id FROM cdni_footprints as " + tableAbbr
+			whereClause = " WHERE " + tableAbbr + ".ucdn = $" + strconv.Itoa(paramCount) + " AND " + tableAbbr + ".footprint_type = $" + strconv.Itoa(paramCount+1) + " AND " + tableAbbr + ".footprint_value = $" + strconv.Itoa(paramCount+2) + "::text[]"
+		} else {
+			oldTableAbbr := tableAbbr
+			tableAbbr = tableAbbr + "f"
+			selectClause = selectClause + " JOIN cdni_footprints as " + tableAbbr + " on " + tableAbbr + ".capability_id = " + oldTableAbbr + ".capability_id"
+			whereClause = whereClause + " AND " + tableAbbr + ".ucdn = $" + strconv.Itoa(paramCount) + " AND " + tableAbbr + ".footprint_type = $" + strconv.Itoa(paramCount+1) + " AND " + tableAbbr + ".footprint_value = $" + strconv.Itoa(paramCount+2) + "::text[]"
 		}
-		var newPotentials []int
-		for _, capId := range capabilityIds {
-			if len(potentialCapabilityIds) == 0 {
-				newPotentials = append(newPotentials, capId)
-			} else {
-				if util.IntInArray(potentialCapabilityIds, capId) {
-					newPotentials = append(newPotentials, capId)
-				}
-			}
-		}
-		if len(newPotentials) == 0 {
-			return 0, fmt.Errorf("no capabilities found that match all footprints: %v", updatedData.Footprints)
-		}
-		potentialCapabilityIds = newPotentials
+		paramCount = paramCount + 3
+		queryParams = append(queryParams, ucdn)
+		queryParams = append(queryParams, footprint.FootprintType)
+		queryParams = append(queryParams, pq.Array(footprint.FootprintValue))
 	}
-	if len(potentialCapabilityIds) == 0 {
+
+	selectQuery := selectClause + whereClause + " AND (SELECT count(*) from cdni_footprints as c where c.capability_id = f.capability_id) = " + strconv.Itoa(len(updatedData.Footprints))
+	rows, err := inf.Tx.Tx.Query(selectQuery, queryParams...)
+	if err != nil {
+		return 0, fmt.Errorf("querying for capacity update request: %w", err)
+	}
+	defer log.Close(rows, "closing footprints query")
+	var capabilityIds []int
+	rowCount := 0
+	for rows.Next() {
+		var capabilityId int
+		if err := rows.Scan(&capabilityId); err != nil {
+			return 0, fmt.Errorf("scanning db rows: %w", err)
+		}
+		rowCount++
+		capabilityIds = append(capabilityIds, capabilityId)
+	}
+
+	if len(capabilityIds) == 0 {
 		return 0, fmt.Errorf("no capabilities found that match all footprints: %v", updatedData.Footprints)
 	}
-	if len(potentialCapabilityIds) > 1 {
+	if len(capabilityIds) > 1 {
 		return 0, fmt.Errorf("more than 1 capability found that match all footprints: %v", updatedData.Footprints)
 	}
-	return potentialCapabilityIds[0], nil
+	return capabilityIds[0], nil
 }
 
 func deleteCapabilityRequest(reqId int, tx *sql.Tx) (int, error) {
