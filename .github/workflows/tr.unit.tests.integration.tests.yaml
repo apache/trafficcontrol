@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Traffic Router Unit Tests
+name: Traffic Router Unit Tests and Integration Tests
 
 env:
   # alpine:3.13
@@ -24,20 +24,20 @@ env:
 on:
   push:
     paths:
-      - .github/actions/tr-unit-tests/**
-      - .github/workflows/tr.unit.tests.yaml
+      - .github/actions/tr-unit-and-integration-tests/**
+      - .github/workflows/tr.unit.tests.integration.tests.yaml
       - traffic_router/**
   create:
   pull_request:
     paths:
-      - .github/actions/tr-unit-tests/**
-      - .github/workflows/tr.unit.tests.yaml
+      - .github/actions/tr-unit-and-integration-tests/**
+      - .github/workflows/tr.unit.tests.integration.tests.yaml
       - traffic_router/**
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
   tests:
-    if: github.event.pull_request.draft == false
+    if: github.event.pull_request.draft == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -56,14 +56,20 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Run Traffic Router unit tests
-        uses: ./.github/actions/tr-unit-tests
+      - name: Run Traffic Router unit tests and integration tests
+        uses: ./.github/actions/tr-unit-and-integration-tests
       - name: Upload Surefire Reports
         uses: actions/upload-artifact@v2
         if: ${{ failure() }}
         with:
           name: surefire-reports
           path: ${{ github.workspace }}/traffic_router/core/target/surefire-reports/TEST-*.xml
+      - name: Upload Failsafe Reports
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: failsafe-reports
+          path: ${{ github.workspace }}/traffic_router/core/target/failsafe-reports/TEST-*.xml
       - name: Checkout junit-report-annotations action
         uses: actions/checkout@v2
         with:

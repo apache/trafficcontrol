@@ -141,7 +141,8 @@ public class ExternalTestSuite {
 		LoggerContext.getContext().getLogger("org.eclipse.jetty").setLevel(Level.WARN);
 		LoggerContext.getContext().getLogger("org.springframework").setLevel(Level.WARN);
 
-		ConsoleAppender consoleAppender = ConsoleAppender.newBuilder().setLayout(PatternLayout.newBuilder().withPattern("%d{ISO8601} [%-5p] %c{4}: %m%n").build()).build();
+		System.out.println(LoggerContext.getContext().getLoggers());
+		ConsoleAppender consoleAppender = ConsoleAppender.newBuilder().setName("stdout").setLayout(PatternLayout.newBuilder().withPattern("%d{ISO8601} [%-5p] %c{4}: %m%n").build()).build();
 		LoggerContext.getContext().getRootLogger().addAppender(consoleAppender);
 		LoggerContext.getContext().getRootLogger().setLevel(Level.INFO);
 

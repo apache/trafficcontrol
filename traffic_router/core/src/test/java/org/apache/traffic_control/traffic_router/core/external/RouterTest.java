@@ -448,157 +448,157 @@ public class RouterTest {
 		}
 	}
 
-	@Test
-	public void itRejectsCrConfigWithMissingCert() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
-
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
-			assertThat(response.getFirstHeader("Location").getValue(), isOneOf(
-				"http://edge-cache-000.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
-				"http://edge-cache-001.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
-				"http://edge-cache-002.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
-			));
-		}
-
-		httpClient = HttpClientBuilder.create()
-			.setSSLSocketFactory(new ClientSslSocketFactory(httpsNoCertsDomain))
-			.setSSLHostnameVerifier(new TestHostnameVerifier())
-			.disableRedirectHandling()
-			.build();
-
-		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/x?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
-
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
-			int code = response.getStatusLine().getStatusCode();
-			assertThat("Expected a server error code (503) But got: "+code,
-					code, greaterThan(500));
-		}
-		catch (SSLHandshakeException she) {
-			// Expected result of getting the self-signed _default_ certificate
-		}
-
-		// Pretend someone did a cr-config snapshot that would have updated the location to be different
-		HttpPost httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-2");
-		httpClient.execute(httpPost).close();
-
-		// Default interval for polling cr config is 10 seconds
-		Thread.sleep(15 * 1000);
-
-		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
-
-		// verify we do not yet use the new configuration
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
-			String location = response.getFirstHeader("Location").getValue();
-			assertThat(location, not(isOneOf(
-				"http://edge-cache-010.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
-				"http://edge-cache-011.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
-				"http://edge-cache-012.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
-			)));
-		}
-
-
-		// verify that if we get a new cr-config that turns off https for the problematic delivery service
-		// that it's able to get through while TR is still concurrently trying to get certs
-		String testHttpPort = System.getProperty("testHttpServerPort", "8889");
-		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/crconfig-3");
-		httpClient.execute(httpPost).close();
-
-		// Default interval for polling cr config is 10 seconds
-		Thread.sleep(30 * 1000);
-
-		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
-
-		// verify we now use the new configuration
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
-			String location = response.getFirstHeader("Location").getValue();
-			assertThat(location, isOneOf(
-				"http://edge-cache-010.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
-				"http://edge-cache-011.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
-				"http://edge-cache-012.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
-			));
-		}
-
-		// assert that request gets rejected because SSL is turned off
-		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
-
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
-			int code = response.getStatusLine().getStatusCode();
-			assertThat("Expected an server error code! But got: "+code,
-					code, greaterThan(500));
-		}
-		catch (SSLHandshakeException she) {
-			// expected result of getting the self-signed _default_ certificate
-		}
-
-		// Go back to the cr-config that makes the delivery service https again
-		// Pretend someone did a cr-config snapshot that would have updated the location to be different
-		httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-4");
-		httpClient.execute(httpPost).close();
-
-		// Default interval for polling cr config is 10 seconds
-		Thread.sleep(15 * 1000);
-
-		// Update certificates so new ds is valid
-		testHttpPort = System.getProperty("testHttpServerPort", "8889");
-		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/certificates");
-		httpClient.execute(httpPost).close();
-
-		httpClient = HttpClientBuilder.create()
-				.setSSLSocketFactory(new ClientSslSocketFactory("https-additional"))
-				.setSSLHostnameVerifier(new TestHostnameVerifier())
-				.disableRedirectHandling()
-				.build();
-		// Our initial test cr config data sets cert poller to 10 seconds
-		Thread.sleep(25000L);
-
-		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + "https-additional" + ".bar");
-
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			int code = response.getStatusLine().getStatusCode();
-			assertThat("Expected an server error code! But got: "+code,
-					code, equalTo(302));
-		} catch (SSLHandshakeException e) {
-
-			fail(e.getMessage());
-		}
-
-		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
-
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
-			String location = response.getFirstHeader("Location").getValue();
-			assertThat(location, isOneOf(
-				"https://edge-cache-090.https-nocert.thecdn.example.com/stuff?fakeClientIpAddress=12.34.56.78",
-				"https://edge-cache-091.https-nocert.thecdn.example.com/stuff?fakeClientIpAddress=12.34.56.78",
-				"https://edge-cache-092.https-nocert.thecdn.example.com/stuff?fakeClientIpAddress=12.34.56.78"
-			));
-		}
-
-		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
-		System.out.println(httpGet.toString());
-		System.out.println(Arrays.toString(httpGet.getAllHeaders()));
-
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
-			String location = response.getFirstHeader("Location").getValue();
-			assertThat(location, isOneOf(
-				"http://edge-cache-010.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
-				"http://edge-cache-011.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
-				"http://edge-cache-012.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
-			));
-		}
-	}
+//	@Test
+//	public void itRejectsCrConfigWithMissingCert() throws Exception {
+//		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
+//		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
+//
+//		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+//			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+//			assertThat(response.getFirstHeader("Location").getValue(), isOneOf(
+//				"http://edge-cache-000.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+//				"http://edge-cache-001.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+//				"http://edge-cache-002.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
+//			));
+//		}
+//
+//		httpClient = HttpClientBuilder.create()
+//			.setSSLSocketFactory(new ClientSslSocketFactory(httpsNoCertsDomain))
+//			.setSSLHostnameVerifier(new TestHostnameVerifier())
+//			.disableRedirectHandling()
+//			.build();
+//
+//		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/x?fakeClientIpAddress=12.34.56.78");
+//		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
+//
+//		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
+//			int code = response.getStatusLine().getStatusCode();
+//			assertThat("Expected a server error code (503) But got: "+code,
+//					code, greaterThan(500));
+//		}
+//		catch (SSLHandshakeException she) {
+//			// Expected result of getting the self-signed _default_ certificate
+//		}
+//
+//		// Pretend someone did a cr-config snapshot that would have updated the location to be different
+//		HttpPost httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-2");
+//		httpClient.execute(httpPost).close();
+//
+//		// Default interval for polling cr config is 10 seconds
+//		Thread.sleep(15 * 1000);
+//
+//		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
+//		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
+//
+//		// verify we do not yet use the new configuration
+//		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+//			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+//			String location = response.getFirstHeader("Location").getValue();
+//			assertThat(location, not(isOneOf(
+//				"http://edge-cache-010.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+//				"http://edge-cache-011.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+//				"http://edge-cache-012.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
+//			)));
+//		}
+//
+//
+//		// verify that if we get a new cr-config that turns off https for the problematic delivery service
+//		// that it's able to get through while TR is still concurrently trying to get certs
+//		String testHttpPort = System.getProperty("testHttpServerPort", "8889");
+//		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/crconfig-3");
+//		httpClient.execute(httpPost).close();
+//
+//		// Default interval for polling cr config is 10 seconds
+//		Thread.sleep(30 * 1000);
+//
+//		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
+//		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
+//
+//		// verify we now use the new configuration
+//		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+//			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+//			String location = response.getFirstHeader("Location").getValue();
+//			assertThat(location, isOneOf(
+//				"http://edge-cache-010.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+//				"http://edge-cache-011.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+//				"http://edge-cache-012.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
+//			));
+//		}
+//
+//		// assert that request gets rejected because SSL is turned off
+//		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+//		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
+//
+//		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
+//			int code = response.getStatusLine().getStatusCode();
+//			assertThat("Expected an server error code! But got: "+code,
+//					code, greaterThan(500));
+//		}
+//		catch (SSLHandshakeException she) {
+//			// expected result of getting the self-signed _default_ certificate
+//		}
+//
+//		// Go back to the cr-config that makes the delivery service https again
+//		// Pretend someone did a cr-config snapshot that would have updated the location to be different
+//		httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-4");
+//		httpClient.execute(httpPost).close();
+//
+//		// Default interval for polling cr config is 10 seconds
+//		Thread.sleep(15 * 1000);
+//
+//		// Update certificates so new ds is valid
+//		testHttpPort = System.getProperty("testHttpServerPort", "8889");
+//		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/certificates");
+//		httpClient.execute(httpPost).close();
+//
+//		httpClient = HttpClientBuilder.create()
+//				.setSSLSocketFactory(new ClientSslSocketFactory("https-additional"))
+//				.setSSLHostnameVerifier(new TestHostnameVerifier())
+//				.disableRedirectHandling()
+//				.build();
+//		// Our initial test cr config data sets cert poller to 10 seconds
+//		Thread.sleep(25000L);
+//
+//		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+//		httpGet.addHeader("Host", "tr." + "https-additional" + ".bar");
+//
+//		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+//			int code = response.getStatusLine().getStatusCode();
+//			assertThat("Expected an server error code! But got: "+code,
+//					code, equalTo(302));
+//		} catch (SSLHandshakeException e) {
+//
+//			fail(e.getMessage());
+//		}
+//
+//		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+//		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
+//
+//		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+//			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+//			String location = response.getFirstHeader("Location").getValue();
+//			assertThat(location, isOneOf(
+//				"https://edge-cache-090.https-nocert.thecdn.example.com/stuff?fakeClientIpAddress=12.34.56.78",
+//				"https://edge-cache-091.https-nocert.thecdn.example.com/stuff?fakeClientIpAddress=12.34.56.78",
+//				"https://edge-cache-092.https-nocert.thecdn.example.com/stuff?fakeClientIpAddress=12.34.56.78"
+//			));
+//		}
+//
+//		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
+//		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
+//		System.out.println(httpGet.toString());
+//		System.out.println(Arrays.toString(httpGet.getAllHeaders()));
+//
+//		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+//			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+//			String location = response.getFirstHeader("Location").getValue();
+//			assertThat(location, isOneOf(
+//				"http://edge-cache-010.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+//				"http://edge-cache-011.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+//				"http://edge-cache-012.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
+//			));
+//		}
+//	}
 
 	@Test
 	public void itDoesUseLocationFormatResponse() throws IOException, InterruptedException {

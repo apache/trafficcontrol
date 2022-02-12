@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: tr-unit-tests
-description: Runs Traffic Ops unit tests
+name: tr-unit-and-integration-tests
+description: Runs Traffic Ops unit tests and integration tests
 runs:
   using: docker
   image: Dockerfile

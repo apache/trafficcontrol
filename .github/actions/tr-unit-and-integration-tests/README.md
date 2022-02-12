@@ -17,8 +17,8 @@
   under the License.
 -->
 
-# tr-unit-tests Docker action
-This action runs the Traffic Router unit tests in an Alpine Docker container.
+# tr-unit-and-integration-tests Docker action
+This action runs the Traffic Router unit tests and integration tests in an Alpine Docker container.
 
 ## Inputs
 
@@ -42,13 +42,13 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Run unit tests
+      - name: Run unit tests and integration tests
         uses: ./.github/actions/tr-unit-tests
 ```
 
 To run the tests locally:
 ```shell
 export GITHUB_WORKSPACE='/github/workspace';
-docker build -f .github/actions/tr-unit-tests/Dockerfile -t tr-unit-tests .;
-docker run --rm -te GITHUB_WORKSPACE -v "$(pwd):${GITHUB_WORKSPACE}" -w "$GITHUB_WORKSPACE" tr-unit-tests;
+docker build -f .github/actions/tr-unit-and-integration-tests/Dockerfile -t tr-unit-and-integration-tests .;
+docker run --rm -te GITHUB_WORKSPACE -v "$(pwd):${GITHUB_WORKSPACE}" -w "$GITHUB_WORKSPACE" tr-unit-and-integration-tests;
 ```

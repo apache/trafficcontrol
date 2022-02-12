@@ -23,4 +23,5 @@ RUN apk add --no-cache \
 ENTRYPOINT	cd traffic_router && \
 			export JAVA_HOME="$(command -v java | xargs realpath | xargs dirname)/.." && \
 			mvn "-Dmaven.repo.local=${GITHUB_WORKSPACE}/.m2/repository" \
-				test -Djava.library.path=/usr/share/java
+				"-Dskiprpms=true"\
+				clean verify -Djava.library.path=/usr/lib
