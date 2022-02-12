@@ -135,7 +135,7 @@ Response Structure
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 :physLocation:   The name of the physical location where the server resides
 :physLocationId: An integral, unique identifier for the physical location where the server resides
-:profiles:       List of :ref:`profile-names` of the :term:`Profiles` used by this server
+:profiles:       List of profile-names of the :term:`Profiles` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :rack:           A string indicating "server rack" location
 :status:         The :term:`Status` of the server

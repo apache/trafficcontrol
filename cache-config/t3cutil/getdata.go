@@ -157,12 +157,12 @@ func GetPackages(cfg TCCfg) ([]Package, error) {
 	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
-	} else if server.Profile == nil {
+	} else if server.Profiles == nil {
 		return nil, errors.New("getting server: nil profile")
 	}
-	params, _, err := cfg.TOClient.GetServerProfileParameters(*server.Profile, nil)
+	params, _, err := cfg.TOClient.GetServerProfileParameters((*server.Profiles)[0], nil)
 	if err != nil {
-		return nil, errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
+		return nil, errors.New("getting server profile '" + (*server.Profiles)[0] + "' parameters: " + err.Error())
 	}
 	packages := []Package{}
 	for _, param := range params {
@@ -196,12 +196,12 @@ func GetChkconfig(cfg TCCfg) ([]ChkConfigEntry, error) {
 	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
-	} else if server.Profile == nil {
+	} else if server.Profiles == nil {
 		return nil, errors.New("getting server: nil profile")
 	}
-	params, _, err := cfg.TOClient.GetServerProfileParameters(*server.Profile, nil)
+	params, _, err := cfg.TOClient.GetServerProfileParameters((*server.Profiles)[0], nil)
 	if err != nil {
-		return nil, errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
+		return nil, errors.New("getting server profile '" + (*server.Profiles)[0] + "' parameters: " + err.Error())
 	}
 	chkconfig := []ChkConfigEntry{}
 	for _, param := range params {
