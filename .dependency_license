@@ -160,3 +160,7 @@ GeoLite2-City.mmdb.gz, !MIT
 /Roboto\.ttf$, Apache-2.0
 /Roboto\.\d+\.ttf$, Apache-2.0
 /MaterialIcons.ttf$, Apache-2.0
+
+# Files that have content generated - not written - by code already covered
+# under its own licenses terms.
+^\.env$, Apache-2.0
