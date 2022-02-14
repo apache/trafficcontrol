@@ -22,6 +22,8 @@ services:
     trafficops:
         build:
             context: dev/traffic_ops/
+            args:
+                - GO_VERSION=${GO_VERSION}
         depends_on:
             - db
         domainname: dev.ciab.test
@@ -71,6 +73,8 @@ services:
     trafficmonitor:
         build:
             context: dev/traffic_monitor
+            args:
+                - GO_VERSION=${GO_VERSION}
         depends_on:
             - trafficops
         hostname: trafficmonitor
@@ -85,6 +89,8 @@ services:
     t3c:
         build:
             context: dev/t3c
+            args:
+                - GO_VERSION=${GO_VERSION}
         depends_on:
             - trafficops
         hostname: edge

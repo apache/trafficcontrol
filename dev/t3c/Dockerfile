@@ -14,13 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+ARG GO_VERSION
 FROM alpine:latest AS traffic-server-builder
 
 RUN apk add --no-cache build-base perl libexecinfo-dev pcre-dev libressl-dev libtool linux-headers openssl-dev zlib-dev
 ADD https://downloads.apache.org/trafficserver/trafficserver-9.1.1.tar.bz2 /
 RUN tar -xf trafficserver-9.1.1.tar.bz2 && cd trafficserver-9.1.1 && mkdir /ats && ./configure --prefix / --enable-experimental-plugins && make -j && make install && ls -R /ats
 
-FROM alpine:latest AS t3c-dev
+FROM golang:${GO_VERSION}-alpine AS t3c-dev
 
 ENV TC="/root/go/src/github.com/apache/trafficcontrol/"
 VOLUME /root/go/src/github.com/apache/trafficcontrol
@@ -37,7 +38,7 @@ COPY --from=traffic-server-builder /libexec/trafficserver /libexec/trafficserver
 COPY --from=traffic-server-builder /share/man /share/man
 RUN mkdir /share/trafficserver && mkdir -p /var/log/trafficserver && mkdir /var/trafficserver
 
-RUN apk add --no-cache make inotify-tools go pcre libexecinfo && \
+RUN apk add --no-cache make inotify-tools gcc libc-dev pcre libexecinfo && \
 	go install github.com/go-delve/delve/cmd/dlv@latest && \
 	ln -s /root/go/bin/dlv /usr/bin/dlv && \
 	mkdir /lib64 && \
