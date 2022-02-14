@@ -26,7 +26,8 @@ services:
                 - GO_VERSION=${GO_VERSION}
         depends_on:
             - db
-        domainname: dev.ciab.test
+        networks:
+            - ciab
         hostname: trafficops
         image: trafficops-dev
         ports:
@@ -42,7 +43,8 @@ services:
         environment:
             - POSTGRES_PASSWORD=twelve12
         hostname: db
-        domainname: dev.ciab.test
+        networks:
+            - ciab
 
     trafficportal:
         build:
@@ -50,7 +52,8 @@ services:
         depends_on:
             - trafficops
         hostname: trafficportal
-        domainname: dev.ciab.test
+        networks:
+            - ciab
         image: trafficportal-dev
         ports:
             - 444:443
@@ -63,7 +66,8 @@ services:
         depends_on:
             - trafficops
         hostname: tpv2
-        domainname: dev.ciab.test
+        networks:
+            - ciab
         image: tpv2-dev
         ports:
             - 443:443
@@ -78,7 +82,8 @@ services:
         depends_on:
             - trafficops
         hostname: trafficmonitor
-        domainname: dev.ciab.test
+        networks:
+            - ciab
         image: trafficmonitor-dev
         ports:
             - 80:80
@@ -94,7 +99,8 @@ services:
         depends_on:
             - trafficops
         hostname: edge
-        domainname: dev.ciab.test
+        networks:
+            - ciab
         image: t3c-dev
         ports:
             - 8080:80
@@ -105,10 +111,13 @@ services:
     trafficrouter:
         build:
             context: dev/traffic_router
+            args:
+                - USER=${USER}
         depends_on:
             - trafficmonitor
         hostname: trafficrouter
-        domainname: dev.ciab.test
+        networks:
+            - ciab
         image: trafficrouter-dev
         ports:
             - 3053:53/tcp
@@ -120,3 +129,7 @@ services:
             - 5005:5005
         volumes:
             - .:/root/go/src/github.com/apache/trafficcontrol
+networks:
+    ciab:
+        name: dev.ciab.test
+        driver: bridge
