@@ -24,7 +24,7 @@ ADD https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.43/bin/apache-tomcat-9.
 RUN cd /opt && \
 	tar -xf tomcat.tgz && \
 	mv apache-tomcat-* tomcat && \
-	rm -rf tomcat.tgz tomcat/webapps/* tomcat/conf/web.xml tomcat/conf/server.xml tomcat/conf/logging.properties /usr/share/java/maven-3/conf/settings.xml
+	rm -r tomcat.tgz tomcat/webapps/* tomcat/conf/web.xml tomcat/conf/server.xml tomcat/conf/logging.properties /usr/share/java/maven-3/conf/settings.xml
 
 COPY settings.xml /usr/share/java/maven-3/conf/settings.xml
 
