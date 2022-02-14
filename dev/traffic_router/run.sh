@@ -23,6 +23,7 @@ cd "$TC/traffic_router"
 mvn -Dmaven.test.skip=true compile -P \!rpm-build
 mvn -Dmaven.test.skip=true package -P \!rpm-build
 
+chmod -R a+rw "$TC/dev/traffic_router/"
 /opt/tomcat/bin/catalina.sh jpda run
 # java -agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n StartTrafficRouter
 

@@ -15,12 +15,17 @@ FROM alpine:latest AS trafficrouter-dev
 
 ENV TC=/root/go/src/github.com/apache/trafficcontrol
 VOLUME /root/go/src/github.com/apache/trafficcontrol
-ENV JPDA_OPTS="-agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n" JAVA_HOME=/usr/lib/jvm/java-11-openjdk M2_HOME=/root/go/src/github.com/apache/trafficcontrol/.m2 CATALINA_BASE=/opt/traffic_router
+ENV JPDA_OPTS="-agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n" JAVA_HOME=/usr/lib/jvm/java-11-openjdk M2_HOME=/root/go/src/github.com/apache/trafficcontrol/.m2 CATALINA_BASE=/opt/traffic_router TRAFFIC_MONITOR_HOSTS=trafficmonitor
 EXPOSE 3053:53/tcp 3053:53/udp 3080:80 3443:443 3333:3333 2222:3443 5005:5005
 
-RUN apk add --no-cache openjdk11 inotify-tools maven && ln -s /usr/lib/jvm/java-11-openjdk/bin/jdb /bin/jdb
+RUN apk add --no-cache openjdk11 inotify-tools maven tomcat-native openssl && ln -s /usr/lib/jvm/java-11-openjdk/bin/jdb /bin/jdb
 
 ADD https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.43/bin/apache-tomcat-9.0.43.tar.gz /opt/tomcat.tgz
+
+ARG USER
+RUN adduser -H -D ${USER}
+RUN chown -R ${USER} /opt /usr/share/java/ /root
+USER ${USER}
 RUN cd /opt && \
 	tar -xf tomcat.tgz && \
 	mv apache-tomcat-* tomcat && \
