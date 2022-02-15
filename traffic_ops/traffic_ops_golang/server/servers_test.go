@@ -20,7 +20,6 @@ package server
  */
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -148,12 +147,11 @@ func TestUpdateServer(t *testing.T) {
 		ID:       testServers[0].Server.ID,
 	}
 
-	userErr, sysErr, errCode := checkTypeChangeSafety(s, db.MustBegin())
+	userErr, _, errCode := checkTypeChangeSafety(s, db.MustBegin())
 	if errCode != 409 {
 		t.Errorf("Update servers: Expected error code of %v, but got %v", 409, errCode)
 	}
 	expectedErr := "server cdn can not be updated when it is currently assigned to delivery services"
-	fmt.Println(userErr, sysErr)
 	if userErr == nil {
 		t.Errorf("Update expected error: %v, but got no error with status: %s", expectedErr, http.StatusText(errCode))
 	}
