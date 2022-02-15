@@ -12,11 +12,40 @@
 * limitations under the License.
 */
 import { ElementRef } from "@angular/core";
+import { BehaviorSubject } from "rxjs";
+
+import type { DataSet } from "src/app/models";
+
 import { LinechartDirective } from "./linechart.directive";
 
 describe("LinechartDirective", () => {
+	let directive: LinechartDirective;
+	let dataSets: BehaviorSubject<Array<DataSet | null> | null>;
+
+	beforeEach(()=>{
+		dataSets =  new BehaviorSubject<Array<DataSet | null>|null>(null);
+		directive = new LinechartDirective(new ElementRef(document.createElement("canvas")));
+		directive.chartDataSets = dataSets;
+		directive.ngAfterViewInit();
+	});
+
 	it("should create an instance", () => {
-		const directive = new LinechartDirective(new ElementRef(null));
 		expect(directive).toBeTruthy();
+	});
+
+	it("sets a default type when not given", () => {
+		expect(directive.chartType).toBe("linear");
+	});
+
+	it("loads new data", () => {
+		// TODO: check more than just that these don't throw errors
+		dataSets.next([{data: [{x: 1, y: 2}, {x: 2, y: 4}], label: "label"}]);
+		dataSets.next([null, {data: [{x: 1, y: 2}], label: "label"}]);
+		dataSets.next([{data: [{x: 1, y: 2}, {x: 2, y: 4}], label: "label"}, null]);
+		dataSets.next(null);
+	});
+
+	it("handles errors in the data stream", () => {
+		dataSets.error(new Error("some kind of problem with the server"));
 	});
 });

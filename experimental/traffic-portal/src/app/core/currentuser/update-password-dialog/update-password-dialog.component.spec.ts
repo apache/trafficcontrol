@@ -15,9 +15,10 @@ import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
+
+import { APITestingModule } from "src/app/api/testing";
 import { User } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { UserService } from "src/app/shared/api";
 
 import { UpdatePasswordDialogComponent } from "./update-password-dialog.component";
 
@@ -37,13 +38,12 @@ describe("UpdatePasswordDialogComponent", () => {
 		updated = false;
 		await TestBed.configureTestingModule({
 			declarations: [ UpdatePasswordDialogComponent ],
-			imports: [ HttpClientModule, MatDialogModule, RouterTestingModule ],
+			imports: [ APITestingModule, HttpClientModule, MatDialogModule, RouterTestingModule ],
 			providers: [
 				{provide: MatDialogRef, useValue: {close: (upd?: true): void => {
 					dialogOpen = false;
 					updated = upd ?? false;
 				}}},
-				{provide: UserService, useValue: mockAPIService},
 				{provide: CurrentUserService, useValue: mockAPIService}
 			]
 		}).compileComponents();

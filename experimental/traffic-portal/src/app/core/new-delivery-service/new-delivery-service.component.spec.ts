@@ -12,25 +12,24 @@
 * limitations under the License.
 */
 
-import {HarnessLoader, parallel} from "@angular/cdk/testing";
-import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
+import { type HarnessLoader, parallel } from "@angular/cdk/testing";
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { HttpClientModule } from "@angular/common/http";
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
 import { MatRadioModule } from "@angular/material/radio";
 import { MatStepperModule } from "@angular/material/stepper";
-import {MatStepperHarness} from "@angular/material/stepper/testing";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import { MatStepperHarness } from "@angular/material/stepper/testing";
+import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import {CDNService, DeliveryServiceService, UserService} from "src/app/shared/api";
-
+import { APITestingModule } from "src/app/api/testing";
+import { Protocol } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { Protocol } from "../../models";
-import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
-import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 
+import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
 describe("NewDeliveryServiceComponent", () => {
 	let component: NewDeliveryServiceComponent;
@@ -39,15 +38,11 @@ describe("NewDeliveryServiceComponent", () => {
 
 	beforeEach(async () => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
-		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
-		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
-		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
-		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
-			id: 0,
-			newUser: false,
-			username: "test"
-		})));
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"], {currentUser: {
+			tenant: "root",
+			tenantId: 1
+		}});
+		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(true)));
 
 		await TestBed.configureTestingModule({
 			declarations: [
@@ -55,6 +50,7 @@ describe("NewDeliveryServiceComponent", () => {
 				TpHeaderComponent
 			],
 			imports: [
+				APITestingModule,
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
@@ -65,9 +61,6 @@ describe("NewDeliveryServiceComponent", () => {
 				MatRadioModule
 			],
 			providers: [
-				{provide: DeliveryServiceService, useValue: mockAPIService},
-				{provide: CDNService, useValue: mockAPIService},
-				{provide: UserService, useValue: mockAPIService},
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
 		}).compileComponents();
@@ -85,7 +78,10 @@ describe("NewDeliveryServiceComponent", () => {
 
 	it("should parse Origin URLs properly", async () => {
 		component.originURL.setValue("http://some.domain.test:9001/a/check/path/here");
+		component.activeImmediately.setValue(true);
+		component.activeImmediately.markAsDirty();
 		component.setOriginURL();
+		expect(component.deliveryService.active).toBeTrue();
 		expect(component.deliveryService.orgServerFqdn).toEqual("http://some.domain.test:9001", "http://some.domain.test:9001");
 		expect(component.deliveryService.checkPath).toEqual("/a/check/path/here", "/a/check/path/here");
 		expect(component.deliveryService.displayName).toEqual(
@@ -104,7 +100,9 @@ describe("NewDeliveryServiceComponent", () => {
 
 		// check other protocol setting
 		component.originURL.setValue("https://test.test");
+		component.activeImmediately.setValue(false);
 		component.setOriginURL();
+		expect(component.deliveryService.active).toBeFalse();
 		expect(component.deliveryService.protocol).toEqual(Protocol.HTTP_TO_HTTPS, "HTTP_TO_HTTPS");
 	});
 
@@ -132,19 +130,87 @@ describe("NewDeliveryServiceComponent", () => {
 		}
 	});
 
-	// it('should set infrastructure info properly', () => {
-	// 	component.step = 2;
-	// 	component.cdnObject.setValue({ name: 'testCDN', id: 1 } as CDN);
-	// 	component.dsType.setValue({ name: 'testType', id: 1 } as Type);
-	// });
+	it("should set infrastructure info properly for HTTP Delivery Services", () => {
+		component.cdnObject.setValue({id: 2, name: "test"});
+		component.dsType.setValue({id: 10, name: "HTTP"});
+		component.dsType.markAsDirty();
+		component.protocol.setValue(Protocol.HTTPS);
+		component.protocol.markAsDirty();
+		component.disableIPv6.setValue(true);
+		component.disableIPv6.markAsDirty();
+		const bypass = "https://some-other.ds.mycdn.test";
+		component.bypassLoc.setValue(bypass);
+		component.bypassLoc.markAsDirty();
+		component.setInfrastructureInformation();
+		expect(component.deliveryService.type).toBe("HTTP");
+		expect(component.deliveryService.typeId).toBe(10);
+		expect(component.deliveryService.cdnId).toBe(2);
+		expect(component.deliveryService.cdnName).toBe("test");
+		expect(component.deliveryService.protocol).toBe(Protocol.HTTPS);
+		expect(component.deliveryService.ipv6RoutingEnabled).toBeFalse();
+		expect(component.deliveryService.httpBypassFqdn).toBe(bypass);
+		expect(component.deliveryService.dnsBypassCname).toBeUndefined();
+		expect(component.deliveryService.dnsBypassIp6).toBeUndefined();
+		expect(component.deliveryService.dnsBypassIp).toBeUndefined();
+	});
+
+	it("should set infrastructure info properly for DNS Delivery Services", () => {
+		component.cdnObject.setValue({id: 2, name: "test"});
+		component.dsType.setValue({id: 7, name: "DNS"});
+		component.dsType.markAsDirty();
+		component.protocol.setValue(Protocol.HTTP);
+		component.protocol.markAsDirty();
+		component.disableIPv6.setValue(true);
+		component.disableIPv6.markAsDirty();
+		let bypass = "some-other.ds.mycdn.test";
+		component.bypassLoc.setValue(bypass);
+		component.bypassLoc.markAsDirty();
+		component.setInfrastructureInformation();
+		expect(component.deliveryService.type).toBe("DNS");
+		expect(component.deliveryService.typeId).toBe(7);
+		expect(component.deliveryService.cdnId).toBe(2);
+		expect(component.deliveryService.cdnName).toBe("test");
+		expect(component.deliveryService.protocol).toBe(Protocol.HTTP);
+		expect(component.deliveryService.ipv6RoutingEnabled).toBeFalse();
+		expect(component.deliveryService.httpBypassFqdn).toBeUndefined();
+		expect(component.deliveryService.dnsBypassCname).toBe(bypass);
+		expect(component.deliveryService.dnsBypassIp6).toBeUndefined();
+		expect(component.deliveryService.dnsBypassIp).toBeUndefined();
+
+		bypass = "2001::abc";
+		component.bypassLoc.setValue(bypass);
+		component.setInfrastructureInformation();
+		expect(component.deliveryService.dnsBypassIp6).toBe(bypass);
+
+		bypass = "192.0.2.1";
+		component.bypassLoc.setValue(bypass);
+		component.setInfrastructureInformation();
+		expect(component.deliveryService.dnsBypassIp).toBe(bypass);
+	});
 
 	it("should match hostnames", async () => {
 		const invalidHostnames: Array<string> = ["h.", "h-", "h-.o", "-h.o"];
-		invalidHostnames.forEach((invalidHostname: string) => void expect(() => component.setDNSBypass(invalidHostname)).toThrow());
+		for (const invalidHostname of invalidHostnames) {
+			expect(() => component.setDNSBypass(invalidHostname)).toThrow();
+		}
 		const validHostnames: Array<string> = ["h", "h.o.s.T.n.a.m.e", "h-O-------s.tNaMe"];
-		expect(() => validHostnames.forEach((hostname: string) => {
-			component.setDNSBypass(hostname);
-			expect(component.deliveryService.dnsBypassCname).toBe(hostname);
-		})).not.toThrow();
+		expect(() => validHostnames.forEach(
+			hostname => {
+				component.setDNSBypass(hostname);
+				expect(component.deliveryService.dnsBypassCname).toBe(hostname);
+			}
+		)).not.toThrow();
+	});
+
+	it("goes to the previous step", async () => {
+		const stepper = await loader.getHarness(MatStepperHarness);
+		const steps = await stepper.getSteps();
+		expect(await steps[0].isSelected()).toBeTrue();
+		await steps[1].select();
+		expect(await steps[0].isSelected()).toBeFalse();
+		expect(await steps[1].isSelected()).toBeTrue();
+		component.previous();
+		expect(await steps[0].isSelected()).toBeTrue();
+		expect(await steps[1].isSelected()).toBeFalse();
 	});
 });

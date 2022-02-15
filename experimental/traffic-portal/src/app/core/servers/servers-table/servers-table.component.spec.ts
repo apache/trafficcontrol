@@ -13,42 +13,227 @@
 */
 
 import { HttpClientModule } from "@angular/common/http";
-import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
+import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 
+import { ServerService } from "src/app/api";
+import { APITestingModule } from "src/app/api/testing";
+import { defaultServer, type Server } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import {TpHeaderComponent} from "../../../shared/tp-header/tp-header.component";
-import {ServerService, UserService} from "../../../shared/api";
-import { ServersTableComponent } from "./servers-table.component";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 
+import { augment, type AugmentedServer, serverIsCache, ServersTableComponent } from "./servers-table.component";
 
 describe("ServersTableComponent", () => {
 	let component: ServersTableComponent;
 	let fixture: ComponentFixture<ServersTableComponent>;
+	let router: Router;
 
-	beforeEach(waitForAsync(() => {
-		const mockAPIService = jasmine.createSpyObj(["getServers", "getUsers"]);
-		mockAPIService.getServers.and.returnValue(new Promise(r => r([])));
+	beforeEach(() => {
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		TestBed.configureTestingModule({
 			declarations: [ ServersTableComponent, TpHeaderComponent ],
-			imports: [HttpClientModule, RouterTestingModule],
+			imports: [
+				HttpClientModule,
+				RouterTestingModule.withRoutes([
+					{component: ServersTableComponent, path: ""},
+					{component: ServersTableComponent, path: "core/server/:id"}
+				]),
+				APITestingModule
+			],
 			providers: [
-				{ provide: ServerService, useValue: mockAPIService },
-				{ provide: UserService, useValue: mockAPIService },
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
-		})
-			.compileComponents();
-	}));
-
-	beforeEach(() => {
+		}).compileComponents();
 		fixture = TestBed.createComponent(ServersTableComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
+		router = TestBed.inject(Router);
+		router.initialNavigation();
 	});
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
+
+	it("knows if a server is a cache", () => {
+		const s: AugmentedServer = {...defaultServer, ipv4Address: "", ipv6Address: "", type: undefined};
+		expect(serverIsCache(s)).toBeFalse();
+		s.type = "EDGE";
+		expect(serverIsCache(s)).toBeTrue();
+		s.type = "EDGE_anything";
+		expect(serverIsCache(s)).toBeTrue();
+		s.type = "MID";
+		expect(serverIsCache(s)).toBeTrue();
+		s.type = "MID_anything";
+		expect(serverIsCache(s)).toBeTrue();
+		s.type = "a string that merely CONTAINS 'EDGE' instead of starting with it";
+		expect(serverIsCache(s)).toBeFalse();
+		s.type = "RASCAL";
+		expect(serverIsCache(s)).toBeFalse();
+	});
+
+	it("augments servers", () => {
+		const s: Server = {...defaultServer, interfaces: []};
+		let a = augment(s);
+		expect(a.ipv4Address).toBe("");
+		expect(a.ipv6Address).toBe("");
+
+		s.interfaces.push({
+			ipAddresses: [],
+			maxBandwidth: null,
+			monitor: false,
+			mtu: null,
+			name: "test"
+		});
+		a = augment(s);
+		expect(a.ipv4Address).toBe("");
+		expect(a.ipv6Address).toBe("");
+
+		s.interfaces[0].ipAddresses.push({
+			address: "192.0.2.0",
+			gateway: null,
+			serviceAddress: false
+		});
+		a = augment(s);
+		expect(a.ipv4Address).toBe("");
+		expect(a.ipv6Address).toBe("");
+
+		s.interfaces[0].ipAddresses.push({
+			address: "2001::1",
+			gateway: null,
+			serviceAddress: false
+		});
+		a = augment(s);
+		expect(a.ipv4Address).toBe("");
+		expect(a.ipv6Address).toBe("");
+
+		s.interfaces.push({
+			ipAddresses: [
+				{
+					address: "192.0.2.1",
+					gateway: null,
+					serviceAddress: false
+				},
+				{
+					address: "2001::2",
+					gateway: null,
+					serviceAddress: false
+				}
+			],
+			maxBandwidth: null,
+			monitor: true,
+			mtu: null,
+			name: "quest"
+		});
+		a = augment(s);
+		expect(a.ipv4Address).toBe("");
+		expect(a.ipv6Address).toBe("");
+
+		s.interfaces[1].ipAddresses.push({
+			address: "192.0.2.2",
+			gateway: null,
+			serviceAddress: true
+		});
+		a = augment(s);
+		expect(a.ipv4Address).toBe("192.0.2.2");
+		expect(a.ipv6Address).toBe("");
+
+		s.interfaces[1].ipAddresses.push({
+			address: "2001::3",
+			gateway: null,
+			serviceAddress: true
+		});
+		a = augment(s);
+		expect(a.ipv4Address).toBe("192.0.2.2");
+		expect(a.ipv6Address).toBe("2001::3");
+	});
+
+	it("loads the 'search' query string parameter as the text for the fuzzy search box", fakeAsync(() => {
+		expect(component.fuzzControl.value).toBe("");
+		router.navigate(["/"], {queryParams: {search: "testquest"}});
+		component.ngOnInit();
+		tick();
+		expect(component.fuzzControl.value).toBe("testquest");
+	}));
+
+	it("propagates changes to the search box to the subscription input of the generic table", () => {
+		const spy = jasmine.createSpy("fuzzySubscription", (v) => {
+			expect(v).toBe("testquest");
+		});
+		component.fuzzySubject.subscribe(spy);
+		component.fuzzControl.setValue("testquest");
+		component.updateURL();
+		expect(spy).toHaveBeenCalled();
+	});
+
+	it("reloads servers when one or more servers' statuses are updated", async () => {
+		const service = TestBed.inject(ServerService);
+		await service.createServer({...defaultServer});
+		component.ngOnInit();
+		const servers = await component.servers;
+		if (!servers) {
+			return fail("servers table has no servers even though I just created one");
+		}
+
+		component.changeStatusOpen = true;
+		component.changeStatusServers = [servers[0]];
+		component.servers = new Promise(r=>r([]));
+		component.statusUpdated(false);
+		expect(component.changeStatusOpen).toBeFalse();
+		expect(component.changeStatusServers.length).toBe(0);
+		expect((await component.servers).length).toBe(0);
+
+		component.changeStatusOpen = true;
+		component.changeStatusServers = [servers[0]];
+		component.statusUpdated(true);
+		expect(component.changeStatusOpen).toBeFalse();
+		expect(component.changeStatusServers.length).toBe(0);
+		expect((await component.servers).length).toBeGreaterThan(0);
+	});
+
+	it("handles its context menu actions", fakeAsync(() => {
+		const augmentFields = {ipv4Address: "192.0.2.0", ipv6Address: "2001::1"};
+		const server = {...defaultServer, id: 9001, type: "EDGE", ...augmentFields};
+
+		component.handleContextMenu({action: "viewDetails", data: server});
+		tick();
+		expect(router.url).toBe("/core/server/9001");
+		expectAsync(component.handleContextMenu({action: "viewDetails", data: [server]})).toBeRejected();
+
+		component.changeStatusOpen = false;
+		component.changeStatusServers = [];
+		component.handleContextMenu({action: "updateStatus", data: server});
+		expect(component.changeStatusOpen).toBeTrue();
+		expect(component.changeStatusServers).toEqual([server]);
+
+		component.changeStatusOpen = false;
+		component.changeStatusServers = [];
+		component.handleContextMenu({action: "updateStatus", data: [server]});
+		expect(component.changeStatusOpen).toBeTrue();
+		expect(component.changeStatusServers).toEqual([server]);
+
+		const service = TestBed.inject(ServerService);
+		const queueSpy = spyOn(service, "queueUpdates");
+		const clearSpy = spyOn(service, "clearUpdates");
+		expect(queueSpy).not.toHaveBeenCalled();
+		expect(clearSpy).not.toHaveBeenCalled();
+
+		component.handleContextMenu({action: "queue", data: server});
+		expect(queueSpy).toHaveBeenCalledTimes(1);
+		expect(clearSpy).not.toHaveBeenCalled();
+
+		component.handleContextMenu({action: "queue", data: [server, server]});
+		expect(queueSpy).toHaveBeenCalledTimes(3);
+
+		component.handleContextMenu({action: "dequeue", data: server});
+		expect(queueSpy).toHaveBeenCalledTimes(3);
+		expect(clearSpy).toHaveBeenCalledTimes(1);
+
+		component.handleContextMenu({action: "dequeue", data: [server, server]});
+		expect(clearSpy).toHaveBeenCalledTimes(3);
+
+		expectAsync(component.handleContextMenu({action: "not a real action", data: []})).toBeRejected();
+	}));
 });

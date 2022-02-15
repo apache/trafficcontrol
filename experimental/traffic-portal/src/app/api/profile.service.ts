@@ -15,9 +15,9 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Parameter, Profile } from "../../models";
+import type { Parameter, Profile } from "src/app/models";
 
-import { APIService } from "./APIService";
+import { APIService } from "./base-api.service";
 
 /**
  * Shared mapping function for converting Parameter 'lastUpdated' fields to actual dates.
@@ -49,7 +49,7 @@ function profileMap(p: Profile): Profile {
 }
 
 /**
- * ServerService exposes API functionality related to Servers.
+ * ProfileService exposes API functionality related to Profiles.
  */
 @Injectable()
 export class ProfileService extends APIService {

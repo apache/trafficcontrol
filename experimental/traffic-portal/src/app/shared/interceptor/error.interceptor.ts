@@ -11,15 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpErrorResponse } from "@angular/common/http";
+import { type HttpRequest, type HttpHandler, type HttpEvent, type HttpInterceptor, HttpErrorResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
-
-import { Observable, throwError } from "rxjs";
+import { type Observable, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
 
-import {AlertService} from "../alert/alert.service";
-import {Alert} from "../../models/alert.model";
+import type { Alert } from "src/app/models";
+
+import { AlertService } from "../alert/alert.service";
 
 /**
  * This class intercepts any and all HTTP error responses and checks for

@@ -11,16 +11,19 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input, OnInit } from "@angular/core";
 import { trigger, style, animate, transition } from "@angular/animations";
-
+import { Component, Input, type OnInit } from "@angular/core";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
-
 import { Subject } from "rxjs";
 
-import { DataPoint, DataSet, DeliveryService, GeoProvider, protocolToString } from "../../models";
-import { DeliveryServiceService } from "../../shared/api";
-
+import { DeliveryServiceService } from "src/app/api";
+import {
+	type DataPoint,
+	type DataSet,
+	type DeliveryService,
+	GeoProvider,
+	protocolToString
+} from "src/app/models";
 
 /**
  * DsCardComponent is a component for displaying information about a Delivery
@@ -59,18 +62,19 @@ export class DsCardComponent implements OnInit {
 	 * The date to use as the 'current' date/time - the end of the date/time
 	 * range for the chart data.
 	 *
-	 * The default is the time of the component's creation.
+	 * If either `now` or `today` is not given, `now` will be set to the moment
+	 * of the component's creation, and `today` will be based on that.
 	 */
-	@Input() public now: Date = new Date();
+	@Input() public now!: Date;
 
 	/**
 	 * The date to use as the 'beginning of the current day' - the start of the
 	 * date/time range for the chart data.
 	 *
-	 * The default is the time of the component's creation (which is the same
-	 * as'now', so you really ought to specify!)
+	 * If either `now` or `today` is not given, `now` will be set to the moment
+	 * of the component's creation, and `today` will be based on that.
 	 */
-	@Input() public today: Date = new Date();
+	@Input() public today!: Date;
 
 	/**
 	 * The number of cache servers available to serve traffic in this Delivery
@@ -114,15 +118,12 @@ export class DsCardComponent implements OnInit {
 
 	/** The Protocol of the Delivery Service as a string. */
 	public get protocolString(): string {
-		if (this.deliveryService.protocol) {
+		if (this.deliveryService.protocol !== undefined) {
 			return protocolToString(this.deliveryService.protocol);
 		}
 		return "";
 	}
 
-	/**
-	 * Constructor.
-	 */
 	constructor(private readonly dsAPI: DeliveryServiceService) {
 		this.deliveryService = {
 			active: true,
@@ -140,6 +141,7 @@ export class DsCardComponent implements OnInit {
 			multiSiteOrigin: false,
 			regionalGeoBlocking: false,
 			routingName: "",
+			tenantId: 1,
 			typeId: -1,
 			xmlId: "-1"
 		};

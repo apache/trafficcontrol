@@ -12,34 +12,34 @@
 * limitations under the License.
 */
 import { HttpClientModule } from "@angular/common/http";
-import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import {DeliveryServiceService, UserService} from "src/app/shared/api";
 
-
+import { DeliveryServiceService } from "src/app/api";
+import { APITestingModule } from "src/app/api/testing";
+import { defaultDeliveryService } from "src/app/models";
+import { AlertService } from "src/app/shared/alert/alert.service";
+import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { LinechartDirective } from "../../shared/charts/linechart.directive";
-import { DeliveryService } from "../../models";
+import { LoadingComponent } from "src/app/shared/loading/loading.component";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+
 import { DsCardComponent } from "../ds-card/ds-card.component";
-import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
-import {LoadingComponent} from "../../shared/loading/loading.component";
-import {AlertService} from "../../shared/alert/alert.service";
+
 import { DashboardComponent } from "./dashboard.component";
 
 describe("DashboardComponent", () => {
 	let component: DashboardComponent;
 	let fixture: ComponentFixture<DashboardComponent>;
+	let router: Router;
 
-	beforeEach(waitForAsync(() => {
-		const mockAPIService = jasmine.createSpyObj(["getDeliveryServices"]);
+	beforeEach(async () => {
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"],
 			{capabilities: new Set<string>()});
 
-		const mockAlertService = jasmine.createSpyObj(["newAlert"]);
-		mockAPIService.getDeliveryServices.and.returnValue(new Promise(resolve=>resolve([])));
-
-		TestBed.configureTestingModule({
+		await TestBed.configureTestingModule({
 			declarations: [
 				DashboardComponent,
 				DsCardComponent,
@@ -48,32 +48,39 @@ describe("DashboardComponent", () => {
 				LinechartDirective
 			],
 			imports: [
+				APITestingModule,
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
-				RouterTestingModule
+				RouterTestingModule.withRoutes([
+					{component: DashboardComponent, path: ""}
+				])
 			],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: DeliveryServiceService, useValue: mockAPIService },
-				{ provide: UserService, useValue: mockAPIService },
-				{ provide: AlertService, useValue: mockAlertService }
+				AlertService,
 			]
-		});
-		TestBed.compileComponents();
-	}));
+		}).compileComponents();
+		const service = TestBed.inject(DeliveryServiceService);
+		const dss = [
+			await service.createDeliveryService({
+				...defaultDeliveryService,
+				displayName: "FIZZbuzz",
+				xmlId: "fizz-buzz"
+			}),
+			await service.createDeliveryService({
+				...defaultDeliveryService,
+				displayName: "fooBAR",
+				xmlId: "foo-bar"
+			})
+		];
 
-	beforeEach(() => {
+		router = TestBed.inject(Router);
+		router.initialNavigation();
+
 		fixture = TestBed.createComponent(DashboardComponent);
 		component = fixture.componentInstance;
-		component.deliveryServices = [
-			{
-				displayName: "FIZZbuzz"
-			} as DeliveryService,
-			{
-				displayName: "fooBAR"
-			} as DeliveryService
-		];
+		component.deliveryServices = dss;
 		fixture.detectChanges();
 	});
 
@@ -81,15 +88,29 @@ describe("DashboardComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it('sets the "search" query parameter', () => {
-		expect(true).toBeTruthy();
-	});
+	it('sets the "search" query parameter', fakeAsync(() => {
+		expect(router.url).toBe("/");
+		component.fuzzControl.setValue("query");
+		component.updateURL(new Event(""));
+		tick();
+		expect(router.url).toBe("/?search=query");
+		component.fuzzControl.setValue("");
+		component.updateURL(new Event(""));
+		tick();
+		expect(router.url).toBe("/");
+	}));
 
-	afterAll(() => {
-		try{
-			TestBed.resetTestingModule();
-		} catch (e) {
-			console.error("error in DashboardComponent afterAll:", e);
-		}
+	it("filters Delivery Services", () => {
+		expect(component.fuzzControl.value).toBe("");
+		expect(component.filteredDSes).toEqual(component.deliveryServices);
+
+		component.fuzzControl.setValue("fz");
+		expect(component.filteredDSes.map(d=>d.displayName)).toEqual(["FIZZbuzz"]);
+
+		component.fuzzControl.setValue("aoeu");
+		expect(component.filteredDSes).toEqual([]);
+
+		component.fuzzControl.setValue("fb");
+		expect(component.filteredDSes.map(d=>d.displayName)).toEqual(["fooBAR", "FIZZbuzz"]);
 	});
 });

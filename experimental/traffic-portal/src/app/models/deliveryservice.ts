@@ -357,7 +357,7 @@ export interface DeliveryService {
 	 * An integral, unique identifier for the Tenant to whom this Delivery
 	 * Service belongs.
 	 */
-	tenantId?:                  number;
+	tenantId:                   number;
 	/**
 	 * HTTP headers that should be logged from client requests by Traffic
 	 * Router.
@@ -395,6 +395,7 @@ export const defaultDeliveryService: DeliveryService ={
 	rangeRequestHandling: RangeRequestHandling.NONE,
 	regionalGeoBlocking: false,
 	routingName: "cdn",
+	tenantId: 1,
 	typeId: -1,
 	xmlId: ""
 };
