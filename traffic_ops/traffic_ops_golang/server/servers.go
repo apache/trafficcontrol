@@ -1315,8 +1315,8 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 
 func checkTypeChangeSafety(server tc.CommonServerPropertiesV40, tx *sqlx.Tx) (error, error, int) {
 	// see if cdn or type changed
-	var cdnID int
-	var typeID int
+	var cdnID *int
+	var typeID *int
 	if err := tx.QueryRow("SELECT type, cdn_id FROM server WHERE id = $1", *server.ID).Scan(&typeID, &cdnID); err != nil {
 		if err == sql.ErrNoRows {
 			return errors.New("no server found with this ID"), nil, http.StatusNotFound
@@ -1325,17 +1325,17 @@ func checkTypeChangeSafety(server tc.CommonServerPropertiesV40, tx *sqlx.Tx) (er
 	}
 
 	var dsIDs []int64
-	if err := tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", server.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
+	if err := tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", *server.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("getting server assigned delivery services: %v", err), http.StatusInternalServerError
 	}
 	// If type is changing ensure it isn't assigned to any DSes.
-	if typeID != *server.TypeID {
+	if typeID != server.TypeID {
 		if len(dsIDs) != 0 {
 			return errors.New("server type can not be updated when it is currently assigned to Delivery Services"), nil, http.StatusConflict
 		}
 	}
 	// Check to see if the user is trying to change the CDN of a server, which is already linked with a DS
-	if cdnID != *server.CDNID && len(dsIDs) != 0 {
+	if cdnID != server.CDNID && len(dsIDs) != 0 {
 		return errors.New("server cdn can not be updated when it is currently assigned to delivery services"), nil, http.StatusConflict
 	}
 
