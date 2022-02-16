@@ -19,6 +19,7 @@
 import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { RouterModule, type Routes } from "@angular/router";
+import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 
 import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
@@ -72,6 +73,7 @@ const routes: Routes = [
 	exports: [
 	],
 	imports: [
+		FontAwesomeModule,
 		SharedModule,
 		AppUIModule,
 		CommonModule,
