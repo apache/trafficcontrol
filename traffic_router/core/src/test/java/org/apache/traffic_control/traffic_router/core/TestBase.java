@@ -27,6 +27,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
+import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.io.File;
@@ -121,7 +122,7 @@ public class TestBase {
 			e.printStackTrace();
 		}
 
-		ConsoleAppender consoleAppender = ConsoleAppender.newBuilder().setLayout(PatternLayout.newBuilder().withPattern("%d{ISO8601} [%-5p] %c{4}: %m%n").build()).build();
+		ConsoleAppender consoleAppender = ConsoleAppender.newBuilder().setName("TestBase").setLayout(PatternLayout.newBuilder().withPattern("%d{ISO8601} [%-5p] %c{4}: %m%n").build()).build();
 		LoggerContext.getContext().getRootLogger().addAppender(consoleAppender);
 		LoggerContext.getContext().getRootLogger().setLevel(Level.INFO);
 	}
@@ -139,6 +140,13 @@ public class TestBase {
 	public static void tearDownFakeServers() throws Exception {
 		httpDataServer.stop();
 		tmpDeployDir.deleteOnExit();
+		final MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
+		try {
+			final ObjectName objectName = new ObjectName(DeliveryServiceCertificatesMBean.OBJECT_NAME);
+			platformMBeanServer.unregisterMBean(objectName);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static ApplicationContext getContext() {

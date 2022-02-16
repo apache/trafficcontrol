@@ -72,7 +72,7 @@ public class ZoneManagerTest {
 	public void setUp() throws Exception {
 		trafficRouterManager = (TrafficRouterManager) context.getBean("trafficRouterManager");
 		trafficRouterManager.getTrafficRouter().setApplicationContext(context);
-		final File file = new File("src/test/db/czmap.json");
+		final File file = new File("src/test/resources/czmap.json");
 		final ObjectMapper mapper = new ObjectMapper();
 		final JsonNode jsonNode = mapper.readTree(file);
 		final JsonNode coverageZones = jsonNode.get("coverageZones");
