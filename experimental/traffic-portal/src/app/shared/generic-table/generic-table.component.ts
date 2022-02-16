@@ -43,7 +43,9 @@ import type { BehaviorSubject, Subscription } from "rxjs";
 import { fuzzyScore } from "src/app/utils";
 
 import { BooleanFilterComponent } from "../table-components/boolean-filter/boolean-filter.component";
+import { EmailCellRendererComponent } from "../table-components/email-cell-renderer/email-cell-renderer.component";
 import { SSHCellRendererComponent } from "../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
+import { TelephoneCellRendererComponent } from "../table-components/telephone-cell-renderer/telephone-cell-renderer.component";
 import { UpdateCellRendererComponent } from "../table-components/update-cell-renderer/update-cell-renderer.component";
 
 /** A context menu action that acts on a single row only. */
@@ -200,6 +202,8 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 
 	/** Passed as components to the ag-grid API */
 	public components = {
+		emailCellRenderer: EmailCellRendererComponent,
+		phoneNumberCellRenderer: TelephoneCellRendererComponent,
 		sshCellRenderer: SSHCellRendererComponent,
 		tpBooleanFilter: BooleanFilterComponent,
 		updateCellRenderer: UpdateCellRendererComponent,
