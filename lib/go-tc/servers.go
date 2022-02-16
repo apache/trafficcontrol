@@ -612,8 +612,8 @@ type Server struct {
 	CachegroupID     int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID            int                 `json:"cdnId" db:"cdn_id"`
 	CDNName          string              `json:"cdnName" db:"cdn_name"`
-	ConfigUpdateTime *time.Time          `json:"configUpdateTime" db:"config_update_time"`
-	ConfigApplyTime  *time.Time          `json:"configApplyTime" db:"config_apply_time"`
+	ConfigUpdateTime time.Time           `json:"configUpdateTime" db:"config_update_time"`
+	ConfigApplyTime  time.Time           `json:"configApplyTime" db:"config_apply_time"`
 	DeliveryServices map[string][]string `json:"deliveryServices,omitempty"`
 	DomainName       string              `json:"domainName" db:"domain_name"`
 	FQDN             *string             `json:"fqdn,omitempty"`
@@ -648,8 +648,8 @@ type Server struct {
 	ProfileID        int                 `json:"profileId" db:"profile_id"`
 	Rack             string              `json:"rack" db:"rack"`
 	RevalPending     bool                `json:"revalPending" db:"reval_pending"`
-	RevalUpdateTime  *time.Time          `json:"revalUpdateTime" db:"revalidate_update_time"`
-	RevalApplyTime   *time.Time          `json:"revalApplyTime" db:"revalidate_apply_time"`
+	RevalUpdateTime  time.Time           `json:"revalUpdateTime" db:"revalidate_update_time"`
+	RevalApplyTime   time.Time           `json:"revalApplyTime" db:"revalidate_apply_time"`
 	RouterHostName   string              `json:"routerHostName" db:"router_host_name"`
 	RouterPortName   string              `json:"routerPortName" db:"router_port_name"`
 	Status           string              `json:"status" db:"status"`
@@ -747,6 +747,8 @@ func (s Server) ToNullable() ServerNullableV2 {
 				CachegroupID:     &s.CachegroupID,
 				CDNID:            &s.CDNID,
 				CDNName:          &s.CDNName,
+				ConfigUpdateTime: &s.ConfigUpdateTime,
+				ConfigApplyTime:  &s.ConfigApplyTime,
 				DeliveryServices: &s.DeliveryServices,
 				DomainName:       &s.DomainName,
 				FQDN:             s.FQDN,
@@ -772,6 +774,8 @@ func (s Server) ToNullable() ServerNullableV2 {
 				ProfileID:        &s.ProfileID,
 				Rack:             &s.Rack,
 				RevalPending:     &s.RevalPending,
+				RevalUpdateTime:  &s.RevalUpdateTime,
+				RevalApplyTime:   &s.RevalApplyTime,
 				Status:           &s.Status,
 				StatusID:         &s.StatusID,
 				TCPPort:          &s.TCPPort,
