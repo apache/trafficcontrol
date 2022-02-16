@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Router: Add support for `file`-protocol URLs for the `geolocation.polling.url` for the Geolocation database.
 - Traffic Monitor: Add support for `access.log` to TM.
 - Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
+- [Traffic Ops] Add additional timestamp fields server for queuing and dequeueing config and revalidate updates.
 
 ### Fixed
 - Update traffic\_portal dependencies to mitigate `npm audit` issues.
