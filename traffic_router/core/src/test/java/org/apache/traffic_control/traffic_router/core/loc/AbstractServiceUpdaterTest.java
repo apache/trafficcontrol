@@ -38,16 +38,20 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doNothing;
 import static org.powermock.api.mockito.PowerMockito.method;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 import static org.powermock.api.support.membermodification.MemberModifier.stub;
+
+import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({AbstractServiceUpdater.class, HttpURLConnection.class, URL.class, Files.class})
 @PowerMockIgnore("javax.management.*")
 public class AbstractServiceUpdaterTest {
 
+	private TrafficRouterManager trafficRouterManager;
 	private HttpURLConnection connection;
 	private Path databasesDirectory;
 	private Path databasePath;
@@ -64,6 +68,9 @@ public class AbstractServiceUpdaterTest {
 
 		databasesDirectory = mock(Path.class);
 		when(databasesDirectory.resolve((String) isNull())).thenReturn(databasePath);
+
+	    trafficRouterManager = mock(TrafficRouterManager.class);
+		doNothing().when(trafficRouterManager).trackEvent(any());
 
 		mockStatic(Files.class);
 		stub(method(Files.class, "exists")).toReturn(true);
@@ -82,6 +89,8 @@ public class AbstractServiceUpdaterTest {
 	@Test
 	public void itUsesETag() throws Exception {
 		Updater updater = new Updater();
+		updater.setTrafficRouterManager(trafficRouterManager);
+
 		updater.setDatabasesDirectory(databasesDirectory);
 		updater.dataBaseURL = "http://www.example.com";
 		updater.updateDatabase();

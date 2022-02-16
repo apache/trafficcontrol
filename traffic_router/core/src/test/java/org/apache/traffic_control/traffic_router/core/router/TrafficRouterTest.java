@@ -73,7 +73,7 @@ public class TrafficRouterTest {
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
         when(deliveryService.getDispersion()).thenReturn(mock(Dispersion.class));
         when(deliveryService.isAcceptHttp()).thenReturn(true);
-		when(deliveryService.getId()).thenReturn("someDsName");
+        when(deliveryService.getId()).thenReturn("someDsName");
 
         consistentHasher = mock(ConsistentHasher.class);
 
@@ -127,9 +127,9 @@ public class TrafficRouterTest {
         HTTPRequest httpRequest = new HTTPRequest();
         httpRequest.setClientIP("192.168.10.11");
         httpRequest.setHostname("ccr.example.com");
-		Map<String, String> headers = new HashMap<String, String>();
-		headers.put("x-tc-steering-option", "itCreatesHttpResults");
-		httpRequest.setHeaders(headers);
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("x-tc-steering-option", "itCreatesHttpResults");
+        httpRequest.setHeaders(headers);
 
         Track track = spy(StatTracker.getTrack());
 
@@ -167,7 +167,7 @@ public class TrafficRouterTest {
 
         DeliveryService ds = mock(DeliveryService.class);
 
-		when(ds.getId()).thenReturn("itFiltersByIpAvailable");
+        when(ds.getId()).thenReturn("itFiltersByIpAvailable");
 
         Cache cacheIPv4 = mock(Cache.class);
         when(cacheIPv4.hasDeliveryService(any())).thenReturn(true);
@@ -286,9 +286,9 @@ public class TrafficRouterTest {
         httpRequest.setClientIP("192.168.10.11");
         httpRequest.setHostname("ccr.example.com");
         httpRequest.setPath("/some/path");
-		Map<String, String> headers = new HashMap<String, String>();
-		headers.put("x-tc-steering-option", "itSetsResultToGeo");
-		httpRequest.setHeaders(headers);
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("x-tc-steering-option", "itSetsResultToGeo");
+        httpRequest.setHeaders(headers);
 
         Track track = spy(StatTracker.getTrack());
 
