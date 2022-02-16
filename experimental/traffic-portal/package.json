@@ -1,6 +1,6 @@
 {
   "name": "traffic-portal",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "The web UI for interacting with the Apache Traffic Control CDN management and operation system.",
   "homepage": "https://github.com/apache/trafficcontrol",
   "repository": {
