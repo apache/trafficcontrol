@@ -54,12 +54,14 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewCache(true, cacheHealthHandler, cfg, appData, cfg.CachePollingProtocol)
+	cacheHealthPoller := poller.NewCache(true, cacheHealthHandler, cfg, appData)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewCache(false, cacheStatHandler, cfg, appData, cfg.CachePollingProtocol)
+	cacheStatPoller := poller.NewCache(false, cacheStatHandler, cfg, appData)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewCache(false, peerHandler, cfg, appData, cfg.PeerPollingProtocol)
+	peerPoller := poller.NewPeer(peerHandler, cfg, appData)
+	distributedPeerHandler := peer.NewHandler()
+	distributedPeerPoller := poller.NewPeer(distributedPeerHandler, cfg, appData)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
@@ -67,6 +69,9 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		go cacheStatPoller.Poll()
 	}
 	go peerPoller.Poll()
+	if cfg.DistributedPolling {
+		go distributedPeerPoller.Poll()
+	}
 
 	events := health.NewThreadsafeEvents(cfg.MaxEvents)
 
@@ -81,14 +86,17 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		cachesChanged = cachesChangedForHealthMgr
 	}
 	peerStates := peer.NewCRStatesPeersThreadsafe(cfg.PeerOptimisticQuorumMin) // each peer's last state is saved in this map
+	distributedPeerStates := peer.NewCRStatesPeersThreadsafe(0)
 
 	monitorConfig := StartMonitorConfigManager(
 		monitorConfigPoller.ConfigChannel,
 		localStates,
 		peerStates,
+		distributedPeerStates,
 		cacheStatPoller.ConfigChannel,
 		cacheHealthPoller.ConfigChannel,
 		peerPoller.ConfigChannel,
+		distributedPeerPoller.ConfigChannel,
 		monitorConfigPoller.IntervalChan,
 		cachesChanged,
 		cfg,
@@ -128,6 +136,15 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		events,
 		localCacheStatus,
 		cachesChangedForHealthMgr,
+		combineStateFunc,
+	)
+
+	StartDistributedPeerManager(
+		distributedPeerHandler.ResultChannel,
+		localStates,
+		distributedPeerStates,
+		events,
+		healthUnpolledCaches,
 	)
 
 	if _, err := StartOpsConfigManager(
@@ -138,6 +155,7 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		[]chan<- towrap.TrafficOpsSessionThreadsafe{monitorConfigPoller.SessionChannel},
 		localStates,
 		peerStates,
+		distributedPeerStates,
 		combinedStates,
 		statInfoHistory,
 		statResultHistory,

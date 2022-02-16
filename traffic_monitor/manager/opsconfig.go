@@ -52,6 +52,7 @@ func StartOpsConfigManager(
 	toChangeSubscribers []chan<- towrap.TrafficOpsSessionThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
+	distributedPeerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
 	statInfoHistory threadsafe.ResultInfoHistory,
 	statResultHistory threadsafe.ResultStatHistory,
@@ -109,6 +110,7 @@ func StartOpsConfigManager(
 			toSession,
 			localStates,
 			peerStates,
+			distributedPeerStates,
 			combinedStates,
 			statInfoHistory,
 			statResultHistory,
@@ -129,6 +131,7 @@ func StartOpsConfigManager(
 			healthUnpolledCaches,
 			monitorConfig,
 			cfg.StatPolling,
+			cfg.DistributedPolling,
 		)
 
 		// If the HTTPS Listener is defined in the traffic_ops.cfg file then it creates the HTTPS endpoint and the corresponding HTTP endpoint as a redirect

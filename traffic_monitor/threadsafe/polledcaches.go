@@ -29,12 +29,13 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 )
 
-// UnpolledCaches is a structure containing a map of caches which have yet to be polled, which is threadsafe for multiple readers and one writer.
-// This could be made lock-free, if the performance was necessary
+// UnpolledCaches is a structure containing a map of caches names (which have yet to be polled) to
+// booleans (which, if true, means the cache is directly polled), which is threadsafe for multiple
+// readers and one writer. This could be made lock-free, if the performance was necessary
 type UnpolledCaches struct {
-	unpolledCaches *map[tc.CacheName]struct{}
-	seenCaches     *map[tc.CacheName]time.Time
-	allCaches      *map[tc.CacheName]struct{}
+	unpolledCaches map[tc.CacheName]bool
+	seenCaches     map[tc.CacheName]time.Time
+	allCaches      map[tc.CacheName]bool
 	initialized    *bool
 	m              *sync.RWMutex
 }
@@ -44,84 +45,66 @@ func NewUnpolledCaches() UnpolledCaches {
 	b := false
 	return UnpolledCaches{
 		m:              &sync.RWMutex{},
-		unpolledCaches: &map[tc.CacheName]struct{}{},
-		allCaches:      &map[tc.CacheName]struct{}{},
-		seenCaches:     &map[tc.CacheName]time.Time{},
+		unpolledCaches: map[tc.CacheName]bool{},
+		allCaches:      map[tc.CacheName]bool{},
+		seenCaches:     map[tc.CacheName]time.Time{},
 		initialized:    &b,
 	}
 }
 
 // UnpolledCaches returns a map of caches not yet polled. Callers MUST NOT modify. If mutation is necessary, copy the map
-func (t *UnpolledCaches) UnpolledCaches() map[tc.CacheName]struct{} {
+func (t *UnpolledCaches) UnpolledCaches() map[tc.CacheName]bool {
 	t.m.RLock()
 	defer t.m.RUnlock()
-	return *t.unpolledCaches
+	return t.unpolledCaches
 }
 
-// setUnpolledCaches sets the internal unpolled caches map. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
-func (t *UnpolledCaches) setUnpolledCaches(v map[tc.CacheName]struct{}) {
+// SetNewCaches takes a list of new caches, which may overlap with the existing caches, diffs them, removes any `unpolledCaches` which aren't in the new list, and sets the list of `polledCaches` (which is only used by this func) to the `newCaches`.
+func (t *UnpolledCaches) SetNewCaches(newCaches map[tc.CacheName]bool) {
 	t.m.Lock()
+	defer t.m.Unlock()
+	for cache := range t.unpolledCaches {
+		if _, ok := newCaches[cache]; !ok {
+			delete(t.unpolledCaches, cache)
+			delete(t.seenCaches, cache)
+		}
+	}
+	for cache := range t.allCaches {
+		if _, ok := newCaches[cache]; !ok {
+			delete(t.allCaches, cache)
+		}
+	}
+	for cache, v := range newCaches {
+		if _, ok := t.allCaches[cache]; !ok {
+			t.unpolledCaches[cache] = v
+			t.allCaches[cache] = v
+		}
+	}
 	*t.initialized = true
-	*t.unpolledCaches = v
-	t.m.Unlock()
-}
-
-// setUnpolledCaches sets the internal unpolled caches map. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
-func (t *UnpolledCaches) setSeenCaches(v map[tc.CacheName]time.Time) {
-	t.m.Lock()
-	*t.seenCaches = v
-	t.m.Unlock()
-}
-
-// SetNewCaches takes a list of new caches, which may overlap with the existing caches, diffs them, removes any `unpolledCaches` which aren't in the new list, and sets the list of `polledCaches` (which is only used by this func) to the `newCaches`. This is threadsafe with one writer, along with `setUnpolledCaches`.
-func (t *UnpolledCaches) SetNewCaches(newCaches map[tc.CacheName]struct{}) {
-	unpolledCaches := copyCaches(t.UnpolledCaches())
-	allCaches := copyCaches(*t.allCaches) // not necessary to lock `allCaches`, as the single-writer is the only thing that accesses it.
-	seenCaches := copyCachesTime(*t.seenCaches)
-	for cache := range unpolledCaches {
-		if _, ok := newCaches[cache]; !ok {
-			delete(unpolledCaches, cache)
-			delete(seenCaches, cache)
-		}
-	}
-	for cache := range allCaches {
-		if _, ok := newCaches[cache]; !ok {
-			delete(allCaches, cache)
-		}
-	}
-	for cache := range newCaches {
-		if _, ok := allCaches[cache]; !ok {
-			unpolledCaches[cache] = struct{}{}
-			allCaches[cache] = struct{}{}
-		}
-	}
-	*t.allCaches = allCaches
-	t.setUnpolledCaches(unpolledCaches)
-	t.setSeenCaches(seenCaches)
 }
 
 // Any returns whether there are any caches marked as not polled. Also returns true if SetNewCaches() has never been called (assuming there exist caches, if this hasn't been initialized, we couldn't have polled any of them).
 func (t *UnpolledCaches) Any() bool {
-	t.m.Lock()
-	defer t.m.Unlock()
-	return !(*t.initialized) || len(*t.unpolledCaches) > 0
+	t.m.RLock()
+	defer t.m.RUnlock()
+	return !(*t.initialized) || len(t.unpolledCaches) > 0
 }
 
-// copyCaches performs a deep copy of the given map.
-func copyCaches(a map[tc.CacheName]struct{}) map[tc.CacheName]struct{} {
-	b := map[tc.CacheName]struct{}{}
-	for k := range a {
-		b[k] = struct{}{}
+// AnyDirectlyPolled returns whether there are any directly-polled caches marked as not polled.
+// Also returns true if SetNewCaches() has never been called (assuming there exist caches, if this
+// hasn't been initialized, we couldn't have polled any of them).
+func (t *UnpolledCaches) AnyDirectlyPolled() bool {
+	t.m.RLock()
+	defer t.m.RUnlock()
+	if !*t.initialized {
+		return true
 	}
-	return b
-}
-
-func copyCachesTime(a map[tc.CacheName]time.Time) map[tc.CacheName]time.Time {
-	b := map[tc.CacheName]time.Time{}
-	for k, v := range a {
-		b[k] = v
+	for _, directlyPolled := range t.unpolledCaches {
+		if directlyPolled {
+			return true
+		}
 	}
-	return b
+	return false
 }
 
 const PolledBytesPerSecTimeout = time.Second * 10
@@ -130,13 +113,13 @@ const PolledBytesPerSecTimeout = time.Second * 10
 // This is threadsafe for one writer, along with `Set`.
 // This is fast if there are no unpolled caches. Moreover, its speed is a function of the number of unpolled caches, not the number of caches total.
 func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.LastStats) {
-	unpolledCaches := copyCaches(t.UnpolledCaches())
-	seenCaches := copyCachesTime(*t.seenCaches)
-	numUnpolledCaches := len(unpolledCaches)
+	t.m.Lock()
+	defer t.m.Unlock()
+	numUnpolledCaches := len(t.unpolledCaches)
 	if numUnpolledCaches == 0 {
 		return
 	}
-	for cache := range unpolledCaches {
+	for cache := range t.unpolledCaches {
 	innerLoop:
 		for _, result := range results {
 			if result.ID != string(cache) {
@@ -146,8 +129,8 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.Last
 			// TODO fix "whether a cache has ever been polled" to be generic somehow. The result.System.NotAvailable check is duplicated in health.EvalCache, and is fragile. What if another "successfully polled but unavailable" flag were added?
 			if !result.Available || result.Error != nil || result.Statistics.NotAvailable {
 				log.Debugf("polled %v\n", cache)
-				delete(unpolledCaches, cache)
-				delete(seenCaches, cache)
+				delete(t.unpolledCaches, cache)
+				delete(t.seenCaches, cache)
 				break innerLoop
 			}
 		}
@@ -158,28 +141,26 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.Last
 
 		if lastStat.Bytes.PerSec != 0 {
 			log.Debugf("polled %v\n", cache)
-			delete(unpolledCaches, cache)
-			delete(seenCaches, cache)
+			delete(t.unpolledCaches, cache)
+			delete(t.seenCaches, cache)
 		} else {
-			if _, ok := seenCaches[cache]; !ok {
-				seenCaches[cache] = lastStat.Bytes.Time
+			if _, ok := t.seenCaches[cache]; !ok {
+				t.seenCaches[cache] = lastStat.Bytes.Time
 			}
 		}
 
-		if seenTime, ok := seenCaches[cache]; ok && time.Since(seenTime) > PolledBytesPerSecTimeout {
+		if seenTime, ok := t.seenCaches[cache]; ok && time.Since(seenTime) > PolledBytesPerSecTimeout {
 			log.Debugf("polled %v (byte change timed out)\n", cache)
-			delete(unpolledCaches, cache)
-			delete(seenCaches, cache)
+			delete(t.unpolledCaches, cache)
+			delete(t.seenCaches, cache)
 		}
 	}
 
-	if len(unpolledCaches) == numUnpolledCaches {
+	if len(t.unpolledCaches) == numUnpolledCaches {
 		return
 	}
-	t.setUnpolledCaches(unpolledCaches)
-	t.setSeenCaches(seenCaches)
-	if len(unpolledCaches) != 0 {
-		log.Infof("remaining unpolled %v\n", unpolledCaches)
+	if len(t.unpolledCaches) != 0 {
+		log.Infof("remaining unpolled %v\n", t.unpolledCaches)
 	} else {
 		log.Infof("all caches polled, ready to serve!\n")
 	}
@@ -190,42 +171,55 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.Last
 // and we can start serving. Serving Traffic Router with caches as 'down' which simply haven't
 // been polled yet would be bad. Therefore, a cache is set as 'polled' if it has given TM two
 // results, OR if the cache is marked as down (and thus we don't need a 2nd result).
-// TODO: for distributed polling, this needs to account for the fact that TM will only get results
-//  for a subset of caches in the CDN. So, it should start serving only after it has received
-//  remote peer states from at least 1 TM in every other TM group. This means that remote peers
-//  should be able to request local states from a TM once that TM has polled its specific subset
-//  of the CDN.
 func (t *UnpolledCaches) SetHealthPolled(results []cache.Result) {
-	unpolledCaches := copyCaches(t.UnpolledCaches())
-	seenCaches := copyCachesTime(*t.seenCaches)
-	numUnpolledCaches := len(unpolledCaches)
+	t.m.Lock()
+	defer t.m.Unlock()
+	numUnpolledCaches := len(t.unpolledCaches)
 	if numUnpolledCaches == 0 {
 		return
 	}
-	for cache := range unpolledCaches {
+	for cache := range t.unpolledCaches {
 	innerLoop:
 		for _, result := range results {
 			if result.ID != string(cache) {
 				continue
 			}
 
-			// TODO fix "whether a cache has ever been polled" to be generic somehow. The result.System.NotAvailable check is duplicated in health.EvalCache, and is fragile. What if another "successfully polled but unavailable" flag were added?
 			if !result.Available || result.Error != nil || result.Statistics.NotAvailable {
 				log.Debugf("polled %v\n", cache)
-				delete(unpolledCaches, cache)
-				delete(seenCaches, cache)
+				delete(t.unpolledCaches, cache)
+				delete(t.seenCaches, cache)
 				break innerLoop
 			} else {
 				// if this cache has already been seen once before, consider it polled
-				if _, ok := seenCaches[cache]; ok {
-					delete(unpolledCaches, cache)
-					delete(seenCaches, cache)
+				if _, ok := t.seenCaches[cache]; ok {
+					delete(t.unpolledCaches, cache)
+					delete(t.seenCaches, cache)
 				} else {
-					seenCaches[cache] = time.Time{}
+					t.seenCaches[cache] = time.Time{}
 				}
 			}
 		}
 	}
-	t.setUnpolledCaches(unpolledCaches)
-	t.setSeenCaches(seenCaches)
+}
+
+// SetRemotePolled sets caches which have been *remote health* polled (as opposed to *locally health* polled).
+func (t *UnpolledCaches) SetRemotePolled(results map[tc.CacheName]tc.IsAvailable) {
+	t.m.Lock()
+	defer t.m.Unlock()
+	numUnpolledCaches := len(t.unpolledCaches)
+	if numUnpolledCaches == 0 {
+		return
+	}
+	for cache := range t.unpolledCaches {
+	innerLoop:
+		for cacheName := range results {
+			if cacheName != cache {
+				continue
+			}
+			delete(t.unpolledCaches, cache)
+			delete(t.seenCaches, cache)
+			break innerLoop
+		}
+	}
 }

@@ -22,8 +22,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
@@ -70,6 +72,7 @@ func main() {
 		staticData.Hostname = cfg.ShortHostnameOverride
 	}
 
+	rand.Seed(time.Now().UnixNano())
 	log.Infof("Starting with config %+v\n", cfg)
 
 	err = manager.Start(*opsConfigFile, cfg, staticData, *configFileName)

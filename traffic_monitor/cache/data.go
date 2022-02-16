@@ -25,11 +25,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// AvailableStatusReported is the status string returned by caches set to
-// "reported" in Traffic Ops.
-// TODO put somewhere more generic
-const AvailableStatusReported = "REPORTED"
-
 // AvailableTuple contains a boolean value to indicate whether IPv4 is
 // available and a boolean value to indicate whether IPv6 is available.
 type AvailableTuple struct {
@@ -96,7 +91,7 @@ func copyResult(a []Result) []Result {
 
 // Copy copies returns a deep copy of this ResultHistory.
 func (a ResultHistory) Copy() ResultHistory {
-	b := ResultHistory{}
+	b := make(ResultHistory, len(a))
 	for k, v := range a {
 		b[k] = copyResult(v)
 	}
@@ -154,7 +149,7 @@ func copyResultInfos(a []ResultInfo) []ResultInfo {
 }
 
 func (a ResultInfoHistory) Copy() ResultInfoHistory {
-	b := ResultInfoHistory{}
+	b := make(ResultInfoHistory, len(a))
 	for k, v := range a {
 		b[k] = copyResultInfos(v) // TODO determine if copy is necessary
 	}
@@ -177,7 +172,7 @@ type Kbpses map[string]uint64
 
 // Copy returns a deep copy of the Kbpses.
 func (a Kbpses) Copy() Kbpses {
-	b := Kbpses{}
+	b := make(Kbpses, len(a))
 	for k, v := range a {
 		b[k] = v
 	}
