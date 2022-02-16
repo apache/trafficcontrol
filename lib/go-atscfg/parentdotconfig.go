@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/url"
 	"regexp"
 	"sort"
@@ -201,6 +202,7 @@ func MakeParentDotConfig(
 			}
 		}
 	}
+	log.Warnln(parentCacheGroups)
 
 	nameTopologies := makeTopologyNameMap(topologies)
 
@@ -246,6 +248,7 @@ func MakeParentDotConfig(
 	cgServerIDs[*server.ID] = struct{}{}
 
 	cgDSServers := filterDSS(dss, nil, cgServerIDs)
+	log.Warnln(cgDSServers)
 	parentServerDSes := map[int]map[int]struct{}{} // map[serverID][dsID]
 	for _, dss := range cgDSServers {
 		if parentServerDSes[dss.Server] == nil {
@@ -253,8 +256,11 @@ func MakeParentDotConfig(
 		}
 		parentServerDSes[dss.Server][dss.DeliveryService] = struct{}{}
 	}
+	log.Warnln(parentServerDSes)
 
 	originServers, profileCaches, orgProfWarns, err := getOriginServersAndProfileCaches(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities)
+	log.Warnln(originServers)
+	log.Warnln(profileCaches)
 	warnings = append(warnings, orgProfWarns...)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, "getting origin servers and profile caches: "+err.Error())
