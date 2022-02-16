@@ -21,7 +21,9 @@ package toreq
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -61,6 +63,34 @@ func (cl *TOClient) GetProfileByName(profileName string, reqHdr http.Header) (tc
 		return tc.Profile{}, reqInf, errors.New("getting profile '" + profileName + "': " + err.Error())
 	}
 	return profile, reqInf, nil
+}
+
+func (cl *TOClient) WriteFsCookie(fileName string) {
+	cookie := torequtil.FsCookie{}
+	u, err := url.Parse(cl.c.URL)
+	if err != nil {
+		log.Warnln("Error parsing Traffic ops URL: ", err)
+		return
+	}
+	for _, c := range cl.c.Client.Jar.Cookies(u) {
+		if c.Name == "mojolicious" {
+			cookie = torequtil.FsCookie{
+				Name:  c.Name,
+				Value: c.Value,
+			}
+		}
+	}
+	fsCookie, err := json.MarshalIndent(cookie, "", " ")
+	if err != nil {
+		log.Warnln("Error creating JSON cookie file: ", err)
+		return
+	}
+	err = ioutil.WriteFile(fileName, fsCookie, 0600)
+	if err != nil {
+		log.Warnln("Error writing cooking file: ", err)
+		return
+	}
+	log.Infoln("Wrote new auth cookie to filesystem")
 }
 
 func (cl *TOClient) GetGlobalParameters(reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
