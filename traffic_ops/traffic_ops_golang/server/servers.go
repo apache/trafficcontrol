@@ -348,44 +348,11 @@ UPDATE server SET
 	status=:status_id,
 	tcp_port=:tcp_port,
 	type=:server_type_id,
-	upd_pending=:upd_pending,
 	xmpp_passwd=:xmpp_passwd,
 	status_last_updated=:status_last_updated
 WHERE id=:id
 RETURNING
-	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
-	cachegroup AS cachegroup_id,
-	cdn_id,
-	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
-	domain_name,
-	guid,
-	host_name,
-	https_port,
-	id,
-	ilo_ip_address,
-	ilo_ip_gateway,
-	ilo_ip_netmask,
-	ilo_password,
-	ilo_username,
-	last_updated,
-	mgmt_ip_address,
-	mgmt_ip_gateway,
-	mgmt_ip_netmask,
-	offline_reason,
-	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
-	phys_location AS phys_location_id,
-	profile AS profile_id,
-	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
-	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
-	rack,
-	reval_pending,
-	(SELECT name FROM status WHERE status.id=server.status) AS status,
-	status AS status_id,
-	tcp_port,
-	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
-	type AS server_type_id,
-	upd_pending,
-	status_last_updated
+	id
 `
 
 const originServerQuery = `
@@ -726,12 +693,9 @@ and p.id = $1
 	return serviceInterface, util.JoinErrs(errs)
 }
 
-func validateConfigUpdate(tx *sql.Tx, server tc.CommonServerProperties, now time.Time) (bool, error) {
+func validateConfigUpdate(tx *sql.Tx, server tc.CommonServerProperties) (bool, error) {
 
 	if server.ConfigUpdateTime != nil {
-		if server.ConfigUpdateTime.Before(now) {
-			return false, fmt.Errorf("failed to add server. config update time cannot be in the past")
-		}
 		return true, nil
 	}
 
@@ -743,12 +707,9 @@ func validateConfigUpdate(tx *sql.Tx, server tc.CommonServerProperties, now time
 	return false, nil
 }
 
-func validateRevalUpdate(tx *sql.Tx, server tc.CommonServerProperties, now time.Time) (bool, error) {
+func validateRevalUpdate(tx *sql.Tx, server tc.CommonServerProperties) (bool, error) {
 
 	if server.RevalUpdateTime != nil {
-		if server.RevalUpdateTime.Before(now) {
-			return false, fmt.Errorf("failed to add server. revalidate update time cannot be in the past")
-		}
 		return true, nil
 	}
 
@@ -756,6 +717,7 @@ func validateRevalUpdate(tx *sql.Tx, server tc.CommonServerProperties, now time.
 	if server.RevalPending != nil {
 		return *server.RevalPending, nil
 	}
+
 	return false, nil
 }
 
@@ -1513,30 +1475,20 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	rows, err := inf.Tx.NamedQuery(updateQuery, server)
+	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties)
 	if err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
-	defer rows.Close()
-
-	rowsAffected := 0
-	for rows.Next() {
-		if err := rows.StructScan(&server); err != nil {
-			api.HandleErr(w, r, tx, http.StatusNotFound, nil, fmt.Errorf("scanning lastUpdated from server insert: %v", err))
-			return
-		}
-		rowsAffected++
+	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
 	}
 
-	if rowsAffected < 1 {
-		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
-		return
-	}
-	if rowsAffected > 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("update for server #%d affected too many rows (%d)", *server.ID, rowsAffected))
-		return
+	serverID, errCode, userErr, sysErr := updateServer(inf.Tx, server)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 	}
 
 	if userErr, sysErr, errCode = deleteInterfaces(id, tx); userErr != nil || sysErr != nil {
@@ -1549,14 +1501,46 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if updatePending {
+		if server.ConfigUpdateTime != nil {
+			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		} else {
+			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		}
+	}
+
+	if revalPending {
+		if server.RevalUpdateTime != nil {
+			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		} else {
+			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			}
+		}
+	}
+
+	where := `WHERE s.id = $1`
+	selquery := selectQuery + where
+	var srvr tc.ServerV40
+	if err := inf.Tx.QueryRowx(selquery, serverID).StructScan(&srvr); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
 	if inf.Version.Major >= 3 {
 		if userErr, sysErr, errCode = updateStatusLastUpdatedTime(id, &statusLastUpdatedTime, tx); userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr)
 	} else {
-		v2Server, err := server.ToServerV2FromV4()
+		v2Server, err := srvr.ToServerV2FromV4()
 		if err != nil {
 			sysErr = fmt.Errorf("converting valid v3 server to a v2 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -1569,8 +1553,36 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: updated", *server.HostName, *server.DomainName, *server.ID)
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: updated", *srvr.HostName, *srvr.DomainName, *srvr.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+}
+
+func updateServer(tx *sqlx.Tx, server tc.ServerV40) (int64, int, error, error) {
+
+	rows, err := tx.NamedQuery(updateQuery, server)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return 0, errCode, userErr, sysErr
+	}
+	defer rows.Close()
+
+	var serverId int64
+	rowsAffected := 0
+	for rows.Next() {
+		if err := rows.Scan(&serverId); err != nil {
+			return 0, http.StatusNotFound, nil, fmt.Errorf("scanning lastUpdated from server insert: %v", err)
+		}
+		rowsAffected++
+	}
+
+	if rowsAffected < 1 {
+		return 0, http.StatusNotFound, errors.New("no server found with this id"), nil
+	}
+	if rowsAffected > 1 {
+		return 0, http.StatusInternalServerError, nil, fmt.Errorf("update for server #%d affected too many rows (%d)", *server.ID, rowsAffected)
+	}
+
+	return serverId, http.StatusAccepted, nil, nil
 }
 
 func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
@@ -1601,14 +1613,12 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currentTime := time.Now()
-
-	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
-	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
@@ -1723,12 +1733,12 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
 
-	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
-	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
@@ -1841,12 +1851,12 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
 
-	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
-	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties, currentTime)
+	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
