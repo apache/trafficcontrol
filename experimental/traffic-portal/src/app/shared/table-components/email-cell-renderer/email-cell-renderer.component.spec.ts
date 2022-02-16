@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import type { ICellRendererParams } from "ag-grid-community";
 
 import { EmailCellRendererComponent } from "./email-cell-renderer.component";
 
@@ -31,4 +32,14 @@ describe("EmailCellRendererComponent", () => {
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
+
+	it("initializes", () => {
+		expect(()=>component.agInit({value: "testquest"} as ICellRendererParams)).not.toThrow();
+		expect(component.value).toBe("testquest");
+	});
+
+	it("refreshes", () => {
+		expect(component.refresh({value: "testquest"} as ICellRendererParams)).toBeTrue();
+	});
+
 });
