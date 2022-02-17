@@ -73,11 +73,11 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	updated = strings.ToLower(updated)
 	revalUpdated = strings.ToLower(revalUpdated)
 
-	if updated != `t` && updated != `true` && updated != `f` && updated != `false` {
+	if hasUpdated && updated != `t` && updated != `true` && updated != `f` && updated != `false` {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'updated' must be 'true' or 'false'"), nil)
 		return
 	}
-	if revalUpdated != `t` && revalUpdated != `true` && revalUpdated != `f` && revalUpdated != `false` {
+	if hasRevalUpdated && revalUpdated != `t` && revalUpdated != `true` && revalUpdated != `f` && revalUpdated != `false` {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'reval_updated' must be 'true' or 'false'"), nil)
 		return
 	}
