@@ -56,6 +56,7 @@ WHERE ds.tenant_id = ANY($1)
 	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
+		return
 	}
 	rows, err := inf.Tx.Tx.Query(q, pq.Array(accessibleTenants))
 	if err != nil {
@@ -113,6 +114,7 @@ JOIN type as rt ON r.type = rt.id
 	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
+		return
 	}
 	if len(where) > 0 {
 		where += " AND ds.tenant_id = ANY(:tenants) "

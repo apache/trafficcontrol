@@ -49,10 +49,12 @@ func ImportProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if importedProfile.Profile.CDNName == nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no CDN Name in the profile to be imported"), nil)
+		return
 	}
 	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *importedProfile.Profile.CDNName, inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
 	}
 
 	id, err := importProfile(&importedProfile.Profile, inf.Tx.Tx)

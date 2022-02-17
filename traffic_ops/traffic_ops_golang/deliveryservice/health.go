@@ -56,6 +56,7 @@ func GetHealth(w http.ResponseWriter, r *http.Request) {
 	}
 	if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
 	}
 
 	health, err := getHealth(inf.Tx.Tx, ds, cdn)
