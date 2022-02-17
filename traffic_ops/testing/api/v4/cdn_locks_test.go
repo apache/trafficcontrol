@@ -16,470 +16,278 @@ package v4
 */
 
 import (
-	"net/http"
-	"net/url"
-	"strconv"
-	"testing"
-	"time"
-
+	"encoding/json"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"net/http"
+	"testing"
 )
 
 func TestCDNLocks(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, ServiceCategories, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities, Roles, Users}, func() {
-		CRDCdnLocks(t)
-		AdminCdnLocks(t)
-		SnapshotWithLock(t)
-		QueueUpdatesWithLock(t)
-		QueueUpdatesFromTopologiesWithLock(t)
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, Tenants, Roles, Users, CDNLocks}, func() {
+		methodTests := map[string]map[string]struct {
+			endpointId     func() int
+			clientSession  *client.Session
+			requestParams  map[string]string
+			requestBody    map[string]interface{}
+			requestHeaders http.Header
+			expectations   []utils.CkReqFunc
+		}{
+			"GET": {
+				// Verify response length
+				// Verify response contains username, cdn, message, soft lock
+				"OK when VALID request": {
+					nil, TOSession, nil, nil, nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+			"POST": {
+				// Verify response contains username, cdn, message, soft lock
+				"CREATED when VALID request": {
+					nil, TOSession, nil,
+					map[string]interface{}{
+						"cdn":     "cdn1",
+						"message": "snapping cdn",
+						"soft":    true,
+					},
+					nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
+				},
+			},
+			"DELETE": {
+				"OK when VALID request": {
+					nil, TOSession, map[string]string{"cdn": "cdn1"}, nil, nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when NON-ADMIN USER DOESNT OWN LOCK": {
+					nil, createSession(t, "opsuser", "pa$$word"), map[string]string{"cdn": "cdn3"}, nil, nil,
+					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+				"OK when ADMIN USER DOESNT OWN LOCK": {
+					nil, TOSession, map[string]string{"cdn": "cdn4"}, nil, nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+			"SNAPSHOT": {
+				"OK when USER OWNS LOCK": {
+					nil, createSession(t, "ops_user_has_lock", "pa$$word"), map[string]string{"cdn": "cdn3"}, nil, nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					nil, TOSession, map[string]string{"cdn": "cdn3"}, nil, nil,
+					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"SERVERS QUEUE UPDATES": {
+				"OK when USER OWNS LOCK": {
+					getServerID(t, "cdn2-test-edge"), createSession(t, "ops_user_has_lock", "pa$$word"),
+					nil, nil, nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					getServerID(t, "cdn2-test-edge"), TOSession,
+					nil, nil, nil,
+					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"TOPOLOGY QUEUE UPDATES": {
+				"OK when USER OWNS LOCK": {
+					nil, createSession(t, "ops_user_has_lock", "pa$$word"),
+					map[string]string{"topology": "top-for-ds-req"},
+					map[string]interface{}{
+						"action": "queue",
+						"cdnId":  getCDNID(t, "cdn2"),
+					}, nil,
+					utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					nil, TOSession,
+					map[string]string{"topology": "top-for-ds-req"},
+					map[string]interface{}{
+						"action": "queue",
+						"cdnId":  getCDNID(t, "cdn2"),
+					}, nil,
+					utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+
+					topology := ""
+					cdnLock := tc.CDNLock{}
+					topQueueUp := tc.TopologiesQueueUpdateRequest{}
+					opts := client.NewRequestOptions()
+
+					if testCase.requestParams != nil {
+						for k, v := range testCase.requestParams {
+							if k == "topology" {
+								topology = v
+							} else {
+								opts.QueryParameters.Add(k, v)
+							}
+						}
+					}
+					if testCase.requestHeaders != nil {
+						opts.Header = testCase.requestHeaders
+					}
+					if testCase.requestBody != nil {
+						if getId, ok := testCase.requestBody["cdnId"]; ok {
+							testCase.requestBody["cdnId"] = getId.(func() int)()
+							dat, _ := json.Marshal(testCase.requestBody)
+							err := json.Unmarshal(dat, &topQueueUp)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						} else {
+							dat, _ := json.Marshal(testCase.requestBody)
+							err := json.Unmarshal(dat, &cdnLock)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						}
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.clientSession.GetCDNLocks(opts)
+							for _, check := range testCase.expectations {
+								check(t, reqInf, resp, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.clientSession.CreateCDNLock(cdnLock, client.RequestOptions{})
+							for _, check := range testCase.expectations {
+								check(t, reqInf, resp, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.clientSession.DeleteCDNLocks(opts)
+							for _, check := range testCase.expectations {
+								check(t, reqInf, alerts, err)
+							}
+						})
+					case "SNAPSHOT":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.clientSession.SnapshotCRConfig(opts)
+								for _, check := range testCase.expectations {
+									check(t, reqInf, alerts, err)
+								}
+							})
+						}
+					case "SERVERS QUEUE UPDATES":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.clientSession.SetServerQueueUpdate(testCase.endpointId(), true, opts)
+								for _, check := range testCase.expectations {
+									check(t, reqInf, alerts, err)
+								}
+							})
+						}
+					case "TOPOLOGY QUEUE UPDATES":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.clientSession.TopologiesQueueUpdate(topology, topQueueUp, opts)
+								for _, check := range testCase.expectations {
+									check(t, reqInf, alerts, err)
+								}
+							})
+						}
+
+					}
+				}
+			})
+		}
 	})
 }
 
-func getCDNName(t *testing.T) string {
-	cdnResp, _, err := TOSession.GetCDNs(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't get CDNs: %v", err)
-	}
-	if len(cdnResp.Response) < 1 {
-		t.Fatalf("no valid CDNs in response")
-	}
-	return cdnResp.Response[0].Name
+func createSession(t *testing.T, username string, password string) *client.Session {
+	// Establish a session with a user from tc fixtures
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, username, password, true, "to-api-v4-client-tests", false, toReqTimeout)
+	require.NoError(t, err, "Could not login with user lock_user1: %v", err)
+	return userSession
 }
 
-func getCDNNameAndServerID(t *testing.T) (string, int) {
-	serverID := -1
-	cdnResp, _, err := TOSession.GetCDNs(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't get CDNs: %v", err)
-	}
-	if len(cdnResp.Response) < 1 {
-		t.Fatalf("no valid CDNs in response")
-	}
-	for _, cdn := range cdnResp.Response {
+//func ValidateResponseFields() utils.CkReqFunc {
+//	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ error) {
+//		cdnLockResp := resp.(tc.CDNLock)
+//		if cdnLockResp.Response.UserName != cdnLock.UserName {
+//			t.Errorf("expected username %v, got %v", cdnLock.UserName, cdnLockResp.Response.UserName)
+//		}
+//		if cdnLockResp.Response.CDN != cdnLock.CDN {
+//			t.Errorf("expected cdn %v, got %v", cdnLock.CDN, cdnLockResp.Response.CDN)
+//		}
+//		if cdnLockResp.Response.Message == nil {
+//			t.Errorf("expected a valid message, but got nothing")
+//		}
+//		if cdnLockResp.Response.Message != nil && *cdnLockResp.Response.Message != *cdnLock.Message {
+//			t.Errorf("expected Message %v, got %v", *cdnLock.Message, *cdnLockResp.Response.Message)
+//		}
+//		if cdnLockResp.Response.Soft == nil {
+//			t.Errorf("expected a valid soft/hard setting, but got nothing")
+//		}
+//		if cdnLockResp.Response.Soft != nil && *cdnLockResp.Response.Soft != *cdnLock.Soft {
+//			t.Errorf("expected 'Soft' to be %v, got %v", *cdnLock.Soft, *cdnLockResp.Response.Soft)
+//		}
+//	}
+//}
+
+func getCDNID(t *testing.T, cdnName string) func() int {
+	return func() int {
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("cdn", strconv.Itoa(cdn.ID))
+		opts.QueryParameters.Set("name", cdnName)
+		cdnsResp, _, err := TOSession.GetCDNs(opts)
+		assert.NoError(t, err, "Get CDNs Request failed with error:", err)
+		assert.Equal(t, 1, len(cdnsResp.Response), "Expected response object length 1, but got %d", len(cdnsResp.Response))
+		assert.NotNil(t, cdnsResp.Response[0].ID, "Expected id to not be nil")
+		return cdnsResp.Response[0].ID
+	}
+}
+
+func getServerID(t *testing.T, hostName string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("hostName", hostName)
 		serversResp, _, err := TOSession.GetServers(opts)
-		if err != nil {
-			t.Errorf("could not get servers for cdn %s: %v", cdn.Name, err)
-		}
-		if len(serversResp.Response) != 0 && serversResp.Response[0].ID != nil {
-			serverID = *serversResp.Response[0].ID
-			return cdn.Name, serverID
-		}
+		assert.NoError(t, err, "Get Servers Request failed with error:", err)
+		assert.Equal(t, 1, len(serversResp.Response), "Expected response object length 1, but got %d", len(serversResp.Response))
+		assert.NotNil(t, serversResp.Response[0].ID, "Expected id to not be nil")
+		return *serversResp.Response[0].ID
 	}
-	return "", serverID
 }
 
-func getCDNDetailsAndTopologyName(t *testing.T) (int, string, string) {
-	opts := client.NewRequestOptions()
-	topologiesResp, _, err := TOSession.GetTopologies(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't get topologies, err: %v", err)
-	}
-	if len(topologiesResp.Response) == 0 {
-		t.Fatal("no topologies returned")
-	}
-	for _, top := range topologiesResp.Response {
-		for _, node := range top.Nodes {
-			opts.QueryParameters.Set("name", node.Cachegroup)
-			cacheGroupResp, _, err := TOSession.GetCacheGroups(opts)
-			if err != nil {
-				t.Errorf("error while GETting cachegroups: %v", err)
-			}
-			if len(cacheGroupResp.Response) != 0 && cacheGroupResp.Response[0].ID != nil {
-				cacheGroupID := *cacheGroupResp.Response[0].ID
-				opts.QueryParameters.Del("name")
-				opts.QueryParameters.Set("cachegroup", strconv.Itoa(cacheGroupID))
-				serversResp, _, err := TOSession.GetServers(opts)
-				if err != nil {
-					t.Errorf("couldn't get servers: %v", err)
-				}
-				if len(serversResp.Response) != 0 && serversResp.Response[0].CDNName != nil && serversResp.Response[0].CDNID != nil {
-					return *serversResp.Response[0].CDNID, *serversResp.Response[0].CDNName, top.Name
+func CreateTestCDNLocks(t *testing.T) {
+	for _, cl := range testData.CDNLocks {
+		clientSession := TOSession
+		if cl.UserName != "" {
+			for _, user := range testData.Users {
+				if user.Username == cl.UserName {
+					clientSession = createSession(t, user.Username, *user.LocalPassword)
 				}
 			}
 		}
-	}
-	t.Error("couldn't find a valid CDN and associated Topology name")
-	return -1, "", ""
-}
-
-func CRDCdnLocks(t *testing.T) {
-	cdn := getCDNName(t)
-	// CREATE
-	var cdnLock tc.CDNLock
-	cdnLock.CDN = cdn
-	cdnLock.UserName = TOSession.UserName
-	cdnLock.Message = util.StrPtr("snapping cdn")
-	cdnLock.Soft = util.BoolPtr(true)
-	cdnLockResp, _, err := TOSession.CreateCDNLock(cdnLock, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't create cdn lock: %v", err)
-	}
-	if cdnLockResp.Response.UserName != cdnLock.UserName {
-		t.Errorf("expected username %v, got %v", cdnLock.UserName, cdnLockResp.Response.UserName)
-	}
-	if cdnLockResp.Response.CDN != cdnLock.CDN {
-		t.Errorf("expected cdn %v, got %v", cdnLock.CDN, cdnLockResp.Response.CDN)
-	}
-	if cdnLockResp.Response.Message == nil {
-		t.Errorf("expected a valid message, but got nothing")
-	}
-	if cdnLockResp.Response.Message != nil && *cdnLockResp.Response.Message != *cdnLock.Message {
-		t.Errorf("expected Message %v, got %v", *cdnLock.Message, *cdnLockResp.Response.Message)
-	}
-	if cdnLockResp.Response.Soft == nil {
-		t.Errorf("expected a valid soft/hard setting, but got nothing")
-	}
-	if cdnLockResp.Response.Soft != nil && *cdnLockResp.Response.Soft != *cdnLock.Soft {
-		t.Errorf("expected 'Soft' to be %v, got %v", *cdnLock.Soft, *cdnLockResp.Response.Soft)
-	}
-
-	// READ
-	cdnLocksReadResp, _, err := TOSession.GetCDNLocks(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not get CDN Locks: %v", err)
-	}
-	if len(cdnLocksReadResp.Response) != 1 {
-		t.Fatalf("expected to get back one CDN lock, but got %d instead", len(cdnLocksReadResp.Response))
-	}
-	if cdnLocksReadResp.Response[0].UserName != cdnLock.UserName {
-		t.Errorf("expected username %v, got %v", cdnLock.UserName, cdnLocksReadResp.Response[0].UserName)
-	}
-	if cdnLocksReadResp.Response[0].CDN != cdnLock.CDN {
-		t.Errorf("expected cdn %v, got %v", cdnLock.CDN, cdnLocksReadResp.Response[0].CDN)
-	}
-	if cdnLocksReadResp.Response[0].Message == nil {
-		t.Errorf("expected a valid message, but got nothing")
-	}
-	if cdnLocksReadResp.Response[0].Message != nil && *cdnLocksReadResp.Response[0].Message != *cdnLock.Message {
-		t.Errorf("expected Message %v, got %v", *cdnLock.Message, *cdnLocksReadResp.Response[0].Message)
-	}
-	if cdnLocksReadResp.Response[0].Soft == nil {
-		t.Errorf("expected a valid soft/hard setting, but got nothing")
-	}
-	if cdnLocksReadResp.Response[0].Soft != nil && *cdnLocksReadResp.Response[0].Soft != *cdnLock.Soft {
-		t.Errorf("expected 'Soft' to be %v, got %v", *cdnLock.Soft, *cdnLocksReadResp.Response[0].Soft)
-	}
-
-	// DELETE
-	_, reqInf, err := TOSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdnLock.CDN}}})
-	if err != nil {
-		t.Fatalf("couldn't delete cdn lock, err: %v", err)
-	}
-	if reqInf.StatusCode != http.StatusOK {
-		t.Errorf("expected status code of 200, but got %d instead", reqInf.StatusCode)
-	}
-
-}
-
-func AdminCdnLocks(t *testing.T) {
-	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not GET tenants: %v", err)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("didn't get any tenant in response")
-	}
-
-	// Create a new user with operations level privileges
-	user1 := tc.UserV4{
-		Username:             "lock_user1",
-		RegistrationSent:     new(time.Time),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		Role:                 "operations",
-	}
-	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = resp.Response[0].ID
-	user1.FullName = util.StrPtr("firstName LastName")
-	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not create test user with username: %s", user1.Username)
-	}
-	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
-
-	// Create another new user with operations level privileges
-	user2 := tc.UserV4{
-		Username:             "lock_user2",
-		RegistrationSent:     new(time.Time),
-		LocalPassword:        util.StrPtr("test_pa$$word2"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word2"),
-		Role:                 "operations",
-	}
-	user2.Email = util.StrPtr("newlockuseremail@domain.com")
-	user2.TenantID = resp.Response[0].ID
-	user2.FullName = util.StrPtr("firstName2 LastName2")
-	_, _, err = TOSession.CreateUser(user2, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not create test user with username: %s, err: %v", user2.Username, err)
-	}
-	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user2"})
-
-	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
-	if err != nil {
-		t.Fatalf("could not login with user lock_user1: %v", err)
-	}
-
-	// Establish another session with the newly created non admin level user
-	userSession2, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user2.Username, *user2.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
-	if err != nil {
-		t.Fatalf("could not login with user lock_user1: %v", err)
-	}
-
-	cdn := getCDNName(t)
-	// Create a lock for this user
-	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
-		CDN:     cdn,
-		Message: util.StrPtr("test lock"),
-		Soft:    util.BoolPtr(true),
-	}, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't create cdn lock: %v", err)
-	}
-
-	// Non admin user trying to delete another user's lock -> this should fail
-	_, reqInf, err := userSession2.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
-	if err == nil {
-		t.Fatalf("expected error when a non admin user tries to delete another user's lock, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Fatalf("expected a 403 status code, but got %d instead", reqInf.StatusCode)
-	}
-
-	// Now try to delete another user's lock by hitting the admin DELETE endpoint for cdn_locks -> this should pass
-	_, reqInf, err = TOSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
-	if err != nil {
-		t.Fatalf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
-	}
-	if reqInf.StatusCode != http.StatusOK {
-		t.Fatalf("expected a 200 status code, but got %d instead", reqInf.StatusCode)
+		resp, _, err := clientSession.CreateCDNLock(cl, client.RequestOptions{})
+		assert.NoError(t, err, "Could not create CDN Lock: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
-func SnapshotWithLock(t *testing.T) {
-	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not GET tenants: %v", err)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("didn't get any tenant in response")
-	}
-
-	// Create a new user with operations level privileges
-	user1 := tc.UserV4{
-		Username:             "lock_user1",
-		RegistrationSent:     new(time.Time),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		Role:                 "operations",
-	}
-	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = resp.Response[0].ID
-	user1.FullName = util.StrPtr("firstName LastName")
-	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not create test user with username: %s", user1.Username)
-	}
-	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
-
-	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
-	if err != nil {
-		t.Fatalf("could not login with user lock_user1: %v", err)
-	}
-
-	cdn := getCDNName(t)
-
-	// Currently, no user has a lock on the "bar" CDN, so when "lock_user1", which does not have the lock on CDN "bar", tries to snap it, this should pass
+func DeleteTestCDNLocks(t *testing.T) {
 	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("cdn", cdn)
-	_, _, err = userSession.SnapshotCRConfig(opts)
-	if err != nil {
-		t.Errorf("expected no error while snapping cdn %s by user %s, but got %v", cdn, user1.Username, err)
-	}
-
-	// Create a lock for this user
-	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
-		CDN:     cdn,
-		Message: util.StrPtr("test lock"),
-		Soft:    util.BoolPtr(true),
-	}, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't create cdn lock: %v", err)
-	}
-
-	// "lock_user1", which has the lock on CDN "bar", tries to snap it -> this should pass
-	_, _, err = userSession.SnapshotCRConfig(opts)
-	if err != nil {
-		t.Errorf("expected no error while snapping cdn %s by user %s, but got %v", cdn, user1.Username, err)
-	}
-
-	// Admin user, which doesn't have the lock on the CDN "bar", is trying to snap it -> this should fail
-	_, reqInf, err := TOSession.SnapshotCRConfig(opts)
-	if err == nil {
-		t.Errorf("expected error while snapping cdn %s by user admin, but got nothing", cdn)
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Errorf("expected a 403 status code, but got %d instead", reqInf.StatusCode)
-	}
-
-	// Delete the lock
-	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
-	if err != nil {
-		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
-	}
-}
-
-func QueueUpdatesWithLock(t *testing.T) {
-	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not GET tenants: %v", err)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("didn't get any tenant in response")
-	}
-
-	// Create a new user with operations level privileges
-	user1 := tc.UserV4{
-		Username:             "lock_user1",
-		RegistrationSent:     new(time.Time),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		Role:                 "operations",
-	}
-	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = resp.Response[0].ID
-	user1.FullName = util.StrPtr("firstName LastName")
-	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not create test user with username: %s", user1.Username)
-	}
-	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
-
-	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
-	if err != nil {
-		t.Fatalf("could not login with user lock_user1: %v", err)
-	}
-
-	cdn, serverID := getCDNNameAndServerID(t)
-	if serverID == -1 {
-		t.Fatalf("Could not get any valid servers to queue updates on")
-	}
-
-	// Currently, no user has a lock on the "bar" CDN, so when "lock_user1", which does not have the lock on CDN "bar", tries to queue updates on a server in the same CDN, this should pass
-	_, _, err = userSession.SetServerQueueUpdate(serverID, true, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while queueing updates for a server in cdn %s by user %s, but got %v", cdn, user1.Username, err)
-	}
-
-	// Create a lock for this user
-	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
-		CDN:     cdn,
-		Message: util.StrPtr("test lock"),
-		Soft:    util.BoolPtr(true),
-	}, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't create cdn lock: %v", err)
-	}
-
-	// "lock_user1", which has the lock on CDN "bar", tries to queue updates on a server in it -> this should pass
-	_, _, err = userSession.SetServerQueueUpdate(serverID, true, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while queueing updates for a server in cdn %s by user %s, but got %v", cdn, user1.Username, err)
-	}
-
-	// Admin user, which doesn't have the lock on the CDN "bar", is trying to queue updates on a server in it -> this should fail
-	_, reqInf, err := TOSession.SetServerQueueUpdate(serverID, true, client.RequestOptions{})
-	if err == nil {
-		t.Errorf("expected error while queueing updates on a server in cdn %s by user admin, but got nothing", cdn)
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Fatalf("expected a 403 status code, but got %d instead", reqInf.StatusCode)
-	}
-
-	// Delete the lock
-	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
-	if err != nil {
-		t.Fatalf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
-	}
-}
-
-func QueueUpdatesFromTopologiesWithLock(t *testing.T) {
-	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not GET tenants: %v", err)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("didn't get any tenant in response")
-	}
-
-	// Create a new user with operations level privileges
-	user1 := tc.UserV4{
-		Username:             "lock_user1",
-		RegistrationSent:     new(time.Time),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		Role:                 "operations",
-	}
-	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = resp.Response[0].ID
-	user1.FullName = util.StrPtr("firstName LastName")
-	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not create test user with username: %s", user1.Username)
-	}
-	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
-
-	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
-	if err != nil {
-		t.Fatalf("could not login with user lock_user1: %v", err)
-	}
-
-	cdnID, cdnName, topology := getCDNDetailsAndTopologyName(t)
-	if topology == "" || cdnName == "" || cdnID == -1 {
-		t.Fatalf("Could not get any valid topologies/ cdns to queue updates on")
-	}
-
-	// Currently, no user has a lock on the "bar" CDN, so when "lock_user1", which does not have the lock on CDN "bar", tries to queue updates on a topology in the same CDN, this should pass
-	_, _, err = userSession.TopologiesQueueUpdate(topology, tc.TopologiesQueueUpdateRequest{Action: "queue", CDNID: int64(cdnID)}, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while queueing updates for a topology server in cdn %s by user %s, but got %v", cdnName, user1.Username, err)
-	}
-
-	// Create a lock for this user
-	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
-		CDN:     cdnName,
-		Message: util.StrPtr("test lock"),
-		Soft:    util.BoolPtr(true),
-	}, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't create cdn lock: %v", err)
-	}
-
-	// "lock_user1", which has the lock on CDN "bar", tries to queue updates on a topology in it -> this should pass
-	_, _, err = userSession.TopologiesQueueUpdate(topology, tc.TopologiesQueueUpdateRequest{Action: "queue", CDNID: int64(cdnID)}, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while queueing updates for a topology server in cdn %s by user %s, but got %v", cdnName, user1.Username, err)
-	}
-
-	// Admin user, which doesn't have the lock on the CDN "bar", is trying to queue updates on a topology in it -> this should fail
-	_, reqInf, err := TOSession.TopologiesQueueUpdate(topology, tc.TopologiesQueueUpdateRequest{Action: "queue", CDNID: int64(cdnID)}, client.RequestOptions{})
-	if err == nil {
-		t.Errorf("expected error while queueing updates on topology servers on cdn %s by user admin, but got nothing", cdnName)
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Fatalf("expected a 403 status code, but got %d instead", reqInf.StatusCode)
-	}
-
-	// Delete the lock
-	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdnName}}})
-	if err != nil {
-		t.Fatalf("expected no error while deleting lock, but got %v", err)
+	cdnlocks, _, err := TOSession.GetCDNLocks(opts)
+	assert.NoError(t, err, "Error retrieving CDN Locks for deletion: %v - alerts: %+v", err, cdnlocks.Alerts)
+	assert.GreaterOrEqual(t, len(cdnlocks.Response), 1, "Expected at least one CDN Lock for deletion")
+	for _, cl := range cdnlocks.Response {
+		opts.QueryParameters.Set("cdn", cl.CDN)
+		resp, _, err := TOSession.DeleteCDNLocks(opts)
+		assert.NoError(t, err, "Could not delete CDN Lock: %v - alerts: %+v", err, resp.Alerts)
+		// Retrieve the CDN Lock to see if it got deleted
+		cdnlock, _, err := TOSession.GetCDNLocks(opts)
+		assert.NoError(t, err, "Error deleting CDN Lock for '%s' : %v - alerts: %+v", cl.CDN, err, cdnlock.Alerts)
+		assert.Equal(t, 0, len(cdnlock.Response), "Expected CDN Lock for '%s' to be deleted", cl.CDN)
 	}
 }
