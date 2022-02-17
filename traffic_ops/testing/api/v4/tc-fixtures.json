@@ -283,6 +283,26 @@
             "name": "bar"
         }
     ],
+    "cdnlocks": [
+        {
+            "userName": "ops_user_has_lock",
+            "cdn": "cdn2",
+            "message": "test lock for server queue updates",
+            "soft": true
+        },
+        {
+            "userName": "ops_user_has_lock",
+            "cdn": "cdn3",
+            "message": "test lock",
+            "soft": true
+        },
+        {
+            "userName": "ops_user_has_lock",
+            "cdn": "cdn4",
+            "message": "test lock 2",
+            "soft": true
+        }
+    ],
     "deliveryServiceRequestComments": [
         {
             "value": "this is comment one"
@@ -5641,6 +5661,27 @@
             "tenant": "root",
             "uid": 0,
             "username": "steering"
+        },
+        {
+            "addressLine1": "address of ops user with lock",
+            "addressLine2": "place",
+            "city": "somewhere",
+            "company": "else",
+            "country": "US",
+            "email": "opswithlock@example.com",
+            "fullName": "Ops with Lock User",
+            "gid": 0,
+            "localPasswd": "pa$$word",
+            "confirmLocalPasswd": "pa$$word",
+            "newUser": false,
+            "phoneNumber": "",
+            "postalCode": "",
+            "publicSshKey": "",
+            "role": "operations",
+            "stateOrProvince": "",
+            "tenant": "root",
+            "uid": 0,
+            "username": "ops_user_has_lock"
         }
     ],
     "steeringTargets": [
