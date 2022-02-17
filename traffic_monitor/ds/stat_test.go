@@ -28,7 +28,6 @@ import (
 	"math/rand"
 	"regexp"
 	"testing"
-	"time"
 
 	tc_log "github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -60,7 +59,6 @@ func TestCreateStats(t *testing.T) {
 	toData := getMockTOData()
 	combinedCRStates := peer.NewCRStatesThreadsafe()
 	lastStatsThs := threadsafe.NewLastStats()
-	now := time.Now()
 	maxEvents := uint64(4)
 	events := health.NewThreadsafeEvents(maxEvents)
 	localCRStates := peer.NewCRStatesThreadsafe()
@@ -87,20 +85,13 @@ func TestCreateStats(t *testing.T) {
 	lastStatsVal := lastStatsThs.Get()
 	lastStatsCopy := lastStatsVal.Copy()
 
-	dsStats, err := CreateStats(precomputeds, toData, combinedCRStates.Get(), lastStatsCopy, now, monitorConfig, events, localCRStates)
-
-	if err != nil {
-		t.Fatalf("CreateStats err expected: nil, actual: " + err.Error())
-	}
+	dsStats := CreateStats(precomputeds, toData, combinedCRStates.Get(), lastStatsCopy, monitorConfig, events, localCRStates)
 
 	serverDeliveryServices := toData.ServerDeliveryServices
 	toData.ServerDeliveryServices = map[tc.CacheName][]tc.DeliveryServiceName{} // temporarily unassign servers to generate warnings about caches not assigned to delivery services
 	buffer := bytes.NewBuffer(make([]byte, 0, 10000))
 	tc_log.Info = log.New(buffer, "TestAddAvailabilityDataNotFoundInDeliveryService", log.Lshortfile)
-	_, err = CreateStats(precomputeds, toData, combinedCRStates.Get(), lastStatsCopy, now, monitorConfig, events, localCRStates)
-	if err != nil {
-		t.Fatalf("CreateStats err expected: nil, actual: " + err.Error())
-	}
+	_ = CreateStats(precomputeds, toData, combinedCRStates.Get(), lastStatsCopy, monitorConfig, events, localCRStates)
 	checkLogOutput(t, buffer, toData, caches)
 	toData.ServerDeliveryServices = serverDeliveryServices
 

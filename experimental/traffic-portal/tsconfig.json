@@ -1,21 +1,36 @@
 {
 	"compileOnSave": false,
 	"compilerOptions": {
+		"allowUnreachableCode": false,
+		"allowUnusedLabels": false,
 		"baseUrl": "./",
-		"downlevelIteration": true,
-		"outDir": "./dist/out-tsc",
-		"sourceMap": true,
 		"declaration": false,
-		"module": "es2020",
-		"moduleResolution": "node",
+		"downlevelIteration": true,
 		"experimentalDecorators": true,
 		"importHelpers": true,
+		"module": "es2020",
+		"moduleResolution": "node",
+		"noImplicitReturns": true,
+		"noImplicitOverride": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"outDir": "./dist/out-tsc",
 		"strict": true,
-		"emitDecoratorMetadata": true,
-		"target": "es2015",
+		"target": "es2017",
 		"lib": [
-			"es2018",
+			"es2020",
 			"dom"
 		]
-	}
+	},
+	"angularCompilerOptions": {
+		"enableI18nLegacyMessageIdFormat": false,
+		"strictInjectionParameters": true,
+		"strictInputAccessModifiers": true,
+		"strictTemplates": true,
+		"strictInputTypes": true,
+		"strictNullInputTypes": false
+	},
+	"exclude": [
+		"src/app/testing/*.ts"
+	]
 }

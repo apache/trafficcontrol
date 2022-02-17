@@ -19,7 +19,7 @@ limitations under the License.
 	<form ngNativeValidate (ngSubmit)="submit($event)" method="dialog">
 		<label for="status">New Status</label>
 		<select id="status" name="status" [formControl]="statusControl" required>
-			<option *ngFor="let status of statuses | async" [ngValue]="status" [disabled]="status.id === currentStatus">{{status.name}}</option>
+			<option *ngFor="let status of statuses" [ngValue]="status" [disabled]="status.id === currentStatus">{{status.name}}</option>
 		</select>
 		<label *ngIf="isOffline" for="offlineReason">Offline Reason</label>
 		<input [formControl]="offlineReasonControl" id="offlineReason" name="offlineReason" *ngIf="isOffline" required maxlength="100"/>

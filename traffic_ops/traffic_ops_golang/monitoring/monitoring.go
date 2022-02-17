@@ -24,6 +24,7 @@ package monitoring
 import (
 	"database/sql"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 
@@ -148,7 +149,7 @@ func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
 		return nil, fmt.Errorf("error getting profiles: %v", err)
 	}
 
-	deliveryServices, err := getDeliveryServices(tx)
+	deliveryServices, err := getDeliveryServices(tx, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting deliveryservices: %v", err)
 	}
@@ -294,6 +295,30 @@ AND cdn.name = $3
 		cacheStatus := tc.CacheStatusFromString(status.String)
 
 		if ttype.String == tc.MonitorTypeName {
+			var ipStr, ipStr6 string
+			var gotBothIPs bool
+			if _, ok := interfacesByNameAndServer[int(serverID.Int64)]; ok {
+				for _, interf := range interfacesByNameAndServer[int(serverID.Int64)] {
+					for _, ipAddress := range interf.IPAddresses {
+						ip := net.ParseIP(ipAddress.Address)
+						if ip == nil {
+							continue
+						}
+						if ipStr == "" && ip.To4() != nil {
+							ipStr = ipAddress.Address
+						} else if ipStr6 == "" && ip.To16() != nil {
+							ipStr6 = ipAddress.Address
+						}
+						if ipStr != "" && ipStr6 != "" {
+							gotBothIPs = true
+							break
+						}
+					}
+					if gotBothIPs {
+						break
+					}
+				}
+			}
 			monitors = append(monitors, Monitor{
 				BasicServer: BasicServer{
 					CommonServerProperties: CommonServerProperties{
@@ -304,6 +329,8 @@ AND cdn.name = $3
 						HostName:   hostName.String,
 						FQDN:       fqdn.String,
 					},
+					IP:  ipStr,
+					IP6: ipStr6,
 				},
 			})
 		} else if (strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID")) &&
@@ -441,13 +468,15 @@ WHERE pr.config_file = $2;
 	return profilesArr, nil
 }
 
-func getDeliveryServices(tx *sql.Tx) ([]DeliveryService, error) {
+func getDeliveryServices(tx *sql.Tx, cdnName string) ([]DeliveryService, error) {
 	query := `
 	SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps
 	FROM deliveryservice ds
+	JOIN cdn on cdn.id = ds.cdn_id
 	WHERE ds.active = true
+	AND cdn.name=$1
 	`
-	rows, err := tx.Query(query)
+	rows, err := tx.Query(query, cdnName)
 	if err != nil {
 		return nil, err
 	}

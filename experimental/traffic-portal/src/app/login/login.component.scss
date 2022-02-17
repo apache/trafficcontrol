@@ -51,8 +51,10 @@ form {
 	div {
 		grid-column: span 2;
 		display: grid;
-		grid-template-columns: 1fr 1fr;
-		justify-content: space-between;
-		grid-column-gap: 60%;
+		grid-template-columns: auto auto 1fr;
+
+		button:last-child {
+			justify-self: end;
+		}
 	}
 }

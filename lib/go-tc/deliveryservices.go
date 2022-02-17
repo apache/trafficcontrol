@@ -245,7 +245,8 @@ type DeliveryServiceV40 struct {
 
 	// TLSVersions is the list of explicitly supported TLS versions for cache
 	// servers serving the Delivery Service's content.
-	TLSVersions []string `json:"tlsVersions" db:"tls_versions"`
+	TLSVersions       []string              `json:"tlsVersions" db:"tls_versions"`
+	GeoLimitCountries GeoLimitCountriesType `json:"geoLimitCountries"`
 }
 
 // DeliveryServiceV4 is a Delivery Service as it appears in version 4 of the
@@ -577,6 +578,40 @@ type DeliveryServiceNullableV11 struct {
 	DeliveryServiceRemovedFieldsV11
 }
 
+// GeoLimitCountriesType is the type alias that is used to represent the GeoLimitCountries attribute of the DeliveryService struct.
+type GeoLimitCountriesType []string
+
+// UnmarshalJSON will unmarshal a byte slice into type GeoLimitCountriesType.
+func (g *GeoLimitCountriesType) UnmarshalJSON(data []byte) error {
+	var err error
+	var initial = make([]string, 0)
+	var initialStr string
+	if err = json.Unmarshal(data, &initial); err != nil {
+		if err = json.Unmarshal(data, &initialStr); err != nil {
+			return err
+		}
+		if strings.Contains(initialStr, ",") {
+			initial = strings.Split(initialStr, ",")
+		} else {
+			initial = append(initial, initialStr)
+		}
+	}
+
+	if initial == nil || len(initial) == 0 {
+		g = nil
+		return nil
+	}
+	*g = initial
+	return nil
+
+}
+
+// MarshalJSON will marshal a GeoLimitCountriesType into a byte slice.
+func (g GeoLimitCountriesType) MarshalJSON() ([]byte, error) {
+	arr := ([]string)(g)
+	return json.Marshal(arr)
+}
+
 // DeliveryServiceNullableFieldsV11 contains properties that Delivery Services
 // as they appeared in Traffic Ops API v1.1 had, AND were not removed by ANY
 // later API version.
@@ -813,6 +848,10 @@ func (ds *DeliveryServiceV4) RemoveLD1AndLD2() DeliveryServiceV4 {
 
 // DowngradeToV3 converts the 4.x DS to a 3.x DS.
 func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
+	nullableFields := ds.DeliveryServiceNullableFieldsV11
+	geoLimitCountries := ([]string)(ds.GeoLimitCountries)
+	geo := strings.Join(geoLimitCountries, ",")
+	nullableFields.GeoLimitCountries = &geo
 	return DeliveryServiceNullableV30{
 		DeliveryServiceV30: DeliveryServiceV30{
 			DeliveryServiceNullableV15: DeliveryServiceNullableV15{
@@ -820,7 +859,7 @@ func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 					DeliveryServiceNullableV13: DeliveryServiceNullableV13{
 						DeliveryServiceNullableV12: DeliveryServiceNullableV12{
 							DeliveryServiceNullableV11: DeliveryServiceNullableV11{
-								DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
+								DeliveryServiceNullableFieldsV11: nullableFields,
 							},
 						},
 						DeliveryServiceFieldsV13: ds.DeliveryServiceFieldsV13,
@@ -837,6 +876,12 @@ func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 
 // UpgradeToV4 converts the 3.x DS to a 4.x DS.
 func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
+	var geo GeoLimitCountriesType
+	if ds.GeoLimitCountries != nil {
+		str := *ds.GeoLimitCountries
+		geo = make([]string, 0)
+		geo = strings.Split(str, ",")
+	}
 	return DeliveryServiceV4{
 		DeliveryServiceFieldsV31:         ds.DeliveryServiceFieldsV31,
 		DeliveryServiceFieldsV30:         ds.DeliveryServiceFieldsV30,
@@ -845,6 +890,7 @@ func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
 		DeliveryServiceFieldsV13:         ds.DeliveryServiceFieldsV13,
 		DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
 		TLSVersions:                      nil,
+		GeoLimitCountries:                geo,
 	}
 }
 

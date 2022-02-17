@@ -26,7 +26,7 @@ export interface InvalidationJob {
 	 * A regular expression that matches content to be "invalidated" or
 	 * "revalidated".
 	 */
-	assetURL: RegExp;
+	assetUrl: string;
 	/**
 	 * The name of the user that created the Job.
 	 */
@@ -34,7 +34,7 @@ export interface InvalidationJob {
 	/** The XMLID of the Delivery Service within which the Job will operate. */
 	deliveryService: string;
 	/** An integral, unique identifier for this Job. */
-	id: number;
+	readonly id: number;
 	/** The type of Job. */
 	keyword: JobType;
 

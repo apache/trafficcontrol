@@ -104,7 +104,7 @@ To install the Traffic Router Developer environment:
 
 	* copy :file:`core/src/main/conf/dns.properties` to :file:`core/src/test/conf/`
 	* copy :file:`core/src/main/conf/http.properties` to :file:`core/src/test/conf/`
-	* copy :file:`core/src/main/conf/log4j.properties` to :file:`core/src/test/conf/`
+	* copy :file:`core/src/main/conf/log4j2.xml` to :file:`core/src/test/conf/`
 	* copy :file:`core/src/main/conf/traffic_monitor.properties` to :file:`core/src/test/conf/` and then edit the ``traffic_monitor.bootstrap.hosts`` property
 	* copy :file:`core/src/main/conf/traffic_ops.properties` to :file:`core/src/test/conf/` and then edit the credentials as appropriate for the Traffic Ops instance you will be using.
 	* Default configuration values now reside in :file:`core/src/main/webapp/WEB-INF/applicationContext.xml`

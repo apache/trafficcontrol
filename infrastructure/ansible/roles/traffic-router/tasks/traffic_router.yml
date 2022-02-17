@@ -18,7 +18,9 @@
 
 - name: Remove Tomcat 6
   import_tasks: purge.tomcat.6.yml
-  when: tr_old_version.stdout is version('2.3', "<")
+  when:
+    - tr_old_version.stdout | length > 0
+    - tr_old_version.stdout is version('2.3', "<")
 
 - name: Protect against expired yum repo metadata
   shell: yum clean expire-cache
@@ -66,12 +68,20 @@
   with_items:
     - cache.properties
     - dns.properties
-    - log4j.properties
+    - log4j2.xml
     - logging.properties
     - startup.properties
     - traffic_monitor.properties
     - traffic_ops.properties
     - server.xml
+
+- name: Deploy Access Cleanup Crontab
+  template:
+    src: crontab.j2
+    dest: /etc/cron.d/access_cleanup
+    owner: root
+    group: root
+    mode: u+rw
 
 - name: Copy traffic router systemd unit file
   template:

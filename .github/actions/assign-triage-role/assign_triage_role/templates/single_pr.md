@@ -1,0 +1,2 @@
+    - <!-- SPDX-License-Identifier: Apache-2.0
+    --> #{ISSUE_NUMBER}, fixed by #{PR_NUMBER}

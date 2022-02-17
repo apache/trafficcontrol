@@ -21,16 +21,18 @@
 import { HttpClientModule } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import * as Chart from "chart.js";
 
 // Routing, Components, Directives and Interceptors
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import { APIModule } from "./api";
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
+import { AppUIModule } from "./app.ui.module";
+import { AuthenticatedGuard } from "./guards/authenticated-guard.service";
 import { LoginComponent } from "./login/login.component";
-import {AppUIModule} from "./app.ui.module";
-import {SharedModule} from "./shared/shared.module";
-import {AuthenticatedGuard} from "./guards/authenticated-guard.service";
+import { ResetPasswordDialogComponent } from "./login/reset-password-dialog/reset-password-dialog.component";
+import { SharedModule } from "./shared/shared.module";
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -59,7 +61,8 @@ Chart.plugins.register({
 	bootstrap: [AppComponent],
 	declarations: [
 		AppComponent,
-		LoginComponent
+		LoginComponent,
+		ResetPasswordDialogComponent
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: "serverApp" }),
@@ -67,7 +70,8 @@ Chart.plugins.register({
 		AppRoutingModule,
 		HttpClientModule,
 		AppUIModule,
-		SharedModule
+		SharedModule,
+		APIModule
 	],
 	providers: [
 		AuthenticatedGuard

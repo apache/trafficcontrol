@@ -68,7 +68,7 @@ list with a short description of your feature plus a link to the blueprint PR.
 1. Wait for feedback to be applied to your blueprint PR. Because it's a PR,
 line-specific feedback can be given.
 1. Just like any PR, once all the concerns have been addressed, the blueprint is
-merged into the blueprints directory (if accepted) or closed (if rejected).
+merged into the blueprints directory (if accepted) or closed (if rejected). Note: Blueprint authors have the option of invoking [lazy consensus](https://community.apache.org/committers/lazyConsensus.html) to facilitate the merge of the blueprint if community feedback is not being provided or feedback has stalled. To invoke lazy consensus, please make the community aware via an email to the [dev@trafficcontrol.apache.org](mailto:dev@trafficcontrol.apache.org) mailing list that you intend to invoke lazy consensus after X hours with no feedback.
 1. Start work on the feature. Optionally, you can open a draft PR if you want
 feedback during development.
 1. Submit your PR for review and reference the blueprint in the PR description.

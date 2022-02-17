@@ -11,35 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from "@angular/core";
 
-import { from, Observable, Subscription } from "rxjs";
-
+import { type AfterViewInit, Directive, ElementRef, Input, type OnDestroy } from "@angular/core";
 import { Chart } from "chart.js"; // TODO: use plotly instead for WebGL-capabale browsers?
+import { from, type Observable, type Subscription } from "rxjs";
 
-import { DataSet } from "../../models/data";
-
-/**
- * LineChartType enumerates the valid types of charts.
- */
-export enum LineChartType {
-	/**
-	 * Plots category proportions.
-	 */
-	CATEGORY = "category",
-	/**
-	 * Scatter plots.
-	 */
-	LINEAR = "linear",
-	/**
-	 * Logarithmic-scale scatter plots.
-	 */
-	LOGARITHMIC = "logarithmic",
-	/**
-	 * Time-series data.
-	 */
-	TIME = "time"
-}
+import type { DataSet } from "src/app/models/data";
 
 /**
  * LinechartDirective decorates canvases by creating a rendering context for
@@ -60,9 +37,9 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	/** Labels for the datasets. */
 	@Input() public chartLabels?: unknown[];
 	/** Data to be plotted by the chart. */
-	@Input() public chartDataSets: Observable<DataSet[]> = from([]);
+	@Input() public chartDataSets: Observable<Array<DataSet | null> | null> = from([]);
 	/** The type of the chart. */
-	@Input() public chartType?: LineChartType;
+	@Input() public chartType?: "category" | "linear" | "logarithmic" | "time";
 	/** A label for the X-axis of the chart. */
 	@Input() public chartXAxisLabel?: string;
 	/** A label for the Y-axis of the chart. */
@@ -77,22 +54,14 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	/** Chart.js configuration options. */
 	private opts: Chart.ChartConfiguration = {};
 
-	/**
-	 * Constructor.
-	 */
 	constructor(private readonly element: ElementRef) { }
 
 	/**
 	 * Initializes the chart using the input data.
 	 */
 	public ngAfterViewInit(): void {
-		if (this.element.nativeElement === null) {
-			console.warn("Use of DOM directive in non-DOM context!");
-			return;
-		}
-
 		if (!(this.element.nativeElement instanceof HTMLCanvasElement)) {
-			throw new Error("[linechart] Directive can only be used on a canvas!");
+			throw new Error("[linechart] Directive can only be used on a canvas in a context where DOM access is allowed");
 		}
 
 		const ctx = this.element.nativeElement.getContext("2d", {alpha: false});
@@ -102,7 +71,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		this.ctx = ctx;
 
 		if (!this.chartType) {
-			this.chartType = LineChartType.LINEAR;
+			this.chartType = "linear";
 		}
 
 		if (this.chartDisplayLegend === null || this.chartDisplayLegend === undefined) {
@@ -150,7 +119,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		};
 
 		this.subscription = this.chartDataSets.subscribe(
-			(data: DataSet[]) => {
+			data => {
 				this.dataLoad(data);
 			},
 			(e: Error) => {
@@ -174,16 +143,17 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		}
 	}
 
-
 	/**
 	 * Loads a new Chart.
 	 *
 	 * @param data The new data sets for the new chart.
 	 */
-	private dataLoad(data: DataSet[]): void {
+	private dataLoad(data: Array<DataSet | null> | null): void {
 		this.destroyChart();
 
-		if (data === null || data === undefined || data.some(x => x === null)) {
+		const hasNoNulls = (arr: Array<DataSet | null>): arr is Array<DataSet> => !arr.some(x=>x===null);
+
+		if (data === null || data === undefined || !hasNoNulls(data)) {
 			this.noData();
 			return;
 		}

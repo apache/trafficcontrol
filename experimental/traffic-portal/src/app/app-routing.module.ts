@@ -11,11 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {NgModule} from "@angular/core";
-import {RouterModule, Routes} from "@angular/router";
+import { NgModule } from "@angular/core";
+import { RouterModule, Routes } from "@angular/router";
 
-import {LoginComponent} from "./login/login.component";
-import {AuthenticatedGuard} from "./guards/authenticated-guard.service";
+import { AuthenticatedGuard } from "./guards/authenticated-guard.service";
+import { LoginComponent } from "./login/login.component";
 
 const routes: Routes = [
 	{component: LoginComponent, path: "login"},

@@ -26,7 +26,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.time.Instant;
@@ -35,7 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
-    private static final Logger LOGGER = Logger.getLogger(LetsEncryptDnsChallengeWatcher.class);
+    private static final Logger LOGGER = LogManager.getLogger(LetsEncryptDnsChallengeWatcher.class);
     public static final String DEFAULT_LE_DNS_CHALLENGE_URL = "https://${toHostname}/api/2.0/letsencrypt/dnsrecords/";
 
     private String configFile;

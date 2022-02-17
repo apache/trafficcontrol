@@ -17,58 +17,122 @@
  */
 export interface User {
 	/** Line one of the user's address. */
-	addressLine1?:    string;
+	addressLine1?:    string | null;
 	/** Line two of the user's address. */
-	addressLine2?:    string;
+	addressLine2?:    string | null;
 	/** The city in which the user lives/is based. */
-	city?:            string;
+	city?:            string | null;
 	/** The company for which the user works. */
-	company?:         string;
+	company?:         string | null;
 	/** A confirmation field for the user's password - this has no known effect, but we set it anyway on password update. */
-	confirmLocalPasswd?: string;
+	confirmLocalPasswd?: string | null;
 	/** The country in which the user lives/is based. */
-	country?:         string;
+	country?:         string | null;
 	/** The user's email address. */
-	email?:           string;
+	email?:           string | null;
 	/** The user's full name. */
-	fullName?:        string;
+	fullName?:        string | null;
 	/** legacy field with no purpose. */
-	gid?:             number;
+	gid?:             number | null;
 	/** An integral, unique identifier for the user. */
 	id:               number;
 	/** The date/time at which the user was last updated. */
-	lastUpdated?:     Date;
+	lastUpdated?:     Date | null;
 	/** The user's password - this should only be populated on update, and only if updating the password. */
-	localPasswd?:     string;
+	localPasswd?:     string | null;
 	/** legacy field with no purpose. */
-	localUser?:       boolean;
+	localUser?:       boolean | null;
 	/**
 	 * Whether (false) or not (true) the user has reset their password after
 	 * registration.
 	 */
 	newUser:          boolean;
 	/** The user's phone number. */
-	phoneNumber?:     string;
+	phoneNumber?:     string | null;
 	/** The postal code where the user lives/is based. */
-	postalCode?:      string;
+	postalCode?:      string | null;
 	/** The user's public SSH key. */
-	publicSshKey?:    string;
+	publicSshKey?:    string | null;
 	/** The integral, unique identifier of the Role the user has. */
 	role?:            number;
 	/** The user's Role. */
-	roleName?:        string;
+	rolename?:        string | null;
 	/** The state or province within which the user lives/is based. */
-	stateOrProvince?: string;
+	stateOrProvince?: string | null;
 	/** The Tenant to which the user belongs. */
-	tenant?:          string;
+	tenant?:          string | null;
 	/** An integral, unique identifier for the Tenant to which the user belongs. */
 	tenantId?:        number;
 	/** legacy field with no purpose. */
-	uid?:             number;
+	uid?:             number | null;
 	/** The user's username. */
 	username:         string;
 }
 
+/**
+ * CurrentUser represents a "current user" (mostly as seen in API *responses* -
+ * request structures are subtly different in a few ways). This differs from a
+ * `User` in a few key ways, most notably `rolename` vs `roleName`.
+ */
+export interface CurrentUser {
+	addressLine1: string | null;
+	addressLine2: string | null;
+	city: string | null;
+	confirmLocalPasswd?: string | null;
+	company: string | null;
+	country: string | null;
+	email: string;
+	fullName: string | null;
+	gid: number | null;
+	id: number;
+	lastUpdated: Date;
+	localPasswd?: string | null;
+	localUser: boolean;
+	newUser: boolean;
+	phoneNumber: string | null;
+	postalCode: string | null;
+	publicSshKey: string | null;
+	role: number;
+	roleName: string;
+	stateOrProvince: string | null;
+	tenant: string;
+	tenantId: number;
+	uid: number | null;
+	username: string;
+}
+
+/**
+ * Gets a new `CurrentUser` to use as a default structure.
+ *
+ * @returns A valid `CurrentUser` - but one that will absolutely fail validation
+ * server-side for several reasons. Should not be used directly.
+ */
+export function newCurrentUser(): CurrentUser {
+	return {
+		addressLine1: null,
+		addressLine2: null,
+		city: null,
+		company: null,
+		country: null,
+		email: "",
+		fullName: "",
+		gid: null,
+		id: -1,
+		lastUpdated: new Date(),
+		localUser: true,
+		newUser: false,
+		phoneNumber: null,
+		postalCode: null,
+		publicSshKey: null,
+		role: -1,
+		roleName: "",
+		stateOrProvince: null,
+		tenant: "",
+		tenantId: -1,
+		uid: null,
+		username: "",
+	};
+}
 
 /**
  * Represents a role that a user may have

@@ -44,12 +44,12 @@ These can all be supplied manually via the steps in :ref:`dev-building` (for Tra
 
 .. tip:: When updating CDN-in-a-Box, there is no need to remove old images before building new ones. Docker detects which files are updated and only reuses cached layers that have not changed.
 
-By default, CDN in a Box will be based on CentOS 8. To base CDN in a Box on CentOS 7, set the ``RHEL_VERSION`` environment variable to ``7`` (for CDN in a Box, it defaults to ``8``):
+By default, CDN in a Box will be based on Rocky Linux 8. To base CDN in a Box on CentOS 7, set the ``BASE_IMAGE`` environment variable to ``centos`` and set the ``RHEL_VERSION`` environment variable to ``7`` (for CDN in a Box, ``BASE_IMAGE`` defaults to ``rockylinux`` and ``RHEL_VERSION`` defaults to ``8``):
 
 .. code-block:: shell
-	:caption: Building CDN in a Box to run CentOS 7 instead of CentOS 8
+	:caption: Building CDN in a Box to run CentOS 7 instead of Rocky Linux 8
 
-	export RHEL_VERSION=7
+	export BASE_IMAGE=centos RHEL_VERSION=7
 	make # Builds RPMs for CentOS 7
 	docker-compose build --parallel # Builds CentOS 7 CDN in a Box images
 
@@ -214,8 +214,8 @@ Importing the :abbr:`CA (Certificate Authority)` certificate on Windows
 #. Import the CIAB intermediate :abbr:`CA (Certificate Authority)` certificate into :menuselection:`Trusted Root Certification Authorities --> Certificates`.
 #. Restart all HTTPS clients (browsers, etc).
 
-Importing the :abbr:`CA (Certificate Authority)` certificate on CentOS 8 (Linux)
---------------------------------------------------------------------------------
+Importing the :abbr:`CA (Certificate Authority)` certificate on Rocky Linux 8 (Linux)
+-------------------------------------------------------------------------------------
 #. Copy the CIAB full chain :abbr:`CA (Certificate Authority)` certificate bundle from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt` to path :file:`/etc/pki/ca-trust/source/anchors/`.
 #. Run ``update-ca-trust-extract`` as the root user or with :manpage:`sudo(8)`.
 #. Restart all HTTPS clients (browsers, etc).

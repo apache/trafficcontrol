@@ -13,10 +13,10 @@
 */
 
 import { Component, OnInit } from "@angular/core";
-import {Router} from "@angular/router";
+import { Router } from "@angular/router";
 
-import { User } from "src/app/models";
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
+import { CurrentUser } from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 /**
  * The most basic component that contains everything else. This should be kept pretty simple.
@@ -31,11 +31,8 @@ export class AppComponent implements OnInit {
 	public title = "Traffic Portal";
 
 	/** The currently logged-in user */
-	public currentUser: User | null = null;
+	public currentUser: CurrentUser | null = null;
 
-	/**
-	 * Constructor.
-	 */
 	constructor(private readonly router: Router, private readonly auth: CurrentUserService) {
 	}
 

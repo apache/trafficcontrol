@@ -16,7 +16,50 @@ import { FormControl } from "@angular/forms";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { Subject } from "rxjs";
 
-import { InvalidationJobService } from "src/app/shared/api";
+import { InvalidationJobService } from "src/app/api";
+import type { InvalidationJob } from "src/app/models";
+
+/**
+ * Gets the time part of a Date as a string.
+ *
+ * @param d The date to convert.
+ * @returns A string that represents the *local* time of the given date in
+ * `HH:mm` format.
+ */
+export function timeStringFromDate(d: Date): string {
+	const hours = String(d.getHours()).padStart(2, "0");
+	const minutes = String(d.getMinutes()).padStart(2, "0");
+	return `${hours}:${minutes}`;
+}
+
+/** The type of parameters passable to the dialog. */
+interface DialogData {
+	/** The ID of the Delivery Service to which the created/edited Job belongs. */
+	dsID: number;
+	/** If passed, the dialog will edit this Job instead of creating a new one. */
+	job?: InvalidationJob;
+}
+
+/**
+ * Gets the string representation of a user-entered regular expression (for
+ * Content Invalidation Jobs).
+ *
+ * Users have a tendency to assign undue importance to '/' because of its
+ * ubiquitous use in the `sed` command line utility examples and snippets
+ * online. This will un-escape any '/'s that the user escaped.
+ *
+ * @example
+ * const r = new RegExp("/.+\\/mypath\\/.+\.jpg/");
+ * console.log(sanitizedRegExpString(r));
+ * // Output: ".+/mypath/.+\.jpg"
+ *
+ * @param r A regular expression entered by a user.
+ * @returns The string representation of the regexp, with unnecessary bits
+ * removed.
+ */
+export function sanitizedRegExpString(r: RegExp): string {
+	return r.toString().replace(/^\/|\/$/g, "").replace(/\\\//g, "/");
+}
 
 /**
  * This is the controller for the dialog box that opens when the user creates
@@ -28,8 +71,9 @@ import { InvalidationJobService } from "src/app/shared/api";
 	templateUrl: "./new-invalidation-job-dialog.component.html",
 })
 export class NewInvalidationJobDialogComponent {
+
 	/** The minimum Start Date that may be selected. */
-	public readonly startMin = new Date();
+	public startMin = new Date();
 	/** The minimum Start Time that may be selected. */
 	public startMinTime: string;
 
@@ -45,16 +89,30 @@ export class NewInvalidationJobDialogComponent {
 	/** A subscribable that tracks whether the new job's regexp is valid. */
 	public readonly regexpIsValid = new Subject<string>();
 
+	private readonly job: InvalidationJob | undefined;
+	private readonly dsID: number;
+
 	constructor(
 		private readonly dialogRef: MatDialogRef<NewInvalidationJobDialogComponent>,
 		private readonly jobAPI: InvalidationJobService,
-		@Inject(MAT_DIALOG_DATA) private readonly dsID: number
+		@Inject(MAT_DIALOG_DATA) data: DialogData
 	) {
-		this.startDate.setDate(this.startDate.getDate()+1);
-		const hours = String(this.startMin.getHours()).padStart(2, "0");
-		const minutes = String(this.startMin.getMinutes()).padStart(2, "0");
-		this.startMinTime = `${hours}:${minutes}`;
-		this.startTime.setValue(this.startMinTime);
+		this.job = data.job;
+		if (this.job) {
+			this.startDate = this.job.startTime;
+			const startTime  = timeStringFromDate(this.job.startTime);
+			this.startMinTime = startTime;
+			this.startTime.setValue(startTime);
+			this.ttl.setValue(parseInt(this.job.parameters.split(":")[1], 10));
+			const regexp = this.job.assetUrl.split("/", 4).slice(3).join("/") || "/";
+			this.regexp.setValue(regexp);
+		} else {
+			this.startDate.setDate(this.startDate.getDate()+1);
+			this.startMinTime = timeStringFromDate(this.startMin);
+			this.startTime.setValue(this.startMinTime);
+		}
+
+		this.dsID = data.dsID;
 	}
 
 	/**
@@ -67,12 +125,36 @@ export class NewInvalidationJobDialogComponent {
 			this.startDate.getMonth() <= this.startMin.getMonth() &&
 			this.startDate.getDate() <= this.startMin.getDate()
 		) {
-			const hours = String(this.startMin.getHours()).padStart(2, "0");
-			const minutes = String(this.startMin.getMinutes()).padStart(2, "0");
-			this.startMinTime = `${hours}:${minutes}`;
+			this.startMinTime = timeStringFromDate(this.startMin);
 		} else {
 			this.startMinTime = "00:00";
 		}
+	}
+
+	/**
+	 * Updates a content invalidation job based on passed pre-parsed data in
+	 * combination with the component's state.
+	 *
+	 * @param j The Job being edited (in its original form).
+	 * @param re The Job's new Regular Expression (pre-parsed from a form
+	 * control).
+	 * @param startTime The Job's new Start Time (pre-parsed from Form Controls).
+	 */
+	private editJob(j: InvalidationJob, re: RegExp, startTime: Date): void {
+		const job = {
+			...j,
+			parameters: `TTL:${this.ttl.value as number}`,
+			startTime
+		};
+		job.assetUrl = `${job.assetUrl.split("/").slice(0, 3).join("/")}/${sanitizedRegExpString(re)}`;
+
+		this.jobAPI.updateInvalidationJob(job).then(
+			()=>this.dialogRef.close(true)
+		).catch(
+			e => {
+				console.error("error:", e);
+			}
+		);
 	}
 
 	/**
@@ -80,7 +162,7 @@ export class NewInvalidationJobDialogComponent {
 	 *
 	 * @param event The form submission event, which must be .preventDefault'd.
 	 */
-	public onSubmit(event: Event): void {
+	public async onSubmit(event: Event): Promise<void> {
 		event.preventDefault();
 		event.stopPropagation();
 
@@ -88,14 +170,17 @@ export class NewInvalidationJobDialogComponent {
 		try {
 			re = new RegExp(this.regexp.value);
 		} catch (err) {
-			this.regexpIsValid.next(`Must be a valid regular expression! (${err})`);
-			return;
+			return this.regexpIsValid.next(`Must be a valid regular expression! (${err instanceof Error ? err.message : err})`);
 		}
 
 		const startTime = new Date(this.startDate);
-		const [hours, minutes] = (this.startTime.value as string).split(":").map(x=>Number(x));
+		const [hours, minutes] = (this.startTime.value as `${number}:${number}`).split(":").map(x=>Number(x));
 		startTime.setHours(hours);
 		startTime.setMinutes(minutes);
+
+		if (this.job) {
+			return this.editJob(this.job, re, startTime);
+		}
 
 		const job = {
 			deliveryService: this.dsID,
@@ -104,18 +189,12 @@ export class NewInvalidationJobDialogComponent {
 			ttl: this.ttl.value
 		};
 
-		this.jobAPI.createInvalidationJob(job).then(
-			r => {
-				if (r) {
-					this.dialogRef.close(true);
-				} else {
-					console.warn("failure");
-				}
-			},
-			err => {
-				console.error("error: ", err);
-			}
-		);
+		try {
+			await this.jobAPI.createInvalidationJob(job);
+			this.dialogRef.close(true);
+		} catch (err) {
+			console.error("error: ", err);
+		}
 	}
 
 	/**

@@ -11,13 +11,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-- name: Create Non-DS Profiles - Per CDN
+- name: Create Non-DS Profiles - Per CDN (Non-Cache)
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
     method: POST
     body: "{{ lookup('template', 'profile.j2') }}"
   with_items: "{{ dl_ds_merged_profile_cdntemplates }}"
-  when: item.type != 'DS_PROFILE'
+  when: item.type != 'DS_PROFILE' and item.type != 'ATS_PROFILE' and item.type != 'GROVE_PROFILE'
   vars:
     name: "{{ item.name }}"
     description: "{{ item.description }}"
@@ -28,18 +28,31 @@
     target_xmlId: "Invalid (only for rendering)"
   register: create_profiles_out
   failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+  no_log: true
+  retries: 10
+  delay: 10
 
-- name: Create and Associate Parameters to Non-DS Profiles - Per CDN
+- name: Create and Associate Parameters to Non-DS Profiles - Per CDN (Non-Cache)
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item.name }}/parameters"
     method: POST
     body: "{{ lookup('template', 'parameter.j2') }}"
-  when: item.type != 'DS_PROFILE'
+  when: item.type != 'DS_PROFILE' and item.type != 'ATS_PROFILE'and item.type != 'GROVE_PROFILE'
   with_items:
     - "{{ dl_ds_merged_profile_cdntemplates }}"
   vars:
+    paramset: "{{ item.parameters | default([]) }}"
     cdn_query: "response[?name == '{{ item.cdn | default('ALL') }}'].id | [0]"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     target_xmlId: "Invalid (only for rendering)"
   register: create_profiles_out
   failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+  no_log: true
+  retries: 10
+  delay: 10
+
+- name: Handle Profile & Parameter CDN Cache Templates
+  include_tasks: cache_parameter_loader.yml
+  with_dict: "{{ cache_hardware_profile_index }}"
+  loop_control:
+    loop_var: Target_hardware_profile

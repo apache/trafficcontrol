@@ -15,26 +15,27 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
+import { UserService } from "src/app/api";
+import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import {UserService} from "../api";
+
 import { TpHeaderComponent } from "./tp-header.component";
 
 describe("TpHeaderComponent", () => {
 	let component: TpHeaderComponent;
 	let fixture: ComponentFixture<TpHeaderComponent>;
+	let logOutSpy: jasmine.Spy;
 
 	beforeEach(waitForAsync(() => {
-		const mockAPIService = jasmine.createSpyObj(["getUsers"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		logOutSpy = mockCurrentUserService.logout;
 		TestBed.configureTestingModule({
 			declarations: [ TpHeaderComponent ],
-			imports: [ HttpClientModule, RouterTestingModule ],
+			imports: [ APITestingModule, HttpClientModule, RouterTestingModule ],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: UserService, useValue: mockAPIService}
 			]
-		})
-			.compileComponents();
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {
@@ -45,6 +46,22 @@ describe("TpHeaderComponent", () => {
 
 	it("should exist", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("logs the user out", async () => {
+		expect(logOutSpy).not.toHaveBeenCalled();
+		await component.logout();
+		expect(logOutSpy).toHaveBeenCalled();
+	});
+
+	it("clears front-end user data even if server-side logout fails", async () => {
+		const userService = TestBed.inject(UserService);
+		const userSpy = spyOn(userService, "logout");
+		userSpy.and.returnValue(new Promise(r=>r(null)));
+		expect(userSpy).not.toHaveBeenCalled();
+		await component.logout();
+		expect(userSpy).toHaveBeenCalled();
+		expect(logOutSpy).toHaveBeenCalled();
 	});
 
 	afterAll(() => {

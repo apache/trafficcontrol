@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -135,7 +136,7 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 		Level: tc.SuccessLevel.String(),
 	})
 
-	w.Header().Add("Location", api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
+	w.Header().Add(rfc.Location, api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 
 }
@@ -208,7 +209,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 			continue
 		}
 
-		expiration, _, err := parseExpirationAndSansFromCert([]byte(keyObj.Certificate.Crt), keyObj.Hostname)
+		expiration, _, err := ParseExpirationAndSansFromCert([]byte(keyObj.Certificate.Crt), keyObj.Hostname)
 		if err != nil {
 			log.Errorf("cert autorenewal: %s: %s", ds.XmlId, err.Error())
 			dsExpInfo.XmlId = ds.XmlId

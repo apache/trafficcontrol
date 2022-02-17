@@ -12,30 +12,39 @@
 * limitations under the License.
 */
 
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, ViewChild } from "@angular/core";
-import { Router } from "@angular/router";
 import {
+	Component,
+	type ElementRef,
+	EventEmitter,
+	HostListener,
+	Input,
+	type OnDestroy,
+	type OnInit,
+	Output,
+	ViewChild
+} from "@angular/core";
+import { Router } from "@angular/router";
+import { faCaretDown, faColumns, faDownload } from "@fortawesome/free-solid-svg-icons";
+import type {
 	CellContextMenuEvent,
 	ColDef,
 	ColGroupDef,
+	Column,
 	ColumnApi,
 	CsvExportParams,
 	GridApi,
 	GridOptions,
 	GridReadyEvent,
 	ITooltipParams,
-	RowNode } from "ag-grid-community";
-import { BehaviorSubject, Subscription } from "rxjs";
-
-import {faCaretDown, faColumns, faDownload} from "@fortawesome/free-solid-svg-icons";
+	RowNode
+} from "ag-grid-community";
+import type { BehaviorSubject, Subscription } from "rxjs";
 
 import { fuzzyScore } from "src/app/utils";
+
 import { BooleanFilterComponent } from "../table-components/boolean-filter/boolean-filter.component";
 import { SSHCellRendererComponent } from "../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import { UpdateCellRendererComponent } from "../table-components/update-cell-renderer/update-cell-renderer.component";
-
-/** Tables can display any of this kind of data. */
-type TableData = Record<string, string | number | bigint | Date | boolean | RegExp | null>;
 
 /** A context menu action that acts on a single row only. */
 interface ContextMenuSingleAction<T> {
@@ -84,7 +93,7 @@ interface ContextMenuMultiAction<T> {
 }
 
 /** ContextMenuActions represent an action that can be taken in a context menu. */
-type ContextMenuAction<T> = ContextMenuSingleAction<T> | ContextMenuMultiAction<T>;
+export type ContextMenuAction<T> = ContextMenuSingleAction<T> | ContextMenuMultiAction<T>;
 
 /** ContextMenuLinks represent a link within a context menu. They aren't templated, so currently have limited uses. */
 interface ContextMenuLink {
@@ -118,10 +127,10 @@ export interface ContextMenuActionEvent<T> {
 	styleUrls: ["./generic-table.component.scss"],
 	templateUrl: "./generic-table.component.html",
 })
-export class GenericTableComponent implements OnInit, OnDestroy {
+export class GenericTableComponent<T> implements OnInit, OnDestroy {
 
 	/** Rows for the table */
-	@Input() public data: Array<TableData> = [];
+	@Input() public data: Array<T> = [];
 	/** Column and column group definitions. */
 	@Input() public cols: Array<ColDef | ColGroupDef> = [];
 	/** Optionally provide fuzzy search text. */
@@ -129,21 +138,21 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	/** Optionally a context to load from localstorage. Providing a unique value for this allows for persistent filter, sort, etc. */
 	@Input() public context: string | undefined;
 	/** Optionally a set of context menu items. If not given, the context menu is disabled. */
-	@Input() public contextMenuItems: Array<ContextMenuItem<unknown>> = [];
+	@Input() public contextMenuItems: Array<ContextMenuItem<T>> = [];
 	/** Emits when context menu actions are clicked. Type safety is the host's responsibility! */
-	@Output() public contextMenuAction = new EventEmitter<ContextMenuActionEvent<unknown>>();
+	@Output() public contextMenuAction = new EventEmitter<ContextMenuActionEvent<T>>();
 	/**
 	 * Checks if a context menu item is an action.
 	 *
 	 * @param i The menu item to check.
 	 * @returns 'true' if 'i' is an action, 'false' if it's a link.
 	 */
-	public isAction<T>(i: ContextMenuItem<T>): i is ContextMenuAction<T> {
+	public isAction(i: ContextMenuItem<T>): i is ContextMenuAction<T> {
 		return Object.prototype.hasOwnProperty.call(i, "action");
 	}
 
 	/** Holds a reference to the context menu which is used to calculate its size. */
-	@ViewChild("contextmenu") public contextmenu: ElementRef | null = null;
+	@ViewChild("contextmenu") public contextmenu!: ElementRef;
 
 	/**
 	 * This event handler listens to click events anywhere, since if you're clicking outside
@@ -159,7 +168,7 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	}
 
 	/** This holds a reference to the table's selected data, which is emitted on context menu action clicks. */
-	public selected: unknown;
+	public selected: T | null = null;
 
 	/** Holds a subscription for the fuzzySearch input if one was provided (otherwise 'null') */
 	private fuzzySubscription: Subscription|null = null;
@@ -167,7 +176,7 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	/** Options to pass into the AG-Grid object. */
 	public gridOptions: GridOptions;
 	/** Holds a reference to the AG-Grid API (once it has been initialized) */
-	private gridAPI: GridApi | undefined;
+	private gridAPI!: GridApi;
 	/** Holds a reference to the AG-Grid Column API (once it has been initialized)  */
 	public columnAPI: ColumnApi | undefined;
 
@@ -200,20 +209,24 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	 * The number of currently selected rows (-1 if the grid is not initialized).
 	 */
 	public get selectionCount(): number {
-		if (!this.gridAPI) {
-			return -1;
-		}
 		return this.gridAPI.getSelectedRows().length;
 	}
 
 	/**
 	 * All currently selected rows.
 	 */
-	public get fullSelection(): Array<unknown> {
-		if (!this.gridAPI) {
+	public get fullSelection(): Array<T> {
+		return this.gridAPI.getSelectedRows();
+	}
+
+	/**
+	 * All column definitions (regardless of whether or not they're visible).
+	 */
+	public get columns(): Array<Column> {
+		if (!this.columnAPI) {
 			return [];
 		}
-		return this.gridAPI.getSelectedRows();
+		return this.columnAPI.getAllColumns() ?? [];
 	}
 
 	/**
@@ -303,23 +316,6 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		} catch (e) {
 			console.error("Failure to load stored sort state:", e);
 		}
-
-		// try {
-		// 	$scope.quickSearch = localStorage.getItem(tableName + "_quick_search");
-		// 	$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
-		// } catch (e) {
-		// 	console.error("Failure to load stored quick search:", e);
-		// }
-
-		// try {
-		// 	const ps = localStorage.getItem(tableName + "_page_size");
-		// 	if (ps && ps > 0) {
-		// 		$scope.pageSize = Number(ps);
-		// 		$scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
-		// 	}
-		// } catch (e) {
-		// 	console.error("Failure to load stored page size:", e);
-		// }
 	}
 
 	/** When sorting changes, stores the sorting state if a context was provided. */
@@ -484,7 +480,6 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		this.menuStyle.bottom = "unset";
 		this.menuStyle.right = "unset";
 		const boundingRect = this.contextmenu.nativeElement.getBoundingClientRect();
-		// const boundingRect = (document.getElementById("context-menu") as HTMLMenuElement).getBoundingClientRect();
 
 		if (boundingRect.bottom > window.innerHeight){
 			this.menuStyle.bottom = `${window.innerHeight - params.event.clientY}px`;
@@ -503,8 +498,8 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	 * @param a The action to check.
 	 * @returns Whether or not `a` should be disabled.
 	 */
-	public isDisabled(a: ContextMenuAction<unknown>): boolean {
-		if (!a.multiRow && this.selectionCount > 1) {
+	public isDisabled(a: ContextMenuAction<T>): boolean {
+		if (!this.selected || (!a.multiRow && this.selectionCount > 1)) {
 			return true;
 		}
 		if (a.disabled) {
@@ -523,7 +518,10 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	 * @param multi If 'true' the emitted data will be all rows currently selected, otherwise only the item on which the user right-clicked.
 	 * @param e The mouse event that triggered this handler.
 	 */
-	public emitContextMenuAction(action: string, multi: boolean, e: MouseEvent): void {
+	public emitContextMenuAction(action: string, multi: boolean | undefined, e: MouseEvent): void {
+		if (!this.selected) {
+			throw new Error("nothing selected, cannot emit context menu action");
+		}
 		e.stopPropagation();
 		if (multi) {
 			this.contextMenuAction.emit({
@@ -543,11 +541,6 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	 * Downloads the table data as a CSV file.
 	 */
 	public download(): void {
-		if (!this.gridAPI) {
-			console.error("Cannot download: no grid API handle");
-			return;
-		}
-
 		const params: CsvExportParams = {
 			onlySelected: this.gridAPI.getSelectedNodes().length > 0,
 		};
@@ -559,22 +552,16 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		this.gridAPI.exportDataAsCsv(params);
 	}
 
-
 	/**
 	 * Select or de-select all rows.
 	 *
 	 * @param de If given and true, de-selects all rows. Otherwise all rows will be selected.
 	 */
 	public selectAll(de?: boolean): void {
-		if (!this.gridAPI) {
-			console.error("Cannot de-select: no grid API handle");
-			return;
-		}
-
 		if (de) {
 			this.gridAPI.deselectAll();
-		} else {
-			this.gridAPI.selectAllFiltered();
+			return;
 		}
+		this.gridAPI.selectAllFiltered();
 	}
 }

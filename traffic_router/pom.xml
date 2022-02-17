@@ -18,7 +18,7 @@
 
 	<artifactId>traffic_router</artifactId>
 	<groupId>org.apache.traffic_control.traffic_router</groupId>
-	<version>6.0.0</version>
+	<version>6.2.0</version>
 	<packaging>pom</packaging>
 	<name>traffic_router</name>
 
@@ -33,7 +33,8 @@
 	<properties>
 		<deploy.dir>/opt/traffic_router</deploy.dir>
 		<spring.version>5.2.9.RELEASE</spring.version>
-		<log4j.version>1.2.17</log4j.version>
+		<log4j.version>2.17.1</log4j.version>
+		<jackson-core.version>2.13.1</jackson-core.version>
 		<junit.version>4.12</junit.version>
 		<hamcrest.version>1.3</hamcrest.version>
 		<geoip2.version>2.1.0</geoip2.version>

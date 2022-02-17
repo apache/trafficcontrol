@@ -25,8 +25,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.log4j.Logger;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
 
 /**
@@ -34,7 +34,7 @@ import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
  */
 public class CacheLocation extends Location {
 
-	public static final Logger LOGGER = Logger.getLogger(CacheLocation.class);
+	public static final Logger LOGGER = LogManager.getLogger(CacheLocation.class);
 
 	private final Map<String, Cache> caches;
 	private List<String> backupCacheGroups = null;

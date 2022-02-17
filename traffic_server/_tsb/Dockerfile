@@ -16,23 +16,23 @@
 # under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as ats-common-dependencies
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION} as ats-common-dependencies
 ARG RHEL_VERSION=8
 
 MAINTAINER dev@trafficcontrol.apache.org
 
 ### Common for all sub-component builds
 RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
-		rpm_gpg_key=RPM-GPG-KEY-centosofficial; \
 		yum install -y 'dnf-command(config-manager)'; \
 		yum config-manager --set-enabled powertools; \
 	else \
-		rpm_gpg_key="RPM-GPG-KEY-CentOS-${RHEL_VERSION%%.*}"; \
 		yum install -y deltarpm centos-release-scl-rh; \
 		yum-config-manager --enable rhel-server-rhscl-7-rpms; \
 	fi && \
-	rpm --import "/etc/pki/rpm-gpg/${rpm_gpg_key}" && \
+	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-* && \
 	rpm --import "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-${RHEL_VERSION%%.*}" && \
 	yum -y clean all && \
 	yum -y update ca-certificates && \

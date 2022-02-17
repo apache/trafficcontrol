@@ -11,14 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
-import { UserService } from "src/app/shared/api";
 
-import { User } from "src/app/models";
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
+import { UserService } from "src/app/api";
+import type { CurrentUser } from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+
 import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-password-dialog.component";
 
 /**
@@ -32,7 +33,7 @@ import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-p
 export class CurrentuserComponent implements OnInit {
 
 	/** The currently logged-in user - or 'null' if not logged-in. */
-	public currentUser: User | null = null;
+	public currentUser: CurrentUser | null = null;
 	/** Whether or not the page is in 'edit' mode. */
 	private editing = false;
 	/** Whether or not the page is in 'edit' mode. */
@@ -45,7 +46,7 @@ export class CurrentuserComponent implements OnInit {
 	 * The editing copy of the current user - used so that you don't need to
 	 * reload the page to see accurate information when the edits are cancelled.
 	 */
-	public editUser: User | null = null;
+	public editUser: CurrentUser | null = null;
 
 	constructor(
 		private readonly auth: CurrentUserService,
@@ -87,8 +88,7 @@ export class CurrentuserComponent implements OnInit {
 	 */
 	public edit(): void {
 		if (!this.currentUser) {
-			console.error("cannot edit null user");
-			return;
+			throw new Error("cannot edit null user");
 		}
 		this.editUser = {...this.currentUser};
 		this.editing = true;
@@ -99,8 +99,11 @@ export class CurrentuserComponent implements OnInit {
 	 * the user's information.
 	 */
 	public cancelEdit(): void {
+		if (!this.currentUser) {
+			throw new Error("shouldn't be able to be in edit mode with a null user");
+		}
 		// It's impossible to be in edit mode with a null user
-		this.editUser = {...(this.currentUser as User)};
+		this.editUser = {...this.currentUser};
 		this.router.navigate(["."], {queryParams: {}, relativeTo: this.route});
 		this.editing = false;
 	}
@@ -122,31 +125,28 @@ export class CurrentuserComponent implements OnInit {
 	 *
 	 * @param e The form submittal event.
 	 */
-	public submitEdit(e: Event): void {
+	public async submitEdit(e: Event): Promise<void> {
 		e.preventDefault();
 		e.stopPropagation();
+		if (this.editUser === null) {
+			throw new Error("cannot submit edit with null user");
+		}
 
 		// There's a separate form for editing passwords, we don't intend to do that here.
-		(this.editUser as User).localPasswd = undefined;
-		(this.editUser as User).confirmLocalPasswd = undefined;
+		this.editUser.localPasswd = undefined;
+		this.editUser.confirmLocalPasswd = undefined;
 
-		this.api.updateCurrentUser(this.editUser as User).then(
-			success => {
-				if (success) {
-					this.auth.updateCurrentUser().then(
-						updated => {
-							if (!updated) {
-								console.warn("Failed to fetch current user after successful update");
-							}
-							this.currentUser = this.auth.currentUser;
-							this.cancelEdit();
-						}
-					);
-				} else {
-					console.warn("Editing the current user failed");
-					this.cancelEdit();
-				}
+		const success = await this.api.updateCurrentUser(this.editUser);
+		if (success) {
+			const updated = await this.auth.updateCurrentUser();
+			if (!updated) {
+				console.warn("Failed to fetch current user after successful update");
 			}
-		);
+			this.currentUser = this.auth.currentUser;
+			this.cancelEdit();
+		} else {
+			console.warn("Editing the current user failed");
+			this.cancelEdit();
+		}
 	}
 }

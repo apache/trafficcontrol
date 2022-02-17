@@ -16,7 +16,7 @@
   service:
     name: fakeOrigin
     state: restarted
-    daemon_reload: yes
+    daemon_reload: true
   notify: Wait for fakeOrigin to become available
 
 - name: Wait for HTTP fakeOrigin to become available

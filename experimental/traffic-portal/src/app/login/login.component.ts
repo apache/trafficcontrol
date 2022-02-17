@@ -13,9 +13,12 @@
 */
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
+import { MatDialog } from "@angular/material/dialog";
 import { Router, ActivatedRoute } from "@angular/router";
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+
+import { ResetPasswordDialogComponent } from "./reset-password-dialog/reset-password-dialog.component";
 
 /**
  * LoginComponent is the controller for the user login form.
@@ -34,21 +37,21 @@ export class LoginComponent implements OnInit {
 	/** The user-entered password. */
 	public p = new FormControl("");
 
-	/**
-	 * Constructor.
-	 */
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
-		private readonly auth: CurrentUserService) { }
+		private readonly auth: CurrentUserService,
+		private readonly dialog: MatDialog
+	) { }
 
 	/**
 	 * Runs initialization, setting up the post-login redirection from the query
 	 * string parameters.
 	 */
 	public ngOnInit(): void {
-		this.returnURL = this.route.snapshot.queryParams.returnUrl || "/core";
-		const token = this.route.snapshot.queryParams.token;
+		const params = this.route.snapshot.queryParamMap;
+		this.returnURL = params.get("returnUrl") ?? "core";
+		const token = params.get("token");
 		if (token) {
 			this.auth.login(token).then(
 				response => {
@@ -79,6 +82,11 @@ export class LoginComponent implements OnInit {
 				console.error("login failed:", err);
 			}
 		);
+	}
+
+	/** Opens the "reset password" dialog. */
+	public resetPassword(): void {
+		this.dialog.open(ResetPasswordDialogComponent, {width: "30%"});
 	}
 
 }

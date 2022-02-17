@@ -18,11 +18,13 @@
 ############################################################
 # Dockerfile to build Edge-Tier Cache container images for
 # Apache Traffic Control
-# Based on CentOS 8
+# Based on Rocky Linux 8
 ############################################################
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} AS common-traffic-server-dependencies
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION} AS common-traffic-server-dependencies
 ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available at runtime
 ENV RHEL_VERSION="$RHEL_VERSION"
@@ -46,6 +48,8 @@ RUN dnf -y install epel-release && \
     fi && \
     dnf -y install              \
         brotli                  \
+        # find is required by to-access.sh
+        findutils               \
         GeoIP                   \
         git                     \
         groff-base              \
@@ -117,7 +121,7 @@ CMD /run.sh
 
 FROM common-traffic-server-dependencies AS get-delve
 RUN dnf -y install golang && \
-    go get -u github.com/go-delve/delve/cmd/dlv
+    GOPROXY='https://proxy.golang.org' go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM common-cache-config-layers AS mid
 ENV CACHE_TYPE=mid

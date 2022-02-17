@@ -19,8 +19,10 @@
 # Based on CentOS
 ############################################################
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} AS trafficstats-dependencies
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION} AS trafficstats-dependencies
 ARG RHEL_VERSION=8
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
@@ -32,6 +34,8 @@ RUN dnf install -y epel-release && \
         jq \
         nmap-ncat \
         net-tools \
+        # find is required by to-access.sh
+        findutils \
         gettext \
         bind-utils \
         openssl && \
@@ -58,8 +62,8 @@ ENTRYPOINT /run.sh
 
 FROM trafficstats-dependencies AS get-delve
 
-RUN dnf -y install golang git && \
-    go get -u github.com/go-delve/delve/cmd/dlv
+RUN dnf -y install golang && \
+    GOPROXY='https://proxy.golang.org' go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM trafficstats AS trafficstats-debug
 COPY --from=get-delve /root/go/bin /usr/bin

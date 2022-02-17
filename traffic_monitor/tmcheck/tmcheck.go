@@ -21,7 +21,6 @@
 package tmcheck
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -32,7 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	to "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 const RequestTimeout = time.Second * time.Duration(30)
@@ -44,8 +43,7 @@ const TrafficMonitorStatsPath = "/publish/Stats"
 
 func getClient() *http.Client {
 	return &http.Client{
-		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
-		Timeout:   RequestTimeout,
+		Timeout: RequestTimeout,
 	}
 }
 

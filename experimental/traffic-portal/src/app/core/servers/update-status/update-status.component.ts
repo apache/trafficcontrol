@@ -11,10 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from "@angular/core";
+import { Component, EventEmitter, HostListener, Input, type OnInit, Output } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { Server, Status } from "src/app/models";
-import { ServerService } from "src/app/shared/api";
+
+import { ServerService } from "src/app/api/server.service";
+import type { Server, Status } from "src/app/models";
 
 /**
  * UpdateStatusComponent is the controller for the "Update Server Status" dialog box.
@@ -43,7 +44,7 @@ export class UpdateStatusComponent implements OnInit {
 	}
 
 	/** The possible statuses of a server. */
-	public statuses = new Promise(resolve => resolve(new Array<Status>()));
+	public statuses = new Array<Status>();
 	/** The ID of the current status of the server, or null if the servers have disparate statuses. */
 	public currentStatus: null | number = null;
 
@@ -74,10 +75,13 @@ export class UpdateStatusComponent implements OnInit {
 	 * Sets up the necessary data to complete the form.
 	 */
 	public ngOnInit(): void {
-		this.statuses = this.api.getStatuses().catch(
+		this.api.getStatuses().then(
+			ss => {
+				this.statuses = ss;
+			}
+		).catch(
 			e => {
 				console.error("Failed to get Statuses:", e);
-				return [];
 			}
 		);
 		if (this.servers.length < 1) {
@@ -102,24 +106,24 @@ export class UpdateStatusComponent implements OnInit {
 	 *
 	 * @param e The submission event.
 	 */
-	public submit(e: Event): void {
+	public async submit(e: Event): Promise<void> {
 		e.preventDefault();
 		e.stopPropagation();
 		let observables;
 		if (this.isOffline) {
-			observables = this.servers.map(async x=>this.api.updateStatus(x, this.statusControl.value.id, this.offlineReasonControl.value));
+			observables = this.servers.map(
+				async x=>this.api.updateStatus(x, this.statusControl.value.name, this.offlineReasonControl.value)
+			);
 		} else {
-			observables = this.servers.map(async x=>this.api.updateStatus(x, this.statusControl.value.id));
+			observables = this.servers.map(async x=>this.api.updateStatus(x, this.statusControl.value.name));
 		}
-		Promise.all(observables).then(
-			() => {
-				this.done.emit(true);
-			},
-			err => {
-				console.error("something went wrong trying to update", this.serverName, "servers:", err);
-				this.done.emit(false);
-			}
-		);
+		try {
+			await Promise.all(observables);
+			this.done.emit(true);
+		} catch (err) {
+			console.error("something went wrong trying to update", this.serverName, "servers:", err);
+			this.done.emit(false);
+		}
 	}
 
 	/**

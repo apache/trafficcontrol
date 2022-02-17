@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>org.apache.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>6.0.0</version>
+		<version>6.2.0</version>
 	</parent>
 
 	<scm>

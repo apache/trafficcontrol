@@ -280,7 +280,7 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 	}
 
 	if reqErr != nil {
-		log.Warnf("%v handler given error '%v'\n", id, reqErr) // error here, in case the thing that called Handle didn't error
+		log.Warnf("%s handler given error: %s", id, reqErr.Error()) // error here, in case the thing that called Handle didn't error
 		result.Error = reqErr
 		handler.resultChan <- result
 		return

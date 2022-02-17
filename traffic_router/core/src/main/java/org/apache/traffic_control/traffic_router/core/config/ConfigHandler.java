@@ -49,7 +49,8 @@ import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.core.edge.Cache.DeliveryServiceReference;
 import org.apache.traffic_control.traffic_router.core.edge.Cache;
@@ -73,7 +74,7 @@ import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseUpd
 
 @SuppressWarnings({"PMD.TooManyFields", "PMD.CyclomaticComplexity"})
 public class ConfigHandler {
-	private static final Logger LOGGER = Logger.getLogger(ConfigHandler.class);
+	private static final Logger LOGGER = LogManager.getLogger(ConfigHandler.class);
 
 	private static long lastSnapshotTimestamp = 0;
 	private static Object configSync = new Object();

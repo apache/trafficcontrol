@@ -20,6 +20,15 @@
 				"build": {
 					"builder": "@angular-devkit/build-angular:browser",
 					"options": {
+						"allowedCommonJsDependencies": [
+							"chart.js"
+						],
+						"optimization": true,
+						"sourceMap": true,
+						"namedChunks": false,
+						"extractLicenses": true,
+						"vendorChunk": true,
+						"buildOptimizer": true,
 						"outputPath": "dist/traffic-portal/browser",
 						"index": "src/index.html",
 						"main": "src/main.ts",
@@ -87,6 +96,7 @@
 					"builder": "@angular-devkit/build-angular:karma",
 					"options": {
 						"main": "src/test.ts",
+						"codeCoverageExclude": ["src/app/api/**/*"],
 						"polyfills": "src/polyfills.ts",
 						"tsConfig": "tsconfig.spec.json",
 						"karmaConfig": "karma.conf.js",

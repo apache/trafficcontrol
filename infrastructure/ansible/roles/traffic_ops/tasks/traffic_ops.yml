@@ -63,7 +63,7 @@
       no_log: true
 
     - name: Run Traffic Ops Postinstall
-      command: "{{ to_install_bin_installdir }}/postinstall -a -cfile {{ to_install_bin_installdir }}/configuration_file.json"
+      shell: "{{ to_install_bin_installdir }}/postinstall -a -cfile {{ to_install_bin_installdir }}/configuration_file.json 2>&1"
       notify: Restart Traffic Ops
       environment:
         GOPATH: /opt/traffic_ops/go
@@ -71,7 +71,9 @@
       failed_when:
         (Postinstall_output.stdout.find("Success! Postinstall complete.") == -1) or
         (Postinstall_output.rc != 0) or
-        (Postinstall_output.stderr.find("Installing modules failed") != -1)
+        (Postinstall_output.stderr.find("Installing modules failed") != -1) or
+        (Postinstall_output.stdout.find("Installing modules failed") != -1) or
+        (Postinstall_output.stdout.find("Database migrate failed") != -1)
 
     - name: Mark Postinstall was successful
       file:
@@ -143,7 +145,11 @@
   environment:
     PATH: "{{ lookup('env', 'PATH') }}:{{ to_base_installdir }}/go/bin"
     GOPATH: /opt/traffic_ops/go
+  failed_when:
+    (db_migrations_output.stdout.find("Can't run goose") != -1) or
+    (db_migrations_output.rc != 0)
   run_once: true
+  register: db_migrations_output
 
 - name: Load Traffic Vault DB schema
   command: ./db/admin --trafficvault -env=production load_schema
@@ -165,41 +171,66 @@
 
 - name: Initialize Riak SOLR
   block:
-    - name: Add search schema
-      uri:
-        url: "{{ to_riak_uri }}/search/schema/sslkeys"
-        force_basic_auth: yes
-        user: "{{ to_riak_admin_username }}"
-        password: "{{ to_riak_admin_username_password }}"
-        method: PUT
-        remote_src: yes
-        src: /opt/traffic_ops/app/conf/misc/riak_search/sslkeys.xml
-        headers:
-          Content-Type: application/xml
-        status_code: 200,204
+    # Riak has problems communicating with modern web security and doesn't properly negotiate TLS protocols and ciphers
+    # https://github.com/basho/riak/issues/918 maybe addressed part of the issue, but it was after the last published 2.2.3 release artifact for riak kv
+    - name: Add search schema - workaround for disabling tls 1.2 for riak
+      command:
+        argv: "{{ curl_base_args + command_args }}"
+      become: yes
+      no_log: true
+      vars:
+        riak_schema_file: /opt/traffic_ops/app/conf/misc/riak_search/sslkeys.xml
+        command_args:
+          - -H
+          - 'Content-Type: application/xml'
+          - -T
+          - "{{ riak_schema_file }}"
+          - "{{ to_riak_uri }}/search/schema/sslkeys"
 
-    - name: Add search index
-      uri:
-        url: "{{ to_riak_uri }}/search/index/sslkeys"
-        force_basic_auth: yes
-        user: "{{ to_riak_admin_username }}"
-        password: "{{ to_riak_admin_username_password }}"
-        method: PUT
-        body_format: json
-        body:
+
+    - name: Add search index - workaround for disabling tls 1.2 for riak
+      command:
+        argv: "{{ curl_base_args + command_args }}"
+      become: yes
+      no_log: true
+      vars:
+        payload:
           schema: sslkeys
-        status_code: 200,204
+        command_args:
+          - -H
+          - 'Content-Type: application/json'
+          - -X
+          - PUT
+          - -d
+          - "{{ payload | to_json }}"
+          - "{{ to_riak_uri }}/search/index/sslkeys"
 
-    - name: Associate search index to bucket
-      uri:
-        url: "{{ to_riak_uri }}/buckets/ssl/props"
-        force_basic_auth: yes
-        user: "{{ to_riak_admin_username }}"
-        password: "{{ to_riak_admin_username_password }}"
-        method: PUT
-        body_format: json
-        body:
+    - name: Associate search index to bucket - workaround for disabling tls 1.2 for riak
+      command:
+        argv: "{{ curl_base_args + command_args }}"
+      become: yes
+      no_log: true
+      vars:
+        payload:
           props:
             search_index: sslkeys
-        status_code: 200,204
+        command_args:
+          - -H
+          - 'Content-Type: application/json'
+          - -X
+          - PUT
+          - -d
+          - "{{ payload | to_json }}"
+          - "{{ to_riak_uri }}/buckets/ssl/props"
   run_once: true
+  vars:
+    curl_base_args:
+      - curl
+      - --fail
+      - --tlsv1.1
+      - --tlsv1.0
+      - --insecure
+      - --basic
+      - --user
+      - "{{ to_riak_admin_username }}:{{ to_riak_admin_username_password }}"
+      - -s

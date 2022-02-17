@@ -11,10 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {EventEmitter, Injectable} from "@angular/core";
+import { EventEmitter, Injectable } from "@angular/core";
 import { Router } from "@angular/router";
-import {UserService} from "src/app/shared/api";
-import { Capability, User } from "../../models";
+
+import { UserService } from "src/app/api";
+import type { Capability, CurrentUser } from "src/app/models";
 
 /**
  * This service keeps track of the currently authenticated user.
@@ -29,14 +30,14 @@ export class CurrentUserService {
 	/** Makes updateCurrentUser able to be called from multiple places without regard to order */
 	private updatingUserPromise: Promise<boolean> | null = null;
 	/** To allow downstream code to stay up to date with the current user */
-	public userChanged: EventEmitter<User> = new EventEmitter<User>();
+	public userChanged = new EventEmitter<CurrentUser>();
 	/** The currently authenticated user - or `null` if not authenticated. */
-	private user: User | null = null;
+	private user: CurrentUser | null = null;
 	/** The Permissions afforded to the currently authenticated user. */
 	private caps = new Set<string>();
 
 	/** The currently authenticated user - or `null` if not authenticated. */
-	public get currentUser(): User | null {
+	public get currentUser(): CurrentUser | null {
 		return this.user;
 	}
 	/** The Permissions afforded to the currently authenticated user. */
@@ -59,8 +60,8 @@ export class CurrentUserService {
 	 * @returns A promise containing the value indicating the success of the update
 	 */
 	public async fetchCurrentUser(): Promise<boolean> {
-		if(this.currentUser !== null){
-			return new Promise<boolean>(resolve => resolve(true));
+		if (this.currentUser !== null){
+			return true;
 		}
 		return this.updateCurrentUser();
 	}
@@ -97,7 +98,7 @@ export class CurrentUserService {
 	 * @param user User to e saved
 	 * @returns A promise returning the status of the update.
 	 */
-	public async saveCurrentUser(user: User): Promise<boolean> {
+	public async saveCurrentUser(user: CurrentUser): Promise<boolean> {
 		return this.api.updateCurrentUser(user);
 	}
 
@@ -110,14 +111,11 @@ export class CurrentUserService {
 	 * @returns An observable that emits whether or not login succeeded.
 	 */
 	public async login(uOrT: string, p?: string): Promise<boolean> {
-		return this.api.login(uOrT, p).then(
-			async resp => {
-				if (resp && resp.status === 200) {
-					return this.updateCurrentUser();
-				}
-				return false;
-			}
-		);
+		const resp = await this.api.login(uOrT, p);
+		if (resp && resp.status === 200) {
+			return this.updateCurrentUser();
+		}
+		return false;
 	}
 
 	/**
@@ -126,7 +124,7 @@ export class CurrentUserService {
 	 * @param u The new user who has been authenticated.
 	 * @param caps The newly authenticated user's Permissions.
 	 */
-	public setUser(u: User, caps: Set<string> | Array<Capability>): void {
+	public setUser(u: CurrentUser, caps: Set<string> | Array<Capability>): void {
 		this.user = u;
 		this.caps = caps instanceof Array ? new Set(caps.map(c=>c.name)) : caps;
 		this.userChanged.emit(this.user);
@@ -160,7 +158,6 @@ export class CurrentUserService {
 				queryParams.returnUrl = "/core";
 			}
 		}
-		console.log("query params:", queryParams);
 		this.router.navigate(["/login"], {queryParams});
 	}
 }

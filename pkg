@@ -157,7 +157,7 @@ PROJECTS="$("${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services)"
 HELP_TEXT="$(cat <<HELP_TEXT
 Usage: $SELF [options] [projects]
   -7           Build RPMs targeting CentOS 7
-  -8           Build RPMs targeting CentOS 8 (default)
+  -8           Build RPMs targeting Rocky Linux 8 (default)
   -a           Build all projects, including optional ones.
   -b           Build builder Docker images before building projects
   -d           Disable compiler optimizations for debugging.

@@ -32,14 +32,15 @@ import java.util.ArrayList;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.net.InetAddresses;
 
 public class NetworkNodeTest {
-	private static final Logger LOGGER = Logger.getLogger(NetworkNodeTest.class);
+	private static final Logger LOGGER = LogManager.getLogger(NetworkNodeTest.class);
 	private Map<String, List<String>> netMap = new HashMap<String, List<String>>();
 	private Map<String, List<String>> deepNetMap = new HashMap<String, List<String>>();
 	private NetworkNode root;

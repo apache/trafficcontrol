@@ -13,13 +13,12 @@
 */
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
-
 import { BehaviorSubject, Observable } from "rxjs";
 
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
-import { Role, User } from "../../models";
-import { UserService } from "../../shared/api";
-import { orderBy } from "../../utils";
+import { UserService } from "src/app/api";
+import type { Role, User } from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { orderBy } from "src/app/utils";
 
 /**
  * UsersComponent is the controller for the "users" page.
@@ -48,7 +47,6 @@ export class UsersComponent implements OnInit {
 
 	/** Maps role IDs to role Names. */
 	public rolesMap: Observable<Map<number, string>>;
-
 
 	/**
 	 * Constructor.

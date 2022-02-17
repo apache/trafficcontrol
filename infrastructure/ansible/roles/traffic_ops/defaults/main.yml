@@ -43,7 +43,7 @@ to_admin_user_password:
 # --- cdn.conf
 to_disable_auto_cert_deletion: false
 to_use_ims: true
-to_use_rbp: false
+to_use_rbp: true
 to_heartbeat_timeout: 20
 to_hypnotoad_number_of_workers: 12
 to_cors_access_control_allow_origin: "http://localhost:8080"
@@ -112,6 +112,12 @@ to_go_supported_ds_metrics:
 
 to_plugin_config: {}
 
+to_le_user_email: user@example.test
+to_le_send_expiration_email: false
+to_le_convert_self_signed: false
+to_le_renew_days_before_expiration: 30
+to_le_environment: production
+
 to_traffic_vault_backend: "postgres"
 
 to_smtp_enabled: false
@@ -177,7 +183,7 @@ to_pi_openssl_common_name: "{{ ansible_hostname }}"
 to_pi_openssl_rsa_passphrase:
 
 # --- postinstall profiles.json
-to_pi_cdn_name: MKGA
+to_pi_cdn_name: "{{ hostvars[groups['traffic_router'] | first].cdn | default('mkga') | lower }}"
 to_pi_health_polling_interval: "8000"
 to_pi_dns_subdomain: "{{ to_pi_cdn_name }}.{{ ansible_domain }}"
 to_pi_soa_admin: "traffic_ops"

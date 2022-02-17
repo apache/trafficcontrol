@@ -41,33 +41,33 @@ Enroller
 
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build/rebuild the ``enroller-debug`` image each time you have changed :atc-file:`infrastructure/cdn-in-a-box/enroller/enroller.go`. Then, start CDN-in-a-Box.
 
-.. code-block:: shell
-	:caption: docker-compose command for debugging the CDN in a Box Enroller
+	.. code-block:: shell
+		:caption: docker-compose command for debugging the CDN in a Box Enroller
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
-	mydc down -v
-	mydc build enroller
-	mydc up
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		mydc down -v
+		mydc build enroller
+		mydc up
 
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2343. If you are using VS Code, the configuration should look like this:
 
-.. code-block:: json
-	:caption: VS Code launch.json for debugging the CDN in a Box Enroller
+	.. code-block:: json
+		:caption: VS Code launch.json for debugging the CDN in a Box Enroller
 
-	{
-		"version": "0.2.0",
-		"configurations": [
-			{
-				"name": "Enroller",
-				"type": "go",
-				"request": "attach",
-				"mode": "remote",
-				"port": 2343,
-				"cwd": "${workspaceRoot}/",
-				"remotePath": "/go/src/github.com/apache/trafficcontrol/",
-			}
-		]
-	}
+		{
+			"version": "0.2.0",
+			"configurations": [
+				{
+					"name": "Enroller",
+					"type": "go",
+					"request": "attach",
+					"mode": "remote",
+					"port": 2343,
+					"cwd": "${workspaceRoot}/",
+					"remotePath": "/go/src/github.com/apache/trafficcontrol/",
+				}
+			]
+		}
 
 * Use the debugging configuration you created to start debugging the Enroller. It should connect without first breaking at any line.
 
@@ -80,13 +80,13 @@ t3c on Edge Cache
 -----------------
 * Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove ``infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm`` because it contains release Go binaries that do not include useful debugging information. Rebuild the RPM with no optimization, for debugging:
 
-.. code-block:: shell
-	:caption: Remove release RPMs, then build debug RPMs
+	.. code-block:: shell
+		:caption: Remove release RPMs, then build debug RPMs
 
-	make very-clean
-	make debug cache/trafficcontrol-cache-config.rpm
+		make very-clean
+		make debug cache/trafficcontrol-cache-config.rpm
 
-.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native cache/trafficcontrol-cache-config.rpm`` instead of ``make debug cache/trafficcontrol-cache-config.rpm`` to build the RPM quickly.
+	.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native cache/trafficcontrol-cache-config.rpm`` instead of ``make debug cache/trafficcontrol-cache-config.rpm`` to build the RPM quickly.
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``T3C_DEBUG_COMPONENT_EDGE`` to ``t3c-apply`` (used for this example). A list of valid values for ``T3C_DEBUG_COMPONENT_EDGE``:
 	- t3c-apply
@@ -100,34 +100,34 @@ t3c on Edge Cache
 
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``edge-debug`` image to make sure it uses our fresh ``trafficcontrol-cache-config.rpm``. Then, start CDN-in-a-Box:
 
-.. code-block:: shell
-	:caption: docker-compose command for debugging ``t3c`` running on the Edge Cache
+	.. code-block:: shell
+		:caption: docker-compose command for debugging ``t3c`` running on the Edge Cache
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
-	mydc down -v
-	mydc build edge
-	mydc up -d
-	mydc logs -f trafficmonitor
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		mydc down -v
+		mydc build edge
+		mydc up -d
+		mydc logs -f trafficmonitor
 
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2347. If you are using VS Code, the configuration should look like this:
 
-.. code-block:: json
-	:caption: VS Code launch.json for debugging ``t3c`` on the Edge Cache
+	.. code-block:: json
+		:caption: VS Code launch.json for debugging ``t3c`` on the Edge Cache
 
-	{
-		"version": "0.2.0",
-		"configurations": [
-			{
-				"name": "t3c on Edge",
-				"type": "go",
-				"request": "attach",
-				"mode": "remote",
-				"port": 2347,
-				"cwd": "${workspaceRoot}",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
-			}
-		]
-	}
+		{
+			"version": "0.2.0",
+			"configurations": [
+				{
+					"name": "t3c on Edge",
+					"type": "go",
+					"request": "attach",
+					"mode": "remote",
+					"port": 2347,
+					"cwd": "${workspaceRoot}",
+					"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
+				}
+			]
+		}
 
 Wait for Traffic Monitor to start, which will indicate that the SSL keys have been generated. Because ``T3C_DEBUG_COMPONENT_EDGE`` is set to the name of one of the ``t3c`` binaries, ``t3c`` will *not* run automatically every minute. Start it it manually:
 
@@ -147,13 +147,13 @@ t3c on Mid 01 Cache
 -------------------
 * Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove ``infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm`` because it contains release Go binaries that do not include useful debugging information. Rebuild the RPM with no optimization, for debugging:
 
-.. code-block:: shell
-	:caption: Remove release RPMs, then build debug RPMs
+	.. code-block:: shell
+		:caption: Remove release RPMs, then build debug RPMs
 
-	make very-clean
-	make debug cache/trafficcontrol-cache-config.rpm
+		make very-clean
+		make debug cache/trafficcontrol-cache-config.rpm
 
-.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native cache/trafficcontrol-cache-config.rpm`` instead of ``make debug cache/trafficcontrol-cache-config.rpm`` to build the RPM quickly.
+	.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native cache/trafficcontrol-cache-config.rpm`` instead of ``make debug cache/trafficcontrol-cache-config.rpm`` to build the RPM quickly.
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``T3C_DEBUG_COMPONENT_MID_01`` to ``t3c-apply`` (used for this example). A list of valid values for ``T3C_DEBUG_COMPONENT_MID_01``:
 	- t3c-apply
@@ -167,34 +167,34 @@ t3c on Mid 01 Cache
 
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``mid-debug`` image to make sure it uses our fresh ``trafficcontrol-cache-config.rpm``. Then, start CDN-in-a-Box:
 
-.. code-block:: shell
-	:caption: docker-compose command for debugging ``t3c`` running on the Mid 01 Cache
+	.. code-block:: shell
+		:caption: docker-compose command for debugging ``t3c`` running on the Mid 01 Cache
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
-	mydc down -v
-	mydc build mid-01
-	mydc up -d
-	mydc logs -f trafficmonitor
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		mydc down -v
+		mydc build mid-01
+		mydc up -d
+		mydc logs -f trafficmonitor
 
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2348. If you are using VS Code, the configuration should look like this:
 
-.. code-block:: json
-	:caption: VS Code launch.json for debugging ``t3c`` on the Mid 01 Cache
+	.. code-block:: json
+		:caption: VS Code launch.json for debugging ``t3c`` on the Mid 01 Cache
 
-	{
-		"version": "0.2.0",
-		"configurations": [
-			{
-				"name": "t3c on Mid 01",
-				"type": "go",
-				"request": "attach",
-				"mode": "remote",
-				"port": 2348,
-				"cwd": "${workspaceRoot}",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
-			}
-		]
-	}
+		{
+			"version": "0.2.0",
+			"configurations": [
+				{
+					"name": "t3c on Mid 01",
+					"type": "go",
+					"request": "attach",
+					"mode": "remote",
+					"port": 2348,
+					"cwd": "${workspaceRoot}",
+					"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
+				}
+			]
+		}
 
 Wait for Traffic Monitor to start, which will indicate that the SSL keys have been generated. Because ``T3C_DEBUG_COMPONENT_MID_01`` is set to the name of one of the ``t3c`` binaries, ``t3c`` will *not* run automatically every minute. Start it it manually:
 
@@ -214,13 +214,13 @@ t3c on Mid 02 Cache
 -------------------
 * Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove ``infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm`` because it contains release Go binaries that do not include useful debugging information. Rebuild the RPM with no optimization, for debugging:
 
-.. code-block:: shell
-	:caption: Remove release RPMs, then build debug RPMs
+	.. code-block:: shell
+		:caption: Remove release RPMs, then build debug RPMs
 
-	make very-clean
-	make debug cache/trafficcontrol-cache-config.rpm
+		make very-clean
+		make debug cache/trafficcontrol-cache-config.rpm
 
-.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native cache/trafficcontrol-cache-config.rpm`` instead of ``make debug cache/trafficcontrol-cache-config.rpm`` to build the RPM quickly.
+	.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native cache/trafficcontrol-cache-config.rpm`` instead of ``make debug cache/trafficcontrol-cache-config.rpm`` to build the RPM quickly.
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``T3C_DEBUG_COMPONENT_MID_02`` to ``t3c-apply`` (used for this example). A list of valid values for ``T3C_DEBUG_COMPONENT_MID_02``:
 	- t3c-apply
@@ -234,34 +234,34 @@ t3c on Mid 02 Cache
 
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``mid-debug`` image to make sure it uses our fresh ``trafficcontrol-cache-config.rpm``. Then, start CDN-in-a-Box:
 
-.. code-block:: shell
-	:caption: docker-compose command for debugging ``t3c`` running on the Mid 02 Cache
+	.. code-block:: shell
+		:caption: docker-compose command for debugging ``t3c`` running on the Mid 02 Cache
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
-	mydc down -v
-	mydc build mid-02
-	mydc up -d
-	mydc logs -f trafficmonitor
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		mydc down -v
+		mydc build mid-02
+		mydc up -d
+		mydc logs -f trafficmonitor
 
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2349. If you are using VS Code, the configuration should look like this:
 
-.. code-block:: json
-	:caption: VS Code launch.json for debugging ``t3c`` on the Mid 02 Cache
+	.. code-block:: json
+		:caption: VS Code launch.json for debugging ``t3c`` on the Mid 02 Cache
 
-	{
-		"version": "0.2.0",
-		"configurations": [
-			{
-				"name": "t3c on Mid 02",
-				"type": "go",
-				"request": "attach",
-				"mode": "remote",
-				"port": 2349,
-				"cwd": "${workspaceRoot}",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
-			}
-		]
-	}
+		{
+			"version": "0.2.0",
+			"configurations": [
+				{
+					"name": "t3c on Mid 02",
+					"type": "go",
+					"request": "attach",
+					"mode": "remote",
+					"port": 2349,
+					"cwd": "${workspaceRoot}",
+					"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
+				}
+			]
+		}
 
 Wait for Traffic Monitor to start, which will indicate that the SSL keys have been generated. Because ``T3C_DEBUG_COMPONENT_MID_02`` is set to the name of one of the ``t3c`` binaries, ``t3c`` will *not* run automatically every minute. Start it it manually:
 
@@ -282,45 +282,45 @@ Traffic Monitor
 
 * Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove the existing RPMs because they contain release Go binaries do not include useful debugging information. Rebuild the RPMs with no optimization, for debugging:
 
-.. code-block:: shell
-	:caption: Remove release RPMs, then build debug RPMs
+	.. code-block:: shell
+		:caption: Remove release RPMs, then build debug RPMs
 
-	make very-clean
-	make debug traffic_monitor/traffic_monitor.rpm
+		make very-clean
+		make debug traffic_monitor/traffic_monitor.rpm
 
-.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native traffic_monitor/traffic_monitor.rpm`` instead of ``make debug traffic_monitor/traffic_monitor.rpm`` to build the RPM quickly.
+	.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native traffic_monitor/traffic_monitor.rpm`` instead of ``make debug traffic_monitor/traffic_monitor.rpm`` to build the RPM quickly.
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TM_DEBUG_ENABLE`` to ``true``.
 
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficmonitor-debug`` image to make sure it uses our fresh ``traffic_monitor.rpm``. Then, start CDN-in-a-Box:
 
-.. code-block:: shell
-	:caption: docker-compose command for debugging Traffic Monitor
+	.. code-block:: shell
+		:caption: docker-compose command for debugging Traffic Monitor
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
-	mydc down -v
-	mydc build trafficmonitor
-	mydc up
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		mydc down -v
+		mydc build trafficmonitor
+		mydc up
 
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2344. If you are using VS Code, the configuration should look like this:
 
-.. code-block:: json
-	:caption: VS Code launch.json for debugging Traffic Monitor
+	.. code-block:: json
+		:caption: VS Code launch.json for debugging Traffic Monitor
 
-	{
-		"version": "0.2.0",
-		"configurations": [
-			{
-				"name": "Traffic Monitor",
-				"type": "go",
-				"request": "attach",
-				"mode": "remote",
-				"port": 2344,
-				"cwd": "${workspaceRoot}",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
-			}
-		]
-	}
+		{
+			"version": "0.2.0",
+			"configurations": [
+				{
+					"name": "Traffic Monitor",
+					"type": "go",
+					"request": "attach",
+					"mode": "remote",
+					"port": 2344,
+					"cwd": "${workspaceRoot}",
+					"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
+				}
+			]
+		}
 
 * Use the debugging configuration you created to start debugging Traffic Monitor. It should connect without first breaking at any line.
 
@@ -331,45 +331,45 @@ Traffic Ops
 
 * Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove the existing RPMs because they contain release Go binaries do not include useful debugging information. Rebuild the RPMs with no optimization, for debugging:
 
-.. code-block:: shell
-	:caption: Remove release RPMs, then build debug RPMs
+	.. code-block:: shell
+		:caption: Remove release RPMs, then build debug RPMs
 
-	make very-clean
-	make debug traffic_stats/traffic_stats.rpm
+		make very-clean
+		make debug traffic_ops/traffic_ops.rpm
 
-.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native traffic_stats/traffic_stats.rpm`` instead of ``make debug traffic_stats/traffic_stats.rpm`` to build the RPM quickly.
+	.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native traffic_ops/traffic_ops.rpm`` instead of ``make debug traffic_ops/traffic_ops.rpm`` to build the RPM quickly.
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TO_DEBUG_ENABLE`` to ``true``.
 
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficops-debug`` image to make sure it uses our fresh ``traffic_ops.rpm``. Then, start CDN-in-a-Box:
 
-.. code-block:: shell
-	:caption: docker-compose command for debugging Traffic Ops
+	.. code-block:: shell
+		:caption: docker-compose command for debugging Traffic Ops
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
-	mydc down -v
-	mydc build trafficops
-	mydc up
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		mydc down -v
+		mydc build trafficops
+		mydc up
 
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2345. If you are using VS Code, the configuration should look like this:
 
-.. code-block:: json
-	:caption: VS Code launch.json for debugging Traffic Ops
+	.. code-block:: json
+		:caption: VS Code launch.json for debugging Traffic Ops
 
-	{
-		"version": "0.2.0",
-		"configurations": [
-			{
-				"name": "Traffic Ops",
-				"type": "go",
-				"request": "attach",
-				"mode": "remote",
-				"port": 2345,
-				"cwd": "${workspaceRoot}",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
-			}
-		]
-	}
+		{
+			"version": "0.2.0",
+			"configurations": [
+				{
+					"name": "Traffic Ops",
+					"type": "go",
+					"request": "attach",
+					"mode": "remote",
+					"port": 2345,
+					"cwd": "${workspaceRoot}",
+					"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
+				}
+			]
+		}
 
 * Use the debugging configuration you created to start debugging Traffic Ops. It should connect without first breaking at any line.
 
@@ -390,87 +390,87 @@ Traffic Router
 
 * Start CDN-in-a-Box, including the "expose ports" "debugging" compose files:
 
-.. code-block:: shell
-	:caption: docker-compose command for debugging Traffic Router
+	.. code-block:: shell
+		:caption: docker-compose command for debugging Traffic Router
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
-	mydc down -v
-	mydc build trafficrouter
-	mydc up -d
-	mydc logs --follow trafficrouter
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		mydc down -v
+		mydc build trafficrouter
+		mydc up -d
+		mydc logs --follow trafficrouter
 
 * Watch the ``trafficrouter`` container's log. After DNS and certificate operations, the enroller, and Traffic Monitor, Traffic Router will start. Look for ``Listening for transport dt_socket at address: 5005`` in the example log below:
 
-.. code-block:: shell
-	:caption: Log of the Docker container for Traffic Router
+	.. code-block:: shell
+		:caption: Log of the Docker container for Traffic Router
 
-	        Warning:
-	        The JKS keystore uses a proprietary format. It is recommended to migrate to PKCS12 which is an industry standard format using "keytool -importkeystore -srckeystore /opt/traffic_router/conf/keyStore.jks -destkeystore /opt/traffic_router/conf/keyStore.jks -deststoretype pkcs12".
-	        Certificate stored in file <trafficrouter.infra.ciab.test.crt>
+		        Warning:
+		        The JKS keystore uses a proprietary format. It is recommended to migrate to PKCS12 which is an industry standard format using "keytool -importkeystore -srckeystore /opt/traffic_router/conf/keyStore.jks -destkeystore /opt/traffic_router/conf/keyStore.jks -deststoretype pkcs12".
+		        Certificate stored in file <trafficrouter.infra.ciab.test.crt>
 
-	        Warning:
-	        The JKS keystore uses a proprietary format. It is recommended to migrate to PKCS12 which is an industry standard format using "keytool -importkeystore -srckeystore /opt/traffic_router/conf/keyStore.jks -destkeystore /opt/traffic_router/conf/keyStore.jks -deststoretype pkcs12".
-	        Waiting for enroller initial data load to complete....
-	        Waiting for enroller initial data load to complete....
-	        Waiting for enroller initial data load to complete....
-	        Waiting for enroller initial data load to complete....
-	        Waiting for enroller initial data load to complete....
-	        Waiting for enroller initial data load to complete....
-	        Waiting for enroller initial data load to complete....
-	        Waiting for enroller initial data load to complete....
-	        Waiting for enroller initial data load to complete....
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        Waiting for Traffic Monitor to start...
-	        tail: cannot open '/opt/tomcat/logs/catalina.log' for reading: No such file or directory
-	        tail: cannot open '/opt/tomcat/logs/catalina.2020-02-21.log' for reading: No such file or directory
-	        ==> /opt/traffic_router/var/log/traffic_router.log <==
+		        Warning:
+		        The JKS keystore uses a proprietary format. It is recommended to migrate to PKCS12 which is an industry standard format using "keytool -importkeystore -srckeystore /opt/traffic_router/conf/keyStore.jks -destkeystore /opt/traffic_router/conf/keyStore.jks -deststoretype pkcs12".
+		        Waiting for enroller initial data load to complete....
+		        Waiting for enroller initial data load to complete....
+		        Waiting for enroller initial data load to complete....
+		        Waiting for enroller initial data load to complete....
+		        Waiting for enroller initial data load to complete....
+		        Waiting for enroller initial data load to complete....
+		        Waiting for enroller initial data load to complete....
+		        Waiting for enroller initial data load to complete....
+		        Waiting for enroller initial data load to complete....
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        Waiting for Traffic Monitor to start...
+		        tail: cannot open '/opt/tomcat/logs/catalina.log' for reading: No such file or directory
+		        tail: cannot open '/opt/tomcat/logs/catalina.2020-02-21.log' for reading: No such file or directory
+		        ==> /opt/traffic_router/var/log/traffic_router.log <==
 
-	        ==> /opt/traffic_router/var/log/access.log <==
-	        Tomcat started.
-	        tail: '/opt/tomcat/logs/catalina.log' has appeared;  following end of new file
-	        tail: '/opt/tomcat/logs/catalina.2020-02-21.log' has appeared;  following end of new file
+		        ==> /opt/traffic_router/var/log/access.log <==
+		        Tomcat started.
+		        tail: '/opt/tomcat/logs/catalina.log' has appeared;  following end of new file
+		        tail: '/opt/tomcat/logs/catalina.2020-02-21.log' has appeared;  following end of new file
 
-	        ==> /opt/traffic_router/var/log/traffic_router.log <==
-	        INFO  2020-02-21T05:16:07.557 [Thread-3] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
-	        INFO  2020-02-21T05:16:07.557 [Thread-4] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
-	        INFO  2020-02-21T05:16:07.558 [Thread-5] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
-	        INFO  2020-02-21T05:16:07.559 [Thread-6] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
+		        ==> /opt/traffic_router/var/log/traffic_router.log <==
+		        INFO  2020-02-21T05:16:07.557 [Thread-3] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
+		        INFO  2020-02-21T05:16:07.557 [Thread-4] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
+		        INFO  2020-02-21T05:16:07.558 [Thread-5] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
+		        INFO  2020-02-21T05:16:07.559 [Thread-6] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
 
-	        ==> /opt/tomcat/logs/catalina.log <==
-	        Listening for transport dt_socket at address: 5005
+		        ==> /opt/tomcat/logs/catalina.log <==
+		        Listening for transport dt_socket at address: 5005
 
-	Watch for the line that mentions port 5005 -----------^^^^
+		Watch for the line that mentions port 5005 -----------^^^^
 
-	        ==> /opt/tomcat/logs/catalina.2020-02-21.log <==
-	        21-Feb-2020 05:16:07.359 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<clinit> Adding BouncyCastle provider
-	        21-Feb-2020 05:16:07.452 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
-	        21-Feb-2020 05:16:07.459 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
-	        21-Feb-2020 05:16:07.459 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
-	        21-Feb-2020 05:16:07.461 INFO [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.setSslImplementationName setSslImplementation: org.apache.traffic_control.traffic_router.protocol.RouterSslImplementation
+		        ==> /opt/tomcat/logs/catalina.2020-02-21.log <==
+		        21-Feb-2020 05:16:07.359 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<clinit> Adding BouncyCastle provider
+		        21-Feb-2020 05:16:07.452 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
+		        21-Feb-2020 05:16:07.459 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
+		        21-Feb-2020 05:16:07.459 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
+		        21-Feb-2020 05:16:07.461 INFO [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.setSslImplementationName setSslImplementation: org.apache.traffic_control.traffic_router.protocol.RouterSslImplementation
 
 * When you see that Tomcat is listening for debugger connections on port 5005, start debugging using the debug configuration that you created.
 
@@ -479,45 +479,45 @@ Traffic Stats
 
 * Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove the existing RPMs because they contain release Go binaries do not include useful debugging information. Rebuild the RPMs with no optimization, for debugging:
 
-.. code-block:: shell
-	:caption: Remove release RPMs, then build debug RPMs
+	.. code-block:: shell
+		:caption: Remove release RPMs, then build debug RPMs
 
-	make very-clean
-	make debug traffic_ops/traffic_ops.rpm
+		make very-clean
+		make debug traffic_stats/traffic_stats.rpm
 
-.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native traffic_ops/traffic_ops.rpm`` instead of ``make debug traffic_ops/traffic_ops.rpm`` to build the RPMs quickly.
+	.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native traffic_stats/traffic_stats.rpm`` instead of ``make debug traffic_stats/traffic_stats.rpm`` to build the RPMs quickly.
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TS_DEBUG_ENABLE`` to ``true``.
 
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficstats-debug`` image to make sure it uses our fresh ``traffic_stats.rpm``. Then, start CDN-in-a-Box:
 
-.. code-block:: shell
-	:caption: docker-compose command for debugging Traffic Stats
+	.. code-block:: shell
+		:caption: docker-compose command for debugging Traffic Stats
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
-	mydc down -v
-	mydc build trafficstats
-	mydc up
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		mydc down -v
+		mydc build trafficstats
+		mydc up
 
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2346. If you are using VS Code, the configuration should look like this:
 
-.. code-block:: json
-	:caption: VS Code launch.json for debugging Traffic Stats
+	.. code-block:: json
+		:caption: VS Code launch.json for debugging Traffic Stats
 
-	{
-		"version": "0.2.0",
-		"configurations": [
-			{
-				"name": "Traffic Stats",
-				"type": "go",
-				"request": "attach",
-				"mode": "remote",
-				"port": 2346,
-				"cwd": "${workspaceRoot}",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
-			}
-		]
-	}
+		{
+			"version": "0.2.0",
+			"configurations": [
+				{
+					"name": "Traffic Stats",
+					"type": "go",
+					"request": "attach",
+					"mode": "remote",
+					"port": 2346,
+					"cwd": "${workspaceRoot}",
+					"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
+				}
+			]
+		}
 
 * Use the debugging configuration you created to start debugging Traffic Stats. It should connect without first breaking at any line.
 

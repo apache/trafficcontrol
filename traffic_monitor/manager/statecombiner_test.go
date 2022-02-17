@@ -20,13 +20,14 @@ package manager
  */
 
 import (
+	"math/rand"
+	"testing"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/health"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
-	"math/rand"
-	"testing"
-	"time"
 )
 
 func TestCombineCacheState(t *testing.T) {
@@ -87,7 +88,7 @@ func TestCombineCacheState(t *testing.T) {
 	}
 
 	for _, localCacheState := range localCacheStates {
-		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates, combinedStates, overrideMap, toData)
+		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates.GetCRStatesPeersInfo(), combinedStates, overrideMap, toData)
 
 		if !combinedStates.Get().Caches[cacheName].IsAvailable {
 			t.Fatalf("cache is unavailable and should be available")
@@ -142,7 +143,7 @@ func TestCombineCacheStateCacheDown(t *testing.T) {
 		cacheName: tc.CacheTypeEdge,
 	}
 
-	combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates, combinedStates, overrideMap, toData)
+	combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates.GetCRStatesPeersInfo(), combinedStates, overrideMap, toData)
 
 	if !combinedStates.Get().Caches[cacheName].IsAvailable {
 		t.Fatalf("cache is unavailable and should be available")

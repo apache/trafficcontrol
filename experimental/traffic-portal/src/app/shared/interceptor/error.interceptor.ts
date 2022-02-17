@@ -11,14 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from "@angular/common/http";
+import { type HttpRequest, type HttpHandler, type HttpEvent, type HttpInterceptor, HttpErrorResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-
-import { Observable, throwError } from "rxjs";
+import { Router } from "@angular/router";
+import { type Observable, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
 
-import {AlertService} from "../alert/alert.service";
-import {Alert} from "../../models/alert.model";
+import type { Alert } from "src/app/models";
+
+import { AlertService } from "../alert/alert.service";
 
 /**
  * This class intercepts any and all HTTP error responses and checks for
@@ -28,7 +29,8 @@ import {Alert} from "../../models/alert.model";
 export class ErrorInterceptor implements HttpInterceptor {
 
 	constructor(
-		private readonly alerts: AlertService
+		private readonly alerts: AlertService,
+		private readonly router: Router
 	) {}
 
 	/**
@@ -47,6 +49,22 @@ export class ErrorInterceptor implements HttpInterceptor {
 			if (err.hasOwnProperty("error") && (err as {error: object}).error.hasOwnProperty("alerts")) {
 				for (const a of (err as {error: {alerts: Alert[]}}).error.alerts) {
 					this.alerts.alertsSubject.next(a);
+				}
+			}
+
+			if (err instanceof HttpErrorResponse && err.status === 401 && this.router.getCurrentNavigation() === null) {
+				const currentURL = this.router.parseUrl(this.router.routerState.snapshot.url);
+				const path = Object.entries(currentURL.root.children).map(c=>c[1].segments.map(s=>s.path).join("/")).join("/");
+				if (path !== "login") {
+					const params = Object.entries(currentURL.queryParams).filter(([param])=>param!=="returnUrl");
+					let returnUrl = path;
+					if (params.length > 0) {
+						returnUrl = `${returnUrl}?${params.map(([k,v])=>`${k}=${v}`).join("&")}`;
+					}
+					if (currentURL.fragment) {
+						returnUrl += `#${currentURL.fragment}`;
+					}
+					this.router.navigate(["/login"], {queryParams: {returnUrl}});
 				}
 			}
 

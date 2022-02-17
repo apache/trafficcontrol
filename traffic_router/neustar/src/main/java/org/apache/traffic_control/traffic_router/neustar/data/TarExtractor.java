@@ -17,7 +17,8 @@ package org.apache.traffic_control.traffic_router.neustar.data;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,7 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class TarExtractor {
-	private final Logger LOGGER = Logger.getLogger(TarExtractor.class);
+	private final Logger LOGGER = LogManager.getLogger(TarExtractor.class);
 
 	public boolean extractTo(File directory, InputStream inputStream) {
 		try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(inputStream)) {

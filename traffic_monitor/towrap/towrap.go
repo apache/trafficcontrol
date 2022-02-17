@@ -677,23 +677,21 @@ func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error)
 }
 
 // CreateMonitorConfig modifies the passed TrafficMonitorConfigMap to add the
-// Traffic Monitors and Delivery Services found in a CDN Snapshot, and wipe out
-// all of those that already existed in the configuration map.
+// Traffic Monitors and Delivery Services found in a CDN Snapshot
 func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
-	// For unknown reasons, this function used to overwrite the passed set of
-	// TrafficServer objects. That was problematic, tc.CRConfig structures don't
-	// contain the same amount of information about their "equivalent"
-	// ContentServers.
-	// TODO: This is still overwriting TM instances found in the monitoring
-	// config - why? It's also doing that for Delivery Services, but that's
-	// necessary until issue #3528 is resolved.
-
 	// Dump the "live" monitoring.json monitors, and populate with the
 	// "snapshotted" CRConfig
-	mc.TrafficMonitor = map[string]tc.TrafficMonitor{}
+	if mc == nil {
+		return mc, errors.New("no TM configmap data")
+	}
+	// TODO: in the next major/minor release following 6.1, we should be able to remove this
+	//  fallback dependency on the CRConfig entirely (https://github.com/apache/trafficcontrol/issues/6512)
 	for name, mon := range crConfig.Monitors {
-		// monitorProfile = *mon.Profile
-		m := tc.TrafficMonitor{}
+		if tmData, ok := mc.TrafficMonitor[name]; !ok || tmData.IP != "" || tmData.IP6 != "" {
+			continue
+		}
+		mc.TrafficMonitor[name] = tc.TrafficMonitor{}
+		m := mc.TrafficMonitor[name]
 		if mon.Port != nil {
 			m.Port = *mon.Port
 		} else {

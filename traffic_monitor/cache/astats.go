@@ -139,7 +139,7 @@ func astatsPrecompute(cacheName string, data todata.TOData, stats Statistics, mi
 
 	var err error
 	for stat, value := range miscStats {
-		dsStats, err = astatsProcessStat(cacheName, dsStats, data, stat, value)
+		dsStats, err = astatsProcessStat(dsStats, data, stat, value)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
 			log.Infof("precomputing cache %s stat %s value %v error %v", cacheName, stat, value, err)
 			precomputed.Errors = append(precomputed.Errors, err)
@@ -153,7 +153,7 @@ func astatsPrecompute(cacheName string, data todata.TOData, stats Statistics, mi
 
 // astatsProcessStat and its subsidiary functions act as a State Machine,
 // flowing the stat through states for each "." component of the stat name.
-func astatsProcessStat(server string, stats map[string]*DSStat, toData todata.TOData, stat string, value interface{}) (map[string]*DSStat, error) {
+func astatsProcessStat(stats map[string]*DSStat, toData todata.TOData, stat string, value interface{}) (map[string]*DSStat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return stats, fmt.Errorf("stat has no initial part")
@@ -161,7 +161,7 @@ func astatsProcessStat(server string, stats map[string]*DSStat, toData todata.TO
 
 	switch parts[0] {
 	case "plugin":
-		return astatsProcessStatPlugin(server, stats, toData, stat, parts[1:], value)
+		return astatsProcessStatPlugin(stats, toData, parts[1:], value)
 	case "proxy":
 		fallthrough
 	case "server":
@@ -173,19 +173,19 @@ func astatsProcessStat(server string, stats map[string]*DSStat, toData todata.TO
 	}
 }
 
-func astatsProcessStatPlugin(server string, stats map[string]*DSStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[string]*DSStat, error) {
+func astatsProcessStatPlugin(stats map[string]*DSStat, toData todata.TOData, statParts []string, value interface{}) (map[string]*DSStat, error) {
 	if len(statParts) < 1 {
 		return stats, fmt.Errorf("stat has no plugin part")
 	}
 	switch statParts[0] {
 	case "remap_stats":
-		return astatsProcessStatPluginRemapStats(server, stats, toData, stat, statParts[1:], value)
+		return astatsProcessStatPluginRemapStats(stats, toData, statParts[1:], value)
 	default:
 		return stats, fmt.Errorf("stat has unknown plugin part '%s'", statParts[0])
 	}
 }
 
-func astatsProcessStatPluginRemapStats(server string, stats map[string]*DSStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[string]*DSStat, error) {
+func astatsProcessStatPluginRemapStats(stats map[string]*DSStat, toData todata.TOData, statParts []string, value interface{}) (map[string]*DSStat, error) {
 	if len(statParts) < 3 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}

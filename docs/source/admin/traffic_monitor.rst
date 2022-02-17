@@ -52,10 +52,10 @@ Configuration Overview
 ----------------------
 Traffic Monitor is configured via two JSON configuration files, :file:`traffic_ops.cfg` and :file:`traffic_monitor.cfg`, by default located in the ``conf`` directory in the install location. :file:`traffic_ops.cfg` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. :file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times, initial poll intervals, and the polling protocols. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
 
-Polling protocol can be set for peers and caches and has 3 options:
+Polling protocol can be set for caches (``cache_polling_protocol`` in :file:`traffic_monitor.cfg`) and has 3 options:
 
-:ipv4only: Traffic Monitor will communicate with the peers or caches only over IPv4
-:ipv6only: Traffic Monitor will communicate with the peers or caches only over IPv6 (use case for peers is if the other Traffic Monitor are only available over IPv6)
+:ipv4only: Traffic Monitor will communicate with caches only over IPv4
+:ipv6only: Traffic Monitor will communicate with caches only over IPv6
 :both (the default): Traffic Monitor will alternate its communication between IPv4 and IPv6 (note: this does not affect the polling frequency so if polling frequency is 1 second IPv4 will be polled every 2 seconds)
 
 .. Note:: ``both`` will poll IPv4 and IPv6 and report on availability based on if the respective IP addresses are defined on the server.  So if only an IPv4 address is defined and the protocol is set to ``both`` then it will only show the availability over IPv4, but if both addresses are defined then it will show availability based on IPv4 and IPv6.
@@ -63,6 +63,14 @@ Polling protocol can be set for peers and caches and has 3 options:
 Optional Stat Polling
 ---------------------
 Traffic Monitor has the option to disable stat polling via the ``stat_polling`` (default: ``true``) option in :file:`traffic_monitor.cfg`. If set to ``false``, Traffic Monitor will not poll caches for stats; it will only poll caches for health. This can be useful in lowering the amount of resources (CPU, bandwidth) used by Traffic Monitor while still allowing it to retain its core functionality (determining cache availability) via health polling alone. However, disabling stat polling also prevents some other ATC features from working properly (basically anything that requires stats data from caches, e.g. Traffic Stats data), so it should only be disabled when absolutely necessary.
+
+Distributed Polling
+-------------------
+Traffic Monitor has the option to enable distributed polling via the ``distributed_polling`` (default: ``false``) option in :file:`traffic_monitor.cfg`. If set to ``true``, TM groups will each poll their own disjoint subsets of the CDN (note: TMs are said to be in the same TM group if they are in the same cachegroup). In order to enable this option, ``stat_polling`` must be disabled. In order to function properly, all TMs in a CDN must have ``distributed_polling`` enabled; otherwise, the results are undefined.
+
+Each TM in the same TM group (referred to as local peers) polls the same disjoint subset of the CDN and combines availablity states with its local peers via the Health Protocol. This is similar to how TM behaves in its legacy, non-distributed mode except TM is not polling the entire CDN. In order to get availability data for the rest of the CDN, each TM also polls every other TM group in parallel (these are referred to as distributed peers). It does this by selecting one distributed peer per group at a time, cycling through each distributed peer in the group for subsequent polls in a round-robin manner.
+
+Upon startup, TM will retrieve its config (either from TO or on-disk backup file), then begin polling the cachegroups that its TM group is responsible for. Once it has polled the cachegroups, it will start serving requests for ``/publish/CrStates?raw`` (the raw, uncombined health states of its local caches) and ``/publish/CrStates?local`` (the combined health states of its local caches derived from all TMs in its group). Once TM has received ``/publish/CrStates?local`` responses from all other TM groups, it will start serving requests for ``/publish/CrStates`` (the combined health states of all caches in the CDN).
 
 Peering and Optimistic Quorum
 -----------------------------

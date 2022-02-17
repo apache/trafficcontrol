@@ -189,13 +189,29 @@ func (cg *TOCacheGroup) ValidateTypeInTopology() error {
 	}
 
 	// language=SQL
+	const previousNameQuery = `
+	SELECT name
+	FROM cachegroup c
+	WHERE c.id = $1
+	`
+	var previousName string
+	err = cg.ReqInfo.Tx.QueryRow(previousNameQuery, *cg.ID).Scan(&previousName)
+	if err == sql.ErrNoRows {
+		return nil
+	}
+	if err != nil {
+		log.Errorf("%s: getting the previous name of cachegroup %s: %s", userErr.Error(), *cg.Name, err.Error())
+		return userErr
+	}
+
+	// language=SQL
 	const usedInTopologyQuery = `
 	SELECT EXISTS (SELECT
 	FROM topology_cachegroup tc
 	WHERE tc.cachegroup = $1)
 	`
 	var usedInTopology bool
-	err = cg.ReqInfo.Tx.QueryRow(usedInTopologyQuery, *cg.Name).Scan(&usedInTopology)
+	err = cg.ReqInfo.Tx.QueryRow(usedInTopologyQuery, previousName).Scan(&usedInTopology)
 	if err != nil {
 		log.Errorf("%s: querying topology_cachegroup by cachegroup name: %s", userErr.Error(), err.Error())
 		return userErr
@@ -279,6 +295,12 @@ func (cg TOCacheGroup) Validate() error {
 //to be added to the struct
 func (cg *TOCacheGroup) Create() (error, error, int) {
 
+	if cg.Latitude == nil {
+		cg.Latitude = util.FloatPtr(0.0)
+	}
+	if cg.Longitude == nil {
+		cg.Longitude = util.FloatPtr(0.0)
+	}
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
 	}
@@ -619,6 +641,13 @@ LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.i
 //The TOCacheGroup implementation of the Updater interface
 func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 
+	if cg.Latitude == nil {
+		cg.Latitude = util.FloatPtr(0.0)
+	}
+	if cg.Longitude == nil {
+		cg.Longitude = util.FloatPtr(0.0)
+	}
+
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
 	}
@@ -645,6 +674,11 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
+	}
+
+	userErr = cg.ValidateTypeInTopology()
+	if userErr != nil {
+		return userErr, nil, http.StatusBadRequest
 	}
 
 	err := cg.ReqInfo.Tx.Tx.QueryRow(

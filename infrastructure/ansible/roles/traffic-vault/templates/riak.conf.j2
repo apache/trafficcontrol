@@ -727,3 +727,8 @@ cluster.job.yokozuna.query = {{ riak_cluster_job_yokozuna_query }}
 
 tls_protocols.tlsv1 = {{ riak_tls_protocols_tlsv1 }}
 tls_protocols.tlsv1.1 = {{ riak_tls_protocols_tlsv1_1 }}
+
+{% if riak_erlang_distribution_port_range_minimum | int > 0 and riak_erlang_distribution_port_range_maximum | int > 0 %}
+erlang.distribution.port_range.minimum = {{ riak_erlang_distribution_port_range_minimum }}
+erlang.distribution.port_range.maximum = {{ riak_erlang_distribution_port_range_maximum }}
+{% endif %}
