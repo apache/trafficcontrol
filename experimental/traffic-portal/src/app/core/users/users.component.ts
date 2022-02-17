@@ -39,7 +39,7 @@ export class UsersComponent implements OnInit {
 	/** The current search text. */
 	public searchText = "";
 
-	/** Whether or not user data is still loading. */
+	/** Whether user data is still loading. */
 	public loading = true;
 
 	/**
