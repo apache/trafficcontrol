@@ -60,7 +60,8 @@ type TrafficOpsReq struct {
 	installedPkgs map[string]struct{} // map of packages which were installed by us.
 	changedFiles  []string            // list of config files which were changed
 
-	configFiles map[string]*ConfigFile
+	configFiles        map[string]*ConfigFile
+	configFileWarnings map[string][]string
 
 	RestartData
 }
@@ -100,6 +101,7 @@ type ConfigFile struct {
 	Perm              os.FileMode // default file permissions
 	Uid               int         // owner uid, default is 0
 	Gid               int         // owner gid, default is 0
+	Warnings          []string
 }
 
 func (u UpdateStatus) String() string {
@@ -220,6 +222,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 	// perform plugin verification
 	if cfg.Name == "remap.config" || cfg.Name == "plugin.config" {
 		if err := checkRefs(r.Cfg, cfg.Body, filesAdding); err != nil {
+			r.configFileWarnings[cfg.Name] = append(r.configFileWarnings[cfg.Name], "failed to verify '"+cfg.Name+"': "+err.Error())
 			return errors.New("failed to verify '" + cfg.Name + "': " + err.Error())
 		}
 		log.Infoln("Successfully verified plugins used by '" + cfg.Name + "'")
@@ -621,6 +624,7 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 	}
 
 	r.configFiles = map[string]*ConfigFile{}
+	r.configFileWarnings = map[string][]string{}
 	var mode os.FileMode
 	for _, file := range allFiles {
 		if file.Secure {
@@ -630,16 +634,34 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 		}
 
 		r.configFiles[file.Name] = &ConfigFile{
-			Name: file.Name,
-			Path: filepath.Join(file.Path, file.Name),
-			Dir:  file.Path,
-			Body: []byte(file.Text),
-			Uid:  atsUid,
-			Gid:  atsGid,
-			Perm: mode,
+			Name:     file.Name,
+			Path:     filepath.Join(file.Path, file.Name),
+			Dir:      file.Path,
+			Body:     []byte(file.Text),
+			Uid:      atsUid,
+			Gid:      atsGid,
+			Perm:     mode,
+			Warnings: file.Warnings,
+		}
+		for _, warn := range file.Warnings {
+			if warn == "" {
+				continue
+			}
+			r.configFileWarnings[file.Name] = append(r.configFileWarnings[file.Name], warn)
 		}
 	}
+
 	return nil
+}
+
+func (r *TrafficOpsReq) PrintWarnings() {
+	log.Infoln("======== Summary of config warnings that may need attention. ========")
+	for file, warning := range r.configFileWarnings {
+		for _, warning := range warning {
+			log.Warnf("%s: %s", file, warning)
+		}
+	}
+	log.Infoln("======== End warning summary ========")
 }
 
 // GetHeaderComment looks up the tm.toolname parameter from traffic ops.
