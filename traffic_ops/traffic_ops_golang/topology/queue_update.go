@@ -130,7 +130,8 @@ DO UPDATE SET config_update_time = now();
 
 func dequeueUpdates(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64) error {
 	query := `
-DELETE FROM public.server_config_update
+UPDATE public.server_config_update
+SET config_apply_time = config_update_time
 WHERE server_id IN (
 SELECT s.id 
 FROM "server" s

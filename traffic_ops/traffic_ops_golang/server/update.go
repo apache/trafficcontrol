@@ -93,6 +93,11 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting update status: "+err.Error()))
 				return
 			}
+		} else {
+			if err = dbhelpers.SetApplyUpdateForServer(inf.Tx.Tx, int64(serverID)); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting update status: "+err.Error()))
+				return
+			}
 		}
 	}
 
@@ -101,6 +106,11 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		if revalUpdatedBool {
 			if err = dbhelpers.QueueRevalForServer(inf.Tx.Tx, int64(serverID)); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting reval status: "+err.Error()))
+				return
+			}
+		} else {
+			if err = dbhelpers.SetApplyRevalForServer(inf.Tx.Tx, int64(serverID)); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting update status: "+err.Error()))
 				return
 			}
 		}

@@ -133,7 +133,8 @@ RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);
 
 func dequeueUpdates(tx *sql.Tx, cgID int, cdnID int) ([]tc.CacheName, error) {
 	q := `
-DELETE FROM public.server_config_update
+UPDATE public.server_config_update
+SET config_apply_time = config_update_time
 WHERE server_id IN (SELECT s.id FROM "server" s WHERE s.cachegroup = $1 AND s.cdn_id = $2)
 RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);
 `

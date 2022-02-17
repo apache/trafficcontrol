@@ -132,9 +132,11 @@ FROM public.server s`
 ON CONFLICT (server_id)
 DO UPDATE SET config_update_time = now()`
 	} else {
-		query = `DELETE FROM public.server_config_update
+		query = `
+UDPATE public.server_config_update
+SET config_apply_time = config_update_time
 WHERE server_id IN (SELECT s.id
-	FROM public.server s`
+FROM public.server s`
 		query = query + where
 		query = query + `)`
 	}

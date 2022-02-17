@@ -1757,14 +1757,14 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 
 // queueUpdateForServer set the current config update time for the server to now
 func QueueUpdateForServer(tx *sql.Tx, serverID int64) error {
-	const query = `
+	query := `
 INSERT INTO public.server_config_update (server_id, config_update_time)
 VALUES ($1, now())
 ON CONFLICT (server_id)
-DO UPDATE SET config_update_time = now();
-	`
+DO UPDATE SET config_update_time = now();`
+
 	if _, err := tx.Exec(query, serverID); err != nil {
-		return fmt.Errorf("updating server table: %v", err)
+		return fmt.Errorf("queueing config update for ServerID %d: %v", serverID, err)
 	}
 
 	return nil
@@ -1772,14 +1772,27 @@ DO UPDATE SET config_update_time = now();
 
 // queueUpdateForServer set the current config update time for the server to now
 func QueueUpdateForServerWithTime(tx *sql.Tx, serverID int64, updateTime time.Time) error {
-	const query = `
+	query := `
 INSERT INTO public.server_config_update (server_id, config_update_time)
 VALUES ($1, $2)
 ON CONFLICT (server_id)
-DO UPDATE SET config_update_time = $2;
-	`
+DO UPDATE SET config_update_time = $2;`
+
 	if _, err := tx.Exec(query, serverID, updateTime); err != nil {
-		return fmt.Errorf("updating server table: %v", err)
+		return fmt.Errorf("queueing config update for ServerID %d with time %v: %v", serverID, updateTime, err)
+	}
+
+	return nil
+}
+
+func SetApplyUpdateForServer(tx *sql.Tx, serverID int64) error {
+	query := `
+UPDATE server_config_update 
+SET server_config_update.config_apply_time = now()
+WHERE server_config_update.server_id = $1;`
+
+	if _, err := tx.Exec(query, serverID); err != nil {
+		return fmt.Errorf("applying config update for ServerID %d: %v", serverID, err)
 	}
 
 	return nil
@@ -1787,14 +1800,14 @@ DO UPDATE SET config_update_time = $2;
 
 // queueUpdateForServer set the current reval update time for the server to now
 func QueueRevalForServer(tx *sql.Tx, serverID int64) error {
-	const query = `
+	query := `
 INSERT INTO public.server_config_update (server_id, revalidate_update_time)
 VALUES ($1, now())
 ON CONFLICT (server_id)
-DO UPDATE SET revalidate_update_time = now();
-	`
+DO UPDATE SET revalidate_update_time = now();`
+
 	if _, err := tx.Exec(query, serverID); err != nil {
-		return fmt.Errorf("updating server table: %v", err)
+		return fmt.Errorf("queueing reval update for ServerID %d: %v", serverID, err)
 	}
 
 	return nil
@@ -1802,14 +1815,27 @@ DO UPDATE SET revalidate_update_time = now();
 
 // queueUpdateForServer set the current reval update time for the server to now
 func QueueRevalForServerWithTime(tx *sql.Tx, serverID int64, revalTime time.Time) error {
-	const query = `
+	query := `
 INSERT INTO public.server_config_update (server_id, revalidate_update_time)
 VALUES ($1, $2)
 ON CONFLICT (server_id)
-DO UPDATE SET revalidate_update_time = $2;
-	`
+DO UPDATE SET revalidate_update_time = $2;`
+
 	if _, err := tx.Exec(query, serverID, revalTime); err != nil {
-		return fmt.Errorf("updating server table: %v", err)
+		return fmt.Errorf("queueing reval update for ServerID %d with time %v: %v", serverID, revalTime, err)
+	}
+
+	return nil
+}
+
+func SetApplyRevalForServer(tx *sql.Tx, serverID int64) error {
+	query := `
+UPDATE server_config_update 
+SET server_config_update.revalidate_apply_time = now()
+WHERE server_config_update.server_id = $1;`
+
+	if _, err := tx.Exec(query, serverID); err != nil {
+		return fmt.Errorf("queueing reval update for ServerID %d: %v", serverID, err)
 	}
 
 	return nil
