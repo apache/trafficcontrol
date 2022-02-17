@@ -1560,13 +1560,13 @@ func setRevalFlags(d interface{}, tx *sql.Tx) error {
 		useReval = "0"
 	}
 
-	deliveryServiceID := 0
-	var err error
+	var deliveryServiceID uint
 	switch t := d.(type) {
 	case uint:
-		deliveryServiceID = d.(int)
+		deliveryServiceID = d.(uint)
 	case string:
-		deliveryServiceID, _, err = dbhelpers.GetDSIDFromXMLID(tx, d.(string))
+		id, _, err := dbhelpers.GetDSIDFromXMLID(tx, d.(string))
+		deliveryServiceID = uint(id)
 		if err != nil {
 			return fmt.Errorf("error retrieving server name for id: %v err: %v", d, err)
 		}
