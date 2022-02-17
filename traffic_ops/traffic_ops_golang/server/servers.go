@@ -1650,7 +1650,7 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 	}
 
-	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, inf.Tx.Tx); err != nil {
+	if userErr, sysErr, errCode := createInterfaces(int(serverID), ifaces, inf.Tx.Tx); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
@@ -1681,21 +1681,20 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	where := `WHERE s.id = $1`
 	selquery := selectQuery + where
-	var srvr tc.ServerNullableV2
-	if err := inf.Tx.QueryRowx(selquery, serverID).StructScan(&srvr); err != nil {
+	var s4 tc.ServerV40
+	if err := inf.Tx.QueryRowx(selquery, serverID).StructScan(&s4); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
+	s4.Interfaces = ifaces
 
-	// TODO: Use returned values from SQL insert to ensure inserted values match
-	srvr.LegacyInterfaceDetails = server.LegacyInterfaceDetails
-	srvr.IPIsService = server.IPIsService
-	srvr.IP6IsService = server.IP6IsService
-	srvr.RouterHostName = server.RouterHostName
-	srvr.RouterPortName = server.RouterPortName
+	srvr, err := s4.ToServerV2FromV4()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server was created.")
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, srvr)
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *srvr.HostName, *srvr.DomainName, *srvr.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
@@ -1801,16 +1800,18 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	where := `WHERE s.id = $1`
 	selquery := selectQuery + where
-	var srvr tc.ServerV30
-	if err := inf.Tx.QueryRowx(selquery, serverID).StructScan(&srvr); err != nil {
+	var s4 tc.ServerV40
+	if err := inf.Tx.QueryRowx(selquery, serverID).StructScan(&s4); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 
-	// TODO: Use returned values from SQL insert to ensure inserted values match
-	srvr.Interfaces = server.Interfaces
-	srvr.RouterHostName = server.RouterHostName
-	srvr.RouterPortName = server.RouterPortName
+	s4.Interfaces = interfaces
+
+	srvr, err := s4.ToServerV3FromV4()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr)
