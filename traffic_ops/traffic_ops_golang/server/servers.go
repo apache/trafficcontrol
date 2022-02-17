@@ -1489,6 +1489,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	serverID, errCode, userErr, sysErr := updateServer(inf.Tx, server)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
 
 	if userErr, sysErr, errCode = deleteInterfaces(id, tx); userErr != nil || sysErr != nil {
@@ -1505,10 +1506,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		if server.ConfigUpdateTime != nil {
 			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		} else {
 			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		}
 	}
@@ -1517,10 +1520,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		if server.RevalUpdateTime != nil {
 			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		} else {
 			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		}
 	}
@@ -1531,6 +1536,17 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if err := inf.Tx.QueryRowx(selquery, serverID).StructScan(&srvr); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
+	}
+
+	serversInterfaces, err := dbhelpers.GetServersInterfaces([]int{*srvr.ID}, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if interfacesMap, ok := serversInterfaces[*srvr.ID]; ok {
+		for _, intfc := range interfacesMap {
+			srvr.Interfaces = append(srvr.Interfaces, intfc)
+		}
 	}
 
 	if inf.Version.Major >= 3 {
@@ -1648,9 +1664,10 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	ifaces, err := server.LegacyInterfaceDetails.ToInterfacesV4(*server.IPIsService, *server.IP6IsService, server.RouterHostName, server.RouterPortName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
 	}
 
-	if userErr, sysErr, errCode := createInterfaces(int(serverID), ifaces, inf.Tx.Tx); err != nil {
+	if userErr, sysErr, errCode := createInterfaces(int(serverID), ifaces, inf.Tx.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
@@ -1659,10 +1676,12 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		if server.ConfigUpdateTime != nil {
 			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		} else {
 			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		}
 	}
@@ -1671,10 +1690,12 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		if server.RevalUpdateTime != nil {
 			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		} else {
 			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		}
 	}
@@ -1691,6 +1712,7 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	srvr, err := s4.ToServerV2FromV4()
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server was created.")
@@ -1767,6 +1789,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	interfaces, err := tc.ToInterfacesV4(server.Interfaces, server.RouterHostName, server.RouterPortName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
 	}
 	userErr, sysErr, errCode := createInterfaces(int(serverID), interfaces, inf.Tx.Tx)
 	if userErr != nil || sysErr != nil {
@@ -1778,10 +1801,12 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		if server.ConfigUpdateTime != nil {
 			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		} else {
 			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		}
 	}
@@ -1790,10 +1815,12 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		if server.RevalUpdateTime != nil {
 			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		} else {
 			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		}
 	}
@@ -1811,6 +1838,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	srvr, err := s4.ToServerV3FromV4()
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
@@ -1894,10 +1922,12 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		if server.ConfigUpdateTime != nil {
 			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		} else {
 			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		}
 	}
@@ -1906,10 +1936,12 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		if server.RevalUpdateTime != nil {
 			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		} else {
 			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
 			}
 		}
 	}
