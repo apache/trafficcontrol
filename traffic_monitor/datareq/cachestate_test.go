@@ -26,7 +26,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 )
 
@@ -59,8 +58,6 @@ func TestCreateCacheStatusesForKbps(t *testing.T) {
 	healthHistory["edgeserver"] = []cache.Result{cacheResult}
 
 	var lastHealthDurations map[tc.CacheName]time.Duration
-	var cacheStates map[tc.CacheName]tc.IsAvailable
-	var lastStats dsdata.LastStats
 	localCacheStatusThreadsafe := threadsafe.NewCacheAvailableStatus()
 	statMaxKbpses := threadsafe.NewCacheKbpses()
 	servers := make(map[string]tc.TrafficServer, 0)
@@ -99,8 +96,6 @@ func TestCreateCacheStatusesForKbps(t *testing.T) {
 		statResultHistory,
 		healthHistory,
 		lastHealthDurations,
-		cacheStates,
-		lastStats,
 		localCacheStatusThreadsafe,
 		statMaxKbpses,
 		servers)
@@ -150,8 +145,6 @@ func TestCreateCacheStatusesForKbps(t *testing.T) {
 		statResultHistory,
 		healthHistory,
 		lastHealthDurations,
-		cacheStates,
-		lastStats,
 		localCacheStatusThreadsafe,
 		statMaxKbpses,
 		servers)

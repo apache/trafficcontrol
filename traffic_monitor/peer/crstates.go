@@ -26,6 +26,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const defaultMapCapacity = 8
+
 // CRStatesThreadsafe provides safe access for multiple goroutines to read a single Crstates object, with a single goroutine writer.
 // This could be made lock-free, if the performance was necessary
 // TODO add separate locks for Caches and DeliveryService maps?
@@ -36,7 +38,7 @@ type CRStatesThreadsafe struct {
 
 // NewCRStatesThreadsafe creates a new CRStatesThreadsafe object safe for multiple goroutine readers and a single writer.
 func NewCRStatesThreadsafe() CRStatesThreadsafe {
-	crs := tc.NewCRStates()
+	crs := tc.NewCRStates(defaultMapCapacity, defaultMapCapacity)
 	return CRStatesThreadsafe{m: &sync.RWMutex{}, crStates: &crs}
 }
 
@@ -202,6 +204,52 @@ func (t *CRStatesPeersThreadsafe) GetPeerAvailability(peer tc.TrafficMonitorName
 	return availability
 }
 
+type CRStatesPeersInfo struct {
+	peerStates map[tc.TrafficMonitorName]bool
+	peerOnline map[tc.TrafficMonitorName]bool
+	peerTimes  map[tc.TrafficMonitorName]time.Time
+	crStates   map[tc.TrafficMonitorName]tc.CRStates
+	timeout    time.Duration
+}
+
+func (i *CRStatesPeersInfo) GetCrStates() map[tc.TrafficMonitorName]tc.CRStates {
+	return i.crStates
+}
+
+func (i *CRStatesPeersInfo) GetPeerAvailability(peer tc.TrafficMonitorName) bool {
+	return i.peerStates[peer] && i.peerOnline[peer] && time.Since(i.peerTimes[peer]) < i.timeout
+}
+
+func (i *CRStatesPeersInfo) HasAvailablePeers() bool {
+	for _, available := range i.peerStates {
+		if available {
+			return true
+		}
+	}
+	return false
+}
+
+// GetCRStatesPeersInfo returns a CRStatesPeersInfo which contains a copy of some
+// internal fields of this CRStatesPeersThreadsafe. This all happens within
+// a single, locked read transaction so that all fields are in sync with each other.
+// This is to avoid making multiple read copies within the same goroutine for the same
+// operation, which is very inefficient.
+func (t *CRStatesPeersThreadsafe) GetCRStatesPeersInfo() CRStatesPeersInfo {
+	t.m.RLock()
+	defer t.m.RUnlock()
+	info := CRStatesPeersInfo{
+		peerStates: copyPeerAvailable(t.peerStates),
+		peerOnline: copyPeerAvailable(t.peerOnline),
+		peerTimes:  copyPeerTimes(t.peerTimes),
+		crStates:   make(map[tc.TrafficMonitorName]tc.CRStates, len(t.crStates)),
+		timeout:    *t.timeout,
+	}
+	for k, v := range t.crStates {
+		info.crStates[k] = v.Copy()
+	}
+	return info
+}
+
 // GetPeersOnline return a map of peers which are marked ONLINE in the latest CRConfig from Traffic Ops. This is NOT guaranteed to actually _contain_ all OFFLINE monitors returned by other functions, such as `GetPeerAvailability` and `GetQueryTimes`, but bool defaults to false, so the value of any key is guaranteed to be correct.
 func (t *CRStatesPeersThreadsafe) GetPeersOnline() map[tc.TrafficMonitorName]bool {
 	t.m.RLock()
@@ -214,25 +262,6 @@ func (t *CRStatesPeersThreadsafe) GetQueryTimes() map[tc.TrafficMonitorName]time
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return copyPeerTimes(t.peerTimes)
-}
-
-// HasAvailablePeers returns true if at least one peer is ONLINE and available (reachable via polling)
-func (t *CRStatesPeersThreadsafe) HasAvailablePeers() bool {
-	t.m.RLock()
-	defer t.m.RUnlock()
-
-	return t.hasAvailablePeers()
-}
-
-// hasAvailablePeers is a private function to determine whether any peers are currently available; callers must lock t
-func (t *CRStatesPeersThreadsafe) hasAvailablePeers() bool {
-	for _, available := range t.peerStates {
-		if available {
-			return true
-		}
-	}
-
-	return false
 }
 
 // numAvailablePeers is a private function to determine how many peers are currently available; callers must lock t
