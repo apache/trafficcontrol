@@ -1788,7 +1788,7 @@ DO UPDATE SET config_update_time = $2;`
 func SetApplyUpdateForServer(tx *sql.Tx, serverID int64) error {
 	query := `
 UPDATE server_config_update 
-SET server_config_update.config_apply_time = now()
+SET config_apply_time = now()
 WHERE server_config_update.server_id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
@@ -1831,7 +1831,7 @@ DO UPDATE SET revalidate_update_time = $2;`
 func SetApplyRevalForServer(tx *sql.Tx, serverID int64) error {
 	query := `
 UPDATE server_config_update 
-SET server_config_update.revalidate_apply_time = now()
+SET revalidate_apply_time = now()
 WHERE server_config_update.server_id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
