@@ -20,6 +20,7 @@ package manager
  */
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -264,5 +265,142 @@ func TestCreateServerStatPollURL(t *testing.T) {
 
 	if expectedV6 != actualV6 {
 		t.Errorf("incorrect IPv6 polling URL; expected: '%s', actual: '%s'", expectedV6, actualV6)
+	}
+}
+
+func TestGetCacheGroupsToPoll(t *testing.T) {
+	monitors := map[string]tc.TrafficMonitor{
+		"tm2": {
+			HostName:     "tm2",
+			Location:     "tm-group-2",
+			ServerStatus: "ONLINE",
+		},
+		"tm1": {
+			HostName:     "tm1",
+			Location:     "tm-group-1",
+			ServerStatus: "ONLINE",
+		},
+		"tm3": {
+			HostName:     "tm3",
+			Location:     "tm-group-3",
+			ServerStatus: "ONLINE",
+		},
+	}
+	caches := map[string]tc.TrafficServer{
+		"cache2": {
+			CacheGroup:   "cache-group-2",
+			ServerStatus: "REPORTED",
+		},
+		"cache1": {
+			CacheGroup:   "cache-group-1",
+			ServerStatus: "REPORTED",
+		},
+		"cache3": {
+			CacheGroup:   "cache-group-3",
+			ServerStatus: "REPORTED",
+		},
+	}
+	cacheGroups := map[string]tc.TMCacheGroup{
+		"tm-group-2": {
+			Name: "tm-group-2",
+			Coordinates: tc.MonitoringCoordinates{
+				Latitude:  38.39,
+				Longitude: -99.58,
+			},
+		},
+		"tm-group-1": {
+			Name: "tm-group-1",
+			Coordinates: tc.MonitoringCoordinates{
+				Latitude:  37.32,
+				Longitude: -121.34,
+			},
+		},
+		"tm-group-3": {
+			Name: "tm-group-3",
+			Coordinates: tc.MonitoringCoordinates{
+				Latitude:  37.22,
+				Longitude: -77.53,
+			},
+		},
+		"cache-group-3": {
+			Name: "cache-group-3",
+			Coordinates: tc.MonitoringCoordinates{
+				Latitude:  41.93,
+				Longitude: -74.17,
+			},
+		},
+		"cache-group-1": {
+			Name: "cache-group-1",
+			Coordinates: tc.MonitoringCoordinates{
+				Latitude:  35.04,
+				Longitude: -120.12,
+			},
+		},
+		"cache-group-2": {
+			Name: "cache-group-2",
+			Coordinates: tc.MonitoringCoordinates{
+				Latitude:  40.92,
+				Longitude: -98.49,
+			},
+		},
+	}
+	type testCase struct {
+		DistributedPolling bool
+		TMName             string
+		ExpectedTMGroup    string
+		ExpectedToPoll     map[string]tc.TMCacheGroup
+		ExpectErr          bool
+	}
+
+	for _, tc := range []testCase{
+		{
+			DistributedPolling: true,
+			TMName:             "tm1",
+			ExpectedTMGroup:    "tm-group-1",
+			ExpectedToPoll: map[string]tc.TMCacheGroup{
+				"cache-group-1": cacheGroups["cache-group-1"],
+			},
+			ExpectErr: false,
+		},
+		{
+			DistributedPolling: true,
+			TMName:             "tm2",
+			ExpectedTMGroup:    "tm-group-2",
+			ExpectedToPoll: map[string]tc.TMCacheGroup{
+				"cache-group-2": cacheGroups["cache-group-2"],
+			},
+			ExpectErr: false,
+		},
+		{
+			DistributedPolling: true,
+			TMName:             "tm3",
+			ExpectedTMGroup:    "tm-group-3",
+			ExpectedToPoll: map[string]tc.TMCacheGroup{
+				"cache-group-3": cacheGroups["cache-group-3"],
+			},
+			ExpectErr: false,
+		},
+		{
+			DistributedPolling: false,
+			TMName:             "tm3",
+			ExpectedTMGroup:    "tm-group-3",
+			ExpectedToPoll: map[string]tc.TMCacheGroup{
+				"cache-group-1": cacheGroups["cache-group-1"],
+				"cache-group-2": cacheGroups["cache-group-2"],
+				"cache-group-3": cacheGroups["cache-group-3"],
+			},
+			ExpectErr: false,
+		},
+	} {
+		tmGroup, toPoll, err := getCacheGroupsToPoll(tc.DistributedPolling, tc.TMName, monitors, caches, cacheGroups)
+		if tc.ExpectErr != (err != nil) {
+			t.Errorf("getting cachegroups to poll -- expect error: %t, actual error: %v", tc.ExpectErr, err)
+		}
+		if tc.ExpectedTMGroup != tmGroup {
+			t.Errorf("getting TM group -- expected: %s, actual: %s", tc.ExpectedTMGroup, tmGroup)
+		}
+		if !reflect.DeepEqual(tc.ExpectedToPoll, toPoll) {
+			t.Errorf("getting cachegroups to poll -- expected: %+v, actual: %+v", tc.ExpectedToPoll, toPoll)
+		}
 	}
 }

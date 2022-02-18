@@ -23,7 +23,7 @@ import (
 	"bytes"
 	"io"
 	"math/rand"
-	"runtime"
+	"net/url"
 	"sync/atomic"
 	"time"
 
@@ -32,67 +32,62 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/handler"
 )
 
-type CachePoller struct {
-	Config         CachePollerConfig
-	ConfigChannel  chan CachePollerConfig
-	TickChan       chan uint64
+type PeerPoller struct {
+	Config         PeerPollerConfig
+	ConfigChannel  chan PeerPollerConfig
 	GlobalContexts map[string]interface{}
 	Handler        handler.Handler
 }
 
-type PollConfig struct {
-	URL      string
-	URLv6    string
-	Host     string
+type PeerPollConfig struct {
+	URLs     []string
 	Timeout  time.Duration
 	Format   string
 	PollType string
 }
 
-type CachePollerConfig struct {
-	Urls            map[string]PollConfig
-	Interval        time.Duration
-	NoKeepAlive     bool
-	PollingProtocol config.PollingProtocol
+func (c PeerPollConfig) Equals(other PeerPollConfig) bool {
+	if len(c.URLs) != len(other.URLs) {
+		return false
+	}
+	for i, v := range c.URLs {
+		if v != other.URLs[i] {
+			return false
+		}
+	}
+	return c.Timeout == other.Timeout && c.Format == other.Format && c.PollType == other.PollType
 }
 
-// NewCache creates and returns a new CachePoller.
-// If tick is false, CachePoller.TickChan() will return nil.
-func NewCache(
-	tick bool,
+type PeerPollerConfig struct {
+	Urls        map[string]PeerPollConfig
+	Interval    time.Duration
+	NoKeepAlive bool
+}
+
+// NewPeer creates and returns a new PeerPoller.
+func NewPeer(
 	handler handler.Handler,
 	cfg config.Config,
 	appData config.StaticAppData,
-) CachePoller {
-	var tickChan chan uint64
-	if tick {
-		tickChan = make(chan uint64)
-	}
-	return CachePoller{
-		TickChan:      tickChan,
-		ConfigChannel: make(chan CachePollerConfig),
-		Config: CachePollerConfig{
-			PollingProtocol: cfg.CachePollingProtocol,
-		},
+) PeerPoller {
+	return PeerPoller{
+		ConfigChannel:  make(chan PeerPollerConfig),
 		GlobalContexts: GetGlobalContexts(cfg, appData),
 		Handler:        handler,
 	}
 }
 
-var pollNum uint64
-
-type CachePollInfo struct {
-	NoKeepAlive     bool
-	Interval        time.Duration
-	ID              string
-	PollingProtocol config.PollingProtocol
-	PollConfig
+type PeerPollInfo struct {
+	NoKeepAlive bool
+	Interval    time.Duration
+	ID          string
+	PeerPollConfig
 }
 
-func (p CachePoller) Poll() {
+func (p PeerPoller) Poll() {
 	killChans := map[string]chan<- struct{}{}
 	for newConfig := range p.ConfigChannel {
-		deletions, additions := diffConfigs(p.Config, newConfig)
+		deletions, additions := diffPeerConfigs(p.Config, newConfig)
 		for _, id := range deletions {
 			killChan := killChans[id]
 			go func() { killChan <- struct{}{} }() // go - we don't want to wait for old polls to die.
@@ -119,20 +114,16 @@ func (p CachePoller) Poll() {
 			if pollerObj.Init != nil {
 				pollerCtx = pollerObj.Init(pollerCfg, p.GlobalContexts[info.PollType])
 			}
-			go poller(info.Interval, info.ID, info.PollingProtocol, info.URL, info.URLv6, info.Host, info.Format, p.Handler, pollerObj.Poll, pollerCtx, kill)
+			go peerPoller(info.Interval, info.ID, info.URLs, info.Format, p.Handler, pollerObj.Poll, pollerCtx, kill)
 		}
 		p.Config = newConfig
 	}
 }
 
-// TODO iterationCount and/or p.TickChan?
-func poller(
+func peerPoller(
 	interval time.Duration,
 	id string,
-	pollingProtocol config.PollingProtocol,
-	url string,
-	url6 string,
-	host string,
+	urls []string,
 	format string,
 	handler handler.Handler,
 	pollFunc PollerFunc,
@@ -143,18 +134,10 @@ func poller(
 	time.Sleep(pollSpread)
 	tick := time.NewTicker(interval)
 	lastTime := time.Now()
-	oscillateProtocols := false
-	if pollingProtocol == config.Both {
-		oscillateProtocols = true
-	}
-	usingIPv4 := pollingProtocol != config.IPv6Only
+	urlI := rand.Intn(len(urls)) // start at a random URL index in order to help spread load
 	for {
 		select {
 		case <-tick.C:
-			if (usingIPv4 && url == "") || (!usingIPv4 && url6 == "") {
-				usingIPv4 = !usingIPv4
-				continue
-			}
 
 			realInterval := time.Now().Sub(lastTime)
 			if realInterval > interval+(time.Millisecond*100) {
@@ -164,24 +147,24 @@ func poller(
 
 			pollID := atomic.AddUint64(&pollNum, 1)
 			pollFinishedChan := make(chan uint64)
-			log.Debugf("poll %v %v start\n", pollID, time.Now())
-			pollUrl := url
-			if !usingIPv4 {
-				pollUrl = url6
-			}
+			log.Debugf("peer poll %v %v start\n", pollID, time.Now())
 
-			bts, reqEnd, reqTime, err := pollFunc(pollCtx, pollUrl, host, pollID)
+			urlString := urls[urlI]
+			urlI = (urlI + 1) % len(urls)
+			urlParsed, err := url.Parse(urlString)
+			if err != nil {
+				// this should never happen because TM creates the URL
+				log.Errorf("parsing peer poller URL %s: %s", urlString, err.Error())
+			}
+			host := urlParsed.Host
+			bts, reqEnd, reqTime, err := pollFunc(pollCtx, urlString, host, pollID)
 			rdr := io.Reader(nil)
 			if bts != nil {
 				rdr = bytes.NewReader(bts) // TODO change handler to take bytes? Benchmark?
 			}
 
-			log.Debugf("poll %v %v poller end\n", pollID, time.Now())
-			go handler.Handle(id, rdr, format, reqTime, reqEnd, err, pollID, usingIPv4, pollCtx, pollFinishedChan)
-
-			if oscillateProtocols {
-				usingIPv4 = !usingIPv4
-			}
+			log.Debugf("peer poll %v %v poller end\n", pollID, time.Now())
+			go handler.Handle(id, rdr, format, reqTime, reqEnd, err, pollID, false, pollCtx, pollFinishedChan)
 
 			<-pollFinishedChan
 		case <-die:
@@ -191,22 +174,21 @@ func poller(
 	}
 }
 
-// diffConfigs takes the old and new configs, and returns a list of deleted IDs, and a list of new polls to do
-func diffConfigs(old CachePollerConfig, new CachePollerConfig) ([]string, []CachePollInfo) {
+// diffPeerConfigs takes the old and new configs, and returns a list of deleted IDs, and a list of new polls to do
+func diffPeerConfigs(old PeerPollerConfig, new PeerPollerConfig) ([]string, []PeerPollInfo) {
 	deletions := []string{}
-	additions := []CachePollInfo{}
+	additions := []PeerPollInfo{}
 
 	if old.Interval != new.Interval || old.NoKeepAlive != new.NoKeepAlive {
 		for id, _ := range old.Urls {
 			deletions = append(deletions, id)
 		}
 		for id, pollCfg := range new.Urls {
-			additions = append(additions, CachePollInfo{
-				Interval:        new.Interval,
-				NoKeepAlive:     new.NoKeepAlive,
-				ID:              id,
-				PollingProtocol: new.PollingProtocol,
-				PollConfig:      pollCfg,
+			additions = append(additions, PeerPollInfo{
+				Interval:       new.Interval,
+				NoKeepAlive:    new.NoKeepAlive,
+				ID:             id,
+				PeerPollConfig: pollCfg,
 			})
 		}
 		return deletions, additions
@@ -216,14 +198,13 @@ func diffConfigs(old CachePollerConfig, new CachePollerConfig) ([]string, []Cach
 		newPollCfg, newIdExists := new.Urls[id]
 		if !newIdExists {
 			deletions = append(deletions, id)
-		} else if newPollCfg != oldPollCfg {
+		} else if !newPollCfg.Equals(oldPollCfg) {
 			deletions = append(deletions, id)
-			additions = append(additions, CachePollInfo{
-				Interval:        new.Interval,
-				NoKeepAlive:     new.NoKeepAlive,
-				ID:              id,
-				PollingProtocol: new.PollingProtocol,
-				PollConfig:      newPollCfg,
+			additions = append(additions, PeerPollInfo{
+				Interval:       new.Interval,
+				NoKeepAlive:    new.NoKeepAlive,
+				ID:             id,
+				PeerPollConfig: newPollCfg,
 			})
 		}
 	}
@@ -231,27 +212,14 @@ func diffConfigs(old CachePollerConfig, new CachePollerConfig) ([]string, []Cach
 	for id, newPollCfg := range new.Urls {
 		_, oldIdExists := old.Urls[id]
 		if !oldIdExists {
-			additions = append(additions, CachePollInfo{
-				Interval:        new.Interval,
-				NoKeepAlive:     new.NoKeepAlive,
-				ID:              id,
-				PollingProtocol: new.PollingProtocol,
-				PollConfig:      newPollCfg,
+			additions = append(additions, PeerPollInfo{
+				Interval:       new.Interval,
+				NoKeepAlive:    new.NoKeepAlive,
+				ID:             id,
+				PeerPollConfig: newPollCfg,
 			})
 		}
 	}
 
 	return deletions, additions
-}
-
-func stacktrace() []byte {
-	initialBufSize := 1024
-	buf := make([]byte, initialBufSize)
-	for {
-		n := runtime.Stack(buf, true)
-		if n < len(buf) {
-			return buf[:n]
-		}
-		buf = make([]byte, len(buf)*2)
-	}
 }

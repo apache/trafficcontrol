@@ -26,8 +26,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
-	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 
@@ -90,14 +88,12 @@ func srvAPICacheStates(
 	statResultHistory threadsafe.ResultStatHistory,
 	healthHistory threadsafe.ResultHistory,
 	lastHealthDurations threadsafe.DurationMap,
-	localStates peer.CRStatesThreadsafe,
-	lastStats threadsafe.LastStats,
 	localCacheStatus threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
 ) ([]byte, error) {
 	json := jsoniter.ConfigFastest
-	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statInfoHistory.Get(), statResultHistory, healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus, statMaxKbpses, monitorConfig.Get().TrafficServer))
+	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statInfoHistory.Get(), statResultHistory, healthHistory.Get(), lastHealthDurations.Get(), localCacheStatus, statMaxKbpses, monitorConfig.Get().TrafficServer))
 }
 
 // interfaceStatus returns the status of the given interface, both qualitatively
@@ -127,8 +123,6 @@ func createCacheStatuses(
 	statResultHistory threadsafe.ResultStatHistory,
 	healthHistory map[tc.CacheName][]cache.Result,
 	lastHealthDurations map[tc.CacheName]time.Duration,
-	cacheStates map[tc.CacheName]tc.IsAvailable,
-	lastStats dsdata.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
 	servers map[string]tc.TrafficServer,
