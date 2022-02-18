@@ -20,7 +20,6 @@ package server
  */
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -65,18 +64,14 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
-	ok := false
+
 	if reqObj.Action == "queue" {
-		ok, err = queueUpdate(inf.Tx.Tx, serverID)
+		err = dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID)
 	} else {
-		ok, err = dequeueUpdate(inf.Tx.Tx, serverID)
+		err = dbhelpers.SetApplyUpdateForServer(inf.Tx.Tx, serverID)
 	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("queueing updates: %v", err))
-		return
-	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("no server with id '%v' found", serverID), nil)
 		return
 	}
 
@@ -98,40 +93,4 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		ServerID: util.JSONIntStr(serverID),
 		Action:   reqObj.Action,
 	})
-}
-
-// queueUpdate adds a record to record a config update. It
-// returns true if the identified server exists and was updated and false if no
-// server was updated either because it doesn't exist or there was an error.
-func queueUpdate(tx *sql.Tx, serverID int64) (bool, error) {
-	const query = `
-INSERT INTO public.server_config_update (server_id, config_update_time)
-VALUES ($1, now())
-ON CONFLICT (server_id)
-DO UPDATE SET config_update_time = now();
-`
-	if result, err := tx.Exec(query, serverID); err != nil {
-		return false, fmt.Errorf("updating server table: %v", err)
-	} else if rc, err := result.RowsAffected(); err != nil {
-		return false, fmt.Errorf("checking rows updated: %v", err)
-	} else {
-		return rc == 1, nil
-	}
-}
-
-// queueUpdate removes a record to record a config update. It
-// returns true if the identified server exists and was updated and false if no
-// server was updated either because it doesn't exist or there was an error.
-func dequeueUpdate(tx *sql.Tx, serverID int64) (bool, error) {
-	const query = `
-DELETE FROM public.server_config_update 
-WHERE server_id = $1;
-`
-	if result, err := tx.Exec(query, serverID); err != nil {
-		return false, fmt.Errorf("updating server table: %v", err)
-	} else if rc, err := result.RowsAffected(); err != nil {
-		return false, fmt.Errorf("checking rows updated: %v", err)
-	} else {
-		return rc == 1, nil
-	}
 }
