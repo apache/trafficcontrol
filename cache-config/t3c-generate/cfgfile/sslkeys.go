@@ -20,7 +20,9 @@ package cfgfile
  */
 
 import (
+	"crypto/tls"
 	"encoding/base64"
+	"errors"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -59,6 +61,12 @@ func GetSSLCertsAndKeyFiles(toData *t3cutil.ConfigData) ([]t3cutil.ATSConfigFile
 			key = append(key, '\n') // it's going to be a file, needs a trailing newline to be POSIX-compliant.
 		}
 
+		var keyPairErr []string
+		pairErr := CheckKeyPair(key, cert, string(dsName))
+		if pairErr != nil {
+			keyPairErr = append(keyPairErr, pairErr.Error())
+		}
+
 		certName, keyName := atscfg.GetSSLMultiCertDotConfigCertAndKeyName(dsName, ds)
 
 		keyFile := t3cutil.ATSConfigFile{}
@@ -66,7 +74,7 @@ func GetSSLCertsAndKeyFiles(toData *t3cutil.ConfigData) ([]t3cutil.ATSConfigFile
 		keyFile.Path = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
 		keyFile.Text = string(key)
 		keyFile.Secure = true
-		keyFile.Warnings = dsWarns
+		keyFile.Warnings = keyPairErr
 		configs = append(configs, keyFile)
 
 		certFile := t3cutil.ATSConfigFile{}
@@ -74,9 +82,18 @@ func GetSSLCertsAndKeyFiles(toData *t3cutil.ConfigData) ([]t3cutil.ATSConfigFile
 		certFile.Path = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
 		certFile.Text = string(cert)
 		certFile.Secure = true
-		certFile.Warnings = dsWarns
+		certFile.Warnings = keyPairErr
 		configs = append(configs, certFile)
 	}
 
 	return configs, nil
+}
+
+func CheckKeyPair(keyPem []byte, certPem []byte, ds string) error {
+	_, err := tls.X509KeyPair(certPem, keyPem)
+	if err != nil {
+		log.Warnf("Issue with keypair for %s: %s", ds, err)
+		return errors.New("Issue with keypair for " + ds + ": " + err.Error())
+	}
+	return nil
 }
