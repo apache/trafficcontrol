@@ -133,7 +133,7 @@ ON CONFLICT (server_id)
 DO UPDATE SET config_update_time = now()`
 	} else {
 		query = `
-UDPATE public.server_config_update
+UPDATE public.server_config_update
 SET config_apply_time = config_update_time
 WHERE server_id IN (SELECT s.id
 FROM public.server s`
