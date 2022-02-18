@@ -17,13 +17,13 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
 
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-
-	"github.com/stretchr/testify/assert"
 )
 
 type ErrorAndMessage struct {
@@ -92,21 +92,21 @@ func CkRequest(c ...CkReqFunc) []CkReqFunc {
 // NoError checks that no error was returned (i.e. `nil`).
 func NoError() CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, _ interface{}, err error) {
-		assert.NoError(t, err, "Expected no error, but got %v", err)
+		assert.NoError(t, err, fmt.Sprintf("Expected no error. Got: %v", err))
 	}
 }
 
 // HasError checks that an error was returned (i.e. not `nil`).
 func HasError() CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, alerts interface{}, err error) {
-		assert.Error(t, err, "Expected error - but got: %+v", alerts)
+		assert.Error(t, err, fmt.Sprintf("Expected error. Got: %v", alerts))
 	}
 }
 
 // HasStatus checks that the status code from the request is as expected.
 func HasStatus(expectedStatus int) CkReqFunc {
 	return func(t *testing.T, reqInf toclientlib.ReqInf, _ interface{}, _ interface{}, _ error) {
-		assert.Equal(t, expectedStatus, reqInf.StatusCode, "Expected Status Code %d, got %d", expectedStatus, reqInf.StatusCode)
+		assert.Equal(t, expectedStatus, reqInf.StatusCode, fmt.Sprintf("Expected Status Code: %d Got: %d", expectedStatus, reqInf.StatusCode))
 	}
 }
 
@@ -118,9 +118,9 @@ func ResponseHasLength(expected int) CkReqFunc {
 		switch rt.Kind() {
 		case reflect.Slice:
 			actual := reflect.ValueOf(resp).Len()
-			assert.Equal(t, expected, actual, "Expected response object length %d, but got %d", expected, actual)
+			assert.Equal(t, expected, actual, fmt.Sprintf("Expected response object length: %d Got: %d", expected, actual))
 		default:
-			assert.Failf(t, "Expected response to be an array", "Expected length: %d Got: %v", expected, rt)
+			t.Errorf("Expected response to be an array. Got: %v", rt)
 		}
 	}
 }
@@ -133,9 +133,9 @@ func ResponseLengthGreaterOrEqual(expected int) CkReqFunc {
 		switch rt.Kind() {
 		case reflect.Slice:
 			actual := reflect.ValueOf(resp).Len()
-			assert.GreaterOrEqual(t, actual, expected, "Expected response object length %d, but got %d", expected, actual)
+			assert.GreaterOrEqual(t, actual, expected, fmt.Sprintf("Expected response object length: %d Got: %d", expected, actual))
 		default:
-			assert.Failf(t, "Expected response to be an array", "Expected length: %d Got: %v", expected, rt)
+			t.Errorf("Expected response to be an array. Got: %v", rt)
 		}
 	}
 }
