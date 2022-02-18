@@ -69,7 +69,7 @@ public class AbstractServiceUpdaterTest {
 		databasesDirectory = mock(Path.class);
 		when(databasesDirectory.resolve((String) isNull())).thenReturn(databasePath);
 
-	    trafficRouterManager = mock(TrafficRouterManager.class);
+		trafficRouterManager = mock(TrafficRouterManager.class);
 		doNothing().when(trafficRouterManager).trackEvent(any());
 
 		mockStatic(Files.class);
