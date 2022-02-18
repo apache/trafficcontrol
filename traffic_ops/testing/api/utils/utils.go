@@ -17,11 +17,13 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	"github.com/stretchr/testify/assert"
+	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type ErrorAndMessage struct {
@@ -77,57 +79,63 @@ func Compare(t *testing.T, expected []string, alertsStrs []string) {
 	}
 }
 
-type CkReqFunc func(*testing.T, toclientlib.ReqInf, interface{}, error)
+// CkReqFunc defines the reusable signature for all other functions that perform checks.
+// Common parameters that are checked include the request's info, response, alerts, and errors.
+type CkReqFunc func(*testing.T, toclientlib.ReqInf, interface{}, interface{}, error)
 
+// CkRequest wraps CkReqFunc functions, to be concise and reduce lexical tokens
+// i.e. Instead of `[]CkReqFunc {` we can use `CkRequest(` in test case declarations.
 func CkRequest(c ...CkReqFunc) []CkReqFunc {
 	return c
 }
 
+// NoError checks that no error was returned (i.e. `nil`).
 func NoError() CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, err error) {
+	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, _ interface{}, err error) {
 		assert.NoError(t, err, "Expected no error, but got %v", err)
 	}
 }
 
+// HasError checks that an error was returned (i.e. not `nil`).
 func HasError() CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, err error) {
-		switch resp := resp.(type) {
-		case tc.CacheGroupDetailResponse:
-			assert.Error(t, err, "Expected error - but got: %+v %+v", resp.Response, resp.Alerts)
-		case tc.CacheGroupsNullableResponse:
-			assert.Error(t, err, "Expected error - but got: %+v %+v", resp.Response, resp.Alerts)
-		case tc.Alerts:
-			assert.Error(t, err, "Expected error - but got: %+v", resp.Alerts)
-		default:
-			assert.Fail(t, "Failed to find response type")
-		}
+	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, alerts interface{}, err error) {
+		assert.Error(t, err, "Expected error - but got: %+v", alerts)
 	}
 }
 
+// HasStatus checks that the status code from the request is as expected.
 func HasStatus(expectedStatus int) CkReqFunc {
-	return func(t *testing.T, reqInf toclientlib.ReqInf, _ interface{}, _ error) {
+	return func(t *testing.T, reqInf toclientlib.ReqInf, _ interface{}, _ interface{}, _ error) {
 		assert.Equal(t, expectedStatus, reqInf.StatusCode, "Expected Status Code %d, got %d", expectedStatus, reqInf.StatusCode)
 	}
 }
 
+// ResponseHasLength checks that the length of the response is as expected.
+// Determines that response is a slice before checking the length of the reflected value.
 func ResponseHasLength(expected int) CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ error) {
-		switch resp := resp.(type) {
-		case tc.CacheGroupsNullableResponse:
-			assert.Equal(t, expected, len(resp.Response), "Expected response object length %d, but got %d", expected, len(resp.Response))
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ interface{}, _ error) {
+		rt := reflect.TypeOf(resp)
+		switch rt.Kind() {
+		case reflect.Slice:
+			actual := reflect.ValueOf(resp).Len()
+			assert.Equal(t, expected, actual, "Expected response object length %d, but got %d", expected, actual)
 		default:
-			assert.Fail(t, "Failed to find response type")
+			assert.Failf(t, "Expected response to be an array", "Expected length: %d Got: %v", expected, rt)
 		}
 	}
 }
 
+// ResponseLengthGreaterOrEqual checks that the response is greater or equal to the expected length.
+// Determines that response is a slice before checking the length of the reflected value.
 func ResponseLengthGreaterOrEqual(expected int) CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ error) {
-		switch resp := resp.(type) {
-		case tc.CacheGroupsNullableResponse:
-			assert.GreaterOrEqual(t, len(resp.Response), expected, "Expected response object length %d, but got %d", expected, len(resp.Response))
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ interface{}, _ error) {
+		rt := reflect.TypeOf(resp)
+		switch rt.Kind() {
+		case reflect.Slice:
+			actual := reflect.ValueOf(resp).Len()
+			assert.GreaterOrEqual(t, actual, expected, "Expected response object length %d, but got %d", expected, actual)
 		default:
-			assert.Fail(t, "Failed to find response type")
+			assert.Failf(t, "Expected response to be an array", "Expected length: %d Got: %v", expected, rt)
 		}
 	}
 }
