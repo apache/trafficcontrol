@@ -64,11 +64,6 @@ INSERT INTO profile (
 	'dev edge Profile',
 	'ATS_PROFILE',
 	(SELECT id FROM cdn WHERE "name" = 'dev')
-), (
-	'GLOBAL',
-	'dev global Profile',
-	'UNK_PROFILE',
-	(SELECT id FROM cdn WHERE "name" = 'ALL')
 );
 
 INSERT INTO parameter (
