@@ -693,34 +693,6 @@ and p.id = $1
 	return serviceInterface, util.JoinErrs(errs)
 }
 
-func validateConfigUpdate(tx *sql.Tx, server tc.CommonServerProperties) (bool, error) {
-
-	if server.ConfigUpdateTime != nil {
-		return true, nil
-	}
-
-	// Deprecated. UpdPending should be treated only as a fallback to the UpdateTime from above
-	if server.UpdPending != nil {
-		return *server.UpdPending, nil
-	}
-
-	return false, nil
-}
-
-func validateRevalUpdate(tx *sql.Tx, server tc.CommonServerProperties) (bool, error) {
-
-	if server.RevalUpdateTime != nil {
-		return true, nil
-	}
-
-	// Deprecated. RevalPending should be treated only as a fallback to the UpdateTime from above
-	if server.RevalPending != nil {
-		return *server.RevalPending, nil
-	}
-
-	return false, nil
-}
-
 // Read is the handler for GET requests to /servers.
 func Read(w http.ResponseWriter, r *http.Request) {
 	var maxTime *time.Time
@@ -1475,17 +1447,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
 	serverID, errCode, userErr, sysErr := updateServer(inf.Tx, server)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -1502,31 +1463,27 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if updatePending {
-		if server.ConfigUpdateTime != nil {
-			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-		} else {
-			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
+	if server.UpdPending != nil && *server.UpdPending { // To continue to work with the legacy implementation and priority. However, consider bool UpdPending deprecated
+		if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	} else if server.ConfigUpdateTime != nil {
+		if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
 		}
 	}
 
-	if revalPending {
-		if server.RevalUpdateTime != nil {
-			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-		} else {
-			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
+	if server.RevalPending != nil && *server.RevalPending { // To continue to work with the legacy implementation and priority. However, consider bool RevalPending deprecated
+		if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	} else if server.RevalUpdateTime != nil {
+		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
 		}
 	}
 
@@ -1629,17 +1586,6 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
@@ -1672,31 +1618,27 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if updatePending {
-		if server.ConfigUpdateTime != nil {
-			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-		} else {
-			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
+	if server.UpdPending != nil && *server.UpdPending { // To continue to work with the legacy implementation and priority. However, consider bool UpdPending deprecated
+		if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	} else if server.ConfigUpdateTime != nil {
+		if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
 		}
 	}
 
-	if revalPending {
-		if server.RevalUpdateTime != nil {
-			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-		} else {
-			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
+	if server.RevalPending != nil && *server.RevalPending { // To continue to work with the legacy implementation and priority. However, consider bool RevalPending deprecated
+		if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	} else if server.RevalUpdateTime != nil {
+		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
 		}
 	}
 
@@ -1754,17 +1696,6 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
 
-	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
@@ -1797,31 +1728,27 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if updatePending {
-		if server.ConfigUpdateTime != nil {
-			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-		} else {
-			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
+	if server.UpdPending != nil && *server.UpdPending { // To continue to work with the legacy implementation and priority. However, consider bool UpdPending deprecated
+		if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	} else if server.ConfigUpdateTime != nil {
+		if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
 		}
 	}
 
-	if revalPending {
-		if server.RevalUpdateTime != nil {
-			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-		} else {
-			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
+	if server.RevalPending != nil && *server.RevalPending { // To continue to work with the legacy implementation and priority. However, consider bool RevalPending deprecated
+		if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	} else if server.RevalUpdateTime != nil {
+		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
 		}
 	}
 
@@ -1880,17 +1807,6 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
 
-	updatePending, err := validateConfigUpdate(inf.Tx.Tx, server.CommonServerProperties)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-	revalPending, err := validateRevalUpdate(inf.Tx.Tx, server.CommonServerProperties)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
@@ -1918,31 +1834,27 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if updatePending {
-		if server.ConfigUpdateTime != nil {
-			if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-		} else {
-			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
+	if server.UpdPending != nil && *server.UpdPending { // To continue to work with the legacy implementation and priority. However, consider bool UpdPending deprecated
+		if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	} else if server.ConfigUpdateTime != nil {
+		if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
 		}
 	}
 
-	if revalPending {
-		if server.RevalUpdateTime != nil {
-			if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-		} else {
-			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
+	if server.RevalPending != nil && *server.RevalPending { // To continue to work with the legacy implementation and priority. However, consider bool RevalPending deprecated
+		if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	} else if server.RevalUpdateTime != nil {
+		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
 		}
 	}
 
