@@ -76,7 +76,7 @@ func Error(t *testing.T, err error, msgAndArgs ...interface{}) bool {
 func Exactly(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if !reflect.DeepEqual(a, b) {
-		msg := failureOutput(fmt.Sprintf("Error: Not equal: \n expected: %v\n actual  : %v", a, b), msgAndArgs...)
+		msg := failureOutput(fmt.Sprintf("Error: Not exactly equal: \n expected: %v\n actual  : %v", a, b), msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
