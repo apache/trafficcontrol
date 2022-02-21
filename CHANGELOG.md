@@ -7,19 +7,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 - Added a new Traffic Ops endpoint to `GET` capacity and telemetry data for CDNi integration.
 - Added a Traffic Ops endpoints to `PUT` a requested configuration change for a full configuration or per host and an endpoint to approve or deny the request.
+- Traffic Monitor config option `distributed_polling` which enables the ability for Traffic Monitor to poll a subset of the CDN and divide into "local peer groups" and "distributed peer groups". Traffic Monitors in the same group are local peers, while Traffic Monitors in other groups are distibuted peers. Each TM group polls the same set of cachegroups and gets availability data for the other cachegroups from other TM groups. This allows each TM to be responsible for polling a subset of the CDN while still having a full view of CDN availability. In order to use this, `stat_polling` must be disabled.
 
 ### Fixed
 - Update traffic_portal dependencies to mitigate `npm audit` issues.
 - Fixed a cdn-in-a-box build issue when using `RHEL_VERSION=7`
 - [#6549](https://github.com/apache/trafficcontrol/issues/6549) Fixed internal server error while deleting a delivery service created from a DSR (Traafic Ops).
 - [#6538](https://github.com/apache/trafficcontrol/pull/6538) Fixed the incorrect use of secure.port on TrafficRouter and corrected to the httpsPort value from the TR server configuration.
+- [#6562](https://github.com/apache/trafficcontrol/pull/6562) Fixed incorrect template in Ansible dataset loader role when fallbackToClosest is defined.
 
 ### Removed
 - Remove traffic_portal dependencies to mitigate `npm audit` issues, specifically `grunt-concurrent`, `grunt-contrib-concat`, `grunt-contrib-cssmin`, `grunt-contrib-jsmin`, `grunt-contrib-uglify`, `grunt-contrib-htmlmin`, `grunt-newer`, and `grunt-wiredep`
+- Removed the Traffic Monitor `peer_polling_protocol` option. Traffic Monitor now just uses hostnames to request peer states, which can be handled via IPv4 or IPv6 depending on the underlying IP version in use.
 - Dropped CentOS 8 support
 
 ### Changed
 - Added Rocky Linux 8 support
+- Added permissions to the role form in traffic portal
 
 ## [6.1.0] - 2022-01-18
 ### Added
@@ -41,6 +45,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6405](https://github.com/apache/trafficcontrol/issues/6405) Added cache config version to all t3c apps and config file headers
 - Traffic Vault: Added additional flag to TV Riak (Deprecated) Util
 - Added Traffic Vault Postgres columns, a Traffic Ops API endpoint, and Traffic Portal page to show SSL certificate expiration information.
+- Added cache config `__CACHEGROUP__` preprocess directive, to allow injecting the local server's cachegroup name into any config file
 - Added support for a DS profile parameter 'LastRawRemapPre' and 'LastRawRemapPost' which allows raw text lines to be pre or post pended to remap.config.
 
 ### Fixed

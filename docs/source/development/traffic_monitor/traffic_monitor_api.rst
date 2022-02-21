@@ -402,6 +402,35 @@ Response Structure
 TODO
 
 
+``/publish/DistributedPeerStates``
+==================================
+The health state information from all distributed peer Traffic Monitors.
+
+``GET``
+-------
+:Response Type: ?
+
+Request Structure
+"""""""""""""""""
+.. table:: Request Query Parameters
+
+	+--------------+---------+------------------------------------------------+
+	|  Parameter   | Type    |                  Description                   |
+	+==============+=========+================================================+
+	| ``hc``       | integer | The history count, number of items to display. |
+	+--------------+---------+------------------------------------------------+
+	| ``stats``    | string  | A comma separated list of stats to display.    |
+	+--------------+---------+------------------------------------------------+
+	| ``wildcard`` | boolean | Controls whether specified stats should be     |
+	|              |         | treated as partial strings.                    |
+	+--------------+---------+------------------------------------------------+
+
+Response Structure
+""""""""""""""""""
+
+TODO
+
+
 ``/publish/Stats``
 ==================
 The general statistics about Traffic Monitor.
