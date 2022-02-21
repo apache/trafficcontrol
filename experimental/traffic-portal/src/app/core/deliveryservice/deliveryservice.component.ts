@@ -11,16 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { faBroom } from "@fortawesome/free-solid-svg-icons";
-
 import { Subject } from "rxjs";
 
-import { DataPoint, DataSet, DeliveryService } from "../../models";
-import { DeliveryServiceService } from "../../shared/api";
-import {AlertService} from "../../shared/alert/alert.service";
+import { DeliveryServiceService } from "src/app/api";
+import type { DataPoint, DataSet, DeliveryService } from "src/app/models";
+import { AlertService } from "src/app/shared/alert/alert.service";
 
 /**
  * DeliveryserviceComponent is the controller for a single Delivery Service's
@@ -35,9 +34,6 @@ export class DeliveryserviceComponent implements OnInit {
 
 	/** The Delivery Service described by this component. */
 	public deliveryservice = {} as DeliveryService;
-
-	/** A map of the names of charts to whether or not they've been loaded. */
-	public loaded = new Map([["main", false], ["bandwidth", false]]);
 
 	/** Data for the bandwidth chart. */
 	public bandwidthData = new Subject<[DataSet]>();
@@ -88,7 +84,6 @@ export class DeliveryserviceComponent implements OnInit {
 		private readonly api: DeliveryServiceService,
 		private readonly alerts: AlertService
 	) {
-		this.bandwidthData = new Subject<[DataSet]>();
 		this.bandwidthData.next([{
 			backgroundColor: "#BA3C57",
 			borderColor: "#BA3C57",
@@ -104,12 +99,6 @@ export class DeliveryserviceComponent implements OnInit {
 	 * fetching data.
 	 */
 	public ngOnInit(): void {
-		const DSID = this.route.snapshot.paramMap.get("id");
-		if (!DSID) {
-			console.error("Missing route 'id' parameter");
-			return;
-		}
-
 		this.to.setUTCMilliseconds(0);
 		this.from = new Date(this.to.getFullYear(), this.to.getMonth(), this.to.getDate());
 
@@ -123,10 +112,15 @@ export class DeliveryserviceComponent implements OnInit {
 		const timeStr = String(this.to.getHours()).padStart(2, "0").concat(":", String(this.to.getMinutes()).padStart(2, "0"));
 		this.toTime = new FormControl(timeStr);
 
+		const DSID = this.route.snapshot.paramMap.get("id");
+		if (!DSID) {
+			console.error("Missing route 'id' parameter");
+			return;
+		}
+
 		this.api.getDeliveryServices(parseInt(DSID, 10)).then(
 			d => {
 				this.deliveryservice = d;
-				this.loaded.set("main", true);
 				this.loadBandwidth();
 				this.loadTPS();
 			}

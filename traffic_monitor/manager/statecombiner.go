@@ -36,28 +36,18 @@ func StartStateCombiner(events health.ThreadsafeEvents, peerStates peer.CRStates
 	combinedStates := peer.NewCRStatesThreadsafe()
 
 	// the chan buffer just reduces the number of goroutines on our infinite buffer hack in combineState(), no real writer will block, since combineState() writes in a goroutine.
-	combineStateChan := make(chan struct{}, 5)
+	combineStateChan := make(chan struct{}, 1)
 	combineState := func() {
-		go func() { combineStateChan <- struct{}{} }()
-	}
-
-	drain := func(c <-chan struct{}) {
-	outer:
-		for {
-			select {
-			case <-c:
-				continue
-			default:
-				break outer
-			}
+		select {
+		case combineStateChan <- struct{}{}:
+		default:
 		}
 	}
 
 	go func() {
 		overrideMap := map[tc.CacheName]bool{}
 		for range combineStateChan {
-			drain(combineStateChan)
-			combineCrStates(events, true, peerStates, localStates.Get(), combinedStates, overrideMap, toData.Get())
+			combineCrStates(events, true, peerStates.GetCRStatesPeersInfo(), localStates.Get(), combinedStates, overrideMap, toData.Get())
 		}
 	}()
 
@@ -69,7 +59,7 @@ func combineCacheState(
 	localCacheState tc.IsAvailable,
 	events health.ThreadsafeEvents,
 	peerOptimistic bool,
-	peerStates peer.CRStatesPeersThreadsafe,
+	peerCrStatesInfo peer.CRStatesPeersInfo,
 	combinedStates peer.CRStatesThreadsafe,
 	overrideMap map[tc.CacheName]bool,
 	toData todata.TOData,
@@ -88,7 +78,7 @@ func combineCacheState(
 			overrideMap[cacheName] = false
 		}
 	} else if peerOptimistic {
-		if !peerStates.HasAvailablePeers() {
+		if !peerCrStatesInfo.HasAvailablePeers() {
 			if override {
 				overrideCondition = "irrelevant; no peers online"
 				overrideMap[cacheName] = false
@@ -98,16 +88,16 @@ func combineCacheState(
 			ipv4OnlineOnPeers := make([]string, 0)
 			ipv6OnlineOnPeers := make([]string, 0)
 
-			for peer, peerCrStates := range peerStates.GetCrstates() {
-				if peerStates.GetPeerAvailability(peer) {
+			for peerName, peerCrStates := range peerCrStatesInfo.GetCrStates() {
+				if peerCrStatesInfo.GetPeerAvailability(peerName) {
 					if peerCrStates.Caches[cacheName].IsAvailable {
-						onlineOnPeers = append(onlineOnPeers, peer.String())
+						onlineOnPeers = append(onlineOnPeers, peerName.String())
 					}
 					if peerCrStates.Caches[cacheName].Ipv4Available {
-						ipv4OnlineOnPeers = append(ipv4OnlineOnPeers, peer.String())
+						ipv4OnlineOnPeers = append(ipv4OnlineOnPeers, peerName.String())
 					}
 					if peerCrStates.Caches[cacheName].Ipv6Available {
-						ipv6OnlineOnPeers = append(ipv6OnlineOnPeers, peer.String())
+						ipv6OnlineOnPeers = append(ipv6OnlineOnPeers, peerName.String())
 					}
 				}
 			}
@@ -143,13 +133,13 @@ func combineCacheState(
 				IPv6Available: ipv6Available})
 	}
 
-	combinedStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: available, Ipv4Available: ipv4Available, Ipv6Available: ipv6Available})
+	combinedStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: available, Ipv4Available: ipv4Available, Ipv6Available: ipv6Available, DirectlyPolled: localCacheState.DirectlyPolled})
 }
 
 func combineDSState(
 	deliveryServiceName tc.DeliveryServiceName,
 	localDeliveryService tc.CRStatesDeliveryService,
-	peerStates peer.CRStatesPeersThreadsafe,
+	peerCrStatesInfo peer.CRStatesPeersInfo,
 	combinedStates peer.CRStatesThreadsafe,
 ) {
 	deliveryService := tc.CRStatesDeliveryService{IsAvailable: false, DisabledLocations: []tc.CacheGroupName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
@@ -157,7 +147,7 @@ func combineDSState(
 		deliveryService.IsAvailable = true
 	}
 
-	for peerName, iPeerStates := range peerStates.GetCrstates() {
+	for peerName, iPeerStates := range peerCrStatesInfo.GetCrStates() {
 		peerDeliveryService, ok := iPeerStates.DeliveryService[deliveryServiceName]
 		if !ok {
 			log.Infof("local delivery service %s not found in peer %s\n", deliveryServiceName, peerName)
@@ -171,14 +161,14 @@ func combineDSState(
 }
 
 // pruneCombinedDSState deletes delivery services in combined states which have been removed from localStates and peerStates
-func pruneCombinedDSState(combinedStates peer.CRStatesThreadsafe, localStates tc.CRStates, peerStates peer.CRStatesPeersThreadsafe) {
+func pruneCombinedDSState(combinedStates peer.CRStatesThreadsafe, localStates tc.CRStates, peerCrStatesInfo peer.CRStatesPeersInfo) {
 	combinedCRStates := combinedStates.Get()
 
 	// remove any DS in combinedStates NOT in local states or peer states
 	for deliveryServiceName := range combinedCRStates.DeliveryService {
 		inPeer := false
 		inLocal := false
-		for _, iPeerStates := range peerStates.GetCrstates() {
+		for _, iPeerStates := range peerCrStatesInfo.GetCrStates() {
 			if _, ok := iPeerStates.DeliveryService[deliveryServiceName]; ok {
 				inPeer = true
 				break
@@ -205,16 +195,16 @@ func pruneCombinedCaches(combinedStates peer.CRStatesThreadsafe, localStates tc.
 	}
 }
 
-func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
+func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerCrStatesInfo peer.CRStatesPeersInfo, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
-		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates, combinedStates, overrideMap, toData)
+		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerCrStatesInfo, combinedStates, overrideMap, toData)
 	}
 
 	for deliveryServiceName, localDeliveryService := range localStates.DeliveryService {
-		combineDSState(deliveryServiceName, localDeliveryService, peerStates, combinedStates)
+		combineDSState(deliveryServiceName, localDeliveryService, peerCrStatesInfo, combinedStates)
 	}
 
-	pruneCombinedDSState(combinedStates, localStates, peerStates)
+	pruneCombinedDSState(combinedStates, localStates, peerCrStatesInfo)
 	pruneCombinedCaches(combinedStates, localStates)
 }
 

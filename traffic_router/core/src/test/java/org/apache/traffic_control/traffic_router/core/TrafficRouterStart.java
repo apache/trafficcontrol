@@ -39,7 +39,7 @@ public class TrafficRouterStart {
 
 		LoggerContext.getContext().getLogger("org.springframework").setLevel(Level.WARN);
 
-		ConsoleAppender consoleAppender = ConsoleAppender.newBuilder().setLayout(PatternLayout.newBuilder().withPattern("%d{ISO8601} [%-5p] %c{4}: %m%n").build()).build();
+		ConsoleAppender consoleAppender = ConsoleAppender.newBuilder().setName("TrafficRouterStart").setLayout(PatternLayout.newBuilder().withPattern("%d{ISO8601} [%-5p] %c{4}: %m%n").build()).build();
 		LoggerContext.getContext().getRootLogger().addAppender(consoleAppender);
 		LoggerContext.getContext().getRootLogger().setLevel(Level.INFO);
 

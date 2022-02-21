@@ -11,15 +11,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { Component, type OnInit } from "@angular/core";
+import type { ValueGetterParams } from "ag-grid-community";
+import { BehaviorSubject } from "rxjs";
 
-import { BehaviorSubject, Observable } from "rxjs";
-
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
-import { Role, User } from "../../models";
-import { UserService } from "../../shared/api";
-import { orderBy } from "../../utils";
+import { UserService } from "src/app/api";
+import type { User } from "src/app/models";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { orderBy } from "src/app/utils";
 
 /**
  * UsersComponent is the controller for the "users" page.
@@ -32,134 +31,186 @@ import { orderBy } from "../../utils";
 export class UsersComponent implements OnInit {
 
 	/** All (visible) users. */
-	public users: Array<User>;
+	public users = new Array<User>();
 
-	/** Fuzzy search control. */
-	public fuzzControl = new FormControl("");
+	/** Emits changes to the fuzzy search text. */
+	public fuzzySubject = new BehaviorSubject("");
 
-	/** Whether or not user data is still loading. */
-	public loading: boolean;
+	/** The current search text. */
+	public searchText = "";
 
-	/** The ID of the currently logged-in user. */
-	public myId: number;
-
-	/** An observation subject for the map of a user's Roles. */
-	private readonly rolesMapSubject: BehaviorSubject<Map<number, string>>;
-
-	/** Maps role IDs to role Names. */
-	public rolesMap: Observable<Map<number, string>>;
-
+	/** Whether user data is still loading. */
+	public loading = true;
 
 	/**
-	 * Constructor.
+	 * A map of Role IDs to their names, since the API doesn't provide Role
+	 * names on user objects in responses.
 	 */
-	constructor(private readonly api: UserService, private readonly auth: CurrentUserService) {
-		this.rolesMapSubject = new BehaviorSubject<Map<number, string>>(new Map<number, string>());
-		this.rolesMap = this.rolesMapSubject.asObservable();
-		this.users = new Array<User>();
-		this.loading = true;
-		this.myId = -1;
+	public roles = new Map<number, string>();
+
+	/** Definitions of the table's columns according to the ag-grid API */
+	public columnDefs = [
+		{
+			field: "addressLine1",
+			headerName: "Address Line 1",
+			hide: true
+		},
+		{
+			field: "addressLine2",
+			headerName: "Address Line 2",
+			hide: true
+		},
+		{
+			field: "city",
+			headerName: "City",
+			hide: true
+		},
+		{
+			field: "company",
+			headerName: "Company",
+			hide: false
+		},
+		{
+			field: "country",
+			headerName: "Country",
+			hide: true
+		},
+		{
+			cellRenderer: "emailCellRenderer",
+			field: "email",
+			headerName: "Email Address",
+			hide: false
+		},
+		{
+			field: "fullName",
+			headerName: "Full Name",
+			hide: false
+		},
+		{
+			field: "gid",
+			filter: "agNumberColumnFilter",
+			headerName: "GID",
+			hide: true,
+		},
+		{
+			field: "id",
+			filter: "agNumberColumnFilter",
+			headerName: "ID",
+			hide: true,
+		},
+		{
+			field: "lastUpdated",
+			filter: "agDateColumnFilter",
+			headerName: "Last Updated",
+			hide: true,
+		},
+		{
+			field: "localUser",
+			filter: "tpBooleanFilter",
+			headerName: "Local User",
+			hide: true,
+		},
+		{
+			field: "newUser",
+			filter: "tpBooleanFilter",
+			headerName: "New User",
+			hide: true
+		},
+		{
+			cellRenderer: "phoneNumberCellRenderer",
+			field: "phoneNumber",
+			headerName: "Phone Number",
+			hide: true
+		},
+		{
+			field: "postalCode",
+			headerName: "Postal Code",
+			hide: true
+		},
+		{
+			field: "role",
+			headerName: "Role",
+			hide: false,
+			valueGetter: (params: ValueGetterParams): string => this.roleDisplayString(params.data.role)
+		},
+		{
+			field: "stateOrProvince",
+			headerName: "State/Province",
+			hide: true,
+		},
+		{
+			field: "tenant",
+			headerName: "Tenant",
+			hide: false,
+			valueGetter: (params: ValueGetterParams): string => `${params.data.tenant} #${params.data.tenantId}`
+		},
+		{
+			field: "uid",
+			filter: "agNumberColumnFilter",
+			headerName: "UID",
+			hide: true
+		},
+		{
+			field: "username",
+			headerName: "Username",
+			hide: false
+		}
+	];
+
+	/** Definitions for the context menu items (which act on user data). */
+	public contextMenuItems: Array<ContextMenuItem<User>> = [
+		{
+			action: "viewDetails",
+			name: "View User Details"
+		}
+	];
+
+	constructor(private readonly api: UserService) {
 	}
 
 	/**
 	 * Initializes data like a map of role ids to their names.
 	 */
-	public ngOnInit(): void {
-		// User may have navigated directly with a valid cookie - in which case current user is null
-		if (!this.auth.currentUser) {
-			this.auth.updateCurrentUser().then(
-				v => {
-					if (v && this.auth.currentUser) {
-						this.myId = this.auth.currentUser.id;
-					}
-				}
-			);
-		} else {
-			this.myId = this.auth.currentUser.id;
-		}
-
-		this.api.getUsers().then(
-			r => {
-				this.users = orderBy(r, "fullName");
-				this.loading = false;
-			}
-		);
-
-		this.api.getRoles().then(
-			(roles: Array<Role>) => {
-				const roleMap = new Map<number, string>();
-				for (const r of roles) {
-					roleMap.set(r.id, r.name);
-				}
-				this.rolesMapSubject.next(roleMap);
-			}
-		);
+	public async ngOnInit(): Promise<void> {
+		this.roles = new Map((await this.api.getRoles()).map(r => [r.id, r.name]));
+		this.users = orderBy(await this.api.getUsers(), "fullName");
+		this.loading = false;
 	}
 
 	/**
-	 * Implements a fuzzy search over usernames
+	 * Gets a string suitable for displaying to the user for a given Role ID.
 	 *
-	 * @param u The user being checked for a fuzzy match (currently uses the username)
-	 * @returns `true` if `u` is a fuzzy match for the `fuzzControl` value, `false` otherwise
+	 * @param role The ID of the Role being displayed.
+	 * @returns A human-readable identifier for the Role, in the form `{{name}} (#{{$ID}})`.
 	 */
-	public fuzzy(u: User): boolean {
-		if (!this.fuzzControl.value) {
-			return true;
+	public roleDisplayString(role: number): string {
+		const roleName = this.roles.get(role);
+		if (!roleName) {
+			throw new Error(`unknown Role: #${role}`);
 		}
-		const testVal = u.username.toLocaleLowerCase();
-		let n = -1;
-		for (const l of this.fuzzControl.value.toLocaleLowerCase()) {
-			/* eslint-disable */
-			if (!~(n = testVal.indexOf(l, n + 1))) {
-			/* eslint-enable */
-				return false;
-			}
-		}
-		return true;
+		return `${roleName} (#${role})`;
 	}
 
 	/**
-	 * Checks if the user has any render-able address piece(s).
-	 *
-	 * @param user The user to check.
-	 * @returns 'true' if the user has at least one populated "location" field (city,
-	 * stateOrProvince etc.), 'false' otherwise.
+	 * Updates the "search" query parameter in the URL every time the search
+	 * text input changes.
 	 */
-	public userHasLocation(user: User): boolean {
-		return user.city !== null || user.stateOrProvince !== null || user.country !== null || user.postalCode !== null;
+	public updateURL(): void {
+		this.fuzzySubject.next(this.searchText);
 	}
 
 	/**
-	 * Gets a string representing a user's address.
+	 * Handles the selection of a context menu item on the table.
 	 *
-	 * @param user The user for whom to fetch a location string.
-	 * @returns The user's address, or 'null' if one cannot be
-	 * constructed because no relevant information exists.
+	 * @param e The clicked action.
 	 */
-	public userLocationString(user: User): string | null {
-		let ret = "";
-		if (user.city) {
-			ret += user.city;
+	public handleContextMenu(e: ContextMenuActionEvent<User>): void {
+		switch (e.action) {
+			case "viewDetails":
+				console.log("viewing user details not implemented");
+				break;
+			default:
+				throw new Error(`unknown context menu item clicked: ${e.action}`);
 		}
-		if (user.stateOrProvince) {
-			if (ret.length !== 0) {
-				ret += ", ";
-			}
-			ret += user.stateOrProvince;
-		}
-		if (user.country) {
-			if (ret.length !== 0) {
-				ret += ", ";
-			}
-			ret += user.country;
-		}
-		if (user.postalCode) {
-			if (ret.length !== 0) {
-				ret += ", ";
-			}
-			ret += user.postalCode;
-		}
-
-		return ret.length === 0 ? null : ret;
 	}
 }

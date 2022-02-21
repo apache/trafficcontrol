@@ -12,140 +12,52 @@
 * limitations under the License.
 */
 import { HttpClientModule } from "@angular/common/http";
-import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { of } from "rxjs";
-
-
+import { DeliveryServiceService } from "src/app/api";
+import { APITestingModule } from "src/app/api/testing";
+import { defaultDeliveryService } from "src/app/models";
+import { AlertService } from "src/app/shared/alert/alert.service";
+import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { LinechartDirective } from "../../shared/charts/linechart.directive";
-import { DeliveryService, GeoLimit, GeoProvider, TPSData } from "../../models";
-import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
-import {DeliveryServiceService, UserService} from "../../shared/api";
-import {AlertService} from "../../shared/alert/alert.service";
-import { DeliveryserviceComponent } from "./deliveryservice.component";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 
+import { DeliveryserviceComponent } from "./deliveryservice.component";
 
 describe("DeliveryserviceComponent", () => {
 	let component: DeliveryserviceComponent;
 	let fixture: ComponentFixture<DeliveryserviceComponent>;
 
-	beforeEach(waitForAsync(() => {
+	beforeEach(async () => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getDeliveryServices", "getDSKBPS", "getAllDSTPSData"]);
-		const mockAlertService = jasmine.createSpyObj(["newAlert"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
-		mockAPIService.getDeliveryServices.and.returnValue(of({
-			active: true,
-			anonymousBlockingEnabled: false,
-			cdnId: 0,
-			displayName: "test DS",
-			dscp: 0,
-			geoLimit: GeoLimit.NONE,
-			geoProvider: GeoProvider.MAX_MIND,
-			ipv6RoutingEnabled: true,
-			lastUpdated: new Date(),
-			logsEnabled: true,
-			longDesc: "A test Delivery Service for API mock-ups",
-			missLat: 0,
-			missLong: 0,
-			multiSiteOrigin: false,
-			regionalGeoBlocking: false,
-			routingName: "test-DS",
-			typeId: 0,
-			xmlId: "test-DS"
-		} as DeliveryService ));
-		mockAPIService.getDSKBPS.and.returnValue(of({series: {values: []}}), of({series: {values: []}}));
-		mockAPIService.getAllDSTPSData.and.returnValue(of({
-			clientError: {
-				dataSet: {
-					data: [],
-					label: ""
-				},
-				fifthPercentile: 0,
-				max: 0,
-				mean: 0,
-				min: 0,
-				ninetyEighthPercentile: 0,
-				ninetyFifthPercentile: 0
-			},
-			redirection: {
-				dataSet: {
-					data: [],
-					label: ""
-				},
-				fifthPercentile: 0,
-				max: 0,
-				mean: 0,
-				min: 0,
-				ninetyEighthPercentile: 0,
-				ninetyFifthPercentile: 0
-			},
-			serverError: {
-				dataSet: {
-					data: [],
-					label: ""
-				},
-				fifthPercentile: 0,
-				max: 0,
-				mean: 0,
-				min: 0,
-				ninetyEighthPercentile: 0,
-				ninetyFifthPercentile: 0
-			},
-			success: {
-				dataSet: {
-					data: [],
-					label: ""
-				},
-				fifthPercentile: 0,
-				max: 0,
-				mean: 0,
-				min: 0,
-				ninetyEighthPercentile: 0,
-				ninetyFifthPercentile: 0,
-			},
-			total: {
-				dataSet: {
-					data: [],
-					label: ""
-				},
-				fifthPercentile: 0,
-				max: 0,
-				mean: 0,
-				min: 0,
-				ninetyEighthPercentile: 0,
-				ninetyFifthPercentile: 0,
-			}
-		} as TPSData));
 
-		TestBed.configureTestingModule({
+		await TestBed.configureTestingModule({
 			declarations: [
 				DeliveryserviceComponent,
 				TpHeaderComponent,
 				LinechartDirective
 			],
 			imports: [
+				APITestingModule,
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
 				RouterTestingModule
 			],
 			providers: [
-				{ provide: DeliveryServiceService, useValue: mockAPIService },
-				{ provide: AlertService, useValue: mockAlertService },
+				AlertService,
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: UserService, useValue: mockAPIService }
 			]
-		});
-		TestBed.compileComponents();
-	}));
+		}).compileComponents();
+		const dsService = TestBed.inject(DeliveryServiceService);
+		const ds = await dsService.createDeliveryService({...defaultDeliveryService});
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(DeliveryserviceComponent);
 		component = fixture.componentInstance;
+		component.deliveryservice = ds;
 		fixture.detectChanges();
 	});
 
@@ -153,11 +65,23 @@ describe("DeliveryserviceComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	afterAll(() => {
-		try{
-			TestBed.resetTestingModule();
-		} catch (e) {
-			console.error("error in DeliveryServiceComponent afterAll:", e);
-		}
-	});
+	it("loads TPS and bandwidth data charts", fakeAsync(() => {
+		component.toDate.setValue("2022-01-01");
+		component.fromDate.setValue("2022-01-01");
+		component.toTime.setValue("00:00");
+		component.fromTime.setValue("00:20");
+		component.newDateRange();
+		tick();
+		expectAsync(component.bandwidthData.toPromise().then(
+			ds => {
+				expect(ds.length).toBe(1);
+			}
+		)).toBeResolved();
+		expectAsync(component.tpsChartData.toPromise().then(
+			ds => {
+				expect(ds.length).toBe(5);
+			}
+		)).toBeResolved();
+	}));
+
 });

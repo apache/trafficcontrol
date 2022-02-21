@@ -248,6 +248,8 @@ func main() {
 		runSysctl(cfg)
 	}
 
+	trops.PrintWarnings()
+
 	if err := trops.UpdateTrafficOps(&syncdsUpdate); err != nil {
 		log.Errorf("failed to update Traffic Ops: %s\n", err.Error())
 	}

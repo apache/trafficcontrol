@@ -11,31 +11,41 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { TestBed } from "@angular/core/testing";
+import { Location } from "@angular/common";
+import { fakeAsync, TestBed, tick } from "@angular/core/testing";
+import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import {UserService} from "src/app/shared/api";
-import {newCurrentUser, User} from "src/app/models";
-import { LoginComponent } from "../../login/login.component";
+
+import { UserService } from "src/app/api";
+import { APITestingModule } from "src/app/api/testing";
+import { LoginComponent } from "src/app/login/login.component";
+import { newCurrentUser, type User } from "src/app/models";
 
 import { CurrentUserService } from "./current-user.service";
 
 describe("CurrentUserService", () => {
 	let service: CurrentUserService;
+	let router: Router;
+	let location: Location;
 
 	beforeEach(() => {
-		const mockAPIService = jasmine.createSpyObj(["getRoles", "updateCurrentUser", "getCurrentUser", "saveCurrentUser"]);
+		const mockAPIService = jasmine.createSpyObj(["updateCurrentUser", "getCurrentUser", "saveCurrentUser"]);
 		mockAPIService.getCurrentUser.and.returnValue(new Promise<User>(resolve => resolve(
 			{id: 1, newUser: false, role: 1, username: "name"}
 		)));
-		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
 		TestBed.configureTestingModule({
-			imports: [RouterTestingModule.withRoutes([{component: LoginComponent, path: "login"}])],
+			imports: [
+				APITestingModule,
+				RouterTestingModule.withRoutes([{component: LoginComponent, path: "login"}])
+			],
 			providers: [
 				CurrentUserService,
-				{provide: UserService, useValue: mockAPIService}
 			]
 		});
 		service = TestBed.inject(CurrentUserService);
+		router = TestBed.inject(Router);
+		location = TestBed.inject(Location);
+		router.initialNavigation();
 	});
 
 	it("should be created", () => {
@@ -109,41 +119,90 @@ describe("CurrentUserService", () => {
 		);
 
 		const u = service.currentUser;
-		expect(u).not.toBeNull();
-		if (u !== null) {
-			expect(u.addressLine1).toBeNull();
-			expect(u.addressLine2).toBeNull();
-			expect(u.city).toBeNull();
-			expect(u.company).toBeNull();
-			expect(u.country).toBeNull();
-			expect(u.email).toBe("different email");
-			expect(u.fullName).toBe("different full name");
-			expect(u.gid).toBeNull();
-			expect(u.id).toEqual(9001);
-			expect(u.lastUpdated).toEqual(new Date(upd.getTime()+1000));
-			expect(u.localUser).toBeFalse();
-			expect(u.newUser).toBeTrue();
-			expect(u.phoneNumber).toBeNull();
-			expect(u.postalCode).toBeNull();
-			expect(u.publicSshKey).toBeNull();
-			expect(u.role).toEqual(2);
-			expect(u.roleName).toBe("different role name");
-			expect(u.stateOrProvince).toBeNull();
-			expect(u.tenant).toBe("different tenant");
-			expect(u.tenantId).toEqual(1);
-			expect(u.uid).toBeNull();
-			expect(u.username).toBe("test");
+		if (u === null) {
+			return fail("user is null after being set");
 		}
+		expect(u).toEqual({
+			addressLine1: null,
+			addressLine2: null,
+			city: null,
+			company: null,
+			country: null,
+			email: "different email",
+			fullName: "different full name",
+			gid: null,
+			id: 9001,
+			lastUpdated: new Date(upd.getTime()+1000),
+			localUser: false,
+			newUser: true,
+			phoneNumber: null,
+			postalCode: null,
+			publicSshKey: null,
+			role: 2,
+			roleName: "different role name",
+			stateOrProvince: null,
+			tenant: "different tenant",
+			tenantId: 1,
+			uid: null,
+			username: "test",
+		});
 	});
 
 	it("should update user permissions properly", () => {
 		service.setUser(newCurrentUser(), new Set(["a different permission"]));
+		expect(service.hasPermission("a different permission")).toBeTrue();
 		service.logout();
+		expect(service.hasPermission("a different permission")).toBeFalse();
 		service.setUser(newCurrentUser(), new Set(["a permission"]));
+		expect(service.capabilities.has("a permission")).toBeTrue();
+		expect(service.hasPermission("a permission")).toBeTrue();
+		expect(service.capabilities.has("a different permission")).toBeFalse();
+		expect(service.hasPermission("a different permission")).toBeFalse();
+		service.setUser(newCurrentUser(), [{description: "", name: "a permission"}]);
 		expect(service.capabilities.has("a permission")).toBeTrue();
 		expect(service.hasPermission("a permission")).toBeTrue();
 		expect(service.capabilities.has("a different permission")).toBeFalse();
 		expect(service.hasPermission("a different permission")).toBeFalse();
 	});
 
+	it("fetches the current user when appropriate", async () => {
+		const spy = spyOn(service, "updateCurrentUser").and.returnValue(new Promise(r=>r(true)));
+		service.setUser(newCurrentUser(), []);
+		expect(await service.fetchCurrentUser()).toBeTrue();
+		expect(spy).not.toHaveBeenCalled();
+
+		service.logout();
+		expect(await service.fetchCurrentUser()).toBeTrue();
+		expect(spy).toHaveBeenCalled();
+	});
+
+	it("logs users in", async () => {
+		expect(await service.login("test-admin", "twelve12!")).toBeTrue();
+		expect(await service.login("test-admin", "a misspelled password")).toBeFalse();
+		expect(await service.login("there's no token that includes apostrophes")).toBeFalse();
+	});
+
+	it("logs users out", fakeAsync(() => {
+		service.logout();
+		tick();
+		expect(location.path()).toBe("/login");
+		expect(service.currentUser).toBeNull();
+
+		service.setUser(newCurrentUser(), new Set(["perm"]));
+		expect(service.currentUser).toBeTruthy();
+		expect(service.hasPermission("perm")).toBeTrue();
+
+		service.logout(true);
+		tick();
+		expect(location.path()).toBe(`/login?returnUrl=${encodeURIComponent("/core")}`);
+		expect(service.currentUser).toBeNull();
+		expect(service.hasPermission("perm")).toBeFalse();
+	}));
+
+	it("submits a request to update the current user", () => {
+		const spy = spyOn(TestBed.inject(UserService), "updateCurrentUser");
+		expect(spy).not.toHaveBeenCalled();
+		service.saveCurrentUser(newCurrentUser());
+		expect(spy).toHaveBeenCalled();
+	});
 });

@@ -684,16 +684,13 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 	if mc == nil {
 		return mc, errors.New("no TM configmap data")
 	}
+	// TODO: in the next major/minor release following 6.1, we should be able to remove this
+	//  fallback dependency on the CRConfig entirely (https://github.com/apache/trafficcontrol/issues/6512)
 	for name, mon := range crConfig.Monitors {
-		if tmData, ok := mc.TrafficMonitor[name]; ok {
-			if tmData.IP != "" && tmData.IP6 != "" {
-				continue
-			} else {
-				mc.TrafficMonitor[name] = tc.TrafficMonitor{}
-			}
-		} else {
+		if tmData, ok := mc.TrafficMonitor[name]; !ok || tmData.IP != "" || tmData.IP6 != "" {
 			continue
 		}
+		mc.TrafficMonitor[name] = tc.TrafficMonitor{}
 		m := mc.TrafficMonitor[name]
 		if mon.Port != nil {
 			m.Port = *mon.Port

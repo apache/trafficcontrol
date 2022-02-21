@@ -16,11 +16,11 @@ import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
+import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { User } from "../../models";
-import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
-import {LoadingComponent} from "../../shared/loading/loading.component";
-import {UserService} from "../../shared/api";
+import { LoadingComponent } from "src/app/shared/loading/loading.component";
+import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+
 import { UsersComponent } from "./users.component";
 
 describe("UsersComponent", () => {
@@ -29,14 +29,6 @@ describe("UsersComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getUsers", "getRoles", "getCurrentUser"]);
-		mockAPIService.getUsers.and.returnValue(new Promise(resolve => resolve([])));
-		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
-		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
-			id: 0,
-			newUser: false,
-			username: "test"
-		} as User)));
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
 
@@ -47,13 +39,13 @@ describe("UsersComponent", () => {
 				TpHeaderComponent,
 			],
 			imports: [
+				APITestingModule,
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
 				RouterTestingModule
 			],
 			providers: [
-				{ provide: UserService, useValue: mockAPIService },
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
 		});
@@ -70,11 +62,14 @@ describe("UsersComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	afterAll(() => {
-		try{
-			TestBed.resetTestingModule();
-		} catch (e) {
-			console.error("error in UsersComponent afterAll:", e);
-		}
+	it("handles its context menu actions", () => {
+		expect(()=>component.handleContextMenu({action: "viewDetails", data: []})).not.toThrow();
+		expect(()=>component.handleContextMenu({action: "unknown action", data: []})).toThrow();
+	});
+
+	it("gets display strings for Roles", () => {
+		component.roles = new Map([[1, "admin"]]);
+		expect(component.roleDisplayString(1)).toBe("admin (#1)");
+		expect(()=>component.roleDisplayString(2)).toThrow();
 	});
 });

@@ -122,7 +122,6 @@ type Config struct {
 	TMConfigBackupFile           string          `json:"tmconfig_backup_file"`
 	TrafficOpsDiskRetryMax       uint64          `json:"traffic_ops_disk_retry_max"`
 	CachePollingProtocol         PollingProtocol `json:"cache_polling_protocol"`
-	PeerPollingProtocol          PollingProtocol `json:"peer_polling_protocol"`
 	HTTPPollingFormat            string          `json:"http_polling_format"`
 	// ShortHostnameOverride is for explicitly setting a hostname rather than using the output of `hostname -s`.
 	ShortHostnameOverride string `json:"short_hostname_override"`
@@ -160,7 +159,6 @@ var DefaultConfig = Config{
 	TMConfigBackupFile:           TMConfigBackupFile,
 	TrafficOpsDiskRetryMax:       2,
 	CachePollingProtocol:         Both,
-	PeerPollingProtocol:          Both,
 	HTTPPollingFormat:            HTTPPollingFormat,
 	ShortHostnameOverride:        "",
 }
@@ -236,6 +234,9 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.TrafficOpsMaxRetryIntervalMs != nil {
 		c.TrafficOpsMaxRetryInterval = time.Duration(*aux.TrafficOpsMaxRetryIntervalMs) * time.Millisecond
+	}
+	if c.StatPolling && c.DistributedPolling {
+		return errors.New("invalid configuration: stat_polling cannot be enabled if distributed_polling is also enabled")
 	}
 	return nil
 }

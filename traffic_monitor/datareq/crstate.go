@@ -29,10 +29,17 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 )
 
-func srvTRState(params url.Values, localStates peer.CRStatesThreadsafe, combinedStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe) ([]byte, int, error) {
-	// local state requested (peer polling case)
-	if _, raw := params["raw"]; raw {
-		data, err := srvTRStateSelf(localStates)
+func srvTRState(
+	params url.Values,
+	localStates peer.CRStatesThreadsafe,
+	combinedStates peer.CRStatesThreadsafe,
+	peerStates peer.CRStatesPeersThreadsafe,
+	distributedPollingEnabled bool,
+) ([]byte, int, error) {
+	_, raw := params["raw"]     // peer polling case
+	_, local := params["local"] // distributed peer polling case
+	if raw {
+		data, err := srvTRStateSelf(localStates, distributedPollingEnabled)
 		return data, http.StatusOK, err
 	}
 
@@ -51,15 +58,36 @@ func srvTRState(params url.Values, localStates peer.CRStatesThreadsafe, combined
 		}
 	}
 
-	data, err := srvTRStateDerived(combinedStates, peerStates)
+	data, err := srvTRStateDerived(combinedStates, local && distributedPollingEnabled)
 
 	return data, http.StatusOK, err
 }
 
-func srvTRStateDerived(combinedStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe) ([]byte, error) {
-	return tc.CRStatesMarshall(combinedStates.Get())
+func srvTRStateDerived(combinedStates peer.CRStatesThreadsafe, directlyPolledOnly bool) ([]byte, error) {
+	if !directlyPolledOnly {
+		return tc.CRStatesMarshall(combinedStates.Get())
+	}
+	unfiltered := combinedStates.Get()
+	return tc.CRStatesMarshall(filterDirectlyPolledCaches(unfiltered))
 }
 
-func srvTRStateSelf(localStates peer.CRStatesThreadsafe) ([]byte, error) {
-	return tc.CRStatesMarshall(localStates.Get())
+func filterDirectlyPolledCaches(crstates tc.CRStates) tc.CRStates {
+	filtered := tc.CRStates{
+		Caches:          make(map[tc.CacheName]tc.IsAvailable),
+		DeliveryService: crstates.DeliveryService,
+	}
+	for cacheName, availability := range crstates.Caches {
+		if availability.DirectlyPolled {
+			filtered.Caches[cacheName] = availability
+		}
+	}
+	return filtered
+}
+
+func srvTRStateSelf(localStates peer.CRStatesThreadsafe, directlyPolledOnly bool) ([]byte, error) {
+	if !directlyPolledOnly {
+		return tc.CRStatesMarshall(localStates.Get())
+	}
+	unfiltered := localStates.Get()
+	return tc.CRStatesMarshall(filterDirectlyPolledCaches(unfiltered))
 }

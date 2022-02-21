@@ -15,9 +15,9 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { DeliveryService, InvalidationJob, NewInvalidationJob, User } from "../../models";
+import type { DeliveryService, InvalidationJob, NewInvalidationJob, User } from "src/app/models";
 
-import { APIService } from "./APIService";
+import { APIService } from "./base-api.service";
 
 /**
  * JobOpts defines the options that can be passed to getInvalidationJobs.
@@ -41,11 +41,6 @@ interface JobOpts {
 @Injectable()
 export class InvalidationJobService extends APIService {
 
-	/**
-	 * Injects the Angular HTTP client service into the parent constructor.
-	 *
-	 * @param http The Angular HTTP client service.
-	 */
 	constructor(http: HttpClient) {
 		super(http);
 	}
@@ -100,12 +95,9 @@ export class InvalidationJobService extends APIService {
 	 * @param job The Job to create.
 	 * @returns whether or not creation succeeded.
 	 */
-	public async createInvalidationJob(job: NewInvalidationJob): Promise<boolean> {
+	public async createInvalidationJob(job: NewInvalidationJob): Promise<InvalidationJob> {
 		const path = "jobs";
-		return this.post(path, job).toPromise().then(
-			() => true,
-			() => false
-		);
+		return this.post<InvalidationJob>(path, job).toPromise();
 	}
 
 	/**

@@ -63,7 +63,6 @@ func NewCache(
 	handler handler.Handler,
 	cfg config.Config,
 	appData config.StaticAppData,
-	pollingProtocol config.PollingProtocol,
 ) CachePoller {
 	var tickChan chan uint64
 	if tick {
@@ -73,7 +72,7 @@ func NewCache(
 		TickChan:      tickChan,
 		ConfigChannel: make(chan CachePollerConfig),
 		Config: CachePollerConfig{
-			PollingProtocol: pollingProtocol,
+			PollingProtocol: cfg.CachePollingProtocol,
 		},
 		GlobalContexts: GetGlobalContexts(cfg, appData),
 		Handler:        handler,
@@ -112,9 +111,6 @@ func (p CachePoller) Poll() {
 			pollerObj := pollers[info.PollType]
 
 			pollerCfg := PollerConfig{
-				URL:         info.URL,
-				URLv6:       info.URLv6,
-				Host:        info.Host,
 				Timeout:     info.Timeout,
 				NoKeepAlive: info.NoKeepAlive,
 				PollerID:    info.ID,

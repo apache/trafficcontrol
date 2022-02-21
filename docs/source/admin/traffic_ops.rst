@@ -237,6 +237,7 @@ To upgrade from older Traffic Ops versions, stop the service, use :manpage:`yum(
 	yum upgrade traffic_ops
 	pushd /opt/traffic_ops/app/
 	./db/admin --env production upgrade
+	./db/admin --env production --trafficvault upgrade
 	popd
 
 After this completes, see Guide_ for instructions on running the :program:`postinstall` script. Once the :program:`postinstall` script, has finished, run the following command as the root user (or with :manpage:`sudo(8)`): ``systemctl start traffic_ops`` to start the service.
@@ -493,6 +494,13 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 :disable_auto_cert_deletion: This optional boolean value can be used to disable the automatic deletion of certificates for Delivery Services that no longer exist (which happens after a CDN Snapshot is taken). Default: false.
 
 	.. versionadded:: 6.1
+
+:cdni: This is an optional section of configurations for :abbr:`CDNi (Content Delivery Network Interconnect)` operations.
+
+	.. versionadded:: 6.2
+
+	:dcdn_id: A string representing this :abbr:`CDN (Content Delivery Network)` to be used in the :abbr:`JWT (JSON Web Token)` and subsequently in :abbr:`CDNi (Content Delivery Network Interconnect)` operations.
+	:jwt_decoding_secret: A string used to decode the :abbr:`JWT (JSON Web Token)` to get information for :abbr:`CDNi (Content Delivery Network Interconnect)` operations.
 
 
 Example cdn.conf

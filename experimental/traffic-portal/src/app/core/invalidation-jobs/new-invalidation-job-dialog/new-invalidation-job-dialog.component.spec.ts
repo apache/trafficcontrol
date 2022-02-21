@@ -12,35 +12,69 @@
 * limitations under the License.
 */
 import { HttpClientModule } from "@angular/common/http";
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed, tick, fakeAsync } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
-import {InvalidationJobService} from "../../../shared/api";
+import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
+import { APITestingModule } from "src/app/api/testing";
+
 import { NewInvalidationJobDialogComponent, sanitizedRegExpString, timeStringFromDate } from "./new-invalidation-job-dialog.component";
 
 describe("NewInvalidationJobDialogComponent", () => {
 	let component: NewInvalidationJobDialogComponent;
 	let fixture: ComponentFixture<NewInvalidationJobDialogComponent>;
+	const dialogRef = {
+		close: jasmine.createSpy("dialog 'close' method", (): void => console.log("dialog closed"))
+	};
+	const dialogData = {
+		dsID: -1
+	};
 
 	beforeEach(async () => {
-		const mockAPIService = jasmine.createSpyObj(["getInvalidationJobs"]);
+		dialogRef.close = jasmine.createSpy("dialog 'close' method", (): void => console.log("dialog closed"));
 		await TestBed.configureTestingModule({
 			declarations: [ NewInvalidationJobDialogComponent ],
 			imports: [
 				MatDialogModule,
-				HttpClientModule
+				HttpClientModule,
+				APITestingModule
 			],
 			providers: [
-				{provide: MatDialogRef, useValue: {close: (): void => {
-					console.log("dialog closed");
-				}}},
-				{provide: MAT_DIALOG_DATA, useValue: {dsID: -1}},
-				{ provide: InvalidationJobService, useValue: mockAPIService}
+				{provide: MatDialogRef, useValue: dialogRef},
+				{provide: MAT_DIALOG_DATA, useValue: dialogData},
 			]
 		}).compileComponents();
-	});
+		const service = TestBed.inject(DeliveryServiceService);
+		// TODO: These are never cleaned up (because the DS service doesn't have
+		// a method for DS deletion)
+		const ds = await service.createDeliveryService({
+			active: true,
+			anonymousBlockingEnabled: false,
+			cdnId: 2,
+			cdnName: "test",
+			displayName: "Test DS",
+			dscp: 1,
+			geoLimit: 0,
+			geoProvider: 0,
+			ipv6RoutingEnabled: true,
+			logsEnabled: true,
+			longDesc: "A DS for testing",
+			missLat: 0,
+			missLong: 0,
+			multiSiteOrigin: false,
+			regionalGeoBlocking: false,
+			routingName: "test",
+			tenant: "root",
+			tenantId: 1,
+			type: "HTTP",
+			typeId: 10,
+			xmlId: "test-ds",
+		});
+		if (ds.id === undefined) {
+			return fail("created Delivery Service had no ID");
+		}
+		dialogData.dsID = ds.id;
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(NewInvalidationJobDialogComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
@@ -49,6 +83,110 @@ describe("NewInvalidationJobDialogComponent", () => {
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
+
+	it("closes the dialog", () => {
+		expect(dialogRef.close).not.toHaveBeenCalled();
+		component.cancel();
+		expect(dialogRef.close).toHaveBeenCalled();
+	});
+
+	it("submits requests to create new Jobs, then closes the dialog", fakeAsync(() => {
+		expect(dialogRef.close).not.toHaveBeenCalled();
+		component.onSubmit(new SubmitEvent("submit"));
+		tick();
+		expect(dialogRef.close).toHaveBeenCalled();
+		const service = TestBed.inject(InvalidationJobService);
+		expectAsync((async (): Promise<true> => {
+			for (const j of await service.getInvalidationJobs()) {
+				await service.deleteInvalidationJob(j.id);
+			}
+			return true;
+		})()).toBeResolvedTo(true);
+	}));
+
+	it("updates the minimum starting time according to a newly selected starting date", () => {
+		component.startDate = new Date();
+		component.startMin = new Date();
+		component.dateChange();
+		expect(component.startMinTime).toBe(timeStringFromDate(component.startMin));
+		component.startDate.setDate(component.startDate.getDate()+1);
+		component.dateChange();
+		expect(component.startMinTime).toBe("00:00");
+	});
+
+	it("doesn't try to create the job when the regexp isn't valid", fakeAsync(() => {
+		component.regexp.setValue("+\\y");
+		component.onSubmit(new SubmitEvent("submit"));
+		tick();
+		expect(dialogRef.close).not.toHaveBeenCalled();
+	}));
+});
+
+describe("NewInvalidationJobDialogComponent - editing", () => {
+	let component: NewInvalidationJobDialogComponent;
+	let fixture: ComponentFixture<NewInvalidationJobDialogComponent>;
+	const dialogRef = {
+		close: jasmine.createSpy("dialog 'close' method", (): void => console.log("dialog closed"))
+	};
+	const dialogData = {
+		dsID: -1,
+		job: {
+			assetUrl: "https://some-url.test/followed/by/a/p\\.attern\\.\\b",
+			id: -1,
+			parameters: "TTL:178",
+			startTime: new Date(0)
+		}
+	};
+
+	beforeEach(async () => {
+		dialogRef.close = jasmine.createSpy("dialog 'close' method", (): void => console.log("dialog closed"));
+		await TestBed.configureTestingModule({
+			declarations: [ NewInvalidationJobDialogComponent ],
+			imports: [
+				MatDialogModule,
+				HttpClientModule,
+				APITestingModule
+			],
+			providers: [
+				{provide: MatDialogRef, useValue: dialogRef},
+				{provide: MAT_DIALOG_DATA, useValue: dialogData},
+			]
+		}).compileComponents();
+
+		const service = TestBed.inject(InvalidationJobService);
+		const now = new Date();
+		const job = await service.createInvalidationJob({
+			deliveryService: "test-xmlid",
+			regex: "/",
+			startTime: new Date(now.setDate(now.getDate()+1)),
+			ttl: 178
+		});
+		if (job.id === undefined) {
+			return fail("created Content Invalidation Job had no ID");
+		}
+		dialogData.job = job;
+
+		fixture = TestBed.createComponent(NewInvalidationJobDialogComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
+
+	afterEach(async ()=>{
+		const service = TestBed.inject(InvalidationJobService);
+		await service.deleteInvalidationJob(dialogData.job.id);
+		expect((await service.getInvalidationJobs()).length).toBe(0);
+	});
+
+	it("should create", () => {
+		expect(component).toBeTruthy();
+	});
+
+	it("submits requests to create new Jobs, then closes the dialog", fakeAsync(() => {
+		expect(dialogRef.close).not.toHaveBeenCalled();
+		component.onSubmit(new SubmitEvent("submit"));
+		tick();
+		expect(dialogRef.close).toHaveBeenCalled();
+	}));
 });
 
 describe("NewInvalidationJobDialogComponent utility functions", () => {

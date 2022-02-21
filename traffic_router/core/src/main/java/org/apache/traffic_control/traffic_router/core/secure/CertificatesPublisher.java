@@ -42,6 +42,7 @@ public class CertificatesPublisher {
 	private final static Logger LOGGER = LogManager.getLogger(CertificatesPublisher.class);
 	private JsonNode deliveryServicesJson;
 	private List<DeliveryService> deliveryServices = new ArrayList<>();
+	private boolean updated = false;
 	private boolean running = true;
 	final Thread worker;
 
@@ -57,13 +58,19 @@ public class CertificatesPublisher {
 						continue;
 					}
 
+					updated = false;
 					if (certificateChecker.certificatesAreValid(certificateDataList, deliveryServicesJson)) {
 						deliveryServices.forEach(ds -> {
 							final boolean hasX509Cert = certificateChecker.hasCertificate(certificateDataList, ds.getId());
 							ds.setHasX509Cert(hasX509Cert);
 						});
+
 						publishCertificateList(certificateDataList);
-						publishStatusQueue.poll(2, TimeUnit.SECONDS);
+
+						if (updated == false) {
+							publishStatusQueue.poll(5, TimeUnit.MICROSECONDS);
+						}
+
 						trafficRouterManager.trackEvent("lastHttpsCertificatesUpdate");
 					} else {
 						trafficRouterManager.trackEvent("lastInvalidHttpsCertificates");
@@ -96,6 +103,7 @@ public class CertificatesPublisher {
 	}
 
 	public void setDeliveryServicesJson(final JsonNode deliveryServicesJson) {
+		updated = true;
 		this.deliveryServicesJson = deliveryServicesJson;
 	}
 

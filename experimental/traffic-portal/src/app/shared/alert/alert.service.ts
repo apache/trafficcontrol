@@ -12,10 +12,9 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
+import { BehaviorSubject, type Observable } from "rxjs";
 
-import { BehaviorSubject, Observable } from "rxjs";
-
-import { Alert, AlertLevel } from "../../models/alert.model";
+import type { Alert, AlertLevel } from "src/app/models/alert.model";
 
 /**
  * This class is responsible for populating an alerts Observable that can be
@@ -58,7 +57,7 @@ export class AlertService {
 	 */
 	public newAlert(levelOrAlert: AlertLevel | Alert, text?: string): void {
 		if (typeof levelOrAlert === "string") {
-			if (text === null || text === undefined) {
+			if (text === undefined) {
 				throw new Error("Can't pass raw level without raw text!");
 			}
 			this.alertsSubject.next({level: levelOrAlert, text});

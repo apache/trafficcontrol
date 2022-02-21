@@ -11,23 +11,24 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { DOCUMENT } from "@angular/common";
+import { Component, type OnInit, ViewChild, Inject } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import type { MatStepper } from "@angular/material/stepper";
 import { Router } from "@angular/router";
 
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
+import { CDNService, DeliveryServiceService } from "src/app/api";
 import {
 	bypassable,
-	CDN,
+	type CDN,
 	defaultDeliveryService,
-	DeliveryService,
+	type DeliveryService,
 	Protocol,
 	protocolToString,
-	Type
-} from "../../models";
-import { User } from "../../models/user";
-import { CDNService, DeliveryServiceService } from "../../shared/api";
+	type Type,
+	type User
+} from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s
@@ -48,7 +49,7 @@ const VALID_IPV4 = /^(1\d\d|2[0-4]\d|25[0-5]|\d\d?)(\.(1\d\d|2[0-4]\d|25[0-5]|\d
  * A regular expression that matches IPv6 addresses
  * This is huge and ugly, but there's no JS built-in for address parsing afaik.
  */
-const VALID_IPV6 = /^((((((([\da-fA-F]{1,4})):){6})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((::((([\da-fA-F]{1,4})):){5})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((((([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){4})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,1}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){3})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,2}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){2})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,3}(([\da-fA-F]{1,4}))):(([\da-fA-F]{1,4})):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,4}(([\da-fA-F]{1,4}))):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,5}(([\da-fA-F]{1,4}))):)(([\da-fA-F]{1,4})))|(((((([\da-fA-F]{1,4})):){0,6}(([\da-fA-F]{1,4}))):))))$/;
+const VALID_IPV6 = /^(?:(?:[a-fA-F\d]{1,4}:){7}(?:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){6}(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){5}(?::(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,2}|:)|(?:[a-fA-F\d]{1,4}:){4}(?:(?::[a-fA-F\d]{1,4}){0,1}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,3}|:)|(?:[a-fA-F\d]{1,4}:){3}(?:(?::[a-fA-F\d]{1,4}){0,2}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,4}|:)|(?:[a-fA-F\d]{1,4}:){2}(?:(?::[a-fA-F\d]{1,4}){0,3}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,5}|:)|(?:[a-fA-F\d]{1,4}:){1}(?:(?::[a-fA-F\d]{1,4}){0,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,6}|:)|(?::(?:(?::[a-fA-F\d]{1,4}){0,5}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,7}|:)))(?:%[0-9a-zA-Z]{1,})?$/;
 /* eslint-enable */
 /**
  * A regular expression that matches a valid hostname
@@ -114,82 +115,73 @@ export class NewDeliveryServiceComponent implements OnInit {
 	public bypassable = bypassable;
 
 	/**
-	 * A reference to the stepper used in the form - this is never actually
-	 * undefined, but the value is set by the decorator, so to satisfy the
-	 * compiler we need to mark it as optional.
+	 * A reference to the stepper used in the form.
 	 */
-	@ViewChild("stepper") public stepper?: MatStepper;
+	@ViewChild("stepper") public stepper!: MatStepper;
 
-	/**
-	 * Constructor.
-	 */
 	constructor(
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly cdnAPI: CDNService,
 		private readonly auth: CurrentUserService,
-		private readonly router: Router
+		private readonly router: Router,
+		@Inject(DOCUMENT) private readonly document: Document
 	) { }
 
 	/**
 	 * Initializes all of the extra data needed to construct a Delivery Service
 	 * (types, cdns, etc).
 	 */
-	public ngOnInit(): void {
-		this.auth.updateCurrentUser().then( success => {
-			if (!success || this.auth.currentUser === null) {
-				return;
+	public async ngOnInit(): Promise<void> {
+		const success = await this.auth.updateCurrentUser();
+		if (!success || this.auth.currentUser === null) {
+			return;
+		}
+
+		this.deliveryService.tenant = this.auth.currentUser.tenant;
+		this.deliveryService.tenantId = this.auth.currentUser.tenantId;
+		const typeP = this.dsAPI.getDSTypes().then(
+			(types: Array<Type>) => {
+				this.dsTypes = types;
+				for (const t of types) {
+					if (t.name === "HTTP") {
+						this.deliveryService.type = t.name;
+						this.deliveryService.typeId = t.id;
+						this.dsType.setValue(t);
+						break;
+					}
+				}
 			}
-			this.deliveryService.tenant = this.auth.currentUser.tenant;
-			this.deliveryService.tenantId = this.auth.currentUser.tenantId;
-			this.dsAPI.getDSTypes().then(
-				(types: Array<Type>) => {
-					this.dsTypes = types;
-					for (const t of types) {
-						if (t.name === "HTTP") {
-							this.deliveryService.type = t.name;
-							this.deliveryService.typeId = t.id;
-							this.dsType.setValue(t);
-							break;
+		);
+		if (!this.auth.currentUser || !this.auth.currentUser.tenantId) {
+			console.error("Cannot set default CDN - user has no tenant");
+			return typeP;
+		}
+		const dsP = this.dsAPI.getDeliveryServices().then(
+			d => {
+				const cdnsInUse = new Map<number, number>();
+				for (const ds of d) {
+					if (ds.tenantId === (this.auth.currentUser as User).tenantId) {
+						const usedCDNs = cdnsInUse.get(ds.tenantId);
+						if (!usedCDNs) {
+							cdnsInUse.set(ds.tenantId, 1);
+						} else {
+							cdnsInUse.set(ds.tenantId, usedCDNs + 1);
 						}
 					}
 				}
-			);
-			if (!this.auth.currentUser || !this.auth.currentUser.tenantId) {
-				console.error("Cannot set default CDN - user has no tenant");
-				return;
-			}
-			this.dsAPI.getDeliveryServices().then(
-				d => {
-					const cdnsInUse = new Map<number, number>();
-					for (const ds of d) {
-						if (ds.tenantId === undefined) {
-							console.warn("Delivery Service has no tenant:", ds);
-							continue;
-						}
-						if (ds.tenantId === (this.auth.currentUser as User).tenantId) {
-							const usedCDNs = cdnsInUse.get(ds.tenantId);
-							if (!usedCDNs) {
-								cdnsInUse.set(ds.tenantId, 1);
-							} else {
-								cdnsInUse.set(ds.tenantId, usedCDNs + 1);
-							}
-						}
+
+				let most = -Infinity;
+				let mostId = -1;
+				cdnsInUse.forEach( (v: number, k: number) => {
+					if (v > most) {
+						most = v;
+						mostId = k;
 					}
-
-					let most = 0;
-					let mostId = -1;
-					cdnsInUse.forEach( (v: number, k: number) => {
-						if (v > most) {
-							most = v;
-							mostId = k;
-						}
-					});
-
-					this.setDefaultCDN(mostId);
-				}
-			);
-
-		});
+				});
+				this.setDefaultCDN(mostId);
+			}
+		);
+		await Promise.all([typeP, dsP]);
 	}
 
 	/**
@@ -201,47 +193,44 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * which case it should be `-1` and the selected CDN will be the first CDN
 	 * in lexigraphical order by name.
 	 */
-	private setDefaultCDN(id: number): void {
-		this.cdnAPI.getCDNs().then(
-			cdns => {
-				if (!cdns) {
-					console.warn("No CDNs found in the API");
-					return;
-				}
-				this.cdns = new Array<CDN>();
-				let def: CDN | null = null;
-				cdns.forEach( (c: CDN) => {
-
-					// this is a special, magic-value CDN that can't have any DSes
-					if (c.name !== "ALL") {
-						this.cdns.push(c);
-						if (id > 0) {
-							if (c.id === id) {
-								def = c;
-							}
-						} else if (!def || c.name < def.name) {
-							def = c;
-						}
+	private async setDefaultCDN(id: number): Promise<void> {
+		const cdns = await this.cdnAPI.getCDNs();
+		if (!cdns) {
+			throw new Error("no CDNs found in the API");
+		}
+		this.cdns = [];
+		let def;
+		for (const [name, cdn] of cdns) {
+			// this is a special, magic-value CDN that can't have any DSes
+			if (name !== "ALL") {
+				this.cdns.push(cdn);
+				if (id > 0) {
+					if (cdn.id === id) {
+						def = cdn;
 					}
-				});
-				if (!def) {
-					def = this.cdns[0];
+				} else if (!def || cdn.name < def.name) {
+					def = cdn;
 				}
-				this.deliveryService.cdnId = def.id;
-				this.deliveryService.cdnName = def.name;
-				this.cdnObject.setValue(def);
 			}
-		);
+		}
+		if (this.cdns.length < 1) {
+			throw new Error("the only CDN is 'ALL', which cannot be used for Delivery Services");
+		}
+
+		if (!def) {
+			def = this.cdns[0];
+		}
+		this.deliveryService.cdnId = def.id;
+		this.deliveryService.cdnName = def.name;
+		this.cdnObject.setValue(def);
 	}
 
 	/**
 	 * When a user submits their origin URL, this parses that out into the
 	 * related DS fields.
-	 *
-	 * @param stepper The stepper controlling the form flow - used to advance to the next step.
 	 */
 	public setOriginURL(): void {
-		const parser = document.createElement("a");
+		const parser = this.document.createElement("a");
 		parser.href = this.originURL.value;
 		this.deliveryService.orgServerFqdn = parser.origin;
 		if (parser.pathname) {
@@ -269,7 +258,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 		this.deliveryService.displayName = `Delivery Service for ${parser.hostname}`;
 		this.displayName.setValue(this.deliveryService.displayName);
-		this.stepper?.next();
+		this.stepper.next();
 	}
 
 	/**
@@ -287,7 +276,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 			// According to https://stackoverflow.com/questions/39642547/is-it-possible-to-get-native-element-for-formcontrol
 			// this could instead be implemented with a Directive, but that doesn't really seem like
 			// any less of a hack to me.
-			const nativeDisplayNameElement = document.getElementById("displayName") as HTMLInputElement;
+			const nativeDisplayNameElement = this.document.getElementById("displayName") as HTMLInputElement;
 			nativeDisplayNameElement.setCustomValidity(
 				"Failed to create a unique key from Delivery Service name. Try using less special characters."
 			);
@@ -301,7 +290,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		if (this.infoURL.value) {
 			this.deliveryService.infoUrl = this.infoURL.value;
 		}
-		this.stepper?.next();
+		this.stepper.next();
 	}
 
 	/**
@@ -335,7 +324,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 						this.setDNSBypass(this.bypassLoc.value);
 					} catch (e) {
 						console.error(e);
-						const nativeBypassElement = document.getElementById("bypass-loc") as HTMLInputElement;
+						const nativeBypassElement = this.document.getElementById("bypass-loc") as HTMLInputElement;
 						nativeBypassElement.setCustomValidity(e instanceof Error ? e.message : String(e));
 						nativeBypassElement.reportValidity();
 						nativeBypassElement.value = "";
@@ -351,12 +340,8 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 		this.dsAPI.createDeliveryService(this.deliveryService).then(
 			v => {
-				if (v) {
-					console.log("New Delivery Service '%s' created", this.deliveryService.displayName);
-					this.router.navigate(["/"], {queryParams: {search: encodeURIComponent(this.deliveryService.displayName)}});
-				} else {
-					console.error("Failed to create deliveryService: ", this.deliveryService);
-				}
+				console.log("New Delivery Service '%s' created", v.displayName);
+				this.router.navigate(["/"], {queryParams: {search: encodeURIComponent(v.displayName)}});
 			}
 		);
 	}
@@ -384,6 +369,6 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * Allows a user to return to the previous step.
 	 */
 	public previous(): void {
-		this.stepper?.previous();
+		this.stepper.previous();
 	}
 }

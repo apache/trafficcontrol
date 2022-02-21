@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -63,7 +64,7 @@ func RefreshDNSSECKeysV4(w http.ResponseWriter, r *http.Request) {
 	if started {
 		message = "Starting DNSSEC key refresh in the background. This may take a few minutes. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusID)
 	}
-	w.Header().Add("Location", api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusID))
+	w.Header().Add(rfc.Location, api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusID))
 	api.WriteAlerts(w, r, http.StatusAccepted, tc.CreateAlerts(tc.SuccessLevel, message))
 }
 
