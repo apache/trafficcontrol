@@ -36,7 +36,7 @@ func failureOutput(failureMessage string, msgAndArgs ...interface{}) string {
 		message = fmt.Sprintf(msgAndArgs[0].(string), msgAndArgs[1:]...)
 	}
 	if len(message) > 0 {
-		output = "\n" + output + "\nMessages: " + message + "\n"
+		output = output + " Messages: " + message
 	}
 	return output
 }
@@ -45,7 +45,7 @@ func failureOutput(failureMessage string, msgAndArgs ...interface{}) string {
 func Equal(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if a != b {
-		msg := failureOutput(fmt.Sprintf("Error: Not equal: \n expected: %v\n actual  : %v", a, b), msgAndArgs...)
+		msg := failureOutput(fmt.Sprintf("Error: Not equal. Expected: %v Actual: %v", a, b), msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
@@ -76,7 +76,7 @@ func Error(t *testing.T, err error, msgAndArgs ...interface{}) bool {
 func Exactly(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if !reflect.DeepEqual(a, b) {
-		msg := failureOutput(fmt.Sprintf("Error: Not exactly equal: \n expected: %v\n actual  : %v", a, b), msgAndArgs...)
+		msg := failureOutput(fmt.Sprintf("Error: Not exactly equal. Expected: %v Actual: %v", a, b), msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
@@ -107,7 +107,7 @@ func RequireGreaterOrEqual(t *testing.T, a, b int, msgAndArgs ...interface{}) {
 func NoError(t *testing.T, err error, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if err != nil {
-		msg := failureOutput(fmt.Sprintf("Received unexpected error:\n%+v", err), msgAndArgs...)
+		msg := failureOutput(fmt.Sprintf("Received unexpected error: %+v", err), msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
