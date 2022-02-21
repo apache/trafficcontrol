@@ -17,7 +17,6 @@ package v4
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -36,6 +35,10 @@ import (
 func TestCacheGroups(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies}, func() {
 
+		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+
 		methodTests := map[string]map[string]struct {
 			endpointId    func() int
 			clientSession *client.Session
@@ -49,16 +52,13 @@ func TestCacheGroups(t *testing.T) {
 					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1), ValidateResponseFields()),
 				},
 				"NOT MODIFIED when NO CHANGES made": {
-					clientSession: TOSession,
-					requestOpts: client.RequestOptions{
-						Header: http.Header{rfc.IfModifiedSince: {time.Now().AddDate(0, 0, 1).Format(time.RFC1123)}},
-					},
+					clientSession: TOSession, requestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
 					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"NOT MODIFIED when VALID NAME parameter when NO CHANGES made": {
 					clientSession: TOSession,
 					requestOpts: client.RequestOptions{
-						Header:          http.Header{rfc.IfModifiedSince: {time.Now().AddDate(0, 0, 1).Format(time.RFC1123)}},
+						Header:          http.Header{rfc.IfModifiedSince: {tomorrow}},
 						QueryParameters: url.Values{"name": {"originCachegroup"}},
 					},
 					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
@@ -66,7 +66,7 @@ func TestCacheGroups(t *testing.T) {
 				"NOT MODIFIED when VALID SHORTNAME parameter when NO CHANGES made": {
 					clientSession: TOSession,
 					requestOpts: client.RequestOptions{
-						Header:          http.Header{rfc.IfModifiedSince: {time.Now().AddDate(0, 0, 1).Format(time.RFC1123)}},
+						Header:          http.Header{rfc.IfModifiedSince: {tomorrow}},
 						QueryParameters: url.Values{"shortName": {"mog1"}},
 					},
 					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
@@ -175,10 +175,11 @@ func TestCacheGroups(t *testing.T) {
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					endpointId: GetCacheGroupId(t, "parentCachegroup"), clientSession: TOSession,
-					requestOpts: client.RequestOptions{Header: http.Header{
-						rfc.IfModifiedSince:   {time.Now().UTC().Add(-5 * time.Second).Format(time.RFC1123)},
-						rfc.IfUnmodifiedSince: {time.Now().UTC().Add(-5 * time.Second).Format(time.RFC1123)},
-					}},
+					requestOpts: client.RequestOptions{
+						Header: http.Header{
+							rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC},
+						},
+					},
 					requestBody: map[string]interface{}{
 						"latitude":  0,
 						"longitude": 0,
@@ -199,9 +200,7 @@ func TestCacheGroups(t *testing.T) {
 						"typeName":  "MID_LOC",
 						"typeId":    -1,
 					},
-					requestOpts: client.RequestOptions{Header: http.Header{
-						rfc.IfMatch: {rfc.ETag(time.Now().UTC().Add(-5 * time.Second))},
-					}},
+					requestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
@@ -222,10 +221,11 @@ func TestCacheGroups(t *testing.T) {
 			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
 					clientSession: TOSession,
-					requestOpts: client.RequestOptions{Header: http.Header{
-						rfc.IfModifiedSince:   {time.Now().UTC().Add(-5 * time.Second).Format(time.RFC1123)},
-						rfc.IfUnmodifiedSince: {time.Now().UTC().Add(-5 * time.Second).Format(time.RFC1123)},
-					}},
+					requestOpts: client.RequestOptions{
+						Header: http.Header{
+							rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC},
+						},
+					},
 					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
@@ -258,9 +258,9 @@ func TestCacheGroups(t *testing.T) {
 							}
 						}
 						dat, err := json.Marshal(testCase.requestBody)
-						assert.NoError(t, err, fmt.Sprintf("Error occurred when marshalling request body: %v", err))
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 						err = json.Unmarshal(dat, &cg)
-						assert.NoError(t, err, fmt.Sprintf("Error occurred when unmarshalling request body: %v", err))
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 					}
 
 					switch method {
@@ -309,11 +309,11 @@ func ValidateExpectedField(field string, expected string) utils.CkReqFunc {
 		cg := cgResp[0]
 		switch field {
 		case "Name":
-			assert.Equal(t, expected, *cg.Name, fmt.Sprintf("Expected name to be %v, but got %v", expected, *cg.Name))
+			assert.Equal(t, expected, *cg.Name, "Expected name to be %v, but got %v", expected, *cg.Name)
 		case "ShortName":
-			assert.Equal(t, expected, *cg.ShortName, fmt.Sprintf("Expected shortName to be %v, but got %v", expected, *cg.ShortName))
+			assert.Equal(t, expected, *cg.ShortName, "Expected shortName to be %v, but got %v", expected, *cg.ShortName)
 		case "TypeName":
-			assert.Equal(t, expected, *cg.Type, fmt.Sprintf("Expected type to be %v, but got %v", expected, *cg.Type))
+			assert.Equal(t, expected, *cg.Type, "Expected type to be %v, but got %v", expected, *cg.Type)
 		default:
 			t.Errorf("Expected field: %v, does not exist in response", field)
 		}
@@ -325,10 +325,10 @@ func ValidateResponseFields() utils.CkReqFunc {
 		cgResp := resp.([]tc.CacheGroupNullable)
 		cg := cgResp[0]
 		assert.NotNil(t, cg.ID, "Expected response id to not be nil")
-		assert.NotNil(t, cg.Latitude, "Expected response id to not be nil")
-		assert.NotNil(t, cg.Longitude, "Expected response id to not be nil")
-		assert.Equal(t, 0.0, *cg.Longitude, fmt.Sprintf("Expected Longitude to be 0, but got %v", cg.Longitude))
-		assert.Equal(t, 0.0, *cg.Latitude, fmt.Sprintf("Expected Latitude to be 0, but got %v", cg.Latitude))
+		assert.NotNil(t, cg.Latitude, "Expected latitude to not be nil")
+		assert.NotNil(t, cg.Longitude, "Expected longitude to not be nil")
+		assert.Equal(t, 0.0, *cg.Longitude, "Expected Longitude to be 0, but got %v", cg.Longitude)
+		assert.Equal(t, 0.0, *cg.Latitude, "Expected Latitude to be 0, but got %v", cg.Latitude)
 	}
 }
 
@@ -339,10 +339,10 @@ func ValidatePagination(paginationParam string) utils.CkReqFunc {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
 		respBase, _, err := TOSession.GetCacheGroups(opts)
-		assert.RequireNoError(t, err, fmt.Sprintf("cannot get Cache Groups: %v - alerts: %+v", err, respBase.Alerts))
+		assert.RequireNoError(t, err, "cannot get Cache Groups: %v - alerts: %+v", err, respBase.Alerts)
 
 		cachegroup := respBase.Response
-		assert.RequireGreaterOrEqual(t, len(cachegroup), 3, fmt.Sprintf("Need at least 3 Cache Groups in Traffic Ops to test pagination support, found: %d", len(cachegroup)))
+		assert.RequireGreaterOrEqual(t, len(cachegroup), 3, "Need at least 3 Cache Groups in Traffic Ops to test pagination support, found: %d", len(cachegroup))
 		switch paginationParam {
 		case "limit:":
 			assert.Exactly(t, cachegroup[:1], paginationResp, "expected GET Cachegroups with limit = 1 to return first result")
@@ -359,8 +359,8 @@ func GetTypeId(t *testing.T, typeName string) int {
 	opts.QueryParameters.Set("name", typeName)
 	resp, _, err := TOSession.GetTypes(opts)
 
-	assert.RequireNoError(t, err, fmt.Sprintf("Get Types Request failed with error: %v", err))
-	assert.RequireEqual(t, 1, len(resp.Response), fmt.Sprintf("Expected response object length 1, but got %d", len(resp.Response)))
+	assert.RequireNoError(t, err, "Get Types Request failed with error: %v", err)
+	assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
 	assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
 
 	return resp.Response[0].ID
@@ -372,8 +372,8 @@ func GetCacheGroupId(t *testing.T, cacheGroupName string) func() int {
 		opts.QueryParameters.Set("name", cacheGroupName)
 
 		resp, _, err := TOSession.GetCacheGroups(opts)
-		assert.RequireNoError(t, err, fmt.Sprintf("Get Cache Groups Request failed with error: %v", err))
-		assert.RequireEqual(t, len(resp.Response), 1, fmt.Sprintf("Expected response object length 1, but got %d", len(resp.Response)))
+		assert.RequireNoError(t, err, "Get Cache Groups Request failed with error: %v", err)
+		assert.RequireEqual(t, len(resp.Response), 1, "Expected response object length 1, but got %d", len(resp.Response))
 		assert.RequireNotNil(t, resp.Response[0].ID, "Expected id to not be nil")
 
 		return *resp.Response[0].ID
@@ -386,13 +386,13 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Add("name", "cachegroup1")
 	cgResp, _, err := TOSession.GetCacheGroups(opts)
-	assert.RequireNoError(t, err, fmt.Sprintf("couldn't get cachegroup: %v", err))
-	assert.RequireEqual(t, 1, len(cgResp.Response), fmt.Sprintf("expected only one cachegroup in response, but got %d, quitting", len(cgResp.Response)))
+	assert.RequireNoError(t, err, "couldn't get cachegroup: %v", err)
+	assert.RequireEqual(t, 1, len(cgResp.Response), "expected only one cachegroup in response, but got %d, quitting", len(cgResp.Response))
 
 	opts.QueryParameters.Del("name")
 	opts.QueryParameters.Add("cachegroupName", "cachegroup1")
 	serversResp, _, err := TOSession.GetServers(opts)
-	assert.RequireNoError(t, err, fmt.Sprintf("couldn't get servers for cachegroup: %v", err))
+	assert.RequireNoError(t, err, "couldn't get servers for cachegroup: %v", err)
 
 	servers = serversResp.Response
 	assert.RequireGreaterOrEqual(t, len(servers), 1, "couldn't get a cachegroup with 1 or more servers assigned, quitting")
@@ -404,8 +404,8 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 		opts = client.RequestOptions{}
 		opts.QueryParameters.Add("id", strconv.Itoa(*server.CDNID))
 		cdnResp, _, err := TOSession.GetCDNs(opts)
-		assert.RequireNoError(t, err, fmt.Sprintf("couldn't get CDN: %v", err))
-		assert.RequireEqual(t, 1, len(cdnResp.Response), fmt.Sprintf("expected only one CDN in response, but got %d", len(cdnResp.Response)))
+		assert.RequireNoError(t, err, "couldn't get CDN: %v", err)
+		assert.RequireEqual(t, 1, len(cdnResp.Response), "expected only one CDN in response, but got %d", len(cdnResp.Response))
 
 		cdnName = cdnResp.Response[0].Name
 	}
@@ -422,13 +422,13 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 	user1.TenantID = 1
 	user1.FullName = util.StrPtr("firstName LastName")
 	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
-	assert.RequireNoError(t, err, fmt.Sprintf("could not create test user with username: %s. err: %v", user1.Username, err))
+	assert.RequireNoError(t, err, "could not create test user with username: %s. err: %v", user1.Username, err)
 
 	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
 
 	// Establish a session with the newly created non admin level user
 	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
-	assert.RequireNoError(t, err, fmt.Sprintf("could not login with user lock_user1: %v", err))
+	assert.RequireNoError(t, err, "could not login with user lock_user1: %v", err)
 
 	// Create a lock for this user
 	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
@@ -436,7 +436,7 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 		Message: util.StrPtr("test lock"),
 		Soft:    util.BoolPtr(false),
 	}, client.RequestOptions{})
-	assert.RequireNoError(t, err, fmt.Sprintf("couldn't create cdn lock: %v", err))
+	assert.RequireNoError(t, err, "couldn't create cdn lock: %v", err)
 
 	cg := cgResp.Response[0]
 
@@ -444,15 +444,15 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 	cg.ShortName = util.StrPtr("changedShortName")
 	_, reqInf, err := TOSession.UpdateCacheGroup(*cg.ID, cg, client.RequestOptions{})
 	assert.Error(t, err, "expected an error while updating a cachegroup for a CDN for which a hard lock is held by another user, but got nothing")
-	assert.Equal(t, http.StatusForbidden, reqInf.StatusCode, fmt.Sprintf("expected a 403 forbidden status while updating a cachegroup for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode))
+	assert.Equal(t, http.StatusForbidden, reqInf.StatusCode, "expected a 403 forbidden status while updating a cachegroup for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
 
 	// Try to update a cachegroup on a CDN that the same user has a hard lock on -> this should succeed
 	_, reqInf, err = userSession.UpdateCacheGroup(*cg.ID, cg, client.RequestOptions{})
-	assert.NoError(t, err, fmt.Sprintf("expected no error while updating a cachegroup for a CDN for which a hard lock is held by the same user, but got %v", err))
+	assert.NoError(t, err, "expected no error while updating a cachegroup for a CDN for which a hard lock is held by the same user, but got %v", err)
 
 	// Delete the lock
 	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdnName}}})
-	assert.NoError(t, err, fmt.Sprintf("expected no error while deleting other user's lock using admin endpoint, but got %v", err))
+	assert.NoError(t, err, "expected no error while deleting other user's lock using admin endpoint, but got %v", err)
 }
 
 func CreateTestCacheGroups(t *testing.T) {
@@ -493,7 +493,7 @@ func DeleteTestCacheGroups(t *testing.T) {
 		// Retrieve the CacheGroup by name so we can get the id for Deletion
 		opts.QueryParameters.Set("name", *cg.Name)
 		resp, _, err := TOSession.GetCacheGroups(opts)
-		assert.NoError(t, err, fmt.Sprintf("Cannot GET CacheGroup by name '%s': %v - alerts: %+v", *cg.Name, err, resp.Alerts))
+		assert.NoError(t, err, "Cannot GET CacheGroup by name '%s': %v - alerts: %+v", *cg.Name, err, resp.Alerts)
 
 		if len(resp.Response) < 1 {
 			t.Errorf("Could not find test data Cache Group '%s' in Traffic Ops", *cg.Name)
@@ -514,13 +514,13 @@ func DeleteTestCacheGroups(t *testing.T) {
 		}
 
 		alerts, _, err := TOSession.DeleteCacheGroup(*cg.ID, client.RequestOptions{})
-		assert.NoError(t, err, fmt.Sprintf("Cannot delete Cache Group: %v - alerts: %+v", err, alerts))
+		assert.NoError(t, err, "Cannot delete Cache Group: %v - alerts: %+v", err, alerts)
 
 		// Retrieve the CacheGroup to see if it got deleted
 		opts.QueryParameters.Set("name", *cg.Name)
 		cgs, _, err := TOSession.GetCacheGroups(opts)
-		assert.NoError(t, err, fmt.Sprintf("Error deleting Cache Group by name: %v - alerts: %+v", err, cgs.Alerts))
-		assert.Equal(t, 0, len(cgs.Response), fmt.Sprintf("Expected CacheGroup name: %s to be deleted", *cg.Name))
+		assert.NoError(t, err, "Error deleting Cache Group by name: %v - alerts: %+v", err, cgs.Alerts)
+		assert.Equal(t, 0, len(cgs.Response), "Expected CacheGroup name: %s to be deleted", *cg.Name)
 	}
 
 	opts = client.NewRequestOptions()
@@ -530,7 +530,7 @@ func DeleteTestCacheGroups(t *testing.T) {
 		opts.QueryParameters.Set("name", *cg.Name)
 		// Retrieve the CacheGroup by name so we can get the id for Deletion
 		resp, _, err := TOSession.GetCacheGroups(opts)
-		assert.NoError(t, err, fmt.Sprintf("Cannot get Cache Group by name '%s': %v - alerts: %+v", *cg.Name, err, resp.Alerts))
+		assert.NoError(t, err, "Cannot get Cache Group by name '%s': %v - alerts: %+v", *cg.Name, err, resp.Alerts)
 
 		if len(resp.Response) < 1 {
 			t.Errorf("Cache Group '%s' somehow stopped existing since the last time we ask Traffic Ops about it", *cg.Name)
@@ -543,12 +543,12 @@ func DeleteTestCacheGroups(t *testing.T) {
 			continue
 		}
 		delResp, _, err := TOSession.DeleteCacheGroup(*respCG.ID, client.RequestOptions{})
-		assert.NoError(t, err, fmt.Sprintf("Cannot delete Cache Group '%s': %v - alerts: %+v", *respCG.Name, err, delResp.Alerts))
+		assert.NoError(t, err, "Cannot delete Cache Group '%s': %v - alerts: %+v", *respCG.Name, err, delResp.Alerts)
 
 		// Retrieve the CacheGroup to see if it got deleted
 		opts.QueryParameters.Set("name", *cg.Name)
 		cgs, _, err := TOSession.GetCacheGroups(opts)
-		assert.NoError(t, err, fmt.Sprintf("Error attempting to fetch Cache Group '%s' after deletion: %v - alerts: %+v", *cg.Name, err, cgs.Alerts))
-		assert.Equal(t, 0, len(cgs.Response), fmt.Sprintf("Expected Cache Group '%s' to be deleted", *cg.Name))
+		assert.NoError(t, err, "Error attempting to fetch Cache Group '%s' after deletion: %v - alerts: %+v", *cg.Name, err, cgs.Alerts)
+		assert.Equal(t, 0, len(cgs.Response), "Expected Cache Group '%s' to be deleted", *cg.Name)
 	}
 }
