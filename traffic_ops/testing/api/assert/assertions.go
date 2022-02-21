@@ -16,14 +16,36 @@ package assert
 */
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
 
+// failureOutput checks if there is a message to be parsed and concatenates with a failure message.
+func failureOutput(failureMessage string, msgAndArgs ...interface{}) string {
+	output := failureMessage
+	message := ""
+	if len(msgAndArgs) == 1 {
+		msg := msgAndArgs[0]
+		if msgAsStr, ok := msg.(string); ok {
+			message = msgAsStr
+		}
+		message = fmt.Sprintf("%+v", msg)
+	}
+	if len(msgAndArgs) > 1 {
+		message = fmt.Sprintf(msgAndArgs[0].(string), msgAndArgs[1:]...)
+	}
+	if len(message) > 0 {
+		output = "\n" + output + "\nMessages: " + message + "\n"
+	}
+	return output
+}
+
 // Equal asserts that two objects are equal.
-func Equal(t *testing.T, a, b interface{}, msg string) bool {
+func Equal(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if a != b {
+		msg := failureOutput(fmt.Sprintf("Error: Not equal: \n expected: %v\n actual  : %v", a, b), msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
@@ -32,17 +54,18 @@ func Equal(t *testing.T, a, b interface{}, msg string) bool {
 
 // RequireEqual asserts that two objects are equal.
 // It marks the test as failed and stops execution.
-func RequireEqual(t *testing.T, a, b interface{}, msg string) {
+func RequireEqual(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) {
 	t.Helper()
-	if !Equal(t, a, b, msg) {
+	if !Equal(t, a, b, msgAndArgs...) {
 		t.FailNow()
 	}
 }
 
 // Error asserts that a function returned an error (i.e. not `nil`).
-func Error(t *testing.T, err error, msg string) bool {
+func Error(t *testing.T, err error, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if err == nil {
+		msg := failureOutput("Error: An error is expected but got nil.", msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
@@ -50,9 +73,10 @@ func Error(t *testing.T, err error, msg string) bool {
 }
 
 // Exactly asserts that two objects are equal in value and type.
-func Exactly(t *testing.T, a, b interface{}, msg string) bool {
+func Exactly(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if !reflect.DeepEqual(a, b) {
+		msg := failureOutput(fmt.Sprintf("Error: Not equal: \n expected: %v\n actual  : %v", a, b), msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
@@ -60,39 +84,50 @@ func Exactly(t *testing.T, a, b interface{}, msg string) bool {
 }
 
 // GreaterOrEqual asserts that the first element is greater than or equal to the second
-func GreaterOrEqual(t *testing.T, a, b int, msg string) bool {
+func GreaterOrEqual(t *testing.T, a, b int, msgAndArgs ...interface{}) bool {
 	t.Helper()
-	if a > b {
+	if a >= b {
 		return true
 	}
-	return Equal(t, a, b, msg)
+	msg := failureOutput(fmt.Sprintf("Error: \"%v\" is not greater than or equal to \"%v\"", a, b), msgAndArgs...)
+	t.Error(msg)
+	return false
 }
 
 // RequireGreaterOrEqual asserts that the first element is greater than or equal to the second
 // It marks the test as failed and stops execution.
-func RequireGreaterOrEqual(t *testing.T, a, b int, msg string) {
+func RequireGreaterOrEqual(t *testing.T, a, b int, msgAndArgs ...interface{}) {
 	t.Helper()
-	if !GreaterOrEqual(t, a, b, msg) {
+	if !GreaterOrEqual(t, a, b, msgAndArgs...) {
 		t.FailNow()
 	}
 }
 
 // NoError asserts that a function returned no error (i.e. `nil`).
-func NoError(t *testing.T, err error, msg string) bool { t.Helper(); return Equal(t, err, nil, msg) }
+func NoError(t *testing.T, err error, msgAndArgs ...interface{}) bool {
+	t.Helper()
+	if err != nil {
+		msg := failureOutput(fmt.Sprintf("Received unexpected error:\n%+v", err), msgAndArgs...)
+		t.Error(msg)
+		return false
+	}
+	return true
+}
 
 // RequireNoError asserts that a function returned no error (i.e. `nil`).
 // It marks the test as failed and stops execution.
-func RequireNoError(t *testing.T, err error, msg string) {
+func RequireNoError(t *testing.T, err error, msgAndArgs ...interface{}) {
 	t.Helper()
-	if !NoError(t, err, msg) {
+	if !NoError(t, err, msgAndArgs...) {
 		t.FailNow()
 	}
 }
 
 // NotNil asserts that the specified object is not nil.
-func NotNil(t *testing.T, a interface{}, msg string) bool {
+func NotNil(t *testing.T, a interface{}, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if a == nil {
+		msg := failureOutput("Error: Expected value not to be nil.", msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
@@ -101,9 +136,9 @@ func NotNil(t *testing.T, a interface{}, msg string) bool {
 
 // RequireNotNil asserts that the specified object is not nil.
 // It marks the test as failed and stops execution.
-func RequireNotNil(t *testing.T, a interface{}, msg string) {
+func RequireNotNil(t *testing.T, a interface{}, msgAndArgs ...interface{}) {
 	t.Helper()
-	if !NotNil(t, a, msg) {
+	if !NotNil(t, a, msgAndArgs...) {
 		t.FailNow()
 	}
 }
