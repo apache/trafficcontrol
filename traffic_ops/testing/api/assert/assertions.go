@@ -45,7 +45,7 @@ func failureOutput(failureMessage string, msgAndArgs ...interface{}) string {
 func Equal(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if a != b {
-		msg := failureOutput(fmt.Sprintf("Error: Not equal. Expected: %v Actual: %v", a, b), msgAndArgs...)
+		msg := failureOutput(fmt.Sprintf("Not equal. Expected: %v Actual: %v", a, b), msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
@@ -65,7 +65,7 @@ func RequireEqual(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) {
 func Error(t *testing.T, err error, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if err == nil {
-		msg := failureOutput("Error: An error is expected but got nil.", msgAndArgs...)
+		msg := failureOutput("An error is expected but got nil.", msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
@@ -76,7 +76,7 @@ func Error(t *testing.T, err error, msgAndArgs ...interface{}) bool {
 func Exactly(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if !reflect.DeepEqual(a, b) {
-		msg := failureOutput(fmt.Sprintf("Error: Not exactly equal. Expected: %v Actual: %v", a, b), msgAndArgs...)
+		msg := failureOutput(fmt.Sprintf("Not exactly equal. Expected: %v Actual: %v", a, b), msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
@@ -89,7 +89,7 @@ func GreaterOrEqual(t *testing.T, a, b int, msgAndArgs ...interface{}) bool {
 	if a >= b {
 		return true
 	}
-	msg := failureOutput(fmt.Sprintf("Error: \"%v\" is not greater than or equal to \"%v\"", a, b), msgAndArgs...)
+	msg := failureOutput(fmt.Sprintf("\"%v\" is not greater than or equal to \"%v\"", a, b), msgAndArgs...)
 	t.Error(msg)
 	return false
 }
@@ -127,7 +127,7 @@ func RequireNoError(t *testing.T, err error, msgAndArgs ...interface{}) {
 func NotNil(t *testing.T, a interface{}, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if a == nil {
-		msg := failureOutput("Error: Expected value not to be nil.", msgAndArgs...)
+		msg := failureOutput("Expected value not to be nil.", msgAndArgs...)
 		t.Error(msg)
 		return false
 	}
