@@ -21,6 +21,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
@@ -80,7 +81,7 @@ func Compare(t *testing.T, expected []string, alertsStrs []string) {
 
 // CkReqFunc defines the reusable signature for all other functions that perform checks.
 // Common parameters that are checked include the request's info, response, alerts, and errors.
-type CkReqFunc func(*testing.T, toclientlib.ReqInf, interface{}, interface{}, error)
+type CkReqFunc func(*testing.T, toclientlib.ReqInf, interface{}, tc.Alerts, error)
 
 // CkRequest wraps CkReqFunc functions, to be concise and reduce lexical tokens
 // i.e. Instead of `[]CkReqFunc {` we can use `CkRequest(` in test case declarations.
@@ -90,21 +91,21 @@ func CkRequest(c ...CkReqFunc) []CkReqFunc {
 
 // NoError checks that no error was returned (i.e. `nil`).
 func NoError() CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, _ interface{}, err error) {
+	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, _ tc.Alerts, err error) {
 		assert.NoError(t, err, "Expected no error. Got: %v", err)
 	}
 }
 
 // HasError checks that an error was returned (i.e. not `nil`).
 func HasError() CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, alerts interface{}, err error) {
+	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, alerts tc.Alerts, err error) {
 		assert.Error(t, err, "Expected error. Got: %v", alerts)
 	}
 }
 
 // HasStatus checks that the status code from the request is as expected.
 func HasStatus(expectedStatus int) CkReqFunc {
-	return func(t *testing.T, reqInf toclientlib.ReqInf, _ interface{}, _ interface{}, _ error) {
+	return func(t *testing.T, reqInf toclientlib.ReqInf, _ interface{}, _ tc.Alerts, _ error) {
 		assert.Equal(t, expectedStatus, reqInf.StatusCode, "Expected Status Code: %d Got: %d", expectedStatus, reqInf.StatusCode)
 	}
 }
@@ -112,7 +113,7 @@ func HasStatus(expectedStatus int) CkReqFunc {
 // ResponseHasLength checks that the length of the response is as expected.
 // Determines that response is a slice before checking the length of the reflected value.
 func ResponseHasLength(expected int) CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ interface{}, _ error) {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		rt := reflect.TypeOf(resp)
 		switch rt.Kind() {
 		case reflect.Slice:
@@ -127,7 +128,7 @@ func ResponseHasLength(expected int) CkReqFunc {
 // ResponseLengthGreaterOrEqual checks that the response is greater or equal to the expected length.
 // Determines that response is a slice before checking the length of the reflected value.
 func ResponseLengthGreaterOrEqual(expected int) CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ interface{}, _ error) {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		rt := reflect.TypeOf(resp)
 		switch rt.Kind() {
 		case reflect.Slice:
