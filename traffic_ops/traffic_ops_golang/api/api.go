@@ -48,6 +48,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
+	"github.com/dgrijalva/jwt-go"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -1029,9 +1030,35 @@ func ParseDBError(ierr error) (error, error, int) {
 // GetUserFromReq returns the current user, any user error, any system error, and an error code to be returned if either error was not nil.
 // This also uses the given ResponseWriter to refresh the cookie, if it was valid.
 func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth.CurrentUser, error, error, int) {
-	cookie, err := r.Cookie(tocookie.Name)
-	if err != nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error getting cookie: " + err.Error()), http.StatusUnauthorized
+	var cookie *http.Cookie
+	for _, givenCookie := range r.Cookies() {
+		switch givenCookie.Name {
+		case "access_token":
+			claims := jwt.MapClaims{}
+			token, err := jwt.ParseWithClaims(givenCookie.Value, claims, func(token *jwt.Token) (interface{}, error) {
+				return []byte(secret), nil
+			})
+			if err != nil {
+				return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), fmt.Errorf("parsing claims: %w", err), http.StatusUnauthorized
+			}
+			if !token.Valid {
+				return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("invalid token"), http.StatusUnauthorized
+			}
+
+			for key, val := range claims {
+				switch key {
+				case "mojoCookie":
+					if _, ok := val.(string); !ok {
+						return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("invalid token - mojoCookie must be a string"), http.StatusUnauthorized
+					}
+					cookie = &http.Cookie{
+						Value: val.(string),
+					}
+				}
+			}
+		case tocookie.Name:
+			cookie = givenCookie
+		}
 	}
 
 	if cookie == nil {

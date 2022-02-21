@@ -23,6 +23,8 @@
 =======
 Returns the complete footprint and capabilities information structure the :abbr:`dCDN (Downstream Content Delivery Network)` wants to expose to a given :abbr:`uCDN (Upstream Content Delivery Network)`.
 
+.. note:: Users with an "admin" role will need to provide a "ucdn" query parameter to bypass the need for :abbr:`uCDN (Upstream Content Delivery Network)` information in the :abbr:`JWT (JSON Web Token)` and allow admins to view all :abbr:`CDNi (Content Delivery Network Interconnect)` information.
+
 :Auth. Required: No
 :Roles Required: "admin" or "operations"
 :Permissions Required: CDNI:READ
@@ -37,7 +39,8 @@ Request Structure
 	|    Name         | Description                                                                                                                  |
 	+=================+==============================================================================================================================+
 	|  Authorization  | A :abbr:`JWT (JSON Web Token)` provided by the :abbr:`dCDN (Downstream Content Delivery Network)` to identify the            |
-	|                 | :abbr:`uCDN (Upstream Content Delivery Network)`. This token must include the following claims:                              |
+	|                 | :abbr:`uCDN (Upstream Content Delivery Network)`. This can be proivded as a header or a cookie.                              |
+	|                 | This token must include the following claims:                                                                                |
 	|                 |                                                                                                                              |
 	|                 | - ``iss`` Issuer claim as a string key for the :abbr:`uCDN (Upstream Content Delivery Network)`                              |
 	|                 | - ``aud`` Audience claim as a string key for the :abbr:`dCDN (Downstream Content Delivery Network)`                          |

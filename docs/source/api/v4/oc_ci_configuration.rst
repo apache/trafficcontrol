@@ -23,6 +23,8 @@
 =======
 Triggers an asynchronous task to update the configuration for the :abbr:`uCDN (Upstream Content Delivery Network)` by adding the request to a queue to be reviewed later. This returns a 202 Accepted status and an endpoint to be used for status updates.
 
+.. note:: Users with an "admin" role will need to provide a "ucdn" query parameter to bypass the need for :abbr:`uCDN (Upstream Content Delivery Network)` information in the :abbr:`JWT (JSON Web Token)` and allow admins to view all :abbr:`CDNi (Content Delivery Network Interconnect)` information.
+
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
 :Permissions Required: CDNI:UPDATE
@@ -31,13 +33,13 @@ Triggers an asynchronous task to update the configuration for the :abbr:`uCDN (U
 
 Request Structure
 -----------------
-.. table:: Request Required Headers
+.. table:: Optional Request Headers
 
 	+-----------------+------------------------------------------------------------------------------------------------------------------------------+
 	|    Name         | Description                                                                                                                  |
 	+=================+==============================================================================================================================+
 	|  Authorization  | A :abbr:`JWT (JSON Web Token)` provided by the :abbr:`dCDN (Downstream Content Delivery Network)` to identify the            |
-	|                 | :abbr:`uCDN (Upstream Content Delivery Network)`                                                                             |
+	|                 | :abbr:`uCDN (Upstream Content Delivery Network)`. This can be proivded as a header or a cookie.                              |
 	+-----------------+------------------------------------------------------------------------------------------------------------------------------+
 
 :type: A string of the type of metadata to follow. See :rfc:`8006` for possible values. Only a selection of these are supported.

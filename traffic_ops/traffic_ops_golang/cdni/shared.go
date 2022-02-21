@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/lib/pq"
@@ -73,14 +74,16 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
+	if inf.Config.Cdni == nil || inf.Config.Secrets[0] == "" || inf.Config.Cdni.DCdnId == "" {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
 		return
 	}
 
-	ucdn, err := checkBearerToken(r.Header.Get("Authorization"), inf)
+	bearerToken := getBearerToken(r)
+
+	ucdn, err := checkBearerToken(bearerToken, inf)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
@@ -106,6 +109,20 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespRaw(w, r, fciCaps)
 }
 
+func getBearerToken(r *http.Request) string {
+	if r.Header.Get("Authorization") != "" {
+		return r.Header.Get("Authorization")
+	}
+	var bearerToken string
+	for _, cookie := range r.Cookies() {
+		switch cookie.Name {
+		case "access_token":
+			bearerToken = cookie.Value
+		}
+	}
+	return bearerToken
+}
+
 func PutHostConfiguration(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"host"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -120,14 +137,15 @@ func PutHostConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
+	if inf.Config.Cdni == nil || inf.Config.Secrets[0] == "" || inf.Config.Cdni.DCdnId == "" {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
 		return
 	}
 
-	ucdn, err := checkBearerToken(r.Header.Get("Authorization"), inf)
+	bearerToken := getBearerToken(r)
+	ucdn, err := checkBearerToken(bearerToken, inf)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
@@ -190,14 +208,15 @@ func PutConfiguration(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
+	if inf.Config.Cdni == nil || inf.Config.Secrets[0] == "" || inf.Config.Cdni.DCdnId == "" {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
 		return
 	}
 
-	ucdn, err := checkBearerToken(r.Header.Get("Authorization"), inf)
+	bearerToken := getBearerToken(r)
+	ucdn, err := checkBearerToken(bearerToken, inf)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
@@ -472,12 +491,12 @@ func validateHostExists(host string, tx *sql.Tx) (int, error, error) {
 
 func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
 	if bearerToken == "" {
-		return "", errors.New("bearer token header is required")
+		return "", errors.New("bearer token is required")
 	}
 
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(inf.Config.Cdni.JwtDecodingSecret), nil
+		return []byte(inf.Config.Secrets[0]), nil
 	})
 	if err != nil {
 		return "", fmt.Errorf("parsing claims: %w", err)
@@ -518,7 +537,14 @@ func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
 		return "", errors.New("invalid token - incorrect dcdn")
 	}
 	if ucdn == "" {
-		return "", errors.New("invalid token - empty ucdn field")
+		if inf.User.PrivLevel == auth.PrivLevelAdmin {
+			ucdn = inf.Params["ucdn"]
+			if ucdn == "" {
+				return "", errors.New("admin level ucdn requests require a ucdn query parameter")
+			}
+		} else {
+			return "", errors.New("invalid token - empty ucdn field")
+		}
 	}
 
 	return ucdn, nil
