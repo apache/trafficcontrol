@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -42,6 +43,7 @@ import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManage
 
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
+@SuppressWarnings({"PMD.CyclomaticComplexity"})
 public abstract class AbstractServiceUpdater {
 	private static final Logger LOGGER = LogManager.getLogger(AbstractServiceUpdater.class);
 
@@ -350,12 +352,13 @@ public abstract class AbstractServiceUpdater {
 	protected String tmpPrefix = "loc";
 	protected String tmpSuffix = ".dat";
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity"})
 	protected File downloadDatabase(final String url, final File existingDb) throws IOException {
 		LOGGER.info("[" + getClass().getSimpleName() + "] Downloading database: " + url);
 		final URL dbURL = new URL(url);
-		final HttpURLConnection conn = (HttpURLConnection) dbURL.openConnection();
+		final URLConnection conn = dbURL.openConnection();
 
-		if (useModifiedTimestamp(existingDb)) {
+		if (conn instanceof HttpURLConnection && useModifiedTimestamp(existingDb)) {
 			conn.setIfModifiedSince(existingDb.lastModified());
 			if (eTag != null) {
 				conn.setRequestProperty("If-None-Match", eTag);
@@ -366,12 +369,14 @@ public abstract class AbstractServiceUpdater {
 		try (InputStream in = conn.getInputStream();
 			 OutputStream out = new FileOutputStream(outputFile)
 		) {
-			eTag = conn.getHeaderField("ETag");
-
-			if (conn.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-				LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingDb.lastModified()));
-				return existingDb;
+			if (conn instanceof HttpURLConnection) {
+				eTag = conn.getHeaderField("ETag");
+				if (((HttpURLConnection) conn).getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
+					LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingDb.lastModified()));
+					return existingDb;
+				}
 			}
+
 
 			IOUtils.copy(sourceCompressed ? new GZIPInputStream(in) : in, out);
 		}
