@@ -49,11 +49,11 @@ func TestCacheGroups(t *testing.T) {
 			"GET": {
 				"OK when VALID NAME parameter AND Lat/Long are 0": {
 					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"name": {"nullLatLongCG"}}},
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1), ValidateResponseFields()),
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1), ValidateResponseFields()),
 				},
 				"NOT MODIFIED when NO CHANGES made": {
 					clientSession: TOSession, requestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"NOT MODIFIED when VALID NAME parameter when NO CHANGES made": {
 					clientSession: TOSession,
@@ -76,7 +76,7 @@ func TestCacheGroups(t *testing.T) {
 				},
 				"OK when VALID NAME parameter": {
 					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"name": {"parentCachegroup"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(2),
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						ValidateExpectedField("Name", "parentCachegroup")),
 				},
 				"OK when VALID SHORTNAME parameter": {
