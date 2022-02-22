@@ -22,6 +22,7 @@ package tmagent
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -325,6 +326,15 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 			} else {
 				log.Infoln("updated TrafficMonitor statuses from TrafficOps")
 			}
+
+			// log the poll state data if enabled
+			if c.Cfg.EnablePollStateLog {
+				err = c.WritePollState()
+				if err != nil {
+					log.Errorf("could not write the poll state log: %s\n", err.Error())
+				}
+			}
+
 			time.Sleep(pollingInterval)
 			continue
 		}
@@ -375,6 +385,14 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 			cycleCount++
 		}
 
+		// log the poll state data if enabled
+		if c.Cfg.EnablePollStateLog {
+			err = c.WritePollState()
+			if err != nil {
+				log.Errorf("could not write the poll state log: %s\n", err.Error())
+			}
+		}
+
 		time.Sleep(pollingInterval)
 	}
 }
@@ -415,6 +433,19 @@ func (c *ParentInfo) UpdateParentInfo() error {
 		return errors.New("trafficserver may not be running: " + err.Error())
 	}
 
+	return nil
+}
+
+func (c *ParentInfo) WritePollState() error {
+	data, err := json.MarshalIndent(c, "", "\t")
+	if err != nil {
+		return fmt.Errorf("marshaling configuration state: %s\n", err.Error())
+	} else {
+		err = os.WriteFile(c.Cfg.PollStateJSONLog, data, 0644)
+		if err != nil {
+			return fmt.Errorf("writing configuration state: %s\n", err.Error())
+		}
+	}
 	return nil
 }
 

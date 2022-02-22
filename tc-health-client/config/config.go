@@ -43,6 +43,7 @@ var tmPollingInterval time.Duration
 var toRequestTimeout time.Duration
 
 const (
+	DefaultPollStateJSONLog         = "/var/log/trafficcontrol/poll-state.json"
 	DefaultConfigFile               = "/etc/trafficcontrol/tc-health-client.json"
 	DefaultLogDirectory             = "/var/log/trafficcontrol"
 	DefaultLogFile                  = "tc-health-client.log"
@@ -67,6 +68,8 @@ type Cfg struct {
 	UnavailablePollThreshold int             `json:"unavailable-poll-threshold"`
 	TrafficServerConfigDir   string          `json:"trafficserver-config-dir"`
 	TrafficServerBinDir      string          `json:"trafficserver-bin-dir"`
+	PollStateJSONLog         string          `json:"poll-state-json-log"`
+	EnablePollStateLog       bool            `json:"enable-poll-state-log"`
 	TrafficMonitors          map[string]bool `json:"trafficmonitors,omitempty"`
 	HealthClientConfigFile   util.ConfigFile
 	CredentialFile           util.ConfigFile
@@ -329,6 +332,9 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 		if cfg.UnavailablePollThreshold == 0 {
 			cfg.UnavailablePollThreshold = DefaultUnavailablePollThreshold
 		}
+		if cfg.PollStateJSONLog == "" {
+			cfg.PollStateJSONLog = DefaultPollStateJSONLog
+		}
 
 		cfg.HealthClientConfigFile.LastModifyTime = modTime
 
@@ -372,6 +378,8 @@ func UpdateConfig(cfg *Cfg, newCfg *Cfg) {
 	cfg.TrafficServerBinDir = newCfg.TrafficServerBinDir
 	cfg.TrafficMonitors = newCfg.TrafficMonitors
 	cfg.HealthClientConfigFile = newCfg.HealthClientConfigFile
+	cfg.PollStateJSONLog = newCfg.PollStateJSONLog
+	cfg.EnablePollStateLog = newCfg.EnablePollStateLog
 }
 
 func Usage() {

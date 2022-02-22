@@ -108,6 +108,8 @@ Sample configuarion file:
     "unavailable-poll-threshold": 2,
     "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",
     "trafficserver-bin-dir": "/opt/trafficserver/bin",
+    "poll-state-json-log": "/var/log/trafficcontrol/poll-state.json",
+    "enable-poll-state-log": false
   }
 ```
 
@@ -178,6 +180,18 @@ Sample configuarion file:
 
   The location on the host where **Traffic Server** **traffic_ctl** tool may
   be found.
+
+### poll-state-json-log ###
+
+  The full path to the polling state file which contains information 
+  about the current status of parents and the health client configuration.
+  Polling state data is written to this file after each polling cycle when
+  enabled, see **enable-poll-state-log**
+
+### enable-poll-state-log ###
+
+  Enable writing the Polling state to the **poll-state-json-log** after
+  eache polling cycle.  Default **false**, disabled
 
 # Files
 
