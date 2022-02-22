@@ -82,6 +82,31 @@ func StrToApplyServiceActionFlag(str string) ApplyServiceActionFlag {
 	}
 }
 
+type UseStrategiesFlag string
+
+const (
+	UseStrategiesFlagTrue    UseStrategiesFlag = "true"
+	UseStrategiesFlagCore    UseStrategiesFlag = "core"
+	UseStrategiesFlagFalse   UseStrategiesFlag = "false"
+	UseStrategiesFlagInvalid UseStrategiesFlag = ""
+)
+
+func (fl UseStrategiesFlag) String() string { return string(fl) }
+
+func StrToUseStrategiesFlag(str string) UseStrategiesFlag {
+	str = strings.ToLower(strings.TrimSpace(str))
+	switch UseStrategiesFlag(str) {
+	case UseStrategiesFlagTrue:
+		return UseStrategiesFlagTrue
+	case UseStrategiesFlagCore:
+		return UseStrategiesFlagCore
+	case UseStrategiesFlagFalse:
+		return UseStrategiesFlagFalse
+	default:
+		return UseStrategiesFlagInvalid
+	}
+}
+
 type ApplyFilesFlag string
 
 const (
