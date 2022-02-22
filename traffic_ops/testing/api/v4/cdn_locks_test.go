@@ -22,12 +22,18 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestCDNLocks(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, Tenants, Roles, Users, CDNLocks}, func() {
+
+		opsUserSession := createSession(t, "opsuser", "pa$$word")
+		opsUserWithLockSession := createSession(t, "ops_user_has_lock", "pa$$word")
+
 		methodTests := map[string]map[string]struct {
 			endpointId    func() int
 			clientSession *client.Session
@@ -36,14 +42,12 @@ func TestCDNLocks(t *testing.T) {
 			expectations  []utils.CkReqFunc
 		}{
 			"GET": {
-				// Verify response length
-				// Verify response contains username, cdn, message, soft lock
 				"OK when VALID request": {
-					clientSession: TOSession, expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					clientSession: TOSession, expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						utils.ResponseLengthGreaterOrEqual(1)),
 				},
 			},
 			"POST": {
-				// Verify response contains username, cdn, message, soft lock
 				"CREATED when VALID request": {
 					clientSession: TOSession,
 					requestBody: map[string]interface{}{
@@ -51,7 +55,8 @@ func TestCDNLocks(t *testing.T) {
 						"message": "snapping cdn",
 						"soft":    true,
 					},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated),
+						validateResponseFields(map[string]interface{}{"username": "admin", "cdn": "cdn1", "message": "snapping cdn", "soft": true})),
 				},
 			},
 			"DELETE": {
@@ -60,7 +65,7 @@ func TestCDNLocks(t *testing.T) {
 					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when NON-ADMIN USER DOESNT OWN LOCK": {
-					clientSession: createSession(t, "opsuser", "pa$$word"),
+					clientSession: opsUserSession,
 					requestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn3"}}},
 					expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -71,7 +76,7 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"SNAPSHOT": {
 				"OK when USER OWNS LOCK": {
-					clientSession: createSession(t, "ops_user_has_lock", "pa$$word"),
+					clientSession: opsUserWithLockSession,
 					requestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn3"}}},
 					expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -82,9 +87,8 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"SERVERS QUEUE UPDATES": {
 				"OK when USER OWNS LOCK": {
-					endpointId:    getServerID(t, "cdn2-test-edge"),
-					clientSession: createSession(t, "ops_user_has_lock", "pa$$word"),
-					expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					endpointId: getServerID(t, "cdn2-test-edge"), clientSession: opsUserWithLockSession,
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					endpointId: getServerID(t, "cdn2-test-edge"), clientSession: TOSession,
@@ -93,7 +97,7 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"TOPOLOGY QUEUE UPDATES": {
 				"OK when USER OWNS LOCK": {
-					clientSession: createSession(t, "ops_user_has_lock", "pa$$word"),
+					clientSession: opsUserWithLockSession,
 					requestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					requestBody: map[string]interface{}{
 						"action": "queue",
@@ -107,6 +111,28 @@ func TestCDNLocks(t *testing.T) {
 					requestBody: map[string]interface{}{
 						"action": "queue",
 						"cdnId":  getCDNID(t, "cdn2"),
+					},
+					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"CACHE GROUP UPDATE": {
+				"OK when USER OWNS LOCK": {
+					endpointId: GetCacheGroupId(t, "cachegroup1"), clientSession: opsUserWithLockSession,
+					requestBody: map[string]interface{}{
+						"name":      "cachegroup1",
+						"shortName": "newShortName",
+						"typeName":  "EDGE_LOC",
+						"typeId":    -1,
+					},
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					endpointId: GetCacheGroupId(t, "cachegroup1"), clientSession: TOSession,
+					requestBody: map[string]interface{}{
+						"name":      "cachegroup1",
+						"shortName": "newShortName",
+						"typeName":  "EDGE_LOC",
+						"typeId":    -1,
 					},
 					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -119,6 +145,7 @@ func TestCDNLocks(t *testing.T) {
 
 					topology := ""
 					cdnLock := tc.CDNLock{}
+					cacheGroup := tc.CacheGroupNullable{}
 					topQueueUp := tc.TopologiesQueueUpdateRequest{}
 
 					if testCase.requestOpts.QueryParameters.Has("topology") {
@@ -128,14 +155,20 @@ func TestCDNLocks(t *testing.T) {
 					if testCase.requestBody != nil {
 						if getId, ok := testCase.requestBody["cdnId"]; ok {
 							testCase.requestBody["cdnId"] = getId.(func() int)()
-							dat, _ := json.Marshal(testCase.requestBody)
+							dat, err := json.Marshal(testCase.requestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err := json.Unmarshal(dat, &topQueueUp)
+							err = json.Unmarshal(dat, &topQueueUp)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						} else if typeName, ok := testCase.requestBody["typeName"]; ok {
+							testCase.requestBody["typeId"] = GetTypeId(t, typeName.(string))
+							dat, err := json.Marshal(testCase.requestBody)
+							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+							err = json.Unmarshal(dat, &cacheGroup)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						} else {
-							dat, _ := json.Marshal(testCase.requestBody)
+							dat, err := json.Marshal(testCase.requestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err := json.Unmarshal(dat, &cdnLock)
+							err = json.Unmarshal(dat, &cdnLock)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						}
 					}
@@ -145,51 +178,59 @@ func TestCDNLocks(t *testing.T) {
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.clientSession.GetCDNLocks(testCase.requestOpts)
 							for _, check := range testCase.expectations {
-								check(t, reqInf, resp, err)
+								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.clientSession.CreateCDNLock(cdnLock, testCase.requestOpts)
 							for _, check := range testCase.expectations {
-								check(t, reqInf, resp, err)
+								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.clientSession.DeleteCDNLocks(testCase.requestOpts)
+							resp, reqInf, err := testCase.clientSession.DeleteCDNLocks(testCase.requestOpts)
 							for _, check := range testCase.expectations {
-								check(t, reqInf, alerts, err)
+								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "SNAPSHOT":
 						{
 							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.clientSession.SnapshotCRConfig(testCase.requestOpts)
+								resp, reqInf, err := testCase.clientSession.SnapshotCRConfig(testCase.requestOpts)
 								for _, check := range testCase.expectations {
-									check(t, reqInf, alerts, err)
+									check(t, reqInf, resp.Response, resp.Alerts, err)
 								}
 							})
 						}
 					case "SERVERS QUEUE UPDATES":
 						{
 							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.clientSession.SetServerQueueUpdate(testCase.endpointId(), true, testCase.requestOpts)
+								resp, reqInf, err := testCase.clientSession.SetServerQueueUpdate(testCase.endpointId(), true, testCase.requestOpts)
 								for _, check := range testCase.expectations {
-									check(t, reqInf, alerts, err)
+									check(t, reqInf, resp.Response, resp.Alerts, err)
 								}
 							})
 						}
 					case "TOPOLOGY QUEUE UPDATES":
 						{
 							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.clientSession.TopologiesQueueUpdate(topology, topQueueUp, testCase.requestOpts)
+								resp, reqInf, err := testCase.clientSession.TopologiesQueueUpdate(topology, topQueueUp, testCase.requestOpts)
 								for _, check := range testCase.expectations {
-									check(t, reqInf, alerts, err)
+									check(t, reqInf, nil, resp.Alerts, err)
 								}
 							})
 						}
-
+					case "CACHE GROUP UPDATE":
+						{
+							t.Run(name, func(t *testing.T) {
+								resp, reqInf, err := testCase.clientSession.UpdateCacheGroup(testCase.endpointId(), cacheGroup, testCase.requestOpts)
+								for _, check := range testCase.expectations {
+									check(t, reqInf, nil, resp.Alerts, err)
+								}
+							})
+						}
 					}
 				}
 			})
@@ -197,36 +238,22 @@ func TestCDNLocks(t *testing.T) {
 	})
 }
 
+// createSession creates a session using the passed in username and password.
 func createSession(t *testing.T, username string, password string) *client.Session {
-	// Establish a session with a user from tc fixtures
 	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, username, password, true, "to-api-v4-client-tests", false, toReqTimeout)
-	require.NoError(t, err, "Could not login with user lock_user1: %v", err)
+	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
 	return userSession
 }
 
-//func ValidateResponseFields() utils.CkReqFunc {
-//	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ error) {
-//		cdnLockResp := resp.(tc.CDNLock)
-//		if cdnLockResp.Response.UserName != cdnLock.UserName {
-//			t.Errorf("expected username %v, got %v", cdnLock.UserName, cdnLockResp.Response.UserName)
-//		}
-//		if cdnLockResp.Response.CDN != cdnLock.CDN {
-//			t.Errorf("expected cdn %v, got %v", cdnLock.CDN, cdnLockResp.Response.CDN)
-//		}
-//		if cdnLockResp.Response.Message == nil {
-//			t.Errorf("expected a valid message, but got nothing")
-//		}
-//		if cdnLockResp.Response.Message != nil && *cdnLockResp.Response.Message != *cdnLock.Message {
-//			t.Errorf("expected Message %v, got %v", *cdnLock.Message, *cdnLockResp.Response.Message)
-//		}
-//		if cdnLockResp.Response.Soft == nil {
-//			t.Errorf("expected a valid soft/hard setting, but got nothing")
-//		}
-//		if cdnLockResp.Response.Soft != nil && *cdnLockResp.Response.Soft != *cdnLock.Soft {
-//			t.Errorf("expected 'Soft' to be %v, got %v", *cdnLock.Soft, *cdnLockResp.Response.Soft)
-//		}
-//	}
-//}
+func validateResponseFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		cdnLockResp := resp.(tc.CDNLock)
+		assert.Equal(t, expectedResp["username"], cdnLockResp.UserName, "Expected username: %v Got: %v", expectedResp["username"], cdnLockResp.UserName)
+		assert.Equal(t, expectedResp["cdn"], cdnLockResp.CDN, "Expected CDN: %v Got: %v", expectedResp["cdn"], cdnLockResp.CDN)
+		assert.Equal(t, expectedResp["message"], *cdnLockResp.Message, "Expected Message %v Got: %v", expectedResp["message"], *cdnLockResp.Message)
+		assert.Equal(t, expectedResp["soft"], *cdnLockResp.Soft, "Expected 'Soft' to be: %v Got: %v", expectedResp["soft"], *cdnLockResp.Soft)
+	}
+}
 
 func getCDNID(t *testing.T, cdnName string) func() int {
 	return func() int {
