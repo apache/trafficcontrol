@@ -73,7 +73,7 @@ func (cl *TOClient) WriteFsCookie(fileName string) {
 		return
 	}
 	for _, c := range cl.c.Client.Jar.Cookies(u) {
-		fsCookie := torequtil.Cookie{&http.Cookie{
+		fsCookie := torequtil.Cookie{Cookie: &http.Cookie{
 			Name:  c.Name,
 			Value: c.Value,
 		}}
