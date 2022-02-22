@@ -288,7 +288,7 @@
             "userName": "ops_user_has_lock",
             "cdn": "cdn2",
             "message": "test lock for server queue updates",
-            "soft": true
+            "soft": false
         },
         {
             "userName": "ops_user_has_lock",
