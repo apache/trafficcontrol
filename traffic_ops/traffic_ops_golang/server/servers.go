@@ -383,13 +383,16 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 		"profileId":      validation.Validate(s.ProfileID, validation.NotNil),
 		"statusId":       validation.Validate(s.StatusID, validation.NotNil),
 		"typeId":         validation.Validate(s.TypeID, validation.NotNil),
-		"updPending":     validation.Validate(s.UpdPending, validation.NotNil),
 		"httpsPort":      validation.Validate(s.HTTPSPort, validation.By(tovalidate.IsValidPortNumber)),
 		"tcpPort":        validation.Validate(s.TCPPort, validation.By(tovalidate.IsValidPortNumber)),
 	})
 
 	if len(errs) > 0 {
 		return errs
+	}
+
+	if s.UpdPending == nil && s.ConfigUpdateTime == nil {
+		errs = append(errs, errors.New("either 'updPending' or 'configUpdateTime' may be null, but not both"))
 	}
 
 	if _, err := tc.ValidateTypeID(tx, s.TypeID, "server"); err != nil {
@@ -1636,7 +1639,7 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if server.RevalUpdateTime != nil {
-		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
 		}
@@ -1746,7 +1749,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if server.RevalUpdateTime != nil {
-		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
 		}
@@ -1852,7 +1855,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if server.RevalUpdateTime != nil {
-		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
 		}
