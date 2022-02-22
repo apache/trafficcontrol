@@ -358,8 +358,9 @@ public abstract class AbstractServiceUpdater {
 		final URL dbURL = new URL(url);
 		final URLConnection conn = dbURL.openConnection();
 
+		final long existingLastModified = existingDb.lastModified();
 		if (conn instanceof HttpURLConnection && useModifiedTimestamp(existingDb)) {
-			conn.setIfModifiedSince(existingDb.lastModified());
+			conn.setIfModifiedSince(existingLastModified);
 			if (eTag != null) {
 				conn.setRequestProperty("If-None-Match", eTag);
 			}
@@ -372,11 +373,13 @@ public abstract class AbstractServiceUpdater {
 			if (conn instanceof HttpURLConnection) {
 				eTag = conn.getHeaderField("ETag");
 				if (((HttpURLConnection) conn).getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-					LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingDb.lastModified()));
+					LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingLastModified));
 					return existingDb;
 				}
+			} else if (dbURL.getProtocol().equals("file") && conn.getLastModified() > 0 && conn.getLastModified() <= existingLastModified) {
+				LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingLastModified));
+				return existingDb;
 			}
-
 
 			IOUtils.copy(sourceCompressed ? new GZIPInputStream(in) : in, out);
 		}
