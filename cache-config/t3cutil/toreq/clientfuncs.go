@@ -73,12 +73,11 @@ func (cl *TOClient) WriteFsCookie(fileName string) {
 		return
 	}
 	for _, c := range cl.c.Client.Jar.Cookies(u) {
-		if c.Name == "mojolicious" {
-			cookie = torequtil.FsCookie{
-				Name:  c.Name,
-				Value: c.Value,
-			}
-		}
+		fsCookie := torequtil.Cookie{&http.Cookie{
+			Name:  c.Name,
+			Value: c.Value,
+		}}
+		cookie.Cookies = append(cookie.Cookies, fsCookie)
 	}
 	fsCookie, err := json.MarshalIndent(cookie, "", " ")
 	if err != nil {
