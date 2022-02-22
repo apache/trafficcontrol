@@ -36,7 +36,7 @@ import (
 )
 
 type Cookie struct {
-	*http.Cookie
+	Cookie *http.Cookie `json:"cookie"`
 }
 
 type FsCookie struct {
