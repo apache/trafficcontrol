@@ -35,9 +35,12 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+type Cookie struct {
+	*http.Cookie
+}
+
 type FsCookie struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Cookies []Cookie `json:"cookies"`
 }
 
 // GetRetry attempts to get the given object, retrying with exponential backoff up to cfg.NumRetries.
