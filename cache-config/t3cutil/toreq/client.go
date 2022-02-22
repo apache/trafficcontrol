@@ -82,7 +82,24 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 	log.Infoln("TO URL string: '" + toURLStr + "'")
 	log.Infoln("TO URL: '" + url.String() + "'")
 
-	if (torequtil.FsCookie{}) == fsCookie {
+	if len(fsCookie.Cookies) > 0 {
+		toIP, err := net.LookupIP(url.Hostname())
+		if err != nil {
+			log.Warnln("error getting traffic ops IP: ", err)
+		}
+		log.Infof("Logging in to Traffic Ops '%s' with Cookie", toIP)
+		cookies := []*http.Cookie{}
+		for _, cookie := range fsCookie.Cookies {
+			cookies = append(cookies, cookie.Cookie)
+		}
+		toClient := toclient.NewSession(user, pass, toURLStr, userAgent, &http.Client{}, false)
+		toClient.Client.Jar, err = cookiejar.New(nil)
+		if err != nil {
+			log.Warnln("error creating cookie jar ", err)
+		}
+		toClient.Client.Jar.SetCookies(url, cookies)
+		client = &TOClient{c: toClient}
+	} else {
 		opts := toclient.Options{}
 		opts.Insecure = insecure
 		opts.UserAgent = userAgent
@@ -121,21 +138,6 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 				log.Infof("cache-config Traffic Ops client: %v not supported, falling back to %v\n", newClient.APIVersion(), oldClient.APIVersion())
 			}
 		}
-	} else {
-		log.Infoln("Logging in with Cookie")
-		cookies := []*http.Cookie{}
-		cookies = append(cookies,
-			&http.Cookie{
-				Name:  fsCookie.Name,
-				Value: fsCookie.Value,
-			})
-		toClient := toclient.NewSession(user, pass, toURLStr, userAgent, &http.Client{}, false)
-		toClient.Client.Jar, err = cookiejar.New(nil)
-		if err != nil {
-			log.Warnln("error creating cookie jar ", err)
-		}
-		toClient.Client.Jar.SetCookies(url, cookies)
-		client = &TOClient{c: toClient}
 	}
 	return client, nil
 }
