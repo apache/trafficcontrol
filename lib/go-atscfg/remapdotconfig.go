@@ -332,8 +332,21 @@ func getServerConfigRemapDotConfigForMid(
 				paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
 		}
 
+		isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
+		if err != nil {
+			return "", warnings, errors.New("determining if cache is the last tier: " + err.Error())
+		}
+
+		mapTo := *ds.OrgServerFQDN
+
+		// if this remap is going to a parent, use http not https.
+		// cache-to-cache communication inside the CDN is always http (though that's likely to change in the future)
+		if !isLastCache {
+			mapTo = strings.Replace(mapTo, `https://`, `http://`, -1)
+		}
+
 		if midRemap != "" {
-			midRemaps[remapFrom] = *ds.OrgServerFQDN + midRemap
+			midRemaps[remapFrom] = mapTo + midRemap
 		}
 
 		// Any raw pre or post pend
@@ -341,11 +354,6 @@ func getServerConfigRemapDotConfigForMid(
 
 		// Add to pre/post remap lines if this is last tier
 		if len(dsPreRemaps) > 0 || len(dsPostRemaps) > 0 {
-			isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
-			if err != nil {
-				return "", warnings, errors.New("determining if cache is the last tier for ds '" + *ds.XMLID + "': " + err.Error())
-			}
-
 			if isLastCache {
 				preRemapLines = append(preRemapLines, dsPreRemaps...)
 				postRemapLines = append(postRemapLines, dsPostRemaps...)
