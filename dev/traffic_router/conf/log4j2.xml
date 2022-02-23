@@ -16,7 +16,7 @@
 <Configuration>
 	<Appenders>
 		<Console name="stdout" target="SYSTEM_OUT">
-			<PatternLayout pattern="%m%n"/>
+			<PatternLayout pattern="%-5p %d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%t] %c - %m%n"/>
 			<ThresholdFilter level="ALL"/>
 		</Console>
 	</Appenders>
