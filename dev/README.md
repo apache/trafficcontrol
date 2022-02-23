@@ -51,6 +51,9 @@ debugger for Go listens on port 81 for connections to debug Traffic Monitor.
 Note that Traffic Monitor will do almost nothing useful if the edge cache server
 (the `t3c` service) is not running when it starts.
 
+Traffic Monitor writes its backups for CDN Snapshots and Monitoring Configs in
+the `dev/traffic_monitor` directory, so you can see them.
+
 ## Database/Traffic Vault
 A Postgres database listens on port 5432 (this conflicts with the default port
 for running Postgres, so any Postgres servers running on the host machine may
@@ -69,3 +72,16 @@ to debug `t3c` sub-commands.
 Note that, while in most production deployments `t3c` runs on a `cron` schedule,
 `t3c` is never run in this service container, normally. One must manualy trigger
 a run, usually by using the `t3c` function provided by `atc.dev.sh`.
+
+## Traffic Router
+Traffic Router listens locally for DNS queries on port 3053 (TCP and/or UDP),
+HTTP requests from clients to be routed on ports 3080 (HTTP) and 3443 (HTTPS),
+HTTP requests to its API on ports 3333 (HTTP) and 2222 (HTTPS), and listens for
+JDPA debugging connections on port 5005.
+
+Traffic Router writes its backups for the "Coverage Zone" file, CDN Snapshot,
+Federations, cache health (as published by Traffic Monitor), LetsEncrypt data,
+and Steering information into `dev/traffic_router/db/` so you can see them.
+Generated DNS Zones are written in `dev/traffic_router/var/` and Traffic Router
+will use `dev/traffic_router/temp` to create any temporary files it needs (that
+will grow without bound, so it may need to be cleaned up every now and again).
