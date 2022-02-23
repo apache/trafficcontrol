@@ -23,7 +23,8 @@ RUN apk add --no-cache openjdk11 inotify-tools maven tomcat-native openssl && ln
 ADD https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.43/bin/apache-tomcat-9.0.43.tar.gz /opt/tomcat.tgz
 
 ARG USER
-RUN adduser -H -D ${USER}
+ARG UID
+RUN adduser -H -D ${USER} -u ${UID}
 RUN chown -R ${USER} /opt /usr/share/java/ /root
 USER ${USER}
 RUN cd /opt && \
