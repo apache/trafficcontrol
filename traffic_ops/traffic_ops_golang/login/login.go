@@ -157,40 +157,37 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				http.SetCookie(w, httpCookie)
 
 				var jwtToken *jwt.Token
-				useJwt := r.URL.Query().Get("token-type") == "jwt"
 				var jwtSigned string
-				if useJwt {
-					claims := jwt.MapClaims{}
+				claims := jwt.MapClaims{}
 
-					emptyConf := config.CdniConf{}
-					if cfg.Cdni != nil && *cfg.Cdni != emptyConf {
-						ucdn, err := auth.GetUserUcdn(form, db, dbCtx)
-						if err != nil {
-							// log but do not error out since this is optional in the JWT for CDNi integration
-							log.Errorf("getting ucdn for user %s: %v", form.Username, err)
-						}
-						claims["iss"] = ucdn
-						claims["aud"] = cfg.Cdni.DCdnId
-					}
-
-					claims["exp"] = httpCookie.Expires.Unix()
-					claims["mojoCookie"] = httpCookie.Value
-					jwtToken = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-					jwtSigned, err = jwtToken.SignedString([]byte(cfg.Secrets[0]))
+				emptyConf := config.CdniConf{}
+				if cfg.Cdni != nil && *cfg.Cdni != emptyConf {
+					ucdn, err := auth.GetUserUcdn(form, db, dbCtx)
 					if err != nil {
-						api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
-						return
+						// log but do not error out since this is optional in the JWT for CDNi integration
+						log.Errorf("getting ucdn for user %s: %v", form.Username, err)
 					}
-
-					http.SetCookie(w, &http.Cookie{
-						Name:     "access_token",
-						Value:    jwtSigned,
-						Path:     "/",
-						MaxAge:   httpCookie.MaxAge,
-						HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
-					})
+					claims["iss"] = ucdn
+					claims["aud"] = cfg.Cdni.DCdnId
 				}
+
+				claims["exp"] = httpCookie.Expires.Unix()
+				claims["mojoCookie"] = httpCookie.Value
+				jwtToken = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+				jwtSigned, err = jwtToken.SignedString([]byte(cfg.Secrets[0]))
+				if err != nil {
+					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+					return
+				}
+
+				http.SetCookie(w, &http.Cookie{
+					Name:     "access_token",
+					Value:    jwtSigned,
+					Path:     "/",
+					MaxAge:   httpCookie.MaxAge,
+					HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
+				})
 
 				// If all's well until here, then update last authenticated time
 				tx, txErr := db.BeginTx(dbCtx, nil)

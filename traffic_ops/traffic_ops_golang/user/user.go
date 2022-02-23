@@ -553,7 +553,8 @@ func InsertQueryV40() string {
 	postal_code,
 	country,
 	tenant_id,
-	local_passwd
+	local_passwd,
+	ucdn
 	) VALUES (
 	:username,
 	:public_ssh_key,
@@ -570,7 +571,8 @@ func InsertQueryV40() string {
 	:postal_code,
 	:country,
 	:tenant_id,
-	:local_passwd
+	:local_passwd,
+	:ucdn
 	) RETURNING id, last_updated,
 	(SELECT t.name FROM tenant t WHERE id = tm_user.tenant_id),
 	(SELECT r.name FROM role r WHERE id = tm_user.role)`

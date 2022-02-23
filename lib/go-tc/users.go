@@ -294,7 +294,7 @@ type UserV40 struct {
 	Tenant               *string    `json:"tenant"`
 	TenantID             int        `json:"tenantId" db:"tenant_id"`
 	Token                *string    `json:"-" db:"token"`
-	UCDN                 *string    `json:"ucdn"`
+	UCDN                 string     `json:"ucdn"`
 	UID                  *int       `json:"uid"`
 	Username             string     `json:"username" db:"username"`
 }

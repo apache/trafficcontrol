@@ -15,4 +15,4 @@
  * the License.
  */
 
-ALTER TABLE tm_user ADD COLUMN IF NOT EXISTS ucdn text;
+ALTER TABLE tm_user ADD COLUMN IF NOT EXISTS ucdn text NOT NULL DEFAULT '';

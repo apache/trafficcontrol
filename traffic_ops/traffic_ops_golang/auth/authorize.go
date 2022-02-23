@@ -183,7 +183,7 @@ func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, ctx context.Context
 
 // GetUserUcdn returns the Upstream CDN to which the user belongs for CDNi operations.
 func GetUserUcdn(form PasswordForm, db *sqlx.DB, ctx context.Context) (string, error) {
-	var ucdn *string
+	var ucdn string
 
 	err := db.GetContext(ctx, &ucdn, "SELECT ucdn FROM tm_user where username=$1", form.Username)
 	if err != nil {
@@ -192,10 +192,8 @@ func GetUserUcdn(form PasswordForm, db *sqlx.DB, ctx context.Context) (string, e
 		}
 		return "", err
 	}
-	if ucdn == nil {
-		return "", nil
-	}
-	return *ucdn, nil
+
+	return ucdn, nil
 }
 
 func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, ctx context.Context) (bool, error, error) {
