@@ -16,5 +16,6 @@
 # under the License.
 
 db/
+logs/
 temp/
 var/
