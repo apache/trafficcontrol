@@ -18,7 +18,7 @@
 
 set -o errexit
 
-cd "$TC/traffic_router"
+cd "$TC/dev/traffic_router"
 
 mvn -Dmaven.test.skip=true compile package -P \!rpm-build
 
