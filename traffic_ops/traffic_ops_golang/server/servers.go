@@ -303,7 +303,7 @@ INSERT INTO server (
 	:mgmt_ip_gateway,
 	:offline_reason,
 	:phys_location_id,
-	:profile_id,
+	(SELECT id FROM profile p WHERE p.name=(CAST(:profile_names AS TEXT[]))[1]),
 	:rack,
 	:status_id,
 	:tcp_port,
@@ -333,9 +333,7 @@ INSERT INTO server (
 	offline_reason,
 	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
 	phys_location AS phys_location_id,
-	profile AS profile_id,
-	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
-	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	(SELECT ARRAY[(SELECT name FROM profile WHERE profile.id=server.profile)]) AS profile_names,
 	rack,
 	reval_pending,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
@@ -1698,6 +1696,35 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
+func insertServerProfile(id int, pName pq.StringArray, tx *sql.Tx) (error, error, int) {
+	insertSPQuery := `
+	INSERT INTO server_profile (
+		server, 
+		profile_names, 
+		priority
+	) VALUES 
+	`
+
+	var priorityArray pq.Int64Array
+	for i, _ := range pName {
+		priorityArray = append(priorityArray, int64(i))
+	}
+
+	iSPQueryParts := make([]string, 0, 1)
+	iSPQueryValues := make([]interface{}, 0, 1)
+	for j := 0; j < 1; j++ {
+		iSPQueryParts = append(iSPQueryParts, fmt.Sprintf("($%d, $%d, $%d)", j+1, j+2, j+3))
+		iSPQueryValues = append(iSPQueryValues, id, pName, priorityArray)
+	}
+	insertSPQuery += strings.Join(iSPQueryParts, ",")
+	log.Debugf("Inserting profile information for a new server, query is: %s", insertSPQuery)
+	_, err := tx.Exec(insertSPQuery, iSPQueryValues...)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+	return nil, nil, http.StatusOK
+}
+
 func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	var server tc.ServerNullableV2
 
@@ -1915,6 +1942,8 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	origProfiles := *server.Profiles
+
 	resultRows, err := inf.Tx.NamedQuery(insertQueryV4, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
@@ -1942,6 +1971,12 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	userErr, sysErr, errCode := createInterfaces(*server.ID, server.Interfaces, tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	userErr, sysErr, statusCode := insertServerProfile(*server.ID, origProfiles, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 
