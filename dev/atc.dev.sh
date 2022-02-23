@@ -165,3 +165,20 @@ function tm-health-client {
 export TO_URL="https://localhost:6443"
 export TO_USER="admin"
 export TO_PASSWORD="twelve12"
+
+
+# On some shell/system combinations, either or both of these are available as
+# shell variables but aren't exported to the execution environment. In others,
+# they may just not be set. In any case, trying to set one or both of these to
+# certain values - or even at all, on some systems - will fail, so we hope this
+# isn't necessary.
+if [[ -z "$USER" ]]; then
+	USER="$(id -un)";
+fi
+export USER;
+
+if [[ -z "$UID" ]]; then
+	UID="$(id -u)";
+fi
+export UID;
+
