@@ -8387,3 +8387,197 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 		t.Errorf("expected warning about not using strategies with useless opt UseStrategiesCore but no UseStrategies, actual '%v'", cfg.Warnings)
 	}
 }
+
+func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
+	opt := &RemapDotConfigOpts{
+		HdrComment:        "myHeaderComment",
+		UseStrategies:     false,
+		UseStrategiesCore: true,
+	}
+
+	server := makeTestRemapServer()
+	server.Type = "MID"
+	server.Cachegroup = util.StrPtr("midCG")
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
+	/*
+		ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+		ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	*/
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.Topology = util.StrPtr("t0")
+
+	// non-nil default values should not trigger header rewrite plugin directive
+	ds.EdgeHeaderRewrite = util.StrPtr("")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.ServiceCategory = util.StrPtr("")
+	ds.MaxOriginConnections = util.IntPtr(0)
+
+	dses := []DeliveryService{ds}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(*server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(*server.Profile),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPost",
+			ConfigFile: "remap.config",
+			Value:      "remap http://penraw/ http://penraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPost",
+			ConfigFile: "remap.config",
+			Value:      "remap http://lastraw/ http://lastraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPre",
+			ConfigFile: "remap.config",
+			Value:      "map_with_recp_port http://firstraw:8000/ http://firstraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				{
+					Cachegroup: "midCG",
+					Parents:    []int{2},
+				},
+				{
+					Cachegroup: "midCG2",
+				},
+			},
+		},
+	}
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG2")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG2 := &tc.CacheGroupNullable{}
+	mCG2.Name = mid1.Cachegroup
+	mCG2.ID = mid1.CachegroupID
+	mCGType2 := tc.CacheGroupMidTypeName
+	mCG2.Type = &mCGType2
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	txt = strings.TrimSpace(txt)
+
+	testComment(t, txt, opt.HdrComment)
+
+	if strings.Contains(txt, `https://origin.example.test`) {
+		t.Errorf("expected mid with a parent mid cache to set remap target scheme to http and not origin https, actual: %v", txt)
+	}
+	if !strings.Contains(txt, `http://origin.example.test`) {
+		t.Errorf("expected mid with a parent mid cache to set remap target scheme to http, actual: %v", txt)
+	}
+}
