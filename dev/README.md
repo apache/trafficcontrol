@@ -70,7 +70,7 @@ local port 8080. The Delve debugger for Go listens on port 8081 for connections
 to debug `t3c` sub-commands.
 
 Note that, while in most production deployments `t3c` runs on a `cron` schedule,
-`t3c` is never run in this service container, normally. One must manualy trigger
+`t3c` is never run in this service container, normally. One must manually trigger
 a run, usually by using the `t3c` function provided by `atc.dev.sh`.
 
 ## Traffic Router
