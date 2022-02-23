@@ -28,6 +28,7 @@ package toreq
  */
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net"
@@ -92,7 +93,12 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 		for _, cookie := range fsCookie.Cookies {
 			cookies = append(cookies, cookie.Cookie)
 		}
-		toClient := toclient.NewSession(user, pass, toURLStr, userAgent, &http.Client{}, false)
+		toClient := toclient.NewSession(user, pass, toURLStr, userAgent, &http.Client{
+			Timeout: timeout,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+			},
+		}, false)
 		toClient.Client.Jar, err = cookiejar.New(nil)
 		if err != nil {
 			log.Warnln("error creating cookie jar ", err)
