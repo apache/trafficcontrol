@@ -107,6 +107,10 @@ INSERT INTO parameter (
 	'CRConfig.json',
 	'coveragezone.polling.url',
 	'file:///root/go/src/github.com/apache/trafficcontrol/traffic_router/core/src/test/resources/czf.json'
+), (
+	'global',
+	'tm.url',
+	'https://trafficops'
 );
 
 INSERT INTO profile_parameter
