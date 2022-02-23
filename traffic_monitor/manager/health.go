@@ -47,6 +47,7 @@ func StartHealthResultManager(
 	events health.ThreadsafeEvents,
 	localCacheStatus threadsafe.CacheAvailableStatus,
 	cachesChanged <-chan struct{},
+	combineStates func(),
 ) (threadsafe.DurationMap, threadsafe.ResultHistory, threadsafe.UnpolledCaches) {
 	lastHealthDurations := threadsafe.NewDurationMap()
 	healthHistory := threadsafe.NewResultHistory()
@@ -64,6 +65,7 @@ func StartHealthResultManager(
 		cfg,
 		healthUnpolledCaches,
 		cachesChanged,
+		combineStates,
 	)
 	return lastHealthDurations, healthHistory, healthUnpolledCaches
 }
@@ -81,6 +83,7 @@ func healthResultManagerListen(
 	cfg config.Config,
 	healthUnpolledCaches threadsafe.UnpolledCaches,
 	cachesChanged <-chan struct{},
+	combineStates func(),
 ) {
 	haveCachesChanged := func() bool {
 		select {
@@ -112,6 +115,7 @@ func healthResultManagerListen(
 			healthHistory,
 			results,
 			cfg,
+			combineStates,
 		)
 	}
 
@@ -156,6 +160,7 @@ func processHealthResult(
 	healthHistory threadsafe.ResultHistory,
 	results []cache.Result,
 	cfg config.Config,
+	combineStates func(),
 ) {
 	if len(results) == 0 {
 		return
@@ -195,9 +200,9 @@ func processHealthResult(
 	pollerName := "health"
 	statResultHistoryNil := (*threadsafe.ResultStatHistory)(nil) // health poller doesn't have stats
 	health.CalcAvailability(results, pollerName, statResultHistoryNil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events, cfg.CachePollingProtocol)
+	combineStates()
 
 	healthHistory.Set(healthHistoryCopy)
-	// TODO determine if we should combineCrStates() here
 
 	lastHealthDurations := threadsafe.CopyDurationMap(lastHealthDurationsThreadsafe.Get())
 	for _, healthResult := range results {

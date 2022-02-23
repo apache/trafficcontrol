@@ -133,6 +133,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 		// CDNI integration
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `OC/FCI/advertisement/?$`, Handler: cdni.GetCapabilities, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729077},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `OC/CI/configuration/?$`, Handler: cdni.PutConfiguration, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729078},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `OC/CI/configuration/{host}?$`, Handler: cdni.PutHostConfiguration, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729079},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `OC/CI/configuration/request/{id}/{approved}?$`, Handler: cdni.PutConfigurationResponse, RequiredPrivLevel: auth.PrivLevelAdmin, RequiredPermissions: []string{"CDNI-CAPACITY:ADMIN"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729080},
 
 		// SSL Keys
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `sslkey_expirations/?$`, Handler: deliveryservice.GetSSlKeyExpirationInformation, RequiredPrivLevel: auth.PrivLevelAdmin, RequiredPermissions: []string{"SSL-KEY-EXPIRATION:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 41357729075},

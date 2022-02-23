@@ -438,7 +438,7 @@ type TrafficMonitor struct {
 	Profile string `json:"profile"`
 	// Location is the Name of the Cache Group to which the Traffic Monitor
 	// belongs - called "Location" for legacy reasons.
-	Location string `json:"location"`
+	Location string `json:"cachegroup"`
 	// ServerStatus is the Name of the Status of the Traffic Monitor.
 	ServerStatus string `json:"status"`
 }

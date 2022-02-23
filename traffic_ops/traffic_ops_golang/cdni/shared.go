@@ -21,33 +21,49 @@ package cdni
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lib/pq"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/lib/pq"
 )
 
-const CapabilityQuery = `SELECT id, type, ucdn FROM cdni_capabilities WHERE type = $1 AND ucdn = $2`
-const AllFootprintQuery = `SELECT footprint_type, footprint_value::text[], capability_id FROM cdni_footprints`
+const (
+	CapabilityQuery   = `SELECT id, type, ucdn FROM cdni_capabilities WHERE type = $1 AND ucdn = $2`
+	AllFootprintQuery = `SELECT footprint_type, footprint_value::text[], capability_id FROM cdni_footprints`
 
-const totalLimitsQuery = `
+	totalLimitsQuery = `
 SELECT limit_type, maximum_hard, maximum_soft, ctl.telemetry_id, ctl.telemetry_metric, t.id, t.type, tm.name, ctl.capability_id 
 FROM cdni_total_limits AS ctl 
 LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id 
 LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name`
 
-const hostLimitsQuery = `
+	hostLimitsQuery = `
 SELECT limit_type, maximum_hard, maximum_soft, chl.telemetry_id, chl.telemetry_metric, t.id, t.type, tm.name, host, chl.capability_id 
 FROM cdni_host_limits AS chl 
 LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id 
 LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name 
 ORDER BY host DESC`
+
+	InsertCapabilityUpdateQuery                    = `INSERT INTO cdni_capability_updates (ucdn, data, async_status_id, request_type, host) VALUES ($1, $2, $3, $4, $5)`
+	SelectCapabilityUpdateQuery                    = `SELECT ucdn, data, async_status_id, request_type, host FROM cdni_capability_updates WHERE id = $1`
+	DeleteCapabilityUpdateQuery                    = `DELETE FROM cdni_capability_updates WHERE id = $1`
+	UpdateTotalLimitsByCapabilityAndLimitTypeQuery = `UPDATE cdni_total_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3`
+	UpdateHostLimitsByCapabilityAndLimitTypeQuery  = `UPDATE cdni_host_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3 AND host = $4`
+	hostQuery                                      = `SELECT count(*) FROM cdni_host_limits WHERE host = $1`
+
+	hostConfigLabel = "hostConfigUpdate"
+)
 
 func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -57,68 +73,14 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	bearerToken := r.Header.Get("Authorization")
-	if bearerToken == "" {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("bearer token header is required"), nil)
-		return
-	}
-
 	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
 		return
 	}
 
-	claims := jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(inf.Config.Cdni.JwtDecodingSecret), nil
-	})
+	ucdn, err := checkBearerToken(r.Header.Get("Authorization"), inf)
 	if err != nil {
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, fmt.Errorf("parsing claims: %w", err), nil)
-		return
-	}
-	if !token.Valid {
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, errors.New("invalid token"), nil)
-		return
-	}
-
-	var expirationFloat float64
-	var ucdn string
-	var dcdn string
-	for key, val := range claims {
-		switch key {
-		case "iss":
-			if _, ok := val.(string); !ok {
-				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("invalid token - iss (Issuer) must be a string"), nil)
-				return
-			}
-			ucdn = val.(string)
-		case "aud":
-			if _, ok := val.(string); !ok {
-				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("invalid token - aud (Audience) must be a string"), nil)
-				return
-			}
-			dcdn = val.(string)
-		case "exp":
-			if _, ok := val.(float64); !ok {
-				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("invalid token - exp (Expiration) must be a float64"), nil)
-				return
-			}
-			expirationFloat = val.(float64)
-		}
-	}
-
-	expiration := int64(expirationFloat)
-
-	if expiration < time.Now().Unix() {
-		api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("token is expired"), nil)
-		return
-	}
-	if dcdn != inf.Config.Cdni.DCdnId {
-		api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("invalid token - incorrect dcdn"), nil)
-		return
-	}
-	if ucdn == "" {
-		api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("invalid token - empty ucdn field"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 
@@ -142,6 +104,424 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	fciCaps.Capabilities = capsList
 
 	api.WriteRespRaw(w, r, fciCaps)
+}
+
+func PutHostConfiguration(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"host"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	host := inf.Params["host"]
+	if errCode, userErr, sysErr := validateHostExists(host, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
+		return
+	}
+
+	ucdn, err := checkBearerToken(r.Header.Get("Authorization"), inf)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	var genericHostRequest GenericHostMetadata
+	err = json.NewDecoder(r.Body).Decode(&genericHostRequest)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("decoding host json request: %w", err))
+		return
+	}
+
+	db, err := api.GetDB(r.Context())
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting async db: %w", err))
+		return
+	}
+	asyncTx, err := db.Begin()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting async tx: %w", err))
+		return
+	}
+	logTx, err := db.Begin()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting log tx: %w", err))
+		return
+	}
+	defer logTx.Commit()
+
+	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(asyncTx, "CDNi host configuration update request received.")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	data := genericHostRequest.HostMetadata.Metadata
+
+	_, err = inf.Tx.Tx.Query(InsertCapabilityUpdateQuery, ucdn, data, asyncStatusId, hostConfigLabel, host)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting capability update request into queue: %w", err))
+		return
+	}
+
+	msg := "CDNi configuration update request received. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusId)
+	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, logTx)
+
+	var alerts tc.Alerts
+	alerts.AddAlert(tc.Alert{
+		Text:  msg,
+		Level: tc.SuccessLevel.String(),
+	})
+
+	w.Header().Add(rfc.Location, api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
+	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
+}
+
+func PutConfiguration(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if inf.Config.Cdni == nil || inf.Config.Cdni.JwtDecodingSecret == "" || inf.Config.Cdni.DCdnId == "" {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
+		return
+	}
+
+	ucdn, err := checkBearerToken(r.Header.Get("Authorization"), inf)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	var genericRequest GenericRequestMetadata
+	err = json.NewDecoder(r.Body).Decode(&genericRequest)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("decoding json request: %w", err))
+		return
+	}
+
+	db, err := api.GetDB(r.Context())
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting async db: %w", err))
+		return
+	}
+	asyncTx, err := db.Begin()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting async tx: %w", err))
+		return
+	}
+	logTx, err := db.Begin()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting log tx: %w", err))
+		return
+	}
+	defer logTx.Commit()
+
+	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(asyncTx, "CDNi configuration update request received.")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	data := genericRequest.Metadata
+
+	_, err = inf.Tx.Tx.Query(InsertCapabilityUpdateQuery, ucdn, data, asyncStatusId, SupportedGenericMetadataType(genericRequest.Type), genericRequest.Host)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting capability update request into queue: %w", err))
+		return
+	}
+
+	msg := "CDNi configuration update request received. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusId)
+	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, logTx)
+	var alerts tc.Alerts
+	alerts.AddAlert(tc.Alert{
+		Text:  msg,
+		Level: tc.SuccessLevel.String(),
+	})
+
+	w.Header().Add(rfc.Location, api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
+	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
+}
+
+func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"approved", "id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	reqId := inf.IntParams["id"]
+	approvedString := inf.Params["approved"]
+	approved, err := strconv.ParseBool(approvedString)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("approved parameter must be a boolean"), nil)
+		return
+	}
+
+	db, err := api.GetDB(r.Context())
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting async db: %w", err))
+		return
+	}
+
+	logTx, err := db.Begin()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting log tx: %w", err))
+		return
+	}
+	defer logTx.Commit()
+
+	rows, err := inf.Tx.Tx.Query(SelectCapabilityUpdateQuery, reqId)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("querying for capability update request: %w", err))
+		return
+	}
+	defer log.Close(rows, "closing capabilities update query")
+	var ucdn string
+	var data json.RawMessage
+	var host string
+	var asyncId int
+	var requestType string
+	count := 0
+	for rows.Next() {
+		if err := rows.Scan(&ucdn, &data, &asyncId, &requestType, &host); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning db rows: %w", err))
+			return
+		}
+		count++
+	}
+	if count == 0 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("no configuration request for that id"), nil)
+		return
+	}
+
+	if !approved {
+		if asyncErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "Requested configuration update has been denied.", asyncId, true); asyncErr != nil {
+			log.Errorf("updating async status for id %d: %s", asyncId, asyncErr.Error())
+		}
+		status, err := deleteCapabilityRequest(reqId, inf.Tx.Tx)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, status, nil, fmt.Errorf("deleting configuration request from queue: %w", err))
+			return
+		}
+		msg := "Successfully denied configuration update request."
+		api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, inf.Tx.Tx)
+		api.WriteResp(w, r, msg)
+		return
+	}
+
+	var updatedDataList []GenericMetadata
+	if err = json.Unmarshal(data, &updatedDataList); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("unmarshalling data for configuration update: %w", err))
+		return
+	}
+
+	var unsupportedTypes []string
+	for _, updatedData := range updatedDataList {
+		if !updatedData.Type.isValid() {
+			unsupportedTypes = append(unsupportedTypes, string(updatedData.Type))
+		}
+	}
+
+	if len(unsupportedTypes) != 0 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("unsupported generic metadata types found: %v", strings.Join(unsupportedTypes, ", ")), nil)
+		return
+	}
+
+	for _, updatedData := range updatedDataList {
+		switch updatedData.Type {
+		case MiRequestedCapacityLimits:
+			var capacityRequestedLimits CapacityRequestedLimits
+			if err = json.Unmarshal(updatedData.Value, &capacityRequestedLimits); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("unmarshalling data for configuration update: %w", err))
+				return
+			}
+			for _, capLim := range capacityRequestedLimits.RequestedLimits {
+				capId, err := getCapabilityIdFromFootprints(capLim, ucdn, inf)
+				if err != nil {
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("finding capability for given information: %w", err))
+					return
+				}
+
+				query := UpdateTotalLimitsByCapabilityAndLimitTypeQuery
+				queryParams := []interface{}{capLim.LimitValue, capId, capLim.LimitType}
+				if host != "" {
+					query = UpdateHostLimitsByCapabilityAndLimitTypeQuery
+					queryParams = []interface{}{capLim.LimitValue, capId, capLim.LimitType, host}
+				}
+
+				result, err := inf.Tx.Tx.Exec(query, queryParams...)
+				if err != nil {
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("updating capacity: %w", err))
+					return
+				}
+
+				if rowsAffected, err := result.RowsAffected(); err != nil {
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("updating capacity: getting rows affected: %w", err))
+					return
+				} else if rowsAffected < 1 {
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("no capacity found for update: host: %s, type: %s, limit: %v", host, updatedData.Type, capLim), nil)
+					return
+				} else if rowsAffected > 1 {
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("capacity update affected too many rows: %d", rowsAffected))
+					return
+				}
+			}
+		}
+	}
+
+	if asyncErr := api.UpdateAsyncStatus(db, api.AsyncSucceeded, "Capacity requested update has been completed.", asyncId, true); asyncErr != nil {
+		log.Errorf("updating async status for id %v: %v", asyncId, asyncErr)
+	}
+	status, err := deleteCapabilityRequest(reqId, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, nil, fmt.Errorf("deleting capacity request from queue: %w", err))
+		return
+	}
+	msg := "Successfully updated configuration."
+	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, logTx)
+	api.WriteResp(w, r, msg)
+}
+
+func getCapabilityIdFromFootprints(updatedData CapacityLimit, ucdn string, inf *api.APIInfo) (int, error) {
+	tableAbbr := ""
+	selectClause := ""
+	whereClause := ""
+	var queryParams []interface{}
+	paramCount := 1
+
+	for i, footprint := range updatedData.Footprints {
+		if i == 0 {
+			tableAbbr = "f"
+			selectClause = "SELECT " + tableAbbr + ".capability_id FROM cdni_footprints as " + tableAbbr
+			whereClause = " WHERE " + tableAbbr + ".ucdn = $" + strconv.Itoa(paramCount) + " AND " + tableAbbr + ".footprint_type = $" + strconv.Itoa(paramCount+1) + " AND " + tableAbbr + ".footprint_value = $" + strconv.Itoa(paramCount+2) + "::text[]"
+		} else {
+			oldTableAbbr := tableAbbr
+			tableAbbr = tableAbbr + "f"
+			selectClause = selectClause + " JOIN cdni_footprints as " + tableAbbr + " on " + tableAbbr + ".capability_id = " + oldTableAbbr + ".capability_id"
+			whereClause = whereClause + " AND " + tableAbbr + ".ucdn = $" + strconv.Itoa(paramCount) + " AND " + tableAbbr + ".footprint_type = $" + strconv.Itoa(paramCount+1) + " AND " + tableAbbr + ".footprint_value = $" + strconv.Itoa(paramCount+2) + "::text[]"
+		}
+		paramCount = paramCount + 3
+		queryParams = append(queryParams, ucdn)
+		queryParams = append(queryParams, footprint.FootprintType)
+		queryParams = append(queryParams, pq.Array(footprint.FootprintValue))
+	}
+
+	selectQuery := selectClause + whereClause + " AND (SELECT count(*) from cdni_footprints as c where c.capability_id = f.capability_id) = " + strconv.Itoa(len(updatedData.Footprints))
+	rows, err := inf.Tx.Tx.Query(selectQuery, queryParams...)
+	if err != nil {
+		return 0, fmt.Errorf("querying for capacity update request: %w", err)
+	}
+	defer log.Close(rows, "closing footprints query")
+	var capabilityIds []int
+	rowCount := 0
+	for rows.Next() {
+		var capabilityId int
+		if err := rows.Scan(&capabilityId); err != nil {
+			return 0, fmt.Errorf("scanning db rows: %w", err)
+		}
+		rowCount++
+		capabilityIds = append(capabilityIds, capabilityId)
+	}
+
+	if len(capabilityIds) == 0 {
+		return 0, fmt.Errorf("no capabilities found that match all footprints: %v", updatedData.Footprints)
+	}
+	if len(capabilityIds) > 1 {
+		return 0, fmt.Errorf("more than 1 capability found that match all footprints: %v", updatedData.Footprints)
+	}
+	return capabilityIds[0], nil
+}
+
+func deleteCapabilityRequest(reqId int, tx *sql.Tx) (int, error) {
+	result, err := tx.Exec(DeleteCapabilityUpdateQuery, reqId)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("deleting configuration update: %w", err)
+	}
+
+	if rowsAffected, err := result.RowsAffected(); err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("deleting configuration update: getting rows affected: %w", err)
+	} else if rowsAffected < 1 {
+		return http.StatusNotFound, errors.New("no configuration update with that key found")
+	} else if rowsAffected > 1 {
+		return http.StatusInternalServerError, fmt.Errorf("delete affected too many rows: %d", rowsAffected)
+	}
+
+	return http.StatusOK, nil
+}
+
+func validateHostExists(host string, tx *sql.Tx) (int, error, error) {
+	count := 0
+	if err := tx.QueryRow(hostQuery, host).Scan(&count); err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("querying if host %s exists: %w", host, err)
+	}
+	if count == 0 {
+		return http.StatusBadRequest, fmt.Errorf("No data found for host: %s", host), nil
+	}
+	return http.StatusOK, nil, nil
+}
+
+func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
+	if bearerToken == "" {
+		return "", errors.New("bearer token header is required")
+	}
+
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(inf.Config.Cdni.JwtDecodingSecret), nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("parsing claims: %w", err)
+	}
+	if !token.Valid {
+		return "", errors.New("invalid token")
+	}
+
+	var expirationFloat float64
+	var ucdn string
+	var dcdn string
+	for key, val := range claims {
+		switch key {
+		case "iss":
+			if _, ok := val.(string); !ok {
+				return "", errors.New("invalid token - iss (Issuer) must be a string")
+			}
+			ucdn = val.(string)
+		case "aud":
+			if _, ok := val.(string); !ok {
+				return "", errors.New("invalid token - aud (Audience) must be a string")
+			}
+			dcdn = val.(string)
+		case "exp":
+			if _, ok := val.(float64); !ok {
+				return "", errors.New("invalid token - exp (Expiration) must be a float64")
+			}
+			expirationFloat = val.(float64)
+		}
+	}
+
+	expiration := int64(expirationFloat)
+
+	if expiration < time.Now().Unix() {
+		return "", errors.New("token is expired")
+	}
+	if dcdn != inf.Config.Cdni.DCdnId {
+		return "", errors.New("invalid token - incorrect dcdn")
+	}
+	if ucdn == "" {
+		return "", errors.New("invalid token - empty ucdn field")
+	}
+
+	return ucdn, nil
 }
 
 func getFootprintMap(tx *sql.Tx) (map[int][]Footprint, error) {
@@ -318,6 +698,20 @@ const (
 	FciCapacityLimits                       = "FCI.CapacityLimits"
 )
 
+type SupportedGenericMetadataType string
+
+const (
+	MiRequestedCapacityLimits SupportedGenericMetadataType = "MI.RequestedCapacityLimits"
+)
+
+func (s SupportedGenericMetadataType) isValid() bool {
+	switch s {
+	case MiRequestedCapacityLimits:
+		return true
+	}
+	return false
+}
+
 type TelemetrySourceType string
 
 const (
@@ -332,3 +726,33 @@ const (
 	Asn                       = "asn"
 	CountryCode               = "countrycode"
 )
+
+type GenericHostMetadata struct {
+	Host         string           `json:"host"`
+	HostMetadata HostMetadataList `json:"host-metadata"`
+}
+
+type GenericRequestMetadata struct {
+	Type     string          `json:"type"`
+	Metadata json.RawMessage `json:"metadata"`
+	Host     string          `json:"host,omitempty"`
+}
+
+type HostMetadataList struct {
+	Metadata json.RawMessage `json:"metadata"`
+}
+
+type GenericMetadata struct {
+	Type  SupportedGenericMetadataType `json:"generic-metadata-type"`
+	Value json.RawMessage              `json:"generic-metadata-value"`
+}
+
+type CapacityRequestedLimits struct {
+	RequestedLimits []CapacityLimit `json:"requested-limits"`
+}
+
+type CapacityLimit struct {
+	LimitType  string      `json:"limit-type"`
+	LimitValue int64       `json:"limit-value"`
+	Footprints []Footprint `json:"footprints"`
+}

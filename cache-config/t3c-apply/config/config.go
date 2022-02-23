@@ -82,6 +82,7 @@ type Cfg struct {
 	Retries             int
 	ReverseProxyDisable bool
 	SkipOSCheck         bool
+	UseStrategies       t3cutil.UseStrategiesFlag
 	TOInsecure          bool
 	TOTimeoutMS         time.Duration
 	TOUser              string
@@ -273,6 +274,10 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	const updateIPAllowFlagName = "update-ipallow"
 	updateIPAllowPtr := getopt.BoolLong(updateIPAllowFlagName, 'A', "Whether ipallow file will be updated if necessary. This exists because ATS had a bug where reloading after changing ipallow would block everything. Default is false.")
 
+	const useStrategiesFlagName = "use-strategies"
+	const defaultUseStrategies = t3cutil.UseStrategiesFlagFalse
+	useStrategiesPtr := getopt.EnumLong(useStrategiesFlagName, 0, []string{string(t3cutil.UseStrategiesFlagTrue), string(t3cutil.UseStrategiesFlagCore), string(t3cutil.UseStrategiesFlagCore), ""}, "", "[true | core| false] whether to generate config using strategies.yaml instead of parent.config. If true use the parent_select plugin, if 'core' use ATS core strategies, if false use parent.config.")
+
 	const runModeFlagName = "run-mode"
 	runModePtr := getopt.StringLong(runModeFlagName, 'm', "", `[badass | report | revalidate | syncds] run mode. Optional, convenience flag which sets other flags for common usage scenarios.
 syncds     keeps the defaults:
@@ -360,6 +365,10 @@ If any of the related flags are also set, they override the mode's default behav
 		*filesPtr = defaultFiles.String()
 	}
 
+	if !getopt.IsSet(useStrategiesFlagName) {
+		*useStrategiesPtr = defaultUseStrategies.String()
+	}
+
 	logLocationError := log.LogLocationStderr
 	logLocationWarn := log.LogLocationNull
 	logLocationInfo := log.LogLocationNull
@@ -401,6 +410,7 @@ If any of the related flags are also set, they override the mode's default behav
 	retries := *retriesPtr
 	reverseProxyDisable := *reverseProxyDisablePtr
 	skipOsCheck := *skipOSCheckPtr
+	useStrategies := t3cutil.UseStrategiesFlag(*useStrategiesPtr)
 	toInsecure := *toInsecurePtr
 	toTimeoutMS := time.Millisecond * time.Duration(*toTimeoutMSPtr)
 	toURL := *toURLPtr
@@ -498,6 +508,7 @@ If any of the related flags are also set, they override the mode's default behav
 		Retries:                     retries,
 		ReverseProxyDisable:         reverseProxyDisable,
 		SkipOSCheck:                 skipOsCheck,
+		UseStrategies:               useStrategies,
 		TOInsecure:                  toInsecure,
 		TOTimeoutMS:                 toTimeoutMS,
 		TOUser:                      toUser,

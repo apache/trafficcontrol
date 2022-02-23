@@ -27,7 +27,9 @@ import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
 import { LoadingComponent } from "./loading/loading.component";
 import { BooleanFilterComponent } from "./table-components/boolean-filter/boolean-filter.component";
+import { EmailCellRendererComponent } from "./table-components/email-cell-renderer/email-cell-renderer.component";
 import { SSHCellRendererComponent } from "./table-components/ssh-cell-renderer/ssh-cell-renderer.component";
+import { TelephoneCellRendererComponent } from "./table-components/telephone-cell-renderer/telephone-cell-renderer.component";
 import { UpdateCellRendererComponent } from "./table-components/update-cell-renderer/update-cell-renderer.component";
 import { TpHeaderComponent } from "./tp-header/tp-header.component";
 import { CustomvalidityDirective } from "./validation/customvalidity.directive";
@@ -46,6 +48,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		CustomvalidityDirective,
 		LinechartDirective,
 		SSHCellRendererComponent,
+		EmailCellRendererComponent,
+		TelephoneCellRendererComponent,
 	],
 	exports: [
 		AlertComponent,

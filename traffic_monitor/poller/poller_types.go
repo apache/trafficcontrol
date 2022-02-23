@@ -36,9 +36,6 @@ type PollerType struct {
 
 // PollerConfig is the data given to cache pollers when they're initialized.
 type PollerConfig struct {
-	URL         string
-	URLv6       string
-	Host        string
 	Timeout     time.Duration
 	NoKeepAlive bool
 	PollerID    string

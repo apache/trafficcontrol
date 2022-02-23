@@ -23,7 +23,9 @@ package torequest
 
 import (
 	"bytes"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -32,6 +34,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -79,6 +82,7 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	args = append(args, "--via-string-release="+strconv.FormatBool(!cfg.OmitViaStringRelease))
 	args = append(args, "--no-outgoing-ip="+strconv.FormatBool(cfg.NoOutgoingIP))
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
+	args = append(args, "--use-strategies="+cfg.UseStrategies.String())
 
 	generatedFiles, stdErr, code := t3cutil.DoInput(configData, config.GenerateCmd, args...)
 	if code != 0 {
@@ -331,6 +335,22 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 	logSubApp(`t3c-check-refs stdout`, stdOut)
 	logSubApp(`t3c-check-refs stderr`, stdErr)
 	return nil
+}
+
+//checkCert checks the validity of the ssl certificate
+func checkCert(c []byte) error {
+	block, _ := pem.Decode(c)
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return err
+	}
+	if cert.NotAfter.Unix() < time.Now().Unix() {
+		err = errors.New("Certificate expired: " + cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
+		log.Warnf(err.Error())
+	} else {
+		log.Infof("Certificate valid until %s ", cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
+	}
+	return err
 }
 
 // checkReload is a helper for the sub-command t3c-check-reload.
