@@ -51,8 +51,7 @@ start() {
 }
 
 stop() {
-    echo `pm2 list` | grep -q "$NAME"
-    if [ "$?" -eq "0" ]; then
+    if pm2 list | grep -q "$NAME"; then
         echo "Shutting down $NAME"
         pm2 stop $APPLICATION_PATH
         RETVAL=$?
@@ -68,8 +67,7 @@ restart() {
 }
 
 status() {
-    echo `pm2 list` | grep -q "$NAME"
-    if [ "$?" -eq "0" ]; then
+    if pm2 list | grep -q "$NAME"; then
         echo "$NAME is running."
         RETVAL=0
     else
