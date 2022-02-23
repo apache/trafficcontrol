@@ -18,7 +18,14 @@
 alias atc-start="docker-compose up -d --build";
 alias atc-build="docker-compose build";
 alias atc-stop="docker-compose kill && docker-compose down -v --remove-orphans";
-alias atc-restart="atc-stop && atc-start";
+
+function atc-restart {
+	if ! atc-stop $@; then
+		return 1;
+	fi
+	atc-start $@;
+	return $?;
+}
 
 function atc-ready {
 	local url="https://localhost:6443/api/4.0/ping";
