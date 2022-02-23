@@ -22,6 +22,8 @@
 Debugging inside CDN-in-a-Box
 *****************************
 
+.. tip:: For the purposes of development, it may be easier to use :ref:`dev`.
+
 Some CDN-in-a-Box components can be used with a debugger to step through lines of code, set breakpoints, see the state of all variables in each scope, etc. at runtime. Components that support debugging:
 
 * `Enroller`_
