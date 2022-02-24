@@ -19,9 +19,9 @@ CREATE TABLE IF NOT EXISTS public.server_profile (
                                                      server bigint NOT NULL,
                                                      profile_names text[] NOT NULL,
                                                      priority bigint[] NOT NULL,
-    CONSTRAINT pk_server_profile PRIMARY KEY(profile_names, server, priority),
-    CONSTRAINT fk_server_id FOREIGN KEY (server) REFERENCES server(id)
-    );
+    CONSTRAINT pk_server_profile PRIMARY KEY(profile_names, server),
+    CONSTRAINT fk_server_id FOREIGN KEY (server) REFERENCES public.server(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
 INSERT into public.server_profile(server, profile_names, priority)
     SELECT s.id, ARRAY [p.name], ARRAY [0]
