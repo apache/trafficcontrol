@@ -445,7 +445,7 @@ UPDATE server SET
 	mgmt_ip_gateway=:mgmt_ip_gateway,
 	offline_reason=:offline_reason,
 	phys_location=:phys_location_id,
-	profile=(SELECT id from profile where name=(SELECT profile_names[1] from server_profile)),
+	profile=(SELECT id from profile where name=(SELECT profile_names[1] from server_profile sp WHERE sp.server=:id)),
 	rack=:rack,
 	status=:status_id,
 	tcp_port=:tcp_port,
@@ -476,7 +476,7 @@ RETURNING
 	offline_reason,
 	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
 	phys_location AS phys_location_id,
-	(SELECT ARRAY[(SELECT name FROM profile WHERE profile.id=server.profile)]) AS profile_names,
+	(SELECT profile_names FROM server_profile sp WHERE sp.server=server.id) AS profile_names,
 	rack,
 	reval_pending,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
@@ -921,7 +921,11 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	if version.Major >= 3 {
 		v3Servers := make([]tc.ServerV30, 0)
 		for _, server := range servers {
-			csp := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+			csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+			if err != nil {
+				api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to query profile: %v", err))
+				return
+			}
 			v3Server, err := server.ToServerV3FromV4(csp)
 			if err != nil {
 				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to V3 format: %v", err))
@@ -935,7 +939,11 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	legacyServers := make([]tc.ServerNullableV2, 0, len(servers))
 	for _, server := range servers {
-		csp := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to query profile: %v", err))
+			return
+		}
 		legacyServer, err := server.ToServerV2FromV4(csp)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
@@ -1507,7 +1515,10 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		dbhelpers.UpdateServerProfiles(server.ID, server.Profiles, tx)
+		if err := dbhelpers.UpdateServerProfiles(server.ID, server.Profiles, tx); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
 	} else if inf.Version.Major >= 3 {
 		if err := json.NewDecoder(r.Body).Decode(&serverV3); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1526,7 +1537,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		cspV40 := dbhelpers.UpdateCommonServerPropertiesV40(serverV3.ID, serverV3.CommonServerProperties, tx)
+		cspV40, err := dbhelpers.UpdateCommonServerPropertiesV40(serverV3.ID, serverV3.CommonServerProperties, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
+			return
+		}
 		server, err = serverV3.UpgradeToV40(cspV40)
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V3 server to V4 structure: %v", err)
@@ -1544,7 +1559,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		cspV40 := dbhelpers.UpdateCommonServerPropertiesV40(legacyServer.ID, legacyServer.CommonServerProperties, tx)
+		cspV40, err := dbhelpers.UpdateCommonServerPropertiesV40(legacyServer.ID, legacyServer.CommonServerProperties, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
+			return
+		}
 		server, err = legacyServer.UpgradeToV40(cspV40)
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V2 server to V3 structure: %v", err)
@@ -1678,7 +1697,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
 	} else {
-		csp := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to query profile: %v", err))
+			return
+		}
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
+			return
+		}
 		v2Server, err := server.ToServerV2FromV4(csp)
 		if err != nil {
 			sysErr = fmt.Errorf("converting valid v3 server to a v2 structure: %v", err)
@@ -1696,7 +1723,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
-func insertServerProfile(id int, pName pq.StringArray, tx *sql.Tx) (error, error, int) {
+func insertServerProfile(id *int, pName pq.StringArray, tx *sql.Tx) (error, error, int) {
 	insertSPQuery := `
 	INSERT INTO server_profile (
 		server, 
@@ -1714,7 +1741,7 @@ func insertServerProfile(id int, pName pq.StringArray, tx *sql.Tx) (error, error
 	iSPQueryValues := make([]interface{}, 0, 1)
 	for j := 0; j < 1; j++ {
 		iSPQueryParts = append(iSPQueryParts, fmt.Sprintf("($%d, $%d, $%d)", j+1, j+2, j+3))
-		iSPQueryValues = append(iSPQueryValues, id, pName, priorityArray)
+		iSPQueryValues = append(iSPQueryValues, *id, pName, priorityArray)
 	}
 	insertSPQuery += strings.Join(iSPQueryParts, ",")
 	log.Debugf("Inserting profile information for a new server, query is: %s", insertSPQuery)
@@ -1974,7 +2001,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, statusCode := insertServerProfile(*server.ID, origProfiles, tx)
+	userErr, sysErr, statusCode := insertServerProfile(server.ID, origProfiles, tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
@@ -2159,7 +2186,11 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if inf.Version.Major >= 3 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
 	} else {
-		csp := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to query profile: %v", err))
+			return
+		}
 		serverV2, err := server.ToServerV2FromV4(csp)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)

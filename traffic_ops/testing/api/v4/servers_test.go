@@ -220,7 +220,10 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("expected to get %d server from cdn %s from cachegroup %s in topology %s, got %d servers", expectedLength, cdnName, cacheGroupName, topologyName, len(servers.Response))
 	}
 	server := servers.Response[0]
-	profileID := dbhelpers.GetProfileID(server.ID)
+	profileID, err := dbhelpers.GetProfileID(server.ID)
+	if err != nil {
+		t.Fatalf("failed to query server: %v", err)
+	}
 	if server.ID == nil || server.CDNID == nil || profileID == nil || server.CachegroupID == nil || server.HostName == nil {
 		t.Fatal("Traffic Ops returned a representation for a server with null or undefined ID and/or CDN ID and/or Profile ID and/or Cache Group ID and/or Host Name")
 	}
@@ -254,15 +257,24 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("Expected exactly one Profile to exist with name 'MID1', found: %d", len(profiles.Response))
 	}
 	newProfile := profiles.Response[0].ID
-	oldProfile := *dbhelpers.GetProfileID(server.ID)
-	newProfileName := dbhelpers.GetProfileName(&newProfile)
+	oldProfile, err := dbhelpers.GetProfileID(server.ID)
+	if err != nil {
+		t.Fatalf("failed to query server: %v", err)
+	}
+	newProfileName, err := dbhelpers.GetProfileName(&newProfile)
+	if err != nil {
+		t.Fatalf("failed to query server: %v", err)
+	}
 	server.Profiles = &pq.StringArray{*newProfileName}
 	_, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("changing the CDN of the last server (%s) in a CDN in a cachegroup used by a topology assigned to a delivery service(s) in that CDN - expected: error, actual: nil", *server.HostName)
 	}
 	server.CDNID = &oldCDNID
-	oldProfileName := dbhelpers.GetProfileName(&oldProfile)
+	oldProfileName, err := dbhelpers.GetProfileName(oldProfile)
+	if err != nil {
+		t.Fatalf("failed to query server: %v", err)
+	}
 	server.Profiles = &pq.StringArray{*oldProfileName}
 
 	opts.QueryParameters.Set("name", moveToCacheGroup)
@@ -955,7 +967,10 @@ func GetTestServersQueryParameters(t *testing.T) {
 		opts.QueryParameters.Del("status")
 	}
 
-	profileID := dbhelpers.GetProfileID(s.ID)
+	profileID, err := dbhelpers.GetProfileID(s.ID)
+	if err != nil {
+		t.Fatalf("failed to query server: %v", err)
+	}
 	if profileID == nil {
 		t.Error("Found server with no Profile ID")
 	} else {

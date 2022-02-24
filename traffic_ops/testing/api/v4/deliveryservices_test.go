@@ -1559,8 +1559,14 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		server.CDNID = new(int)
 	}
 	*server.CDNID = cdn1.ID
-	profileID := dbhelpers.GetProfileID(server.ID)
-	profileDesc := dbhelpers.GetProfileDescription(server.ID)
+	profileID, err := dbhelpers.GetProfileID(server.ID)
+	if err != nil {
+		t.Fatalf("failed to query server: %v", err)
+	}
+	profileDesc, err := dbhelpers.GetProfileDescription(server.ID)
+	if err != nil {
+		t.Fatalf("failed to query server: %v", err)
+	}
 
 	if &(*server.Profiles)[0] == nil || profileID == nil || profileDesc == nil || server.ID == nil || server.HostName == nil {
 		t.Fatal("Traffic Ops returned a representation for a Server that had null or undefined Profile and/or Profile ID and/or Profile Description and/or ID and/or Host Name")
