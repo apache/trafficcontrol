@@ -219,10 +219,6 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("expected to get %d server from cdn %s from cachegroup %s in topology %s, got %d servers", expectedLength, cdnName, cacheGroupName, topologyName, len(servers.Response))
 	}
 	server := servers.Response[0]
-
-	if err != nil {
-		t.Fatalf("failed to query server: %v", err)
-	}
 	if server.ID == nil || server.CDNID == nil || (*server.Profiles)[0] == "" || server.CachegroupID == nil || server.HostName == nil {
 		t.Fatal("Traffic Ops returned a representation for a server with null or undefined ID and/or CDN ID and/or Profile ID and/or Cache Group ID and/or Host Name")
 	}
