@@ -339,3 +339,12 @@ INSERT INTO origin (
 	(SELECT id FROM tenant WHERE "name" = 'root')
 )
 ON CONFLICT DO NOTHING;
+
+INSERT INTO deliveryservice_server (
+	deliveryservice,
+	"server"
+) VALUES (
+	(SELECT id FROM deliveryservice WHERE xml_id = 'dev-ds'),
+	(SELECT id FROM "server" WHERE host_name = 'edge')
+)
+ON CONFLICT DO NOTHING;
