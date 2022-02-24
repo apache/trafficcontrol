@@ -32,7 +32,7 @@ func TestCDNLocks(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, Tenants, Roles, Users, CDNLocks}, func() {
 
 		opsUserSession := createSession(t, "opsuser", "pa$$word")
-		opsUserWithLockSession := createSession(t, "ops_user_has_lock", "pa$$word")
+		opsUserWithLockSession := createSession(t, "opslockuser", "pa$$word")
 
 		methodTests := map[string]map[string]struct {
 			endpointId    func() int
