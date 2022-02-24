@@ -1885,7 +1885,7 @@ func getServerParentConfigParams(server *Server, profileParentConfigParams map[s
 	// We only need parent.config params, don't need all the params on the server
 	serverParams := map[string]string{}
 	if server.Profiles == nil || (*server.Profiles)[0] != "" { // TODO warn/error if false? Servers requires profiles
-		for name, val := range profileParentConfigParams[(*server.Profiles)[0] {
+		for name, val := range profileParentConfigParams[(*server.Profiles)[0]] {
 			if name == ParentConfigParamQStringHandling ||
 				name == ParentConfigParamAlgorithm ||
 				name == ParentConfigParamQString {

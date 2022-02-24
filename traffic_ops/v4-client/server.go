@@ -44,8 +44,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	profileID := dbhelpers.GetProfileID(server.ID)
-	fmt.Println(profileID)
+	profileID, _ := dbhelpers.GetProfileID(server.ID)
 
 	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
 		innerOpts := NewRequestOptions()
