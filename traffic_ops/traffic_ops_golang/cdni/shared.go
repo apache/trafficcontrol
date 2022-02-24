@@ -108,9 +108,6 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBearerToken(r *http.Request) string {
-	if r.Header.Get("Authorization") != "" {
-		return r.Header.Get("Authorization")
-	}
 	var bearerToken string
 	for _, cookie := range r.Cookies() {
 		switch cookie.Name {

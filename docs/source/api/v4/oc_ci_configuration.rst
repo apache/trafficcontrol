@@ -29,18 +29,20 @@ Triggers an asynchronous task to update the configuration for the :abbr:`uCDN (U
 :Roles Required: "admin" or "operations"
 :Permissions Required: CDNI:UPDATE
 :Response Type:  Object
-:Headers Required: "Authorization"
 
 Request Structure
 -----------------
-.. table:: Optional Request Headers
+This requires authorization using a :abbr:`JWT (JSON Web Token)` provided by the :abbr:`dCDN (Downstream Content Delivery Network)` to identify the :abbr:`uCDN (Upstream Content Delivery Network)`. This token must include the following claims:
 
-	+-----------------+------------------------------------------------------------------------------------------------------------------------------+
-	|    Name         | Description                                                                                                                  |
-	+=================+==============================================================================================================================+
-	|  Authorization  | A :abbr:`JWT (JSON Web Token)` provided by the :abbr:`dCDN (Downstream Content Delivery Network)` to identify the            |
-	|                 | :abbr:`uCDN (Upstream Content Delivery Network)`. This can be proivded as a header or a cookie.                              |
-	+-----------------+------------------------------------------------------------------------------------------------------------------------------+
+.. table:: Required JWT claims
+
+	+-----------------+--------------------------------------------------------------------------------------------------------------------+
+	|    Name         | Description                                                                                                        |
+	+=================+====================================================================================================================+
+	|      iss        | Issuer claim as a string key for the :abbr:`uCDN (Upstream Content Delivery Network)`                              |
+	|      aud        | Audience claim as a string key for the :abbr:`dCDN (Downstream Content Delivery Network)`                          |
+	|      exp        | Expiration claim as the expiration date as a Unix epoch timestamp (in seconds)                                     |
+	+-----------------+--------------------------------------------------------------------------------------------------------------------+
 
 :type: A string of the type of metadata to follow. See :rfc:`8006` for possible values. Only a selection of these are supported.
 :host: A string of the domain that the requested updates will change.

@@ -29,23 +29,20 @@ Returns the complete footprint and capabilities information structure the :abbr:
 :Roles Required: "admin" or "operations"
 :Permissions Required: CDNI:READ
 :Response Type:  Array
-:Headers Required: "Authorization"
 
 Request Structure
 -----------------
-.. table:: Request Required Headers
+This requires authorization using a :abbr:`JWT (JSON Web Token)` provided by the :abbr:`dCDN (Downstream Content Delivery Network)` to identify the :abbr:`uCDN (Upstream Content Delivery Network)`. This token must include the following claims:
 
-	+-----------------+------------------------------------------------------------------------------------------------------------------------------+
-	|    Name         | Description                                                                                                                  |
-	+=================+==============================================================================================================================+
-	|  Authorization  | A :abbr:`JWT (JSON Web Token)` provided by the :abbr:`dCDN (Downstream Content Delivery Network)` to identify the            |
-	|                 | :abbr:`uCDN (Upstream Content Delivery Network)`. This can be proivded as a header or a cookie.                              |
-	|                 | This token must include the following claims:                                                                                |
-	|                 |                                                                                                                              |
-	|                 | - ``iss`` Issuer claim as a string key for the :abbr:`uCDN (Upstream Content Delivery Network)`                              |
-	|                 | - ``aud`` Audience claim as a string key for the :abbr:`dCDN (Downstream Content Delivery Network)`                          |
-	|                 | - ``exp`` Expiration claim as the expiration date as a Unix epoch timestamp (in seconds)                                     |
-	+-----------------+------------------------------------------------------------------------------------------------------------------------------+
+.. table:: Required JWT claims
+
+	+-----------------+--------------------------------------------------------------------------------------------------------------------+
+	|    Name         | Description                                                                                                        |
+	+=================+====================================================================================================================+
+	|      iss        | Issuer claim as a string key for the :abbr:`uCDN (Upstream Content Delivery Network)`                              |
+	|      aud        | Audience claim as a string key for the :abbr:`dCDN (Downstream Content Delivery Network)`                          |
+	|      exp        | Expiration claim as the expiration date as a Unix epoch timestamp (in seconds)                                     |
+	+-----------------+--------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
