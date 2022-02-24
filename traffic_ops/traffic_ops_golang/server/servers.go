@@ -992,6 +992,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"id":               {Column: "s.id", Checker: api.IsInt},
 		"hostName":         {Column: "s.host_name", Checker: nil},
 		"physLocation":     {Column: "s.phys_location", Checker: api.IsInt},
+		"profileId":        {Column: "s.profile", Checker: api.IsInt},
 		"status":           {Column: "st.name", Checker: nil},
 		"topology":         {Column: "tc.topology", Checker: nil},
 		"type":             {Column: "t.name", Checker: nil},
@@ -1002,12 +1003,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		queryParamsToSQLCols["cachegroupName"] = dbhelpers.WhereColumnInfo{
 			Column:  "cg.name",
 			Checker: nil,
-		}
-	}
-	if version.Major < 4 {
-		queryParamsToSQLCols["profileId"] = dbhelpers.WhereColumnInfo{
-			Column:  "s.profile",
-			Checker: api.IsInt,
 		}
 	}
 
@@ -1443,6 +1438,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := inf.IntParams["id"]
+	fmt.Println(id)
 
 	// Get original server
 	originals, _, userErr, sysErr, errCode, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false, *version)
@@ -1493,6 +1489,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		originalXMPPID = *original.XMPPID
 	}
 	originalStatusID := *original.StatusID
+	fmt.Println(*original.Profiles, *original.ID)
 
 	var server tc.ServerV40
 	var serverV3 tc.ServerV30
@@ -1515,6 +1512,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
+		fmt.Println(*server.Profiles, *server.ID)
 		if err := dbhelpers.UpdateServerProfiles(server.ID, server.Profiles, tx); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
