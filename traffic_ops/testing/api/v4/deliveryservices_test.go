@@ -18,7 +18,6 @@ package v4
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/lib/pq"
 	"net/http"
 	"net/url"
@@ -1559,24 +1558,24 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		server.CDNID = new(int)
 	}
 	*server.CDNID = cdn1.ID
-	profileID, err := dbhelpers.GetProfileID(server.ID)
-	if err != nil {
-		t.Fatalf("failed to query server: %v", err)
-	}
-	profileDesc, err := dbhelpers.GetProfileDescription(server.ID)
-	if err != nil {
-		t.Fatalf("failed to query server: %v", err)
-	}
 
-	if &(*server.Profiles)[0] == nil || profileID == nil || profileDesc == nil || server.ID == nil || server.HostName == nil {
+	if &(*server.Profiles)[0] == nil || server.ID == nil || server.HostName == nil {
 		t.Fatal("Traffic Ops returned a representation for a Server that had null or undefined Profile and/or Profile ID and/or Profile Description and/or ID and/or Host Name")
 	}
 	// A profile specific to CDN 1 is required
+	opts.QueryParameters.Set("name", (*server.Profiles)[0])
+	pr, _, err := TOSession.GetProfiles(opts)
+	if err != nil {
+		t.Fatalf("failed to query profiles: %v", err)
+	}
+	if len(pr.Response) != 1 {
+		t.Fatalf("Expected exactly one Profile to exist, found: %d", len(pr.Response))
+	}
 	profileCopy := tc.ProfileCopy{
 		Name:         (*server.Profiles)[0] + "_BUT_IN_CDN1",
-		ExistingID:   *profileID,
+		ExistingID:   pr.Response[0].ID,
 		ExistingName: (*server.Profiles)[0],
-		Description:  *profileDesc,
+		Description:  pr.Response[0].Description,
 	}
 	copyResp, _, err := TOSession.CopyProfile(profileCopy, client.RequestOptions{})
 	if err != nil {

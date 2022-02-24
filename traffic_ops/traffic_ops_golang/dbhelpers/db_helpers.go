@@ -1753,66 +1753,6 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 	return regionName, true, nil
 }
 
-// GetProfileID gets profile ID for a given server
-func GetProfileID(sid *int) (*int, error) {
-	var tx *sql.Tx
-	var pid *int
-	q := `SELECT profile FROM server where id=$1`
-
-	rows, err := tx.Query(q, *sid)
-	if err != nil {
-		return nil, fmt.Errorf("querying profile id by server id: %v" + err.Error())
-	}
-	defer log.Close(rows, "closing rows in GetProfileID")
-
-	for rows.Next() {
-		if err := rows.Scan(&pid); err != nil {
-			return nil, fmt.Errorf("scanning profile id: %v" + err.Error())
-		}
-	}
-	return pid, nil
-}
-
-// GetProfileDescription gets profile ID for a given server
-func GetProfileDescription(sid *int) (*string, error) {
-	var tx *sql.Tx
-	var desc *string
-	q := `SELECT description from profile where id=(SELECT profile FROM server where id=$1)`
-
-	rows, err := tx.Query(q, *sid)
-	if err != nil {
-		return nil, fmt.Errorf("querying profile description by server id: " + err.Error())
-	}
-	defer log.Close(rows, "closing rows in GetProfileDescription")
-
-	for rows.Next() {
-		if err := rows.Scan(&desc); err != nil {
-			return nil, fmt.Errorf("scanning profile description: " + err.Error())
-		}
-	}
-	return desc, nil
-}
-
-// GetProfileName gets profile Name from a profileID
-func GetProfileName(pid *int) (*string, error) {
-	var tx *sql.Tx
-	var pName *string
-	q := `SELECT name FROM profile where id=$1`
-
-	rows, err := tx.Query(q, *pid)
-	if err != nil {
-		return nil, fmt.Errorf("querying profile name by profile id: " + err.Error())
-	}
-	defer log.Close(rows, "closing rows in GetProfileName")
-
-	for rows.Next() {
-		if err := rows.Scan(&pName); err != nil {
-			return nil, fmt.Errorf("scanning profile name: " + err.Error())
-		}
-	}
-	return pName, nil
-}
-
 // GetCommonServerPropertiesFromV4 converts CommonServerPropertiesV40 to CommonServerProperties struct
 func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
 	var id int
