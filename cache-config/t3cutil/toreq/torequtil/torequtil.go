@@ -101,11 +101,11 @@ func GetFsCookie(cookiePath string) (FsCookie, error) {
 	cookie := FsCookie{}
 	file, err := ioutil.ReadFile(cookiePath)
 	if err != nil {
-		return FsCookie{}, err
+		return FsCookie{Cookies: nil}, err
 	}
 	err = json.Unmarshal(file, &cookie)
 	if err != nil {
-		return FsCookie{}, err
+		return FsCookie{Cookies: nil}, err
 	}
 	return cookie, err
 }

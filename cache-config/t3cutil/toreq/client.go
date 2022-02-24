@@ -83,7 +83,7 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 	log.Infoln("TO URL string: '" + toURLStr + "'")
 	log.Infoln("TO URL: '" + url.String() + "'")
 
-	if len(fsCookie.Cookies) > 0 {
+	if fsCookie.Cookies != nil {
 		toIP, err := net.LookupIP(url.Hostname())
 		if err != nil {
 			log.Warnln("error getting traffic ops IP: ", err)
