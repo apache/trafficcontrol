@@ -237,6 +237,7 @@ To upgrade from older Traffic Ops versions, stop the service, use :manpage:`yum(
 	yum upgrade traffic_ops
 	pushd /opt/traffic_ops/app/
 	./db/admin --env production upgrade
+	./db/admin --env production --trafficvault upgrade
 	popd
 
 After this completes, see Guide_ for instructions on running the :program:`postinstall` script. Once the :program:`postinstall` script, has finished, run the following command as the root user (or with :manpage:`sudo(8)`): ``systemctl start traffic_ops`` to start the service.

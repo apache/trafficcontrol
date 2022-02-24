@@ -52,6 +52,7 @@ type Cfg struct {
 	LogLocationWarn    string
 	RevalOnly          bool
 	Dir                string
+	UseStrategies      t3cutil.UseStrategiesFlag
 	ViaRelease         bool
 	SetDNSLocalBind    bool
 	NoOutgoingIP       bool
@@ -85,6 +86,10 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	noOutgoingIP := getopt.BoolLong("no-outgoing-ip", 'i', "Whether to not set the records.config outgoing IP to the server's addresses in Traffic Ops. Default is false.")
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
 	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
+
+	const useStrategiesFlagName = "use-strategies"
+	const defaultUseStrategies = t3cutil.UseStrategiesFlagFalse
+	useStrategiesPtr := getopt.EnumLong(useStrategiesFlagName, 0, []string{string(t3cutil.UseStrategiesFlagTrue), string(t3cutil.UseStrategiesFlagCore), string(t3cutil.UseStrategiesFlagFalse), string(t3cutil.UseStrategiesFlagCore), ""}, "", "[true | core| false] whether to generate config using strategies.yaml instead of parent.config. If true use the parent_select plugin, if 'core' use ATS core strategies, if false use parent.config.")
 
 	getopt.Parse()
 
@@ -135,6 +140,10 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		}
 	}
 
+	if !getopt.IsSet(useStrategiesFlagName) {
+		*useStrategiesPtr = defaultUseStrategies.String()
+	}
+
 	cfg := Cfg{
 		LogLocationErr:     logLocationError,
 		LogLocationWarn:    logLocationWarn,
@@ -151,6 +160,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		DefaultTLSVersions: defaultTLSVersions,
 		Version:            appVersion,
 		GitRevision:        gitRevision,
+		UseStrategies:      t3cutil.UseStrategiesFlag(*useStrategiesPtr),
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")

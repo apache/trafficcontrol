@@ -127,9 +127,9 @@ func TestMakeRemapDotConfig0(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
-
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -245,8 +245,9 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -345,8 +346,9 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -459,9 +461,9 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
-
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -560,9 +562,9 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
-
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -699,8 +701,9 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -798,8 +801,9 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -899,8 +903,9 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1013,8 +1018,9 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1050,7 +1056,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 		t.Errorf("expected to contain cachekey.config param, actual '%v'", txt)
 	}
 
-	if 1 != len(cfg.Warnings) || !strings.Contains(cfg.Warnings[0], "Both new cachekey.pparam and old cachekey.config parameters assigned") {
+	if !warningsContains(cfg.Warnings, "Both new cachekey.pparam and old cachekey.config parameters assigned") {
 		t.Errorf("expected to contain warning about using both cachekey.config and cachekey.pparam, actual '%v', '%v'", cfg.Warnings, txt)
 	}
 }
@@ -1163,8 +1169,9 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1279,8 +1286,9 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1419,8 +1427,9 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1560,8 +1569,9 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1957,8 +1967,9 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2061,8 +2072,9 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2182,8 +2194,9 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2303,8 +2316,9 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2424,8 +2438,9 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2545,8 +2560,9 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2668,8 +2684,9 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2791,8 +2808,9 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2914,8 +2932,9 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3041,8 +3060,9 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3168,8 +3188,9 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3301,8 +3322,9 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3428,8 +3450,9 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3550,8 +3573,9 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3672,8 +3696,9 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3794,8 +3819,9 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3916,8 +3942,9 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4036,8 +4063,9 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4171,8 +4199,9 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4208,7 +4237,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 		t.Errorf("expected cachekey plugin to have '--ckeycc=', actual '%v'", txt)
 	}
 
-	if 1 != len(cfg.Warnings) || !strings.Contains(cfg.Warnings[0], "Both new cachekey.pparam and old cachekey.config parameters assigned") {
+	if !warningsContains(cfg.Warnings, "Both new cachekey.pparam and old cachekey.config parameters assigned") {
 		t.Errorf("expected to contain warning about using both cachekey.config and cachekey.pparam, actual '%v', '%v'", cfg.Warnings, txt)
 	}
 }
@@ -4298,8 +4327,9 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4433,8 +4463,9 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4559,8 +4590,9 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4682,8 +4714,9 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4801,8 +4834,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4940,8 +4974,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5083,8 +5118,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5115,7 +5151,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 		t.Errorf("expected remap on edge server to contain repeated background fetch parameter for log, actual '%v'", txt)
 	}
 
-	if 0 == len(cfg.Warnings) || !strings.Contains(cfg.Warnings[0], "Multiple repeated arguments") {
+	if !warningsContains(cfg.Warnings, "Multiple repeated arguments") {
 		t.Errorf("expected multiple releated arguments warning, actual '%v'", cfg.Warnings)
 	}
 
@@ -5216,8 +5252,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5350,8 +5387,9 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5494,8 +5532,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5634,8 +5673,9 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5779,8 +5819,9 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5917,8 +5958,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6044,8 +6086,9 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6163,8 +6206,9 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6282,8 +6326,9 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6401,8 +6446,9 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6524,8 +6570,9 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6643,8 +6690,9 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6752,8 +6800,9 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6866,8 +6915,9 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6985,8 +7035,9 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -7104,8 +7155,9 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -7219,8 +7271,9 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -7350,8 +7403,9 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -7522,8 +7576,9 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -7706,8 +7761,9 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -7903,7 +7959,9 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -7939,5 +7997,586 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 		if !strings.Contains(penstr, "penraw") {
 			t.Fatalf("expected [-1] with 'penraw', actual: '%v' got %v", txt, penstr)
 		}
+	}
+}
+
+func TestMakeRemapDotConfigStrategies(t *testing.T) {
+	opt := &RemapDotConfigOpts{
+		HdrComment:    "myHeaderComment",
+		UseStrategies: true,
+	}
+
+	server := makeTestRemapServer()
+	server.Type = "MID"
+	server.Cachegroup = util.StrPtr("midCG")
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("http://origin.example.test")
+	/*
+		ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+		ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	*/
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.Topology = util.StrPtr("t0")
+
+	// non-nil default values should not trigger header rewrite plugin directive
+	ds.EdgeHeaderRewrite = util.StrPtr("")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.ServiceCategory = util.StrPtr("")
+	ds.MaxOriginConnections = util.IntPtr(0)
+
+	dses := []DeliveryService{ds}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(*server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(*server.Profile),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPost",
+			ConfigFile: "remap.config",
+			Value:      "remap http://penraw/ http://penraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPost",
+			ConfigFile: "remap.config",
+			Value:      "remap http://lastraw/ http://lastraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPre",
+			ConfigFile: "remap.config",
+			Value:      "map_with_recp_port http://firstraw:8000/ http://firstraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1, 2},
+				},
+				{
+					Cachegroup: "midCG",
+				},
+				{
+					Cachegroup: "midCG2",
+				},
+			},
+		},
+	}
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG2 := &tc.CacheGroupNullable{}
+	mCG2.Name = mid1.Cachegroup
+	mCG2.ID = mid1.CachegroupID
+	mCGType2 := tc.CacheGroupMidTypeName
+	mCG2.Type = &mCGType2
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	txt = strings.TrimSpace(txt)
+
+	testComment(t, txt, opt.HdrComment)
+
+	if !strings.Contains(txt, `@plugin=parent_select.so @pparam=/opt/trafficserver/etc/trafficserver/strategies.yaml @pparam=strategy-mydsname`) {
+		t.Fatalf("expected parent_select plugin for opt.UseStrategies, actual: %v", txt)
+	}
+}
+
+func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
+	opt := &RemapDotConfigOpts{
+		HdrComment:        "myHeaderComment",
+		UseStrategies:     false,
+		UseStrategiesCore: true,
+	}
+
+	server := makeTestRemapServer()
+	server.Type = "MID"
+	server.Cachegroup = util.StrPtr("midCG")
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("http://origin.example.test")
+	/*
+		ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+		ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	*/
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.Topology = util.StrPtr("t0")
+
+	// non-nil default values should not trigger header rewrite plugin directive
+	ds.EdgeHeaderRewrite = util.StrPtr("")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.ServiceCategory = util.StrPtr("")
+	ds.MaxOriginConnections = util.IntPtr(0)
+
+	dses := []DeliveryService{ds}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(*server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(*server.Profile),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPost",
+			ConfigFile: "remap.config",
+			Value:      "remap http://penraw/ http://penraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPost",
+			ConfigFile: "remap.config",
+			Value:      "remap http://lastraw/ http://lastraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPre",
+			ConfigFile: "remap.config",
+			Value:      "map_with_recp_port http://firstraw:8000/ http://firstraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1, 2},
+				},
+				{
+					Cachegroup: "midCG",
+				},
+				{
+					Cachegroup: "midCG2",
+				},
+			},
+		},
+	}
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG2 := &tc.CacheGroupNullable{}
+	mCG2.Name = mid1.Cachegroup
+	mCG2.ID = mid1.CachegroupID
+	mCGType2 := tc.CacheGroupMidTypeName
+	mCG2.Type = &mCGType2
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	txt = strings.TrimSpace(txt)
+
+	testComment(t, txt, opt.HdrComment)
+
+	if strings.Contains(txt, `strategy`) {
+		t.Fatalf("expected no strategy core directive for !opt.UseStrategies but useless opt.UseStrategiesCores, actual: %v", txt)
+	}
+
+	if strings.Contains(txt, `parent_select`) {
+		t.Fatalf("expected no strategy plugin directive for !opt.UseStrategies but useless opt.UseStrategiesCores, actual: %v", txt)
+	}
+
+	if !warningsContains(cfg.Warnings, "ot using strategies") {
+		t.Errorf("expected warning about not using strategies with useless opt UseStrategiesCore but no UseStrategies, actual '%v'", cfg.Warnings)
+	}
+}
+
+func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
+	opt := &RemapDotConfigOpts{
+		HdrComment:        "myHeaderComment",
+		UseStrategies:     false,
+		UseStrategiesCore: true,
+	}
+
+	server := makeTestRemapServer()
+	server.Type = "MID"
+	server.Cachegroup = util.StrPtr("midCG")
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
+	/*
+		ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+		ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	*/
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.Topology = util.StrPtr("t0")
+
+	// non-nil default values should not trigger header rewrite plugin directive
+	ds.EdgeHeaderRewrite = util.StrPtr("")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.ServiceCategory = util.StrPtr("")
+	ds.MaxOriginConnections = util.IntPtr(0)
+
+	dses := []DeliveryService{ds}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(*server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(*server.Profile),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPost",
+			ConfigFile: "remap.config",
+			Value:      "remap http://penraw/ http://penraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPost",
+			ConfigFile: "remap.config",
+			Value:      "remap http://lastraw/ http://lastraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "LastRawRemapPre",
+			ConfigFile: "remap.config",
+			Value:      "map_with_recp_port http://firstraw:8000/ http://firstraw0/",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				{
+					Cachegroup: "midCG",
+					Parents:    []int{2},
+				},
+				{
+					Cachegroup: "midCG2",
+				},
+			},
+		},
+	}
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG2")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG2 := &tc.CacheGroupNullable{}
+	mCG2.Name = mid1.Cachegroup
+	mCG2.ID = mid1.CachegroupID
+	mCGType2 := tc.CacheGroupMidTypeName
+	mCG2.Type = &mCGType2
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	txt = strings.TrimSpace(txt)
+
+	testComment(t, txt, opt.HdrComment)
+
+	if strings.Contains(txt, `https://origin.example.test`) {
+		t.Errorf("expected mid with a parent mid cache to set remap target scheme to http and not origin https, actual: %v", txt)
+	}
+	if !strings.Contains(txt, `http://origin.example.test`) {
+		t.Errorf("expected mid with a parent mid cache to set remap target scheme to http, actual: %v", txt)
 	}
 }

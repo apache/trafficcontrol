@@ -3135,7 +3135,7 @@
       "revalPending": false,
       "routerHostName": "",
       "routerPortName": "",
-      "status": "REPORTED",
+      "status": "ONLINE",
       "tcpPort": 81,
       "type": "RASCAL",
       "updPending": false,

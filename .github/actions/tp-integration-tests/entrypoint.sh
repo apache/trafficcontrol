@@ -22,7 +22,7 @@ onFail() {
     mkdir Reports;
   fi
   if [[ -f tp.log ]]; then
-    mv tp.log Reports/forever.log
+    mv tp.log Reports/pm2.log
   fi
   if [[ -f access.log ]]; then
     mv access.log Reports/tp-access.log
@@ -78,7 +78,7 @@ openssl rand 32 | base64 | sudo tee /aes.key
 
 sudo apt-get install -y --no-install-recommends gettext curl
 
-sudo npm i -g forever grunt sass
+sudo npm i -g pm2 grunt sass
 
 CHROMIUM_CONTAINER=$(docker ps -qf name=chromium)
 HUB_CONTAINER=$(docker ps -qf name=hub)
@@ -119,7 +119,7 @@ tp_build() {
 
   cp "${resources}/config.js" ./conf/
   touch tp.log access.log out.log err.log
-  sudo forever --minUptime 5000 --spinSleepTime 2000 -f start server.js >out.log 2>&1 &
+  sudo pm2 start server.js -l out.log
   popd
 }
 

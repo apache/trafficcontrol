@@ -141,8 +141,8 @@ func TestMakeParentDotConfig(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected malformed qstring 'myQstringParam' in warnings, actual: '%v' val '%v'", cfg.Warnings, txt)
 	}
 }
 
@@ -537,8 +537,8 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
 	if strings.Contains(txt, "# topology") {
 		// ATS doesn't support inline comments in parent.config
@@ -969,8 +969,8 @@ func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
 
 	if strings.Contains(txt, "should-omit") {
@@ -1113,8 +1113,8 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
 
 	if strings.Contains(txt, "should-omit") {
@@ -1512,7 +1512,7 @@ func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
 	testComment(t, txt, hdr.HdrComment)
 
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
-		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
+		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v' warnings %+v", txt, cfg.Warnings)
 	}
 	if !strings.Contains(txt, "myorigin0") {
 		t.Errorf("expected origin0 with DeliveryServiceServer assigned to this DS, actual: '%v'", txt)
@@ -2008,8 +2008,8 @@ func TestMakeParentDotConfigTopologiesNonStandardServerTypes(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
 	if strings.Contains(txt, "# topology") {
 		// ATS doesn't support inline comments in parent.config
@@ -2171,8 +2171,8 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
 	if strings.Count(txt, "secondary_mode=2") != 2 {
 		t.Errorf("expected secondary_mode=2 for both Topology and DSS DSes with ParentConfigParamSecondaryMode parameter and secondary parents, actual: '%v'", txt)
@@ -2326,11 +2326,11 @@ func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
-	if strings.Contains(txt, "secondary_mode") {
-		t.Errorf("expected no secondary_mode for DSes without ParentConfigParamSecondaryMode parameter, actual: '%v'", txt)
+	if !strings.Contains(txt, "secondary_mode=1") {
+		t.Errorf("expected default secondary_mode=1 for DSes without ParentConfigParamSecondaryMode parameter, actual: '%v'", txt)
 	}
 
 	if strings.Contains(txt, `topology 't0'`) {
@@ -2454,8 +2454,8 @@ func TestMakeParentDotConfigComments(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQstringParam") {
+		t.Errorf("expected warning for malformed myQstringParam', actual: '%+v'", cfg.Warnings)
 	}
 	if !strings.Contains(txt, "# ds 'ds1'") {
 		t.Errorf("expected comment with delivery service name, actual: '%v'", txt)
@@ -2609,11 +2609,12 @@ func TestMakeParentDotConfigCommentTopology(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
-	if strings.Contains(txt, "secondary_mode") {
-		t.Errorf("expected no secondary_mode for DSes without ParentConfigParamSecondaryMode parameter, actual: '%v'", txt)
+
+	if !strings.Contains(txt, "secondary_mode=1") {
+		t.Errorf("expected default secondary_mode=1 for DSes without ParentConfigParamSecondaryMode parameter, actual: '%v'", txt)
 	}
 	if !strings.Contains(txt, `# ds 'ds1' topology 't0'`) {
 		t.Errorf("expected comment with delivery service and topology, actual: '%v'", txt)
@@ -2876,6 +2877,17 @@ func TestMakeParentDotConfigHTTPSOriginTopology(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds0.example.net port=80") {
 		t.Errorf("expected topology parent.config of https origin to be http/80 not https/443, actual: '%v'", txt)
 	}
+}
+
+// warnsContains returns whether the given warnings has str as a substring of any warning.
+// Note this is different than lib/go-util.ContainsStr, which only returns if the array has the exact value as one of its values.
+func warningsContains(warnings []string, str string) bool {
+	for _, warn := range warnings {
+		if strings.Contains(warn, str) {
+			return true
+		}
+	}
+	return false
 }
 
 func makeTestParentServer() *Server {

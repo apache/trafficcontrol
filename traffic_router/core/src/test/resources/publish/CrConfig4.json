@@ -1255,8 +1255,10 @@
     }
   },
   "config": {
-    "federationmapping.polling.url": "http://${toHostname}/api/2.0/federations/all",
     "certificate.api.url": "http://${toHostname}/api/2.0/cdns/name/${cdnName}/sslkeys",
+    "dnschallengemapping.polling.url": "http://${toHostname}/api/2.0/dnsrecords/",
+    "dnschallengemapping.polling.interval": "600000",
+    "federationmapping.polling.url": "http://${toHostname}/api/2.0/federations/all",
     "federationmapping.polling.interval": "600000",
     "steeringmapping.polling.url": "http://${toHostname}/api/2.0/steering",
     "steeringmapping.polling.interval": "15000",

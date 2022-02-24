@@ -133,9 +133,17 @@ public class Fetcher {
 
 			connection.connect();
 
+		} catch (IOException e) {
+			// For IO exceptions disconnect the connection down and propagate the exception upward
+			final String failureMessage = connectionFailed(http, url);
+			LOGGER.error(failureMessage + " \"" + e.toString() + "\"");
+			throw(e);
+
 		} catch (Exception e) {
-			LOGGER.error("Failed Http Request to " + http.getURL() + " Status " + http.getResponseCode());
-			http.disconnect();
+			// For other exceptions mimic existing functionality - attempt to disconnect the
+			// connection but squelch the exception
+			final String failureMessage = connectionFailed(http, url);
+			LOGGER.error(failureMessage + " \"" + e.toString() + "\"");
 		}
 
 		return http;
@@ -233,4 +241,23 @@ public class Fetcher {
 			}
 		}
 	}
+
+	private String connectionFailed(final HttpURLConnection http, final String url) {
+		String httpUrl = url;
+		String responseCode = "(none)";
+
+		try {
+			httpUrl = http.getURL().toString();
+			responseCode = String.valueOf(http.getResponseCode());
+		} catch (Exception e2) {
+			// Don't care
+			LOGGER.debug("Exception during call attempt to retrieve url or responseCode from http");
+		}
+
+		if (http != null) {
+			http.disconnect();
+		}
+		return String.format("Failed Http Request to %s, status code: %s", httpUrl, responseCode);
+	}
+
 }

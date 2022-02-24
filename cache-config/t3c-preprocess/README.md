@@ -65,6 +65,8 @@ The following directives will be replaced. These directives may be placed anywhe
     __FULL_HOSTNAME__   is replaced with the Server's HostName, a dot, and the Server's DomainName
                         from Traffic Ops (i.e. the Server's Fully Qualified Domain Name).
 
+    __CACHEGROUP__      is replaced with the Server's Cachegroup name from Traffic Ops.
+
     __RETURN__          is replaced with a newline character, and any whitespace before or after
                         it is removed.
 
