@@ -966,11 +966,10 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to query profile: %v", err)
 	}
-	if pr.Response != nil {
+	if len(pr.Response) != 1 {
 		t.Error("Found server with no Profile ID")
 	} else {
 		profileID := pr.Response[0].ID
-		fmt.Println(profileID)
 		opts.QueryParameters.Add("profileId", strconv.Itoa(profileID))
 		if resp, _, err := TOSession.GetServers(opts); err != nil {
 			t.Errorf("Error getting servers by Profile ID: %v - alerts: %+v", err, resp.Alerts)
