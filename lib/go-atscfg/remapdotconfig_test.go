@@ -8074,13 +8074,13 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(*server.Profile),
+			Profiles:   []byte(`["` + (*server.Profiles)[0] + `"]`),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(*server.Profile),
+			Profiles:   []byte(`["` + (*server.Profiles)[0] + `"]`),
 		},
 	}
 
@@ -8264,13 +8264,13 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(*server.Profile),
+			Profiles:   []byte(`["` + (*server.Profiles)[0] + `"]`),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(*server.Profile),
+			Profiles:   []byte(`["` + (*server.Profiles)[0] + `"]`),
 		},
 	}
 
@@ -8462,13 +8462,13 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(*server.Profile),
+			Profiles:   []byte(`["` + (*server.Profiles)[0] + `"]`),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(*server.Profile),
+			Profiles:   []byte(`["` + (*server.Profiles)[0] + `"]`),
 		},
 	}
 
