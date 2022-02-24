@@ -19,7 +19,7 @@ TO_SOURCE=$(filter-out %_test.go,$(wildcard traffic_ops/traffic_ops_golang/**.go
 
 T3C_TARGETS := cache-config/t3c/t3c cache-config/t3c-apply/t3c-apply cache-config/t3c-check/t3c-check t3c-check-refs/t3c-check-refs t3c-check-reload/t3c-check-reload cache-config/t3c-diff/t3c-diff cache-config/t3c-generate/t3c-generate cache-config/t3c-preprocess/t3c-preprocess cache-config/t3c-request/t3c-request cache-config/t3c-update/t3c-update
 
-.PHONY: lint unit all check
+.PHONY: lint unit all check clean
 
 all: traffic_ops/app/db/admin $(T3C_TARGETS)
 
@@ -40,3 +40,6 @@ cache-config/t3c-check-refs/t3c-check-refs: cache-config/t3c-check-refs/config/c
 
 unit: cache-config/t3c-check-refs/t3c-check-refs
 	go test $(addsuffix ...,$(addprefix ./,$(CACHE_CONFIG_DIRS))) ./grove/... ./lib/... ./traffic_monitor/... ./traffic_ops/traffic_ops_golang/... ./traffic_stats/...
+
+clean:
+	$(RM) traffic_ops/app/db/admin $(T3C_TARGETS)
