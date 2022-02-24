@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	"github.com/lib/pq"
 )
@@ -220,11 +219,11 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("expected to get %d server from cdn %s from cachegroup %s in topology %s, got %d servers", expectedLength, cdnName, cacheGroupName, topologyName, len(servers.Response))
 	}
 	server := servers.Response[0]
-	profileID, err := dbhelpers.GetProfileID(server.ID)
+
 	if err != nil {
 		t.Fatalf("failed to query server: %v", err)
 	}
-	if server.ID == nil || server.CDNID == nil || profileID == nil || server.CachegroupID == nil || server.HostName == nil {
+	if server.ID == nil || server.CDNID == nil || (*server.Profiles)[0] == "" || server.CachegroupID == nil || server.HostName == nil {
 		t.Fatal("Traffic Ops returned a representation for a server with null or undefined ID and/or CDN ID and/or Profile ID and/or Cache Group ID and/or Host Name")
 	}
 
@@ -256,26 +255,25 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	if len(profiles.Response) != 1 {
 		t.Fatalf("Expected exactly one Profile to exist with name 'MID1', found: %d", len(profiles.Response))
 	}
-	newProfile := profiles.Response[0].ID
-	oldProfile, err := dbhelpers.GetProfileID(server.ID)
+	newProfileID := profiles.Response[0].ID
+	oldProfileName := (*server.Profiles)[0]
+
+	opts.QueryParameters.Set("id", strconv.Itoa(newProfileID))
+	nps, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
-		t.Fatalf("failed to query server: %v", err)
+		t.Fatalf("failed to query profiles: %v", err)
 	}
-	newProfileName, err := dbhelpers.GetProfileName(&newProfile)
-	if err != nil {
-		t.Fatalf("failed to query server: %v", err)
+	if len(nps.Response) != 1 {
+		t.Fatalf("Expected exactly one Profile to exist, found: %d", len(profiles.Response))
 	}
-	server.Profiles = &pq.StringArray{*newProfileName}
+	server.Profiles = &pq.StringArray{nps.Response[0].Name}
+
 	_, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("changing the CDN of the last server (%s) in a CDN in a cachegroup used by a topology assigned to a delivery service(s) in that CDN - expected: error, actual: nil", *server.HostName)
 	}
 	server.CDNID = &oldCDNID
-	oldProfileName, err := dbhelpers.GetProfileName(oldProfile)
-	if err != nil {
-		t.Fatalf("failed to query server: %v", err)
-	}
-	server.Profiles = &pq.StringArray{*oldProfileName}
+	server.Profiles = &pq.StringArray{oldProfileName}
 
 	opts.QueryParameters.Set("name", moveToCacheGroup)
 	cgs, _, err := TOSession.GetCacheGroups(opts)
@@ -967,14 +965,17 @@ func GetTestServersQueryParameters(t *testing.T) {
 		opts.QueryParameters.Del("status")
 	}
 
-	profileID, err := dbhelpers.GetProfileID(s.ID)
+	opts.QueryParameters.Add("name", (*s.Profiles)[0])
+	pr, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
-		t.Fatalf("failed to query server: %v", err)
+		t.Fatalf("failed to query profile: %v", err)
 	}
-	if profileID == nil {
+	if pr.Response != nil {
 		t.Error("Found server with no Profile ID")
 	} else {
-		opts.QueryParameters.Add("profileId", strconv.Itoa(*profileID))
+		profileID := pr.Response[0].ID
+		fmt.Println(profileID)
+		opts.QueryParameters.Add("profileId", strconv.Itoa(profileID))
 		if resp, _, err := TOSession.GetServers(opts); err != nil {
 			t.Errorf("Error getting servers by Profile ID: %v - alerts: %+v", err, resp.Alerts)
 		}

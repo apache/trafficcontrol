@@ -17,7 +17,6 @@ package client
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net"
 	"net/url"
 	"strconv"
@@ -44,7 +43,6 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	profileID, _ := dbhelpers.GetProfileID(server.ID)
 
 	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
 		innerOpts := NewRequestOptions()
@@ -84,18 +82,6 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 			return ph.Alerts, reqInf, fmt.Errorf("no physlocation named %s", *server.PhysLocation)
 		}
 		server.PhysLocationID = &ph.Response[0].ID
-	}
-	if needAndCanFetch(profileID, &(*server.Profiles)[0]) {
-		innerOpts := NewRequestOptions()
-		innerOpts.QueryParameters.Set("name", (*server.Profiles)[0])
-		pr, reqInf, err := to.GetProfiles(innerOpts)
-		if err != nil {
-			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s: %w", (*server.Profiles)[0], err)
-		}
-		if len(pr.Response) == 0 {
-			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s", (*server.Profiles)[0])
-		}
-		profileID = &pr.Response[0].ID
 	}
 	if needAndCanFetch(server.StatusID, server.Status) {
 		innerOpts := NewRequestOptions()
