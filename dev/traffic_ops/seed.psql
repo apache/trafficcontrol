@@ -173,8 +173,8 @@ INSERT INTO coordinate (
 	longitude
 ) VALUES (
 	'dev',
-	0,
-	0
+	1,
+	1
 )
 ON CONFLICT DO NOTHING;
 
@@ -281,10 +281,12 @@ INSERT INTO deliveryservice (
 	active,
 	dscp,
 	qstring_ignore,
-	type,
+	"type",
 	cdn_id,
 	display_name,
-	tenant_id
+	tenant_id,
+	miss_lat,
+	miss_long
 ) VALUES (
 	'dev-ds',
 	TRUE,
@@ -293,7 +295,9 @@ INSERT INTO deliveryservice (
 	(SELECT id FROM "type" WHERE "name" = 'HTTP'),
 	(SELECT id FROM cdn WHERE "name" = 'dev'),
 	'dev',
-	(SELECT id FROM tenant WHERE "name" = 'root')
+	(SELECT id FROM tenant WHERE "name" = 'root'),
+	1,
+	1
 )
 ON CONFLICT DO NOTHING;
 
