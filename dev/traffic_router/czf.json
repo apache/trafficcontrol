@@ -1,0 +1,20 @@
+{
+	"coverageZones":
+	{
+		"dev":
+		{
+			"network6":
+			[
+				"::/0"
+			],
+			"network":
+			[
+				"0.0.0.0/0"
+			],
+			"coordinates": {
+				"latitude": 1,
+				"longitude": 1
+			}
+		}
+	}
+}
