@@ -51,12 +51,12 @@ func TestCDNLocks(t *testing.T) {
 				"CREATED when VALID request": {
 					clientSession: TOSession,
 					requestBody: map[string]interface{}{
-						"cdn":     "cdn1",
+						"cdn":     "cdn3",
 						"message": "snapping cdn",
 						"soft":    true,
 					},
 					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated),
-						validateResponseFields(map[string]interface{}{"username": "admin", "cdn": "cdn1", "message": "snapping cdn", "soft": true})),
+						validateResponseFields(map[string]interface{}{"username": "admin", "cdn": "cdn3", "message": "snapping cdn", "soft": true})),
 				},
 			},
 			"DELETE": {
@@ -66,7 +66,7 @@ func TestCDNLocks(t *testing.T) {
 				},
 				"FORBIDDEN when NON-ADMIN USER DOESNT OWN LOCK": {
 					clientSession: opsUserSession,
-					requestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn3"}}},
+					requestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn4"}}},
 					expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"OK when ADMIN USER DOESNT OWN LOCK": {
@@ -77,11 +77,11 @@ func TestCDNLocks(t *testing.T) {
 			"SNAPSHOT": {
 				"OK when USER OWNS LOCK": {
 					clientSession: opsUserWithLockSession,
-					requestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn3"}}},
+					requestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn2"}}},
 					expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn3"}}},
+					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn2"}}},
 					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},

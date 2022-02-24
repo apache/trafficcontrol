@@ -286,20 +286,20 @@
     "cdnlocks": [
         {
             "userName": "ops_user_has_lock",
-            "cdn": "cdn2",
-            "message": "test lock for server queue updates",
-            "soft": false
-        },
-        {
-            "userName": "ops_user_has_lock",
-            "cdn": "cdn3",
+            "cdn": "cdn1",
             "message": "test lock",
             "soft": true
         },
         {
             "userName": "ops_user_has_lock",
+            "cdn": "cdn2",
+            "message": "test lock for updates",
+            "soft": false
+        },
+        {
+            "userName": "ops_user_has_lock",
             "cdn": "cdn4",
-            "message": "test lock 2",
+            "message": "test lock",
             "soft": true
         }
     ],
