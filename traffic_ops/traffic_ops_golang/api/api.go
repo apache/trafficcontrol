@@ -1032,6 +1032,9 @@ func ParseDBError(ierr error) (error, error, int) {
 func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth.CurrentUser, error, error, int) {
 	var cookie *http.Cookie
 	for _, givenCookie := range r.Cookies() {
+		if cookie != nil {
+			break
+		}
 		switch givenCookie.Name {
 		case "access_token":
 			claims := jwt.MapClaims{}

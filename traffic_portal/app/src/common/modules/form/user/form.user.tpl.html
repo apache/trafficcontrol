@@ -84,8 +84,8 @@ under the License.
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(userForm.uCDN), 'has-feedback': hasError(userForm.uCDN)}">
                 <label for="uCDN" class="control-label col-md-2 col-sm-2 col-xs-12">Upstream CDN</label>
-                <div id="uCDN" class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="uCDN" type="text" class="form-control" ng-model="user.ucdn" ng-pattern="/^\S*$/" autofocus>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="uCDN" name="uCDN" type="text" class="form-control" ng-model="user.ucdn" ng-pattern="/^\S*$/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(userForm.ucdn, 'pattern')">No Spaces</small>
                     <span ng-show="hasError(userForm.ucdn)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>

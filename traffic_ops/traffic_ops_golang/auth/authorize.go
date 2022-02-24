@@ -187,9 +187,6 @@ func GetUserUcdn(form PasswordForm, db *sqlx.DB, ctx context.Context) (string, e
 
 	err := db.GetContext(ctx, &ucdn, "SELECT ucdn FROM tm_user where username=$1", form.Username)
 	if err != nil {
-		if err == context.DeadlineExceeded || err == context.Canceled {
-			return "", err
-		}
 		return "", err
 	}
 

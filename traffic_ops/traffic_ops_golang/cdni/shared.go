@@ -33,8 +33,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/lib/pq"
 )
@@ -537,7 +535,7 @@ func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
 		return "", errors.New("invalid token - incorrect dcdn")
 	}
 	if ucdn == "" {
-		if inf.User.PrivLevel == auth.PrivLevelAdmin {
+		if inf.User.RoleName == tc.AdminRoleName {
 			ucdn = inf.Params["ucdn"]
 			if ucdn == "" {
 				return "", errors.New("admin level ucdn requests require a ucdn query parameter")
