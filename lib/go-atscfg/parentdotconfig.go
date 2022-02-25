@@ -44,6 +44,7 @@ const ParentConfigParamMSOParentRetry = "mso.parent_retry"
 const ParentConfigParamMSOUnavailableServerRetryResponses = "mso.unavailable_server_retry_responses"
 const ParentConfigParamMSOMaxSimpleRetries = "mso.max_simple_retries"
 const ParentConfigParamMSOMaxUnavailableServerRetries = "mso.max_unavailable_server_retries"
+const ParentConfigParamMergeGroups = "merge_parent_groups"
 const ParentConfigParamAlgorithm = "algorithm"
 const ParentConfigParamQString = "qstring"
 const ParentConfigParamSecondaryMode = "try_all_primaries_before_secondary"
@@ -808,6 +809,7 @@ type parentDSParams struct {
 	MaxUnavailableServerRetries     string
 	QueryStringHandling             string
 	TryAllPrimariesBeforeSecondary  bool
+	MergeGroups                     []string
 }
 
 // getDSParams returns the Delivery Service Profile Parameters used in parent.config, and any warnings.
@@ -833,7 +835,13 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 		return params, warnings
 	}
 
-	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling] // may be blank, no default
+	// the following may be blank, no default
+	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling]
+	params.MergeGroups = strings.Split(dsParams[ParentConfigParamMergeGroups], " ")
+	if 0 < len(params.MergeGroups) {
+		sort.Strings(params.MergeGroups)
+	}
+
 	// TODO deprecate & remove "mso." Parameters - there was never a reason to restrict these settings to MSO.
 	if isMSO {
 		if v, ok := dsParams[ParentConfigParamMSOAlgorithm]; ok && strings.TrimSpace(v) != "" {
@@ -924,6 +932,7 @@ func getTopologyParentConfigLine(
 	}
 
 	serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
+
 	if err != nil {
 		return nil, warnings, errors.New("getting topology placement: " + err.Error())
 	}
@@ -952,7 +961,7 @@ func getTopologyParentConfigLine(
 	}
 	// txt += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port()
 
-	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, servers, serverParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins)
+	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, servers, serverParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins, dsParams.MergeGroups)
 	warnings = append(warnings, parentWarnings...)
 	if err != nil {
 		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
@@ -1260,6 +1269,7 @@ func getTopologyParents(
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	dsOrigins map[ServerID]struct{}, // for Topology DSes, MSO still needs DeliveryServiceServer assignments.
+	dsMergeGroups []string, // sorted parent merge groups for this ds
 ) ([]*ParentAbstractionServiceParent, []*ParentAbstractionServiceParent, []string, error) {
 	warnings := []string{}
 	// If it's the last tier, then the parent is the origin.
@@ -1378,6 +1388,14 @@ func getTopologyParents(
 				return nil, nil, warnings, errors.New("getting server parent string: " + err.Error())
 			}
 			secondaryParentStrs = append(secondaryParentStrs, parentStr)
+		}
+	}
+
+	if 0 < len(dsMergeGroups) && 0 < len(secondaryParentStrs) {
+		if sort.SearchStrings(dsMergeGroups, parentCG) < len(dsMergeGroups) &&
+			sort.SearchStrings(dsMergeGroups, secondaryParentCG) < len(dsMergeGroups) {
+			parentStrs = append(parentStrs, secondaryParentStrs...)
+			secondaryParentStrs = nil
 		}
 	}
 
