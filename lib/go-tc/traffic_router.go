@@ -27,13 +27,21 @@ import (
 // coverage zone polling parameters.
 const CoverageZonePollingPrefix = "coveragezone.polling."
 
+// CoverageZonePollingURL is the Name of the Parameter that defines the URL that
+// Traffic Router will repeatedly poll for a coverage zone file.
 const CoverageZonePollingURL = CoverageZonePollingPrefix + "url"
 
+// CoverageZoneLocation represents a single "location" in a coverage zone file.
 type CoverageZoneLocation struct {
 	Network  []string `json:"network,omitempty"`
 	Network6 []string `json:"network6,omitempty"`
 }
 
+// GetFirstIPAddressOfType returns the first IP address (or CIDR-notation
+// subnet) that can be found within the location that meets the criteria
+// specified by its argument - "true" means an IPv4 address should be returned,
+// while "false" means it should be IPv6. If no addresses (or subnets) are found
+// that meet that criteria, an empty string is returned.
 func (c *CoverageZoneLocation) GetFirstIPAddressOfType(isIPv4 bool) string {
 	var network []string
 	if isIPv4 {
