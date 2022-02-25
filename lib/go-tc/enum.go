@@ -234,7 +234,7 @@ const UseRevalPendingParameterName = ParameterName("use_reval_pending")
 //
 // Note that there is no guarantee that a Parameter with this name exists in
 // Traffic Ops at any given time, and while it's implementation relies on
-// a boolean Value, this it not gauranteed either.
+// a boolean Value, this it not guaranteed either.
 const RefetchEnabled = ParameterName("refetch_enabled")
 
 // ConfigFileName is a Parameter ConfigFile value.
