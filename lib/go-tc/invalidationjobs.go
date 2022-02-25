@@ -470,8 +470,8 @@ const (
 	REFETCH = "REFETCH"
 )
 
-// InvalidationJobsResponse is the type of a response from Traffic Ops to a
-// request made to its /jobs API endpoint for v 4.0+
+// InvalidationJobsResponseV4 is the type of a response from Traffic Ops to a
+// request made to its /jobs API endpoint for API major version 4.
 type InvalidationJobsResponseV4 struct {
 	Response []InvalidationJobV4 `json:"response"`
 	Alerts
