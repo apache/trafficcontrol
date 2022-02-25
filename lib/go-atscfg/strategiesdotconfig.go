@@ -24,17 +24,21 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
-	//	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
+// ContentTypeStrategiesDotYAML is the MIME type of the contents of a
+// strategies.yaml ATS configuration file.
 const ContentTypeStrategiesDotYAML = ContentTypeYAML
+
+// LineCommentStrategiesDotYAML is the string used to signal the beginning of a
+// line comment in the grammar of a strategies.yaml ATS configuration file.
 const LineCommentStrategiesDotYAML = LineCommentHash
 
 // StrategiesYAMLOpts contains settings to configure strategies.config generation options.
 type StrategiesYAMLOpts struct {
 	// VerboseComments is whether to add informative comments to the generated file, about what was generated and why.
 	// Note this does not include the header comment, which is configured separately with HdrComment.
-	// These comments are human-readable and not guarnateed to be consistent between versions. Automating anything based on them is strongly discouraged.
+	// These comments are human-readable and not guaranteed to be consistent between versions. Automating anything based on them is strongly discouraged.
 	VerboseComments bool
 
 	// GoDirect is set with a command line argument default is true.
@@ -60,6 +64,7 @@ type StrategiesYAMLOpts struct {
 	ATSMajorVersion uint
 }
 
+// MakeStrategiesDotYAML constructs a strategies.yaml ATS configuration file.
 func MakeStrategiesDotYAML(
 	dses []DeliveryService,
 	server *Server,
@@ -126,8 +131,14 @@ func MakeStrategiesDotYAML(
 	}, nil
 }
 
-// YAMLDocumentStart is the YAML document start directive
+// YAMLDocumentStart is the symbol used in the YAML grammar to indicate the end
+// of "directives", which simultaneously constitutes the beginning of the
+// "document".
 const YAMLDocumentStart = "---"
+
+// YAMLDocumentEnd is the symbol used in the YAML grammar to indicate the end of
+// the "document", which simultaneously constitutes the beginning of the zero or
+// more "directives" (again).
 const YAMLDocumentEnd = "..."
 
 func parentAbstractionToStrategiesDotYaml(pa *ParentAbstraction, opt *StrategiesYAMLOpts, atsMajorVersion uint) (string, []string, error) {
