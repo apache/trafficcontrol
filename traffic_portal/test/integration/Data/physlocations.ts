@@ -231,7 +231,7 @@ export const physLocations = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				}

@@ -342,7 +342,7 @@ export const servers = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -414,7 +414,7 @@ export const servers = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -486,7 +486,7 @@ export const servers = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -558,7 +558,7 @@ export const servers = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				}

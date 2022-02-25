@@ -381,7 +381,7 @@ export const topologies = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "TopTestPf",
-							replace: "profileId"
+							replace: "profileNames"
 						}
                     ],
                     updPending: false
@@ -453,7 +453,7 @@ export const topologies = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "TopTestPf",
-							replace: "profileId"
+							replace: "profileNames"
 						}
                     ],
                     updPending: false

@@ -296,7 +296,7 @@ export const deliveryservices = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				}

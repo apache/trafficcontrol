@@ -299,7 +299,7 @@ export const serverServerCapabilities = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -371,7 +371,7 @@ export const serverServerCapabilities = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -443,7 +443,7 @@ export const serverServerCapabilities = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -515,7 +515,7 @@ export const serverServerCapabilities = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -587,7 +587,7 @@ export const serverServerCapabilities = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -659,7 +659,7 @@ export const serverServerCapabilities = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				}
