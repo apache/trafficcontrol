@@ -191,7 +191,9 @@ func (inf ServerInterfaceInfoV40) Copy() ServerInterfaceInfoV40 {
 	}
 }
 
-// GetDefaultAddressOrCIDR returns the IPv4 and IPv6 service addresses of the interface.
+// GetDefaultAddress returns the IPv4 and IPv6 service addresses of the
+// interface - without any subnet/masking that may or may not be present on said
+// address(es).
 func (i *ServerInterfaceInfo) GetDefaultAddress() (string, string) {
 	ipv4, ipv6 := i.GetDefaultAddressOrCIDR()
 	address, _, err := net.ParseCIDR(ipv4)
@@ -235,8 +237,8 @@ func (i *ServerInterfaceInfo) GetDefaultAddressOrCIDR() (string, string) {
 
 // Value implements the driver.Valuer interface
 // marshals struct to json to pass back as a json.RawMessage.
-func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
-	b, err := json.Marshal(sii)
+func (i *ServerInterfaceInfo) Value() (driver.Value, error) {
+	b, err := json.Marshal(i)
 	return b, err
 }
 
@@ -244,13 +246,13 @@ func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
 //
 // This expects src to be a json.RawMessage and unmarshals it into the
 // ServerInterfaceInfo.
-func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
+func (i *ServerInterfaceInfo) Scan(src interface{}) error {
 	b, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
 	}
 
-	return json.Unmarshal([]byte(b), sii)
+	return json.Unmarshal(b, i)
 }
 
 // LegacyInterfaceDetails is the details for interfaces on servers for API v2.
