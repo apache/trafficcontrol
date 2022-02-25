@@ -22,7 +22,9 @@ package torequtil
  */
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"math"
 	"net"
 	"net/http"
@@ -32,6 +34,14 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
+
+type Cookie struct {
+	Cookie *http.Cookie `json:"cookie"`
+}
+
+type FsCookie struct {
+	Cookies []Cookie `json:"cookies"`
+}
 
 // GetRetry attempts to get the given object, retrying with exponential backoff up to cfg.NumRetries.
 // The objName is not used in actual fetching or logic, but only for logging. It can be any printable string, but should be unique and reflect the object being fetched.
@@ -85,6 +95,19 @@ func MaybeHdrStr(hdr http.Header, hdrName string) string {
 		return hdr.Get(hdrName)
 	}
 	return ""
+}
+
+func GetFsCookie(cookiePath string) (FsCookie, error) {
+	cookie := FsCookie{}
+	file, err := ioutil.ReadFile(cookiePath)
+	if err != nil {
+		return FsCookie{Cookies: nil}, err
+	}
+	err = json.Unmarshal(file, &cookie)
+	if err != nil {
+		return FsCookie{Cookies: nil}, err
+	}
+	return cookie, err
 }
 
 func StringToCookies(cookiesStr string) []*http.Cookie {
