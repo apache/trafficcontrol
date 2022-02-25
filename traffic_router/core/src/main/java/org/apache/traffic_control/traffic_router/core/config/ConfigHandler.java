@@ -499,6 +499,7 @@ public class ConfigHandler {
 						statMap.put(ds.getId(), dsNames);
 						return topologyMap.get(topologyName).stream();
 					})
+					.filter(node -> cacheRegister.getCacheLocation(node) != null)
 					.flatMap(node -> cacheRegister.getCacheLocation(node).getCaches().stream())
 					.filter(cache -> ds.hasRequiredCapabilities(cache.getCapabilities()))
 					.forEach(cache -> {
