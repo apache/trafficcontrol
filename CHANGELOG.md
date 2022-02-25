@@ -53,6 +53,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added cache config `__CACHEGROUP__` preprocess directive, to allow injecting the local server's cachegroup name into any config file
 - Added t3c experimental strategies generation.
 - Added support for a DS profile parameter 'LastRawRemapPre' and 'LastRawRemapPost' which allows raw text lines to be pre or post pended to remap.config.
+- Added DS parameter 'merge_parent_groups' to allow primary and secondary parents to be merged into the primary parent list in parent.config.
 
 ### Fixed
 - [#6411](https://github.com/apache/trafficcontrol/pull/6411) Removes invalid 'ALL cdn' options from TP

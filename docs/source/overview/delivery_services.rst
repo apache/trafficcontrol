@@ -985,6 +985,16 @@ A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site O
 
 .. warning:: The ``mso.simple_retry_response_codes`` :term:`Parameter` has no apparent, possible use according to the :abbr:`ATS (Apache Traffic Server)` `parent.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_. Whether or not it has any effect - let alone the *intended* effect - is not known, and its use is therefore strongly discouraged.
 
+Additional Delivery Service Profile_ :term:`Parameters` have been introduced that affects `parent.config` line generation
+
+.. table:: :term:`Parameters` of a Delivery Service Profile_ that Affect :abbr:`MSO (Multi-Site-Origin)` Parenting
+	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| Name                                        | field value                                                                | Effect                                                                              |
+	+=============================================+============================================================================+=====================================================================================+
+	| merge_parent_groups                         | space separated list of cache groups to combine                            | Moves the secondary_parent list into the primary parent.  This can be used to       |
+	|                                             |                                                                            | combine all parents into a single consistent hash ring.                             |
+	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+
 .. seealso:: A quick guide on setting up Multi-Site Origins is given in :ref:`multi-site-origin-qht`.
 
 .. seealso:: See the `Apache Traffic Server documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_ for more information on its implementation of Multi-Site Origins.
