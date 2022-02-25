@@ -1,0 +1,10 @@
+{
+	"description": "dev db",
+	"dbname": "traffic_ops_development",
+	"hostname": "db",
+	"user": "traffic_ops",
+	"password": "twelve12",
+	"port": "5432",
+	"ssl": false,
+	"type": "Pg"
+}
