@@ -151,6 +151,43 @@ SELECT
 	s.offline_reason,
 	pl.name AS phys_location,
 	s.phys_location AS phys_location_id,
+	ARRAY[p.name] AS profile_names,
+	s.rack,
+	s.reval_pending,
+	st.name AS status,
+	s.status AS status_id,
+	s.tcp_port,
+	t.name AS server_type,
+	s.type AS server_type_id,
+	s.upd_pending AS upd_pending,
+	s.xmpp_id,
+	s.xmpp_passwd,
+	s.status_last_updated
+` + serversFromAndJoin
+
+const selectV4Query = `
+SELECT
+	cg.name AS cachegroup,
+	s.cachegroup AS cachegroup_id,
+	s.cdn_id,
+	cdn.name AS cdn_name,
+	s.domain_name,
+	s.guid,
+	s.host_name,
+	s.https_port,
+	s.id,
+	s.ilo_ip_address,
+	s.ilo_ip_gateway,
+	s.ilo_ip_netmask,
+	s.ilo_password,
+	s.ilo_username,
+	s.last_updated,
+	s.mgmt_ip_address,
+	s.mgmt_ip_gateway,
+	s.mgmt_ip_netmask,
+	s.offline_reason,
+	pl.name AS phys_location,
+	s.phys_location AS phys_location_id,
 	sp.profile_names AS profile_names,
 	s.rack,
 	s.reval_pending,
@@ -1089,7 +1126,12 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		log.Debugln("Non IMS request")
 	}
 
-	query := selectQuery + queryAddition + where + orderBy + pagination
+	var query string
+	if version.Major >= 4 {
+		query = selectV4Query + queryAddition + where + orderBy + pagination
+	} else {
+		query = selectQuery + queryAddition + where + orderBy + pagination
+	}
 	// If you're looking to get the servers for a particular delivery service, make sure you're also querying the ORG servers from the deliveryservice_server table
 	if _, ok := params[`dsId`]; ok {
 		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + originServerQuery
@@ -1789,6 +1831,9 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	origProfiles := pq.StringArray{*server.Profile}
+
 	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
@@ -1819,6 +1864,12 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); err != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	userErr, sysErr, statusCode := insertServerProfile(server.ID, origProfiles, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 
@@ -1861,6 +1912,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
+	origProfiles := pq.StringArray{*server.Profile}
 
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
@@ -1907,6 +1959,12 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	userErr, sysErr, errCode := createInterfaces(*server.ID, interfaces, tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	userErr, sysErr, statusCode := insertServerProfile(server.ID, origProfiles, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 
