@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input, OnInit } from "@angular/core";
+import { Component, Input } from "@angular/core";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
@@ -24,12 +24,7 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 	styleUrls: ["./tp-header.component.scss"],
 	templateUrl: "./tp-header.component.html"
 })
-export class TpHeaderComponent implements OnInit {
-
-	/**
-	 * The set of permissions available to the authenticated user.
-	 */
-	public permissions = new Set<string>();
+export class TpHeaderComponent {
 
 	/**
 	 * The title to be used in the header.
@@ -38,13 +33,18 @@ export class TpHeaderComponent implements OnInit {
 	 */
 	@Input() public title?: string;
 
-	/** Constructor */
 	constructor(private readonly auth: CurrentUserService, private readonly api: UserService) {
 	}
 
-	/** Sets up data dependencies. */
-	public ngOnInit(): void {
-		this.permissions = this.auth.capabilities;
+	/**
+	 * Checks for a Permission afforded to the currently authenticated user.
+	 *
+	 * @param perm The Permission for which to check.
+	 * @returns Whether the currently authenticated user has the Permission
+	 * `perm`.
+	 */
+	public hasPermission(perm: string): boolean {
+		return this.auth.hasPermission(perm);
 	}
 
 	/**

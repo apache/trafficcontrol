@@ -13,9 +13,10 @@
 */
 import { EventEmitter, Injectable } from "@angular/core";
 import { Router } from "@angular/router";
+import { BehaviorSubject } from "rxjs";
 
 import { UserService } from "src/app/api";
-import type { Capability, CurrentUser } from "src/app/models";
+import { type Capability, type CurrentUser, ADMIN_ROLE } from "src/app/models";
 
 /**
  * This service keeps track of the currently authenticated user.
@@ -33,17 +34,14 @@ export class CurrentUserService {
 	public userChanged = new EventEmitter<CurrentUser>();
 	/** The currently authenticated user - or `null` if not authenticated. */
 	private user: CurrentUser | null = null;
-	/** The Permissions afforded to the currently authenticated user. */
-	private caps = new Set<string>();
 
 	/** The currently authenticated user - or `null` if not authenticated. */
 	public get currentUser(): CurrentUser | null {
 		return this.user;
 	}
+
 	/** The Permissions afforded to the currently authenticated user. */
-	public get capabilities(): Set<string> {
-		return this.caps;
-	}
+	public capabilities: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set());
 
 	/** Whether or not the user is authenticated. */
 	public get loggedIn(): boolean {
@@ -126,8 +124,9 @@ export class CurrentUserService {
 	 */
 	public setUser(u: CurrentUser, caps: Set<string> | Array<Capability>): void {
 		this.user = u;
-		this.caps = caps instanceof Array ? new Set(caps.map(c=>c.name)) : caps;
+		const capabilities = caps instanceof Array ? new Set(caps.map(c=>c.name)) : caps;
 		this.userChanged.emit(this.user);
+		this.capabilities.next(capabilities);
 	}
 
 	/**
@@ -137,7 +136,10 @@ export class CurrentUserService {
 	 * @returns `true` if the user has the Permission `perm`, `false` otherwise.
 	 */
 	public hasPermission(perm: string): boolean {
-		return this.user ? this.caps.has(perm) : false;
+		if (!this.user) {
+			return false;
+		}
+		return this.user.roleName === ADMIN_ROLE || this.capabilities.getValue().has(perm);
 	}
 
 	/**
@@ -149,7 +151,7 @@ export class CurrentUserService {
 	 */
 	public logout(withRedirect?: boolean): void {
 		this.user = null;
-		this.caps.clear();
+		this.capabilities.next(new Set());
 
 		const queryParams: Record<string | symbol, string> = {};
 		if (withRedirect) {

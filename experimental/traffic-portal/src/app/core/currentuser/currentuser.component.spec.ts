@@ -63,6 +63,7 @@ describe("CurrentuserComponent", () => {
 						get currentUser(): CurrentUser | null {
 							return currentUser;
 						},
+						hasPermission: (): boolean => true,
 						updateCurrentUser: async (): Promise<boolean> => updateSpy()
 					}
 				},
