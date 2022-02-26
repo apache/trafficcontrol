@@ -1801,15 +1801,7 @@ WHERE server_config_update.server_id = $1;`
 func SetApplyUpdateForServer(tx *sql.Tx, serverID int64) error {
 	query := `
 UPDATE server_config_update 
-<<<<<<< HEAD
-<<<<<<< HEAD
 SET config_apply_time = now()
-=======
-SET server_config_update.config_apply_time = now()
->>>>>>> 625762265... Continued cleanup for update and reval quueing and apply.
-=======
-SET config_apply_time = now()
->>>>>>> 100d49c3c... Remove table clarification from update statements
 WHERE server_config_update.server_id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
