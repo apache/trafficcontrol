@@ -114,7 +114,7 @@ func writeChangeLog(tx *sql.Tx, user *auth.CurrentUser, cgID int) (error, int) {
 	} else if !ok {
 		return fmt.Errorf("cachegroup %d does not exist", cgID), http.StatusNotFound
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.Itoa(cgID)+", ACTION: Assign DSes to CacheGroup servers", user, tx)
+	api.CreateChangeLogRawTx("CACHEGROUP: "+string(cgName)+", ID: "+strconv.Itoa(cgID)+", ACTION: Assign DSes to CacheGroup servers", user, tx)
 	return nil, 0
 }
 

@@ -97,7 +97,7 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	message := fmt.Sprintf("TOPOLOGY: %s, ACTION: Topology server updates %sd", topologyName, reqObj.Action)
-	api.CreateChangeLogRawTx(api.ApiChange, message, inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(message, inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, tc.TopologiesQueueUpdate{Action: reqObj.Action, CDNID: reqObj.CDNID, Topology: topologyName})
 }
 

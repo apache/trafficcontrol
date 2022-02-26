@@ -22,34 +22,37 @@
 
 ``GET``
 =======
-Fetches a list of changes that have been made to the Traffic Control system
+Fetches a list of changes that have been made to the Traffic Control system.
 
-:Auth. Required: Yes
-:Roles Required: None
+:Auth. Required:       Yes
+:Roles Required:       None
 :Permissions Required: LOG:READ
-:Response Type:  Array
+:Response Type:        Array
 
 Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| Name      | Required | Description                                                                                                                         |
-	+===========+==========+=====================================================================================================================================+
-	| days      | no       | An integer number of days of change logs to return                                                                                  |
-	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| limit     | no       | The number of records to which to limit the response, by default there is no limit applied                                          |
-	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                |
-	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.|
-	|           |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                   |
-	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| username  | no       | A name to which to limit the response too                                                                                           |
-	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	+--------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| Name   | Required | Description                                                                                                                         |
+	+========+==========+=====================================================================================================================================+
+	| days   | no       | An integer number of days of change logs to return - 0 means "no limit" (which could be quite a lot!)                               |
+	+--------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| limit  | no       | The number of records to which to limit the response, by default there is no limit applied                                          |
+	+--------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| offset | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                |
+	+--------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| page   | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.|
+	|        |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                   |
+	+--------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| user   | no       | A name to which to limit the response too                                                                                           |
+	+--------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
 
 .. versionadded:: ATCv6
 	The ``username``, ``page``, ``offset`` query parameters were added to this in endpoint across across all API versions in :abbr:`ATC (Apache Traffic Control)` version 6.0.0.
+
+.. versionchanged:: 4.0
+	The ``username`` query string parameter was renamed to ``user`` so that it has the same name as the response property by which it filters.
 
 .. code-block:: http
 	:caption: Request Example
@@ -62,52 +65,38 @@ Request Structure
 
 Response Structure
 ------------------
-:id:          Integral, unique identifier for the Log entry
-:lastUpdated: Date and time at which the change was made, in :ref:`non-rfc-datetime`
-:level:       Log categories for each entry, e.g. 'UICHANGE', 'OPER', 'APICHANGE'
+:lastUpdated: Date and time at which the change was made, in :rfc:`3339` format (the name was chosen for consistency for the rest of the API; changelog entries are never "updated")
 :message:     Log detail about what occurred
-:ticketNum:   Optional field to cross reference with any bug tracking systems
-:user:        Name of the user who made the change
+:user:        username of the user who made the change
 
 .. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Date: Thu, 15 Nov 2018 15:11:38 GMT
-	X-Server-Name: traffic_ops_golang/
-	Set-Cookie: last_seen_log="2018-11-15% 15:11:38"; path=/; Max-Age=604800
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Permissions-Policy: interest-cohort=()
+	Set-Cookie: mojolicious=...; HttpOnly, last_seen_log=2021-11-22T02:34:06.583699419Z;
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: 40dV+azaZ3b6F30y6YHVbV3H2a3ekZrdoxICupwaxQnj62pwYfb7YCM7Qhe3OAItmB77Tbg9INy27ymaz3hr9A==
-	Content-Length: 357
+	X-Server-Name: traffic_ops_golang/
+	Date: Mon, 22 Nov 2021 02:34:06 GMT
+	Content-Length: 220
 
 	{ "response": [
 		{
-			"ticketNum": null,
-			"level": "APICHANGE",
-			"lastUpdated": "2018-11-14 21:40:06.493975+00",
-			"user": "admin",
-			"id": 444,
-			"message": "User [ test ] unlinked from deliveryservice [ 1 | demo1 ]."
+			"lastUpdated": "2021-11-22T01:59:32.692767Z",
+			"message": "CDN: CDN-in-a-Box, ID: 2, ACTION: server updates queued on 6 servers",
+			"user": "admin"
 		},
 		{
-			"ticketNum": null,
-			"level": "APICHANGE",
-			"lastUpdated": "2018-11-14 21:37:30.707571+00",
-			"user": "admin",
-			"id": 443,
-			"message": "1 delivery services were assigned to test"
-		}],
-		"summary": {
-			"count": 2
+			"lastUpdated": "2021-11-22T01:59:30.624049Z",
+			"message": "CDN: CDN-in-a-Box, ID: -1, ACTION: Snapshot of CRConfig and Monitor",
+			"user": "admin"
 		}
-	}
+	],
+	"summary": {
+		"count": 467
+	}}
 
 Summary Fields
 """"""""""""""

@@ -182,7 +182,7 @@ func PostUsers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("FEDERATION: %v, ID: %v, ACTION: Assign Users to federation", fedName, fedID), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(fmt.Sprintf("FEDERATION: %v, ID: %v, ACTION: Assign Users to federation", fedName, fedID), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%v user(s) were assigned to the %v federation", strconv.Itoa(len(post.IDs)), fedName), post)
 }
 

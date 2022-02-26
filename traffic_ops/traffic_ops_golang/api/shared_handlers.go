@@ -297,7 +297,7 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 			return
 		}
 
-		if err := CreateChangeLog(ApiChange, Updated, obj, inf.User, inf.Tx.Tx); err != nil {
+		if err := CreateChangeLog(Updated, obj, inf.User, inf.Tx.Tx); err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
@@ -441,7 +441,7 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 		}
 
 		log.Debugf("changelog for delete on object")
-		if err := CreateChangeLog(ApiChange, Deleted, obj, inf.User, inf.Tx.Tx); err != nil {
+		if err := CreateChangeLog(Deleted, obj, inf.User, inf.Tx.Tx); err != nil {
 			errHandler(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
@@ -513,7 +513,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 					return
 				}
 
-				if err = CreateChangeLog(ApiChange, Created, objElem, inf.User, inf.Tx.Tx); err != nil {
+				if err = CreateChangeLog(Created, objElem, inf.User, inf.Tx.Tx); err != nil {
 					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 					return
 				}
@@ -565,7 +565,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 				return
 			}
 
-			if err = CreateChangeLog(ApiChange, Created, obj, inf.User, inf.Tx.Tx); err != nil {
+			if err = CreateChangeLog(Created, obj, inf.User, inf.Tx.Tx); err != nil {
 				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 				return
 			}

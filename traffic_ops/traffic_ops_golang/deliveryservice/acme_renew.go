@@ -147,7 +147,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, http
 
 	client, err := GetAcmeClient(acmeAccount, userTx, db, &dsName)
 	if err != nil {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
+		api.CreateChangeLogRawTx("DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
 		return nil, errors.New("getting acme client: " + err.Error()), http.StatusInternalServerError
 	}
 
@@ -182,7 +182,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, http
 
 	if err := tv.PutDeliveryServiceSSLKeys(newCertObj, tx, httpCtx); err != nil {
 		log.Errorf("Error posting acme certificate to Traffic Vault: %s", err.Error())
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
+		api.CreateChangeLogRawTx("DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
 		return nil, errors.New(dsName + ": putting keys in Traffic Vault: " + err.Error()), http.StatusInternalServerError
 	}
 
@@ -198,7 +198,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, http
 	}
 	tx2.Commit()
 
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: Added SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
+	api.CreateChangeLogRawTx("DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: Added SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
 
 	return nil, nil, http.StatusOK
 }

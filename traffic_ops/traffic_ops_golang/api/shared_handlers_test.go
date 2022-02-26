@@ -151,7 +151,7 @@ func TestCreateHandler(t *testing.T) {
 	keys, _ := typeRef.GetKeys()
 	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Created + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT").WithArgs(expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
 	createFunc(w, r)
@@ -289,7 +289,7 @@ func TestUpdateHandler(t *testing.T) {
 	keys, _ := typeRef.GetKeys()
 	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Updated + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT").WithArgs(expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
 	updateFunc(w, r)
@@ -337,7 +337,7 @@ func TestDeleteHandler(t *testing.T) {
 	keys, _ := typeRef.GetKeys()
 	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Deleted + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT").WithArgs(expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	deleteFunc(w, r)
 

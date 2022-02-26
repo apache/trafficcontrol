@@ -361,11 +361,8 @@ func DeleteTestRegionsByName(t *testing.T) {
 		if len(deleteLog.Response) != 1 {
 			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog.Response))
 		}
-		if deleteLog.Response[0].Message == nil {
-			t.Fatal("Traffic Ops returned a representation for a log entry with null or undefined message")
-		}
-		if !strings.Contains(*deleteLog.Response[0].Message, region.Name) {
-			t.Errorf("region deletion audit log entry - expected: message containing region name '%s', actual: %s", region.Name, *deleteLog.Response[0].Message)
+		if !strings.Contains(deleteLog.Response[0].Message, region.Name) {
+			t.Errorf("region deletion audit log entry - expected: message containing region name '%s', actual: %s", region.Name, deleteLog.Response[0].Message)
 		}
 
 		// Retrieve the Region to see if it got deleted

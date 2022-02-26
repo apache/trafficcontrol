@@ -209,6 +209,6 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdn+", ID: "+strconv.Itoa(id)+", ACTION: Snapshot of CRConfig and Monitor", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx("CDN: "+cdn+", ID: "+strconv.Itoa(id)+", ACTION: Snapshot of CRConfig and Monitor", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "SUCCESS")
 }

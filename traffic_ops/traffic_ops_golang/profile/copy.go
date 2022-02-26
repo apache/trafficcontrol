@@ -67,7 +67,7 @@ func CopyProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	successMsg := fmt.Sprintf("created new profile [%s] from existing profile [%s]", p.Response.Name, p.Response.ExistingName)
-	api.CreateChangeLogRawTx(api.ApiChange, successMsg, inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(successMsg, inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, successMsg, p.Response)
 }
 

@@ -584,22 +584,20 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 
 const createChangeLogQuery = `
 INSERT INTO log (
-	level,
 	message,
-	tm_user
+	"user"
 ) VALUES (
 	$1,
-	$2,
-	$3
+	$2
 )
 `
 
 // CreateChangeLog creates a new changelog message at the APICHANGE level for
 // the current user.
 func (inf APIInfo) CreateChangeLog(msg string) {
-	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, ApiChange, msg, inf.User.ID)
+	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, msg, inf.User.ID)
 	if err != nil {
-		log.Errorf("Inserting chage log level '%s' message '%s' for user '%s': %v", ApiChange, msg, inf.User.UserName, err)
+		log.Errorf("Inserting chage log message '%s' for user '%s': %v", msg, inf.User.UserName, err)
 	}
 }
 

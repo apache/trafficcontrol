@@ -33,10 +33,10 @@ import (
 
 const readQuery = `
 SELECT cn.id,
-	cn.cdn, 
+	cn.cdn,
 	cn.last_updated,
-	cn.user, 
-	cn.notification 
+	cn.user,
+	cn.notification
 FROM cdn_notification as cn
 INNER JOIN cdn ON cdn.name = cn.cdn
 INNER JOIN tm_user ON tm_user.username = cn.user
@@ -138,7 +138,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Created", resp.Notification, resp.CDN)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 
 	alertMsg := fmt.Sprintf("CDN notification created [ User = %s ] for CDN: %s", resp.User, resp.CDN)
 	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMsg)
@@ -184,7 +184,7 @@ func deleteCDNNotification(inf *api.APIInfo) (tc.Alert, tc.CDNNotification, erro
 	}
 
 	changeLogMsg := fmt.Sprintf("CDN_NOTIFICATION: %s, CDN: %s, ACTION: Deleted", result.Notification, result.CDN)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, inf.Tx.Tx)
 
 	alertMsg := fmt.Sprintf("CDN notification deleted [ User = %s ] for CDN: %s", result.User, result.CDN)
 	alert = tc.Alert{

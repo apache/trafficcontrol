@@ -16,7 +16,6 @@ package tcdata
 */
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -36,17 +35,6 @@ func (r *TCData) DeleteTestRegionsByName(t *testing.T) {
 		delResp, _, err := TOSession.DeleteRegion(nil, &region.Name)
 		if err != nil {
 			t.Errorf("cannot DELETE Region by name: %v - %v", err, delResp)
-		}
-
-		deleteLog, _, err := TOSession.GetLogsByLimit(1)
-		if err != nil {
-			t.Fatalf("unable to get latest audit log entry")
-		}
-		if len(deleteLog) != 1 {
-			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog))
-		}
-		if !strings.Contains(*deleteLog[0].Message, region.Name) {
-			t.Errorf("region deletion audit log entry - expected: message containing region name '%s', actual: %s", region.Name, *deleteLog[0].Message)
 		}
 
 		// Retrieve the Region to see if it got deleted

@@ -40,7 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 )
@@ -602,12 +602,12 @@ SELECT
 
 const readQuery = readBaseQuery + `
 u.last_authenticated,
-(SELECT count(l.tm_user) FROM log as l WHERE l.tm_user = u.id) as change_log_count,
+(SELECT count(l.user) FROM public.log as l WHERE l.user = u.id) as change_log_count,
 r.name as role
-FROM tm_user u
-LEFT JOIN tenant t ON u.tenant_id = t.id
-LEFT JOIN role r ON u.role = r.id
-LEFT JOIN role_capability rc on rc.role_id = r.id
+FROM public.tm_user u
+LEFT JOIN public.tenant t ON u.tenant_id = t.id
+LEFT JOIN public.role r ON u.role = r.id
+LEFT JOIN public.role_capability rc on rc.role_id = r.id
 `
 
 const legacyReadQuery = readBaseQuery + `
@@ -902,7 +902,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/users?id=%d", inf.Version.Major, inf.Version.Minor, *userV4.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, userResponse.Alerts, userResponse.Response)
 	changeLogMsg = fmt.Sprintf("USER: %s, ID: %d, ACTION: Created User", userV4.Username, *userV4.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -1085,5 +1085,5 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusOK, userResponse.Alerts, userResponse.Response)
 	changeLogMsg = fmt.Sprintf("USER: %s, ID: %d, ACTION: Updated User", userV4.Username, *userV4.ID)
 
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }

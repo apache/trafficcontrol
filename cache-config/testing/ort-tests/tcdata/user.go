@@ -48,7 +48,7 @@ func (r *TCData) ForceDeleteTestUsers(t *testing.T) {
 	}
 
 	// there is a constraint that prevents users from being deleted when they have a log
-	q := `DELETE FROM log WHERE NOT tm_user = (SELECT id FROM tm_user WHERE username = 'admin')`
+	q := `DELETE FROM log`
 	err = execSQL(db, q)
 	if err != nil {
 		t.Errorf("cannot execute SQL: %v; SQL is %s", err, q)

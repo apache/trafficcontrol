@@ -70,7 +70,7 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("parameter not found"), nil)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "PARAM: "+paramName+", ID: "+strconv.FormatInt(*paramProfile.ParamID, 10)+", ACTION: Assigned "+strconv.Itoa(len(*paramProfile.ProfileIDs))+" profiles to parameter", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx("PARAM: "+paramName+", ID: "+strconv.FormatInt(*paramProfile.ParamID, 10)+", ACTION: Assigned "+strconv.Itoa(len(*paramProfile.ProfileIDs))+" profiles to parameter", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d profiles were assigned to the %d parameter", len(*paramProfile.ProfileIDs), *paramProfile.ParamID), paramProfile)
 }
 

@@ -21,21 +21,20 @@ package login
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"html/template"
+	"net/http"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
-import "database/sql"
-import "errors"
-import "fmt"
-import "html/template"
-import "net/http"
-
-import "github.com/apache/trafficcontrol/lib/go-log"
-import "github.com/apache/trafficcontrol/lib/go-rfc"
-import "github.com/apache/trafficcontrol/lib/go-tc"
-
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 type registrationEmailFormatter struct {
 	From         rfc.EmailAddress
@@ -294,7 +293,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	var changeLog = "USER: %s, EMAIL: %s, ACTION: registration sent with role %s and tenant %s"
 	changeLog = fmt.Sprintf(changeLog, email, email, role, tenant)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLog, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLog, inf.User, tx)
 }
 
 func renewRegistration(tx *sql.Tx, req tc.UserRegistrationRequest, t string, u tc.User) (string, string, error) {

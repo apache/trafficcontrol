@@ -116,7 +116,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 			log.Errorln("generating CDN DNSSEC keys: committing transaction for changelog: " + err.Error())
 		}
 	}()
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdnName+", ID: "+strconv.Itoa(cdnID)+", ACTION: Generated DNSSEC keys", inf.User, logTx.Tx)
+	api.CreateChangeLogRawTx("CDN: "+cdnName+", ID: "+strconv.Itoa(cdnID)+", ACTION: Generated DNSSEC keys", inf.User, logTx.Tx)
 	api.WriteResp(w, r, "Successfully created dnssec keys for "+cdnName)
 }
 
@@ -423,7 +423,7 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx("CDN: "+key+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
 	successMsg := "Successfully deleted " + CDNDNSSECKeyType + " for " + key
 	api.WriteResp(w, r, successMsg)
 }
