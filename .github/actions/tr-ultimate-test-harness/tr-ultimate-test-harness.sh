@@ -100,5 +100,7 @@ fi
 if [[ $http_result -eq 0 && $dns_result -eq 0 ]]; then echo
 	echo Tests passed!
 else
+	exit_code=$?
 	echo Tests failed!
+	exit $exit_code
 fi
