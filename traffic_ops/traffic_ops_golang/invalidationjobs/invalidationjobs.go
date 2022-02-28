@@ -585,11 +585,13 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		sysErr = fmt.Errorf("failed to match XML ID to int ID for Delivery Service %s: %v", job.DeliveryService, err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
 	}
 	if !exists {
 		userErr = fmt.Errorf("delivery service \"%v\" does not exist", job.DeliveryService)
 		errCode = http.StatusNotFound
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
 	}
 
 	row := inf.Tx.Tx.QueryRow(insertQueryV4,
