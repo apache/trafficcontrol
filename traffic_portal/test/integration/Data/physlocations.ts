@@ -201,7 +201,7 @@ export const physLocations = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 0,
-					profileId: 0,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -231,7 +231,7 @@ export const physLocations = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				}

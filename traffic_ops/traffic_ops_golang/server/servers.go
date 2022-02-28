@@ -62,6 +62,17 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 `
 
+const serversV4FromAndJoin = `
+FROM server AS s
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id
+JOIN server_profile sp ON sp.server = s.id
+`
+
 /* language=SQL */
 const dssTopologiesJoinSubquery = `
 (SELECT
@@ -112,6 +123,11 @@ const serverCountQuery = `
 SELECT COUNT(s.id)
 ` + serversFromAndJoin
 
+const selectIDQuery = `
+SELECT
+	s.id
+` + serversFromAndJoin
+
 const selectQuery = `
 SELECT
 	cg.name AS cachegroup,
@@ -135,9 +151,7 @@ SELECT
 	s.offline_reason,
 	pl.name AS phys_location,
 	s.phys_location AS phys_location_id,
-	p.name AS profile,
-	p.description AS profile_desc,
-	s.profile AS profile_id,
+	ARRAY[p.name] AS profile_names,
 	s.rack,
 	s.reval_pending,
 	st.name AS status,
@@ -151,10 +165,42 @@ SELECT
 	s.status_last_updated
 ` + serversFromAndJoin
 
-const selectIDQuery = `
+const selectV4Query = `
 SELECT
-	s.id
-` + serversFromAndJoin
+	cg.name AS cachegroup,
+	s.cachegroup AS cachegroup_id,
+	s.cdn_id,
+	cdn.name AS cdn_name,
+	s.domain_name,
+	s.guid,
+	s.host_name,
+	s.https_port,
+	s.id,
+	s.ilo_ip_address,
+	s.ilo_ip_gateway,
+	s.ilo_ip_netmask,
+	s.ilo_password,
+	s.ilo_username,
+	s.last_updated,
+	s.mgmt_ip_address,
+	s.mgmt_ip_gateway,
+	s.mgmt_ip_netmask,
+	s.offline_reason,
+	pl.name AS phys_location,
+	s.phys_location AS phys_location_id,
+	sp.profile_names AS profile_names,
+	s.rack,
+	s.reval_pending,
+	st.name AS status,
+	s.status AS status_id,
+	s.tcp_port,
+	t.name AS server_type,
+	s.type AS server_type_id,
+	s.upd_pending AS upd_pending,
+	s.xmpp_id,
+	s.xmpp_passwd,
+	s.status_last_updated
+` + serversV4FromAndJoin
 
 const midWhereClause = `
 WHERE t.name = :cache_type_mid AND s.cachegroup IN (
@@ -252,6 +298,7 @@ INSERT INTO server (
 	type AS server_type_id,
 	upd_pending
 `
+
 const insertQueryV4 = `
 INSERT INTO server (
 	cachegroup,
@@ -293,7 +340,7 @@ INSERT INTO server (
 	:mgmt_ip_gateway,
 	:offline_reason,
 	:phys_location_id,
-	:profile_id,
+	(SELECT id FROM profile p WHERE p.name=(CAST(:profile_names AS TEXT[]))[1]),
 	:rack,
 	:status_id,
 	:tcp_port,
@@ -323,9 +370,7 @@ INSERT INTO server (
 	offline_reason,
 	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
 	phys_location AS phys_location_id,
-	profile AS profile_id,
-	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
-	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	(SELECT ARRAY[(SELECT name FROM profile WHERE profile.id=server.profile)]) AS profile_names,
 	rack,
 	reval_pending,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
@@ -437,7 +482,7 @@ UPDATE server SET
 	mgmt_ip_gateway=:mgmt_ip_gateway,
 	offline_reason=:offline_reason,
 	phys_location=:phys_location_id,
-	profile=:profile_id,
+	profile=(SELECT id from profile where name=(SELECT profile_names[1] from server_profile sp WHERE sp.server=:id)),
 	rack=:rack,
 	status=:status_id,
 	tcp_port=:tcp_port,
@@ -468,9 +513,7 @@ RETURNING
 	offline_reason,
 	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
 	phys_location AS phys_location_id,
-	profile AS profile_id,
-	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
-	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	(SELECT profile_names FROM server_profile sp WHERE sp.server=server.id) AS profile_names,
 	rack,
 	reval_pending,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
@@ -538,7 +581,54 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 	if cdnID != *s.CDNID {
 		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, *s.ProfileID, *s.CDNID))
 	}
+	return errs
+}
 
+func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
+
+	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+
+	errs := tovalidate.ToErrors(validation.Errors{
+		"cachegroupId":   validation.Validate(s.CachegroupID, validation.NotNil),
+		"cdnId":          validation.Validate(s.CDNID, validation.NotNil),
+		"domainName":     validation.Validate(s.DomainName, validation.Required, noSpaces),
+		"hostName":       validation.Validate(s.HostName, validation.Required, noSpaces),
+		"physLocationId": validation.Validate(s.PhysLocationID, validation.NotNil),
+		"profileNames":   validation.Validate(s.Profiles, validation.NotNil),
+		"statusId":       validation.Validate(s.StatusID, validation.NotNil),
+		"typeId":         validation.Validate(s.TypeID, validation.NotNil),
+		"updPending":     validation.Validate(s.UpdPending, validation.NotNil),
+		"httpsPort":      validation.Validate(s.HTTPSPort, validation.By(tovalidate.IsValidPortNumber)),
+		"tcpPort":        validation.Validate(s.TCPPort, validation.By(tovalidate.IsValidPortNumber)),
+	})
+
+	if len(errs) > 0 {
+		return errs
+	}
+
+	if _, err := tc.ValidateTypeID(tx, s.TypeID, "server"); err != nil {
+		errs = append(errs, err)
+	}
+
+	if len(*s.Profiles) == 0 {
+		errs = append(errs, fmt.Errorf("no profiles exists"))
+	}
+
+	var cdnID int
+	if err := tx.QueryRow("SELECT cdn from profile WHERE name=$1", (*s.Profiles)[0]).Scan(&cdnID); err != nil {
+		log.Errorf("could not execute select cdnID from profile: %s\n", err)
+		if err == sql.ErrNoRows {
+			errs = append(errs, fmt.Errorf("no such profileId: '%v'", (*s.Profiles)[0]))
+		} else {
+			errs = append(errs, tc.DBError)
+		}
+		return errs
+	}
+
+	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
+	if cdnID != *s.CDNID {
+		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%v' does not match Server CDN '%d'", cdnID, (*s.Profiles)[0], *s.CDNID))
+	}
 	return errs
 }
 
@@ -679,7 +769,7 @@ func validateV4(s *tc.ServerV40, tx *sql.Tx) (string, error) {
 	if !serviceAddrV6Found && !serviceAddrV4Found {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
-	if errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...); errs != nil {
+	if errs = append(errs, validateCommonV40(&s.CommonServerPropertiesV40, tx)...); errs != nil {
 		return serviceInterface, util.JoinErrs(errs)
 	}
 	query := `
@@ -688,15 +778,14 @@ JOIN profile p on p.Id = s.Profile
 JOIN interface i on i.server = s.ID
 JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
 WHERE ip.service_address = true
-and p.id = $1
 `
 	var rows *sql.Rows
 	var err error
 	//ProfileID already validated
 	if s.ID != nil {
-		rows, err = tx.Query(query+" and s.id != $2", *s.ProfileID, *s.ID)
+		rows, err = tx.Query(query+" and s.id != $1", *s.ID)
 	} else {
-		rows, err = tx.Query(query, *s.ProfileID)
+		rows, err = tx.Query(query)
 	}
 	if err != nil {
 		errs = append(errs, errors.New("unable to determine service address uniqueness"))
@@ -869,7 +958,12 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	if version.Major >= 3 {
 		v3Servers := make([]tc.ServerV30, 0)
 		for _, server := range servers {
-			v3Server, err := server.ToServerV3FromV4()
+			csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+			if err != nil {
+				api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to query profile: %v", err))
+				return
+			}
+			v3Server, err := server.ToServerV3FromV4(csp)
 			if err != nil {
 				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to V3 format: %v", err))
 				return
@@ -882,7 +976,12 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	legacyServers := make([]tc.ServerNullableV2, 0, len(servers))
 	for _, server := range servers {
-		legacyServer, err := server.ToServerV2FromV4()
+		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to query profile: %v", err))
+			return
+		}
+		legacyServer, err := server.ToServerV2FromV4(csp)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
 			return
@@ -1027,7 +1126,12 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		log.Debugln("Non IMS request")
 	}
 
-	query := selectQuery + queryAddition + where + orderBy + pagination
+	var query string
+	if version.Major >= 4 {
+		query = selectV4Query + queryAddition + where + orderBy + pagination
+	} else {
+		query = selectQuery + queryAddition + where + orderBy + pagination
+	}
 	// If you're looking to get the servers for a particular delivery service, make sure you're also querying the ORG servers from the deliveryservice_server table
 	if _, ok := params[`dsId`]; ok {
 		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + originServerQuery
@@ -1252,10 +1356,10 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 	return ids, nil, nil, http.StatusOK
 }
 
-func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error, error, int) {
+func checkTypeChangeSafety(server tc.CommonServerPropertiesV40, tx *sqlx.Tx) (error, error, int) {
 	// see if cdn or type changed
-	var cdnID int
-	var typeID int
+	var cdnID *int
+	var typeID *int
 	if err := tx.QueryRow("SELECT type, cdn_id FROM server WHERE id = $1", *server.ID).Scan(&typeID, &cdnID); err != nil {
 		if err == sql.ErrNoRows {
 			return errors.New("no server found with this ID"), nil, http.StatusNotFound
@@ -1264,17 +1368,17 @@ func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error
 	}
 
 	var dsIDs []int64
-	if err := tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", server.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
+	if err := tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", *server.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("getting server assigned delivery services: %v", err), http.StatusInternalServerError
 	}
 	// If type is changing ensure it isn't assigned to any DSes.
-	if typeID != *server.TypeID {
+	if typeID != server.TypeID {
 		if len(dsIDs) != 0 {
 			return errors.New("server type can not be updated when it is currently assigned to Delivery Services"), nil, http.StatusConflict
 		}
 	}
 	// Check to see if the user is trying to change the CDN of a server, which is already linked with a DS
-	if cdnID != *server.CDNID && len(dsIDs) != 0 {
+	if cdnID != server.CDNID && len(dsIDs) != 0 {
 		return errors.New("server cdn can not be updated when it is currently assigned to delivery services"), nil, http.StatusConflict
 	}
 
@@ -1448,6 +1552,10 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
+		if err := dbhelpers.UpdateServerProfiles(server.ID, server.Profiles, tx); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
 	} else if inf.Version.Major >= 3 {
 		if err := json.NewDecoder(r.Body).Decode(&serverV3); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1466,7 +1574,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		server, err = serverV3.UpgradeToV40()
+		cspV40, err := dbhelpers.UpdateCommonServerPropertiesV40(serverV3.ID, serverV3.CommonServerProperties, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
+			return
+		}
+		server, err = serverV3.UpgradeToV40(cspV40)
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V3 server to V4 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -1483,8 +1596,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-
-		server, err = legacyServer.UpgradeToV40()
+		cspV40, err := dbhelpers.UpdateCommonServerPropertiesV40(legacyServer.ID, legacyServer.CommonServerProperties, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
+			return
+		}
+		server, err = legacyServer.UpgradeToV40(cspV40)
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V2 server to V3 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -1544,7 +1661,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerProperties, inf.Tx); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerPropertiesV40, inf.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
@@ -1617,7 +1734,16 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
 	} else {
-		v2Server, err := server.ToServerV2FromV4()
+		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to query profile: %v", err))
+			return
+		}
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
+			return
+		}
+		v2Server, err := server.ToServerV2FromV4(csp)
 		if err != nil {
 			sysErr = fmt.Errorf("converting valid v3 server to a v2 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -1632,6 +1758,35 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: updated", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+}
+
+func insertServerProfile(id *int, pName pq.StringArray, tx *sql.Tx) (error, error, int) {
+	insertSPQuery := `
+	INSERT INTO server_profile (
+		server, 
+		profile_names, 
+		priority
+	) VALUES 
+	`
+
+	var priorityArray pq.Int64Array
+	for i, _ := range pName {
+		priorityArray = append(priorityArray, int64(i))
+	}
+
+	iSPQueryParts := make([]string, 0, 1)
+	iSPQueryValues := make([]interface{}, 0, 1)
+	for j := 0; j < 1; j++ {
+		iSPQueryParts = append(iSPQueryParts, fmt.Sprintf("($%d, $%d, $%d)", j+1, j+2, j+3))
+		iSPQueryValues = append(iSPQueryValues, *id, pName, priorityArray)
+	}
+	insertSPQuery += strings.Join(iSPQueryParts, ",")
+	log.Debugf("Inserting profile information for a new server, query is: %s", insertSPQuery)
+	_, err := tx.Exec(insertSPQuery, iSPQueryValues...)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+	return nil, nil, http.StatusOK
 }
 
 func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
@@ -1676,6 +1831,9 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	origProfiles := pq.StringArray{*server.Profile}
+
 	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
@@ -1708,6 +1866,12 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); err != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	userErr, sysErr, statusCode := insertServerProfile(server.ID, origProfiles, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 
@@ -1750,6 +1914,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
+	origProfiles := pq.StringArray{*server.Profile}
 
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
@@ -1797,6 +1962,12 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	userErr, sysErr, errCode := createInterfaces(*server.ID, interfaces, tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	userErr, sysErr, statusCode := insertServerProfile(server.ID, origProfiles, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 
@@ -1854,6 +2025,8 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	origProfiles := *server.Profiles
+
 	resultRows, err := inf.Tx.NamedQuery(insertQueryV4, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
@@ -1865,7 +2038,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
+		if err := resultRows.StructScan(&server.CommonServerPropertiesV40); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
 			return
 		}
@@ -1881,6 +2054,12 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	userErr, sysErr, errCode := createInterfaces(*server.ID, server.Interfaces, tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	userErr, sysErr, statusCode := insertServerProfile(server.ID, origProfiles, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 
@@ -2063,8 +2242,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if inf.Version.Major >= 3 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
 	} else {
-
-		serverV2, err := server.ToServerV2FromV4()
+		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to query profile: %v", err))
+			return
+		}
+		serverV2, err := server.ToServerV2FromV4(csp)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 			return

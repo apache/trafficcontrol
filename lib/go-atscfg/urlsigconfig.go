@@ -49,8 +49,8 @@ func MakeURLSigConfig(
 	}
 	warnings := []string{}
 
-	if server.Profile == nil {
-		return Cfg{}, makeErr(warnings, "server missing Profile")
+	if server.Profiles == nil && len(*server.Profiles) == 0 {
+		return Cfg{}, makeErr(warnings, "server missing Profiles")
 	}
 
 	paramData, paramWarns := paramsToMap(filterParams(serverParams, fileName, "", "", "location"))

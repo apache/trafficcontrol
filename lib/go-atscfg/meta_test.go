@@ -25,6 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/lib/pq"
 )
 
 func TestMakeMetaConfig(t *testing.T) {
@@ -41,8 +42,8 @@ func TestMakeMetaConfig(t *testing.T) {
 	setIP(server, ip)
 	// server.ParentCacheGroupID=            45
 	// server.ParentCacheGroupType=          "MID_LOC"
-	server.ProfileID = util.IntPtr(46)
-	server.Profile = util.StrPtr("myserverprofile")
+	//server.ProfileID = util.IntPtr(46)
+	server.Profiles = &pq.StringArray{"myserverprofile"}
 	server.TCPPort = util.IntPtr(80)
 	// server.SecondaryParentCacheGroupID=   47
 	// server.SecondaryParentCacheGroupType= "MID_LOC"
@@ -65,7 +66,7 @@ func TestMakeMetaConfig(t *testing.T) {
 			Name:       "location",
 			ConfigFile: name,
 			Value:      "/my/location/",
-			Profiles:   []byte(`["` + *server.Profile + `"]`),
+			Profiles:   []byte(`["` + (*server.Profiles)[0] + `"]`),
 		}
 	}
 

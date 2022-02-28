@@ -352,7 +352,7 @@ export const topologies = {
                     mgmtIpNetmask: "",
                     offlineReason: "",
                     physLocationId: 2,
-                    profileId: 9,
+                    profileNames: ["TopTestPf"],
                     routerHostName: "",
                     routerPortName: "",
                     statusId: 3,
@@ -381,7 +381,7 @@ export const topologies = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "TopTestPf",
-							replace: "profileId"
+							replace: "profileNames"
 						}
                     ],
                     updPending: false
@@ -424,7 +424,7 @@ export const topologies = {
                     mgmtIpNetmask: "",
                     offlineReason: "",
                     physLocationId: 2,
-                    profileId: 9,
+                    profileNames: ["TopTestPf"],
                     routerHostName: "",
                     routerPortName: "",
                     statusId: 3,
@@ -453,7 +453,7 @@ export const topologies = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "TopTestPf",
-							replace: "profileId"
+							replace: "profileNames"
 						}
                     ],
                     updPending: false

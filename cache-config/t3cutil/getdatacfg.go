@@ -272,7 +272,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			return errors.New("server '" + cacheHostName + " missing CDNName")
 		} else if server.CDNID == nil {
 			return errors.New("server '" + cacheHostName + " missing CDNID")
-		} else if server.Profile == nil {
+		} else if server.Profiles == nil {
 			return errors.New("server '" + cacheHostName + " missing Profile")
 		}
 
@@ -468,15 +468,15 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.Profile != nil && *oldServer.Profile == *server.Profile {
+				if oldCfg != nil && oldServer.Profiles != nil && (*oldServer.Profiles)[0] == (*server.Profiles)[0] {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.ServerParams)
 				}
-				params, reqInf, err := toClient.GetServerProfileParameters(*server.Profile, reqHdr)
-				log.Infoln(toreq.RequestInfoStr(reqInf, "GetURLSigKeys("+*server.Profile+")"))
+				params, reqInf, err := toClient.GetServerProfileParameters((*server.Profiles)[0], reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetURLSigKeys("+(*server.Profiles)[0]+")"))
 				if err != nil {
-					return errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
+					return errors.New("getting server profile '" + (*server.Profiles)[0] + "' parameters: " + err.Error())
 				} else if len(params) == 0 {
-					return errors.New("getting server profile '" + *server.Profile + "' parameters: no parameters (profile not found?)")
+					return errors.New("getting server profile '" + (*server.Profiles)[0] + "' parameters: no parameters (profile not found?)")
 				}
 
 				if reqInf.StatusCode == http.StatusNotModified {
@@ -519,13 +519,13 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.Profile != nil && *oldServer.Profile == *server.Profile {
+				if oldCfg != nil && oldServer.Profiles != nil && (*oldServer.Profiles)[0] == (*server.Profiles)[0] {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.Profile)
 				}
-				profile, reqInf, err := toClient.GetProfileByName(*server.Profile, reqHdr)
-				log.Infoln(toreq.RequestInfoStr(reqInf, "GetProfileByName("+*server.Profile+")"))
+				profile, reqInf, err := toClient.GetProfileByName((*server.Profiles)[0], reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetProfileByName("+(*server.Profiles)[0]+")"))
 				if err != nil {
-					return errors.New("getting profile '" + *server.Profile + "': " + err.Error())
+					return errors.New("getting profile '" + (*server.Profiles)[0] + "': " + err.Error())
 				}
 				if reqInf.StatusCode == http.StatusNotModified {
 					log.Infof("Getting config: %v not modified, using old config", "Profile")

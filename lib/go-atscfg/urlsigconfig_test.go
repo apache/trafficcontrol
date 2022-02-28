@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/lib/pq"
 )
 
 func TestMakeURLSigConfig(t *testing.T) {
@@ -40,11 +41,11 @@ func TestMakeURLSigConfig(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.Profile = &profileName
+	server.Profiles = &pq.StringArray{profileName}
 
 	fileName := "url_sig_myds.config"
 
-	params := makeParamsFromMap(*server.Profile, fileName, paramData)
+	params := makeParamsFromMap((*server.Profiles)[0], fileName, paramData)
 
 	cfg, err := MakeURLSigConfig(fileName, server, params, allURLSigKeys, &URLSigConfigOpts{HdrComment: hdr})
 	if err != nil {

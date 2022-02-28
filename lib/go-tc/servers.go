@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 	"net"
 	"strconv"
 	"strings"
@@ -700,6 +701,44 @@ type CommonServerProperties struct {
 	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
+type CommonServerPropertiesV40 struct {
+	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
+	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
+	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
+	CDNName          *string              `json:"cdnName" db:"cdn_name"`
+	DeliveryServices *map[string][]string `json:"deliveryServices,omitempty"`
+	DomainName       *string              `json:"domainName" db:"domain_name"`
+	FQDN             *string              `json:"fqdn,omitempty"`
+	FqdnTime         time.Time            `json:"-"`
+	GUID             *string              `json:"guid" db:"guid"`
+	HostName         *string              `json:"hostName" db:"host_name"`
+	HTTPSPort        *int                 `json:"httpsPort" db:"https_port"`
+	ID               *int                 `json:"id" db:"id"`
+	ILOIPAddress     *string              `json:"iloIpAddress" db:"ilo_ip_address"`
+	ILOIPGateway     *string              `json:"iloIpGateway" db:"ilo_ip_gateway"`
+	ILOIPNetmask     *string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
+	ILOPassword      *string              `json:"iloPassword" db:"ilo_password"`
+	ILOUsername      *string              `json:"iloUsername" db:"ilo_username"`
+	LastUpdated      *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
+	MgmtIPAddress    *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPGateway    *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPNetmask    *string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	OfflineReason    *string              `json:"offlineReason" db:"offline_reason"`
+	PhysLocation     *string              `json:"physLocation" db:"phys_location"`
+	PhysLocationID   *int                 `json:"physLocationId" db:"phys_location_id"`
+	Profiles         *pq.StringArray      `json:"profileNames" db:"profile_names"`
+	Rack             *string              `json:"rack" db:"rack"`
+	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
+	Status           *string              `json:"status" db:"status"`
+	StatusID         *int                 `json:"statusId" db:"status_id"`
+	TCPPort          *int                 `json:"tcpPort" db:"tcp_port"`
+	Type             string               `json:"type" db:"server_type"`
+	TypeID           *int                 `json:"typeId" db:"server_type_id"`
+	UpdPending       *bool                `json:"updPending" db:"upd_pending"`
+	XMPPID           *string              `json:"xmppId" db:"xmpp_id"`
+	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
+}
+
 // ServerNullableV11 is a server as it appeared in API version 1.1.
 type ServerNullableV11 struct {
 	LegacyInterfaceDetails
@@ -716,6 +755,15 @@ type ServerNullableV2 struct {
 	ServerNullableV11
 	IPIsService  *bool `json:"ipIsService" db:"ip_address_is_service"`
 	IP6IsService *bool `json:"ip6IsService" db:"ip6_address_is_service"`
+}
+
+type ServerNullableV40 struct {
+	LegacyInterfaceDetails
+	CommonServerPropertiesV40
+	RouterHostName *string `json:"routerHostName" db:"router_host_name"`
+	RouterPortName *string `json:"routerPortName" db:"router_port_name"`
+	IPIsService    *bool   `json:"ipIsService" db:"ip_address_is_service"`
+	IP6IsService   *bool   `json:"ip6IsService" db:"ip6_address_is_service"`
 }
 
 // ToNullable converts the Server to an equivalent, "nullable" structure.
@@ -917,10 +965,10 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 //
 // Deprecated: Traffic Ops API version 3 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerV30) UpgradeToV40() (ServerV40, error) {
+func (s ServerV30) UpgradeToV40(cspV40 CommonServerPropertiesV40) (ServerV40, error) {
 	upgraded := ServerV40{
-		CommonServerProperties: s.CommonServerProperties,
-		StatusLastUpdated:      s.StatusLastUpdated,
+		CommonServerPropertiesV40: cspV40,
+		StatusLastUpdated:         s.StatusLastUpdated,
 	}
 	infs, err := ToInterfacesV4(s.Interfaces, s.RouterHostName, s.RouterPortName)
 	if err != nil {
@@ -936,7 +984,7 @@ func (s ServerV30) UpgradeToV40() (ServerV40, error) {
 //
 // Deprecated: Traffic Ops API version 2 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
+func (s ServerNullableV2) UpgradeToV40(cspV40 CommonServerPropertiesV40) (ServerV40, error) {
 	ipv4IsService := false
 	if s.IPIsService != nil {
 		ipv4IsService = *s.IPIsService
@@ -946,7 +994,7 @@ func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
 		ipv6IsService = *s.IP6IsService
 	}
 	upgraded := ServerV40{
-		CommonServerProperties: s.CommonServerProperties,
+		CommonServerPropertiesV40: cspV40,
 	}
 
 	infs, err := s.LegacyInterfaceDetails.ToInterfacesV4(ipv4IsService, ipv6IsService, s.RouterHostName, s.RouterPortName)
@@ -959,7 +1007,7 @@ func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
 
 // ServerV40 is the representation of a Server in version 4.0 of the Traffic Ops API.
 type ServerV40 struct {
-	CommonServerProperties
+	CommonServerPropertiesV40
 	Interfaces        []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 	StatusLastUpdated *time.Time               `json:"statusLastUpdated" db:"status_last_updated"`
 }
@@ -1022,7 +1070,7 @@ func (s *ServerV30) ToServerV2() (ServerNullableV2, error) {
 //
 // Deprecated: Traffic Ops API version 3 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
+func (s *ServerV40) ToServerV3FromV4(csp CommonServerProperties) (ServerV30, error) {
 	routerHostName := ""
 	routerPortName := ""
 	interfaces := make([]ServerInterfaceInfo, 0)
@@ -1042,7 +1090,7 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 		interfaces = append(interfaces, i)
 	}
 	serverV30 := ServerV30{
-		CommonServerProperties: s.CommonServerProperties,
+		CommonServerProperties: csp,
 		Interfaces:             interfaces,
 		StatusLastUpdated:      s.StatusLastUpdated,
 	}
@@ -1059,12 +1107,12 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 //
 // Deprecated: Traffic Ops API version 2 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
+func (s *ServerV40) ToServerV2FromV4(csp CommonServerProperties) (ServerNullableV2, error) {
 	routerHostName := ""
 	routerPortName := ""
 	legacyServer := ServerNullableV2{
 		ServerNullableV11: ServerNullableV11{
-			CommonServerProperties: s.CommonServerProperties,
+			CommonServerProperties: csp,
 		},
 		IPIsService:  new(bool),
 		IP6IsService: new(bool),

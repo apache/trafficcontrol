@@ -312,7 +312,7 @@ export const servers = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 0,
-					profileId: 0,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -342,7 +342,7 @@ export const servers = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -384,7 +384,7 @@ export const servers = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 0,
-					profileId: 0,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -414,7 +414,7 @@ export const servers = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -456,7 +456,7 @@ export const servers = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 0,
-					profileId: 0,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -486,7 +486,7 @@ export const servers = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				},
@@ -528,7 +528,7 @@ export const servers = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 0,
-					profileId: 0,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -558,7 +558,7 @@ export const servers = {
 							route: "/profiles",
 							queryKey: "name",
 							queryValue: "testProfile",
-							replace: "profileId"
+							replace: "profileNames"
 						}
 					]
 				}

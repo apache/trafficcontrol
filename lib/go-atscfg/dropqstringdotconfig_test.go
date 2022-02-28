@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/lib/pq"
 )
 
 func TestMakeDropQStringDotConfig(t *testing.T) {
@@ -31,7 +32,7 @@ func TestMakeDropQStringDotConfig(t *testing.T) {
 	profileName := "myProfile"
 
 	server := makeGenericServer()
-	server.Profile = &profileName
+	server.Profiles = &pq.StringArray{profileName}
 
 	params := []tc.Parameter{
 		{
