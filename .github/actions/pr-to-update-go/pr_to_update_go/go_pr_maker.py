@@ -323,7 +323,7 @@ class GoPRMaker:
 		env_path = os.path.join(os.path.dirname(go_version_file), ".env")
 		kwargs["path"] = env_path
 		kwargs["content"] = f"GO_VERSION={go_version}\n"
-		kwargs["sha"] = self.file_contents(go_version_file, source_branch_name).sha
+		kwargs["sha"] = self.file_contents(env_path, source_branch_name).sha
 		commit: Commit = self.repo.update_file(**kwargs)["commit"]
 		print(f"Updated {env_path} on {self.repo.name}")
 		return commit
