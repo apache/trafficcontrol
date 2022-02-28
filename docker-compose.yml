@@ -16,7 +16,7 @@
 # under the License.
 
 ---
-version: '3.5'
+version: '3.8'
 
 services:
     trafficops:
