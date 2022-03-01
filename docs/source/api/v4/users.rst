@@ -91,9 +91,6 @@ Response Structure
 :tenant:            The name of the tenant to which this user belongs
 :tenantId:          The integral, unique identifier of the tenant to which this user belongs
 :ucdn:              The name of the :abbr:`uCDN (Upstream Content Delivery Network)` to which the user belongs
-
-	.. note:: This field is optional and only used if :abbr:`CDNi (Content Delivery Network Interconnect)` is in use.
-
 :uid:               A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - now it is always ``null``
 :username:          The user's username
 
@@ -172,11 +169,8 @@ Request Structure
 
 	.. note:: This field is optional if and only if tenancy is not enabled in Traffic Control
 
-:ucdn:              The name of the :abbr:`uCDN (Upstream Content Delivery Network)` to which the user belongs
-
-	.. note:: This field is optional and only used if :abbr:`CDNi (Content Delivery Network Interconnect)` is in use.
-
-:username: The new user's username
+:ucdn:               An optional field (only used if :abbr:`CDNi (Content Delivery Network Interconnect)` is in use) containing the name of the :abbr:`uCDN (Upstream Content Delivery Network)` to which the user belongs
+:username:           The new user's username
 
 .. code-block:: http
 	:caption: Request Example

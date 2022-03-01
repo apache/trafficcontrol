@@ -108,14 +108,13 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBearerToken(r *http.Request) string {
-	var bearerToken string
 	for _, cookie := range r.Cookies() {
 		switch cookie.Name {
 		case "access_token":
-			bearerToken = cookie.Value
+			return cookie.Value
 		}
 	}
-	return bearerToken
+	return ""
 }
 
 func PutHostConfiguration(w http.ResponseWriter, r *http.Request) {
