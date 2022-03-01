@@ -353,7 +353,6 @@ func makeParentDotConfigData(
 				parentAbstraction.Services = append(parentAbstraction.Services, txt)
 			}
 		} else if cacheIsTopLevel {
-			warnings = append(warnings, "DEBUG cacheIsTopLevel")
 			parentQStr := false
 			if dsParams.QueryStringHandling == "" && dsParams.Algorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
 				parentQStr = true
