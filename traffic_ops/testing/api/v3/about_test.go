@@ -16,18 +16,42 @@ package v3
 */
 
 import (
+	"net/http"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )
 
 func TestAbout(t *testing.T) {
-	m, _, err := TOSession.GetAbout()
-	if err != nil {
-		t.Errorf("error from GetAbout(): %v", err)
-	}
-	t.Logf("about: %v", m)
 
-	m, _, err = NoAuthTOSession.GetAbout()
-	if err == nil {
-		t.Error("expected error from GetAbout() when unauthenticated")
+	methodTests := map[string]map[string]struct {
+		clientSession *client.Session
+		expectations  []utils.CkReqFunc
+	}{
+		"GET": {
+			"OK when VALID request": {
+				clientSession: TOSession, expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+			},
+			"UNAUTHORIZED when NOT LOGGED IN": {
+				clientSession: NoAuthTOSession, expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+			},
+		},
+	}
+	for method, testCases := range methodTests {
+		t.Run(method, func(t *testing.T) {
+			for name, testCase := range testCases {
+				switch method {
+				case "GET":
+					t.Run(name, func(t *testing.T) {
+						resp, reqInf, err := testCase.clientSession.GetAbout()
+						for _, check := range testCase.expectations {
+							check(t, reqInf, resp, tc.Alerts{}, err)
+						}
+					})
+				}
+			}
+		})
 	}
 }
