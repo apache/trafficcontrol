@@ -19,19 +19,36 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestAcmeAutoRenew(t *testing.T) {
-	PostTestAutoRenew(t)
-}
 
-func PostTestAutoRenew(t *testing.T) {
-	alerts, reqInf, err := TOSession.AutoRenew(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Unexpected error scheduling automatic renewal of ACME certificates: %v - alerts: %+v", err, alerts.Alerts)
+	methodTests := map[string]map[string]struct {
+		clientSession *client.Session
+		requestOpts   client.RequestOptions
+		expectations  []utils.CkReqFunc
+	}{
+		"POST": {
+			"OK when VALID request": {
+				clientSession: TOSession, expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusAccepted)),
+			},
+		},
 	}
-	if reqInf.StatusCode != http.StatusAccepted {
-		t.Fatalf("Expected 202 status code, got %v", reqInf.StatusCode)
+	for method, testCases := range methodTests {
+		t.Run(method, func(t *testing.T) {
+			for name, testCase := range testCases {
+				switch method {
+				case "POST":
+					t.Run(name, func(t *testing.T) {
+						alerts, reqInf, err := testCase.clientSession.AutoRenew(testCase.requestOpts)
+						for _, check := range testCase.expectations {
+							check(t, reqInf, nil, alerts, err)
+						}
+					})
+				}
+			}
+		})
 	}
 }
