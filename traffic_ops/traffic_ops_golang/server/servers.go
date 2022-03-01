@@ -1484,19 +1484,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if server.RevalUpdateTime != nil {
-		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-	}
-
-	if server.RevalPending != nil && *server.RevalPending { // To continue to work with the legacy implementation and priority. However, consider bool RevalPending deprecated
-		if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-	} else if server.RevalUpdateTime != nil {
-		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
+		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
 		}

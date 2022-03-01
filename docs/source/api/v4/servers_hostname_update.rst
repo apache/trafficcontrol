@@ -40,18 +40,30 @@ Request Structure
 
 .. table:: Request Query Parameters
 
-	+---------------+----------+--------------------------------------------------------------------------------------+
-	| Name          | Required | Description                                                                          |
-	+===============+==========+======================================================================================+
-	| updated       | no       | The value to set for the queue update flag on this server. May be 'true' or 'false'. |
-	+---------------+----------+--------------------------------------------------------------------------------------+
-	| reval_updated | no       | The value to set for the queue update flag on this server. May be 'true' or 'false'. |
-	+---------------+----------+--------------------------------------------------------------------------------------+
+	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name                       | Required | Description                                                                                                  |
+	+============================+==========+==============================================================================================================+
+	| updated (Deprecated)       | no       | The value to set for the queue update flag on this server. May be 'true' or 'false'.                         |
+	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| reval_updated (Deprecated) | no       | The value to set for the reval update flag on this server. May be 'true' or 'false'.                         |
+	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| config_update_time         | no       | The value to set for when a queue update is requested for this server. Must be a valid RFC333Nano timestamp. |
+	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| config_apply_time          | no       | The value to set for when a queue update is applied for this server. Must be a valid RFC333Nano timestamp.   |
+	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| revalidate_update_time     | no       | The value to set for when a reval update is requested for this server. Must be a valid RFC333Nano timestamp. |
+	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| revalidate_apply_time      | no       | The value to set for when a reval update is applied for this server. Must be a valid RFC333Nano timestamp.   |
+	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+The ``updated`` and ``reval_updated`` boolean values should be considered deprecated and may be removed in a future release. Prefer to use the timestamp values associated with ``config_update_time``, ``config_apply_time``, ``revalidate_update_time``, and ``revalidate_apply_time``.
+
+.. note:: You will not be able to send both a boolean value (``updated`` and ``reval_updated``) and the corresponding timestamp values (``config_update_time``, ``config_apply_time``, ``revalidate_update_time``, and ``revalidate_apply_time``) in the same request as they will conflict.
 
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/4.0/servers/my-edge/update?updated=true&reval_updated=false HTTP/1.1
+	POST /api/4.0/servers/my-edge/update?config_update_time=2022-01-31T12%3A00%3A00.123456-07%3A00&revalidate_update_time=2022-01-31T12%3A00%3A00.123456-07%3A00 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -81,7 +93,7 @@ Response Structure
 		"alerts" :
 			[
 				{
-					"text" : "successfully set server 'my-edge' updated=true reval_updated=false",
+					"text" : "successfully set server 'my-edge' config_update_time=2022-01-31T12:00:00.123456-07:00 revalidate_update_time=2022-01-31T12:00:00.123456-07:00",
 					"level" : "success"
 				}
 			]

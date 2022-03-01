@@ -52,16 +52,26 @@ Response Structure
 ------------------
 Each object in the returned array\ [1]_ will contain the following fields:
 
+:configUpdateTime:     The last time an update was requested for this server. This field defaults to standard epoch
+:configApplyTime:      The last time an update was applied for this server. This field defaults to standard epoch
 :host_id:              The integral, unique identifier for the server for which the other fields in this object represent the pending updates and revalidation status
 :host_name:            The (short) hostname of the server for which the other fields in this object represent the pending updates and revalidation status
 :parent_pending:       A boolean telling whether or not any :term:`Topology` ancestor or :term:`parent` of this server has pending updates
 :parent_reval_pending: A boolean telling whether or not any :term:`Topology` ancestor or :term:`parent` of this server has pending :term:`Content Invalidation Jobs`
 :reval_pending:        ``true`` if the server has pending :term:`Content Invalidation Jobs`, ``false`` otherwise
-:status:               The name of the status of this server
+
+    .. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to rely on the timestamp fields going forward as this will likely be deprecated in the future.
+
+:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
+:revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
+:status:          The name of the status of this server
 
 	.. seealso:: :ref:`health-proto` gives more information on how these statuses are used, and the ``GET`` method of the :ref:`to-api-v3-statuses` endpoint can be used to retrieve information about all server statuses configured in Traffic Ops.
 
-:upd_pending:       ``true`` if the server has pending updates, ``false`` otherwise
+:upd_pending: ``true`` if the server has pending updates, ``false`` otherwise
+
+    .. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
+
 :use_reval_pending: A boolean which tells :term:`ORT` whether or not this version of Traffic Ops should use pending :term:`Content Invalidation Jobs`
 
 	.. note:: This field was introduced to give :term:`ORT` the ability to work with Traffic Control versions 1.x and 2.x seamlessly - as of Traffic Control v3.0 there is no reason for this field to ever be ``false``.
@@ -89,7 +99,11 @@ Each object in the returned array\ [1]_ will contain the following fields:
 		"host_id": 10,
 		"status": "REPORTED",
 		"parent_pending": false,
-		"parent_reval_pending": false
+		"parent_reval_pending": false,
+		"config_update_time": "2022-02-18T13:52:47.129174-07:00",
+		"config_apply_time": "2022-02-18T13:52:47.129174-07:00",
+		"revalidate_update_time": "2022-02-28T15:44:15.895145-07:00",
+		"revalidate_apply_time": "2022-02-18T13:52:47.129174-07:00"
 	}]
 
 .. [1] The returned object is an array, and there is no guarantee that one server exists for a given hostname. However, for each server in the array, that server's update status will be accurate for the server with that particular server ID.
