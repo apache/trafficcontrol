@@ -305,7 +305,7 @@ class GoPRMaker:
 		kwargs = {
 			"branch": source_branch_name,
 			"committer": NotSet,
-			"content": f"${go_version}\n",
+			"content": f"{go_version}\n",
 			"path": go_version_file,
 			"message": commit_message,
 			"sha": self.file_contents(go_version_file, source_branch_name).sha
@@ -379,7 +379,7 @@ class GoPRMaker:
 		milestone_url = self.get_go_milestone(latest_go_version)
 		if milestone_url is None:
 			#TODO subclass this
-			raise LookupError(f"no milestone found for '${latest_go_version}'")
+			raise LookupError(f"no milestone found for '{latest_go_version}'")
 		pr_body = get_pr_body(latest_go_version, milestone_url)
 		pull_request: PullRequest = self.repo.create_pull(
 			title=commit_message,
