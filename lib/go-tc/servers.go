@@ -1236,14 +1236,14 @@ type ServerDetail struct {
 	MgmtIPNetmask      *string           `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
 	OfflineReason      *string           `json:"offlineReason" db:"offline_reason"`
 	PhysLocation       *string           `json:"physLocation" db:"phys_location"`
-	Profile            *string           `json:"profile" db:"profile"`
-	ProfileDesc        *string           `json:"profileDesc" db:"profile_desc"`
 	Rack               *string           `json:"rack" db:"rack"`
 	Status             *string           `json:"status" db:"status"`
 	TCPPort            *int              `json:"tcpPort" db:"tcp_port"`
 	Type               string            `json:"type" db:"server_type"`
 	XMPPID             *string           `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd         *string           `json:"xmppPasswd" db:"xmpp_passwd"`
+	Profiles           *string           `json:"profile" db:"profile"`
+	ProfileDesc        *string           `json:"profileDesc" db:"profile_desc"`
 }
 
 // ServerQueueUpdateRequest encodes the request data for the POST
