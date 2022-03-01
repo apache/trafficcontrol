@@ -107,6 +107,11 @@ func GetFsCookie(cookiePath string) (FsCookie, error) {
 	if err != nil {
 		return FsCookie{Cookies: nil}, err
 	}
+	for _, c := range cookie.Cookies {
+		if len(c.Cookie.String()) == 0 {
+			return FsCookie{Cookies: nil}, errors.New("file system cookie was empty")
+		}
+	}
 	return cookie, err
 }
 
