@@ -4812,7 +4812,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profileNames": ["EDGE1"],
+            "profileNames": ["EDGE1", "ATS_EDGE_TIER_CACHE"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",

@@ -263,6 +263,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("Expected exactly one Profile to exist, found: %d", len(profiles.Response))
 	}
 	server.Profiles = &pq.StringArray{nps.Response[0].Name}
+	opts.QueryParameters.Del("id")
 
 	_, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err == nil {
