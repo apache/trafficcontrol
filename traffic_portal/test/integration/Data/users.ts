@@ -53,6 +53,7 @@ export const users = {
                     Email: "test@cdn.tc.com",
                     Role: "admin",
                     Tenant: "- tenantSame",
+                    UCDN: "",
                     Password: "qwe@123#rty",
                     ConfirmPassword: "qwe@123#rty",
                     PublicSSHKey: "",
