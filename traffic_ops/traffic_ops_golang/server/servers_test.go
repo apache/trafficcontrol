@@ -132,7 +132,7 @@ func TestUpdateServer(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{"type", "cdn_id"})
 	// note here that the cdnid is 5, which is not the same as the initial cdnid of the fist traffic server
-	rows.AddRow(testServers[0].Server.TypeID, util.IntPtr(5))
+	rows.AddRow(*testServers[0].Server.TypeID, 5)
 	// Make it return a list of atleast one associated ds
 	dsrows := sqlmock.NewRows([]string{"array"})
 	dsrows.AddRow("{3}")
