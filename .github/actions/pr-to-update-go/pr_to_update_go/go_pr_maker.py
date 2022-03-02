@@ -73,7 +73,7 @@ def get_pr_body(go_version: str, milestone_url: str) -> str:
 		pr_template = file.read()
 	go_major_version = get_major_version(go_version)
 
-	release_notes = get_release_notes(go_version)
+	release_notes = _get_release_notes(go_version)
 	pr_body = pr_template.format(GO_VERSION=go_version, GO_MAJOR_VERSION=go_major_version,
 		RELEASE_NOTES=release_notes, MILESTONE_URL=milestone_url)
 	print('Templated PR body')
@@ -112,22 +112,53 @@ def getenv(var: str) -> str:
 get_repo_name = lambda: getenv(ENV_GITHUB_REPOSITORY)
 get_repo_owner = lambda: getenv(ENV_GITHUB_REPOSITORY_OWNER)
 
-def get_release_notes(go_version: str) -> str:
+def parse_release_notes(version: str, content: str) -> str:
+	"""
+	Parses Go version release notes.
+
+	>>> raw = '''<html lang="en-US"><head><title>test</title></head><body>
+	... <h1>Big Title</h1>
+	... <script>"use strict";</script>
+	... <div><section><p>
+	... 	go4.15.5 text before
+	... </p></section></div>
+	... <div><section><p>
+	... 	go4.15.6 The expected release notes
+	... </p></section></div>
+	... <div><section><p>
+	... 	go4.15.7 text after
+	... </p><section></div>
+	... <style>* { display: none; }</style>
+	... </body></html>'''
+	>>> parse_release_notes("4.15.6", raw)
+	'<p> go4.15.6 The expected release notes </p>'
+	>>> raw = '''<html lang="en-US"><head><title>test</title></head><body>
+	... go4.15.6 is mentioned earlier
+	... go4.15.6 before on the same line as the opening tag <p>
+	... go4.15.6 the actual notes.
+	... </p>go4.15.6 later on the same line as the closing tag
+	... go4.15.6 in a later context
+	... </body></html>'''
+	>>> parse_release_notes("4.15.6", raw)
+	'<p> go4.15.6 the actual notes. </p>'
+	"""
+	go_version_pattern = version.replace('.', r"\.")
+	release_notes_pattern = re.compile(
+		r"<p>\s*\n\s*go"+go_version_pattern+r".*?</p>",
+		re.MULTILINE | re.DOTALL
+	)
+	matches = release_notes_pattern.search(content)
+	if not matches:
+		raise Exception(f'could not find release notes for Go {version}')
+	return " ".join(matches.group(0).split())
+
+def _get_release_notes(go_version: str) -> str:
 	"""
 	Gets the release notes for the given Go version.
 	"""
 	release_history_response = requests.get(RELEASE_PAGE_URL)
 	release_history_response.raise_for_status()
-	release_notes_content = release_history_response.content.decode()
-	go_version_pattern = go_version.replace('.', '\\.')
-	release_notes_pattern: str = f'<p>\\s*\\n\\s*go{go_version_pattern}.*?</p>'
-	release_notes_matches = re.search(release_notes_pattern, release_notes_content,
-		re.MULTILINE | re.DOTALL)
-	if release_notes_matches is None:
-		raise Exception(f'Could not find release notes on {RELEASE_PAGE_URL}')
-	release_notes = re.sub(r'[\s\t]+', ' ', release_notes_matches.group(0))
-	return release_notes
-
+	return parse_release_notes(go_version, release_history_response	.content.decode())
 
 def get_latest_major_upgrade(from_go_version: str) -> str:
 	"""
