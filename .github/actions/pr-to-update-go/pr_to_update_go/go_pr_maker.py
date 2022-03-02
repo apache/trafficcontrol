@@ -240,13 +240,13 @@ class GoPRMaker:
 			raise PermissionError(f"Credentials from token '{ENV_GITHUB_TOKEN}' were bad") from e
 		return repo
 
-	def get_go_milestone(self, go_version: str) -> Optional[str]:
+	def get_go_milestone(self, go_version: str) -> str:
 		"""
 		Gets a URL for the GitHub milestone that tracks the release of the
 		passed Go version.
 
 		If the passed version is not found to have a milestone associated with
-		it, an exception is raised.
+		it, a LookupError exception is raised.
 		"""
 		go_repo: Repository = self.get_repo(GO_REPO_NAME)
 		milestones = go_repo.get_milestones(state='all', sort='due_on', direction='desc')
@@ -254,8 +254,8 @@ class GoPRMaker:
 		for milestone in milestones:  # type: Milestone
 			if milestone.title == milestone_title:
 				print(f'Found Go milestone {milestone.title}')
-				return milestone.raw_data.get('html_url')
-		raise Exception(f'Could not find a milestone named {milestone_title}.')
+				return milestone.url
+		raise LookupError(f'could not find a milestone named {milestone_title}')
 
 	def file_contents(self, file: str, branch: str = "master") -> ContentFile:
 		"""
@@ -393,9 +393,6 @@ class GoPRMaker:
 			return
 
 		milestone_url = self.get_go_milestone(latest_go_version)
-		if milestone_url is None:
-			#TODO subclass this
-			raise LookupError(f"no milestone found for '{latest_go_version}'")
 		pr_body = get_pr_body(latest_go_version, milestone_url)
 		pull_request: PullRequest = self.repo.create_pull(
 			title=commit_message,
