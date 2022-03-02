@@ -64,7 +64,7 @@ class GoVersion(TypedDict):
 	stable: bool
 	version: str
 
-def get_pr_body(go_version: str, milestone_url: str) -> str:
+def _get_pr_body(go_version: str, milestone_url: str) -> str:
 	"""
 	Generates the body of a Pull Request given a Go release version and a
 	URL that points to information about what changes were in said release.
@@ -108,9 +108,6 @@ def getenv(var: str) -> str:
 	'BAR'
 	"""
 	return os.environ[var]
-
-get_repo_name = lambda: getenv(ENV_GITHUB_REPOSITORY)
-get_repo_owner = lambda: getenv(ENV_GITHUB_REPOSITORY_OWNER)
 
 def parse_release_notes(version: str, content: str) -> str:
 	"""
@@ -235,7 +232,7 @@ class GoPRMaker:
 
 	def __init__(self, gh_api: Github):
 		self.gh_api = gh_api
-		self.repo = self.get_repo(get_repo_name())
+		self.repo = self.get_repo(getenv(ENV_GITHUB_REPOSITORY))
 
 		try:
 			git_author_name = getenv(ENV_GIT_AUTHOR_NAME)
@@ -277,7 +274,7 @@ class GoPRMaker:
 		necessary to create the PR that will update the repository's Go version.
 		"""
 		repo_go_version = self.get_repo_go_version()
-		self.latest_go_version = get_latest_major_upgrade(repo_go_version)
+		self.latest_go_version = _get_latest_major_upgrade(repo_go_version)
 		commit_message: str = f'Update Go version to {self.latest_go_version}'
 
 		source_branch_name: str = f'go-{self.latest_go_version}'
@@ -304,8 +301,13 @@ class GoPRMaker:
 			sha: str = update_golang_org_x_commit.sha
 			self.update_branch(source_branch_name, sha)
 
-		self.create_pr(self.latest_go_version, commit_message, get_repo_owner(), source_branch_name,
-			target_branch)
+		self.create_pr(
+			self.latest_go_version,
+			commit_message,
+			getenv(ENV_GITHUB_REPOSITORY_OWNER),
+			source_branch_name,
+			target_branch
+		)
 
 	def get_repo(self, repo_name: str) -> Repository:
 		"""
@@ -470,7 +472,7 @@ class GoPRMaker:
 			return
 
 		milestone_url = self.get_go_milestone(latest_go_version)
-		pr_body = get_pr_body(latest_go_version, milestone_url)
+		pr_body = _get_pr_body(latest_go_version, milestone_url)
 		pull_request: PullRequest = self.repo.create_pull(
 			title=commit_message,
 			body=pr_body,
