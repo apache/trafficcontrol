@@ -12,14 +12,14 @@
 #
 from unittest import TestCase
 
-from pr_to_update_go.go_pr_maker import GoPRMaker
+from pr_to_update_go.go_pr_maker import get_major_version, GoPRMaker
 
 
 class TestGoPRMaker(TestCase):
 	def test_get_major_version(self) -> None:
 		version: str = '1.2.3'
 		expected_major_version: str = '1.2'
-		actual_major_version: str = GoPRMaker.get_major_version(version)
+		actual_major_version: str = get_major_version(version)
 		self.assertEqual(expected_major_version, actual_major_version)
 		return
 
