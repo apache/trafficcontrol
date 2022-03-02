@@ -26,6 +26,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -66,6 +67,7 @@ func (cl *TOClient) GetProfileByName(profileName string, reqHdr http.Header) (tc
 }
 
 func (cl *TOClient) WriteFsCookie(fileName string) {
+	tmpFileName := fileName + ".tmp"
 	cookie := torequtil.FsCookie{}
 	u, err := url.Parse(cl.c.URL)
 	if err != nil {
@@ -84,12 +86,16 @@ func (cl *TOClient) WriteFsCookie(fileName string) {
 		log.Warnln("Error creating JSON cookie file: ", err)
 		return
 	}
-	err = ioutil.WriteFile(fileName, fsCookie, 0600)
+	log.Infof("Writing temp file '%s'", tmpFileName)
+	err = ioutil.WriteFile(tmpFileName, fsCookie, 0600)
 	if err != nil {
 		log.Warnln("Error writing cooking file: ", err)
 		return
 	}
-	log.Infoln("Wrote new auth cookie to filesystem")
+	if err := os.Rename(tmpFileName, fileName); err != nil {
+		log.Warnln("Error moving cookie file: ", err)
+	}
+	log.Infof("Copying temp file '%s' to real '%s'", tmpFileName, fileName)
 }
 
 func (cl *TOClient) GetGlobalParameters(reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
