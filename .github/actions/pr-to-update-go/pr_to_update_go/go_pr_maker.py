@@ -28,18 +28,14 @@ from typing import Optional, TypedDict, Any
 
 import requests
 
-from github.Branch import Branch
 from github.Commit import Commit
 from github.ContentFile import ContentFile
 from github.GitCommit import GitCommit
 from github.GithubException import BadCredentialsException, GithubException, UnknownObjectException
 from github.GitRef import GitRef
-from github.GitTree import GitTree
 from github.InputGitAuthor import InputGitAuthor
 from github.InputGitTreeElement import InputGitTreeElement
-from github.Label import Label
 from github.MainClass import Github
-from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 from pr_to_update_go.constants import (
@@ -275,10 +271,10 @@ class GoPRMaker:
 		"""
 		repo_go_version = self.get_repo_go_version()
 		self.latest_go_version = _get_latest_major_upgrade(repo_go_version)
-		commit_message: str = f'Update Go version to {self.latest_go_version}'
+		commit_message = f'Update Go version to {self.latest_go_version}'
 
-		source_branch_name: str = f'go-{self.latest_go_version}'
-		target_branch: str = 'master'
+		source_branch_name = f'go-{self.latest_go_version}'
+		target_branch = 'master'
 		if repo_go_version == self.latest_go_version:
 			print(f'Go version is up-to-date on {target_branch}, nothing to do.')
 			return
@@ -296,10 +292,9 @@ class GoPRMaker:
 			print(f'Branch {source_branch_name} has been created, exiting...')
 			return
 
-		update_golang_org_x_commit: Optional[GitCommit] = self.update_golang_org_x(commit)
-		if isinstance(update_golang_org_x_commit, GitCommit):
-			sha: str = update_golang_org_x_commit.sha
-			self.update_branch(source_branch_name, sha)
+		update_golang_org_x_commit = self.update_golang_org_x(commit)
+		if update_golang_org_x_commit:
+			self.update_branch(source_branch_name, update_golang_org_x_commit.sha)
 
 		self.create_pr(
 			self.latest_go_version,
@@ -327,7 +322,7 @@ class GoPRMaker:
 		If the passed version is not found to have a milestone associated with
 		it, a LookupError exception is raised.
 		"""
-		go_repo: Repository = self.get_repo(GO_REPO_NAME)
+		go_repo = self.get_repo(GO_REPO_NAME)
 		milestones = go_repo.get_milestones(state='all', sort='due_on', direction='desc')
 		milestone_title = f'Go{go_version}'
 		for milestone in milestones:  # type: Milestone
@@ -367,7 +362,7 @@ class GoPRMaker:
 		This includes updating the GO_VERSION and .env files at the repository's
 		root.
 		"""
-		master: Branch = self.repo.get_branch('master')
+		master = self.repo.get_branch('master')
 		sha = master.commit.sha
 		ref = f'refs/heads/{source_branch_name}'
 		self.repo.create_git_ref(ref, sha)
@@ -419,7 +414,7 @@ class GoPRMaker:
 		subprocess.run(['git', 'fetch', 'origin'], check=True)
 		subprocess.run(['git', 'checkout', previous_commit.sha], check=True)
 		subprocess.run([os.path.join(os.path.dirname(__file__), 'update_golang_org_x.sh')], check=True)
-		files_to_check: list[str] = ['go.mod', 'go.sum', os.path.join('vendor', 'modules.txt')]
+		files_to_check = ['go.mod', 'go.sum', os.path.join('vendor', 'modules.txt')]
 		tree_elements: list[InputGitTreeElement] = []
 		for file in files_to_check:
 			diff_process = subprocess.run(['git', 'diff', '--exit-code', '--', file], check=False)
@@ -435,10 +430,10 @@ class GoPRMaker:
 			return None
 		tree_hash = subprocess.check_output(
 			['git', 'log', '-1', '--pretty=%T', previous_commit.sha]).decode().strip()
-		base_tree: GitTree = self.repo.get_git_tree(sha=tree_hash)
-		tree: GitTree = self.repo.create_git_tree(tree_elements, base_tree)
+		base_tree = self.repo.get_git_tree(sha=tree_hash)
+		tree = self.repo.create_git_tree(tree_elements, base_tree)
 		commit_message: str = f'Update golang.org/x/ dependencies for go{self.latest_go_version}'
-		previous_git_commit: GitCommit = self.repo.get_git_commit(previous_commit.sha)
+		previous_git_commit = self.repo.get_git_commit(previous_commit.sha)
 		git_commit: GitCommit
 		if self.author:
 			git_commit = self.repo.create_git_commit(
@@ -473,7 +468,7 @@ class GoPRMaker:
 
 		milestone_url = self.get_go_milestone(latest_go_version)
 		pr_body = _get_pr_body(latest_go_version, milestone_url)
-		pull_request: PullRequest = self.repo.create_pull(
+		pull_request = self.repo.create_pull(
 			title=commit_message,
 			body=pr_body,
 			head=f'{owner}:{source_branch_name}',
@@ -481,7 +476,7 @@ class GoPRMaker:
 			maintainer_can_modify=True,
 		)
 		try:
-			go_version_label: Label = self.repo.get_label('go version')
+			go_version_label = self.repo.get_label('go version')
 			pull_request.add_to_labels(go_version_label)
 		except UnknownObjectException:
 			print('Unable to find a label named "go version"', file=sys.stderr)
