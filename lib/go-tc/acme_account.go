@@ -39,10 +39,10 @@ type AcmeAccount struct {
 // Validate validates the AcmeAccount request is valid for creation or update.
 func (aa *AcmeAccount) Validate(tx *sql.Tx) error {
 	errs := validation.Errors{
-		"email":       validation.Validate(aa.Email, validation.Required),
-		"private_key": validation.Validate(aa.PrivateKey, validation.Required),
-		"uri":         validation.Validate(aa.Uri, validation.Required),
-		"provider":    validation.Validate(aa.Provider, validation.Required),
+		"email":      validation.Validate(aa.Email, validation.Required),
+		"privateKey": validation.Validate(aa.PrivateKey, validation.Required),
+		"uri":        validation.Validate(aa.Uri, validation.Required),
+		"provider":   validation.Validate(aa.Provider, validation.Required),
 	}
 
 	return util.JoinErrs(tovalidate.ToErrors(errs))
