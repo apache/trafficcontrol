@@ -10,13 +10,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""
+The unit testing module for the pr_to_update_go package.
+
+Note that this module merely reiterates the docstring tests - and only covers a
+proper subset of the test cases covered by said docstring tests.
+"""
+
 from unittest import TestCase
 
 from pr_to_update_go.go_pr_maker import get_major_version, GoPRMaker
 
 
 class TestGoPRMaker(TestCase):
+	"""
+	Tests the go_pr_maker module.
+
+	Note that this reiterates the docstring tests - and only covers a proper
+	subset of those test cases.
+	"""
+
 	def test_get_major_version(self) -> None:
+		"""Tests the get_major_version function."""
 		version: str = '1.2.3'
 		expected_major_version: str = '1.2'
 		actual_major_version: str = get_major_version(version)
@@ -24,6 +39,7 @@ class TestGoPRMaker(TestCase):
 		return
 
 	def test_get_release_notes(self) -> None:
+		"""Tests the get_release_notes function."""
 		go_version: str = '4.15.6'
 		expected_release_notes: str = f'<p> go4.15.6 The expected release notes </p>'
 		release_notes_with_whitespace: str = f"""<p>  
