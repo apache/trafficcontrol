@@ -42,9 +42,18 @@ from github.MainClass import Github
 from github.PullRequest import PullRequest
 from github.Repository import Repository
 
-from pr_to_update_go.constants import ENV_GITHUB_TOKEN, GO_VERSION_URL, ENV_GITHUB_REPOSITORY, \
-	ENV_GITHUB_REPOSITORY_OWNER, GO_REPO_NAME, RELEASE_PAGE_URL, ENV_GO_VERSION_FILE, \
-	ENV_GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL_TEMPLATE
+from pr_to_update_go.constants import (
+	ENV_ENV_FILE,
+	ENV_GITHUB_TOKEN,
+	GO_VERSION_URL,
+	ENV_GITHUB_REPOSITORY,
+	ENV_GITHUB_REPOSITORY_OWNER,
+	GO_REPO_NAME,
+	RELEASE_PAGE_URL,
+	ENV_GO_VERSION_FILE,
+	ENV_GIT_AUTHOR_NAME,
+	GIT_AUTHOR_EMAIL_TEMPLATE
+)
 
 class GoVersion(TypedDict):
 	"""
@@ -141,7 +150,7 @@ def get_latest_major_upgrade(from_go_version: str) -> str:
 		if major_version == get_major_version(fetched_go_version):
 			break
 	else:
-		raise Exception(f'No supported {major_version} Go versions exist.')
+		raise Exception(f'no supported {major_version} Go versions exist')
 	print(f'Latest version of Go {major_version} is {fetched_go_version}')
 	return fetched_go_version
 
