@@ -33,7 +33,6 @@ from github.Commit import Commit
 from github.ContentFile import ContentFile
 from github.GitCommit import GitCommit
 from github.GithubException import BadCredentialsException, GithubException, UnknownObjectException
-from github.GithubObject import NotSet
 from github.GitRef import GitRef
 from github.GitTree import GitTree
 from github.InputGitAuthor import InputGitAuthor
@@ -156,7 +155,7 @@ class GoPRMaker:
 	gh_api: Github
 	latest_go_version: str
 	repo: Repository
-	author: InputGitAuthor
+	author: Optional[InputGitAuthor]
 
 	def __init__(self, gh_api: Github):
 		self.gh_api = gh_api
@@ -167,7 +166,7 @@ class GoPRMaker:
 			git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=git_author_name)
 			self.author = InputGitAuthor(git_author_name, git_author_email)
 		except KeyError:
-			self.author = NotSet
+			self.author = None
 			print('Will commit using the default author')
 
 	def branch_exists(self, branch: str) -> bool:
@@ -302,29 +301,40 @@ class GoPRMaker:
 
 		print(f'Created branch {source_branch_name}')
 		go_version_file = getenv(ENV_GO_VERSION_FILE)
-		kwargs = {
-			"branch": source_branch_name,
-			"committer": NotSet,
-			"content": f"{go_version}\n",
-			"path": go_version_file,
-			"message": commit_message,
-			"sha": self.file_contents(go_version_file, source_branch_name).sha
-		}
-		try:
-			git_author_name = getenv(ENV_GIT_AUTHOR_NAME)
-			git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=git_author_name)
-			author: InputGitAuthor = InputGitAuthor(name=git_author_name, email=git_author_email)
-			kwargs["author"] = author
-		except KeyError:
+		content = f"{go_version}\n"
+		sha = self.file_contents(go_version_file, source_branch_name).sha
+		if self.author:
+			self.repo.update_file(
+				author=self.author,
+				branch=source_branch_name,
+				content=content,
+				path=go_version_file,
+				message=commit_message,
+				sha=sha
+			)
+		else:
 			print('Committing using the default author')
+			self.repo.update_file(
+				branch=source_branch_name,
+				content=content,
+				path=go_version_file,
+				message=commit_message,
+				sha=sha
+			)
 
-		self.repo.update_file(**kwargs)
 		print(f'Updated {go_version_file} on {self.repo.name}')
-		env_path = os.path.join(os.path.dirname(go_version_file), ".env")
-		kwargs["path"] = env_path
-		kwargs["content"] = f"GO_VERSION={go_version}\n"
-		kwargs["sha"] = self.file_contents(env_path, source_branch_name).sha
-		commit: Commit = self.repo.update_file(**kwargs)["commit"]
+		env_path = os.path.join(os.path.dirname(getenv(ENV_ENV_FILE)), ".env")
+		content = f"GO_VERSION={go_version}\n"
+		sha = self.file_contents(env_path, source_branch_name).sha
+		commit = self.repo.update_file(
+			branch=source_branch_name,
+			content=content,
+			path=env_path,
+			message=commit_message,
+			sha=sha
+		)["commit"]
+		if not isinstance(commit, Commit):
+			raise TypeError("'commit' property of file update response was not a Commit")
 		print(f"Updated {env_path} on {self.repo.name}")
 		return commit
 
@@ -356,9 +366,21 @@ class GoPRMaker:
 		tree: GitTree = self.repo.create_git_tree(tree_elements, base_tree)
 		commit_message: str = f'Update golang.org/x/ dependencies for go{self.latest_go_version}'
 		previous_git_commit: GitCommit = self.repo.get_git_commit(previous_commit.sha)
-		git_commit: GitCommit = self.repo.create_git_commit(message=commit_message, tree=tree,
-			parents=[previous_git_commit],
-			author=self.author, committer=self.author)
+		git_commit: GitCommit
+		if self.author:
+			git_commit = self.repo.create_git_commit(
+				message=commit_message,
+				tree=tree,
+				parents=[previous_git_commit],
+				author=self.author,
+				committer=self.author
+			)
+		else:
+			git_commit = self.repo.create_git_commit(
+				message=commit_message,
+				tree=tree,
+				parents=[previous_git_commit]
+			)
 		print('Updated golang.org/x/ dependencies')
 		return git_commit
 
