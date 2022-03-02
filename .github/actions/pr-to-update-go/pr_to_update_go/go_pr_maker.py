@@ -160,7 +160,54 @@ def _get_release_notes(go_version: str) -> str:
 	release_history_response.raise_for_status()
 	return parse_release_notes(go_version, release_history_response	.content.decode())
 
-def get_latest_major_upgrade(from_go_version: str) -> str:
+def find_latest_major_upgrade(major_version: str, versions: list[GoVersion]) -> str:
+	"""
+	Finds the latest version in `versions` with the given "major" version.
+
+	Note that this expects and relies on the ordering of the passed `versions`
+	being in descending order (as returned by the Go website API).
+	>>> versions=[
+	... {
+	... 	"stable": True,
+	... 	"version": "1.3.0",
+	... 	"files": []
+	... },
+	... {
+	... 	"stable": False,
+	... 	"version": "1.2.5",
+	...     "files": []
+	... },
+	... {
+	... 	"stable": True,
+	...     "version": "1.2.4",
+	...     "files": []
+	... },
+	... {
+	... 	"stable": True,
+	... 	"version": "one.two.three",
+	... 	"files": []
+	... },
+	... {
+	... 	"stable": True,
+	... 	"version": "1.2.3",
+	... 	"files": []
+	... }]
+	>>> find_latest_major_upgrade("1.2", versions)
+	'1.2.4'
+	"""
+	for version in versions:
+		if not version["stable"]:
+			continue
+		match = re.search(r"[\d.]+", version["version"])
+		if not match:
+			continue
+		fetched_go_version = match.group(0)
+		if major_version == get_major_version(fetched_go_version):
+			return fetched_go_version
+
+	raise Exception(f'no supported {major_version} Go versions exist')
+
+def _get_latest_major_upgrade(from_go_version: str) -> str:
 	"""
 	Gets the version of the latest Go release that is the same "major"
 	version as the passed current (or "from") Go version.
@@ -168,25 +215,13 @@ def get_latest_major_upgrade(from_go_version: str) -> str:
 	If no stable version is found that is the same "major" version as the
 	given current version, an exception is raised.
 	"""
+	response = requests.get(GO_VERSION_URL)
+	response.raise_for_status()
+	versions: list[GoVersion] = json.loads(response.content)
 	major_version = get_major_version(from_go_version)
-	go_version_response = requests.get(GO_VERSION_URL)
-	go_version_response.raise_for_status()
-	go_version_content: list[GoVersion] = json.loads(go_version_response.content)
-	fetched_go_version: str = ''
-	for go_version in go_version_content:
-		if not go_version["stable"]:
-			continue
-		match = re.search(r"[\d.]+", go_version["version"])
-		if not match:
-			continue
-		fetched_go_version = match.group(0)
-		if major_version == get_major_version(fetched_go_version):
-			break
-	else:
-		raise Exception(f'no supported {major_version} Go versions exist')
+	fetched_go_version = find_latest_major_upgrade(major_version, versions)
 	print(f'Latest version of Go {major_version} is {fetched_go_version}')
 	return fetched_go_version
-
 
 class GoPRMaker:
 	"""
