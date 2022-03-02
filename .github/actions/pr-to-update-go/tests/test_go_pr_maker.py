@@ -19,7 +19,7 @@ proper subset of the test cases covered by said docstring tests.
 
 from unittest import TestCase
 
-from pr_to_update_go.go_pr_maker import get_major_version, GoPRMaker
+from pr_to_update_go.go_pr_maker import get_major_version, parse_release_notes
 
 
 class TestGoPRMaker(TestCase):
@@ -40,13 +40,13 @@ class TestGoPRMaker(TestCase):
 
 	def test_get_release_notes(self) -> None:
 		"""Tests the get_release_notes function."""
-		go_version: str = '4.15.6'
-		release_notes_with_whitespace: str = f"""<p>  
+		go_version = '4.15.6'
+		expected_release_notes = '<p> go4.15.6 The expected release notes </p>'
+		release_notes_with_whitespace = f"""<p>
                 go{go_version} The expected release notes
             </p>"""
-		content: str = f"""go4.15.5 text before
+		content = f"""go4.15.5 text before
         {release_notes_with_whitespace}
         text <p>after</p> 4.15.7"""
-		actual_release_notes: str = GoPRMaker.get_release_notes(go_version, content)
-		expected_release_notes: str = '<p> go4.15.6 The expected release notes </p>'
+		actual_release_notes = parse_release_notes(go_version, content)
 		self.assertEqual(expected_release_notes, actual_release_notes)
