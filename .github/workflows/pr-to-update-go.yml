@@ -46,6 +46,7 @@ jobs:
           GIT_AUTHOR_NAME: asfgit
           GITHUB_TOKEN: ${{ github.token }}
           GO_VERSION_FILE: GO_VERSION
+          ENV_FILE: .env
       - name: Check Go version
         run: echo "::set-output name=value::$(cat GO_VERSION)"
         id: go-version
@@ -60,3 +61,4 @@ jobs:
           GIT_AUTHOR_NAME: asfgit
           GITHUB_TOKEN: ${{ github.token }}
           GO_VERSION_FILE: GO_VERSION
+          ENV_FILE: .env
