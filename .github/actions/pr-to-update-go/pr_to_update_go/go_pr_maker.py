@@ -41,7 +41,6 @@ from github.Label import Label
 from github.MainClass import Github
 from github.PullRequest import PullRequest
 from github.Repository import Repository
-from github.Requester import Requester
 
 from pr_to_update_go.constants import ENV_GITHUB_TOKEN, GO_VERSION_URL, ENV_GITHUB_REPOSITORY, \
 	ENV_GITHUB_REPOSITORY_OWNER, GO_REPO_NAME, RELEASE_PAGE_URL, ENV_GO_VERSION_FILE, \
@@ -192,13 +191,8 @@ class GoPRMaker:
 		Note that only fast-forward updates are possible, as this doesn't
 		"force" push.
 		"""
-		requester: Requester = self.repo._requester
-		patch_parameters = {
-			'sha': sha,
-		}
-		requester.requestJsonAndCheck(
-			'PATCH', self.repo.url + f'/git/refs/heads/{branch_name}', input=patch_parameters
-		)
+		ref = self.repo.get_git_ref(f"heads/{branch_name}")
+		ref.edit(sha)
 
 	def run(self, update_version_only: bool = False) -> None:
 		"""
