@@ -87,6 +87,8 @@ def get_major_version(from_go_version: str) -> str:
 
 	>>> get_major_version("1.23.45-6rc7")
 	'1.23'
+	>>> get_major_version("1.2.3")
+	'1.2'
 	>>> get_major_version("not a release version")
 	''
 	"""
