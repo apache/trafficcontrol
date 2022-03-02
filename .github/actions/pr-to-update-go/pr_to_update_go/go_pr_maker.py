@@ -24,7 +24,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Optional, TypedDict, Any, Final
+from typing import Optional, TypedDict, Any
 
 import requests
 
