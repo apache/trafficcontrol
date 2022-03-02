@@ -351,7 +351,7 @@ class GoPRMaker:
 		Gets the current Go version used at the head of the given branch (or not
 		given to use "master" by default) for the repository.
 		"""
-		return self.file_contents(getenv(ENV_GO_VERSION_FILE), branch).decoded_content.decode()
+		return self.file_contents(getenv(ENV_GO_VERSION_FILE), branch).decoded_content.decode().strip()
 
 	def set_go_version(self, go_version: str, commit_message: str,
 			source_branch_name: str) -> Commit:
