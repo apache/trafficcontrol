@@ -418,3 +418,7 @@ class GoPRMaker:
 		except UnknownObjectException:
 			print('Unable to find a label named "go version"', file=sys.stderr)
 		print(f'Created pull request {pull_request.html_url}')
+
+if __name__ == "__main__":
+	import doctest
+	doctest.testmod()
