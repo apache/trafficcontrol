@@ -41,7 +41,6 @@ class TestGoPRMaker(TestCase):
 	def test_get_release_notes(self) -> None:
 		"""Tests the get_release_notes function."""
 		go_version: str = '4.15.6'
-		expected_release_notes: str = f'<p> go4.15.6 The expected release notes </p>'
 		release_notes_with_whitespace: str = f"""<p>  
                 go{go_version} The expected release notes
             </p>"""
@@ -49,4 +48,5 @@ class TestGoPRMaker(TestCase):
         {release_notes_with_whitespace}
         text <p>after</p> 4.15.7"""
 		actual_release_notes: str = GoPRMaker.get_release_notes(go_version, content)
+		expected_release_notes: str = '<p> go4.15.6 The expected release notes </p>'
 		self.assertEqual(expected_release_notes, actual_release_notes)
