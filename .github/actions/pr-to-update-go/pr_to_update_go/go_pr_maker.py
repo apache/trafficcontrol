@@ -328,7 +328,11 @@ class GoPRMaker:
 		for milestone in milestones:
 			if milestone.title == milestone_title:
 				print(f'Found Go milestone {milestone.title}')
-				return milestone.url
+				# Technically it would probably be best to use the 'html_url'
+				# returned by the GH API, but accessing that through PyGithub
+				# involves using poorly-documented properties of that library,
+				# as well as sacrificing type-safety.
+				return f"https://github.com/{GO_REPO_NAME}/milestone/{milestone.number}"
 		raise LookupError(f'could not find a milestone named {milestone_title}')
 
 	def file_contents(self, file: str, branch: str = "master") -> ContentFile:
