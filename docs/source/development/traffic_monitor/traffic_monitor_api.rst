@@ -361,16 +361,16 @@ Response Structure
 :caches: An object with keys that are the names of monitored :term:`cache servers`
 	:server name: The name of the server being monitored
 
-		:isAvailable: Whether or not this cache is available for monitoring
-		:ipv4Available: Whether or not an IPV4 interface on this cache is available for monitoring
-		:ipv6Available: Whether or not an IPV6 interface on this cache is available for monitoring
+		:isAvailable: Whether or not this cache is available for routing
+		:ipv4Available: Whether or not an IPV4 interface on this cache is available for routing
+		:ipv6Available: Whether or not an IPV6 interface on this cache is available for routing
 		:status: The status of this server, along with any additional reason for it to be marked as such
-		:lastHmPoll: The last time the health data for this server was polled by a traffic monitor
+		:lastPoll: The last time the health data for this server was polled by a traffic monitor
 
 :deliveryServices: An object with keys as the names of monitored :term:`Delivery Services`
 	:delivery service name: The name of the delivery service being monitored
 		:disabledLocations: A list of disabled locations for this delivery service
-		:isAvailable: Whether or not this delivery service is available for monitoring
+		:isAvailable: Whether or not this delivery service is available for routing
 
 .. code-block:: http
 	:caption: Example Response
@@ -382,12 +382,12 @@ Response Structure
 
 	{
 		"caches": {
-			"cdn-ec-atl-03": {
+			"server-name-01": {
 				"isAvailable": true,
 				"ipv4Available": true,
 				"ipv6Available": true,
-				"status": "REPORTED - id cdn-ec-atl-03 url http://[2001:558:fe13:b1::2]:80/_astats?application=system&inf.name=bond0 fetch error: bad HTTP status: 403; bond0: not found in polled data",
-				"lastHmPoll": "2022-03-03T12:26:02.78556-07:00"
+				"status": "REPORTED - id server-name-01 url http://[2001:db8:3333:4444:5555:6666:7777:8888]:80 fetch error: bad HTTP status: 403; interface0: not found in polled data",
+				"lastPoll": "2022-03-03T12:26:02.78556-07:00"
 			},...
 		},
 		"deliveryServices": {

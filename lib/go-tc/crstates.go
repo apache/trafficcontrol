@@ -43,7 +43,7 @@ type IsAvailable struct {
 	Ipv6Available  bool      `json:"ipv6Available"`
 	DirectlyPolled bool      `json:"-"`
 	Status         string    `json:"status"`
-	LastHmPoll     time.Time `json:"lastHmPoll"`
+	LastPoll       time.Time `json:"lastPoll"`
 }
 
 // NewCRStates creates a new CR states object, initializing pointer members.
