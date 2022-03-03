@@ -5,7 +5,7 @@
   "main": "config.ts",
   "dependencies": {
     "@types/random-ipv6": "^1.0.0",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "chromedriver": "^78.0.1",
     "constants": "0.0.2",
     "download-file": "^0.1.5",
