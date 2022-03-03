@@ -1031,36 +1031,34 @@ func ParseDBError(ierr error) (error, error, int) {
 // This also uses the given ResponseWriter to refresh the cookie, if it was valid.
 func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth.CurrentUser, error, error, int) {
 	var cookie *http.Cookie
-	for _, givenCookie := range r.Cookies() {
-		if cookie != nil {
-			break
-		}
-		switch givenCookie.Name {
-		case "access_token":
-			claims := jwt.MapClaims{}
-			token, err := jwt.ParseWithClaims(givenCookie.Value, claims, func(token *jwt.Token) (interface{}, error) {
-				return []byte(secret), nil
-			})
-			if err != nil {
-				return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), fmt.Errorf("parsing claims: %w", err), http.StatusUnauthorized
-			}
-			if !token.Valid {
-				return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("invalid token"), http.StatusUnauthorized
-			}
 
-			for key, val := range claims {
-				switch key {
-				case "mojoCookie":
-					if _, ok := val.(string); !ok {
-						return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("invalid token - mojoCookie must be a string"), http.StatusUnauthorized
-					}
-					cookie = &http.Cookie{
-						Value: val.(string),
-					}
-				}
+	if r.Header.Get("Authorization") != "" && strings.Contains(r.Header.Get("Authorization"), "Bearer") {
+		givenToken := r.Header.Get("Authorization")
+		if strings.Contains(givenToken, "access_token") {
+			givenToken = strings.Split(givenToken, "=")[1]
+		} else {
+			givenToken = strings.Split(givenToken, " ")[1]
+		}
+		bearerCookie, err := getCookieFromAccessToken(givenToken, secret)
+		if err != nil {
+			return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), err, http.StatusUnauthorized
+		}
+		cookie = bearerCookie
+	} else {
+		for _, givenCookie := range r.Cookies() {
+			if cookie != nil {
+				break
 			}
-		case tocookie.Name:
-			cookie = givenCookie
+			switch givenCookie.Name {
+			case "access_token":
+				bearerCookie, err := getCookieFromAccessToken(givenCookie.Value, secret)
+				if err != nil {
+					return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), err, http.StatusUnauthorized
+				}
+				cookie = bearerCookie
+			case tocookie.Name:
+				cookie = givenCookie
+			}
 		}
 	}
 
@@ -1103,6 +1101,34 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 	newCookie := tocookie.GetCookie(oldCookie.AuthData, duration, secret)
 	http.SetCookie(w, newCookie)
 	return user, nil, nil, http.StatusOK
+}
+
+func getCookieFromAccessToken(bearerToken string, secret string) (*http.Cookie, error) {
+	var cookie *http.Cookie
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("parsing claims: %w", err)
+	}
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	for key, val := range claims {
+		switch key {
+		case "mojoCookie":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("invalid token - mojoCookie must be a string")
+			}
+			cookie = &http.Cookie{
+				Value: val.(string),
+			}
+		}
+	}
+
+	return cookie, nil
 }
 
 func AddUserToReq(r *http.Request, u auth.CurrentUser) {
