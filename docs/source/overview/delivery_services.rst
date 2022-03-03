@@ -948,7 +948,7 @@ Naturally, this assumes that each redundant server is exactly identical, from re
 	| :abbr:`MSO (Multi-Site Origin)` | In documentation and used heavily in discussion in Slack, mailing list etc. | unchanged (usually only used where implicitly ``true``) |
 	+---------------------------------+-----------------------------------------------------------------------------+---------------------------------------------------------+
 
-A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site Origin configuration. These are detailed in the :ref:`ds-mso-parameters` table. All of these :term:`Parameters` should have their Configuration File set to ``parent.config``.
+A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site Origin configuration. These are detailed in `Parameters that Affect Multi-Site Origin`_.
 
 .. seealso:: A quick guide on setting up Multi-Site Origins is given in :ref:`multi-site-origin-qht`.
 
