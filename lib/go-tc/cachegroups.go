@@ -87,6 +87,7 @@ type CachegroupTrimmedName struct {
 // CachegroupQueueUpdatesRequest holds info relating to the
 // cachegroups/{{ID}}/queue_update TO route.
 type CachegroupQueueUpdatesRequest struct {
-	Action string `json:"action"`
-	CDNID  *int   `json:"cdnId"`
+	Action string   `json:"action"`
+	CDN    *CDNName `json:"cdn"`
+	CDNID  *int     `json:"cdnId"`
 }

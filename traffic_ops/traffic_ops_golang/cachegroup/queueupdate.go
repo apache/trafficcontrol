@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -43,6 +44,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	// Validate body and params
 	reqObj := tc.CachegroupQueueUpdatesRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
@@ -52,10 +54,37 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
 		return
 	}
-	if reqObj.CDNID == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdnId is a required field"), nil)
+	if reqObj.CDNID == nil && (reqObj.CDN == nil || *reqObj.CDN == "") {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn or cdnId is required"), nil)
 		return
 	}
+
+	if reqObj.CDNID != nil && (reqObj.CDN == nil || *reqObj.CDN == "") {
+		cdnName, ok, sysErr := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*reqObj.CDNID))
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("cdn %d does not exist", *reqObj.CDNID), nil)
+			return
+		}
+		reqObj.CDN = &cdnName
+	}
+
+	if reqObj.CDNID == nil && (reqObj.CDN != nil && *reqObj.CDN != "") {
+		cdnID, ok, sysErr := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, *reqObj.CDN)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("cdn %s does not exist", *reqObj.CDN), nil)
+			return
+		}
+		reqObj.CDNID = &cdnID
+	}
+
 	cgID := inf.IntParams["id"]
 	cgName, ok, err := dbhelpers.GetCacheGroupNameFromID(inf.Tx.Tx, cgID)
 	if err != nil {
@@ -66,19 +95,15 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdnName, _, sysErr := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*reqObj.CDNID))
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
-		return
-	}
-
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	// Verify rights
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(*reqObj.CDN), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 
-	updatedCaches := []tc.CacheName{}
+	// Queue updates
+	var updatedCaches []tc.CacheName
 	if reqObj.Action == queue {
 		updatedCaches, err = queueUpdates(inf.Tx.Tx, cgID, *reqObj.CDNID)
 	} else {
@@ -93,10 +118,10 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		CacheGroupName: cgName,
 		Action:         reqObj.Action,
 		ServerNames:    updatedCaches,
-		CDN:            cdnName,
+		CDN:            *reqObj.CDN,
 		CacheGroupID:   cgID,
 	})
-	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.Itoa(cgID)+", ACTION: "+strings.Title(reqObj.Action)+"d CacheGroup server updates to the "+string(cdnName)+" CDN", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.Itoa(cgID)+", ACTION: "+strings.Title(reqObj.Action)+"d CacheGroup server updates to the "+string(*reqObj.CDN)+" CDN", inf.User, inf.Tx.Tx)
 }
 
 type QueueUpdatesResp struct {
