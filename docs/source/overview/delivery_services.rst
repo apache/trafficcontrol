@@ -991,7 +991,7 @@ The following :term:`Parameters` must have the :ref:`Config File <parameter-conf
 
 	.. warning:: Interpretation of the :ref:`parameter-value` of this :term:`Parameter` is extremely permissive. For example, the :ref:`Values <parameter-value>` ``t``, ``Y``, ``True``, ``yes``, ``talse``, ``yno``, ``Yeah, don't do this``, ``You should never under any circumstances allow HTTP/2``, and ``totally horrible idea to enable this`` all equally mean "true". No part of :abbr:`ATC (Apache Traffic Control)` checks or warns about typos or strange :ref:`Values <parameter-value>` for this :term:`Parameter`, so take care to prevent typos, misspellings, and the like to avoid confusing situations.
 
-- ``tls_versions`` - on a Delivery Service :term:`Profile`, if this exists, enable the given comma-delimited[tlsDelimiters]_ TLS versions for client requests e.g. ``1.1,1.2,1.3``. :abbr:`ATS (Apache Traffic Server)` must also be accepting those TLS versions - configured in ``records.config`` - or this will have no effect.
+- ``tls_versions`` - on a Delivery Service :term:`Profile`, if this exists, enable the given comma-delimited\ [#tlsDelimiters]_ TLS versions for client requests e.g. ``1.1,1.2,1.3``. :abbr:`ATS (Apache Traffic Server)` must also be accepting those TLS versions - configured in ``records.config`` - or this will have no effect.
 
 	.. impl-detail:: This :term:`Parameter` does not affect the contents of ``parent.config``, but instead either ``ssl_server_name.yaml`` in :abbr:`ATS (Apache Traffic Server)` 8 or ``sni.yaml`` in :abbr:`ATS (Apache Traffic Server)` 9. It has the ``parent.config`` :ref:`parameter-config-file` value for consistency.
 
@@ -1048,7 +1048,6 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 .. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
 
 .. [#xmlValid] Some things to consider when choosing an xml_id and routing name: the name should be descriptive and unique, but as brief as possible to avoid creating a monstrous :abbr:`FQDN (Fully Qualified Domain Name)`. Also, because these are combined to form an :abbr:`FQDN (Fully Qualified Domain Name)`, they should not contain any characters that are illegal for a DNS subdomain, e.g. ``.`` (period/dot). Finally, the restrictions on what characters are allowable (especially in xml_id) are, in general, **NOT** enforced by the :ref:`to-api`, so take care that the name is appropriate. See :rfc:`1035` for exact guidelines.
-.. [#cardinality] In source code and :ref:`to-api` responses, the "Long Description" fields of a Delivery Service are "0-indexed" - hence the names differing slightly from the ones displayed in user-friendly UIs.
 .. [#dupOrigin] These Delivery Services Types are vulnerable to what this writer likes to call the "Duplicate Origin Problem". This problem is tracked by :issue:`3537`.
 .. [#httpOnlyRegex] These regular expression types can only appear in the Match List of HTTP-:ref:`Routed <ds-types>` Delivery Services.
 .. [#tlsDelimiters] The list may also be separated by spaces or semicolons, or spread across lines.

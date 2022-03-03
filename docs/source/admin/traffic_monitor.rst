@@ -66,7 +66,7 @@ Traffic Monitor has the option to disable stat polling via the ``stat_polling`` 
 
 Distributed Polling
 -------------------
-Traffic Monitor has the option to enable distributed polling via the ``distributed_polling`` (default: ``false``) option in :file:`traffic_monitor.cfg`. If set to ``true``, Traffic Monitor groups will each poll their own disjoint subsets of the :term:`CDN`. In order to enable this option, ``stat_polling`` must be disabled. In order to function properly, all Traffic Monitors in a :term:`CDN` must have ``distributed_polling`` enabled; otherwise, the results are undefined.
+Traffic Monitor has the option to enable distributed polling via the ``distributed_polling`` (default: ``false``) option in :file:`traffic_monitor.cfg`. If set to ``true``, Traffic Monitor groups will each poll their own disjoint subsets of the CDN. In order to enable this option, ``stat_polling`` must be disabled. In order to function properly, all Traffic Monitors in a CDN must have ``distributed_polling`` enabled; otherwise, the results are undefined.
 
 .. note:: Traffic Monitors are said to be in the same "Traffic Monitor group" if they are in the same :term:`Cache Group`.
 
