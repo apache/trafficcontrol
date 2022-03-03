@@ -65,7 +65,7 @@ def _get_pr_body(go_version: str, milestone_url: str) -> str:
 	Generates the body of a Pull Request given a Go release version and a
 	URL that points to information about what changes were in said release.
 	"""
-	with open(os.path.join(os.path.dirname(__file__), '/pr_template.md'), encoding="UTF-8") as file:
+	with open(os.path.join(os.path.dirname(__file__), 'pr_template.md'), encoding="UTF-8") as file:
 		pr_template = file.read()
 	go_major_version = get_major_version(go_version)
 
