@@ -325,7 +325,7 @@ class GoPRMaker:
 		go_repo = self.get_repo(GO_REPO_NAME)
 		milestones = go_repo.get_milestones(state='all', sort='due_on', direction='desc')
 		milestone_title = f'Go{go_version}'
-		for milestone in milestones:  # type: Milestone
+		for milestone in milestones:
 			if milestone.title == milestone_title:
 				print(f'Found Go milestone {milestone.title}')
 				return milestone.url
