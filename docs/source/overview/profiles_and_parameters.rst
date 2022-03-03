@@ -499,6 +499,8 @@ This configuration file is generated entirely from :term:`Cache Group` relations
 
 Additionally, :term:`Delivery Service` :ref:`Profiles <ds-profile>` can have special Parameters with the :ref:`parameter-name` "mso.parent_retry" to :ref:`multi-site-origin-qht`.
 
+.. seealso:: There are many Parameters with this Config File that only apply on :ref:`Delivery Service Profiles <ds-profile>`. Those are documented in :ref:`their section of the Delivery Service overview page <ds-parameters-parent.config>`.
+
 .. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
 
 plugin.config
