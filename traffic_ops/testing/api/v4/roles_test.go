@@ -16,6 +16,7 @@ package v4
 */
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -24,8 +25,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -38,6 +42,7 @@ const (
 
 func TestRoles(t *testing.T) {
 	WithObjs(t, []TCObj{Roles}, func() {
+		CheckAllRoutePermissionsExist(t)
 		GetTestRolesIMS(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
@@ -56,6 +61,55 @@ func TestRoles(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestRolesWithHeaders(t, header)
 	})
+}
+
+func CheckAllRoutePermissionsExist(t *testing.T) {
+	fake := routing.ServerData{Config: config.NewFakeConfig()}
+	routes, _, err := routing.Routes(fake)
+	if err != nil {
+		t.Fatalf("error getting routes: %v\n", err)
+	}
+
+	db, err := OpenConnection()
+	if err != nil {
+		t.Fatalf("error opening db connection: %v\n", err)
+	}
+	defer log.Close(db, "closing connection")
+	query := "SELECT DISTINCT cap_name from role_capability ORDER BY cap_name"
+	perms := make(map[string]struct{})
+
+	rows, err := db.Query(query)
+	if err != nil {
+		t.Fatalf("error querying db: %v\n", err)
+	}
+	defer log.Close(rows, "closing query")
+
+	for rows.Next() {
+		capName := ""
+		if err := rows.Scan(&capName); err != nil {
+			t.Fatalf("unable to scan row: %v\n", err)
+		}
+		if _, ok := perms[capName]; ok {
+			continue
+		}
+		perms[capName] = struct{}{}
+	}
+
+	var missing []string
+	for _, route := range routes {
+		if route.Version.Major != 4 {
+			continue
+		}
+		for _, perm := range route.RequiredPermissions {
+			if _, ok := perms[perm]; !ok {
+				missing = append(missing, fmt.Sprintf("%v (%v)", perm, route.Path))
+			}
+		}
+	}
+
+	if len(missing) > 0 {
+		t.Fatalf("found several permissions in routes: %v\n", strings.Join(missing, ","))
+	}
 }
 
 func UpdateTestRolesWithHeaders(t *testing.T, header http.Header) {
