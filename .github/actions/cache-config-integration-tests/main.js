@@ -23,7 +23,7 @@ const dockerCompose = ["docker-compose", "-f", `${process.env.GITHUB_WORKSPACE}/
 
 function runProcess(...commandArguments) {
 	console.info(...commandArguments);
-	let status;
+	let status = 1;
 	try {
 		status = child_process.spawnSync(commandArguments[0], commandArguments.slice(1), spawnOptions).status;
 		if (status !== 0) {
@@ -33,7 +33,7 @@ function runProcess(...commandArguments) {
 		const msg = e instanceof Error ? e.message : e;
 		console.error('Failed to spawn child process "', ...commandArguments, '":', msg);
 	}
-	process.exit(status ?? 1);
+	process.exit(status);
 }
 
 runProcess(...dockerCompose, "run", "ort_test");
