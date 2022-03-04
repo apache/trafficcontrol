@@ -108,6 +108,15 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBearerToken(r *http.Request) string {
+	if r.Header.Get("Authorization") != "" && strings.Contains(r.Header.Get("Authorization"), "Bearer") {
+		givenToken := r.Header.Get("Authorization")
+		if strings.Contains(givenToken, "access_token") {
+			givenToken = strings.Split(givenToken, "=")[1]
+		} else {
+			givenToken = strings.Split(givenToken, " ")[1]
+		}
+		return givenToken
+	}
 	for _, cookie := range r.Cookies() {
 		switch cookie.Name {
 		case "access_token":
@@ -530,8 +539,13 @@ func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
 	if dcdn != inf.Config.Cdni.DCdnId {
 		return "", errors.New("invalid token - incorrect dcdn")
 	}
+
+	if ucdn != inf.User.UCDN {
+		return "", errors.New("user ucdn did not match token ucdn")
+	}
+
 	if ucdn == "" {
-		if inf.User.RoleName == tc.AdminRoleName {
+		if inf.User.Can("ICDN:UCDN-OVERRIDE") {
 			ucdn = inf.Params["ucdn"]
 			if ucdn == "" {
 				return "", errors.New("admin level ucdn requests require a ucdn query parameter")

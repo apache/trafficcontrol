@@ -23,7 +23,7 @@
 =======
 Returns the complete footprint and capabilities information structure the :abbr:`dCDN (Downstream Content Delivery Network)` wants to expose to a given :abbr:`uCDN (Upstream Content Delivery Network)`.
 
-.. note:: Users with an "admin" role will need to provide a "ucdn" query parameter to bypass the need for :abbr:`uCDN (Upstream Content Delivery Network)` information in the :abbr:`JWT (JSON Web Token)` and allow admins to view all :abbr:`CDNi (Content Delivery Network Interconnect)` information.
+.. note:: Users with the ``ICDN:UCDN-OVERRIDE`` permission will need to provide a "ucdn" query parameter to bypass the need for :abbr:`uCDN (Upstream Content Delivery Network)` information in the :abbr:`JWT (JSON Web Token)` and allow them to view all :abbr:`CDNi (Content Delivery Network Interconnect)` information.
 
 :Auth. Required: No
 :Roles Required: "admin" or "operations"
@@ -40,7 +40,9 @@ This requires authorization using a :abbr:`JWT (JSON Web Token)` provided by the
 	|    Name         | Description                                                                                                        |
 	+=================+====================================================================================================================+
 	|      iss        | Issuer claim as a string key for the :abbr:`uCDN (Upstream Content Delivery Network)`                              |
+	+-----------------+--------------------------------------------------------------------------------------------------------------------+
 	|      aud        | Audience claim as a string key for the :abbr:`dCDN (Downstream Content Delivery Network)`                          |
+	+-----------------+--------------------------------------------------------------------------------------------------------------------+
 	|      exp        | Expiration claim as the expiration date as a Unix epoch timestamp (in seconds)                                     |
 	+-----------------+--------------------------------------------------------------------------------------------------------------------+
 

@@ -44,6 +44,7 @@ type CurrentUser struct {
 	Role         int            `json:"role" db:"role"`
 	RoleName     string         `json:"roleName" db:"role_name"`
 	Capabilities pq.StringArray `json:"capabilities" db:"capabilities"`
+	UCDN         string         `json:"ucdn" db:"ucdn"`
 	perms        map[string]struct{}
 }
 
@@ -115,7 +116,8 @@ SELECT
   u.id,
   u.username,
   COALESCE(u.tenant_id, -1) AS tenant_id,
-  ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=r.id) AS capabilities
+  ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=r.id) AS capabilities,
+  u.ucdn
 FROM
   tm_user AS u
 JOIN
@@ -126,14 +128,14 @@ WHERE
 
 	var currentUserInfo CurrentUser
 	if DB == nil {
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, nil}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, "", nil}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
 	}
 	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
 	defer dbClose()
 
 	err := DB.GetContext(dbCtx, &currentUserInfo, qry, user)
 	if err != nil {
-		invalidUser := CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, nil}
+		invalidUser := CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, "", nil}
 		if errors.Is(err, sql.ErrNoRows) {
 			return invalidUser, errors.New("user not found"), fmt.Errorf("checking user %v info: user not in database", user), http.StatusUnauthorized
 		}
@@ -160,7 +162,7 @@ func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
 			return nil, fmt.Errorf("CurrentUser found with bad type: %T", v)
 		}
 	}
-	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, nil}, errors.New("No user found in Context")
+	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, "", nil}, errors.New("No user found in Context")
 }
 
 func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, ctx context.Context) (bool, error, error) {
