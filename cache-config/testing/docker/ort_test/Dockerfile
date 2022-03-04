@@ -23,15 +23,11 @@
 # The recommended minimum size for each block devices is 1G.
 # For example, `sudo modprobe brd rd_size=1048576 rd_nr=2`
 
-MAINTAINER dev@trafficcontrol.apache.org
-
 ARG OS_VERSION=8 \
 	OS_DISTRO=rockylinux
-# Makes RHEL_VERSION available in later layers without needing to specify it again
-ENV OS_VERSION=${OS_VERSION} \
-	OS_DISTRO=${OS_DISTRO}
 
 FROM ${OS_DISTRO}:${OS_VERSION}
+MAINTAINER dev@trafficcontrol.apache.org
 EXPOSE 80 443
 
 RUN yum install -y epel-release && \
