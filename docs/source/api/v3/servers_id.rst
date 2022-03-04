@@ -85,7 +85,7 @@ Request Structure
 :routerHostName: An optional string containing the human-readable name of the router responsible for reaching this server
 :routerPortName: An optional string containing the human-readable name of the port used by the router responsible for reaching this server
 :statusId:       The integral, unique identifier of the status of this server
- 
+
 	.. seealso:: :ref:`health-proto`
 
 :tcpPort: An optional port number on which this server listens for incoming TCP connections
@@ -111,7 +111,6 @@ Request Structure
 	{
 		"cachegroupId": 6,
 		"cdnId": 2,
-		"configUpdateTime": "2022-02-18T13:52:47.129174-07:00",
 		"domainName": "infra.ciab.test",
 		"hostName": "quest",
 		"httpsPort": 443,
@@ -157,7 +156,8 @@ Request Structure
 		"routerPortName": "",
 		"statusId": 3,
 		"tcpPort": 80,
-		"typeId": 12
+		"typeId": 12,
+		"updPending": false
 	}
 
 Response Structure
@@ -295,7 +295,7 @@ Response Structure
 		"tcpPort": 80,
 		"type": "MID",
 		"typeId": 12,
-		"updPending": true,
+		"updPending": false,
 		"xmppId": null,
 		"xmppPasswd": null,
 		"interfaces": [
@@ -352,12 +352,12 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belonged
-:cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belonged
-:cdnId:            The integral, unique identifier of the CDN to which the server belonged
-:cdnName:          Name of the CDN to which the server belonged
-:domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:guid:             An identifier used to uniquely identify the server
+:cachegroup:   A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belonged
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belonged
+:cdnId:        The integral, unique identifier of the CDN to which the server belonged
+:cdnName:      Name of the CDN to which the server belonged
+:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:guid:         An identifier used to uniquely identify the server
 
 	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
@@ -401,17 +401,17 @@ Response Structure
 	.. deprecated:: 3.0
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
-:offlineReason:   A user-entered reason why the server was in ADMIN_DOWN or OFFLINE status
-:physLocation:    The name of the physical location where the server resided
-:physLocationId:  An integral, unique identifier for the physical location where the server resided
-:profile:         The :ref:`profile-name` of the :term:`Profile` which was used by this server
-:profileDesc:     A :ref:`profile-description` of the :term:`Profile` which was used by this server
-:profileId:       The :ref:`profile-id` the :term:`Profile` which was used by this server
-:revalPending:    A boolean value which, if ``true`` indicates that this server had pending content invalidation/revalidation
-:rack:            A string indicating "server rack" location
-:routerHostName:  The human-readable name of the router responsible for reaching this server
-:routerPortName:  The human-readable name of the port used by the router responsible for reaching this server
-:status:          The :term:`Status` of the server
+:offlineReason:  A user-entered reason why the server was in ADMIN_DOWN or OFFLINE status
+:physLocation:   The name of the physical location where the server resided
+:physLocationId: An integral, unique identifier for the physical location where the server resided
+:profile:        The :ref:`profile-name` of the :term:`Profile` which was used by this server
+:profileDesc:    A :ref:`profile-description` of the :term:`Profile` which was used by this server
+:profileId:      The :ref:`profile-id` the :term:`Profile` which was used by this server
+:revalPending:   A boolean value which, if ``true`` indicates that this server had pending content invalidation/revalidation
+:rack:           A string indicating "server rack" location
+:routerHostName: The human-readable name of the router responsible for reaching this server
+:routerPortName: The human-readable name of the port used by the router responsible for reaching this server
+:status:         The :term:`Status` of the server
 
 	.. seealso:: :ref:`health-proto`
 

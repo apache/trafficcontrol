@@ -726,7 +726,7 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr htt
 		if err != nil {
 			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		status := obj.(*tc.ServerUpdateStatus)
+		status := obj.(*tc.ServerUpdateStatusV4)
 		if len(toStatus.Response) != 1 {
 			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + "expected 1 update_status for the server, got " + strconv.Itoa(len(toStatus.Response)))
 		}
