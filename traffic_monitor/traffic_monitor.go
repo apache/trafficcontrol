@@ -38,6 +38,15 @@ var GitRevision = "No Git Revision Specified. Please build with '-X main.GitRevi
 // BuildTimestamp is the time the app was built. The app SHOULD always be built with this set via the `-X` flag.
 var BuildTimestamp = "No Build Timestamp Specified. Please build with '-X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
 
+func InitAccessCfg(cfg config.Config) error {
+	accessW, err := config.GetAccessLogWriters(cfg)
+	if err != nil {
+		return err
+	}
+	log.InitAccess(accessW)
+	return nil
+}
+
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -65,6 +74,11 @@ func main() {
 
 	if err := log.InitCfg(cfg); err != nil {
 		fmt.Printf("Error starting service: failed to create log writers: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := InitAccessCfg(cfg); err != nil {
+		fmt.Printf("Error starting service: failed to create access log writers: %v\n", err)
 		os.Exit(1)
 	}
 

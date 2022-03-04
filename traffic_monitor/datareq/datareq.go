@@ -31,6 +31,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/health"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
@@ -286,24 +287,47 @@ func WrapAgeErr(errorCount threadsafe.Uint, f func() ([]byte, time.Time, error),
 	}
 }
 
+func accessLogTime(t time.Time) float64 {
+	return float64(t.Unix()) + (float64(t.Nanosecond()) / 1e9)
+}
+
+func accessLogStr(
+	timestamp time.Time, // prefix
+	remoteAddress string, // addr
+	reqMethod string, // method
+	reqPath string, // path
+	reqProto string, // proto
+	statusCode int, // statusCode
+	respSize int, // respSize
+	reqServeTimeMs int, // reqServeTimeMs
+	userAgent string, // uas
+) string {
+	return fmt.Sprintf("%.3f addr=%s method=%s path=%s proto=%s statusCode=%d respSize=%d reqServeTimeMs=%d uas=%s", accessLogTime(timestamp), remoteAddress, reqMethod, reqPath, reqProto, statusCode, respSize, reqServeTimeMs, userAgent)
+}
+
 // WrapUnpolledCheck wraps an http.HandlerFunc, returning ServiceUnavailable if all caches have't been polled; else, calling the wrapped func. Once all caches have been polled, we never return a 503 again, even if the CRConfig has been changed and new, unpolled caches exist. This is because, before those new caches existed in the CRConfig, they weren't being routed to, so it doesn't break anything to continue not routing to them until they're polled, while still serving polled caches as available. Whereas, on startup, if we were to return data with some caches unpolled, we would be telling clients that existing, potentially-available caches are unavailable, simply because we hadn't polled them yet.
 func wrapUnpolledCheck(unpolledCaches threadsafe.UnpolledCaches, errorCount threadsafe.Uint, f http.HandlerFunc) http.HandlerFunc {
+	start := time.Now()
 	polledAll := false
 	polledLocal := false
 	return func(w http.ResponseWriter, r *http.Request) {
+		iw := &util.Interceptor{W: w}
+		defer func() {
+			log.Accessln(accessLogStr(time.Now(), r.RemoteAddr, r.Method, r.URL.Path, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent()))
+		}()
 		if !polledAll || !polledLocal {
 			polledAll = !unpolledCaches.Any()
 			polledLocal = !unpolledCaches.AnyDirectlyPolled()
 			rawOrLocal := r.URL.Query().Has("raw") || r.URL.Query().Has("local")
 			if (!rawOrLocal && !polledAll) || (rawOrLocal && !polledLocal) {
 				HandleErr(errorCount, r.URL.EscapedPath(), fmt.Errorf("service still starting, some caches unpolled: %v", unpolledCaches.UnpolledCaches()))
-				w.WriteHeader(http.StatusServiceUnavailable)
-				log.Write(w, []byte("Service Unavailable"), r.URL.EscapedPath())
+				iw.WriteHeader(http.StatusServiceUnavailable)
+				log.Write(iw, []byte("Service Unavailable"), r.URL.EscapedPath())
 				return
 			}
 		}
-		w.Header().Set(rfc.PermissionsPolicy, "interest-cohort=()")
-		f(w, r)
+		iw.Header().Set(rfc.PermissionsPolicy, "interest-cohort=()")
+		f(iw, r)
 	}
 }
 
