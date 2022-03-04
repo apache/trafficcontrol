@@ -70,14 +70,12 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
-:cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
-:cdnId:            The integral, unique identifier of the CDN to which the server belongs
-:cdnName:          Name of the CDN to which the server belongs
-:configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
-:configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
-:domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:guid:             An identifier used to uniquely identify the server
+:cachegroup:   A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
+:cdnId:        The integral, unique identifier of the CDN to which the server belongs
+:cdnName:      Name of the CDN to which the server belongs
+:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:guid:         An identifier used to uniquely identify the server
 
 	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
@@ -109,15 +107,10 @@ Response Structure
 :profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
 :profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
-
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
-
-:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch.
-:revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch.
-:rack:            A string indicating "server rack" location
-:routerHostName:  The human-readable name of the router responsible for reaching this server
-:routerPortName:  The human-readable name of the port used by the router responsible for reaching this server
-:status:          The :term:`Status` of the server
+:rack:           A string indicating "server rack" location
+:routerHostName: The human-readable name of the router responsible for reaching this server
+:routerPortName: The human-readable name of the port used by the router responsible for reaching this server
+:status:         The :term:`Status` of the server
 
 	.. seealso:: :ref:`health-proto`
 
@@ -132,9 +125,6 @@ Response Structure
 :type:       The name of the :term:`Type` of this server
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
-
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
-
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
 
@@ -159,8 +149,6 @@ Response Structure
 			"cachegroupId": 6,
 			"cdnId": 2,
 			"cdnName": "CDN-in-a-Box",
-			"configUpdateTime": "1969-12-31T17:00:00-07:00",
-			"configApplyTime": "1969-12-31T17:00:00-07:00",
 			"domainName": "infra.ciab.test",
 			"guid": null,
 			"hostName": "mid",
@@ -190,8 +178,6 @@ Response Structure
 			"profileId": 10,
 			"rack": "",
 			"revalPending": false,
-			"revalUpdateTime": "1969-12-31T17:00:00-07:00",
-			"revalApplyTime": "1969-12-31T17:00:00-07:00",
 			"routerHostName": "",
 			"routerPortName": "",
 			"status": "REPORTED",
@@ -217,19 +203,17 @@ Allows a user to create a new server.
 
 Request Structure
 -----------------
-:cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
-:cdnId:            The integral, unique identifier of the CDN to which the server shall belong
-:configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
-:configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
-:domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:hostName:         The (short) hostname of the server
-:httpsPort:        An optional port number on which the server listens for incoming HTTPS connections/requests
-:iloIpAddress:     An optional IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
-:iloIpGateway:     An optional IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
-:iloIpNetmask:     An optional IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
-:iloPassword:      An optional string containing the password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
-:iloUsername:      An optional string containing the user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
-:interfaceMtu:     The :abbr:`MTU (Maximum Transmission Unit)` configured on ``interfaceName``
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
+:cdnId:        The integral, unique identifier of the CDN to which the server shall belong
+:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:hostName:     The (short) hostname of the server
+:httpsPort:    An optional port number on which the server listens for incoming HTTPS connections/requests
+:iloIpAddress: An optional IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpGateway: An optional IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpNetmask: An optional IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloPassword:  An optional string containing the password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
+:iloUsername:  An optional string containing the user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:interfaceMtu: The :abbr:`MTU (Maximum Transmission Unit)` configured on ``interfaceName``
 
 	.. note:: In virtually all cases this ought to be 1500. Further note that the only acceptable values are 1500 and 9000.
 
@@ -247,15 +231,10 @@ Request Structure
 :physLocationId: An integral, unique identifier for the physical location where the server resides
 :profileId:      The :ref:`profile-id` the :term:`Profile` that shall be used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
-
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
-
-:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch.
-:revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch.
-:rack:            An optional string indicating "server rack" location
-:routerHostName:  An optional string containing the human-readable name of the router responsible for reaching this server
-:routerPortName:  An optional string containing the human-readable name of the port used by the router responsible for reaching this server
-:statusId:        The integral, unique identifier of the status of this server
+:rack:           An optional string indicating "server rack" location
+:routerHostName: An optional string containing the human-readable name of the router responsible for reaching this server
+:routerPortName: An optional string containing the human-readable name of the port used by the router responsible for reaching this server
+:statusId:       The integral, unique identifier of the status of this server
 
 	.. seealso:: :ref:`health-proto`
 
@@ -265,9 +244,6 @@ Request Structure
 
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
-
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
-
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: An optional password used in XMPP communications with the server
 
@@ -285,7 +261,6 @@ Request Structure
 	{
 		"cachegroupId": 6,
 		"cdnId": 2,
-		"configUpdateTime": "1969-12-31T17:00:00-07:00",
 		"domainName": "infra.ciab.test",
 		"hostName": "test",
 		"httpsPort": 443,
@@ -312,20 +287,19 @@ Request Structure
 		"statusId": 3,
 		"tcpPort": 80,
 		"typeId": 12,
+		"updPending": false,
 		"ipIsService": true,
 		"ip6IsService": true
 	}
 
 Response Structure
 ------------------
-:cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
-:cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
-:cdnId:            The integral, unique identifier of the CDN to which the server belongs
-:cdnName:          Name of the CDN to which the server belongs
-:configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
-:configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
-:domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:guid:             An identifier used to uniquely identify the server
+:cachegroup:   A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
+:cdnId:        The integral, unique identifier of the CDN to which the server belongs
+:cdnName:      Name of the CDN to which the server belongs
+:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:guid:         An identifier used to uniquely identify the server
 
 	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
@@ -357,15 +331,10 @@ Response Structure
 :profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
 :profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
-
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
-
-:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
-:revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
-:rack:            A string indicating "server rack" location
-:routerHostName:  The human-readable name of the router responsible for reaching this server
-:routerPortName:  The human-readable name of the port used by the router responsible for reaching this server
-:status:          The status of the server
+:rack:           A string indicating "server rack" location
+:routerHostName: The human-readable name of the router responsible for reaching this server
+:routerPortName: The human-readable name of the port used by the router responsible for reaching this server
+:status:         The status of the server
 
 	.. seealso:: :ref:`health-proto`
 
@@ -380,9 +349,6 @@ Response Structure
 :type:       The name of the 'type' of this server
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
-
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
-
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
 
@@ -412,8 +378,6 @@ Response Structure
 		"cachegroupId": 6,
 		"cdnId": 2,
 		"cdnName": null,
-		"configUpdateTime": "1969-12-31T17:00:00-07:00",
-		"configApplyTime": "1969-12-31T17:00:00-07:00",
 		"domainName": "infra.ciab.test",
 		"guid": null,
 		"hostName": "test",
@@ -443,8 +407,6 @@ Response Structure
 		"profileId": 10,
 		"rack": null,
 		"revalPending": null,
-		"revalUpdateTime": "1969-12-31T17:00:00-07:00",
-		"revalApplyTime": "1969-12-31T17:00:00-07:00",
 		"routerHostName": "",
 		"routerPortName": "",
 		"status": null,

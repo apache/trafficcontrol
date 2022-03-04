@@ -1,5 +1,7 @@
 package tc
 
+import "github.com/apache/trafficcontrol/lib/go-util"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -87,7 +89,7 @@ type CachegroupTrimmedName struct {
 // CachegroupQueueUpdatesRequest holds info relating to the
 // cachegroups/{{ID}}/queue_update TO route.
 type CachegroupQueueUpdatesRequest struct {
-	Action string   `json:"action"`
-	CDN    *CDNName `json:"cdn"`
-	CDNID  *int     `json:"cdnId"`
+	Action string           `json:"action"`
+	CDN    *CDNName         `json:"cdn"`
+	CDNID  *util.JSONIntStr `json:"cdnId"`
 }

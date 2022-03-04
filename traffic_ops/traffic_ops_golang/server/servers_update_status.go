@@ -39,21 +39,25 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	serverUpdateStatus, err := getServerUpdateStatus(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
+	serverUpdateStatuses, err := getServerUpdateStatus(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	if inf.Version == nil || inf.Version.Major < 4 {
-		api.WriteRespRaw(w, r, serverUpdateStatus)
+		var downgradedStatuses []tc.ServerUpdateStatus
+		for _, status := range serverUpdateStatuses {
+			downgradedStatuses = append(downgradedStatuses, status.Downgrade())
+		}
+		api.WriteRespRaw(w, r, downgradedStatuses)
 	} else {
-		api.WriteResp(w, r, serverUpdateStatus)
+		api.WriteResp(w, r, serverUpdateStatuses)
 	}
 }
 
-func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatus, error) {
+func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatusV40, error) {
 
-	updateStatuses := []tc.ServerUpdateStatus{}
+	updateStatuses := []tc.ServerUpdateStatusV40{}
 
 	selectQuery := `
 /* topology_ancestors finds the ancestor topology nodes of the topology node for
@@ -164,7 +168,7 @@ ORDER BY s.id
 	defer log.Close(rows, "getServerUpdateStatus(): unable to close db connection")
 
 	for rows.Next() {
-		var us tc.ServerUpdateStatus
+		var us tc.ServerUpdateStatusV40
 		var serverType string
 		if err := rows.Scan(&us.HostId, &us.HostName, &serverType, &us.RevalPending, &us.UseRevalPending, &us.UpdatePending, &us.Status, &us.ParentPending, &us.ParentRevalPending, &us.ConfigUpdateTime, &us.ConfigApplyTime, &us.RevalidateUpdateTime, &us.RevalidateApplyTime); err != nil {
 			log.Errorf("could not scan server update status: %s\n", err)

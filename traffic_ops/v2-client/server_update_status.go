@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -110,50 +109,4 @@ func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool
 	}
 	resp.Body.Close()
 	return reqInf, nil
-}
-
-// SetUpdateServerStatusTimes updates a server's config queue status and/or reval status.
-// Each argument individually is optional, however at least one argument must not be nil.
-func (to *Session) SetUpdateServerStatusTimes(serverName string, configUpdateTime *time.Time, configApplyTime *time.Time, revalUpdateTime *time.Time, revalApplyTime *time.Time) (ReqInf, error) {
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
-	if configUpdateTime == nil && configApplyTime == nil && revalUpdateTime == nil && revalApplyTime == nil {
-		return reqInf, errors.New("one must be non-nil (configUpdateTime, configApplyTime, revalUpdateTime, revalApplyTime); nothing to do")
-	}
-
-	path := `/servers/` + serverName + `/update?`
-	queryParams := []string{}
-
-	if configUpdateTime != nil {
-		cut := configUpdateTime.Format(time.RFC3339Nano)
-		if configUpdateTime != nil {
-			queryParams = append(queryParams, `config_update_time=`+cut)
-		}
-	}
-	if configApplyTime != nil {
-		cat := configApplyTime.Format(time.RFC3339Nano)
-		if configUpdateTime != nil {
-			queryParams = append(queryParams, `config_apply_time=`+cat)
-		}
-	}
-	if revalUpdateTime != nil {
-		rut := revalUpdateTime.Format(time.RFC3339Nano)
-		if configUpdateTime != nil {
-			queryParams = append(queryParams, `revalidate_update_time=`+rut)
-		}
-	}
-	if revalApplyTime != nil {
-		rat := revalApplyTime.Format(time.RFC3339Nano)
-		if configUpdateTime != nil {
-			queryParams = append(queryParams, `revalidate_apply_time=`+rat)
-		}
-	}
-
-	path += strings.Join(queryParams, `&`)
-	resp, remoteAddr, err := to.request(http.MethodPost, path, nil)
-	reqInf.RemoteAddr = remoteAddr
-	if err != nil {
-		return reqInf, err
-	}
-	resp.Body.Close()
-	return reqInf, err
 }

@@ -612,8 +612,6 @@ type Server struct {
 	CachegroupID     int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID            int                 `json:"cdnId" db:"cdn_id"`
 	CDNName          string              `json:"cdnName" db:"cdn_name"`
-	ConfigUpdateTime time.Time           `json:"configUpdateTime" db:"config_update_time"`
-	ConfigApplyTime  time.Time           `json:"configApplyTime" db:"config_apply_time"`
 	DeliveryServices map[string][]string `json:"deliveryServices,omitempty"`
 	DomainName       string              `json:"domainName" db:"domain_name"`
 	FQDN             *string             `json:"fqdn,omitempty"`
@@ -648,8 +646,6 @@ type Server struct {
 	ProfileID        int                 `json:"profileId" db:"profile_id"`
 	Rack             string              `json:"rack" db:"rack"`
 	RevalPending     bool                `json:"revalPending" db:"reval_pending"`
-	RevalUpdateTime  time.Time           `json:"revalUpdateTime" db:"revalidate_update_time"`
-	RevalApplyTime   time.Time           `json:"revalApplyTime" db:"revalidate_apply_time"`
 	RouterHostName   string              `json:"routerHostName" db:"router_host_name"`
 	RouterPortName   string              `json:"routerPortName" db:"router_port_name"`
 	Status           string              `json:"status" db:"status"`
@@ -669,8 +665,6 @@ type CommonServerProperties struct {
 	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
 	CDNName          *string              `json:"cdnName" db:"cdn_name"`
-	ConfigUpdateTime *time.Time           `json:"configUpdateTime" db:"config_update_time"`
-	ConfigApplyTime  *time.Time           `json:"configApplyTime" db:"config_apply_time"`
 	DeliveryServices *map[string][]string `json:"deliveryServices,omitempty"`
 	DomainName       *string              `json:"domainName" db:"domain_name"`
 	FQDN             *string              `json:"fqdn,omitempty"`
@@ -696,8 +690,6 @@ type CommonServerProperties struct {
 	ProfileID        *int                 `json:"profileId" db:"profile_id"`
 	Rack             *string              `json:"rack" db:"rack"`
 	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
-	RevalUpdateTime  *time.Time           `json:"revalUpdateTime" db:"revalidate_update_time"`
-	RevalApplyTime   *time.Time           `json:"revalApplyTime" db:"revalidate_apply_time"`
 	Status           *string              `json:"status" db:"status"`
 	StatusID         *int                 `json:"statusId" db:"status_id"`
 	TCPPort          *int                 `json:"tcpPort" db:"tcp_port"`
@@ -747,8 +739,6 @@ func (s Server) ToNullable() ServerNullableV2 {
 				CachegroupID:     &s.CachegroupID,
 				CDNID:            &s.CDNID,
 				CDNName:          &s.CDNName,
-				ConfigUpdateTime: &s.ConfigUpdateTime,
-				ConfigApplyTime:  &s.ConfigApplyTime,
 				DeliveryServices: &s.DeliveryServices,
 				DomainName:       &s.DomainName,
 				FQDN:             s.FQDN,
@@ -774,8 +764,6 @@ func (s Server) ToNullable() ServerNullableV2 {
 				ProfileID:        &s.ProfileID,
 				Rack:             &s.Rack,
 				RevalPending:     &s.RevalPending,
-				RevalUpdateTime:  &s.RevalUpdateTime,
-				RevalApplyTime:   &s.RevalApplyTime,
 				Status:           &s.Status,
 				StatusID:         &s.StatusID,
 				TCPPort:          &s.TCPPort,
@@ -974,6 +962,10 @@ type ServerV40 struct {
 	CommonServerProperties
 	Interfaces        []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 	StatusLastUpdated *time.Time               `json:"statusLastUpdated" db:"status_last_updated"`
+	ConfigUpdateTime  *time.Time               `json:"configUpdateTime" db:"config_update_time"`
+	ConfigApplyTime   *time.Time               `json:"configApplyTime" db:"config_apply_time"`
+	RevalUpdateTime   *time.Time               `json:"revalUpdateTime" db:"revalidate_update_time"`
+	RevalApplyTime    *time.Time               `json:"revalApplyTime" db:"revalidate_apply_time"`
 }
 
 // ServerV4 is the representation of a Server in the latest minor version of
@@ -1113,18 +1105,9 @@ func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
 	return legacyServer, nil
 }
 
-// ServerUpdateStatus is the type of each entry in the `response` property of
-// the response from Traffic Ops to GET requests made to its
-// /servers/{{host name}}/update_status API endpoint.
-//
-// This is a subset of Server structure information mainly relating to what
-// operations t3c has done/needs to do. For most purposes, using Server
-// structures will be better - especially since the basic principle of this
-// type is predicated on a lie: that server host names are unique.
-//
-// Edits to this struct will require editing the custom MarshalJson function
-// for this type below
-type ServerUpdateStatus struct {
+type ServerUpdateStatusV4 ServerUpdateStatusV40
+
+type ServerUpdateStatusV40 struct {
 	HostName             string    `json:"host_name"`
 	UpdatePending        bool      `json:"upd_pending"`
 	RevalPending         bool      `json:"reval_pending"`
@@ -1140,7 +1123,7 @@ type ServerUpdateStatus struct {
 }
 
 // MarshalJSON is a custom implementation to ensure the date format returned is a RFC3339 string (and not RFC3339Nano or something else)
-func (sus ServerUpdateStatus) MarshalJSON() ([]byte, error) {
+func (sus ServerUpdateStatusV40) MarshalJSON() ([]byte, error) {
 	formatTime := struct {
 		HostName             string `json:"host_name"`
 		UpdatePending        bool   `json:"upd_pending"`
@@ -1172,11 +1155,46 @@ func (sus ServerUpdateStatus) MarshalJSON() ([]byte, error) {
 	return json.Marshal(formatTime)
 }
 
+// Strip the Config and Revalidate timestamps from V40 to return previous struct to
+// ensure previous compatibility
+func (sus ServerUpdateStatusV40) Downgrade() ServerUpdateStatus {
+	return ServerUpdateStatus{
+		HostName:           sus.HostName,
+		UpdatePending:      sus.UpdatePending,
+		RevalPending:       sus.RevalPending,
+		HostId:             sus.HostId,
+		Status:             sus.Status,
+		ParentPending:      sus.ParentPending,
+		ParentRevalPending: sus.ParentRevalPending,
+	}
+}
+
+// ServerUpdateStatus is the type of each entry in the `response` property of
+// the response from Traffic Ops to GET requests made to its
+// /servers/{{host name}}/update_status API endpoint.
+//
+// This is a subset of Server structure information mainly relating to what
+// operations t3c has done/needs to do. For most purposes, using Server
+// structures will be better - especially since the basic principle of this
+// type is predicated on a lie: that server host names are unique.
+//
+// Deprecated: For use only in APIs below V4
+type ServerUpdateStatus struct {
+	HostName           string `json:"host_name"`
+	UpdatePending      bool   `json:"upd_pending"`
+	RevalPending       bool   `json:"reval_pending"`
+	UseRevalPending    bool   `json:"use_reval_pending"`
+	HostId             int    `json:"host_id"`
+	Status             string `json:"status"`
+	ParentPending      bool   `json:"parent_pending"`
+	ParentRevalPending bool   `json:"parent_reval_pending"`
+}
+
 // ServerUpdateStatusResponseV40 is the type of a response from the Traffic
 // Ops API to a request to its /servers/{{host name}}/update_status endpoint
 // in API version 4.0.
 type ServerUpdateStatusResponseV40 struct {
-	Response []ServerUpdateStatus `json:"response"`
+	Response []ServerUpdateStatusV4 `json:"response"`
 	Alerts
 }
 

@@ -391,10 +391,6 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 		return errs
 	}
 
-	if s.UpdPending == nil && s.ConfigUpdateTime == nil {
-		errs = append(errs, errors.New("either 'updPending' or 'configUpdateTime' may be null, but not both"))
-	}
-
 	if _, err := tc.ValidateTypeID(tx, s.TypeID, "server"); err != nil {
 		errs = append(errs, err)
 	}
@@ -431,6 +427,7 @@ func validateV1(s *tc.ServerNullableV11, tx *sql.Tx) error {
 	validateErrs := validation.Errors{
 		"interfaceMtu":  validation.Validate(s.InterfaceMtu, validation.NotNil),
 		"interfaceName": validation.Validate(s.InterfaceName, validation.NotNil),
+		"updPending":    validation.Validate(s.UpdPending, validation.NotNil),
 	}
 
 	if s.IPAddress != nil && *s.IPAddress != "" {
@@ -441,6 +438,7 @@ func validateV1(s *tc.ServerNullableV11, tx *sql.Tx) error {
 	if s.IP6Address != nil && *s.IP6Address != "" {
 		validateErrs["ip6Address"] = validation.Validate(s.IP6Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress))
 	}
+
 	errs = append(errs, tovalidate.ToErrors(validateErrs)...)
 	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
 
@@ -555,6 +553,11 @@ func validateV4(s *tc.ServerV40, tx *sql.Tx) (string, error) {
 	if !serviceAddrV6Found && !serviceAddrV4Found {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
+
+	if s.UpdPending == nil && s.ConfigUpdateTime == nil {
+		errs = append(errs, errors.New("either 'updPending' or 'configUpdateTime' may be null, but not both"))
+	}
+
 	if errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...); errs != nil {
 		return serviceInterface, util.JoinErrs(errs)
 	}
@@ -658,6 +661,11 @@ func validateV3(s *tc.ServerV30, tx *sql.Tx) (string, error) {
 	if !serviceAddrV6Found && !serviceAddrV4Found {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
+
+	if s.UpdPending == nil {
+		errs = append(errs, errors.New("'updPending' cannot be null"))
+	}
+
 	if errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...); errs != nil {
 		return serviceInterface, util.JoinErrs(errs)
 	}
@@ -1621,27 +1629,31 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if server.UpdPending != nil && *server.UpdPending { // To continue to work with the legacy implementation and priority. However, consider bool UpdPending deprecated
-		if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-	} else if server.ConfigUpdateTime != nil {
-		if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
+	if server.UpdPending != nil {
+		if *server.UpdPending {
+			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
+			}
+		} else {
+			if err := dbhelpers.DequeueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
+			}
 		}
 	}
 
-	if server.RevalPending != nil && *server.RevalPending { // To continue to work with the legacy implementation and priority. However, consider bool RevalPending deprecated
-		if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-	} else if server.RevalUpdateTime != nil {
-		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
+	if server.RevalPending != nil {
+		if *server.RevalPending {
+			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
+			}
+		} else {
+			if err := dbhelpers.DequeueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
+			}
 		}
 	}
 
@@ -1730,27 +1742,31 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if server.UpdPending != nil && *server.UpdPending { // To continue to work with the legacy implementation and priority. However, consider bool UpdPending deprecated
-		if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-	} else if server.ConfigUpdateTime != nil {
-		if err := dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, *server.ConfigUpdateTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
+	if server.UpdPending != nil {
+		if *server.UpdPending {
+			if err := dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
+			}
+		} else {
+			if err := dbhelpers.DequeueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
+			}
 		}
 	}
 
-	if server.RevalPending != nil && *server.RevalPending { // To continue to work with the legacy implementation and priority. However, consider bool RevalPending deprecated
-		if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-	} else if server.RevalUpdateTime != nil {
-		if err := dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, *server.RevalUpdateTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
+	if server.RevalPending != nil {
+		if *server.RevalPending {
+			if err := dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
+			}
+		} else {
+			if err := dbhelpers.DequeueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
+			}
 		}
 	}
 
