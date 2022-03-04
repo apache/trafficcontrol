@@ -1035,9 +1035,15 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 	if r.Header.Get("Authorization") != "" && strings.Contains(r.Header.Get("Authorization"), "Bearer") {
 		givenToken := r.Header.Get("Authorization")
 		if strings.Contains(givenToken, "access_token") {
-			givenToken = strings.Split(givenToken, "=")[1]
+			tokenSplit := strings.Split(givenToken, "=")
+			if len(tokenSplit) > 1 {
+				givenToken = tokenSplit[1]
+			}
 		} else {
-			givenToken = strings.Split(givenToken, " ")[1]
+			tokenSplit := strings.Split(givenToken, " ")
+			if len(tokenSplit) > 1 {
+				givenToken = tokenSplit[1]
+			}
 		}
 		bearerCookie, err := getCookieFromAccessToken(givenToken, secret)
 		if err != nil {
