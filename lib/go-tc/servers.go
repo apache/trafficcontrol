@@ -965,9 +965,9 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 //
 // Deprecated: Traffic Ops API version 3 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerV30) UpgradeToV40(cspV40 CommonServerPropertiesV40) (ServerV40, error) {
+func (s ServerV30) UpgradeToV40(profileName pq.StringArray) (ServerV40, error) {
 	upgraded := ServerV40{
-		CommonServerPropertiesV40: cspV40,
+		CommonServerPropertiesV40: UpdateCommonServerPropertiesV40(profileName, s.CommonServerProperties),
 		StatusLastUpdated:         s.StatusLastUpdated,
 	}
 	infs, err := ToInterfacesV4(s.Interfaces, s.RouterHostName, s.RouterPortName)
@@ -984,7 +984,7 @@ func (s ServerV30) UpgradeToV40(cspV40 CommonServerPropertiesV40) (ServerV40, er
 //
 // Deprecated: Traffic Ops API version 2 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerNullableV2) UpgradeToV40(cspV40 CommonServerPropertiesV40) (ServerV40, error) {
+func (s ServerNullableV2) UpgradeToV40(profileName pq.StringArray) (ServerV40, error) {
 	ipv4IsService := false
 	if s.IPIsService != nil {
 		ipv4IsService = *s.IPIsService
@@ -994,7 +994,7 @@ func (s ServerNullableV2) UpgradeToV40(cspV40 CommonServerPropertiesV40) (Server
 		ipv6IsService = *s.IP6IsService
 	}
 	upgraded := ServerV40{
-		CommonServerPropertiesV40: cspV40,
+		CommonServerPropertiesV40: UpdateCommonServerPropertiesV40(profileName, s.CommonServerProperties),
 	}
 
 	infs, err := s.LegacyInterfaceDetails.ToInterfacesV4(ipv4IsService, ipv6IsService, s.RouterHostName, s.RouterPortName)
@@ -1003,6 +1003,47 @@ func (s ServerNullableV2) UpgradeToV40(cspV40 CommonServerPropertiesV40) (Server
 	}
 	upgraded.Interfaces = infs
 	return upgraded, nil
+}
+
+// UpdateCommonServerPropertiesV40 updates CommonServerProperties of V2 and V3 to CommonServerPropertiesV40
+func UpdateCommonServerPropertiesV40(profileName pq.StringArray, properties CommonServerProperties) CommonServerPropertiesV40 {
+	return CommonServerPropertiesV40{
+		Cachegroup:       properties.Cachegroup,
+		CachegroupID:     properties.CachegroupID,
+		CDNID:            properties.CDNID,
+		CDNName:          properties.CDNName,
+		DeliveryServices: properties.DeliveryServices,
+		DomainName:       properties.DomainName,
+		FQDN:             properties.FQDN,
+		FqdnTime:         properties.FqdnTime,
+		GUID:             properties.GUID,
+		HostName:         properties.HostName,
+		HTTPSPort:        properties.HTTPSPort,
+		ID:               properties.ID,
+		ILOIPAddress:     properties.ILOIPAddress,
+		ILOIPGateway:     properties.ILOIPGateway,
+		ILOIPNetmask:     properties.ILOIPNetmask,
+		ILOPassword:      properties.ILOPassword,
+		ILOUsername:      properties.ILOUsername,
+		LastUpdated:      properties.LastUpdated,
+		MgmtIPAddress:    properties.MgmtIPAddress,
+		MgmtIPGateway:    properties.MgmtIPGateway,
+		MgmtIPNetmask:    properties.MgmtIPNetmask,
+		OfflineReason:    properties.OfflineReason,
+		Profiles:         &profileName,
+		PhysLocation:     properties.PhysLocation,
+		PhysLocationID:   properties.PhysLocationID,
+		Rack:             properties.Rack,
+		RevalPending:     properties.RevalPending,
+		Status:           properties.Status,
+		StatusID:         properties.StatusID,
+		TCPPort:          properties.TCPPort,
+		Type:             properties.Type,
+		TypeID:           properties.TypeID,
+		UpdPending:       properties.UpdPending,
+		XMPPID:           properties.XMPPID,
+		XMPPPasswd:       properties.XMPPPasswd,
+	}
 }
 
 // ServerV40 is the representation of a Server in version 4.0 of the Traffic Ops API.
