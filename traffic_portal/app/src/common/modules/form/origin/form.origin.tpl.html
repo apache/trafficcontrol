@@ -47,7 +47,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(originForm.tenantId), 'has-feedback': hasError(originForm.tenantId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Tenant</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <tree-select ng-if="tenants.length > 0" tree-data="[tenants[0]]" handle="tenantId" on-update="origin.tenantId=value" selection="origin.tenantId"></tree-select>
+                    <tree-select ng-if="tenants.length > 0" tree-data="[tenants[0]]" handle="tenantId" on-update="origin.tenantId=value" initial-value="origin.tenantId"></tree-select>
                     <small class="input-error" ng-show="hasPropertyError(originForm.tenantId, 'required')">Required</small>
                     <small ng-show="origin.tenantId"><a href="/#!/tenants/{{origin.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
