@@ -82,7 +82,7 @@ const disallowed = "disallowed"
 // PrivLevelInvalid - The Default Priv level
 const PrivLevelInvalid = -1
 
-const PrivLevel = 0
+const PrivLevelUnauthenticated = 0
 
 const PrivLevelReadOnly = 10
 

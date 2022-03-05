@@ -229,11 +229,11 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `jobs/?`, Handler: invalidationjobs.CreateV40, RequiredPrivLevel: auth.PrivLevelPortal, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 404509553},
 
 		//Login
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `user/login/?$`, Handler: login.LoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 43926708213},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `user/logout/?$`, Handler: login.LogoutHandler(d.Config.Secrets[0]), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 4434348253},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `user/login/oauth/?$`, Handler: login.OauthLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 44158860093},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `user/login/token/?$`, Handler: login.TokenLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 4024088413},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `user/reset_password/?$`, Handler: login.ResetPassword(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 42929146303},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `user/login/?$`, Handler: login.LoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 43926708213},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `user/logout/?$`, Handler: login.LogoutHandler(d.Config.Secrets[0]), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 4434348253},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `user/login/oauth/?$`, Handler: login.OauthLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 44158860093},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `user/login/token/?$`, Handler: login.TokenLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 4024088413},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `user/reset_password/?$`, Handler: login.ResetPassword(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 42929146303},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `users/register/?$`, Handler: login.RegisterUser, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"USER:CREATE", "USER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 43373},
 
 		//ISO
@@ -262,7 +262,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodDelete, Path: `phys_locations/{id}$`, Handler: api.DeleteHandler(&physlocation.TOPhysLocation{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"PHYSICAL-LOCATION:DELETE", "PHYSICAL-LOCATION:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 456142213},
 
 		//Ping
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `ping$`, Handler: ping.Handler, RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 45556615973},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `ping$`, Handler: ping.Handler, RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 45556615973},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `vault/ping/?$`, Handler: ping.Vault, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"TRAFFIC-VAULT:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 48840121143},
 
 		//Profile: CRUD
@@ -623,11 +623,11 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `jobs/?`, Handler: invalidationjobs.Create, RequiredPrivLevel: auth.PrivLevelPortal, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 204509553},
 
 		//Login
-		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `user/login/?$`, Handler: login.LoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 23926708213},
-		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `user/logout/?$`, Handler: login.LogoutHandler(d.Config.Secrets[0]), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2434348253},
-		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `user/login/oauth/?$`, Handler: login.OauthLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 24158860093},
-		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `user/login/token/?$`, Handler: login.TokenLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 2024088413},
-		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `user/reset_password/?$`, Handler: login.ResetPassword(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 22929146303},
+		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `user/login/?$`, Handler: login.LoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 23926708213},
+		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `user/logout/?$`, Handler: login.LogoutHandler(d.Config.Secrets[0]), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2434348253},
+		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `user/login/oauth/?$`, Handler: login.OauthLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 24158860093},
+		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `user/login/token/?$`, Handler: login.TokenLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 2024088413},
+		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `user/reset_password/?$`, Handler: login.ResetPassword(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 22929146303},
 		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `users/register/?$`, Handler: login.RegisterUser, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 23373},
 
 		//ISO
@@ -656,7 +656,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodDelete, Path: `phys_locations/{id}$`, Handler: api.DeleteHandler(&physlocation.TOPhysLocation{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 256142213},
 
 		//Ping
-		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodGet, Path: `ping$`, Handler: ping.Handler, RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 25556615973},
+		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodGet, Path: `ping$`, Handler: ping.Handler, RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 25556615973},
 		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodGet, Path: `vault/ping/?$`, Handler: ping.Vault, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 28840121143},
 
 		//Profile: CRUD
@@ -1000,11 +1000,11 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `jobs/?`, Handler: invalidationjobs.Create, RequiredPrivLevel: auth.PrivLevelPortal, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 20450955},
 
 		//Login
-		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `user/login/?$`, Handler: login.LoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 2392670821},
-		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `user/logout/?$`, Handler: login.LogoutHandler(d.Config.Secrets[0]), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 243434825},
-		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `user/login/oauth/?$`, Handler: login.OauthLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 2415886009},
-		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `user/login/token/?$`, Handler: login.TokenLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 202408841},
-		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `user/reset_password/?$`, Handler: login.ResetPassword(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 2292914630},
+		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `user/login/?$`, Handler: login.LoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 2392670821},
+		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `user/logout/?$`, Handler: login.LogoutHandler(d.Config.Secrets[0]), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 243434825},
+		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `user/login/oauth/?$`, Handler: login.OauthLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 2415886009},
+		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `user/login/token/?$`, Handler: login.TokenLoginHandler(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 202408841},
+		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `user/reset_password/?$`, Handler: login.ResetPassword(d.DB, d.Config), RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 2292914630},
 		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `users/register/?$`, Handler: login.RegisterUser, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2337},
 
 		//ISO
@@ -1033,7 +1033,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodDelete, Path: `phys_locations/{id}$`, Handler: api.DeleteHandler(&physlocation.TOPhysLocation{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 25614221},
 
 		//Ping
-		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodGet, Path: `ping$`, Handler: ping.Handler, RequiredPrivLevel: auth.PrivLevel, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 2555661597},
+		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodGet, Path: `ping$`, Handler: ping.Handler, RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: NoAuth, Middlewares: nil, ID: 2555661597},
 		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodGet, Path: `vault/ping/?$`, Handler: ping.Vault, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2884012114},
 
 		//Profile: CRUD
