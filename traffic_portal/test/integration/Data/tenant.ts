@@ -70,7 +70,7 @@ export const tenants = {
                     description: "create a tenant",
                     Name: "TPTenantTest",
                     Active: "true",
-                    ParentTenant: "- root",
+                    ParentTenant: "root",
                     validationMessage: "Tenant created"
                 }
             ],
@@ -103,7 +103,7 @@ export const tenants = {
                     description: "create a tenant",
                     Name: "TPTenantTest",
                     Active: "true",
-                    ParentTenant: "- root",
+                    ParentTenant: "root",
                     validationMessage: "missing required Permissions: TENANT:CREATE"
                 }
             ],
