@@ -1219,7 +1219,7 @@ func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (profi
 		profileCache.Port = *sv.TCPPort
 	}
 	for _, param := range params {
-		if _, ok := param.ProfileNames[*sv.Profile]; !ok {
+		if _, ok := param.ProfileNames[(*sv.Profiles)[0]]; !ok {
 			continue
 		}
 		switch param.Name {
