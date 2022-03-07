@@ -98,7 +98,7 @@ var TreeSelectDirective = function($document) {
                     hidden: false
                 });
                 const last = scope.treeRows.length - 1;
-                if(row.id === scope.initialValue) {
+                if(row.id === scope.initialValue || row.name === scope.initialValue) {
                     scope.selected = scope.treeRows[last];
                 }
                 if(row.children != null) {
@@ -154,7 +154,7 @@ var TreeSelectDirective = function($document) {
              * Triggers onUpdate binding
              */
             scope.update = function() {
-                scope.onUpdate({value: scope.selected});
+                scope.onUpdate({value: scope.selected.value ?? ""});
             }
 
             /**
@@ -178,6 +178,7 @@ var TreeSelectDirective = function($document) {
             scope.select = function(row) {
                 scope.selected = row;
                 scope.selection = row.value;
+                scope.update();
                 scope.close();
             }
             /**
