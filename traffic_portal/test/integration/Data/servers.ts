@@ -337,7 +337,7 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
+						}
 					]
 				},
 				{
@@ -403,7 +403,7 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
+						}
 					]
 				},
 				{
@@ -469,7 +469,7 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
+						}
 					]
 				},
 				{
@@ -535,7 +535,7 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
+						}
 					]
 				}
 			]

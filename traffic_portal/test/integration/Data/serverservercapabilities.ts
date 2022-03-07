@@ -294,12 +294,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				},
@@ -366,12 +360,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				},
@@ -438,12 +426,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				},
@@ -510,12 +492,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				},
@@ -582,12 +558,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				},
@@ -654,12 +624,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				}

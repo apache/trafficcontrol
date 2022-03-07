@@ -376,12 +376,6 @@ export const topologies = {
 							queryKey: "name",
 							queryValue: "TopTestCDN",
 							replace: "cdnId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "TopTestPf",
-							replace: "profileNames"
 						}
                     ],
                     updPending: false
@@ -448,12 +442,6 @@ export const topologies = {
 							queryKey: "name",
 							queryValue: "TopTestCDN",
 							replace: "cdnId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "TopTestPf",
-							replace: "profileNames"
 						}
                     ],
                     updPending: false
