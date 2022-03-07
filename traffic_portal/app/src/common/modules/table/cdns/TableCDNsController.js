@@ -212,7 +212,7 @@ var TableCDNsController = function(cdns, $scope, $uibModal, locationUtils, cdnSe
 			type: 2
 		},
 		{
-			getHref: cdn => `#!/cdns/${cdn.id}/profiles`,
+			getHref: cdn => `#!/profiles?cdnName=${encodeURIComponent(cdn.name)}`,
 			text: "Manage Profiles",
 			type: 2
 		},

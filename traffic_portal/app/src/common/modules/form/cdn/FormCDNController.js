@@ -47,7 +47,7 @@ var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, s
     };
 
     $scope.viewProfiles = function() {
-        $location.path($location.path() + '/profiles');
+        $location.url(`/profiles?cdnName=${encodeURIComponent(cdn.name)}`);
     };
 
     $scope.viewServers = function() {
