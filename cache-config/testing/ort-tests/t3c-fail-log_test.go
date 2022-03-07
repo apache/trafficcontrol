@@ -38,14 +38,14 @@ func doTestT3cApplyFailMsg(t *testing.T) {
 	// and use the short name (which is what will be in Traffic Ops),
 	// and not the full FQDN.
 
-	stdOut, exitCode := t3cUpdateUnsetFlag("nonexistent-host-to-cause-failure", "badass")
+	stdErr, exitCode := t3cUpdateReload("nonexistent-host-to-cause-failure", "badass")
 	if exitCode == 0 {
-		t.Fatalf("t3c-apply with nonexistent host expected failure, actual code %v output: %s", exitCode, stdOut)
+		t.Fatalf("t3c-apply with nonexistent host expected failure, actual code %v stderr: %s", exitCode, stdErr)
 	}
 
-	outStr := strings.TrimSpace(string(stdOut))
+	errStr := strings.TrimSpace(string(stdErr))
 
-	if !strings.HasSuffix(outStr, "CRITICAL FAILURE, ABORTING") {
-		t.Fatalf("t3c-apply failure expected to end with critical failure message, actual code %v output: %s", exitCode, stdOut)
+	if !strings.HasSuffix(errStr, "CRITICAL FAILURE, ABORTING") {
+		t.Fatalf("t3c-apply failure expected to end with critical failure message, actual code %v stderr: %s", exitCode, stdErr)
 	}
 }
