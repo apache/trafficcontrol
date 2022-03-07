@@ -485,13 +485,13 @@ Apart from start Grafana, the above commands also expose port 3000 for it.
 
 Check the charts
 """"""""""""""""
-There are some *scripted dashboards* can show beautiful charts. You can display different charts by passing in different *query string*
+There are some "scripted dashboards" that can show easily comprehended charts. The data displayed on different charts is controlled using query string parameters.
 
-* ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``. The query parameter `which` in this particular URL should be the **cachegroup**. Take CIAB as an example, it can be filled in with **CDN_in_a_Box_Edge** or **CDN_in_a_Box_Edge**.
-* ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``. The query parameter `which` in this particular URL should be the **xml_id** of the desired Delivery Service.
-* ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``. The query parameter `which` in this particular URL should be the **hostname** (not **FQDN**). It can be filled in with **edge** or **mid** in CIAB.
+* :samp:`https://{Grafana Host}/dashboard/script/traffic_ops_cachegroup.js?which={Cache Group name}`. The query string parameter ``which`` in this particular URL should be the :term:`Cache Group`. With default :abbr:`CiaB (CDN-in-a-Box)` data, it can be filled in with **CDN_in_a_Box_Edge** or **CDN_in_a_Box_Edge**.
+* :samp:`https://{Grafana Host}/dashboard/script/traffic_ops_deliveryservice.js?which={XML ID}`. The query string parameter ``which`` in this particular URL should be the :ref:`ds-xmlid` of the desired :term:`Delivery Service`.
+* :samp:`https://{Grafana Host}/dashboard/script/traffic_ops_server.js?which={hostname}`. The query string parameter ``which`` in this particular URL should be the **hostname** (not **FQDN**). With default :abbr:`CiaB (CDN-in-a-Box)` data, it can be filled in with **edge** or **mid**.
 
 Debugging
----------
+=========
 
 See :ref:`dev-debugging-ciab`.
