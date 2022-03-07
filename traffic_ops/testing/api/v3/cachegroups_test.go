@@ -16,144 +16,241 @@ package v3
 */
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )
 
 func TestCacheGroups(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies}, func() {
-		GetTestCacheGroupsIMS(t)
-		GetTestCacheGroupsByNameIMS(t)
-		GetTestCacheGroupsByShortNameIMS(t)
-		GetTestCacheGroups(t)
-		GetTestCacheGroupsByName(t)
-		GetTestCacheGroupsByShortName(t)
-		GetTestCacheGroupsByTopology(t)
-		CheckCacheGroupsAuthentication(t)
+
+		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		UpdateTestCacheGroups(t)
-		UpdateTestCacheGroupsWithHeaders(t, header)
-		GetTestCacheGroupsAfterChangeIMS(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestCacheGroupsWithHeaders(t, header)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+
+		methodTests := map[string]map[string]struct {
+			endpointId     func() int
+			clientSession  *client.Session
+			requestParams  url.Values
+			requestHeaders http.Header
+			requestBody    map[string]interface{}
+			expectations   []utils.CkReqFunc
+		}{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					clientSession: TOSession, requestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"NOT MODIFIED when VALID NAME parameter when NO CHANGES made": {
+					clientSession: TOSession, requestParams: url.Values{"name": {"originCachegroup"}},
+					requestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"NOT MODIFIED when VALID SHORTNAME parameter when NO CHANGES made": {
+					clientSession: TOSession, requestParams: url.Values{"shortName": {"mog1"}},
+					requestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					clientSession: TOSession, expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when VALID NAME parameter": {
+					clientSession: TOSession, requestParams: url.Values{"name": {"parentCachegroup"}},
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						ValidateExpectedField("Name", "parentCachegroup")),
+				},
+				"OK when VALID SHORTNAME parameter": {
+					clientSession: TOSession, requestParams: url.Values{"shortName": {"pg2"}},
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						ValidateExpectedField("ShortName", "pg2")),
+				},
+				"OK when VALID TOPOLOGY parameter": {
+					clientSession: TOSession, requestParams: url.Values{"topology": {"mso-topology"}},
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"UNAUTHORIZED when NOT LOGGED IN": {
+					clientSession: NoAuthTOSession, expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+				},
+			},
+			"POST": {
+				"UNAUTHORIZED when NOT LOGGED IN": {
+					clientSession: NoAuthTOSession, expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					endpointId: GetCacheGroupId(t, "cachegroup1"), clientSession: TOSession,
+					requestBody: map[string]interface{}{
+						"latitude":            17.5,
+						"longitude":           17.5,
+						"name":                "cachegroup1",
+						"shortName":           "newShortName",
+						"localizationMethods": []string{"CZ"},
+						"fallbacks":           []string{"fallback1"},
+						"typeName":            "EDGE_LOC",
+						"typeId":              -1,
+					},
+					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					endpointId: GetCacheGroupId(t, "parentCachegroup"), clientSession: TOSession,
+					requestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					requestBody: map[string]interface{}{
+						"latitude":  0,
+						"longitude": 0,
+						"name":      "parentCachegroup",
+						"shortName": "pg1",
+						"typeName":  "MID_LOC",
+						"typeId":    -1,
+					},
+					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					endpointId: GetCacheGroupId(t, "parentCachegroup2"), clientSession: TOSession,
+					requestBody: map[string]interface{}{
+						"latitude":  0,
+						"longitude": 0,
+						"name":      "parentCachegroup2",
+						"shortName": "pg2",
+						"typeName":  "MID_LOC",
+						"typeId":    -1,
+					},
+					requestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"UNAUTHORIZED when NOT LOGGED IN": {
+					endpointId: GetCacheGroupId(t, "cachegroup1"), clientSession: NoAuthTOSession,
+					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+				},
+			},
+			"DELETE": {
+				"UNAUTHORIZED when NOT LOGGED IN": {
+					endpointId: GetCacheGroupId(t, "cachegroup1"), clientSession: NoAuthTOSession,
+					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					clientSession:  TOSession,
+					requestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					cg := tc.CacheGroupNullable{}
+
+					if testCase.requestParams.Has("type") {
+						val := testCase.requestParams.Get("type")
+						if _, err := strconv.Atoi(val); err != nil {
+							testCase.requestParams.Set("type", strconv.Itoa(GetTypeId(t, val)))
+						}
+					}
+
+					if testCase.requestBody != nil {
+						if _, ok := testCase.requestBody["id"]; ok {
+							testCase.requestBody["id"] = testCase.endpointId()
+						}
+						if typeId, ok := testCase.requestBody["typeId"]; ok {
+							if typeId == -1 {
+								if typeName, ok := testCase.requestBody["typeName"]; ok {
+									testCase.requestBody["typeId"] = GetTypeId(t, typeName.(string))
+								}
+							}
+						}
+						dat, err := json.Marshal(testCase.requestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &cg)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.clientSession.GetCacheGroupsByQueryParamsWithHdr(testCase.requestParams, testCase.requestHeaders)
+							for _, check := range testCase.expectations {
+								check(t, reqInf, resp, tc.Alerts{}, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.clientSession.CreateCacheGroupNullable(cg)
+							for _, check := range testCase.expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.clientSession.UpdateCacheGroupNullableByIDWithHdr(testCase.endpointId(), cg, testCase.requestHeaders)
+							for _, check := range testCase.expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.clientSession.DeleteCacheGroupByID(testCase.endpointId())
+							for _, check := range testCase.expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestCacheGroupsWithHeaders(t *testing.T, h http.Header) {
-	firstCG := testData.CacheGroups[0]
-	resp, _, err := TOSession.GetCacheGroupNullableByNameWithHdr(*firstCG.Name, h)
-	if err != nil {
-		t.Errorf("cannot GET CACHEGROUP by name: %v - %v", *firstCG.Name, err)
-	}
-	if len(resp) > 0 {
-		cg := resp[0]
-		expectedShortName := "blah"
-		cg.ShortName = &expectedShortName
-
-		// fix the type id for test
-		typeResp, _, err := TOSession.GetTypeByIDWithHdr(*cg.TypeID, h)
-		if err != nil {
-			t.Fatalf("could not lookup a typeID for this cachegroup: %v", err.Error())
-		}
-		if len(typeResp) > 0 {
-			cg.TypeID = &typeResp[0].ID
-			_, reqInf, err := TOSession.UpdateCacheGroupNullableByIDWithHdr(*cg.ID, cg, h)
-			if err == nil {
-				t.Errorf("Expected an error showing Precondition Failed, got none")
-			}
-			if reqInf.StatusCode != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-			}
+func ValidateExpectedField(field string, expected string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		cgResp := resp.([]tc.CacheGroupNullable)
+		cg := cgResp[0]
+		switch field {
+		case "Name":
+			assert.Equal(t, expected, *cg.Name, "Expected name to be %v, but got %v", expected, *cg.Name)
+		case "ShortName":
+			assert.Equal(t, expected, *cg.ShortName, "Expected shortName to be %v, but got %v", expected, *cg.ShortName)
+		case "TypeName":
+			assert.Equal(t, expected, *cg.Type, "Expected type to be %v, but got %v", expected, *cg.Type)
+		default:
+			t.Errorf("Expected field: %v, does not exist in response", field)
 		}
 	}
 }
 
-func GetTestCacheGroupsAfterChangeIMS(t *testing.T, header http.Header) {
-	_, reqInf, err := TOSession.GetCacheGroupsByQueryParamsWithHdr(url.Values{}, header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	if reqInf.StatusCode != http.StatusOK {
-		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	_, reqInf, err = TOSession.GetCacheGroupsByQueryParamsWithHdr(url.Values{}, header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-	}
+func GetTypeId(t *testing.T, typeName string) int {
+	resp, _, err := TOSession.GetTypeByNameWithHdr(typeName, nil)
+	assert.RequireNoError(t, err, "Get Types Request failed with error: %v", err)
+	assert.RequireEqual(t, 1, len(resp), "Expected response object length 1, but got %d", len(resp))
+	assert.RequireNotNil(t, &resp[0].ID, "Expected id to not be nil")
+
+	return resp[0].ID
 }
 
-func GetTestCacheGroupsByShortNameIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	for _, cg := range testData.CacheGroups {
-		_, reqInf, err := TOSession.GetCacheGroupNullableByShortNameWithHdr(*cg.ShortName, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
-	}
-}
+func GetCacheGroupId(t *testing.T, cacheGroupName string) func() int {
+	return func() int {
+		resp, _, err := TOSession.GetCacheGroupNullableByNameWithHdr(cacheGroupName, nil)
+		assert.RequireNoError(t, err, "Get Cache Groups Request failed with error: %v", err)
+		assert.RequireEqual(t, len(resp), 1, "Expected response object length 1, but got %d", len(resp))
+		assert.RequireNotNil(t, resp[0].ID, "Expected id to not be nil")
 
-func GetTestCacheGroupsByNameIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	for _, cg := range testData.CacheGroups {
-		_, reqInf, err := TOSession.GetCacheGroupNullableByNameWithHdr(*cg.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
-	}
-}
-
-func GetTestCacheGroupsIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetCacheGroupsByQueryParamsWithHdr(url.Values{}, header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		return *resp[0].ID
 	}
 }
 
 func CreateTestCacheGroups(t *testing.T) {
-
 	var err error
 	var resp *tc.CacheGroupDetailResponse
 
@@ -175,286 +272,9 @@ func CreateTestCacheGroups(t *testing.T) {
 		if cg.Type != nil && resp.Response.Type == nil {
 			t.Error("Type is null in response when it should have a value\n")
 		}
-		if resp.Response.LocalizationMethods == nil {
-			t.Error("Localization methods are null")
-		}
-		if resp.Response.Fallbacks == nil {
-			t.Error("Fallbacks are null")
-		}
+		assert.NotNil(t, resp.Response.LocalizationMethods, "Localization methods are null")
+		assert.NotNil(t, resp.Response.Fallbacks, "Fallbacks are null")
 
-	}
-}
-
-func GetTestCacheGroups(t *testing.T) {
-	resp, _, err := TOSession.GetCacheGroupsByQueryParams(url.Values{})
-	if err != nil {
-		t.Errorf("cannot GET CacheGroups %v - %v", err, resp)
-	}
-	expectedCachegroups := make(map[string]struct{})
-	for _, cg := range testData.CacheGroups {
-		expectedCachegroups[*cg.Name] = struct{}{}
-	}
-	foundCachegroups := make(map[string]struct{})
-	for _, cg := range resp {
-		if _, expected := expectedCachegroups[*cg.Name]; !expected {
-			t.Errorf("got unexpected cachegroup: %s", *cg.Name)
-		}
-		if _, found := foundCachegroups[*cg.Name]; !found {
-			foundCachegroups[*cg.Name] = struct{}{}
-		} else {
-			t.Errorf("GET returned duplicate cachegroup: %s", *cg.Name)
-		}
-	}
-}
-
-func GetTestCacheGroupsByName(t *testing.T) {
-	for _, cg := range testData.CacheGroups {
-		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
-		if err != nil {
-			t.Errorf("cannot GET CacheGroup by name: %v - %v", err, resp)
-		}
-		if *resp[0].Name != *cg.Name {
-			t.Errorf("name expected: %s, actual: %s", *cg.Name, *resp[0].Name)
-		}
-	}
-}
-
-func GetTestCacheGroupsByShortName(t *testing.T) {
-	for _, cg := range testData.CacheGroups {
-		resp, _, err := TOSession.GetCacheGroupNullableByShortName(*cg.ShortName)
-		if err != nil {
-			t.Errorf("cannot GET CacheGroup by shortName: %v - %v", err, resp)
-		}
-		if *resp[0].ShortName != *cg.ShortName {
-			t.Errorf("short name expected: %s, actual: %s", *cg.ShortName, *resp[0].ShortName)
-		}
-	}
-}
-
-func GetTestCacheGroupsByTopology(t *testing.T) {
-	for _, top := range testData.Topologies {
-		qparams := url.Values{}
-		qparams.Set("topology", top.Name)
-		resp, _, err := TOSession.GetCacheGroupsByQueryParams(qparams)
-		if err != nil {
-			t.Errorf("cannot GET CacheGroups by topology: %v - %v", err, resp)
-		}
-		expectedCGs := topologyCachegroups(top)
-		for _, cg := range resp {
-			if _, exists := expectedCGs[*cg.Name]; !exists {
-				t.Errorf("GET cachegroups by topology - expected one of: %v, actual: %s", expectedCGs, *cg.Name)
-			}
-		}
-	}
-}
-
-func topologyCachegroups(top tc.Topology) map[string]struct{} {
-	res := make(map[string]struct{})
-	for _, node := range top.Nodes {
-		res[node.Cachegroup] = struct{}{}
-	}
-	return res
-}
-
-func UpdateTestCacheGroups(t *testing.T) {
-	firstCG := testData.CacheGroups[0]
-	resp, _, err := TOSession.GetCacheGroupNullableByName(*firstCG.Name)
-	if err != nil {
-		t.Errorf("cannot GET CACHEGROUP by name: %v - %v", *firstCG.Name, err)
-	}
-	if len(resp) == 0 {
-		t.Fatal("got an empty response for cachegroups")
-	}
-	cg := resp[0]
-	expectedShortName := "blah"
-	cg.ShortName = &expectedShortName
-
-	// fix the type id for test
-	typeResp, _, err := TOSession.GetTypeByID(*cg.TypeID)
-	if err != nil {
-		t.Error("could not lookup a typeID for this cachegroup")
-	}
-	if len(typeResp) == 0 {
-		t.Fatal("got an empty response for types")
-	}
-	cg.TypeID = &typeResp[0].ID
-	updResp, _, err := TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
-	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
-	}
-
-	if updResp == nil {
-		t.Fatal("could not update cachegroup by ID, got nil response")
-	}
-	// Check response to make sure fields aren't null
-	if cg.ParentName != nil && updResp.Response.ParentName == nil {
-		t.Error("Parent cachegroup is null in response when it should have a value")
-	}
-	if cg.SecondaryParentName != nil && updResp.Response.SecondaryParentName == nil {
-		t.Error("Secondary parent cachegroup is null in response when it should have a value\n")
-	}
-	if cg.Type != nil && updResp.Response.Type == nil {
-		t.Error("Type is null in response when it should have a value\n")
-	}
-	if updResp.Response.LocalizationMethods == nil {
-		t.Error("Localization methods are null")
-	}
-	if updResp.Response.Fallbacks == nil {
-		t.Error("Fallbacks are null")
-	}
-
-	// Retrieve the CacheGroup to check CacheGroup name got updated
-	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
-	if err != nil {
-		t.Errorf("cannot GET CacheGroup by name: '%s', %v", *firstCG.Name, err)
-	}
-	if len(resp) == 0 {
-		t.Fatal("got an empty response for cachegroups")
-	}
-	cg = resp[0]
-	if *cg.ShortName != expectedShortName {
-		t.Errorf("results do not match actual: %s, expected: %s", *cg.ShortName, expectedShortName)
-	}
-
-	// test coordinate updates
-	expectedLat := 7.0
-	expectedLong := 8.0
-	cg.Latitude = &expectedLat
-	cg.Longitude = &expectedLong
-	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
-	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
-	}
-
-	if updResp == nil {
-		t.Fatal("could not update cachegroup by ID, got nil response")
-	}
-	resp, _, err = TOSession.GetCacheGroupNullableByIDWithHdr(*cg.ID, nil)
-
-	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
-	}
-	if len(resp) == 0 {
-		t.Fatal("got an empty response for cachegroups")
-	}
-	cg = resp[0]
-	if *cg.Latitude != expectedLat {
-		t.Errorf("failed to update latitude (expected = %f, actual = %f)", expectedLat, *cg.Latitude)
-	}
-	if *cg.Longitude != expectedLong {
-		t.Errorf("failed to update longitude (expected = %f, actual = %f)", expectedLong, *cg.Longitude)
-	}
-
-	// test localizationMethods
-	expectedMethods := []tc.LocalizationMethod{tc.LocalizationMethodGeo}
-	cg.LocalizationMethods = &expectedMethods
-	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
-	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
-	}
-
-	if updResp == nil {
-		t.Fatal("could not update cachegroup by ID, got nil response")
-	}
-	resp, _, err = TOSession.GetCacheGroupNullableByIDWithHdr(*cg.ID, nil)
-
-	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
-	}
-	if len(resp) == 0 {
-		t.Fatal("got an empty response for cachegroups")
-	}
-	cg = resp[0]
-	if !reflect.DeepEqual(expectedMethods, *cg.LocalizationMethods) {
-		t.Errorf("failed to update localizationMethods (expected = %v, actual = %v)", expectedMethods, *cg.LocalizationMethods)
-	}
-
-	// test cachegroup fallbacks
-
-	// Retrieve the CacheGroup to check CacheGroup name got updated
-	firstEdgeCGName := "cachegroup1"
-	resp, _, err = TOSession.GetCacheGroupNullableByName(firstEdgeCGName)
-	if err != nil {
-		t.Errorf("cannot GET CacheGroup by name: '$%s', %v", firstEdgeCGName, err)
-	}
-	if len(resp) == 0 {
-		t.Fatal("got an empty response for cachegroups")
-	}
-	cg = resp[0]
-	if *cg.Name != firstEdgeCGName {
-		t.Errorf("results do not match actual: %s, expected: %s", *cg.ShortName, firstEdgeCGName)
-	}
-
-	// Test adding fallbacks when previously nil
-	expectedFallbacks := []string{"fallback1", "fallback2"}
-	cg.Fallbacks = &expectedFallbacks
-	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
-	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
-	}
-
-	if updResp == nil {
-		t.Fatal("could not update cachegroup by ID, got nil response")
-	}
-	resp, _, err = TOSession.GetCacheGroupNullableByIDWithHdr(*cg.ID, nil)
-
-	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
-	}
-	if len(resp) == 0 {
-		t.Fatal("got an empty response for cachegroups")
-	}
-	cg = resp[0]
-	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
-		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)", expectedFallbacks, *cg.Fallbacks)
-	}
-
-	// Test adding fallback to existing list
-	expectedFallbacks = []string{"fallback1", "fallback2", "fallback3"}
-	cg.Fallbacks = &expectedFallbacks
-	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
-	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v)", err, updResp)
-	}
-
-	if updResp == nil {
-		t.Fatal("could not update cachegroup by ID, got nil response")
-	}
-	resp, _, err = TOSession.GetCacheGroupNullableByIDWithHdr(*cg.ID, nil)
-
-	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
-	}
-	if len(resp) == 0 {
-		t.Fatal("got an empty response for cachegroups")
-	}
-	cg = resp[0]
-	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
-		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)", expectedFallbacks, *cg.Fallbacks)
-	}
-
-	// Test removing fallbacks
-	expectedFallbacks = []string{}
-	cg.Fallbacks = &expectedFallbacks
-	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
-	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
-	}
-
-	if updResp == nil {
-		t.Fatal("could not update cachegroup by ID, got nil response")
-	}
-	resp, _, err = TOSession.GetCacheGroupNullableByIDWithHdr(*cg.ID, nil)
-
-	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
-	}
-	if len(resp) == 0 {
-		t.Fatal("got an empty response for cachegroups")
-	}
-	cg = resp[0]
-	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
-		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)", expectedFallbacks, *cg.Fallbacks)
 	}
 }
 
@@ -464,10 +284,8 @@ func DeleteTestCacheGroups(t *testing.T) {
 	// delete the edge caches.
 	for _, cg := range testData.CacheGroups {
 		// Retrieve the CacheGroup by name so we can get the id for the Update
-		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
-		if err != nil {
-			t.Errorf("cannot GET CacheGroup by name: %v - %v", *cg.Name, err)
-		}
+		resp, _, err := TOSession.GetCacheGroupNullableByNameWithHdr(*cg.Name, nil)
+		assert.NoError(t, err, "Cannot GET CacheGroup by name '%s': %v", *cg.Name, err)
 		cg = resp[0]
 
 		// Cachegroups that are parents (usually mids but sometimes edges)
@@ -479,73 +297,29 @@ func DeleteTestCacheGroups(t *testing.T) {
 		if len(resp) > 0 {
 			respCG := resp[0]
 			_, _, err := TOSession.DeleteCacheGroupByID(*respCG.ID)
-			if err != nil {
-				t.Errorf("cannot DELETE CacheGroup by name: '%s' %v", *respCG.Name, err)
-			}
+			assert.NoError(t, err, "Cannot delete Cache Group: %v - alerts: %+v", *respCG.Name, err)
+
 			// Retrieve the CacheGroup to see if it got deleted
-			cgs, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
-			if err != nil {
-				t.Errorf("error deleting CacheGroup by name: %s", err.Error())
-			}
-			if len(cgs) > 0 {
-				t.Errorf("expected CacheGroup name: %s to be deleted", *cg.Name)
-			}
+			cgs, _, err := TOSession.GetCacheGroupNullableByNameWithHdr(*cg.Name, nil)
+			assert.NoError(t, err, "Error deleting Cache Group by name: %v", err)
+			assert.Equal(t, 0, len(cgs), "Expected CacheGroup name: %s to be deleted", *cg.Name)
 		}
 	}
 
 	// now delete the parentless cachegroups
 	for _, cg := range parentlessCacheGroups {
 		// Retrieve the CacheGroup by name so we can get the id for the Update
-		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
-		if err != nil {
-			t.Errorf("cannot GET CacheGroup by name: %v - %v", *cg.Name, err)
-		}
+		resp, _, err := TOSession.GetCacheGroupNullableByNameWithHdr(*cg.Name, nil)
+		assert.NoError(t, err, "Cannot GET CacheGroup by name '%s': %v", *cg.Name, err)
 		if len(resp) > 0 {
 			respCG := resp[0]
 			_, _, err := TOSession.DeleteCacheGroupByID(*respCG.ID)
-			if err != nil {
-				t.Errorf("cannot DELETE CacheGroup by name: '%s' %v", *respCG.Name, err)
-			}
+			assert.NoError(t, err, "Cannot delete Cache Group: %v - alerts: %+v", *respCG.Name, err)
 
 			// Retrieve the CacheGroup to see if it got deleted
-			cgs, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
-			if err != nil {
-				t.Errorf("error deleting CacheGroup name: %s", err.Error())
-			}
-			if len(cgs) > 0 {
-				t.Errorf("expected CacheGroup name: %s to be deleted", *cg.Name)
-			}
+			cgs, _, err := TOSession.GetCacheGroupNullableByShortNameWithHdr(*cg.Name, nil)
+			assert.NoError(t, err, "Error deleting Cache Group by name: %v", err)
+			assert.Equal(t, 0, len(cgs), "Expected CacheGroup name: %s to be deleted", *cg.Name)
 		}
-	}
-}
-
-func CheckCacheGroupsAuthentication(t *testing.T) {
-	errFormat := "expected error from %s when unauthenticated"
-
-	cg := testData.CacheGroups[0]
-
-	resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
-	if err != nil {
-		t.Errorf("cannot GET CacheGroup by name: %v - %v", *cg.Name, err)
-	}
-	cg = resp[0]
-
-	if _, _, err = NoAuthTOSession.CreateCacheGroupNullable(cg); err == nil {
-		t.Error(fmt.Errorf(errFormat, "CreateCacheGroup"))
-	}
-	if _, _, err = NoAuthTOSession.GetCacheGroupsNullable(); err == nil {
-		t.Error(fmt.Errorf(errFormat, "GetCacheGroups"))
-	}
-	if _, _, err = NoAuthTOSession.GetCacheGroupNullableByName(*cg.Name); err == nil {
-		t.Error(fmt.Errorf(errFormat, "GetCacheGroupByName"))
-	}
-	if _, _, err = NoAuthTOSession.GetCacheGroupNullableByID(*cg.ID); err == nil {
-		t.Error(fmt.Errorf(errFormat, "GetCacheGroupByID"))
-	}
-	if _, _, err = NoAuthTOSession.UpdateCacheGroupNullableByID(*cg.ID, cg); err == nil {
-		t.Error(fmt.Errorf(errFormat, "UpdateCacheGroupByID"))
-	}
-	if _, _, err = NoAuthTOSession.DeleteCacheGroupByID(*cg.ID); err == nil {
-		t.Error(fmt.Errorf(errFormat, "DeleteCacheGroupByID"))
 	}
 }

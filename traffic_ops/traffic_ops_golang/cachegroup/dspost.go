@@ -102,6 +102,7 @@ func DSPostHandlerV40(w http.ResponseWriter, r *http.Request) {
 
 	if err, errCode := writeChangeLog(inf.Tx.Tx, inf.User, inf.IntParams["id"]); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, err)
+		return
 	}
 
 	api.WriteRespVals(w, r, resp, vals)

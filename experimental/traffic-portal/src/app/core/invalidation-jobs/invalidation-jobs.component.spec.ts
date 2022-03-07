@@ -36,7 +36,7 @@ describe("InvalidationJobsComponent", () => {
 
 	beforeEach(async () => {
 		// mock the API
-		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"]);
 
 		await TestBed.configureTestingModule({
 			declarations: [

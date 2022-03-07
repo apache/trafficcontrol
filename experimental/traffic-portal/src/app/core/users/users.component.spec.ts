@@ -29,8 +29,9 @@ describe("UsersComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		// mock the API
-		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"]);
 		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
+		mockCurrentUserService.hasPermission.and.returnValue(true);
 
 		TestBed.configureTestingModule({
 			declarations: [

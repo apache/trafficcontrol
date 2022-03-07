@@ -16,137 +16,135 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor';
+import { browser, by, element } from "protractor";
 import { randomize } from "../config";
-import { BasePage } from './BasePage.po';
-import { SideNavigationPage } from './SideNavigationPage.po';
+import { SideNavigationPage } from "./SideNavigationPage.po";
 
 interface CDN {
-  description?: string;
-  DNSSEC: string;
-  Domain: string;
-  Name: string;
-  validationMessage?: string;
+	description?: string;
+	DNSSEC: string;
+	Domain: string;
+	Name: string;
+	validationMessage?: string;
 }
 
 interface UpdateCDN {
-  description: string;
-  Name: string;
-  NewName: string;
-  validationMessage?: string;
+	description: string;
+	Name: string;
+	NewName: string;
+	validationMessage?: string;
 }
 
-interface DeleteCDN {
-  Name: string;
-  validationMessage?: string;
-}
+export class CDNPage extends SideNavigationPage {
 
-export class CDNPage extends BasePage {
+	private readonly txtCDNName = element(by.name("name"));
 
-  private btnNewCDN = element(by.name('createCdnButton'));
-  private txtCDNName = element(by.name('name'));
-  private txtDomain = element(by.name('domainName'));
-  private selectDNSSEC = element(by.name('dnssecEnabled'));
-  private txtSearch = element(by.id('cdnsTable_filter')).element(by.css('label input'));
-  private btnDelete = element(by.buttonText('Delete'));
-  private txtConfirmName = element(by.name('confirmWithNameInput'));
-  private btnDiffSnapshot = element(by.xpath("//button[@title='Diff CDN Snapshot']"));
-  private btnYes = element((by.xpath("//button[text()='Yes']")));
-  private btnQueueUpdates = element((by.xpath("//button[contains(text(),'Queue Updates')]")));
-  private randomize = randomize;
+	/**
+	 * Navigates the browser to the CDNs table page.
+	 */
+	public async openCDNsPage(): Promise<void> {
+		await this.NavigateToCDNPage();
+	}
 
-  public async OpenCDNsPage(): Promise<void> {
-    let snp = new SideNavigationPage();
-    await snp.NavigateToCDNPage();
-  }
+	/**
+	 * Creates a given CDN.
+	 *
+	 * @param cdn The CDN to create.
+	 * @returns Whether or not creation succeeded, which is judged by comparing
+	 * the displayed Alert messge to `cdn`'s `validtionMessge` - they must mtch
+	 * *exactly*!
+	 */
+	public async createCDN(cdn: CDN): Promise<boolean> {
+		await this.openCDNsPage();
+		await element(by.buttonText("More")).click();
+		await element(by.linkText("Create New CDN")).click();
+		await Promise.all([
+			this.txtCDNName.sendKeys(cdn.Name + randomize),
+			element(by.name("domainName")).sendKeys(cdn.Domain),
+			element(by.name("dnssecEnabled")).sendKeys(cdn.DNSSEC)
+		]);
+		await this.ClickCreate();
+		return this.GetOutputMessage().then(v => cdn.validationMessage === v);
+	}
 
-  public async CreateCDN(cdn: CDN): Promise<boolean> {
-    let snp = new SideNavigationPage();
-    let basePage = new BasePage();
-    await snp.NavigateToCDNPage();
-    await this.btnNewCDN.click();
-    await this.txtCDNName.sendKeys(cdn.Name + this.randomize);
-    await this.txtDomain.sendKeys(cdn.Domain);
-    await this.selectDNSSEC.sendKeys(cdn.DNSSEC);
-    await basePage.ClickCreate();
-    return await basePage.GetOutputMessage().then(value => cdn.validationMessage === value);
-  }
+	/**
+	 * Searches the CDNs table for a specific CDN, and navigates to its details
+	 * page.
+	 *
+	 * @param cdnName The Name of the CDN for which to search.
+	 */
+	public async searchCDN(cdnName: string): Promise<void> {
+		cdnName += randomize;
+		await this.NavigateToCDNPage();
+		const searchInput = element(by.id("quickSearch"));
+		await searchInput.clear();
+		await searchInput.sendKeys(cdnName);
+		await element(by.cssContainingText("span", cdnName)).click();
+	}
 
-  async SearchCDN(nameCDN: string) {
-    let snp = new SideNavigationPage();
-    let name = nameCDN + this.randomize;
-    await snp.NavigateToCDNPage();
-    await this.txtSearch.clear();
-    await this.txtSearch.sendKeys(name);
-    await element.all(by.repeater('cdn in ::cdns')).filter(function (row) {
-      return row.element(by.name('name')).getText().then(function (val) {
-        return val === name;
-      });
-    }).first().click();
-  }
+	/**
+	 * Updates a CDN's Name.
+	 *
+	 * @param cdn A definition of the CDN renaming.
+	 * @returns Whether or not renaming succeeded.
+	 */
+	public async updateCDN(cdn: UpdateCDN): Promise<boolean> {
+		const yesButton = element(by.buttonText("Yes"));
+		const queueButton = element(by.buttonText("Queue Updates"));
 
-  public async UpdateCDN(cdn: UpdateCDN): Promise<boolean | undefined> {
-    let result: boolean | undefined = false;
-    let basePage = new BasePage();
-    switch (cdn.description) {
-      case 'perform snapshot':
-        await this.btnDiffSnapshot.click();
-        if (await browser.isElementPresent(element(by.xpath('//button[@title="Perform ' + cdn.Name + this.randomize + ' Snapshot"]')))) {
-          await element(by.xpath('//button[@title="Perform ' + cdn.Name + this.randomize + ' Snapshot"]')).click();
-        } else {
-          throw new Error("Cannot find Perform Snapshot button")
-        }
-        await this.btnYes.click();
-        break;
-      case 'queue CDN updates':
-        await this.btnQueueUpdates.click();
-        if (await browser.isElementPresent(element(by.linkText('Queue ' + cdn.Name + this.randomize + ' Server Updates')))) {
-          await element(by.linkText('Queue ' + cdn.Name + this.randomize + ' Server Updates')).click();
-        } else {
-          throw new Error("Cannot find Queue CDN updates button")
-        }
-        await this.btnYes.click();
-        break;
-      case 'clear CDN updates':
-        await this.btnQueueUpdates.click();
-        if (await browser.isElementPresent(element(by.linkText('Clear ' + cdn.Name + this.randomize + ' Server Updates')))) {
-          await element(by.linkText('Clear ' + cdn.Name + this.randomize + ' Server Updates')).click();
-        } else {
-          throw new Error("Cannot find Clear CDN updates button")
-        }
-        await this.btnYes.click();
-        break;
-      case 'update cdn name':
-        await this.txtCDNName.clear();
-        await this.txtCDNName.sendKeys(cdn.NewName + this.randomize);
-        await this.ClickUpdate();
-      default:
-        result = undefined;
-    }
-    result = await basePage.GetOutputMessage().then(function (value) {
-      if (cdn.validationMessage == value) {
-        return true;
-      } else {
-        return false;
-      }
-    })
-    return result;
-  }
+		switch (cdn.description) {
+			case "perform snapshot":
+				await element(by.name("diffCDNbtn")).click();
+				const snapshotButton = by.partialButtonText("Perform Snapshot");
+				if (!await browser.isElementPresent(snapshotButton)) {
+					throw new Error("cannot find 'Perform Snapshot' button")
+				}
+				await element(snapshotButton).click();
+				await yesButton.click();
+				break;
+			case "queue CDN updates":
+				await queueButton.click();
+				const queueSelection = by.linkText(`Queue ${cdn.Name}${randomize} Server Updates`);
+				if (!await browser.isElementPresent(queueSelection)) {
+					throw new Error("cannot find 'Queue CDN updates' button")
+				}
+				await element(queueSelection).click();
+				await yesButton.click();
+				break;
+			case "clear CDN updates":
+				await queueButton.click();
+				const clearSelection = by.linkText(`Clear ${cdn.Name}${randomize} Server Updates`);
+				if (!await browser.isElementPresent(clearSelection)) {
+					throw new Error("Cannot find Clear CDN updates button")
+				}
+				await element(clearSelection).click();
+				await yesButton.click();
+				break;
+			case "update cdn name":
+				await this.txtCDNName.clear();
+				await this.txtCDNName.sendKeys(cdn.NewName + randomize);
+				await this.ClickUpdate();
+				break;
+			default:
+				throw new Error(`unhandleable description: '${cdn.description}'`);
+		}
 
-  public async DeleteCDN(cdn: DeleteCDN): Promise<boolean> {
-    let name = cdn.Name + this.randomize;
-    let basePage = new BasePage();
-    await this.btnDelete.click();
-    await this.txtConfirmName.sendKeys(name);
-    await basePage.ClickDeletePermanently();
-    return await basePage.GetOutputMessage().then(value => cdn.validationMessage === value);
-  }
-  public async CheckCSV(name:string): Promise<boolean> {
-    let result = false;
-    let linkName = name;
-    if (await browser.isElementPresent(element(by.xpath("//span[text()='" + linkName + "']"))) == true) {
-      result = true;
-    }
-    return result;
-  }
+		return (await this.GetOutputMessage()) === cdn.validationMessage;
+	}
+
+	/**
+	 * Deletes a CDN.
+	 *
+	 * @param cdn The Name of the CDN to be deleted.
+	 * @param validationMessage A literal Alert text that will be checked for to
+	 * determine success. If omitted, no Alert is expected.
+	 * @returns Whether or not the deletion succeeded.
+	 */
+	public async deleteCDN(cdn: string, validationMessage?: string): Promise<boolean> {
+		cdn += randomize;
+		await element(by.buttonText("Delete")).click();
+		await element(by.name("confirmWithNameInput")).sendKeys(cdn);
+		await this.ClickDeletePermanently();
+		return (await this.GetOutputMessage()) === validationMessage;
+	}
 }

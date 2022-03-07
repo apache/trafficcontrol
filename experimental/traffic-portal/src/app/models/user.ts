@@ -163,3 +163,6 @@ export interface Capability {
 	/** The date/time at which the Capability was last updated. */
 	lastUpdated?: Date;
 }
+
+/** The name of a special Role that is always allowed to do whatever it wants. */
+export const ADMIN_ROLE = "admin";

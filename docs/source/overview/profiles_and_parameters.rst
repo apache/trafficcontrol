@@ -205,6 +205,9 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	|                          |                         | updates and pending :term:`Content Invalidation Jobs`. This behavior should be enabled by default, and disabling it, while still      |
 	|                          |                         | possible is **EXTREMELY DISCOURAGED**.                                                                                                |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tm_query_status_override | global                  | When this Parameter is present, its Value_ will set which status of Traffic Monitors that Traffic Ops will query for                  |
+	|                          |                         | endpoints that require querying Traffic Monitors. If not present, Traffic Ops will default to querying ``ONLINE`` Traffic Monitors.   |
+	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation.polling.url  | CRConfig.json           | The location of a geographic IP mapping database for Traffic Router instances to use.                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation6.polling.url | CRConfig.json           | The location of a geographic IPv6 mapping database for Traffic Router instances to use.                                               |

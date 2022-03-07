@@ -1855,11 +1855,13 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	} else if rowsAffected > 1 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
+		return
 	}
 
 	ifaces, err := server.LegacyInterfaceDetails.ToInterfacesV4(*server.IPIsService, *server.IP6IsService, server.RouterHostName, server.RouterPortName)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
 	}
 
 	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); err != nil {
@@ -1955,6 +1957,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	interfaces, err := tc.ToInterfacesV4(server.Interfaces, server.RouterHostName, server.RouterPortName)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
 	}
 	userErr, sysErr, errCode := createInterfaces(*server.ID, interfaces, tx)
 	if userErr != nil || sysErr != nil {
