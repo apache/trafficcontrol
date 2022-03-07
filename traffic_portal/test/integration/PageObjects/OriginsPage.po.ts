@@ -71,7 +71,7 @@ export class OriginsPage extends BasePage {
         await this.btnCreateNewOrigins.click();
         await this.txtName.sendKeys(origins.Name + this.randomize);
         await this.selTenant.click();
-        await element(by.name(origins.Tenant)).click();
+        await element(by.name(origins.Tenant + this.randomize)).click();
         await this.txtFQDN.sendKeys(origins.FQDN);
         await this.txtProtocol.sendKeys(origins.Protocol);
         await this.txtDeliveryService.click();
