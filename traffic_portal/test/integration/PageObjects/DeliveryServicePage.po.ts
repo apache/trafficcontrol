@@ -25,6 +25,7 @@ import {browser, by, element} from 'protractor';
 interface DeliveryServices {
   Type: string;
   Name: string;
+  Tenant: string;
   validationMessage: string;
 }
 interface UpdateDeliveryService {
@@ -100,7 +101,7 @@ export class DeliveryServicePage extends BasePage {
         await this.selectActive.sendKeys('Active')
         await this.selectType.sendKeys('ANY_MAP')
         await this.selectTenant.click();
-        await element(by.name('root')).click();
+        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
         await this.selectCDN.sendKeys('dummycdn')
         await this.txtRemapText.sendKeys('test')
         break;
@@ -111,7 +112,7 @@ export class DeliveryServicePage extends BasePage {
         await this.selectActive.sendKeys('Active')
         await this.selectType.sendKeys('DNS')
         await this.selectTenant.click();
-        await element(by.name('root')).click();
+        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
         await this.selectCDN.sendKeys('dummycdn')
         await this.txtOrgServerURL.sendKeys('http://origin.infra.ciab.test');
         await this.txtProtocol.sendKeys('HTTP')
@@ -123,7 +124,7 @@ export class DeliveryServicePage extends BasePage {
         await this.selectActive.sendKeys('Active')
         await this.selectType.sendKeys('HTTP')
         await this.selectTenant.click();
-        await element(by.name('root')).click();
+        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
         await this.selectCDN.sendKeys('dummycdn')
         await this.txtOrgServerURL.sendKeys('http://origin.infra.ciab.test');
         await this.txtProtocol.sendKeys('HTTP')
@@ -135,7 +136,7 @@ export class DeliveryServicePage extends BasePage {
         await this.selectActive.sendKeys('Active')
         await this.selectType.sendKeys('STEERING')
         await this.selectTenant.click();
-        await element(by.name('root')).click();
+        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
         await this.selectCDN.sendKeys('dummycdn')
         await this.txtProtocol.sendKeys('HTTP')
         break;
