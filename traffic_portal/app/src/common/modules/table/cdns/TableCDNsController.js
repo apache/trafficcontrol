@@ -17,192 +17,241 @@
  * under the License.
  */
 
-var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $window, locationUtils, cdnService, messageModel) {
+/**
+ * @typedef CDN
+ * @property {boolean} dnssecEnabled
+ * @property {string} domainName
+ * @property {number} id
+ * @property {Date} lastUpdated
+ * @property {string} name
+ */
 
-    let queueServerUpdates = function(cdn) {
-        cdnService.queueServerUpdates(cdn.id);
-    };
+/**
+ * @param {CDN} cdn
+ * @returns  {string}
+ */
+const getHref = cdn => `#!/cdns/${cdn.id}`;
 
-    let clearServerUpdates = function(cdn) {
-        cdnService.clearServerUpdates(cdn.id);
-    };
+/**
+ * @param {CDN[]} cdns
+ */
+var TableCDNsController = function(cdns, $scope, $uibModal, locationUtils, cdnService, messageModel) {
 
-    let deleteCDN = function(cdn) {
-        cdnService.deleteCDN(cdn.id)
-            .then(function(result) {
-                messageModel.setMessages(result.alerts, false);
-                $scope.refresh();
-            });
-    };
+	/**** Constants, scope data, etc. ****/
 
-    let confirmQueueServerUpdates = function(cdn) {
-        var params = {
-            title: 'Queue Server Updates: ' + cdn.name,
-            message: 'Are you sure you want to queue server updates for all ' + cdn.name + ' servers?'
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            queueServerUpdates(cdn);
-        }, function () {
-            // do nothing
-        });
-    };
+	/** The columns of the ag-grid table */
+	$scope.columns = [
+		{
+			headerName: "DNSSEC Enabled",
+			field: "dnssecEnabled",
+			hide: false
+		},
+		{
+			headerName: "Domain",
+			field: "domainName",
+			hide: false
+		},
+		{
+			headerName: "ID",
+			field: "id",
+			filter: "agNumberColumnFilter",
+			hide: true
+		},
+		{
+			headerName: "Last Updated",
+			field: "lastUpdated",
+			hide: true,
+			filter: "agDateColumnFilter",
+			relative: true
+		},
+		{
+			headerName: "Name",
+			field: "name",
+			hide: false,
+		}
+	];
 
-    let confirmClearServerUpdates = function(cdn) {
-        var params = {
-            title: 'Clear Server Updates: ' + cdn.name,
-            message: 'Are you sure you want to clear server updates for all ' + cdn.name + ' servers?'
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-            controller: 'DialogConfirmController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            clearServerUpdates(cdn);
-        }, function () {
-            // do nothing
-        });
-    };
+	/** @type CGC.DropDownOption[] */
+	$scope.dropDownOptions = [{
+		name: "createCDNMenuItem",
+		href: "#!/cdns/new",
+		text: "Create New CDN",
+		type: 2
+	}, {
+		type: 0
+	}, {
+		onClick: function (entry) {
+			$scope.confirmQueueServerUpdates(entry);
+		},
+		text: "Queue CDN Server Updates",
+		type: 1
+	}, {
+		onClick: function (entry) {
+			$scope.confirmClearServerUpdates(entry);
+		},
+		text: "Clear CDN Server Updates",
+		type: 1
+	}];
 
-    let confirmDelete = function(cdn) {
-        var params = {
-            title: 'Delete CDN: ' + cdn.name,
-            key: cdn.name
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-            controller: 'DialogDeleteController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            deleteCDN(cdn);
-        }, function () {
-            // do nothing
-        });
-    };
 
-    $scope.cdns = cdns;
+	/**
+	 * Deletes a CDN if confirmation is given.
+	 * @param {CDN} cdn
+	 */
+	function confirmDelete(cdn) {
+		const params = {
+			title: `Delete CDN: ${cdn.name}`,
+			key: cdn.name
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/delete/dialog.delete.tpl.html",
+			controller: "DialogDeleteController",
+			size: "md",
+			resolve: {params}
+		});
+		modalInstance.result.then(() => {
+			cdnService.deleteCDN(cdn.id).then(
+				result => {
+					messageModel.setMessages(result.alerts, false);
+					$scope.refresh();
+				}
+			);
+		}).catch(
+			e => console.error("failed to delete CDN:", e)
+		);
+	};
 
-    $scope.contextMenuItems = [
-        {
-            text: 'Open in New Tab',
-            click: function ($itemScope) {
-                $window.open('/#!/cdns/' + $itemScope.cdn.id, '_blank');
-            }
-        },
-        null, // Dividier
-        {
-            text: 'Edit',
-            click: function ($itemScope) {
-                $scope.editCDN($itemScope.cdn.id);
-            }
-        },
-        {
-            text: 'Delete',
-            click: function ($itemScope) {
-                confirmDelete($itemScope.cdn);
-            }
-        },
-        null, // Dividier
-        {
-            text: 'Diff Snapshot',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/cdns/' + $itemScope.cdn.id + '/config/changes');
-            }
-        },
-        null, // Dividier
-        {
-            text: 'Queue Server Updates',
-            click: function ($itemScope) {
-                confirmQueueServerUpdates($itemScope.cdn);
-            }
-        },
-        {
-            text: 'Clear Server Updates',
-            click: function ($itemScope) {
-                confirmClearServerUpdates($itemScope.cdn);
-            }
-        },
-        null, // Dividier
-        {
-            text: 'Manage DNSSEC Keys',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/cdns/' + $itemScope.cdn.id + '/dnssec-keys');
-            }
-        },
-        {
-            text: 'Manage Federations',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/cdns/' + $itemScope.cdn.id + '/federations');
-            }
-        },
-        {
-            text: 'Manage Delivery Services',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/cdns/' + $itemScope.cdn.id + '/delivery-services');
-            }
-        },
-        {
-            text: 'Manage Profiles',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/cdns/' + $itemScope.cdn.id + '/profiles');
-            }
-        },
-        {
-            text: 'Manage Servers',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/cdns/' + $itemScope.cdn.id + '/servers');
-            }
-        },
-        {
-            text: 'Manage Notifications',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/cdns/' + $itemScope.cdn.id + '/notifications');
-            }
-        }
-    ];
+	/**
+	 * Queues servers updates on a CDN if confirmation is given.
+	 * @param {CDN} cdn
+	 */
+	function confirmQueueServerUpdates(cdn) {
+		const params = {
+			title: `Queue Server Updates: ${cdn.name}`,
+			message: `Are you sure you want to queue server updates for all ${cdn.name} servers?`
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/confirm/dialog.confirm.tpl.html",
+			controller: "DialogConfirmController",
+			size: "md",
+			resolve: {params}
+		});
+		modalInstance.result.then(() => cdnService.queueServerUpdates(cdn.id));
+	};
 
-    $scope.editCDN = function(id) {
-        locationUtils.navigateToPath('/cdns/' + id);
-    };
+	/**
+	 * Clears servers updates on a CDN if confirmation is given.
+	 * @param {CDN} cdn
+	 */
+	 function confirmClearServerUpdates(cdn) {
+		const params = {
+			title: `Clear Server Updates: ${cdn.name}`,
+			message: `Are you sure you want to clear server updates for all ${cdn.name} servers?`
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/confirm/dialog.confirm.tpl.html",
+			controller: "DialogConfirmController",
+			size: "md",
+			resolve: {params}
+		});
+		modalInstance.result.then(function() {
+			cdnService.clearServerUpdates(cdn.id);
+		});
+	};
 
-    $scope.createCDN = function() {
-        locationUtils.navigateToPath('/cdns/new');
-    };
+	/** @type CGC.ContextMenuOption[] */
+	$scope.contextMenuOptions = [
+		{
+			getHref,
+			getText: cdn => `Open ${cdn.name} in a new tab`,
+			newTab: true,
+			type: 2
+		},
+		{type: 0},
+		{
+			getHref,
+			text: "Edit",
+			type: 2
+		},
+		{
+			onClick: cdn => confirmDelete(cdn),
+			text: "Delete",
+			type: 1
+		},
+		{type: 0},
+		{
+			getHref: cdn => `#!/cdns/${cdn.id}/config/changes`,
+			text: "Diff Snapshot",
+			type: 2
+		},
+		{type: 0},
+		{
+			onClick: cdn => confirmQueueServerUpdates(cdn),
+			text: "Queue Server Updates",
+			type: 1
+		},
+		{
+			onClick: cdn => confirmClearServerUpdates(cdn),
+			text: "Clear Server Updates",
+			type: 1
+		},
+		{type: 0},
+		{
+			getHref: cdn => `#!/cdns/${cdn.id}/dnssec-keys`,
+			text: "Manage DNSSEC Keys",
+			type: 2
+		},
+		{
+			getHref: cdn => `#!/cdns/${cdn.id}/federations`,
+			text: "Manage Federations",
+			type: 2
+		},
+		{
+			getHref: cdn => `#!/cdns/${cdn.id}/delivery-services`,
+			text: "Manage Delivery Services",
+			type: 2
+		},
+		{
+			getHref: cdn => `#!/cdns/${cdn.id}/profiles`,
+			text: "Manage Profiles",
+			type: 2
+		},
+		{
+			getHref: cdn => `#!/cdns/${cdn.id}/servers`,
+			text: "Manage Servers",
+			type: 2
+		},
+		{
+			getHref: cdn => `#!/cdns/${cdn.id}/notifications`,
+			text: "Manage Notifications",
+			type: 2
+		}
+	];
 
-    $scope.refresh = function() {
-        $state.reload(); // reloads all the resolves for the view
-    };
+	/** Options, configuration, data and callbacks for the ag-grid table. */
+	/** @type CGC.GridSettings */
+	$scope.gridOptions = {
+		onRowClick: function(row) {
+			locationUtils.navigateToPath(`/cdns/${row.data.id}`);
+		}
+	};
 
-    angular.element(document).ready(function () {
-        $('#cdnsTable').dataTable({
-            "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": 25,
-            "aaSorting": []
-        });
-    });
+	$scope.defaultData = {
+		dnssecEnabled: false,
+		domainName: "",
+		name: ""
+	};
+
+	$scope.cdns = cdns.map(
+		cdn => {
+			/** @type string */
+			const lastUpdated = cdn.lastUpdated
+			cdn.lastUpdated = new Date(lastUpdated.replace(" ", "T").replace("+00", "Z"));
+			return cdn;
+		}
+	);
 
 };
 
-TableCDNsController.$inject = ['cdns', '$location', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'cdnService', 'messageModel'];
+TableCDNsController.$inject = ["cdns", "$scope", "$uibModal", "locationUtils", "cdnService", "messageModel"];
 module.exports = TableCDNsController;

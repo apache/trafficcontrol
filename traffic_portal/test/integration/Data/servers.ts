@@ -337,12 +337,6 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				},
@@ -409,12 +403,6 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				},
@@ -481,12 +469,6 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				},
@@ -553,12 +535,6 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				}
@@ -797,7 +773,7 @@ export const servers = {
 					CDN: "dummycdn",
 					CacheGroup: "testCG",
 					Type: "EDGE",
-					Profile: "testProfile",
+					Profile: ["testProfile"],
 					PhysLocation: "TPPhysLocation2",
 					InterfaceName: "test",
 					validationMessage: "Server created"
@@ -810,7 +786,7 @@ export const servers = {
 					CDN: "dummycdn",
 					CacheGroup: "testCG",
 					Type: "EDGE",
-					Profile: "testProfile",
+					Profile: ["testProfile"],
 					PhysLocation: "TPPhysLocation2",
 					InterfaceName: "test",
 					validationMessage: "Server created"
@@ -821,14 +797,14 @@ export const servers = {
 					description: "Validate cannot change the cdn of a Server when it is currently assigned to a Delivery Services in different CDN",
 					Name: "servertestremove3",
 					CDN: "servertestcdn1",
-					Profile: "servertestprofiles1",
+					Profile: ["servertestprofiles1"],
 					validationMessage: "server cdn can not be updated when it is currently assigned to delivery services"
 				},
 				{
 					description: "change the cdn of a Server when it is currently not assign to any delivery service",
 					Name: "servertestcreate1",
 					CDN: "servertestcdn1",
-					Profile: "servertestprofiles1",
+					Profile: ["servertestprofiles1"],
 					validationMessage: "Server updated"
 				}
 			],
@@ -872,7 +848,7 @@ export const servers = {
 					CDN: "dummycdn",
 					CacheGroup: "testCG",
 					Type: "EDGE",
-					Profile: "testProfile",
+					Profile: ["testProfile"],
 					PhysLocation: "TPPhysLocation2",
 					InterfaceName: "test",
 					validationMessage: "missing required Permissions: SERVER:CREATE"
@@ -883,7 +859,7 @@ export const servers = {
 					description: "change the cdn of a Server",
 					Name: "servertestcreate2",
 					CDN: "servertestcdn1",
-					Profile: "servertestprofiles1",
+					Profile: ["servertestprofiles1"],
 					validationMessage: "missing required Permissions: SERVER:UPDATE"
 				}
 			],
@@ -922,7 +898,7 @@ export const servers = {
 					CDN: "dummycdn",
 					CacheGroup: "testCG",
 					Type: "EDGE",
-					Profile: "testProfile",
+					Profile: ["testProfile"],
 					PhysLocation: "TPPhysLocation2",
 					InterfaceName: "test",
 					validationMessage: "Server created"
@@ -935,7 +911,7 @@ export const servers = {
 					CDN: "dummycdn",
 					CacheGroup: "testCG",
 					Type: "EDGE",
-					Profile: "testProfile",
+					Profile: ["testProfile"],
 					PhysLocation: "TPPhysLocation2",
 					InterfaceName: "test",
 					validationMessage: "Server created"
@@ -946,14 +922,14 @@ export const servers = {
 					description: "Validate cannot change the cdn of a Server when it is currently assigned to a Delivery Services in different CDN",
 					Name: "servertestremoveop3",
 					CDN: "servertestcdn1",
-					Profile: "servertestprofiles1",
+					Profile: ["servertestprofiles1"],
 					validationMessage: "server cdn can not be updated when it is currently assigned to delivery services"
 				},
 				{
 					description: "change the cdn of a Server when it is currently not assign to any delivery service",
 					Name: "servertestcreateop1",
 					CDN: "servertestcdn1",
-					Profile: "servertestprofiles1",
+					Profile: ["servertestprofiles1"],
 					validationMessage: "Server updated"
 				}
 			],

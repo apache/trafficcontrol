@@ -1810,62 +1810,8 @@ func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServe
 	}, nil
 }
 
-// UpdateCommonServerPropertiesV40 updates CommonServerPropertiesV40 struct
-func UpdateCommonServerPropertiesV40(id *int, properties tc.CommonServerProperties, tx *sql.Tx) (tc.CommonServerPropertiesV40, error) {
-	var profileNames pq.StringArray
-	rows, err := tx.Query("UPDATE server_profile set profile_names=ARRAY[$1] WHERE server=$2 RETURNING profile_names", *properties.Profile, *id)
-	if err != nil {
-		return tc.CommonServerPropertiesV40{}, fmt.Errorf("updating server_profile by profile_names: " + err.Error())
-	}
-	defer log.Close(rows, "closing rows in UpdateCommonServerPropertiesV40")
-
-	for rows.Next() {
-		if err := rows.Scan(&profileNames); err != nil {
-			return tc.CommonServerPropertiesV40{}, fmt.Errorf("scanning server_profile: " + err.Error())
-		}
-	}
-
-	return tc.CommonServerPropertiesV40{
-		Cachegroup:       properties.Cachegroup,
-		CachegroupID:     properties.CachegroupID,
-		CDNID:            properties.CDNID,
-		CDNName:          properties.CDNName,
-		DeliveryServices: properties.DeliveryServices,
-		DomainName:       properties.DomainName,
-		FQDN:             properties.FQDN,
-		FqdnTime:         properties.FqdnTime,
-		GUID:             properties.GUID,
-		HostName:         properties.HostName,
-		HTTPSPort:        properties.HTTPSPort,
-		ID:               properties.ID,
-		ILOIPAddress:     properties.ILOIPAddress,
-		ILOIPGateway:     properties.ILOIPGateway,
-		ILOIPNetmask:     properties.ILOIPNetmask,
-		ILOPassword:      properties.ILOPassword,
-		ILOUsername:      properties.ILOUsername,
-		LastUpdated:      properties.LastUpdated,
-		MgmtIPAddress:    properties.MgmtIPAddress,
-		MgmtIPGateway:    properties.MgmtIPGateway,
-		MgmtIPNetmask:    properties.MgmtIPNetmask,
-		OfflineReason:    properties.OfflineReason,
-		Profiles:         &profileNames,
-		PhysLocation:     properties.PhysLocation,
-		PhysLocationID:   properties.PhysLocationID,
-		Rack:             properties.Rack,
-		RevalPending:     properties.RevalPending,
-		Status:           properties.Status,
-		StatusID:         properties.StatusID,
-		TCPPort:          properties.TCPPort,
-		Type:             properties.Type,
-		TypeID:           properties.TypeID,
-		UpdPending:       properties.UpdPending,
-		XMPPID:           properties.XMPPID,
-		XMPPPasswd:       properties.XMPPPasswd,
-	}, nil
-}
-
-// UpdateServerProfiles updates server_profile table for PUT /servers/(id) API
-func UpdateServerProfiles(id *int, profile *pq.StringArray, tx *sql.Tx) error {
+// UpdateServerProfilesForV4 updates server_profile table via update function for APIv4
+func UpdateServerProfilesForV4(id *int, profile *pq.StringArray, tx *sql.Tx) error {
 	var profileNames pq.StringArray
 	var priorityArray pq.Int64Array
 	for i, _ := range *profile {
@@ -1884,4 +1830,21 @@ func UpdateServerProfiles(id *int, profile *pq.StringArray, tx *sql.Tx) error {
 		}
 	}
 	return nil
+}
+
+// UpdateServerProfileTableForV2V3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v2/v3
+func UpdateServerProfileTableForV2V3(id *int, profile *string, tx *sql.Tx) (pq.StringArray, error) {
+	var profileNames pq.StringArray
+	rows, err := tx.Query("UPDATE server_profile set profile_names=ARRAY[$1] WHERE server=$2 RETURNING profile_names", *profile, *id)
+	if err != nil {
+		return nil, fmt.Errorf("updating server_profile by profile_names: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in UpdateCommonServerPropertiesV40")
+
+	for rows.Next() {
+		if err := rows.Scan(&profileNames); err != nil {
+			return nil, fmt.Errorf("scanning server_profile: " + err.Error())
+		}
+	}
+	return profileNames, nil
 }

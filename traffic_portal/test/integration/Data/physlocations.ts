@@ -226,12 +226,6 @@ export const physLocations = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileNames"
 						}
 					]
 				}

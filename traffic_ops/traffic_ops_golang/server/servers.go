@@ -1552,7 +1552,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		if err := dbhelpers.UpdateServerProfiles(server.ID, server.Profiles, tx); err != nil {
+		if err := dbhelpers.UpdateServerProfilesForV4(server.ID, server.Profiles, tx); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
@@ -1574,12 +1574,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		cspV40, err := dbhelpers.UpdateCommonServerPropertiesV40(serverV3.ID, serverV3.CommonServerProperties, tx)
+		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.Profile, tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
 			return
 		}
-		server, err = serverV3.UpgradeToV40(cspV40)
+		server, err = serverV3.UpgradeToV40(profileName)
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V3 server to V4 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -1596,12 +1596,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		cspV40, err := dbhelpers.UpdateCommonServerPropertiesV40(legacyServer.ID, legacyServer.CommonServerProperties, tx)
+		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(legacyServer.ID, legacyServer.Profile, tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
 			return
 		}
-		server, err = legacyServer.UpgradeToV40(cspV40)
+		server, err = legacyServer.UpgradeToV40(profileName)
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V2 server to V3 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)

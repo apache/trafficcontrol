@@ -31,7 +31,7 @@ interface CreateServer {
   CDN: string;
   CacheGroup: string;
   Type: string;
-  Profile: string;
+  Profile: string[];
   PhysLocation: string;
   InterfaceName: string;
   validationMessage?: string;
@@ -45,7 +45,7 @@ interface ServerCapability {
 interface UpdateServer {
   description: string;
   CDN: string;
-  Profile: string;
+  Profile: string[];
   validationMessage?: string;
 }
 
