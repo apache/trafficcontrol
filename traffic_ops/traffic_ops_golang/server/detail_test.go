@@ -123,7 +123,7 @@ func TestGetDetailServers(t *testing.T) {
 			sd.MgmtIPNetmask,
 			sd.OfflineReason,
 			sd.PhysLocation,
-			sd.Profile,
+			sd.Profiles,
 			sd.ProfileDesc,
 			sd.Rack,
 			sd.Status,
