@@ -38,7 +38,7 @@ var TreeSelectDirective = function($document) {
             scope.searchText = "";
             /** @type boolean */
             scope.shown = false;
-            /** @type string */
+            /** @type TreeSelectDirective.RowData */
             scope.selected = null;
 
             // Bound variables
@@ -81,6 +81,18 @@ var TreeSelectDirective = function($document) {
                 $document.off("click", closeSelect);
                 scope.$apply();
             };
+
+            /**
+             * Initializes treeRows, must be called whenever treeData changes
+             */
+            const reInit = function() {
+                scope.treeRows = [];
+                scope.selected = null;
+                for(let data of scope.treeData) {
+                    if (data != undefined)
+                        addNode(data, 0);
+                }
+            }
 
             /**
              * Converts a tree data node into row data recursively.
@@ -213,9 +225,9 @@ var TreeSelectDirective = function($document) {
                 else return "fa-file";
             }
 
-            for(let data of scope.treeData) {
-                addNode(data, 0);
-            }
+            scope.$watch("treeData", function(newVal, oldVal) {
+                reInit();
+            });
         }
     }
 };

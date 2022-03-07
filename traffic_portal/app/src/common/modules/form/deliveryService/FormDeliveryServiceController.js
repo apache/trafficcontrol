@@ -142,6 +142,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
                     .then(function(tenants) {
                         $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant.parentId, []);
                         tenantUtils.addLevels($scope.tenants);
+                        console.log(tenants, $scope.tenants);
                     });
             });
     };

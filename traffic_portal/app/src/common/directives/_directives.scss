@@ -14,23 +14,26 @@
  limitations under the License.
 
 */
+
+.has-error {
+  div.search-box {
+    label {
+      color: #555555;
+      background-color: #eeeeee;
+      border-color: #ccc;
+    }
+    input {
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+      border-color: #ccc;
+    }
+  }
+}
+
 div.tree-select-root {
   position: relative;
 
   input.display-field {
     background-color: #fff;
-
-    &::after {
-      content :'< >';
-      transform: rotate(90deg);
-      font-size: 25px;
-      background: black;
-      position: absolute;
-      top: 0;
-      width: 40px;
-      height: 40px;
-      right: 0;
-    }
   }
 
   div.tree-drop-down {

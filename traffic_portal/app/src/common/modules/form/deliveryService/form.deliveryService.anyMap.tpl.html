@@ -144,7 +144,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <tree-select ng-if="tenants.length > 0" handle="tenantId" on-update="deliveryService.tenantId=value" tree-data="[tenants[0]]" initial-value="deliveryService.tenantId"></tree-select>
+                            <tree-select handle="tenantId" on-update="deliveryService.tenantId=value" tree-data="[tenants[0]]" initial-value="deliveryService.tenantId"></tree-select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.tenantId, 'required')">Required</small>
                             <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.tenantId != dsCurrent.tenantId">

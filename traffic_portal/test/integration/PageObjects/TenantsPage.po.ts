@@ -61,11 +61,7 @@ export class TenantsPage extends BasePage {
       await this.txtName.sendKeys(tenant.Name + this.randomize);
       await this.txtActive.sendKeys(tenant.Active);
       await this.selParentTenant.click();
-      if (tenant.ParentTenant == 'root') {
-        await element(by.name(tenant.ParentTenant)).click();
-      } else {
-        await element(by.name(tenant.ParentTenant + this.randomize)).click();
-      }
+      await element(by.name(tenant.ParentTenant + this.randomize)).click();
       await basePage.ClickCreate();
       return basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
     }
