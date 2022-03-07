@@ -20,18 +20,18 @@ under the License.
     <input type="text" id="{{ handle }}" name="{{ handle }}" class="form-control display-field" ng-model="selected.label" ng-click="toggle()" required readonly>
     <div class="tree-drop-down" ng-show="shown">
         <div class="input-group search-box">
-            <label class="input-group-addon has-tooltip control-label" for="searchText">
+            <label class="input-group-addon has-tooltip control-label" for="{{ handle }}searchText">
                 Filter:
                 <div class="helptooltip">
                     <div class="helptext">Fuzzy search by tenant name</div>
                 </div>
             </label>
-            <input name="searchText" type="text" class="form-control" ng-model="searchText" maxlength="48">
+            <input id="{{ handle }}searchText" name="{{ handle }}searchText" type="text" class="form-control" ng-model="searchText" maxlength="48">
         </div>
         <ul class="nav nav-list nav-pills nav-stacked">
             <li class="tree-row" ng-repeat="row in treeRows | filter: checkFilters">
-                <a ng-class="'depth-' + {{ row.depth }}" ng-click="select(row)" name="{{row.label}}">
-                    <i class="fa" ng-class="getClass(row)" ng-click="collapse(row, $event)"></i>
+                <a ng-style="{'left': row.depth*8+'px'}" ng-click="select(row)" name="{{row.label}}">
+                    <div ng-click="collapse(row, $event)"><i class="fa" ng-class="getClass(row)"></i></div>
                     <span>{{row.label}}</span>
                 </a>
             </li>

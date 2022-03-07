@@ -22,6 +22,7 @@
       background-color: #eeeeee;
       border-color: #ccc;
     }
+
     input {
       box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
       border-color: #ccc;
@@ -56,24 +57,19 @@ div.tree-select-root {
       }
     }
 
-    ul.nav  {
+    ul.nav {
       max-height: 550px;
       overflow-y: scroll;
       overflow-x: hidden;
 
       & > li.tree-row > a {
-        padding: 5px 0 5px 10px;
+        padding: 5px 0 5px 5px;
+        position: relative;
 
 
-        i {
-          margin-right: 3px;
-        }
-
-        @for $i from 0 through 30 {
-          &.depth-#{$i} {
-            position: relative;
-            left: #{$i * 8}px;
-          }
+        div {
+          float: left;
+          padding: 0 5px 0 5px;
         }
       }
     }
