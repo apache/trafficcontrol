@@ -52,8 +52,6 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool) (tc.Serv
 
 // SetUpdateServerStatuses updates a server's queue status and/or reval status.
 // Either updateStatus or revalStatus may be nil, in which case that status isn't updated (but not both, because that wouldn't do anything).
-//
-// Deprecated: Prefer to use SetUpdateServerStatusTimes
 func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool, revalStatus *bool) (toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	if updateStatus == nil && revalStatus == nil {

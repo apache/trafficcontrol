@@ -1,7 +1,5 @@
 package tc
 
-import "github.com/apache/trafficcontrol/lib/go-util"
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,6 +18,8 @@ import "github.com/apache/trafficcontrol/lib/go-util"
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import "github.com/apache/trafficcontrol/lib/go-util"
 
 // CacheGroupsResponse is a list of CacheGroups as a response.
 type CacheGroupsResponse struct {

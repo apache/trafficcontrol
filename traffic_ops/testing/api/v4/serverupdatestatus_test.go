@@ -457,7 +457,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 		)
 		cacheGroupNames := []string{edgeCacheGroup, otherEdgeCacheGroup, midCacheGroup}
 		cachesByCacheGroup := map[string]tc.ServerV40{}
-		updateStatusByCacheGroup := map[string]tc.ServerUpdateStatusV4{}
+		updateStatusByCacheGroup := map[string]tc.ServerUpdateStatusV40{}
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", topologyName)

@@ -38,11 +38,11 @@ Request Structure
 	|  ID  | The integral, unique identifier of a server |
 	+------+---------------------------------------------+
 
-:cachegroupId: 	   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
-:cdnId:        	   The integral, unique identifier of the CDN to which the server shall belong
+:cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
+:cdnId:            The integral, unique identifier of the CDN to which the server shall belong
 :configUpdateTime: The last time an update was requested for this server.
 
-    .. note:: To maintain backwards compatibility, the ``updPending`` boolean flag will trump this value. However, it is advised to no longer use the ``upd_pending`` flag and is preferred to use this timestamp instead. 
+	.. note:: To maintain backwards compatibility, the ``updPending`` boolean flag will trump this value. However, it is advised to no longer use the ``upd_pending`` flag and is preferred to use this timestamp instead. 
 
 :domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :hostName:     The (short) hostname of the server
@@ -90,10 +90,10 @@ Request Structure
 :revalPending:    A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 
-    .. note:: To maintain backwards compatibility, the ``revalPending`` boolean flag will trump this value. However, it is advised to no longer use the ``revalPending`` flag and is preferred to use this timestamp instead.
+	.. note:: To maintain backwards compatibility, the ``revalPending`` boolean flag will trump this value. However, it is advised to no longer use the ``revalPending`` flag and is preferred to use this timestamp instead.
 
-:rack:           	An optional string indicating "server rack" location
-:statusId:       	The integral, unique identifier of the status of this server
+:rack:            An optional string indicating "server rack" location
+:statusId:        The integral, unique identifier of the status of this server
 
 	.. seealso:: :ref:`health-proto`
 
@@ -180,7 +180,7 @@ Response Structure
 :domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :guid:             An identifier used to uniquely identify the server
 
-    .. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS connections/requests
@@ -224,15 +224,15 @@ Response Structure
 	.. deprecated:: 3.0
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
-:offlineReason:   A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:physLocation:    The name of the :term:`Physical Location` where the server resides
-:physLocationId:  An integral, unique identifier for the :term:`Physical Location` where the server resides
-:profile:         The :ref:`profile-name` of the :term:`Profile` used by this server
-:profileDesc:     A :ref:`profile-description` of the :term:`Profile` used by this server
-:profileId:       The :ref:`profile-id` the :term:`Profile` used by this server
-:revalPending:    A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
+:offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
+:physLocation:   The name of the :term:`Physical Location` where the server resides
+:physLocationId: An integral, unique identifier for the :term:`Physical Location` where the server resides
+:profile:        The :ref:`profile-name` of the :term:`Profile` used by this server
+:profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
+:profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
+:revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 
-    .. note::	  While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
+	.. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
 
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
@@ -253,7 +253,7 @@ Response Structure
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
 
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
+	.. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
 
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
@@ -377,13 +377,13 @@ Request Structure
 Response Structure
 ------------------
 :cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belonged
-:cachegroupId: 	   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belonged
-:cdnId:        	   The integral, unique identifier of the CDN to which the server belonged
-:cdnName:      	   Name of the CDN to which the server belonged
+:cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belonged
+:cdnId:            The integral, unique identifier of the CDN to which the server belonged
+:cdnName:          Name of the CDN to which the server belonged
 :configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
 :configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
 :domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:guid:         	   An identifier used to uniquely identify the server
+:guid:             An identifier used to uniquely identify the server
 
 	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
@@ -437,7 +437,7 @@ Response Structure
 :profileId:       The :ref:`profile-id` the :term:`Profile` which was used by this server
 :revalPending:    A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 
-	.. note::	  While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
+	.. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
 
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
@@ -458,7 +458,7 @@ Response Structure
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
 
-	.. note::		While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
+	.. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
 
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server

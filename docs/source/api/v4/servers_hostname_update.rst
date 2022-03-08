@@ -56,7 +56,8 @@ Request Structure
 	| revalidate_apply_time      | no       | The value to set for when a reval update is applied for this server. Must be a valid RFC333Nano timestamp.   |
 	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
 
-The ``updated`` and ``reval_updated`` boolean values should be considered deprecated and may be removed in a future release. Prefer to use the timestamp values associated with ``config_update_time``, ``config_apply_time``, ``revalidate_update_time``, and ``revalidate_apply_time``.
+.. deprecated:: 4.0
+	The ``updated`` and ``reval_updated`` boolean values should be considered deprecated and may be removed in a future release. Prefer to use the timestamp values associated with ``config_update_time``, ``config_apply_time``, ``revalidate_update_time``, and ``revalidate_apply_time``.
 
 .. note:: You will not be able to send both a boolean value (``updated`` and ``reval_updated``) and the corresponding timestamp values (``config_update_time``, ``config_apply_time``, ``revalidate_update_time``, and ``revalidate_apply_time``) in the same request as they will conflict.
 

@@ -58,25 +58,27 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var cdnID int
+	var cdnID int64
 	if reqObj.CDNID != nil && (reqObj.CDN == nil || *reqObj.CDN == "") {
 		cdnName, ok, sysErr := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*reqObj.CDNID))
-		if userErr != nil || sysErr != nil {
+		if sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 		if !ok {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("cdn %d does not exist", *reqObj.CDNID), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("cdn id %d does not exist", *reqObj.CDNID), nil)
 			return
 		}
-		cdnID = int(*reqObj.CDNID)
+		cdnID = int64(*reqObj.CDNID)
 		reqObj.CDN = &cdnName
 	}
 
 	if reqObj.CDNID == nil && (reqObj.CDN != nil && *reqObj.CDN != "") {
 		var found bool
-		cdnID, found, sysErr = dbhelpers.GetCDNIDFromName(inf.Tx.Tx, *reqObj.CDN)
-		if userErr != nil || sysErr != nil {
+		var cdnIDint int
+		cdnIDint, found, sysErr = dbhelpers.GetCDNIDFromName(inf.Tx.Tx, *reqObj.CDN)
+		cdnID = int64(cdnIDint)
+		if sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}

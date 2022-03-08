@@ -87,8 +87,8 @@ Response Structure
 :cdnName:          Name of the CDN to which the server belongs
 :configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
 :configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
-:domainName:   	   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:guid:         	   An identifier used to uniquely identify the server
+:domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:guid:             An identifier used to uniquely identify the server
 
 	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
@@ -142,7 +142,7 @@ Response Structure
 :profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
+	.. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
 
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch.
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch.
@@ -163,7 +163,7 @@ Response Structure
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
 
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
+	.. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
 
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
@@ -256,19 +256,19 @@ Allows a user to create a new server.
 
 Request Structure
 -----------------
-:cachegroupId: 	   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
-:cdnId:        	   The integral, unique identifier of the CDN to which the server shall belong
+:cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
+:cdnId:            The integral, unique identifier of the CDN to which the server shall belong
 :configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
 :configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
-:domainName:   	   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:hostName:     	   The (short) hostname of the server
-:httpsPort:    	   An optional port number on which the server listens for incoming HTTPS connections/requests
-:iloIpAddress: 	   An optional IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:iloIpGateway: 	   An optional IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:iloIpNetmask: 	   An optional IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:iloPassword:  	   An optional string containing the password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
-:iloUsername:  	   An optional string containing the user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:interfaces:   	   A set of the network interfaces in use by the server. In most scenarios, only one will be necessary, but it is illegal for this set to be an empty collection.
+:domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:hostName:         The (short) hostname of the server
+:httpsPort:        An optional port number on which the server listens for incoming HTTPS connections/requests
+:iloIpAddress:     An optional IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloIpGateway:     An optional IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloIpNetmask:     An optional IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloPassword:      An optional string containing the password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
+:iloUsername:      An optional string containing the user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:interfaces:       A set of the network interfaces in use by the server. In most scenarios, only one will be necessary, but it is illegal for this set to be an empty collection.
 
 	:ipAddresses:       A set of objects representing IP Addresses assigned to this network interface. In most scenarios, only one or two (usually one IPv4 address and one IPv6 address) will be necessary, but it is illegal for this set to be an empty collection.
 
@@ -305,7 +305,7 @@ Request Structure
 :profileId:      The :ref:`profile-id` the :term:`Profile` that shall be used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
+	.. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
 
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch.
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch.
@@ -321,7 +321,7 @@ Request Structure
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
 
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
+	.. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
 
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: An optional password used in XMPP communications with the server
@@ -402,15 +402,15 @@ Response Structure
 
 	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
-:hostName:       The (short) hostname of the server
-:httpsPort:      The port on which the server listens for incoming HTTPS connections/requests
-:id:             An integral, unique identifier for this server
-:iloIpAddress:   The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:iloIpGateway:   The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:iloIpNetmask:   The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:iloPassword:    The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :abbr:`Role(s) <Role>`
-:iloUsername:    The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:interfaces:     A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
+:hostName:     The (short) hostname of the server
+:httpsPort:    The port on which the server listens for incoming HTTPS connections/requests
+:id:           An integral, unique identifier for this server
+:iloIpAddress: The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloIpGateway: The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloIpNetmask: The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloPassword:  The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :abbr:`Role(s) <Role>`
+:iloUsername:  The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:interfaces:   A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
 
 	:ipAddresses:       A set of objects representing IP Addresses assigned to this network interface. In most scenarios, only one or two (usually one IPv4 address and one IPv6 address) will be present, but it is illegal for this set to be an empty collection.
 
@@ -452,7 +452,7 @@ Response Structure
 :profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.:
+	.. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.:
 
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
@@ -473,7 +473,7 @@ Response Structure
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
 
-    .. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
+	.. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
 
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server

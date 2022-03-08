@@ -1763,7 +1763,7 @@ SET config_update_time = now()
 WHERE server.id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
-		return fmt.Errorf("queueing config update for ServerID %d: %v", serverID, err)
+		return fmt.Errorf("queueing config update for ServerID %d: %w", serverID, err)
 	}
 
 	return nil
@@ -1777,13 +1777,13 @@ SET config_update_time = $2
 WHERE server.id = $1;`
 
 	if _, err := tx.Exec(query, serverID, updateTime); err != nil {
-		return fmt.Errorf("queueing config update for ServerID %d with time %v: %v", serverID, updateTime, err)
+		return fmt.Errorf("queueing config update for ServerID %d with time %v: %w", serverID, updateTime, err)
 	}
 
 	return nil
 }
 
-func QueueUpdateForServerWithCachegroupCDN(tx *sql.Tx, cgID int, cdnID int) ([]tc.CacheName, error) {
+func QueueUpdateForServerWithCachegroupCDN(tx *sql.Tx, cgID int, cdnID int64) ([]tc.CacheName, error) {
 	q := `
 UPDATE public.server
 SET config_update_time = now()
@@ -1791,14 +1791,14 @@ WHERE server.cachegroup = $1 AND server.cdn_id = $2
 RETURNING server.host_name;`
 	rows, err := tx.Query(q, cgID, cdnID)
 	if err != nil {
-		return nil, errors.New("querying : " + err.Error())
+		return nil, fmt.Errorf("updating server config_update_time: %w", err)
 	}
 	defer rows.Close()
 	names := []tc.CacheName{}
 	for rows.Next() {
 		name := ""
 		if err := rows.Scan(&name); err != nil {
-			return nil, errors.New("scanning queue updates: " + err.Error())
+			return nil, fmt.Errorf("scanning queue updates: %w", err)
 		}
 		names = append(names, tc.CacheName(name))
 	}
@@ -1816,7 +1816,7 @@ AND topology_cachegroup = $1
 AND server.cdn_id = $2;`
 	var err error
 	if _, err = tx.Exec(query, topologyName, cdnId); err != nil {
-		err = fmt.Errorf("queueing updates: %s", err)
+		err = fmt.Errorf("queueing updates: %w", err)
 	}
 	return err
 }
@@ -1828,13 +1828,13 @@ SET config_update_time = config_apply_time
 WHERE server.id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
-		return fmt.Errorf("applying config update for ServerID %d: %v", serverID, err)
+		return fmt.Errorf("applying config update for ServerID %d: %w", serverID, err)
 	}
 
 	return nil
 }
 
-func DequeueUpdateForServerWithCachegroupCDN(tx *sql.Tx, cgID int, cdnID int) ([]tc.CacheName, error) {
+func DequeueUpdateForServerWithCachegroupCDN(tx *sql.Tx, cgID int, cdnID int64) ([]tc.CacheName, error) {
 	q := `
 UPDATE public.server
 SET config_update_time = config_apply_time
@@ -1843,14 +1843,14 @@ AND server.cdn_id = $2
 RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);`
 	rows, err := tx.Query(q, cgID, cdnID)
 	if err != nil {
-		return nil, errors.New("querying queue updates: " + err.Error())
+		return nil, fmt.Errorf("querying queue updates: %w", err)
 	}
 	defer rows.Close()
 	names := []tc.CacheName{}
 	for rows.Next() {
 		name := ""
 		if err := rows.Scan(&name); err != nil {
-			return nil, errors.New("scanning queue updates: " + err.Error())
+			return nil, fmt.Errorf("scanning queue updates: %w", err)
 		}
 		names = append(names, tc.CacheName(name))
 	}
@@ -1868,7 +1868,7 @@ AND tc.topology = $1
 AND s.cdn_id = $2);`
 	var err error
 	if _, err = tx.Exec(query, topologyName, cdnId); err != nil {
-		err = fmt.Errorf("queueing updates: %s", err)
+		err = fmt.Errorf("queueing updates: %w", err)
 	}
 	return err
 }
@@ -1880,7 +1880,7 @@ SET config_apply_time = now()
 WHERE server.id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
-		return fmt.Errorf("applying config update for ServerID %d: %v", serverID, err)
+		return fmt.Errorf("applying config update for ServerID %d: %w", serverID, err)
 	}
 
 	return nil
@@ -1893,7 +1893,7 @@ SET config_apply_time = $2
 WHERE server.id = $1;`
 
 	if _, err := tx.Exec(query, serverID, applyUpdateTime); err != nil {
-		return fmt.Errorf("applying config update for ServerID %d with time %v: %v", serverID, applyUpdateTime, err)
+		return fmt.Errorf("applying config update for ServerID %d with time %v: %w", serverID, applyUpdateTime, err)
 	}
 
 	return nil
@@ -1907,7 +1907,7 @@ SET revalidate_update_time = now()
 WHERE server.id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
-		return fmt.Errorf("queueing reval update for ServerID %d: %v", serverID, err)
+		return fmt.Errorf("queueing reval update for ServerID %d: %w", serverID, err)
 	}
 
 	return nil
@@ -1921,7 +1921,7 @@ SET revalidate_update_time = $2
 WHERE server.id = $1;`
 
 	if _, err := tx.Exec(query, serverID, revalTime); err != nil {
-		return fmt.Errorf("queueing reval update for ServerID %d with time %v: %v", serverID, revalTime, err)
+		return fmt.Errorf("queueing reval update for ServerID %d with time %v: %w", serverID, revalTime, err)
 	}
 
 	return nil
@@ -1934,7 +1934,7 @@ SET revalidate_apply_time = now()
 WHERE server.id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
-		return fmt.Errorf("queueing reval update for ServerID %d: %v", serverID, err)
+		return fmt.Errorf("queueing reval update for ServerID %d: %w", serverID, err)
 	}
 
 	return nil
@@ -1947,7 +1947,7 @@ SET revalidate_apply_time = $2
 WHERE server.id = $1;`
 
 	if _, err := tx.Exec(query, serverID, applyRevalTime); err != nil {
-		return fmt.Errorf("applying config update for ServerID %d with time %v: %v", serverID, applyRevalTime, err)
+		return fmt.Errorf("applying config update for ServerID %d with time %v: %w", serverID, applyRevalTime, err)
 	}
 
 	return nil

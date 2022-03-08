@@ -1105,8 +1105,15 @@ func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
 	return legacyServer, nil
 }
 
+// ServerUpdateStatusV4 is the type of each entry in the `response` property of
+// the response from Traffic Ops to GET requests made to its
+// /servers/{{host name}}/update_status in the latest minor API
+// v4.0 endpoint.
 type ServerUpdateStatusV4 ServerUpdateStatusV40
 
+// ServerUpdateStatusV40 is the type of each entry in the `response` property of
+// the response from Traffic Ops to GET requests made to its
+// /servers/{{host name}}/update_status in API v4.0 endpoint.
 type ServerUpdateStatusV40 struct {
 	HostName             string    `json:"host_name"`
 	UpdatePending        bool      `json:"upd_pending"`
@@ -1122,7 +1129,8 @@ type ServerUpdateStatusV40 struct {
 	RevalidateApplyTime  time.Time `json:"revalidate_apply_time"`
 }
 
-// MarshalJSON is a custom implementation to ensure the date format returned is a RFC3339 string (and not RFC3339Nano or something else)
+// MarshalJSON is a custom implementation to ensure the date format returned is
+// a RFC3339Nano.
 func (sus ServerUpdateStatusV40) MarshalJSON() ([]byte, error) {
 	formatTime := struct {
 		HostName             string `json:"host_name"`
@@ -1155,8 +1163,9 @@ func (sus ServerUpdateStatusV40) MarshalJSON() ([]byte, error) {
 	return json.Marshal(formatTime)
 }
 
-// Strip the Config and Revalidate timestamps from V40 to return previous struct to
-// ensure previous compatibility
+// Downgrade strips the Config and Revalidate timestamps from
+// ServerUpdateStatusV40 to return previous versions of the struct to ensure
+// previous compatibility.
 func (sus ServerUpdateStatusV40) Downgrade() ServerUpdateStatus {
 	return ServerUpdateStatus{
 		HostName:           sus.HostName,
@@ -1178,7 +1187,8 @@ func (sus ServerUpdateStatusV40) Downgrade() ServerUpdateStatus {
 // structures will be better - especially since the basic principle of this
 // type is predicated on a lie: that server host names are unique.
 //
-// Deprecated: For use only in APIs below V4
+// Deprecated: ServerUpdateStatus is for use only in APIs below V4. New code
+// should use ServerUpdateStatusV40 or newer.
 type ServerUpdateStatus struct {
 	HostName           string `json:"host_name"`
 	UpdatePending      bool   `json:"upd_pending"`
@@ -1194,7 +1204,7 @@ type ServerUpdateStatus struct {
 // Ops API to a request to its /servers/{{host name}}/update_status endpoint
 // in API version 4.0.
 type ServerUpdateStatusResponseV40 struct {
-	Response []ServerUpdateStatusV4 `json:"response"`
+	Response []ServerUpdateStatusV40 `json:"response"`
 	Alerts
 }
 
