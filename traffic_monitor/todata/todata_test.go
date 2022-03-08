@@ -48,6 +48,7 @@ func TestGetDeliveryServiceServersWithTopologyBasedDeliveryService(t *testing.T)
 				Protocol  string `json:"protocol"`
 				MatchList []struct {
 					Regex string `json:"regex"`
+					Type  string `json:"match-type"`
 				} `json:"matchlist"`
 			} `json:"matchsets"`
 		}{
@@ -57,11 +58,13 @@ func TestGetDeliveryServiceServersWithTopologyBasedDeliveryService(t *testing.T)
 					Protocol  string `json:"protocol"`
 					MatchList []struct {
 						Regex string `json:"regex"`
+						Type  string `json:"match-type"`
 					} `json:"matchlist"`
 				}{{
 					Protocol: "HTTP",
 					MatchList: []struct {
 						Regex string `json:"regex"`
+						Type  string `json:"match-type"`
 					}{{Regex: `.*\.demo1\..*`}},
 				}},
 			}},
@@ -77,10 +80,7 @@ func TestGetDeliveryServiceServersWithTopologyBasedDeliveryService(t *testing.T)
 	}
 
 	topologiesTOData := TOData{}
-	var err error
-	if topologiesTOData.DeliveryServiceServers, topologiesTOData.ServerDeliveryServices, err = getDeliveryServiceServers(topologyCrConfig); err != nil {
-		t.Fatalf("unable to get deliveryservice servers for crconfig with topology-based delivery service: %s", err)
-	}
+	topologiesTOData.DeliveryServiceServers, topologiesTOData.ServerDeliveryServices = getDeliveryServiceServers(topologyCrConfig, tc.TrafficMonitorConfigMap{})
 	if !reflect.DeepEqual(expectedTopologiesTOData, topologiesTOData) {
 		t.Fatalf("getDeliveryServiceServers with topology-based delivery service expected: %+v actual: %+v", expectedTopologiesTOData, topologiesTOData)
 	}
@@ -110,6 +110,7 @@ func TestGetDeliveryServiceServersWithNonTopologyBasedDeliveryService(t *testing
 				Protocol  string `json:"protocol"`
 				MatchList []struct {
 					Regex string `json:"regex"`
+					Type  string `json:"match-type"`
 				} `json:"matchlist"`
 			} `json:"matchsets"`
 		}{
@@ -118,11 +119,13 @@ func TestGetDeliveryServiceServersWithNonTopologyBasedDeliveryService(t *testing
 					Protocol  string `json:"protocol"`
 					MatchList []struct {
 						Regex string `json:"regex"`
+						Type  string `json:"match-type"`
 					} `json:"matchlist"`
 				}{{
 					Protocol: "HTTP",
 					MatchList: []struct {
 						Regex string `json:"regex"`
+						Type  string `json:"match-type"`
 					}{{Regex: `.*\.demo2\..*`}},
 				}},
 			},
@@ -134,10 +137,7 @@ func TestGetDeliveryServiceServersWithNonTopologyBasedDeliveryService(t *testing
 	}
 
 	nonTopologiesTOData := TOData{}
-	var err error
-	if nonTopologiesTOData.DeliveryServiceServers, nonTopologiesTOData.ServerDeliveryServices, err = getDeliveryServiceServers(nonTopologyCrConfig); err != nil {
-		t.Fatalf("unable to get deliveryservice servers for crconfig with non-topology-based delivery service: %s", err)
-	}
+	nonTopologiesTOData.DeliveryServiceServers, nonTopologiesTOData.ServerDeliveryServices = getDeliveryServiceServers(nonTopologyCrConfig, tc.TrafficMonitorConfigMap{})
 	if !reflect.DeepEqual(expectedNonTopologiesTOData, nonTopologiesTOData) {
 		t.Fatalf("getDeliveryServiceServers with non-topology-based delivery service expected: %+v actual: %+v", expectedNonTopologiesTOData, nonTopologiesTOData)
 	}

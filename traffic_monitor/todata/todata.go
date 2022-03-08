@@ -29,7 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // Regexes maps Delivery Service Regular Expressions to delivery services.
@@ -132,6 +132,7 @@ type CRConfig struct {
 			Protocol  string `json:"protocol"`
 			MatchList []struct {
 				Regex string `json:"regex"`
+				Type  string `json:"match-type"`
 			} `json:"matchlist"`
 		} `json:"matchsets"`
 	} `json:"deliveryServices"`
@@ -140,20 +141,11 @@ type CRConfig struct {
 	}
 }
 
-// Fetch gets the CRConfig from Traffic Ops, creates the TOData maps, and atomically sets the TOData.
-// TODO since the session is threadsafe, each TOData get func below could be put in a goroutine, if performance mattered
-func (d TODataThreadsafe) Fetch(to towrap.TrafficOpsSessionThreadsafe, cdn string) error {
-	if _, err := to.CRConfigRaw(cdn); err != nil {
-		return fmt.Errorf("Error getting CRconfig from Traffic Ops: %v", err)
-	}
-	return d.Update(to, cdn)
-}
-
 // Update updates the TOData data with the last fetched CDN
-func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn string) error {
+func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn string, mc tc.TrafficMonitorConfigMap) error {
 	crConfigBytes, _, err := to.LastCRConfig(cdn)
 	if err != nil {
-		return fmt.Errorf("Error getting last CRConfig: %v", err)
+		return fmt.Errorf("getting last CRConfig: %v", err)
 	}
 
 	newTOData := TOData{}
@@ -162,32 +154,29 @@ func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn stri
 	json := jsoniter.ConfigFastest
 	err = json.Unmarshal(crConfigBytes, &crConfig)
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling CRconfig: %v", err)
+		return fmt.Errorf("unmarshalling CRconfig: %v", err)
 	}
 
-	newTOData.DeliveryServiceServers, newTOData.ServerDeliveryServices, err = getDeliveryServiceServers(crConfig)
+	// TODO: remove the fallback behavior on the CRConfig in ATC 8.0 (https://github.com/apache/trafficcontrol/issues/6627)
+	newTOData.DeliveryServiceServers, newTOData.ServerDeliveryServices = getDeliveryServiceServers(crConfig, mc)
+
+	// TODO: remove the fallback behavior on the CRConfig in ATC 8.0 (https://github.com/apache/trafficcontrol/issues/6627)
+	newTOData.DeliveryServiceTypes, err = getDeliveryServiceTypes(crConfig, mc)
 	if err != nil {
-		return err
+		return fmt.Errorf("getting delivery service types from Traffic Ops: %v\n", err)
 	}
 
-	newTOData.DeliveryServiceTypes, err = getDeliveryServiceTypes(crConfig)
+	// TODO: remove the fallback behavior on the CRConfig in ATC 8.0 (https://github.com/apache/trafficcontrol/issues/6627)
+	newTOData.DeliveryServiceRegexes, err = getDeliveryServiceRegexes(crConfig, mc)
 	if err != nil {
-		return fmt.Errorf("Error getting delivery service types from Traffic Ops: %v\n", err)
+		return fmt.Errorf("getting delivery service regexes from Traffic Ops: %v\n", err)
 	}
 
-	newTOData.DeliveryServiceRegexes, err = getDeliveryServiceRegexes(crConfig)
-	if err != nil {
-		return fmt.Errorf("Error getting delivery service regexes from Traffic Ops: %v\n", err)
-	}
+	newTOData.ServerCachegroups = getServerCachegroups(mc)
 
-	newTOData.ServerCachegroups, err = getServerCachegroups(crConfig)
+	newTOData.ServerTypes, err = getServerTypes(mc)
 	if err != nil {
-		return fmt.Errorf("Error getting server cachegroups from Traffic Ops: %v\n", err)
-	}
-
-	newTOData.ServerTypes, err = getServerTypes(crConfig)
-	if err != nil {
-		return fmt.Errorf("Error getting server types from Traffic Ops: %v\n", err)
+		return fmt.Errorf("getting server types from monitoring config: %v\n", err)
 	}
 
 	d.set(newTOData)
@@ -195,11 +184,41 @@ func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn stri
 }
 
 // getDeliveryServiceServers gets the servers on each delivery services, for the given CDN, from Traffic Ops.
-func getDeliveryServiceServers(crc CRConfig) (map[tc.DeliveryServiceName][]tc.CacheName, map[tc.CacheName][]tc.DeliveryServiceName, error) {
+func getDeliveryServiceServers(crc CRConfig, mc tc.TrafficMonitorConfigMap) (map[tc.DeliveryServiceName][]tc.CacheName, map[tc.CacheName][]tc.DeliveryServiceName) {
 	dsServers := map[tc.DeliveryServiceName][]tc.CacheName{}
 	serverDses := map[tc.CacheName][]tc.DeliveryServiceName{}
 
 	topologyCacheGroupDses := map[string][]tc.DeliveryServiceName{}
+
+	if canUseMonitorConfig(mc) {
+		for deliveryServiceName, deliveryService := range mc.DeliveryService {
+			if deliveryService.Topology == "" {
+				continue
+			}
+			dsName := tc.DeliveryServiceName(deliveryServiceName)
+			for _, cacheGroup := range mc.Topology[deliveryService.Topology].Nodes {
+				topologyCacheGroupDses[cacheGroup] = append(topologyCacheGroupDses[cacheGroup], dsName)
+			}
+		}
+
+		for serverName, serverData := range mc.TrafficServer {
+			srvName := tc.CacheName(serverName)
+			if cacheGroupDses, inTopology := topologyCacheGroupDses[serverData.CacheGroup]; inTopology {
+				for _, deliveryServiceName := range cacheGroupDses {
+					dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], srvName)
+				}
+				serverDses[srvName] = append(serverDses[srvName], cacheGroupDses...)
+			}
+			for _, deliveryServiceName := range serverData.DeliveryServices {
+				dsName := tc.DeliveryServiceName(deliveryServiceName)
+				dsServers[dsName] = append(dsServers[dsName], srvName)
+				serverDses[srvName] = append(serverDses[srvName], dsName)
+			}
+
+		}
+		return dsServers, serverDses
+	}
+
 	for deliveryServiceName, deliveryService := range crc.DeliveryServices {
 		if deliveryService.Topology == "" {
 			continue
@@ -222,18 +241,32 @@ func getDeliveryServiceServers(crc CRConfig) (map[tc.DeliveryServiceName][]tc.Ca
 		}
 
 	}
-	return dsServers, serverDses, nil
+	return dsServers, serverDses
 }
 
 // getDeliveryServiceRegexes gets the regexes of each delivery service, for the given CDN, from Traffic Ops.
 // Returns a map[deliveryService][]regex.
-func getDeliveryServiceRegexes(crc CRConfig) (Regexes, error) {
+func getDeliveryServiceRegexes(crc CRConfig, mc tc.TrafficMonitorConfigMap) (Regexes, error) {
 	dsRegexes := map[tc.DeliveryServiceName][]string{}
+
+	if canUseMonitorConfig(mc) {
+		for dsName, dsData := range mc.DeliveryService {
+			if len(dsData.HostRegexes) < 1 {
+				log.Warnln("TMConfig missing regex for delivery service " + string(dsName))
+				continue
+			}
+			dsRegexes[tc.DeliveryServiceName(dsName)] = dsData.HostRegexes
+		}
+		return createRegexes(dsRegexes)
+	}
 
 	for dsName, dsData := range crc.DeliveryServices {
 		for _, matchset := range dsData.Matchsets {
 			if len(matchset.MatchList) < 1 {
 				log.Warnln("CRConfig missing regex for delivery service '" + string(dsName) + "' matchset protocol '" + matchset.Protocol + "'")
+				continue
+			}
+			if matchset.MatchList[0].Type != "HOST" {
 				continue
 			}
 			dsRegexes[dsName] = append(dsRegexes[dsName], matchset.MatchList[0].Regex)
@@ -286,31 +319,50 @@ func createRegexes(dsToRegex map[tc.DeliveryServiceName][]string) (Regexes, erro
 
 // getServerCachegroups gets the cachegroup of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
 // Returns a map[server]cachegroup.
-func getServerCachegroups(crc CRConfig) (map[tc.CacheName]tc.CacheGroupName, error) {
+func getServerCachegroups(mc tc.TrafficMonitorConfigMap) map[tc.CacheName]tc.CacheGroupName {
 	serverCachegroups := map[tc.CacheName]tc.CacheGroupName{}
 
-	for server, serverData := range crc.ContentServers {
-		serverCachegroups[server] = tc.CacheGroupName(serverData.CacheGroup)
+	for server, serverData := range mc.TrafficServer {
+		serverCachegroups[tc.CacheName(server)] = tc.CacheGroupName(serverData.CacheGroup)
 	}
-	return serverCachegroups, nil
+	return serverCachegroups
 }
 
 // getServerTypes gets the cache type of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
-func getServerTypes(crc CRConfig) (map[tc.CacheName]tc.CacheType, error) {
+func getServerTypes(mc tc.TrafficMonitorConfigMap) (map[tc.CacheName]tc.CacheType, error) {
 	serverTypes := map[tc.CacheName]tc.CacheType{}
 
-	for server, serverData := range crc.ContentServers {
+	for server, serverData := range mc.TrafficServer {
 		t := tc.CacheTypeFromString(serverData.Type)
 		if t == tc.CacheTypeInvalid {
-			return nil, fmt.Errorf("getServerTypes CRConfig unknown type for '%s': '%s'", server, serverData.Type)
+			return nil, fmt.Errorf("getServerTypes monitoring config unknown type for '%s': '%s'", server, serverData.Type)
 		}
-		serverTypes[server] = t
+		serverTypes[tc.CacheName(server)] = t
 	}
 	return serverTypes, nil
 }
 
-func getDeliveryServiceTypes(crc CRConfig) (map[tc.DeliveryServiceName]tc.DSTypeCategory, error) {
+// canUseMonitorConfig returns true if we can prefer monitor config data to crconfig data.
+func canUseMonitorConfig(mc tc.TrafficMonitorConfigMap) bool {
+	for _, dsData := range mc.DeliveryService {
+		return dsData.Type != ""
+	}
+	return false
+}
+
+func getDeliveryServiceTypes(crc CRConfig, mc tc.TrafficMonitorConfigMap) (map[tc.DeliveryServiceName]tc.DSTypeCategory, error) {
 	dsTypes := map[tc.DeliveryServiceName]tc.DSTypeCategory{}
+	if canUseMonitorConfig(mc) {
+		for dsName, dsData := range mc.DeliveryService {
+			dsType := tc.DSTypeCategoryFromString(dsData.Type)
+			if dsType == tc.DSTypeCategoryInvalid {
+				log.Warnln("monitoring config invalid DS type category for delivery service '" + string(dsName) + "' matchset protocol '" + dsData.Type + "'; skipping")
+				continue
+			}
+			dsTypes[tc.DeliveryServiceName(dsName)] = dsType
+		}
+		return dsTypes, nil
+	}
 
 	for dsName, dsData := range crc.DeliveryServices {
 		if len(dsData.Matchsets) < 1 {

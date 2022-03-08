@@ -291,7 +291,7 @@ func ExampleLegacyTrafficMonitorConfigMap_Upgrade() {
 		TrafficServer: map[string]LegacyTrafficServer{
 			"test": {
 				CacheGroup:       "test",
-				DeliveryServices: []tsdeliveryService{},
+				DeliveryServices: []string{},
 				FQDN:             "test.quest",
 				HashID:           "test",
 				HostName:         "test",

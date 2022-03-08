@@ -543,6 +543,39 @@ func GetDSTenantIDFromXMLID(tx *sql.Tx, xmlid string) (int, bool, error) {
 	return id, true, nil
 }
 
+func GetServerDSNamesByCDN(tx *sql.Tx, cdn string) (map[tc.CacheName][]string, error) {
+	q := `
+SELECT s.host_name, ds.xml_id
+FROM deliveryservice_server AS dss
+INNER JOIN server AS s ON dss.server = s.id
+INNER JOIN deliveryservice AS ds ON ds.id = dss.deliveryservice
+INNER JOIN type AS dt ON dt.id = ds.type
+INNER JOIN profile AS p ON p.id = s.profile
+INNER JOIN status AS st ON st.id = s.status
+WHERE ds.cdn_id = (SELECT id FROM cdn WHERE name = $1)
+AND ds.active = true
+AND dt.name != '` + tc.DSTypeAnyMap.String() + `'
+AND p.routing_disabled = false
+AND (st.name = '` + tc.CacheStatusOnline.String() + `' OR st.name = '` + tc.CacheStatusReported.String() + `' OR st.name = '` + tc.CacheStatusAdminDown.String() + `')
+`
+	rows, err := tx.Query(q, cdn)
+	if err != nil {
+		return nil, errors.New("querying server deliveryservice names by CDN: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows after querying server deliveryservice names by CDN")
+
+	serverDSes := map[tc.CacheName][]string{}
+	for rows.Next() {
+		ds := ""
+		server := ""
+		if err := rows.Scan(&server, &ds); err != nil {
+			return nil, errors.New("scanning server deliveryservice names: " + err.Error())
+		}
+		serverDSes[tc.CacheName(server)] = append(serverDSes[tc.CacheName(server)], ds)
+	}
+	return serverDSes, nil
+}
+
 // returns returns the delivery service name and cdn, whether it existed, and any error.
 func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNName, bool, error) {
 	name := tc.DeliveryServiceName("")
