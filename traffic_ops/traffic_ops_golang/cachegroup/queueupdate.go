@@ -20,7 +20,6 @@ package cachegroup
  */
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -107,9 +106,9 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 	// Queue updates
 	var updatedCaches []tc.CacheName
 	if reqObj.Action == queue {
-		updatedCaches, err = queueUpdates(inf.Tx.Tx, cgID, cdnID)
+		updatedCaches, err = dbhelpers.QueueUpdateForServerWithCachegroupCDN(inf.Tx.Tx, cgID, cdnID)
 	} else {
-		updatedCaches, err = dequeueUpdates(inf.Tx.Tx, cgID, cdnID)
+		updatedCaches, err = dbhelpers.DequeueUpdateForServerWithCachegroupCDN(inf.Tx.Tx, cgID, cdnID)
 	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("queueing updates: "+err.Error()))
@@ -132,51 +131,4 @@ type QueueUpdatesResp struct {
 	ServerNames    []tc.CacheName    `json:"serverNames"`
 	CDN            tc.CDNName        `json:"cdn"`
 	CacheGroupID   int               `json:"cachegroupID"`
-}
-
-func queueUpdates(tx *sql.Tx, cgID int, cdnID int) ([]tc.CacheName, error) {
-	q := `
-INSERT INTO public.server_config_update (server_id, config_update_time) 
-SELECT s.id, now() FROM "server" s WHERE s.cachegroup = $1 AND s.cdn_id = $2
-ON CONFLICT (server_id)
-DO UPDATE SET config_update_time = now()
-RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);
-	`
-	rows, err := tx.Query(q, cgID, cdnID)
-	if err != nil {
-		return nil, errors.New("querying : " + err.Error())
-	}
-	defer rows.Close()
-	names := []tc.CacheName{}
-	for rows.Next() {
-		name := ""
-		if err := rows.Scan(&name); err != nil {
-			return nil, errors.New("scanning queue updates: " + err.Error())
-		}
-		names = append(names, tc.CacheName(name))
-	}
-	return names, nil
-}
-
-func dequeueUpdates(tx *sql.Tx, cgID int, cdnID int) ([]tc.CacheName, error) {
-	q := `
-UPDATE public.server_config_update
-SET config_apply_time = config_update_time
-WHERE server_id IN (SELECT s.id FROM "server" s WHERE s.cachegroup = $1 AND s.cdn_id = $2)
-RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);
-`
-	rows, err := tx.Query(q, cgID, cdnID)
-	if err != nil {
-		return nil, errors.New("querying queue updates: " + err.Error())
-	}
-	defer rows.Close()
-	names := []tc.CacheName{}
-	for rows.Next() {
-		name := ""
-		if err := rows.Scan(&name); err != nil {
-			return nil, errors.New("scanning queue updates: " + err.Error())
-		}
-		names = append(names, tc.CacheName(name))
-	}
-	return names, nil
 }

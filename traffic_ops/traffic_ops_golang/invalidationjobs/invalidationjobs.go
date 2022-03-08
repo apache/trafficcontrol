@@ -136,9 +136,8 @@ RETURNING
 `
 
 const queueUpdateQuery = `
-INSERT INTO public.server_config_update (server_id, config_update_time)
-SELECT server.id, now()
-FROM server
+UPDATE public.server
+SET config_update_time = now()
 WHERE server.status NOT IN (
                              SELECT status.id
                              FROM status
@@ -158,15 +157,12 @@ WHERE server.status NOT IN (
                              SELECT deliveryservice.cdn_id
                              FROM deliveryservice
                              WHERE deliveryservice.id=$1
-                           )
-ON CONFLICT (server_id)
-DO UPDATE SET config_update_time = now();
+                           );
 `
 
 const queueRevalQuery = `
-INSERT INTO public.server_config_update (server_id, revalidate_update_time)
-SELECT server.id, now()
-FROM server
+UPDATE public.server
+SET revalidate_update_time = now()
 WHERE server.status NOT IN (
                              SELECT status.id
                              FROM status
@@ -186,9 +182,7 @@ WHERE server.status NOT IN (
                              SELECT deliveryservice.cdn_id
                              FROM deliveryservice
                              WHERE deliveryservice.id=$1
-                           )
-ON CONFLICT (server_id)
-DO UPDATE SET revalidate_update_time = now();
+                           );
 `
 
 const updateQuery = `

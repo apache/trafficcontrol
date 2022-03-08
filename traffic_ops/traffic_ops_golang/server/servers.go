@@ -54,7 +54,6 @@ import (
 
 const serversFromAndJoin = `
 FROM server AS s
-LEFT OUTER JOIN server_config_update scu ON s.id = scu.server_id
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
@@ -140,17 +139,17 @@ SELECT
 	p.description AS profile_desc,
 	s.profile AS profile_id,
 	s.rack,
-	(COALESCE (scu.revalidate_update_time, TIMESTAMPTZ 'epoch') - COALESCE (scu.revalidate_apply_time, TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS reval_pending,
-	COALESCE (scu.revalidate_update_time, TIMESTAMPTZ 'epoch') AS revalidate_update_time,
-	COALESCE (scu.revalidate_apply_time, TIMESTAMPTZ 'epoch') AS revalidate_apply_time,
+	(COALESCE (s.revalidate_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.revalidate_apply_time, TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS reval_pending,
+	COALESCE (s.revalidate_update_time, TIMESTAMPTZ 'epoch') AS revalidate_update_time,
+	COALESCE (s.revalidate_apply_time, TIMESTAMPTZ 'epoch') AS revalidate_apply_time,
 	st.name AS status,
 	s.status AS status_id,
 	s.tcp_port,
 	t.name AS server_type,
 	s.type AS server_type_id,
-	(COALESCE (scu.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (scu.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending,
-	COALESCE (scu.config_update_time, TIMESTAMPTZ 'epoch') AS config_update_time,
-	COALESCE (scu.config_apply_time, TIMESTAMPTZ 'epoch') AS config_apply_time,
+	(COALESCE (s.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending,
+	COALESCE (s.config_update_time, TIMESTAMPTZ 'epoch') AS config_update_time,
+	COALESCE (s.config_apply_time, TIMESTAMPTZ 'epoch') AS config_apply_time,
 	s.xmpp_id,
 	s.xmpp_passwd,
 	s.status_last_updated

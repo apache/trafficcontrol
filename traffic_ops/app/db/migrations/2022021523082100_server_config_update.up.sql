@@ -14,15 +14,15 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+ 
+-- Add columns, timestamp with time zone, nullable, default null
+ALTER TABLE public.server 
+ADD COLUMN IF NOT EXISTS config_update_time TIMESTAMPTZ NULL DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS config_apply_time TIMESTAMPTZ NULL DEFAULT NULL, 
+ADD COLUMN IF NOT EXISTS revalidate_update_time TIMESTAMPTZ NULL DEFAULT NULL, 
+ADD COLUMN IF NOT EXISTS revalidate_apply_time TIMESTAMPTZ NULL DEFAULT NULL;
 
-CREATE TABLE IF NOT EXISTS public.server_config_update ( 
-    server_id bigint NOT NULL PRIMARY KEY, 
-    config_update_time TIMESTAMPTZ, 
-    config_apply_time TIMESTAMPTZ, 
-    revalidate_update_time TIMESTAMPTZ, 
-    revalidate_apply_time TIMESTAMPTZ, 
-    last_updated TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_server_id FOREIGN KEY(server_id) REFERENCES public.server(id) ON DELETE CASCADE
-);
-
-ALTER TABLE public.server DROP COLUMN IF EXISTS upd_pending, DROP COLUMN IF EXISTS reval_pending;
+-- Drop previous columns
+ALTER TABLE public.server 
+DROP COLUMN IF EXISTS upd_pending, 
+DROP COLUMN IF EXISTS reval_pending;

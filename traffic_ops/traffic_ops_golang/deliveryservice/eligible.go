@@ -132,7 +132,6 @@ JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
-LEFT OUTER JOIN server_config_update scu ON s.id = scu.server_id
 %s`
 	queryWhereClause := `
 WHERE s.cdn_id = (SELECT cdn_id from deliveryservice where id = (select v from ds_id))
@@ -168,7 +167,7 @@ s.status as status_id,
 s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
-(COALESCE (scu.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (scu.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending,
+(COALESCE (s.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending,
 ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities,
 ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability) as deliveryservice_capabilities
 `

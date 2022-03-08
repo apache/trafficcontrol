@@ -15,11 +15,14 @@
  * the License.
  */
 
+-- Add previously existing columns
 ALTER TABLE public.server 
 ADD COLUMN IF NOT EXISTS upd_pending bool NOT NULL DEFAULT false, 
 ADD COLUMN IF NOT EXISTS reval_pending bool NOT NULL DEFAULT false;
 
-
-/* TODO insert value based on table before dropping */
-
-DROP TABLE IF EXISTS server_config_update;
+-- Remove new columns
+ALTER TABLE public.server 
+DROP COLUMN IF EXISTS config_update_time, 
+DROP COLUMN IF EXISTS config_apply_time,
+DROP COLUMN IF EXISTS revalidate_update_time, 
+DROP COLUMN IF EXISTS revalidate_apply_time;

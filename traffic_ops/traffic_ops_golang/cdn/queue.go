@@ -124,21 +124,14 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 
 	query := ""
 	if reqObj.Action == "queue" {
-		query = `INSERT INTO public.server_config_update (server_id, config_update_time)
-SELECT s.id, now() 
-FROM public.server s`
-		query = query + where
-		query = query + `
-ON CONFLICT (server_id)
-DO UPDATE SET config_update_time = now()`
+		query = `UPDATE public.server
+SET config_update_time = now()`
+		query = query + where + `)`
 	} else {
 		query = `
-UPDATE public.server_config_update
-SET config_update_time = config_apply_time
-WHERE server_id IN (SELECT s.id
-FROM public.server s`
-		query = query + where
-		query = query + `)`
+UPDATE public.server
+SET config_update_time = config_apply_time`
+		query = query + where + `)`
 	}
 
 	rowsAffected, err := queueUpdates(inf.Tx, query, queryValues)

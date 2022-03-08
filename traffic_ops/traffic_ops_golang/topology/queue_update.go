@@ -93,12 +93,12 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if reqObj.Action == "queue" {
-		if err := queueUpdates(inf.Tx.Tx, topologyName, reqObj.CDNID); err != nil {
+		if err := dbhelpers.QueueUpdateForServerWithTopologyCDN(inf.Tx.Tx, topologyName, reqObj.CDNID); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Topology queueing updates: "+err.Error()))
 			return
 		}
 	} else {
-		if err := dequeueUpdates(inf.Tx.Tx, topologyName, reqObj.CDNID); err != nil {
+		if err := dbhelpers.DequeueUpdateForServerWithTopologyCDN(inf.Tx.Tx, topologyName, reqObj.CDNID); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Topology queueing updates: "+err.Error()))
 			return
 		}
@@ -107,42 +107,4 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	message := fmt.Sprintf("TOPOLOGY: %s, ACTION: Topology server updates %sd", topologyName, reqObj.Action)
 	api.CreateChangeLogRawTx(api.ApiChange, message, inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, tc.TopologiesQueueUpdate{Action: reqObj.Action, CDNID: reqObj.CDNID, Topology: topologyName})
-}
-
-func queueUpdates(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64) error {
-	query := `
-INSERT INTO public.server_config_update (server_id, config_update_time)
-SELECT s.id, now()
-FROM "server" s
-INNER JOIN cachegroup c ON c.id =s.cachegroup 
-INNER JOIN topology_cachegroup tc ON tc.cachegroup = c."name"
-WHERE tc.topology = $1
-AND s.cdn_id = $2
-ON CONFLICT (server_id)
-DO UPDATE SET config_update_time = now();
-`
-	var err error
-	if _, err = tx.Exec(query, topologyName, cdnId); err != nil {
-		err = fmt.Errorf("queueing updates: %s", err)
-	}
-	return err
-}
-
-func dequeueUpdates(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64) error {
-	query := `
-UPDATE public.server_config_update
-SET config_update_time = config_apply_time
-WHERE server_id IN (
-SELECT s.id 
-FROM "server" s
-INNER JOIN cachegroup c ON c.id =s.cachegroup 
-INNER JOIN topology_cachegroup tc ON tc.cachegroup = c."name"
-WHERE tc.topology = $1 
-AND s.cdn_id = $2);
-`
-	var err error
-	if _, err = tx.Exec(query, topologyName, cdnId); err != nil {
-		err = fmt.Errorf("queueing updates: %s", err)
-	}
-	return err
 }
