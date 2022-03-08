@@ -1755,7 +1755,7 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 	return regionName, true, nil
 }
 
-// queueUpdateForServer set the current config update time for the server to now
+// QueueUpdateForServer sets the config update time for the server to now.
 func QueueUpdateForServer(tx *sql.Tx, serverID int64) error {
 	query := `
 UPDATE public.server
@@ -1769,7 +1769,8 @@ WHERE server.id = $1;`
 	return nil
 }
 
-// queueUpdateForServer set the current config update time for the server to now
+// QueueUpdateForServerWithTime sets the config update time for the
+// server to the provided time.
 func QueueUpdateForServerWithTime(tx *sql.Tx, serverID int64, updateTime time.Time) error {
 	query := `
 UPDATE public.server
@@ -1783,6 +1784,8 @@ WHERE server.id = $1;`
 	return nil
 }
 
+// QueueUpdateForServerWithCachegroupCDN sets the config update time
+// for all servers belonging to the specified cachegroup (id) and cdn (id).
 func QueueUpdateForServerWithCachegroupCDN(tx *sql.Tx, cgID int, cdnID int64) ([]tc.CacheName, error) {
 	q := `
 UPDATE public.server
@@ -1805,6 +1808,8 @@ RETURNING server.host_name;`
 	return names, nil
 }
 
+// QueueUpdateForServerWithTopologyCDN sets the config update time
+// for all servers within the specific topology (name) and cdn (id).
 func QueueUpdateForServerWithTopologyCDN(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64) error {
 	query := `
 UPDATE public.server
@@ -1821,6 +1826,9 @@ AND server.cdn_id = $2;`
 	return err
 }
 
+// DequeueUpdateForServer sets the config update time equal to the
+// config apply time, thereby effectively dequeueing any pending
+// updates for the server specified.
 func DequeueUpdateForServer(tx *sql.Tx, serverID int64) error {
 	query := `
 UPDATE public.server
@@ -1834,6 +1842,9 @@ WHERE server.id = $1;`
 	return nil
 }
 
+// DequeueUpdateForServerWithCachegroupCDN sets the config update time equal to
+// the config apply time, thereby effectively dequeueing any pending
+// updates for the servers specified by the cachegroup (id) and the cdn (id).
 func DequeueUpdateForServerWithCachegroupCDN(tx *sql.Tx, cgID int, cdnID int64) ([]tc.CacheName, error) {
 	q := `
 UPDATE public.server
@@ -1857,6 +1868,9 @@ RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);`
 	return names, nil
 }
 
+// DequeueUpdateForServerWithTopologyCDN sets the config update time equal to
+// the config apply time, thereby effectively dequeueing any pending
+// updates for the servers specified by the topology (name) and the cdn (id).
 func DequeueUpdateForServerWithTopologyCDN(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64) error {
 	query := `
 UPDATE public.server
@@ -1873,6 +1887,7 @@ AND s.cdn_id = $2);`
 	return err
 }
 
+// SetApplyUpdateForServer sets the config apply time for the server to now.
 func SetApplyUpdateForServer(tx *sql.Tx, serverID int64) error {
 	query := `
 UPDATE public.server
@@ -1886,6 +1901,8 @@ WHERE server.id = $1;`
 	return nil
 }
 
+// SetApplyUpdateForServerWithTime sets the config apply time for the
+// server to the provided time.
 func SetApplyUpdateForServerWithTime(tx *sql.Tx, serverID int64, applyUpdateTime time.Time) error {
 	query := `
 UPDATE public.server
@@ -1899,7 +1916,7 @@ WHERE server.id = $1;`
 	return nil
 }
 
-// queueUpdateForServer set the current reval update time for the server to now
+// QueueRevalForServer sets the revalidate update time for the server to now.
 func QueueRevalForServer(tx *sql.Tx, serverID int64) error {
 	query := `
 UPDATE public.server
@@ -1913,7 +1930,8 @@ WHERE server.id = $1;`
 	return nil
 }
 
-// queueUpdateForServer set the current reval update time for the server to now
+// QueueRevalForServerWithTime sets the revalidate update time for the
+// server to the provided time.
 func QueueRevalForServerWithTime(tx *sql.Tx, serverID int64, revalTime time.Time) error {
 	query := `
 UPDATE public.server
@@ -1927,6 +1945,7 @@ WHERE server.id = $1;`
 	return nil
 }
 
+// SetApplyRevalForServer sets the revalidate apply time for the server to now.
 func SetApplyRevalForServer(tx *sql.Tx, serverID int64) error {
 	query := `
 UPDATE public.server
@@ -1940,6 +1959,8 @@ WHERE server.id = $1;`
 	return nil
 }
 
+// SetApplyRevalForServerWithTime sets the revalidate apply time for the
+// server to the provided time.
 func SetApplyRevalForServerWithTime(tx *sql.Tx, serverID int64, applyRevalTime time.Time) error {
 	query := `
 UPDATE public.server
