@@ -42,8 +42,8 @@ SELECT server.host_name AS hostName,
 	status.name AS adminState,
 	cachegroup.name AS cacheGroup,
 	type.name AS type,
-	(COALESCE (s.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending,
-	(COALESCE (s.revalidate_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.revalidate_apply_time, TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS reval_pending
+	s.config_update_time - s.config_apply_time > INTERVAL '0 seconds' AS upd_pending,
+	s.revalidate_update_time - s.revalidate_apply_time > INTERVAL '0 seconds' AS reval_pending
 FROM server s
 LEFT JOIN profile ON server.profile = profile.id
 LEFT JOIN status ON server.status = status.id

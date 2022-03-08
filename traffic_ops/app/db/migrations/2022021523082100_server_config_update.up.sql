@@ -14,13 +14,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
- 
+
 -- Add columns, timestamp with time zone, nullable, default null
-ALTER TABLE public.server 
-ADD COLUMN IF NOT EXISTS config_update_time TIMESTAMPTZ NULL DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS config_apply_time TIMESTAMPTZ NULL DEFAULT NULL, 
-ADD COLUMN IF NOT EXISTS revalidate_update_time TIMESTAMPTZ NULL DEFAULT NULL, 
-ADD COLUMN IF NOT EXISTS revalidate_apply_time TIMESTAMPTZ NULL DEFAULT NULL;
+ALTER TABLE public.server
+ADD COLUMN IF NOT EXISTS config_update_time TIMESTAMPTZ NULL DEFAULT TIMESTAMP 'epoch',
+ADD COLUMN IF NOT EXISTS config_apply_time TIMESTAMPTZ NULL DEFAULT TIMESTAMP 'epoch', 
+ADD COLUMN IF NOT EXISTS revalidate_update_time TIMESTAMPTZ NULL DEFAULT TIMESTAMP 'epoch', 
+ADD COLUMN IF NOT EXISTS revalidate_apply_time TIMESTAMPTZ NULL DEFAULT TIMESTAMP 'epoch';
 
 -- Drop previous columns
 ALTER TABLE public.server 

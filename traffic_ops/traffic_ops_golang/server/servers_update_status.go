@@ -87,11 +87,11 @@ UNION ALL
  */
 ), server_topology_ancestors AS (
 SELECT s.id, 
-	s.cachegroup, 
-	s.cdn_id, 
-	(COALESCE (s.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending,
-	(COALESCE (s.revalidate_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.revalidate_apply_time, TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS reval_pending,
-	s.status, 
+	s.cachegroup,
+	s.cdn_id,
+	s.config_update_time - s.config_apply_time > INTERVAL '0 seconds' AS upd_pending,
+	s.revalidate_update_time - s.revalidate_apply_time > INTERVAL '0 seconds' AS reval_pending,
+	s.status,
 	ta.base_server_id
 	FROM server s
 	JOIN cachegroup c ON s.cachegroup = c.id
@@ -100,10 +100,10 @@ SELECT s.id,
 	WHERE status.name = ANY($1::TEXT[])
 ), parentservers AS (
 SELECT ps.id, 
-	ps.cachegroup, 
-	ps.cdn_id, 
-	(COALESCE (s.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending,
-	(COALESCE (s.revalidate_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.revalidate_apply_time, TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS reval_pending,
+	ps.cachegroup,
+	ps.cdn_id,
+	ps.config_update_time - ps.config_apply_time > INTERVAL '0 seconds' AS upd_pending,
+	ps.revalidate_update_time - ps.revalidate_apply_time > INTERVAL '0 seconds' AS reval_pending,
 	ps.status
 	FROM server ps
 	LEFT JOIN status AS pstatus ON pstatus.id = ps.status
@@ -121,9 +121,9 @@ SELECT
 	s.id,
 	s.host_name,
 	type.name AS type,
-	(COALESCE (s.revalidate_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.revalidate_apply_time, TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS server_reval_pending,
+	s.revalidate_update_time - s.revalidate_apply_time > INTERVAL '0 seconds' AS server_reval_pending,
 	use_reval_pending.value,
-	(COALESCE (s.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.config_apply_time, TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS server_upd_pending,
+	s.config_update_time - s.config_apply_time > INTERVAL '0 seconds' AS server_upd_pending,
 	status.name AS status,
 	/* True if the cachegroup parent or any ancestor topology node has pending updates. */
 	TRUE IN (
@@ -139,10 +139,10 @@ SELECT
 		AND sta.cdn_id = s.cdn_id
 		UNION SELECT COALESCE(BOOL_OR(ps.reval_pending), FALSE)
 	) AS parent_reval_pending,
-	COALESCE (s.config_update_time, TIMESTAMPTZ 'epoch') AS config_update_time,
-	COALESCE (s.config_apply_time, TIMESTAMPTZ 'epoch') AS config_apply_time,
-	COALESCE (s.revalidate_update_time, TIMESTAMPTZ 'epoch') AS revalidate_update_time,
-	COALESCE (s.revalidate_apply_time, TIMESTAMPTZ 'epoch') AS revalidate_apply_time
+	s.config_update_time,
+	s.config_apply_time,
+	s.revalidate_update_time,
+	s.revalidate_apply_time
 	FROM use_reval_pending,
 		 server s
 LEFT JOIN status ON s.status = status.id

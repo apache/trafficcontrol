@@ -780,7 +780,7 @@ s.status as status_id,
 s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
-(COALESCE (s.config_update_time, TIMESTAMPTZ 'epoch') - COALESCE (s.config_apply_time , TIMESTAMPTZ 'epoch')) > INTERVAL '0 seconds' AS upd_pending
+s.config_update_time - s.config_apply_time > INTERVAL '0 seconds' AS upd_pending,
 `
 
 	queryFormatString := `
