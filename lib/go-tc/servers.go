@@ -1129,40 +1129,6 @@ type ServerUpdateStatusV40 struct {
 	RevalidateApplyTime  time.Time `json:"revalidate_apply_time"`
 }
 
-// MarshalJSON is a custom implementation to ensure the date format returned is
-// a RFC3339Nano.
-func (sus ServerUpdateStatusV40) MarshalJSON() ([]byte, error) {
-	formatTime := struct {
-		HostName             string `json:"host_name"`
-		UpdatePending        bool   `json:"upd_pending"`
-		RevalPending         bool   `json:"reval_pending"`
-		UseRevalPending      bool   `json:"use_reval_pending"`
-		HostId               int    `json:"host_id"`
-		Status               string `json:"status"`
-		ParentPending        bool   `json:"parent_pending"`
-		ParentRevalPending   bool   `json:"parent_reval_pending"`
-		ConfigUpdateTime     string `json:"config_update_time"`
-		ConfigApplyTime      string `json:"config_apply_time"`
-		RevalidateUpdateTime string `json:"revalidate_update_time"`
-		RevalidateApplyTime  string `json:"revalidate_apply_time"`
-	}{
-		HostName:             sus.HostName,
-		UpdatePending:        sus.UpdatePending,
-		RevalPending:         sus.RevalPending,
-		UseRevalPending:      sus.UseRevalPending,
-		HostId:               sus.HostId,
-		Status:               sus.Status,
-		ParentPending:        sus.ParentPending,
-		ParentRevalPending:   sus.ParentRevalPending,
-		ConfigUpdateTime:     sus.ConfigUpdateTime.Format(time.RFC3339Nano),
-		ConfigApplyTime:      sus.ConfigApplyTime.Format(time.RFC3339Nano),
-		RevalidateUpdateTime: sus.RevalidateUpdateTime.Format(time.RFC3339Nano),
-		RevalidateApplyTime:  sus.RevalidateApplyTime.Format(time.RFC3339Nano),
-	}
-
-	return json.Marshal(formatTime)
-}
-
 // Downgrade strips the Config and Revalidate timestamps from
 // ServerUpdateStatusV40 to return previous versions of the struct to ensure
 // previous compatibility.
