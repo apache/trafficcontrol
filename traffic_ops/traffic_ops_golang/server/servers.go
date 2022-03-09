@@ -139,7 +139,7 @@ SELECT
 	p.description AS profile_desc,
 	s.profile AS profile_id,
 	s.rack,
-	s.revalidate_update_time - s.revalidate_apply_time > INTERVAL '0 seconds' AS reval_pending
+	s.revalidate_update_time - s.revalidate_apply_time > INTERVAL '0 seconds' AS reval_pending,
 	s.revalidate_update_time,
 	s.revalidate_apply_time,
 	st.name AS status,
