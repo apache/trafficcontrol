@@ -21,6 +21,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -45,7 +46,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		id, ok, err := dbhelpers.GetServerIDFromName(idOrName, inf.Tx.Tx)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server id from name '"+idOrName+"': "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting server id from name '%v': %w", idOrName, err))
 			return
 		} else if !ok {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server name '"+idOrName+"' not found"), nil)
@@ -144,12 +145,12 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		updatedBool := strToBool(updated)
 		if updatedBool {
 			if err = dbhelpers.QueueUpdateForServer(inf.Tx.Tx, int64(serverID)); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting update status: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting update status: %w", err))
 				return
 			}
 		} else {
 			if err = dbhelpers.SetApplyUpdateForServer(inf.Tx.Tx, int64(serverID)); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting update status: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting update status: %w", err))
 				return
 			}
 		}
@@ -159,12 +160,12 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		revalUpdatedBool := strToBool(revalUpdated)
 		if revalUpdatedBool {
 			if err = dbhelpers.QueueRevalForServer(inf.Tx.Tx, int64(serverID)); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting reval status: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval status: %w", err))
 				return
 			}
 		} else {
 			if err = dbhelpers.SetApplyRevalForServer(inf.Tx.Tx, int64(serverID)); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting update status: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval status: %w", err))
 				return
 			}
 		}
@@ -172,33 +173,37 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	if hasConfig_update_time {
 		if err = dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, int64(serverID), configUpdateTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting config update time: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting config update time: %w", err))
 			return
 		}
 	}
 
 	if hasConfig_apply_time {
 		if err = dbhelpers.SetApplyUpdateForServerWithTime(inf.Tx.Tx, int64(serverID), configApplyTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting config apply time: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting config apply time: %w", err))
 			return
 		}
 	}
 
 	if hasRevalidate_update_time {
 		if err = dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, int64(serverID), revalUpdateTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting reval update time: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval update time: %w", err))
 			return
 		}
 	}
 
 	if hasConfig_apply_time {
 		if err = dbhelpers.SetApplyUpdateForServerWithTime(inf.Tx.Tx, int64(serverID), revalApplyTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting reval apply time: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval apply time: %w", err))
 			return
 		}
 	}
 
-	hostName, _, _ := dbhelpers.GetServerNameFromID(inf.Tx.Tx, serverID)
+	hostName, _, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, serverID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("querying for server name with id %d: %w", serverID, err))
+		return
+	}
 
 	respMsg := "successfully set server '" + hostName + "'"
 	if hasUpdated {

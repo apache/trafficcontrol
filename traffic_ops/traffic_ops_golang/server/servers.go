@@ -1559,13 +1559,13 @@ func updateServer(tx *sqlx.Tx, server tc.ServerV40) (int64, int, error, error) {
 	}
 
 	if rowsAffected < 1 {
-		return 0, http.StatusNotFound, errors.New("no server found with this id"), nil
+		return 0, http.StatusNotFound, fmt.Errorf("no server found with id %d", *server.ID), nil
 	}
 	if rowsAffected > 1 {
 		return 0, http.StatusInternalServerError, nil, fmt.Errorf("update for server #%d affected too many rows (%d)", *server.ID, rowsAffected)
 	}
 
-	return serverId, http.StatusAccepted, nil, nil
+	return serverId, http.StatusOK, nil, nil
 }
 
 func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {

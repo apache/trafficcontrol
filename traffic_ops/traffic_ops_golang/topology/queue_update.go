@@ -94,12 +94,12 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	if reqObj.Action == "queue" {
 		if err := dbhelpers.QueueUpdateForServerWithTopologyCDN(inf.Tx.Tx, topologyName, reqObj.CDNID); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Topology queueing updates: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("topology queueing updates: %w", err))
 			return
 		}
 	} else {
 		if err := dbhelpers.DequeueUpdateForServerWithTopologyCDN(inf.Tx.Tx, topologyName, reqObj.CDNID); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Topology queueing updates: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("topology queueing updates: %w", err))
 			return
 		}
 	}
