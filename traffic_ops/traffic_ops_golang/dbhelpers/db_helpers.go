@@ -1817,7 +1817,7 @@ SET config_update_time = now()
 FROM public.cachegroup AS cg
 INNER JOIN public.topology_cachegroup AS tc ON tc.cachegroup = cg."name"
 WHERE cg.id = server.cachegroup
-AND topology_cachegroup = $1
+AND tc.topology = $1
 AND server.cdn_id = $2;`
 	var err error
 	if _, err = tx.Exec(query, topologyName, cdnId); err != nil {
@@ -1879,7 +1879,7 @@ FROM cachegroup cg
 INNER JOIN topology_cachegroup tc ON tc.cachegroup = cg."name"
 WHERE cg.id = server.cachegroup
 AND tc.topology = $1
-AND s.cdn_id = $2);`
+AND server.cdn_id = $2;`
 	var err error
 	if _, err = tx.Exec(query, topologyName, cdnId); err != nil {
 		err = fmt.Errorf("queueing updates: %w", err)

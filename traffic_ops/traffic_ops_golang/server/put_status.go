@@ -197,7 +197,7 @@ SELECT c.id
 FROM cachegroup c
 JOIN topology_descendants td ON c."name" = td.cachegroup
 )
-INSERT INTO public.server
+UPDATE public.server
 SET config_update_time = now()
 WHERE (server.cdn_id = $1
 	   AND server.cachegroup IN (

@@ -50,9 +50,9 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cols := map[string]dbhelpers.WhereColumnInfo{
-		"cdnID":     {Column: "s.cdn_id", Checker: api.IsInt},
-		"typeID":    {Column: "s.type", Checker: nil},
-		"profileID": {Column: "s.profile", Checker: nil},
+		"cdnID":     {Column: "cdn_id", Checker: api.IsInt},
+		"typeID":    {Column: "type", Checker: nil},
+		"profileID": {Column: "profile", Checker: nil},
 	}
 
 	typeName := inf.Params["type"]
@@ -126,12 +126,12 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 	if reqObj.Action == "queue" {
 		query = `UPDATE public.server
 SET config_update_time = now()`
-		query = query + where + `)`
+		query = query + where
 	} else {
 		query = `
 UPDATE public.server
 SET config_update_time = config_apply_time`
-		query = query + where + `)`
+		query = query + where
 	}
 
 	rowsAffected, err := queueUpdates(inf.Tx, query, queryValues)
