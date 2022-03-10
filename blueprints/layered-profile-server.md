@@ -93,7 +93,7 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 {
   "response": [{
     "id": 5,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+    "profileNames": ["MID", "AMIGA_123", "CDN_FOO"]
   }]
 }
 ```
@@ -102,7 +102,7 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 ```JSON
 {
   "response": [{
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+    "profileNames": ["MID", "AMIGA_123", "CDN_FOO"]
   }]
 }
 ```
@@ -115,7 +115,7 @@ JSON **request** with the proposed change will look as follows:
 {
     "cachegroupId": 6,
     "cdnId": 2,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+    "profileNames": ["MID", "AMIGA_123", "CDN_FOO"]
 }
 ```
 
@@ -124,7 +124,7 @@ JSON **request** with the proposed change will look as follows:
 {
     "cachegroupId": 6,
     "cdnId": 2,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+    "profileNames": ["MID", "AMIGA_123", "CDN_FOO"]
 }
 ```
 
@@ -141,7 +141,7 @@ return following **response**
     "cachegroupId": 6,
     "cdnId": 2,
     "id": 5,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+    "profileNames": ["MID", "AMIGA_123", "CDN_FOO"]
   }
 }
 ```
@@ -151,7 +151,7 @@ The following table describes the top level `layered_profile` object for servers
 | field           | type                 | optionality | description                                              |
 | ----------------| ---------------------| ----------- | ---------------------------------------------------------|
 | server          | bigint               | required    | the server id associated with a given profile            |
-| profile_name    | text []              | required    | the profile names associated with a server               |
+| profile_names   | text []              | required    | the profile names associated with a server               |
 | order           | bigint []            | required    | the order in which a profile is applied to a server      |
 
 **API constraints**
@@ -173,7 +173,7 @@ The following table describes the top level `layered_profile` object for servers
      Column    |  Type                    | Collation | Nullable | Default
 ---------------+--------------------------+-----------+----------+--------
  server        | bigint                   |           | not null |
- profile_name  | text []                  |           | not null |
+ profile_names | text []                  |           | not null |
  order         | bigint []                |           | not null |
 Indexes:
     "pk_server_profile" PRIMARY KEY(profile_name, server, order)
