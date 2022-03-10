@@ -135,7 +135,7 @@ Response Structure
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 :physLocation:   The name of the physical location where the server resides
 :physLocationId: An integral, unique identifier for the physical location where the server resides
-:profiles:       List of profile-names of the :term:`Profiles` used by this server
+:profileNames:   List of :ref:`profile-names` of the :term:`Profiles` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :rack:           A string indicating "server rack" location
 :status:         The :term:`Status` of the server
@@ -190,7 +190,7 @@ Response Structure
 		"offlineReason": "",
 		"physLocation": "Apachecon North America 2018",
 		"physLocationId": 1,
-		"profiles": ["ATS_MID_TIER_CACHE"],
+		"profileNames": ["ATS_MID_TIER_CACHE"],
 		"rack": "",
 		"revalPending": false,
 		"status": "REPORTED",
@@ -282,7 +282,7 @@ Request Structure
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
 :physLocationId: An integral, unique identifier for the physical location where the server resides
-:profileId:      The :ref:`profile-id` the :term:`Profile` that shall be used by this server
+:profileNames:   List of :ref:`profile-names` of the :term:`Profiles` that shall be used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :rack:           An optional string indicating "server rack" location
 :statusId:       The integral, unique identifier of the status of this server
@@ -354,7 +354,7 @@ Request Structure
 		"mgmtIpNetmask": "",
 		"offlineReason": "",
 		"physLocationId": 1,
-		"profileId": 10,
+		"profileNames": ["ATS_MID_TIER_CACHE"],
 		"statusId": 3,
 		"tcpPort": 80,
 		"typeId": 12,
@@ -417,9 +417,7 @@ Response Structure
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 :physLocation:   The name of the :term:`Physical Location` where the server resides
 :physLocationId: An integral, unique identifier for the :term:`Physical Location` where the server resides
-:profile:        The :ref:`profile-name` of the :term:`Profile` used by this server
-:profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
-:profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
+:profileNames:   List of :ref:`profile-names` of the :term:`Profiles` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :rack:           A string indicating "server rack" location
 :status:         The status of the server
@@ -480,9 +478,7 @@ Response Structure
 		"offlineReason": "",
 		"physLocation": "Apachecon North America 2018",
 		"physLocationId": 1,
-		"profile": "ATS_MID_TIER_CACHE",
-		"profileDesc": "Mid Cache - Apache Traffic Server",
-		"profileId": 10,
+		"profileNames": ["ATS_MID_TIER_CACHE"],
 		"rack": null,
 		"revalPending": false,
 		"status": "REPORTED",
