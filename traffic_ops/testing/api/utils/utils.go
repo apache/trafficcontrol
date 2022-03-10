@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
@@ -81,6 +82,20 @@ func Compare(t *testing.T, expected []string, alertsStrs []string) {
 			}
 		}
 	}
+}
+
+// CreateV3Session creates a session for client v4 using the passed in username and password.
+func CreateV3Session(t *testing.T, TrafficOpsURL string, username string, password string, toReqTimeout int) *v3client.Session {
+	userSession, _, err := v3client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v3-client-tests", false, time.Second*time.Duration(toReqTimeout))
+	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
+	return userSession
+}
+
+// CreateV4Session creates a session for client v4 using the passed in username and password.
+func CreateV4Session(t *testing.T, TrafficOpsURL string, username string, password string, toReqTimeout int) *v4client.Session {
+	userSession, _, err := v4client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v4-client-tests", false, time.Second*time.Duration(toReqTimeout))
+	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
+	return userSession
 }
 
 // V3TestCase is the type of the V3TestData struct.
