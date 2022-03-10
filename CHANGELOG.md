@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Added Rocky Linux 8 support
 - Traffic Monitors now peer with other Traffic Monitors of the same status (e.g. ONLINE with ONLINE, OFFLINE with OFFLINE), instead of all peering with ONLINE.
+- Changed the Traffic Ops user last_authenticated update query to only update once per minute to avoid row-locking when the same user logs in frequently.
 - Added permissions to the role form in traffic portal
 - Updated the Cache Stats Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated the CDNs Traffic Portal page to use a more performant AG-Grid-based table.
