@@ -563,6 +563,11 @@ This product bundles lestrrat-go/jwx, which is available under an MIT license.
 ./vendor/github.com/lestrrat-go/jwx/LICENSE
 Refer to the above license for the full text.
 
+This product bundles dgrijalva/jwt-go, which is available under an MIT license.
+@vendor/github.com/dgrijalva/jwt-go/*
+./vendor/github.com/dgrijalva/jwt-go/LICENSE
+Refer to the above license for the full text.
+
 This product bundles errors, which is available under a BSD-2-Clause license.
 @vendor/github.com/pkg/errors/*
 ./vendor/github.com/pkg/errors/LICENSE
