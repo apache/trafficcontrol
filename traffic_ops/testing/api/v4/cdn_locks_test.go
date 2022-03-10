@@ -40,6 +40,11 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						utils.ResponseLengthGreaterOrEqual(1)),
 				},
+				"OK when VALID CDN parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn2"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateGetResponseFields(map[string]interface{}{"username": "opslockuser", "cdn": "cdn2", "message": "test lock for updates", "soft": false})),
+				},
 			},
 			"POST": {
 				"CREATED when VALID request": {
@@ -50,7 +55,7 @@ func TestCDNLocks(t *testing.T) {
 						"soft":    true,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated),
-						validateResponseFields(map[string]interface{}{"username": "admin", "cdn": "cdn3", "message": "snapping cdn", "soft": true})),
+						validateCreateResponseFields(map[string]interface{}{"username": "admin", "cdn": "cdn3", "message": "snapping cdn", "soft": true})),
 				},
 			},
 			"DELETE": {
@@ -232,7 +237,17 @@ func TestCDNLocks(t *testing.T) {
 	})
 }
 
-func validateResponseFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+func validateGetResponseFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		cdnLockResp := resp.([]tc.CDNLock)
+		assert.Equal(t, expectedResp["username"], cdnLockResp[0].UserName, "Expected username: %v Got: %v", expectedResp["username"], cdnLockResp[0].UserName)
+		assert.Equal(t, expectedResp["cdn"], cdnLockResp[0].CDN, "Expected CDN: %v Got: %v", expectedResp["cdn"], cdnLockResp[0].CDN)
+		assert.Equal(t, expectedResp["message"], *cdnLockResp[0].Message, "Expected Message %v Got: %v", expectedResp["message"], *cdnLockResp[0].Message)
+		assert.Equal(t, expectedResp["soft"], *cdnLockResp[0].Soft, "Expected 'Soft' to be: %v Got: %v", expectedResp["soft"], *cdnLockResp[0].Soft)
+	}
+}
+
+func validateCreateResponseFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		cdnLockResp := resp.(tc.CDNLock)
 		assert.Equal(t, expectedResp["username"], cdnLockResp.UserName, "Expected username: %v Got: %v", expectedResp["username"], cdnLockResp.UserName)
