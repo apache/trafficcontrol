@@ -5,7 +5,7 @@
   "to-credential-file": "/etc/to-creds",
   "to-request-timeout-seconds": "5s",
   "tm-poll-interval-seconds": "10s",
-  "tm-update-cycles": 20,
+  "to-login-dispersion-factor": 90,
   "unavailable-poll-threshold": 2,
   "enable-poll-state-log": true,
   "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",

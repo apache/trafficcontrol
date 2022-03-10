@@ -16,6 +16,7 @@ package v4
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -24,208 +25,163 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestASN(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, ASN}, func() {
-		GetTestASNsIMS(t)
+		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		opts := client.NewRequestOptions()
-		opts.Header.Set(rfc.IfModifiedSince, time)
-		SortTestASNs(t)
-		UpdateTestASNs(t)
-		GetTestASNs(t)
-		GetTestASNsIMSAfterChange(t, opts)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSorted()),
+				},
+				"OK when VALID ASN PARAMETER": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"asn": {"9999"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					ClientSession: TOSession, EndpointId: GetASNId(t, "8888"),
+					RequestBody: map[string]interface{}{
+						"asn":            7777,
+						"cachegroupName": "originCachegroup",
+						"cachegroupId":   -1,
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts: client.RequestOptions{
+						Header: http.Header{
+							rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC},
+						},
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					asn := tc.ASN{}
+
+					if testCase.RequestBody != nil {
+						if cgId, ok := testCase.RequestBody["cachegroupId"]; ok {
+							if cgId == -1 {
+								if cgName, ok := testCase.RequestBody["cachegroupName"]; ok {
+									testCase.RequestBody["cachegroupId"] = GetCacheGroupId(t, cgName.(string))()
+								}
+							}
+						}
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &asn)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetASNs(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateASN(testCase.EndpointId(), asn, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func GetTestASNsIMSAfterChange(t *testing.T, opts client.RequestOptions) {
-	if opts.QueryParameters == nil {
-		opts.QueryParameters = url.Values{}
-	}
-	for _, asn := range testData.ASNs {
-		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
-		_, reqInf, err := TOSession.GetASNs(opts)
-		if err != nil {
-			t.Errorf("Expected no error, but got %v", err)
+func validateSorted() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		asnResp := resp.([]tc.ASN)
+		var sortedList []string
+		assert.RequireGreaterOrEqual(t, len(asnResp), 2, "Need at least 2 ASNs in Traffic Ops to test sorted, found: %d", len(asnResp))
+
+		for _, asn := range asnResp {
+			sortedList = append(sortedList, strconv.Itoa(asn.ASN))
 		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
-	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	opts.Header.Set(rfc.IfModifiedSince, timeStr)
-	for _, asn := range testData.ASNs {
-		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
-		_, reqInf, err := TOSession.GetASNs(opts)
-		if err != nil {
-			t.Errorf("Expected no error, but got %v", err)
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+
+		res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+			return sortedList[p] < sortedList[q]
+		})
+		assert.Equal(t, res, true, "List is not sorted by their names: %v", sortedList)
 	}
 }
 
-func GetTestASNsIMS(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, asn := range testData.ASNs {
-		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
-		futureTime := time.Now().AddDate(0, 0, 1)
-		time := futureTime.Format(time.RFC1123)
-		opts.Header.Set(rfc.IfModifiedSince, time)
-		_, reqInf, err := TOSession.GetASNs(opts)
-		if err != nil {
-			t.Errorf("Expected no error, but got %v", err)
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+func GetASNId(t *testing.T, ASN string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("asn", ASN)
+
+		resp, _, err := TOSession.GetASNs(opts)
+		assert.RequireNoError(t, err, "Get ASNs Request failed with error: %v", err)
+		assert.RequireEqual(t, len(resp.Response), 1, "Expected response object length 1, but got %d", len(resp.Response))
+		assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
+
+		return resp.Response[0].ID
 	}
 }
 
 func CreateTestASNs(t *testing.T) {
-	if len(testData.CacheGroups) < 1 {
-		t.Fatal("Need at least one Cache Group to test creating ASNs")
-	}
+	assert.RequireGreaterOrEqual(t, len(testData.CacheGroups), 1, "Need at least one Cache Group to test creating ASNs")
+
 	cg := testData.CacheGroups[0]
-	if cg.Name == nil {
-		t.Fatal("Cache Group found in the test data with null or undefined name")
-	}
+	assert.RequireNotNil(t, cg.Name, "Cache Group found in the test data with null or undefined name")
 
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", *cg.Name)
 	resp, _, err := TOSession.GetCacheGroups(opts)
-	if err != nil {
-		t.Fatalf("unable to get cachgroup ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Cache Group with Name '%s', got: %d", *cg.Name, len(resp.Response))
-	}
-	if resp.Response[0].ID == nil {
-		t.Fatalf("Cache Group '%s' had no ID in Traffic Ops response", *cg.Name)
-	}
+	assert.RequireNoError(t, err, "Unable to get cachgroup ID: %v - alerts: %+v", err, resp.Alerts)
+	assert.RequireEqual(t, 1, len(resp.Response), "Expected exactly one Cache Group with Name '%s', got: %d", *cg.Name, len(resp.Response))
+	assert.RequireNotNil(t, resp.Response[0].ID, "Cache Group '%s' had no ID in Traffic Ops response", *cg.Name)
+
 	id := *resp.Response[0].ID
 	for _, asn := range testData.ASNs {
 		asn.CachegroupID = id
 		resp, _, err := TOSession.CreateASN(asn, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("could not create ASN: %v - alerts: %+v", err, resp)
-		}
-	}
-
-}
-
-func SortTestASNs(t *testing.T) {
-	var sortedList []string
-	resp, _, err := TOSession.GetASNs(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	if len(resp.Response) < 2 {
-		t.Fatal("Cannot test sort order with less than 2 ASNs")
-	}
-	for _, asn := range resp.Response {
-		sortedList = append(sortedList, strconv.Itoa(asn.ASN))
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UpdateTestASNs(t *testing.T) {
-	if len(testData.ASNs) < 1 {
-		t.Fatal("Need at least one ASN to test updating ASNs")
-	}
-	firstASN := testData.ASNs[0]
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("asn", strconv.Itoa(firstASN.ASN))
-
-	resp, _, err := TOSession.GetASNs(opts)
-	if err != nil {
-		t.Fatalf("cannot get ASN by ASN %d: %v - alerts: %+v", firstASN.ASN, err, resp.Alerts)
-	}
-	if len(resp.Response) < 1 {
-		t.Fatalf("Expected ASN %d to exist, but Traffic Ops returned no such ASN", firstASN.ASN)
-	}
-
-	remoteASN := resp.Response[0]
-	remoteASN.ASN = 7777
-	alert, _, err := TOSession.UpdateASN(remoteASN.ID, remoteASN, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("cannot update ASN by id: %v - alerts: %+v", err, alert)
-	}
-
-	opts.QueryParameters.Del("asn")
-	opts.QueryParameters.Set("id", strconv.Itoa(remoteASN.ID))
-	resp, _, err = TOSession.GetASNs(opts)
-	if err != nil {
-		t.Errorf("cannot get ANS by ID %d: %v - alerts: %+v", firstASN.ASN, err, resp.Alerts)
-	}
-	if len(resp.Response) < 1 {
-		t.Fatalf("Expected ASN with ID %d to exist after update, but Traffic Ops returned no such ASN", remoteASN.ID)
-	}
-	respASN := resp.Response[0]
-	if respASN.ASN != remoteASN.ASN {
-		t.Errorf("results do not match actual: %v, expected: %v", respASN.ASN, remoteASN.ASN)
-	}
-
-	//Revert back to original ASN number for further functions to work correctly
-	respASN.ASN = firstASN.ASN
-	alert, _, err = TOSession.UpdateASN(respASN.ID, respASN, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update ASN by id: %v - alerts: %+v", err, alert)
-	}
-}
-
-func GetTestASNs(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, asn := range testData.ASNs {
-		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
-		resp, _, err := TOSession.GetASNs(opts)
-		if err != nil {
-			t.Errorf("cannot get ASN by asn: %v - alerts: %+v", err, resp.Alerts)
-		}
+		assert.NoError(t, err, "Could not create ASN: %v - alerts: %+v", err, resp)
 	}
 }
 
 func DeleteTestASNs(t *testing.T) {
 	opts := client.NewRequestOptions()
-	for _, asn := range testData.ASNs {
-		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
-		resp, _, err := TOSession.GetASNs(opts)
-		if err != nil {
-			t.Errorf("cannot get ASN %d: %v - alerts: %+v", asn.ASN, err, resp.Alerts)
-			continue
-		}
-		if len(resp.Response) < 1 {
-			t.Errorf("ASN %d existed in the test data, but not in Traffic Ops", asn.ASN)
-			continue
-		}
-
-		respASN := resp.Response[0]
-
-		alerts, _, err := TOSession.DeleteASN(respASN.ID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot delete ASN %d: %v - alerts: %+v", respASN.ASN, err, alerts)
-		}
+	// Retrieve the ASNs to delete
+	asns, _, err := TOSession.GetASNs(opts)
+	assert.NoError(t, err, "Error trying to fetch ASNs for deletion: %v - alerts: %+v", err, asns.Alerts)
+	for _, asn := range asns.Response {
+		alerts, _, err := TOSession.DeleteASN(asn.ID, client.RequestOptions{})
+		assert.NoError(t, err, "Cannot delete ASN %d: %v - alerts: %+v", asn.ASN, err, alerts)
 
 		// Retrieve the ASN to see if it got deleted
+		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
 		asns, _, err := TOSession.GetASNs(opts)
-		if err != nil {
-			t.Errorf("error trying to fetch ASN after deletion: %v - alerts: %+v", err, asns.Alerts)
-		}
-		if len(asns.Response) > 0 {
-			t.Errorf("expected ASN %d to be deleted, but it was found in Traffic Ops's response", asn.ASN)
-		}
+		assert.NoError(t, err, "Error trying to fetch ASN after deletion: %v - alerts: %+v", err, asns.Alerts)
+		assert.Equal(t, 0, len(asns.Response), "Expected ASN %d to be deleted, but it was found in Traffic Ops's response", asn.ASN)
 	}
 }
