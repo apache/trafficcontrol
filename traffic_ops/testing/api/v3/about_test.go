@@ -21,21 +21,17 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
-	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )
 
 func TestAbout(t *testing.T) {
 
-	methodTests := map[string]map[string]struct {
-		clientSession *client.Session
-		expectations  []utils.CkReqFunc
-	}{
+	methodTests := utils.V3TestCase{
 		"GET": {
 			"OK when VALID request": {
-				clientSession: TOSession, expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 			},
 			"UNAUTHORIZED when NOT LOGGED IN": {
-				clientSession: NoAuthTOSession, expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+				ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 			},
 		},
 	}
@@ -45,8 +41,8 @@ func TestAbout(t *testing.T) {
 				switch method {
 				case "GET":
 					t.Run(name, func(t *testing.T) {
-						resp, reqInf, err := testCase.clientSession.GetAbout()
-						for _, check := range testCase.expectations {
+						resp, reqInf, err := testCase.ClientSession.GetAbout()
+						for _, check := range testCase.Expectations {
 							check(t, reqInf, resp, tc.Alerts{}, err)
 						}
 					})

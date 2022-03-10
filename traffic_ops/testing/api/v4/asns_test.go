@@ -38,46 +38,40 @@ func TestASN(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 
-		methodTests := map[string]map[string]struct {
-			endpointId    func() int
-			clientSession *client.Session
-			requestOpts   client.RequestOptions
-			requestBody   map[string]interface{}
-			expectations  []utils.CkReqFunc
-		}{
+		methodTests := utils.V4TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					clientSession: TOSession, expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSorted()),
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSorted()),
 				},
 				"OK when VALID ASN PARAMETER": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"asn": {"9999"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"asn": {"9999"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
 				},
 			},
 			"PUT": {
 				"OK when VALID request": {
-					clientSession: TOSession, endpointId: GetASNId(t, "8888"),
-					requestBody: map[string]interface{}{
+					ClientSession: TOSession, EndpointId: GetASNId(t, "8888"),
+					RequestBody: map[string]interface{}{
 						"asn":            7777,
 						"cachegroupName": "originCachegroup",
 						"cachegroupId":   -1,
 					},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
-					clientSession: TOSession,
-					requestOpts: client.RequestOptions{
+					ClientSession: TOSession,
+					RequestOpts: client.RequestOptions{
 						Header: http.Header{
 							rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC},
 						},
 					},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -87,15 +81,15 @@ func TestASN(t *testing.T) {
 				for name, testCase := range testCases {
 					asn := tc.ASN{}
 
-					if testCase.requestBody != nil {
-						if cgId, ok := testCase.requestBody["cachegroupId"]; ok {
+					if testCase.RequestBody != nil {
+						if cgId, ok := testCase.RequestBody["cachegroupId"]; ok {
 							if cgId == -1 {
-								if cgName, ok := testCase.requestBody["cachegroupName"]; ok {
-									testCase.requestBody["cachegroupId"] = GetCacheGroupId(t, cgName.(string))()
+								if cgName, ok := testCase.RequestBody["cachegroupName"]; ok {
+									testCase.RequestBody["cachegroupId"] = GetCacheGroupId(t, cgName.(string))()
 								}
 							}
 						}
-						dat, err := json.Marshal(testCase.requestBody)
+						dat, err := json.Marshal(testCase.RequestBody)
 						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 						err = json.Unmarshal(dat, &asn)
 						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
@@ -104,15 +98,15 @@ func TestASN(t *testing.T) {
 					switch method {
 					case "GET", "GET AFTER CHANGES":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.clientSession.GetASNs(testCase.requestOpts)
-							for _, check := range testCase.expectations {
+							resp, reqInf, err := testCase.ClientSession.GetASNs(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.clientSession.UpdateASN(testCase.endpointId(), asn, testCase.requestOpts)
-							for _, check := range testCase.expectations {
+							alerts, reqInf, err := testCase.ClientSession.UpdateASN(testCase.EndpointId(), asn, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})

@@ -20,19 +20,14 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestAcmeAutoRenew(t *testing.T) {
 
-	methodTests := map[string]map[string]struct {
-		clientSession *client.Session
-		requestOpts   client.RequestOptions
-		expectations  []utils.CkReqFunc
-	}{
+	methodTests := utils.V4TestCase{
 		"POST": {
 			"OK when VALID request": {
-				clientSession: TOSession, expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusAccepted)),
+				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusAccepted)),
 			},
 		},
 	}
@@ -42,8 +37,8 @@ func TestAcmeAutoRenew(t *testing.T) {
 				switch method {
 				case "POST":
 					t.Run(name, func(t *testing.T) {
-						alerts, reqInf, err := testCase.clientSession.AutoRenew(testCase.requestOpts)
-						for _, check := range testCase.expectations {
+						alerts, reqInf, err := testCase.ClientSession.AutoRenew(testCase.RequestOpts)
+						for _, check := range testCase.Expectations {
 							check(t, reqInf, nil, alerts, err)
 						}
 					})
