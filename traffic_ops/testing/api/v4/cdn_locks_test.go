@@ -31,8 +31,8 @@ import (
 func TestCDNLocks(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, Tenants, Roles, Users, CDNLocks}, func() {
 
-		opsUserSession := createSession(t, "opsuser", "pa$$word")
-		opsUserWithLockSession := createSession(t, "opslockuser", "pa$$word")
+		opsUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opsuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
+		opsUserWithLockSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opslockuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
 		methodTests := utils.V4TestCase{
 			"GET": {
@@ -232,13 +232,6 @@ func TestCDNLocks(t *testing.T) {
 	})
 }
 
-// createSession creates a session using the passed in username and password.
-func createSession(t *testing.T, username string, password string) *client.Session {
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, username, password, true, "to-api-v4-client-tests", false, toReqTimeout)
-	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
-	return userSession
-}
-
 func validateResponseFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		cdnLockResp := resp.(tc.CDNLock)
@@ -279,7 +272,7 @@ func CreateTestCDNLocks(t *testing.T) {
 		if cl.UserName != "" {
 			for _, user := range testData.Users {
 				if user.Username == cl.UserName {
-					ClientSession = createSession(t, user.Username, *user.LocalPassword)
+					ClientSession = utils.CreateV4Session(t, Config.TrafficOps.URL, user.Username, *user.LocalPassword, Config.Default.Session.TimeoutInSecs)
 				}
 			}
 		}
