@@ -17,6 +17,8 @@ package utils
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/url"
 	"reflect"
 	"sort"
 	"testing"
@@ -24,6 +26,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	v3client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	v4client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 type ErrorAndMessage struct {
@@ -77,6 +81,33 @@ func Compare(t *testing.T, expected []string, alertsStrs []string) {
 			}
 		}
 	}
+}
+
+// V3TestCase is the type of the V3TestData struct.
+// Uses nested map to represent the method being tested and the test's description.
+type V3TestCase map[string]map[string]V3TestData
+
+// V4TestCase is the type of the V4TestData struct.
+// Uses nested map to represent the method being tested and the test's description.
+type V4TestCase map[string]map[string]V4TestData
+
+// V3TestData represents the data needed for testing the v3 api endpoints.
+type V3TestData struct {
+	EndpointId     func() int
+	ClientSession  *v3client.Session
+	RequestParams  url.Values
+	RequestHeaders http.Header
+	RequestBody    map[string]interface{}
+	Expectations   []CkReqFunc
+}
+
+// V4TestData represents the data needed for testing the v4 api endpoints.
+type V4TestData struct {
+	EndpointId    func() int
+	ClientSession *v4client.Session
+	RequestOpts   v4client.RequestOptions
+	RequestBody   map[string]interface{}
+	Expectations  []CkReqFunc
 }
 
 // CkReqFunc defines the reusable signature for all other functions that perform checks.
