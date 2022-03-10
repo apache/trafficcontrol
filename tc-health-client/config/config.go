@@ -36,7 +36,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/tc-health-client/util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 
 	"github.com/pborman/getopt/v2"
 )
@@ -261,10 +261,9 @@ func GetConfig() (Cfg, error, bool) {
 }
 
 func GetTrafficMonitors(cfg *Cfg) error {
-	qry := url.Values{}
+	qry := &url.Values{}
 	qry.Add("type", "RASCAL")
 	qry.Add("status", "ONLINE")
-	opts := toclient.RequestOptions{QueryParameters: qry}
 
 	// login to traffic ops.
 	if toSession == nil {
@@ -275,7 +274,7 @@ func GetTrafficMonitors(cfg *Cfg) error {
 			toSession = session
 		}
 	}
-	srvs, _, err := toSession.GetServers(opts)
+	srvs, _, err := toSession.GetServersWithHdr(qry, nil)
 	if err != nil {
 		// next time we'll login again and get a new session.
 		toSession = nil
