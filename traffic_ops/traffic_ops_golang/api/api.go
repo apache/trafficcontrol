@@ -82,6 +82,11 @@ const (
 	TrafficVaultContextKey = "tv"
 )
 
+const (
+	MojoCookie  = "mojoCookie"
+	AccessToken = "access_token"
+)
+
 const influxServersQuery = `
 SELECT (host_name||'.'||domain_name) as fqdn,
        tcp_port,
@@ -1032,15 +1037,15 @@ func ParseDBError(ierr error) (error, error, int) {
 func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth.CurrentUser, error, error, int) {
 	var cookie *http.Cookie
 
-	if r.Header.Get("Authorization") != "" && strings.Contains(r.Header.Get("Authorization"), "Bearer") {
-		givenToken := r.Header.Get("Authorization")
+	if r.Header.Get(rfc.Authorization) != "" && strings.Contains(r.Header.Get(rfc.Authorization), "Bearer") {
+		givenToken := r.Header.Get(rfc.Authorization)
 		tokenSplit := strings.Split(givenToken, " ")
 		if len(tokenSplit) > 1 {
 			givenToken = tokenSplit[1]
 		}
 		bearerCookie, err := getCookieFromAccessToken(givenToken, secret)
 		if err != nil {
-			return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), err, http.StatusUnauthorized
+			return auth.CurrentUser{}, errors.New("unauthorized, please log in."), err, http.StatusUnauthorized
 		}
 		cookie = bearerCookie
 	} else {
@@ -1048,11 +1053,14 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 			if cookie != nil {
 				break
 			}
+			if givenCookie == nil {
+				continue
+			}
 			switch givenCookie.Name {
-			case "access_token":
+			case AccessToken:
 				bearerCookie, err := getCookieFromAccessToken(givenCookie.Value, secret)
 				if err != nil {
-					return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), err, http.StatusUnauthorized
+					return auth.CurrentUser{}, errors.New("unauthorized, please log in."), err, http.StatusUnauthorized
 				}
 				cookie = bearerCookie
 			case tocookie.Name:
@@ -1062,17 +1070,17 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 	}
 
 	if cookie == nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), nil, http.StatusUnauthorized
 	}
 
 	oldCookie, err := tocookie.Parse(secret, cookie.Value)
 	if err != nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
+		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
 	}
 
 	username := oldCookie.AuthData
 	if username == "" {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), nil, http.StatusUnauthorized
 	}
 	db := (*sqlx.DB)(nil)
 	val := r.Context().Value(DBContextKey)
@@ -1111,18 +1119,22 @@ func getCookieFromAccessToken(bearerToken string, secret string) (*http.Cookie, 
 	if err != nil {
 		return nil, fmt.Errorf("parsing claims: %w", err)
 	}
+	if token == nil {
+		return nil, errors.New("parsing claims: parsed nil token")
+	}
 	if !token.Valid {
 		return nil, errors.New("invalid token")
 	}
 
 	for key, val := range claims {
 		switch key {
-		case "mojoCookie":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("invalid token - mojoCookie must be a string")
+		case MojoCookie:
+			mojoVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("invalid token - " + MojoCookie + " must be a string")
 			}
 			cookie = &http.Cookie{
-				Value: val.(string),
+				Value: mojoVal,
 			}
 		}
 	}

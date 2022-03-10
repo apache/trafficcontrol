@@ -108,18 +108,17 @@ func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBearerToken(r *http.Request) string {
-	if r.Header.Get("Authorization") != "" && strings.Contains(r.Header.Get("Authorization"), "Bearer") {
-		givenToken := r.Header.Get("Authorization")
-		if strings.Contains(givenToken, "access_token") {
-			givenToken = strings.Split(givenToken, "=")[1]
-		} else {
-			givenToken = strings.Split(givenToken, " ")[1]
+	if r.Header.Get(rfc.Authorization) != "" && strings.Contains(r.Header.Get(rfc.Authorization), "Bearer") {
+		givenTokenSplit := strings.Split(r.Header.Get(rfc.Authorization), " ")
+		if len(givenTokenSplit) < 2 {
+			return ""
 		}
-		return givenToken
+
+		return givenTokenSplit[1]
 	}
 	for _, cookie := range r.Cookies() {
 		switch cookie.Name {
-		case "access_token":
+		case api.AccessToken:
 			return cookie.Value
 		}
 	}

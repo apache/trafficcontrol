@@ -172,7 +172,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				}
 
 				claims["exp"] = httpCookie.Expires.Unix()
-				claims["mojoCookie"] = httpCookie.Value
+				claims[api.MojoCookie] = httpCookie.Value
 				jwtToken = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 				jwtSigned, err = jwtToken.SignedString([]byte(cfg.Secrets[0]))
@@ -182,7 +182,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				}
 
 				http.SetCookie(w, &http.Cookie{
-					Name:     "access_token",
+					Name:     api.AccessToken,
 					Value:    jwtSigned,
 					Path:     "/",
 					MaxAge:   httpCookie.MaxAge,
@@ -403,15 +403,15 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
 			log.Warnf("Error parsing JSON response from oAuth: %s", err.Error())
 			encodedToken = buf.String()
-		} else if _, ok := result["access_token"]; !ok {
+		} else if _, ok := result[api.AccessToken]; !ok {
 			sysErr := fmt.Errorf("Missing access token in response: %s\n", buf.String())
 			usrErr := errors.New("Bad response from OAuth2.0 provider")
 			api.HandleErr(w, r, nil, http.StatusBadGateway, usrErr, sysErr)
 			return
 		} else {
-			switch t := result["access_token"].(type) {
+			switch t := result[api.AccessToken].(type) {
 			case string:
-				encodedToken = result["access_token"].(string)
+				encodedToken = result[api.AccessToken].(string)
 			default:
 				sysErr := fmt.Errorf("Incorrect type of access_token! Expected 'string', got '%v'\n", t)
 				usrErr := errors.New("Bad response from OAuth2.0 provider")
