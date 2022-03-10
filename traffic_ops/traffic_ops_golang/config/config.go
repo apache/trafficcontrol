@@ -28,6 +28,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -251,8 +252,13 @@ func NewFakeConfig() Config {
 	return c
 }
 
-const DefaultLDAPTimeoutSecs = 60
-const DefaultDBQueryTimeoutSecs = 20
+const (
+	DefaultLDAPTimeoutSecs    = 60
+	DefaultDBQueryTimeoutSecs = 20
+	DefaultDBPort             = "5432"
+	MinPort                   = 1
+	MaxPort                   = 65535
+)
 
 // ErrorLog - critical messages
 func (c Config) ErrorLog() log.LogLocation {
@@ -316,6 +322,10 @@ func LoadConfig(cdnConfPath string, dbConfPath string, appVersion string) (Confi
 	err = json.Unmarshal(dbConfBytes, &cfg.DB)
 	if err != nil {
 		return Config{}, []error{fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)}, BlockStartup
+	}
+	if portNum, err := strconv.Atoi(cfg.DB.Port); err != nil || portNum < MinPort || MaxPort < portNum {
+		_, _ = fmt.Fprintf(os.Stderr, "error parsing database port: '%s' is invalid. Using default %s\n", cfg.DB.Port, DefaultDBPort)
+		cfg.DB.Port = DefaultDBPort
 	}
 	cfg, err = ParseConfig(cfg)
 	if err != nil {
