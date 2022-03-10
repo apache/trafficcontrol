@@ -26,7 +26,6 @@ require (
 	github.com/basho/riak-go-client v1.7.1-0.20170327205844-5587c16e0b8b
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
 	github.com/dchest/siphash v1.2.2
-	github.com/dgrijalva/jwt-go v3.2.1-0.20190620180102-5e25c22bd5d6+incompatible
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/go-acme/lego v2.7.2+incompatible
 	github.com/go-ldap/ldap/v3 v3.4.1
@@ -40,7 +39,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kylelemons/godebug v1.1.1-0.20201107061927-e693023230a4
-	github.com/lestrrat-go/jwx v1.2.12
+	github.com/lestrrat-go/jwx v1.2.14
 	github.com/lib/pq v1.10.4
 	github.com/miekg/dns v1.1.43
 	github.com/onsi/ginkgo v1.16.5
@@ -62,7 +61,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210816181553-5444fa50b93d // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.1 // indirect
-	github.com/goccy/go-json v0.7.10 // indirect
+	github.com/goccy/go-json v0.8.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
@@ -84,6 +83,8 @@ require (
 	github.com/Shopify/sarama v1.27.2
 	github.com/klauspost/compress v1.13.6 // indirect
 )
+
+require github.com/dgrijalva/jwt-go v3.2.0+incompatible
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
