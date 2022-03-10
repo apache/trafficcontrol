@@ -2,12 +2,18 @@ package v4
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -17,6 +23,63 @@ func TestDeliveryServicesUrlSigKeys(t *testing.T) {
 		t.Skip()
 	}
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices}, func() {
+
+		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			// "/xmlId/%s/sslkeys" // t.Run("Verify SSL key generation on DS creation", VerifySSLKeysOnDsCreationTest)
+			"GET": {
+				"OK when VALID request": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"xmlID": {"ds1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
+				},
+			},
+			"PUT": {
+				"BAD REQUEST when updating DS ROUTING NAME when DS has SSL KEYS": {},
+				"BAD REQUEST when updating DS CDN when DS has SSL KEYS": {},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceSSLKeys(testCase.RequestOpts.QueryParameters.Get("xmlID"), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							fmt.Println(*ds.Tenant)
+							resp, reqInf, err := testCase.ClientSession.CreateDeliveryService(ds, testCase.RequestOpts)
+							fmt.Println(resp)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryService(testCase.EndpointId(), ds, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.DeleteDeliveryService(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 		t.Run("Verify SSL key generation on DS creation", VerifySSLKeysOnDsCreationTest)
 		t.Run("Update CDN for a Delivery Service with SSL keys", SSLDeliveryServiceCDNUpdateTest)
 		t.Run("Create URL Signature keys for a Delivery Service", CreateTestDeliveryServicesURLSignatureKeys)
@@ -28,6 +91,32 @@ func TestDeliveryServicesUrlSigKeys(t *testing.T) {
 		t.Run("Delete old CDN SSL keys", DeleteCDNOldSSLKeys)
 		t.Run("Create and retrieve SSL keys for a Delivery Service", DeliveryServiceSSLKeys)
 	})
+}
+
+func validateSSLKeyExpectedFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		dsSSLKey := resp.(tc.DeliveryServiceSSLKeys)
+		for field, expected := range expectedResp {
+			switch field {
+			case "Key":
+				assert.Equal(t, expected, dsSSLKey.Certificate.Key, "Expected Certificate Key to be %v, but got %v", expected, dsSSLKey.Certificate.Key)
+			case "Crt":
+				assert.Equal(t, expected, dsSSLKey.Certificate.Crt, "Expected Certificate Crt to be %v, but got %v", expected, dsSSLKey.Certificate.Crt)
+			case "CSR":
+				assert.Equal(t, expected, dsSSLKey.Certificate.CSR, "Expected Certificate CSR to be %v, but got %v", expected, dsSSLKey.Certificate.CSR)
+			default:
+				t.Errorf("Expected field: %v, does not exist in response", field)
+			}
+		}
+	}
+}
+
+func validateCertDecoding() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		dsSSLKey := resp.(tc.DeliveryServiceSSLKeys)
+		err := deliveryservice.Base64DecodeCertificate(&dsSSLKey.Certificate)
+		assert.RequireNoError(t, err, "Couldn't decode certificate: %v", err)
+	}
 }
 
 func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
