@@ -65,7 +65,7 @@ const userQueryByEmail = `SELECT EXISTS(SELECT * FROM tm_user WHERE email=$1)`
 const setTokenQuery = `UPDATE tm_user SET token=$1 WHERE email=$2`
 
 // UpdateLoginTimeQuery is meant to only update the last_authenticated field once per minute in order to avoid row-locking when the same user logs in frequently.
-const UpdateLoginTimeQuery = `UPDATE tm_user SET last_authenticated = now() WHERE username=$1 AND last_authenticated < now() - INTERVAL '1 minute'`
+const UpdateLoginTimeQuery = `UPDATE tm_user SET last_authenticated = NOW() WHERE username=$1 AND (last_authenticated IS NULL OR last_authenticated < NOW() - INTERVAL '1 MINUTE')`
 
 const defaultCookieDuration = 6 * time.Hour
 
