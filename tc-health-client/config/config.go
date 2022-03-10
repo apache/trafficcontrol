@@ -261,11 +261,7 @@ func GetConfig() (Cfg, error, bool) {
 }
 
 func GetTrafficMonitors(cfg *Cfg) error {
-	u, err := url.Parse(cfg.TOUrl)
-	if err != nil {
-		return errors.New("error parsing TOURL parameters: " + err.Error())
-	}
-	qry := u.Query()
+	qry := &url.Values{}
 	qry.Add("type", "RASCAL")
 	qry.Add("status", "ONLINE")
 
@@ -278,7 +274,7 @@ func GetTrafficMonitors(cfg *Cfg) error {
 			toSession = session
 		}
 	}
-	srvs, _, err := toSession.GetServers(&qry)
+	srvs, _, err := toSession.GetServersWithHdr(qry, nil)
 	if err != nil {
 		// next time we'll login again and get a new session.
 		toSession = nil
@@ -286,9 +282,9 @@ func GetTrafficMonitors(cfg *Cfg) error {
 	}
 
 	cfg.TrafficMonitors = make(map[string]bool, 0)
-	for _, v := range srvs {
-		if v.CDNName == cfg.CDNName && v.Status == "ONLINE" {
-			hostname := v.HostName + "." + v.DomainName
+	for _, v := range srvs.Response {
+		if *v.CDNName == cfg.CDNName && *v.Status == "ONLINE" {
+			hostname := *v.HostName + "." + *v.DomainName
 			cfg.TrafficMonitors[hostname] = true
 		}
 	}
