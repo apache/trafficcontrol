@@ -24,29 +24,32 @@ import os
 import re
 import subprocess
 import sys
-from typing import Optional, TypedDict, Any, Final
+from typing import Optional, TypedDict, Any
 
 import requests
 
-from github.Branch import Branch
 from github.Commit import Commit
 from github.ContentFile import ContentFile
 from github.GitCommit import GitCommit
 from github.GithubException import BadCredentialsException, GithubException, UnknownObjectException
-from github.GithubObject import NotSet
 from github.GitRef import GitRef
-from github.GitTree import GitTree
 from github.InputGitAuthor import InputGitAuthor
 from github.InputGitTreeElement import InputGitTreeElement
-from github.Label import Label
 from github.MainClass import Github
-from github.PullRequest import PullRequest
 from github.Repository import Repository
-from github.Requester import Requester
 
-from pr_to_update_go.constants import ENV_GITHUB_TOKEN, GO_VERSION_URL, ENV_GITHUB_REPOSITORY, \
-	ENV_GITHUB_REPOSITORY_OWNER, GO_REPO_NAME, RELEASE_PAGE_URL, ENV_GO_VERSION_FILE, \
-	ENV_GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL_TEMPLATE
+from pr_to_update_go.constants import (
+	ENV_ENV_FILE,
+	ENV_GITHUB_TOKEN,
+	GO_VERSION_URL,
+	ENV_GITHUB_REPOSITORY,
+	ENV_GITHUB_REPOSITORY_OWNER,
+	GO_REPO_NAME,
+	RELEASE_PAGE_URL,
+	ENV_GO_VERSION_FILE,
+	ENV_GIT_AUTHOR_NAME,
+	GIT_AUTHOR_EMAIL_TEMPLATE
+)
 
 class GoVersion(TypedDict):
 	"""
@@ -57,16 +60,16 @@ class GoVersion(TypedDict):
 	stable: bool
 	version: str
 
-def get_pr_body(go_version: str, milestone_url: str) -> str:
+def _get_pr_body(go_version: str, milestone_url: str) -> str:
 	"""
 	Generates the body of a Pull Request given a Go release version and a
 	URL that points to information about what changes were in said release.
 	"""
-	with open(os.path.join(os.path.dirname(__file__), '/pr_template.md'), encoding="UTF-8") as file:
+	with open(os.path.join(os.path.dirname(__file__), 'pr_template.md'), encoding="UTF-8") as file:
 		pr_template = file.read()
 	go_major_version = get_major_version(go_version)
 
-	release_notes = get_release_notes(go_version)
+	release_notes = _get_release_notes(go_version)
 	pr_body = pr_template.format(GO_VERSION=go_version, GO_MAJOR_VERSION=go_major_version,
 		RELEASE_NOTES=release_notes, MILESTONE_URL=milestone_url)
 	print('Templated PR body')
@@ -80,6 +83,8 @@ def get_major_version(from_go_version: str) -> str:
 
 	>>> get_major_version("1.23.45-6rc7")
 	'1.23'
+	>>> get_major_version("1.2.3")
+	'1.2'
 	>>> get_major_version("not a release version")
 	''
 	"""
@@ -100,27 +105,102 @@ def getenv(var: str) -> str:
 	"""
 	return os.environ[var]
 
-get_repo_name = lambda: getenv(ENV_GITHUB_REPOSITORY)
-get_repo_owner = lambda: getenv(ENV_GITHUB_REPOSITORY_OWNER)
+def parse_release_notes(version: str, content: str) -> str:
+	"""
+	Parses Go version release notes.
 
-def get_release_notes(go_version: str) -> str:
+	>>> raw = '''<html lang="en-US"><head><title>test</title></head><body>
+	... <h1>Big Title</h1>
+	... <script>"use strict";</script>
+	... <div><section><p>
+	... 	go4.15.5 text before
+	... </p></section></div>
+	... <div><section><p>
+	... 	go4.15.6 The expected release notes
+	... </p></section></div>
+	... <div><section><p>
+	... 	go4.15.7 text after
+	... </p><section></div>
+	... <style>* { display: none; }</style>
+	... </body></html>'''
+	>>> parse_release_notes("4.15.6", raw)
+	'<p> go4.15.6 The expected release notes </p>'
+	>>> raw = '''<html lang="en-US"><head><title>test</title></head><body>
+	... go4.15.6 is mentioned earlier
+	... go4.15.6 before on the same line as the opening tag <p>
+	... go4.15.6 the actual notes.
+	... </p>go4.15.6 later on the same line as the closing tag
+	... go4.15.6 in a later context
+	... </body></html>'''
+	>>> parse_release_notes("4.15.6", raw)
+	'<p> go4.15.6 the actual notes. </p>'
+	"""
+	go_version_pattern = version.replace('.', r"\.")
+	release_notes_pattern = re.compile(
+		r"<p>\s*\n\s*go"+go_version_pattern+r".*?</p>",
+		re.MULTILINE | re.DOTALL
+	)
+	matches = release_notes_pattern.search(content)
+	if not matches:
+		raise Exception(f'could not find release notes for Go {version}')
+	return " ".join(matches.group(0).split())
+
+def _get_release_notes(go_version: str) -> str:
 	"""
 	Gets the release notes for the given Go version.
 	"""
 	release_history_response = requests.get(RELEASE_PAGE_URL)
 	release_history_response.raise_for_status()
-	release_notes_content = release_history_response.content.decode()
-	go_version_pattern = go_version.replace('.', '\\.')
-	release_notes_pattern: str = f'<p>\\s*\\n\\s*go{go_version_pattern}.*?</p>'
-	release_notes_matches = re.search(release_notes_pattern, release_notes_content,
-		re.MULTILINE | re.DOTALL)
-	if release_notes_matches is None:
-		raise Exception(f'Could not find release notes on {RELEASE_PAGE_URL}')
-	release_notes = re.sub(r'[\s\t]+', ' ', release_notes_matches.group(0))
-	return release_notes
+	return parse_release_notes(go_version, release_history_response	.content.decode())
 
+def find_latest_major_upgrade(major_version: str, versions: list[GoVersion]) -> str:
+	"""
+	Finds the latest version in `versions` with the given "major" version.
 
-def get_latest_major_upgrade(from_go_version: str) -> str:
+	Note that this expects and relies on the ordering of the passed `versions`
+	being in descending order (as returned by the Go website API).
+	>>> versions=[
+	... {
+	... 	"stable": True,
+	... 	"version": "1.3.0",
+	... 	"files": []
+	... },
+	... {
+	... 	"stable": False,
+	... 	"version": "1.2.5",
+	...     "files": []
+	... },
+	... {
+	... 	"stable": True,
+	...     "version": "1.2.4",
+	...     "files": []
+	... },
+	... {
+	... 	"stable": True,
+	... 	"version": "one.two.three",
+	... 	"files": []
+	... },
+	... {
+	... 	"stable": True,
+	... 	"version": "1.2.3",
+	... 	"files": []
+	... }]
+	>>> find_latest_major_upgrade("1.2", versions)
+	'1.2.4'
+	"""
+	for version in versions:
+		if not version["stable"]:
+			continue
+		match = re.search(r"[\d.]+", version["version"])
+		if not match:
+			continue
+		fetched_go_version = match.group(0)
+		if major_version == get_major_version(fetched_go_version):
+			return fetched_go_version
+
+	raise Exception(f'no supported {major_version} Go versions exist')
+
+def _get_latest_major_upgrade(from_go_version: str) -> str:
 	"""
 	Gets the version of the latest Go release that is the same "major"
 	version as the passed current (or "from") Go version.
@@ -128,25 +208,13 @@ def get_latest_major_upgrade(from_go_version: str) -> str:
 	If no stable version is found that is the same "major" version as the
 	given current version, an exception is raised.
 	"""
+	response = requests.get(GO_VERSION_URL)
+	response.raise_for_status()
+	versions: list[GoVersion] = json.loads(response.content)
 	major_version = get_major_version(from_go_version)
-	go_version_response = requests.get(GO_VERSION_URL)
-	go_version_response.raise_for_status()
-	go_version_content: list[GoVersion] = json.loads(go_version_response.content)
-	fetched_go_version: str = ''
-	for go_version in go_version_content:
-		if not go_version["stable"]:
-			continue
-		match = re.search(r"[\d.]+", go_version["version"])
-		if not match:
-			continue
-		fetched_go_version = match.group(0)
-		if major_version == get_major_version(fetched_go_version):
-			break
-	else:
-		raise Exception(f'No supported {major_version} Go versions exist.')
+	fetched_go_version = find_latest_major_upgrade(major_version, versions)
 	print(f'Latest version of Go {major_version} is {fetched_go_version}')
 	return fetched_go_version
-
 
 class GoPRMaker:
 	"""
@@ -156,18 +224,18 @@ class GoPRMaker:
 	gh_api: Github
 	latest_go_version: str
 	repo: Repository
-	author: InputGitAuthor
+	author: Optional[InputGitAuthor]
 
 	def __init__(self, gh_api: Github):
 		self.gh_api = gh_api
-		self.repo = self.get_repo(get_repo_name())
+		self.repo = self.get_repo(getenv(ENV_GITHUB_REPOSITORY))
 
 		try:
 			git_author_name = getenv(ENV_GIT_AUTHOR_NAME)
 			git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=git_author_name)
 			self.author = InputGitAuthor(git_author_name, git_author_email)
 		except KeyError:
-			self.author = NotSet
+			self.author = None
 			print('Will commit using the default author')
 
 	def branch_exists(self, branch: str) -> bool:
@@ -193,13 +261,8 @@ class GoPRMaker:
 		Note that only fast-forward updates are possible, as this doesn't
 		"force" push.
 		"""
-		requester: Requester = self.repo._requester
-		patch_parameters = {
-			'sha': sha,
-		}
-		requester.requestJsonAndCheck(
-			'PATCH', self.repo.url + f'/git/refs/heads/{branch_name}', input=patch_parameters
-		)
+		ref = self.repo.get_git_ref(f"heads/{branch_name}")
+		ref.edit(sha)
 
 	def run(self, update_version_only: bool = False) -> None:
 		"""
@@ -207,11 +270,11 @@ class GoPRMaker:
 		necessary to create the PR that will update the repository's Go version.
 		"""
 		repo_go_version = self.get_repo_go_version()
-		self.latest_go_version = get_latest_major_upgrade(repo_go_version)
-		commit_message: str = f'Update Go version to {self.latest_go_version}'
+		self.latest_go_version = _get_latest_major_upgrade(repo_go_version)
+		commit_message = f'Update Go version to {self.latest_go_version}'
 
-		source_branch_name: str = f'go-{self.latest_go_version}'
-		target_branch: str = 'master'
+		source_branch_name = f'go-{self.latest_go_version}'
+		target_branch = 'master'
 		if repo_go_version == self.latest_go_version:
 			print(f'Go version is up-to-date on {target_branch}, nothing to do.')
 			return
@@ -229,13 +292,17 @@ class GoPRMaker:
 			print(f'Branch {source_branch_name} has been created, exiting...')
 			return
 
-		update_golang_org_x_commit: Optional[GitCommit] = self.update_golang_org_x(commit)
-		if isinstance(update_golang_org_x_commit, GitCommit):
-			sha: str = update_golang_org_x_commit.sha
-			self.update_branch(source_branch_name, sha)
+		update_golang_org_x_commit = self.update_golang_org_x(commit)
+		if update_golang_org_x_commit:
+			self.update_branch(source_branch_name, update_golang_org_x_commit.sha)
 
-		self.create_pr(self.latest_go_version, commit_message, get_repo_owner(), source_branch_name,
-			target_branch)
+		self.create_pr(
+			self.latest_go_version,
+			commit_message,
+			getenv(ENV_GITHUB_REPOSITORY_OWNER),
+			source_branch_name,
+			target_branch
+		)
 
 	def get_repo(self, repo_name: str) -> Repository:
 		"""
@@ -247,22 +314,26 @@ class GoPRMaker:
 			raise PermissionError(f"Credentials from token '{ENV_GITHUB_TOKEN}' were bad") from e
 		return repo
 
-	def get_go_milestone(self, go_version: str) -> Optional[str]:
+	def get_go_milestone(self, go_version: str) -> str:
 		"""
 		Gets a URL for the GitHub milestone that tracks the release of the
 		passed Go version.
 
 		If the passed version is not found to have a milestone associated with
-		it, an exception is raised.
+		it, a LookupError exception is raised.
 		"""
-		go_repo: Repository = self.get_repo(GO_REPO_NAME)
+		go_repo = self.get_repo(GO_REPO_NAME)
 		milestones = go_repo.get_milestones(state='all', sort='due_on', direction='desc')
 		milestone_title = f'Go{go_version}'
-		for milestone in milestones:  # type: Milestone
+		for milestone in milestones:
 			if milestone.title == milestone_title:
 				print(f'Found Go milestone {milestone.title}')
-				return milestone.raw_data.get('html_url')
-		raise Exception(f'Could not find a milestone named {milestone_title}.')
+				# Technically it would probably be best to use the 'html_url'
+				# returned by the GH API, but accessing that through PyGithub
+				# involves using poorly-documented properties of that library,
+				# as well as sacrificing type-safety.
+				return f"https://github.com/{GO_REPO_NAME}/milestone/{milestone.number}"
+		raise LookupError(f'could not find a milestone named {milestone_title}')
 
 	def file_contents(self, file: str, branch: str = "master") -> ContentFile:
 		"""
@@ -284,7 +355,7 @@ class GoPRMaker:
 		Gets the current Go version used at the head of the given branch (or not
 		given to use "master" by default) for the repository.
 		"""
-		return self.file_contents(getenv(ENV_GO_VERSION_FILE), branch).decoded_content.decode()
+		return self.file_contents(getenv(ENV_GO_VERSION_FILE), branch).decoded_content.decode().strip()
 
 	def set_go_version(self, go_version: str, commit_message: str,
 			source_branch_name: str) -> Commit:
@@ -295,36 +366,47 @@ class GoPRMaker:
 		This includes updating the GO_VERSION and .env files at the repository's
 		root.
 		"""
-		master: Branch = self.repo.get_branch('master')
+		master = self.repo.get_branch('master')
 		sha = master.commit.sha
 		ref = f'refs/heads/{source_branch_name}'
 		self.repo.create_git_ref(ref, sha)
 
 		print(f'Created branch {source_branch_name}')
 		go_version_file = getenv(ENV_GO_VERSION_FILE)
-		kwargs = {
-			"branch": source_branch_name,
-			"committer": NotSet,
-			"content": f"${go_version}\n",
-			"path": go_version_file,
-			"message": commit_message,
-			"sha": self.file_contents(go_version_file, source_branch_name).sha
-		}
-		try:
-			git_author_name = getenv(ENV_GIT_AUTHOR_NAME)
-			git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=git_author_name)
-			author: InputGitAuthor = InputGitAuthor(name=git_author_name, email=git_author_email)
-			kwargs["author"] = author
-		except KeyError:
+		content = f"{go_version}\n"
+		sha = self.file_contents(go_version_file, source_branch_name).sha
+		if self.author:
+			self.repo.update_file(
+				author=self.author,
+				branch=source_branch_name,
+				content=content,
+				path=go_version_file,
+				message=commit_message,
+				sha=sha
+			)
+		else:
 			print('Committing using the default author')
+			self.repo.update_file(
+				branch=source_branch_name,
+				content=content,
+				path=go_version_file,
+				message=commit_message,
+				sha=sha
+			)
 
-		self.repo.update_file(**kwargs)
 		print(f'Updated {go_version_file} on {self.repo.name}')
-		env_path = os.path.join(os.path.dirname(go_version_file), ".env")
-		kwargs["path"] = env_path
-		kwargs["content"] = f"GO_VERSION={go_version}\n"
-		kwargs["sha"] = self.file_contents(go_version_file, source_branch_name).sha
-		commit: Commit = self.repo.update_file(**kwargs)["commit"]
+		env_path = os.path.join(os.path.dirname(getenv(ENV_ENV_FILE)), ".env")
+		content = f"GO_VERSION={go_version}\n"
+		sha = self.file_contents(env_path, source_branch_name).sha
+		commit = self.repo.update_file(
+			branch=source_branch_name,
+			content=content,
+			path=env_path,
+			message=commit_message,
+			sha=sha
+		)["commit"]
+		if not isinstance(commit, Commit):
+			raise TypeError("'commit' property of file update response was not a Commit")
 		print(f"Updated {env_path} on {self.repo.name}")
 		return commit
 
@@ -336,7 +418,7 @@ class GoPRMaker:
 		subprocess.run(['git', 'fetch', 'origin'], check=True)
 		subprocess.run(['git', 'checkout', previous_commit.sha], check=True)
 		subprocess.run([os.path.join(os.path.dirname(__file__), 'update_golang_org_x.sh')], check=True)
-		files_to_check: list[str] = ['go.mod', 'go.sum', os.path.join('vendor', 'modules.txt')]
+		files_to_check = ['go.mod', 'go.sum', os.path.join('vendor', 'modules.txt')]
 		tree_elements: list[InputGitTreeElement] = []
 		for file in files_to_check:
 			diff_process = subprocess.run(['git', 'diff', '--exit-code', '--', file], check=False)
@@ -352,13 +434,25 @@ class GoPRMaker:
 			return None
 		tree_hash = subprocess.check_output(
 			['git', 'log', '-1', '--pretty=%T', previous_commit.sha]).decode().strip()
-		base_tree: GitTree = self.repo.get_git_tree(sha=tree_hash)
-		tree: GitTree = self.repo.create_git_tree(tree_elements, base_tree)
+		base_tree = self.repo.get_git_tree(sha=tree_hash)
+		tree = self.repo.create_git_tree(tree_elements, base_tree)
 		commit_message: str = f'Update golang.org/x/ dependencies for go{self.latest_go_version}'
-		previous_git_commit: GitCommit = self.repo.get_git_commit(previous_commit.sha)
-		git_commit: GitCommit = self.repo.create_git_commit(message=commit_message, tree=tree,
-			parents=[previous_git_commit],
-			author=self.author, committer=self.author)
+		previous_git_commit = self.repo.get_git_commit(previous_commit.sha)
+		git_commit: GitCommit
+		if self.author:
+			git_commit = self.repo.create_git_commit(
+				message=commit_message,
+				tree=tree,
+				parents=[previous_git_commit],
+				author=self.author,
+				committer=self.author
+			)
+		else:
+			git_commit = self.repo.create_git_commit(
+				message=commit_message,
+				tree=tree,
+				parents=[previous_git_commit]
+			)
 		print('Updated golang.org/x/ dependencies')
 		return git_commit
 
@@ -377,11 +471,8 @@ class GoPRMaker:
 			return
 
 		milestone_url = self.get_go_milestone(latest_go_version)
-		if milestone_url is None:
-			#TODO subclass this
-			raise LookupError(f"no milestone found for '${latest_go_version}'")
-		pr_body = get_pr_body(latest_go_version, milestone_url)
-		pull_request: PullRequest = self.repo.create_pull(
+		pr_body = _get_pr_body(latest_go_version, milestone_url)
+		pull_request = self.repo.create_pull(
 			title=commit_message,
 			body=pr_body,
 			head=f'{owner}:{source_branch_name}',
@@ -389,8 +480,12 @@ class GoPRMaker:
 			maintainer_can_modify=True,
 		)
 		try:
-			go_version_label: Label = self.repo.get_label('go version')
+			go_version_label = self.repo.get_label('go version')
 			pull_request.add_to_labels(go_version_label)
 		except UnknownObjectException:
 			print('Unable to find a label named "go version"', file=sys.stderr)
 		print(f'Created pull request {pull_request.html_url}')
+
+if __name__ == "__main__":
+	import doctest
+	doctest.testmod()

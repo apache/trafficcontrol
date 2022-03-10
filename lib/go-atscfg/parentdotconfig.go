@@ -44,6 +44,7 @@ const ParentConfigParamMSOParentRetry = "mso.parent_retry"
 const ParentConfigParamMSOUnavailableServerRetryResponses = "mso.unavailable_server_retry_responses"
 const ParentConfigParamMSOMaxSimpleRetries = "mso.max_simple_retries"
 const ParentConfigParamMSOMaxUnavailableServerRetries = "mso.max_unavailable_server_retries"
+const ParentConfigParamMergeGroups = "merge_parent_groups"
 const ParentConfigParamAlgorithm = "algorithm"
 const ParentConfigParamQString = "qstring"
 const ParentConfigParamSecondaryMode = "try_all_primaries_before_secondary"
@@ -186,11 +187,16 @@ func makeParentDotConfigData(
 
 	profileParentConfigParams, parentWarns := getProfileParentConfigParams(tcParentConfigParams)
 	warnings = append(warnings, parentWarns...)
-	// profileParentConfigParams, err := tcParamsToParamsWithProfiles(tcParentConfigParams)
-	// if err != nil {
-	// 	return nil, warnings, errors.New("adding profiles to parent config params: " + err.Error())
-	// }
 
+	parentConfigParamsWithProfiles, err := tcParamsToParamsWithProfiles(tcParentConfigParams)
+	if err != nil {
+		return nil, warnings, errors.New("adding profiles to parent config params: " + err.Error())
+	}
+
+	// parentConfigParams are the parent.config params for all profiles (needed for parents)
+	parentConfigParams := parameterWithProfilesToMap(parentConfigParamsWithProfiles)
+
+	// serverParams are the parent.config params for this particular server
 	serverParams := getServerParentConfigParams(server, profileParentConfigParams)
 
 	parentCacheGroups := map[string]struct{}{}
@@ -332,6 +338,7 @@ func makeParentDotConfigData(
 				servers,
 				&ds,
 				serverParams,
+				parentConfigParams,
 				nameTopologies,
 				serverCapabilities,
 				dsRequiredCapabilities,
@@ -352,7 +359,6 @@ func makeParentDotConfigData(
 				parentAbstraction.Services = append(parentAbstraction.Services, txt)
 			}
 		} else if cacheIsTopLevel {
-			warnings = append(warnings, "DEBUG cacheIsTopLevel")
 			parentQStr := false
 			if dsParams.QueryStringHandling == "" && dsParams.Algorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
 				parentQStr = true
@@ -440,7 +446,7 @@ func makeParentDotConfigData(
 				textLine.SecondaryMode = secondaryMode
 				textLine.RetryPolicy = dsParams.Algorithm // TODO convert
 				textLine.IgnoreQueryStringInParentSelection = !parentQStr
-				textLine.GoDirect = false
+				textLine.GoDirect = true
 
 				// textLine += parents + secondaryParents + ` round_robin=` + dsParams.Algorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
 				prWarns := []string{}
@@ -808,6 +814,7 @@ type parentDSParams struct {
 	MaxUnavailableServerRetries     string
 	QueryStringHandling             string
 	TryAllPrimariesBeforeSecondary  bool
+	MergeGroups                     []string
 }
 
 // getDSParams returns the Delivery Service Profile Parameters used in parent.config, and any warnings.
@@ -833,7 +840,13 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 		return params, warnings
 	}
 
-	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling] // may be blank, no default
+	// the following may be blank, no default
+	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling]
+	params.MergeGroups = strings.Split(dsParams[ParentConfigParamMergeGroups], " ")
+	if 0 < len(params.MergeGroups) {
+		sort.Strings(params.MergeGroups)
+	}
+
 	// TODO deprecate & remove "mso." Parameters - there was never a reason to restrict these settings to MSO.
 	if isMSO {
 		if v, ok := dsParams[ParentConfigParamMSOAlgorithm]; ok && strings.TrimSpace(v) != "" {
@@ -904,6 +917,7 @@ func getTopologyParentConfigLine(
 	servers []Server,
 	ds *DeliveryService,
 	serverParams map[string]string,
+	parentConfigParams []parameterWithProfilesMap, // all params with configFile parent.config
 	nameTopologies map[TopologyName]tc.Topology,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
@@ -924,6 +938,7 @@ func getTopologyParentConfigLine(
 	}
 
 	serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
+
 	if err != nil {
 		return nil, warnings, errors.New("getting topology placement: " + err.Error())
 	}
@@ -952,7 +967,7 @@ func getTopologyParentConfigLine(
 	}
 	// txt += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port()
 
-	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, servers, serverParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins)
+	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins, dsParams.MergeGroups)
 	warnings = append(warnings, parentWarnings...)
 	if err != nil {
 		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
@@ -976,7 +991,7 @@ func getTopologyParentConfigLine(
 	txt.RetryPolicy = getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
 	// txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
 
-	txt.GoDirect = getTopologyGoDirect(ds, serverPlacement.IsLastTier)
+	txt.GoDirect = getTopologyGoDirect(ds, serverPlacement.IsLastTier, serverPlacement.IsLastCacheTier)
 	// txt += ` go_direct=` + getTopologyGoDirect(ds, serverPlacement.IsLastTier)
 
 	// TODO convert
@@ -993,6 +1008,7 @@ func getTopologyParentConfigLine(
 	tqWarns := []string{}
 	txt.IgnoreQueryStringInParentSelection, tqWarns = getTopologyQueryStringIgnore(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm, useQueryStringInParentSelection)
 	warnings = append(warnings, tqWarns...)
+
 	// txt += ` qstring=` + getTopologyQueryString(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm, dsParams.QueryStringHandling)
 
 	// TODO ensure value is always !goDirect, and determine what to do if not
@@ -1140,7 +1156,10 @@ func getTopologyRoundRobin(
 	return ParentAbstractionServiceRetryPolicyConsistentHash
 }
 
-func getTopologyGoDirect(ds *DeliveryService, serverIsLastTier bool) bool {
+func getTopologyGoDirect(ds *DeliveryService, serverIsLastTier bool, serverIsLastCacheTier bool) bool {
+	if serverIsLastCacheTier {
+		return true
+	}
 	if !serverIsLastTier {
 		return false
 	}
@@ -1163,14 +1182,19 @@ func getTopologyQueryStringIgnore(
 	warnings := []string{}
 	if serverIsLastTier {
 		if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin && qStringHandling == nil && algorithm == ParentAbstractionServiceRetryPolicyConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
-			return true, warnings
+			return false, warnings
 		}
-		return false, warnings
+
+		if qStringHandling != nil {
+			return !(*qStringHandling), warnings
+		}
+
+		return true, warnings
 	}
 
 	if param := serverParams[ParentConfigParamQStringHandling]; param != "" {
 		if useQStr := ParentSelectParamQStringHandlingToBool(param); useQStr != nil {
-			return *useQStr, warnings
+			return !(*useQStr), warnings
 		} else if param != "" {
 			warnings = append(warnings, "Server param '"+ParentConfigParamQStringHandling+"' value '"+param+"' malformed, not using!")
 		}
@@ -1187,36 +1211,40 @@ func getTopologyQueryStringIgnore(
 
 // serverParentageParams gets the Parameters used for parent= line, or defaults if they don't exist
 // Returns the Parameters used for parent= lines for the given server, and any warnings.
-func serverParentageParams(sv *Server, serverParams map[string]string) (profileCache, []string) {
+func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (profileCache, []string) {
 	warnings := []string{}
 	// TODO deduplicate with atstccfg/parentdotconfig.go
 	profileCache := defaultProfileCache()
 	if sv.TCPPort != nil {
 		profileCache.Port = *sv.TCPPort
 	}
-	for paramName, paramVal := range serverParams {
-		switch paramName {
+	for _, param := range params {
+		if _, ok := param.ProfileNames[*sv.Profile]; !ok {
+			continue
+		}
+		switch param.Name {
 		case ParentConfigCacheParamWeight:
-			profileCache.Weight = paramVal
+			profileCache.Weight = param.Value
 		case ParentConfigCacheParamPort:
-			if i, err := strconv.Atoi(paramVal); err != nil {
+			if i, err := strconv.Atoi(param.Value); err != nil {
 				warnings = append(warnings, "port param is not an integer, skipping! : "+err.Error())
 			} else {
 				profileCache.Port = i
 			}
 		case ParentConfigCacheParamUseIP:
-			profileCache.UseIP = paramVal == "1"
+			profileCache.UseIP = param.Value == "1"
 		case ParentConfigCacheParamRank:
 
-			if i, err := strconv.Atoi(paramVal); err != nil {
+			if i, err := strconv.Atoi(param.Value); err != nil {
 				warnings = append(warnings, "rank param is not an integer, skipping! : "+err.Error())
 			} else {
 				profileCache.Rank = i
 			}
 		case ParentConfigCacheParamNotAParent:
-			profileCache.NotAParent = paramVal != "false"
+			profileCache.NotAParent = param.Value != "false"
 		}
 	}
+
 	return profileCache, warnings
 }
 
@@ -1254,12 +1282,13 @@ func getTopologyParents(
 	server *Server,
 	ds *DeliveryService,
 	servers []Server,
-	serverParams map[string]string, // all params with configFile parent.confign
+	parentConfigParams []parameterWithProfilesMap, // all params with configFile parent.config
 	topology tc.Topology,
 	serverIsLastTier bool,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	dsOrigins map[ServerID]struct{}, // for Topology DSes, MSO still needs DeliveryServiceServer assignments.
+	dsMergeGroups []string, // sorted parent merge groups for this ds
 ) ([]*ParentAbstractionServiceParent, []*ParentAbstractionServiceParent, []string, error) {
 	warnings := []string{}
 	// If it's the last tier, then the parent is the origin.
@@ -1281,6 +1310,7 @@ func getTopologyParents(
 			Port:   orgPort,
 			Weight: DefaultParentWeight,
 		}
+
 		return []*ParentAbstractionServiceParent{parent}, nil, warnings, nil
 	}
 
@@ -1323,7 +1353,7 @@ func getTopologyParents(
 
 	serversWithParams := []serverWithParams{}
 	for _, sv := range servers {
-		serverParentParams, parentWarns := serverParentageParams(&sv, serverParams)
+		serverParentParams, parentWarns := serverParentageParams(&sv, parentConfigParams)
 		warnings = append(warnings, parentWarns...)
 		serversWithParams = append(serversWithParams, serverWithParams{
 			Server: sv,
@@ -1378,6 +1408,14 @@ func getTopologyParents(
 				return nil, nil, warnings, errors.New("getting server parent string: " + err.Error())
 			}
 			secondaryParentStrs = append(secondaryParentStrs, parentStr)
+		}
+	}
+
+	if 0 < len(dsMergeGroups) && 0 < len(secondaryParentStrs) {
+		if sort.SearchStrings(dsMergeGroups, parentCG) < len(dsMergeGroups) &&
+			sort.SearchStrings(dsMergeGroups, secondaryParentCG) < len(dsMergeGroups) {
+			parentStrs = append(parentStrs, secondaryParentStrs...)
+			secondaryParentStrs = nil
 		}
 	}
 

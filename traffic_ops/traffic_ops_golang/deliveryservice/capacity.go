@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -58,6 +59,7 @@ func GetCapacity(w http.ResponseWriter, r *http.Request) {
 	}
 	if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
 	}
 
 	capacity, err := getCapacity(inf.Tx.Tx, ds, cdn)
@@ -98,45 +100,49 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 		return CapacityResp{}, errors.New("getting profile thresholds: " + err.Error())
 	}
 
-	monitorFQDN, ok := monitors[cdn]
+	monitorFQDNs, ok := monitors[cdn]
 	if !ok {
 		return CapacityResp{}, nil // TODO emulates perl; change to error?
 	}
 
-	crStates, err := monitorhlp.GetCRStates(monitorFQDN, client)
-	// TODO on err, try another online monitor
-	if err != nil {
-		return CapacityResp{}, errors.New("getting CRStates for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	crConfig, err := monitorhlp.GetCRConfig(monitorFQDN, client)
-	// TODO on err, try another online monitor
-	if err != nil {
-		return CapacityResp{}, errors.New("getting CRConfig for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	statsoFetch := []string{tc.StatNameMaxKBPS, tc.StatNameKBPS}
-	cacheStats, _, err := monitorhlp.GetCacheStats(monitorFQDN, client, statsoFetch)
-	if err != nil {
-		legacyCacheStats, _, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, statsoFetch)
+	errs := []error{}
+	for _, monitorFQDN := range monitorFQDNs {
+		crStates, err := monitorhlp.GetCRStates(monitorFQDN, client)
 		if err != nil {
-			return CapacityResp{}, errors.New("getting CacheStats for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
+			errs = append(errs, errors.New("getting CRStates for delivery service '"+string(ds)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+			continue
 		}
-		cacheStats = monitorhlp.UpgradeLegacyStats(legacyCacheStats)
-	}
-	cap := addCapacity(CapData{}, ds, cacheStats, crStates, crConfig, thresholds)
-	if cap.Capacity == 0 {
-		if dsHasServer(ds, crConfig) {
-			return CapacityResp{}, errors.New("Delivery service '" + string(ds) + "' has servers, but capacity was zero!'")
+		crConfig, err := monitorhlp.GetCRConfig(monitorFQDN, client)
+		if err != nil {
+			errs = append(errs, errors.New("getting CRConfig for delivery service '"+string(ds)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+			continue
 		}
-		log.Warnf("Delivery service '" + string(ds) + "' has no servers. Returning 0 capacity'")
-		return CapacityResp{}, nil // avoid divide-by-zero below.
+		statsToFetch := []string{tc.StatNameMaxKBPS, tc.StatNameKBPS}
+		cacheStats, _, err := monitorhlp.GetCacheStats(monitorFQDN, client, statsToFetch)
+		if err != nil {
+			legacyCacheStats, _, err := monitorhlp.GetLegacyCacheStats(monitorFQDN, client, statsToFetch)
+			if err != nil {
+				errs = append(errs, errors.New("getting CacheStats for delivery service '"+string(ds)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+				continue
+			}
+			cacheStats = monitorhlp.UpgradeLegacyStats(legacyCacheStats)
+		}
+		cap := addCapacity(CapData{}, ds, cacheStats, crStates, crConfig, thresholds)
+		if cap.Capacity == 0 {
+			if dsHasServer(ds, crConfig) {
+				return CapacityResp{}, errors.New("Delivery service '" + string(ds) + "' has servers, but capacity was zero!'")
+			}
+			log.Warnf("Delivery service '" + string(ds) + "' has no servers. Returning 0 capacity'")
+			return CapacityResp{}, nil // avoid divide-by-zero below.
+		}
+		return CapacityResp{
+			UtilizedPercent:    (cap.Available * 100) / cap.Capacity,
+			UnavailablePercent: (cap.Unavailable * 100) / cap.Capacity,
+			MaintenancePercent: (cap.Maintenance * 100) / cap.Capacity,
+			AvailablePercent:   ((cap.Capacity - cap.Unavailable - cap.Maintenance - cap.Available) * 100) / cap.Capacity,
+		}, nil
 	}
-
-	return CapacityResp{
-		UtilizedPercent:    (cap.Available * 100) / cap.Capacity,
-		UnavailablePercent: (cap.Unavailable * 100) / cap.Capacity,
-		MaintenancePercent: (cap.Maintenance * 100) / cap.Capacity,
-		AvailablePercent:   ((cap.Capacity - cap.Unavailable - cap.Maintenance - cap.Available) * 100) / cap.Capacity,
-	}, nil
+	return CapacityResp{}, errors.New("getting capacity: " + util.JoinErrs(errs).Error())
 }
 
 // dsHasServer checks whether a given DS has servers.
@@ -149,9 +155,6 @@ func dsHasServer(ds tc.DeliveryServiceName, crConfig tc.CRConfig) bool {
 	return false
 
 }
-
-const StatNameKBPS = "kbps"
-const StatNameMaxKBPS = "maxKbps"
 
 func addCapacity(
 	cap CapData,

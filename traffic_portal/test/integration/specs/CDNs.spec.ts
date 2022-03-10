@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser } from 'protractor';
+import { browser } from "protractor";
 
-import { LoginPage } from '../PageObjects/LoginPage.po'
-import { CDNPage } from '../PageObjects/CDNPage.po';
-import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { LoginPage } from "../PageObjects/LoginPage.po"
+import { CDNPage } from "../PageObjects/CDNPage.po";
+import { TopNavigationPage } from "../PageObjects/TopNavigationPage.po";
 import { cdns } from "../Data";
 
 
@@ -29,44 +29,37 @@ const topNavigation = new TopNavigationPage();
 const cdnsPage = new CDNPage();
 
 cdns.tests.forEach(async cdnsData =>{
-    cdnsData.logins.forEach(login => {
-        describe('Traffic Portal - CDN - ' + login.description, function(){
-            it('can login', async () => {
-                browser.get(browser.params.baseUrl);
-                await loginPage.Login(login);
-                expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            });
-            it('can open CDN page', async () => {
-                await cdnsPage.OpenCDNsPage();
-            });
-             cdnsData.check.forEach(check => {
-                 it(check.description, async () => {
-                     expect(await cdnsPage.CheckCSV(check.Name)).toBe(true);
-                     await cdnsPage.OpenCDNsPage();
-                 });
-            });
-            cdnsData.add.forEach(add => {
-                it(add.description, async () => {
-                    expect(await cdnsPage.CreateCDN(add)).toBeTruthy();
-                    await cdnsPage.OpenCDNsPage();
-                });
-            });
-            cdnsData.update.forEach(update => {
-                it(update.description, async () => {
-                    await cdnsPage.SearchCDN(update.Name);
-                    expect(await cdnsPage.UpdateCDN(update)).toBeTruthy();
-                });
-            });
-            cdnsData.remove.forEach(remove => {
-                it(remove.description, async () => {
-                    await cdnsPage.SearchCDN(remove.Name);
-                    expect(await cdnsPage.DeleteCDN(remove)).toBeTruthy();
-
-                });
-            });
-            it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBeTruthy();
-            });
-        });
-    });
+	for (const login of cdnsData.logins) {
+		describe(`Traffic Portal - CDN - ${login.description}`, () =>{
+			beforeAll(async () => {
+				browser.get(browser.params.baseUrl);
+				await loginPage.Login(login);
+				expect(await loginPage.CheckUserName(login)).toBeTruthy();
+				await cdnsPage.openCDNsPage();
+			});
+			afterAll(async ()=>{
+				expect(await topNavigation.Logout()).toBeTruthy();
+			});
+			afterEach(async ()=> {
+				await cdnsPage.openCDNsPage();
+			});
+			for (const add of cdnsData.add) {
+				it(add.description, async () => {
+					expect(await cdnsPage.createCDN(add)).toBeTruthy();
+				});
+			}
+			for (const update of cdnsData.update) {
+				it(update.description, async () => {
+					await cdnsPage.searchCDN(update.Name);
+					expect(await cdnsPage.updateCDN(update)).toBeTruthy();
+				});
+			}
+			for (const remove of cdnsData.remove) {
+				it(remove.description, async () => {
+					await cdnsPage.searchCDN(remove.Name);
+					expect(await cdnsPage.deleteCDN(remove.Name, remove.validationMessage)).toBeTruthy();
+				});
+			}
+		});
+	}
 });

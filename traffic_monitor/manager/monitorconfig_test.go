@@ -392,12 +392,15 @@ func TestGetCacheGroupsToPoll(t *testing.T) {
 			ExpectErr: false,
 		},
 	} {
-		tmGroup, toPoll, err := getCacheGroupsToPoll(tc.DistributedPolling, tc.TMName, monitors, caches, cacheGroups)
+		tmGroup, tmStatus, toPoll, err := getCacheGroupsToPoll(tc.DistributedPolling, tc.TMName, monitors, caches, cacheGroups)
 		if tc.ExpectErr != (err != nil) {
 			t.Errorf("getting cachegroups to poll -- expect error: %t, actual error: %v", tc.ExpectErr, err)
 		}
 		if tc.ExpectedTMGroup != tmGroup {
 			t.Errorf("getting TM group -- expected: %s, actual: %s", tc.ExpectedTMGroup, tmGroup)
+		}
+		if tmStatus != "ONLINE" {
+			t.Errorf("expected TM status: ONLINE, actual: %s", tmStatus)
 		}
 		if !reflect.DeepEqual(tc.ExpectedToPoll, toPoll) {
 			t.Errorf("getting cachegroups to poll -- expected: %+v, actual: %+v", tc.ExpectedToPoll, toPoll)

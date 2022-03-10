@@ -205,6 +205,9 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	|                          |                         | updates and pending :term:`Content Invalidation Jobs`. This behavior should be enabled by default, and disabling it, while still      |
 	|                          |                         | possible is **EXTREMELY DISCOURAGED**.                                                                                                |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tm_query_status_override | global                  | When this Parameter is present, its Value_ will set which status of Traffic Monitors that Traffic Ops will query for                  |
+	|                          |                         | endpoints that require querying Traffic Monitors. If not present, Traffic Ops will default to querying ``ONLINE`` Traffic Monitors.   |
+	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation.polling.url  | CRConfig.json           | The location of a geographic IP mapping database for Traffic Router instances to use.                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation6.polling.url | CRConfig.json           | The location of a geographic IPv6 mapping database for Traffic Router instances to use.                                               |
@@ -495,6 +498,8 @@ This configuration file is generated entirely from :term:`Cache Group` relations
 - ``not_a_parent`` - unlike the other Parameters listed (which have a 1:1 correspondence with Apache Traffic Server configuration options), this Parameter affects the generation of :term:`parent` relationships between :term:`cache servers`. When a Parameter with this :ref:`parameter-name` and Config File exists on a :ref:`Profile <profiles>` used by a :term:`cache server`, it will not be added as a :term:`parent` of any other :term:`cache server`, regardless of :term:`Cache Group` hierarchy. Under ordinary circumstances, there's no real reason for this Parameter to exist.
 
 Additionally, :term:`Delivery Service` :ref:`Profiles <ds-profile>` can have special Parameters with the :ref:`parameter-name` "mso.parent_retry" to :ref:`multi-site-origin-qht`.
+
+.. seealso:: There are many Parameters with this Config File that only apply on :ref:`Delivery Service Profiles <ds-profile>`. Those are documented in :ref:`their section of the Delivery Service overview page <ds-parameters-parent.config>`.
 
 .. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
 

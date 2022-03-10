@@ -87,12 +87,11 @@ func (f *FileLock) GetLock(lockFile string) bool {
 	return f.is_locked
 }
 
-// Releases a file lock and exits with the given status code.
-func (f *FileLock) UnlockAndExit(code int) {
+// Releases the file lock, if locked.
+func (f *FileLock) Unlock() {
 	if f.is_locked {
 		f.f_lock.Unlock()
 	}
-	os.Exit(code)
 }
 
 func DirectoryExists(dir string) (bool, os.FileInfo) {

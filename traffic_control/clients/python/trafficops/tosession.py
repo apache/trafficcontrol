@@ -1293,7 +1293,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'profiles/{id:d}/parameters', ('3.0',))
+	@api_request('get', 'profiles/{profile_id:d}/parameters', ('3.0',))
 	def get_parameters_by_profile_id(self, profile_id=None):
 		"""
 		Get all Parameters associated with a Profile by Id.

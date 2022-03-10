@@ -147,6 +147,7 @@ func StrToUseGitFlag(str string) UseGitFlag {
 type WaitForParentsFlag string
 
 const WaitForParentsDefault = WaitForParentsReval
+const TimeAndDateLayout = "Jan 2, 2006 15:04 MST"
 
 const (
 	WaitForParentsTrue    = "true"

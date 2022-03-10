@@ -240,7 +240,7 @@ func monitorConfigListen(
 			continue
 		}
 
-		thisTMGroup, cacheGroupsToPoll, err := getCacheGroupsToPoll(
+		thisTMGroup, thisTMStatus, cacheGroupsToPoll, err := getCacheGroupsToPoll(
 			cfg.DistributedPolling,
 			staticAppData.Hostname,
 			monitorConfig.TrafficMonitor,
@@ -309,7 +309,7 @@ func monitorConfigListen(
 		peerSet := map[tc.TrafficMonitorName]struct{}{}
 		tmsByGroup := make(map[string][]tc.TrafficMonitor)
 		for _, srv := range monitorConfig.TrafficMonitor {
-			if tc.CacheStatusFromString(srv.ServerStatus) != tc.CacheStatusOnline {
+			if srv.ServerStatus != thisTMStatus {
 				continue
 			}
 			tmsByGroup[srv.Location] = append(tmsByGroup[srv.Location], srv)
@@ -319,7 +319,7 @@ func monitorConfigListen(
 			if srv.HostName == staticAppData.Hostname || (cfg.DistributedPolling && srv.Location != thisTMGroup) {
 				continue
 			}
-			if tc.CacheStatusFromString(srv.ServerStatus) != tc.CacheStatusOnline {
+			if srv.ServerStatus != thisTMStatus {
 				continue
 			}
 			// TODO: the URL should be config driven. -jse
@@ -379,28 +379,36 @@ func monitorConfigListen(
 	}
 }
 
-// getCacheGroupsToPoll returns the name of this Traffic Monitor's cache group
-// and the set of cache groups it needs to poll.
+// getCacheGroupsToPoll returns the name of this Traffic Monitor's cache group,
+// the status of this Traffic Monitor, and the set of cache groups it needs to poll.
 func getCacheGroupsToPoll(distributedPolling bool, hostname string, monitors map[string]tc.TrafficMonitor,
-	caches map[string]tc.TrafficServer, allCacheGroups map[string]tc.TMCacheGroup) (string, map[string]tc.TMCacheGroup, error) {
+	caches map[string]tc.TrafficServer, allCacheGroups map[string]tc.TMCacheGroup) (string, string, map[string]tc.TMCacheGroup, error) {
 	tmGroupSet := make(map[string]tc.TMCacheGroup)
 	cacheGroupSet := make(map[string]tc.TMCacheGroup)
 	tmGroupToPolledCacheGroups := make(map[string]map[string]tc.TMCacheGroup)
 	thisTMGroup := ""
+	thisTMStatus := ""
 
 	for _, tm := range monitors {
 		if tm.HostName == hostname {
+			thisTMStatus = tm.ServerStatus
 			thisTMGroup = tm.Location
+			break
 		}
-		if tc.CacheStatusFromString(tm.ServerStatus) == tc.CacheStatusOnline {
+	}
+	if thisTMStatus == "" {
+		return "", "", nil, fmt.Errorf("unable to find status for this Traffic Monitor (%s) in monitoring config snapshot", hostname)
+	}
+	if thisTMGroup == "" {
+		return "", "", nil, fmt.Errorf("unable to find cache group for this Traffic Monitor (%s) in monitoring config snapshot", hostname)
+	}
+	for _, tm := range monitors {
+		if tm.ServerStatus == thisTMStatus {
 			tmGroupSet[tm.Location] = allCacheGroups[tm.Location]
 			if _, ok := tmGroupToPolledCacheGroups[tm.Location]; !ok {
 				tmGroupToPolledCacheGroups[tm.Location] = make(map[string]tc.TMCacheGroup)
 			}
 		}
-	}
-	if thisTMGroup == "" {
-		return "", nil, fmt.Errorf("unable to find cache group for this Traffic Monitor (%s) in monitoring config snapshot", hostname)
 	}
 
 	for _, c := range caches {
@@ -411,7 +419,7 @@ func getCacheGroupsToPoll(distributedPolling bool, hostname string, monitors map
 	}
 
 	if !distributedPolling {
-		return thisTMGroup, cacheGroupSet, nil
+		return thisTMGroup, thisTMStatus, cacheGroupSet, nil
 	}
 
 	tmGroups := make([]string, 0, len(tmGroupSet))
@@ -431,7 +439,7 @@ func getCacheGroupsToPoll(distributedPolling bool, hostname string, monitors map
 		closest, cgs = findAndRemoveClosestCachegroup(cgs, allCacheGroups[tmGroup], allCacheGroups)
 		tmGroupToPolledCacheGroups[tmGroup][closest] = allCacheGroups[closest]
 	}
-	return thisTMGroup, tmGroupToPolledCacheGroups[thisTMGroup], nil
+	return thisTMGroup, thisTMStatus, tmGroupToPolledCacheGroups[thisTMGroup], nil
 }
 
 func findAndRemoveClosestCachegroup(remainingCacheGroups []string, target tc.TMCacheGroup, allCacheGroups map[string]tc.TMCacheGroup) (string, []string) {

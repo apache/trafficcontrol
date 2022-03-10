@@ -17,216 +17,317 @@
  * under the License.
  */
 
-var TableProfilesController = function(profiles, $scope, $state, $location, $uibModal, $window, locationUtils, profileService, messageModel, fileUtils) {
+/**
+ * @typedef ProfileType @type {"ATS_PROFILE" | "TR_PROFILE" | "TM_PROFILE" | "TS_PROFILE" | "TP_PROFILE" | "INFLUXDB_PROFILE" | "RIAK_PROFILE" | "SPLUNK_PROFILE" | "DS_PROFILE" | "ORG_PROFILE" | "KAFKA_PROFILE" | "LOGSTASH_PROFILE" | "ES_PROFILE" | "UNK_PROFILE" | "GROVE_PROFILE"}
+ */
 
-    let profilesTable;
+/**
+ * @typedef Profile
+ * @property {number} cdn
+ * @property {string} cdnName
+ * @property {string} description
+ * @property {number} id
+ * @property {Date} lastUpdated
+ * @property {string} name
+ * @property {boolean} routingDisabled
+ * @property {ProfileType} type
+ */
 
-    var confirmDelete = function(profile) {
-        var params = {
-            title: 'Delete Profile: ' + profile.name,
-            key: profile.name
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-            controller: 'DialogDeleteController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            deleteProfile(profile);
-        }, function () {
-            // do nothing
-        });
-    };
+/**
+ * @typedef ProfileGridParams
+ * @property {Profile} data
+ */
 
-    var deleteProfile = function(profile) {
-        profileService.deleteProfile(profile.id)
-            .then(function(result) {
-                messageModel.setMessages(result.alerts, false);
-                $scope.refresh();
-            });
-    };
+/**
+ * The controller for the Profiles table view
+ *
+ * @param {Profile[]} profiles
+ */
+var TableProfilesController = function(profiles, $scope, $location, $uibModal, locationUtils, profileService, messageModel, fileUtils) {
 
-    var cloneProfile = function(profile) {
-        var params = {
-            title: 'Clone Profile',
-            message: "Your are about to clone the " + profile.name + " profile. Your clone will have the same attributes and parameter assignments as the " + profile.name + " profile.<br><br>Please enter a name for your cloned profile."
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
-            controller: 'DialogInputController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function(clonedProfileName) {
-            profileService.cloneProfile(profile.name, clonedProfileName);
-        }, function () {
-            // do nothing
-        });
-    };
+	/**** Constants, scope data, etc. ****/
 
-    var exportProfile = function(profile) {
-        profileService.exportProfile(profile.id).
-        then(
-            function(result) {
-                fileUtils.exportJSON(result, profile.name, 'traffic_ops');
-            }
-        );
+	/** The columns of the ag-grid table */
+	$scope.columns = [
+		{
+			headerName: "CDN",
+			field: "cdnName",
+			hide: false,
+			/**
+			 * @param {ProfileGridParams} params
+			 * @returns {string}
+			 */
+			tooltipValueGetter: params => `#${params.data.cdn}`
+		},
+		{
+			headerName: "Description",
+			field: "description",
+			hide: false
+		},
+		{
+			headerName: "ID",
+			field: "id",
+			filter: "agNumberColumnFilter",
+			hide: true
+		},
+		{
+			headerName: "Last Updated",
+			field: "lastUpdated",
+			hide: true,
+			filter: "agDateColumnFilter",
+			relative: true
+		},
+		{
+			headerName: "Name",
+			field: "name",
+			hide: false,
+		},
+		{
+			headerName: "Routing Disabled",
+			field: "routingDisabled",
+			hide: false
+		},
+		{
+			headerName: "Type",
+			field: "type",
+			hide: false,
+			/**
+			 * @param {ProfileGridParams} params
+			 * @returns {string}
+			 */
+			tooltipValueGetter: params => {
+				switch(params.data.type) {
+					case "ATS_PROFILE":
+						return "Trafficserver Cache Server Profile";
+					case "DS_PROFILE":
+						return "Delivery Service Profile";
+					case "ES_PROFILE":
+						return "Elasticsearch Server Profile";
+					case "GROVE_PROFILE":
+						return "Grove Cache Server Profile";
+					case "INFLUXDB_PROFILE":
+						return "InfluxDB Server Profile";
+					case "KAFKA_PROFILE":
+						return "Kafka Server Profile";
+					case "LOGSTASH_PROFILE":
+						return "Logstash Server Profile";
+					case "ORG_PROFILE":
+						return "Origin Profile";
+					case "RIAK_PROFILE":
+						return "Traffic Vault Server Profile";
+					case "SPLUNK_PROFILE":
+						return "Splunk Server Profile";
+					case "TM_PROFILE":
+						return "Traffic Monitor Server Profile";
+					case "TP_PROFILE":
+						return "Traffic Portal Server Profile";
+					case "TR_PROFILE":
+						return "Traffic Router Server Profile";
+					case "TS_PROFILE":
+						return "Traffic Stats Server Profile";
+					case "UNK_PROFILE":
+						return "Other Profile";
+				}
+			}
+		}
+	];
 
-    };
+	/**
+	 * Opens a dialog that prompts the user to upload a Profile to be imported.
+	 */
+	function importProfile() {
+		const params = {
+			title: "Import Profile",
+			message: "Drop Profile Here"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/import/dialog.import.tpl.html",
+			controller: "DialogImportController",
+			size: "lg",
+			resolve: {params}
+		});
+		modalInstance.result.then(
+			importJSON => {
+				profileService.importProfile(importJSON);
+			}
+		);
+	};
 
-    $scope.profiles = profiles;
+	/**
+	 * Opens a dialog that prompts the user to select two Profiles to compare,
+	 * then navigates to the Profile comparison page for them (assuming it was
+	 * not instead cancelled).
+	 */
+	function compareProfiles() {
+		const params = {
+			title: "Compare Profiles",
+			message: "Please select 2 profiles to compare",
+			labelFunction: item => `${item.name} (${item.type})`
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/compare/dialog.compare.tpl.html",
+			controller: "DialogCompareController",
+			size: "md",
+			resolve: {
+				collection: profileService => profileService.getProfiles({ orderby: "name" }),
+				params
+			}
+		});
+		modalInstance.result.then(
+			([a, b]) => {
+				$location.path(`${$location.path()}/${a.id}/${b.id}/compare/diff`);
+			}
+		);
+	};
 
-    $scope.columns = [
-        { "name": "Name", "visible": true, "searchable": true },
-        { "name": "Type", "visible": true, "searchable": true },
-        { "name": "Routing Disabled", "visible": true, "searchable": true },
-        { "name": "Description", "visible": true, "searchable": true },
-        { "name": "CDN", "visible": true, "searchable": true }
-    ];
+	/** @type CGC.DropDownOption[] */
+	$scope.dropDownOptions = [
+		{
+			name: "createProfileMenuItem",
+			href: "#!/profiles/new",
+			text: "Create New Profile",
+			type: 2
+		},
+		{type: 0},
+		{
+			onClick: importProfile,
+			text: "Import Profile",
+			type: 1
+		},
+		{
+			onClick: compareProfiles,
+			text: "Compare Profiles",
+			type: 1
+		}
+	];
 
-    $scope.contextMenuItems = [
-        {
-            text: 'Open in New Tab',
-            click: function ($itemScope) {
-                $window.open('/#!/profiles/' + $itemScope.p.id, '_blank');
-            }
-        },
-        null, // Divider
-        {
-            text: 'Edit',
-            click: function ($itemScope) {
-                $scope.editProfile($itemScope.p.id);
-            }
-        },
-        {
-            text: 'Delete',
-            click: function ($itemScope) {
-                confirmDelete($itemScope.p);
-            }
-        },
-        null, // Divider
-        {
-            text: 'Clone Profile',
-            click: function ($itemScope) {
-                cloneProfile($itemScope.p);
-            }
-        },
-        {
-            text: 'Export Profile',
-            click: function ($itemScope) {
-                exportProfile($itemScope.p);
-            }
-        },
-        null, // Divider
-        {
-            text: 'Manage Parameters',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/profiles/' + $itemScope.p.id + '/parameters');
-            }
-        },
-        {
-            text: 'Manage Servers',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/profiles/' + $itemScope.p.id + '/servers');
-            }
-        }
-    ];
+	/**
+	 * Deletes a Profile after getting confirmation from the user.
+	 *
+	 * @param {Profile} profile
+	 */
+	function confirmDelete(profile) {
+		const params = {
+			title: `Delete Profile: ${profile.name}`,
+			key: profile.name
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/delete/dialog.delete.tpl.html",
+			controller: "DialogDeleteController",
+			size: "md",
+			resolve: {params}
+		});
+		modalInstance.result.then(
+			async () => {
+				const result = await profileService.deleteProfile(profile.id)
+				messageModel.setMessages(result.alerts, false);
+				$scope.refresh();
+			}
+		);
+	};
 
-    $scope.editProfile = function(id) {
-        locationUtils.navigateToPath('/profiles/' + id);
-    };
+	/**
+	 * Clones the given Profile.
+	 *
+	 * @param {Profile} profile
+	 */
+	function cloneProfile(profile) {
+		const params = {
+			title: "Clone Profile",
+			message: `You are about to clone the ${profile.name} profile. Your clone will have the same attributes and parameter assignments as the ${profile.name} profile.<br><br>Please enter a name for your cloned profile.`
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/input/dialog.input.tpl.html",
+			controller: "DialogInputController",
+			size: "md",
+			resolve: {params}
+		});
+		modalInstance.result.then(
+			clonedProfileName => {
+				profileService.cloneProfile(profile.name, clonedProfileName);
+			}
+		);
+	};
 
-    $scope.createProfile = function() {
-        locationUtils.navigateToPath('/profiles/new');
-    };
+	/**
+	 * Downloads the given Profile.
+	 *
+	 * @param {Profile} profile
+	 */
+	async function exportProfile(profile) {
+		const result = await profileService.exportProfile(profile.id)
+		fileUtils.exportJSON(result, profile.name, "json");
+	};
 
-    $scope.importProfile = function() {
-        var params = {
-            title: 'Import Profile',
-            message: "Drop Profile Here"
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/import/dialog.import.tpl.html',
-            controller: 'DialogImportController',
-            size: 'lg',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function(importJSON) {
-            profileService.importProfile(importJSON);
-        }, function () {
-            // do nothing
-        });
-    };
+	/** @type CGC.ContextMenuOption[] */
+	$scope.contextMenuOptions = [
+		{
+			getHref: profile => `#!/profiles/${profile.id}`,
+			getText: profile => `Open ${profile.name} in a new tab`,
+			newTab: true,
+			type: 2
+		},
+		{type: 0},
+		{
+			getHref: profile => `#!/profiles/${profile.id}`,
+			text: "Edit",
+			type: 2
+		},
+		{
+			onClick: profile => confirmDelete(profile),
+			text: "Delete",
+			type: 1
+		},
+		{type: 0},
+		{
+			onClick: cloneProfile,
+			text: "Clone Profile",
+			type: 1
+		},
+		{
+			onClick: exportProfile,
+			text: "Export Profile",
+			type: 1
+		},
+		{type: 0},
+		{
+			getHref: profile => `#!/profiles/${profile.id}/parameters`,
+			text: "Manage Parameters",
+			type: 2
+		},
+		{
+			getHref: profile => `#!/profiles/${profile.id}/servers`,
+			text: "Manage Servers",
+			type: 2
+		}
+	];
 
-    $scope.compareProfiles = function() {
-        var params = {
-            title: 'Compare Profiles',
-            message: 'Please select 2 profiles to compare',
-            labelFunction: function(item) { return item['name'] + ' (' + item['type'] + ')' }
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/compare/dialog.compare.tpl.html',
-            controller: 'DialogCompareController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                },
-                collection: function(profileService) {
-                    return profileService.getProfiles({ orderby: 'name' });
-                }
-            }
-        });
-        modalInstance.result.then(function(profiles) {
-            $location.path($location.path() + '/' + profiles[0].id + '/' + profiles[1].id + '/compare/diff');
-        }, function () {
-            // do nothing
-        });
-    };
+	/** Options, configuration, data and callbacks for the ag-grid table. */
+	/** @type CGC.GridSettings */
+	$scope.gridOptions = {
+		onRowClick: row => {
+			locationUtils.navigateToPath(`/profiles/${row.data.id}`);
+		}
+	};
 
-    $scope.refresh = function() {
-        $state.reload(); // reloads all the resolves for the view
-    };
+	$scope.defaultData = {
+		cdn: -1,
+		cdnName: "",
+		description: "",
+		id: -1,
+		lastUpdated: new Date(),
+		name: "",
+		routingDisabled: true,
+		type: "ATS_PROFILE"
+	};
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
-
-    $scope.toggleVisibility = function(colName) {
-        const col = profilesTable.column(colName + ':name');
-        col.visible(!col.visible());
-        profilesTable.rows().invalidate().draw();
-    };
-
-    angular.element(document).ready(function () {
-        profilesTable = $('#profilesTable').DataTable({
-            "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": 25,
-            "aaSorting": [],
-            "columns": $scope.columns,
-            "initComplete": function(settings, json) {
-                try {
-                    // need to create the show/hide column checkboxes and bind to the current visibility
-                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_profilesTable_/')).columns;
-                } catch (e) {
-                    console.error("Failure to retrieve required column info from localStorage (key=DataTables_profilesTable_/):", e);
-                }
-            }
-        });
-    });
-
+	$scope.profiles = profiles.map(
+		profile => {
+			profile.lastUpdated = new Date(profile.lastUpdated.replace(" ", "T").replace("+00", "Z"));
+			return profile;
+		}
+	);
 };
 
-TableProfilesController.$inject = ['profiles', '$scope', '$state', '$location', '$uibModal', '$window', 'locationUtils', 'profileService', 'messageModel', 'fileUtils'];
+TableProfilesController.$inject = ["profiles", "$scope", "$location", "$uibModal", "locationUtils", "profileService", "messageModel", "fileUtils"];
 module.exports = TableProfilesController;

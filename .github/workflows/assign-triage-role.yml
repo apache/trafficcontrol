@@ -33,6 +33,10 @@ on:
     # 14:00 UTC on the first day of each month
     - cron: '0 14 1 * *'
 
+env:
+  DEFAULT_MINIMUM_COMMITS: '2'
+  DEFAULT_SINCE_DAYS_AGO: '31'
+
 jobs:
   assign-triage-role:
     runs-on: ubuntu-latest
@@ -54,5 +58,5 @@ jobs:
         env:
           GIT_AUTHOR_NAME: asfgit
           GITHUB_TOKEN: ${{ github.token }}
-          MINIMUM_COMMITS: '${{ github.event.inputs.minimum-commits }}'
-          SINCE_DAYS_AGO: '${{ github.event.inputs.since-days-ago }}'
+          MINIMUM_COMMITS: '${{ github.event.inputs.minimum-commits || env.DEFAULT_MINIMUM_COMMITS }}'
+          SINCE_DAYS_AGO: '${{ github.event.inputs.since-days-ago || env.DEFAULT_SINCE_DAYS_AGO }}'

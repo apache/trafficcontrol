@@ -291,9 +291,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		errCode, userErr, sysErr = getOriginals(originalIDs, inf.Tx, needOriginals, true)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		} else {
-			api.WriteResp(w, r, dsrs)
+			return
 		}
+		api.WriteResp(w, r, dsrs)
 		return
 	}
 

@@ -56,7 +56,7 @@ describe("CurrentUserService", () => {
 		service.logout();
 		expect(service.loggedIn).toBeFalse();
 		expect(service.currentUser).toBeNull();
-		expect(service.capabilities.size).toBe(0);
+		expect(service.capabilities.getValue().size).toBe(0);
 	});
 
 	it("should update user data properly", () => {
@@ -151,18 +151,24 @@ describe("CurrentUserService", () => {
 	it("should update user permissions properly", () => {
 		service.setUser(newCurrentUser(), new Set(["a different permission"]));
 		expect(service.hasPermission("a different permission")).toBeTrue();
+
 		service.logout();
+
 		expect(service.hasPermission("a different permission")).toBeFalse();
+
 		service.setUser(newCurrentUser(), new Set(["a permission"]));
-		expect(service.capabilities.has("a permission")).toBeTrue();
 		expect(service.hasPermission("a permission")).toBeTrue();
-		expect(service.capabilities.has("a different permission")).toBeFalse();
 		expect(service.hasPermission("a different permission")).toBeFalse();
+
 		service.setUser(newCurrentUser(), [{description: "", name: "a permission"}]);
-		expect(service.capabilities.has("a permission")).toBeTrue();
 		expect(service.hasPermission("a permission")).toBeTrue();
-		expect(service.capabilities.has("a different permission")).toBeFalse();
 		expect(service.hasPermission("a different permission")).toBeFalse();
+	});
+
+	it("lets 'admin' users do things even when they don't have permission", () => {
+		service.setUser({...newCurrentUser(), roleName: "admin"}, new Set());
+		expect(service.capabilities.getValue().has("a permission")).toBeFalse();
+		expect(service.hasPermission("a permission")).toBeTrue();
 	});
 
 	it("fetches the current user when appropriate", async () => {

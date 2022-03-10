@@ -208,7 +208,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Acme account updated")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, acmeAccount)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, acmeAccount)
 
 	changeLogMsg := fmt.Sprintf("ACME ACCOUNT: %s %s, ACTION: updated", *acmeAccount.Email, *acmeAccount.Provider)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
