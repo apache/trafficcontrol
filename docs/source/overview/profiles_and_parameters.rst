@@ -73,7 +73,7 @@ Type
 """"
 A Profile's :dfn:`Type` determines how its configured Parameters_ are treated by various components, and often even determine how the object using the Profile is treated (particularly when it is a server). Unlike the more general ":term:`Type`" employed by Traffic Control, the allowed Types of Profiles are set in stone, and they are as follows.
 
-.. danger:: Nearly all of these Profile Types have strict naming requirements, and it may be noted that some of said requirements are prefixes ending with ``_``, while others are either not prefixes or do not end with ``_``. This is exactly true; some requirements **need** that ``_`` and some may or may not have it. It is our suggestion, therefore, that for the time being all prefixes use the ``_`` notation to separate words, so as to avoid causing headaches remembering when that matters and when it does not.
+.. danger:: Some of these Profile Types have strict naming requirements, and it may be noted that some of said requirements are prefixes ending with ``_``, while others are either not prefixes or do not end with ``_``. This is exactly true; some requirements **need** that ``_`` and some may or may not have it. It is our suggestion, therefore, that for the time being all prefixes use the ``_`` notation to separate words, so as to avoid causing headaches remembering when that matters and when it does not.
 
 ATS_PROFILE
 	A Profile that can be used with either an Edge-tier or Mid-tier :term:`cache server` (but not both, in general). This is the only Profile type that will ultimately pass its Parameters_ on to :term:`ORT` in the form of generated configuration files. For this reason, it can make use of the :ref:`t3c-special-strings` in the values of some of its Parameters_.
@@ -86,40 +86,28 @@ DS_PROFILE
 ES_PROFILE
 	A Profile for `ElasticSearch <https://www.elastic.co/products/elasticsearch>`_ servers. This has no known special meaning to any component of Traffic Control, but if ElasticSearch is in use the use of this Profile Type is suggested regardless.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``ELASTICSEARCH``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 GROVE_PROFILE
 	A Profile for use with the experimental Grove HTTP caching proxy.
 
 INFLUXDB_PROFILE
 	A Profile used with `InfluxDB <https://www.influxdata.com/>`_, which is used by Traffic Stats.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``INFLUXDB``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 KAFKA_PROFILE
 	A Profile for `Kafka <https://kafka.apache.org/>`_ servers. This has no known special meaning to any component of Traffic Control, but if Kafka is in use the use of this Profile Type is suggested regardless.
-
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``KAFKA``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
 LOGSTASH_PROFILE
 	A Profile for `Logstash <https://www.elastic.co/products/logstash>`_ servers. This has no known special meaning to any component of Traffic Control, but if Logstash is in use the use of this Profile Type is suggested regardless.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``LOGSTASH_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 ORG_PROFILE
 	A Profile that may be used by either :term:`origin servers` or :term:`Origins` (no, they aren't the same thing).
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``MSO``, or contain either ``ORG`` or ``ORIGIN`` anywhere in the name. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 RIAK_PROFILE
-	A Profile used for each `Riak <http://basho.com/products/riak-kv/>`_ server in a Traffic Stats cluster.
+	A Profile used for a Traffic Vault server.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``RIAK``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
+	.. impl-detail:: This Profile Type gets its name from the legacy implementation of Traffic Vault: Riak KV.
 
 SPLUNK_PROFILE
 	A Profile meant to be used with `Splunk <https://www.splunk.com/>`_ servers. This has no known special meaning to any component of Traffic Control, but if Splunk is in use the use of this Profile Type is suggested regardless.
-
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``SPLUNK``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
 TM_PROFILE
 	A Traffic Monitor Profile.
@@ -138,8 +126,6 @@ TR_PROFILE
 
 TS_PROFILE
 	A Traffic Stats Profile.
-
-	.. caution:: For legacy reasons, the names of Profiles of this type *must* be ``TRAFFIC_STATS``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise! Furthermore, because Profile names must be unique, this means that only one TS_PROFILE-Type Profile can exist at a time.
 
 UNK_PROFILE
 	A catch-all type that can be assigned to anything without imbuing it with any special meaning or behavior.
