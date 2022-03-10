@@ -27,7 +27,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -41,219 +40,212 @@ func TestDeliveryServices(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 
-		tenant4UserSession := createSession(t, "tenant4user", "pa$$word")
+		tenant4UserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
-		methodTests := map[string]map[string]struct {
-			endpointId    func() int
-			clientSession *client.Session
-			requestOpts   client.RequestOptions
-			requestBody   map[string]interface{}
-			expectations  []utils.CkReqFunc
-		}{
+		methodTests := utils.V4TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
-				// Performs GET -> Validates against test data
 				"OK when VALID request": {
-					clientSession: TOSession, expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				//GetAccessibleToTest
 				// ADDITIONAL TESTS: GET USING ROOT TENANT ID: 1 -> should match length of testdata
 				// GET USING NEW TENANT BELONGING TO NO DSs -> length = 0 // tenant1 = child of root -> len = testdata - 1
 				"OK when VALID ACCESSIBLETO parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"accessibleTo": {"1"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"accessibleTo": {"1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 				"OK when ACTIVE=TRUE": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"active": {"true"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateExpectedFields(map[string]interface{}{"Active": true})),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"active": {"true"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"Active": true})),
 				},
 				"OK when ACTIVE=FALSE": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"active": {"false"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateExpectedFields(map[string]interface{}{"Active": false})),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"active": {"false"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"Active": false})),
 				},
 				"OK when VALID CDN parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn1"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateExpectedFields(map[string]interface{}{"CDNName": "cdn1"})),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"CDNName": "cdn1"})),
 				},
 				"OK when VALID LOGSENABLED parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"logsEnabled": {"false"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateExpectedFields(map[string]interface{}{"LogsEnabled": false})),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"logsEnabled": {"false"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"LogsEnabled": false})),
 				},
 				"OK when VALID PROFILE parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"profile": {"ATS_EDGE_TIER_CACHE"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateExpectedFields(map[string]interface{}{"ProfileName": "ATS_EDGE_TIER_CACHE"})),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"profile": {"ATS_EDGE_TIER_CACHE"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"ProfileName": "ATS_EDGE_TIER_CACHE"})),
 				},
 				"OK when VALID SERVICECATEGORY parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"serviceCategory": {"serviceCategory1"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateExpectedFields(map[string]interface{}{"ServiceCategory": "serviceCategory1"})),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"serviceCategory": {"serviceCategory1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"ServiceCategory": "serviceCategory1"})),
 				},
 				"OK when VALID TENANT parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"tenant": {"tenant1"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateExpectedFields(map[string]interface{}{"Tenant": "tenant1"})),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"tenant": {"tenant1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"Tenant": "tenant1"})),
 				},
 				"OK when VALID TOPOLOGY parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"topology": {"mso-topology"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateExpectedFields(map[string]interface{}{"Topology": "mso-topology"})),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"topology": {"mso-topology"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"Topology": "mso-topology"})),
 				},
 				"OK when VALID TYPE parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"type": {"HTTP"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateExpectedFields(map[string]interface{}{"Type": tc.DSTypeHTTP})),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"type": {"HTTP"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"Type": tc.DSTypeHTTP})),
 				},
 				"OK when VALID XMLID parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds1"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
-						validateExpectedFields(map[string]interface{}{"XMLID": "ds1"})),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateDSExpectedFields(map[string]interface{}{"XMLID": "ds1"})),
 				},
 				"EMPTY RESPONSE when INVALID ACCESSIBLETO parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"accessibleTo": {"10000"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"accessibleTo": {"10000"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 				"EMPTY RESPONSE when INVALID CDN parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"10000"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"10000"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 				"EMPTY RESPONSE when INVALID PROFILE parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"profile": {"10000"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"profile": {"10000"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 				"EMPTY RESPONSE when INVALID TENANT parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"tenant": {"10000"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"tenant": {"10000"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 				"EMPTY RESPONSE when INVALID TYPE parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"type": {"10000"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"type": {"10000"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 				"EMPTY RESPONSE when INVALID XMLID parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"xmlId": {"invalid_xml_id"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"xmlId": {"invalid_xml_id"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 				"FIRST RESULT when LIMIT=1": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePagination("limit")),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePagination("limit")),
 				},
 				"SECOND RESULT when LIMIT=1 OFFSET=1": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePagination("offset")),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePagination("offset")),
 				},
 				"SECOND RESULT when LIMIT=1 PAGE=2": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePagination("page")),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePagination("page")),
 				},
 				"BAD REQUEST when INVALID LIMIT parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID OFFSET parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID PAGE parameter": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"VALID when SORTORDER param is DESC": {
-					clientSession: TOSession, requestOpts: client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSorted()),
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDescSort()),
 				},
 				"EMPTY RESPONSE when TENANT attempts reading DS OUTSIDE TENANCY": {
-					clientSession: tenant4UserSession,
-					requestOpts:   client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds3"}}},
-					expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+					ClientSession: tenant4UserSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds3"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 			},
 			"POST": {
 				"CREATED when VALID request WITH GEO LIMIT COUNTRIES": {
-					clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"geoLimit":          2,
 						"geoLimitCountries": []string{"US", "CA"},
 						"xmlId":             "geolimit-test",
 					}),
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated), utils.ResponseHasLength(1),
-						validateExpectedFields(map[string]interface{}{"GeoLimitCountries": tc.GeoLimitCountriesType{"US", "CA"}})),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated), utils.ResponseHasLength(1),
+						validateDSExpectedFields(map[string]interface{}{"GeoLimitCountries": tc.GeoLimitCountriesType{"US", "CA"}})),
 				},
 				"BAD REQUEST when using LONG DESCRIPTION 2 and 3 fields": {
-					clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"longDesc1": "long desc 1",
 						"longDesc2": "long desc 2",
 						"xmlId":     "ld1-ld2-test",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when XMLID left EMPTY": {
-					clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"xmlId": "",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when XMLID is NIL": {
-					clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"xmlId": nil,
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when TOPOLOGY DOESNT EXIST": {
-					clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": "topology-doesnt-exist",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when creating STEERING DS with TLS VERSIONS": {
-					clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"tlsVersions": []string{"1.1"},
 						"typeId":      GetTypeId(t, "STEERING"),
 						"xmlId":       "test-TLS-creation-steering",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when creating HTTP DS with TLS VERSIONS": {
-					clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"tlsVersions": []string{"1.1"},
 						"xmlId":       "test-TLS-creation-http",
 					}),
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated), utils.ResponseHasLength(1)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated), utils.ResponseHasLength(1)),
 				},
 				"BAD REQUEST when creating DS with TENANCY NOT THE SAME AS CURRENT TENANT": {
-					clientSession: tenant4UserSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					ClientSession: tenant4UserSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"tenantId": GetTenantId(t, "tenant3"),
 						"xmlId":    "test-tenancy",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden), utils.ResponseHasLength(0)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden), utils.ResponseHasLength(0)),
 				},
 			},
 			"PUT": {
 				"BAD REQUEST when using LONG DESCRIPTION 2 and 3 fields": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"longDesc1": "long desc 1",
 						"longDesc2": "long desc 2",
 						"xmlId":     "ds1",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				//"OK when VALID request": {
-				//	endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-				//	requestBody: map[string]interface{}{
+				//	EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+				//	RequestBody: map[string]interface{}{
 				//		"active": false,
 				//		"cdnName": "cdn1",
 				//		"ccrDnsTtl": 3600,
@@ -320,134 +312,134 @@ func TestDeliveryServices(t *testing.T) {
 				//		"maxOriginConnections": 100
 				//		"maxRequestHeaderBytes": 131080
 				//	},
-				//	expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				//	Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				//},
 				//UpdateValidateORGServerCacheGroup
 				//"Assign an Origin not in a Cache Group used by a Delivery Service's Topology to that Delivery Service": {},
 				"BAD REQUEST when INVALID REMAP TEXT": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua\nline2",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING SLICE PLUGIN SIZE": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"rangeRequestHandling": 3,
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when SLICE PLUGIN SIZE SET with INVALID RANGE REQUEST SETTING": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"rangeRequestHandling": 1,
 						"rangeSliceBlockSize":  262144,
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when SLICE PLUGIN SIZE TOO SMALL": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"rangeRequestHandling": 3,
 						"rangeSliceBlockSize":  0,
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when SLICE PLUGIN SIZE TOO LARGE": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"rangeRequestHandling": 3,
 						"rangeSliceBlockSize":  40000000,
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ADDING TOPOLOGY to CLIENT STEERING DS": {
-					endpointId: GetDeliveryServiceId(t, "ds-client-steering"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds-client-steering"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": "mso-topology",
 						"xmlId":    "ds-client-steering",
 						"typeId":   GetTypeId(t, "CLIENT_STEERING"),
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when TOPOLOGY DOESNT EXIST": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": "",
 						"xmlId":    "ds1",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ADDING TOPOLOGY to DS with DS REQUIRED CAPABILITY": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": "top-for-ds-req",
 						"xmlId":    "ds1",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when REMOVING TOPOLOGY": {
-					endpointId: GetDeliveryServiceId(t, "ds-based-top-with-no-mids"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds-based-top-with-no-mids"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": nil,
 						"xmlId":    "ds-based-top-with-no-mids",
 					}),
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				//t.Fatalf("expected 400-level error assigning Topology %s to Delivery Service %s because Cache Group %s has no Servers in it in CDN %d, no error received", *dsTopology, xmlID, cacheGroupName, *ds.CDNID)
 				// "top-ds-in-cdn2"
 				//"BAD REQUEST when ASSIGNING TOPOLOGY when CG has NO SERVERS": {
-				//	endpointId: GetDeliveryServiceId(t, "top-ds-in-cdn2"), clientSession: TOSession,
-				//	requestBody: map[string]interface{}{
+				//	EndpointId: GetDeliveryServiceId(t, "top-ds-in-cdn2"), ClientSession: TOSession,
+				//	RequestBody: map[string]interface{}{
 				//		"topology": "top-cg-no-servers",
 				//		"xmlId":    "top-ds-in-cdn2",
 				//	},
-				//	expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				//	Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				//},
 				"OK when DS with TOPOLOGY updates HEADER REWRITE FIELDS": {
-					endpointId: GetDeliveryServiceId(t, "ds-top"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"firstHeaderRewrite": "foo",
 						"innerHeaderRewrite": "bar",
 						"lastHeaderRewrite":  "baz",
 						"topology":           "mso-topology",
 						"xmlId":              "ds-top",
 					}),
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when DS with NO TOPOLOGY updates HEADER REWRITE FIELDS": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"firstHeaderRewrite": "foo",
 						"innerHeaderRewrite": "bar",
 						"lastHeaderRewrite":  "baz",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when DS with TOPOLOGY updates LEGACY HEADER REWRITE FIELDS": {
-					endpointId: GetDeliveryServiceId(t, "ds-top"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"edgeHeaderRewrite": "foo",
 						"midHeaderRewrite":  "bar",
 						"topology":          "mso-topology",
 						"xmlId":             "ds-top",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when DS with NO TOPOLOGY updates LEGACY HEADER REWRITE FIELDS": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"profileId":         GetProfileId(t, "ATS_EDGE_TIER_CACHE"),
 						"edgeHeaderRewrite": "foo",
 						"midHeaderRewrite":  "bar",
 						"xmlId":             "ds1",
 					}),
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when UPDATING MINOR VERSION FIELDS": {
-					endpointId: GetDeliveryServiceId(t, "ds-test-minor-versions"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds-test-minor-versions"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"consistentHashQueryParams": []string{"d", "e", "f"},
 						"consistentHashRegex":       "foo",
 						"deepCachingType":           "NEVER",
@@ -460,73 +452,69 @@ func TestDeliveryServices(t *testing.T) {
 						"trResponseHeaders":         "Access-Control-Max-Age: 600\nContent-Type: text/html; charset=utf-8",
 						"xmlId":                     "ds-test-minor-versions",
 					}),
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateExpectedFields(map[string]interface{}{"ConsistentHashQueryParams": []string{"d", "e", "f"},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateDSExpectedFields(map[string]interface{}{"ConsistentHashQueryParams": []string{"d", "e", "f"},
 							"ConsistentHashRegex": "foo", "DeepCachingType": tc.DeepCachingTypeNever, "FQPacingRate": 41, "MaxOriginConnections": 500,
 							"SigningAlgorithm": "uri_signing", "Tenant": "tenant1", "TRRequestHeaders": "X-ooF\nX-raB",
 							"TRResponseHeaders": "Access-Control-Max-Age: 600\nContent-Type: text/html; charset=utf-8",
 						})),
 				},
 				"BAD REQUEST when INVALID COUNTRY CODE": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"geoLimit":          2,
 						"geoLimitCountries": []string{"US", "CA", "12"},
 						"xmlId":             "invalid-geolimit-test",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when CHANGING TOPOLOGY of DS with ORG SERVERS ASSIGNED": {
-					endpointId: GetDeliveryServiceId(t, "ds-top"), clientSession: TOSession,
-					requestBody: generateDeliveryService(t, map[string]interface{}{
+					EndpointId: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": "another-topology",
 						"xmlId":    "ds-top",
 					}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when UPDATING DS OUTSIDE TENANCY": {
-					endpointId: GetDeliveryServiceId(t, "ds3"), clientSession: tenant4UserSession,
-					requestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds3"}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+					EndpointId: GetDeliveryServiceId(t, "ds3"), ClientSession: tenant4UserSession,
+					RequestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds3"}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestOpts: client.RequestOptions{
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestOpts: client.RequestOptions{
 						Header: http.Header{
 							rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC},
 						},
 					},
-					requestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds1"}),
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+					RequestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds1"}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					endpointId: GetDeliveryServiceId(t, "ds1"), clientSession: TOSession,
-					requestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds1"}),
-					requestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds1"}),
+					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 			},
 			"DELETE": {
 				"BAD REQUEST when DELETING DS OUTSIDE TENANCY": {
-					endpointId: GetDeliveryServiceId(t, "ds3"), clientSession: tenant4UserSession,
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+					EndpointId: GetDeliveryServiceId(t, "ds3"), ClientSession: tenant4UserSession,
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
 			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
-					clientSession: TOSession,
-					requestOpts: client.RequestOptions{
+					ClientSession: TOSession,
+					RequestOpts: client.RequestOptions{
 						Header: http.Header{
 							rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC},
 						},
 					},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
-			//"CDN LOCK": {
-			//	//CUDDeliveryServiceWithLocks
-			//	"Create/ Update/ Delete delivery services with locks": {},
-			//},
 			//"DELIVERY SERVICES CAPACITY": {
 			//	// capDS, _, err := TOSession.GetDeliveryServiceCapacity(*ds.ID, client.RequestOptions{})
 			//	"Basic GET request for /deliveryservices/{{ID}}/capacity": {},
@@ -538,34 +526,34 @@ func TestDeliveryServices(t *testing.T) {
 				for name, testCase := range testCases {
 					ds := tc.DeliveryServiceV4{}
 
-					if val, ok := testCase.requestOpts.QueryParameters["accessibleTo"]; ok {
+					if val, ok := testCase.RequestOpts.QueryParameters["accessibleTo"]; ok {
 						if _, err := strconv.Atoi(val[0]); err != nil {
-							testCase.requestOpts.QueryParameters.Set("accessibleTo", strconv.Itoa(GetTenantId(t, val[0])))
+							testCase.RequestOpts.QueryParameters.Set("accessibleTo", strconv.Itoa(GetTenantId(t, val[0])))
 						}
 					}
-					if val, ok := testCase.requestOpts.QueryParameters["cdn"]; ok {
+					if val, ok := testCase.RequestOpts.QueryParameters["cdn"]; ok {
 						if _, err := strconv.Atoi(val[0]); err != nil {
-							testCase.requestOpts.QueryParameters.Set("cdn", strconv.Itoa(GetCDNId(t, val[0])))
+							testCase.RequestOpts.QueryParameters.Set("cdn", strconv.Itoa(GetCDNId(t, val[0])))
 						}
 					}
-					if val, ok := testCase.requestOpts.QueryParameters["profile"]; ok {
+					if val, ok := testCase.RequestOpts.QueryParameters["profile"]; ok {
 						if _, err := strconv.Atoi(val[0]); err != nil {
-							testCase.requestOpts.QueryParameters.Set("profile", strconv.Itoa(GetProfileId(t, val[0])))
+							testCase.RequestOpts.QueryParameters.Set("profile", strconv.Itoa(GetProfileId(t, val[0])))
 						}
 					}
-					if val, ok := testCase.requestOpts.QueryParameters["type"]; ok {
+					if val, ok := testCase.RequestOpts.QueryParameters["type"]; ok {
 						if _, err := strconv.Atoi(val[0]); err != nil {
-							testCase.requestOpts.QueryParameters.Set("type", strconv.Itoa(GetTypeId(t, val[0])))
+							testCase.RequestOpts.QueryParameters.Set("type", strconv.Itoa(GetTypeId(t, val[0])))
 						}
 					}
-					if val, ok := testCase.requestOpts.QueryParameters["tenant"]; ok {
+					if val, ok := testCase.RequestOpts.QueryParameters["tenant"]; ok {
 						if _, err := strconv.Atoi(val[0]); err != nil {
-							testCase.requestOpts.QueryParameters.Set("tenant", strconv.Itoa(GetTenantId(t, val[0])))
+							testCase.RequestOpts.QueryParameters.Set("tenant", strconv.Itoa(GetTenantId(t, val[0])))
 						}
 					}
 
-					if testCase.requestBody != nil {
-						dat, err := json.Marshal(testCase.requestBody)
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
 						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 						err = json.Unmarshal(dat, &ds)
 						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
@@ -574,37 +562,33 @@ func TestDeliveryServices(t *testing.T) {
 					switch method {
 					case "GET", "GET AFTER CHANGES":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.clientSession.GetDeliveryServices(testCase.requestOpts)
-							for _, check := range testCase.expectations {
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServices(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
 							fmt.Println(*ds.Tenant)
-							resp, reqInf, err := testCase.clientSession.CreateDeliveryService(ds, testCase.requestOpts)
+							resp, reqInf, err := testCase.ClientSession.CreateDeliveryService(ds, testCase.RequestOpts)
 							fmt.Println(resp)
-							for _, check := range testCase.expectations {
+							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.clientSession.UpdateDeliveryService(testCase.endpointId(), ds, testCase.requestOpts)
-							for _, check := range testCase.expectations {
+							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryService(testCase.EndpointId(), ds, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.clientSession.DeleteDeliveryService(testCase.endpointId(), testCase.requestOpts)
-							for _, check := range testCase.expectations {
+							resp, reqInf, err := testCase.ClientSession.DeleteDeliveryService(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, resp.Alerts, err)
 							}
-						})
-					case "CDNLOCK":
-						t.Run(name, func(t *testing.T) {
-							UpdateCachegroupWithLocks(t)
 						})
 					}
 				}
@@ -613,7 +597,7 @@ func TestDeliveryServices(t *testing.T) {
 	})
 }
 
-func validateExpectedFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+func validateDSExpectedFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		dsResp := resp.([]tc.DeliveryServiceV40)
 		for field, expected := range expectedResp {
@@ -685,11 +669,11 @@ func validatePagination(paginationParam string) utils.CkReqFunc {
 	}
 }
 
-func validateSorted() utils.CkReqFunc {
+func validateDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		dsResp := resp.([]tc.DeliveryServiceV40)
 		var sortedList []string
-		assert.RequireGreaterOrEqual(t, len(dsResp), 2, "Need at least 2 ASNs in Traffic Ops to test sorted, found: %d", len(dsResp))
+		assert.RequireGreaterOrEqual(t, len(dsResp), 2, "Need at least 2 XMLIDs in Traffic Ops to test desc sort, found: %d", len(dsResp))
 
 		for _, ds := range dsResp {
 			sortedList = append(sortedList, *ds.XMLID)
@@ -783,125 +767,6 @@ func generateDeliveryService(t *testing.T, requestDS map[string]interface{}) map
 		genericHTTPDS[k] = v
 	}
 	return genericHTTPDS
-}
-
-// createSession creates a session using the passed in username and password.
-func createSession(t *testing.T, username string, password string) *client.Session {
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, username, password, true, "to-api-v4-client-tests", false, toReqTimeout)
-	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
-	return userSession
-}
-
-func CUDDeliveryServiceWithLocks(t *testing.T) {
-	// Create a new user with operations level privileges
-	user1 := tc.UserV4{
-		Username:             "lock_user1",
-		RegistrationSent:     new(time.Time),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		Role:                 "operations",
-	}
-	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = 1
-	//util.IntPtr(resp.Response[0].ID)
-	user1.FullName = util.StrPtr("firstName LastName")
-	_, _, err := TOSession.CreateUser(user1, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not create test user with username: %s", user1.Username)
-	}
-	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
-
-	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
-	if err != nil {
-		t.Fatalf("could not login with user lock_user1: %v", err)
-	}
-	if len(testData.DeliveryServices) == 0 {
-		t.Fatalf("no deliveryservices to run the test on, quitting")
-	}
-
-	cdn := createBlankCDN("sslkeytransfer", t)
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "HTTP")
-	types, _, err := TOSession.GetTypes(opts)
-	if err != nil {
-		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
-	}
-	if len(types.Response) < 1 {
-		t.Fatal("expected at least one type")
-	}
-	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "cdn-locks-test-ds-name", "edge", "https://test-cdn-locks.com", "cdn-locks-test-ds-xml-id")
-
-	// Create a lock for this user
-	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
-		CDN:     cdn.Name,
-		Message: util.StrPtr("test lock"),
-		Soft:    util.BoolPtr(false),
-	}, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't create cdn lock: %v", err)
-	}
-	// Try to create a new ds on a CDN that another user has a hard lock on -> this should fail
-	_, reqInf, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
-	if err == nil {
-		t.Error("expected an error while creating a new ds for a CDN for which a hard lock is held by another user, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Errorf("expected a 403 forbidden status while creating a new ds for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
-	}
-
-	// Try to create a new ds on a CDN that the same user has a hard lock on -> this should succeed
-	dsResp, reqInf, err := userSession.CreateDeliveryService(customDS, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while creating a new ds for a CDN for which a hard lock is held by the same user, but got %v", err)
-	}
-	if len(dsResp.Response) != 1 {
-		t.Fatalf("one response expected, but got %d", len(dsResp.Response))
-	}
-	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", *customDS.XMLID)
-	deliveryServices, _, err := userSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("couldn't get ds: %v", err)
-	}
-	if len(deliveryServices.Response) != 1 {
-		t.Fatal("couldn't get exactly one ds in the response, quitting")
-	}
-	dsID := dsResp.Response[0].ID
-	// Try to update a ds on a CDN that another user has a hard lock on -> this should fail
-	customDS.LongDesc = util.StrPtr("changed_long_desc")
-	_, reqInf, err = TOSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
-	if err == nil {
-		t.Error("expected an error while updating a ds for a CDN for which a hard lock is held by another user, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Errorf("expected a 403 forbidden status while updating a ds for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
-	}
-	// Try to update a ds on a CDN that the same user has a hard lock on -> this should succeed
-	_, reqInf, err = userSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while updating a ds for a CDN for which a hard lock is held by the same user, but got %v", err)
-	}
-	// Try to delete a ds on a CDN that another user has a hard lock on -> this should fail
-	_, reqInf, err = TOSession.DeleteDeliveryService(*dsID, client.RequestOptions{})
-	if err == nil {
-		t.Error("expected an error while deleting a ds for a CDN for which a hard lock is held by another user, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Errorf("expected a 403 forbidden status while deleting a ds for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
-	}
-
-	// Try to delete a ds on a CDN that the same user has a hard lock on -> this should succeed
-	_, reqInf, err = userSession.DeleteDeliveryService(*dsID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while deleting a ds for a CDN for which a hard lock is held by the same user, but got %v", err)
-	}
-
-	// Delete the lock
-	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn.Name}}})
-	if err != nil {
-		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
-	}
 }
 
 func CreateTestDeliveryServices(t *testing.T) {
