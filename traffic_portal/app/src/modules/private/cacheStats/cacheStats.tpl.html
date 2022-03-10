@@ -18,41 +18,7 @@ under the License.
 -->
 
 <div class="x_panel">
-    <div class="x_title">
-        <ol class="breadcrumb pull-left">
-            <li class="active">Cache Stats</li>
-        </ol>
-        <div class="pull-right" role="group">
-            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-        </div>
-        <div class="clearfix"></div>
-    </div>
-    <div class="x_content">
-        <br>
-        <table id="cacheStatsTable" class="table responsive-utilities jambo_table">
-            <thead>
-            <tr class="headings">
-                <th>Profile</th>
-                <th>Host</th>
-                <th>Cache Group</th>
-                <th>Healthy</th>
-                <th>Status</th>
-                <th>Connections</th>
-                <th>Mbps Out</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr ng-repeat="cs in ::cacheStats">
-                <td>{{::cs.profile}}</td>
-                <td><a ng-click="ssh(cs.ip, $event)">{{::cs.hostname}}</a></td>
-                <td>{{::cs.cachegroup}}</td>
-                <td ng-class="{'green': cs.healthy, 'red': !cs.healthy}"><strong>{{::cs.healthy}}</strong></td>
-                <td>{{::cs.status}}</td>
-                <td>{{::connections(cs.connections)}}</td>
-                <td>{{::bandwidth(cs.kbps, 'Mb')}}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+	<common-grid-controller title="Cache Stats" table-name="cache-stats" options="gridOptions" data="data" columns="columns"
+	default-data="defaultData">
+</common-grid-controller>
 </div>
-

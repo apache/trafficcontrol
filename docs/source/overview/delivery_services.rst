@@ -948,14 +948,70 @@ Naturally, this assumes that each redundant server is exactly identical, from re
 	| :abbr:`MSO (Multi-Site Origin)` | In documentation and used heavily in discussion in Slack, mailing list etc. | unchanged (usually only used where implicitly ``true``) |
 	+---------------------------------+-----------------------------------------------------------------------------+---------------------------------------------------------+
 
-A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site Origin configuration. These are detailed in the :ref:`ds-mso-parameters` table. All of these :term:`Parameters` should have their Configuration File set to ``parent.config``. Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`ATS (Apache Traffic Server)` `parent.config file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>` (usually by almost the same name), and documentation for these fields is provided in the form of links to their entries in the :abbr:`ATS (Apache Traffic Server)` documentation.
+A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site Origin configuration. These are detailed in `Parameters that Affect Multi-Site Origin`_.
 
-.. _round_robin: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html#parent-config-format-round-robin
-.. _max_simple_retries: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-simple-retries
-.. _max_unavailable_server_retries: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-unavailable-server-retries
-.. _parent_retry: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent-retry
-.. _unavailable_server_retry_responses: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html#parent-config-format-unavailable-server-retry-responses
-.. _parent.config: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html
+.. seealso:: A quick guide on setting up Multi-Site Origins is given in :ref:`multi-site-origin-qht`.
+
+.. _ds-xmlid:
+
+xml_id
+------
+A text-based unique identifier for a Delivery Service. Many :ref:`to-api` endpoints and internal :abbr:`ATC (Apache Traffic Control)` functions use this to uniquely identify a Delivery Service as opposed to the historically favored "ID". This string will become a part of the CDN service domain, which all together looks like: :file:`{Delivery Service Routing Name}.{Delivery Service xml_id}.{CDN Subdomain}.{CDN Domain}.{Top-Level Domain}`. Must be all lowercase, no spaces or special characters, but may contain dashes/hyphens\ [#xmlValid]_.
+
+.. table:: Aliases
+
+	+------+---------------------------------+------------------------+
+	| Name | Use(s)                          | Type(s)                |
+	+======+=================================+========================+
+	| Key  | Traffic Portal tables and forms | unchanged (``string``) |
+	+------+---------------------------------+------------------------+
+
+.. _ds-parameters:
+
+Delivery Service Parameters
+---------------------------
+Features which are new, experimental, or not significant enough to be first-class Delivery Service fields are often added as :term:`Parameters`. To use these, add a :term:`Profile` to the Delivery Service, with the given :term:`Parameter` assigned.
+
+.. _ds-parameters-parent.config:
+
+parent.config
+"""""""""""""
+The following :term:`Parameters` must have the :ref:`Config File <parameter-config-file>` ``parent.config`` to take effect - even if, strictly speaking, they aren't used to modify the contents of the :abbr:`ATS (Apache Traffic Server)` ``parent.config`` configuration file.
+
+.. seealso:: See the `Apache Traffic Server documentation for parent.config <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_ and `their documentation for strategies.yaml <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/strategies.yaml.en.html>`_ for more information on its implementation of parent selection (and in particular Multi-Site Origins).
+
+
+- ``try_all_primaries_before_secondary`` - on a Delivery Service :term:`Profile`, if this exists, try all "primary parents" before "failing over" to "secondary parents", which may be ideal if objects are unlikely to be in cache. The default behavior is to immediately fail to a secondary, which is ideal if objects are likely to be in cache, as the first consistent-hashed "secondary parent" will be the "primary parent" in its own :term:`Cache Group` and therefore receive requests for that object from clients near its own :term:`Cache Group`.
+
+	.. caution:: The :ref:`parameter-value` of this :term:`Parameter` is ignored. It is considered implicitly "truthy" if the :term:`Parameter` is present at all on the Profile_. This means that the :ref:`Values <parameter-value>` ``false``, ``0``, and ``"no"`` will all result in the behavior described being adopted, contrary to what might be intuitively expected.
+
+- ``enable_h2`` - On a Delivery Service Profile, if the :ref:`parameter-value` of this :term:`Parameter` begins with ``t`` or ``y`` (case-insensitive), HTTP/2 is enabled for client requests. :abbr:`ATS (Apache Traffic Server)` must also be listening for HTTP/2 - configured in ``records.config`` - or this will have no effect.
+
+	.. impl-detail:: This :term:`Parameter` does not affect the contents of ``parent.config``, but instead either ``ssl_server_name.yaml`` in :abbr:`ATS (Apache Traffic Server)` 8 or ``sni.yaml`` in :abbr:`ATS (Apache Traffic Server)` 9. It has the ``parent.config`` :ref:`parameter-config-file` value for consistency.
+
+	.. warning:: Interpretation of the :ref:`parameter-value` of this :term:`Parameter` is extremely permissive. For example, the :ref:`Values <parameter-value>` ``t``, ``Y``, ``True``, ``yes``, ``talse``, ``yno``, ``Yeah, don't do this``, ``You should never under any circumstances allow HTTP/2``, and ``totally horrible idea to enable this`` all equally mean "true". No part of :abbr:`ATC (Apache Traffic Control)` checks or warns about typos or strange :ref:`Values <parameter-value>` for this :term:`Parameter`, so take care to prevent typos, misspellings, and the like to avoid confusing situations.
+
+- ``tls_versions`` - on a Delivery Service :term:`Profile`, if this exists, enable the given comma-delimited\ [#tlsDelimiters]_ TLS versions for client requests e.g. ``1.1,1.2,1.3``. :abbr:`ATS (Apache Traffic Server)` must also be accepting those TLS versions - configured in ``records.config`` - or this will have no effect.
+
+	.. impl-detail:: This :term:`Parameter` does not affect the contents of ``parent.config``, but instead either ``ssl_server_name.yaml`` in :abbr:`ATS (Apache Traffic Server)` 8 or ``sni.yaml`` in :abbr:`ATS (Apache Traffic Server)` 9. It has the ``parent.config`` :ref:`parameter-config-file` value for consistency.
+
+	.. caution:: The actual permitted TLS versions are the union of those laid out in this :term:`Parameter` and those configured as the `TLS Versions`_ property of the Delivery Service.
+
+	.. deprecated:: ATCv6.2
+		In :ref:`to-api` version 4 (unstable at the time of this writing), TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.
+
+Parameters that Affect Multi-Site Origin
+''''''''''''''''''''''''''''''''''''''''
+Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`ATS (Apache Traffic Server)` `parent.config file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_ (usually by almost the same name), and documentation for these fields is provided in the form of links to their entries in the :abbr:`ATS (Apache Traffic Server)` documentation.
+
+.. _round_robin: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-round-robin
+.. _max_simple_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-simple-retries
+.. _max_unavailable_server_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-unavailable-server-retries
+.. _parent_retry: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent-retry
+.. _unavailable_server_retry_responses: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-unavailable-server-retry-responses
+.. _parent.config: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html
+.. _parent: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent
+.. _secondary_parent: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-secondary-parent
 
 .. _ds-mso-parameters:
 
@@ -982,48 +1038,16 @@ A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site O
 	| mso.unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |
 	|                                             |                                                                            | currently "unavailable".                                                            |
 	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| merge_parent_groups                         | `parent`_ and `secondary_parent`_                                          | Moves each of the space-separated :term:`Cache Groups` named in the                 |
+	|                                             |                                                                            | :ref:`parameter-value` from the secondary parent list into the primary parent list. |
+	|                                             |                                                                            | This can be used to combine all parents into a single consistent hash ring.         |
+	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
 
-.. warning:: The ``mso.simple_retry_response_codes`` :term:`Parameter` has no apparent, possible use according to the :abbr:`ATS (Apache Traffic Server)` `parent.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_. Whether or not it has any effect - let alone the *intended* effect - is not known, and its use is therefore strongly discouraged.
-
-.. seealso:: A quick guide on setting up Multi-Site Origins is given in :ref:`multi-site-origin-qht`.
-
-.. seealso:: See the `Apache Traffic Server documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_ for more information on its implementation of Multi-Site Origins.
-
-.. _ds-xmlid:
-
-xml_id
-------
-A text-based unique identifier for a Delivery Service. Many :ref:`to-api` endpoints and internal :abbr:`ATC (Apache Traffic Control)` functions use this to uniquely identify a Delivery Service as opposed to the historically favored "ID". This string will become a part of the CDN service domain, which all together looks like: :file:`{Delivery Service Routing Name}.{Delivery Service xml_id}.{CDN Subdomain}.{CDN Domain}.{Top-Level Domain}`. Must be all lowercase, no spaces or special characters, but may contain dashes/hyphens\ [#xmlValid]_.
-
-.. table:: Aliases
-
-	+------+---------------------------------+------------------------+
-	| Name | Use(s)                          | Type(s)                |
-	+======+=================================+========================+
-	| Key  | Traffic Portal tables and forms | unchanged (``string``) |
-	+------+---------------------------------+------------------------+
-
-.. [#xmlValid] Some things to consider when choosing an xml_id and routing name: the name should be descriptive and unique, but as brief as possible to avoid creating a monstrous :abbr:`FQDN (Fully Qualified Domain Name)`. Also, because these are combined to form an :abbr:`FQDN (Fully Qualified Domain Name)`, they should not contain any characters that are illegal for a DNS subdomain, e.g. ``.`` (period/dot). Finally, the restrictions on what characters are allowable (especially in xml_id) are, in general, **NOT** enforced by the :ref:`to-api`, so take care that the name is appropriate. See :rfc:`1035` for exact guidelines.
-.. [#cardinality] In source code and :ref:`to-api` responses, the "Long Description" fields of a Delivery Service are "0-indexed" - hence the names differing slightly from the ones displayed in user-friendly UIs.
-.. [#dupOrigin] These Delivery Services Types are vulnerable to what this writer likes to call the "Duplicate Origin Problem". This problem is tracked by :issue:`3537`.
-.. [#httpOnlyRegex] These regular expression types can only appear in the Match List of HTTP-:ref:`Routed <ds-types>` Delivery Services.
-
-
-.. _ds-parameters:
-
-Delivery Service Parameters
----------------------------
-
-Features which are new, experimental, or not significant enough to be first-class Delivery Service fields are often added as Parameters. To use these, add a Profile to the Delivery Service, with the given Parameter assigned.
-
-parent.config
-'''''''''''''
-The following Parameters must have the Config File ``parent.config`` to take effect.
-
-- ``try_all_primaries_before_secondary`` - on a Delivery Service Profile, if this exists, try all primary parents before failing over to secondary parents, which may be ideal if objects are unlikely to be in cache. The default behavior is to immediately fail to a secondary, which is ideal if objects are likely to be in cache, as the first consistent-hashed secondary parent will be the primary parent in its own cachegroup and therefore receive requests for that object from clients near its own cachegroup.
-- ``enable_h2`` - on a Delivery Service Profile, if this is ``true``, enable HTTP/2 for client requests. Note ATS must also be listening for HTTP/2 in records.config, or this will have no effect. Note this setting is not in the parent.config config file, but either ssl_server_name.yaml in ATS 8 or sni.yaml in ATS 9. The Parameter has the "parent.config" config file for consistency.
-- ``tls_versions`` - on a Delivery Service Profile, if this exists, enable the given comma-delimited TLS versions for client requests. For example, ``1.1,1.2,1.3``. Note ATS must also be accepting those TLS versions in records.config, or this will have no effect. Note this setting is not in the parent.config config file, but either ssl_server_name.yaml in ATS 8 or sni.yaml in ATS 9. The Parameter has the "parent.config" config file for consistency.
-
-Additionally, :term:`Delivery Service` :ref:`Profiles <ds-profile>` can have special Parameters with the :ref:`parameter-name` "mso.parent_retry" to :ref:`multi-site-origin-qht`.
+.. warning:: The ``mso.simple_retry_response_codes`` :term:`Parameter` has no apparent, possible use according to the :abbr:`ATS (Apache Traffic Server)` `parent.config documentation <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_. Whether or not it has any effect - let alone the *intended* effect - is not known, and its use is therefore strongly discouraged.
 
 .. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
+
+.. [#xmlValid] Some things to consider when choosing an xml_id and routing name: the name should be descriptive and unique, but as brief as possible to avoid creating a monstrous :abbr:`FQDN (Fully Qualified Domain Name)`. Also, because these are combined to form an :abbr:`FQDN (Fully Qualified Domain Name)`, they should not contain any characters that are illegal for a DNS subdomain, e.g. ``.`` (period/dot). Finally, the restrictions on what characters are allowable (especially in xml_id) are, in general, **NOT** enforced by the :ref:`to-api`, so take care that the name is appropriate. See :rfc:`1035` for exact guidelines.
+.. [#dupOrigin] These Delivery Services Types are vulnerable to what this writer likes to call the "Duplicate Origin Problem". This problem is tracked by :issue:`3537`.
+.. [#httpOnlyRegex] These regular expression types can only appear in the Match List of HTTP-:ref:`Routed <ds-types>` Delivery Services.
+.. [#tlsDelimiters] The list may also be separated by spaces or semicolons, or spread across lines.

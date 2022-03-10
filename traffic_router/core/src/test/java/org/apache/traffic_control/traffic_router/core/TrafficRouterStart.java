@@ -15,12 +15,15 @@
 
 package org.apache.traffic_control.traffic_router.core;
 
+import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+
+import java.util.Collection;
 
 public class TrafficRouterStart {
 
@@ -37,11 +40,18 @@ public class TrafficRouterStart {
 		System.setProperty("dns.tcp.port", "1053");
 		System.setProperty("dns.udp.port", "1053");
 
-		LoggerContext.getContext().getLogger("org.springframework").setLevel(Level.WARN);
+		LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+		Configuration config = ctx.getConfiguration();
+		config.getLoggerConfig("org.springframework").setLevel(Level.WARN);
 
+		Collection<Appender> rootAppenders = ctx.getRootLogger().getAppenders().values();
+		for (Appender a : rootAppenders) {
+			ctx.getRootLogger().removeAppender(a);
+		}
 		ConsoleAppender consoleAppender = ConsoleAppender.newBuilder().setName("TrafficRouterStart").setLayout(PatternLayout.newBuilder().withPattern("%d{ISO8601} [%-5p] %c{4}: %m%n").build()).build();
-		LoggerContext.getContext().getRootLogger().addAppender(consoleAppender);
-		LoggerContext.getContext().getRootLogger().setLevel(Level.INFO);
+		ctx.getRootLogger().addAppender(consoleAppender);
+		config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME).setLevel(Level.INFO);
+		ctx.updateLoggers();
 
 		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Embedded Tomcat loading Traffic Router");
 		CatalinaTrafficRouter catalinaTrafficRouter = new CatalinaTrafficRouter(prefix + "/src/main/conf/server.xml", prefix + "/src/main/webapp" );

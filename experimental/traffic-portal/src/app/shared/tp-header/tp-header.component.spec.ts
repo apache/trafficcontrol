@@ -27,7 +27,7 @@ describe("TpHeaderComponent", () => {
 	let logOutSpy: jasmine.Spy;
 
 	beforeEach(waitForAsync(() => {
-		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"]);
 		logOutSpy = mockCurrentUserService.logout;
 		TestBed.configureTestingModule({
 			declarations: [ TpHeaderComponent ],

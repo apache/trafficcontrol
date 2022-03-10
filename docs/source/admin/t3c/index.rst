@@ -18,7 +18,7 @@
 .. _t3c:
 
 ***
-T3C
+t3c
 ***
 :dfn:`t3c` is the tool used to deploy configuration to :term:`cache servers` used by :abbr:`ATC (Apache Traffic Control)`. It stands for "Traffic Control Cache Configuration".
 

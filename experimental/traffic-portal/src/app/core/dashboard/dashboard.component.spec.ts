@@ -36,7 +36,7 @@ describe("DashboardComponent", () => {
 	let router: Router;
 
 	beforeEach(async () => {
-		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"],
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"],
 			{capabilities: new Set<string>()});
 
 		await TestBed.configureTestingModule({

@@ -54,6 +54,7 @@ traffic_router/core/src/test/resources/api/2.0/cdns/name/thecdn/sslkeys(-missing
 traffic_router/core/src/test/resources/api/2.0/steering*, Apache-2.0
 traffic_router/core/src/test/resources/api/2.0/federations/all, Apache-2.0
 BUILD_NUMBER$, Apache-2.0
+\.jks, Apache-2.0 # Java Key Store
 
 # Images, created for this project or used under an Apache license.
 ^misc/logos/ATC-PNG\.png, Apache-2.0
@@ -159,3 +160,7 @@ GeoLite2-City.mmdb.gz, !MIT
 /Roboto\.ttf$, Apache-2.0
 /Roboto\.\d+\.ttf$, Apache-2.0
 /MaterialIcons.ttf$, Apache-2.0
+
+# Files that have content generated - not written - by code already covered
+# under its own licenses terms.
+^\.env$, Apache-2.0

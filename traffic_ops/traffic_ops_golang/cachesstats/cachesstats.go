@@ -45,10 +45,8 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	api.RespWriter(w, r, inf.Tx.Tx)(getCachesStats(inf.Tx.Tx))
 }
 
-const MonitorOnlineStatus = "ONLINE"
-
 func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
-	monitors, err := getCDNMonitorFQDNs(tx)
+	monitors, err := monitorhlp.GetURLs(tx)
 	if err != nil {
 		return nil, errors.New("getting monitors: " + err.Error())
 	}
@@ -200,9 +198,6 @@ type CacheData struct {
 	Connections uint64            `json:"connections"`
 }
 
-const CacheProfilePrefixEdge = "EDGE"
-const CacheProfilePrefixMID = "MID"
-
 // getCacheData gets the cache data from the servers table. Note this only gets from the database, and thus does not set the Healthy member.
 func getCacheData(tx *sql.Tx) ([]CacheData, error) {
 	qry := `
@@ -218,7 +213,7 @@ FROM
   JOIN status st ON s.status = st.id
   JOIN profile p ON s.profile = p.id
 WHERE
-  p.name LIKE '` + CacheProfilePrefixEdge + `%' OR p.name LIKE '` + CacheProfilePrefixMID + `%'
+  p.name LIKE '` + tc.CacheTypeEdge.String() + `%' OR p.name LIKE '` + tc.CacheTypeMid.String() + `%'
 `
 	rows, err := tx.Query(qry)
 	if err != nil {
@@ -234,44 +229,4 @@ WHERE
 		data = append(data, d)
 	}
 	return data, nil
-}
-
-// getCDNMonitors returns an FQDN, including port, of an online monitor for each CDN. If a CDN has no online monitors, that CDN will not have an entry in the map. If a CDN has multiple online monitors, an arbitrary one will be returned.
-func getCDNMonitorFQDNs(tx *sql.Tx) (map[tc.CDNName][]string, error) {
-	qry := `
-SELECT
-  s.host_name,
-  s.domain_name,
-  s.tcp_port,
-  c.name as cdn
-FROM
-  server s
-  JOIN type t ON s.type = t.id
-  JOIN status st ON st.id = s.status
-  JOIN cdn c ON c.id = s.cdn_id
-WHERE
-  t.name = '` + tc.MonitorTypeName + `'
-  AND st.name = '` + MonitorOnlineStatus + `'
-`
-	rows, err := tx.Query(qry)
-	if err != nil {
-		return nil, errors.New("querying monitors: " + err.Error())
-	}
-	defer rows.Close()
-	monitors := map[tc.CDNName][]string{}
-	for rows.Next() {
-		host := ""
-		domain := ""
-		port := sql.NullInt64{}
-		cdn := tc.CDNName("")
-		if err := rows.Scan(&host, &domain, &port, &cdn); err != nil {
-			return nil, errors.New("scanning monitors: " + err.Error())
-		}
-		fqdn := host + "." + domain
-		if port.Valid {
-			fqdn += ":" + strconv.FormatInt(port.Int64, 10)
-		}
-		monitors[cdn] = append(monitors[cdn], fqdn)
-	}
-	return monitors, nil
 }

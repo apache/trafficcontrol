@@ -21,6 +21,8 @@ package config
 
 import (
 	"bufio"
+	"crypto/md5"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -39,16 +41,19 @@ import (
 	"github.com/pborman/getopt/v2"
 )
 
+var userAgent = "tc-health-client/1.0"
 var tmPollingInterval time.Duration
 var toRequestTimeout time.Duration
+var toSession *toclient.Session = nil
 
 const (
+	DefaultPollStateJSONLog         = "/var/log/trafficcontrol/poll-state.json"
 	DefaultConfigFile               = "/etc/trafficcontrol/tc-health-client.json"
 	DefaultLogDirectory             = "/var/log/trafficcontrol"
 	DefaultLogFile                  = "tc-health-client.log"
+	DefaultTOLoginDispersionFactor  = 90
 	DefaultTrafficServerConfigDir   = "/opt/trafficserver/etc/trafficserver"
 	DefaultTrafficServerBinDir      = "/opt/trafficserver/bin"
-	DefaultTmUpdateCycles           = 10
 	DefaultUnavailablePollThreshold = 2
 )
 
@@ -63,10 +68,12 @@ type Cfg struct {
 	TOUser                   string          `json:"to-user"`
 	TmProxyURL               string          `json:"tm-proxy-url"`
 	TmPollIntervalSeconds    string          `json:"tm-poll-interval-seconds"`
-	TmUpdateCycles           int             `json:"tm-update-cycles"`
+	TOLoginDispersionFactor  int             `json:"to-login-dispersion-factor"`
 	UnavailablePollThreshold int             `json:"unavailable-poll-threshold"`
 	TrafficServerConfigDir   string          `json:"trafficserver-config-dir"`
 	TrafficServerBinDir      string          `json:"trafficserver-bin-dir"`
+	PollStateJSONLog         string          `json:"poll-state-json-log"`
+	EnablePollStateLog       bool            `json:"enable-poll-state-log"`
 	TrafficMonitors          map[string]bool `json:"trafficmonitors,omitempty"`
 	HealthClientConfigFile   util.ConfigFile
 	CredentialFile           util.ConfigFile
@@ -242,6 +249,9 @@ func GetConfig() (Cfg, error, bool) {
 		return cfg, err, false
 	}
 
+	dispersion := GetTOLoginDispersion(cfg.TOLoginDispersionFactor)
+	log.Infof("waiting %v seconds before logging into TrafficOps", dispersion.Seconds())
+	time.Sleep(dispersion)
 	err = GetTrafficMonitors(&cfg)
 	if err != nil {
 		return cfg, err, false
@@ -260,12 +270,18 @@ func GetTrafficMonitors(cfg *Cfg) error {
 	qry.Add("status", "ONLINE")
 
 	// login to traffic ops.
-	session, _, err := toclient.LoginWithAgent(cfg.TOUrl, cfg.TOUser, cfg.TOPass, true, "tc-health-client", false, GetRequestTimeout())
-	if err != nil {
-		return fmt.Errorf("could not establish a TrafficOps session: %w", err)
+	if toSession == nil {
+		session, _, err := toclient.LoginWithAgent(cfg.TOUrl, cfg.TOUser, cfg.TOPass, true, userAgent, false, GetRequestTimeout())
+		if err != nil {
+			return fmt.Errorf("could not establish a TrafficOps session: %w", err)
+		} else {
+			toSession = session
+		}
 	}
-	srvs, _, err := session.GetServers(&qry)
+	srvs, _, err := toSession.GetServers(&qry)
 	if err != nil {
+		// next time we'll login again and get a new session.
+		toSession = nil
 		return errors.New("error fetching Trafficmonitor server list: " + err.Error())
 	}
 
@@ -282,6 +298,22 @@ func GetTrafficMonitors(cfg *Cfg) error {
 
 func GetTMPollingInterval() time.Duration {
 	return tmPollingInterval
+}
+
+func GetTOLoginDispersion(dispersionFactor int) time.Duration {
+	dispersionSeconds := uint64(tmPollingInterval.Seconds()) * uint64(dispersionFactor)
+	hostName, err := os.Hostname()
+	if err != nil {
+		log.Errorf("the OS hostname is not set, cannot continue: %s", err.Error())
+		os.Exit(1)
+	}
+	md5hash := md5.Sum([]byte(hostName))
+	sl := md5hash[0:8]
+	disp := (binary.BigEndian.Uint64(sl) % dispersionSeconds)
+	if disp < uint64(tmPollingInterval.Seconds()*2) {
+		disp = ((disp * 2) + uint64(tmPollingInterval.Seconds()))
+	}
+	return time.Duration(disp) * time.Second
 }
 
 func GetRequestTimeout() time.Duration {
@@ -310,6 +342,9 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 		if err != nil {
 			return updated, errors.New("parsing TMPollingIntervalSeconds: " + err.Error())
 		}
+		if cfg.TOLoginDispersionFactor == 0 {
+			cfg.TOLoginDispersionFactor = DefaultTOLoginDispersionFactor
+		}
 		toRequestTimeout, err = time.ParseDuration(cfg.TORequestTimeOutSeconds)
 		if err != nil {
 			return updated, errors.New("parsing TORequestTimeOutSeconds: " + err.Error())
@@ -323,11 +358,11 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 		if cfg.TrafficServerBinDir == "" {
 			cfg.TrafficServerBinDir = DefaultTrafficServerBinDir
 		}
-		if cfg.TmUpdateCycles == 0 {
-			cfg.TmUpdateCycles = DefaultTmUpdateCycles
-		}
 		if cfg.UnavailablePollThreshold == 0 {
 			cfg.UnavailablePollThreshold = DefaultUnavailablePollThreshold
+		}
+		if cfg.PollStateJSONLog == "" {
+			cfg.PollStateJSONLog = DefaultPollStateJSONLog
 		}
 
 		cfg.HealthClientConfigFile.LastModifyTime = modTime
@@ -366,12 +401,17 @@ func UpdateConfig(cfg *Cfg, newCfg *Cfg) {
 	cfg.TOUrl = newCfg.TOUrl
 	cfg.TOUser = newCfg.TOUser
 	cfg.TmPollIntervalSeconds = newCfg.TmPollIntervalSeconds
-	cfg.TmUpdateCycles = newCfg.TmUpdateCycles
+	cfg.TOLoginDispersionFactor = newCfg.TOLoginDispersionFactor
+	if cfg.TOLoginDispersionFactor == 0 {
+		cfg.TOLoginDispersionFactor = DefaultTOLoginDispersionFactor
+	}
 	cfg.UnavailablePollThreshold = newCfg.UnavailablePollThreshold
 	cfg.TrafficServerConfigDir = newCfg.TrafficServerConfigDir
 	cfg.TrafficServerBinDir = newCfg.TrafficServerBinDir
 	cfg.TrafficMonitors = newCfg.TrafficMonitors
 	cfg.HealthClientConfigFile = newCfg.HealthClientConfigFile
+	cfg.PollStateJSONLog = newCfg.PollStateJSONLog
+	cfg.EnablePollStateLog = newCfg.EnablePollStateLog
 }
 
 func Usage() {

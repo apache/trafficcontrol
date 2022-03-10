@@ -1,0 +1,6 @@
+{
+	"/api": {
+		"target": "https://trafficops:443/",
+		"secure": false
+	}
+}

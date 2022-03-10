@@ -17,26 +17,22 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.private.cdns.profiles', [])
-	.config(function($stateProvider, $urlRouterProvider) {
-		$stateProvider
-			.state('trafficPortal.private.cdns.profiles', {
-				url: '/{cdnId}/profiles',
-				views: {
-					cdnsContent: {
-						templateUrl: 'common/modules/table/cdnProfiles/table.cdnProfiles.tpl.html',
-						controller: 'TableCDNProfilesController',
-						resolve: {
-							cdn: function($stateParams, cdnService) {
-								return cdnService.getCDN($stateParams.cdnId);
-							},
-							profiles: function($stateParams, profileService) {
-								return profileService.getProfiles({ cdn: $stateParams.cdnId, orderby: 'name' });
-							}
-						}
-					}
-				}
-			})
-		;
-		$urlRouterProvider.otherwise('/');
-	});
+module.exports = {
+    timeout: '120s',
+    useSSL: true,
+    port: 80,
+    sslPort: 443,
+    ssl: {
+        key:    '/server.key',
+        cert:   '/server.crt',
+        ca:     [ '/server.crt' ]
+    },
+    api: {
+        base_url: 'https://trafficops:443/api/'
+    },
+    files: {
+        static: '/root/go/src/github.com/apache/trafficcontrol/traffic_portal/app/dist/public'
+    },
+    log: null,
+    reject_unauthorized: 0
+};

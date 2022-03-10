@@ -1,3 +1,6 @@
+% tc-health-client(1) tc-health-client 6.2.0 | ATC tc-health-client Manual
+%
+% 2022-03-09
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -104,10 +107,12 @@ Sample configuarion file:
     "to-request-timeout-seconds": "5s",
     "tm-poll-interval-seconds": "60s",
     "tm-proxy-url", "http://sample-http-proxy.cdn.net:80",
-    "tm-update-cycles": 5,
+    "to-login-dispersion-factor": 90,
     "unavailable-poll-threshold": 2,
     "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",
     "trafficserver-bin-dir": "/opt/trafficserver/bin",
+    "poll-state-json-log": "/var/log/trafficcontrol/poll-state.json",
+    "enable-poll-state-log": false
   }
 ```
 
@@ -157,11 +162,13 @@ Sample configuarion file:
   polling a Traffic Monitor and you wish to funnel queries through a caching
   proxy server to limit direct direct connections to Traffic Monitor.
 
-### tm-update-cycles
+### to-login-dispersion-factor
 
-  Each time a polling cycle completes a count is incremented. When the count
-  reaches **tm-update-cycles**, TrafficOps is polled for a new list of available
-  TrafficMonitors for the CDN and the poll count is reset to 0.
+  This is used to calculate TrafficOps login dispersion.  It is related to the
+  **tm-poll-interval-seconds**.  The login dispersion is computed by multiplying
+  **tm-poll-interval-seconds** by the **to-login-dispersion-factor**.  For example
+  if to-login-dispersion-factor is 90 and the **tm-poll-interval-seconds** is 10s
+  the the dispersion modulo window is 900s.
 
 ### unavailable-poll-threshold
 
@@ -178,6 +185,18 @@ Sample configuarion file:
 
   The location on the host where **Traffic Server** **traffic_ctl** tool may
   be found.
+
+### poll-state-json-log ###
+
+  The full path to the polling state file which contains information 
+  about the current status of parents and the health client configuration.
+  Polling state data is written to this file after each polling cycle when
+  enabled, see **enable-poll-state-log**
+
+### enable-poll-state-log ###
+
+  Enable writing the Polling state to the **poll-state-json-log** after
+  eache polling cycle.  Default **false**, disabled
 
 # Files
 

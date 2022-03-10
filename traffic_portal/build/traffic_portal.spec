@@ -70,7 +70,7 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 
 %post
 		echo "Successfully installed the traffic_portal assets to " %{traffic_portal_home}
-		%__chmod +x %{traffic_portal_home}/node_modules/forever/bin/forever
+		%__chmod +x %{traffic_portal_home}/node_modules/pm2/bin/pm2
 		%__chmod +x /etc/init.d/traffic_portal
 		echo "Successfully installed the 'traffic_portal' service"
 		/sbin/chkconfig traffic_portal on
@@ -81,8 +81,7 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 %license LICENSE
 %defattr(644,root,root,755)
 %attr(755,root,root) /etc/init.d/traffic_portal
-%attr(755,root,root) %{traffic_portal_home}/node_modules/forever/bin/forever
-%attr(755,root,root) %{traffic_portal_home}/node_modules/forever/bin/monitor
+%attr(755,root,root) %{traffic_portal_home}/node_modules/pm2/bin/pm2
 %config(noreplace)/etc/traffic_portal/conf/config.js
 %config(noreplace)%{traffic_portal_home}/public/traffic_portal_properties.json
 %dir /var/log/traffic_portal

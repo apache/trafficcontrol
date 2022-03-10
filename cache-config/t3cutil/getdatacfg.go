@@ -605,8 +605,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			caps, reqInf, err := toClient.GetServerCapabilitiesByID(nil, reqHdr) // TODO change to not take a param; it doesn't use it to request TO anyway.
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetServerCapabilitiesByID"))
 			if err != nil {
-				log.Errorln("Server Capabilities error, skipping!")
-				// return errors.New("getting server caps from Traffic Ops: " + err.Error())
+				return errors.New("getting server caps from Traffic Ops: " + err.Error())
 			} else {
 				if reqInf.StatusCode == http.StatusNotModified {
 					log.Infof("Getting config: %v not modified, using old config", "ServerCapabilities")
@@ -631,8 +630,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			caps, reqInf, err := toClient.GetDeliveryServiceRequiredCapabilitiesByID(nil, reqHdr)
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetDeliveryServiceRequiredCapabilitiesByID"))
 			if err != nil {
-				log.Errorln("DS Required Capabilities error, skipping!")
-				// return errors.New("getting DS required capabilities: " + err.Error())
+				return errors.New("getting DS required capabilities: " + err.Error())
 			} else {
 				if reqInf.StatusCode == http.StatusNotModified {
 					log.Infof("Getting config: %v not modified, using old config", "DSRequiredCapabilities")

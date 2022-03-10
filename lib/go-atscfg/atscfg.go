@@ -37,6 +37,7 @@ const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer 
 // todo also unused
 const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
 const ContentTypeTextASCII = `text/plain; charset=us-ascii`
+
 const LineCommentHash = "#"
 const ConfigSuffix = ".config"
 const TsDefaultRequestHeaderMaxSize = 131072
@@ -727,4 +728,16 @@ func JobToInvalidationJob(jb tc.Job) (InvalidationJob, error) {
 		InvalidationType: invalType,
 		StartTime:        startTime.Time,
 	}, nil
+}
+
+// FilterServers returns the servers for which filter returns true
+func FilterServers(servers []Server, filter func(sv *Server) bool) []Server {
+	// TODO add warning/error feature?
+	filteredServers := []Server{}
+	for _, sv := range servers {
+		if filter(&sv) {
+			filteredServers = append(filteredServers, sv)
+		}
+	}
+	return filteredServers
 }

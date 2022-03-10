@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/monitorhlp"
 )
@@ -73,19 +74,19 @@ func getHealth(tx *sql.Tx) (tc.HealthData, error) {
 }
 
 func getNameHealth(tx *sql.Tx, name tc.CDNName) (tc.HealthData, error) {
-	monitors, err := monitorhlp.GetURLs(tx)
+	monitorURLs, err := monitorhlp.GetURLs(tx)
 	if err != nil {
 		return tc.HealthData{}, errors.New("getting monitors: " + err.Error())
 	}
-	monitor, ok := monitors[name]
-	monitors = nil
+	monitors, ok := monitorURLs[name]
+	monitorURLs = nil
 	if ok {
-		monitors = map[tc.CDNName]string{name: monitor}
+		monitorURLs = map[tc.CDNName][]string{name: monitors}
 	}
-	return getMonitorsHealth(tx, monitors)
+	return getMonitorsHealth(tx, monitorURLs)
 }
 
-func getMonitorsHealth(tx *sql.Tx, monitors map[tc.CDNName]string) (tc.HealthData, error) {
+func getMonitorsHealth(tx *sql.Tx, monitors map[tc.CDNName][]string) (tc.HealthData, error) {
 	client, err := monitorhlp.GetClient(tx)
 	if err != nil {
 		return tc.HealthData{}, errors.New("getting monitor client: " + err.Error())
@@ -94,18 +95,27 @@ func getMonitorsHealth(tx *sql.Tx, monitors map[tc.CDNName]string) (tc.HealthDat
 	totalOnline := uint64(0)
 	totalOffline := uint64(0)
 	cgData := map[tc.CacheGroupName]tc.HealthDataCacheGroup{}
-	for cdn, monitorFQDN := range monitors {
-		crStates, err := monitorhlp.GetCRStates(monitorFQDN, client)
-		// TODO on err, try another online monitor
-		if err != nil {
-			return tc.HealthData{}, errors.New("getting CRStates for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
+	for cdn, monitorFQDNs := range monitors {
+		success := false
+		errs := []error{}
+		for _, monitorFQDN := range monitorFQDNs {
+			crStates, err := monitorhlp.GetCRStates(monitorFQDN, client)
+			if err != nil {
+				errs = append(errs, errors.New("getting CRStates for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+				continue
+			}
+			crConfig, err := monitorhlp.GetCRConfig(monitorFQDN, client)
+			if err != nil {
+				errs = append(errs, errors.New("getting CRConfig for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+				continue
+			}
+			cgData, totalOnline, totalOffline = addHealth(cgData, totalOnline, totalOffline, crStates, crConfig)
+			success = true
+			break
 		}
-		crConfig, err := monitorhlp.GetCRConfig(monitorFQDN, client)
-		// TODO on err, try another online monitor
-		if err != nil {
-			return tc.HealthData{}, errors.New("getting CRConfig for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
+		if !success {
+			return tc.HealthData{}, errors.New("getting health data from all Traffic Monitors failed for CDN '" + string(cdn) + "': " + util.JoinErrs(errs).Error())
 		}
-		cgData, totalOnline, totalOffline = addHealth(cgData, totalOnline, totalOffline, crStates, crConfig)
 	}
 
 	healthData := tc.HealthData{TotalOffline: totalOffline, TotalOnline: totalOnline}
