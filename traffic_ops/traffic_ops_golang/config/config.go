@@ -324,6 +324,7 @@ func LoadConfig(cdnConfPath string, dbConfPath string, appVersion string) (Confi
 		return Config{}, []error{fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)}, BlockStartup
 	}
 	if portNum, err := strconv.Atoi(cfg.DB.Port); err != nil || portNum < MinPort || MaxPort < portNum {
+		_, _ = fmt.Fprintf(os.Stderr, "error parsing database port: '%s' is invalid. Using default %s\n", cfg.DB.Port, DefaultDBPort)
 		cfg.DB.Port = DefaultDBPort
 	}
 	cfg, err = ParseConfig(cfg)
