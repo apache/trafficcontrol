@@ -135,7 +135,7 @@ Response Structure
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 :physLocation:   The name of the physical location where the server resides
 :physLocationId: An integral, unique identifier for the physical location where the server resides
-:profileNames:   List of :ref:`profile-names` of the :term:`Profiles` used by this server
+:profileNames:   List of :ref:`profile-name` of the :term:`Profiles` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :rack:           A string indicating "server rack" location
 :status:         The :term:`Status` of the server
@@ -282,7 +282,7 @@ Request Structure
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
 :physLocationId: An integral, unique identifier for the physical location where the server resides
-:profileNames:   List of :ref:`profile-names` of the :term:`Profiles` that shall be used by this server
+:profileNames:   List of :ref:`profile-name` of the :term:`Profiles` that shall be used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :rack:           An optional string indicating "server rack" location
 :statusId:       The integral, unique identifier of the status of this server
@@ -417,7 +417,7 @@ Response Structure
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 :physLocation:   The name of the :term:`Physical Location` where the server resides
 :physLocationId: An integral, unique identifier for the :term:`Physical Location` where the server resides
-:profileNames:   List of :ref:`profile-names` of the :term:`Profiles` used by this server
+:profileNames:   List of :ref:`profile-name` of the :term:`Profiles` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :rack:           A string indicating "server rack" location
 :status:         The status of the server
