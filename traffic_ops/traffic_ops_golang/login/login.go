@@ -42,9 +42,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat-go/jwx/jwk"
-	"github.com/lestrrat-go/jwx/jwt"
+	ljwt "github.com/lestrrat-go/jwx/jwt"
 )
 
 type emailFormatter struct {
@@ -425,10 +426,10 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		decodedToken, err := jwt.Parse(
+		decodedToken, err := ljwt.Parse(
 			[]byte(encodedToken),
-			jwt.WithVerifyAuto(true),
-			jwt.WithJWKSetFetcher(jwksFetcher),
+			ljwt.WithVerifyAuto(true),
+			ljwt.WithJWKSetFetcher(jwksFetcher),
 		)
 		if err != nil {
 			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, errors.New("Error decoding token with message: "+err.Error()))
