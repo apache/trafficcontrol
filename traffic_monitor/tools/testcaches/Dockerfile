@@ -21,7 +21,7 @@ MAINTAINER dev@trafficcontrol.apache.org
 RUN dnf -y install golang git
 ENV GOPATH=/go
 
-RUN go get -u github.com/apache/trafficcontrol/lib/go-rfc
+RUN go get github.com/apache/trafficcontrol/lib/go-rfc
 ADD .   ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/
 WORKDIR ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches
 RUN go build && cp testcaches /usr/sbin/
