@@ -22,12 +22,7 @@ trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 export GOPATH="${HOME}/go"
 
 # update all golang.org/x dependencies in go.mod/go.sum
-go get -u \
-	golang.org/x/crypto \
-	golang.org/x/net \
-	golang.org/x/sys \
-	golang.org/x/text \
-	golang.org/x/xerrors
+sed -i '/golang\.org\/x\//d' go.mod
 
 #Update go.mod and go.sum
 go mod tidy -v
