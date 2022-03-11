@@ -32,7 +32,8 @@ import (
 	"strconv"
 	"strings"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwt"
 	_ "github.com/lib/pq"
 )
 
@@ -135,27 +136,16 @@ func getTokenData(jwtSigningKey string, r *http.Request) (*TokenData, error) {
 		return nil, err
 	}
 
-	token, err := jwt.Parse(encToken.Value, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(jwtSigningKey), nil
-	})
-
+	token, err := jwt.Parse(
+		[]byte(encToken.Value),
+		jwt.WithVerify(jwa.HS256, jwtSigningKey),
+	)
 	if err != nil {
 		return nil, err
 	}
-	if !token.Valid {
-		return nil, fmt.Errorf("invalid token")
-	}
 
-	clms, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, fmt.Errorf("expected MapClaims in token, got: %T", token.Claims)
-	}
-
-	userInterface, hasUser := clms["user"]
-	roleInterface, hasRole := clms["role"]
+	userInterface, hasUser := token.Get("user")
+	roleInterface, hasRole := token.Get("role")
 	user, userIsStr := userInterface.(string)
 	role, roleIsStr := roleInterface.(string)
 	if !hasUser || !hasRole || !userIsStr || !roleIsStr {
@@ -187,17 +177,16 @@ func HandleLogin(db *sql.DB, jwtSigningKey string, w http.ResponseWriter, r *htt
 		return
 	}
 
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	clms, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
+	token, err := jwt.NewBuilder().
+		Claim(`user`, user).
+		Claim(`role`, role).
+		Build()
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("ERROR creating token for 'token.Claims': expected MapClaims in token, got %T", token.Claims)
+		log.Printf("ERROR creating token: %s", err)
 		return
 	}
-	clms["user"] = user
-	clms["role"] = role
-	tokenString, err := token.SignedString([]byte(jwtSigningKey))
+	signed, err := jwt.Sign(token, jwa.HS256, []byte(jwtSigningKey))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("%s ERROR creating token for '%s': %v\n", r.RemoteAddr, user, err)
@@ -206,7 +195,7 @@ func HandleLogin(db *sql.DB, jwtSigningKey string, w http.ResponseWriter, r *htt
 
 	http.SetCookie(w, &http.Cookie{
 		Name:   "access_token",
-		Value:  tokenString,
+		Value:  string(signed),
 		Domain: TrafficOpsDomain,
 		Path:   "/",
 		//Secure: true, // TODO uncomment when https is implemented

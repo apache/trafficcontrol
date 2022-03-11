@@ -476,7 +476,7 @@ func UpdateMaxmind(cfg config.Cfg) bool {
 	// Check if filename exists in ats etc
 	filePath := filepath.Join(cfg.TsConfigDir, "/", fileName)
 	stdOut, _, code := t3cutil.Do(`date`,
-		"+%a, %d %b %Y %r %Z",
+		"+%a, %d %b %Y %T %Z",
 		"-u",
 		"-r",
 		filePath)
