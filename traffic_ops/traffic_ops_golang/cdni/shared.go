@@ -33,7 +33,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/dgrijalva/jwt-go"
+
+	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/lib/pq"
 )
 
@@ -496,21 +498,17 @@ func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
 		return "", errors.New("bearer token is required")
 	}
 
-	claims := jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(inf.Config.Secrets[0]), nil
-	})
+	token, err := jwt.Parse([]byte(bearerToken),
+		jwt.WithVerify(jwa.HS256, []byte(inf.Config.Secrets[0])),
+	)
 	if err != nil {
-		return "", fmt.Errorf("parsing claims: %w", err)
-	}
-	if !token.Valid {
 		return "", errors.New("invalid token")
 	}
 
 	var expirationFloat float64
 	var ucdn string
 	var dcdn string
-	for key, val := range claims {
+	for key, val := range token.PrivateClaims() {
 		switch key {
 		case "iss":
 			if _, ok := val.(string); !ok {
