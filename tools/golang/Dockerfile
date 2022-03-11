@@ -58,6 +58,6 @@ FROM base AS unit
 VOLUME ["/junit"]
 
 RUN go get github.com/wadey/gocovmerge &&\
-    go get -u github.com/jstemmer/go-junit-report
+    go get github.com/jstemmer/go-junit-report
 
 CMD /go/src/github.com/apache/trafficcontrol/tools/golang/unit-tests.sh
