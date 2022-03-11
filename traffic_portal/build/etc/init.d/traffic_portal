@@ -52,6 +52,7 @@ RESTART_TIME="2000"
 
 PATH=$PM2_BIN_DIR:$NODE_BIN_DIR:$PATH
 export NODE_PATH=$NODE_PATH
+set -o pipefail
 
 start() {
     echo "Starting $NAME"
@@ -62,14 +63,14 @@ start() {
       -l $LOGFILE \
       --restart-delay $RESTART_TIME \
       --time \
-      --name "$NAME" 2>&1 > /dev/null
+      --name "$NAME" > /dev/null 2>&1
     RETVAL=$?
 }
 
 stop() {
     if pm2 list | grep -q "$NAME"; then
         echo "Shutting down $NAME"
-        pm2 stop $APPLICATION_PATH 2>&1 > /dev/null
+        pm2 stop $APPLICATION_PATH > /dev/null 2>&1
         RETVAL=$?
     else
         echo "$NAME is not running."
@@ -102,10 +103,7 @@ case "$1" in
     status)
         status
         ;;
-    restart)
-        restart
-        ;;
-    force-reload)
+    restart | force-reload)
         restart
         ;;
     *)
