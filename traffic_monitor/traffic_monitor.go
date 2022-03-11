@@ -39,7 +39,7 @@ var GitRevision = "No Git Revision Specified. Please build with '-X main.GitRevi
 var BuildTimestamp = "No Build Timestamp Specified. Please build with '-X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
 
 func InitAccessCfg(cfg config.Config) error {
-	accessW, err := config.GetAccessLogWriters(cfg)
+	accessW, err := config.GetAccessLogWriter(cfg)
 	if err != nil {
 		return err
 	}

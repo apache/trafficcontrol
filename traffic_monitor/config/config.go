@@ -137,7 +137,7 @@ func (c Config) DebugLog() log.LogLocation   { return log.LogLocation(c.LogLocat
 func (c Config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
 func (c Config) AccessLog() log.LogLocation  { return log.LogLocation(c.LogLocationAccess) }
 
-func GetAccessLogWriters(cfg Config) (io.WriteCloser, error) {
+func GetAccessLogWriter(cfg Config) (io.WriteCloser, error) {
 	accessLoc := cfg.AccessLog()
 
 	accessW, err := log.GetLogWriter(accessLoc)
@@ -163,6 +163,7 @@ var DefaultConfig = Config{
 	LogLocationInfo:              LogLocationNull,
 	LogLocationDebug:             LogLocationNull,
 	LogLocationEvent:             LogLocationStdout,
+	LogLocationAccess:            LogLocationNull,
 	ServeReadTimeout:             10 * time.Second,
 	ServeWriteTimeout:            10 * time.Second,
 	StaticFileDir:                StaticFileDir,
