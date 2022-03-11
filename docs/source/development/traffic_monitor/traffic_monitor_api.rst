@@ -359,6 +359,7 @@ The current state of this CDN per the :ref:`health-proto`.
 Response Structure
 """"""""""""""""""
 :caches: An object with keys that are the names of monitored :term:`cache servers`
+
 	:server name: The name of the server being monitored
 
 		:isAvailable: Whether or not this cache is available for routing
@@ -368,7 +369,9 @@ Response Structure
 		:lastPoll: The last time the health data for this server was polled by a traffic monitor
 
 :deliveryServices: An object with keys as the names of monitored :term:`Delivery Services`
+
 	:delivery service name: The name of the delivery service being monitored
+
 		:disabledLocations: A list of disabled locations for this delivery service
 		:isAvailable: Whether or not this delivery service is available for routing
 
