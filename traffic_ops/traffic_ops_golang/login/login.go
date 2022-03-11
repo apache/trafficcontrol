@@ -42,8 +42,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
+	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwk"
 	ljwt "github.com/lestrrat-go/jwx/jwt"
 )
@@ -156,9 +156,9 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
 				http.SetCookie(w, httpCookie)
 
-				var jwtToken *jwt.Token
-				var jwtSigned string
-				claims := jwt.MapClaims{}
+				var jwtToken ljwt.Token
+				var jwtSigned []byte
+				jwtBuilder := ljwt.NewBuilder()
 
 				emptyConf := config.CdniConf{}
 				if cfg.Cdni != nil && *cfg.Cdni != emptyConf {
@@ -167,15 +167,19 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 						// log but do not error out since this is optional in the JWT for CDNi integration
 						log.Errorf("getting ucdn for user %s: %v", form.Username, err)
 					}
-					claims["iss"] = ucdn
-					claims["aud"] = cfg.Cdni.DCdnId
+					jwtBuilder.Claim("iss", ucdn)
+					jwtBuilder.Claim("aud", cfg.Cdni.DCdnId)
 				}
 
-				claims["exp"] = httpCookie.Expires.Unix()
-				claims[api.MojoCookie] = httpCookie.Value
-				jwtToken = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				jwtBuilder.Claim("exp", httpCookie.Expires.Unix())
+				jwtBuilder.Claim(api.MojoCookie, httpCookie.Value)
+				jwtToken, err = jwtBuilder.Build()
+				if err != nil {
+					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("building token: %s", err))
+					return
+				}
 
-				jwtSigned, err = jwtToken.SignedString([]byte(cfg.Secrets[0]))
+				jwtSigned, err = ljwt.Sign(jwtToken, jwa.HS256, []byte(cfg.Secrets[0]))
 				if err != nil {
 					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
 					return
@@ -183,7 +187,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 				http.SetCookie(w, &http.Cookie{
 					Name:     api.AccessToken,
-					Value:    jwtSigned,
+					Value:    string(jwtSigned),
 					Path:     "/",
 					MaxAge:   httpCookie.MaxAge,
 					HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
