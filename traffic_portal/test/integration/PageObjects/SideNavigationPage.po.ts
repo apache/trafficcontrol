@@ -30,6 +30,7 @@ export class SideNavigationPage extends BasePage{
     private lnkParameters = element(by.xpath("//a[@href='/#!/parameters']"))
     private lnkTypes = element(by.xpath("//a[@href='/#!/types']"))
     private lnkStatuses = element(by.xpath("//a[@href='/#!/statuses']"))
+    private lnkCdniConfigRequests = element(by.id("cdni-config-requests"));
     //Navigation for Services
     private propServices  = "//div[@id='sidebar-menu']//a[text()=' Services']"
     private mnuServices = element(by.xpath( this.propServices ));
@@ -142,6 +143,10 @@ export class SideNavigationPage extends BasePage{
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkStatuses), 2000);
         await browser.actions().mouseMove(this.lnkStatuses).perform();
         await browser.actions().click(this.lnkStatuses).perform();
+    }
+    /** NavigateToCdniRequestsPage verifies that the link to the CDNi Requests page is clickable. */
+    public async NavigateToCdniRequestsPage(): Promise<void>{
+        return this.lnkCdniConfigRequests.click();
     }
     async NavigateToDeliveryServicesPage() {
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkDeliveryServices), 2000);

@@ -56,8 +56,10 @@ LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id
 LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name 
 ORDER BY host DESC`
 
-	InsertCapabilityUpdateQuery                    = `INSERT INTO cdni_capability_updates (ucdn, data, async_status_id, request_type, host) VALUES ($1, $2, $3, $4, $5)`
-	SelectCapabilityUpdateQuery                    = `SELECT ucdn, data, async_status_id, request_type, host FROM cdni_capability_updates WHERE id = $1`
+	InsertCapabilityUpdateQuery     = `INSERT INTO cdni_capability_updates (ucdn, data, async_status_id, request_type, host) VALUES ($1, $2, $3, $4, $5)`
+	SelectCapabilityUpdateQuery     = `SELECT ucdn, data, async_status_id, request_type, host FROM cdni_capability_updates WHERE id = $1`
+	SelectAllCapabilityUpdatesQuery = `SELECT id, ucdn, data, request_type, host FROM cdni_capability_updates`
+
 	DeleteCapabilityUpdateQuery                    = `DELETE FROM cdni_capability_updates WHERE id = $1`
 	UpdateTotalLimitsByCapabilityAndLimitTypeQuery = `UPDATE cdni_total_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3`
 	UpdateHostLimitsByCapabilityAndLimitTypeQuery  = `UPDATE cdni_host_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3 AND host = $4`
@@ -272,6 +274,48 @@ func PutConfiguration(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add(rfc.Location, api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
+}
+
+func GetRequests(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var rows *sql.Rows
+	var err error
+
+	idParam := inf.Params["id"]
+	if idParam != "" {
+		id, parseErr := strconv.Atoi(idParam)
+		if parseErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("id must be an integer"), nil)
+			return
+		}
+		rows, err = inf.Tx.Tx.Query(SelectAllCapabilityUpdatesQuery+" WHERE id = $1", id)
+	} else {
+		rows, err = inf.Tx.Tx.Query(SelectAllCapabilityUpdatesQuery)
+	}
+
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("querying for capability update requests: %w", err))
+		return
+	}
+	defer log.Close(rows, "closing capabilities update query")
+	requests := []ConfigurationUpdateRequest{}
+	for rows.Next() {
+		var request ConfigurationUpdateRequest
+		if err := rows.Scan(&request.Id, &request.UCDN, &request.Data, &request.RequestType, &request.Host); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning db rows: %w", err))
+			return
+		}
+		requests = append(requests, request)
+	}
+
+	api.WriteResp(w, r, requests)
+
 }
 
 func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
@@ -766,4 +810,13 @@ type CapacityLimit struct {
 	LimitType  string      `json:"limit-type"`
 	LimitValue int64       `json:"limit-value"`
 	Footprints []Footprint `json:"footprints"`
+}
+
+type ConfigurationUpdateRequest struct {
+	Id            int             `json:"id"`
+	UCDN          string          `json:"ucdn"`
+	Data          json.RawMessage `json:"data"`
+	Host          string          `json:"host"`
+	RequestType   string          `json:"request_type"`
+	AsyncStatusId int             `json:"async_status_id"`
 }
