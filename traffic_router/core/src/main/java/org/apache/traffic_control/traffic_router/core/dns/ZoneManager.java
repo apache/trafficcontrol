@@ -940,7 +940,7 @@ public class ZoneManager extends Resolver {
 			final DNSRouteResult result = trafficRouter.route(request, track);
 
 			if (result != null) {
-				final Zone dynamicZone = fillDynamicZone(dynamicZoneCache, staticZone, request, result);
+				final Zone dynamicZone = fillDynamicZone(getDynamicZoneCache(), staticZone, request, result);
 				track.setResultCode(dynamicZone, request.getName(), request.getQueryType());
 				if (result.getDeliveryService() == null) {
 					builder.deliveryServiceXmlIds(null);
@@ -1039,7 +1039,7 @@ public class ZoneManager extends Resolver {
 				}
 
 				try {
-					final ZoneKey zoneKey = signatureManager.generateDynamicZoneKey(staticZone.getOrigin(), records, request.isDnssec());
+					final ZoneKey zoneKey = getSignatureManager().generateDynamicZoneKey(staticZone.getOrigin(), records, request.isDnssec());
 					final Zone zone = dzc.get(zoneKey);
 					return zone;
 				} catch (ExecutionException e) {
@@ -1217,5 +1217,12 @@ public class ZoneManager extends Resolver {
 
 	public CacheStats getDynamicCacheStats() {
 		return dynamicZoneCache.stats();
+	}
+
+	public static SignatureManager getSignatureManager() {
+		return signatureManager;
+	}
+	public static LoadingCache<ZoneKey, Zone> getDynamicZoneCache() {
+		return dynamicZoneCache;
 	}
 }
