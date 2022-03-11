@@ -240,8 +240,7 @@ type ConfigInflux struct {
 }
 
 type CdniConf struct {
-	DCdnId            string `json:"dcdn_id"`
-	JwtDecodingSecret string `json:"jwt_decoding_secret"`
+	DCdnId string `json:"dcdn_id"`
 }
 
 // NewFakeConfig returns a fake Config struct with just enough data to view Routes.

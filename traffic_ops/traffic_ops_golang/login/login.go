@@ -42,9 +42,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat-go/jwx/jwk"
-	"github.com/lestrrat-go/jwx/jwt"
+	ljwt "github.com/lestrrat-go/jwx/jwt"
 )
 
 type emailFormatter struct {
@@ -155,6 +156,39 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			if authenticated {
 				httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
 				http.SetCookie(w, httpCookie)
+
+				var jwtToken *jwt.Token
+				var jwtSigned string
+				claims := jwt.MapClaims{}
+
+				emptyConf := config.CdniConf{}
+				if cfg.Cdni != nil && *cfg.Cdni != emptyConf {
+					ucdn, err := auth.GetUserUcdn(form, db, dbCtx)
+					if err != nil {
+						// log but do not error out since this is optional in the JWT for CDNi integration
+						log.Errorf("getting ucdn for user %s: %v", form.Username, err)
+					}
+					claims["iss"] = ucdn
+					claims["aud"] = cfg.Cdni.DCdnId
+				}
+
+				claims["exp"] = httpCookie.Expires.Unix()
+				claims[api.MojoCookie] = httpCookie.Value
+				jwtToken = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+				jwtSigned, err = jwtToken.SignedString([]byte(cfg.Secrets[0]))
+				if err != nil {
+					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+					return
+				}
+
+				http.SetCookie(w, &http.Cookie{
+					Name:     api.AccessToken,
+					Value:    jwtSigned,
+					Path:     "/",
+					MaxAge:   httpCookie.MaxAge,
+					HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
+				})
 
 				// If all's well until here, then update last authenticated time
 				tx, txErr := db.BeginTx(dbCtx, nil)
@@ -370,15 +404,15 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
 			log.Warnf("Error parsing JSON response from oAuth: %s", err.Error())
 			encodedToken = buf.String()
-		} else if _, ok := result["access_token"]; !ok {
+		} else if _, ok := result[api.AccessToken]; !ok {
 			sysErr := fmt.Errorf("Missing access token in response: %s\n", buf.String())
 			usrErr := errors.New("Bad response from OAuth2.0 provider")
 			api.HandleErr(w, r, nil, http.StatusBadGateway, usrErr, sysErr)
 			return
 		} else {
-			switch t := result["access_token"].(type) {
+			switch t := result[api.AccessToken].(type) {
 			case string:
-				encodedToken = result["access_token"].(string)
+				encodedToken = result[api.AccessToken].(string)
 			default:
 				sysErr := fmt.Errorf("Incorrect type of access_token! Expected 'string', got '%v'\n", t)
 				usrErr := errors.New("Bad response from OAuth2.0 provider")
@@ -392,10 +426,10 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		decodedToken, err := jwt.Parse(
+		decodedToken, err := ljwt.Parse(
 			[]byte(encodedToken),
-			jwt.WithVerifyAuto(true),
-			jwt.WithJWKSetFetcher(jwksFetcher),
+			ljwt.WithVerifyAuto(true),
+			ljwt.WithJWKSetFetcher(jwksFetcher),
 		)
 		if err != nil {
 			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, errors.New("Error decoding token with message: "+err.Error()))
