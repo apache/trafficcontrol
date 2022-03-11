@@ -45,7 +45,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwk"
-	ljwt "github.com/lestrrat-go/jwx/jwt"
+	"github.com/lestrrat-go/jwx/jwt"
 )
 
 type emailFormatter struct {
@@ -156,9 +156,9 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
 				http.SetCookie(w, httpCookie)
 
-				var jwtToken ljwt.Token
+				var jwtToken jwt.Token
 				var jwtSigned []byte
-				jwtBuilder := ljwt.NewBuilder()
+				jwtBuilder := jwt.NewBuilder()
 
 				emptyConf := config.CdniConf{}
 				if cfg.Cdni != nil && *cfg.Cdni != emptyConf {
@@ -179,7 +179,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 					return
 				}
 
-				jwtSigned, err = ljwt.Sign(jwtToken, jwa.HS256, []byte(cfg.Secrets[0]))
+				jwtSigned, err = jwt.Sign(jwtToken, jwa.HS256, []byte(cfg.Secrets[0]))
 				if err != nil {
 					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
 					return
@@ -429,10 +429,10 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		decodedToken, err := ljwt.Parse(
+		decodedToken, err := jwt.Parse(
 			[]byte(encodedToken),
-			ljwt.WithVerifyAuto(true),
-			ljwt.WithJWKSetFetcher(jwksFetcher),
+			jwt.WithVerifyAuto(true),
+			jwt.WithJWKSetFetcher(jwksFetcher),
 		)
 		if err != nil {
 			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Error decoding token with message: %w", err))
