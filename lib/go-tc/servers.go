@@ -1137,6 +1137,7 @@ func (sus ServerUpdateStatusV40) Downgrade() ServerUpdateStatus {
 		HostName:           sus.HostName,
 		UpdatePending:      sus.UpdatePending,
 		RevalPending:       sus.RevalPending,
+		UseRevalPending:    sus.UseRevalPending,
 		HostId:             sus.HostId,
 		Status:             sus.Status,
 		ParentPending:      sus.ParentPending,
