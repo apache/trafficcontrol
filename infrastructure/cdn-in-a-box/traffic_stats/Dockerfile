@@ -63,7 +63,7 @@ ENTRYPOINT /run.sh
 FROM trafficstats-dependencies AS get-delve
 
 RUN dnf -y install golang git && \
-    go get -u github.com/go-delve/delve/cmd/dlv
+    go get github.com/go-delve/delve/cmd/dlv
 
 FROM trafficstats AS trafficstats-debug
 COPY --from=get-delve /root/go/bin /usr/bin
