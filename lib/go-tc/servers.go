@@ -1115,18 +1115,18 @@ type ServerUpdateStatusV4 ServerUpdateStatusV40
 // the response from Traffic Ops to GET requests made to its
 // /servers/{{host name}}/update_status in API v4.0 endpoint.
 type ServerUpdateStatusV40 struct {
-	HostName             string    `json:"host_name"`
-	UpdatePending        bool      `json:"upd_pending"`
-	RevalPending         bool      `json:"reval_pending"`
-	UseRevalPending      bool      `json:"use_reval_pending"`
-	HostId               int       `json:"host_id"`
-	Status               string    `json:"status"`
-	ParentPending        bool      `json:"parent_pending"`
-	ParentRevalPending   bool      `json:"parent_reval_pending"`
-	ConfigUpdateTime     time.Time `json:"config_update_time"`
-	ConfigApplyTime      time.Time `json:"config_apply_time"`
-	RevalidateUpdateTime time.Time `json:"revalidate_update_time"`
-	RevalidateApplyTime  time.Time `json:"revalidate_apply_time"`
+	HostName             string     `json:"host_name"`
+	UpdatePending        bool       `json:"upd_pending"`
+	RevalPending         bool       `json:"reval_pending"`
+	UseRevalPending      bool       `json:"use_reval_pending"`
+	HostId               int        `json:"host_id"`
+	Status               string     `json:"status"`
+	ParentPending        bool       `json:"parent_pending"`
+	ParentRevalPending   bool       `json:"parent_reval_pending"`
+	ConfigUpdateTime     *time.Time `json:"config_update_time"`
+	ConfigApplyTime      *time.Time `json:"config_apply_time"`
+	RevalidateUpdateTime *time.Time `json:"revalidate_update_time"`
+	RevalidateApplyTime  *time.Time `json:"revalidate_apply_time"`
 }
 
 // Downgrade strips the Config and Revalidate timestamps from
