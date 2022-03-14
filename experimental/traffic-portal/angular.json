@@ -23,8 +23,12 @@
 						"allowedCommonJsDependencies": [
 							"chart.js"
 						],
+						"optimization": false,
 						"sourceMap": true,
+						"namedChunks": false,
+						"extractLicenses": false,
 						"vendorChunk": true,
+						"buildOptimizer": false,
 						"outputPath": "dist/traffic-portal/browser",
 						"index": "src/index.html",
 						"main": "src/main.ts",
@@ -68,8 +72,7 @@
 								}
 							]
 						}
-					},
-					"defaultConfiguration": ""
+					}
 				},
 				"serve": {
 					"builder": "@angular-devkit/build-angular:dev-server",
@@ -133,9 +136,7 @@
 					"options": {
 						"outputPath": "dist/traffic-portal/server",
 						"main": "server.ts",
-						"tsConfig": "tsconfig.server.json",
-						"sourceMap": true,
-						"optimization": false
+						"tsConfig": "tsconfig.server.json"
 					},
 					"configurations": {
 						"production": {
@@ -149,8 +150,7 @@
 							"sourceMap": false,
 							"optimization": true
 						}
-					},
-					"defaultConfiguration": ""
+					}
 				},
 				"serve-ssr": {
 					"builder": "@nguniversal/builders:ssr-dev-server",
