@@ -136,6 +136,38 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
+			"DELIVERY SERVICE POST": {
+				"OK when USER OWNS LOCK": {
+					ClientSession: opsUserWithLockSession, RequestBody: generateDeliveryService(t, map[string]interface{}{}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					ClientSession: TOSession, RequestBody: generateDeliveryService(t, map[string]interface{}{}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"DELIVERY SERVICE PUT": {
+				"OK when USER OWNS LOCK": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: opsUserWithLockSession,
+					RequestBody:  generateDeliveryService(t, map[string]interface{}{}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody:  generateDeliveryService(t, map[string]interface{}{}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"DELIVERY SERVICE DELETE": {
+				"OK when USER OWNS LOCK": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: opsUserWithLockSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
 		}
 
 		for method, testCases := range methodTests {
@@ -145,6 +177,7 @@ func TestCDNLocks(t *testing.T) {
 					topology := ""
 					cdnLock := tc.CDNLock{}
 					cacheGroup := tc.CacheGroupNullable{}
+					ds := tc.DeliveryServiceV4{}
 					topQueueUp := tc.TopologiesQueueUpdateRequest{}
 
 					if testCase.RequestOpts.QueryParameters.Has("topology") {
@@ -163,6 +196,11 @@ func TestCDNLocks(t *testing.T) {
 							dat, err := json.Marshal(testCase.RequestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 							err = json.Unmarshal(dat, &cacheGroup)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						} else if _, ok := testCase.RequestBody["xmlId"]; ok {
+							dat, err := json.Marshal(testCase.RequestBody)
+							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+							err = json.Unmarshal(dat, &ds)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						} else {
 							dat, err := json.Marshal(testCase.RequestBody)
@@ -225,6 +263,33 @@ func TestCDNLocks(t *testing.T) {
 						{
 							t.Run(name, func(t *testing.T) {
 								resp, reqInf, err := testCase.ClientSession.UpdateCacheGroup(testCase.EndpointId(), cacheGroup, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, resp.Alerts, err)
+								}
+							})
+						}
+					case "DELIVERY SERVICE POST":
+						{
+							t.Run(name, func(t *testing.T) {
+								resp, reqInf, err := testCase.ClientSession.CreateDeliveryService(ds, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, resp.Alerts, err)
+								}
+							})
+						}
+					case "DELIVERY SERVICE PUT":
+						{
+							t.Run(name, func(t *testing.T) {
+								resp, reqInf, err := testCase.ClientSession.UpdateDeliveryService(testCase.EndpointId(), ds, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, resp.Alerts, err)
+								}
+							})
+						}
+					case "DELIVERY SERVICE DELETE":
+						{
+							t.Run(name, func(t *testing.T) {
+								resp, reqInf, err := testCase.ClientSession.DeleteDeliveryService(testCase.EndpointId(), testCase.RequestOpts)
 								for _, check := range testCase.Expectations {
 									check(t, reqInf, nil, resp.Alerts, err)
 								}
