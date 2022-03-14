@@ -22,6 +22,8 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -112,6 +114,7 @@ type Config struct {
 	LogLocationInfo              string          `json:"log_location_info"`
 	LogLocationDebug             string          `json:"log_location_debug"`
 	LogLocationEvent             string          `json:"log_location_event"`
+	LogLocationAccess            string          `json:"log_location_access"`
 	ServeReadTimeout             time.Duration   `json:"-"`
 	ServeWriteTimeout            time.Duration   `json:"-"`
 	StaticFileDir                string          `json:"static_file_dir"`
@@ -132,6 +135,17 @@ func (c Config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocat
 func (c Config) InfoLog() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
 func (c Config) DebugLog() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
 func (c Config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
+func (c Config) AccessLog() log.LogLocation  { return log.LogLocation(c.LogLocationAccess) }
+
+func GetAccessLogWriter(cfg Config) (io.WriteCloser, error) {
+	accessLoc := cfg.AccessLog()
+
+	accessW, err := log.GetLogWriter(accessLoc)
+	if err != nil {
+		return nil, fmt.Errorf("getting log access writer %v: %v", accessLoc, err)
+	}
+	return accessW, nil
+}
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
 var DefaultConfig = Config{
@@ -149,6 +163,7 @@ var DefaultConfig = Config{
 	LogLocationInfo:              LogLocationNull,
 	LogLocationDebug:             LogLocationNull,
 	LogLocationEvent:             LogLocationStdout,
+	LogLocationAccess:            LogLocationNull,
 	ServeReadTimeout:             10 * time.Second,
 	ServeWriteTimeout:            10 * time.Second,
 	StaticFileDir:                StaticFileDir,
