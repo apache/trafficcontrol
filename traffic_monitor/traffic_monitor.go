@@ -78,7 +78,7 @@ func main() {
 	}
 
 	if err := InitAccessCfg(cfg); err != nil {
-		fmt.Printf("Error starting service: failed to create access log writers: %v\n", err)
+		fmt.Printf("Error starting service: failed to create access log writer: %v\n", err)
 		os.Exit(1)
 	}
 
