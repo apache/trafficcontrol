@@ -288,7 +288,7 @@ func WrapAgeErr(errorCount threadsafe.Uint, f func() ([]byte, time.Time, error),
 }
 
 func accessLogTime(t time.Time) float64 {
-	return float64(t.Unix()) + (float64(t.Nanosecond()) / 1e9)
+	return float64(t.UnixMilli()) / 1000.0
 }
 
 func accessLogStr(

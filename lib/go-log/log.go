@@ -129,7 +129,9 @@ func eventTime(t time.Time) float64 {
 }
 
 func Accessln(v ...interface{}) {
-	Access.Println(v...)
+	if Access != nil {
+		Access.Println(v...)
+	}
 }
 
 // event log entries (TM event.log, TR access.log, etc)

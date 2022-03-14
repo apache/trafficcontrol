@@ -126,6 +126,7 @@ cat > ./traffic_monitor.cfg <<- EOF
       "max_events": 200,
       "health_flush_interval_ms": 20,
       "stat_flush_interval_ms": 20,
+      "log_location_access": null,
       "log_location_event": null,
       "log_location_error": "err.log",
       "log_location_warning": "warn.log",
