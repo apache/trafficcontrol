@@ -72,3 +72,9 @@ To run the unit tests:
 .. code-block:: shell
 
 	python3 -m unittest discover ./tests
+
+To run the doctests:
+
+.. code-block:: shell
+
+	python3 ./pr_to_update_go/go_pr_maker.py

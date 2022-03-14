@@ -17,60 +17,220 @@
  * under the License.
  */
 
-var CacheStatsController = function(cacheStats, $scope, $state, $interval, numberUtils, serverUtils) {
+/**
+ * @typedef CacheStat
+ * @property {string} cachegroup
+ * @property {number} connections
+ * @property {boolean} healthy
+ * @property {string} hostname
+ * @property {string | null} ip
+ * @property {number} kbps
+ * @property {string} profile
+ * @property {string} status
+ */
 
-	var cacheStatsInterval,
-		autoRefresh = false,
-		refreshRateInMS = 10000;
 
-	var createInterval = function() {
-		killInterval();
-		cacheStatsInterval = $interval(function() { $scope.refresh() }, refreshRateInMS );
-	};
+class CacheStatsHealthyCellRenderer {
+	/** @type HTMLSpanElement */
+	eGui;
 
-	var killInterval = function() {
-		if (angular.isDefined(cacheStatsInterval)) {
-			$interval.cancel(cacheStatsInterval);
-			cacheStatsInterval = undefined;
+	/**
+	 * Called by AG-Grid as a pseudo constructor, used when a renderer is
+	 * instantiated.
+	 *
+	 * @param {{
+	 * 	api: any;
+	 * 	colDef: any;
+	 * 	column: any;
+	 * 	columnApi: any;
+	 * 	context: any;
+	 * 	data: CacheStat;
+	 * 	eGridCell: HTMLElement;
+	 * 	eParentOfValue: HTMLElement;
+	 * 	formatValue: function;
+	 * 	fullWidth: boolean;
+	 * 	getValue: function;
+	 * 	node: any;
+	 * 	pinned: string | null;
+	 * 	refreshCell: function;
+	 * 	registerRowDragger: function;
+	 * 	rowIndex: number;
+	 * 	setValue: function;
+	 * 	value: boolean;
+	 * 	valueFormatted: null;
+	 * 	$scope: null;
+	 * }} params
+	 */
+	init(params) {
+		this.eGui = document.createElement("span");
+		this.eGui.setAttribute("class", params.value ? "green" : "red");
+		this.eGui.textContent = String(params.value);
+	}
+
+	/**
+	 * Gets a rendered cell. Parameters are available, but not currently used.
+	 *
+	 * @returns {HTMLElement | Text} A rendered cell element.
+	 */
+	getGui() {
+		return this.eGui;
+	}
+}
+
+/**
+ *
+ * @param {CacheStat[]} cacheStats
+ * @param {{user: {username: string}}} userModel
+ */
+var CacheStatsController = function(cacheStats, $scope, userModel) {
+
+	class CacheStatsSSHCellRenderer {
+		/** @type HTMLAnchorElement | Text */
+		eGui;
+
+		/**
+		 * Called by AG-Grid as a pseudo constructor, used when a renderer is
+		 * instantiated.
+		 *
+		 * @param {{
+		 * 	api: any;
+		 * 	colDef: any;
+		 * 	column: any;
+		 * 	columnApi: any;
+		 * 	context: any;
+		 * 	data: CacheStat;
+		 * 	eGridCell: HTMLElement;
+		 * 	eParentOfValue: HTMLElement;
+		 * 	formatValue: function;
+		 * 	fullWidth: boolean;
+		 * 	getValue: function;
+		 * 	node: any;
+		 * 	pinned: string | null;
+		 * 	refreshCell: function;
+		 * 	registerRowDragger: function;
+		 * 	rowIndex: number;
+		 * 	setValue: function;
+		 * 	value: string;
+		 * 	valueFormatted: null;
+		 * 	$scope: null;
+		 * }} params
+		 */
+		init(params) {
+			if (params.data.ip === null) {
+				this.eGui = document.createTextNode(params.value);
+				return;
+			}
+			this.eGui = document.createElement("a");
+			this.eGui.href = `ssh://${userModel.user.username}@${params.data.ip}`;
+			this.eGui.setAttribute("class", "link");
+			this.eGui.textContent = params.value;
 		}
-	};
 
-	$scope.cacheStats = cacheStats;
-
-	$scope.ssh = serverUtils.ssh;
-
-	$scope.bandwidth = function(kbps, unit) {
-		return numberUtils.addCommas(numberUtils.convertTo(kbps, unit));
-	};
-
-	$scope.connections = function(amt) {
-		return numberUtils.addCommas(amt);
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.$on("$destroy", function() {
-		killInterval();
-	});
-
-	angular.element(document).ready(function () {
-		$('#cacheStatsTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"order": [ [ 6, "desc" ] ] // sort by bandwidth, descending
-		});
-	});
-
-	var init = function () {
-		if (autoRefresh) {
-			createInterval();
+		/**
+		 * Gets a rendered cell. Parameters are available, but not currently used.
+		 *
+		 * @returns {HTMLElement | Text} A rendered cell element.
+		 */
+		getGui() {
+			return this.eGui;
 		}
+	}
+
+	/**
+	 * The columns of the ag-grid table.
+	 * @type CGC.ColumnDefinition[]
+	 */
+	$scope.columns = [
+		{
+			headerName: "Cache Group",
+			field: "cachegroup",
+			hide: false
+		},
+		{
+			headerName: "Connections",
+			field: "connections",
+			hide: false,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			cellRenderer: CacheStatsHealthyCellRenderer,
+			headerName: "Healthy",
+			field: "healthy",
+			hide: false
+		},
+		{
+			cellRenderer: CacheStatsSSHCellRenderer,
+			headerName: "Host",
+			field: "hostname",
+			hide: false
+		},
+		{
+			cellRenderer: CacheStatsSSHCellRenderer,
+			headerName: "IP",
+			field: "ip",
+			hide: true,
+		},
+		{
+			headerName: "Data out rate",
+			field: "kbps",
+			filter: "agNumberColumnFilter",
+			hide: false,
+			/**
+			 * Formats the kbps metric.
+			 * @param {{value: number}} value Some AG Grid params containing the raw value to be formatted.
+			 * @returns {string} The formatted value.
+			 */
+			valueFormatter: ({value}) => {
+				if (!value || value <= 0 || !isFinite(value)) {
+					return "0bps";
+				}
+				if (value >= 1e9) {
+					return `${(value/1e9).toFixed(3)}Tb/s`;
+				}
+				if (value >= 1e6) {
+					return `${(value/1e6).toFixed(3)}Gb/s`;
+				}
+				if (value >= 1000) {
+					return `${(value/1000).toFixed(3)}Mb/s`;
+				}
+				if (value >= 1) {
+					return `${value.toFixed(3)}kb/s`;
+				}
+				return `${(value*1000).toFixed(0)}b/s`;
+			}
+		},
+		{
+			headerName: "Profile",
+			field: "profile",
+			hide: false,
+		},
+		{
+			headerName: "Status",
+			field: "status",
+			hide: false,
+		}
+	];
+
+	$scope.data = cacheStats;
+
+	/** Options, configuration, data and callbacks for the ag-grid table. */
+	/** @type CGC.GridSettings */
+	$scope.gridOptions = {
+		refreshable: true,
 	};
-	init();
+
+	$scope.defaultData = {
+		cachegroup: "ALL",
+		connections: -1,
+		healthy: false,
+		hostname: "ALL",
+		ip: null,
+		kbps: -1,
+		profile: "ALL",
+		status: "ALL"
+	};
 
 };
 
-CacheStatsController.$inject = ['cacheStats', '$scope', '$state', '$interval', 'numberUtils', 'serverUtils'];
+CacheStatsController.$inject = ["cacheStats", "$scope", "userModel"];
 module.exports = CacheStatsController;

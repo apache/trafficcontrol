@@ -48,6 +48,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
+	"github.com/dgrijalva/jwt-go"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -79,6 +80,11 @@ const (
 	APIRespWrittenKey      = "respwritten"
 	PathParamsKey          = "pathParams"
 	TrafficVaultContextKey = "tv"
+)
+
+const (
+	MojoCookie  = "mojoCookie"
+	AccessToken = "access_token"
 )
 
 const influxServersQuery = `
@@ -1029,23 +1035,52 @@ func ParseDBError(ierr error) (error, error, int) {
 // GetUserFromReq returns the current user, any user error, any system error, and an error code to be returned if either error was not nil.
 // This also uses the given ResponseWriter to refresh the cookie, if it was valid.
 func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth.CurrentUser, error, error, int) {
-	cookie, err := r.Cookie(tocookie.Name)
-	if err != nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error getting cookie: " + err.Error()), http.StatusUnauthorized
+	var cookie *http.Cookie
+
+	if r.Header.Get(rfc.Authorization) != "" && strings.Contains(r.Header.Get(rfc.Authorization), "Bearer") {
+		givenToken := r.Header.Get(rfc.Authorization)
+		tokenSplit := strings.Split(givenToken, " ")
+		if len(tokenSplit) > 1 {
+			givenToken = tokenSplit[1]
+		}
+		bearerCookie, err := getCookieFromAccessToken(givenToken, secret)
+		if err != nil {
+			return auth.CurrentUser{}, errors.New("unauthorized, please log in."), err, http.StatusUnauthorized
+		}
+		cookie = bearerCookie
+	} else {
+		for _, givenCookie := range r.Cookies() {
+			if cookie != nil {
+				break
+			}
+			if givenCookie == nil {
+				continue
+			}
+			switch givenCookie.Name {
+			case AccessToken:
+				bearerCookie, err := getCookieFromAccessToken(givenCookie.Value, secret)
+				if err != nil {
+					return auth.CurrentUser{}, errors.New("unauthorized, please log in."), err, http.StatusUnauthorized
+				}
+				cookie = bearerCookie
+			case tocookie.Name:
+				cookie = givenCookie
+			}
+		}
 	}
 
 	if cookie == nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), nil, http.StatusUnauthorized
 	}
 
 	oldCookie, err := tocookie.Parse(secret, cookie.Value)
 	if err != nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
+		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
 	}
 
 	username := oldCookie.AuthData
 	if username == "" {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), nil, http.StatusUnauthorized
 	}
 	db := (*sqlx.DB)(nil)
 	val := r.Context().Value(DBContextKey)
@@ -1073,6 +1108,38 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 	newCookie := tocookie.GetCookie(oldCookie.AuthData, duration, secret)
 	http.SetCookie(w, newCookie)
 	return user, nil, nil, http.StatusOK
+}
+
+func getCookieFromAccessToken(bearerToken string, secret string) (*http.Cookie, error) {
+	var cookie *http.Cookie
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("parsing claims: %w", err)
+	}
+	if token == nil {
+		return nil, errors.New("parsing claims: parsed nil token")
+	}
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	for key, val := range claims {
+		switch key {
+		case MojoCookie:
+			mojoVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("invalid token - " + MojoCookie + " must be a string")
+			}
+			cookie = &http.Cookie{
+				Value: mojoVal,
+			}
+		}
+	}
+
+	return cookie, nil
 }
 
 func AddUserToReq(r *http.Request, u auth.CurrentUser) {

@@ -1132,26 +1132,15 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
 	ds1.Topology = util.StrPtr("t0")
 	ds1.MultiSiteOrigin = util.BoolPtr(true)
+	ds1.ProfileName = util.StrPtr("dsprofile")
 
 	dses := []DeliveryService{*ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
-			Name:       ParentConfigParamQStringHandling,
-			ConfigFile: "parent.config",
-			Value:      "myQStringHandlingParam",
-			Profiles:   []byte(`["serverprofile"]`),
-		},
-		tc.Parameter{
 			Name:       ParentConfigParamAlgorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
-			Profiles:   []byte(`["serverprofile"]`),
-		},
-		tc.Parameter{
-			Name:       ParentConfigParamQString,
-			ConfigFile: "parent.config",
-			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
 	}
@@ -1160,7 +1149,7 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 	}
@@ -1251,6 +1240,71 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 	if strings.Contains(txt, "myorigin1") {
 		t.Errorf("expected no origin1 without DeliveryServiceServer assigned to this DS, actual: '%v'", txt)
 	}
+
+	if !strings.Contains(txt, "go_direct=true") {
+		t.Errorf("expected MSO Topologies to Origin to go_direct=true, actual: '%v'", txt)
+	}
+
+	if !strings.Contains(txt, "parent_is_proxy=false") {
+		t.Errorf("expected MSO Topologies to Origin to parent_is_proxy=false, actual: '%v'", txt)
+	}
+
+	t.Run("MSO topologoies default qstring=ignore", func(t *testing.T) {
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(cfg.Text, "qstring=ignore") {
+			t.Errorf("expected MSO Topologies to Origin to default to qstring=ignore, actual: '%v'", cfg.Text)
+		}
+	})
+
+	t.Run("MSO topologoies param qstring=ignore", func(t *testing.T) {
+		parentConfigParamsWithQstr := append(parentConfigParams, tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "ignore",
+			Profiles:   []byte(`["serverprofile"]`),
+		})
+
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParamsWithQstr, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(cfg.Text, "qstring=ignore") {
+			t.Errorf("expected MSO Topologies to Origin to default to qstring=ignore, actual: '%v'", cfg.Text)
+		}
+	})
+
+	t.Run("MSO topologoies param qstring=consider", func(t *testing.T) {
+		parentConfigParamsWithQstr := append(parentConfigParams, tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "consider",
+			Profiles:   []byte(`["` + *ds1.ProfileName + `"]`),
+		})
+
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParamsWithQstr, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(cfg.Text, "qstring=consider") {
+			t.Errorf("expected MSO Topologies to Origin with param to qstring=consider, actual: '''%v''' warnings '''%+v'''", cfg.Text, cfg.Warnings)
+		}
+	})
+
+	t.Run("MSO topologoies param ds qstring consider", func(t *testing.T) {
+		ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+		dses := []DeliveryService{*ds1}
+
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(cfg.Text, "qstring=consider") {
+			t.Errorf("expected MSO Topologies to Origin with param to qstring=consider, actual: '''%v''' warnings '''%+v'''", cfg.Text, cfg.Warnings)
+		}
+	})
 }
 
 func TestMakeParentDotConfigTopologiesMSOWithCapabilities(t *testing.T) {
@@ -2878,17 +2932,6 @@ func TestMakeParentDotConfigHTTPSOriginTopology(t *testing.T) {
 	}
 }
 
-// warnsContains returns whether the given warnings has str as a substring of any warning.
-// Note this is different than lib/go-util.ContainsStr, which only returns if the array has the exact value as one of its values.
-func warningsContains(warnings []string, str string) bool {
-	for _, warn := range warnings {
-		if strings.Contains(warn, str) {
-			return true
-		}
-	}
-	return false
-}
-
 func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
 	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
 
@@ -3048,6 +3091,17 @@ func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
 	if strings.Count(txt, "secondary_parent") != 1 {
 		t.Errorf("expected only one secondary parent (dest_domain=.): '%v'", txt)
 	}
+}
+
+// warningsContains returns whether the given warnings has str as a substring of any warning.
+// Note this is different than lib/go-util.ContainsStr, which only returns if the array has the exact value as one of its values.
+func warningsContains(warnings []string, str string) bool {
+	for _, warn := range warnings {
+		if strings.Contains(warn, str) {
+			return true
+		}
+	}
+	return false
 }
 
 func makeTestParentServer() *Server {
