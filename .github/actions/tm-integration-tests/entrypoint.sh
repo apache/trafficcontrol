@@ -118,6 +118,9 @@ cd "${repo_dir}/traffic_monitor"
 go mod vendor
 go build
 
+# fixes `failed to write CRConfig backup file: open /opt/traffic_monitor/crconfig.backup: no such file or directory`
+sudo ln -s $(pwd | xargs realpath) /opt/traffic_monitor
+
 cat > ./traffic_monitor.cfg <<- EOF
   {
       "monitor_config_polling_interval_ms": 15000,
