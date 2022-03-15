@@ -502,7 +502,7 @@ func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
 		jwt.WithVerify(jwa.HS256, []byte(inf.Config.Secrets[0])),
 	)
 	if err != nil {
-		return "", errors.New("invalid token")
+		return "", fmt.Errorf("invalid token: %w", err)
 	}
 
 	var expirationFloat float64
