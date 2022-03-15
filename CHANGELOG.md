@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated the Cache Stats Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated the CDNs Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated the Profiles Traffic Portal page to use a more performant AG-Grid-based table.
+- Updated Go version to 1.18
 
 ## [6.1.0] - 2022-01-18
 ### Added
