@@ -883,7 +883,7 @@ func createMockCache(interfaceName string) Cache {
 		},
 		Type:             "EDGE",
 		HashID:           "cacheHash",
-		DeliveryServices: []string{"xml_id_foo"},
+		DeliveryServices: []tc.TSDeliveryService{{XmlId: "xml_id_foo"}},
 	}
 }
 

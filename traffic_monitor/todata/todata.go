@@ -209,8 +209,8 @@ func getDeliveryServiceServers(crc CRConfig, mc tc.TrafficMonitorConfigMap) (map
 				}
 				serverDses[srvName] = append(serverDses[srvName], cacheGroupDses...)
 			}
-			for _, deliveryServiceName := range serverData.DeliveryServices {
-				dsName := tc.DeliveryServiceName(deliveryServiceName)
+			for _, serverDS := range serverData.DeliveryServices {
+				dsName := tc.DeliveryServiceName(serverDS.XmlId)
 				dsServers[dsName] = append(dsServers[dsName], srvName)
 				serverDses[srvName] = append(serverDses[srvName], dsName)
 			}

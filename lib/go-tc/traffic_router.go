@@ -92,19 +92,19 @@ type MatchList struct {
 // Deprecated: The configuration versions that use this structure to represent
 // a cache server are deprecated, new code should use TrafficServer instead.
 type LegacyTrafficServer struct {
-	CacheGroup       string   `json:"cacheGroup"`
-	DeliveryServices []string `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
-	FQDN             string   `json:"fqdn"`
-	HashID           string   `json:"hashId"`
-	HostName         string   `json:"hostName"`
-	HTTPSPort        int      `json:"httpsPort,omitempty"`
-	InterfaceName    string   `json:"interfaceName"`
-	IP               string   `json:"ip"`
-	IP6              string   `json:"ip6"`
-	Port             int      `json:"port"`
-	Profile          string   `json:"profile"`
-	ServerStatus     string   `json:"status"`
-	Type             string   `json:"type"`
+	CacheGroup       string              `json:"cacheGroup"`
+	DeliveryServices []TSDeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
+	FQDN             string              `json:"fqdn"`
+	HashID           string              `json:"hashId"`
+	HostName         string              `json:"hostName"`
+	HTTPSPort        int                 `json:"httpsPort,omitempty"`
+	InterfaceName    string              `json:"interfaceName"`
+	IP               string              `json:"ip"`
+	IP6              string              `json:"ip6"`
+	Port             int                 `json:"port"`
+	Profile          string              `json:"profile"`
+	ServerStatus     string              `json:"status"`
+	Type             string              `json:"type"`
 }
 
 // Upgrade upgrades the LegacyTrafficServer into its modern-day equivalent.
@@ -207,7 +207,7 @@ func (ts *TrafficServer) ToLegacyServer() LegacyTrafficServer {
 // Traffic Router instances.
 type TrafficServer struct {
 	CacheGroup       string                `json:"cachegroup"`
-	DeliveryServices []string              `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
+	DeliveryServices []TSDeliveryService   `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
 	FQDN             string                `json:"fqdn"`
 	HashID           string                `json:"hashId"`
 	HostName         string                `json:"hostName"`
@@ -249,7 +249,6 @@ func (ts *TrafficServer) IPv6() string {
 	return *lid.IP6Address
 }
 
-type tsdeliveryService struct {
-	Xmlid  string   `json:"xmlId"`
-	Remaps []string `json:"remaps"`
+type TSDeliveryService struct {
+	XmlId string `json:"xmlId"`
 }

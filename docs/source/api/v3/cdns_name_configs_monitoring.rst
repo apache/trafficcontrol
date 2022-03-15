@@ -101,7 +101,10 @@ Response Structure
 :trafficServers: An array of objects that represent the :term:`cache servers` being monitored within this CDN
 
 	:cachegroup:       The :term:`Cache Group` to which this :term:`cache server` belongs
-	:deliveryServices: An array of strings which are the XML IDs of the delivery services to which this cache server is assigned
+	:deliveryServices: An array of objects which contain the XML IDs of the delivery services to which this cache server is assigned
+
+		:xmlId: A string which is the XML ID of the delivery service
+
 	:fqdn:             An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the :term:`cache server`'s IPv4 (or IPv6) address
 	:hashId:           The (short) hostname for the :term:`cache server` - named "hashId" for legacy reasons
 	:hostName:         The (short) hostname of the :term:`cache server`

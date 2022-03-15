@@ -76,7 +76,7 @@ type Cache struct {
 	Interfaces       []tc.ServerInterfaceInfo `json:"interfaces"`
 	Type             string                   `json:"type"`
 	HashID           string                   `json:"hashid"`
-	DeliveryServices []string                 `json:"deliveryServices,omitempty"`
+	DeliveryServices []tc.TSDeliveryService   `json:"deliveryServices,omitempty"`
 }
 
 type Cachegroup struct {
@@ -283,6 +283,14 @@ AND cdn.name = $3
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	serverDSes := make(map[tc.CacheName][]tc.TSDeliveryService, len(serverDSNames))
+	for c, dsNames := range serverDSNames {
+		tsDS := make([]tc.TSDeliveryService, 0, len(dsNames))
+		for _, n := range dsNames {
+			tsDS = append(tsDS, tc.TSDeliveryService{XmlId: n})
+		}
+		serverDSes[c] = tsDS
+	}
 
 	rows, err := tx.Query(serversQuery, cdn)
 	if err != nil {
@@ -373,7 +381,7 @@ AND cdn.name = $3
 				Interfaces:       cacheInterfaces,
 				Type:             ttype.String,
 				HashID:           hashID.String,
-				DeliveryServices: serverDSNames[tc.CacheName(hostName.String)],
+				DeliveryServices: serverDSes[tc.CacheName(hostName.String)],
 			}
 			caches = append(caches, cache)
 		} else if ttype.String == tc.RouterTypeName {
