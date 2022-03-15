@@ -199,7 +199,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	hostName, _, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, int(serverID))
+	hostName, _, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, serverID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("querying for server name with id %d: %w", serverID, err))
 		return

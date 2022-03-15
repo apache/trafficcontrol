@@ -1046,7 +1046,7 @@ func GetServerIDFromName(serverName string, tx *sql.Tx) (int, bool, error) {
 	return id, true, nil
 }
 
-func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
+func GetServerNameFromID(tx *sql.Tx, id int64) (string, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT host_name FROM server WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {

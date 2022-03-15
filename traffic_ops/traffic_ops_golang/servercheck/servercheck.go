@@ -153,7 +153,7 @@ func CreateUpdateServercheck(w http.ResponseWriter, r *http.Request) {
 
 func getServerID(id *int, hostname *string, tx *sql.Tx) (int, bool, error) {
 	if id != nil {
-		_, exists, err := dbhelpers.GetServerNameFromID(tx, *id)
+		_, exists, err := dbhelpers.GetServerNameFromID(tx, int64(*id))
 		return *id, exists, err
 	}
 	sID, exists, err := dbhelpers.GetServerIDFromName(*hostname, tx)
