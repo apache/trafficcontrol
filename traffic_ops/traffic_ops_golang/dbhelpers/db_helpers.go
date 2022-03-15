@@ -543,6 +543,9 @@ func GetDSTenantIDFromXMLID(tx *sql.Tx, xmlid string) (int, bool, error) {
 	return id, true, nil
 }
 
+// GetServerDSNamesByCDN returns a map of ONLINE/REPORTED/ADMIN_DOWN cache names to slice of
+// strings which are the XML IDs of the active, non-ANYMAP delivery services to which the cache
+// is assigned in the given CDN.
 func GetServerDSNamesByCDN(tx *sql.Tx, cdn string) (map[tc.CacheName][]string, error) {
 	q := `
 SELECT s.host_name, ds.xml_id

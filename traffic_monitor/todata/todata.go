@@ -163,20 +163,20 @@ func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn stri
 	// TODO: remove the fallback behavior on the CRConfig in ATC 8.0 (https://github.com/apache/trafficcontrol/issues/6627)
 	newTOData.DeliveryServiceTypes, err = getDeliveryServiceTypes(crConfig, mc)
 	if err != nil {
-		return fmt.Errorf("getting delivery service types from Traffic Ops: %v\n", err)
+		return fmt.Errorf("getting delivery service types from Traffic Ops: %v", err)
 	}
 
 	// TODO: remove the fallback behavior on the CRConfig in ATC 8.0 (https://github.com/apache/trafficcontrol/issues/6627)
 	newTOData.DeliveryServiceRegexes, err = getDeliveryServiceRegexes(crConfig, mc)
 	if err != nil {
-		return fmt.Errorf("getting delivery service regexes from Traffic Ops: %v\n", err)
+		return fmt.Errorf("getting delivery service regexes from Traffic Ops: %v", err)
 	}
 
 	newTOData.ServerCachegroups = getServerCachegroups(mc)
 
 	newTOData.ServerTypes, err = getServerTypes(mc)
 	if err != nil {
-		return fmt.Errorf("getting server types from monitoring config: %v\n", err)
+		return fmt.Errorf("getting server types from monitoring config: %v", err)
 	}
 
 	d.set(newTOData)
@@ -252,7 +252,7 @@ func getDeliveryServiceRegexes(crc CRConfig, mc tc.TrafficMonitorConfigMap) (Reg
 	if canUseMonitorConfig(mc) {
 		for dsName, dsData := range mc.DeliveryService {
 			if len(dsData.HostRegexes) < 1 {
-				log.Warnln("TMConfig missing regex for delivery service " + string(dsName))
+				log.Warnln("TMConfig missing regex for delivery service " + dsName)
 				continue
 			}
 			dsRegexes[tc.DeliveryServiceName(dsName)] = dsData.HostRegexes

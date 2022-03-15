@@ -60,7 +60,7 @@ Response Structure
 
 	:hostRegexes:        An array of strings which are the Delivery Service's HOST_REGEXP-type regexes
 	:status:             The :term:`Delivery Service`'s status
-	:topology:           A string that is the name of the Delivery Service's topology (if assigned one)
+	:topology:           A string that is the name of the Delivery Service's :term:`Topology` (if assigned one)
 	:totalKbpsThreshold: A threshold rate of data transfer this :term:`Delivery Service` is configured to handle, in Kilobits per second
 	:totalTpsThreshold:  A threshold amount of transactions per second that this :term:`Delivery Service` is configured to handle
 	:type:               A string that is the Delivery Service's type category (HTTP or DNS)
@@ -89,7 +89,7 @@ Response Structure
 
 :trafficMonitors: An array of objects representing each Traffic Monitor that monitors this CDN (this is used by Traffic Monitor's "peer polling" function)
 
-	:cachegroup: The :term:`Cache Group` to which this Traffic Monitor belongs
+	:cachegroup: The name of the :term:`Cache Group` to which this Traffic Monitor belongs
 	:fqdn:       An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the IPv4 (and/or IPv6) address of the server running this Traffic Monitor instance
 	:hostname:   The hostname of the server running this Traffic Monitor instance
 	:ip6:        The IPv6 address of this Traffic Monitor - when applicable
@@ -105,14 +105,16 @@ Response Structure
 
 		:xmlId: A string which is the XML ID of the delivery service
 
-	:fqdn:             An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the :term:`cache server`'s IPv4 (or IPv6) address
-	:hashId:           The (short) hostname for the :term:`cache server` - named "hashId" for legacy reasons
-	:hostName:         The (short) hostname of the :term:`cache server`
-	:port:             The port on which the :term:`cache server` listens for incoming connections
-	:profile:          A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this :term:`cache server`
-	:status:           The status of the :term:`cache server`
-	:type:             A string that names the :term:`Type` of the :term:`cache server` - should (ideally) be either ``EDGE`` or ``MID``
-	:interfaces:       A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
+	:fqdn:          An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the :term:`cache server`'s IPv4 (or IPv6) address
+	:hashId:        The (short) hostname for the :term:`cache server` - named "hashId" for legacy reasons
+	:hostName:      The (short) hostname of the :term:`cache server`
+	:interfacename: The name of the network interface device being used by the :term:`cache server`'s HTTP proxy
+	:ip6:           The :term:`cache server`'s IPv6 address - when applicable
+	:ip:            The :term:`cache server`'s IPv4 address
+	:port:          The port on which the :term:`cache server` listens for incoming connections
+	:profile:       A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this :term:`cache server`
+	:status:        The status of the :term:`cache server`
+	:type:          A string that names the :term:`Type` of the :term:`cache server` - should (ideally) be either ``EDGE`` or ``MID``
 
 .. code-block:: http
 	:caption: Response Example

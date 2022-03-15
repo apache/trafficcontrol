@@ -249,6 +249,7 @@ func (ts *TrafficServer) IPv6() string {
 	return *lid.IP6Address
 }
 
+// TSDeliveryService represents a delivery service as assigned to a TrafficServer in the TMConfig.
 type TSDeliveryService struct {
 	XmlId string `json:"xmlId"`
 }

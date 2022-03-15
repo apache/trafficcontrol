@@ -61,7 +61,7 @@ Response Structure
 
 	:hostRegexes:        An array of strings which are the Delivery Service's HOST_REGEXP-type regexes
 	:status:             The :term:`Delivery Service`'s status
-	:topology:           A string that is the name of the Delivery Service's topology (if assigned one)
+	:topology:           A string that is the name of the Delivery Service's :term:`Topology` (if assigned one)
 	:totalKbpsThreshold: A threshold rate of data transfer this :term:`Delivery Service` is configured to handle, in Kilobits per second
 	:totalTpsThreshold:  A threshold amount of transactions per second that this :term:`Delivery Service` is configured to handle
 	:type:               A string that is the Delivery Service's type category (HTTP or DNS)
@@ -90,7 +90,7 @@ Response Structure
 
 :trafficMonitors: An array of objects representing each Traffic Monitor that monitors this CDN (this is used by Traffic Monitor's "peer polling" function)
 
-	:cachegroup: The :term:`Cache Group` to which this Traffic Monitor belongs
+	:cachegroup: The name of the :term:`Cache Group` to which this Traffic Monitor belongs
 	:fqdn:       An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the IPv4 (and/or IPv6) address of the server running this Traffic Monitor instance
 	:hostname:   The hostname of the server running this Traffic Monitor instance
 	:ip6:        The IPv6 address of this Traffic Monitor - when applicable

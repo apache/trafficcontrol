@@ -166,7 +166,7 @@ func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
 	}
 	topologies, err := topology.MakeTopologies(tx)
 	if err != nil {
-		return nil, fmt.Errorf("getting topologies: %s", err.Error())
+		return nil, fmt.Errorf("getting topologies: %w", err)
 	}
 
 	return &Monitoring{
