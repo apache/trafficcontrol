@@ -63,7 +63,7 @@ Response Structure
 	:topology:           A string that is the name of the Delivery Service's :term:`Topology` (if assigned one)
 	:totalKbpsThreshold: A threshold rate of data transfer this :term:`Delivery Service` is configured to handle, in Kilobits per second
 	:totalTpsThreshold:  A threshold amount of transactions per second that this :term:`Delivery Service` is configured to handle
-	:type:               A string that is the Delivery Service's type category (HTTP or DNS)
+	:type:               A string that is the Delivery Service's type category (``"HTTP"`` or ``"DNS"``)
 	:xmlId:              A string that is the :ref:`Delivery Service's XMLID <ds-xmlid>`
 
 :profiles: An array of the :term:`Profiles` in use by the :term:`cache servers` and :term:`Delivery Services` belonging to this CDN
@@ -101,7 +101,7 @@ Response Structure
 :trafficServers: An array of objects that represent the :term:`cache servers` being monitored within this CDN
 
 	:cacheGroup:       The :term:`Cache Group` to which this :term:`cache server` belongs
-	:deliveryServices: An array of objects which contain the XML IDs of the delivery services to which this cache server is assigned
+	:deliveryServices: An array of objects which contain the XML IDs of the delivery services to which this cache server is assigned (this field is omitted entirely if no delivery services are assigned to this cache server)
 
 		:xmlId: A string which is the XML ID of the delivery service
 
