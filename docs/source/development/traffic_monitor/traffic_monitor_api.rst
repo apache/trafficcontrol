@@ -178,6 +178,7 @@ Response Structure
 		}
 	}
 
+
 ``publish/CacheStats/{{cache}}``
 ================================
 Statistics gathered for only a single cache.
@@ -354,26 +355,21 @@ The current state of this CDN per the :ref:`health-proto`.
 
 	GET /publish/CrStates HTTP/1.1
 	Accept: */*
-	Content-Type: application/json
 
 Response Structure
 """"""""""""""""""
-:caches: An object with keys that are the names of monitored :term:`cache servers`
+:caches: An object with keys that are the names of monitored :term:`cache servers`.
 
-	:server name: The name of the server being monitored
+	:isAvailable: Whether or not this :term:`cache server` is available for routing overall
+	:ipv4Available: Whether or not an IPv4 interface on this :term:`cache server` is available for routing.
+	:ipv6Available: Whether or not an IPv6 interface on this :term:`cache server` is available for routing.
+	:status: The status of this server, along with any additional reason for it to be marked as such
+	:lastPoll: The last time the health data for this server was polled by a traffic monitor
 
-		:isAvailable: Whether or not this cache is available for routing
-		:ipv4Available: Whether or not an IPV4 interface on this cache is available for routing
-		:ipv6Available: Whether or not an IPV6 interface on this cache is available for routing
-		:status: The status of this server, along with any additional reason for it to be marked as such
-		:lastPoll: The last time the health data for this server was polled by a traffic monitor
+:deliveryServices: An object with keys that are the :ref:`XMLIDs <ds-xmlid>` of monitored :term:`Delivery Services`.
 
-:deliveryServices: An object with keys as the names of monitored :term:`Delivery Services`
-
-	:delivery service name: The name of the delivery service being monitored
-
-		:disabledLocations: A list of disabled locations for this delivery service
-		:isAvailable: Whether or not this delivery service is available for routing
+	:disabledLocations: An array of the names of disabled "locations" (i.e. :term:`Cache Groups`) for this :term:`Delivery Service`.
+	:isAvailable: Whether or not this :term:`Delivery Service` is available for routing
 
 .. code-block:: http
 	:caption: Example Response
@@ -385,21 +381,22 @@ Response Structure
 
 	{
 		"caches": {
-			"server-name-01": {
+			"edge": {
 				"isAvailable": true,
 				"ipv4Available": true,
-				"ipv6Available": true,
-				"status": "REPORTED - id server-name-01 url http://[2001:db8:3333:4444:5555:6666:7777:8888]:80 fetch error: bad HTTP status: 403; interface0: not found in polled data",
-				"lastPoll": "2022-03-03T12:26:02.78556-07:00"
-			},...
+				"ipv6Available": false,
+				"status": "REPORTED - available",
+				"lastPoll": "2022-03-15T17:54:03.821178179Z"
+			}
 		},
 		"deliveryServices": {
-			"ds-1": {
+			"dev-ds": {
 				"disabledLocations": [],
 				"isAvailable": true
-			},...
+			}
 		}
 	}
+
 
 ``/publish/CrConfig``
 =====================
