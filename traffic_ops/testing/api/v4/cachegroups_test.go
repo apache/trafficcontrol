@@ -35,7 +35,7 @@ func TestCacheGroups(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies}, func() {
 
 		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
-		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 
 		methodTests := utils.V4TestCase{
