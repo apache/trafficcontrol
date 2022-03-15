@@ -26,6 +26,8 @@ RUN architecture=$(uname -m) && \
 ENV GOROOT=/usr/local/go \
     CGO_ENABLED=0
 
+RUN apk add --no-cache git
+
 COPY entrypoint.sh dbconf.yml /
 
 ENTRYPOINT /entrypoint.sh
