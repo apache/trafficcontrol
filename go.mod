@@ -17,7 +17,7 @@ module github.com/apache/trafficcontrol
 // specific language governing permissions and limitations
 // under the License.
 
-go 1.17
+go 1.18
 
 require (
 	code.cloudfoundry.org/bytefmt v0.0.0-20211005130812-5bb3c17173e5
