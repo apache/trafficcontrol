@@ -1121,7 +1121,7 @@ func getCookieFromAccessToken(bearerToken string, secret string) (*http.Cookie, 
 	var cookie *http.Cookie
 	token, err := jwt.Parse([]byte(bearerToken), jwt.WithVerify(jwa.HS256, []byte(secret)))
 	if err != nil {
-		return nil, fmt.Errorf("invalid token: %s", err)
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 	if token == nil {
 		return nil, errors.New("parsing claims: parsed nil token")
