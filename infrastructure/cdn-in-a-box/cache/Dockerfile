@@ -121,7 +121,7 @@ CMD /run.sh
 
 FROM common-traffic-server-dependencies AS get-delve
 RUN dnf -y install golang && \
-    GOPROXY='https://proxy.golang.org' go get github.com/go-delve/delve/cmd/dlv
+    go install github.com/go-delve/delve/cmd/dlv@latest
 
 FROM common-cache-config-layers AS mid
 ENV CACHE_TYPE=mid
