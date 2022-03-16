@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )
 
 func TestCacheGroups(t *testing.T) {
@@ -38,59 +37,52 @@ func TestCacheGroups(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 
-		methodTests := map[string]map[string]struct {
-			endpointId     func() int
-			clientSession  *client.Session
-			requestParams  url.Values
-			requestHeaders http.Header
-			requestBody    map[string]interface{}
-			expectations   []utils.CkReqFunc
-		}{
+		methodTests := utils.V3TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					clientSession: TOSession, requestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession: TOSession, RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"NOT MODIFIED when VALID NAME parameter when NO CHANGES made": {
-					clientSession: TOSession, requestParams: url.Values{"name": {"originCachegroup"}},
-					requestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
-					expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession: TOSession, RequestParams: url.Values{"name": {"originCachegroup"}},
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"NOT MODIFIED when VALID SHORTNAME parameter when NO CHANGES made": {
-					clientSession: TOSession, requestParams: url.Values{"shortName": {"mog1"}},
-					requestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
-					expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession: TOSession, RequestParams: url.Values{"shortName": {"mog1"}},
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					clientSession: TOSession, expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when VALID NAME parameter": {
-					clientSession: TOSession, requestParams: url.Values{"name": {"parentCachegroup"}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+					ClientSession: TOSession, RequestParams: url.Values{"name": {"parentCachegroup"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						ValidateExpectedField("Name", "parentCachegroup")),
 				},
 				"OK when VALID SHORTNAME parameter": {
-					clientSession: TOSession, requestParams: url.Values{"shortName": {"pg2"}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+					ClientSession: TOSession, RequestParams: url.Values{"shortName": {"pg2"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						ValidateExpectedField("ShortName", "pg2")),
 				},
 				"OK when VALID TOPOLOGY parameter": {
-					clientSession: TOSession, requestParams: url.Values{"topology": {"mso-topology"}},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession: TOSession, RequestParams: url.Values{"topology": {"mso-topology"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					clientSession: NoAuthTOSession, expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+					ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"POST": {
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					clientSession: NoAuthTOSession, expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+					ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"PUT": {
 				"OK when VALID request": {
-					endpointId: GetCacheGroupId(t, "cachegroup1"), clientSession: TOSession,
-					requestBody: map[string]interface{}{
+					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"latitude":            17.5,
 						"longitude":           17.5,
 						"name":                "cachegroup1",
@@ -100,12 +92,12 @@ func TestCacheGroups(t *testing.T) {
 						"typeName":            "EDGE_LOC",
 						"typeId":              -1,
 					},
-					expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					endpointId: GetCacheGroupId(t, "parentCachegroup"), clientSession: TOSession,
-					requestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					requestBody: map[string]interface{}{
+					EndpointId: GetCacheGroupId(t, "parentCachegroup"), ClientSession: TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestBody: map[string]interface{}{
 						"latitude":  0,
 						"longitude": 0,
 						"name":      "parentCachegroup",
@@ -113,11 +105,11 @@ func TestCacheGroups(t *testing.T) {
 						"typeName":  "MID_LOC",
 						"typeId":    -1,
 					},
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					endpointId: GetCacheGroupId(t, "parentCachegroup2"), clientSession: TOSession,
-					requestBody: map[string]interface{}{
+					EndpointId: GetCacheGroupId(t, "parentCachegroup2"), ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"latitude":  0,
 						"longitude": 0,
 						"name":      "parentCachegroup2",
@@ -125,25 +117,25 @@ func TestCacheGroups(t *testing.T) {
 						"typeName":  "MID_LOC",
 						"typeId":    -1,
 					},
-					requestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
-					expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					endpointId: GetCacheGroupId(t, "cachegroup1"), clientSession: NoAuthTOSession,
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: NoAuthTOSession,
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"DELETE": {
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					endpointId: GetCacheGroupId(t, "cachegroup1"), clientSession: NoAuthTOSession,
-					expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: NoAuthTOSession,
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
-					clientSession:  TOSession,
-					requestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -153,25 +145,25 @@ func TestCacheGroups(t *testing.T) {
 				for name, testCase := range testCases {
 					cg := tc.CacheGroupNullable{}
 
-					if testCase.requestParams.Has("type") {
-						val := testCase.requestParams.Get("type")
+					if testCase.RequestParams.Has("type") {
+						val := testCase.RequestParams.Get("type")
 						if _, err := strconv.Atoi(val); err != nil {
-							testCase.requestParams.Set("type", strconv.Itoa(GetTypeId(t, val)))
+							testCase.RequestParams.Set("type", strconv.Itoa(GetTypeId(t, val)))
 						}
 					}
 
-					if testCase.requestBody != nil {
-						if _, ok := testCase.requestBody["id"]; ok {
-							testCase.requestBody["id"] = testCase.endpointId()
+					if testCase.RequestBody != nil {
+						if _, ok := testCase.RequestBody["id"]; ok {
+							testCase.RequestBody["id"] = testCase.EndpointId()
 						}
-						if typeId, ok := testCase.requestBody["typeId"]; ok {
+						if typeId, ok := testCase.RequestBody["typeId"]; ok {
 							if typeId == -1 {
-								if typeName, ok := testCase.requestBody["typeName"]; ok {
-									testCase.requestBody["typeId"] = GetTypeId(t, typeName.(string))
+								if typeName, ok := testCase.RequestBody["typeName"]; ok {
+									testCase.RequestBody["typeId"] = GetTypeId(t, typeName.(string))
 								}
 							}
 						}
-						dat, err := json.Marshal(testCase.requestBody)
+						dat, err := json.Marshal(testCase.RequestBody)
 						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 						err = json.Unmarshal(dat, &cg)
 						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
@@ -180,29 +172,29 @@ func TestCacheGroups(t *testing.T) {
 					switch method {
 					case "GET", "GET AFTER CHANGES":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.clientSession.GetCacheGroupsByQueryParamsWithHdr(testCase.requestParams, testCase.requestHeaders)
-							for _, check := range testCase.expectations {
+							resp, reqInf, err := testCase.ClientSession.GetCacheGroupsByQueryParamsWithHdr(testCase.RequestParams, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.clientSession.CreateCacheGroupNullable(cg)
-							for _, check := range testCase.expectations {
+							resp, reqInf, err := testCase.ClientSession.CreateCacheGroupNullable(cg)
+							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.clientSession.UpdateCacheGroupNullableByIDWithHdr(testCase.endpointId(), cg, testCase.requestHeaders)
-							for _, check := range testCase.expectations {
+							resp, reqInf, err := testCase.ClientSession.UpdateCacheGroupNullableByIDWithHdr(testCase.EndpointId(), cg, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.clientSession.DeleteCacheGroupByID(testCase.endpointId())
-							for _, check := range testCase.expectations {
+							alerts, reqInf, err := testCase.ClientSession.DeleteCacheGroupByID(testCase.EndpointId())
+							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})

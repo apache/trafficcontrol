@@ -33,6 +33,7 @@ tm_log_location_error: "{{ tm_log_dir }}/traffic_monitor.log"
 tm_log_location_warning: "{{ tm_log_dir }}/traffic_monitor.log"
 tm_log_location_info: "null"
 tm_log_location_debug: "null"
+tm_log_location_access: "{{ tm_log_dir }}/access.log"
 tm_log_location_event: "{{ tm_log_dir }}/event.log"
 tm_stat_flush_interval_ms: 20
 tm_serve_read_timeout_ms: 10000

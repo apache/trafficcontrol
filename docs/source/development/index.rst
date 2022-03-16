@@ -18,6 +18,21 @@ Developer's Guide
 *****************
 Use this guide to start developing applications that consume the Traffic Control APIs, to create extensions to Traffic Ops, or work on Traffic Control itself.
 
+.. toctree::
+	:maxdepth: 1
+
+	api_guidelines
+	environment_variables
+	building
+	debugging
+	documentation_guidelines
+	godocs
+	traffic_monitor
+	traffic_ops
+	traffic_portal
+	traffic_router
+	traffic_stats
+
 .. _dev:
 
 The Development Environment
@@ -208,18 +223,3 @@ t3c
 The ``atc.dev.sh`` file also provides a way to run :ref:`t3c-t3c` commands with debugging enabled. While in most production deployments :ref:`t3c-t3c` runs on a :manpage:`cron(8)` schedule, it is never run in the development environment, normally. One must manually trigger a run in order to run it and debug it.
 
 The usage of this provided function is exactly as if one were simply calling :ref:`t3c-t3c`. A `delve <https://github.com/go-delve/delve/tree/master/Documentation>`_ debugging session is automatically started when :ref:`t3c-t3c` is run, which listens on port 8081.
-
-.. toctree::
-	:maxdepth: 2
-
-	api_guidelines
-	environment_variables
-	building
-	debugging
-	documentation_guidelines
-	godocs
-	traffic_monitor
-	traffic_ops
-	traffic_portal
-	traffic_router
-	traffic_stats

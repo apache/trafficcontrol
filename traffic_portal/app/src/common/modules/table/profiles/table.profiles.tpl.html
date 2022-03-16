@@ -18,61 +18,15 @@ under the License.
 -->
 
 <div class="x_panel">
-    <div class="x_title">
-        <ol class="breadcrumb pull-left">
-            <li class="active">Profiles</li>
-        </ol>
-        <div class="pull-right">
-            <button name="createProfileButton" class="btn btn-primary" title="Create Profile" ng-click="createProfile()"><i class="fa fa-plus"></i></button>
-            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    <i class="fa fa-columns"></i>&nbsp;
-                    <span class="caret"></span>
-                </button>
-                <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
-                        <div class="checkbox">
-                            <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
-                        </div>
-                    </li>
-                </menu>
-            </div>
-            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    More
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="importProfile()">Import Profile</a></li>
-                    <li name="compareProfilesBtn" role="menuitem"><a ng-click="compareProfiles()">Compare Profiles</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="clearfix"></div>
-    </div>
-    <div class="x_content">
-        <br>
-        <table id="profilesTable" class="table responsive-utilities jambo_table">
-            <thead>
-            <tr class="headings">
-                <th>Name</th>
-                <th>Type</th>
-                <th>Routing Disabled</th>
-                <th>Description</th>
-                <th>CDN</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr ng-click="editProfile(p.id)" ng-repeat="p in ::profiles" context-menu="contextMenuItems">
-                <td name="name" data-search="^{{::p.name}}$">{{::p.name}}</td>
-                <td data-search="^{{::p.type}}$">{{::p.type}}</td>
-                <td data-search="^{{::p.routingDisabled}}$">{{::p.routingDisabled}}</td>
-                <td data-search="^{{::p.description}}$">{{::p.description}}</td>
-                <td data-search="^{{::p.cdnName}}$">{{::p.cdnName}}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+	<common-grid-controller
+		title="Profiles"
+		table-name="profiles"
+		options="gridOptions"
+		data="profiles"
+		columns="columns"
+		drop-down-options="dropDownOptions"
+		context-menu-options="contextMenuOptions"
+		default-data="defaultData"
+	>
+	</common-grid-controller>
 </div>
-

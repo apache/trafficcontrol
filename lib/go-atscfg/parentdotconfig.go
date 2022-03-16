@@ -843,9 +843,6 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	// the following may be blank, no default
 	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling]
 	params.MergeGroups = strings.Split(dsParams[ParentConfigParamMergeGroups], " ")
-	if 0 < len(params.MergeGroups) {
-		sort.Strings(params.MergeGroups)
-	}
 
 	// TODO deprecate & remove "mso." Parameters - there was never a reason to restrict these settings to MSO.
 	if isMSO {
@@ -1412,8 +1409,7 @@ func getTopologyParents(
 	}
 
 	if 0 < len(dsMergeGroups) && 0 < len(secondaryParentStrs) {
-		if sort.SearchStrings(dsMergeGroups, parentCG) < len(dsMergeGroups) &&
-			sort.SearchStrings(dsMergeGroups, secondaryParentCG) < len(dsMergeGroups) {
+		if util.ContainsStr(dsMergeGroups, parentCG) && util.ContainsStr(dsMergeGroups, secondaryParentCG) {
 			parentStrs = append(parentStrs, secondaryParentStrs...)
 			secondaryParentStrs = nil
 		}
