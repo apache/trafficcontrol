@@ -24,13 +24,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lib/pq"
 	"net"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/lib/pq"
 )
 
 // ServersV4Response is the format of a response to a GET request for API v4.x /servers.
@@ -755,15 +755,6 @@ type ServerNullableV2 struct {
 	ServerNullableV11
 	IPIsService  *bool `json:"ipIsService" db:"ip_address_is_service"`
 	IP6IsService *bool `json:"ip6IsService" db:"ip6_address_is_service"`
-}
-
-type ServerNullableV40 struct {
-	LegacyInterfaceDetails
-	CommonServerPropertiesV40
-	RouterHostName *string `json:"routerHostName" db:"router_host_name"`
-	RouterPortName *string `json:"routerPortName" db:"router_port_name"`
-	IPIsService    *bool   `json:"ipIsService" db:"ip_address_is_service"`
-	IP6IsService   *bool   `json:"ip6IsService" db:"ip6_address_is_service"`
 }
 
 // ToNullable converts the Server to an equivalent, "nullable" structure.

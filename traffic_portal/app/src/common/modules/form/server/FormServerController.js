@@ -61,8 +61,8 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     };
 
     $scope.getProfileID = function(profileName) {
-        for (let profile of $scope.profiles) {
-            if (profile.name == profileName) {
+        for (const profile of $scope.profiles) {
+            if (profile.name === profileName) {
                 return "/#!/profiles/"+profile.id
             }
         }
