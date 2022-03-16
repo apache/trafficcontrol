@@ -118,8 +118,12 @@ HEALTHCHECK --interval=10s --timeout=1s \
 
 FROM trafficops-dependencies as get-delve
 
-RUN dnf -y install golang && \
-    go install github.com/go-delve/delve/cmd/dlv@latest
+RUN if [[ "$DEBUG_ENABLE" == true ]]; then \
+        dnf -y install golang && \
+        go install github.com/go-delve/delve/cmd/dlv@latest; \
+    else \
+        mkdir -p /root/go/bin; \
+    fi
 
 FROM trafficops AS trafficops-debug
 COPY --from=get-delve /root/go/bin /usr/bin

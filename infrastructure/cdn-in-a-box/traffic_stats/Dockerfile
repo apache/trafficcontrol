@@ -62,8 +62,12 @@ ENTRYPOINT /run.sh
 
 FROM trafficstats-dependencies AS get-delve
 
-RUN dnf -y install golang && \
-    go install github.com/go-delve/delve/cmd/dlv@latest
+RUN if [[ "$DEBUG_ENABLE" == true ]]; then \
+        dnf -y install golang && \
+        go install github.com/go-delve/delve/cmd/dlv@latest; \
+    else \
+        mkdir -p /root/go/bin; \
+    fi
 
 FROM trafficstats AS trafficstats-debug
 COPY --from=get-delve /root/go/bin /usr/bin

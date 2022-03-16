@@ -120,8 +120,12 @@ RUN rpm -Uvh /$(basename $ORT_RPM) &&\
 CMD /run.sh
 
 FROM common-traffic-server-dependencies AS get-delve
-RUN dnf -y install golang && \
-    go install github.com/go-delve/delve/cmd/dlv@latest
+RUN if [[ "$DEBUG_ENABLE" == true ]]; then \
+        dnf -y install golang && \
+        go install github.com/go-delve/delve/cmd/dlv@latest; \
+    else \
+        mkdir -p /root/go/bin; \
+    fi
 
 FROM common-cache-config-layers AS mid
 ENV CACHE_TYPE=mid

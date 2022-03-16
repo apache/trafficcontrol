@@ -60,7 +60,11 @@ RUN set -o errexit -o nounset; \
     go build -ldflags "$ldflags" -gcflags "$gcflags"
 
 FROM enroller-dependencies as get-delve
-RUN go install github.com/go-delve/delve/cmd/dlv@latest
+RUN if [[ "$DEBUG_ENABLE" == true ]]; then \
+        go install github.com/go-delve/delve/cmd/dlv@latest; \
+    else \
+        mkdir -p /go/bin; \
+    fi
 
 FROM debian:bullseye AS enroller
 

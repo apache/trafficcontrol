@@ -70,8 +70,12 @@ HEALTHCHECK --interval=10s --timeout=1s \
 
 FROM trafficmonitor-dependencies as get-delve
 
-RUN dnf -y install golang && \
-    go install github.com/go-delve/delve/cmd/dlv@latest
+RUN if [[ "$DEBUG_ENABLE" == true ]]; then \
+        dnf -y install golang && \
+        go install github.com/go-delve/delve/cmd/dlv@latest; \
+    else \
+        mkdir -p /root/go/bin; \
+    fi
 
 FROM trafficmonitor as trafficmonitor-debug
 COPY --from=get-delve /root/go/bin /usr/bin

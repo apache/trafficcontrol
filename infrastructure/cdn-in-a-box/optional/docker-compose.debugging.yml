@@ -25,6 +25,7 @@ services:
     build:
       target: enroller-debug
       args:
+        DEBUG_ENABLE: 'true'
         ENROLLER_DEBUG_BUILD: 'true'
     image: enroller-debug
     ports:
@@ -32,12 +33,16 @@ services:
   trafficmonitor:
     build:
       target: trafficmonitor-debug
+      args:
+        DEBUG_ENABLE: 'true'
     image: trafficmonitor-debug
     ports:
       - "2344:2344" # Delve debugging port
   trafficops:
     build:
       target: trafficops-debug
+      args:
+        DEBUG_ENABLE: 'true'
     image: trafficops-debug
     ports:
       - "2345:2345" # Delve debugging port
@@ -47,24 +52,32 @@ services:
   trafficstats:
     build:
       target: trafficstats-debug
+      args:
+        DEBUG_ENABLE: 'true'
     image: trafficstats-debug
     ports:
       - "2346:2346" # Delve debugging port
   edge:
     build:
       target: edge-debug
+      args:
+        DEBUG_ENABLE: 'true'
     image: edge-debug
     ports:
       - "2347:2347" # Delve debugging port
   mid-01:
     build:
       target: mid-debug
+      args:
+        DEBUG_ENABLE: 'true'
     image: mid-debug
     ports:
       - "2348:2348" # Delve debugging port
   mid-02:
     build:
       target: mid-debug
+      args:
+        DEBUG_ENABLE: 'true'
     image: mid-debug
     ports:
       - "2349:2349" # Delve debugging port
