@@ -14,28 +14,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-FROM golang:1.11
-MAINTAINER dev@trafficcontrol.apache.org
-
-RUN apt-get update && \
-    apt-get install -y ffmpeg \
-      openssl \
-      gpac && \
-    apt-get autoremove -y && \
-    apt-get autoclean -y && \
-    rm -rf /var/lib/apt/lists/*
-
-COPY . /go/src/github.com/apache/trafficcontrol
-WORKDIR /go/src/github.com/apache/trafficcontrol/test/fakeOrigin
-
-RUN go install -v ./...
-
-RUN groupadd -g 999 fakeOrigin && \
-    useradd -r -u 999 -g fakeOrigin fakeOrigin
-RUN chown -R fakeOrigin:fakeOrigin .
-USER fakeOrigin
-
-VOLUME ["/host"]
-
-CMD ["fakeOrigin", "-cfg", "/host/config.json"]
+*
+!/cache-config/testing/ort-tests/config/config.go
+!/go.mod
+!/go.sum
+!/GO_VERSION
+!/lib/
+!/traffic_monitor
+!/traffic_ops/toclientlib
+!/traffic_ops/v*-client
+!/vendor/
