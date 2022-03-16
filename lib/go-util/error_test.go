@@ -36,7 +36,7 @@ func ExampleWrapError() {
 
 func BenchmarkErrorStringConcatenation(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		errors.New("querying for cdns: " + sql.ErrNoRows.Error())
+		_ = errors.New("querying for cdns: " + sql.ErrNoRows.Error())
 	}
 }
 
@@ -48,7 +48,7 @@ func BenchmarkErrorWrapping(b *testing.B) {
 
 func BenchmarkErrorf(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		fmt.Errorf("querying for cdns: %w", sql.ErrNoRows)
+		_ = fmt.Errorf("querying for cdns: %w", sql.ErrNoRows)
 	}
 }
 
