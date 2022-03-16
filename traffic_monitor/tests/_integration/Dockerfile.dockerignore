@@ -14,21 +14,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-FROM rockylinux:8
-MAINTAINER dev@trafficcontrol.apache.org
-
-RUN dnf -y install golang git
-ENV GOPATH=/go
-
-RUN mkdir -p ${GOPATH}/src/github.com/apache/trafficcontrol
-COPY go.mod \
-     go.sum \
-     ${GOPATH}/src/github.com/apache/trafficcontrol/
-COPY lib ${GOPATH}/src/github.com/apache/trafficcontrol/lib
-COPY vendor ${GOPATH}/src/github.com/apache/trafficcontrol/vendor
-COPY traffic_monitor/tools/testcaches ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/
-WORKDIR ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches
-RUN go build && cp testcaches /usr/sbin/
-
-CMD ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/Dockerfile_run.sh
+*
+!/cache-config/testing/ort-tests/config/config.go
+!/go.mod
+!/go.sum
+!/GO_VERSION
+!/lib/
+!/traffic_monitor
+!/traffic_ops/toclientlib
+!/traffic_ops/v*-client
+!/vendor/
