@@ -26,19 +26,15 @@ var FormCdniRequestController = function($scope, $stateParams, $uibModal, cdniSe
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	$scope.respondToRequest = function(approve) {
-		let titleStart = approve ? 'Approve' : 'Deny';
-		var params = {
-			title: titleStart + ' CDNi Update Request: ' + cdniRequest.id
+		const titleStart = approve ? 'Approve' : 'Deny';
+		const params = {
+			title: `${titleStart} CDNi Update Request: ${cdniRequest.id}`
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
 			controller: 'DialogConfirmController',
 			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
-			}
+			resolve: {params}
 		});
 		modalInstance.result.then(function() {
 			cdniService.sendResponseToCdniRequest(cdniRequest.id, approve).then(

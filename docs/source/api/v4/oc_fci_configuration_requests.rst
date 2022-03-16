@@ -44,8 +44,8 @@ Response Structure
 :ucdn:             The name of the :abbr:`uCDN (Upstream Content Delivery Network)` to which the requested changes apply.
 :data:             An array of generic :abbr:`FCI (Footprint and Capabilities Advertisement Interface)` base objects.
 :host:             The domain to which the requested changes apply.
-:request_type:     A string of the type of configuration update request.
-:async_status_id:  An integral, unique identifier for the associated asynchronous status.
+:request-type:     A string of the type of configuration update request.
+:async-status-id:  An integral, unique identifier for the associated asynchronous status.
 :capability-type:  A string of the type of base object.
 :capability-value: An array of the value for the base object.
 :footprints:       An array of footprints impacted by this generic base object.
@@ -89,8 +89,8 @@ Response Structure
 					}
 				],
 				"host": "example.com",
-				"request_type": "hostConfigUpdate",
-				"async_status_id": 0
+				"request-type": "hostConfigUpdate",
+				"async-status-id": 0
 			}
 		]
 	}
