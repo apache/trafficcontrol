@@ -179,13 +179,13 @@ func TestCacheGroups(t *testing.T) {
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					RequestBody: map[string]interface{}{
 						"name":      "cachegroup1",
 						"shortName": "changeName",
 						"typeName":  "EDGE_LOC",
 						"typeId":    -1,
 					},
-					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
