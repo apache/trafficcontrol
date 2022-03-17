@@ -75,14 +75,14 @@ func TestGetDetailServers(t *testing.T) {
 		"mgmt_ip_netmask",
 		"offline_reason",
 		"phys_location",
-		"profile",
-		"profile_desc",
 		"rack",
 		"status",
 		"tcp_port",
 		"server_type",
 		"xmpp_id",
 		"xmpp_passwd",
+		"profile",
+		"profile_desc",
 	}
 	detailRows := sqlmock.NewRows(detailCols)
 
@@ -123,14 +123,14 @@ func TestGetDetailServers(t *testing.T) {
 			sd.MgmtIPNetmask,
 			sd.OfflineReason,
 			sd.PhysLocation,
-			sd.Profiles,
-			sd.ProfileDesc,
 			sd.Rack,
 			sd.Status,
 			sd.TCPPort,
 			sd.Type,
 			sd.XMPPID,
 			sd.XMPPPasswd,
+			sd.Profiles,
+			sd.ProfileDesc,
 		)
 	}
 	mock.ExpectQuery("SELECT server.id ,").WillReturnRows(detailRows)
