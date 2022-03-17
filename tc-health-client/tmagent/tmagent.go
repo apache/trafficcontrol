@@ -264,8 +264,9 @@ func (c *ParentInfo) GetCacheStatuses() (tc.CRStates, error) {
 // down in the trafficserver subsystem based upon that hosts current status and
 // the status that trafficmonitor health protocol has determined for a parent.
 func (c *ParentInfo) PollAndUpdateCacheStatus() {
-	cycleCount := 0
+	toLoginDispersion := config.GetTOLoginDispersion(c.Cfg.TOLoginDispersionFactor)
 	log.Infoln("polling started")
+	log.Infof("TO login dispersion: %v seconds\n", toLoginDispersion.Seconds())
 
 	for {
 		pollingInterval := config.GetTMPollingInterval()
@@ -374,15 +375,15 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 		}
 
 		// periodically update the TrafficMonitor list and statuses
-		if cycleCount == c.Cfg.TmUpdateCycles {
-			cycleCount = 0
+		if toLoginDispersion <= 0 {
+			toLoginDispersion = config.GetTOLoginDispersion(c.Cfg.TOLoginDispersionFactor)
 			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
 				log.Errorln("could not update the list of trafficmonitors, keeping the old config")
 			} else {
 				log.Infoln("updated TrafficMonitor statuses from TrafficOps")
 			}
 		} else {
-			cycleCount++
+			toLoginDispersion -= pollingInterval
 		}
 
 		// log the poll state data if enabled

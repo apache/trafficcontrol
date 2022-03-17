@@ -1757,7 +1757,7 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
 	var id int
 	var desc string
-	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (*s.Profiles)[0])
+	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (*s.ProfileNames)[0])
 	if err != nil {
 		return tc.CommonServerProperties{}, fmt.Errorf("querying profile id and description by profile_names: " + err.Error())
 	}
@@ -1792,7 +1792,7 @@ func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServe
 		MgmtIPGateway:    s.MgmtIPGateway,
 		MgmtIPNetmask:    s.MgmtIPNetmask,
 		OfflineReason:    s.OfflineReason,
-		Profile:          &(*s.Profiles)[0],
+		Profile:          &(*s.ProfileNames)[0],
 		ProfileDesc:      &desc,
 		ProfileID:        &id,
 		PhysLocation:     s.PhysLocation,

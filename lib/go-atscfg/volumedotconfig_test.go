@@ -39,9 +39,9 @@ func TestMakeVolumeDotConfig(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
-	params := makeParamsFromMap((*server.Profiles)[0], VolumeFileName, paramData)
+	params := makeParamsFromMap((*server.ProfileNames)[0], VolumeFileName, paramData)
 
 	cfg, err := MakeVolumeDotConfig(server, params, &VolumeDotConfigOpts{HdrComment: hdr})
 	if err != nil {
@@ -61,7 +61,7 @@ func TestMakeVolumeDotConfig(t *testing.T) {
 
 	delete(paramData, "SSD_Drive_Prefix")
 	delete(paramData, "SSD_Drive_Letters")
-	params = makeParamsFromMap((*server.Profiles)[0], VolumeFileName, paramData)
+	params = makeParamsFromMap((*server.ProfileNames)[0], VolumeFileName, paramData)
 
 	cfg, err = MakeVolumeDotConfig(server, params, &VolumeDotConfigOpts{HdrComment: hdr})
 	if err != nil {
@@ -79,7 +79,7 @@ func TestMakeVolumeDotConfig(t *testing.T) {
 
 	delete(paramData, "RAM_Drive_Prefix")
 	delete(paramData, "RAM_Drive_Letters")
-	params = makeParamsFromMap((*server.Profiles)[0], VolumeFileName, paramData)
+	params = makeParamsFromMap((*server.ProfileNames)[0], VolumeFileName, paramData)
 
 	cfg, err = MakeVolumeDotConfig(server, params, &VolumeDotConfigOpts{HdrComment: hdr})
 	if err != nil {
@@ -102,9 +102,9 @@ func TestMakeVolumeDotConfigNoParams(t *testing.T) {
 	paramData := map[string]string{}
 
 	server := makeGenericServer()
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
-	params := makeParamsFromMap((*server.Profiles)[0], VolumeFileName, paramData)
+	params := makeParamsFromMap((*server.ProfileNames)[0], VolumeFileName, paramData)
 
 	cfg, err := MakeVolumeDotConfig(server, params, &VolumeDotConfigOpts{HdrComment: hdr})
 	if err != nil {
@@ -138,9 +138,9 @@ func TestMakeVolumeDotConfigNoLetters(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
-	params := makeParamsFromMap((*server.Profiles)[0], VolumeFileName, paramData)
+	params := makeParamsFromMap((*server.ProfileNames)[0], VolumeFileName, paramData)
 
 	cfg, err := MakeVolumeDotConfig(server, params, &VolumeDotConfigOpts{HdrComment: hdr})
 	if err != nil {
@@ -172,9 +172,9 @@ func TestMakeVolumeDotConfigSomePrefixes(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
-	params := makeParamsFromMap((*server.Profiles)[0], VolumeFileName, paramData)
+	params := makeParamsFromMap((*server.ProfileNames)[0], VolumeFileName, paramData)
 
 	cfg, err := MakeVolumeDotConfig(server, params, &VolumeDotConfigOpts{HdrComment: hdr})
 	if err != nil {

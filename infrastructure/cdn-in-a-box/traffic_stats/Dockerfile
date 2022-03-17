@@ -63,7 +63,7 @@ ENTRYPOINT /run.sh
 FROM trafficstats-dependencies AS get-delve
 
 RUN dnf -y install golang && \
-    GOPROXY='https://proxy.golang.org' go get -u github.com/go-delve/delve/cmd/dlv
+    GOPROXY='https://proxy.golang.org' go get github.com/go-delve/delve/cmd/dlv
 
 FROM trafficstats AS trafficstats-debug
 COPY --from=get-delve /root/go/bin /usr/bin

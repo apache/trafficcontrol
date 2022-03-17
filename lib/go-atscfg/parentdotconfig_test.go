@@ -2936,28 +2936,16 @@ func TestMakeParentDotConfigHTTPSOriginTopology(t *testing.T) {
 func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
 	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
 
-	/*
-		ds0 := makeParentDS()
-		ds0Type := tc.DSTypeHTTP
-		ds0.Type = &ds0Type
-		ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
-		ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
-		ds0.ProfileID = util.IntPtr(311)
-		ds0.ProfileName = util.StrPtr("ds0Profile")
-	*/
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+	ds0.ProfileID = util.IntPtr(311)
+	ds0.ProfileName = util.StrPtr("ds0Profile")
+	ds0.Topology = util.StrPtr("t0")
 
-	ds1 := makeParentDS()
-	ds1.ID = util.IntPtr(43)
-	ds1Type := tc.DSTypeDNS
-	ds1.Type = &ds1Type
-	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
-	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
-	ds1.Topology = util.StrPtr("t0")
-	ds1.ProfileID = util.IntPtr(312)
-	ds1.ProfileName = util.StrPtr("ds0Profile")
-
-	//dses := []DeliveryService{*ds0, *ds1}
-	dses := []DeliveryService{*ds1}
+	dses := []DeliveryService{*ds0}
 
 	parentConfigParams := []tc.Parameter{
 		{
@@ -2981,14 +2969,8 @@ func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
 		{
 			Name:       ParentConfigParamMergeGroups,
 			ConfigFile: "parent.config",
-			Value:      "midCG midCG2",
+			Value:      "oplCG0 oplCG1",
 			Profiles:   []byte(`["ds0Profile"]`),
-		},
-		{
-			Name:       ParentConfigParamMergeGroups,
-			ConfigFile: "parent.config",
-			Value:      "midCG midCG2",
-			Profiles:   []byte(`["ds1Profile"]`),
 		},
 	}
 
@@ -3006,20 +2988,34 @@ func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
 	edge.CachegroupID = util.IntPtr(400)
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.Cachegroup = util.StrPtr("midCG0")
 	mid0.CachegroupID = util.IntPtr(500)
-	mid0.HostName = util.StrPtr("mymid")
+	mid0.HostName = util.StrPtr("mymid0")
 	mid0.ID = util.IntPtr(45)
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.StrPtr("midCG2")
+	mid1.Cachegroup = util.StrPtr("midCG1")
 	mid1.CachegroupID = util.IntPtr(501)
 	mid1.HostName = util.StrPtr("mymid1")
 	mid1.ID = util.IntPtr(46)
-	setIP(mid1, "192.168.2.3")
+	setIP(mid0, "192.168.2.3")
 
-	servers := []Server{*edge, *mid0, *mid1}
+	opl0 := makeTestParentServer()
+	opl0.Cachegroup = util.StrPtr("oplCG0")
+	opl0.CachegroupID = util.IntPtr(600)
+	opl0.HostName = util.StrPtr("myopl0")
+	opl0.ID = util.IntPtr(47)
+	setIP(opl0, "192.168.2.4")
+
+	opl1 := makeTestParentServer()
+	opl1.Cachegroup = util.StrPtr("oplCG1")
+	opl1.CachegroupID = util.IntPtr(601)
+	opl1.HostName = util.StrPtr("myopl1")
+	opl1.ID = util.IntPtr(48)
+	setIP(opl0, "192.168.2.5")
+
+	servers := []Server{*edge, *mid0, *mid1, *opl0, *opl1}
 
 	topologies := []tc.Topology{
 		{
@@ -3030,10 +3026,18 @@ func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
 					Parents:    []int{1, 2},
 				},
 				{
-					Cachegroup: "midCG",
+					Cachegroup: "midCG0",
+					Parents:    []int{3, 4},
 				},
 				{
-					Cachegroup: "midCG2",
+					Cachegroup: "midCG1",
+					Parents:    []int{3, 4},
+				},
+				{
+					Cachegroup: "oplCG0",
+				},
+				{
+					Cachegroup: "oplCG1",
 				},
 			},
 		},
@@ -3052,24 +3056,48 @@ func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
-	mCG := &tc.CacheGroupNullable{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
-	mCGType := tc.CacheGroupMidTypeName
-	mCG.Type = &mCGType
+	mCG0 := &tc.CacheGroupNullable{}
+	mCG0.Name = mid0.Cachegroup
+	mCG0.ID = mid0.CachegroupID
+	mCG0.ParentName = opl0.Cachegroup
+	mCG0.ParentCachegroupID = opl0.CachegroupID
+	mCG0.SecondaryParentName = opl1.Cachegroup
+	mCG0.SecondaryParentCachegroupID = opl1.CachegroupID
+	mCGType0 := tc.CacheGroupMidTypeName
+	mCG0.Type = &mCGType0
 
-	mCG2 := &tc.CacheGroupNullable{}
-	mCG2.Name = mid1.Cachegroup
-	mCG2.ID = mid1.CachegroupID
-	mCGType2 := tc.CacheGroupMidTypeName
-	mCG2.Type = &mCGType2
+	mCG1 := &tc.CacheGroupNullable{}
+	mCG1.Name = mid1.Cachegroup
+	mCG1.ID = mid1.CachegroupID
+	mCG1.ParentName = opl1.Cachegroup
+	mCG1.ParentCachegroupID = opl1.CachegroupID
+	mCG1.SecondaryParentName = opl0.Cachegroup
+	mCG1.SecondaryParentCachegroupID = opl0.CachegroupID
+	mCGType1 := tc.CacheGroupMidTypeName
+	mCG1.Type = &mCGType1
 
-	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	oCG0 := &tc.CacheGroupNullable{}
+	oCG0.Name = opl0.Cachegroup
+	oCG0.ID = opl0.CachegroupID
+	oCGType0 := tc.CacheGroupMidTypeName
+	oCG0.Type = &oCGType0
+
+	oCG1 := &tc.CacheGroupNullable{}
+	oCG1.Name = opl1.Cachegroup
+	oCG1.ID = opl1.CachegroupID
+	oCGType1 := tc.CacheGroupMidTypeName
+	oCG1.Type = &oCGType1
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG0, *mCG1, *oCG0, *oCG1}
 
 	dss := []DeliveryServiceServer{
 		{
 			Server:          *edge.ID,
-			DeliveryService: *ds1.ID,
+			DeliveryService: *ds0.ID,
+		},
+		{
+			Server:          *mid0.ID,
+			DeliveryService: *ds0.ID,
 		},
 	}
 	cdn := &tc.CDN{
@@ -3077,20 +3105,38 @@ func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	cfg, err := MakeParentDotConfig(dses, edge, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
-	if err != nil {
-		t.Fatal(err)
+	{ // test edge config
+		cfg, err := MakeParentDotConfig(dses, edge, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, hdr.HdrComment)
+
+		if !strings.Contains(txt, `dest_domain=ds0.example.net port=80 parent="mymid0.mydomain.example.net:80|0.999" secondary_parent="mymid1.mydomain.example.net:80|0.999"`) {
+			t.Errorf("expected topology parent.config of ds0 edge to have parent only: '%v'", txt)
+		}
+
+		if strings.Count(txt, "secondary_parent") != 2 {
+			t.Errorf("expected 2 secondary parents for edge (dest_domain=.): '%v'", txt)
+		}
 	}
-	txt := cfg.Text
 
-	testComment(t, txt, hdr.HdrComment)
+	{ // test mid config
+		cfg, err := MakeParentDotConfig(dses, mid0, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
 
-	if !strings.Contains(txt, `dest_domain=ds1.example.net port=80 parent="mymid.mydomain.example.net:80|0.999;mymid1.mydomain.example.net:80|0.999"`) {
-		t.Errorf("expected topology parent.config of ds1 to have parent only: '%v'", txt)
-	}
+		testComment(t, txt, hdr.HdrComment)
 
-	if strings.Count(txt, "secondary_parent") != 1 {
-		t.Errorf("expected only one secondary parent (dest_domain=.): '%v'", txt)
+		if !strings.Contains(txt, `dest_domain=ds0.example.net port=80 parent="myopl0.mydomain.example.net:80|0.999;myopl1.mydomain.example.net:80|0.999"`) {
+			t.Errorf("expected topology parent.config of ds0 mid1 to have parent only: '%v'", txt)
+		} else if strings.Count(txt, "secondary_parent") != 1 {
+			t.Errorf("expected one secondary parent for mid1 (dest_domain=.): '%v'", txt)
+		}
 	}
 }
 
@@ -3118,7 +3164,7 @@ func makeTestParentServer() *Server {
 	server.ID = util.IntPtr(44)
 	setIP(server, "192.168.2.1")
 	//server.ProfileID = util.IntPtr(46)
-	server.Profiles = &pq.StringArray{"serverprofile"}
+	server.ProfileNames = &pq.StringArray{"serverprofile"}
 	server.TCPPort = util.IntPtr(80)
 	server.Type = "EDGE"
 	server.TypeID = util.IntPtr(91)

@@ -53,7 +53,7 @@ func MakeLoggingDotConfig(
 	}
 	warnings := []string{}
 
-	if server.Profiles == nil && len(*server.Profiles) == 0 {
+	if server.ProfileNames == nil && len(*server.ProfileNames) == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 
@@ -75,7 +75,7 @@ func MakeLoggingDotConfig(
 			format := paramData[logFormatField+".Format"]
 			if format == "" {
 				// TODO determine if the line should be excluded. Perl includes it anyway, without checking.
-				warnings = append(warnings, fmt.Sprintf("profile '%v' has logging.config format '%v' Name Parameter but no Format Parameter. Setting blank Format!\n", *server.Profiles, logFormatField))
+				warnings = append(warnings, fmt.Sprintf("profile '%v' has logging.config format '%v' Name Parameter but no Format Parameter. Setting blank Format!\n", *server.ProfileNames, logFormatField))
 			}
 			format = strings.Replace(format, `"`, `\"`, -1)
 			text += logFormatName + " = format {\n"
@@ -94,7 +94,7 @@ func MakeLoggingDotConfig(
 			filter := paramData[logFilterField+".Filter"]
 			if filter == "" {
 				// TODO determine if the line should be excluded. Perl includes it anyway, without checking.
-				warnings = append(warnings, fmt.Sprintf("profile '%v' has logging.config format '%v' Name Parameter but no Filter Parameter. Setting blank Filter!\n", *server.Profiles, logFilterField))
+				warnings = append(warnings, fmt.Sprintf("profile '%v' has logging.config format '%v' Name Parameter but no Filter Parameter. Setting blank Filter!\n", *server.ProfileNames, logFilterField))
 			}
 
 			filter = strings.Replace(filter, `\`, `\\`, -1)

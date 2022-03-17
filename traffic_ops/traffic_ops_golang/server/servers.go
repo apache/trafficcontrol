@@ -594,7 +594,7 @@ func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
 		"domainName":     validation.Validate(s.DomainName, validation.Required, noSpaces),
 		"hostName":       validation.Validate(s.HostName, validation.Required, noSpaces),
 		"physLocationId": validation.Validate(s.PhysLocationID, validation.NotNil),
-		"profileNames":   validation.Validate(s.Profiles, validation.NotNil),
+		"profileNames":   validation.Validate(s.ProfileNames, validation.NotNil),
 		"statusId":       validation.Validate(s.StatusID, validation.NotNil),
 		"typeId":         validation.Validate(s.TypeID, validation.NotNil),
 		"updPending":     validation.Validate(s.UpdPending, validation.NotNil),
@@ -610,15 +610,15 @@ func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
 		errs = append(errs, err)
 	}
 
-	if len(*s.Profiles) == 0 {
+	if len(*s.ProfileNames) == 0 {
 		errs = append(errs, fmt.Errorf("no profiles exists"))
 	}
 
 	var cdnID int
-	if err := tx.QueryRow("SELECT cdn from profile WHERE name=$1", (*s.Profiles)[0]).Scan(&cdnID); err != nil {
+	if err := tx.QueryRow("SELECT cdn from profile WHERE name=$1", (*s.ProfileNames)[0]).Scan(&cdnID); err != nil {
 		log.Errorf("could not execute select cdnID from profile: %s\n", err)
 		if err == sql.ErrNoRows {
-			errs = append(errs, fmt.Errorf("no such profileName: '%v'", (*s.Profiles)[0]))
+			errs = append(errs, fmt.Errorf("no such profileName: '%v'", (*s.ProfileNames)[0]))
 		} else {
 			errs = append(errs, tc.DBError)
 		}
@@ -627,7 +627,7 @@ func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
 
 	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
 	if cdnID != *s.CDNID {
-		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%v' does not match Server CDN '%d'", cdnID, (*s.Profiles)[0], *s.CDNID))
+		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%v' does not match Server CDN '%d'", cdnID, (*s.ProfileNames)[0], *s.CDNID))
 	}
 	return errs
 }
@@ -1552,7 +1552,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		if err := dbhelpers.UpdateServerProfilesForV4(server.ID, server.Profiles, tx); err != nil {
+		if err := dbhelpers.UpdateServerProfilesForV4(server.ID, server.ProfileNames, tx); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
@@ -2025,7 +2025,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	origProfiles := *server.Profiles
+	origProfiles := *server.ProfileNames
 
 	resultRows, err := inf.Tx.NamedQuery(insertQueryV4, server)
 	if err != nil {

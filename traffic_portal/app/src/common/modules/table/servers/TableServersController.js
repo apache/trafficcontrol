@@ -365,7 +365,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
 			x.statusLastUpdated = x.statusLastUpdated ? new Date(x.statusLastUpdated): x.statusLastUpdated;
 			Object.assign(x, serverUtils.toLegacyIPInfo(x.interfaces));
-			if (x.profileNames != undefined) {
+			if (x.profileNames !== undefined) {
 				x.profileName = x.profileNames[0]
 			}
 			return x;

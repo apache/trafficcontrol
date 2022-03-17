@@ -17,13 +17,18 @@ package utils
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/url"
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	v3client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	v4client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 type ErrorAndMessage struct {
@@ -77,6 +82,47 @@ func Compare(t *testing.T, expected []string, alertsStrs []string) {
 			}
 		}
 	}
+}
+
+// CreateV3Session creates a session for client v4 using the passed in username and password.
+func CreateV3Session(t *testing.T, TrafficOpsURL string, username string, password string, toReqTimeout int) *v3client.Session {
+	userSession, _, err := v3client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v3-client-tests", false, time.Second*time.Duration(toReqTimeout))
+	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
+	return userSession
+}
+
+// CreateV4Session creates a session for client v4 using the passed in username and password.
+func CreateV4Session(t *testing.T, TrafficOpsURL string, username string, password string, toReqTimeout int) *v4client.Session {
+	userSession, _, err := v4client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v4-client-tests", false, time.Second*time.Duration(toReqTimeout))
+	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
+	return userSession
+}
+
+// V3TestCase is the type of the V3TestData struct.
+// Uses nested map to represent the method being tested and the test's description.
+type V3TestCase map[string]map[string]V3TestData
+
+// V4TestCase is the type of the V4TestData struct.
+// Uses nested map to represent the method being tested and the test's description.
+type V4TestCase map[string]map[string]V4TestData
+
+// V3TestData represents the data needed for testing the v3 api endpoints.
+type V3TestData struct {
+	EndpointId     func() int
+	ClientSession  *v3client.Session
+	RequestParams  url.Values
+	RequestHeaders http.Header
+	RequestBody    map[string]interface{}
+	Expectations   []CkReqFunc
+}
+
+// V4TestData represents the data needed for testing the v4 api endpoints.
+type V4TestData struct {
+	EndpointId    func() int
+	ClientSession *v4client.Session
+	RequestOpts   v4client.RequestOptions
+	RequestBody   map[string]interface{}
+	Expectations  []CkReqFunc
 }
 
 // CkReqFunc defines the reusable signature for all other functions that perform checks.

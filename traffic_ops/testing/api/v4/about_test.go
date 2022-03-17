@@ -16,20 +16,38 @@ package v4
 */
 
 import (
+	"net/http"
 	"testing"
 
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestAbout(t *testing.T) {
-	m, _, err := TOSession.GetAbout(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("error from GetAbout(): %v", err)
-	}
-	t.Logf("about: %v", m)
 
-	m, _, err = NoAuthTOSession.GetAbout(client.RequestOptions{})
-	if err == nil {
-		t.Error("expected error from GetAbout() when unauthenticated")
+	methodTests := utils.V4TestCase{
+		"GET": {
+			"OK when VALID request": {
+				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+			},
+			"UNAUTHORIZED when NOT LOGGED IN": {
+				ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+			},
+		},
+	}
+	for method, testCases := range methodTests {
+		t.Run(method, func(t *testing.T) {
+			for name, testCase := range testCases {
+				switch method {
+				case "GET":
+					t.Run(name, func(t *testing.T) {
+						resp, reqInf, err := testCase.ClientSession.GetAbout(testCase.RequestOpts)
+						for _, check := range testCase.Expectations {
+							check(t, reqInf, resp, tc.Alerts{}, err)
+						}
+					})
+				}
+			}
+		})
 	}
 }

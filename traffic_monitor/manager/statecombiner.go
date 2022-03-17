@@ -133,7 +133,7 @@ func combineCacheState(
 				IPv6Available: ipv6Available})
 	}
 
-	combinedStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: available, Ipv4Available: ipv4Available, Ipv6Available: ipv6Available, DirectlyPolled: localCacheState.DirectlyPolled})
+	combinedStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: available, Ipv4Available: ipv4Available, Ipv6Available: ipv6Available, DirectlyPolled: localCacheState.DirectlyPolled, Status: localCacheState.Status, LastPoll: localCacheState.LastPoll})
 }
 
 func combineDSState(

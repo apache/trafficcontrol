@@ -16,150 +16,143 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor';
+import { browser, by, element } from "protractor";
 
-import { randomize } from '../config';
-import { BasePage } from './BasePage.po';
-import { SideNavigationPage } from './SideNavigationPage.po';
+import { randomize } from "../config";
+import { SideNavigationPage } from "./SideNavigationPage.po";
 
+/** A definition of a Profile to create. */
 interface CreateProfile {
-    CDN: string;
-    Description: string;
-    Name: string;
-    RoutingDisable: string;
-    Type: string;
-    validationMessage?: string;
+	cdn: string;
+	name: string;
+	profileDescription: string;
+	routingDisabled: string;
+	type: string;
+	validationMessage?: string;
 }
 
-interface UpdateProfile {
-    description: string;
-    Type: string;
-    validationMessage?: string;
-}
+/** An interface for interacting with various Profile pages. */
+export class ProfilesPage extends SideNavigationPage {
 
-interface DeleteProfile {
-    Name: string;
-    validationMessage?: string;
-}
+	private static readonly txtType = element(by.name("type"));
 
-export class ProfilesPage extends BasePage {
+	/**
+	 * Creates the given Profile.
+	 *
+	 * @param profile The Profile to create.
+	 * @returns Whether or not the creation was successful.
+	 */
+	public async createProfile(profile: CreateProfile): Promise<boolean> {
+		await this.NavigateToProfilesPage();
+		await element(by.buttonText("More")).click();
+		await element(by.linkText("Create New Profile")).click();
+		await Promise.all([
+			element(by.name("name")).sendKeys(`${profile.name}${randomize}`),
+			element(by.name("cdn")).sendKeys(profile.cdn),
+			ProfilesPage.txtType.sendKeys(profile.type),
+			element(by.name("routingDisabled")).sendKeys(profile.routingDisabled),
+			element(by.id("description")).sendKeys(profile.profileDescription)
+		]);
+		await this.ClickCreate();
+		const result = await this.GetOutputMessage();
+		return result === profile.validationMessage;
+	}
 
-    private btnCreateNewProfile = element(by.name('createProfileButton'));
-    private txtName = element(by.name('name'));
-    private txtCDN = element(by.name('cdn'));
-    private txtType = element(by.name('type'));
-    private txtRoutingDisable = element(by.name('routingDisabled'));
-    private txtDescription = element(by.id('description'));
-    private txtSearch = element(by.id('profilesTable_filter')).element(by.css('label input'));
-    private btnDelete = element(by.buttonText('Delete'));
-    private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private btnMore = element(by.name('moreBtn'));
-    private btnCompareProfile = element(by.name('compareProfilesBtn'));
-    private txtCompareDropdown1 = element(by.name('compareDropdown1'));
-    private txtCompareDropdown2 = element(by.name('compareDropdown2'));
-    private btnCompareSubmit = element(by.name('compareSubmit'));
-    private mnuCompareTable = element(by.id('profilesParamsCompareTable_wrapper'));
-    private btnTableColumn = element(by.className("caret"))
-    private randomize = randomize;
+	/**
+	 * Searches for a Profile in the table by Name, and clicks on the first
+	 * matching entry if any exist.
+	 *
+	 * @param name The Name of the Profile for which to search.
+	 * @returns Whether or not at least one matching entry is present after
+	 * searching. If `false`, no navigation was performed (because it couldn"t
+	 * be).
+	 */
+	public async searchProfile(name: string): Promise<boolean> {
+		name += randomize;
+		await this.NavigateToProfilesPage();
 
-    public async OpenProfilesPage() {
-        const snp = new SideNavigationPage();
-        await snp.NavigateToProfilesPage();
-    }
+		const quickSearch = element(by.id("quickSearch"));
+		await quickSearch.clear();
+		await quickSearch.sendKeys(name);
 
-    public async OpenConfigureMenu() {
-        const snp = new SideNavigationPage();
-        await snp.ClickConfigureMenu();
-    }
+		const match = element(by.cssContainingText("span", name));
+		if (!await browser.isElementPresent(match)) {
+			return false;
+		}
 
-    public async CreateProfile(profile: CreateProfile): Promise<boolean> {
-        let result = false;
-        const basePage = new BasePage();
-        const snp = new SideNavigationPage();
-        await snp.NavigateToProfilesPage();
-        await this.btnCreateNewProfile.click();
-        await this.txtName.sendKeys(profile.Name + this.randomize);
-        await this.txtCDN.sendKeys(profile.CDN);
-        await this.txtType.sendKeys(profile.Type);
-        await this.txtRoutingDisable.sendKeys(profile.RoutingDisable);
-        await this.txtDescription.sendKeys(profile.Description);
-        await basePage.ClickCreate();
-        result = await basePage.GetOutputMessage().then(function (value) {
-            if (profile.validationMessage == value) {
-                return true;
-            } else {
-                return false;
-            }
-        })
-        return result;
-    }
+		await match.click();
+		return true;
+	}
 
-    public async SearchProfile(nameProfiles: string): Promise<boolean> {
-        const snp = new SideNavigationPage();
-        let name = nameProfiles + this.randomize;
-        await snp.NavigateToProfilesPage();
-        await this.txtSearch.clear();
-        await this.txtSearch.sendKeys(name);
-        if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
-            await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            return true;
-        }
-        return false;
-    }
+	/**
+	 * Opens the "compare" page for the given two Profiles.
+	 *
+	 * @param profile1 The Name of the first Profile to compare.
+	 * @param profile2 The Name of the second Profile to compare.
+	 * @returns Whether or not all steps successfully completed and the browser
+	 * is sitting
+	 */
+	public async compareProfiles(profile1: string, profile2: string): Promise<boolean> {
+		await this.NavigateToProfilesPage();
+		await element(by.buttonText("More")).click();
+		await element(by.buttonText("Compare Profiles")).click();
+		await Promise.all([
+			element(by.name("compareDropdown1")).sendKeys(profile1),
+			element(by.name("compareDropdown1")).sendKeys(profile2)
+		]);
+		await element(by.name("compareSubmit")).click();
+		return element(by.id("profilesParamsCompareTable_wrapper")).isDisplayed();
+	}
 
-    public async CompareProfile(profile1: string, profile2: string) {
-        let result = false;
-        const snp = new SideNavigationPage();
-        await snp.NavigateToProfilesPage();
-        await this.btnMore.click();
-        await this.btnCompareProfile.click();
-        await this.txtCompareDropdown1.sendKeys(profile1);
-        await this.txtCompareDropdown2.sendKeys(profile2);
-        await this.btnCompareSubmit.click();
-        if (await this.mnuCompareTable.isDisplayed() == true) {
-            result = true;
-            return result;
-        }
-    }
+	/**
+	 * Updates the Profile for which the browser is currently view details
+	 * (navigation to the details page **must** be done *before* calling this
+	 * method).
+	 *
+	 * @param type The new Type to give a Profile
+	 * @param validationMessage A literal Alert text that will be checked for to
+	 * determine success. If omitted, no Alert is expected.
+	 * @returns Whether or not the update was successful.
+	 */
+	public async updateProfile(type: string, validationMessage: string): Promise<boolean> {
+		await ProfilesPage.txtType.sendKeys(type);
+		await this.ClickUpdate();
+		return (await this.GetOutputMessage()) === validationMessage;
+	}
 
-    public async UpdateProfile(profile: UpdateProfile): Promise<boolean> {
-        const basePage = new BasePage();
-        switch (profile.description) {
-            case "update profile type":
-                await this.txtType.sendKeys(profile.Type);
-                await basePage.ClickUpdate();
-                break;
-            default:
-                return false;
-        }
-        return await basePage.GetOutputMessage().then(value => profile.validationMessage === value);
-    }
+	/**
+	 * Deletes the Profile for which the browser is currently view details
+	 * (navigation to the details page **must** be done *before* calling this
+	 * method).
+	 *
+	 * @param name The Name of the Profile to be deleted.
+	 * @param validationMessage A literal Alert text that will be checked for to
+	 * determine success. If omitted, no Alert is expected.
+	 * @returns Whether or not the update was successful.
+	 */
+	public async deleteProfile(name: string, validationMessage: string): Promise<boolean> {
+		await element(by.buttonText("Delete")).click();
+		await element(by.name("confirmWithNameInput")).sendKeys(`${name}${randomize}`);
+		await this.ClickDeletePermanently();
+		return await this.GetOutputMessage() === validationMessage;
+	}
 
-    public async DeleteProfile(profile: DeleteProfile): Promise<boolean> {
-        let result = false;
-        const basePage = new BasePage();
-        await this.btnDelete.click();
-        await this.txtConfirmName.sendKeys(profile.Name + this.randomize);
-        await basePage.ClickDeletePermanently();
-        result = await basePage.GetOutputMessage().then(function (value) {
-            if (profile.validationMessage == value) {
-                return true;
-            } else {
-                return false;
-            }
-        })
-        return result;
-    }
-
-    public async CheckCSV(name: string): Promise<boolean> {
-        return element(by.cssContainingText("span", name)).isPresent();
-    }
-
-    public async ToggleTableColumn(name: string): Promise<boolean> {
-        await this.btnTableColumn.click();
-        const result = await element(by.cssContainingText("th", name)).isPresent();
-        await element(by.cssContainingText("label", name)).click();
-        await this.btnTableColumn.click();
-        return !result;
-    }
+	/**
+	 * Toggles the visibility of a column on the Profiles table page.
+	 *
+	 * This does not perform navigation to that page!
+	 *
+	 * @param name The name of the column to toggle.
+	 * @returns Whether or not the column is visible after being toggled.
+	 */
+	public async toggleTableColumn(name: string): Promise<boolean> {
+		const btnTableColumn = element(by.className("fa-columns"));
+		await btnTableColumn.click();
+		try {
+			await element(by.cssContainingText("label", name)).click();
+		} finally {
+			await btnTableColumn.click();
+		}
+		return element(by.cssContainingText('span[role="columnheader"]', name)).isPresent();
+	}
 }

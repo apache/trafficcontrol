@@ -36,9 +36,9 @@ func TestMakeSysCtlDotConf(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
-	params := makeParamsFromMap((*server.Profiles)[0], SysctlFileName, paramData)
+	params := makeParamsFromMap((*server.ProfileNames)[0], SysctlFileName, paramData)
 
 	cfg, err := MakeSysCtlDotConf(server, params, &SysCtlDotConfOpts{HdrComment: hdr})
 	if err != nil {

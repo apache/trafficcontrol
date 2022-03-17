@@ -31,7 +31,7 @@ func TestMakeLoggingDotConfig(t *testing.T) {
 	hdrComment := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
 	params := makeParamsFromMap("serverProfile", LoggingFileName, map[string]string{
 		"LogFormat.Name":           "myFormatName",

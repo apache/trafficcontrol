@@ -107,45 +107,39 @@ export const profiles = {
 					password: "pa$$word"
 				}
 			],
-			check: [
-				{
-					description: "check CSV link from Profiles page",
-					Name: "Export as CSV"
-				}
-			],
 			toggle:[
 				{
 					description: "hide first table column",
-					Name: "CDN"
+					name: "CDN"
 				},
 				{
 					description: "redisplay first table column",
-					Name: "CDN"
+					name: "CDN"
 				}
 			],
 			add: [
 				{
 					description: "create a Profiles",
-					Name: "TPProfiles1",
-					CDN: "CDN-in-a-Box",
-					Type: "ATS_PROFILE",
-					RoutingDisable: "true",
-					Description: "testing",
+					name: "TPProfiles1",
+					cdn: "CDN-in-a-Box",
+					type: "ATS_PROFILE",
+					routingDisabled: "true",
+					profileDescription: "testing",
 					validationMessage: "Profile created"
 				}
 			],
 			update: [
 				{
 					description: "update profile type",
-					Name: "TPProfiles1",
-					Type: "RIAK_PROFILE",
+					name: "TPProfiles1",
+					type: "RIAK_PROFILE",
 					validationMessage: "Profile updated"
 				}
 			],
 			remove: [
 				{
 					description: "delete a Profile",
-					Name: "TPProfiles1",
+					name: "TPProfiles1",
 					validationMessage: "profile was deleted."
 				}
 			]
@@ -158,45 +152,39 @@ export const profiles = {
 					password: "pa$$word"
 				}
 			],
-			check: [
-				{
-					description: "check CSV link from Profiles page",
-					Name: "Export as CSV"
-				}
-			],
 			toggle:[
 				{
 					description: "hide first table column",
-					Name: "CDN"
+					name: "CDN"
 				},
 				{
 					description: "redisplay first table column",
-					Name: "CDN"
+					name: "CDN"
 				}
 			],
 			add: [
 				{
 					description: "create a Profiles",
-					Name: "TPProfiles1",
-					CDN: "CDN-in-a-Box",
-					Type: "ATS_PROFILE",
-					RoutingDisable: "true",
-					Description: "testing",
+					name: "TPProfiles1",
+					cdn: "CDN-in-a-Box",
+					type: "ATS_PROFILE",
+					routingDisabled: "true",
+					profileDescription: "testing",
 					validationMessage: "missing required Permissions: PROFILE:CREATE"
 				}
 			],
 			update: [
 				{
 					description: "update profile type",
-					Name: "TPProfiles2",
-					Type: "RIAK_PROFILE",
+					name: "TPProfiles2",
+					type: "RIAK_PROFILE",
 					validationMessage: "missing required Permissions: PROFILE:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete a Profile",
-					Name: "TPProfiles2",
+					name: "TPProfiles2",
 					validationMessage: "missing required Permissions: PROFILE:DELETE"
 				}
 			]
