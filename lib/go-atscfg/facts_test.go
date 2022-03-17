@@ -29,7 +29,7 @@ import (
 func TestMake12MFacts(t *testing.T) {
 	server := makeGenericServer()
 	profileName := "myProfile"
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
 	hdr := "myHeaderComment"
 

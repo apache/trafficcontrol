@@ -41,11 +41,11 @@ func TestMakeURLSigConfig(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
 	fileName := "url_sig_myds.config"
 
-	params := makeParamsFromMap((*server.Profiles)[0], fileName, paramData)
+	params := makeParamsFromMap((*server.ProfileNames)[0], fileName, paramData)
 
 	cfg, err := MakeURLSigConfig(fileName, server, params, allURLSigKeys, &URLSigConfigOpts{HdrComment: hdr})
 	if err != nil {

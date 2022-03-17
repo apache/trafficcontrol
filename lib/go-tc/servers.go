@@ -726,7 +726,7 @@ type CommonServerPropertiesV40 struct {
 	OfflineReason    *string              `json:"offlineReason" db:"offline_reason"`
 	PhysLocation     *string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID   *int                 `json:"physLocationId" db:"phys_location_id"`
-	Profiles         *pq.StringArray      `json:"profileNames" db:"profile_names"`
+	ProfileNames     *pq.StringArray      `json:"profileNames" db:"profile_names"`
 	Rack             *string              `json:"rack" db:"rack"`
 	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
 	Status           *string              `json:"status" db:"status"`
@@ -1021,7 +1021,7 @@ func UpdateCommonServerPropertiesV40(profileName pq.StringArray, properties Comm
 		MgmtIPGateway:    properties.MgmtIPGateway,
 		MgmtIPNetmask:    properties.MgmtIPNetmask,
 		OfflineReason:    properties.OfflineReason,
-		Profiles:         &profileName,
+		ProfileNames:     &profileName,
 		PhysLocation:     properties.PhysLocation,
 		PhysLocationID:   properties.PhysLocationID,
 		Rack:             properties.Rack,

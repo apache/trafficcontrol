@@ -32,7 +32,7 @@ func TestMakeDropQStringDotConfig(t *testing.T) {
 	profileName := "myProfile"
 
 	server := makeGenericServer()
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
 	params := []tc.Parameter{
 		{

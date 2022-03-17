@@ -219,7 +219,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("expected to get %d server from cdn %s from cachegroup %s in topology %s, got %d servers", expectedLength, cdnName, cacheGroupName, topologyName, len(servers.Response))
 	}
 	server := servers.Response[0]
-	if server.ID == nil || server.CDNID == nil || (*server.Profiles)[0] == "" || server.CachegroupID == nil || server.HostName == nil {
+	if server.ID == nil || server.CDNID == nil || (*server.ProfileNames)[0] == "" || server.CachegroupID == nil || server.HostName == nil {
 		t.Fatal("Traffic Ops returned a representation for a server with null or undefined ID and/or CDN ID and/or Profile ID and/or Cache Group ID and/or Host Name")
 	}
 
@@ -252,7 +252,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("Expected exactly one Profile to exist with name 'MID1', found: %d", len(profiles.Response))
 	}
 	newProfileID := profiles.Response[0].ID
-	oldProfileName := (*server.Profiles)[0]
+	oldProfileName := (*server.ProfileNames)[0]
 
 	opts.QueryParameters.Set("id", strconv.Itoa(newProfileID))
 	nps, _, err := TOSession.GetProfiles(opts)
@@ -262,7 +262,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	if len(nps.Response) != 1 {
 		t.Fatalf("Expected exactly one Profile to exist, found: %d", len(profiles.Response))
 	}
-	server.Profiles = &pq.StringArray{nps.Response[0].Name}
+	server.ProfileNames = &pq.StringArray{nps.Response[0].Name}
 	opts.QueryParameters.Del("id")
 
 	_, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
@@ -270,7 +270,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("changing the CDN of the last server (%s) in a CDN in a cachegroup used by a topology assigned to a delivery service(s) in that CDN - expected: error, actual: nil", *server.HostName)
 	}
 	server.CDNID = &oldCDNID
-	server.Profiles = &pq.StringArray{oldProfileName}
+	server.ProfileNames = &pq.StringArray{oldProfileName}
 
 	opts.QueryParameters.Set("name", moveToCacheGroup)
 	cgs, _, err := TOSession.GetCacheGroups(opts)
@@ -618,16 +618,16 @@ func CreateTestServerWithoutProfileID(t *testing.T) {
 	}
 
 	server := resp.Response[0]
-	if &(*server.Profiles)[0] == nil || server.ID == nil || server.HostName == nil {
+	if &(*server.ProfileNames)[0] == nil || server.ID == nil || server.HostName == nil {
 		t.Fatal("Traffic Ops returned a representation of a server with null or undefined ID and/or Profile and/or Host Name")
 	}
-	originalProfile := *server.Profiles
+	originalProfile := *server.ProfileNames
 	delResp, _, err := TOSession.DeleteServer(*server.ID, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot delete Server by ID %d: %v - %v", *server.ID, err, delResp)
 	}
 
-	*server.Profiles = pq.StringArray{""}
+	*server.ProfileNames = pq.StringArray{""}
 	//server.ProfileID = nil
 	_, reqInfo, _ := TOSession.CreateServer(server, client.RequestOptions{})
 	if reqInfo.StatusCode != 400 {
@@ -635,7 +635,7 @@ func CreateTestServerWithoutProfileID(t *testing.T) {
 	}
 
 	//Reverting it back for further tests
-	*server.Profiles = originalProfile
+	*server.ProfileNames = originalProfile
 	response, _, err := TOSession.CreateServer(server, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("could not create server: %v - alerts: %+v", err, response.Alerts)
@@ -962,7 +962,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		opts.QueryParameters.Del("status")
 	}
 
-	opts.QueryParameters.Add("name", (*s.Profiles)[0])
+	opts.QueryParameters.Add("name", (*s.ProfileNames)[0])
 	pr, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
 		t.Fatalf("failed to query profile: %v", err)
@@ -1026,7 +1026,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 				Valid: false,
 			},
 			PhysLocation: server.PhysLocation,
-			Profiles:     server.Profiles,
+			ProfileNames: server.ProfileNames,
 			StatusID:     server.StatusID,
 			Type:         server.Type,
 			UpdPending:   util.BoolPtr(false),

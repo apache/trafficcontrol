@@ -33,7 +33,7 @@ func TestMakeLoggingDotYAML(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
 	params := makeParamsFromMap("serverProfile", LoggingYAMLFileName, map[string]string{
 		"LogFormat.Name":           "myFormatName",
@@ -102,7 +102,7 @@ func TestMakeLoggingDotYAMLMultiFormat(t *testing.T) {
 	})
 
 	server := makeGenericServer()
-	server.Profiles = &pq.StringArray{profileName}
+	server.ProfileNames = &pq.StringArray{profileName}
 
 	cfg, err := MakeLoggingDotYAML(server, paramData, &LoggingDotYAMLOpts{HdrComment: hdr})
 	if err != nil {

@@ -1559,11 +1559,11 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 	*server.CDNID = cdn1.ID
 
-	if &(*server.Profiles)[0] == nil || server.ID == nil || server.HostName == nil {
+	if &(*server.ProfileNames)[0] == nil || server.ID == nil || server.HostName == nil {
 		t.Fatal("Traffic Ops returned a representation for a Server that had null or undefined Profile and/or Profile ID and/or Profile Description and/or ID and/or Host Name")
 	}
 	// A profile specific to CDN 1 is required
-	opts.QueryParameters.Set("name", (*server.Profiles)[0])
+	opts.QueryParameters.Set("name", (*server.ProfileNames)[0])
 	pr, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
 		t.Fatalf("failed to query profiles: %v", err)
@@ -1572,14 +1572,14 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("Expected exactly one Profile to exist, found: %d", len(pr.Response))
 	}
 	profileCopy := tc.ProfileCopy{
-		Name:         (*server.Profiles)[0] + "_BUT_IN_CDN1",
+		Name:         (*server.ProfileNames)[0] + "_BUT_IN_CDN1",
 		ExistingID:   pr.Response[0].ID,
-		ExistingName: (*server.Profiles)[0],
+		ExistingName: (*server.ProfileNames)[0],
 		Description:  pr.Response[0].Description,
 	}
 	copyResp, _, err := TOSession.CopyProfile(profileCopy, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("copying Profile %s: %v - alerts: %+v", (*server.Profiles)[0], err, copyResp.Alerts)
+		t.Fatalf("copying Profile %s: %v - alerts: %+v", (*server.ProfileNames)[0], err, copyResp.Alerts)
 	}
 
 	profileOpts := client.NewRequestOptions()
@@ -1597,7 +1597,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	if err != nil {
 		t.Fatalf("updating Profile %s: %v - alerts: %+v", profile.Name, err, alerts.Alerts)
 	}
-	*server.Profiles = pq.StringArray{profile.Name}
+	*server.ProfileNames = pq.StringArray{profile.Name}
 
 	// Empty Cache Group dtrc1 with respect to CDN 2
 	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
@@ -1613,7 +1613,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("expected %d-level status code but received status code %d", http.StatusBadRequest, reqInf.StatusCode)
 	}
 	*server.CDNID = *ds.CDNID
-	*server.Profiles = pq.StringArray{profileCopy.ExistingName}
+	*server.ProfileNames = pq.StringArray{profileCopy.ExistingName}
 
 	// Put things back the way they were
 	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})

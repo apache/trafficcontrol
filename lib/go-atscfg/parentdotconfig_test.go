@@ -3164,7 +3164,7 @@ func makeTestParentServer() *Server {
 	server.ID = util.IntPtr(44)
 	setIP(server, "192.168.2.1")
 	//server.ProfileID = util.IntPtr(46)
-	server.Profiles = &pq.StringArray{"serverprofile"}
+	server.ProfileNames = &pq.StringArray{"serverprofile"}
 	server.TCPPort = util.IntPtr(80)
 	server.Type = "EDGE"
 	server.TypeID = util.IntPtr(91)

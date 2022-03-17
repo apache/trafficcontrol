@@ -32,12 +32,12 @@ func TestMakeServerUnknown(t *testing.T) {
 
 	server := makeGenericServer()
 	server.HostName = util.StrPtr("server0")
-	server.Profiles = &pq.StringArray{"serverProfile"}
+	server.ProfileNames = &pq.StringArray{"serverProfile"}
 	server.DomainName = util.StrPtr("example.test")
 
 	fileName := "myconfig.config"
 
-	params := makeParamsFromMapArr((*server.Profiles)[0], fileName, map[string][]string{
+	params := makeParamsFromMapArr((*server.ProfileNames)[0], fileName, map[string][]string{
 		"location":   []string{"locationshouldnotexist"},
 		"param0name": []string{"param0val0", "param0val1"},
 		"param1name": []string{"param1val0"},

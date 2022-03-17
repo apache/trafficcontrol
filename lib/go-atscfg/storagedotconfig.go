@@ -51,7 +51,7 @@ func MakeStorageDotConfig(
 	}
 	warnings := []string{}
 
-	if server.Profiles == nil && len(*server.Profiles) == 0 {
+	if server.ProfileNames == nil && len(*server.ProfileNames) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing Profiles")
 	}
 
@@ -64,7 +64,7 @@ func MakeStorageDotConfig(
 	if drivePrefix := paramData["Drive_Prefix"]; drivePrefix != "" {
 		driveLetters := strings.TrimSpace(paramData["Drive_Letters"])
 		if driveLetters == "" {
-			warnings = append(warnings, fmt.Sprintf("profile %+v has Drive_Prefix parameter, but no Drive_Letters; creating anyway", (*server.Profiles)[0]))
+			warnings = append(warnings, fmt.Sprintf("profile %+v has Drive_Prefix parameter, but no Drive_Letters; creating anyway", (*server.ProfileNames)[0]))
 		}
 		text += makeStorageVolumeText(drivePrefix, driveLetters, nextVolume)
 		nextVolume++
@@ -73,7 +73,7 @@ func MakeStorageDotConfig(
 	if ramDrivePrefix := paramData["RAM_Drive_Prefix"]; ramDrivePrefix != "" {
 		ramDriveLetters := strings.TrimSpace(paramData["RAM_Drive_Letters"])
 		if ramDriveLetters == "" {
-			warnings = append(warnings, fmt.Sprintf("profile %+v has RAM_Drive_Prefix parameter, but no RAM_Drive_Letters; creating anyway", (*server.Profiles)[0]))
+			warnings = append(warnings, fmt.Sprintf("profile %+v has RAM_Drive_Prefix parameter, but no RAM_Drive_Letters; creating anyway", (*server.ProfileNames)[0]))
 		}
 		text += makeStorageVolumeText(ramDrivePrefix, ramDriveLetters, nextVolume)
 		nextVolume++
@@ -82,7 +82,7 @@ func MakeStorageDotConfig(
 	if ssdDrivePrefix := paramData["SSD_Drive_Prefix"]; ssdDrivePrefix != "" {
 		ssdDriveLetters := strings.TrimSpace(paramData["SSD_Drive_Letters"])
 		if ssdDriveLetters == "" {
-			warnings = append(warnings, fmt.Sprintf("profile %+v has SSD_Drive_Prefix parameter, but no SSD_Drive_Letters; creating anyway", (*server.Profiles)[0]))
+			warnings = append(warnings, fmt.Sprintf("profile %+v has SSD_Drive_Prefix parameter, but no SSD_Drive_Letters; creating anyway", (*server.ProfileNames)[0]))
 		}
 		text += makeStorageVolumeText(ssdDrivePrefix, ssdDriveLetters, nextVolume)
 		nextVolume++
