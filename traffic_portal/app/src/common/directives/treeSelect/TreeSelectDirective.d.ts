@@ -21,7 +21,7 @@ export namespace TreeSelectDirective {
    export interface TreeData {
        name: string;
        id: string;
-       children: [TreeData];
+       children: TreeData[];
     }
    export interface RowData {
        label: string;
@@ -29,6 +29,6 @@ export namespace TreeSelectDirective {
        depth: number;
        collapsed: boolean;
        hidden: boolean;
-       children: [RowData];
+       children: RowData[];
    }
 }

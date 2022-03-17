@@ -20,6 +20,7 @@
 var TreeSelectDirective = function($document) {
     return {
         restrict: "E",
+        require: "^form",
         templateUrl: "common/directives/treeSelect/tree.select.tpl.html",
         replace: true,
         scope: {
@@ -28,10 +29,10 @@ var TreeSelectDirective = function($document) {
             handle: '@',
             onUpdate: "&"
         },
-        link: function(scope, element, attrs) {
+        link: function(scope, element, attrs, ngFormController) {
             /**
              * Non-recursed ordered list of rows to display (before filtering)
-             * @type [TreeSelectDirective.RowData]
+             * @type TreeSelectDirective.RowData[]
              */
             scope.treeRows = [];
             /** @type string */
@@ -42,7 +43,7 @@ var TreeSelectDirective = function($document) {
             scope.selected = null;
 
             // Bound variables
-            /** @type [TreeSelectDirective.TreeData] */
+            /** @type TreeSelectDirective.TreeData[] */
             scope.treeData;
             /** @type string */
             scope.initialValue;
@@ -114,8 +115,8 @@ var TreeSelectDirective = function($document) {
                     scope.selected = scope.treeRows[last];
                 }
                 if(row.children != null) {
-                    for(let child of row.children) {
-                        if(child == undefined) continue;
+                    for(const child of row.children) {
+                        if(child === undefined) continue;
                         scope.treeRows[last].children.push(addNode(child, depth + 1));
                     }
                 }
@@ -129,9 +130,9 @@ var TreeSelectDirective = function($document) {
              */
             const collapseRecurse = function(row, state) {
                 if(row.children.length === 0 ) return;
-                for(let treeRow of scope.treeRows) {
+                for(const treeRow of scope.treeRows) {
                     if (treeRow.value === row.value) {
-                        if(state == null)
+                        if(state === null)
                             treeRow.collapsed = !treeRow.collapsed;
                         else
                             treeRow.collapsed = state;
@@ -151,7 +152,7 @@ var TreeSelectDirective = function($document) {
              */
             const fuzzyMatch = function(text, input) {
                 if(input === "") return true;
-                if(text == undefined) return false;
+                if(text === undefined) return false;
                 text = text.toString().toLowerCase();
                 input = input.toString().toLowerCase();
                 let n = -1;
@@ -191,6 +192,13 @@ var TreeSelectDirective = function($document) {
                 scope.selected = row;
                 scope.selection = row.value;
                 scope.update();
+
+                if(row.value !== this.initialValue) {
+                    ngFormController[this.handle].$setDirty();
+                } else {
+                    ngFormController[this.handle].$setPristine();
+                }
+                console.log(ngFormController[this.handle]);
                 scope.close();
             }
             /**
