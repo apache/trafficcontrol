@@ -32,12 +32,32 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+
+	"github.com/lib/pq"
 )
 
-const readQuery = `SELECT username, cdn, message, soft, last_updated FROM cdn_lock`
-const insertQuery = `INSERT INTO cdn_lock (username, cdn, message, soft) VALUES (:username, :cdn, :message, :soft) RETURNING username, cdn, message, soft, last_updated`
-const deleteQuery = `DELETE FROM cdn_lock WHERE cdn=$1 AND username=$2 RETURNING username, cdn, message, soft, last_updated`
-const deleteAdminQuery = `DELETE FROM cdn_lock WHERE cdn=$1 RETURNING username, cdn, message, soft, last_updated`
+const readQuery = `SELECT username, cdn, message, soft, shared_usernames, last_updated FROM cdn_lock`
+const insertQuery = `INSERT INTO cdn_lock (username, cdn, message, soft, shared_usernames) VALUES ($1, $2, $3, $4, $5) RETURNING username, cdn, message, soft, shared_usernames, last_updated`
+const deleteQuery = `DELETE FROM cdn_lock WHERE cdn=$1 AND username=$2 RETURNING username, cdn, message, soft, shared_usernames, last_updated`
+const deleteAdminQuery = `DELETE FROM cdn_lock WHERE cdn=$1 RETURNING username, cdn, message, soft, shared_usernames, last_updated`
+const checkSharedUsersValidityQuery = `select count(*) from tm_user u join role r on r.id = u.role join role_capability rc on rc.role_id = r.id where u.tenant_id in (WITH RECURSIVE
+user_tenant_id as (select (select tenant_id from tm_user where username=$1)::bigint as v),
+user_tenant_parents AS (
+  SELECT active, parent_id FROM tenant WHERE id = (select v from user_tenant_id)
+  UNION
+  SELECT t.active, t.parent_id FROM TENANT t JOIN user_tenant_parents ON user_tenant_parents.parent_id = t.id
+),
+user_tenant_active AS (
+  SELECT bool_and(active) as v FROM user_tenant_parents
+),
+user_tenant_children AS (
+  SELECT id, name, active, parent_id
+  FROM tenant WHERE id = (SELECT v FROM user_tenant_id) AND (SELECT v FROM user_tenant_active)
+  UNION
+  SELECT t.id, t.name, t.active, t.parent_id
+  FROM tenant t JOIN user_tenant_children ON user_tenant_children.id = t.parent_id
+)
+SELECT id as tenant_list FROM user_tenant_children) and u.username = ANY($2) and rc.cap_name='CDN-LOCK:CREATE'`
 
 // Read is the handler for GET requests to /cdn_locks.
 func Read(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +93,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var cLock tc.CDNLock
-		if err = rows.Scan(&cLock.UserName, &cLock.CDN, &cLock.Message, &cLock.Soft, &cLock.LastUpdated); err != nil {
+		if err = rows.Scan(&cLock.UserName, &cLock.CDN, &cLock.Message, &cLock.Soft, pq.Array(&cLock.SharedUserNames), &cLock.LastUpdated); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning cdn locks: "+err.Error()))
 			return
 		}
@@ -110,7 +130,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cdnLock.UserName = inf.User.UserName
-	resultRows, err := inf.Tx.NamedQuery(insertQuery, cdnLock)
+	if cdnLock.SharedUserNames != nil && len(cdnLock.SharedUserNames) > 0 {
+		errCode, userErr, sysErr := checkSharedUserNamesValidity(tx, cdnLock)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+	}
+	resultRows, err := inf.Tx.Query(insertQuery, cdnLock.UserName, cdnLock.CDN, cdnLock.Message, cdnLock.Soft, pq.Array(cdnLock.SharedUserNames))
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -121,7 +148,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&cdnLock.UserName, &cdnLock.CDN, &cdnLock.Message, &cdnLock.Soft, &cdnLock.LastUpdated); err != nil {
+		if err := resultRows.Scan(&cdnLock.UserName, &cdnLock.CDN, &cdnLock.Message, &cdnLock.Soft, pq.Array(cdnLock.SharedUserNames), &cdnLock.LastUpdated); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("cdn lock create: scanning locks: "+err.Error()))
 			return
 		}
@@ -135,6 +162,17 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: %s lock acquired", inf.User.UserName, cdnLock.CDN, soft)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+}
+
+func checkSharedUserNamesValidity(tx *sql.Tx, lock tc.CDNLock) (int, error, error) {
+	count := 0
+	if err := tx.QueryRow(checkSharedUsersValidityQuery, lock.UserName, pq.Array(lock.SharedUserNames)).Scan(&count); err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+	if count != len(lock.SharedUserNames) {
+		return http.StatusBadRequest, errors.New("shared users must exist and be in the same/child tenants of the current user"), nil
+	}
+	return http.StatusOK, nil, nil
 }
 
 // Delete is the handler for DELETE requests to /cdn_locks.
@@ -153,9 +191,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	adminPerms := inf.Config.RoleBasedPermissions && inf.User.Can("CDN-LOCK:DELETE-OTHERS")
 
 	if adminPerms || inf.User.PrivLevel == auth.PrivLevelAdmin {
-		err = inf.Tx.Tx.QueryRow(deleteAdminQuery, cdn).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, &result.LastUpdated)
+		err = inf.Tx.Tx.QueryRow(deleteAdminQuery, cdn).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, pq.Array(&result.SharedUserNames), &result.LastUpdated)
 	} else {
-		err = inf.Tx.Tx.QueryRow(deleteQuery, cdn, inf.User.UserName).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, &result.LastUpdated)
+		err = inf.Tx.Tx.QueryRow(deleteQuery, cdn, inf.User.UserName).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, pq.Array(&result.SharedUserNames), &result.LastUpdated)
 	}
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
