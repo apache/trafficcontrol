@@ -14,7 +14,7 @@
 ARG GO_VERSION
 FROM golang:${GO_VERSION}-alpine AS trafficmonitor-dev
 
-ENV TC=/root/go/src/github.com/apache/trafficcontrol
+ENV TC=/root/go/src/github.com/apache/trafficcontrol GOFLAGS="--buildvcs=false"
 VOLUME /root/go/src/github.com/apache/trafficcontrol
 EXPOSE 80 81
 
