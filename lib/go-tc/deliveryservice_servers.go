@@ -16,6 +16,7 @@ package tc
 */
 
 import (
+	"github.com/lib/pq"
 	"time"
 )
 
@@ -156,9 +157,7 @@ type DSServerBaseV4 struct {
 	OfflineReason               *string              `json:"offlineReason" db:"offline_reason"`
 	PhysLocation                *string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID              *int                 `json:"physLocationId" db:"phys_location_id"`
-	Profile                     *string              `json:"profile" db:"profile"`
-	ProfileDesc                 *string              `json:"profileDesc" db:"profile_desc"`
-	ProfileID                   *int                 `json:"profileId" db:"profile_id"`
+	ProfileNames                *pq.StringArray      `json:"profileNames" db:"profile_names"`
 	Rack                        *string              `json:"rack" db:"rack"`
 	Status                      *string              `json:"status" db:"status"`
 	StatusID                    *int                 `json:"statusId" db:"status_id"`
@@ -235,9 +234,7 @@ func (oldBase DSServerBase) ToDSServerBaseV4() DSServerBaseV4 {
 	dsServerBaseV4.OfflineReason = oldBase.OfflineReason
 	dsServerBaseV4.PhysLocation = oldBase.PhysLocation
 	dsServerBaseV4.PhysLocationID = oldBase.PhysLocationID
-	dsServerBaseV4.Profile = oldBase.Profile
-	dsServerBaseV4.ProfileDesc = oldBase.ProfileDesc
-	dsServerBaseV4.ProfileID = oldBase.ProfileID
+	dsServerBaseV4.ProfileNames = &pq.StringArray{*oldBase.Profile}
 	dsServerBaseV4.Rack = oldBase.Rack
 	dsServerBaseV4.Status = oldBase.Status
 	dsServerBaseV4.StatusID = oldBase.StatusID
@@ -252,7 +249,7 @@ func (oldBase DSServerBase) ToDSServerBaseV4() DSServerBaseV4 {
 
 // ToDSServerBase downgrades the DSServerBaseV4 to the structure used by the
 // Traffic Ops API in versions earlier than 4.0.
-func (baseV4 DSServerBaseV4) ToDSServerBase(routerHostName, routerPort *string) DSServerBase {
+func (baseV4 DSServerBaseV4) ToDSServerBase(routerHostName, routerPort, pDesc *string, pID *int) DSServerBase {
 	var dsServerBase DSServerBase
 	dsServerBase.Cachegroup = baseV4.Cachegroup
 	dsServerBase.CachegroupID = baseV4.CachegroupID
@@ -278,9 +275,9 @@ func (baseV4 DSServerBaseV4) ToDSServerBase(routerHostName, routerPort *string) 
 	dsServerBase.OfflineReason = baseV4.OfflineReason
 	dsServerBase.PhysLocation = baseV4.PhysLocation
 	dsServerBase.PhysLocationID = baseV4.PhysLocationID
-	dsServerBase.Profile = baseV4.Profile
-	dsServerBase.ProfileDesc = baseV4.ProfileDesc
-	dsServerBase.ProfileID = baseV4.ProfileID
+	dsServerBase.Profile = &(*baseV4.ProfileNames)[0]
+	dsServerBase.ProfileDesc = pDesc
+	dsServerBase.ProfileID = pID
 	dsServerBase.Rack = baseV4.Rack
 	dsServerBase.Status = baseV4.Status
 	dsServerBase.StatusID = baseV4.StatusID
