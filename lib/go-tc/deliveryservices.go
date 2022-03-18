@@ -846,7 +846,29 @@ func (ds *DeliveryServiceV4) RemoveLD1AndLD2() DeliveryServiceV4 {
 	return *ds
 }
 
-// DowngradeToV3 converts the 4.x DS to a 3.x DS.
+// DowngradeToV2 converts a 4.x DS to a 2.x DS.
+func (ds *DeliveryServiceV4) DowngradeToV2() DeliveryServiceNullable {
+	nullableFields := ds.DeliveryServiceNullableFieldsV11
+	geoLimitCountries := ([]string)(ds.GeoLimitCountries)
+	geo := strings.Join(geoLimitCountries, ",")
+	nullableFields.GeoLimitCountries = &geo
+	return DeliveryServiceNullable{
+		DeliveryServiceNullableV14: DeliveryServiceNullableV14{
+			DeliveryServiceNullableV13: DeliveryServiceNullableV13{
+				DeliveryServiceNullableV12: DeliveryServiceNullableV12{
+					DeliveryServiceNullableV11: DeliveryServiceNullableV11{
+						DeliveryServiceNullableFieldsV11: nullableFields,
+					},
+				},
+				DeliveryServiceFieldsV13: ds.DeliveryServiceFieldsV13,
+			},
+			DeliveryServiceFieldsV14: ds.DeliveryServiceFieldsV14,
+		},
+		DeliveryServiceFieldsV15: ds.DeliveryServiceFieldsV15,
+	}
+}
+
+// DowngradeToV3 converts a 4.x DS to a 3.x DS.
 func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 	nullableFields := ds.DeliveryServiceNullableFieldsV11
 	geoLimitCountries := ([]string)(ds.GeoLimitCountries)
