@@ -473,8 +473,8 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 		// Postgres stores microsecond precision. There is also some discussion around MacOS losing
 		// precision as well. The nanosecond precision is accurate within go one linux however,
 		// but round trips to and from the database may result in an inaccurate Equals comparison
-		// with the loss of precision.
-		now := time.Now().Truncate(time.Microsecond)
+		// with the loss of precision. Also, it appears to Round and not Truncate.
+		now := time.Now().Round(time.Microsecond)
 		later := time.Now().Add(time.Hour * 6)
 
 		// Test setting the values works as expected
