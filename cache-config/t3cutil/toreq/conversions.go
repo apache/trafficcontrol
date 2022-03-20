@@ -22,6 +22,7 @@ package toreq
 import (
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -144,4 +145,70 @@ func InvalidationJobV4FromLegacy(job InvalidationJobV4PlusLegacy) (tc.Invalidati
 	job.AssetURL = strings.TrimSuffix(job.AssetURL, atscfg.JobLegacyRefetchSuffix)
 
 	return tc.InvalidationJobV4(job.InvalidationJobV4ForLegacy), nil
+}
+
+/***
+Server Update Status
+
+The follow code can be removed once both T3C and ATC has been deployed with the T3C Race
+condition fix.
+
+T3C MUST be deployed first to account for both possible scenarios (previous bool `upd_pending`
+and `reval_pending` and the new timestamp values `config_update_time`, `config_apply_time`,
+`revalidate_update_time`, and `revalidate_apply_time`). TO is currently serving the boolean
+valuesin v4. The next release of TO will include the timestamp values only.
+
+Once both are deployed, T3C can remove the following logic and utilize the client libraries
+calls as intended:
+	- SetServerUpdateStatus
+
+***/
+
+// SetServerUpdateStatusCompat is a bridge to send both styles of query parameters to the
+// TO endpoint /servers/{hostname-or-id}/update. The current (old) is to send a bool
+// value, however this has resulted in an accidental race condition. The attempt to fix
+// this is to send a timestamp representing when the config or revalidation changes
+// have been applied.
+//
+// To ensure T3C is compatible with both the current releases and future releases
+// this function will send both "styles". Once both T3C and TO have been deployed
+// with the timestamp only V4 TO API endpoint, this function can be removed and the
+// V4 client function `SetUpdateServerStatusTimes` may be used instead (as intended).
+func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, updateStatus *bool, revalStatus *bool, opts toclient.RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
+	var alerts tc.Alerts
+
+	if updateStatus == nil && revalStatus == nil {
+		return alerts, reqInf, errors.New("either updateStatus or revalStatus must be non-nil; nothing to do")
+	}
+
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+
+	if updateStatus != nil {
+		if *updateStatus {
+			opts.QueryParameters.Set("updated", "true")
+			opts.QueryParameters.Set("config_update_time", time.Now().Format(time.RFC3339Nano))
+		} else {
+			opts.QueryParameters.Set("updated", "false")
+			opts.QueryParameters.Set("config_apply_time", time.Now().Format(time.RFC3339Nano))
+		}
+	}
+	if revalStatus != nil {
+		if *revalStatus {
+			opts.QueryParameters.Set("reval_updated", "true")
+			opts.QueryParameters.Set("revalidate_update_time", time.Now().Format(time.RFC3339Nano))
+		} else {
+			opts.QueryParameters.Set("reval_updated", "false")
+			opts.QueryParameters.Set("revalidate_apply_time", time.Now().Format(time.RFC3339Nano))
+		}
+	}
+
+	path := `/servers/` + url.PathEscape(serverName) + `/update`
+	if len(opts.QueryParameters) > 0 {
+		path += "?" + opts.QueryParameters.Encode()
+	}
+	reqInf, err := cl.c.TOClient.Req(http.MethodPost, path, nil, opts.Header, &alerts)
+	return alerts, reqInf, err
 }

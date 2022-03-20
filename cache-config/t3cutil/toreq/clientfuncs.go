@@ -714,6 +714,8 @@ func (cl *TOClient) GetStatuses(reqHdr http.Header) ([]tc.Status, toclientlib.Re
 }
 
 // GetServerUpdateStatus returns the data, the Traffic Ops address, and any error.
+// TODO: Alias ServerUpdateStatus in atscfg lib to ServerUpdateStatusV4. Need to add
+// possible conversion functions as well.
 func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr http.Header) (tc.ServerUpdateStatus, toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		return cl.old.GetServerUpdateStatus(cacheHostName)
@@ -748,7 +750,8 @@ func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, updateStat
 
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "set_server_update_status_"+string(cacheHostName), nil, func(obj interface{}) error {
-		_, toReqInf, err := cl.c.SetUpdateServerStatuses(string(cacheHostName), updateStatus, revalStatus, *ReqOpts(nil))
+		// TODO: Change to use `SetServerUpdateStatusTimes` instead of Compat()
+		_, toReqInf, err := cl.SetServerUpdateStatusCompat(string(cacheHostName), updateStatus, revalStatus, *ReqOpts(nil))
 		if err != nil {
 			return errors.New("setting server update status in Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}

@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -376,7 +377,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Add("hostName", *testServer.HostName)
-		testVals := func(queue *bool, reval *bool) {
+		testVals := func(configUpdate, configApply, revalUpdate, revalApply *time.Time, name string) {
 			resp, _, err := TOSession.GetServers(opts)
 			if err != nil {
 				t.Errorf("cannot get Server by name '%s': %v - alerts: %+v", *testServer.HostName, err, resp.Alerts)
@@ -384,17 +385,32 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
 			}
 
-			existingServer := resp.Response
+			beforeServer := resp.Response[0]
 
-			if existingServer[0].UpdPending == nil {
+			// Ensure baseline
+			if beforeServer.UpdPending == nil {
 				t.Fatalf("Server '%s' had nil UpdPending before update status change", *testServer.HostName)
 			}
-			if existingServer[0].RevalPending == nil {
+			if beforeServer.RevalPending == nil {
 				t.Fatalf("Server '%s' had nil RevalPending before update status change", *testServer.HostName)
 			}
+			if beforeServer.ConfigUpdateTime == nil {
+				t.Fatalf("Server '%s' had nil ConfigUpdateTime before update status change", *testServer.HostName)
+			}
+			if beforeServer.ConfigApplyTime == nil {
+				t.Fatalf("Server '%s' had nil ConfigApplyTime before update status change", *testServer.HostName)
+			}
+			if beforeServer.RevalUpdateTime == nil {
+				t.Fatalf("Server '%s' had nil RevalUpdateTime before update status change", *testServer.HostName)
+			}
+			if beforeServer.RevalApplyTime == nil {
+				t.Fatalf("Server '%s' had nil RevalApplyTime before update status change", *testServer.HostName)
+			}
 
-			if alerts, _, err := TOSession.SetUpdateServerStatuses(*testServer.HostName, queue, reval, client.RequestOptions{}); err != nil {
-				t.Fatalf("UpdateServerStatuses error expected: nil, actual: %v - alerts: %+v", err, alerts.Alerts)
+			// Make change
+			if alerts, _, err := TOSession.SetUpdateServerStatusTimes(*testServer.HostName, configUpdate, configApply, revalUpdate, revalApply, client.RequestOptions{}); err != nil {
+				t.Errorf("%v, %v, %v, %v, %s", configUpdate, configApply, revalUpdate, revalApply, name)
+				t.Fatalf("SetUpdateServerStatusTimes error. expected: nil, actual: %v - alerts: %+v", err, alerts.Alerts)
 			}
 
 			resp, _, err = TOSession.GetServers(opts)
@@ -404,44 +420,73 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
 			}
 
-			newServer := resp.Response
+			afterServer := resp.Response[0]
 
-			if newServer[0].UpdPending == nil {
+			if afterServer.UpdPending == nil {
 				t.Fatalf("Server '%s' had nil UpdPending after update status change", *testServer.HostName)
 			}
-			if newServer[0].RevalPending == nil {
+			if afterServer.RevalPending == nil {
 				t.Fatalf("Server '%s' had nil RevalPending after update status change", *testServer.HostName)
 			}
 
-			if queue != nil {
-				if *newServer[0].UpdPending != *queue {
-					t.Errorf("set queue update pending to %v, but then got server %v", *queue, *newServer[0].UpdPending)
-				}
-			} else {
-				if *newServer[0].UpdPending != *existingServer[0].UpdPending {
-					t.Errorf("set queue update pending with nil (don't update), but then got server %v which didn't match pre-update value %v", *newServer[0].UpdPending, *existingServer[0].UpdPending)
+			// Ensure values were actually set
+			if configUpdate != nil {
+				if afterServer.ConfigUpdateTime == nil || !afterServer.ConfigUpdateTime.Equal(*configUpdate) {
+					t.Errorf("Faild to set server's ConfigUpdateTime. expected: %v actual: %v", *configUpdate, afterServer.ConfigUpdateTime)
 				}
 			}
-			if reval != nil {
-				if *newServer[0].RevalPending != *reval {
-					t.Errorf("set reval update pending to %v, but then got server %v", *reval, *newServer[0].RevalPending)
+			if configApply != nil {
+				if afterServer.ConfigApplyTime == nil || !afterServer.ConfigApplyTime.Equal(*configApply) {
+					t.Errorf("Faild to set server's ConfigApplyTime. expected: %v actual: %v", *configApply, afterServer.ConfigApplyTime)
 				}
-			} else {
-				if *newServer[0].RevalPending != *existingServer[0].RevalPending {
-					t.Errorf("set reval update pending with nil (don't update), but then got server %v which didn't match pre-update value %v", *newServer[0].RevalPending, *existingServer[0].RevalPending)
+			}
+			if revalUpdate != nil {
+				if afterServer.RevalUpdateTime == nil || !afterServer.RevalUpdateTime.Equal(*revalUpdate) {
+					t.Errorf("Faild to set server's RevalUpdateTime. expected: %v actual: %v", *revalUpdate, afterServer.RevalUpdateTime)
+				}
+			}
+			if revalApply != nil {
+				if afterServer.RevalApplyTime == nil || !afterServer.RevalApplyTime.Equal(*revalApply) {
+					t.Errorf("Faild to set server's RevalApplyTime. expected: %v actual: %v", *revalApply, afterServer.RevalApplyTime)
+				}
+			}
+
+			// Ensure boolean logic continues to work as expected
+			if configUpdate != nil && configApply != nil {
+				if ((*configUpdate).Before(*configApply) || (*configUpdate).Equal(*configApply)) &&
+					*afterServer.UpdPending {
+					t.Error("The configUpdateTime <= configApplyTime. UpdPending should be false")
+				} else if (*configUpdate).After(*configApply) && !*afterServer.UpdPending {
+					t.Error("The configUpdateTime > configApplyTime. UpdPending should be true")
+				}
+			}
+			if revalUpdate != nil && revalApply != nil {
+				if ((*revalUpdate).Before(*revalApply) || (*revalUpdate).Equal(*revalApply)) &&
+					*afterServer.RevalPending {
+					t.Error("The configUpdateTime <= configApplyTime. RevalPending should be false")
+				} else if (*revalUpdate).After(*revalApply) && !*afterServer.RevalPending {
+					t.Error("The configUpdateTime > configApplyTime. RevalPending should be true")
 				}
 			}
 		}
 
-		testVals(util.BoolPtr(true), util.BoolPtr(true))
-		testVals(util.BoolPtr(true), util.BoolPtr(false))
-		testVals(util.BoolPtr(false), util.BoolPtr(false))
-		testVals(nil, util.BoolPtr(true))
-		testVals(nil, util.BoolPtr(false))
-		testVals(util.BoolPtr(true), nil)
-		testVals(util.BoolPtr(false), nil)
+		now := time.Now()
+		later := time.Now().Add(time.Hour * 6)
 
-		if _, _, err := TOSession.SetUpdateServerStatuses(*testServer.HostName, nil, nil, client.RequestOptions{}); err == nil {
+		// Test setting the values works as expected
+		testVals(util.TimePtr(now), nil, nil, nil, "configUpdate")
+		testVals(nil, util.TimePtr(now), nil, nil, "configApply")
+		testVals(nil, nil, util.TimePtr(now), nil, "revalUpdate")
+		testVals(nil, nil, nil, util.TimePtr(now), "revalApply")
+
+		// Test the boolean logic works as expected
+		testVals(util.TimePtr(now), util.TimePtr(now), nil, nil, "configUpdate = configApply")
+		testVals(util.TimePtr(now), util.TimePtr(later), nil, nil, "configUpdate < configApply")
+		testVals(nil, nil, util.TimePtr(now), util.TimePtr(now), "revalUpdate = revalApply")
+		testVals(nil, nil, util.TimePtr(now), util.TimePtr(later), "revalUpdate < revalApply")
+
+		// Test sending all nils. Should fail
+		if _, _, err := TOSession.SetUpdateServerStatusTimes(*testServer.HostName, nil, nil, nil, nil, client.RequestOptions{}); err == nil {
 			t.Errorf("UpdateServerStatuses with (nil,nil) expected error, actual nil")
 		}
 	})

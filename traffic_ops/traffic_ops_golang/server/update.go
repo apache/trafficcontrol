@@ -20,6 +20,7 @@ package server
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -32,8 +33,147 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-// UpdateHandler implements an http handler that updates a server's config update and reval times.
+// UpdateHandler implements an http handler that updates a server's upd_pending and reval_pending values.
+//
+// Deprecated: As of V4, prefer to use UpdateHandlerV4. This provides legacy compatibility with V3 and lower.
 func UpdateHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id-or-name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	idOrName := inf.Params["id-or-name"]
+	serverID, err := strconv.Atoi(idOrName)
+	hostName := ""
+	if err == nil {
+		name, ok, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, int64(serverID))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from id '"+idOrName+"': "+err.Error()))
+			return
+		} else if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server ID '"+idOrName+"' not found"), nil)
+			return
+		}
+		hostName = name
+		cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(serverID))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	} else {
+		hostName = idOrName
+		var ok bool
+		serverID, ok, err = dbhelpers.GetServerIDFromName(hostName, inf.Tx.Tx)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server id from name '"+idOrName+"': "+err.Error()))
+			return
+		} else if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server name '"+idOrName+"' not found"), nil)
+			return
+		}
+		cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(serverID))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+
+	updated, hasUpdated := inf.Params["updated"]
+	revalUpdated, hasRevalUpdated := inf.Params["reval_updated"]
+	if !hasUpdated && !hasRevalUpdated {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Must pass at least one query paramter of 'updated' or 'reval_updated'"), nil)
+		return
+	}
+	updated = strings.ToLower(updated)
+	revalUpdated = strings.ToLower(revalUpdated)
+
+	if hasUpdated && updated != `t` && updated != `true` && updated != `f` && updated != `false` {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'updated' must be 'true' or 'false'"), nil)
+		return
+	}
+	if hasRevalUpdated && revalUpdated != `t` && revalUpdated != `true` && revalUpdated != `f` && revalUpdated != `false` {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'reval_updated' must be 'true' or 'false'"), nil)
+		return
+	}
+
+	strToBool := func(s string) bool {
+		return !strings.HasPrefix(strings.ToLower(s), "f")
+	}
+
+	updatedPtr := (*bool)(nil)
+	if hasUpdated {
+		updatedBool := strToBool(updated)
+		updatedPtr = &updatedBool
+	}
+	revalUpdatedPtr := (*bool)(nil)
+	if hasRevalUpdated {
+		revalUpdatedBool := strToBool(revalUpdated)
+		revalUpdatedPtr = &revalUpdatedBool
+	}
+
+	if err := setUpdateStatuses(inf.Tx.Tx, int64(serverID), updatedPtr, revalUpdatedPtr); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting updated statuses: "+err.Error()))
+		return
+	}
+
+	respMsg := "successfully set server '" + hostName + "'"
+	if hasUpdated {
+		respMsg += " updated=" + strconv.FormatBool(strToBool(updated))
+	}
+	if hasRevalUpdated {
+		respMsg += " reval_updated=" + strconv.FormatBool(strToBool(revalUpdated))
+	}
+
+	api.WriteAlerts(w, r, http.StatusOK, tc.CreateAlerts(tc.SuccessLevel, respMsg))
+}
+
+// setUpdateStatuses sets the upd_pending and reval_pending columns of a server.
+// If updatePending or revalPending is nil, that value is not changed.
+func setUpdateStatuses(tx *sql.Tx, serverID int64, updatePending *bool, revalPending *bool) error {
+	if updatePending == nil && revalPending == nil {
+		return errors.New("either updatePending or revalPending must not be nil")
+	}
+
+	if updatePending != nil {
+		if *updatePending {
+			if err := dbhelpers.QueueUpdateForServer(tx, serverID); err != nil {
+				return err
+			}
+		} else {
+			if err := dbhelpers.SetApplyUpdateForServer(tx, serverID); err != nil {
+				return err
+			}
+		}
+	}
+
+	if revalPending != nil {
+		if *revalPending {
+			if err := dbhelpers.QueueRevalForServer(tx, serverID); err != nil {
+				return err
+			}
+		} else {
+			if err := dbhelpers.SetApplyRevalForServer(tx, serverID); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// UpdateHandler implements an http handler that updates a server's config update and reval times.
+func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id-or-name"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -67,26 +207,12 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify query string parameters
-	updated, hasUpdated := inf.Params["updated"]
-	revalUpdated, hasRevalUpdated := inf.Params["reval_updated"]
 	config_update_time, hasConfig_update_time := inf.Params["config_update_time"]
 	config_apply_time, hasConfig_apply_time := inf.Params["config_apply_time"]
 	revalidate_update_time, hasRevalidate_update_time := inf.Params["revalidate_update_time"]
 	revalidate_apply_time, hasRevalidate_apply_time := inf.Params["revalidate_apply_time"]
-	if !hasUpdated && !hasRevalUpdated && !hasConfig_update_time && !hasConfig_apply_time && !hasRevalidate_update_time && !hasRevalidate_apply_time {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must pass at least one query parameter: 'updated', 'reval_updated', 'config_update_time', 'config_apply_time', 'revalidate_update_time', 'revalidate_apply_time'"), nil)
-		return
-	}
-
-	// Legacy, prefer RFC3339 query parameters (*_time) over boolean flags
-	updated = strings.ToLower(updated)
-	revalUpdated = strings.ToLower(revalUpdated)
-	if hasUpdated && updated != `t` && updated != `true` && updated != `f` && updated != `false` {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'updated' must be 'true' or 'false'"), nil)
-		return
-	}
-	if hasRevalUpdated && revalUpdated != `t` && revalUpdated != `true` && revalUpdated != `f` && revalUpdated != `false` {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'reval_updated' must be 'true' or 'false'"), nil)
+	if !hasConfig_update_time && !hasConfig_apply_time && !hasRevalidate_update_time && !hasRevalidate_apply_time {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must pass at least one query parameter: 'config_update_time', 'config_apply_time', 'revalidate_update_time', 'revalidate_apply_time'"), nil)
 		return
 	}
 
@@ -95,7 +221,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	if hasConfig_update_time {
 		configUpdateTime, err = time.Parse(time.RFC3339Nano, config_update_time)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'config_update_time' must be valid RFC3339 format"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'config_update_time' must be valid RFC3339Nano format"), nil)
 			return
 		}
 	}
@@ -104,7 +230,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	if hasConfig_apply_time {
 		configApplyTime, err = time.Parse(time.RFC3339Nano, config_apply_time)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'config_apply_time' must be valid RFC3339 format"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'config_apply_time' must be valid RFC3339Nano format"), nil)
 			return
 		}
 	}
@@ -113,7 +239,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	if hasRevalidate_update_time {
 		revalUpdateTime, err = time.Parse(time.RFC3339Nano, revalidate_update_time)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'revalidate_update_time' must be valid RFC3339 format"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'revalidate_update_time' must be valid RFC3339Nano format"), nil)
 			return
 		}
 	}
@@ -122,52 +248,8 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	if hasRevalidate_apply_time {
 		revalApplyTime, err = time.Parse(time.RFC3339Nano, revalidate_apply_time)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'revalidate_apply_time' must be valid RFC3339 format"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'revalidate_apply_time' must be valid RFC3339Nano format"), nil)
 			return
-		}
-	}
-
-	if hasUpdated && (hasConfig_update_time || hasConfig_apply_time) {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("potential conflict between params. use 'config_update_time' or 'config_apply_time' over 'updated'"), nil)
-		return
-	}
-
-	if hasRevalUpdated && (hasRevalidate_update_time || hasRevalidate_apply_time) {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("potential conflict between params. use 'reval_update_time' or 'reval_apply_time' over 'reval_updated'"), nil)
-		return
-	}
-
-	strToBool := func(s string) bool {
-		return !strings.HasPrefix(s, "f")
-	}
-
-	if hasUpdated {
-		updatedBool := strToBool(updated)
-		if updatedBool {
-			if err = dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting update status: %w", err))
-				return
-			}
-		} else {
-			if err = dbhelpers.SetApplyUpdateForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting update status: %w", err))
-				return
-			}
-		}
-	}
-
-	if hasRevalUpdated {
-		revalUpdatedBool := strToBool(revalUpdated)
-		if revalUpdatedBool {
-			if err = dbhelpers.QueueRevalForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval status: %w", err))
-				return
-			}
-		} else {
-			if err = dbhelpers.SetApplyRevalForServer(inf.Tx.Tx, serverID); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval status: %w", err))
-				return
-			}
 		}
 	}
 
@@ -192,8 +274,8 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if hasConfig_apply_time {
-		if err = dbhelpers.SetApplyUpdateForServerWithTime(inf.Tx.Tx, serverID, revalApplyTime); err != nil {
+	if hasRevalidate_apply_time {
+		if err = dbhelpers.SetApplyRevalForServerWithTime(inf.Tx.Tx, serverID, revalApplyTime); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval apply time: %w", err))
 			return
 		}
@@ -206,12 +288,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respMsg := "successfully set server '" + hostName + "'"
-	if hasUpdated {
-		respMsg += " updated=" + updated
-	}
-	if hasRevalUpdated {
-		respMsg += " reval_updated=" + revalUpdated
-	}
+
 	if hasConfig_update_time {
 		respMsg += " config_update_time=" + config_update_time
 	}
