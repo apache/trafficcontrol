@@ -50,6 +50,10 @@ func jobsToLatest(jobs []tc.InvalidationJobV4) []atscfg.InvalidationJob {
 	return atscfg.ToInvalidationJobs(jobs)
 }
 
+func serverUpdateStatusesToLatest(statuses []tc.ServerUpdateStatusV40) []atscfg.ServerUpdateStatus {
+	return atscfg.ToServerUpdateStatuses(statuses)
+}
+
 // GetJobsCompat gets jobs from any Traffic Ops built from the ATC `master` branch, and converts the different formats to the latest.
 // This makes t3c work with old or new Traffic Ops deployed from `master`,
 // though it doesn't make a version of t3c older than this work with a new TO,

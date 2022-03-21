@@ -1167,6 +1167,22 @@ type ServerUpdateStatus struct {
 	ParentRevalPending bool   `json:"parent_reval_pending"`
 }
 
+// Downgrade strips the Config and Revalidate timestamps from
+// ServerUpdateStatusV40 to return previous versions of the struct to ensure
+// previous compatibility.
+func (sus ServerUpdateStatus) Upgrade() ServerUpdateStatusV4 {
+	return ServerUpdateStatusV4{
+		HostName:           sus.HostName,
+		UpdatePending:      sus.UpdatePending,
+		RevalPending:       sus.RevalPending,
+		UseRevalPending:    sus.UseRevalPending,
+		HostId:             sus.HostId,
+		Status:             sus.Status,
+		ParentPending:      sus.ParentPending,
+		ParentRevalPending: sus.ParentRevalPending,
+	}
+}
+
 // ServerUpdateStatusResponseV40 is the type of a response from the Traffic
 // Ops API to a request to its /servers/{{host name}}/update_status endpoint
 // in API version 4.0.

@@ -716,28 +716,29 @@ func (cl *TOClient) GetStatuses(reqHdr http.Header) ([]tc.Status, toclientlib.Re
 // GetServerUpdateStatus returns the data, the Traffic Ops address, and any error.
 // TODO: Alias ServerUpdateStatus in atscfg lib to ServerUpdateStatusV4. Need to add
 // possible conversion functions as well.
-func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr http.Header) (tc.ServerUpdateStatus, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr http.Header) (atscfg.ServerUpdateStatus, toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		return cl.old.GetServerUpdateStatus(cacheHostName)
 	}
 
-	status := tc.ServerUpdateStatus{}
+	status := atscfg.ServerUpdateStatus{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), &status, func(obj interface{}) error {
 		toStatus, toReqInf, err := cl.c.GetServerUpdateStatus(string(cacheHostName), *ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		status := obj.(*tc.ServerUpdateStatus)
+		status := obj.(*atscfg.ServerUpdateStatus)
 		if len(toStatus.Response) != 1 {
 			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + "expected 1 update_status for the server, got " + strconv.Itoa(len(toStatus.Response)))
 		}
-		*status = toStatus.Response[0].Downgrade()
+
+		*status = serverUpdateStatusesToLatest(toStatus.Response)[0]
 		reqInf = toReqInf
 		return nil
 	})
 	if err != nil {
-		return tc.ServerUpdateStatus{}, reqInf, errors.New("getting server update status: " + err.Error())
+		return atscfg.ServerUpdateStatus{}, reqInf, errors.New("getting server update status: " + err.Error())
 	}
 	return status, reqInf, nil
 }

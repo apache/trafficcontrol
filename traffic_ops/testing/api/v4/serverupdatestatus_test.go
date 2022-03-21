@@ -432,22 +432,22 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 			// Ensure values were actually set
 			if configUpdate != nil {
 				if afterServer.ConfigUpdateTime == nil || !afterServer.ConfigUpdateTime.Equal(*configUpdate) {
-					t.Errorf("Faild to set server's ConfigUpdateTime. expected: %v actual: %v", *configUpdate, afterServer.ConfigUpdateTime)
+					t.Errorf("Failed to set server's ConfigUpdateTime. expected: %v actual: %v", *configUpdate, afterServer.ConfigUpdateTime)
 				}
 			}
 			if configApply != nil {
 				if afterServer.ConfigApplyTime == nil || !afterServer.ConfigApplyTime.Equal(*configApply) {
-					t.Errorf("Faild to set server's ConfigApplyTime. expected: %v actual: %v", *configApply, afterServer.ConfigApplyTime)
+					t.Errorf("Failed to set server's ConfigApplyTime. expected: %v actual: %v", *configApply, afterServer.ConfigApplyTime)
 				}
 			}
 			if revalUpdate != nil {
 				if afterServer.RevalUpdateTime == nil || !afterServer.RevalUpdateTime.Equal(*revalUpdate) {
-					t.Errorf("Faild to set server's RevalUpdateTime. expected: %v actual: %v", *revalUpdate, afterServer.RevalUpdateTime)
+					t.Errorf("Failed to set server's RevalUpdateTime. expected: %v actual: %v", *revalUpdate, afterServer.RevalUpdateTime)
 				}
 			}
 			if revalApply != nil {
 				if afterServer.RevalApplyTime == nil || !afterServer.RevalApplyTime.Equal(*revalApply) {
-					t.Errorf("Faild to set server's RevalApplyTime. expected: %v actual: %v", *revalApply, afterServer.RevalApplyTime)
+					t.Errorf("Failed to set server's RevalApplyTime. expected: %v actual: %v", *revalApply, afterServer.RevalApplyTime)
 				}
 			}
 
