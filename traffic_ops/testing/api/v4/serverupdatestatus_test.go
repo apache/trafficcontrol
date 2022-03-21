@@ -377,7 +377,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Add("hostName", *testServer.HostName)
-		testVals := func(configUpdate, configApply, revalUpdate, revalApply *time.Time, name string) {
+		testVals := func(configUpdate, configApply, revalUpdate, revalApply *time.Time) {
 			resp, _, err := TOSession.GetServers(opts)
 			if err != nil {
 				t.Errorf("cannot get Server by name '%s': %v - alerts: %+v", *testServer.HostName, err, resp.Alerts)
@@ -409,7 +409,6 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 
 			// Make change
 			if alerts, _, err := TOSession.SetUpdateServerStatusTimes(*testServer.HostName, configUpdate, configApply, revalUpdate, revalApply, client.RequestOptions{}); err != nil {
-				t.Errorf("%v, %v, %v, %v, %s", configUpdate, configApply, revalUpdate, revalApply, name)
 				t.Fatalf("SetUpdateServerStatusTimes error. expected: nil, actual: %v - alerts: %+v", err, alerts.Alerts)
 			}
 
@@ -475,19 +474,19 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 		// but round trips to and from the database may result in an inaccurate Equals comparison
 		// with the loss of precision. Also, it appears to Round and not Truncate.
 		now := time.Now().Round(time.Microsecond)
-		later := time.Now().Add(time.Hour * 6)
+		later := now.Add(time.Hour * 6)
 
 		// Test setting the values works as expected
-		testVals(util.TimePtr(now), nil, nil, nil, "configUpdate")
-		testVals(nil, util.TimePtr(now), nil, nil, "configApply")
-		testVals(nil, nil, util.TimePtr(now), nil, "revalUpdate")
-		testVals(nil, nil, nil, util.TimePtr(now), "revalApply")
+		testVals(util.TimePtr(now), nil, nil, nil) // configUpdate
+		testVals(nil, util.TimePtr(now), nil, nil) // configApply
+		testVals(nil, nil, util.TimePtr(now), nil) // revalUpdate
+		testVals(nil, nil, nil, util.TimePtr(now)) // revalApply
 
 		// Test the boolean logic works as expected
-		testVals(util.TimePtr(now), util.TimePtr(now), nil, nil, "configUpdate = configApply")
-		testVals(util.TimePtr(now), util.TimePtr(later), nil, nil, "configUpdate < configApply")
-		testVals(nil, nil, util.TimePtr(now), util.TimePtr(now), "revalUpdate = revalApply")
-		testVals(nil, nil, util.TimePtr(now), util.TimePtr(later), "revalUpdate < revalApply")
+		testVals(util.TimePtr(now), util.TimePtr(now), nil, nil)   //configUpdate = configApply
+		testVals(util.TimePtr(now), util.TimePtr(later), nil, nil) // configUpdate < configApply
+		testVals(nil, nil, util.TimePtr(now), util.TimePtr(now))   // revalUpdate = revalApply
+		testVals(nil, nil, util.TimePtr(now), util.TimePtr(later)) // revalUpdate < revalApply
 
 		// Test sending all nils. Should fail
 		if _, _, err := TOSession.SetUpdateServerStatusTimes(*testServer.HostName, nil, nil, nil, nil, client.RequestOptions{}); err == nil {
