@@ -127,8 +127,11 @@ func WriteAndLogErr(w http.ResponseWriter, r *http.Request, bts []byte) {
 	}
 }
 
-// WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
-// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+// WriteResp takes any object, serializes it as JSON, and writes that to w.
+//
+// Any errors are logged and written to w as alerts (if applicable). This is a
+// helper for the common case; not using this in unusual cases is perfectly
+// acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
 	resp := APIResponse{v}
 	WriteRespRaw(w, r, resp)
@@ -145,7 +148,7 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 	respBts, err := json.Marshal(v)
 	if err != nil {
 		log.Errorf("marshalling JSON (raw) for %T: %v", v, err)
-		tc.GetHandleErrorsFunc(w, r)(http.StatusInternalServerError, errors.New(http.StatusText(http.StatusInternalServerError)))
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, nil)
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
@@ -177,7 +180,7 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 	respBts, err := json.Marshal(vals)
 	if err != nil {
 		log.Errorf("marshalling JSON for %T: %v", v, err)
-		tc.GetHandleErrorsFunc(w, r)(http.StatusInternalServerError, errors.New(http.StatusText(http.StatusInternalServerError)))
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, nil)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -305,8 +308,11 @@ func RespWriterVals(w http.ResponseWriter, r *http.Request, tx *sql.Tx, vals map
 	}
 }
 
-// WriteRespAlert creates an alert, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
-// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+// WriteRespAlert creates an alert, serializes it as JSON, and writes that to w.
+//
+// Any errors are logged and written to w as alerts (if applicable). This is a
+// helper for the common case; not using this in unusual cases is perfectly
+// acceptable.
 func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel, msg string) {
 	if respWritten(r) {
 		log.Errorf("WriteRespAlert called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
