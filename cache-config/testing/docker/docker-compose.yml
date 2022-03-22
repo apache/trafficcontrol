@@ -67,19 +67,6 @@ services:
     depends_on:
       - db_init
 
-  traffic_vault:
-    env_file:
-      - variables.env
-    ports:
-      - "8087:8087"
-      - "8088:8088"
-      - "8098:8098"
-    build:
-      context: .
-      dockerfile: traffic_vault/Dockerfile
-    depends_on:
-      - to_server
-
   ort_test:
     env_file:
       - variables.env
@@ -93,7 +80,6 @@ services:
     depends_on:
       - yumserver
       - to_server
-      - traffic_vault
     volumes:
       - ../../..:/root/go/src/github.com/apache/trafficcontrol
       - ./yumserver:/yumserver

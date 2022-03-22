@@ -27,4 +27,6 @@ while ! nc $DB_SERVER $DB_PORT </dev/null; do # &>/dev/null; do
         sleep 3
 done
 psql -h $DB_SERVER -U postgres -c "CREATE USER $DB_USER WITH ENCRYPTED PASSWORD '$DB_USER_PASS'"
+psql -h $DB_SERVER -U postgres -c "CREATE USER $TV_USER WITH ENCRYPTED PASSWORD '$TV_USER_PASS'"
 createdb $DB_NAME -h $DB_SERVER -U postgres --owner $DB_USER
+createdb $TV_DB_NAME -h $DB_SERVER -U postgres --owner $TV_USER
