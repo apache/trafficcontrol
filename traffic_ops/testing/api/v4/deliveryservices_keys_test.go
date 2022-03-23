@@ -24,21 +24,58 @@ func TestDeliveryServicesUrlSigKeys(t *testing.T) {
 	}
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices}, func() {
 
-		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		currentTimeRFC := currentTime.Format(time.RFC1123)
-
 		methodTests := utils.V4TestCase{
-			// "/xmlId/%s/sslkeys" // t.Run("Verify SSL key generation on DS creation", VerifySSLKeysOnDsCreationTest)
 			"GET": {
+				// "deliveryservices/xmlId/%s/sslkeys" // t.Run("Verify SSL key generation on DS creation", VerifySSLKeysOnDsCreationTest)
+				// Verifies fields are not empty strings // cert can be decoded
 				"OK when VALID request": {
 					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"xmlID": {"ds1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
 				},
+				// CreateTestDeliveryServicesURLSignatureKeys
+				// /xmlId/%s/urlkeys
+
+				///xmlId/%s/urlkeys // GetTestDeliveryServicesURLSignatureKeys
+				// Verify no error
+
+				//%s/urisignkeys  // CreateTestDeliveryServicesURISigningKeys
+				// Verify they match with was created
+
+				//%s/urisignkeys  // GetTestDeliveryServicesURISigningKeys
+				// Verify no error
+			},
+			"POST": {
+				// Blank CDN "sslkeytransfer" // NEW DS type=HTTP CDN="sslkeytransfer"
+				// Generate keys // deliveryservices/sslkeys/generate
+				// get keys for oldcdn: %s/name/%s/sslkeys"
+				// get keys for new cdn: sslkeytransfer1
+
+				// CreateTestDeliveryServicesURLSignatureKeys
+				// FIRST POST
+				///deliveryservices/xmlId/%s/urlkeys/generate
+				// GET AND VERIFY they were created
+				// Create new keys again and check that they are different
+
+				//CreateTestDeliveryServicesURISigningKeys // deliveryservices/%s/urisignkeys
+				// Perform another create using different keyset
+				// verify the get req matches new keyset not old one
+
+				// DeliveryServiceSSLKeys /sslkeys/add
 			},
 			"PUT": {
 				"BAD REQUEST when updating DS ROUTING NAME when DS has SSL KEYS": {},
-				"BAD REQUEST when updating DS CDN when DS has SSL KEYS": {},
+				"BAD REQUEST when updating DS CDN when DS has SSL KEYS":          {},
+			},
+			"DELETE": {
+				///xmlId/%s/urlkeys // DeleteTestDeliveryServicesURLSignatureKeys
+
+				///%s/urisignkeys // DeleteTestDeliveryServicesURISigningKeys
+				// Expect certain keys to not be empty?
+
+				//t.Errorf("expected 1 ssl keys for CDN %v, got %d instead", cdn.Name, len(newCdnKeys))
+				// Expect on CDN key one deleting a DS that belonged to that cdn
+				// PreREq: create cdn, 2 dses attached, get keys, delete ds get cdn keys // expect len=1
+
 			},
 		}
 
