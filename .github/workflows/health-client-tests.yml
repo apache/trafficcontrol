@@ -39,7 +39,7 @@ on:
       - vendor/**.go
       - vendor/modules.txt
       - .github/actions/build-ats-test-rpm/**
-      - .github/actions/fetch-github-branch-sha/**
+      - .github/actions/repo-info/**
       - .github/actions/health-client-integration-tests/**
   create:
   pull_request:
@@ -58,7 +58,7 @@ on:
       - vendor/**.go
       - vendor/modules.txt
       - .github/actions/build-ats-test-rpm/**
-      - .github/actions/fetch-github-branch-sha/**
+      - .github/actions/repo-info/**
       - .github/actions/health-client-integration-tests/**
     types: [opened, reopened, ready_for_review, synchronize]
 
@@ -108,18 +108,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Get latest commit sha and latest tag
-        uses: ./.github/actions/fetch-github-branch-sha
+        uses: ./.github/actions/repo-info
         with:
           owner: apache
           repo: trafficserver
           branch: ${{ env.ATS_VERSION }}
-        id: git-repo-sha
+        id: repo-info
       - name: Check Cache
         id: ats-rpm-cache
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/dist
-          key: ${{ steps.git-repo-sha.outputs.sha }}-${{ steps.git-repo-sha.outputs.latest-tag }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('tc-health-client/testing/docker/trafficserver/**') }}
+          key: ${{ steps.repo-info.outputs.sha }}-${{ steps.repo-info.outputs.latest-tag }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('tc-health-client/testing/docker/trafficserver/**') }}
       - name: Build ATS RPM
         if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/build-ats-test-rpm

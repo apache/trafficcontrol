@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: 'fetch-github-branch-sha'
+name: 'repo-info'
 description: 'Fetches the most recent commit from a github repository branch'
 inputs:
   owner:
