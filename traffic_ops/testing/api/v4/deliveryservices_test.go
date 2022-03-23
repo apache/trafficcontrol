@@ -37,7 +37,7 @@ func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices, DeliveryServicesRequiredCapabilities, DeliveryServiceServerAssignments}, func() {
 
 		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 
 		tenant4UserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
@@ -49,11 +49,9 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						utils.ResponseLengthGreaterOrEqual(1)),
 				},
-				//GetAccessibleToTest
-				// ADDITIONAL TESTS: GET USING ROOT TENANT ID: 1 -> should match length of testdata
-				// GET USING NEW TENANT BELONGING TO NO DSs -> length = 0 // tenant1 = child of root -> len = testdata - 1
 				"OK when VALID ACCESSIBLETO parameter": {
 					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"accessibleTo": {"1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
@@ -243,79 +241,37 @@ func TestDeliveryServices(t *testing.T) {
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				//"OK when VALID request": {
-				//	EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
-				//	RequestBody: map[string]interface{}{
-				//		"active": false,
-				//		"cdnName": "cdn1",
-				//		"ccrDnsTtl": 3600,
-				//		"checkPath": "",
-				//		"consistentHashQueryParams": [],
-				//		"deepCachingType": "NEVER",
-				//		"displayName": "newds1displayname",
-				//		"dnsBypassCname": null,
-				//		"dnsBypassIp": "",
-				//		"dnsBypassIp6": "",
-				//		"dnsBypassTtl": 30,
-				//		"dscp": 41,
-				//		"edgeHeaderRewrite": "edgeHeader1\nedgeHeader2",
-				//		"exampleURLs": [
-				//		"http://ccr.ds1.example.net",
-				//		"https://ccr.ds1.example.net"
-				//	],
-				//		"fqPacingRate": 0,
-				//		"geoLimit": 1,
-				//		"geoLimitCountries": "",
-				//		"geoLimitRedirectURL": null,
-				//		"geoProvider": 0,
-				//		"globalMaxMbps": 0,
-				//		"globalMaxTps": 0,
-				//		"httpBypassFqdn": "",
-				//		"infoUrl": "TBD",
-				//		"initialDispersion": 2,
-				//		"ipv6RoutingEnabled": false,
-				//		"logsEnabled": true,
-				//		"longDesc": "something different",
-				//		"longDesc1": "ds1",
-				//		"longDesc2": "ds1",
-				//		"matchList": [
-				//	{
-				//		"pattern": ".*\\.ds1\\..*",
-				//		"setNumber": 0,
-				//		"type": "HOST_REGEXP"
-				//	}
-				//	],
-				//		"maxDnsAnswers": 164598,
-				//		"midHeaderRewrite": "midHeader1\nmidHeader2",
-				//		"missLat": 42.881944,
-				//		"missLong": -88.627778,
-				//		"multiSiteOrigin": true,
-				//		"orgServerFqdn": "http://origin.update.example.net",
-				//		"originShield": null,
-				//		"profileDescription": null,
-				//		"profileName": "ATS_EDGE_TIER_CACHE",
-				//		"protocol": 2,
-				//		"qstringIgnore": 0,
-				//		"rangeRequestHandling": 0,
-				//		"regexRemap": "rr1\nrr2",
-				//		"regionalGeoBlocking": true,
-				//		"remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua",
-				//		"routingName": "ccr-ds1",
-				//		"signed": false,
-				//		"signingAlgorithm": "url_sig",
-				//		"sslKeyVersion": 2,
-				//		"tenant": "tenant1",
-				//		"tenantName": "tenant1",
-				//		"type": "HTTP",
-				//		"xmlId": "ds1",
-				//		"anonymousBlockingEnabled": true,
-				//		"maxOriginConnections": 100
-				//		"maxRequestHeaderBytes": 131080
-				//	},
-				//	Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				//},
-				//UpdateValidateORGServerCacheGroup
-				//"Assign an Origin not in a Cache Group used by a Delivery Service's Topology to that Delivery Service": {},
+				"OK when VALID request": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"maxRequestHeaderBytes": 131080,
+						"longDesc":              "something different",
+						"maxDNSAnswers":         164598,
+						"maxOriginConnections":  100,
+						"active":                false,
+						"displayName":           "newds1displayname",
+						"dscp":                  41,
+						"geoLimit":              1,
+						"initialDispersion":     2,
+						"ipv6RoutingEnabled":    false,
+						"logsEnabled":           false,
+						"missLat":               42.881944,
+						"missLong":              -88.627778,
+						"multiSiteOrigin":       true,
+						"orgServerFqdn":         "http://origin.example.net",
+						"protocol":              2,
+						"qStringIgnore":         0,
+						"regionalGeoBlocking":   true,
+					}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateDSExpectedFields(map[string]interface{}{"MaxRequestHeaderSize": 131080,
+							"LongDesc": "something different", "MaxDNSAnswers": 164598, "MaxOriginConnections": 100,
+							"Active": false, "DisplayName": "newds1displayname", "DSCP": 41, "GeoLimit": 1,
+							"InitialDispersion": 2, "IPV6RoutingEnabled": false, "LogsEnabled": false, "MissLat": 42.881944,
+							"MissLong": -88.627778, "MultiSiteOrigin": true, "OrgServerFQDN": "http://origin.example.net",
+							"Protocol": 2, "QStringIgnore": 0, "RegionalGeoBlocking": true,
+						})),
+				},
 				"BAD REQUEST when INVALID REMAP TEXT": {
 					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
@@ -387,16 +343,6 @@ func TestDeliveryServices(t *testing.T) {
 					}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
-				//t.Fatalf("expected 400-level error assigning Topology %s to Delivery Service %s because Cache Group %s has no Servers in it in CDN %d, no error received", *dsTopology, xmlID, cacheGroupName, *ds.CDNID)
-				// "top-ds-in-cdn2"
-				//"BAD REQUEST when ASSIGNING TOPOLOGY when CG has NO SERVERS": {
-				//	EndpointId: GetDeliveryServiceId(t, "top-ds-in-cdn2"), ClientSession: TOSession,
-				//	RequestBody: map[string]interface{}{
-				//		"topology": "top-cg-no-servers",
-				//		"xmlId":    "top-ds-in-cdn2",
-				//	},
-				//	Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-				//},
 				"OK when DS with TOPOLOGY updates HEADER REWRITE FIELDS": {
 					EndpointId: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
@@ -483,11 +429,7 @@ func TestDeliveryServices(t *testing.T) {
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
-					RequestOpts: client.RequestOptions{
-						Header: http.Header{
-							rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC},
-						},
-					},
+					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds1"}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
@@ -507,18 +449,16 @@ func TestDeliveryServices(t *testing.T) {
 			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
 					ClientSession: TOSession,
-					RequestOpts: client.RequestOptions{
-						Header: http.Header{
-							rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC},
-						},
-					},
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+			"DELIVERY SERVICES CAPACITY": {
+				"OK when VALID request": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
-			//"DELIVERY SERVICES CAPACITY": {
-			//	// capDS, _, err := TOSession.GetDeliveryServiceCapacity(*ds.ID, client.RequestOptions{})
-			//	"Basic GET request for /deliveryservices/{{ID}}/capacity": {},
-			//},
 		}
 
 		for method, testCases := range methodTests {
@@ -590,6 +530,13 @@ func TestDeliveryServices(t *testing.T) {
 								check(t, reqInf, nil, resp.Alerts, err)
 							}
 						})
+					case "DELIVERY SERVICES CAPACITY":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceCapacity(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, resp.Alerts, err)
+							}
+						})
 					}
 				}
 			})
@@ -604,31 +551,61 @@ func validateDSExpectedFields(expectedResp map[string]interface{}) utils.CkReqFu
 			for _, ds := range dsResp {
 				switch field {
 				case "Active":
-					assert.Equal(t, expected, *ds.Active, "Expected active to be %v, but got %v", expected, *ds.Active)
+					assert.Equal(t, expected, *ds.Active, "Expected Active to be %v, but got %v", expected, *ds.Active)
 				case "DeepCachingType":
-					assert.Equal(t, expected, *ds.DeepCachingType, "Expected deepCachingType to be %v, but got %v", expected, *ds.DeepCachingType)
+					assert.Equal(t, expected, *ds.DeepCachingType, "Expected DeepCachingType to be %v, but got %v", expected, *ds.DeepCachingType)
 				case "CDNName":
 					assert.Equal(t, expected, *ds.CDNName, "Expected CDNName to be %v, but got %v", expected, *ds.CDNName)
 				case "ConsistentHashRegex":
 					assert.Equal(t, expected, *ds.ConsistentHashRegex, "Expected ConsistentHashRegex to be %v, but got %v", expected, *ds.ConsistentHashRegex)
 				case "ConsistentHashQueryParams":
 					assert.Exactly(t, expected, ds.ConsistentHashQueryParams, "Expected ConsistentHashQueryParams to be %v, but got %v", expected, ds.ConsistentHashQueryParams)
+				case "DisplayName":
+					assert.Equal(t, expected, *ds.DisplayName, "Expected DisplayName to be %v, but got %v", expected, *ds.DisplayName)
+				case "DSCP":
+					assert.Equal(t, expected, *ds.DSCP, "Expected DSCP to be %v, but got %v", expected, *ds.DSCP)
 				case "FQPacingRate":
 					assert.Equal(t, expected, *ds.FQPacingRate, "Expected FQPacingRate to be %v, but got %v", expected, *ds.FQPacingRate)
+				case "GeoLimit":
+					assert.Equal(t, expected, *ds.GeoLimit, "Expected GeoLimit to be %v, but got &v", expected, ds.GeoLimit)
 				case "GeoLimitCountries":
 					assert.Exactly(t, expected, ds.GeoLimitCountries, "Expected GeoLimitCountries to be %v, but got &v", expected, ds.GeoLimitCountries)
+				case "InitialDispersion":
+					assert.Equal(t, expected, *ds.InitialDispersion, "Expected InitialDispersion to be %v, but got &v", expected, ds.InitialDispersion)
+				case "IPV6RoutingEnabled":
+					assert.Equal(t, expected, *ds.IPV6RoutingEnabled, "Expected IPV6RoutingEnabled to be %v, but got &v", expected, ds.IPV6RoutingEnabled)
 				case "LogsEnabled":
 					assert.Equal(t, expected, *ds.LogsEnabled, "Expected LogsEnabled to be %v, but got %v", expected, *ds.LogsEnabled)
+				case "LongDesc":
+					assert.Equal(t, expected, *ds.LongDesc, "Expected LongDesc to be %v, but got %v", expected, *ds.LongDesc)
+				case "MaxDNSAnswers":
+					assert.Equal(t, expected, *ds.MaxDNSAnswers, "Expected MaxDNSAnswers to be %v, but got %v", expected, *ds.MaxDNSAnswers)
 				case "MaxOriginConnections":
 					assert.Equal(t, expected, *ds.MaxOriginConnections, "Expected MaxOriginConnections to be %v, but got %v", expected, *ds.MaxOriginConnections)
+				case "MaxRequestHeaderSize":
+					assert.Equal(t, expected, *ds.MaxRequestHeaderBytes, "Expected MaxRequestHeaderBytes to be %v, but got %v", expected, *ds.MaxRequestHeaderBytes)
+				case "MissLat":
+					assert.Equal(t, expected, *ds.MissLat, "Expected MissLat to be %v, but got %v", expected, *ds.MissLat)
+				case "MissLong":
+					assert.Equal(t, expected, *ds.MissLong, "Expected MissLong to be %v, but got %v", expected, *ds.MissLong)
+				case "MultiSiteOrigin":
+					assert.Equal(t, expected, *ds.MultiSiteOrigin, "Expected MultiSiteOrigin to be %v, but got %v", expected, *ds.MultiSiteOrigin)
+				case "OrgServerFQDN":
+					assert.Equal(t, expected, *ds.OrgServerFQDN, "Expected OrgServerFQDN to be %v, but got %v", expected, *ds.OrgServerFQDN)
 				case "ProfileName":
 					assert.Equal(t, expected, *ds.ProfileName, "Expected ProfileName to be %v, but got %v", expected, *ds.ProfileName)
+				case "Protocol":
+					assert.Equal(t, expected, *ds.Protocol, "Expected Protocol to be %v, but got %v", expected, *ds.Protocol)
+				case "QStringIgnore":
+					assert.Equal(t, expected, *ds.QStringIgnore, "Expected QStringIgnore to be %v, but got %v", expected, *ds.QStringIgnore)
+				case "RegionalGeoBlocking":
+					assert.Equal(t, expected, *ds.RegionalGeoBlocking, "Expected QStringIgnore to be %v, but got %v", expected, *ds.RegionalGeoBlocking)
 				case "ServiceCategory":
 					assert.Equal(t, expected, *ds.ServiceCategory, "Expected ServiceCategory to be %v, but got %v", expected, *ds.ServiceCategory)
 				case "SigningAlgorithm":
 					assert.Equal(t, expected, *ds.SigningAlgorithm, "Expected SigningAlgorithm to be %v, but got %v", expected, *ds.SigningAlgorithm)
 				case "Tenant":
-					assert.Equal(t, expected, *ds.Tenant, "Expected Topology to be %v, but got %v", expected, *ds.Tenant)
+					assert.Equal(t, expected, *ds.Tenant, "Expected Tenant to be %v, but got %v", expected, *ds.Tenant)
 				case "Topology":
 					assert.Equal(t, expected, *ds.Topology, "Expected Topology to be %v, but got %v", expected, *ds.Topology)
 				case "TRRequestHeaders":
@@ -761,7 +738,7 @@ func generateDeliveryService(t *testing.T, requestDS map[string]interface{}) map
 		"tenant":               "tenant1",
 		"type":                 tc.DSTypeHTTP,
 		"typeId":               GetTypeId(t, "HTTP"),
-		"xmlId":                "da1",
+		"xmlId":                "ds1",
 	}
 	for k, v := range requestDS {
 		genericHTTPDS[k] = v
