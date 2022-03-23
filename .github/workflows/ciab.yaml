@@ -268,9 +268,11 @@ jobs:
         uses: ./.github/actions/build-ats-test-rpm
         env:
           ATC_COMPONENT: ${{ github.job }}
-      - name: Display structure of dist directory
-        run: ls -lR
-        working-directory: ${{ github.workspace }}/dist
+      - name: Check ATS RPM name
+        run: |
+          set -o errexit -o nounset -o xtrace
+          actual_rpm_name="$(ls dist | grep -E '^trafficserver-[0-9.]+-[0-9]+\.[0-9a-f]+.el${{ env.RHEL_VERSION }}.${{ env.TARGET_ARCH }}.rpm$')"
+          [[ "${{ steps.repo-info.outputs.expected-rpm-name }}" == "$actual_rpm_name" ]]
       - name: Upload RPM
         uses: actions/upload-artifact@v2
         with:
