@@ -1568,6 +1568,12 @@
             "RequiredCapability": "bar"
         }
     ],
+    "deliveryServiceServerAssignments": [
+        {
+            "xmlId": "ds-top",
+            "serverNames": ["denver-mso-org-01"]
+        }
+    ],
     "topologyBasedDeliveryServicesRequiredCapabilities": [
         {
             "xmlID": "ds-top-req-cap",
@@ -1817,6 +1823,12 @@
             "name": "tm.instance_name",
             "secure": false,
             "value": "Traffic Ops API Tests"
+        },
+        {
+            "configFile": "remap.config",
+            "name": "location",
+            "secure": false,
+            "value": "/remap/config/location/parameter/"
         }
     ],
     "physLocations": [
