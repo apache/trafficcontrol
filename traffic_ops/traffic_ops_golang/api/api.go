@@ -48,9 +48,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
-	"github.com/dgrijalva/jwt-go"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/lib/pq"
 )
 
@@ -1118,21 +1119,15 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 
 func getCookieFromAccessToken(bearerToken string, secret string) (*http.Cookie, error) {
 	var cookie *http.Cookie
-	claims := jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secret), nil
-	})
+	token, err := jwt.Parse([]byte(bearerToken), jwt.WithVerify(jwa.HS256, []byte(secret)))
 	if err != nil {
-		return nil, fmt.Errorf("parsing claims: %w", err)
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 	if token == nil {
 		return nil, errors.New("parsing claims: parsed nil token")
 	}
-	if !token.Valid {
-		return nil, errors.New("invalid token")
-	}
 
-	for key, val := range claims {
+	for key, val := range token.PrivateClaims() {
 		switch key {
 		case MojoCookie:
 			mojoVal, ok := val.(string)
