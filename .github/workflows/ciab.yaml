@@ -19,6 +19,7 @@ name: CDN-in-a-Box CI
 
 env:
   RHEL_VERSION: 8
+  TARGET_ARCH: x86_64
   # alpine:3.13
   ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
 
@@ -249,7 +250,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Get latest commit sha and latest tag
+      - name: Get expected RPM name
         uses: ./.github/actions/repo-info
         with:
           owner: apache
@@ -261,7 +262,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/dist
-          key: ${{ steps.repo-info.outputs.sha }}-${{ steps.repo-info.outputs.latest-tag }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
+          key: ${{ steps.repo-info.outputs.expected-rpm-name }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
       - name: Build ATS RPM
         if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/build-ats-test-rpm

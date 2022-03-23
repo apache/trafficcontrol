@@ -28,12 +28,9 @@ inputs:
     description: 'The repository branch to query ie, "8.1.0-branch"'
     required: true
 outputs:
-  sha:
-    description: 'The latest git commit sha on the given branch'
-    value: ${{ steps.entrypoint.outputs.sha }}
-  latest-tag:
-    description: 'The latest git tag on the given branch'
-    value: ${{ steps.entrypoint.outputs.latest-tag }}
+  expected-rpm-name:
+    description: 'The name that an RPM with the fetched git tag and commit sha is expected to have'
+    value: ${{ steps.entrypoint.outputs.expected-rpm-name }}
 runs:
   using: 'composite'
   steps:

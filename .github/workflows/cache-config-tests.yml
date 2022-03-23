@@ -18,8 +18,9 @@
 name: Traffic Control Cache Config integration tests
 
 env:
-  RHEL_VERSION: 8
   ATS_VERSION: 8.1.x
+  RHEL_VERSION: 8
+  TARGET_ARCH: x86_64
 
 on:
   workflow_dispatch:
@@ -106,7 +107,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Get latest commit sha and latest tag
+      - name: Get expected RPM name
         uses: ./.github/actions/repo-info
         with:
           owner: apache
@@ -118,7 +119,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/dist
-          key: ${{ steps.repo-info.outputs.sha }}-${{ steps.repo-info.outputs.latest-tag }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
+          key: ${{ steps.repo-info.outputs.expected-rpm-name }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
       - name: Build ATS RPM
         if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/build-ats-test-rpm
