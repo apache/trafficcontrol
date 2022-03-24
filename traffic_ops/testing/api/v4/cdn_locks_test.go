@@ -162,7 +162,7 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"DELIVERY SERVICE DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointId: GetDeliveryServiceId(t, "basic-ds-in-cdn2"), ClientSession: opsUserWithLockSession,
+					EndpointId: GetDeliveryServiceId(t, "ds-forked-topology"), ClientSession: opsUserWithLockSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
