@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
-	"github.com/lib/pq"
 )
 
 func TestServers(t *testing.T) {
@@ -262,7 +261,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	if len(nps.Response) != 1 {
 		t.Fatalf("Expected exactly one Profile to exist, found: %d", len(profiles.Response))
 	}
-	server.ProfileNames = &pq.StringArray{nps.Response[0].Name}
+	server.ProfileNames = &[]string{nps.Response[0].Name}
 	opts.QueryParameters.Del("id")
 
 	_, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
@@ -270,7 +269,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("changing the CDN of the last server (%s) in a CDN in a cachegroup used by a topology assigned to a delivery service(s) in that CDN - expected: error, actual: nil", *server.HostName)
 	}
 	server.CDNID = &oldCDNID
-	server.ProfileNames = &pq.StringArray{oldProfileName}
+	server.ProfileNames = &[]string{oldProfileName}
 
 	opts.QueryParameters.Set("name", moveToCacheGroup)
 	cgs, _, err := TOSession.GetCacheGroups(opts)
@@ -627,7 +626,7 @@ func CreateTestServerWithoutProfileID(t *testing.T) {
 		t.Fatalf("cannot delete Server by ID %d: %v - %v", *server.ID, err, delResp)
 	}
 
-	*server.ProfileNames = pq.StringArray{""}
+	*server.ProfileNames = []string{""}
 	//server.ProfileID = nil
 	_, reqInfo, _ := TOSession.CreateServer(server, client.RequestOptions{})
 	if reqInfo.StatusCode != 400 {

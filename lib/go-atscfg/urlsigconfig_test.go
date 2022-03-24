@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/lib/pq"
 )
 
 func TestMakeURLSigConfig(t *testing.T) {
@@ -41,7 +40,7 @@ func TestMakeURLSigConfig(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = &[]string{profileName}
 
 	fileName := "url_sig_myds.config"
 

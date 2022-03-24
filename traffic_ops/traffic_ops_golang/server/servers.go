@@ -62,17 +62,6 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 `
 
-const serversV4FromAndJoin = `
-FROM server AS s
-JOIN cachegroup cg ON s.cachegroup = cg.id
-JOIN cdn cdn ON s.cdn_id = cdn.id
-JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
-JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id
-JOIN server_profile sp ON sp.server = s.id
-`
-
 /* language=SQL */
 const dssTopologiesJoinSubquery = `
 (SELECT
@@ -151,7 +140,7 @@ SELECT
 	s.offline_reason,
 	pl.name AS phys_location,
 	s.phys_location AS phys_location_id,
-	ARRAY[p.name] AS profile_names,
+	ARRAY[p.name] AS profile_name,
 	s.rack,
 	s.reval_pending,
 	st.name AS status,
@@ -188,7 +177,7 @@ SELECT
 	s.offline_reason,
 	pl.name AS phys_location,
 	s.phys_location AS phys_location_id,
-	sp.profile_names AS profile_names,
+	(SELECT ARRAY_AGG(sp.profile_name) FROM server_profile AS sp where sp.server=s.id) AS profile_name,
 	s.rack,
 	s.reval_pending,
 	st.name AS status,
@@ -200,7 +189,7 @@ SELECT
 	s.xmpp_id,
 	s.xmpp_passwd,
 	s.status_last_updated
-` + serversV4FromAndJoin
+` + serversFromAndJoin
 
 const midWhereClause = `
 WHERE t.name = :cache_type_mid AND s.cachegroup IN (
@@ -340,7 +329,7 @@ INSERT INTO server (
 	:mgmt_ip_gateway,
 	:offline_reason,
 	:phys_location_id,
-	(SELECT id FROM profile p WHERE p.name=(CAST(:profile_names AS TEXT[]))[1]),
+	(SELECT id FROM profile p WHERE p.name=(CAST(:profile_name AS TEXT[]))[1]),
 	:rack,
 	:status_id,
 	:tcp_port,
@@ -370,7 +359,7 @@ INSERT INTO server (
 	offline_reason,
 	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
 	phys_location AS phys_location_id,
-	(SELECT ARRAY[(SELECT name FROM profile WHERE profile.id=server.profile)]) AS profile_names,
+	(SELECT ARRAY[(SELECT name FROM profile WHERE profile.id=server.profile)]) AS profile_name,
 	rack,
 	reval_pending,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
@@ -482,7 +471,7 @@ UPDATE server SET
 	mgmt_ip_gateway=:mgmt_ip_gateway,
 	offline_reason=:offline_reason,
 	phys_location=:phys_location_id,
-	profile=(SELECT id from profile where name=(SELECT profile_names[1] from server_profile sp WHERE sp.server=:id)),
+	profile=(SELECT id from profile where name=(SELECT profile_name from server_profile sp WHERE sp.server=:id)),
 	rack=:rack,
 	status=:status_id,
 	tcp_port=:tcp_port,
@@ -513,7 +502,7 @@ RETURNING
 	offline_reason,
 	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
 	phys_location AS phys_location_id,
-	(SELECT profile_names FROM server_profile sp WHERE sp.server=server.id) AS profile_names,
+	(SELECT profile_name FROM server_profile sp WHERE sp.server=server.id) AS profile_name,
 	rack,
 	reval_pending,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
@@ -534,6 +523,11 @@ AND dsorg.deliveryservice=:dsId
 const deleteServerQuery = `DELETE FROM server WHERE id=$1`
 const deleteInterfacesQuery = `DELETE FROM interface WHERE server=$1`
 const deleteIPsQuery = `DELETE FROM ip_address WHERE server = $1`
+
+type TOServerV40 struct {
+	ProfileNamesDB interface{} `json:"-" db:"profile_name"`
+	tc.ServerV40
+}
 
 func newUUID() *string {
 	uuidReference := uuid.New().String()
@@ -1137,7 +1131,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + originServerQuery
 	}
 
-	log.Debugln("Query is ", query)
+	fmt.Printf("Query is %v %v", query, queryValues)
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, serverCount, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError, nil
@@ -1149,8 +1143,52 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	servers := make(map[int]tc.ServerV40)
 	ids := []int{}
 	for rows.Next() {
-		var s tc.ServerV40
-		if err = rows.StructScan(&s); err != nil {
+		s := tc.ServerV40{}
+		var profiles []string
+		s.ProfileNames = &profiles
+		//s := TOServerV40{
+		//	ServerV40:      tc.ServerV40{
+		//		CommonServerPropertiesV40: tc.CommonServerPropertiesV40{
+		//			ProfileNames:     &profiles,
+		//		},
+		//	},
+		//}
+		//s.ProfileNamesDB = pq.Array(&s.ProfileNames)
+		//err = rows.StructScan(&s);
+		err := rows.Scan(&s.Cachegroup,
+			&s.CachegroupID,
+			&s.CDNID,
+			&s.CDNName,
+			&s.DomainName,
+			&s.GUID,
+			&s.HostName,
+			&s.HTTPSPort,
+			&s.ID,
+			&s.ILOIPAddress,
+			&s.ILOIPGateway,
+			&s.ILOIPNetmask,
+			&s.ILOPassword,
+			&s.ILOUsername,
+			&s.LastUpdated,
+			&s.MgmtIPAddress,
+			&s.MgmtIPGateway,
+			&s.MgmtIPNetmask,
+			&s.OfflineReason,
+			&s.PhysLocation,
+			&s.PhysLocationID,
+			pq.Array(s.ProfileNames),
+			&s.Rack,
+			&s.RevalPending,
+			&s.Status,
+			&s.StatusID,
+			&s.TCPPort,
+			&s.Type,
+			&s.TypeID,
+			&s.UpdPending,
+			&s.XMPPID,
+			&s.XMPPPasswd,
+			&s.StatusLastUpdated)
+		if err != nil {
 			return nil, serverCount, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		if user.PrivLevel < auth.PrivLevelOperations {
@@ -1760,28 +1798,29 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
-func insertServerProfile(id *int, pName pq.StringArray, tx *sql.Tx) (error, error, int) {
+func insertServerProfile(id *int, pName []string, tx *sql.Tx) (error, error, int) {
 	insertSPQuery := `
 	INSERT INTO server_profile (
 		server, 
-		profile_names, 
+		profile_name, 
 		priority
 	) VALUES 
 	`
 
-	var priorityArray pq.Int64Array
-	for i, _ := range pName {
-		priorityArray = append(priorityArray, int64(i))
+	//var priorityArray pq.Int64Array
+	//priorityArray = append(priorityArray, int64(i))
+
+	iSPQueryParts := make([]string, 0, len(pName))
+	iSPQueryValues := make([]interface{}, 0, len(pName))
+	for i, name := range pName {
+		valStart := i * 3
+		iSPQueryParts = append(iSPQueryParts, fmt.Sprintf("($%d, $%d, $%d)", valStart+1, valStart+2, valStart+3))
+		iSPQueryValues = append(iSPQueryValues, *id, name, i)
 	}
 
-	iSPQueryParts := make([]string, 0, 1)
-	iSPQueryValues := make([]interface{}, 0, 1)
-	for j := 0; j < 1; j++ {
-		iSPQueryParts = append(iSPQueryParts, fmt.Sprintf("($%d, $%d, $%d)", j+1, j+2, j+3))
-		iSPQueryValues = append(iSPQueryValues, *id, pName, priorityArray)
-	}
 	insertSPQuery += strings.Join(iSPQueryParts, ",")
 	log.Debugf("Inserting profile information for a new server, query is: %s", insertSPQuery)
+
 	_, err := tx.Exec(insertSPQuery, iSPQueryValues...)
 	if err != nil {
 		return api.ParseDBError(err)
@@ -1832,7 +1871,7 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	origProfiles := pq.StringArray{*server.Profile}
+	origProfiles := []string{*server.Profile}
 
 	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
 	if err != nil {
@@ -1914,7 +1953,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
-	origProfiles := pq.StringArray{*server.Profile}
+	origProfiles := []string{*server.Profile}
 
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)

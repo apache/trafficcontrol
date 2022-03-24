@@ -22,8 +22,6 @@ package atscfg
 import (
 	"strings"
 	"testing"
-
-	"github.com/lib/pq"
 )
 
 func TestMakeVolumeDotConfig(t *testing.T) {
@@ -39,7 +37,7 @@ func TestMakeVolumeDotConfig(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = &[]string{profileName}
 
 	params := makeParamsFromMap((*server.ProfileNames)[0], VolumeFileName, paramData)
 
@@ -102,7 +100,7 @@ func TestMakeVolumeDotConfigNoParams(t *testing.T) {
 	paramData := map[string]string{}
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = &[]string{profileName}
 
 	params := makeParamsFromMap((*server.ProfileNames)[0], VolumeFileName, paramData)
 
@@ -138,7 +136,7 @@ func TestMakeVolumeDotConfigNoLetters(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = &[]string{profileName}
 
 	params := makeParamsFromMap((*server.ProfileNames)[0], VolumeFileName, paramData)
 
@@ -172,7 +170,7 @@ func TestMakeVolumeDotConfigSomePrefixes(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = &[]string{profileName}
 
 	params := makeParamsFromMap((*server.ProfileNames)[0], VolumeFileName, paramData)
 

@@ -25,7 +25,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/lib/pq"
 )
 
 func makeTestRemapServer() *Server {
@@ -38,7 +37,7 @@ func makeTestRemapServer() *Server {
 	server.HTTPSPort = util.IntPtr(12345)
 	server.ID = util.IntPtr(44)
 	setIP(server, "192.168.2.4")
-	server.ProfileNames = &pq.StringArray{"MyProfile"}
+	server.ProfileNames = &[]string{"MyProfile"}
 	server.TCPPort = util.IntPtr(12080)
 	server.Type = "MID"
 	return server

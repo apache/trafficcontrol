@@ -25,7 +25,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/lib/pq"
 )
 
 func TestMakeParentDotConfig(t *testing.T) {
@@ -3164,7 +3163,7 @@ func makeTestParentServer() *Server {
 	server.ID = util.IntPtr(44)
 	setIP(server, "192.168.2.1")
 	//server.ProfileID = util.IntPtr(46)
-	server.ProfileNames = &pq.StringArray{"serverprofile"}
+	server.ProfileNames = &[]string{"serverprofile"}
 	server.TCPPort = util.IntPtr(80)
 	server.Type = "EDGE"
 	server.TypeID = util.IntPtr(91)

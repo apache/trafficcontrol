@@ -32,7 +32,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -66,7 +65,7 @@ func getTestServers() []ServerAndInterfaces {
 			OfflineReason:  util.StrPtr("offlineReason"),
 			PhysLocation:   util.StrPtr("physLocation"),
 			PhysLocationID: util.IntPtr(1),
-			ProfileNames:   &pq.StringArray{"profile"},
+			ProfileNames:   &[]string{"profile"},
 			Rack:           util.StrPtr("rack"),
 			RevalPending:   util.BoolPtr(true),
 			Status:         util.StrPtr("status"),

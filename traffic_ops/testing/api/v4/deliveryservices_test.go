@@ -18,7 +18,6 @@ package v4
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lib/pq"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -1597,7 +1596,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	if err != nil {
 		t.Fatalf("updating Profile %s: %v - alerts: %+v", profile.Name, err, alerts.Alerts)
 	}
-	*server.ProfileNames = pq.StringArray{profile.Name}
+	*server.ProfileNames = []string{profile.Name}
 
 	// Empty Cache Group dtrc1 with respect to CDN 2
 	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
@@ -1613,7 +1612,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("expected %d-level status code but received status code %d", http.StatusBadRequest, reqInf.StatusCode)
 	}
 	*server.CDNID = *ds.CDNID
-	*server.ProfileNames = pq.StringArray{profileCopy.ExistingName}
+	*server.ProfileNames = []string{profileCopy.ExistingName}
 
 	// Put things back the way they were
 	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})

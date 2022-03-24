@@ -22,8 +22,6 @@ package atscfg
 import (
 	"strings"
 	"testing"
-
-	"github.com/lib/pq"
 )
 
 func TestMakeStorageDotConfig(t *testing.T) {
@@ -31,7 +29,7 @@ func TestMakeStorageDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = &[]string{profileName}
 
 	paramData := map[string]string{
 		"Drive_Prefix":      "/dev/sd",
@@ -96,7 +94,7 @@ func TestMakeStorageDotConfigNoParams(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = &[]string{profileName}
 
 	paramData := map[string]string{}
 
@@ -133,7 +131,7 @@ func TestMakeStorageDotConfigNoDriveLetters(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = &[]string{profileName}
 
 	paramData := map[string]string{
 		"Drive_Prefix":     "/dev/sd",
@@ -175,7 +173,7 @@ func TestMakeStorageDotConfigSomeDriveLetters(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = &[]string{profileName}
 
 	paramData := map[string]string{
 		"Drive_Prefix":     "/dev/sd",

@@ -1759,7 +1759,7 @@ func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServe
 	var desc string
 	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (*s.ProfileNames)[0])
 	if err != nil {
-		return tc.CommonServerProperties{}, fmt.Errorf("querying profile id and description by profile_names: " + err.Error())
+		return tc.CommonServerProperties{}, fmt.Errorf("querying profile id and description by profile_name: " + err.Error())
 	}
 	defer log.Close(rows, "closing rows in GetCommonServerPropertiesFromV4")
 
@@ -1811,14 +1811,14 @@ func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServe
 }
 
 // UpdateServerProfilesForV4 updates server_profile table via update function for APIv4
-func UpdateServerProfilesForV4(id *int, profile *pq.StringArray, tx *sql.Tx) error {
-	var profileNames pq.StringArray
+func UpdateServerProfilesForV4(id *int, profile *[]string, tx *sql.Tx) error {
+	var profileNames []string
 	var priorityArray pq.Int64Array
 	for i, _ := range *profile {
 		priorityArray = append(priorityArray, int64(i))
 	}
 
-	rows, err := tx.Query("UPDATE server_profile set profile_names=$1, priority=$2 WHERE server=$3 RETURNING profile_names", *profile, priorityArray, *id)
+	rows, err := tx.Query("UPDATE server_profile set profile_name=$1 WHERE server=$2 RETURNING profile_name", *profile, *id)
 	if err != nil {
 		return fmt.Errorf("updating server_profile by server id: %v" + strconv.Itoa(*id) + ", error: " + err.Error())
 	}
@@ -1833,11 +1833,11 @@ func UpdateServerProfilesForV4(id *int, profile *pq.StringArray, tx *sql.Tx) err
 }
 
 // UpdateServerProfileTableForV2V3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v2/v3
-func UpdateServerProfileTableForV2V3(id *int, profile *string, tx *sql.Tx) (pq.StringArray, error) {
-	var profileNames pq.StringArray
-	rows, err := tx.Query("UPDATE server_profile set profile_names=ARRAY[$1] WHERE server=$2 RETURNING profile_names", *profile, *id)
+func UpdateServerProfileTableForV2V3(id *int, profile *string, tx *sql.Tx) ([]string, error) {
+	var profileNames []string
+	rows, err := tx.Query("UPDATE server_profile set profile_name=$1 WHERE server=$2 RETURNING profile_name", *profile, *id)
 	if err != nil {
-		return nil, fmt.Errorf("updating server_profile by profile_names: " + err.Error())
+		return nil, fmt.Errorf("updating server_profile by profile_name: " + err.Error())
 	}
 	defer log.Close(rows, "closing rows in UpdateCommonServerPropertiesV40")
 

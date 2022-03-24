@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/lib/pq"
 )
 
 func TestMakeServerUnknown(t *testing.T) {
@@ -32,7 +31,7 @@ func TestMakeServerUnknown(t *testing.T) {
 
 	server := makeGenericServer()
 	server.HostName = util.StrPtr("server0")
-	server.ProfileNames = &pq.StringArray{"serverProfile"}
+	server.ProfileNames = &[]string{"serverProfile"}
 	server.DomainName = util.StrPtr("example.test")
 
 	fileName := "myconfig.config"
