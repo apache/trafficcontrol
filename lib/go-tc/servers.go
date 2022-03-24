@@ -1167,9 +1167,8 @@ type ServerUpdateStatus struct {
 	ParentRevalPending bool   `json:"parent_reval_pending"`
 }
 
-// Downgrade strips the Config and Revalidate timestamps from
-// ServerUpdateStatusV40 to return previous versions of the struct to ensure
-// previous compatibility.
+// Upgrade converts the deprecated ServerUpdateStatus to a
+// ServerUpdateStatusV4 struct.
 func (sus ServerUpdateStatus) Upgrade() ServerUpdateStatusV4 {
 	return ServerUpdateStatusV4{
 		HostName:           sus.HostName,

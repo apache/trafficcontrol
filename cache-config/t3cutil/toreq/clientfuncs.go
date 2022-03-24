@@ -715,8 +715,6 @@ func (cl *TOClient) GetStatuses(reqHdr http.Header) ([]tc.Status, toclientlib.Re
 }
 
 // GetServerUpdateStatus returns the data, the Traffic Ops address, and any error.
-// TODO: Alias ServerUpdateStatus in atscfg lib to ServerUpdateStatusV4. Need to add
-// possible conversion functions as well.
 func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr http.Header) (atscfg.ServerUpdateStatus, toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		return cl.old.GetServerUpdateStatus(cacheHostName)

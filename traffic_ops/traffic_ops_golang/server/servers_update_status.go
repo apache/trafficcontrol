@@ -89,8 +89,8 @@ UNION ALL
 SELECT s.id, 
 	s.cachegroup,
 	s.cdn_id,
-	s.config_update_time - s.config_apply_time > INTERVAL '0 seconds' AS upd_pending,
-	s.revalidate_update_time - s.revalidate_apply_time > INTERVAL '0 seconds' AS reval_pending,
+	s.config_update_time > s.config_apply_time AS upd_pending,
+	s.revalidate_update_time > s.revalidate_apply_time AS reval_pending,
 	s.status,
 	ta.base_server_id
 	FROM server s
@@ -102,8 +102,8 @@ SELECT s.id,
 SELECT ps.id, 
 	ps.cachegroup,
 	ps.cdn_id,
-	ps.config_update_time - ps.config_apply_time > INTERVAL '0 seconds' AS upd_pending,
-	ps.revalidate_update_time - ps.revalidate_apply_time > INTERVAL '0 seconds' AS reval_pending,
+	ps.config_update_time > ps.config_apply_time AS upd_pending,
+	ps.revalidate_update_time > ps.revalidate_apply_time AS reval_pending,
 	ps.status
 	FROM server ps
 	LEFT JOIN status AS pstatus ON pstatus.id = ps.status
@@ -121,9 +121,9 @@ SELECT
 	s.id,
 	s.host_name,
 	type.name AS type,
-	s.revalidate_update_time - s.revalidate_apply_time > INTERVAL '0 seconds' AS server_reval_pending,
+	s.revalidate_update_time > s.revalidate_apply_time AS server_reval_pending,
 	use_reval_pending.value,
-	s.config_update_time - s.config_apply_time > INTERVAL '0 seconds' AS server_upd_pending,
+	s.config_update_time > s.config_apply_time AS server_upd_pending,
 	status.name AS status,
 	/* True if the cachegroup parent or any ancestor topology node has pending updates. */
 	TRUE IN (

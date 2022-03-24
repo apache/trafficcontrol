@@ -139,7 +139,7 @@ SELECT
 	p.description AS profile_desc,
 	s.profile AS profile_id,
 	s.rack,
-	s.revalidate_update_time - s.revalidate_apply_time > INTERVAL '0 seconds' AS reval_pending,
+	s.revalidate_update_time > s.revalidate_apply_time AS reval_pending,
 	s.revalidate_update_time,
 	s.revalidate_apply_time,
 	st.name AS status,
@@ -147,7 +147,7 @@ SELECT
 	s.tcp_port,
 	t.name AS server_type,
 	s.type AS server_type_id,
-	s.config_update_time - s.config_apply_time > INTERVAL '0 seconds' AS upd_pending,
+	s.config_update_time > s.config_apply_time AS upd_pending,
 	s.config_update_time,
 	s.config_apply_time,
 	s.xmpp_id,
@@ -1898,7 +1898,7 @@ func createServerV4(tx *sqlx.Tx, server tc.ServerV40) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	log.Close(rows, "failed to close rows for createServerV4")
 
 	rowsAffected := 0
 	var serverID int64
@@ -1923,7 +1923,7 @@ func createServerV3(tx *sqlx.Tx, server tc.ServerV30) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	log.Close(rows, "failed to close rows for createServerV3")
 
 	rowsAffected := 0
 	var serverID int64
@@ -1948,7 +1948,7 @@ func createServerV2(tx *sqlx.Tx, server tc.ServerNullableV2) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	log.Close(rows, "failed to close rows for createServerV2")
 
 	rowsAffected := 0
 	var serverID int64

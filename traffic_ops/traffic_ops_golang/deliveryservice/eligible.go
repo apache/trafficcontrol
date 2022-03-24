@@ -167,7 +167,7 @@ s.status as status_id,
 s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
-s.config_update_time - s.config_apply_time > INTERVAL '0 seconds' AS upd_pending,
+s.config_update_time > s.config_apply_time AS upd_pending,
 ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities,
 ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability) as deliveryservice_capabilities
 `

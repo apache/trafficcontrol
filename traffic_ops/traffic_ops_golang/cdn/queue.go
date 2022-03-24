@@ -124,7 +124,8 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 
 	query := ""
 	if reqObj.Action == "queue" {
-		query = `UPDATE public.server
+		query = `
+UPDATE public.server
 SET config_update_time = now()`
 		query = query + where
 	} else {

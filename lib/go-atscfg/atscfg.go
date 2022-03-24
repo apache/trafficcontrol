@@ -106,13 +106,13 @@ func ToServers(servers []tc.ServerV40) []Server {
 	return as
 }
 
-// ToServers converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToServerUpdateStatuses(servers []tc.ServerUpdateStatusV40) []ServerUpdateStatus {
-	as := []ServerUpdateStatus{}
-	for _, sv := range servers {
-		as = append(as, ServerUpdateStatus(sv))
+// ToServerUpdateStatuses converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
+func ToServerUpdateStatuses(statuses []tc.ServerUpdateStatusV40) []ServerUpdateStatus {
+	sus := []ServerUpdateStatus{}
+	for _, st := range statuses {
+		sus = append(sus, ServerUpdateStatus(st))
 	}
-	return as
+	return sus
 }
 
 // CfgFile is all the information necessary to create an ATS config file, including the file name, path, data, and metadata.

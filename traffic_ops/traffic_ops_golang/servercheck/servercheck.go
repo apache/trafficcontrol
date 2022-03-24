@@ -42,8 +42,8 @@ SELECT server.host_name AS hostName,
 	status.name AS adminState,
 	cachegroup.name AS cacheGroup,
 	type.name AS type,
-	server.config_update_time - server.config_apply_time > INTERVAL '0 seconds' AS upd_pending,
-	server.revalidate_update_time - server.revalidate_apply_time > INTERVAL '0 seconds' AS reval_pending
+	server.config_update_time > server.config_apply_time AS upd_pending,
+	server.revalidate_update_time > server.revalidate_apply_time AS reval_pending
 FROM server
 LEFT JOIN profile ON server.profile = profile.id
 LEFT JOIN status ON server.status = status.id

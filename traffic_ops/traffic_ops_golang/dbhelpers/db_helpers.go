@@ -1774,10 +1774,10 @@ WHERE server.id = $1;`
 func QueueUpdateForServerWithTime(tx *sql.Tx, serverID int64, updateTime time.Time) error {
 	query := `
 UPDATE public.server
-SET config_update_time = $2
-WHERE server.id = $1;`
+SET config_update_time = $1
+WHERE server.id = $2;`
 
-	if _, err := tx.Exec(query, serverID, updateTime); err != nil {
+	if _, err := tx.Exec(query, updateTime, serverID); err != nil {
 		return fmt.Errorf("queueing config update for ServerID %d with time %v: %w", serverID, updateTime, err)
 	}
 
@@ -1796,7 +1796,7 @@ RETURNING server.host_name;`
 	if err != nil {
 		return nil, fmt.Errorf("updating server config_update_time: %w", err)
 	}
-	defer rows.Close()
+	defer log.Close(rows, "error closing rows for QueueUpdateForServerWithCachegroupCDN")
 	names := []tc.CacheName{}
 	for rows.Next() {
 		name := ""
@@ -1856,7 +1856,7 @@ RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);`
 	if err != nil {
 		return nil, fmt.Errorf("querying queue updates: %w", err)
 	}
-	defer rows.Close()
+	defer log.Close(rows, "error closing rows for DequeueUpdateForServerWithCachegroupCDN")
 	names := []tc.CacheName{}
 	for rows.Next() {
 		name := ""
@@ -1906,10 +1906,10 @@ WHERE server.id = $1;`
 func SetApplyUpdateForServerWithTime(tx *sql.Tx, serverID int64, applyUpdateTime time.Time) error {
 	query := `
 UPDATE public.server
-SET config_apply_time = $2
-WHERE server.id = $1;`
+SET config_apply_time = $1
+WHERE server.id = $2;`
 
-	if _, err := tx.Exec(query, serverID, applyUpdateTime); err != nil {
+	if _, err := tx.Exec(query, applyUpdateTime, serverID); err != nil {
 		return fmt.Errorf("applying config update for ServerID %d with time %v: %w", serverID, applyUpdateTime, err)
 	}
 
@@ -1935,10 +1935,10 @@ WHERE server.id = $1;`
 func QueueRevalForServerWithTime(tx *sql.Tx, serverID int64, revalTime time.Time) error {
 	query := `
 UPDATE public.server
-SET revalidate_update_time = $2
-WHERE server.id = $1;`
+SET revalidate_update_time = $1
+WHERE server.id = $2;`
 
-	if _, err := tx.Exec(query, serverID, revalTime); err != nil {
+	if _, err := tx.Exec(query, revalTime, serverID); err != nil {
 		return fmt.Errorf("queueing reval update for ServerID %d with time %v: %w", serverID, revalTime, err)
 	}
 
@@ -1964,10 +1964,10 @@ WHERE server.id = $1;`
 func SetApplyRevalForServerWithTime(tx *sql.Tx, serverID int64, applyRevalTime time.Time) error {
 	query := `
 UPDATE public.server
-SET revalidate_apply_time = $2
-WHERE server.id = $1;`
+SET revalidate_apply_time = $1
+WHERE server.id = $2;`
 
-	if _, err := tx.Exec(query, serverID, applyRevalTime); err != nil {
+	if _, err := tx.Exec(query, applyRevalTime, serverID); err != nil {
 		return fmt.Errorf("applying config update for ServerID %d with time %v: %w", serverID, applyRevalTime, err)
 	}
 
