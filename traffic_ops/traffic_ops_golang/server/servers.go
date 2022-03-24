@@ -1898,7 +1898,7 @@ func createServerV4(tx *sqlx.Tx, server tc.ServerV40) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	log.Close(rows, "failed to close rows for createServerV4")
+	defer log.Close(rows, "failed to close rows for createServerV4")
 
 	rowsAffected := 0
 	var serverID int64
@@ -1923,7 +1923,7 @@ func createServerV3(tx *sqlx.Tx, server tc.ServerV30) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	log.Close(rows, "failed to close rows for createServerV3")
+	defer log.Close(rows, "failed to close rows for createServerV3")
 
 	rowsAffected := 0
 	var serverID int64
@@ -1948,7 +1948,7 @@ func createServerV2(tx *sqlx.Tx, server tc.ServerNullableV2) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	log.Close(rows, "failed to close rows for createServerV2")
+	defer log.Close(rows, "failed to close rows for createServerV2")
 
 	rowsAffected := 0
 	var serverID int64
