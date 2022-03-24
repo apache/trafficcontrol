@@ -19,11 +19,11 @@ import (
 	"encoding/json"
 	"errors"
 	"os/exec"
-	"strconv"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
 func TestTOUpdater(t *testing.T) {
@@ -39,7 +39,7 @@ func TestTOUpdater(t *testing.T) {
 		if err != nil {
 			t.Fatalf("t3c-request failed: %v", err)
 		}
-		var serverStatus tc.ServerUpdateStatus
+		var serverStatus atscfg.ServerUpdateStatus
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
 			t.Fatalf("failed to parse t3c-request output: %v", err)
@@ -55,7 +55,8 @@ func TestTOUpdater(t *testing.T) {
 		}
 
 		// change the server update status
-		err = ExecTOUpdater(DefaultCacheHostName, false, true)
+		now := time.Now().UTC().Round(time.Microsecond)
+		err = ExecTOUpdater(DefaultCacheHostName, &now, nil, nil, nil)
 		if err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
@@ -74,9 +75,12 @@ func TestTOUpdater(t *testing.T) {
 		if serverStatus.UpdatePending != true {
 			t.Fatal("expected UpdatePending to be 'true'")
 		}
+		if !serverStatus.ConfigApplyTime.Equal(now) {
+			t.Fatalf("failed to set config apply time.\nSent: %v\nRecv: %v", now, serverStatus.ConfigApplyTime)
+		}
 
 		// now change the reval stat and put server update status back
-		err = ExecTOUpdater(DefaultCacheHostName, true, false)
+		err = ExecTOUpdater(DefaultCacheHostName, nil, &now, nil, nil)
 		if err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
@@ -95,11 +99,14 @@ func TestTOUpdater(t *testing.T) {
 		if serverStatus.UpdatePending != false {
 			t.Fatal("expected UpdatePending to be 'true'")
 		}
+		if !serverStatus.RevalidateApplyTime.Equal(now) {
+			t.Fatalf("failed to set config apply time.\nSent: %v\nRecv: %v", now, serverStatus.RevalidateApplyTime)
+		}
 
 	})
 }
 
-func ExecTOUpdater(host string, reval_status bool, update_status bool) error {
+func ExecTOUpdater(host string, configApplyTime, revalApplyTime, configUpdateTime, revalUpdateTime *time.Time) error {
 	args := []string{
 		"update",
 		"--traffic-ops-insecure=true",
@@ -109,8 +116,18 @@ func ExecTOUpdater(host string, reval_status bool, update_status bool) error {
 		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
 		"--cache-host-name=" + host,
 		"-vv",
-		"--set-reval-status=" + strconv.FormatBool(reval_status),
-		"--set-update-status=" + strconv.FormatBool(update_status),
+	}
+	if configApplyTime != nil {
+		args = append(args, "--set-config-apply-time="+(*configApplyTime).Format(time.RFC3339Nano))
+	}
+	if revalApplyTime != nil {
+		args = append(args, "--set-reval-apply-time="+(*revalApplyTime).Format(time.RFC3339Nano))
+	}
+	if configUpdateTime != nil {
+		args = append(args, "--set-config-update-time="+(*configUpdateTime).Format(time.RFC3339Nano))
+	}
+	if revalUpdateTime != nil {
+		args = append(args, "--set-reval-update-time="+(*revalUpdateTime).Format(time.RFC3339Nano))
 	}
 	cmd := exec.Command("t3c", args...)
 	var out bytes.Buffer

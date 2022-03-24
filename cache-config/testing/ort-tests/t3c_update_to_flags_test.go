@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -51,9 +52,8 @@ func TestT3cTOUpdates(t *testing.T) {
 		}
 
 		// change the server update status
-		err = ExecTOUpdater(DefaultCacheHostName, true, true)
-		if err != nil {
-			t.Fatalf("to_updater run failed: %v", err)
+		if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.TimeNow); err != nil {
+			t.Fatalf("t3c-update failed: %v", err)
 		}
 		// verify the update status is now 'true'
 		output, err = runRequest(DefaultCacheHostName, CMDUpdateStatus)

@@ -23,6 +23,7 @@ import (
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 )
 
 func TestT3cReload(t *testing.T) {
@@ -53,7 +54,7 @@ func doTestT3cReloadHeaderRewrite(t *testing.T) {
 	}
 
 	// set the update flag, so syncds will run
-	if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
+	if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.Epoch); err != nil {
 		t.Fatalf("t3c-update failed: %v", err)
 	}
 
@@ -81,7 +82,7 @@ func doTestT3cReloadAnythingInTrafficserverDir(t *testing.T) {
 	}
 
 	// set the update flag, so syncds will run
-	if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
+	if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.Epoch); err != nil {
 		t.Fatalf("t3c-update failed: %v", err)
 	}
 
@@ -105,7 +106,7 @@ func doTestT3cReloadNoChange(t *testing.T) {
 	// no change, should not trigger a reload
 
 	// set the update flag, so syncds will run
-	if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
+	if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.Epoch); err != nil {
 		t.Fatalf("t3c-update failed: %v", err)
 	}
 
@@ -133,7 +134,7 @@ func doTestT3cRevalCallsReload(t *testing.T) {
 	}
 
 	// set the update flag, so reval will run
-	if err := ExecTOUpdater(DefaultCacheHostName, true, false); err != nil {
+	if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.Epoch); err != nil {
 		t.Fatalf("t3c-update failed: %v", err)
 	}
 
@@ -169,7 +170,7 @@ func doTestT3cReloadState(t *testing.T) {
 	}
 
 	// set the update flag, so syncds will run
-	if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
+	if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.Epoch); err != nil {
 		t.Fatalf("t3c-update failed: %v", err)
 	}
 

@@ -29,6 +29,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -744,15 +745,21 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr htt
 }
 
 // SetServerUpdateStatus sets the server's update and reval statuses in Traffic Ops.
-func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, updateStatus *bool, revalStatus *bool) (toclientlib.ReqInf, error) {
+func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, configApply, revalApply *time.Time) (toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.SetServerUpdateStatus(cacheHostName, updateStatus, revalStatus)
+		var updateStatus, revalStatus bool
+		if configApply != nil {
+			updateStatus = true
+		}
+		if revalApply != nil {
+			revalStatus = true
+		}
+		return cl.old.SetServerUpdateStatus(cacheHostName, &updateStatus, &revalStatus)
 	}
 
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "set_server_update_status_"+string(cacheHostName), nil, func(obj interface{}) error {
-		// TODO: Change to use `SetServerUpdateStatusTimes` instead of Compat()
-		_, toReqInf, err := cl.SetServerUpdateStatusCompat(string(cacheHostName), updateStatus, revalStatus, *ReqOpts(nil))
+		_, toReqInf, err := cl.c.SetUpdateServerStatusTimes(string(cacheHostName), nil, configApply, nil, revalApply, *ReqOpts(nil))
 		if err != nil {
 			return errors.New("setting server update status in Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}

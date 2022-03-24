@@ -1179,19 +1179,20 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 		log.Errorln("In Report mode and Traffic Ops needs updated you should probably do that manually.")
 		return nil
 	}
+	now := time.Now().UTC()
 
 	if !r.Cfg.ReportOnly && !r.Cfg.NoUnsetUpdateFlag {
 		if r.Cfg.Files == t3cutil.ApplyFilesFlagAll {
 			if serverStatus.RevalPending {
-				err = sendUpdate(r.Cfg, false, true)
+				err = sendUpdate(r.Cfg, nil, &now)
 			} else {
-				err = sendUpdate(r.Cfg, false, false)
+				err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime)
 			}
 		} else if r.Cfg.Files == t3cutil.ApplyFilesFlagReval {
 			if serverStatus.UpdatePending {
-				err = sendUpdate(r.Cfg, true, false)
+				err = sendUpdate(r.Cfg, &now, nil)
 			} else {
-				err = sendUpdate(r.Cfg, false, false)
+				err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil)
 			}
 		}
 		if err != nil {

@@ -53,9 +53,10 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
 
 # OPTIONS
 
--a, -\-set-reval-status
+-a, -\-set-reval-apply-time
 
-    [true | false] sets the servers revalidate status (required)
+    [RFC3339Nano Timestamp] sets the server's reval apply time.
+    Either this or set-config-apply-time must be used (Required)
 
 -H, -\-cache-host-name=value
 
@@ -80,9 +81,10 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
     Traffic Ops password. Required. May also be set with the
     environment variable TO_PASS
 
--q, -\-set-update-status
+-q, -\-set-config-apply-time
 
-    [true | false] sets the servers update status (required)
+    [RFC3339Nano Timestamp] sets the server's config apply time.
+    Either this or set-reval-apply-time must be used (Required)
 
 -s, -\-silent
 

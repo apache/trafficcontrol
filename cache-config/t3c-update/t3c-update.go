@@ -63,7 +63,7 @@ func main() {
 		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
 	}
 
-	err = t3cutil.SetUpdateStatus(cfg.TCCfg, tc.CacheName(cfg.TCCfg.CacheHostName), cfg.UpdatePending, cfg.RevalPending)
+	err = t3cutil.SetUpdateStatus(cfg.TCCfg, tc.CacheName(cfg.TCCfg.CacheHostName), cfg.ConfigApplyTime, cfg.RevalApplyTime)
 	if err != nil {
 		log.Errorf("%s, %s\n", err, cfg.TCCfg.CacheHostName)
 		os.Exit(3)
@@ -75,10 +75,23 @@ func main() {
 		os.Exit(4)
 	}
 
-	if cur_status.UpdatePending != cfg.UpdatePending && cfg.RevalPending != cfg.RevalPending {
-		log.Errorf("ERROR: update failed, update status and/or reval status was not set.\n")
-	} else {
-		log.Infoln("Update successfully completed")
+	if cfg.ConfigApplyTime != nil && !(*cfg.ConfigApplyTime).Equal(*cur_status.ConfigApplyTime) {
+		log.Errorf("Failed to set config_apply_time.\nSent: %v\nRecv: %v", *cfg.ConfigApplyTime, *cur_status.ConfigApplyTime)
 	}
 
+	if cfg.RevalApplyTime != nil && !(*cfg.RevalApplyTime).Equal(*cur_status.RevalidateApplyTime) {
+		log.Errorf("Failed to set reval_apply_time.\nSent: %v\nRecv: %v", *cfg.RevalApplyTime, *cur_status.RevalidateApplyTime)
+	}
+
+	if (*cur_status.ConfigUpdateTime).After(*cur_status.ConfigApplyTime) {
+		// Another update appears to have been queued. Should we run again?
+		log.Warnf("Config Update and Apply times do not match")
+	}
+
+	if (*cur_status.RevalidateUpdateTime).After(*cur_status.RevalidateApplyTime) {
+		// Another reval appears to have been queued. Should we run again?
+		log.Warnf("Reval Update and Apply times do not match")
+	}
+
+	log.Infoln("Update completed")
 }

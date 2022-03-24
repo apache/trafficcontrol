@@ -219,9 +219,9 @@ type ChkConfigEntry struct {
 }
 
 // SetUpdateStatus sets the queue and reval status of serverName in Traffic Ops.
-func SetUpdateStatus(cfg TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
+func SetUpdateStatus(cfg TCCfg, serverName tc.CacheName, configApply, revalApply *time.Time) error {
 	// TODO need to move to toreq, add fallback
-	reqInf, err := cfg.TOClient.SetServerUpdateStatus(serverName, &queue, &revalPending)
+	reqInf, err := cfg.TOClient.SetServerUpdateStatus(serverName, configApply, revalApply)
 	if err != nil {
 		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
 	}

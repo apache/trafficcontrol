@@ -38,7 +38,7 @@ var (
 )
 var tcd *tcdata.TCData
 
-var TCD *tcdata.TCData
+// var TCD *tcdata.TCData
 
 const cfgFmt = `Using Config values:
 	TO Config File:              %s

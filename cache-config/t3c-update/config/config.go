@@ -43,8 +43,10 @@ type Cfg struct {
 	LoginDispersion  time.Duration
 	CacheHostName    string
 	GetData          string
-	UpdatePending    bool
-	RevalPending     bool
+	ConfigApplyTime  *time.Time
+	RevalApplyTime   *time.Time
+	ConfigUpdateTime *time.Time
+	RevalUpdateTime  *time.Time
 	t3cutil.TCCfg
 	Version     string
 	GitRevision string
@@ -69,10 +71,14 @@ func Usage() {
 func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	dispersionPtr := getopt.IntLong("login-dispersion", 'l', 0, "[seconds] wait a random number of seconds between 0 and [seconds] before login to traffic ops, default 0")
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
-	const setUpdateStatusFlagName = "set-update-status"
-	updatePendingPtr := getopt.BoolLong(setUpdateStatusFlagName, 'q', "[true | false] sets the servers update status")
-	const setRevalStatusFlagName = "set-reval-status"
-	revalPendingPtr := getopt.BoolLong(setRevalStatusFlagName, 'a', "[true | false] sets the servers revalidate status")
+	const setConfigUpdateTimeFlagName = "set-config-update-time"
+	configUpdateTimeStringPtr := getopt.StringLong(setConfigUpdateTimeFlagName, 'x', "", "[RFC3339Nano Timestamp] sets the server's config update time. Should only be used for testing")
+	const setRevalUpdateTimeFlagName = "set-reval-update-time"
+	revalUpdateTimeStringPtr := getopt.StringLong(setRevalUpdateTimeFlagName, 'z', "", "[RFC3339Nano Timestamp] sets the server's reval apply time. Should only be used for testing")
+	const setConfigApplyTimeFlagName = "set-config-apply-time"
+	configApplyTimeStringPtr := getopt.StringLong(setConfigApplyTimeFlagName, 'q', "", "[RFC3339Nano Timestamp] sets the server's config apply time")
+	const setRevalApplyTimeFlagName = "set-reval-apply-time"
+	revalApplyTimeStringPtr := getopt.StringLong(setRevalApplyTimeFlagName, 'a', "", "[RFC3339Nano Timestamp] sets the server's reval apply time")
 	toInsecurePtr := getopt.BoolLong("traffic-ops-insecure", 'I', "[true | false] ignore certificate errors from Traffic Ops")
 	toTimeoutMSPtr := getopt.IntLong("traffic-ops-timeout-milliseconds", 't', 30000, "Timeout in milli-seconds for Traffic Ops requests, default is 30000")
 	toURLPtr := getopt.StringLong("traffic-ops-url", 'u', "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with     the environment variable TO_URL")
@@ -93,14 +99,41 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 		os.Exit(0)
 	}
 
-	if !getopt.IsSet(setRevalStatusFlagName) {
-		fmt.Println("--set-reval-status is required")
+	// Verify at least one flag is passed
+	if !getopt.IsSet(setConfigApplyTimeFlagName) && !getopt.IsSet(setRevalApplyTimeFlagName) {
+		fmt.Printf("Must set either %s or %s. One is at least required.\n", setConfigApplyTimeFlagName, setRevalApplyTimeFlagName)
 		os.Exit(0)
 	}
-	if !getopt.IsSet(setUpdateStatusFlagName) {
-		fmt.Printf("DEBUG %v\n", *updatePendingPtr)
-		fmt.Println("--set-update-status is required")
-		os.Exit(0)
+
+	var configUpdateTimePtr, configApplyTimePtr, revalUpdateTimePtr, revalApplyTimePtr *time.Time
+	// Validate that it can be parsed to a valid timestamp
+	if getopt.IsSet(setConfigApplyTimeFlagName) {
+		parsed, err := time.Parse(time.RFC3339Nano, *configApplyTimeStringPtr)
+		if err != nil {
+			fmt.Printf("%s must be a valid RFC3339Nano timestamp", setConfigApplyTimeFlagName)
+		}
+		configApplyTimePtr = &parsed
+	}
+	if getopt.IsSet(setRevalApplyTimeFlagName) {
+		parsed, err := time.Parse(time.RFC3339Nano, *revalApplyTimeStringPtr)
+		if err != nil {
+			fmt.Printf("%s must be a valid RFC3339Nano timestamp", setRevalApplyTimeFlagName)
+		}
+		revalApplyTimePtr = &parsed
+	}
+	if getopt.IsSet(setConfigUpdateTimeFlagName) {
+		parsed, err := time.Parse(time.RFC3339Nano, *configUpdateTimeStringPtr)
+		if err != nil {
+			fmt.Printf("%s must be a valid RFC3339Nano timestamp", setConfigUpdateTimeFlagName)
+		}
+		configUpdateTimePtr = &parsed
+	}
+	if getopt.IsSet(setRevalUpdateTimeFlagName) {
+		parsed, err := time.Parse(time.RFC3339Nano, *revalUpdateTimeStringPtr)
+		if err != nil {
+			fmt.Printf("%s must be a valid RFC3339Nano timestamp", setRevalUpdateTimeFlagName)
+		}
+		revalUpdateTimePtr = &parsed
 	}
 
 	logLocationError := log.LogLocationStderr
@@ -165,8 +198,10 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 		LogLocationInfo:  logLocationInfo,
 		LogLocationWarn:  logLocationWarn,
 		LoginDispersion:  dispersion,
-		UpdatePending:    *updatePendingPtr,
-		RevalPending:     *revalPendingPtr,
+		ConfigApplyTime:  configApplyTimePtr,
+		RevalApplyTime:   revalApplyTimePtr,
+		ConfigUpdateTime: configUpdateTimePtr,
+		RevalUpdateTime:  revalUpdateTimePtr,
 		TCCfg: t3cutil.TCCfg{
 			CacheHostName: cacheHostName,
 			GetData:       "update-status",

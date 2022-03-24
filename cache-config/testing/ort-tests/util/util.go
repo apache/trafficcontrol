@@ -21,7 +21,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+var Epoch = time.Unix(0, 0).UTC().Round(time.Microsecond)
+var TimeNow = time.Now().UTC().Round(time.Microsecond)
 
 func readFile(fileName string) ([]byte, error) {
 	if fileName == "" {
