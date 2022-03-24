@@ -135,53 +135,28 @@ RETURNING
 	start_time as startTime
 `
 
-const queueUpdateQuery = `
+const queueUpdateOrRevalQuery = `
 UPDATE public.server
-SET config_update_time = now()
-WHERE server.status NOT IN (
-                             SELECT status.id
-                             FROM status
-                             WHERE name IN ('OFFLINE', 'PRE_PROD')
-                           )
+SET %s = now()
+WHERE server.status IN (
+						SELECT status.id
+						FROM status
+						WHERE name IN ('ONLINE', 'REPORTED', 'ADMIN_DOWN')
+						)
      AND server.profile IN (
-                             SELECT profile_parameter.profile
-                             FROM profile_parameter
-                             WHERE profile_parameter.parameter IN (
-                                                                    SELECT parameter.id
-                                                                    FROM parameter
-                                                                    WHERE parameter.name='location'
-                                                                     AND parameter.config_file='regex_revalidate.config'
-                                                                  )
+							SELECT profile_parameter.profile
+							FROM profile_parameter
+							WHERE profile_parameter.parameter IN (
+																SELECT parameter.id
+																FROM parameter
+																WHERE parameter.name='location'
+																AND parameter.config_file='regex_revalidate.config'
+																)
                            )
      AND server.cdn_id  =  (
-                             SELECT deliveryservice.cdn_id
-                             FROM deliveryservice
-                             WHERE deliveryservice.id=$1
-                           );
-`
-
-const queueRevalQuery = `
-UPDATE public.server
-SET revalidate_update_time = now()
-WHERE server.status NOT IN (
-                             SELECT status.id
-                             FROM status
-                             WHERE name IN ('OFFLINE', 'PRE_PROD')
-                           )
-     AND server.profile IN (
-                             SELECT profile_parameter.profile
-                             FROM profile_parameter
-                             WHERE profile_parameter.parameter IN (
-                                                                    SELECT parameter.id
-                                                                    FROM parameter
-                                                                    WHERE parameter.name='location'
-                                                                     AND parameter.config_file='regex_revalidate.config'
-                                                                  )
-                           )
-     AND server.cdn_id  =  (
-                             SELECT deliveryservice.cdn_id
-                             FROM deliveryservice
-                             WHERE deliveryservice.id=$1
+							SELECT deliveryservice.cdn_id
+							FROM deliveryservice
+							WHERE deliveryservice.%s=$1
                            );
 `
 
@@ -1520,7 +1495,7 @@ func validateTLLHours(ttlHours uint32, tx *sql.Tx) (bool, error) {
 	err := tx.QueryRow(`SELECT value FROM parameter WHERE name='maxRevalDurationDays' AND config_file='regex_revalidate.config'`).Scan(&maxDays)
 	maxHours := maxDays * 24
 	if err != nil {
-		log.Errorf("error querying \"maxRevalDurationDays\" parameter: %v", err)
+		log.Errorf("error querying \"maxRevalDurationDays\" parameter: %w", err)
 		return false, nil // sent to the user, hide server error
 	}
 	if err == nil && uint(ttlHours) > maxHours {
@@ -1535,7 +1510,7 @@ func refetchAllowed(tx *sql.Tx) bool {
 	err := tx.QueryRow(`SELECT 'true' = lower(trim(p.value)) FROM "parameter" p WHERE p.name=$1 AND p.config_file=$2`,
 		tc.RefetchEnabled, tc.GlobalConfigFileName).Scan(&refetchEnabled)
 	if err != nil {
-		log.Errorf("error querying \"refetch_enabled\" from parameter: %v", err)
+		log.Errorf("error querying \"refetch_enabled\" from parameter: %w", err)
 		return refetchEnabled // sent to the user, hide server error
 	}
 	return refetchEnabled
@@ -1554,26 +1529,22 @@ func setRevalFlags(d interface{}, tx *sql.Tx) error {
 		useReval = "0"
 	}
 
-	var deliveryServiceID uint
+	column := "revalidate_update_time"
+	if useReval == "0" {
+		column = "config_update_time"
+	}
+
+	var q string
 	switch t := d.(type) {
 	case uint:
-		deliveryServiceID = d.(uint)
+		q = fmt.Sprintf(queueUpdateOrRevalQuery, column, "id")
 	case string:
-		id, _, err := dbhelpers.GetDSIDFromXMLID(tx, d.(string))
-		deliveryServiceID = uint(id)
-		if err != nil {
-			return fmt.Errorf("error retrieving server name for id: %v err: %v", d, err)
-		}
+		q = fmt.Sprintf(queueUpdateOrRevalQuery, column, "xml_id")
 	default:
 		return fmt.Errorf("invalid type passed to 'setRevalFlags': %v", t)
 	}
 
-	if useReval == "0" {
-		row = tx.QueryRow(queueUpdateQuery, deliveryServiceID)
-	} else {
-		row = tx.QueryRow(queueRevalQuery, deliveryServiceID)
-	}
-
+	row = tx.QueryRow(q, d)
 	if err := row.Scan(); err != nil && err != sql.ErrNoRows {
 		return err
 	}

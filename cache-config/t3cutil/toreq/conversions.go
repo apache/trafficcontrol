@@ -22,6 +22,7 @@ package toreq
 import (
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -148,4 +149,56 @@ func InvalidationJobV4FromLegacy(job InvalidationJobV4PlusLegacy) (tc.Invalidati
 	job.AssetURL = strings.TrimSuffix(job.AssetURL, atscfg.JobLegacyRefetchSuffix)
 
 	return tc.InvalidationJobV4(job.InvalidationJobV4ForLegacy), nil
+}
+
+// SetServerUpdateStatusCompat is a bridge to send both styles of query parameters to the
+// TO endpoint /servers/{hostname-or-id}/update. The current (old) is to send a bool
+// value, however this has resulted in an accidental race condition. The attempt to fix
+// this is to send a timestamp representing when the config or revalidation changes
+// have been applied.
+//
+// To ensure T3C is compatible with both the current releases and future releases
+// this function will send both "styles". Once both T3C and TO have been deployed
+// with the timestamp only V4 TO API endpoint, this function can be removed and the
+// V4 client function `SetUpdateServerStatusTimes` may be used instead (as intended).
+func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configUpdateTime, configApplyTime, revalUpdateTime, revalApplyTime *time.Time, opts toclient.RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
+	var alerts tc.Alerts
+
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+
+	if configUpdateTime != nil {
+		opts.QueryParameters.Set("updated", "true")
+		opts.QueryParameters.Set("config_update_time", configUpdateTime.Format(time.RFC3339Nano))
+	}
+	if configApplyTime != nil {
+		opts.QueryParameters.Set("updated", "false")
+		opts.QueryParameters.Set("config_apply_time", configApplyTime.Format(time.RFC3339Nano))
+	}
+	if revalUpdateTime != nil {
+		opts.QueryParameters.Set("reval_updated", "true")
+		opts.QueryParameters.Set("revalidate_update_time", revalUpdateTime.Format(time.RFC3339Nano))
+	}
+	if revalApplyTime != nil {
+		opts.QueryParameters.Set("reval_updated", "false")
+		opts.QueryParameters.Set("revalidate_apply_time", revalApplyTime.Format(time.RFC3339Nano))
+	}
+
+	if configUpdateTime != nil && configApplyTime != nil {
+		updated := (*configApplyTime).After(*configUpdateTime)
+		opts.QueryParameters.Set("updated", strconv.FormatBool(updated))
+	}
+	if revalUpdateTime != nil && revalApplyTime != nil {
+		revalUpdated := (*revalApplyTime).After(*revalUpdateTime)
+		opts.QueryParameters.Set("reval_updated", strconv.FormatBool(revalUpdated))
+	}
+
+	path := `/servers/` + url.PathEscape(serverName) + `/update`
+	if len(opts.QueryParameters) > 0 {
+		path += "?" + opts.QueryParameters.Encode()
+	}
+	reqInf, err := cl.c.TOClient.Req(http.MethodPost, path, nil, opts.Header, &alerts)
+	return alerts, reqInf, err
 }

@@ -757,7 +757,8 @@ func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, configAppl
 
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "set_server_update_status_"+string(cacheHostName), nil, func(obj interface{}) error {
-		_, toReqInf, err := cl.c.SetUpdateServerStatusTimes(string(cacheHostName), nil, configApply, nil, revalApply, *ReqOpts(nil))
+		_, toReqInf, err := cl.SetServerUpdateStatusCompat(string(cacheHostName), nil, configApply, nil, revalApply, *ReqOpts(nil))
+		// _, toReqInf, err := cl.c.SetUpdateServerStatusTimes(string(cacheHostName), nil, configApply, nil, revalApply, *ReqOpts(nil))
 		if err != nil {
 			return errors.New("setting server update status in Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}

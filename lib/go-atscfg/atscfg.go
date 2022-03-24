@@ -72,7 +72,7 @@ type ServerUpdateStatus tc.ServerUpdateStatusV4
 
 // ToDeliveryServices converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
 func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
-	ad := []DeliveryService{}
+	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
 	}
@@ -81,7 +81,7 @@ func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 
 // V40ToDeliveryServices converts a slice of the old traffic_ops/client type to the local alias.
 func V40ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
-	ad := []DeliveryService{}
+	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
 	}
@@ -90,7 +90,7 @@ func V40ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 
 // ToInvalidationJobs converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
 func ToInvalidationJobs(jobs []tc.InvalidationJobV4) []InvalidationJob {
-	aj := []InvalidationJob{}
+	aj := make([]InvalidationJob, 0, len(jobs))
 	for _, job := range jobs {
 		aj = append(aj, InvalidationJob(job))
 	}
@@ -99,7 +99,7 @@ func ToInvalidationJobs(jobs []tc.InvalidationJobV4) []InvalidationJob {
 
 // ToServers converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
 func ToServers(servers []tc.ServerV40) []Server {
-	as := []Server{}
+	as := make([]Server, 0, len(servers))
 	for _, sv := range servers {
 		as = append(as, Server(sv))
 	}
@@ -108,7 +108,7 @@ func ToServers(servers []tc.ServerV40) []Server {
 
 // ToServerUpdateStatuses converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
 func ToServerUpdateStatuses(statuses []tc.ServerUpdateStatusV40) []ServerUpdateStatus {
-	sus := []ServerUpdateStatus{}
+	sus := make([]ServerUpdateStatus, 0, len(statuses))
 	for _, st := range statuses {
 		sus = append(sus, ServerUpdateStatus(st))
 	}

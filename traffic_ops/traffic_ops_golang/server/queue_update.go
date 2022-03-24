@@ -31,7 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-// QueueUpdateHandler implements an http handler that sets or removes a server's
+// QueueUpdateHandler implements an http handler that sets a server's
 // config update time value.
 func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
