@@ -18,8 +18,9 @@
 name: Traffic Control Cache Config integration tests
 
 env:
-  RHEL_VERSION: 8
   ATS_VERSION: 8.1.x
+  RHEL_VERSION: 8
+  TARGET_ARCH: x86_64
 
 on:
   workflow_dispatch:
@@ -39,7 +40,7 @@ on:
       - vendor/**.go
       - vendor/modules.txt
       - .github/actions/build-ats-test-rpm/**
-      - .github/actions/fetch-github-branch-sha/**
+      - .github/actions/repo-info/**
       - .github/actions/cache-config-integration-tests/**
   create:
   pull_request:
@@ -58,7 +59,7 @@ on:
       - vendor/**.go
       - vendor/modules.txt
       - .github/actions/build-ats-test-rpm/**
-      - .github/actions/fetch-github-branch-sha/**
+      - .github/actions/repo-info/**
       - .github/actions/cache-config-integration-tests/**
     types: [opened, reopened, ready_for_review, synchronize]
 
@@ -106,24 +107,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Get latest commit sha and latest tag
-        uses: ./.github/actions/fetch-github-branch-sha
+      - name: Get expected RPM name
+        uses: ./.github/actions/repo-info
         with:
           owner: apache
           repo: trafficserver
           branch: ${{ env.ATS_VERSION }}
-        id: git-repo-sha
+        id: repo-info
       - name: Check Cache
         id: ats-rpm-cache
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/dist
-          key: ${{ steps.git-repo-sha.outputs.sha }}-${{ steps.git-repo-sha.outputs.latest-tag }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
+          key: ${{ steps.repo-info.outputs.expected-rpm-name }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
       - name: Build ATS RPM
         if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/build-ats-test-rpm
         env:
           ATC_COMPONENT: ${{ github.job }}
+      - name: Check ATS RPM name
+        run: |
+          set -o errexit -o nounset -o xtrace
+          actual_rpm_name="$(ls dist | grep -E '^trafficserver-[0-9.]+-[0-9]+\.[0-9a-f]+.el${{ env.RHEL_VERSION }}.${{ env.TARGET_ARCH }}.rpm$')"
+          [[ "${{ steps.repo-info.outputs.expected-rpm-name }}" == "$actual_rpm_name" ]]
       - name: Upload RPM
         uses: actions/upload-artifact@v2
         with:

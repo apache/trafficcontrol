@@ -17,8 +17,8 @@
   under the License.
 -->
 
-# fetch-github-branch-sha docker action
-This action queries for the latest git commit sha and latest tag on a GitHub repo branch.
+# repo-info docker action
+This action builds an RPM name, after fetching the latest git commit sha and latest tag on a GitHub repo branch.
 
 ## Inputs
 
@@ -51,8 +51,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-      - name: Fetch GitHub commit
-        uses: ./.github/actions/fetch-github-branch-sha
+      - name: Fetch RPM name
+        uses: ./.github/actions/repo-info
           with:
             - owner: apache
             - repo: trafficserver
