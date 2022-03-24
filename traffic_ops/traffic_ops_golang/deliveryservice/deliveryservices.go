@@ -263,7 +263,7 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 		return nil, http.StatusInternalServerError, nil, err
 	}
 
-	oldRes := tc.DeliveryServiceV31(ds.DowngradeToV3())
+	oldRes := tc.DeliveryServiceV31(ds.DowngradeToV31())
 	return &oldRes, status, userErr, sysErr
 }
 
@@ -609,11 +609,11 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 		case version.Major > 3:
 			returnable = append(returnable, ds.RemoveLD1AndLD2())
 		case version.Major > 2 && version.Minor >= 1:
-			returnable = append(returnable, ds.DowngradeToV3())
+			returnable = append(returnable, ds.DowngradeToV31())
 		case version.Major > 2:
-			returnable = append(returnable, ds.DowngradeToV3().DeliveryServiceV30)
+			returnable = append(returnable, ds.DowngradeToV31().DeliveryServiceV30)
 		case version.Major > 1:
-			returnable = append(returnable, ds.DowngradeToV3().DeliveryServiceNullableV15)
+			returnable = append(returnable, ds.DowngradeToV31().DeliveryServiceNullableV15)
 		default:
 			return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
 		}
@@ -817,7 +817,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		return nil, http.StatusInternalServerError, nil, err
 	}
 
-	oldRes := tc.DeliveryServiceV31(ds.DowngradeToV3())
+	oldRes := tc.DeliveryServiceV31(ds.DowngradeToV31())
 	return &oldRes, http.StatusOK, nil, nil
 }
 func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {

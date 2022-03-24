@@ -12,18 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-- name: Install dependencies
-  yum:
-    state: present
-    name:
-      - golang-src-1.15*
-      - golang-bin-1.15*
-      - golang-1.15*
-    enablerepo: "{{ additional_yum_repos | default([]) }}"
-    lock_timeout: 300
-  retries: 5
-  delay: 5
-
 - name: Install Traffic Stats
   yum:
     state: present

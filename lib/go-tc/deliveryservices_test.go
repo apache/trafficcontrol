@@ -646,22 +646,22 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 
 func TestDeliveryServiceUpgradeAndDowngrade(t *testing.T) {
 	oldDS, newDS := dsUpgradeAndDowngradeTestingPair()
-	compareV31DSes(oldDS, newDS.DowngradeToV3(), t)
+	compareV31DSes(oldDS, newDS.DowngradeToV31(), t)
 
 	nullableOldDS := DeliveryServiceNullableV30(oldDS)
 	upgraded := nullableOldDS.UpgradeToV4()
-	compareV31DSes(upgraded.DowngradeToV3(), newDS.DowngradeToV3(), t)
+	compareV31DSes(upgraded.DowngradeToV31(), newDS.DowngradeToV31(), t)
 
-	downgraded := newDS.DowngradeToV3()
+	downgraded := newDS.DowngradeToV31()
 	upgraded = downgraded.UpgradeToV4()
-	downgraded = upgraded.DowngradeToV3()
+	downgraded = upgraded.DowngradeToV31()
 	compareV31DSes(oldDS, downgraded, t)
 
 	upgraded = nullableOldDS.UpgradeToV4()
-	downgraded = newDS.DowngradeToV3()
+	downgraded = newDS.DowngradeToV31()
 	tmp := downgraded.UpgradeToV4()
-	downgraded = tmp.DowngradeToV3()
-	compareV31DSes(upgraded.DowngradeToV3(), downgraded, t)
+	downgraded = tmp.DowngradeToV31()
+	compareV31DSes(upgraded.DowngradeToV31(), downgraded, t)
 
 	if oldDS.CacheURL == nil {
 		oldDS.CacheURL = new(string)
@@ -669,12 +669,12 @@ func TestDeliveryServiceUpgradeAndDowngrade(t *testing.T) {
 	}
 
 	upgraded = oldDS.UpgradeToV4()
-	downgraded = upgraded.DowngradeToV3()
+	downgraded = upgraded.DowngradeToV31()
 	if downgraded.CacheURL != nil {
 		t.Error("Expected 'cacheurl' to be null after upgrade then downgrade because it doesn't exist in APIv4, but it wasn't")
 	}
 
-	downgraded = newDS.DowngradeToV3()
+	downgraded = newDS.DowngradeToV31()
 	upgraded = downgraded.UpgradeToV4()
 	if upgraded.TLSVersions != nil {
 		t.Errorf("Expected 'tlsVersions' to be nil after upgrade, because all TLS versions are implicitly supported for an APIv3 DS; found: %v", upgraded.TLSVersions)

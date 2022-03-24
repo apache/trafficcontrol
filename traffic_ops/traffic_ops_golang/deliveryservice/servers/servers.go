@@ -956,8 +956,19 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	for _, ds := range dses {
 		if version.Major > 3 && version.Minor >= 0 {
 			ds = ds.RemoveLD1AndLD2()
+			returnable = append(returnable, ds)
+		} else if version.Major > 2 {
+			if version.Minor > 0 {
+				dsV31 := ds.DowngradeToV31()
+				returnable = append(returnable, dsV31)
+			} else {
+				dsV30 := ds.DowngradeToV31().DeliveryServiceV30
+				returnable = append(returnable, dsV30)
+			}
+		} else {
+			dsV2 := ds.DowngradeToV31().DeliveryServiceNullableV15
+			returnable = append(returnable, dsV2)
 		}
-		returnable = append(returnable, ds)
 	}
 	return returnable, nil, nil, http.StatusOK, &maxTime
 }

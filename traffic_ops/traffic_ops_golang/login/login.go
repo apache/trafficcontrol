@@ -42,9 +42,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
+	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/lestrrat-go/jwx/jwt"
 )
 
 type emailFormatter struct {
@@ -109,12 +110,11 @@ Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 
 func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		defer r.Body.Close()
 		authenticated := false
 		form := auth.PasswordForm{}
 		if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
-			handleErrs(http.StatusBadRequest, err)
+			api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
 			return
 		}
 		if form.Username == "" || form.Password == "" {
@@ -156,6 +156,43 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
 				http.SetCookie(w, httpCookie)
 
+				var jwtToken jwt.Token
+				var jwtSigned []byte
+				jwtBuilder := jwt.NewBuilder()
+
+				emptyConf := config.CdniConf{}
+				if cfg.Cdni != nil && *cfg.Cdni != emptyConf {
+					ucdn, err := auth.GetUserUcdn(form, db, dbCtx)
+					if err != nil {
+						// log but do not error out since this is optional in the JWT for CDNi integration
+						log.Errorf("getting ucdn for user %s: %v", form.Username, err)
+					}
+					jwtBuilder.Claim("iss", ucdn)
+					jwtBuilder.Claim("aud", cfg.Cdni.DCdnId)
+				}
+
+				jwtBuilder.Claim("exp", httpCookie.Expires.Unix())
+				jwtBuilder.Claim(api.MojoCookie, httpCookie.Value)
+				jwtToken, err = jwtBuilder.Build()
+				if err != nil {
+					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("building token: %s", err))
+					return
+				}
+
+				jwtSigned, err = jwt.Sign(jwtToken, jwa.HS256, []byte(cfg.Secrets[0]))
+				if err != nil {
+					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+					return
+				}
+
+				http.SetCookie(w, &http.Cookie{
+					Name:     api.AccessToken,
+					Value:    string(jwtSigned),
+					Path:     "/",
+					MaxAge:   httpCookie.MaxAge,
+					HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
+				})
+
 				// If all's well until here, then update last authenticated time
 				tx, txErr := db.BeginTx(dbCtx, nil)
 				if txErr != nil {
@@ -191,7 +228,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
 			return
 		}
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
@@ -248,11 +285,67 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	}
 }
 
+type whitelist struct {
+	urls []string
+}
+
+func (w *whitelist) IsAllowed(u string) bool {
+	for _, listing := range w.urls {
+		if listing == "" {
+			continue
+		}
+
+		urlParsed, err := url.Parse(u)
+		if err != nil {
+			return false
+		}
+
+		matched, err := filepath.Match(listing, urlParsed.Hostname())
+		if err != nil {
+			return false
+		}
+
+		if matched {
+			return true
+		}
+	}
+	return false
+}
+
+type jwksFetch struct {
+	ar *jwk.AutoRefresh
+	wl jwk.Whitelist
+}
+
+func (f *jwksFetch) Fetch(u string) (jwk.Set, error) {
+	// Note: all calls to jwk.AutoRefresh should be conccurency-safe
+	if !f.ar.IsRegistered(u) {
+		f.ar.Configure(u, jwk.WithFetchWhitelist(f.wl))
+	}
+
+	return f.ar.Fetch(context.TODO(), u)
+}
+
+var jwksFetcher *jwksFetch
+
 // OauthLoginHandler accepts a JSON web token previously obtained from an OAuth provider, decodes it, validates it, authorizes the user against the database, and returns the login result as either an error or success message
 func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+	// The jwk.AutoRefresh and jwk.Whitelist objects only get created once.
+	// They are shared between all handlers
+	// Note: This assumes two things:
+	// 1) that the cfg.ConfigTrafficOpsGolang.WhitelistedOAuthUrls is not updated once it has been initialized
+	// 2) OauthLoginHandler is not called conccurently
+	if jwksFetcher == nil {
+		ar := jwk.NewAutoRefresh(context.TODO())
+		wl := &whitelist{urls: cfg.ConfigTrafficOpsGolang.WhitelistedOAuthUrls}
+		jwksFetcher = &jwksFetch{
+			ar: ar,
+			wl: wl,
+		}
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		authenticated := false
 		resp := struct {
 			tc.Alerts
 		}{}
@@ -314,15 +407,15 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
 			log.Warnf("Error parsing JSON response from oAuth: %s", err.Error())
 			encodedToken = buf.String()
-		} else if _, ok := result["access_token"]; !ok {
+		} else if _, ok := result[api.AccessToken]; !ok {
 			sysErr := fmt.Errorf("Missing access token in response: %s\n", buf.String())
 			usrErr := errors.New("Bad response from OAuth2.0 provider")
 			api.HandleErr(w, r, nil, http.StatusBadGateway, usrErr, sysErr)
 			return
 		} else {
-			switch t := result["access_token"].(type) {
+			switch t := result[api.AccessToken].(type) {
 			case string:
-				encodedToken = result["access_token"].(string)
+				encodedToken = result[api.AccessToken].(string)
 			default:
 				sysErr := fmt.Errorf("Incorrect type of access_token! Expected 'string', got '%v'\n", t)
 				usrErr := errors.New("Bad response from OAuth2.0 provider")
@@ -336,44 +429,17 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		decodedToken, err := jwt.Parse(encodedToken, func(unverifiedToken *jwt.Token) (interface{}, error) {
-			publicKeyUrl := unverifiedToken.Header["jku"].(string)
-			publicKeyId := unverifiedToken.Header["kid"].(string)
-
-			matched, err := VerifyUrlOnWhiteList(publicKeyUrl, cfg.ConfigTrafficOpsGolang.WhitelistedOAuthUrls)
-			if err != nil {
-				return nil, err
-			}
-			if !matched {
-				return nil, errors.New("Key URL from token is not included in the whitelisted urls. Received: " + publicKeyUrl)
-			}
-
-			keys, err := jwk.Fetch(context.TODO(), publicKeyUrl)
-			if err != nil {
-				return nil, errors.New("Error fetching JSON key set with message: " + err.Error())
-			}
-
-			keyById, ok := keys.LookupKeyID(publicKeyId)
-			if !ok {
-				return nil, errors.New("No public key found for id: " + publicKeyId + " at url: " + publicKeyUrl)
-			}
-
-			var selectedKey interface{}
-			err = keyById.Raw(&selectedKey)
-			if err != nil {
-				return nil, errors.New("Error materializing key from JSON key set with message: " + err.Error())
-			}
-
-			return selectedKey, nil
-		})
+		decodedToken, err := jwt.Parse(
+			[]byte(encodedToken),
+			jwt.WithVerifyAuto(true),
+			jwt.WithJWKSetFetcher(jwksFetcher),
+		)
 		if err != nil {
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, errors.New("Error decoding token with message: "+err.Error()))
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Error decoding token with message: %w", err))
 			return
 		}
 
-		authenticated = decodedToken.Valid
-
-		userId := decodedToken.Claims.(jwt.MapClaims)["sub"].(string)
+		userId := decodedToken.Subject()
 		form.Username = userId
 
 		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
@@ -387,7 +453,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			log.Errorf("checking local user: %s\n", err.Error())
 		}
 
-		if userAllowed && authenticated {
+		if userAllowed {
 			_, dbErr := db.Exec(UpdateLoginTimeQuery, form.Username)
 			if dbErr != nil {
 				dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", form.Username, dbErr)
@@ -407,13 +473,10 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("encoding response: %w", err))
 			return
 		}
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-		if !authenticated {
-			w.WriteHeader(http.StatusUnauthorized)
-		}
 		if !userAllowed {
 			w.WriteHeader(http.StatusForbidden)
 		}
