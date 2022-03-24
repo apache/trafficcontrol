@@ -29,7 +29,7 @@ import (
 )
 
 func TestCDNLocks(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, Tenants, Roles, Users, CDNLocks}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServiceCategories, Topologies, Tenants, Roles, Users, DeliveryServices, CDNLocks}, func() {
 
 		opsUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opsuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 		opsUserWithLockSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opslockuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
@@ -138,33 +138,35 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"DELIVERY SERVICE POST": {
 				"OK when USER OWNS LOCK": {
-					ClientSession: opsUserWithLockSession, RequestBody: generateDeliveryService(t, map[string]interface{}{}),
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession: opsUserWithLockSession, RequestBody: generateDeliveryService(t, map[string]interface{}{"xmlId": "testDSLock"}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					ClientSession: TOSession, RequestBody: generateDeliveryService(t, map[string]interface{}{}),
+					ClientSession: TOSession, RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"xmlId": "testDSLock2", "cdnId": GetCDNId(t, "cdn2")}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
 			"DELIVERY SERVICE PUT": {
 				"OK when USER OWNS LOCK": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: opsUserWithLockSession,
-					RequestBody:  generateDeliveryService(t, map[string]interface{}{}),
+					EndpointId: GetDeliveryServiceId(t, "basic-ds-in-cdn2"), ClientSession: opsUserWithLockSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"xmlId": "basic-ds-in-cdn2", "cdnId": GetCDNId(t, "cdn2"), "cdnName": "cdn2", "routingName": "cdn"}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointId: GetDeliveryServiceId(t, "basic-ds-in-cdn2"), ClientSession: TOSession,
 					RequestBody:  generateDeliveryService(t, map[string]interface{}{}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
 			"DELIVERY SERVICE DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: opsUserWithLockSession,
+					EndpointId: GetDeliveryServiceId(t, "basic-ds-in-cdn2"), ClientSession: opsUserWithLockSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointId: GetDeliveryServiceId(t, "top-ds-in-cdn2"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
@@ -185,7 +187,12 @@ func TestCDNLocks(t *testing.T) {
 					}
 
 					if testCase.RequestBody != nil {
-						if getId, ok := testCase.RequestBody["cdnId"]; ok {
+						if _, ok := testCase.RequestBody["xmlId"]; ok {
+							dat, err := json.Marshal(testCase.RequestBody)
+							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+							err = json.Unmarshal(dat, &ds)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						} else if getId, ok := testCase.RequestBody["cdnId"]; ok {
 							testCase.RequestBody["cdnId"] = getId.(func() int)()
 							dat, err := json.Marshal(testCase.RequestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
@@ -196,11 +203,6 @@ func TestCDNLocks(t *testing.T) {
 							dat, err := json.Marshal(testCase.RequestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 							err = json.Unmarshal(dat, &cacheGroup)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						} else if _, ok := testCase.RequestBody["xmlId"]; ok {
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &ds)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						} else {
 							dat, err := json.Marshal(testCase.RequestBody)
