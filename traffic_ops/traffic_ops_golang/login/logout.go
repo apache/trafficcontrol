@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -42,6 +43,14 @@ func LogoutHandler(secret string) http.HandlerFunc {
 
 		cookie := tocookie.GetCookie(inf.User.UserName, 0, secret)
 		http.SetCookie(w, cookie)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "access_token",
+			Value:    "",
+			Path:     "/",
+			Expires:  time.Now().Add(0),
+			MaxAge:   0,
+			HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
+		})
 		resp := struct {
 			tc.Alerts
 		}{tc.CreateAlerts(tc.SuccessLevel, "You are logged out.")}

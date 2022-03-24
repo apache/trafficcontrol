@@ -20,10 +20,6 @@ FROM golang
 # Note: need to move to ~/go?
 ADD . /go/src/github.com/rarenivar/project5799/webfront
 
-# Build the outyet command inside the container.
-# (You may fetch or manage dependencies here,
-# either manually or with a tool like "godep".)
-RUN go get github.com/dgrijalva/jwt-go
 #RUN ls -lR
 WORKDIR ./src/github.com/rarenivar/project5799/webfront
 #RUN cd ./src/github.com/rarenivar/project5799/webfront && export GOBIN=$GOPATH/bin && go install webfront.go

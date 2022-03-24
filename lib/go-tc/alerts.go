@@ -20,14 +20,7 @@ package tc
  */
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
 	"strings"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 // Alert represents an informational message, typically returned through the Traffic Ops API.
@@ -65,32 +58,6 @@ func CreateAlerts(level AlertLevel, messages ...string) Alerts {
 		alerts = append(alerts, Alert{message, level.String()})
 	}
 	return Alerts{alerts}
-}
-
-// GetHandleErrorsFunc is used to provide an error-handling function. The error handler provides a
-// response to an HTTP request made to the Traffic Ops API and accepts a response code and a set of
-// errors to display as alerts.
-//
-// Deprecated: Traffic Ops API handlers should use
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.HandleErr instead.
-func GetHandleErrorsFunc(w http.ResponseWriter, r *http.Request) func(status int, errs ...error) {
-	return func(status int, errs ...error) {
-		log.Errorf("%v %v\n", r.RemoteAddr, errs)
-		errBytes, jsonErr := json.Marshal(CreateErrorAlerts(errs...))
-		if jsonErr != nil {
-			log.Errorf("failed to marshal error: %s\n", jsonErr)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
-			return
-		}
-		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, StatusKey, status)
-		*r = *r.WithContext(ctx)
-
-		fmt.Fprintf(w, "%s", errBytes)
-	}
 }
 
 // ToStrings converts Alerts to a slice of strings that are their messages. Note that this return

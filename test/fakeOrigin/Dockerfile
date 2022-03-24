@@ -29,8 +29,7 @@ RUN apt-get update && \
 COPY . /go/src/github.com/apache/trafficcontrol
 WORKDIR /go/src/github.com/apache/trafficcontrol/test/fakeOrigin
 
-RUN go get -d -v ./... && \
-    go install -v ./...
+RUN go install -v ./...
 
 RUN groupadd -g 999 fakeOrigin && \
     useradd -r -u 999 -g fakeOrigin fakeOrigin

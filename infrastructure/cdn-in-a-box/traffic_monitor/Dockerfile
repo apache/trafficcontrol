@@ -71,7 +71,7 @@ HEALTHCHECK --interval=10s --timeout=1s \
 FROM trafficmonitor-dependencies as get-delve
 
 RUN dnf -y install golang && \
-    GOPROXY='https://proxy.golang.org' go get -u github.com/go-delve/delve/cmd/dlv
+    go install github.com/go-delve/delve/cmd/dlv@latest
 
 FROM trafficmonitor as trafficmonitor-debug
 COPY --from=get-delve /root/go/bin /usr/bin

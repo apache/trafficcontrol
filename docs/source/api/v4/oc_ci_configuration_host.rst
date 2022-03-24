@@ -23,22 +23,28 @@
 =======
 Triggers an asynchronous task to update the configuration for the :abbr:`uCDN (Upstream Content Delivery Network)` and the specified host by adding the request to a queue to be reviewed later. This returns a 202 Accepted status and an endpoint to be used for status updates.
 
+.. note:: Users with the ``ICDN:UCDN-OVERRIDE`` permission will need to provide a "ucdn" query parameter to bypass the need for :abbr:`uCDN (Upstream Content Delivery Network)` information in the :abbr:`JWT (JSON Web Token)` and allow them to view all :abbr:`CDNi (Content Delivery Network Interconnect)` information.
+
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
 :Permissions Required: CDNI:UPDATE
 :Response Type:  Object
-:Headers Required: "Authorization"
 
 Request Structure
 -----------------
-.. table:: Request Required Headers
+This requires authorization using a :abbr:`JWT (JSON Web Token)` provided by the :abbr:`dCDN (Downstream Content Delivery Network)` to identify the :abbr:`uCDN (Upstream Content Delivery Network)`. This token must include the following claims:
 
-	+-----------------+------------------------------------------------------------------------------------------------------------------------------+
-	|    Name         | Description                                                                                                                  |
-	+=================+==============================================================================================================================+
-	|  Authorization  | A :abbr:`JWT (JSON Web Token)` provided by the :abbr:`dCDN (Downstream Content Delivery Network)` to identify the            |
-	|                 | :abbr:`uCDN (Upstream Content Delivery Network)`                                                                             |
-	+-----------------+------------------------------------------------------------------------------------------------------------------------------+
+.. table:: Required JWT claims
+
+	+-----------------+--------------------------------------------------------------------------------------------------------------------+
+	|    Name         | Description                                                                                                        |
+	+=================+====================================================================================================================+
+	|      iss        | Issuer claim as a string key for the :abbr:`uCDN (Upstream Content Delivery Network)`                              |
+	+-----------------+--------------------------------------------------------------------------------------------------------------------+
+	|      aud        | Audience claim as a string key for the :abbr:`dCDN (Downstream Content Delivery Network)`                          |
+	+-----------------+--------------------------------------------------------------------------------------------------------------------+
+	|      exp        | Expiration claim as the expiration date as a Unix epoch timestamp (in seconds)                                     |
+	+-----------------+--------------------------------------------------------------------------------------------------------------------+
 
 .. table:: Request Path Parameters
 

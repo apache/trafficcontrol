@@ -23,7 +23,7 @@ RUN tar -xf trafficserver-9.1.1.tar.bz2 && cd trafficserver-9.1.1 && mkdir /ats 
 
 FROM golang:${GO_VERSION}-alpine AS t3c-dev
 
-ENV TC="/root/go/src/github.com/apache/trafficcontrol/"
+ENV TC="/root/go/src/github.com/apache/trafficcontrol/" GOFLAGS="--buildvcs=false"
 VOLUME /root/go/src/github.com/apache/trafficcontrol
 EXPOSE 80 8081
 

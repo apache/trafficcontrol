@@ -34,7 +34,7 @@ func TestCacheGroups(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies}, func() {
 
 		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 
 		methodTests := utils.V3TestCase{
@@ -95,26 +95,22 @@ func TestCacheGroups(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId: GetCacheGroupId(t, "parentCachegroup"), ClientSession: TOSession,
-					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: map[string]interface{}{
-						"latitude":  0,
-						"longitude": 0,
-						"name":      "parentCachegroup",
-						"shortName": "pg1",
-						"typeName":  "MID_LOC",
+						"name":      "cachegroup1",
+						"shortName": "changeName",
+						"typeName":  "EDGE_LOC",
 						"typeId":    -1,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId: GetCacheGroupId(t, "parentCachegroup2"), ClientSession: TOSession,
+					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"latitude":  0,
-						"longitude": 0,
-						"name":      "parentCachegroup2",
-						"shortName": "pg2",
-						"typeName":  "MID_LOC",
+						"name":      "cachegroup1",
+						"shortName": "changeName",
+						"typeName":  "EDGE_LOC",
 						"typeId":    -1,
 					},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
@@ -134,7 +130,7 @@ func TestCacheGroups(t *testing.T) {
 			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
 					ClientSession:  TOSession,
-					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
 					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
