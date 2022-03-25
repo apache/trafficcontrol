@@ -207,25 +207,14 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify query string parameters
-	configUpdateTimeParam, hasConfigUpdateTimeParam := inf.Params["config_update_time"]
 	configApplyTimeParam, hasConfigApplyTimeParam := inf.Params["config_apply_time"]
-	revalidateUpdateTimeParam, hasRevalidateUpdateTimeParam := inf.Params["revalidate_update_time"]
 	revalidateApplyTimeParam, hasRevalidateApplyTimeParam := inf.Params["revalidate_apply_time"]
-	if !hasConfigUpdateTimeParam && !hasConfigApplyTimeParam && !hasRevalidateUpdateTimeParam && !hasRevalidateApplyTimeParam {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must pass at least one query parameter: 'config_update_time', 'config_apply_time', 'revalidate_update_time', 'revalidate_apply_time'"), nil)
+	if !hasConfigApplyTimeParam && !hasRevalidateApplyTimeParam {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must pass at least one query parameter: 'config_apply_time', 'revalidate_apply_time'"), nil)
 		return
 	}
 
 	// Validate parameters before attempting to apply them (don't want to partially apply various status before an error)
-	var configUpdateTime time.Time
-	if hasConfigUpdateTimeParam {
-		configUpdateTime, err = time.Parse(time.RFC3339Nano, configUpdateTimeParam)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'config_update_time' must be valid RFC3339Nano format"), nil)
-			return
-		}
-	}
-
 	var configApplyTime time.Time
 	if hasConfigApplyTimeParam {
 		configApplyTime, err = time.Parse(time.RFC3339Nano, configApplyTimeParam)
@@ -234,16 +223,6 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	var revalUpdateTime time.Time
-	if hasRevalidateUpdateTimeParam {
-		revalUpdateTime, err = time.Parse(time.RFC3339Nano, revalidateUpdateTimeParam)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("query parameter 'revalidate_update_time' must be valid RFC3339Nano format"), nil)
-			return
-		}
-	}
-
 	var revalApplyTime time.Time
 	if hasRevalidateApplyTimeParam {
 		revalApplyTime, err = time.Parse(time.RFC3339Nano, revalidateApplyTimeParam)
@@ -253,23 +232,9 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if hasConfigUpdateTimeParam {
-		if err = dbhelpers.QueueUpdateForServerWithTime(inf.Tx.Tx, serverID, configUpdateTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting config update time: %w", err))
-			return
-		}
-	}
-
 	if hasConfigApplyTimeParam {
 		if err = dbhelpers.SetApplyUpdateForServerWithTime(inf.Tx.Tx, serverID, configApplyTime); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting config apply time: %w", err))
-			return
-		}
-	}
-
-	if hasRevalidateUpdateTimeParam {
-		if err = dbhelpers.QueueRevalForServerWithTime(inf.Tx.Tx, serverID, revalUpdateTime); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval update time: %w", err))
 			return
 		}
 	}
@@ -283,14 +248,8 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 
 	respMsg := "successfully set server '" + idOrName + "'"
 
-	if hasConfigUpdateTimeParam {
-		respMsg += " config_update_time=" + configUpdateTimeParam
-	}
 	if hasConfigApplyTimeParam {
 		respMsg += " config_apply_time=" + configApplyTimeParam
-	}
-	if hasRevalidateUpdateTimeParam {
-		respMsg += " revalidate_update_time=" + revalidateUpdateTimeParam
 	}
 	if hasRevalidateApplyTimeParam {
 		respMsg += " revalidate_apply_time=" + revalidateApplyTimeParam

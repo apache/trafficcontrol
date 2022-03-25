@@ -52,29 +52,21 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool, opts Req
 
 // SetUpdateServerStatusTimes updates a server's config queue status and/or reval status.
 // Each argument individually is optional, however at least one argument must not be nil.
-func (to *Session) SetUpdateServerStatusTimes(serverName string, configUpdateTime, configApplyTime, revalUpdateTime, revalApplyTime *time.Time, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) SetUpdateServerStatusTimes(serverName string, configApplyTime, revalApplyTime *time.Time, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	var alerts tc.Alerts
 
-	if configUpdateTime == nil && configApplyTime == nil && revalUpdateTime == nil && revalApplyTime == nil {
-		return alerts, reqInf, errors.New("one must be non-nil (configUpdateTime, configApplyTime, revalUpdateTime, revalApplyTime); nothing to do")
+	if configApplyTime == nil && revalApplyTime == nil {
+		return alerts, reqInf, errors.New("one must be non-nil (configApplyTime, revalApplyTime); nothing to do")
 	}
 
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 
-	if configUpdateTime != nil {
-		cut := configUpdateTime.Format(time.RFC3339Nano)
-		opts.QueryParameters.Set("config_update_time", cut)
-	}
 	if configApplyTime != nil {
 		cat := configApplyTime.Format(time.RFC3339Nano)
 		opts.QueryParameters.Set("config_apply_time", cat)
-	}
-	if revalUpdateTime != nil {
-		rut := revalUpdateTime.Format(time.RFC3339Nano)
-		opts.QueryParameters.Set("revalidate_update_time", rut)
 	}
 	if revalApplyTime != nil {
 		rat := revalApplyTime.Format(time.RFC3339Nano)

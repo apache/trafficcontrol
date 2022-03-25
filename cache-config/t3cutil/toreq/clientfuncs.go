@@ -745,14 +745,16 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr htt
 // SetServerUpdateStatus sets the server's update and reval statuses in Traffic Ops.
 func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, configApply, revalApply *time.Time) (toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		var updateStatus, revalStatus bool
+		var updateStatus, revalStatus *bool
 		if configApply != nil {
-			updateStatus = true
+			*updateStatus = true
+			revalStatus = nil
 		}
 		if revalApply != nil {
-			revalStatus = true
+			*revalStatus = true
+			updateStatus = nil
 		}
-		return cl.old.SetServerUpdateStatus(cacheHostName, &updateStatus, &revalStatus)
+		return cl.old.SetServerUpdateStatus(cacheHostName, updateStatus, revalStatus)
 	}
 
 	reqInf := toclientlib.ReqInf{}
