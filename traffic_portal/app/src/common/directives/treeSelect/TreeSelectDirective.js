@@ -129,10 +129,10 @@ var TreeSelectDirective = function($document) {
              * @param {boolean?} state
              */
             const collapseRecurse = function(row, state) {
-                if(row.children.length === 0 ) return;
+                if(row.children.length === 0) return;
                 for(const treeRow of scope.treeRows) {
                     if (treeRow.value === row.value) {
-                        if(state === null)
+                        if(state === undefined)
                             treeRow.collapsed = !treeRow.collapsed;
                         else
                             treeRow.collapsed = state;
@@ -198,7 +198,6 @@ var TreeSelectDirective = function($document) {
                 } else {
                     ngFormController[this.handle].$setPristine();
                 }
-                console.log(ngFormController[this.handle]);
                 scope.close();
             }
             /**
@@ -228,9 +227,9 @@ var TreeSelectDirective = function($document) {
              * @returns {string}
              */
             scope.getClass = function(row) {
-                if(row.collapsed) return "fa-minus";
+                if(row.collapsed && row.children.length > 0) return "fa-minus";
                 else if(row.children.length > 0) return "fa-plus";
-                else return "fa-file";
+                else return "fa-users";
             }
 
             scope.$watch("treeData", function(newVal, oldVal) {
