@@ -445,7 +445,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 }
 
 func GetTestDeliveryServicesURLSignatureKeys(t *testing.T) {
-	assert.RequireEqual(t, len(testData.DeliveryServices), 0, "Couldn't get the xml ID of test DS")
+	assert.RequireGreaterOrEqual(t, len(testData.DeliveryServices), 1, "Couldn't get the xml ID of test DS")
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
@@ -454,7 +454,7 @@ func GetTestDeliveryServicesURLSignatureKeys(t *testing.T) {
 }
 
 func CreateTestDeliveryServicesURLSignatureKeys(t *testing.T) {
-	assert.RequireEqual(t, len(testData.DeliveryServices), 0, "Couldn't get the xml ID of test DS")
+	assert.RequireGreaterOrEqual(t, len(testData.DeliveryServices), 1, "Couldn't get the xml ID of test DS")
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
@@ -485,7 +485,7 @@ func CreateTestDeliveryServicesURLSignatureKeys(t *testing.T) {
 }
 
 func DeleteTestDeliveryServicesURLSignatureKeys(t *testing.T) {
-	assert.RequireEqual(t, len(testData.DeliveryServices), 0, "Couldn't get the xml ID of test DS")
+	assert.RequireGreaterOrEqual(t, len(testData.DeliveryServices), 1, "Couldn't get the xml ID of test DS")
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
@@ -494,7 +494,7 @@ func DeleteTestDeliveryServicesURLSignatureKeys(t *testing.T) {
 }
 
 func GetTestDeliveryServicesURISigningKeys(t *testing.T) {
-	assert.RequireEqual(t, len(testData.DeliveryServices), 0, "Couldn't get the xml ID of test DS")
+	assert.RequireGreaterOrEqual(t, len(testData.DeliveryServices), 1, "Couldn't get the xml ID of test DS")
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
@@ -534,7 +534,7 @@ const (
 )
 
 func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
-	assert.RequireEqual(t, len(testData.DeliveryServices), 0, "Couldn't get the xml ID of test DS")
+	assert.RequireGreaterOrEqual(t, len(testData.DeliveryServices), 1, "Couldn't get the xml ID of test DS")
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
@@ -588,7 +588,7 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 }
 
 func DeleteTestDeliveryServicesURISigningKeys(t *testing.T) {
-	assert.RequireEqual(t, len(testData.DeliveryServices), 0, "Couldn't get the xml ID of test DS")
+	assert.RequireGreaterOrEqual(t, len(testData.DeliveryServices), 1, "Couldn't get the xml ID of test DS")
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
