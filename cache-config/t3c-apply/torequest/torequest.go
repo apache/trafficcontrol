@@ -1183,11 +1183,11 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 	if !r.Cfg.ReportOnly && !r.Cfg.NoUnsetUpdateFlag {
 		if r.Cfg.Files == t3cutil.ApplyFilesFlagAll {
 			if serverStatus.RevalPending {
-				err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime)
+				err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil)
 			}
 		} else if r.Cfg.Files == t3cutil.ApplyFilesFlagReval {
 			if serverStatus.UpdatePending {
-				err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil)
+				err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime)
 			}
 		}
 		if err != nil {
