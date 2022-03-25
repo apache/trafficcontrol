@@ -17,7 +17,6 @@ package v4
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
@@ -509,9 +508,7 @@ func TestDeliveryServices(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							fmt.Println(*ds.Tenant)
 							resp, reqInf, err := testCase.ClientSession.CreateDeliveryService(ds, testCase.RequestOpts)
-							fmt.Println(resp)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
@@ -682,7 +679,7 @@ func GetDeliveryServiceId(t *testing.T, xmlId string) func() int {
 
 		resp, _, err := TOSession.GetDeliveryServices(opts)
 		assert.RequireNoError(t, err, "Get Delivery Service Request failed with error: %v", err)
-		assert.RequireEqual(t, len(resp.Response), 1, "Expected response object length 1, but got %d", len(resp.Response))
+		assert.RequireEqual(t, 1, len(resp.Response), "Expected delivery service response object length 1, but got %d", len(resp.Response))
 		assert.RequireNotNil(t, resp.Response[0].ID, "Expected id to not be nil")
 
 		return *resp.Response[0].ID
