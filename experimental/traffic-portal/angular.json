@@ -173,8 +173,7 @@
           "options": {
             "devServerTarget": "traffic-portal:serve",
             "tsConfig": "./tsconfig.e2e.json",
-            "config": "./nightwatch/nightwatch.conf.js",
-            "env": "chrome"
+            "config": "./nightwatch/nightwatch.conf.js"
           },
           "configurations": {
             "production": {
@@ -187,8 +186,7 @@
           "options": {
             "devServerTarget": "traffic-portal:serve",
             "tsConfig": "./tsconfig.e2e.json",
-            "config": "./nightwatch/nightwatch.conf.js",
-            "env": "chrome"
+            "config": "./nightwatch/nightwatch.conf.js"
           },
           "configurations": {
             "production": {

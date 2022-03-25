@@ -48,21 +48,6 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     services:
-      hub:
-        image: selenium/hub
-        ports:
-          - 4442:4442
-          - 4443:4443
-          - 4444:4444
-        options: --health-cmd=/opt/bin/check-grid.sh --health-interval=5s --health-timeout=15s --health-retries=5
-      chromium:
-        image: ossalternatives/selenium-node-chromium
-        env:
-          SE_EVENT_BUS_HOST: hub
-          SE_EVENT_BUS_PUBLISH_PORT: 4442
-          SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
-        volumes:
-          - /dev/shm:/dev/shm
       postgres:
         image: postgres:11
         env:
@@ -125,6 +110,6 @@ jobs:
         if: always()
         with:
           name: ${{ github.job }}
-          path: ${{ github.workspace }}/expirimental/traffic-portal/Reports/
+          path: ${{ github.workspace }}/expirimental/traffic-portal/Reports
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

@@ -8,6 +8,6 @@
 			"node",
 			"nightwatch"
 		],
-		"rootDirs": ["./page_objects", "./src"]
+		"rootDirs": ["./page_objects", "./tests", "./globals"]
 	}
 }

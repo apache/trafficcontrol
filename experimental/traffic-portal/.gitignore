@@ -13,6 +13,8 @@
 # compiled output
 /dist
 /.angular
+/nightwatch/tests_output
+/nightwatch/screens
 /out-tsc
 # Only exists if Bazel was run
 /bazel-out

@@ -12,28 +12,30 @@
 * limitations under the License.
 */
 import {
-	ElementCommands,
 	EnhancedElementInstance,
-	EnhancedPageObject, EnhancedSectionInstance
+	EnhancedPageObject, EnhancedSectionInstance, NightwatchAPI
 } from "nightwatch";
 
-interface LoginFormSectionCommands extends EnhancedSectionInstance, ElementCommands {
+/**
+ * Defines the commands for the loginForm section
+ */
+interface LoginFormSectionCommands extends EnhancedSectionInstance, EnhancedElementInstance<EnhancedPageObject> {
 	fillOut(username: string, password: string): this;
 	login(username: string, password: string): this;
 }
 
-type LFSection = EnhancedSectionInstance<LoginFormSectionCommands, typeof loginPageObject.sections.loginForm.elements>;
+/**
+ * Defines the loginForm section
+ */
+type LoginFormSection = EnhancedSectionInstance<LoginFormSectionCommands, typeof loginPageObject.sections.loginForm.elements>;
 
 /**
  * Define the type for our PO
  */
-//export type LoginPageObject = EnhancedPageObject<{}, {}, LoginSectionInstance>;
+export type LoginPageObject = EnhancedPageObject<{}, typeof loginPageObject.elements, { loginForm: LoginFormSection }>;
 
-/**
- * Define the type for our PO
- */
-export type LoginPageObject = EnhancedPageObject<{}, typeof loginPageObject.elements, { loginForm: LFSection }>;
 const loginPageObject = {
+	api: {} as NightwatchAPI,
 	elements: {
 		snackbarEle: {
 			selector: "simple-snack-bar"
@@ -44,7 +46,7 @@ const loginPageObject = {
 			commands: {
 				fillOut(username: string, password: string): LoginFormSectionCommands  {
 					 return this
-						.setValue("input#u", username)
+						.setValue("@usernameTxt", username)
 						.setValue("@passwordTxt", password);
 				},
 				login(username: string, password: string): LoginFormSectionCommands {
@@ -66,7 +68,7 @@ const loginPageObject = {
 					selector: "button[name='reset']"
 				},
 				usernameTxt: {
-					selector: "input[id='u']"
+					selector: "input#u"
 				}
 			},
 			selector: "form[name='login']"
@@ -75,6 +77,6 @@ const loginPageObject = {
 	url(): string {
 		return `${this.api.launchUrl}/login`;
 	}
-} as LoginPageObject;
+};
 
 export default loginPageObject;
