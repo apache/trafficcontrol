@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -645,18 +644,25 @@ func validatePagination(paginationParam string) utils.CkReqFunc {
 
 func validateDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
-		dsResp := resp.([]tc.DeliveryServiceV40)
-		var sortedList []string
-		assert.RequireGreaterOrEqual(t, len(dsResp), 2, "Need at least 2 XMLIDs in Traffic Ops to test desc sort, found: %d", len(dsResp))
-
-		for _, ds := range dsResp {
-			sortedList = append(sortedList, *ds.XMLID)
+		dsDescResp := resp.([]tc.DeliveryServiceV40)
+		var descSortedList []string
+		var ascSortedList []string
+		assert.GreaterOrEqual(t, len(dsDescResp), 2, "Need at least 2 XMLIDs in Traffic Ops to test desc sort, found: %d", len(dsDescResp))
+		// Get delivery services in the default ascending order for comparison.
+		dsAscResp, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
+		assert.NoError(t, err, "Unexpected error getting Delivery Services with default sort order: %v - alerts: %+v", err, dsAscResp.Alerts)
+		assert.GreaterOrEqual(t, len(dsAscResp.Response), 2, "Need at least 2 XMLIDs in Traffic Ops to test sort, found %d", len(dsAscResp.Response))
+		// Verify the response match in length, i.e. equal amount of delivery services.
+		assert.Equal(t, len(dsAscResp.Response), len(dsDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(dsAscResp.Response), len(dsDescResp))
+		// Insert xmlIDs to the front of a new list, so they are now reversed to be in ascending order.
+		for _, ds := range dsDescResp {
+			descSortedList = append([]string{*ds.XMLID}, descSortedList...)
 		}
-
-		res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-			return sortedList[p] > sortedList[q]
-		})
-		assert.Equal(t, res, true, "List is not sorted by their XMLIDs: %v", sortedList)
+		// Insert xmlIDs by appending to a new list, so they stay in ascending order.
+		for _, ds := range dsAscResp.Response {
+			ascSortedList = append(ascSortedList, *ds.XMLID)
+		}
+		assert.Exactly(t, ascSortedList, descSortedList, "Delivery Service responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
 	}
 }
 
@@ -728,6 +734,7 @@ func generateDeliveryService(t *testing.T, requestDS map[string]interface{}) map
 		"multiSiteOrigin":      false,
 		"orgServerFqdn":        "http://ds.test",
 		"protocol":             0,
+		"profileName":          "ATS_EDGE_TIER_CACHE",
 		"qstringIgnore":        0,
 		"rangeRequestHandling": 0,
 		"regionalGeoBlocking":  false,
