@@ -606,6 +606,6 @@ func DeleteTestDeliveryServicesURISigningKeys(t *testing.T) {
 	keys, hasKeys := emptyMap["keys"]
 	assert.Equal(t, hasRenewalKid, true, "Getting empty URI signing keys - expected: 'renewal_kid' key, actual: not present")
 	assert.Equal(t, hasKeys, true, "Getting empty URI signing keys - expected: 'keys' key, actual: not present")
-	assert.NotNil(t, renewalKid, "Getting empty URI signing keys - expected: 'renewal_kid' value to be nil, actual: %+v", renewalKid)
-	assert.NotNil(t, keys, "Getting empty URI signing keys - expected: 'keys' value to be nil, actual: %+v", keys)
+	assert.Equal(t, renewalKid, nil, "Getting empty URI signing keys - expected: 'renewal_kid' value to be nil, actual: %+v", renewalKid)
+	assert.Equal(t, keys, nil, "Getting empty URI signing keys - expected: 'keys' value to be nil, actual: %+v", keys)
 }
