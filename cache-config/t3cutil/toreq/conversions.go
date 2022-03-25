@@ -161,7 +161,7 @@ func InvalidationJobV4FromLegacy(job InvalidationJobV4PlusLegacy) (tc.Invalidati
 // this function will send both "styles". Once both T3C and TO have been deployed
 // with the timestamp only V4 TO API endpoint, this function can be removed and the
 // V4 client function `SetUpdateServerStatusTimes` may be used instead (as intended).
-func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configUpdateTime, configApplyTime, revalUpdateTime, revalApplyTime *time.Time, opts toclient.RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configApplyTime, revalApplyTime *time.Time, opts toclient.RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	var alerts tc.Alerts
 
@@ -169,30 +169,17 @@ func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configUpdateT
 		opts.QueryParameters = url.Values{}
 	}
 
-	if configUpdateTime != nil {
-		opts.QueryParameters.Set("updated", "true")
-		opts.QueryParameters.Set("config_update_time", configUpdateTime.Format(time.RFC3339Nano))
-	}
+	// TODO: How do we know when to set it to `true` for the
+	// previous API if all we have are the apply times?
+
 	if configApplyTime != nil {
 		opts.QueryParameters.Set("updated", "false")
 		opts.QueryParameters.Set("config_apply_time", configApplyTime.Format(time.RFC3339Nano))
 	}
-	if revalUpdateTime != nil {
-		opts.QueryParameters.Set("reval_updated", "true")
-		opts.QueryParameters.Set("revalidate_update_time", revalUpdateTime.Format(time.RFC3339Nano))
-	}
+
 	if revalApplyTime != nil {
 		opts.QueryParameters.Set("reval_updated", "false")
 		opts.QueryParameters.Set("revalidate_apply_time", revalApplyTime.Format(time.RFC3339Nano))
-	}
-
-	if configUpdateTime != nil && configApplyTime != nil {
-		updated := (*configApplyTime).After(*configUpdateTime)
-		opts.QueryParameters.Set("updated", strconv.FormatBool(updated))
-	}
-	if revalUpdateTime != nil && revalApplyTime != nil {
-		revalUpdated := (*revalApplyTime).After(*revalUpdateTime)
-		opts.QueryParameters.Set("reval_updated", strconv.FormatBool(revalUpdated))
 	}
 
 	path := `/servers/` + url.PathEscape(serverName) + `/update`

@@ -48,7 +48,9 @@ func verifyRemapConfigPlaced(t *testing.T) {
 		t.Fatalf("unable to remove %s: %v", remap, err)
 	}
 	// prepare for running syncds.
-	if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.Epoch); err != nil {
+	// Send an apply time that is before an update time, signaling there is an update pending
+	before := util.Epoch.Add(-time.Hour * 24)
+	if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
 		t.Fatalf("queue updates failed: %v", err)
 	}
 

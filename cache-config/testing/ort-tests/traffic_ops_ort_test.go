@@ -33,12 +33,9 @@ import (
 
 var (
 	Config             config.Config
-	testData           tcdata.TrafficControl
 	includeSystemTests bool
+	tcd                *tcdata.TCData
 )
-var tcd *tcdata.TCData
-
-// var TCD *tcdata.TCData
 
 const cfgFmt = `Using Config values:
 	TO Config File:              %s

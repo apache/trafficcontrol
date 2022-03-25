@@ -23,9 +23,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	testutil "github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -60,10 +62,11 @@ func TestWaitForParentsTrue(t *testing.T) {
 
 		// queue on both child and parent
 
-		if err := ExecTOUpdater(childCacheHostName, &testutil.Epoch, &testutil.Epoch, &testutil.TimeNow, &testutil.Epoch); err != nil {
+		before := testutil.Epoch.Add(-time.Hour * 24)
+		if err := ExecTOUpdater(childCacheHostName, &before, &testutil.Epoch); err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
-		if err := ExecTOUpdater(parentCacheHostName, &testutil.Epoch, &testutil.Epoch, &testutil.TimeNow, &testutil.Epoch); err != nil {
+		if err := ExecTOUpdater(parentCacheHostName, &before, &testutil.Epoch); err != nil {
 			t.Fatalf("queue updates on parent failed: %v", err)
 		}
 
@@ -102,15 +105,16 @@ func TestWaitForParentsTrue(t *testing.T) {
 			t.Errorf("expected: '%s' to still be queued after failed syncds run, actual: %+v", childCacheHostName, status)
 		}
 
-		if status, err := getUpdateStatus(parentCacheHostName); err != nil {
+		parentStatus, err := getUpdateStatus(parentCacheHostName)
+		if err != nil {
 			t.Fatalf("checking '%s' queue status: %v", parentCacheHostName, err)
-		} else if !status.UpdatePending {
-			t.Errorf("expected: '%s' to still be queued after unrelated child failed syncds run, actual: %+v", parentCacheHostName, status)
+		} else if !parentStatus.UpdatePending {
+			t.Errorf("expected: '%s' to still be queued after unrelated child failed syncds run, actual: %+v", parentCacheHostName, parentStatus)
 		}
 
 		// un-queue the parent
 
-		if err = ExecTOUpdater(parentCacheHostName, &testutil.TimeNow, &testutil.Epoch, &testutil.TimeNow, &testutil.Epoch); err != nil {
+		if err = ExecTOUpdater(parentCacheHostName, parentStatus.ConfigUpdateTime, &testutil.Epoch); err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
 
@@ -169,10 +173,11 @@ func TestWaitForParentsDefaultReval(t *testing.T) {
 
 		// queue both child and parent
 
-		if err := ExecTOUpdater(childCacheHostName, &testutil.Epoch, &testutil.Epoch, &testutil.TimeNow, &testutil.Epoch); err != nil {
+		before := testutil.Epoch.Add(-time.Hour * 24)
+		if err := ExecTOUpdater(childCacheHostName, &before, &testutil.Epoch); err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
-		if err := ExecTOUpdater(parentCacheHostName, &testutil.Epoch, &testutil.Epoch, &testutil.TimeNow, &testutil.Epoch); err != nil {
+		if err := ExecTOUpdater(parentCacheHostName, &before, &testutil.Epoch); err != nil {
 			t.Fatalf("queue updates on parent failed: %v", err)
 		}
 
@@ -237,10 +242,11 @@ func TestWaitForParentsFalse(t *testing.T) {
 
 		// queue both child and parent
 
-		if err := ExecTOUpdater(childCacheHostName, &testutil.Epoch, &testutil.Epoch, &testutil.TimeNow, &testutil.Epoch); err != nil {
+		before := testutil.Epoch.Add(-time.Hour * 24)
+		if err := ExecTOUpdater(childCacheHostName, &before, &testutil.Epoch); err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
-		if err := ExecTOUpdater(parentCacheHostName, &testutil.Epoch, &testutil.Epoch, &testutil.TimeNow, &testutil.Epoch); err != nil {
+		if err := ExecTOUpdater(parentCacheHostName, &before, &testutil.Epoch); err != nil {
 			t.Fatalf("queue updates on parent failed: %v", err)
 		}
 
@@ -301,12 +307,12 @@ func TestWaitForParentsFalse(t *testing.T) {
 	})
 }
 
-func getUpdateStatus(hostName string) (tc.ServerUpdateStatus, error) {
-	st := tc.ServerUpdateStatus{}
+func getUpdateStatus(hostName string) (atscfg.ServerUpdateStatus, error) {
+	st := atscfg.ServerUpdateStatus{}
 	if output, err := runRequest(hostName, CMDUpdateStatus); err != nil {
-		return tc.ServerUpdateStatus{}, errors.New("t3c-request failed: " + err.Error())
+		return atscfg.ServerUpdateStatus{}, errors.New("t3c-request failed: " + err.Error())
 	} else if err = json.Unmarshal([]byte(output), &st); err != nil {
-		return tc.ServerUpdateStatus{}, errors.New("unmarshalling t3c-request json output: " + err.Error())
+		return atscfg.ServerUpdateStatus{}, errors.New("unmarshalling t3c-request json output: " + err.Error())
 	}
 	return st, nil
 }

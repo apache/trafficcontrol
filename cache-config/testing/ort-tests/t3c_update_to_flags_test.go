@@ -17,10 +17,10 @@ package orttest
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
 func TestT3cTOUpdates(t *testing.T) {
@@ -36,7 +36,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		if err != nil {
 			t.Fatalf("update-status run failed: %v", err)
 		}
-		var serverStatus tc.ServerUpdateStatus
+		var serverStatus atscfg.ServerUpdateStatus
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
 			t.Fatalf("unmarshalling json output: %v", err)
@@ -52,7 +52,9 @@ func TestT3cTOUpdates(t *testing.T) {
 		}
 
 		// change the server update status
-		if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.TimeNow); err != nil {
+		// Send an apply time that is before an update time, signaling there is an update pending
+		before := serverStatus.ConfigUpdateTime.Add(-time.Hour * 24)
+		if err = ExecTOUpdater(DefaultCacheHostName, &before, serverStatus.RevalidateUpdateTime); err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
 		// verify the update status is now 'true'

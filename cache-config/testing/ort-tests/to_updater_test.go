@@ -55,8 +55,9 @@ func TestTOUpdater(t *testing.T) {
 		}
 
 		// change the server update status
-		now := time.Now().UTC().Round(time.Microsecond)
-		err = ExecTOUpdater(DefaultCacheHostName, &now, nil, nil, nil)
+		// Send an apply time that is before an update time, signaling there is an update pending
+		before := serverStatus.ConfigUpdateTime.Add(-time.Hour * 24)
+		err = ExecTOUpdater(DefaultCacheHostName, &before, serverStatus.RevalidateUpdateTime)
 		if err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
@@ -75,12 +76,14 @@ func TestTOUpdater(t *testing.T) {
 		if serverStatus.UpdatePending != true {
 			t.Fatal("expected UpdatePending to be 'true'")
 		}
-		if !serverStatus.ConfigApplyTime.Equal(now) {
-			t.Fatalf("failed to set config apply time.\nSent: %v\nRecv: %v", now, serverStatus.ConfigApplyTime)
+		if !serverStatus.ConfigApplyTime.Equal(before) {
+			t.Fatalf("failed to set config apply time.\nSent: %v\nRecv: %v", before, serverStatus.ConfigApplyTime)
 		}
 
 		// now change the reval stat and put server update status back
-		err = ExecTOUpdater(DefaultCacheHostName, nil, &now, nil, nil)
+		// Send an apply time that is before an update time, signaling there is an reval pending
+		before = serverStatus.RevalidateUpdateTime.Add(-time.Hour * 24)
+		err = ExecTOUpdater(DefaultCacheHostName, serverStatus.ConfigUpdateTime, &before)
 		if err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
@@ -99,14 +102,14 @@ func TestTOUpdater(t *testing.T) {
 		if serverStatus.UpdatePending != false {
 			t.Fatal("expected UpdatePending to be 'true'")
 		}
-		if !serverStatus.RevalidateApplyTime.Equal(now) {
-			t.Fatalf("failed to set config apply time.\nSent: %v\nRecv: %v", now, serverStatus.RevalidateApplyTime)
+		if !serverStatus.RevalidateApplyTime.Equal(before) {
+			t.Fatalf("failed to set config apply time.\nSent: %v\nRecv: %v", before, serverStatus.RevalidateApplyTime)
 		}
 
 	})
 }
 
-func ExecTOUpdater(host string, configApplyTime, revalApplyTime, configUpdateTime, revalUpdateTime *time.Time) error {
+func ExecTOUpdater(host string, configApplyTime, revalApplyTime *time.Time) error {
 	args := []string{
 		"update",
 		"--traffic-ops-insecure=true",
@@ -122,12 +125,6 @@ func ExecTOUpdater(host string, configApplyTime, revalApplyTime, configUpdateTim
 	}
 	if revalApplyTime != nil {
 		args = append(args, "--set-reval-apply-time="+(*revalApplyTime).Format(time.RFC3339Nano))
-	}
-	if configUpdateTime != nil {
-		args = append(args, "--set-config-update-time="+(*configUpdateTime).Format(time.RFC3339Nano))
-	}
-	if revalUpdateTime != nil {
-		args = append(args, "--set-reval-update-time="+(*revalUpdateTime).Format(time.RFC3339Nano))
 	}
 	cmd := exec.Command("t3c", args...)
 	var out bytes.Buffer

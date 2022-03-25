@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
@@ -90,7 +91,8 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 		}
 
 		// set the update flag, so syncds will run
-		if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.Epoch); err != nil {
+		before := util.Epoch.Add(-time.Hour * 24)
+		if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
 

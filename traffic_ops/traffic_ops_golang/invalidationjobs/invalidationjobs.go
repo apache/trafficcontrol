@@ -139,25 +139,25 @@ const queueUpdateOrRevalQuery = `
 UPDATE public.server
 SET %s = now()
 WHERE server.status IN (
-						SELECT status.id
-						FROM status
-						WHERE name IN ('ONLINE', 'REPORTED', 'ADMIN_DOWN')
-						)
+		SELECT status.id
+		FROM status
+		WHERE name IN ('ONLINE', 'REPORTED', 'ADMIN_DOWN')
+		)
      AND server.profile IN (
-							SELECT profile_parameter.profile
-							FROM profile_parameter
-							WHERE profile_parameter.parameter IN (
-																SELECT parameter.id
-																FROM parameter
-																WHERE parameter.name='location'
-																AND parameter.config_file='regex_revalidate.config'
-																)
-                           )
+		SELECT profile_parameter.profile
+		FROM profile_parameter
+		WHERE profile_parameter.parameter IN (
+			SELECT parameter.id
+			FROM parameter
+			WHERE parameter.name='location'
+			AND parameter.config_file='regex_revalidate.config'
+			)
+		)
      AND server.cdn_id  =  (
-							SELECT deliveryservice.cdn_id
-							FROM deliveryservice
-							WHERE deliveryservice.%s=$1
-                           );
+		SELECT deliveryservice.cdn_id
+		FROM deliveryservice
+		WHERE deliveryservice.%s=$1
+		);
 `
 
 const updateQuery = `
@@ -1495,7 +1495,7 @@ func validateTLLHours(ttlHours uint32, tx *sql.Tx) (bool, error) {
 	err := tx.QueryRow(`SELECT value FROM parameter WHERE name='maxRevalDurationDays' AND config_file='regex_revalidate.config'`).Scan(&maxDays)
 	maxHours := maxDays * 24
 	if err != nil {
-		log.Errorf("error querying \"maxRevalDurationDays\" parameter: %w", err)
+		log.Errorf("error querying \"maxRevalDurationDays\" parameter: %v", err)
 		return false, nil // sent to the user, hide server error
 	}
 	if err == nil && uint(ttlHours) > maxHours {
@@ -1510,7 +1510,7 @@ func refetchAllowed(tx *sql.Tx) bool {
 	err := tx.QueryRow(`SELECT 'true' = lower(trim(p.value)) FROM "parameter" p WHERE p.name=$1 AND p.config_file=$2`,
 		tc.RefetchEnabled, tc.GlobalConfigFileName).Scan(&refetchEnabled)
 	if err != nil {
-		log.Errorf("error querying \"refetch_enabled\" from parameter: %w", err)
+		log.Errorf("error querying \"refetch_enabled\" from parameter: %v", err)
 		return refetchEnabled // sent to the user, hide server error
 	}
 	return refetchEnabled

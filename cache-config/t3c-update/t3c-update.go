@@ -83,15 +83,5 @@ func main() {
 		log.Errorf("Failed to set reval_apply_time.\nSent: %v\nRecv: %v", *cfg.RevalApplyTime, *cur_status.RevalidateApplyTime)
 	}
 
-	// if (*cur_status.ConfigUpdateTime).After(*cur_status.ConfigApplyTime) {
-	// 	// Another update appears to have been queued. Should we run again?
-	// 	log.Warnf("Config Update and Apply times do not match")
-	// }
-
-	// if (*cur_status.RevalidateUpdateTime).After(*cur_status.RevalidateApplyTime) {
-	// 	// Another reval appears to have been queued. Should we run again?
-	// 	log.Warnf("Reval Update and Apply times do not match")
-	// }
-
 	log.Infoln("Update completed")
 }

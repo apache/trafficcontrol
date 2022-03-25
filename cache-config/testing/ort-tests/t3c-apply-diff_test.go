@@ -20,6 +20,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
@@ -54,7 +55,8 @@ func TestApplyDiff(t *testing.T) {
 			}
 			// queue and syncds to get changes
 
-			if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.Epoch); err != nil {
+			before := util.Epoch.Add(-time.Hour * 24)
+			if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
 				t.Fatalf("t3c-update failed: %v", err)
 			}
 			out, code := t3cUpdateReload(DefaultCacheHostName, "syncds")
@@ -86,7 +88,8 @@ func TestApplyDiff(t *testing.T) {
 
 			// queue and syncds to get changes
 
-			if err := ExecTOUpdater(DefaultCacheHostName, &util.Epoch, &util.Epoch, &util.TimeNow, &util.Epoch); err != nil {
+			before := util.Epoch.Add(-time.Hour * 24)
+			if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
 				t.Fatalf("t3c-update failed: %v", err)
 			}
 			out, code := t3cUpdateReload(DefaultCacheHostName, "syncds")
