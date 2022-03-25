@@ -1,0 +1,24 @@
+{
+	"author": "Apache Traffic Control",
+	"description": "Runs Traffic Portal v2 Integration tests",
+	"license": "Apache-2.0",
+	"main": "dist/tpv2-integration-tests.js",
+	"name": "tpv2-integration-tests",
+	"version": "0.0.0",
+	"scripts": {
+		"build": "tsc",
+		"lint": "eslint tpv2-integration-tests.ts",
+		"all": "npm run lint && npm run build"
+	},
+	"devDependencies": {
+		"@types/node": "^14.14.0",
+		"@typescript-eslint/eslint-plugin": "^4.5.0",
+		"@typescript-eslint/eslint-plugin-tslint": "^4.6.0",
+		"@typescript-eslint/parser": "^4.5.0",
+		"eslint": "^7.11.0",
+		"eslint-plugin-import": "^2.22.1",
+		"eslint-plugin-jsdoc": "^30.7.3",
+		"tslint": "^6.1.3",
+		"typescript": "^4.0.3"
+	}
+}
