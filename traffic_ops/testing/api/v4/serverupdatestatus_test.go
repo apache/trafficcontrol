@@ -377,7 +377,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Add("hostName", *testServer.HostName)
-		testVals := func(configUpdate, configApply, revalUpdate, revalApply *time.Time) {
+		testVals := func(configApply, revalApply *time.Time) {
 			resp, _, err := TOSession.GetServers(opts)
 			if err != nil {
 				t.Errorf("cannot get Server by name '%s': %v - alerts: %+v", *testServer.HostName, err, resp.Alerts)
@@ -408,7 +408,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 			}
 
 			// Make change
-			if alerts, _, err := TOSession.SetUpdateServerStatusTimes(*testServer.HostName, configUpdate, configApply, revalUpdate, revalApply, client.RequestOptions{}); err != nil {
+			if alerts, _, err := TOSession.SetUpdateServerStatusTimes(*testServer.HostName, configApply, revalApply, client.RequestOptions{}); err != nil {
 				t.Fatalf("SetUpdateServerStatusTimes error. expected: nil, actual: %v - alerts: %+v", err, alerts.Alerts)
 			}
 
@@ -429,19 +429,9 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 			}
 
 			// Ensure values were actually set
-			if configUpdate != nil {
-				if afterServer.ConfigUpdateTime == nil || !afterServer.ConfigUpdateTime.Equal(*configUpdate) {
-					t.Errorf("Failed to set server's ConfigUpdateTime. expected: %v actual: %v", *configUpdate, afterServer.ConfigUpdateTime)
-				}
-			}
 			if configApply != nil {
 				if afterServer.ConfigApplyTime == nil || !afterServer.ConfigApplyTime.Equal(*configApply) {
 					t.Errorf("Failed to set server's ConfigApplyTime. expected: %v actual: %v", *configApply, afterServer.ConfigApplyTime)
-				}
-			}
-			if revalUpdate != nil {
-				if afterServer.RevalUpdateTime == nil || !afterServer.RevalUpdateTime.Equal(*revalUpdate) {
-					t.Errorf("Failed to set server's RevalUpdateTime. expected: %v actual: %v", *revalUpdate, afterServer.RevalUpdateTime)
 				}
 			}
 			if revalApply != nil {
@@ -450,23 +440,6 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 				}
 			}
 
-			// Ensure boolean logic continues to work as expected
-			if configUpdate != nil && configApply != nil {
-				if ((*configUpdate).Before(*configApply) || (*configUpdate).Equal(*configApply)) &&
-					*afterServer.UpdPending {
-					t.Error("The configUpdateTime <= configApplyTime. UpdPending should be false")
-				} else if (*configUpdate).After(*configApply) && !*afterServer.UpdPending {
-					t.Error("The configUpdateTime > configApplyTime. UpdPending should be true")
-				}
-			}
-			if revalUpdate != nil && revalApply != nil {
-				if ((*revalUpdate).Before(*revalApply) || (*revalUpdate).Equal(*revalApply)) &&
-					*afterServer.RevalPending {
-					t.Error("The configUpdateTime <= configApplyTime. RevalPending should be false")
-				} else if (*revalUpdate).After(*revalApply) && !*afterServer.RevalPending {
-					t.Error("The configUpdateTime > configApplyTime. RevalPending should be true")
-				}
-			}
 		}
 
 		// Postgres stores microsecond precision. There is also some discussion around MacOS losing
@@ -474,22 +447,13 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 		// but round trips to and from the database may result in an inaccurate Equals comparison
 		// with the loss of precision. Also, it appears to Round and not Truncate.
 		now := time.Now().Round(time.Microsecond)
-		later := now.Add(time.Hour * 6)
 
 		// Test setting the values works as expected
-		testVals(util.TimePtr(now), nil, nil, nil) // configUpdate
-		testVals(nil, util.TimePtr(now), nil, nil) // configApply
-		testVals(nil, nil, util.TimePtr(now), nil) // revalUpdate
-		testVals(nil, nil, nil, util.TimePtr(now)) // revalApply
-
-		// Test the boolean logic works as expected
-		testVals(util.TimePtr(now), util.TimePtr(now), nil, nil)   //configUpdate = configApply
-		testVals(util.TimePtr(now), util.TimePtr(later), nil, nil) // configUpdate < configApply
-		testVals(nil, nil, util.TimePtr(now), util.TimePtr(now))   // revalUpdate = revalApply
-		testVals(nil, nil, util.TimePtr(now), util.TimePtr(later)) // revalUpdate < revalApply
+		testVals(util.TimePtr(now), nil) // configApply
+		testVals(nil, util.TimePtr(now)) // revalApply
 
 		// Test sending all nils. Should fail
-		if _, _, err := TOSession.SetUpdateServerStatusTimes(*testServer.HostName, nil, nil, nil, nil, client.RequestOptions{}); err == nil {
+		if _, _, err := TOSession.SetUpdateServerStatusTimes(*testServer.HostName, nil, nil, client.RequestOptions{}); err == nil {
 			t.Errorf("UpdateServerStatuses with (nil,nil) expected error, actual nil")
 		}
 	})
