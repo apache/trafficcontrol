@@ -225,9 +225,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         getTypes();
         getCDNs();
         getProfiles(($scope.server.cdnId) ? $scope.server.cdnId : 0); // hacky but does the job. only when a cdn is selected can we fetch the appropriate profiles. otherwise, show no profiles.
-        if ($scope.server.profileNames != undefined) {
-            $scope.server.profileName = $scope.server.profileNames[0]
-        }
     };
     init();
 
