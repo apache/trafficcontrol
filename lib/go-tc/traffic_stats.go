@@ -260,7 +260,7 @@ func (s TrafficStatsSeries) FormatTimestamps() error {
 			if err != nil {
 				return fmt.Errorf("error converting timestamp %s into RFC3339 format: %v", v[0], err)
 			}
-			s.Values[i][0] = t.String()
+			s.Values[i][0] = t.Format(time.RFC3339)
 		default:
 			return fmt.Errorf("Invalid type %T for datapoint %d (%v)", v[0], i, v)
 		}
