@@ -359,7 +359,7 @@ INSERT INTO server (
 	offline_reason,
 	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
 	phys_location AS phys_location_id,
-	(SELECT ARRAY[(SELECT name FROM profile WHERE profile.id=server.profile)]) AS profile_name,
+	(SELECT ARRAY_AGG[(SELECT name FROM profile WHERE profile.id=server.profile)]) AS profile_name,
 	rack,
 	reval_pending,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
@@ -454,6 +454,66 @@ INSERT INTO server (
 	upd_pending
 `
 
+const updateV4Query = `
+UPDATE server SET
+	cachegroup=:cachegroup_id,
+	cdn_id=:cdn_id,
+	domain_name=:domain_name,
+	host_name=:host_name,
+	https_port=:https_port,
+	ilo_ip_address=:ilo_ip_address,
+	ilo_ip_netmask=:ilo_ip_netmask,
+	ilo_ip_gateway=:ilo_ip_gateway,
+	ilo_username=:ilo_username,
+	ilo_password=:ilo_password,
+	mgmt_ip_address=:mgmt_ip_address,
+	mgmt_ip_netmask=:mgmt_ip_netmask,
+	mgmt_ip_gateway=:mgmt_ip_gateway,
+	offline_reason=:offline_reason,
+	phys_location=:phys_location_id,
+	profile=(SELECT id FROM profile p WHERE p.name=(CAST(:profile_name AS TEXT[]))[1])
+	rack=:rack,
+	status=:status_id,
+	tcp_port=:tcp_port,
+	type=:server_type_id,
+	upd_pending=:upd_pending,
+	xmpp_passwd=:xmpp_passwd,
+	status_last_updated=:status_last_updated
+WHERE id=:id
+RETURNING
+	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
+	cachegroup AS cachegroup_id,
+	cdn_id,
+	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
+	domain_name,
+	guid,
+	host_name,
+	https_port,
+	id,
+	ilo_ip_address,
+	ilo_ip_gateway,
+	ilo_ip_netmask,
+	ilo_password,
+	ilo_username,
+	last_updated,
+	mgmt_ip_address,
+	mgmt_ip_gateway,
+	mgmt_ip_netmask,
+	offline_reason,
+	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
+	phys_location AS phys_location_id,
+	(SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server_profile.server=server.id) AS profile_name,
+	rack,
+	reval_pending,
+	(SELECT name FROM status WHERE status.id=server.status) AS status,
+	status AS status_id,
+	tcp_port,
+	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
+	type AS server_type_id,
+	upd_pending,
+	status_last_updated
+`
+
 const updateQuery = `
 UPDATE server SET
 	cachegroup=:cachegroup_id,
@@ -502,7 +562,7 @@ RETURNING
 	offline_reason,
 	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
 	phys_location AS phys_location_id,
-	(SELECT profile_name FROM server_profile sp WHERE sp.server=server.id) AS profile_name,
+	(SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server_profile.server=server.id) AS profile_name,
 	rack,
 	reval_pending,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
@@ -1131,7 +1191,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + originServerQuery
 	}
 
-	fmt.Printf("Query is %v %v", query, queryValues)
+	log.Debugln("Query is ", query)
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, serverCount, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError, nil
@@ -1146,16 +1206,8 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		s := tc.ServerV40{}
 		var profiles []string
 		s.ProfileNames = &profiles
-		//s := TOServerV40{
-		//	ServerV40:      tc.ServerV40{
-		//		CommonServerPropertiesV40: tc.CommonServerPropertiesV40{
-		//			ProfileNames:     &profiles,
-		//		},
-		//	},
-		//}
-		//s.ProfileNamesDB = pq.Array(&s.ProfileNames)
-		//err = rows.StructScan(&s);
-		err := rows.Scan(&s.Cachegroup,
+		err := rows.Scan(
+			&s.Cachegroup,
 			&s.CachegroupID,
 			&s.CDNID,
 			&s.CDNName,
@@ -1612,12 +1664,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.Profile, tx)
+		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.Profile, (*original.ProfileNames)[0], tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
 			return
 		}
-		server, err = serverV3.UpgradeToV40(profileName)
+		if len(profileName) > 1 {
+			profileName = []string{profileName[0]}
+		}
+		server, err = serverV3.UpgradeToV40(&profileName)
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V3 server to V4 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -1634,12 +1689,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(legacyServer.ID, legacyServer.Profile, tx)
+		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(legacyServer.ID, legacyServer.Profile, (*original.ProfileNames)[0], tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
 			return
 		}
-		server, err = legacyServer.UpgradeToV40(profileName)
+		if len(profileName) > 1 {
+			profileName = []string{profileName[0]}
+		}
+		server, err = legacyServer.UpgradeToV40(&profileName)
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V2 server to V3 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -1729,7 +1787,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	rows, err := inf.Tx.NamedQuery(updateQuery, server)
+	var query string
+	if version.Major >= 4 {
+		query = updateV4Query
+	} else {
+		query = updateQuery
+	}
+	rows, err := inf.Tx.NamedQuery(query, server)
 	if err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -1739,7 +1803,38 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	rowsAffected := 0
 	for rows.Next() {
-		if err := rows.StructScan(&server); err != nil {
+		err := rows.Scan(&server.Cachegroup,
+			&server.CachegroupID,
+			&server.CDNID,
+			&server.CDNName,
+			&server.DomainName,
+			&server.GUID,
+			&server.HostName,
+			&server.HTTPSPort,
+			&server.ID,
+			&server.ILOIPAddress,
+			&server.ILOIPGateway,
+			&server.ILOIPNetmask,
+			&server.ILOPassword,
+			&server.ILOUsername,
+			&server.LastUpdated,
+			&server.MgmtIPAddress,
+			&server.MgmtIPGateway,
+			&server.MgmtIPNetmask,
+			&server.OfflineReason,
+			&server.PhysLocation,
+			&server.PhysLocationID,
+			pq.Array(server.ProfileNames),
+			&server.Rack,
+			&server.RevalPending,
+			&server.Status,
+			&server.StatusID,
+			&server.TCPPort,
+			&server.Type,
+			&server.TypeID,
+			&server.UpdPending,
+			&server.StatusLastUpdated)
+		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusNotFound, nil, fmt.Errorf("scanning lastUpdated from server insert: %v", err))
 			return
 		}
