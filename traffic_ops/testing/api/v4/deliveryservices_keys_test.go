@@ -27,7 +27,7 @@ import (
 
 func TestDeliveryServicesKeys(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices}, func() {
-		if includeSystemTests {
+		if !includeSystemTests {
 			t.Skip()
 		}
 		t.Run("Verify SSL key generation on DS creation", VerifySSLKeysOnDsCreationTest)

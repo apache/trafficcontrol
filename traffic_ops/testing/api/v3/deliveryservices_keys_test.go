@@ -25,7 +25,7 @@ import (
 
 func TestDeliveryServicesKeys(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices}, func() {
-		if includeSystemTests {
+		if !includeSystemTests {
 			t.Skip()
 		}
 		SSLDeliveryServiceCDNUpdateTest(t)
@@ -156,12 +156,12 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	// Check new CDN still has an ssl key
 	keys, _, err := TOSession.GetCDNSSLKeysWithHdr(newCdn.Name, nil)
 	assert.RequireNoError(t, err, "Unable to get cdn %v keys: %v", newCdn.Name, err)
-	assert.Equal(t, len(keys), len(newCDNKeys), "Expected %v keys, got %v", len(newCDNKeys), len(keys))
+	assert.Equal(t, len(newCDNKeys), len(keys), "Expected %v keys, got %v", len(newCDNKeys), len(keys))
 
 	// Check old CDN does not have ssl key
 	keys, _, err = TOSession.GetCDNSSLKeysWithHdr(oldCdn.Name, nil)
 	assert.RequireNoError(t, err, "Unable to get cdn %v keys: %v", oldCdn.Name, err)
-	assert.Equal(t, len(keys), len(newCDNKeys), "Expected %v key, got %v", len(oldCDNKeys), len(keys))
+	assert.Equal(t, len(oldCDNKeys), len(keys), "Expected %v key, got %v", len(oldCDNKeys), len(keys))
 }
 
 func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
