@@ -38,12 +38,8 @@ Request Structure
 	|  ID  | The integral, unique identifier of a server |
 	+------+---------------------------------------------+
 
-:cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
-:cdnId:            The integral, unique identifier of the CDN to which the server shall belong
-:configUpdateTime: The last time an update was requested for this server.
-
-	.. note:: To maintain backwards compatibility, the ``updPending`` boolean flag will trump this value. However, it is advised to no longer use the ``upd_pending`` flag and is preferred to use this timestamp instead. 
-
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
+:cdnId:        The integral, unique identifier of the CDN to which the server shall belong
 :domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :hostName:     The (short) hostname of the server
 :httpsPort:    An optional port number on which the server listens for incoming HTTPS connections/requests
@@ -87,11 +83,6 @@ Request Structure
 
 :physLocationId:  An integral, unique identifier for the physical location where the server resides
 :profileId:       The :ref:`profile-id` the :term:`Profile` that shall be used by this server
-:revalPending:    A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
-:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
-
-	.. note:: To maintain backwards compatibility, the ``revalPending`` boolean flag will trump this value. However, it is advised to no longer use the ``revalPending`` flag and is preferred to use this timestamp instead.
-
 :rack:            An optional string indicating "server rack" location
 :statusId:        The integral, unique identifier of the status of this server
 
@@ -102,7 +93,6 @@ Request Structure
 	.. note:: This is typically thought of as synonymous with "HTTP port", as the port specified by ``httpsPort`` may also be used for incoming TCP connections.
 
 :typeId:     The integral, unique identifier of the 'type' of this server
-:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Ops ORT
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: An optional password used in XMPP communications with the server
 
@@ -120,7 +110,6 @@ Request Structure
 	{
 		"cachegroupId": 6,
 		"cdnId": 2,
-		"configUpdateTime": "2022-02-18T13:52:47.129174-07:00",
 		"domainName": "infra.ciab.test",
 		"hostName": "quest",
 		"httpsPort": 443,
