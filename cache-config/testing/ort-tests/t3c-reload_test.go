@@ -31,7 +31,7 @@ func TestT3cReload(t *testing.T) {
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
-		tcdata.DeliveryServices}, func() {
+		tcdata.DeliveryServices, tcdata.InvalidationJobs}, func() {
 
 		t.Run("reload header rewrite", doTestT3cReloadHeaderRewrite)
 		t.Run("reload anything in trafficserver dir", doTestT3cReloadAnythingInTrafficserverDir)
