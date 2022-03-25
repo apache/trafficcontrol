@@ -21,11 +21,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -91,9 +89,9 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 		}
 
 		// set the update flag, so syncds will run
-		before := util.Epoch.Add(-time.Hour * 24)
-		if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
-			t.Fatalf("t3c-update failed: %v", err)
+		err := tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+		if err != nil {
+			t.Fatalf("failed to queue updates: %v", err)
 		}
 
 		if err := verifyUpdateStatusIsTrue(); err != nil {

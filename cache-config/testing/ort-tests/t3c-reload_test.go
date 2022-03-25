@@ -20,11 +20,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 )
 
 func TestT3cReload(t *testing.T) {
@@ -55,9 +53,9 @@ func doTestT3cReloadHeaderRewrite(t *testing.T) {
 	}
 
 	// set the update flag, so syncds will run
-	before := util.Epoch.Add(-time.Hour * 24)
-	if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
-		t.Fatalf("t3c-update failed: %v", err)
+	err := tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+	if err != nil {
+		t.Fatalf("failed to set config update: %v", err)
 	}
 
 	stdOut, _ := t3cUpdateReload(DefaultCacheHostName, "syncds")
@@ -84,9 +82,9 @@ func doTestT3cReloadAnythingInTrafficserverDir(t *testing.T) {
 	}
 
 	// set the update flag, so syncds will run
-	before := util.Epoch.Add(-time.Hour * 24)
-	if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
-		t.Fatalf("t3c-update failed: %v", err)
+	err := tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+	if err != nil {
+		t.Fatalf("failed to set config update: %v", err)
 	}
 
 	stdOut, _ := t3cUpdateReload(DefaultCacheHostName, "syncds")
@@ -109,9 +107,9 @@ func doTestT3cReloadNoChange(t *testing.T) {
 	// no change, should not trigger a reload
 
 	// set the update flag, so syncds will run
-	before := util.Epoch.Add(-time.Hour * 24)
-	if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
-		t.Fatalf("t3c-update failed: %v", err)
+	err := tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+	if err != nil {
+		t.Fatalf("failed to set config update: %v", err)
 	}
 
 	stdOut, _ := t3cUpdateReload(DefaultCacheHostName, "syncds")
@@ -138,9 +136,10 @@ func doTestT3cRevalCallsReload(t *testing.T) {
 	}
 
 	// set the update flag, so reval will run
-	before := util.Epoch.Add(-time.Hour * 24)
-	if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
-		t.Fatalf("t3c-update failed: %v", err)
+	// TODO this sets the config update, do we need to do reval instead?
+	err := tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+	if err != nil {
+		t.Fatalf("failed to set config update: %v", err)
 	}
 
 	stdOut, _ := t3cUpdateReload(DefaultCacheHostName, "revalidate")
@@ -175,9 +174,10 @@ func doTestT3cReloadState(t *testing.T) {
 	}
 
 	// set the update flag, so syncds will run
-	before := util.Epoch.Add(-time.Hour * 24)
-	if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
-		t.Fatalf("t3c-update failed: %v", err)
+	// TODO this sets the config update, do we need to do reval instead?
+	err = tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+	if err != nil {
+		t.Fatalf("failed to set config update: %v", err)
 	}
 
 	stdOut, _ := t3cUpdateReload(DefaultCacheHostName, "syncds")

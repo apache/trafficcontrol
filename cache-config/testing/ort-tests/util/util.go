@@ -147,3 +147,7 @@ func FileExists(filename string) bool {
 	}
 	return !info.IsDir()
 }
+
+func QueueUpdate(serverID int) error {
+	return nil
+}

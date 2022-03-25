@@ -48,10 +48,9 @@ func verifyRemapConfigPlaced(t *testing.T) {
 		t.Fatalf("unable to remove %s: %v", remap, err)
 	}
 	// prepare for running syncds.
-	// Send an apply time that is before an update time, signaling there is an update pending
-	before := util.Epoch.Add(-time.Hour * 24)
-	if err := ExecTOUpdater(DefaultCacheHostName, &before, &util.Epoch); err != nil {
-		t.Fatalf("queue updates failed: %v", err)
+	err = tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+	if err != nil {
+		t.Fatalf("failed to set config update: %v", err)
 	}
 
 	// remap.config is removed and atlanta-edge-03 should have

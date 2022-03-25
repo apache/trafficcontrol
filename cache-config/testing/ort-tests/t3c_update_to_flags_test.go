@@ -17,7 +17,6 @@ package orttest
 import (
 	"encoding/json"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -29,7 +28,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
-		tcdata.DeliveryServices}, func() {
+		tcdata.DeliveryServices, tcdata.InvalidationJobs}, func() {
 
 		// retrieve the current server status
 		output, err := runRequest(DefaultCacheHostName, CMDUpdateStatus)
@@ -44,18 +43,17 @@ func TestT3cTOUpdates(t *testing.T) {
 		if serverStatus.HostName != DefaultCacheHostName {
 			t.Fatalf("incorrect server status hostname, expected '%s', got '%s'", DefaultCacheHostName, serverStatus.HostName)
 		}
-		if serverStatus.RevalPending != false {
-			t.Fatal("expected RevalPending to be 'false'")
+		if serverStatus.RevalPending != true { // should be true since invalidation jobs were queued
+			t.Fatal("expected RevalPending to be 'true'")
 		}
 		if serverStatus.UpdatePending != false {
 			t.Fatal("expected UpdatePending to be 'false'")
 		}
 
 		// change the server update status
-		// Send an apply time that is before an update time, signaling there is an update pending
-		before := serverStatus.ConfigUpdateTime.Add(-time.Hour * 24)
-		if err = ExecTOUpdater(DefaultCacheHostName, &before, serverStatus.RevalidateUpdateTime); err != nil {
-			t.Fatalf("t3c-update failed: %v", err)
+		err = tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+		if err != nil {
+			t.Fatalf("failed to set config update: %v", err)
 		}
 		// verify the update status is now 'true'
 		output, err = runRequest(DefaultCacheHostName, CMDUpdateStatus)
@@ -66,7 +64,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to parse update-status run output: %v", err)
 		}
-		if serverStatus.RevalPending != true {
+		if serverStatus.RevalPending != true { // should be true since invalidation jobs were queued
 			t.Fatal("expected RevalPending to be 'true'")
 		}
 		if serverStatus.UpdatePending != true {
@@ -86,11 +84,14 @@ func TestT3cTOUpdates(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to parse update-status run output: %v", err)
 		}
-		if serverStatus.RevalPending != true {
+		if serverStatus.RevalPending != true { // should be true since invalidation jobs were queued
 			t.Fatal("expected RevalPending to be 'true'")
 		}
 		if serverStatus.UpdatePending != false {
 			t.Fatal("expected UpdatePending to be 'false'")
+		}
+		if !(*serverStatus.ConfigApplyTime).Equal(*serverStatus.ConfigUpdateTime) {
+			t.Fatalf("failed to set config apply time.\nExpc: %v\nRecv: %v", *serverStatus.ConfigUpdateTime, *serverStatus.ConfigApplyTime)
 		}
 
 		// run t3c revalidate and verify only the queue update flag is still 'false'
@@ -112,6 +113,9 @@ func TestT3cTOUpdates(t *testing.T) {
 		}
 		if serverStatus.UpdatePending != false {
 			t.Error("expected UpdatePending to be 'false'")
+		}
+		if !(*serverStatus.RevalidateApplyTime).Equal(*serverStatus.RevalidateUpdateTime) {
+			t.Fatalf("failed to set reval apply time.\nExpc: %v\nRecv: %v", *serverStatus.RevalidateUpdateTime, *serverStatus.RevalidateApplyTime)
 		}
 	})
 }

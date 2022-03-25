@@ -16,6 +16,7 @@ package tcdata
 */
 
 import (
+	"fmt"
 	"net/url"
 	"testing"
 
@@ -140,4 +141,29 @@ func (r *TCData) DeleteTestServers(t *testing.T) {
 			}
 		}
 	}
+}
+
+func (r *TCData) QueueUpdatesForServer(hostname string, queue bool) error {
+	params := url.Values{}
+	params.Set("hostName", hostname)
+
+	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		return fmt.Errorf("cannot GET Server by hostname '%s': %v - %v", hostname, err, resp.Alerts)
+	}
+	if len(resp.Response) > 0 {
+		if len(resp.Response) > 1 {
+			return fmt.Errorf("expected exactly one server by hostname '%s' - actual: %d", hostname, len(resp.Response))
+		}
+		respServer := resp.Response[0]
+
+		if respServer.ID == nil {
+			return fmt.Errorf("server '%s' had nil ID", hostname)
+		}
+
+		if _, _, err := TOSession.SetServerQueueUpdate(*respServer.ID, queue); err != nil {
+			return err
+		}
+	}
+	return nil
 }

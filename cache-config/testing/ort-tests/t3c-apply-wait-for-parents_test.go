@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	testutil "github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
@@ -62,14 +61,14 @@ func TestWaitForParentsTrue(t *testing.T) {
 
 		// queue on both child and parent
 
-		before := testutil.Epoch.Add(-time.Hour * 24)
-		if err := ExecTOUpdater(childCacheHostName, &before, &testutil.Epoch); err != nil {
+		err := tcd.QueueUpdatesForServer(childCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
-		if err := ExecTOUpdater(parentCacheHostName, &before, &testutil.Epoch); err != nil {
+		err = tcd.QueueUpdatesForServer(parentCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on parent failed: %v", err)
 		}
-
 		// verify child has parent-pending in TO status endpoint.
 
 		if status, err := getUpdateStatus(childCacheHostName); err != nil {
@@ -173,14 +172,14 @@ func TestWaitForParentsDefaultReval(t *testing.T) {
 
 		// queue both child and parent
 
-		before := testutil.Epoch.Add(-time.Hour * 24)
-		if err := ExecTOUpdater(childCacheHostName, &before, &testutil.Epoch); err != nil {
+		err := tcd.QueueUpdatesForServer(childCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
-		if err := ExecTOUpdater(parentCacheHostName, &before, &testutil.Epoch); err != nil {
+		err = tcd.QueueUpdatesForServer(parentCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on parent failed: %v", err)
 		}
-
 		// verify child has parent-pending in TO status endpoint.
 
 		if status, err := getUpdateStatus(childCacheHostName); err != nil {
@@ -242,11 +241,12 @@ func TestWaitForParentsFalse(t *testing.T) {
 
 		// queue both child and parent
 
-		before := testutil.Epoch.Add(-time.Hour * 24)
-		if err := ExecTOUpdater(childCacheHostName, &before, &testutil.Epoch); err != nil {
+		err := tcd.QueueUpdatesForServer(childCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
-		if err := ExecTOUpdater(parentCacheHostName, &before, &testutil.Epoch); err != nil {
+		err = tcd.QueueUpdatesForServer(parentCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on parent failed: %v", err)
 		}
 
