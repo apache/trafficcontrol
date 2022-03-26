@@ -22,6 +22,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-update/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -75,11 +76,15 @@ func main() {
 		os.Exit(4)
 	}
 
-	if cfg.ConfigApplyTime != nil && !(*cfg.ConfigApplyTime).Equal(*cur_status.ConfigApplyTime) {
+	// When comparing equality, it must be done with microsecond precision (Round not Truncate). This is because Postgres stores
+	// Microsecond precision.
+	// t3c (Nano) -> client (Nano) -> TO (Nano) -> Postgres (Micro)
+	// Postgres (Micro) -> TO (Micro) -> client (Micro) -> here / t3c (Micro)
+	if cfg.ConfigApplyTime != nil && !(*cfg.ConfigApplyTime).Round(time.Microsecond).Equal((*cur_status.ConfigApplyTime).Round(time.Microsecond)) {
 		log.Errorf("Failed to set config_apply_time.\nSent: %v\nRecv: %v", *cfg.ConfigApplyTime, *cur_status.ConfigApplyTime)
 	}
 
-	if cfg.RevalApplyTime != nil && !(*cfg.RevalApplyTime).Equal(*cur_status.RevalidateApplyTime) {
+	if cfg.RevalApplyTime != nil && !(*cfg.RevalApplyTime).Round(time.Microsecond).Equal((*cur_status.RevalidateApplyTime).Round(time.Microsecond)) {
 		log.Errorf("Failed to set reval_apply_time.\nSent: %v\nRecv: %v", *cfg.RevalApplyTime, *cur_status.RevalidateApplyTime)
 	}
 

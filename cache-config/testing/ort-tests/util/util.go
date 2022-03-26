@@ -21,7 +21,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 // Microsecond precision is only necessary if comparing the time sent
@@ -29,10 +28,6 @@ import (
 // precision. A time sent in Nanoseconds will lose said precision
 // when returned. This is only necessary for tests, in actual use
 // RFC3339Nano is expected and preferred.
-var (
-	Epoch = time.Unix(0, 0).UTC().Round(time.Microsecond)
-	Now   = time.Now().UTC().Round(time.Microsecond)
-)
 
 func readFile(fileName string) ([]byte, error) {
 	if fileName == "" {

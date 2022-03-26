@@ -1151,7 +1151,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 }
 
 func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
-	var updateResult bool
+	var performUpdate bool
 
 	serverStatus, err := getUpdateStatus(r.Cfg)
 	if err != nil {
@@ -1159,7 +1159,7 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 	}
 
 	if *syncdsUpdate == UpdateTropsNotNeeded && (serverStatus.UpdatePending == true || serverStatus.RevalPending == true) {
-		updateResult = true
+		performUpdate = true
 		log.Errorln("Traffic Ops is signaling that an update is ready to be applied but, none was found! Clearing update state in Traffic Ops anyway.")
 	} else if *syncdsUpdate == UpdateTropsNotNeeded {
 		log.Errorln("Traffic Ops does not require an update at this time")
@@ -1168,11 +1168,11 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 		log.Errorln("Traffic Ops requires an update but, applying the update locally failed.  Traffic Ops is not being updated.")
 		return nil
 	} else if *syncdsUpdate == UpdateTropsSuccessful {
-		updateResult = true
+		performUpdate = true
 		log.Errorln("Traffic Ops requires an update and it was applied successfully.  Clearing update state in Traffic Ops.")
 	}
 
-	if !updateResult {
+	if !performUpdate {
 		return nil
 	}
 	if r.Cfg.ReportOnly {
@@ -1180,15 +1180,12 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 		return nil
 	}
 
+	// TODO: Still need to account for the previous TO version that does not send back Timestamps
 	if !r.Cfg.ReportOnly && !r.Cfg.NoUnsetUpdateFlag {
 		if r.Cfg.Files == t3cutil.ApplyFilesFlagAll {
-			if serverStatus.RevalPending {
-				err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil)
-			}
+			err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil)
 		} else if r.Cfg.Files == t3cutil.ApplyFilesFlagReval {
-			if serverStatus.UpdatePending {
-				err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime)
-			}
+			err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime)
 		}
 		if err != nil {
 			return errors.New("Traffic Ops Update failed: " + err.Error())

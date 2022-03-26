@@ -244,6 +244,7 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time) erro
 		args = append(args, "-v")
 	}
 
+	// TODO: Do these override the values set above? These appear to be the same, dups?
 	if _, used := os.LookupEnv("TO_USER"); !used {
 		args = append(args, "--traffic-ops-user="+cfg.TOUser)
 	}
