@@ -254,8 +254,8 @@ func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, ctx context.Context)
 // maximum duration of timeout.
 func CheckLocalUserToken(token string, db *sqlx.DB, timeout time.Duration) (bool, string, error) {
 	if usersCacheIsEnabled() {
-		username := getUserNameFromCacheByToken(token)
-		return username != "", username, nil
+		username, matched := getUserNameFromCacheByToken(token)
+		return matched, username, nil
 	}
 	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
 	defer dbClose()

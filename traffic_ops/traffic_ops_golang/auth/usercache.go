@@ -94,11 +94,12 @@ func getUserFromCache(username string) (user, bool) {
 	return u, exists
 }
 
-// getUserNameFromCacheByToken returns the username with the given token or an empty string if not found.
-func getUserNameFromCacheByToken(token string) string {
+// getUserNameFromCacheByToken returns the username with the given token and a boolean indicating whether a matching token was found.
+func getUserNameFromCacheByToken(token string) (string, bool) {
 	usersCache.RLock()
 	defer usersCache.RUnlock()
-	return usersCache.usernamesByToken[token]
+	t, exists := usersCache.usernamesByToken[token]
+	return t, exists
 }
 
 var once = sync.Once{}
