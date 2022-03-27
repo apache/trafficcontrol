@@ -19,11 +19,13 @@ import (
 	"encoding/json"
 	"errors"
 	"os/exec"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestTOUpdater(t *testing.T) {
@@ -76,7 +78,7 @@ func TestTOUpdater(t *testing.T) {
 		}
 
 		// set config apply time to the config update time to signal the update was applied
-		err = ExecTOUpdater(DefaultCacheHostName, serverStatus.ConfigUpdateTime, nil)
+		err = ExecTOUpdater(DefaultCacheHostName, serverStatus.ConfigUpdateTime, nil, util.BoolPtr(true), nil)
 		if err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
@@ -95,13 +97,15 @@ func TestTOUpdater(t *testing.T) {
 		if serverStatus.UpdatePending != false {
 			t.Fatal("expected UpdatePending to be 'false'")
 		}
-		if !(*serverStatus.ConfigApplyTime).Equal(*serverStatus.ConfigUpdateTime) {
-			t.Fatalf("failed to set config apply time.\nExpc: %v\nRecv: %v", *serverStatus.ConfigUpdateTime, *serverStatus.ConfigApplyTime)
+		if serverStatus.ConfigApplyTime != nil && serverStatus.ConfigUpdateTime != nil {
+			if !(*serverStatus.ConfigApplyTime).Equal(*serverStatus.ConfigUpdateTime) {
+				t.Fatalf("failed to set config apply time.\nExpc: %v\nRecv: %v", *serverStatus.ConfigUpdateTime, *serverStatus.ConfigApplyTime)
+			}
 		}
 
 		// now change the reval stat and put server update status back
 		// set config apply time to the config update time to signal the update was applied
-		err = ExecTOUpdater(DefaultCacheHostName, nil, serverStatus.RevalidateUpdateTime)
+		err = ExecTOUpdater(DefaultCacheHostName, nil, serverStatus.RevalidateUpdateTime, nil, util.BoolPtr(true))
 		if err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
@@ -120,14 +124,16 @@ func TestTOUpdater(t *testing.T) {
 		if serverStatus.UpdatePending != false {
 			t.Fatal("expected UpdatePending to be 'false'")
 		}
-		if !(*serverStatus.RevalidateApplyTime).Equal(*serverStatus.RevalidateUpdateTime) {
-			t.Fatalf("failed to set reval apply time.\nExpc: %v\nRecv: %v", *serverStatus.RevalidateUpdateTime, *serverStatus.RevalidateApplyTime)
+		if serverStatus.RevalidateApplyTime != nil && serverStatus.RevalidateUpdateTime != nil {
+			if !(*serverStatus.RevalidateApplyTime).Equal(*serverStatus.RevalidateUpdateTime) {
+				t.Fatalf("failed to set reval apply time.\nExpc: %v\nRecv: %v", *serverStatus.RevalidateUpdateTime, *serverStatus.RevalidateApplyTime)
+			}
 		}
 
 	})
 }
 
-func ExecTOUpdater(host string, configApplyTime, revalApplyTime *time.Time) error {
+func ExecTOUpdater(host string, configApplyTime, revalApplyTime *time.Time, configApplyBool, revalApplyBool *bool) error {
 	args := []string{
 		"update",
 		"--traffic-ops-insecure=true",
@@ -144,6 +150,16 @@ func ExecTOUpdater(host string, configApplyTime, revalApplyTime *time.Time) erro
 	if revalApplyTime != nil {
 		args = append(args, "--set-reval-apply-time="+(*revalApplyTime).Format(time.RFC3339Nano))
 	}
+
+	// *** Compatability requirement until TO (v6.3+ eta 04/22/22) is deployed with the timestamp features
+	if configApplyBool != nil {
+		args = append(args, "--set-config-apply-bool="+strconv.FormatBool(*configApplyBool))
+	}
+	if revalApplyBool != nil {
+		args = append(args, "--set-reval-apply-bool="+strconv.FormatBool(*revalApplyBool))
+	}
+	// ***
+
 	cmd := exec.Command("t3c", args...)
 	var out bytes.Buffer
 	var errOut bytes.Buffer

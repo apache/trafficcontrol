@@ -217,7 +217,7 @@ func getPackages(cfg config.Cfg) ([]Package, error) {
 
 // sendUpdate updates the given cache's queue update and reval status in Traffic Ops.
 // Note the statuses are the value to be set, not whether to set the value.
-func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time) error {
+func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, configApplyBool, revalApplyBool *bool) error {
 	args := []string{
 		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
 		"--traffic-ops-user=" + cfg.TOUser,
@@ -233,6 +233,15 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time) erro
 	if revalApplyTime != nil {
 		args = append(args, "--set-reval-apply-time="+(*revalApplyTime).Format(time.RFC3339Nano))
 	}
+
+	// *** Compatability requirement until TO (v6.3+ eta 04/22/22) is deployed with the timestamp features
+	if configApplyBool != nil {
+		args = append(args, "--set-config-apply-bool="+strconv.FormatBool(*configApplyBool))
+	}
+	if revalApplyBool != nil {
+		args = append(args, "--set-reval-apply-bool="+strconv.FormatBool(*revalApplyBool))
+	}
+	// ***
 
 	if cfg.LogLocationErr == log.LogLocationNull {
 		args = append(args, "-s")

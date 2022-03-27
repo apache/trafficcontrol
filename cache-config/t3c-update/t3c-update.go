@@ -64,7 +64,9 @@ func main() {
 		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
 	}
 
-	err = t3cutil.SetUpdateStatus(cfg.TCCfg, tc.CacheName(cfg.TCCfg.CacheHostName), cfg.ConfigApplyTime, cfg.RevalApplyTime)
+	// *** Compatability requirement until TO (v6.3+ eta 04/22/22) is deployed with the timestamp features
+	// Use SetUpdateStatus is preferred
+	err = t3cutil.SetUpdateStatusCompat(cfg.TCCfg, tc.CacheName(cfg.TCCfg.CacheHostName), cfg.ConfigApplyTime, cfg.RevalApplyTime, cfg.ConfigApplyBool, cfg.RevalApplyBool)
 	if err != nil {
 		log.Errorf("%s, %s\n", err, cfg.TCCfg.CacheHostName)
 		os.Exit(3)

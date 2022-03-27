@@ -759,9 +759,38 @@ func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, configAppl
 
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "set_server_update_status_"+string(cacheHostName), nil, func(obj interface{}) error {
-		_, toReqInf, err := cl.SetServerUpdateStatusCompat(string(cacheHostName), configApply, revalApply, *ReqOpts(nil))
-		// TODO: Enable the line below once both T3C and TO have been deployed
-		// _, toReqInf, err := cl.c.SetUpdateServerStatusTimes(string(cacheHostName), configApply, revalApply, *ReqOpts(nil))
+		_, toReqInf, err := cl.c.SetUpdateServerStatusTimes(string(cacheHostName), configApply, revalApply, *ReqOpts(nil))
+		if err != nil {
+			return errors.New("setting server update status in Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		reqInf = toReqInf
+		return nil
+	})
+	if err != nil {
+		return reqInf, errors.New("getting server update status: " + err.Error())
+	}
+	return reqInf, nil
+}
+
+// SetServerUpdateStatusBoolCompat sets the server's update and reval statuses in Traffic Ops.
+// *** Compatability requirement until TO (v6.3+ eta 04/22/22) is deployed with the timestamp features
+func (cl *TOClient) SetServerUpdateStatusBoolCompat(cacheHostName tc.CacheName, configApply, revalApply *time.Time, configApplyBool, revalApplyBool *bool) (toclientlib.ReqInf, error) {
+	if cl.c == nil {
+		var updateStatus, revalStatus *bool
+		if configApply != nil || configApplyBool != nil {
+			*updateStatus = true
+			revalStatus = nil
+		}
+		if revalApply != nil || revalApplyBool != nil {
+			*revalStatus = true
+			updateStatus = nil
+		}
+		return cl.old.SetServerUpdateStatus(cacheHostName, updateStatus, revalStatus)
+	}
+
+	reqInf := toclientlib.ReqInf{}
+	err := torequtil.GetRetry(cl.NumRetries, "set_server_update_status_"+string(cacheHostName), nil, func(obj interface{}) error {
+		_, toReqInf, err := cl.SetServerUpdateStatusCompat(string(cacheHostName), configApply, revalApply, configApplyBool, revalApplyBool, *ReqOpts(nil))
 		if err != nil {
 			return errors.New("setting server update status in Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}

@@ -113,7 +113,7 @@ func TestWaitForParentsTrue(t *testing.T) {
 
 		// un-queue the parent
 
-		if err = ExecTOUpdater(parentCacheHostName, parentStatus.ConfigUpdateTime, parentStatus.RevalidateUpdateTime); err != nil {
+		if err = ExecTOUpdater(parentCacheHostName, parentStatus.ConfigUpdateTime, parentStatus.RevalidateUpdateTime, util.BoolPtr(true), util.BoolPtr(true)); err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
 

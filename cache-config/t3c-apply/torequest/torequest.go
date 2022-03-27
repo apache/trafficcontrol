@@ -1183,9 +1183,11 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 	// TODO: Still need to account for the previous TO version that does not send back Timestamps
 	if !r.Cfg.ReportOnly && !r.Cfg.NoUnsetUpdateFlag {
 		if r.Cfg.Files == t3cutil.ApplyFilesFlagAll {
-			err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil)
+			b := true
+			err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil, &b, nil)
 		} else if r.Cfg.Files == t3cutil.ApplyFilesFlagReval {
-			err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime)
+			b := true
+			err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime, nil, &b)
 		}
 		if err != nil {
 			return errors.New("Traffic Ops Update failed: " + err.Error())

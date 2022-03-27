@@ -90,8 +90,10 @@ func TestT3cTOUpdates(t *testing.T) {
 		if serverStatus.UpdatePending != false {
 			t.Fatal("expected UpdatePending to be 'false'")
 		}
-		if !(*serverStatus.ConfigApplyTime).Equal(*serverStatus.ConfigUpdateTime) {
-			t.Fatalf("failed to set config apply time.\nExpc: %v\nRecv: %v", *serverStatus.ConfigUpdateTime, *serverStatus.ConfigApplyTime)
+		if serverStatus.ConfigApplyTime != nil && serverStatus.ConfigUpdateTime != nil {
+			if !(*serverStatus.ConfigApplyTime).Equal(*serverStatus.ConfigUpdateTime) {
+				t.Fatalf("failed to set config apply time.\nExpc: %v\nRecv: %v", *serverStatus.ConfigUpdateTime, *serverStatus.ConfigApplyTime)
+			}
 		}
 
 		// run t3c revalidate and verify only the queue update flag is still 'false'
@@ -114,8 +116,10 @@ func TestT3cTOUpdates(t *testing.T) {
 		if serverStatus.UpdatePending != false {
 			t.Error("expected UpdatePending to be 'false'")
 		}
-		if !(*serverStatus.RevalidateApplyTime).Equal(*serverStatus.RevalidateUpdateTime) {
-			t.Fatalf("failed to set reval apply time.\nExpc: %v\nRecv: %v", *serverStatus.RevalidateUpdateTime, *serverStatus.RevalidateApplyTime)
+		if serverStatus.RevalidateApplyTime != nil && serverStatus.RevalidateUpdateTime != nil {
+			if !(*serverStatus.RevalidateApplyTime).Equal(*serverStatus.RevalidateUpdateTime) {
+				t.Fatalf("failed to set reval apply time.\nExpc: %v\nRecv: %v", *serverStatus.RevalidateUpdateTime, *serverStatus.RevalidateApplyTime)
+			}
 		}
 	})
 }

@@ -161,7 +161,8 @@ func InvalidationJobV4FromLegacy(job InvalidationJobV4PlusLegacy) (tc.Invalidati
 // this function will send both "styles". Once both T3C and TO have been deployed
 // with the timestamp only V4 TO API endpoint, this function can be removed and the
 // V4 client function `SetUpdateServerStatusTimes` may be used instead (as intended).
-func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configApplyTime, revalApplyTime *time.Time, opts toclient.RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+// *** Compatability requirement until TO (v6.3+ eta 04/22/22) is deployed with the timestamp features
+func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configApplyTime, revalApplyTime *time.Time, configApplyBool, revalApplyBool *bool, opts toclient.RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	var alerts tc.Alerts
 
@@ -169,17 +170,19 @@ func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configApplyTi
 		opts.QueryParameters = url.Values{}
 	}
 
-	// TODO: How do we know when to set it to `true` for the
-	// previous API if all we have are the apply times?
-
 	if configApplyTime != nil {
-		opts.QueryParameters.Set("updated", "false")
 		opts.QueryParameters.Set("config_apply_time", configApplyTime.Format(time.RFC3339Nano))
 	}
 
 	if revalApplyTime != nil {
-		opts.QueryParameters.Set("reval_updated", "false")
 		opts.QueryParameters.Set("revalidate_apply_time", revalApplyTime.Format(time.RFC3339Nano))
+	}
+
+	if configApplyBool != nil {
+		opts.QueryParameters.Set("updated", "false")
+	}
+	if revalApplyBool != nil {
+		opts.QueryParameters.Set("reval_updated", "false")
 	}
 
 	path := `/servers/` + url.PathEscape(serverName) + `/update`
