@@ -23,12 +23,6 @@ import (
 	"strings"
 )
 
-// Microsecond precision is only necessary if comparing the time sent
-// to and from the server for equality. Postgres stores Microsecond
-// precision. A time sent in Nanoseconds will lose said precision
-// when returned. This is only necessary for tests, in actual use
-// RFC3339Nano is expected and preferred.
-
 func readFile(fileName string) ([]byte, error) {
 	if fileName == "" {
 		return nil, errors.New("filename is empty.")
@@ -141,8 +135,4 @@ func FileExists(filename string) bool {
 		return false
 	}
 	return !info.IsDir()
-}
-
-func QueueUpdate(serverID int) error {
-	return nil
 }

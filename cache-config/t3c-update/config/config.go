@@ -85,7 +85,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
 	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
-	// *** Compatability requirement until TO (v6.3+ eta 04/22/22) is deployed with the timestamp features
+	// *** Compatability requirement until TO (v6.3+ eta 2022-04-22) is deployed with the timestamp features
 	const setConfigApplyBoolFlagName = "set-config-apply-bool"
 	configApplyBoolPtr := getopt.BoolLong(setConfigApplyBoolFlagName, 'y', `[true or nonexistent] Set the Update Status to false for the server`)
 	const setRevalApplyBoolFlagName = "set-reval-apply-bool"
@@ -104,7 +104,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 
 	// Verify at least one flag is passed
 	if (!getopt.IsSet(setConfigApplyTimeFlagName) && !getopt.IsSet(setRevalApplyTimeFlagName)) &&
-		(!getopt.IsSet(setConfigApplyBoolFlagName) && !getopt.IsSet(setRevalApplyBoolFlagName)) { // TODO: Remove once TO (v6.3+ eta 04/22/22) is deployed
+		(!getopt.IsSet(setConfigApplyBoolFlagName) && !getopt.IsSet(setRevalApplyBoolFlagName)) { // TODO: Remove once TO (v6.3+ eta 2022-04-22) is deployed
 		fmt.Printf("Must set either %s or %s. One is at least required.\n", setConfigApplyTimeFlagName, setRevalApplyTimeFlagName)
 		os.Exit(0)
 	}
@@ -126,11 +126,11 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 		revalApplyTimePtr = &parsed
 	}
 
-	// TODO: Remove once TO (v6.3+ eta 04/22/22) is deployed
-	if !getopt.IsSet(setConfigApplyBoolFlagName) {
+	// TODO: Remove once TO (v6.3+ eta 2022-04-22) is deployed
+	if !getopt.IsSet(setConfigApplyBoolFlagName) || *configApplyBoolPtr == false {
 		configApplyBoolPtr = nil
 	}
-	if !getopt.IsSet(setRevalApplyBoolFlagName) {
+	if !getopt.IsSet(setRevalApplyBoolFlagName) || *revalApplyBoolPtr == false {
 		revalApplyBoolPtr = nil
 	}
 

@@ -773,7 +773,7 @@ func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, configAppl
 }
 
 // SetServerUpdateStatusBoolCompat sets the server's update and reval statuses in Traffic Ops.
-// *** Compatability requirement until TO (v6.3+ eta 04/22/22) is deployed with the timestamp features
+// *** Compatability requirement until TO (v6.3+ eta 2022-04-22) is deployed with the timestamp features
 func (cl *TOClient) SetServerUpdateStatusBoolCompat(cacheHostName tc.CacheName, configApply, revalApply *time.Time, configApplyBool, revalApplyBool *bool) (toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		var updateStatus, revalStatus *bool

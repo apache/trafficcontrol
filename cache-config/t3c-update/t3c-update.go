@@ -64,7 +64,7 @@ func main() {
 		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
 	}
 
-	// *** Compatability requirement until TO (v6.3+ eta 04/22/22) is deployed with the timestamp features
+	// *** Compatability requirement until TO (v6.3+ eta 2022-04-22) is deployed with the timestamp features
 	// Use SetUpdateStatus is preferred
 	err = t3cutil.SetUpdateStatusCompat(cfg.TCCfg, tc.CacheName(cfg.TCCfg.CacheHostName), cfg.ConfigApplyTime, cfg.RevalApplyTime, cfg.ConfigApplyBool, cfg.RevalApplyBool)
 	if err != nil {
@@ -78,14 +78,14 @@ func main() {
 		os.Exit(4)
 	}
 
-	// When comparing equality, it must be done with microsecond precision (Round not Truncate). This is because Postgres stores
-	// Microsecond precision.
+	// When comparing equality, it must be done with microsecond precision (Round not Truncate).
+	// This is because Postgres stores Microsecond precision. Round also drops the monotonic
+	// clock reading.
 	// t3c (Nano) -> client (Nano) -> TO (Nano) -> Postgres (Micro)
 	// Postgres (Micro) -> TO (Micro) -> client (Micro) -> here / t3c (Micro)
 	if cfg.ConfigApplyTime != nil && !(*cfg.ConfigApplyTime).Round(time.Microsecond).Equal((*cur_status.ConfigApplyTime).Round(time.Microsecond)) {
 		log.Errorf("Failed to set config_apply_time.\nSent: %v\nRecv: %v", *cfg.ConfigApplyTime, *cur_status.ConfigApplyTime)
 	}
-
 	if cfg.RevalApplyTime != nil && !(*cfg.RevalApplyTime).Round(time.Microsecond).Equal((*cur_status.RevalidateApplyTime).Round(time.Microsecond)) {
 		log.Errorf("Failed to set reval_apply_time.\nSent: %v\nRecv: %v", *cfg.RevalApplyTime, *cur_status.RevalidateApplyTime)
 	}
