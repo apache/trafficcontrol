@@ -54,7 +54,9 @@ jobs:
       - name: Vendor dependencies
         run: go mod vendor
       - name: Build docker-compose services
-        run: docker-compose build --parallel
+        run: |
+          source dev/atc.dev.sh &&
+          docker-compose build --parallel
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
