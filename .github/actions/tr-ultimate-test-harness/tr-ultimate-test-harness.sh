@@ -29,14 +29,6 @@ declare -r cookie_name=dev-ciab-cookie
 # Set TO_USER, TO_PASSWORD, and TO_URL environment variables and get atc-ready function
 source dev/atc.dev.sh
 
-store_dev_ciab_logs() {
-	echo 'Storing Dev CDN-in-a-Box logs...';
-	mkdir -p dev/logs;
-	for service in $(docker-compose ps --services); do
-		docker-compose logs --no-color --timestamps "$service" >"dev/logs/${service}.log";
-	done;
-}
-
 export -f atc-ready
 if ! timeout 10m <<'BASH_COMMANDS' bash; then
 set -o errexit -o nounset
@@ -47,7 +39,6 @@ done
 echo 'Traffic Ops is ready to accept requests!'
 BASH_COMMANDS
 	echo 'Traffic Ops was not available within 10 minutes!'
-	store_dev_ciab_logs
 	trap - ERR
 	echo 'Exiting...'
 	exit 1
@@ -83,7 +74,7 @@ JSON
 	for ip_address_field in IPv4Address IPv6Address; do
 		ip_address="$(<<<"$docker_network" jq -r --arg CONTAINER_ID "$container_id" --arg IP_ADDRESS_FIELD "$ip_address_field" '.[0].Containers[$CONTAINER_ID][$IP_ADDRESS_FIELD]')"
 		if [[ "$ip_address" == null ]]; then
-			echo "Could not find ${ip_address_field} for ${hostname} container!"
+			echo "Could not find ${ip_address_field} for ${hostname} service!"
 			exit 1
 		fi
 		interface="$(<<<"$interface" jq --arg IP_ADDRESS "$ip_address" '.ipAddresses += [{} | .address = $IP_ADDRESS | .serviceAddress = true]')"
