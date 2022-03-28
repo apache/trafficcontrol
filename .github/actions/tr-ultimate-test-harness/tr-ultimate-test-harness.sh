@@ -19,7 +19,6 @@
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR;
 set -o xtrace
 set -o errexit -o nounset -o pipefail
-docker-compose pull
 docker-compose build --parallel
 docker-compose up -d
 
