@@ -30,11 +30,29 @@ declare -r cookie_name=dev-ciab-cookie
 # Set TO_USER, TO_PASSWORD, and TO_URL environment variables and get atc-ready function
 source dev/atc.dev.sh
 
+store_dev_ciab_logs() {
+	echo 'Storing Dev CDN-in-a-Box logs...';
+	mkdir -p dev/logs;
+	for service in $(docker-compose ps --services); do
+		docker-compose logs --no-color --timestamps "$service" >"dev/logs/${service}.log";
+	done;
+}
+
+export -f atc-ready
+if ! timeout 10m <<'BASH_COMMANDS' bash; then
+set -o errexit -o nounset
 until atc-ready; do
 	echo 'Waiting until Traffic Ops is ready to accept requests...'
 	sleep 3
 done
 echo 'Traffic Ops is ready to accept requests!'
+BASH_COMMANDS
+	echo 'Traffic Ops was not available within 10 minutes!'
+	store_dev_ciab_logs
+	trap - ERR
+	echo 'Exiting...'
+	exit 1
+fi
 
 to-req() {
 	endpoint="$1"
