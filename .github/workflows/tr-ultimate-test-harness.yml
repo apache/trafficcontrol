@@ -62,6 +62,13 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.npm
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/**/package*.json') }}-
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
       - name: Run Traffic Router Ultimate Test Harness
         run: ./.github/actions/tr-ultimate-test-harness/tr-ultimate-test-harness.sh
       - name: Write Dev CDN-in-a-Box logs to files
