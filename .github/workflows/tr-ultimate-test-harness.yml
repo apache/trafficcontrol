@@ -55,6 +55,13 @@ jobs:
         run: go mod vendor
       - name: Build docker-compose services
         run: docker-compose build --parallel
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
       - name: Run Traffic Router Ultimate Test Harness
         run: ./.github/actions/tr-ultimate-test-harness/tr-ultimate-test-harness.sh
       - name: Write Dev CDN-in-a-Box logs to files
