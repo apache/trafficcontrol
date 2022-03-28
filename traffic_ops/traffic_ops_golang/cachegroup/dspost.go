@@ -328,7 +328,7 @@ INSERT INTO profile_parameter (parameter, profile) (
 
 func getDSTenants(tx *sql.Tx, dsIDs []int) ([]int, error) {
 	q := `
-SELECT COALESCE(tenant_id, 0) FROM deliveryservice
+SELECT tenant_id FROM deliveryservice
 WHERE deliveryservice.id = ANY($1)
 `
 	rows, err := tx.Query(q, pq.Array(dsIDs))
