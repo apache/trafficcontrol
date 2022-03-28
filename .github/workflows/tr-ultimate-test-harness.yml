@@ -53,6 +53,8 @@ jobs:
           go-version: ${{ steps.go-version.outputs.value }}
       - name: Vendor dependencies
         run: go mod vendor
+      - name: Build docker-compose services
+        run: docker-compose build --parallel
       - name: Run Traffic Router Ultimate Test Harness
         run: ./.github/actions/tr-ultimate-test-harness/tr-ultimate-test-harness.sh
       - name: Upload Dev CDN-in-a-Box logs
