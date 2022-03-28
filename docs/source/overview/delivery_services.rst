@@ -997,6 +997,10 @@ The following :term:`Parameters` must have the :ref:`Config File <parameter-conf
 
 	.. caution:: The actual permitted TLS versions are the union of those laid out in this :term:`Parameter` and those configured as the `TLS Versions`_ property of the Delivery Service.
 
+- ``use_peering`` - on a Deliver Service :term:`Profile`, if this exists and is ``true``, the ``strategy ring_mode`` will be set to ``peering_ring`` for large library DNS support.
+
+	.. impl-detail:: This :term:`Parameter` does not affect the contents of ``parent.config``, but instead ``strategies.yaml`` in :abbr:`ATS (Apache Traffic Server)` 9. It has the ``parent.config`` :ref:`parameter-config-file` value for consistency.
+
 	.. deprecated:: ATCv6.2
 		In :ref:`to-api` version 4 (unstable at the time of this writing), TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.
 
