@@ -151,7 +151,7 @@ func ExecTOUpdater(host string, configApplyTime, revalApplyTime *time.Time, conf
 		args = append(args, "--set-reval-apply-time="+(*revalApplyTime).Format(time.RFC3339Nano))
 	}
 
-	// *** Compatability requirement until TO (v6.3+ eta 2022-04-22) is deployed with the timestamp features
+	// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
 	if configApplyBool != nil {
 		args = append(args, "--set-config-apply-bool="+strconv.FormatBool(*configApplyBool))
 	}

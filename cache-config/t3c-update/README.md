@@ -121,13 +121,13 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
 -y, -\-set-config-apply-bool
 
     [true or nonexistent] Set the Update Status to false for the server.
-    Compatability requirement until TO (v6.3+ eta 2022-04-22) is deployed 
+    Compatability requirement until ATC (v7.0+) is deployed 
     with the timestamp features.
 
 -z, -\-set-reval-apply-bool
 
     [true or nonexistent] Set the Reval Status to false for the server.
-    Compatability requirement until TO (v6.3+ eta 2022-04-22) is deployed 
+    Compatability requirement until ATC (v7.0+) is deployed 
     with the timestamp features.
 
 # AUTHORS

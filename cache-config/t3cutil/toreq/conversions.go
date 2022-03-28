@@ -161,7 +161,7 @@ func InvalidationJobV4FromLegacy(job InvalidationJobV4PlusLegacy) (tc.Invalidati
 // this function will send both "styles". Once both T3C and TO have been deployed
 // with the timestamp only V4 TO API endpoint, this function can be removed and the
 // V4 client function `SetUpdateServerStatusTimes` may be used instead (as intended).
-// *** Compatability requirement until TO (v6.3+ eta 2022-04-22) is deployed with the timestamp features
+// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
 func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configApplyTime, revalApplyTime *time.Time, configApplyBool, revalApplyBool *bool, opts toclient.RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	var alerts tc.Alerts

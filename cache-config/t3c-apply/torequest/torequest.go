@@ -1180,7 +1180,7 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 		return nil
 	}
 
-	// TODO: The boolean flags/representation can be removed after TO (v6.3+ eta 2022-04-22)
+	// TODO: The boolean flags/representation can be removed after ATC (v7.0+)
 	if !r.Cfg.ReportOnly && !r.Cfg.NoUnsetUpdateFlag {
 		if r.Cfg.Files == t3cutil.ApplyFilesFlagAll {
 			b := true
