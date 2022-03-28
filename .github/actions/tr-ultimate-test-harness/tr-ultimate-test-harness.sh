@@ -79,9 +79,13 @@ for hostname in trafficrouter edge; do
 	}
 JSON
 	)"
+	docker_network="$(docker network inspect dev.ciab.test)"
 	for ip_address_field in IPv4Address IPv6Address; do
-		ip_address="$(docker network inspect dev.ciab.test |
-			jq -r --arg TR_CONTAINER_ID "$container_id" --arg IP_ADDRESS_FIELD "$ip_address_field" '.[0].Containers[$TR_CONTAINER_ID][$IP_ADDRESS_FIELD]')"
+		ip_address="$(<<<"$docker_network" jq -r --arg CONTAINER_ID "$container_id" --arg IP_ADDRESS_FIELD "$ip_address_field" '.[0].Containers[$CONTAINER_ID][$IP_ADDRESS_FIELD]')"
+		if [[ "$ip_address" == null ]]; then
+			echo "Could not find ${ip_address_field} for ${hostname} container!"
+			exit 1
+		fi
 		interface="$(<<<"$interface" jq --arg IP_ADDRESS "$ip_address" '.ipAddresses += [{} | .address = $IP_ADDRESS | .serviceAddress = true]')"
 	done
 
