@@ -134,18 +134,15 @@ Response Structure
 	.. deprecated:: 3.0
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
-:offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:physLocation:   The name of the physical location where the server resides
-:physLocationId: An integral, unique identifier for the physical location where the server resides
-:profile:        The :ref:`profile-name` of the :term:`Profile` used by this server
-:profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
-:profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
-:revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
-
-	.. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
-
-:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch.
-:revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch.
+:offlineReason:   A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
+:physLocation:    The name of the physical location where the server resides
+:physLocationId:  An integral, unique identifier for the physical location where the server resides
+:profile:         The :ref:`profile-name` of the :term:`Profile` used by this server
+:profileDesc:     A :ref:`profile-description` of the :term:`Profile` used by this server
+:profileId:       The :ref:`profile-id` the :term:`Profile` used by this server
+:revalPending:    A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
+:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
+:revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
 :rack:            A string indicating "server rack" location
 :status:          The :term:`Status` of the server
 
@@ -162,9 +159,6 @@ Response Structure
 :type:       The name of the :term:`Type` of this server
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (:term:`t3c`, formerly ORT)
-
-	.. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
-
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
 
@@ -431,16 +425,13 @@ Response Structure
 	.. deprecated:: 3.0
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
-:offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:physLocation:   The name of the :term:`Physical Location` where the server resides
-:physLocationId: An integral, unique identifier for the :term:`Physical Location` where the server resides
-:profile:        The :ref:`profile-name` of the :term:`Profile` used by this server
-:profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
-:profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
-:revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
-
-	.. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.:
-
+:offlineReason:   A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
+:physLocation:    The name of the :term:`Physical Location` where the server resides
+:physLocationId:  An integral, unique identifier for the :term:`Physical Location` where the server resides
+:profile:         The :ref:`profile-name` of the :term:`Profile` used by this server
+:profileDesc:     A :ref:`profile-description` of the :term:`Profile` used by this server
+:profileId:       The :ref:`profile-id` the :term:`Profile` used by this server
+:revalPending:    A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
 :rack:            A string indicating "server rack" location
@@ -459,9 +450,6 @@ Response Structure
 :type:       The name of the 'type' of this server
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
-
-	.. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
-
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
 

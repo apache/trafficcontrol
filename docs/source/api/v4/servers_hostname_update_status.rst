@@ -63,19 +63,13 @@ Each object in the returned array\ [#uniqueness]_ will contain the following fie
 :parent_pending:       A boolean telling whether or not any :term:`Topology` ancestor or :term:`parent` of this server has pending updates
 :parent_reval_pending: A boolean telling whether or not any :term:`Topology` ancestor or :term:`parent` of this server has pending :term:`Content Invalidation Jobs`
 :reval_pending:        ``true`` if the server has pending :term:`Content Invalidation Jobs`, ``false`` otherwise
-
-	.. note:: While not officially deprecated, this is based on the values corresponding to ``revalUpdateTime`` and ``revalApplyTime``. It is preferred to rely on the timestamp fields going forward as this will likely be deprecated in the future.
-
-:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
-:revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
-:status:          The name of the status of this server
+:revalUpdateTime:      The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
+:revalApplyTime:       The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
+:status:               The name of the status of this server
 
 	.. seealso:: :ref:`health-proto` gives more information on how these statuses are used, and the ``GET`` method of the :ref:`to-api-statuses` endpoint can be used to retrieve information about all server statuses configured in Traffic Ops.
 
-:upd_pending: ``true`` if the server has pending updates, ``false`` otherwise
-
-	.. note:: While not officially deprecated, this is based on the values corresponding to ``configUpdateTime`` and ``configApplyTime``. It is preferred to use the timestamp fields going forward as this will likely be deprecated in the future.
-
+:upd_pending:       ``true`` if the server has pending updates, ``false`` otherwise
 :use_reval_pending: A boolean which tells :term:`ORT` whether or not this version of Traffic Ops should use pending :term:`Content Invalidation Jobs`
 
 	.. note:: This field was introduced to give :term:`ORT` the ability to work with Traffic Control versions 1.x and 2.x seamlessly - as of Traffic Control v3.0 there is no reason for this field to ever be ``false``.
