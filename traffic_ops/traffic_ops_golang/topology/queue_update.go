@@ -24,10 +24,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"net/http"
 	"strconv"
-
-	validation "github.com/go-ozzo/ozzo-validation"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -77,19 +76,21 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("invalid request to queue updates: %s", err), nil)
 		return
 	}
-	cdnName, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, reqObj.CDNID)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+strconv.Itoa(int(reqObj.CDNID))+"': "+err.Error()))
-		return
-	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn "+strconv.Itoa(int(reqObj.CDNID))+" does not exist"), nil)
-		return
-	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-		return
+	if reqObj.Action == "queue" {
+		cdnName, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, reqObj.CDNID)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+strconv.Itoa(int(reqObj.CDNID))+"': "+err.Error()))
+			return
+		}
+		if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn "+strconv.Itoa(int(reqObj.CDNID))+" does not exist"), nil)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
 	}
 	if err := queueUpdates(inf.Tx.Tx, topologyName, reqObj.CDNID, reqObj.Action == "queue"); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Topology queueing updates: "+err.Error()))

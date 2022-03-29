@@ -113,6 +113,15 @@ func TestCDNLocks(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
+				"Ok when ADMIN USER DOESNT OWN LOCK FOR DEQUEUE": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
+					RequestBody: map[string]interface{}{
+						"action": "dequeue",
+						"cdnId":  getCDNID(t, "cdn2"),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"CACHE GROUP UPDATE": {
 				"OK when USER OWNS LOCK": {
