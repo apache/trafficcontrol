@@ -58,6 +58,7 @@ jobs:
           username: . # The username can be anything but must not be empty
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push ${{ env.CONTAINER }}
+        if: ${{ github.event_name != 'pull_request' }}
         working-directory: .github/containers/trafficserver-alpine
         run: |
           set -o errexit -o nounset
