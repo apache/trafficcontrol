@@ -26,6 +26,7 @@ import subprocess
 import sys
 from typing import Optional, TypedDict, Any
 
+import dotenv
 import requests
 
 from github.Commit import Commit
@@ -48,7 +49,8 @@ from pr_to_update_go.constants import (
 	RELEASE_PAGE_URL,
 	ENV_GO_VERSION_FILE,
 	ENV_GIT_AUTHOR_NAME,
-	GIT_AUTHOR_EMAIL_TEMPLATE
+	GIT_AUTHOR_EMAIL_TEMPLATE,
+	GO_VERSION_KEY,
 )
 
 class GoVersion(TypedDict):
@@ -396,11 +398,16 @@ class GoPRMaker:
 
 		print(f'Updated {go_version_file} on {self.repo.name}')
 		env_path = os.path.join(os.path.dirname(getenv(ENV_ENV_FILE)), ".env")
-		content = f"GO_VERSION={go_version}\n"
 		sha = self.file_contents(env_path, source_branch_name).sha
+		with open(env_path, encoding='UTF-8') as env_stream:
+			previous_env_content = env_stream.read()
+		dotenv.set_key(dotenv_path=env_path, key_to_set=GO_VERSION_KEY, value_to_set=go_version,
+			quote_mode='never')
+		with open(env_path, encoding='UTF-8') as env_stream:
+			env_content = env_stream.read()
 		commit = self.repo.update_file(
 			branch=source_branch_name,
-			content=content,
+			content=env_content,
 			path=env_path,
 			message=commit_message,
 			sha=sha
@@ -408,6 +415,8 @@ class GoPRMaker:
 		if not isinstance(commit, Commit):
 			raise TypeError("'commit' property of file update response was not a Commit")
 		print(f"Updated {env_path} on {self.repo.name}")
+		with open(env_path, encoding='UTF-8', mode='w') as env_stream:
+			env_stream.write(previous_env_content)
 		return commit
 
 	def update_golang_org_x(self, previous_commit: Commit) -> Optional[GitCommit]:
