@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@master
       - name: Load environment
         run: cp .env "${{ github.env }}"
-      - name: Build ${{ env.CONTAINER }}
+      - name: Build ${{ env.CONTAINER }}:${{ env.ATS_VERSION }}
         working-directory: .github/containers/trafficserver-alpine
         run: docker-compose build
       - name: docker login ghcr.io
@@ -54,7 +54,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push ${{ env.CONTAINER }}
+      - name: Push ${{ env.CONTAINER }}:${{ env.ATS_VERSION }}
         if: ${{ github.event_name != 'pull_request' }}
         working-directory: .github/containers/trafficserver-alpine
         run: docker-compose push
