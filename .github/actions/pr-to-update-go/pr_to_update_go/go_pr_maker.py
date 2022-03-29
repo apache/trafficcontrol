@@ -24,7 +24,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Optional, TypedDict, Any
+from typing import Optional, TypedDict, Any, Union
 
 import dotenv
 import requests
@@ -281,22 +281,20 @@ class GoPRMaker:
 			print(f'Go version is up-to-date on {target_branch}, nothing to do.')
 			return
 
-		commit: Optional[Commit] = None
+		commit: Optional[GitCommit] = None
 		if not self.branch_exists(source_branch_name):
 			commit = self.set_go_version(self.latest_go_version, commit_message,
 				source_branch_name)
 		if commit is None:
 			source_branch_ref: GitRef = self.repo.get_git_ref(f'heads/{source_branch_name}')
-			commit = self.repo.get_commit(source_branch_ref.object.sha)
+			commit = self.repo.get_git_commit(source_branch_ref.object.sha)
 		subprocess.run(['git', 'fetch', 'origin'], check=True)
 		subprocess.run(['git', 'checkout', commit.sha], check=True)
 		if update_version_only:
 			print(f'Branch {source_branch_name} has been created, exiting...')
 			return
 
-		update_golang_org_x_commit = self.update_golang_org_x(commit)
-		if update_golang_org_x_commit:
-			self.update_branch(source_branch_name, update_golang_org_x_commit.sha)
+		self.update_golang_org_x(commit, source_branch_name)
 
 		self.create_pr(
 			self.latest_go_version,
@@ -360,7 +358,7 @@ class GoPRMaker:
 		return self.file_contents(getenv(ENV_GO_VERSION_FILE), branch).decoded_content.decode().strip()
 
 	def set_go_version(self, go_version: str, commit_message: str,
-			source_branch_name: str) -> Commit:
+			source_branch_name: str) -> GitCommit:
 		"""
 		Makes the commits necessary to change the Go version used by the
 		repository.
@@ -368,61 +366,28 @@ class GoPRMaker:
 		This includes updating the GO_VERSION and .env files at the repository's
 		root.
 		"""
-		master = self.repo.get_branch('master')
-		sha = master.commit.sha
+		master_tip = self.repo.get_branch('master').commit
+		sha = master_tip.sha
 		ref = f'refs/heads/{source_branch_name}'
 		self.repo.create_git_ref(ref, sha)
-
 		print(f'Created branch {source_branch_name}')
+
 		go_version_file = getenv(ENV_GO_VERSION_FILE)
-		content = f"{go_version}\n"
-		sha = self.file_contents(go_version_file, source_branch_name).sha
-		kwargs = {
-			'branch': source_branch_name,
-			'content': content,
-			'path': go_version_file,
-			'message': commit_message,
-			'sha': sha
-		}
-		if self.author:
-			kwargs['author'] = self.author
-			kwargs['committer'] = self.author
-		else:
-			print('Committing using the default author')
-		self.repo.update_file(**kwargs)
-		print(f'Updated {go_version_file} on {self.repo.name}')
+		with open(go_version_file, 'w') as go_version_file_stream:
+			go_version_file_stream.write(f'{go_version}\n')
 		env_file = getenv(ENV_ENV_FILE)
 		env_path = os.path.join(os.path.dirname(env_file), ".env")
-		sha = self.file_contents(env_path, source_branch_name).sha
-		with open(env_path, encoding='UTF-8') as env_stream:
-			previous_env_content = env_stream.read()
 		dotenv.set_key(dotenv_path=env_path, key_to_set=GO_VERSION_KEY, value_to_set=go_version,
 			quote_mode='never')
-		with open(env_path, encoding='UTF-8') as env_stream:
-			env_content = env_stream.read()
-		kwargs.update({
-			'content': env_content,
-			'path': env_path,
-			'message': kwargs['message'] + ' in ' + env_file,
-			'sha': sha
-		})
-		commit = self.repo.update_file(**kwargs)["commit"]
-		if not isinstance(commit, Commit):
-			raise TypeError("'commit' property of file update response was not a Commit")
-		print(f"Updated {env_path} on {self.repo.name}")
-		with open(env_path, encoding='UTF-8', mode='w') as env_stream:
-			env_stream.write(previous_env_content)
-		return commit
+		return self.update_files_on_tree(head=master_tip, files_to_check=[go_version_file,
+			env_file], commit_message=commit_message, source_branch_name=source_branch_name)
 
-	def update_golang_org_x(self, previous_commit: Commit) -> Optional[GitCommit]:
+	def update_files_on_tree(self, head: Union[Commit, GitCommit], files_to_check: list[str],
+			commit_message: str, source_branch_name:
+	str) -> Optional[GitCommit]:
 		"""
-		Updates golang.org/x/ Go dependencies as necessary for the new Go
-		version.
+		Commits multiple files in a single Git commit, then reverts those changes locally.
 		"""
-		subprocess.run(['git', 'fetch', 'origin'], check=True)
-		subprocess.run(['git', 'checkout', previous_commit.sha], check=True)
-		subprocess.run([os.path.join(os.path.dirname(__file__), 'update_golang_org_x.sh')], check=True)
-		files_to_check = ['go.mod', 'go.sum', os.path.join('vendor', 'modules.txt')]
 		tree_elements: list[InputGitTreeElement] = []
 		for file in files_to_check:
 			diff_process = subprocess.run(['git', 'diff', '--exit-code', '--', file], check=False)
@@ -433,20 +398,18 @@ class GoPRMaker:
 			tree_element: InputGitTreeElement = InputGitTreeElement(path=file, mode='100644',
 				type='blob', content=content)
 			tree_elements.append(tree_element)
+			subprocess.run(['git', 'checkout', '--', file], check=True)
 		if len(tree_elements) == 0:
-			print('No golang.org/x/ dependencies need to be updated.')
+			print('No files need to be updated.')
 			return None
 		tree_hash = subprocess.check_output(
-			['git', 'log', '-1', '--pretty=%T', previous_commit.sha]).decode().strip()
+			['git', 'log', '-1', '--pretty=%T', head.sha]).decode().strip()
 		base_tree = self.repo.get_git_tree(sha=tree_hash)
 		tree = self.repo.create_git_tree(tree_elements, base_tree)
-		commit_message: str = f'Update golang.org/x/ dependencies for go{self.latest_go_version}'
-		previous_git_commit = self.repo.get_git_commit(previous_commit.sha)
-		git_commit: GitCommit
 		kwargs = {
 			'message': commit_message,
 			'tree': tree,
-			'parents': [previous_git_commit],
+			'parents': [self.repo.get_git_commit(head.sha)],
 			'author': self.author,
 			'committer': self.author,
 		}
@@ -454,6 +417,22 @@ class GoPRMaker:
 			kwargs['author'] = self.author
 			kwargs['committer'] = self.author
 		git_commit = self.repo.create_git_commit(**kwargs)
+		self.update_branch(source_branch_name, git_commit.sha)
+		return git_commit
+
+	def update_golang_org_x(self, head: GitCommit, source_branch_name: str) -> Optional[GitCommit]:
+		"""
+		Updates golang.org/x/ Go dependencies as necessary for the new Go
+		version.
+		"""
+		subprocess.run(['git', 'fetch', 'origin'], check=True)
+		subprocess.run(['git', 'checkout', head.sha], check=True)
+		subprocess.run([os.path.join(os.path.dirname(__file__), 'update_golang_org_x.sh')], check=True)
+
+		commit_message: str = f'Update golang.org/x/ dependencies for go{self.latest_go_version}'
+		git_commit = self.update_files_on_tree(head=head, files_to_check=['go.mod', 'go.sum',
+			os.path.join('vendor', 'modules.txt')], commit_message=commit_message,
+			source_branch_name=source_branch_name)
 		print('Updated golang.org/x/ dependencies')
 		return git_commit
 
