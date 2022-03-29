@@ -55,7 +55,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: . # The username can be anything but must not be empty
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push ${{ env.CONTAINER }}
         if: ${{ github.event_name != 'pull_request' }}
