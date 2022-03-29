@@ -377,27 +377,22 @@ class GoPRMaker:
 		go_version_file = getenv(ENV_GO_VERSION_FILE)
 		content = f"{go_version}\n"
 		sha = self.file_contents(go_version_file, source_branch_name).sha
+		kwargs = {
+			'branch': source_branch_name,
+			'content': content,
+			'path': go_version_file,
+			'message': commit_message,
+			'sha': sha
+		}
 		if self.author:
-			self.repo.update_file(
-				author=self.author,
-				branch=source_branch_name,
-				content=content,
-				path=go_version_file,
-				message=commit_message,
-				sha=sha
-			)
+			kwargs['author'] = self.author
+			kwargs['committer'] = self.author
 		else:
 			print('Committing using the default author')
-			self.repo.update_file(
-				branch=source_branch_name,
-				content=content,
-				path=go_version_file,
-				message=commit_message,
-				sha=sha
-			)
-
+		self.repo.update_file(**kwargs)
 		print(f'Updated {go_version_file} on {self.repo.name}')
-		env_path = os.path.join(os.path.dirname(getenv(ENV_ENV_FILE)), ".env")
+		env_file = getenv(ENV_ENV_FILE)
+		env_path = os.path.join(os.path.dirname(env_file), ".env")
 		sha = self.file_contents(env_path, source_branch_name).sha
 		with open(env_path, encoding='UTF-8') as env_stream:
 			previous_env_content = env_stream.read()
@@ -405,13 +400,13 @@ class GoPRMaker:
 			quote_mode='never')
 		with open(env_path, encoding='UTF-8') as env_stream:
 			env_content = env_stream.read()
-		commit = self.repo.update_file(
-			branch=source_branch_name,
-			content=env_content,
-			path=env_path,
-			message=commit_message,
-			sha=sha
-		)["commit"]
+		kwargs.update({
+			'content': env_content,
+			'path': env_path,
+			'message': kwargs['message'] + ' in ' + env_file,
+			'sha': sha
+		})
+		commit = self.repo.update_file(**kwargs)["commit"]
 		if not isinstance(commit, Commit):
 			raise TypeError("'commit' property of file update response was not a Commit")
 		print(f"Updated {env_path} on {self.repo.name}")
@@ -448,20 +443,17 @@ class GoPRMaker:
 		commit_message: str = f'Update golang.org/x/ dependencies for go{self.latest_go_version}'
 		previous_git_commit = self.repo.get_git_commit(previous_commit.sha)
 		git_commit: GitCommit
+		kwargs = {
+			'message': commit_message,
+			'tree': tree,
+			'parents': [previous_git_commit],
+			'author': self.author,
+			'committer': self.author,
+		}
 		if self.author:
-			git_commit = self.repo.create_git_commit(
-				message=commit_message,
-				tree=tree,
-				parents=[previous_git_commit],
-				author=self.author,
-				committer=self.author
-			)
-		else:
-			git_commit = self.repo.create_git_commit(
-				message=commit_message,
-				tree=tree,
-				parents=[previous_git_commit]
-			)
+			kwargs['author'] = self.author
+			kwargs['committer'] = self.author
+		git_commit = self.repo.create_git_commit(**kwargs)
 		print('Updated golang.org/x/ dependencies')
 		return git_commit
 
