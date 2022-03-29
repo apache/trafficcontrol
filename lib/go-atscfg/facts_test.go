@@ -27,7 +27,7 @@ import (
 func TestMake12MFacts(t *testing.T) {
 	server := makeGenericServer()
 	profileName := "myProfile"
-	server.ProfileNames = &[]string{profileName}
+	server.ProfileNames = []string{profileName}
 
 	hdr := "myHeaderComment"
 

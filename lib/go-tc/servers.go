@@ -725,7 +725,7 @@ type CommonServerPropertiesV40 struct {
 	OfflineReason    *string              `json:"offlineReason" db:"offline_reason"`
 	PhysLocation     *string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID   *int                 `json:"physLocationId" db:"phys_location_id"`
-	ProfileNames     *[]string            `json:"profileNames" db:"profile_name"`
+	ProfileNames     []string             `json:"profileNames" db:"profile_name"`
 	Rack             *string              `json:"rack" db:"rack"`
 	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
 	Status           *string              `json:"status" db:"status"`
@@ -955,7 +955,7 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 //
 // Deprecated: Traffic Ops API version 3 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerV30) UpgradeToV40(profileNames *[]string) (ServerV40, error) {
+func (s ServerV30) UpgradeToV40(profileNames []string) (ServerV40, error) {
 	upgraded := ServerV40{
 		CommonServerPropertiesV40: UpdateCommonServerPropertiesV40(profileNames, s.CommonServerProperties),
 		StatusLastUpdated:         s.StatusLastUpdated,
@@ -974,7 +974,7 @@ func (s ServerV30) UpgradeToV40(profileNames *[]string) (ServerV40, error) {
 //
 // Deprecated: Traffic Ops API version 2 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerNullableV2) UpgradeToV40(profileNames *[]string) (ServerV40, error) {
+func (s ServerNullableV2) UpgradeToV40(profileNames []string) (ServerV40, error) {
 	ipv4IsService := false
 	if s.IPIsService != nil {
 		ipv4IsService = *s.IPIsService
@@ -996,7 +996,7 @@ func (s ServerNullableV2) UpgradeToV40(profileNames *[]string) (ServerV40, error
 }
 
 // UpdateCommonServerPropertiesV40 updates CommonServerProperties of V2 and V3 to CommonServerPropertiesV40
-func UpdateCommonServerPropertiesV40(profileNames *[]string, properties CommonServerProperties) CommonServerPropertiesV40 {
+func UpdateCommonServerPropertiesV40(profileNames []string, properties CommonServerProperties) CommonServerPropertiesV40 {
 	return CommonServerPropertiesV40{
 		Cachegroup:       properties.Cachegroup,
 		CachegroupID:     properties.CachegroupID,

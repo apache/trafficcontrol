@@ -154,7 +154,7 @@ func makeGenericServer() *Server {
 	server.HTTPSPort = util.IntPtr(12443)
 	server.ID = util.IntPtr(44)
 	setIP(server, "192.168.2.1")
-	server.ProfileNames = &[]string{"serverprofile"}
+	server.ProfileNames = []string{"serverprofile"}
 	server.TCPPort = util.IntPtr(80)
 	server.Type = "EDGE"
 	server.TypeID = util.IntPtr(91)

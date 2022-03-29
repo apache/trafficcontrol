@@ -42,7 +42,7 @@ func TestMakeMetaConfig(t *testing.T) {
 	// server.ParentCacheGroupID=            45
 	// server.ParentCacheGroupType=          "MID_LOC"
 	//server.ProfileID = util.IntPtr(46)
-	server.ProfileNames = &[]string{"myserverprofile"}
+	server.ProfileNames = []string{"myserverprofile"}
 	server.TCPPort = util.IntPtr(80)
 	// server.SecondaryParentCacheGroupID=   47
 	// server.SecondaryParentCacheGroupType= "MID_LOC"
@@ -65,7 +65,7 @@ func TestMakeMetaConfig(t *testing.T) {
 			Name:       "location",
 			ConfigFile: name,
 			Value:      "/my/location/",
-			Profiles:   []byte(`["` + (*server.ProfileNames)[0] + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		}
 	}
 

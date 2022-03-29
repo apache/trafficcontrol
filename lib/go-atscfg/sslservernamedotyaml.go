@@ -210,7 +210,7 @@ func GetServerSSLData(
 ) ([]SSLData, []string, error) {
 	warnings := []string{}
 
-	if server.ProfileNames == nil && len(*server.ProfileNames) == 0 {
+	if server.ProfileNames == nil && len(server.ProfileNames) == 0 {
 		return nil, warnings, errors.New("this server missing Profiles")
 	}
 

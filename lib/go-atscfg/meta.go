@@ -67,7 +67,7 @@ func MakeConfigFilesList(
 		return nil, warnings, errors.New("server missing CDNName")
 	} else if server.ID == nil {
 		return nil, warnings, errors.New("server missing ID")
-	} else if server.ProfileNames == nil && len(*server.ProfileNames) == 0 {
+	} else if server.ProfileNames == nil && len(server.ProfileNames) == 0 {
 		return nil, warnings, errors.New("server missing Profile")
 	}
 

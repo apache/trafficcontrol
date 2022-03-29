@@ -65,7 +65,7 @@ func getTestServers() []ServerAndInterfaces {
 			OfflineReason:  util.StrPtr("offlineReason"),
 			PhysLocation:   util.StrPtr("physLocation"),
 			PhysLocationID: util.IntPtr(1),
-			ProfileNames:   &[]string{"profile"},
+			ProfileNames:   []string{"profile"},
 			Rack:           util.StrPtr("rack"),
 			RevalPending:   util.BoolPtr(true),
 			Status:         util.StrPtr("status"),
@@ -173,6 +173,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
+	cols = append(cols, "statusLastUpdated")
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -206,7 +207,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 			*ts.OfflineReason,
 			*ts.PhysLocation,
 			*ts.PhysLocationID,
-			ts.ProfileNames,
+			1,
 			*ts.Rack,
 			*ts.RevalPending,
 			*ts.Status,
@@ -285,6 +286,7 @@ func TestGetMidServers(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
+	cols = append(cols, "statusLastUpdated")
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -316,7 +318,7 @@ func TestGetMidServers(t *testing.T) {
 			*ts.OfflineReason,
 			*ts.PhysLocation,
 			*ts.PhysLocationID,
-			ts.ProfileNames,
+			ts.ProfileNames[0],
 			*ts.Rack,
 			*ts.RevalPending,
 			*ts.Status,
@@ -367,6 +369,7 @@ func TestGetMidServers(t *testing.T) {
 	}
 
 	cols2 := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
+	cols2 = append(cols2, "statusLastUpdated")
 	rows2 := sqlmock.NewRows(cols2)
 
 	cgs := []tc.CacheGroup{}
@@ -452,7 +455,7 @@ func TestGetMidServers(t *testing.T) {
 		*ts.OfflineReason,
 		*ts.PhysLocation,
 		*ts.PhysLocationID,
-		ts.ProfileNames,
+		ts.ProfileNames[0],
 		*ts.Rack,
 		*ts.RevalPending,
 		*ts.Status,

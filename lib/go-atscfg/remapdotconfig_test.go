@@ -37,7 +37,7 @@ func makeTestRemapServer() *Server {
 	server.HTTPSPort = util.IntPtr(12345)
 	server.ID = util.IntPtr(44)
 	setIP(server, "192.168.2.4")
-	server.ProfileNames = &[]string{"MyProfile"}
+	server.ProfileNames = []string{"MyProfile"}
 	server.TCPPort = util.IntPtr(12080)
 	server.Type = "MID"
 	return server
@@ -222,7 +222,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -323,7 +323,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -438,7 +438,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -539,7 +539,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -678,7 +678,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -778,7 +778,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -880,7 +880,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -983,7 +983,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -1122,7 +1122,7 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -1263,7 +1263,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -1404,7 +1404,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -1546,7 +1546,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -1944,7 +1944,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -2049,7 +2049,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -2171,7 +2171,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -2293,7 +2293,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -2415,7 +2415,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -2537,7 +2537,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -2655,13 +2655,13 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -2779,13 +2779,13 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -2903,13 +2903,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -3031,13 +3031,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -3159,13 +3159,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -3287,13 +3287,13 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -3421,13 +3421,13 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -3544,13 +3544,13 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -3667,13 +3667,13 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -3790,13 +3790,13 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -3913,13 +3913,13 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -4034,13 +4034,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -4158,13 +4158,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -4305,13 +4305,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -4422,13 +4422,13 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -4561,13 +4561,13 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -4685,13 +4685,13 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -4805,13 +4805,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -4929,13 +4929,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -5077,13 +5077,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -5223,13 +5223,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -5352,13 +5352,13 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -5491,13 +5491,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -5644,13 +5644,13 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -5790,13 +5790,13 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -5929,13 +5929,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -6057,13 +6057,13 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -6177,13 +6177,13 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -6297,13 +6297,13 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -6417,13 +6417,13 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -6541,13 +6541,13 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -6661,13 +6661,13 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -6771,13 +6771,13 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -6886,13 +6886,13 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -7006,13 +7006,13 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -7126,13 +7126,13 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -7242,13 +7242,13 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -7374,13 +7374,13 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -7496,13 +7496,13 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -7681,13 +7681,13 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -7860,13 +7860,13 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte((*server.ProfileNames)[0]),
+			Profiles:   []byte(server.ProfileNames[0]),
 		},
 	}
 
@@ -8073,13 +8073,13 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(`["` + (*server.ProfileNames)[0] + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(`["` + (*server.ProfileNames)[0] + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 	}
 
@@ -8263,13 +8263,13 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(`["` + (*server.ProfileNames)[0] + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(`["` + (*server.ProfileNames)[0] + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 	}
 
@@ -8461,13 +8461,13 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(`["` + (*server.ProfileNames)[0] + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 		tc.Parameter{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(`["` + (*server.ProfileNames)[0] + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 	}
 

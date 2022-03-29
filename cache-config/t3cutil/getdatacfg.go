@@ -468,15 +468,15 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.ProfileNames != nil && (*oldServer.ProfileNames)[0] == (*server.ProfileNames)[0] {
+				if oldCfg != nil && oldServer.ProfileNames != nil && oldServer.ProfileNames[0] == server.ProfileNames[0] {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.ServerParams)
 				}
-				params, reqInf, err := toClient.GetServerProfileParameters((*server.ProfileNames)[0], reqHdr)
-				log.Infoln(toreq.RequestInfoStr(reqInf, "GetURLSigKeys("+(*server.ProfileNames)[0]+")"))
+				params, reqInf, err := toClient.GetServerProfileParameters(server.ProfileNames[0], reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetURLSigKeys("+server.ProfileNames[0]+")"))
 				if err != nil {
-					return errors.New("getting server profile '" + (*server.ProfileNames)[0] + "' parameters: " + err.Error())
+					return errors.New("getting server profile '" + server.ProfileNames[0] + "' parameters: " + err.Error())
 				} else if len(params) == 0 {
-					return errors.New("getting server profile '" + (*server.ProfileNames)[0] + "' parameters: no parameters (profile not found?)")
+					return errors.New("getting server profile '" + server.ProfileNames[0] + "' parameters: no parameters (profile not found?)")
 				}
 
 				if reqInf.StatusCode == http.StatusNotModified {
@@ -519,13 +519,13 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.ProfileNames != nil && (*oldServer.ProfileNames)[0] == (*server.ProfileNames)[0] {
+				if oldCfg != nil && oldServer.ProfileNames != nil && oldServer.ProfileNames[0] == server.ProfileNames[0] {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.Profile)
 				}
-				profile, reqInf, err := toClient.GetProfileByName((*server.ProfileNames)[0], reqHdr)
-				log.Infoln(toreq.RequestInfoStr(reqInf, "GetProfileByName("+(*server.ProfileNames)[0]+")"))
+				profile, reqInf, err := toClient.GetProfileByName(server.ProfileNames[0], reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetProfileByName("+server.ProfileNames[0]+")"))
 				if err != nil {
-					return errors.New("getting profile '" + (*server.ProfileNames)[0] + "': " + err.Error())
+					return errors.New("getting profile '" + server.ProfileNames[0] + "': " + err.Error())
 				}
 				if reqInf.StatusCode == http.StatusNotModified {
 					log.Infof("Getting config: %v not modified, using old config", "Profile")

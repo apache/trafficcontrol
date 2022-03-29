@@ -1757,7 +1757,7 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
 	var id int
 	var desc string
-	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (*s.ProfileNames)[0])
+	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (s.ProfileNames)[0])
 	if err != nil {
 		return tc.CommonServerProperties{}, fmt.Errorf("querying profile id and description by profile_name: " + err.Error())
 	}
@@ -1792,7 +1792,7 @@ func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServe
 		MgmtIPGateway:    s.MgmtIPGateway,
 		MgmtIPNetmask:    s.MgmtIPNetmask,
 		OfflineReason:    s.OfflineReason,
-		Profile:          &(*s.ProfileNames)[0],
+		Profile:          &(s.ProfileNames)[0],
 		ProfileDesc:      &desc,
 		ProfileID:        &id,
 		PhysLocation:     s.PhysLocation,
@@ -1811,7 +1811,7 @@ func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServe
 }
 
 // UpdateServerProfilesForV4 updates server_profile table via update function for APIv4
-func UpdateServerProfilesForV4(id *int, profile *[]string, tx *sql.Tx) error {
+func UpdateServerProfilesForV4(id *int, profile []string, tx *sql.Tx) error {
 	var profileNames []string
 
 	//Delete existing rows from server_profile to get the priority correct for profile_name changes
@@ -1820,7 +1820,7 @@ func UpdateServerProfilesForV4(id *int, profile *[]string, tx *sql.Tx) error {
 		return fmt.Errorf("updating server_profile by server id: %v" + strconv.Itoa(*id) + ", error: " + err.Error())
 	}
 
-	for i, pName := range *profile {
+	for i, pName := range profile {
 		query := `INSERT INTO server_profile (server, profile_name, priority) VALUES ($1, $2, $3)`
 		_, err := tx.Exec(query, *id, pName, i)
 		if err != nil {
