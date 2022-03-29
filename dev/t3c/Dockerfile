@@ -24,15 +24,12 @@ ENV PATH=/usr/local/go/bin:${PATH} \
 ENV PATH=${GOPATH}/bin:${PATH}
 
 ENV TC="/root/go/src/github.com/apache/trafficcontrol/" GOFLAGS="--buildvcs=false"
-VOLUME /root/go/src/github.com/apache/trafficcontrol
+VOLUME $TC
 EXPOSE 80 8081
 
 USER root
-RUN apk add --no-cache inotify-tools gcc && \
-	go install github.com/go-delve/delve/cmd/dlv@latest && \
-	ln -s /root/go/bin/dlv /usr/bin/dlv && \
-	mkdir /lib64 && \
-	ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+RUN apk add --no-cache inotify-tools gcc musl-dev && \
+	go install github.com/go-delve/delve/cmd/dlv@latest
 
 RUN echo "stats_over_http.so" >> /etc/trafficserver/plugin.config && echo "system_stats.so" >> /etc/trafficserver/plugin.config
 
