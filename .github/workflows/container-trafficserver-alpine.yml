@@ -43,14 +43,11 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@master
+      - name: Load environment
+        run: cp .env "${{ github.env }}"
       - name: Build ${{ env.CONTAINER }}
         working-directory: .github/containers/trafficserver-alpine
-        run: |
-          set -o errexit -o nounset
-          while IFS= read -r line; do
-            export "$line"
-          done <${GITHUB_WORKSPACE}/.env
-          docker-compose build
+        run: docker-compose build
       - name: docker login ghcr.io
         uses: docker/login-action@v1
         with:
@@ -60,9 +57,4 @@ jobs:
       - name: Push ${{ env.CONTAINER }}
         if: ${{ github.event_name != 'pull_request' }}
         working-directory: .github/containers/trafficserver-alpine
-        run: |
-          set -o errexit -o nounset
-          while IFS= read -r line; do
-            export "$line"
-          done <${GITHUB_WORKSPACE}/.env
-          docker-compose push
+        run: docker-compose push
