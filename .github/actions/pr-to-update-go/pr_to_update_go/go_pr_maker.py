@@ -53,6 +53,7 @@ from pr_to_update_go.constants import (
 	GO_VERSION_KEY,
 )
 
+
 class GoVersion(TypedDict):
 	"""
 	A single entry in the list returned by the Go website's version listing API.
@@ -61,6 +62,7 @@ class GoVersion(TypedDict):
 	files: list[Any]
 	stable: bool
 	version: str
+
 
 def _get_pr_body(go_version: str, milestone_url: str) -> str:
 	"""
@@ -76,6 +78,7 @@ def _get_pr_body(go_version: str, milestone_url: str) -> str:
 		RELEASE_NOTES=release_notes, MILESTONE_URL=milestone_url)
 	print('Templated PR body')
 	return pr_body
+
 
 def get_major_version(from_go_version: str) -> str:
 	"""
@@ -95,6 +98,7 @@ def get_major_version(from_go_version: str) -> str:
 		return match.group(0)
 	return ""
 
+
 def getenv(var: str) -> str:
 	"""
 	Returns the value of the environment variable with the given name.
@@ -106,6 +110,7 @@ def getenv(var: str) -> str:
 	'BAR'
 	"""
 	return os.environ[var]
+
 
 def parse_release_notes(version: str, content: str) -> str:
 	"""
@@ -139,7 +144,7 @@ def parse_release_notes(version: str, content: str) -> str:
 	"""
 	go_version_pattern = version.replace('.', r"\.")
 	release_notes_pattern = re.compile(
-		r"<p>\s*\n\s*go"+go_version_pattern+r".*?</p>",
+		r"<p>\s*\n\s*go" + go_version_pattern + r".*?</p>",
 		re.MULTILINE | re.DOTALL
 	)
 	matches = release_notes_pattern.search(content)
@@ -147,13 +152,15 @@ def parse_release_notes(version: str, content: str) -> str:
 		raise Exception(f'could not find release notes for Go {version}')
 	return " ".join(matches.group(0).split())
 
+
 def _get_release_notes(go_version: str) -> str:
 	"""
 	Gets the release notes for the given Go version.
 	"""
 	release_history_response = requests.get(RELEASE_PAGE_URL)
 	release_history_response.raise_for_status()
-	return parse_release_notes(go_version, release_history_response	.content.decode())
+	return parse_release_notes(go_version, release_history_response.content.decode())
+
 
 def find_latest_major_upgrade(major_version: str, versions: list[GoVersion]) -> str:
 	"""
@@ -202,6 +209,7 @@ def find_latest_major_upgrade(major_version: str, versions: list[GoVersion]) -> 
 
 	raise Exception(f'no supported {major_version} Go versions exist')
 
+
 def _get_latest_major_upgrade(from_go_version: str) -> str:
 	"""
 	Gets the version of the latest Go release that is the same "major"
@@ -217,6 +225,7 @@ def _get_latest_major_upgrade(from_go_version: str) -> str:
 	fetched_go_version = find_latest_major_upgrade(major_version, versions)
 	print(f'Latest version of Go {major_version} is {fetched_go_version}')
 	return fetched_go_version
+
 
 class GoPRMaker:
 	"""
@@ -355,7 +364,8 @@ class GoPRMaker:
 		Gets the current Go version used at the head of the given branch (or not
 		given to use "master" by default) for the repository.
 		"""
-		return self.file_contents(getenv(ENV_GO_VERSION_FILE), branch).decoded_content.decode().strip()
+		return self.file_contents(getenv(ENV_GO_VERSION_FILE),
+			branch).decoded_content.decode().strip()
 
 	def set_go_version(self, go_version: str, commit_message: str,
 			source_branch_name: str) -> GitCommit:
@@ -384,7 +394,7 @@ class GoPRMaker:
 
 	def update_files_on_tree(self, head: Union[Commit, GitCommit], files_to_check: list[str],
 			commit_message: str, source_branch_name:
-	str) -> Optional[GitCommit]:
+			str) -> Optional[GitCommit]:
 		"""
 		Commits multiple files in a single Git commit, then reverts those changes locally.
 		"""
@@ -427,7 +437,8 @@ class GoPRMaker:
 		"""
 		subprocess.run(['git', 'fetch', 'origin'], check=True)
 		subprocess.run(['git', 'checkout', head.sha], check=True)
-		subprocess.run([os.path.join(os.path.dirname(__file__), 'update_golang_org_x.sh')], check=True)
+		subprocess.run([os.path.join(os.path.dirname(__file__), 'update_golang_org_x.sh')],
+			check=True)
 
 		commit_message: str = f'Update golang.org/x/ dependencies for go{self.latest_go_version}'
 		git_commit = self.update_files_on_tree(head=head, files_to_check=['go.mod', 'go.sum',
@@ -447,7 +458,8 @@ class GoPRMaker:
 			pull_request = self.repo.get_pull(list_item.number)
 			if pull_request.head.ref != source_branch_name:
 				continue
-			print(f'Pull request for branch {source_branch_name} already exists:\n{pull_request.html_url}')
+			print(
+				f'Pull request for branch {source_branch_name} already exists:\n{pull_request.html_url}')
 			return
 
 		milestone_url = self.get_go_milestone(latest_go_version)
@@ -466,6 +478,8 @@ class GoPRMaker:
 			print('Unable to find a label named "go version"', file=sys.stderr)
 		print(f'Created pull request {pull_request.html_url}')
 
+
 if __name__ == "__main__":
 	import doctest
+
 	doctest.testmod()
