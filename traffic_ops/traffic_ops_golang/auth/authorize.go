@@ -44,6 +44,7 @@ type CurrentUser struct {
 	Role         int            `json:"role" db:"role"`
 	RoleName     string         `json:"roleName" db:"role_name"`
 	Capabilities pq.StringArray `json:"capabilities" db:"capabilities"`
+	UCDN         string         `json:"ucdn" db:"ucdn"`
 	perms        map[string]struct{}
 }
 
@@ -82,9 +83,9 @@ const disallowed = "disallowed"
 // PrivLevelInvalid - The Default Priv level
 const PrivLevelInvalid = -1
 
-const PrivLevelReadOnly = 10
+const PrivLevelUnauthenticated = 0
 
-const PrivLevelORT = 11
+const PrivLevelReadOnly = 10
 
 const PrivLevelSteering = 15
 
@@ -105,6 +106,14 @@ const CurrentUserKey key = iota
 
 // GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist, along with a user facing error, a system error to log, and an error code to return
 func GetCurrentUserFromDB(DB *sqlx.DB, user string, timeout time.Duration) (CurrentUser, error, error, int) {
+	invalidUser := CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, "", nil}
+	if usersCacheIsEnabled() {
+		u, exists := getUserFromCache(user)
+		if !exists {
+			return invalidUser, errors.New("user not found"), fmt.Errorf("checking user '%s' info: user not in cache", user), http.StatusUnauthorized
+		}
+		return u.CurrentUser, nil, nil, http.StatusOK
+	}
 	qry := `
 SELECT
   r.priv_level,
@@ -112,8 +121,9 @@ SELECT
   r.name as role_name, 
   u.id,
   u.username,
-  COALESCE(u.tenant_id, -1) AS tenant_id,
-  ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=r.id) AS capabilities
+  u.tenant_id,
+  ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=r.id) AS capabilities,
+  u.ucdn
 FROM
   tm_user AS u
 JOIN
@@ -124,14 +134,13 @@ WHERE
 
 	var currentUserInfo CurrentUser
 	if DB == nil {
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, nil}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, "", nil}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
 	}
 	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
 	defer dbClose()
 
 	err := DB.GetContext(dbCtx, &currentUserInfo, qry, user)
 	if err != nil {
-		invalidUser := CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, nil}
 		if errors.Is(err, sql.ErrNoRows) {
 			return invalidUser, errors.New("user not found"), fmt.Errorf("checking user %v info: user not in database", user), http.StatusUnauthorized
 		}
@@ -158,10 +167,18 @@ func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
 			return nil, fmt.Errorf("CurrentUser found with bad type: %T", v)
 		}
 	}
-	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, nil}, errors.New("No user found in Context")
+	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, "", nil}, errors.New("No user found in Context")
 }
 
 func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, ctx context.Context) (bool, error, error) {
+	if usersCacheIsEnabled() {
+		u, exists := getUserFromCache(form.Username)
+		if !exists {
+			return false, fmt.Errorf("user '%s' not found in cache", form.Username), nil
+		}
+		allowed := u.RoleName != disallowed
+		return allowed, nil, nil
+	}
 	var roleName string
 
 	err := db.GetContext(ctx, &roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1", form.Username)
@@ -179,17 +196,47 @@ func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, ctx context.Context
 	return false, nil, nil
 }
 
+// GetUserUcdn returns the Upstream CDN to which the user belongs for CDNi operations.
+func GetUserUcdn(form PasswordForm, db *sqlx.DB, ctx context.Context) (string, error) {
+	if usersCacheIsEnabled() {
+		u, exists := getUserFromCache(form.Username)
+		if !exists {
+			return "", fmt.Errorf("user '%s' not found in cache", form.Username)
+		}
+		return u.UCDN, nil
+	}
+	var ucdn string
+
+	err := db.GetContext(ctx, &ucdn, "SELECT ucdn FROM tm_user where username=$1", form.Username)
+	if err != nil {
+		return "", err
+	}
+
+	return ucdn, nil
+}
+
 func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, ctx context.Context) (bool, error, error) {
 	var hashedPassword string
-
-	err := db.GetContext(ctx, &hashedPassword, "SELECT local_passwd FROM tm_user WHERE username=$1", form.Username)
-	if err != nil {
-		if err == context.DeadlineExceeded || err == context.Canceled {
-			return false, nil, err
+	if usersCacheIsEnabled() {
+		u, exists := getUserFromCache(form.Username)
+		if !exists {
+			return false, fmt.Errorf("user '%s' not found in cache", form.Username), nil
 		}
-		return false, err, nil
+		if u.LocalPasswd == nil {
+			return false, nil, nil
+		}
+		hashedPassword = *u.LocalPasswd
+	} else {
+		err := db.GetContext(ctx, &hashedPassword, "SELECT local_passwd FROM tm_user WHERE username=$1", form.Username)
+		if err != nil {
+			if err == context.DeadlineExceeded || err == context.Canceled {
+				return false, nil, err
+			}
+			return false, err, nil
+		}
 	}
-	err = VerifySCRYPTPassword(form.Password, hashedPassword)
+
+	err := VerifySCRYPTPassword(form.Password, hashedPassword)
 	if err != nil {
 		hashedInput, err := sha1Hex(form.Password)
 		if err != nil {
@@ -206,6 +253,10 @@ func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, ctx context.Context)
 // CheckLocalUserToken checks the passed token against the records in the db for a match, up to a
 // maximum duration of timeout.
 func CheckLocalUserToken(token string, db *sqlx.DB, timeout time.Duration) (bool, string, error) {
+	if usersCacheIsEnabled() {
+		username, matched := getUserNameFromCacheByToken(token)
+		return matched, username, nil
+	}
 	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
 	defer dbClose()
 

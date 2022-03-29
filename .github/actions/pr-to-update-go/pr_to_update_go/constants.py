@@ -10,14 +10,88 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""
+The constants module holds some constants used by the PR maker.
+
+Environment variable names, and the meanings of the values of those variables:
+
+	ENV_GIT_AUTHOR_NAME         - The username of the author for commits
+	ENV_GITHUB_REPOSITORY       - The "name" of the repository set by GHA (e.g. octocat/Hello-World)
+	ENV_GITHUB_REPOSITORY_OWNER - The repository owner's name set by GHA (e.g. octocat)
+	ENV_GITHUB_TOKEN            - The token used to access the GitHub API - set by GHA
+	ENV_GO_VERSION_FILE         - The repository-relative path to the file containing the Go version
+	ENV_ENV_FILE                - The repository-relative path to an environment file containing
+	                              a line setting the variable GO_VERSION to the Go version
+	                              (e.g. GO_VERSION=3.2.1)
+
+Miscellaneous:
+
+	GIT_AUTHOR_EMAIL_TEMPLATE - Template used to construct the Git Author's email address.
+	GO_REPO_NAME              - The name of the official Go repository.
+	GO_VERSION_URL            - A URL from which information about Go releases is fetched.
+	RELEASE_PAGE_URL          - The URL of a webpage containing changelog notes about Go releases.
+"""
 from typing import Final
 
 ENV_GIT_AUTHOR_NAME: Final = 'GIT_AUTHOR_NAME'
+"""
+The name of the environment variable set to username of the author for commits.
+"""
+
 ENV_GITHUB_REPOSITORY: Final = 'GITHUB_REPOSITORY'
+"""
+The name of the environment variable set to "name" of the repository set by GHA
+(e.g. octocat/Hello-World).
+"""
+
 ENV_GITHUB_REPOSITORY_OWNER: Final = 'GITHUB_REPOSITORY_OWNER'
+"""
+The name of the environment variable set to repository owner's name set by GHA
+(e.g. octocat).
+"""
+
 ENV_GITHUB_TOKEN: Final = 'GITHUB_TOKEN'
+"""
+The name of the environment variable set to token used to access the GitHub
+API - set by GHA.
+"""
+
 ENV_GO_VERSION_FILE: Final = 'GO_VERSION_FILE'
+"""
+The name of the environment variable set to repository-relative path to the file
+containing the Go version.
+"""
+
+ENV_ENV_FILE: Final = 'ENV_FILE'
+"""
+The name of the environment variable set to repository-relative path to an
+environment file containing a line setting the variable GO_VERSION to the Go
+version (e.g. GO_VERSION=3.2.1).
+"""
+
+
 GIT_AUTHOR_EMAIL_TEMPLATE: Final = '{git_author_name}@users.noreply.github.com'
+"""Template used to construct the Git Author's email address."""
+
 GO_REPO_NAME: Final = 'golang/go'
+"""The name of the official Go repository."""
+
 GO_VERSION_URL: Final = 'https://golang.org/dl/?mode=json'
+"""A URL from which information about Go releases is fetched."""
+
 RELEASE_PAGE_URL: Final = 'https://golang.org/doc/devel/release.html'
+"""The URL of a webpage containing changelog notes about Go releases."""
+
+
+__all__ = [
+	"ENV_GIT_AUTHOR_NAME",
+	"ENV_GITHUB_REPOSITORY",
+	"ENV_GITHUB_REPOSITORY_OWNER",
+	"ENV_GITHUB_TOKEN",
+	"ENV_GO_VERSION_FILE",
+	"ENV_ENV_FILE",
+	"GIT_AUTHOR_EMAIL_TEMPLATE",
+	"GO_REPO_NAME",
+	"GO_VERSION_URL",
+	"RELEASE_PAGE_URL",
+]

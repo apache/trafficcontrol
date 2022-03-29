@@ -22,7 +22,6 @@ package crconfig
 import (
 	"context"
 	"fmt"
-	"github.com/lib/pq"
 	"math/rand"
 	"net"
 	"reflect"
@@ -32,32 +31,22 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-type StringArray pq.StringArray
-
+// TODO: move all these rand functions to traffic_ops_golang/test/rand.go
 func randBool() *bool {
 	b := rand.Int()%2 == 0
 	return &b
 }
 func randStr() *string {
-	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_"
-	num := 100
-	s := ""
-	for i := 0; i < num; i++ {
-		s += string(chars[rand.Intn(len(chars))])
-	}
-	return &s
+	return test.RandStr()
 }
 func randStrArray() []string {
-	num := 100
-	sArray := make([]string, num)
-	for i := 0; i < num; i++ {
-		sArray[i] = *randStr()
-	}
-	return sArray
+	return test.RandStrArray()
 }
 func randInt() *int {
 	i := rand.Int()
@@ -490,21 +479,21 @@ func TestGetAllServersNonService(t *testing.T) {
 	compare(expected, actual, t)
 }
 
-func ExpectedGetServerDSNames() map[tc.CacheName][]tc.DeliveryServiceName {
-	return map[tc.CacheName][]tc.DeliveryServiceName{
-		"cache0": []tc.DeliveryServiceName{"ds0", "ds1"},
-		"cache1": []tc.DeliveryServiceName{"ds0", "ds1"},
+func ExpectedGetServerDSNames() map[tc.CacheName][]string {
+	return map[tc.CacheName][]string{
+		"cache0": {"ds0", "ds1"},
+		"cache1": {"ds0", "ds1"},
 	}
 }
 
-func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[tc.CacheName][]tc.DeliveryServiceName, cdn string) {
+func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[tc.CacheName][]string, cdn string) {
 	rows := sqlmock.NewRows([]string{"host_name", "xml_id"})
 	for cache, dses := range expected {
 		for _, ds := range dses {
 			rows = rows.AddRow(cache, ds)
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetServerDSNames(t *testing.T) {
@@ -529,7 +518,7 @@ func TestGetServerDSNames(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getServerDSNames(cdn, tx)
+	actual, err := dbhelpers.GetServerDSNamesByCDN(tx, cdn)
 
 	if err != nil {
 		t.Fatalf("getServerDSNames expected: nil error, actual: %v", err)
@@ -544,12 +533,12 @@ func TestGetServerDSNames(t *testing.T) {
 	}
 }
 
-func ExpectedGetServerDSes(expectedGetServerDSNames map[tc.CacheName][]tc.DeliveryServiceName) map[tc.CacheName]map[string][]string {
+func ExpectedGetServerDSes(expectedGetServerDSNames map[tc.CacheName][]string) map[tc.CacheName]map[string][]string {
 	e := map[tc.CacheName]map[string][]string{}
 	for cache, dses := range expectedGetServerDSNames {
 		e[cache] = map[string][]string{}
 		for _, ds := range dses {
-			e[cache][string(ds)] = []string{string(ds) + "regex0", string(ds) + "regex1"}
+			e[cache][ds] = []string{ds + "regex0", ds + "regex1"}
 		}
 	}
 	return e

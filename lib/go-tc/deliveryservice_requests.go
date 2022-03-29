@@ -793,10 +793,10 @@ func (dsr DeliveryServiceRequestV40) Downgrade() DeliveryServiceRequestNullable 
 	downgraded.CreatedAt = TimeNoModFromTime(dsr.CreatedAt)
 	if dsr.Requested != nil {
 		downgraded.DeliveryService = new(DeliveryServiceNullableV30)
-		*downgraded.DeliveryService = dsr.Requested.DowngradeToV3()
+		*downgraded.DeliveryService = dsr.Requested.DowngradeToV31()
 	} else if dsr.Original != nil {
 		downgraded.DeliveryService = new(DeliveryServiceNullableV30)
-		*downgraded.DeliveryService = dsr.Original.DowngradeToV3()
+		*downgraded.DeliveryService = dsr.Original.DowngradeToV31()
 	}
 	if dsr.ID != nil {
 		downgraded.ID = new(int)

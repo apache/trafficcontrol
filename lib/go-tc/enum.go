@@ -315,6 +315,14 @@ func DSTypeCategoryFromString(s string) DSTypeCategory {
 	}
 }
 
+// GetDSTypeCategory returns the delivery service type category (either HTTP or DNS) of the given delivery service type.
+func GetDSTypeCategory(dsType string) string {
+	if strings.HasPrefix(dsType, "DNS") {
+		return "DNS"
+	}
+	return "HTTP"
+}
+
 // These are the allowable values for the Signing Algorithm property of a
 // Delivery Service.
 const (

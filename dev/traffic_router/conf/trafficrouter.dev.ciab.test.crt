@@ -1,0 +1,39 @@
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-----BEGIN CERTIFICATE-----
+MIID2TCCAsGgAwIBAgIECbxoVzANBgkqhkiG9w0BAQsFADCBjTELMAkGA1UEBhMC
+VVMxETAPBgNVBAgTCENvbG9yYWRvMQ8wDQYDVQQHEwZEZW52ZXIxHzAdBgNVBAoT
+FkFwYWNoZSBUcmFmZmljIENvbnRyb2wxEzARBgNVBAsTCkFQSURlZmF1bHQxJDAi
+BgNVBAMTG3RyYWZmaWNyb3V0ZXIuZGV2LmNpYWIudGVzdDAeFw0yMTEwMjkyMDE0
+MzRaFw0zMTEwMjcyMDE0MzRaMIGNMQswCQYDVQQGEwJVUzERMA8GA1UECBMIQ29s
+b3JhZG8xDzANBgNVBAcTBkRlbnZlcjEfMB0GA1UEChMWQXBhY2hlIFRyYWZmaWMg
+Q29udHJvbDETMBEGA1UECxMKQVBJRGVmYXVsdDEkMCIGA1UEAxMbdHJhZmZpY3Jv
+dXRlci5kZXYuY2lhYi50ZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+AQEA0qm0F2S8enGsj51QjXD+RVbYS2MvET66xIOsl50xbva6qcmBr2N1QnSwEjvi
+qW8l/f/rheTbin+33RGhZBkdlDiGdA9AJDcFnfoEapklPXp4bls/2S0SW/QnmB+S
+3oQsw2ApOG3WIxf4i8SlfdIZypu3wjEYGivu1IE8br93LFiS9fCMLoNr5zSKTGt6
+2Qq+7MCx2nDS35yY9L4Wbl5GpLiniU1CVz203AjyEMJ4obENP4k5AgBgmV21Qu9r
+CdT9KTXuCyS1VekaRQrRYTAC4bPH2RKxzPYge6AcvKU/DgkPObAb0rDJHDscZ5eg
+s9udg7CcrFv1aaGyGU8fRTcVDwIDAQABoz8wPTAPBgNVHRMBAf8EBTADAQH/MAsG
+A1UdDwQEAwICpDAdBgNVHQ4EFgQUY9QVEWlky7Bi21tW9pconfsKh28wDQYJKoZI
+hvcNAQELBQADggEBAGgTkpfYzchX3HV0nbj3Gv8yVP9IdDOEKpku8XzaF29rjuNJ
+1TAgJV5ZiW2N7HKGa7dI9kvirWBliStSyB7t6HyJAMED2OTsBXAQmjaCCRAd3Rzr
+pCMxmfkUk4mPin9/Hz08nzeLEurb7m1uqyyZiMxKCVhE2i+RaQ81GDOBH8YK249o
+2tKxT4tJpSV0uNGvHSdxAu6+5IeWk4N/lWJJ6zMTELMF/Y8MLbkJ6lg64igmXNrU
+g9yTAx99uZ7MMwnCuNdqAx+6BXuif0mVkpxIUWxQrr294aznO8taAYzELPI+P4yU
+qy5sinTvvDuPNqncH0AfixT6Bk0ObnnmD1WDbEE=
+-----END CERTIFICATE-----

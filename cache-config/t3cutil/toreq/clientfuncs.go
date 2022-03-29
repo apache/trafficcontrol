@@ -21,9 +21,12 @@ package toreq
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -61,6 +64,38 @@ func (cl *TOClient) GetProfileByName(profileName string, reqHdr http.Header) (tc
 		return tc.Profile{}, reqInf, errors.New("getting profile '" + profileName + "': " + err.Error())
 	}
 	return profile, reqInf, nil
+}
+
+func (cl *TOClient) WriteFsCookie(fileName string) {
+	tmpFileName := fileName + ".tmp"
+	cookie := torequtil.FsCookie{}
+	u, err := url.Parse(cl.c.URL)
+	if err != nil {
+		log.Warnln("Error parsing Traffic ops URL: ", err)
+		return
+	}
+	for _, c := range cl.c.Client.Jar.Cookies(u) {
+		fsCookie := torequtil.Cookie{Cookie: &http.Cookie{
+			Name:  c.Name,
+			Value: c.Value,
+		}}
+		cookie.Cookies = append(cookie.Cookies, fsCookie)
+	}
+	fsCookie, err := json.MarshalIndent(cookie, "", " ")
+	if err != nil {
+		log.Warnln("Error creating JSON cookie file: ", err)
+		return
+	}
+	log.Infof("Writing temp file '%s'", tmpFileName)
+	err = ioutil.WriteFile(tmpFileName, fsCookie, 0600)
+	if err != nil {
+		log.Warnln("Error writing cooking file: ", err)
+		return
+	}
+	if err := os.Rename(tmpFileName, fileName); err != nil {
+		log.Warnln("Error moving cookie file: ", err)
+	}
+	log.Infof("Copying temp file '%s' to real '%s'", tmpFileName, fileName)
 }
 
 func (cl *TOClient) GetGlobalParameters(reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {

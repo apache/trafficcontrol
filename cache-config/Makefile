@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,8 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-
 SOURCE_DIRS := $(subst /,,$(dir $(wildcard **/README.md)))
 MANPAGES := $(join $(SOURCE_DIRS), $(SOURCE_DIRS:%=/%.1))
 RST := $(join $(SOURCE_DIRS), $(SOURCE_DIRS:%=/%.rst))
@@ -24,9 +21,14 @@ PANDOC_VERSION := $(shell pandoc --version | head -n1 | cut -d ' ' -f2)
 DATE ?= $(shell date '+%Y-%m-%d')
 TC_VERSION ?= $(shell cat ../VERSION)
 
+GO_FLAGS ?=
 PANDOC_FLAGS := --strip-comments
 
-.PHONY: man rst clean
+TARGETS := t3c/t3c t3c-apply/t3c-apply t3c-check/t3c-check t3c-check-refs/t3c-check-refs t3c-check-reload/t3c-check-reload t3c-diff/t3c-diff t3c-generate/t3c-generate t3c-preprocess/t3c-preprocess t3c-request/t3c-request t3c-update/t3c-update
+
+.PHONY: debug all man rst clean
+
+all: $(TARGETS)
 
 man: $(MANPAGES)
 
@@ -59,4 +61,28 @@ rst: $(RST)
 
 
 clean:
-	$(RM) $(MANPAGES) $(RST)
+	$(RM) $(MANPAGES) $(RST) $(TARGETS)
+
+t3c/t3c: $(wildcard t3c/**/*.go) $(wildcard t3c/*.go)
+	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
+t3c-apply/t3c-apply: $(wildcard t3c-apply/**/*.go) $(wildcard t3c-apply/*.go)
+	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
+t3c-check/t3c-check: $(wildcard t3c-check/**/*.go) $(wildcard t3c-check/*.go)
+	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
+t3c-check-refs/t3c-check-refs: $(wildcard t3c-check-refs/**/*.go) $(wildcard t3c-check-refs/*.go)
+	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
+t3c-check-reload/t3c-check-reload: $(wildcard t3c-check-reload/**/*.go) $(wildcard t3c-check-reload/*.go)
+	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
+t3c-diff/t3c-diff: $(wildcard t3c-diff/**/*.go) $(wildcard t3c-diff/*.go)
+	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
+t3c-generate/t3c-generate: $(wildcard t3c-generate/**/*.go) $(wildcard t3c-generate/*.go)
+	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
+t3c-preprocess/t3c-preprocess: $(wildcard t3c-preprocess/**/*.go) $(wildcard t3c-preprocess/*.go)
+	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
+t3c-request/t3c-request: $(wildcard t3c-request/**/*.go) $(wildcard t3c-request/*.go)
+	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
+t3c-update/t3c-update: $(wildcard t3c-update/**/*.go) $(wildcard t3c-update/*.go)
+	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
+
+debug: GO_FLAGS=--gcflags "all=-N -l"
+debug: $(TARGETS)

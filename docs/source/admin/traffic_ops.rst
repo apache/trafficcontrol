@@ -500,7 +500,12 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	.. versionadded:: 6.2
 
 	:dcdn_id: A string representing this :abbr:`CDN (Content Delivery Network)` to be used in the :abbr:`JWT (JSON Web Token)` and subsequently in :abbr:`CDNi (Content Delivery Network Interconnect)` operations.
-	:jwt_decoding_secret: A string used to decode the :abbr:`JWT (JSON Web Token)` to get information for :abbr:`CDNi (Content Delivery Network Interconnect)` operations.
+
+:user_cache_refresh_interval_sec: This optional integer value specifies the interval (in seconds) between refreshing the in-memory Users cache. Default: 0 (disabled).
+
+	.. warning:: Enabling the Users cache improves performance by reducing the number of queries made to the Traffic Ops database, but it means that it may take up to this many seconds before any changes to Users and/or Roles are enforced.
+
+	.. versionadded:: 7.0
 
 
 Example cdn.conf

@@ -118,7 +118,6 @@ func CreateTestDeliveryServiceWithGeoLimitCountries(t *testing.T) {
 	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "geo-limit-countries-test-ds-name", "edge", "https://test-geo-limit.com", "geo-limit-countries-test-ds-xml-id")
 	customDS.Protocol = util.IntPtr(0)
 	customDS.GeoLimit = util.IntPtr(2)
-	//geoLimitCountries := []string{"US   ", "CA"}
 	customDS.GeoLimitCountries = []string{"US   ", "CA"}
 
 	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})

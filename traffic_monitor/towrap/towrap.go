@@ -457,7 +457,7 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 // to try to get the CRConfig from Traffic Ops.
 func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time, error) {
 	crConfig, crConfigTime, _ := s.lastCRConfig.Get(cdn)
-	if crConfig == nil {
+	if len(crConfig) == 0 {
 		b, err := s.CRConfigRaw(cdn)
 		return b, time.Now(), err
 	}
@@ -552,23 +552,6 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 	if err != nil {
 		return nil, fmt.Errorf("getting monitor config map: %v", err)
 	}
-
-	crcData, err := s.CRConfigRaw(cdn)
-	if err != nil {
-		return nil, fmt.Errorf("getting CRConfig: %v", err)
-	}
-
-	crConfig := tc.CRConfig{}
-	json := jsoniter.ConfigFastest
-	if err := json.Unmarshal(crcData, &crConfig); err != nil {
-		return nil, fmt.Errorf("unmarshalling CRConfig JSON : %v", err)
-	}
-
-	mc, err = CreateMonitorConfig(crConfig, mc)
-	if err != nil {
-		return nil, fmt.Errorf("creating Traffic Monitor Config: %v", err)
-	}
-
 	return mc, nil
 }
 
@@ -674,81 +657,4 @@ func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error)
 	// nil-dereference checks done already in each 'fetch' method; they'll just
 	// return an error in that case
 	return *server.CDNName, nil
-}
-
-// CreateMonitorConfig modifies the passed TrafficMonitorConfigMap to add the
-// Traffic Monitors and Delivery Services found in a CDN Snapshot
-func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
-	// Dump the "live" monitoring.json monitors, and populate with the
-	// "snapshotted" CRConfig
-	if mc == nil {
-		return mc, errors.New("no TM configmap data")
-	}
-	// TODO: in the next major/minor release following 6.1, we should be able to remove this
-	//  fallback dependency on the CRConfig entirely (https://github.com/apache/trafficcontrol/issues/6512)
-	for name, mon := range crConfig.Monitors {
-		if tmData, ok := mc.TrafficMonitor[name]; !ok || tmData.IP != "" || tmData.IP6 != "" {
-			continue
-		}
-		mc.TrafficMonitor[name] = tc.TrafficMonitor{}
-		m := mc.TrafficMonitor[name]
-		if mon.Port != nil {
-			m.Port = *mon.Port
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing Port field\n", name)
-		}
-		if mon.IP6 != nil {
-			m.IP6 = *mon.IP6
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing IP6 field\n", name)
-		}
-		if mon.IP != nil {
-			m.IP = *mon.IP
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing IP field\n", name)
-		}
-		m.HostName = name
-		if mon.FQDN != nil {
-			m.FQDN = *mon.FQDN
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing FQDN field\n", name)
-		}
-		if mon.Profile != nil {
-			m.Profile = *mon.Profile
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing Profile field\n", name)
-		}
-		if mon.Location != nil {
-			m.Location = *mon.Location
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing Location field\n", name)
-		}
-		if mon.ServerStatus != nil {
-			m.ServerStatus = string(*mon.ServerStatus)
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing ServerStatus field\n", name)
-		}
-		mc.TrafficMonitor[name] = m
-	}
-
-	// Dump the "live" monitoring.json DeliveryServices, and populate with the
-	// "snapshotted" CRConfig but keep using the monitoring.json thresholds,
-	// because they're not in the CRConfig.
-	rawDeliveryServices := mc.DeliveryService
-	mc.DeliveryService = map[string]tc.TMDeliveryService{}
-	for name, _ := range crConfig.DeliveryServices {
-		if rawDS, ok := rawDeliveryServices[name]; ok {
-			// use the raw DS if it exists, because the CRConfig doesn't have
-			// thresholds or statuses
-			mc.DeliveryService[name] = rawDS
-		} else {
-			mc.DeliveryService[name] = tc.TMDeliveryService{
-				XMLID:              name,
-				TotalTPSThreshold:  0,
-				ServerStatus:       "REPORTED",
-				TotalKbpsThreshold: 0,
-			}
-		}
-	}
-	return mc, nil
 }

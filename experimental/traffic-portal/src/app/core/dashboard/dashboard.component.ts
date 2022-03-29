@@ -64,7 +64,9 @@ export class DashboardComponent implements OnInit {
 	 * Whether or not the currently logged-in user has permission to create
 	 * Delivery Services.
 	 */
-	public canCreateDeliveryServices = false;
+	public get canCreateDeliveryServices(): boolean {
+		return this.auth.hasPermission("DELIVERY-SERVICE:CREATE");
+	}
 
 	/**
 	 * The date and time at which the page loaded.
@@ -77,9 +79,6 @@ export class DashboardComponent implements OnInit {
 	/** Fuzzy search control */
 	public fuzzControl = new FormControl("", {updateOn: "change"});
 
-	/**
-	 * Constructor.
-	 */
 	constructor(
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly route: ActivatedRoute,
@@ -114,8 +113,6 @@ export class DashboardComponent implements OnInit {
 				}
 			}
 		);
-
-		this.canCreateDeliveryServices = this.auth.capabilities.has("ds-create");
 	}
 
 	/**

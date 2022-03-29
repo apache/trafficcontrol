@@ -45,6 +45,7 @@ init() {
 				"max_events": 200,
 				"health_flush_interval_ms": 20,
 				"stat_flush_interval_ms": 20,
+				"log_location_access": "/opt/traffic_monitor/var/log/access.log",
 				"log_location_event": "/opt/traffic_monitor/var/log/event.log",
 				"log_location_error": "/opt/traffic_monitor/var/log/traffic_monitor.log",
 				"log_location_warning": "/opt/traffic_monitor/var/log/traffic_monitor.log",

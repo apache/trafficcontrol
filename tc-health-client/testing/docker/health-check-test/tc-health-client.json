@@ -1,0 +1,13 @@
+{
+  "cdn-name": "cdn1",
+  "enable-active-markdowns": true,
+  "reason-code": "active",
+  "to-credential-file": "/etc/to-creds",
+  "to-request-timeout-seconds": "5s",
+  "tm-poll-interval-seconds": "10s",
+  "to-login-dispersion-factor": 90,
+  "unavailable-poll-threshold": 2,
+  "enable-poll-state-log": true,
+  "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",
+  "trafficserver-bin-dir": "/opt/trafficserver/bin"
+}

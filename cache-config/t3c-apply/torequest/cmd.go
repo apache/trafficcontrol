@@ -82,6 +82,7 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	args = append(args, "--via-string-release="+strconv.FormatBool(!cfg.OmitViaStringRelease))
 	args = append(args, "--no-outgoing-ip="+strconv.FormatBool(cfg.NoOutgoingIP))
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
+	args = append(args, "--use-strategies="+cfg.UseStrategies.String())
 
 	generatedFiles, stdErr, code := t3cutil.DoInput(configData, config.GenerateCmd, args...)
 	if code != 0 {
@@ -336,18 +337,18 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 	return nil
 }
 
-//checkCert checks the validity of the ssl certificate
+//checkCert checks the validity of the ssl certificate.
 func checkCert(c []byte) error {
 	block, _ := pem.Decode(c)
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return err
+		return errors.New("Error Parsing Certificate: " + err.Error())
 	}
 	if cert.NotAfter.Unix() < time.Now().Unix() {
-		err = errors.New("Certificate expired: " + cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
+		err = errors.New("Certificate expired: " + cert.NotAfter.Format(config.TimeAndDateLayout))
 		log.Warnf(err.Error())
 	} else {
-		log.Infof("Certificate valid until %s ", cert.NotAfter.Format("Jan 2, 2006 15:04 MST"))
+		log.Infof("Certificate valid until %s ", cert.NotAfter.Format(config.TimeAndDateLayout))
 	}
 	return err
 }

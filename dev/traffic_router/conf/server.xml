@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- 
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+ -->
+<Server port="8005" shutdown="SHUTDOWN">
+	<Listener className="org.apache.catalina.startup.VersionLoggerListener" />
+	<Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
+	<Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+	<Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
+	<Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+	<Listener className="org.apache.traffic_control.traffic_router.tomcat.TomcatLifecycleListener" />
+
+	<Service name="traffic_router_core">
+		<Connector port="80" protocol="org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
+				connectionTimeout="10000" mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="Port"
+				sendReasonPhrase="true"/>
+		<Connector port="3333" protocol="org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
+				connectionTimeout="10000" mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="ApiPort"/>
+		<Connector port="3443" protocol="org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
+				scheme="https" secure="true" SSLEnabled="true" clientAuth="false" sslProtocol="TLS" protocols="+TLSv1.1,+TLSv1.2,+TLSv1.3" connectionTimeout="10000"
+				mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecureApiPort" sendReasonPhrase="true"
+				sslImplementationName="org.apache.traffic_control.traffic_router.protocol.RouterSslImplementation"> </Connector>
+		<Connector port="443" protocol="org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
+				scheme="https" secure="true" SSLEnabled="true" clientAuth="false" sslProtocol="TLS" protocols="+TLSv1.1,+TLSv1.2,+TLSv1.3" connectionTimeout="10000"
+				mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecurePort" sendReasonPhrase="true"
+				sslImplementationName="org.apache.traffic_control.traffic_router.protocol.RouterSslImplementation">
+		</Connector>
+		<Engine name="traffic_router_core" defaultHost="localhost">
+			<Host name="localhost" appBase="webapps">
+				<Context path=""><JarScanner scanManifest="false" /></Context>
+			</Host>
+		</Engine>
+	</Service>
+
+</Server>

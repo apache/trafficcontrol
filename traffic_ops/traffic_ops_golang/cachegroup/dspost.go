@@ -102,6 +102,7 @@ func DSPostHandlerV40(w http.ResponseWriter, r *http.Request) {
 
 	if err, errCode := writeChangeLog(inf.Tx.Tx, inf.User, inf.IntParams["id"]); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, err)
+		return
 	}
 
 	api.WriteRespVals(w, r, resp, vals)
@@ -327,7 +328,7 @@ INSERT INTO profile_parameter (parameter, profile) (
 
 func getDSTenants(tx *sql.Tx, dsIDs []int) ([]int, error) {
 	q := `
-SELECT COALESCE(tenant_id, 0) FROM deliveryservice
+SELECT tenant_id FROM deliveryservice
 WHERE deliveryservice.id = ANY($1)
 `
 	rows, err := tx.Query(q, pq.Array(dsIDs))

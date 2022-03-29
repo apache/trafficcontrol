@@ -38,7 +38,7 @@ describe("NewDeliveryServiceComponent", () => {
 
 	beforeEach(async () => {
 		// mock the API
-		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"], {currentUser: {
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"], {currentUser: {
 			tenant: "root",
 			tenantId: 1
 		}});

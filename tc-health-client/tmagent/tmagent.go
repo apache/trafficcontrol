@@ -22,6 +22,7 @@ package tmagent
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -263,8 +264,9 @@ func (c *ParentInfo) GetCacheStatuses() (tc.CRStates, error) {
 // down in the trafficserver subsystem based upon that hosts current status and
 // the status that trafficmonitor health protocol has determined for a parent.
 func (c *ParentInfo) PollAndUpdateCacheStatus() {
-	cycleCount := 0
+	toLoginDispersion := config.GetTOLoginDispersion(c.Cfg.TOLoginDispersionFactor)
 	log.Infoln("polling started")
+	log.Infof("TO login dispersion: %v seconds\n", toLoginDispersion.Seconds())
 
 	for {
 		pollingInterval := config.GetTMPollingInterval()
@@ -325,6 +327,15 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 			} else {
 				log.Infoln("updated TrafficMonitor statuses from TrafficOps")
 			}
+
+			// log the poll state data if enabled
+			if c.Cfg.EnablePollStateLog {
+				err = c.WritePollState()
+				if err != nil {
+					log.Errorf("could not write the poll state log: %s\n", err.Error())
+				}
+			}
+
 			time.Sleep(pollingInterval)
 			continue
 		}
@@ -364,15 +375,23 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 		}
 
 		// periodically update the TrafficMonitor list and statuses
-		if cycleCount == c.Cfg.TmUpdateCycles {
-			cycleCount = 0
+		if toLoginDispersion <= 0 {
+			toLoginDispersion = config.GetTOLoginDispersion(c.Cfg.TOLoginDispersionFactor)
 			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
 				log.Errorln("could not update the list of trafficmonitors, keeping the old config")
 			} else {
 				log.Infoln("updated TrafficMonitor statuses from TrafficOps")
 			}
 		} else {
-			cycleCount++
+			toLoginDispersion -= pollingInterval
+		}
+
+		// log the poll state data if enabled
+		if c.Cfg.EnablePollStateLog {
+			err = c.WritePollState()
+			if err != nil {
+				log.Errorf("could not write the poll state log: %s\n", err.Error())
+			}
 		}
 
 		time.Sleep(pollingInterval)
@@ -415,6 +434,19 @@ func (c *ParentInfo) UpdateParentInfo() error {
 		return errors.New("trafficserver may not be running: " + err.Error())
 	}
 
+	return nil
+}
+
+func (c *ParentInfo) WritePollState() error {
+	data, err := json.MarshalIndent(c, "", "\t")
+	if err != nil {
+		return fmt.Errorf("marshaling configuration state: %s\n", err.Error())
+	} else {
+		err = os.WriteFile(c.Cfg.PollStateJSONLog, data, 0644)
+		if err != nil {
+			return fmt.Errorf("writing configuration state: %s\n", err.Error())
+		}
+	}
 	return nil
 }
 
