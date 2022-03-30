@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-<div class="tree-select-root">
+<div class="tree-select-root" role="combobox" aria-expanded="{{ scope.shown }}">
     <input type="text" id="{{ handle }}" name="{{ handle }}" class="form-control display-field" ng-model="selected.label" ng-click="toggle()" required readonly>
     <div class="tree-drop-down" ng-show="shown">
         <div class="input-group search-box">
@@ -30,10 +30,10 @@ under the License.
         </div>
         <ul class="nav nav-list nav-pills nav-stacked">
             <li class="tree-row" ng-repeat="row in treeRows | filter: checkFilters">
-                <a ng-style="{'left': row.depth*8+'px'}" ng-click="select(row)" name="{{row.label}}">
+                <button type="button" ng-style="{'left': row.depth*8+'px'}" ng-click="select(row)" name="{{row.label}}">
                     <div ng-click="collapse(row, $event)"><i class="fa" ng-class="getClass(row)"></i></div>
                     <span>{{row.label}}</span>
-                </a>
+                </button>
             </li>
         </ul>
     </div>

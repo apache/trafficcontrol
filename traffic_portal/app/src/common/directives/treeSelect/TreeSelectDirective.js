@@ -39,7 +39,7 @@ var TreeSelectDirective = function($document) {
             scope.searchText = "";
             /** @type boolean */
             scope.shown = false;
-            /** @type TreeSelectDirective.RowData */
+            /** @type TreeSelectDirective.RowData | null */
             scope.selected = null;
 
             // Bound variables
@@ -89,8 +89,8 @@ var TreeSelectDirective = function($document) {
             const reInit = function() {
                 scope.treeRows = [];
                 scope.selected = null;
-                for(let data of scope.treeData) {
-                    if (data != undefined)
+                for(const data of scope.treeData) {
+                    if (data !== undefined)
                         addNode(data, 0);
                 }
             }
@@ -102,25 +102,25 @@ var TreeSelectDirective = function($document) {
              * @returns TreeSelectDirective.RowData
              */
             const addNode = function(row, depth) {
-                scope.treeRows.push({
+                const node = {
                     label: row.name,
                     value: row.id,
                     depth: depth,
                     children: [],
                     collapsed: false,
                     hidden: false
-                });
-                const last = scope.treeRows.length - 1;
+                };
+                scope.treeRows.push(node);
                 if(row.id === scope.initialValue || row.name === scope.initialValue) {
-                    scope.selected = scope.treeRows[last];
+                    scope.selected = node
                 }
-                if(row.children != null) {
+                if(row.children !== null && row.children !== undefined) {
                     for(const child of row.children) {
                         if(child === undefined) continue;
-                        scope.treeRows[last].children.push(addNode(child, depth + 1));
+                        node.children.push(addNode(child, depth + 1));
                     }
                 }
-                return scope.treeRows[last];
+                return node;
             }
 
             /**
@@ -136,7 +136,7 @@ var TreeSelectDirective = function($document) {
                             treeRow.collapsed = !treeRow.collapsed;
                         else
                             treeRow.collapsed = state;
-                        for(let treeChild of treeRow.children) {
+                        for(const treeChild of treeRow.children) {
                             treeChild.hidden = treeRow.collapsed;
                             collapseRecurse(treeChild, treeRow.collapsed);
                         }
@@ -156,7 +156,7 @@ var TreeSelectDirective = function($document) {
                 text = text.toString().toLowerCase();
                 input = input.toString().toLowerCase();
                 let n = -1;
-                for(let i in input) {
+                for(const i in input) {
                     const letter = input[i];
                     if (!~(n = text.indexOf(letter, n + 1))) return false;
                 }
@@ -194,9 +194,7 @@ var TreeSelectDirective = function($document) {
                 scope.update();
 
                 if(row.value !== this.initialValue) {
-                    ngFormController[this.handle].$setDirty();
-                } else {
-                    ngFormController[this.handle].$setPristine();
+                    ngFormController[scope.handle].$setDirty();
                 }
                 scope.close();
             }
@@ -235,6 +233,8 @@ var TreeSelectDirective = function($document) {
             scope.$watch("treeData", function(newVal, oldVal) {
                 reInit();
             });
+
+            ngFormController.$removeControl(ngFormController[scope.handle + "searchText"]);
         }
     }
 };

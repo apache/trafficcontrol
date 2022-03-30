@@ -62,14 +62,26 @@ div.tree-select-root {
       overflow-y: scroll;
       overflow-x: hidden;
 
-      & > li.tree-row > a {
-        padding: 5px 0 5px 5px;
-        position: relative;
+      & > li.tree-row {
+        &:hover {
+          background: #eeeeee;
+        }
+
+        & > button {
+          padding: 5px 0 5px 5px;
+          position: relative;
+          appearance: none;
+          border: none;
+          background: transparent;
+          width: 100%;
+          text-align: left;
 
 
-        div {
-          float: left;
-          padding: 0 5px 0 5px;
+
+          div {
+            float: left;
+            padding: 0 5px 0 5px;
+          }
         }
       }
     }
