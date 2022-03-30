@@ -172,8 +172,7 @@ function tm-health-client {
 	return $?;
 }
 
-declare -r API_VERSION=4.0
-export API_VERSION
+export API_VERSION=4.0
 export TO_URL="https://localhost:6443"
 export TO_USER="admin"
 export TO_PASSWORD="twelve12"
