@@ -32,7 +32,15 @@ function atc-ready {
 	if [[ $# -gt 0 ]]; then
 		case "$1" in
 			-w|--wait)
-				while ! curl -skL "$url" >/dev/null 2>&1; do
+				until curl -skL "$url" >/dev/null 2>&1; do
+					sleep 1;
+				done
+				return 0;;
+			-d|--deliveryservice)
+				local deliveryservice=cdn.dev-ds.ciab.test
+				until curl -4sfH "Host: ${deliveryservice}" localhost:3080 &&
+								<<<"$(dig +short -4 @localhost -p 3053 "$deliveryservice")" grep -q '^[0-9.]\+$';
+				do
 					sleep 1;
 				done
 				return 0;;
@@ -41,12 +49,14 @@ function atc-ready {
 				echo "";
 				echo "-h, --help  print usage information and exit";
 				echo "-w, --wait  wait for ATC to be ready, instead of just checking if it is ready";
+				echo "-d, --wait  wait for the ATC delivery service to be ready";
 				return 0;;
 			*)
 				echo "Usage: $0 [-h] [-w]" >&2;
 				echo "" >&2;
 				echo "-h, --help  print usage information and exit" >&2;
 				echo "-w, --wait  wait for ATC to be ready, instead of just checking if it is ready" >&2;
+				echo "-d, --wait  wait for the ATC delivery service to be ready" >&2;
 				return 1;;
 		esac
 	fi

@@ -30,14 +30,8 @@ declare -r cookie_name=dev-ciab-cookie
 source dev/atc.dev.sh
 
 export -f atc-ready
-if ! timeout 10m <<'BASH_COMMANDS' bash; then
-set -o errexit -o nounset
-until atc-ready; do
-	echo 'Waiting until Traffic Ops is ready to accept requests...'
-	sleep 3
-done
-echo 'Traffic Ops is ready to accept requests!'
-BASH_COMMANDS
+echo 'Waiting until Traffic Ops is ready to accept requests...'
+if ! timeout 10m bash -c 'atc-ready -w'; then
 	echo 'Traffic Ops was not available within 10 minutes!'
 	trap - ERR
 	echo 'Exiting...'
@@ -99,6 +93,15 @@ done
 # Snapshot
 cdn_id="$(<<<"$server" jq .cdnId)"
 to-req "/snapshot?cdnID=${cdn_id}" --request PUT
+
+deliveryservice=cdn.dev-ds.ciab.test
+echo "Waiting for Delivery Service ${deliveryservice} to be available..."
+if ! timeout 2m bash -c 'atc-ready -d'; then
+	echo "Delivery Service ${deliveryservice} was not available within 2 minutes!"
+	trap - ERR
+	echo 'Exiting...'
+	exit 1
+fi
 
 http_result=0 dns_result=0
 # Compile the tests
