@@ -5357,6 +5357,16 @@
             ]
         },
         {
+            "name": "top-with-caches-in-cdn1",
+            "description": "a topology",
+            "nodes": [
+                {
+                    "cachegroup": "cdn1-only",
+                    "parents": []
+                }
+            ]
+        },
+        {
             "name": "top-with-no-mids",
             "description": "A topology that has no MID_LOC cachegroups",
             "nodes": [

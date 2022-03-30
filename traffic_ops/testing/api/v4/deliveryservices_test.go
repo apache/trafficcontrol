@@ -333,6 +333,15 @@ func TestDeliveryServices(t *testing.T) {
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
+				"BAD REQUEST when ADDING TOPOLOGY to DS when NO CACHES in SAME CDN as DS": {
+					EndpointId: GetDeliveryServiceId(t, "top-ds-in-cdn2"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"cdnId":    GetCDNId(t, "cdn2"),
+						"topology": "top-with-caches-in-cdn1",
+						"xmlId":    "top-ds-in-cdn2",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
 				"OK when REMOVING TOPOLOGY": {
 					EndpointId: GetDeliveryServiceId(t, "ds-based-top-with-no-mids"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
