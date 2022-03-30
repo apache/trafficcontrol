@@ -28,7 +28,13 @@ VOLUME $TC
 EXPOSE 80 8081
 
 USER root
-RUN apk add --no-cache inotify-tools gcc musl-dev && \
+RUN apk add --no-cache \
+	# inotify-tools is used for inotifywait in run.sh
+	inotify-tools \
+	# make is used for the t3c Makefile
+	make \
+	# gcc and musl-dev are used to build packages using CGO
+	gcc musl-dev && \
 	go install github.com/go-delve/delve/cmd/dlv@latest
 
 RUN echo "stats_over_http.so" >> /etc/trafficserver/plugin.config && echo "system_stats.so" >> /etc/trafficserver/plugin.config
