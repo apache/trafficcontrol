@@ -1802,6 +1802,16 @@
             "RequiredCapability": "ram"
         }
     ],
+    "deliveryServiceServerAssignments": [
+        {
+            "xmlId": "ds3",
+            "serverNames": ["atlanta-edge-16"]
+        },
+        {
+            "xmlId": "ds-top",
+            "serverNames": ["denver-mso-org-01"]
+        }
+    ],
     "divisions": [
         {
             "name": "division1"
