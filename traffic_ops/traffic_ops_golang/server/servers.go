@@ -140,43 +140,6 @@ SELECT
 	s.offline_reason,
 	pl.name AS phys_location,
 	s.phys_location AS phys_location_id,
-	ARRAY[p.name] AS profile_name,
-	s.rack,
-	s.reval_pending,
-	st.name AS status,
-	s.status AS status_id,
-	s.tcp_port,
-	t.name AS server_type,
-	s.type AS server_type_id,
-	s.upd_pending AS upd_pending,
-	s.xmpp_id,
-	s.xmpp_passwd,
-	s.status_last_updated
-` + serversFromAndJoin
-
-const selectV4Query = `
-SELECT
-	cg.name AS cachegroup,
-	s.cachegroup AS cachegroup_id,
-	s.cdn_id,
-	cdn.name AS cdn_name,
-	s.domain_name,
-	s.guid,
-	s.host_name,
-	s.https_port,
-	s.id,
-	s.ilo_ip_address,
-	s.ilo_ip_gateway,
-	s.ilo_ip_netmask,
-	s.ilo_password,
-	s.ilo_username,
-	s.last_updated,
-	s.mgmt_ip_address,
-	s.mgmt_ip_gateway,
-	s.mgmt_ip_netmask,
-	s.offline_reason,
-	pl.name AS phys_location,
-	s.phys_location AS phys_location_id,
 	(SELECT ARRAY_AGG(sp.profile_name) FROM server_profile AS sp where sp.server=s.id) AS profile_name,
 	s.rack,
 	s.reval_pending,
@@ -501,11 +464,6 @@ AND dsorg.deliveryservice=:dsId
 const deleteServerQuery = `DELETE FROM server WHERE id=$1`
 const deleteInterfacesQuery = `DELETE FROM interface WHERE server=$1`
 const deleteIPsQuery = `DELETE FROM ip_address WHERE server = $1`
-
-//type TOServerV40 struct {
-//	ProfileNamesDB interface{} `json:"-" db:"profile_name"`
-//	tc.ServerV40
-//}
 
 func newUUID() *string {
 	uuidReference := uuid.New().String()
@@ -1098,12 +1056,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		log.Debugln("Non IMS request")
 	}
 
-	var query string
-	if version.Major >= 4 {
-		query = selectV4Query + queryAddition + where + orderBy + pagination
-	} else {
-		query = selectQuery + queryAddition + where + orderBy + pagination
-	}
+	query := selectQuery + queryAddition + where + orderBy + pagination
 	// If you're looking to get the servers for a particular delivery service, make sure you're also querying the ORG servers from the deliveryservice_server table
 	if _, ok := params[`dsId`]; ok {
 		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + originServerQuery
@@ -1122,9 +1075,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	ids := []int{}
 	for rows.Next() {
 		s := tc.ServerV40{}
-		var profiles []string
-		err := rows.Scan(
-			&s.Cachegroup,
+		err := rows.Scan(&s.Cachegroup,
 			&s.CachegroupID,
 			&s.CDNID,
 			&s.CDNName,
@@ -1145,7 +1096,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 			&s.OfflineReason,
 			&s.PhysLocation,
 			&s.PhysLocationID,
-			pq.Array(&profiles),
+			pq.Array(&s.ProfileNames),
 			&s.Rack,
 			&s.RevalPending,
 			&s.Status,
@@ -1160,7 +1111,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		if err != nil {
 			return nil, serverCount, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError, nil
 		}
-		s.ProfileNames = profiles
 		if user.PrivLevel < auth.PrivLevelOperations {
 			s.ILOPassword = &HiddenField
 			s.XMPPPasswd = &HiddenField
@@ -1343,7 +1293,39 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 	ids := []int{}
 	for rows.Next() {
 		var s tc.ServerV40
-		if err := rows.StructScan(&s); err != nil {
+		if err := rows.Scan(&s.Cachegroup,
+			&s.CachegroupID,
+			&s.CDNID,
+			&s.CDNName,
+			&s.DomainName,
+			&s.GUID,
+			&s.HostName,
+			&s.HTTPSPort,
+			&s.ID,
+			&s.ILOIPAddress,
+			&s.ILOIPGateway,
+			&s.ILOIPNetmask,
+			&s.ILOPassword,
+			&s.ILOUsername,
+			&s.LastUpdated,
+			&s.MgmtIPAddress,
+			&s.MgmtIPGateway,
+			&s.MgmtIPNetmask,
+			&s.OfflineReason,
+			&s.PhysLocation,
+			&s.PhysLocationID,
+			pq.Array(&s.ProfileNames),
+			&s.Rack,
+			&s.RevalPending,
+			&s.Status,
+			&s.StatusID,
+			&s.TCPPort,
+			&s.Type,
+			&s.TypeID,
+			&s.UpdPending,
+			&s.XMPPID,
+			&s.XMPPPasswd,
+			&s.StatusLastUpdated); err != nil {
 			log.Errorf("could not scan mid servers: %s\n", err)
 			return nil, nil, err, http.StatusInternalServerError
 		}
@@ -2080,12 +2062,12 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = inf.Tx.QueryRow(insertQueryV4, server.CachegroupID, server.CDNID, server.DomainName,
+	resultsRows := inf.Tx.QueryRow(insertQueryV4, server.CachegroupID, server.CDNID, server.DomainName,
 		server.HostName, server.HTTPSPort, server.ILOIPAddress, server.ILOIPNetmask, server.ILOIPGateway,
 		server.ILOUsername, server.ILOPassword, server.MgmtIPAddress, server.MgmtIPNetmask, server.MgmtIPGateway,
 		server.OfflineReason, server.PhysLocationID, profileID, server.Rack, server.StatusID,
-		server.TCPPort, server.TypeID, server.UpdPending, server.XMPPID, server.XMPPPasswd).Scan(
-		&server.Cachegroup,
+		server.TCPPort, server.TypeID, server.UpdPending, server.XMPPID, server.XMPPPasswd)
+	err = resultsRows.Scan(&server.Cachegroup,
 		&server.CachegroupID,
 		&server.CDNID,
 		&server.CDNName,

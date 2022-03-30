@@ -20,7 +20,9 @@ package server
  */
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -207,7 +209,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 			*ts.OfflineReason,
 			*ts.PhysLocation,
 			*ts.PhysLocationID,
-			1,
+			fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 			*ts.Rack,
 			*ts.RevalPending,
 			*ts.Status,
@@ -318,7 +320,7 @@ func TestGetMidServers(t *testing.T) {
 			*ts.OfflineReason,
 			*ts.PhysLocation,
 			*ts.PhysLocationID,
-			ts.ProfileNames[0],
+			fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 			*ts.Rack,
 			*ts.RevalPending,
 			*ts.Status,
@@ -455,7 +457,7 @@ func TestGetMidServers(t *testing.T) {
 		*ts.OfflineReason,
 		*ts.PhysLocation,
 		*ts.PhysLocationID,
-		ts.ProfileNames[0],
+		fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 		*ts.Rack,
 		*ts.RevalPending,
 		*ts.Status,
