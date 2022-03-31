@@ -420,8 +420,6 @@ class GoPRMaker:
 			'message': commit_message,
 			'tree': tree,
 			'parents': [self.repo.get_git_commit(head.sha)],
-			'author': self.author,
-			'committer': self.author,
 		}
 		if self.author:
 			kwargs['author'] = self.author
