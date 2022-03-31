@@ -254,11 +254,6 @@
             "name": "nullLatLongCG",
             "shortName": "null-ll",
             "typeName": "EDGE_LOC"
-        },
-        {
-            "name": "noServers",
-            "shortName": "noServers",
-            "typeName": "EDGE_LOC"
         }
     ],
     "cdns": [
