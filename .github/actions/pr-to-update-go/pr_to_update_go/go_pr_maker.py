@@ -24,6 +24,7 @@ import os
 import re
 import subprocess
 import sys
+from pathlib import PurePath
 from typing import Optional, TypedDict, Any, Union
 
 import dotenv
@@ -386,7 +387,7 @@ class GoPRMaker:
 		with open(go_version_file, 'w') as go_version_file_stream:
 			go_version_file_stream.write(f'{go_version}\n')
 		env_file = getenv(ENV_ENV_FILE)
-		env_path = os.path.join(os.path.dirname(env_file), ".env")
+		env_path = PurePath(os.path.dirname(env_file), ".env")
 		dotenv.set_key(dotenv_path=env_path, key_to_set=GO_VERSION_KEY, value_to_set=go_version,
 			quote_mode='never')
 		return self.update_files_on_tree(head=master_tip, files_to_check=[go_version_file,
