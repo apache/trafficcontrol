@@ -24,13 +24,12 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/lib/pq"
 )
 
 func TestMakeATSDotRules(t *testing.T) {
 	server := makeGenericServer()
 	serverProfile := "myProfile"
-	server.ProfileNames = &pq.StringArray{serverProfile}
+	server.ProfileNames = []string{serverProfile}
 
 	hdr := "myHeaderComment"
 

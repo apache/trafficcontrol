@@ -22,8 +22,6 @@ package atscfg
 import (
 	"strings"
 	"testing"
-
-	"github.com/lib/pq"
 )
 
 func TestMakeSysCtlDotConf(t *testing.T) {
@@ -36,9 +34,9 @@ func TestMakeSysCtlDotConf(t *testing.T) {
 	}
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = []string{profileName}
 
-	params := makeParamsFromMap((*server.ProfileNames)[0], SysctlFileName, paramData)
+	params := makeParamsFromMap(server.ProfileNames[0], SysctlFileName, paramData)
 
 	cfg, err := MakeSysCtlDotConf(server, params, &SysCtlDotConfOpts{HdrComment: hdr})
 	if err != nil {

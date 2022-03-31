@@ -22,7 +22,6 @@ package toreqold
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/lib/pq"
 )
 
 // serversToLatest converts a []tc.Server to []tc.ServerV30.
@@ -42,7 +41,7 @@ func serversToLatest(svs tc.ServersV3Response) ([]atscfg.Server, error) {
 // serverToLatest converts a tc.Server to tc.ServerV30.
 // This is necessary, because the old Traffic Ops client doesn't return the same type as the latest client.
 func serverToLatest(oldSv *tc.ServerV30) (*atscfg.Server, error) {
-	sv, err := oldSv.UpgradeToV40(pq.StringArray{*oldSv.Profile})
+	sv, err := oldSv.UpgradeToV40([]string{*oldSv.Profile})
 	if err != nil {
 		return nil, err
 	}

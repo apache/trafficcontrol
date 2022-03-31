@@ -22,8 +22,6 @@ package atscfg
 import (
 	"strings"
 	"testing"
-
-	"github.com/lib/pq"
 )
 
 func TestMakeLogsXMLDotConfig(t *testing.T) {
@@ -39,7 +37,7 @@ func TestMakeLogsXMLDotConfig(t *testing.T) {
 	})
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = []string{profileName}
 
 	cfg, err := MakeLogsXMLDotConfig(server, paramData, &LogsXMLDotConfigOpts{HdrComment: hdr})
 	if err != nil {

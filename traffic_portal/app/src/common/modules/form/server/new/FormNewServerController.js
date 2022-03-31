@@ -40,7 +40,6 @@ var FormNewServerController = function(server, $anchorScroll, $scope, $controlle
     };
 
     $scope.save = function(server) {
-        server.profileNames = [server.profileName];
         serverService.createServer(server).
             then(
                 function(result) {

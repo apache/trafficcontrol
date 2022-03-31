@@ -22,8 +22,6 @@ package atscfg
 import (
 	"strings"
 	"testing"
-
-	"github.com/lib/pq"
 )
 
 func TestMakeLoggingDotConfig(t *testing.T) {
@@ -31,7 +29,7 @@ func TestMakeLoggingDotConfig(t *testing.T) {
 	hdrComment := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = []string{profileName}
 
 	params := makeParamsFromMap("serverProfile", LoggingFileName, map[string]string{
 		"LogFormat.Name":           "myFormatName",

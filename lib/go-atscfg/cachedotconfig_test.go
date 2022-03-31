@@ -25,13 +25,12 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/lib/pq"
 )
 
 func TestMakeCacheDotConfig(t *testing.T) {
 	server := makeGenericServer()
 	serverProfile := "myProfile"
-	server.ProfileNames = &pq.StringArray{serverProfile}
+	server.ProfileNames = []string{serverProfile}
 	servers := []Server{*server}
 
 	ds0 := makeGenericDS()

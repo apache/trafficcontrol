@@ -140,7 +140,7 @@ func QueueUpdatesByProfile(t *testing.T) {
 	}
 	server := testData.Servers[0]
 	opts := client.NewRequestOptions()
-	if server.CDNName == nil || &(*server.ProfileNames)[0] == nil {
+	if server.CDNName == nil || server.ProfileNames[0] == "" {
 		t.Fatalf("server doesn't have a CDN name or a profile name...quitting")
 	}
 
@@ -157,7 +157,7 @@ func QueueUpdatesByProfile(t *testing.T) {
 	opts.QueryParameters.Del("name")
 
 	// Get the first server's Profile ID
-	opts.QueryParameters.Set("name", (*server.ProfileNames)[0])
+	opts.QueryParameters.Set("name", server.ProfileNames[0])
 	profiles, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
 		t.Fatalf("error while getting profiles: %v", err)

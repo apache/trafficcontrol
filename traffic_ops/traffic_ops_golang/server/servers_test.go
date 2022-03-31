@@ -20,7 +20,9 @@ package server
  */
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,7 +34,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -66,7 +67,7 @@ func getTestServers() []ServerAndInterfaces {
 			OfflineReason:  util.StrPtr("offlineReason"),
 			PhysLocation:   util.StrPtr("physLocation"),
 			PhysLocationID: util.IntPtr(1),
-			ProfileNames:   &pq.StringArray{"profile"},
+			ProfileNames:   []string{"profile"},
 			Rack:           util.StrPtr("rack"),
 			RevalPending:   util.BoolPtr(true),
 			Status:         util.StrPtr("status"),
@@ -78,6 +79,7 @@ func getTestServers() []ServerAndInterfaces {
 			XMPPID:         util.StrPtr("xmppId"),
 			XMPPPasswd:     util.StrPtr("xmppPasswd"),
 		},
+		StatusLastUpdated: &(time.Time{}),
 	}
 
 	mtu := uint64(9500)
@@ -173,6 +175,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
+	cols = append(cols, "statusLastUpdated")
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -206,7 +209,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 			*ts.OfflineReason,
 			*ts.PhysLocation,
 			*ts.PhysLocationID,
-			ts.ProfileNames,
+			fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 			*ts.Rack,
 			*ts.RevalPending,
 			*ts.Status,
@@ -217,6 +220,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 			*ts.UpdPending,
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
+			*ts.StatusLastUpdated,
 		)
 		interfaceRows = interfaceRows.AddRow(
 			srv.Interface.MaxBandwidth,
@@ -284,6 +288,7 @@ func TestGetMidServers(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
+	cols = append(cols, "statusLastUpdated")
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -315,7 +320,7 @@ func TestGetMidServers(t *testing.T) {
 			*ts.OfflineReason,
 			*ts.PhysLocation,
 			*ts.PhysLocationID,
-			ts.ProfileNames,
+			fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 			*ts.Rack,
 			*ts.RevalPending,
 			*ts.Status,
@@ -326,6 +331,7 @@ func TestGetMidServers(t *testing.T) {
 			*ts.UpdPending,
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
+			*ts.StatusLastUpdated,
 		)
 		interfaceRows = interfaceRows.AddRow(
 			srv.Interface.MaxBandwidth,
@@ -365,6 +371,7 @@ func TestGetMidServers(t *testing.T) {
 	}
 
 	cols2 := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
+	cols2 = append(cols2, "statusLastUpdated")
 	rows2 := sqlmock.NewRows(cols2)
 
 	cgs := []tc.CacheGroup{}
@@ -450,7 +457,7 @@ func TestGetMidServers(t *testing.T) {
 		*ts.OfflineReason,
 		*ts.PhysLocation,
 		*ts.PhysLocationID,
-		ts.ProfileNames,
+		fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 		*ts.Rack,
 		*ts.RevalPending,
 		*ts.Status,
@@ -461,6 +468,7 @@ func TestGetMidServers(t *testing.T) {
 		*ts.UpdPending,
 		*ts.XMPPID,
 		*ts.XMPPPasswd,
+		*ts.StatusLastUpdated,
 	)
 
 	mock.ExpectBegin()

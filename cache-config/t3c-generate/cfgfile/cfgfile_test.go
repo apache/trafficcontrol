@@ -31,7 +31,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/lib/pq"
 )
 
 func TestWriteConfigs(t *testing.T) {
@@ -312,7 +311,7 @@ func randServer() *atscfg.Server {
 	sv.OfflineReason = randStr()
 	sv.PhysLocation = randStr()
 	sv.PhysLocationID = randInt()
-	sv.ProfileNames = &pq.StringArray{*randStr()}
+	sv.ProfileNames = []string{*randStr()}
 	sv.Rack = randStr()
 	sv.RevalPending = randBool()
 	sv.Status = randStr()

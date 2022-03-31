@@ -20,7 +20,6 @@ package atscfg
  */
 
 import (
-	"github.com/lib/pq"
 	"strings"
 	"testing"
 )
@@ -36,7 +35,7 @@ func TestMakePluginDotConfig(t *testing.T) {
 	})
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = []string{profileName}
 
 	cfg, err := MakePluginDotConfig(server, paramData, &PluginDotConfigOpts{HdrComment: hdr})
 	if err != nil {

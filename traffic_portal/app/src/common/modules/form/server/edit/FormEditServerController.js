@@ -45,7 +45,6 @@ var FormEditServerController = function(server, $anchorScroll, $scope, $controll
     };
 
     $scope.save = function(server) {
-        server.profileNames = [server.profileName];
         serverService.updateServer(server).
             then(
                 function(result) {

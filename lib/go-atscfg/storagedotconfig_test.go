@@ -22,8 +22,6 @@ package atscfg
 import (
 	"strings"
 	"testing"
-
-	"github.com/lib/pq"
 )
 
 func TestMakeStorageDotConfig(t *testing.T) {
@@ -31,7 +29,7 @@ func TestMakeStorageDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = []string{profileName}
 
 	paramData := map[string]string{
 		"Drive_Prefix":      "/dev/sd",
@@ -42,7 +40,7 @@ func TestMakeStorageDotConfig(t *testing.T) {
 		"SSD_Drive_Letters": "i,j,k",
 	}
 
-	params := makeParamsFromMap((*server.ProfileNames)[0], StorageFileName, paramData)
+	params := makeParamsFromMap(server.ProfileNames[0], StorageFileName, paramData)
 
 	/*
 	   # DO NOT EDIT - Generated for myProfile by myToolName (https://myto.example.net) on Thu
@@ -96,11 +94,11 @@ func TestMakeStorageDotConfigNoParams(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = []string{profileName}
 
 	paramData := map[string]string{}
 
-	params := makeParamsFromMap((*server.ProfileNames)[0], StorageFileName, paramData)
+	params := makeParamsFromMap(server.ProfileNames[0], StorageFileName, paramData)
 
 	cfg, err := MakeStorageDotConfig(server, params, &StorageDotConfigOpts{HdrComment: hdr})
 	if err != nil {
@@ -133,7 +131,7 @@ func TestMakeStorageDotConfigNoDriveLetters(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = []string{profileName}
 
 	paramData := map[string]string{
 		"Drive_Prefix":     "/dev/sd",
@@ -141,7 +139,7 @@ func TestMakeStorageDotConfigNoDriveLetters(t *testing.T) {
 		"SSD_Drive_Prefix": "/dev/ss",
 	}
 
-	params := makeParamsFromMap((*server.ProfileNames)[0], StorageFileName, paramData)
+	params := makeParamsFromMap(server.ProfileNames[0], StorageFileName, paramData)
 
 	cfg, err := MakeStorageDotConfig(server, params, &StorageDotConfigOpts{HdrComment: hdr})
 	if err != nil {
@@ -175,7 +173,7 @@ func TestMakeStorageDotConfigSomeDriveLetters(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.ProfileNames = &pq.StringArray{profileName}
+	server.ProfileNames = []string{profileName}
 
 	paramData := map[string]string{
 		"Drive_Prefix":     "/dev/sd",
@@ -184,7 +182,7 @@ func TestMakeStorageDotConfigSomeDriveLetters(t *testing.T) {
 		"Drive_Letters":    "a,b,c,d,e",
 	}
 
-	params := makeParamsFromMap((*server.ProfileNames)[0], StorageFileName, paramData)
+	params := makeParamsFromMap(server.ProfileNames[0], StorageFileName, paramData)
 
 	cfg, err := MakeStorageDotConfig(server, params, &StorageDotConfigOpts{HdrComment: hdr})
 	if err != nil {
