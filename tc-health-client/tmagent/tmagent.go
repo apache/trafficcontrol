@@ -353,11 +353,7 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 					if !c.Cfg.EnableActiveMarkdowns && !tmAvailable {
 						log.Infof("TM reports that %s is not available and should be marked DOWN but, mark downs are disabled by configuration", hostName)
 					} else {
-						// See issue #6448, the status field used in api/cache-status is not
-						// available in the publish/CrStates endpoint.  For now, will not
-						// use it.
-						//if err = c.markParent(cs.Fqdn, *v.Status, tmAvailable); err != nil {
-						if err = c.markParent(cs.Fqdn, tmAvailable); err != nil {
+						if err = c.markParent(cs.Fqdn, v.Status, tmAvailable); err != nil {
 							log.Errorln(err.Error())
 						}
 					}
@@ -523,10 +519,7 @@ func (c *ParentInfo) execTrafficCtl(fqdn string, available bool) error {
 
 // used to mark a parent as up or down in the trafficserver HostStatus
 // subsystem.
-//
-// TODO see issue #6448, add cacheStatus back when available in CrStates
-//func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool) error {
-func (c *ParentInfo) markParent(fqdn string, available bool) error {
+func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool) error {
 	var hostAvailable bool
 	var err error
 	hostName := parseFqdn(fqdn)
@@ -553,10 +546,8 @@ func (c *ParentInfo) markParent(fqdn string, available bool) error {
 					log.Errorln(err.Error())
 				}
 				if err == nil {
-					// TODO see issue 6448, add cacheStatus back when available in CrStates
-					// log.Infof("marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
 					hostAvailable = false
-					log.Infof("marked parent %s DOWN", hostName)
+					log.Infof("marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
 				}
 			}
 		} else { // available
@@ -566,9 +557,7 @@ func (c *ParentInfo) markParent(fqdn string, available bool) error {
 				hostAvailable = true
 				// reset the unavilable poll count
 				unavailablePollCount = 0
-				// TODO see issue #6448, add cacheStatus back when available in CrStates
-				//log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
-				log.Infof("marked parent %s UP", hostName)
+				log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
 			} else {
 				hostAvailable = false
 			}

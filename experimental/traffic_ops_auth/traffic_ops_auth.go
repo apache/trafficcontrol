@@ -138,7 +138,7 @@ func getTokenData(jwtSigningKey string, r *http.Request) (*TokenData, error) {
 
 	token, err := jwt.Parse(
 		[]byte(encToken.Value),
-		jwt.WithVerify(jwa.HS256, jwtSigningKey),
+		jwt.WithVerify(jwa.HS256, []byte(jwtSigningKey)),
 	)
 	if err != nil {
 		return nil, err

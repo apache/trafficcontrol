@@ -42,10 +42,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
+	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwk"
-	ljwt "github.com/lestrrat-go/jwx/jwt"
+	"github.com/lestrrat-go/jwx/jwt"
 )
 
 type emailFormatter struct {
@@ -110,12 +110,11 @@ Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 
 func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		defer r.Body.Close()
 		authenticated := false
 		form := auth.PasswordForm{}
 		if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
-			handleErrs(http.StatusBadRequest, err)
+			api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
 			return
 		}
 		if form.Username == "" || form.Password == "" {
@@ -157,9 +156,9 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
 				http.SetCookie(w, httpCookie)
 
-				var jwtToken *jwt.Token
-				var jwtSigned string
-				claims := jwt.MapClaims{}
+				var jwtToken jwt.Token
+				var jwtSigned []byte
+				jwtBuilder := jwt.NewBuilder()
 
 				emptyConf := config.CdniConf{}
 				if cfg.Cdni != nil && *cfg.Cdni != emptyConf {
@@ -168,15 +167,19 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 						// log but do not error out since this is optional in the JWT for CDNi integration
 						log.Errorf("getting ucdn for user %s: %v", form.Username, err)
 					}
-					claims["iss"] = ucdn
-					claims["aud"] = cfg.Cdni.DCdnId
+					jwtBuilder.Claim("iss", ucdn)
+					jwtBuilder.Claim("aud", cfg.Cdni.DCdnId)
 				}
 
-				claims["exp"] = httpCookie.Expires.Unix()
-				claims[api.MojoCookie] = httpCookie.Value
-				jwtToken = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+				jwtBuilder.Claim("exp", httpCookie.Expires.Unix())
+				jwtBuilder.Claim(api.MojoCookie, httpCookie.Value)
+				jwtToken, err = jwtBuilder.Build()
+				if err != nil {
+					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("building token: %s", err))
+					return
+				}
 
-				jwtSigned, err = jwtToken.SignedString([]byte(cfg.Secrets[0]))
+				jwtSigned, err = jwt.Sign(jwtToken, jwa.HS256, []byte(cfg.Secrets[0]))
 				if err != nil {
 					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
 					return
@@ -184,7 +187,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 				http.SetCookie(w, &http.Cookie{
 					Name:     api.AccessToken,
-					Value:    jwtSigned,
+					Value:    string(jwtSigned),
 					Path:     "/",
 					MaxAge:   httpCookie.MaxAge,
 					HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
@@ -225,7 +228,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
 			return
 		}
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
@@ -426,13 +429,13 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		decodedToken, err := ljwt.Parse(
+		decodedToken, err := jwt.Parse(
 			[]byte(encodedToken),
-			ljwt.WithVerifyAuto(true),
-			ljwt.WithJWKSetFetcher(jwksFetcher),
+			jwt.WithVerifyAuto(true),
+			jwt.WithJWKSetFetcher(jwksFetcher),
 		)
 		if err != nil {
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, errors.New("Error decoding token with message: "+err.Error()))
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Error decoding token with message: %w", err))
 			return
 		}
 
@@ -470,7 +473,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("encoding response: %w", err))
 			return
 		}
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)

@@ -1,4 +1,4 @@
-package crconfig
+package topology
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,17 +22,20 @@ package crconfig
 import (
 	"context"
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func randTopology() tc.CRConfigTopology {
 	return tc.CRConfigTopology{
-		Nodes: randStrArray(),
+		Nodes: test.RandStrArray(),
 	}
 }
 
@@ -75,7 +78,7 @@ func TestMakeTops(t *testing.T) {
 		t.Fatal("creating transaction: ", err)
 	}
 
-	actual, err := makeTopologies(tx)
+	actual, err := MakeTopologies(tx)
 	if err != nil {
 		t.Fatal("makeTopologies expected: nil error, actual: ", err)
 	}

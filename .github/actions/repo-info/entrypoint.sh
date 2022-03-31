@@ -32,16 +32,21 @@ if ! _brinfo="$(curl --silent "${GITHUB_API_URL}/repos/${INPUT_OWNER}/${INPUT_RE
   exit 2
 fi
 
+if [[ "$RHEL_VERSION" -ge 8 ]]; then
+	sha_length=9
+else
+	sha_length=7
+fi
+
 # parse out the commit sha
 _sha="$(<<<"$_brinfo" jq -r .commit.sha)"
+_sha="${_sha::${sha_length}}"
 
 # verify the sha
 if [[ -z "${_sha}" || "${_sha}" == "null" ]]; then
   echo "Error: could not parse the commit from branch ${INPUT_BRANCH}"
   exit 3
 fi
-
-echo "::set-output name=sha::${_sha}"
 
 branch_prefix_pattern="^$(<<<"$INPUT_BRANCH" grep -o '.*\.' | sed 's/\./\\./g')[0-9.]+$"
 
@@ -53,6 +58,18 @@ fi
 latest_tag="$(<<<"$tags_info" jq -r --arg BRANCH_PREFIX_PATTERN "$branch_prefix_pattern" '.[] | .name | select(test($BRANCH_PREFIX_PATTERN))' |
 	head -n1)"
 
-echo "::set-output name=latest-tag::${latest_tag}"
+commit_range="${latest_tag}...${INPUT_BRANCH}"
+if ! compare="$(curl --silent "${GITHUB_API_URL}/repos/${INPUT_OWNER}/${INPUT_REPO}/compare/${commit_range}")"; then
+	echo "Error: failed to fetch comparison info for commit range ${commit_range}"
+	exit 2
+fi
+ahead_by="$(<<<"$compare" jq -r .ahead_by)"
+
+if [[ -z "$ahead_by" ]]; then
+	echo "Error: could not fetch commit count between tag ${latest_tag} and the tip of branch ${INPUT_BRANCH}"
+fi
+expected_rpm_name="${INPUT_REPO}-${latest_tag}-${ahead_by}.${_sha}.el${RHEL_VERSION}.${TARGET_ARCH}.rpm"
+
+echo "::set-output name=expected-rpm-name::${expected_rpm_name}"
 
 exit 0

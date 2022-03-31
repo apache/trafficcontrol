@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -337,14 +338,18 @@ func TestGetDeliveryServices(t *testing.T) {
 		TotalTPSThreshold:  42.42,
 		Status:             DeliveryServiceStatus,
 		TotalKBPSThreshold: 24.24,
+		Type:               "HTTP",
+		Topology:           "foo",
+		HostRegexes:        []string{`.*\.example\..*`},
 	}
 
 	deliveryservices := []DeliveryService{deliveryservice}
 
 	mock.ExpectBegin()
-	rows := sqlmock.NewRows([]string{"xml_id", "global_max_tps", "global_max_mbps"})
+	rows := sqlmock.NewRows([]string{"xml_id", "global_max_tps", "global_max_mbps", "ds_type", "topology", "host_regexes"})
 	for _, deliveryservice := range deliveryservices {
-		rows = rows.AddRow(deliveryservice.XMLID, deliveryservice.TotalTPSThreshold, deliveryservice.TotalKBPSThreshold/KilobitsPerMegabit)
+		rows = rows.AddRow(deliveryservice.XMLID, deliveryservice.TotalTPSThreshold, deliveryservice.TotalKBPSThreshold/KilobitsPerMegabit,
+			deliveryservice.Type, deliveryservice.Topology, "{"+strings.Join(deliveryservice.HostRegexes, ",")+"}")
 	}
 
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
@@ -367,7 +372,7 @@ func TestGetDeliveryServices(t *testing.T) {
 
 	for i, sqlDeliveryservice := range sqlDeliveryservices {
 		deliveryservice := deliveryservices[i]
-		if deliveryservice != sqlDeliveryservice {
+		if !reflect.DeepEqual(deliveryservice, sqlDeliveryservice) {
 			t.Errorf("getDeliveryServices expected: %v, actual: %v", deliveryservice, sqlDeliveryservice)
 		}
 	}
@@ -513,14 +518,18 @@ func TestGetMonitoringJSON(t *testing.T) {
 			TotalTPSThreshold:  42.42,
 			Status:             DeliveryServiceStatus,
 			TotalKBPSThreshold: 24.24,
+			Type:               "HTTP",
+			Topology:           "foo",
+			HostRegexes:        []string{`.*\.example\..*`},
 		}
 
 		deliveryservices := []DeliveryService{deliveryservice}
 		// routers := []Router{router}
 
-		rows := sqlmock.NewRows([]string{"xml_id", "global_max_tps", "global_max_mbps"})
+		rows := sqlmock.NewRows([]string{"xml_id", "global_max_tps", "global_max_mbps", "ds_type", "topology", "host_regexes"})
 		for _, deliveryservice := range deliveryservices {
-			rows = rows.AddRow(deliveryservice.XMLID, deliveryservice.TotalTPSThreshold, deliveryservice.TotalKBPSThreshold/KilobitsPerMegabit)
+			rows = rows.AddRow(deliveryservice.XMLID, deliveryservice.TotalTPSThreshold, deliveryservice.TotalKBPSThreshold/KilobitsPerMegabit,
+				deliveryservice.Type, deliveryservice.Topology, "{"+strings.Join(deliveryservice.HostRegexes, ",")+"}")
 		}
 
 		mock.ExpectQuery("SELECT").WillReturnRows(rows)
@@ -542,6 +551,21 @@ func TestGetMonitoringJSON(t *testing.T) {
 
 		mock.ExpectQuery("SELECT").WillReturnRows(rows)
 		resp.Response.Config = config
+	}
+	{
+		//
+		// topologies
+		//
+		topologies := map[string]tc.CRConfigTopology{
+			"foo": {Nodes: []string{"cg1"}},
+		}
+
+		rows := sqlmock.NewRows([]string{"name", "nodes"})
+		for name, nodes := range topologies {
+			rows = rows.AddRow(name, "{"+strings.Join(nodes.Nodes, ",")+"}")
+		}
+		mock.ExpectQuery("SELECT").WillReturnRows(rows)
+		resp.Response.Topologies = topologies
 	}
 
 	dbCtx, f := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
@@ -589,6 +613,9 @@ func TestGetMonitoringJSON(t *testing.T) {
 	}
 	if !reflect.DeepEqual(sqlResp.Config, resp.Response.Config) {
 		t.Errorf("GetMonitoringJSON expected Config: %+v actual: %+v", resp.Response.Config, sqlResp.Config)
+	}
+	if !reflect.DeepEqual(sqlResp.Topologies, resp.Response.Topologies) {
+		t.Errorf("GetMonitoringJSON expected Topologies: %+v actual: %+v", resp.Response.Topologies, sqlResp.Topologies)
 	}
 }
 
@@ -715,9 +742,11 @@ func setupMockGetMonitoringServersWithoutIPv4(mock sqlmock.Sqlmock, monitor Moni
 	serverRows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "profile", "type", "hashId", "serverID"})
 	interfaceRows := sqlmock.NewRows([]string{"name", "max_bandwidth", "mtu", "monitor", "server"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "server", "interface"})
+	dssRows := sqlmock.NewRows([]string{"host_name", "xml_id"})
 	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.Profile, MonitorType, "noHash", 5)
 	for index, cache := range caches {
 		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.Profile, cache.Type, cache.HashID, cacheIDs[index])
+		dssRows = dssRows.AddRow(cache.HostName, "xml_id_foo")
 
 		interfaceRows = interfaceRows.AddRow("none", nil, 1500, false, 0)
 		for _, interf := range cache.Interfaces {
@@ -737,6 +766,7 @@ func setupMockGetMonitoringServersWithoutIPv4(mock sqlmock.Sqlmock, monitor Moni
 	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, router.Profile, RouterType, "noHashid", 3)
 	mock.ExpectQuery("SELECT (.+) FROM interface i (.+)").WithArgs(cdn).WillReturnRows(interfaceRows)
 	mock.ExpectQuery("SELECT (.+) FROM ip_address ip (.+)").WillReturnRows(ipAddressRows)
+	mock.ExpectQuery("SELECT (.+) FROM deliveryservice_server AS dss (.+)").WillReturnRows(dssRows)
 	mock.ExpectQuery("SELECT (.+) FROM server me (.+)").WithArgs(cdn).WillReturnRows(serverRows)
 }
 
@@ -744,9 +774,11 @@ func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router
 	serverRows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "profile", "type", "hashId", "serverID"})
 	interfaceRows := sqlmock.NewRows([]string{"name", "max_bandwidth", "mtu", "monitor", "server"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "server", "interface"})
+	dssRows := sqlmock.NewRows([]string{"host_name", "xml_id"})
 	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.Profile, MonitorType, "noHash", 5)
 	for index, cache := range caches {
 		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.Profile, cache.Type, cache.HashID, cacheIDs[index])
+		dssRows = dssRows.AddRow(cache.HostName, "xml_id_foo")
 
 		interfaceRows = interfaceRows.AddRow("none", nil, 1500, false, 0)
 		for _, interf := range cache.Interfaces {
@@ -767,6 +799,7 @@ func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router
 	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, router.Profile, RouterType, "noHashid", 3)
 	mock.ExpectQuery("SELECT (.+) FROM interface i (.+)").WithArgs(cdn).WillReturnRows(interfaceRows)
 	mock.ExpectQuery("SELECT (.+) FROM ip_address ip (.+)").WillReturnRows(ipAddressRows)
+	mock.ExpectQuery("SELECT (.+) FROM deliveryservice_server AS dss (.+)").WillReturnRows(dssRows)
 	mock.ExpectQuery("SELECT (.+) FROM server me (.+)").WithArgs(cdn).WillReturnRows(serverRows)
 }
 
@@ -848,8 +881,9 @@ func createMockCache(interfaceName string) Cache {
 				Name:         interfaceName + "2",
 			},
 		},
-		Type:   "EDGE",
-		HashID: "cacheHash",
+		Type:             "EDGE",
+		HashID:           "cacheHash",
+		DeliveryServices: []tc.TSDeliveryService{{XmlId: "xml_id_foo"}},
 	}
 }
 

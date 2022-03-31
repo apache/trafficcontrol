@@ -17,965 +17,749 @@ package v4
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices}, func() {
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		ti := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, ti)
-		header.Set(rfc.IfUnmodifiedSince, ti)
-		if includeSystemTests {
-			t.Run("Verify SSL key generation on DS creation", VerifySSLKeysOnDsCreationTest)
-			t.Run("Update CDN for a Delivery Service with SSL keys", SSLDeliveryServiceCDNUpdateTest)
-			t.Run("Create URL Signature keys for a Delivery Service", CreateTestDeliveryServicesURLSignatureKeys)
-			t.Run("Retrieve URL Signature keys for a Delivery Service", GetTestDeliveryServicesURLSignatureKeys)
-			t.Run("Delete URL Signature keys for a Delivery Service", DeleteTestDeliveryServicesURLSignatureKeys)
-			t.Run("Create URI Signing Keys for a Delivery Service", CreateTestDeliveryServicesURISigningKeys)
-			t.Run("Retrieve URI Signing keys for a Delivery Service", GetTestDeliveryServicesURISigningKeys)
-			t.Run("Delete URI Signing keys for a Delivery Service", DeleteTestDeliveryServicesURISigningKeys)
-			t.Run("Delete old CDN SSL keys", DeleteCDNOldSSLKeys)
-			t.Run("Create and retrieve SSL keys for a Delivery Service", DeliveryServiceSSLKeys)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices, DeliveryServicesRequiredCapabilities, DeliveryServiceServerAssignments}, func() {
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		tenant4UserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"OK when VALID ACCESSIBLETO parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"accessibleTo": {"1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"OK when ACTIVE=TRUE": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"active": {"true"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"Active": true})),
+				},
+				"OK when ACTIVE=FALSE": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"active": {"false"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"Active": false})),
+				},
+				"OK when VALID CDN parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"CDNName": "cdn1"})),
+				},
+				"OK when VALID LOGSENABLED parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"logsEnabled": {"false"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"LogsEnabled": false})),
+				},
+				"OK when VALID PROFILE parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"profile": {"ATS_EDGE_TIER_CACHE"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"ProfileName": "ATS_EDGE_TIER_CACHE"})),
+				},
+				"OK when VALID SERVICECATEGORY parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"serviceCategory": {"serviceCategory1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"ServiceCategory": "serviceCategory1"})),
+				},
+				"OK when VALID TENANT parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"tenant": {"tenant1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"Tenant": "tenant1"})),
+				},
+				"OK when VALID TOPOLOGY parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"topology": {"mso-topology"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"Topology": "mso-topology"})),
+				},
+				"OK when VALID TYPE parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"type": {"HTTP"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSExpectedFields(map[string]interface{}{"Type": tc.DSTypeHTTP})),
+				},
+				"OK when VALID XMLID parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateDSExpectedFields(map[string]interface{}{"XMLID": "ds1"})),
+				},
+				"EMPTY RESPONSE when INVALID ACCESSIBLETO parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"accessibleTo": {"10000"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when INVALID CDN parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"10000"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when INVALID PROFILE parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"profile": {"10000"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when INVALID TENANT parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"tenant": {"10000"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when INVALID TYPE parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"type": {"10000"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when INVALID XMLID parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"xmlId": {"invalid_xml_id"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"FIRST RESULT when LIMIT=1": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePagination("limit")),
+				},
+				"SECOND RESULT when LIMIT=1 OFFSET=1": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePagination("offset")),
+				},
+				"SECOND RESULT when LIMIT=1 PAGE=2": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePagination("page")),
+				},
+				"BAD REQUEST when INVALID LIMIT parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID OFFSET parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID PAGE parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"VALID when SORTORDER param is DESC": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDescSort()),
+				},
+				"EMPTY RESPONSE when TENANT attempts reading DS OUTSIDE TENANCY": {
+					ClientSession: tenant4UserSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds3"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+			},
+			"POST": {
+				"CREATED when VALID request WITH GEO LIMIT COUNTRIES": {
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"geoLimit":          2,
+						"geoLimitCountries": []string{"US", "CA"},
+						"xmlId":             "geolimit-test",
+					}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated), utils.ResponseHasLength(1),
+						validateDSExpectedFields(map[string]interface{}{"GeoLimitCountries": tc.GeoLimitCountriesType{"US", "CA"}})),
+				},
+				"BAD REQUEST when using LONG DESCRIPTION 2 and 3 fields": {
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"longDesc1": "long desc 1",
+						"longDesc2": "long desc 2",
+						"xmlId":     "ld1-ld2-test",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when XMLID left EMPTY": {
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"xmlId": "",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when XMLID is NIL": {
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"xmlId": nil,
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when TOPOLOGY DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"topology": "topology-doesnt-exist",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when creating STEERING DS with TLS VERSIONS": {
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"tlsVersions": []string{"1.1"},
+						"typeId":      GetTypeId(t, "STEERING"),
+						"xmlId":       "test-TLS-creation-steering",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"OK when creating HTTP DS with TLS VERSIONS": {
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"tlsVersions": []string{"1.1"},
+						"xmlId":       "test-TLS-creation-http",
+					}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated), utils.ResponseHasLength(1)),
+				},
+				"BAD REQUEST when creating DS with TENANCY NOT THE SAME AS CURRENT TENANT": {
+					ClientSession: tenant4UserSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"tenantId": GetTenantId(t, "tenant3"),
+						"xmlId":    "test-tenancy",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden), utils.ResponseHasLength(0)),
+				},
+			},
+			"PUT": {
+				"BAD REQUEST when using LONG DESCRIPTION 2 and 3 fields": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"longDesc1": "long desc 1",
+						"longDesc2": "long desc 2",
+						"xmlId":     "ds1",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"OK when VALID request": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"maxRequestHeaderBytes": 131080,
+						"longDesc":              "something different",
+						"maxDNSAnswers":         164598,
+						"maxOriginConnections":  100,
+						"active":                false,
+						"displayName":           "newds1displayname",
+						"dscp":                  41,
+						"geoLimit":              1,
+						"initialDispersion":     2,
+						"ipv6RoutingEnabled":    false,
+						"logsEnabled":           false,
+						"missLat":               42.881944,
+						"missLong":              -88.627778,
+						"multiSiteOrigin":       true,
+						"orgServerFqdn":         "http://origin.example.net",
+						"protocol":              2,
+						"qStringIgnore":         0,
+						"regionalGeoBlocking":   true,
+					}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateDSExpectedFields(map[string]interface{}{"MaxRequestHeaderSize": 131080,
+							"LongDesc": "something different", "MaxDNSAnswers": 164598, "MaxOriginConnections": 100,
+							"Active": false, "DisplayName": "newds1displayname", "DSCP": 41, "GeoLimit": 1,
+							"InitialDispersion": 2, "IPV6RoutingEnabled": false, "LogsEnabled": false, "MissLat": 42.881944,
+							"MissLong": -88.627778, "MultiSiteOrigin": true, "OrgServerFQDN": "http://origin.example.net",
+							"Protocol": 2, "QStringIgnore": 0, "RegionalGeoBlocking": true,
+						})),
+				},
+				"BAD REQUEST when INVALID REMAP TEXT": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua\nline2",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING SLICE PLUGIN SIZE": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"rangeRequestHandling": 3,
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when SLICE PLUGIN SIZE SET with INVALID RANGE REQUEST SETTING": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"rangeRequestHandling": 1,
+						"rangeSliceBlockSize":  262144,
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when SLICE PLUGIN SIZE TOO SMALL": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"rangeRequestHandling": 3,
+						"rangeSliceBlockSize":  0,
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when SLICE PLUGIN SIZE TOO LARGE": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"rangeRequestHandling": 3,
+						"rangeSliceBlockSize":  40000000,
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ADDING TOPOLOGY to CLIENT STEERING DS": {
+					EndpointId: GetDeliveryServiceId(t, "ds-client-steering"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"topology": "mso-topology",
+						"xmlId":    "ds-client-steering",
+						"typeId":   GetTypeId(t, "CLIENT_STEERING"),
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when TOPOLOGY DOESNT EXIST": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"topology": "",
+						"xmlId":    "ds1",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ADDING TOPOLOGY to DS with DS REQUIRED CAPABILITY": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"topology": "top-for-ds-req",
+						"xmlId":    "ds1",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ADDING TOPOLOGY to DS when NO CACHES in SAME CDN as DS": {
+					EndpointId: GetDeliveryServiceId(t, "top-ds-in-cdn2"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"cdnId":    GetCDNId(t, "cdn2"),
+						"topology": "top-with-caches-in-cdn1",
+						"xmlId":    "top-ds-in-cdn2",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"OK when REMOVING TOPOLOGY": {
+					EndpointId: GetDeliveryServiceId(t, "ds-based-top-with-no-mids"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"topology": nil,
+						"xmlId":    "ds-based-top-with-no-mids",
+					}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when DS with TOPOLOGY updates HEADER REWRITE FIELDS": {
+					EndpointId: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"firstHeaderRewrite": "foo",
+						"innerHeaderRewrite": "bar",
+						"lastHeaderRewrite":  "baz",
+						"topology":           "mso-topology",
+						"xmlId":              "ds-top",
+					}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"BAD REQUEST when DS with NO TOPOLOGY updates HEADER REWRITE FIELDS": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"firstHeaderRewrite": "foo",
+						"innerHeaderRewrite": "bar",
+						"lastHeaderRewrite":  "baz",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when DS with TOPOLOGY updates LEGACY HEADER REWRITE FIELDS": {
+					EndpointId: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"edgeHeaderRewrite": "foo",
+						"midHeaderRewrite":  "bar",
+						"topology":          "mso-topology",
+						"xmlId":             "ds-top",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"OK when DS with NO TOPOLOGY updates LEGACY HEADER REWRITE FIELDS": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"profileId":         GetProfileId(t, "ATS_EDGE_TIER_CACHE"),
+						"edgeHeaderRewrite": "foo",
+						"midHeaderRewrite":  "bar",
+						"xmlId":             "ds1",
+					}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when UPDATING MINOR VERSION FIELDS": {
+					EndpointId: GetDeliveryServiceId(t, "ds-test-minor-versions"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"consistentHashQueryParams": []string{"d", "e", "f"},
+						"consistentHashRegex":       "foo",
+						"deepCachingType":           "NEVER",
+						"fqPacingRate":              41,
+						"maxOriginConnections":      500,
+						"routingName":               "cdn",
+						"signingAlgorithm":          "uri_signing",
+						"tenantId":                  GetTenantId(t, "tenant1"),
+						"trRequestHeaders":          "X-ooF\nX-raB",
+						"trResponseHeaders":         "Access-Control-Max-Age: 600\nContent-Type: text/html; charset=utf-8",
+						"xmlId":                     "ds-test-minor-versions",
+					}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateDSExpectedFields(map[string]interface{}{"ConsistentHashQueryParams": []string{"d", "e", "f"},
+							"ConsistentHashRegex": "foo", "DeepCachingType": tc.DeepCachingTypeNever, "FQPacingRate": 41, "MaxOriginConnections": 500,
+							"SigningAlgorithm": "uri_signing", "Tenant": "tenant1", "TRRequestHeaders": "X-ooF\nX-raB",
+							"TRResponseHeaders": "Access-Control-Max-Age: 600\nContent-Type: text/html; charset=utf-8",
+						})),
+				},
+				"BAD REQUEST when INVALID COUNTRY CODE": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"geoLimit":          2,
+						"geoLimitCountries": []string{"US", "CA", "12"},
+						"xmlId":             "invalid-geolimit-test",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when CHANGING TOPOLOGY of DS with ORG SERVERS ASSIGNED": {
+					EndpointId: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
+					RequestBody: generateDeliveryService(t, map[string]interface{}{
+						"topology": "another-topology",
+						"xmlId":    "ds-top",
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when UPDATING DS OUTSIDE TENANCY": {
+					EndpointId: GetDeliveryServiceId(t, "ds3"), ClientSession: tenant4UserSession,
+					RequestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds3"}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds1"}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds1"}),
+					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"BAD REQUEST when DELETING DS OUTSIDE TENANCY": {
+					EndpointId: GetDeliveryServiceId(t, "ds3"), ClientSession: tenant4UserSession,
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+			"DELIVERY SERVICES CAPACITY": {
+				"OK when VALID request": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
 		}
 
-		t.Run("Create a Delivery Service with geo limit countries", CreateTestDeliveryServiceWithGeoLimitCountries)
-		t.Run("Create a Delivery Service with the removed Long Description 2 and 3 fields", CreateTestDeliveryServiceWithLongDescFields)
-		t.Run("Update a Delivery Service, setting its removed Long Description 2 and 3 fields", UpdateTestDeliveryServiceWithLongDescFields)
-		t.Run("Getting unmodified Delivery Services using the If-Modified-Since header", GetTestDeliveryServicesIMS)
-		t.Run("Getting Delivery Services accessible to a Tenant", GetAccessibleToTest)
-		t.Run("Basic update of some Delivery Service fields", UpdateTestDeliveryServices)
-		t.Run("Assign an Origin not in a Cache Group used by a Delivery Service's Topology to that Delivery Service", UpdateValidateORGServerCacheGroup)
-		t.Run("Attempt to update a Delivery Service with If-Unmodified-Since", testUpdatingDeliveryServicesWithIUSOrIfMatch(header))
-		t.Run("Basic update of some other Delivery Service fields", UpdateNullableTestDeliveryServices)
-		t.Run("Update a Delivery Service giving it invalid Raw Remap text", UpdateDeliveryServiceWithInvalidRemapText)
-		t.Run("Update a Delivery Service giving it invalid combinations of Range Slice Block Size and Range Request Handling", UpdateDeliveryServiceWithInvalidSliceRangeRequest)
-		t.Run("Invalid Topology-to-Delivery Service assignments", UpdateDeliveryServiceWithInvalidTopology)
-		t.Run("Getting modified Delivery Services using the If-Modified-Since header", testGettingDeliveryServicesWithIMSAfterModification(header))
-		t.Run("Basic update of Delivery Service header rewrite fields", UpdateDeliveryServiceTopologyHeaderRewriteFields)
-		t.Run("Basic GET request", GetTestDeliveryServices)
-		t.Run("GET requests using the 'active' query string parameter", GetInactiveTestDeliveryServices)
-		t.Run("Basic GET request for /deliveryservices/{{ID}}/capacity", GetTestDeliveryServicesCapacity)
-		t.Run("Update fields added in new minor versions of the API", DeliveryServiceMinorVersionsTest)
-		t.Run("Verify Tenancy-restricted Delivery Service access", DeliveryServiceTenancyTest)
-		t.Run("Attempt to create invalid Delivery Services", PostDeliveryServiceTest)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		t.Run("Attempt to update a Delivery Service with If-Match", testUpdatingDeliveryServicesWithIUSOrIfMatch(header))
-		t.Run("GET requests using pagination-controlling query string parameters", VerifyPaginationSupportDS)
-		t.Run("GET requests using the 'cdn' query string parameter", GetDeliveryServiceByCdn)
-		t.Run("Check behavior of 'cdn' query string parameter when CDN doesn't exist", GetDeliveryServiceByInvalidCdn)
-		t.Run("Check behavior of 'profile' query string parameter when Profile doesn't exist", GetDeliveryServiceByInvalidProfile)
-		t.Run("Check behavior of 'tenant' query string parameter when Tenant doesn't exist", GetDeliveryServiceByInvalidTenant)
-		t.Run("Check behavior of 'type' query string parameter when Type doesn't exist", GetDeliveryServiceByInvalidType)
-		t.Run("Check behavior of 'accessibleTo' query string parameter when the Tenant doesn't exist", GetDeliveryServiceByInvalidAccessibleTo)
-		t.Run("Check behavior of 'xmlId' query string parameter when xmlId doesn't exist", GetDeliveryServiceByInvalidXmlId)
-		t.Run("GET request using the 'logsEnabled' query string parameter", GetDeliveryServiceByLogsEnabled)
-		t.Run("GET request using the 'profile' query string parameter", GetDeliveryServiceByValidProfile)
-		t.Run("GET request using the 'tenant' query string parameter", GetDeliveryServiceByValidTenant)
-		t.Run("GET request using the 'type' query string parameter", GetDeliveryServiceByValidType)
-		t.Run("GET request using the 'xmlId' query string parameter", GetDeliveryServiceByValidXmlId)
-		t.Run("GET request using the 'topology' query string parameter", GetDeliveryServiceByTopology)
-		t.Run("GET request using the 'servicecategory' query string parameter", GetDeliveryServiceByServiceCategory)
-		t.Run("Descending order sorted response to GET request", SortTestDeliveryServicesDesc)
-		t.Run("Create/ Update/ Delete delivery services with locks", CUDDeliveryServiceWithLocks)
-		t.Run("TLS Versions property", addTLSVersionsToDeliveryService)
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					ds := tc.DeliveryServiceV4{}
+
+					if val, ok := testCase.RequestOpts.QueryParameters["accessibleTo"]; ok {
+						if _, err := strconv.Atoi(val[0]); err != nil {
+							testCase.RequestOpts.QueryParameters.Set("accessibleTo", strconv.Itoa(GetTenantId(t, val[0])))
+						}
+					}
+					if val, ok := testCase.RequestOpts.QueryParameters["cdn"]; ok {
+						if _, err := strconv.Atoi(val[0]); err != nil {
+							testCase.RequestOpts.QueryParameters.Set("cdn", strconv.Itoa(GetCDNId(t, val[0])))
+						}
+					}
+					if val, ok := testCase.RequestOpts.QueryParameters["profile"]; ok {
+						if _, err := strconv.Atoi(val[0]); err != nil {
+							testCase.RequestOpts.QueryParameters.Set("profile", strconv.Itoa(GetProfileId(t, val[0])))
+						}
+					}
+					if val, ok := testCase.RequestOpts.QueryParameters["type"]; ok {
+						if _, err := strconv.Atoi(val[0]); err != nil {
+							testCase.RequestOpts.QueryParameters.Set("type", strconv.Itoa(GetTypeId(t, val[0])))
+						}
+					}
+					if val, ok := testCase.RequestOpts.QueryParameters["tenant"]; ok {
+						if _, err := strconv.Atoi(val[0]); err != nil {
+							testCase.RequestOpts.QueryParameters.Set("tenant", strconv.Itoa(GetTenantId(t, val[0])))
+						}
+					}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &ds)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServices(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.CreateDeliveryService(ds, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryService(testCase.EndpointId(), ds, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.DeleteDeliveryService(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, resp.Alerts, err)
+							}
+						})
+					case "DELIVERY SERVICES CAPACITY":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceCapacity(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func CreateTestDeliveryServiceWithGeoLimitCountries(t *testing.T) {
-
-	if len(testData.DeliveryServices) == 0 {
-		t.Fatalf("no deliveryservices to run the test on, quitting")
-	}
-
-	cdn := createBlankCDN("geoLimitCDN", t)
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "HTTP")
-	types, _, err := TOSession.GetTypes(opts)
-	if err != nil {
-		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
-	}
-	if len(types.Response) < 1 {
-		t.Fatal("expected at least one type")
-	}
-	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "geo-limit-countries-test-ds-name", "edge", "https://test-geo-limit.com", "geo-limit-countries-test-ds-xml-id")
-	customDS.Protocol = util.IntPtr(0)
-	customDS.GeoLimit = util.IntPtr(2)
-	//geoLimitCountries := []string{"US   ", "CA"}
-	customDS.GeoLimitCountries = []string{"US   ", "CA"}
-
-	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while creating a new ds, but got %v", err)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("expected 1 response in return of a create DS request, but got %d", len(resp.Response))
-	}
-	if resp.Response[0].GeoLimitCountries == nil {
-		t.Fatalf("got nothing in geo limit countries")
-	}
-	arr := ([]string)(resp.Response[0].GeoLimitCountries)
-	if len(arr) != 2 || arr[0] != "US" || arr[1] != "CA" {
-		t.Errorf("expected geo limit countries: US,CA; actual: %s", arr)
-	}
-	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", *customDS.XMLID)
-	deliveryServices, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("couldn't get ds: %v", err)
-	}
-	if len(deliveryServices.Response) != 1 {
-		t.Fatal("couldn't get exactly one ds in the response, quitting")
-	}
-	dsID := deliveryServices.Response[0].ID
-	if dsID == nil {
-		t.Fatalf("got a delivery service with no ID")
-	}
-	customDS.GeoLimitCountries = []string{"US   ", "CA", "12"}
-	_, _, err = TOSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
-	if err == nil {
-		t.Error("expected an error while updating geo limit countries of a ds with an invalid country code, but got nothing")
-	}
-
-	_, _, err = TOSession.DeleteDeliveryService(*dsID, client.NewRequestOptions())
-	if err != nil {
-		t.Errorf("expected no error while deleting ds, but got %v", err)
-	}
-}
-
-func CUDDeliveryServiceWithLocks(t *testing.T) {
-	// Create a new user with operations level privileges
-	user1 := tc.UserV4{
-		Username:             "lock_user1",
-		RegistrationSent:     new(time.Time),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		Role:                 "operations",
-	}
-	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = 1
-	//util.IntPtr(resp.Response[0].ID)
-	user1.FullName = util.StrPtr("firstName LastName")
-	_, _, err := TOSession.CreateUser(user1, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not create test user with username: %s", user1.Username)
-	}
-	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
-
-	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
-	if err != nil {
-		t.Fatalf("could not login with user lock_user1: %v", err)
-	}
-	if len(testData.DeliveryServices) == 0 {
-		t.Fatalf("no deliveryservices to run the test on, quitting")
-	}
-
-	cdn := createBlankCDN("sslkeytransfer", t)
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "HTTP")
-	types, _, err := TOSession.GetTypes(opts)
-	if err != nil {
-		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
-	}
-	if len(types.Response) < 1 {
-		t.Fatal("expected at least one type")
-	}
-	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "cdn-locks-test-ds-name", "edge", "https://test-cdn-locks.com", "cdn-locks-test-ds-xml-id")
-
-	// Create a lock for this user
-	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
-		CDN:     cdn.Name,
-		Message: util.StrPtr("test lock"),
-		Soft:    util.BoolPtr(false),
-	}, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't create cdn lock: %v", err)
-	}
-	// Try to create a new ds on a CDN that another user has a hard lock on -> this should fail
-	_, reqInf, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
-	if err == nil {
-		t.Error("expected an error while creating a new ds for a CDN for which a hard lock is held by another user, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Errorf("expected a 403 forbidden status while creating a new ds for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
-	}
-
-	// Try to create a new ds on a CDN that the same user has a hard lock on -> this should succeed
-	dsResp, reqInf, err := userSession.CreateDeliveryService(customDS, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while creating a new ds for a CDN for which a hard lock is held by the same user, but got %v", err)
-	}
-	if len(dsResp.Response) != 1 {
-		t.Fatalf("one response expected, but got %d", len(dsResp.Response))
-	}
-	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", *customDS.XMLID)
-	deliveryServices, _, err := userSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("couldn't get ds: %v", err)
-	}
-	if len(deliveryServices.Response) != 1 {
-		t.Fatal("couldn't get exactly one ds in the response, quitting")
-	}
-	dsID := dsResp.Response[0].ID
-	// Try to update a ds on a CDN that another user has a hard lock on -> this should fail
-	customDS.LongDesc = util.StrPtr("changed_long_desc")
-	_, reqInf, err = TOSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
-	if err == nil {
-		t.Error("expected an error while updating a ds for a CDN for which a hard lock is held by another user, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Errorf("expected a 403 forbidden status while updating a ds for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
-	}
-	// Try to update a ds on a CDN that the same user has a hard lock on -> this should succeed
-	_, reqInf, err = userSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while updating a ds for a CDN for which a hard lock is held by the same user, but got %v", err)
-	}
-	// Try to delete a ds on a CDN that another user has a hard lock on -> this should fail
-	_, reqInf, err = TOSession.DeleteDeliveryService(*dsID, client.RequestOptions{})
-	if err == nil {
-		t.Error("expected an error while deleting a ds for a CDN for which a hard lock is held by another user, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Errorf("expected a 403 forbidden status while deleting a ds for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
-	}
-
-	// Try to delete a ds on a CDN that the same user has a hard lock on -> this should succeed
-	_, reqInf, err = userSession.DeleteDeliveryService(*dsID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("expected no error while deleting a ds for a CDN for which a hard lock is held by the same user, but got %v", err)
-	}
-
-	// Delete the lock
-	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn.Name}}})
-	if err != nil {
-		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
-	}
-}
-
-func CreateTestDeliveryServiceWithLongDescFields(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test updating a Delivery Service")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in the test data with a null or undefined XMLID")
-	}
-
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-	var remoteDS tc.DeliveryServiceV4
-	found := false
-	for _, ds := range dses.Response {
-		if ds.XMLID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
-			continue
-		}
-		if *ds.XMLID == *firstDS.XMLID {
-			found = true
-			remoteDS = ds
-			break
-		}
-	}
-	if !found {
-		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
-	}
-	if remoteDS.ID == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined ID") //... or it returned no DSes at all
-	}
-	remoteDS.XMLID = util.StrPtr("testDSCreation")
-	remoteDS.DisplayName = util.StrPtr("test DS with LD1 and LD2 fields")
-	remoteDS.LongDesc1 = util.StrPtr("long desc 1")
-	remoteDS.LongDesc2 = util.StrPtr("Long desc 2")
-	_, reqInf, err := TOSession.CreateDeliveryService(remoteDS, client.RequestOptions{})
-	if err == nil {
-		t.Errorf("expected an error stating that Long Desc 1 and Long Desc 2 fields are not supported in api version 4.0 onwards, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("expected a 400 status code, but got %d", reqInf.StatusCode)
-	}
-}
-
-func UpdateTestDeliveryServiceWithLongDescFields(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test updating a Delivery Service")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in the test data with a null or undefined XMLID")
-	}
-
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-
-	var remoteDS tc.DeliveryServiceV4
-	found := false
-	for _, ds := range dses.Response {
-		if ds.XMLID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
-			continue
-		}
-		if *ds.XMLID == *firstDS.XMLID {
-			found = true
-			remoteDS = ds
-			break
-		}
-	}
-	if !found {
-		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
-	}
-	if remoteDS.ID == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined ID") //... or it returned no DSes at all
-	}
-
-	remoteDS.LongDesc1 = util.StrPtr("long desc 1")
-	remoteDS.LongDesc2 = util.StrPtr("Long desc 2")
-	_, reqInf, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{})
-	if err == nil {
-		t.Errorf("expected an error stating that Long Desc 1 and Long Desc 2 fields are not supported in api version 4.0 onwards, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("expected a 400 status code, but got %d", reqInf.StatusCode)
-	}
-}
-
-func testUpdatingDeliveryServicesWithIUSOrIfMatch(h http.Header) func(*testing.T) {
-	return func(t *testing.T) {
-		UpdateTestDeliveryServicesWithHeaders(t, h)
-	}
-}
-
-func UpdateTestDeliveryServicesWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test updating Delivery Services with HTTP Headers")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in testing data with null or undefined XMLID")
-	}
-
-	opts := client.RequestOptions{Header: header}
-	dses, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-
-	var remoteDS tc.DeliveryServiceV4
-	found := false
-	for _, ds := range dses.Response {
-		if ds.XMLID != nil && *ds.XMLID == *firstDS.XMLID {
-			found = true
-			remoteDS = ds
-			break
-		}
-	}
-	if !found {
-		t.Fatalf("GET Delivery Services missing: %s", *firstDS.XMLID)
-	}
-	if remoteDS.ID == nil {
-		t.Fatalf("Traffic Ops returned a representation for Delivery Service '%s' that had a null or undefined ID", *firstDS.XMLID)
-	}
-
-	updatedLongDesc := "something different"
-	updatedMaxDNSAnswers := 164598
-	updatedMaxOriginConnections := 100
-	remoteDS.LongDesc = &updatedLongDesc
-	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
-	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
-	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
-
-	_, reqInf, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, opts)
-	if err == nil {
-		t.Errorf("expected precondition failed error, got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("expected status code to be 412 Precondition Failed, but got: %d", reqInf.StatusCode)
-	}
-}
-
-func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
-	_, _, err := TOSession.CreateCDN(tc.CDN{
-		DNSSECEnabled: false,
-		DomainName:    cdnName + ".ai",
-		Name:          cdnName,
-	}, client.RequestOptions{})
-	if err != nil {
-		t.Fatal("unable to create cdn: " + err.Error())
-	}
-
-	originalKeys, _, err := TOSession.GetCDNSSLKeys(cdnName, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("unable to get keys on cdn %v: %v - alerts: %+v", cdnName, err, originalKeys.Alerts)
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", cdnName)
-	cdns, _, err := TOSession.GetCDNs(opts)
-	if err != nil {
-		t.Fatalf("unable to get cdn %v: %v - alerts: %+v", cdnName, err, cdns.Alerts)
-	}
-	if len(cdns.Response) < 1 {
-		t.Fatal("expected more than 0 cdns")
-	}
-	keys, _, err := TOSession.GetCDNSSLKeys(cdnName, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("unable to get keys on cdn %v: %v", cdnName, err)
-	}
-	if len(keys.Response) != len(originalKeys.Response) {
-		t.Fatalf("expected %v ssl keys on cdn %v, got %v", len(originalKeys.Response), cdnName, len(keys.Response))
-	}
-	return cdns.Response[0]
-}
-
-func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int, sslKeyVersions []string) {
-	if ds.ID == nil || ds.XMLID == nil {
-		t.Error("Cannot clean up Delivery Service with nil ID and/or XMLID")
-		return
-	}
-	xmlid := *ds.XMLID
-	id := *ds.ID
-
-	opts := client.NewRequestOptions()
-	for _, version := range sslKeyVersions {
-		opts.QueryParameters.Set("version", version)
-		resp, _, err := TOSession.DeleteDeliveryServiceSSLKeys(xmlid, opts)
-		if err != nil {
-			t.Errorf("Unexpected error deleting Delivery Service SSL Keys: %v - alerts: %+v", err, resp.Alerts)
-		}
-	}
-	resp, _, err := TOSession.DeleteDeliveryService(id, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error deleting Delivery Service '%s' (#%d) during cleanup: %v - alerts: %+v", xmlid, id, err, resp.Alerts)
-	}
-	if oldCDNID != -1 {
-		resp2, _, err := TOSession.DeleteCDN(oldCDNID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("Unexpected error deleting CDN (#%d) during cleanup: %v - alerts: %+v", oldCDNID, err, resp2.Alerts)
-		}
-	}
-	if newCDNID != -1 {
-		resp2, _, err := TOSession.DeleteCDN(newCDNID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("Unexpected error deleting CDN (#%d) during cleanup: %v - alerts: %+v", newCDNID, err, resp2.Alerts)
-		}
-	}
-}
-
-// getCustomDS returns a DS that is guaranteed to have non-nil:
-//
-//    Active
-//    CDNID
-//    DSCP
-//    DisplayName
-//    RoutingName
-//    GeoLimit
-//    GeoProvider
-//    IPV6RoutingEnabled
-//    InitialDispersion
-//    LogsEnabled
-//    MissLat
-//    MissLong
-//    MultiSiteOrigin
-//    OrgServerFQDN
-//    Protocol
-//    QStringIgnore
-//    RangeRequestHandling
-//    RegionalGeoBlocking
-//    TenantID
-//    TypeID
-//    XMLID
-//
-// BUT, will ALWAYS have nil MaxRequestHeaderBytes.
-// Note that the Tenant is hard-coded to #1.
-func getCustomDS(cdnID, typeID int, displayName, routingName, orgFQDN, dsID string) tc.DeliveryServiceV4 {
-	customDS := tc.DeliveryServiceV4{}
-	customDS.Active = util.BoolPtr(true)
-	customDS.CDNID = util.IntPtr(cdnID)
-	customDS.DSCP = util.IntPtr(0)
-	customDS.DisplayName = util.StrPtr(displayName)
-	customDS.RoutingName = util.StrPtr(routingName)
-	customDS.GeoLimit = util.IntPtr(0)
-	customDS.GeoProvider = util.IntPtr(0)
-	customDS.IPV6RoutingEnabled = util.BoolPtr(false)
-	customDS.InitialDispersion = util.IntPtr(1)
-	customDS.LogsEnabled = util.BoolPtr(true)
-	customDS.MissLat = util.FloatPtr(0)
-	customDS.MissLong = util.FloatPtr(0)
-	customDS.MultiSiteOrigin = util.BoolPtr(false)
-	customDS.OrgServerFQDN = util.StrPtr(orgFQDN)
-	customDS.Protocol = util.IntPtr(2)
-	customDS.QStringIgnore = util.IntPtr(0)
-	customDS.RangeRequestHandling = util.IntPtr(0)
-	customDS.RegionalGeoBlocking = util.BoolPtr(false)
-	customDS.TenantID = util.IntPtr(1)
-	customDS.TypeID = util.IntPtr(typeID)
-	customDS.XMLID = util.StrPtr(dsID)
-	customDS.MaxRequestHeaderBytes = nil
-	return customDS
-}
-
-func DeleteCDNOldSSLKeys(t *testing.T) {
-	cdn := createBlankCDN("sslkeytransfer", t)
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "HTTP")
-	types, _, err := TOSession.GetTypes(opts)
-	if err != nil {
-		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
-	}
-	if len(types.Response) < 1 {
-		t.Fatal("expected at least one type")
-	}
-
-	// First DS creation
-	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "displayName", "routingName", "https://test.com", "dsID")
-
-	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error creating a Delivery Service: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected Delivery Service creation to return exactly one Delivery Service, got: %d", len(resp.Response))
-	}
-	ds := resp.Response[0]
-	if ds.XMLID == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
-	}
-
-	ds.CDNName = &cdn.Name
-	sslKeyRequestFields := tc.SSLKeyRequestFields{
-		BusinessUnit: util.StrPtr("BU"),
-		City:         util.StrPtr("CI"),
-		Organization: util.StrPtr("OR"),
-		HostName:     util.StrPtr("*.test.com"),
-		Country:      util.StrPtr("CO"),
-		State:        util.StrPtr("ST"),
-	}
-	genResp, _, err := TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, sslKeyRequestFields, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Unexpected error generaing SSL Keys for Delivery Service '%s': %v - alerts: %+v", *ds.XMLID, err, genResp.Alerts)
-	}
-	defer cleanUp(t, ds, cdn.ID, -1, []string{"1"})
-
-	// Second DS creation
-	customDS2 := getCustomDS(cdn.ID, types.Response[0].ID, "displayName2", "routingName2", "https://test2.com", "dsID2")
-
-	resp, _, err = TOSession.CreateDeliveryService(customDS2, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error creating a Delivery Service: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected Delivery Service creation to return exactly one Delivery Service, got: %d", len(resp.Response))
-	}
-	ds2 := resp.Response[0]
-	if ds2.XMLID == nil || ds2.ID == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID and/or ID")
-	}
-
-	ds2.CDNName = &cdn.Name
-	sslKeyRequestFields.HostName = util.StrPtr("*.test2.com")
-	genResp, _, err = TOSession.GenerateSSLKeysForDS(*ds2.XMLID, *ds2.CDNName, sslKeyRequestFields, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Unexpected error generaing SSL Keys for Delivery Service '%s': %v - alerts: %+v", *ds2.XMLID, err, genResp.Alerts)
-	}
-
-	var cdnKeys []tc.CDNSSLKeys
-	for tries := 0; tries < 5; tries++ {
-		time.Sleep(time.Second)
-		var sslKeysResp tc.CDNSSLKeysResponse
-		sslKeysResp, _, err = TOSession.GetCDNSSLKeys(cdn.Name, client.RequestOptions{})
-		if err != nil {
-			continue
-		}
-		cdnKeys = sslKeysResp.Response
-		if len(cdnKeys) != 0 {
-			break
-		}
-	}
-
-	if err != nil {
-		t.Fatalf("unable to get CDN %v SSL keys: %v", cdn.Name, err)
-	}
-	if len(cdnKeys) != 2 {
-		t.Errorf("expected two ssl keys for CDN %v, got %d instead", cdn.Name, len(cdnKeys))
-	}
-
-	delResp, _, err := TOSession.DeleteDeliveryService(*ds2.ID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error deleting Delivery Service #%d: %v - alerts: %+v", *ds2.ID, err, delResp.Alerts)
-	}
-
-	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("cdnID", strconv.Itoa(cdn.ID))
-	snapResp, _, err := TOSession.SnapshotCRConfig(opts)
-	if err != nil {
-		t.Fatalf("Failed to take Snapshot of CDN #%d: %v - alerts: %+v", cdn.ID, err, snapResp.Alerts)
-	}
-	var newCdnKeys []tc.CDNSSLKeys
-	for tries := 0; tries < 5; tries++ {
-		time.Sleep(time.Second)
-		var sslKeysResp tc.CDNSSLKeysResponse
-		sslKeysResp, _, err = TOSession.GetCDNSSLKeys(cdn.Name, client.RequestOptions{})
-		newCdnKeys = sslKeysResp.Response
-		if err == nil && len(newCdnKeys) == 1 {
-			break
-		}
-	}
-
-	if err != nil {
-		t.Fatalf("unable to get CDN %v SSL keys: %v", cdn.Name, err)
-	}
-	if len(newCdnKeys) != 1 {
-		t.Errorf("expected 1 ssl keys for CDN %v, got %d instead", cdn.Name, len(newCdnKeys))
-	}
-}
-
-func DeliveryServiceSSLKeys(t *testing.T) {
-	cdn := createBlankCDN("sslkeytransfer", t)
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "HTTP")
-	types, _, err := TOSession.GetTypes(opts)
-	if err != nil {
-		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
-	}
-	if len(types.Response) < 1 {
-		t.Fatal("expected at least one type")
-	}
-
-	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "displayName", "routingName", "https://test.com", "dsID")
-
-	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error creating a Delivery Service: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected Delivery Service creation to return exactly one Delivery Service, got: %d", len(resp.Response))
-	}
-	ds := resp.Response[0]
-	if ds.XMLID == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
-	}
-
-	ds.CDNName = &cdn.Name
-	genResp, _, err := TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
-		BusinessUnit: util.StrPtr("BU"),
-		City:         util.StrPtr("CI"),
-		Organization: util.StrPtr("OR"),
-		HostName:     util.StrPtr("*.test2.com"),
-		Country:      util.StrPtr("CO"),
-		State:        util.StrPtr("ST"),
-	}, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Unexpected error generating SSL Keys for Delivery Service '%s': %v - alerts: %+v", *ds.XMLID, err, genResp.Alerts)
-	}
-	defer cleanUp(t, ds, cdn.ID, -1, []string{"1"})
-
-	dsSSLKey := new(tc.DeliveryServiceSSLKeys)
-	for tries := 0; tries < 5; tries++ {
-		time.Sleep(time.Second)
-		var sslKeysResp tc.DeliveryServiceSSLKeysResponse
-		sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(*ds.XMLID, client.RequestOptions{})
-		*dsSSLKey = sslKeysResp.Response
-		if err == nil && dsSSLKey != nil {
-			break
-		}
-	}
-
-	if err != nil || dsSSLKey == nil {
-		t.Fatalf("unable to get DS %s SSL key: %v", *ds.XMLID, err)
-	}
-	if dsSSLKey.Certificate.Key == "" {
-		t.Errorf("expected a valid key but got nothing")
-	}
-	if dsSSLKey.Certificate.Crt == "" {
-		t.Errorf("expected a valid certificate, but got nothing")
-	}
-	if dsSSLKey.Certificate.CSR == "" {
-		t.Errorf("expected a valid CSR, but got nothing")
-	}
-
-	err = deliveryservice.Base64DecodeCertificate(&dsSSLKey.Certificate)
-	if err != nil {
-		t.Fatalf("couldn't decode certificate: %v", err)
-	}
-
-	dsSSLKeyReq := tc.DeliveryServiceSSLKeysReq{
-		AuthType:        &dsSSLKey.AuthType,
-		CDN:             &dsSSLKey.CDN,
-		DeliveryService: &dsSSLKey.DeliveryService,
-		BusinessUnit:    &dsSSLKey.BusinessUnit,
-		City:            &dsSSLKey.City,
-		Organization:    &dsSSLKey.Organization,
-		HostName:        &dsSSLKey.Hostname,
-		Country:         &dsSSLKey.Country,
-		State:           &dsSSLKey.State,
-		Key:             &dsSSLKey.Key,
-		Version:         &dsSSLKey.Version,
-		Certificate:     &dsSSLKey.Certificate,
-	}
-	addSSLKeysResp, _, err := TOSession.AddSSLKeysForDS(tc.DeliveryServiceAddSSLKeysReq{DeliveryServiceSSLKeysReq: dsSSLKeyReq}, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error adding SSL keys for Delivery Service '%s': %v - alerts: %+v", dsSSLKey.DeliveryService, err, addSSLKeysResp.Alerts)
-	}
-
-	dsSSLKey = new(tc.DeliveryServiceSSLKeys)
-	for tries := 0; tries < 5; tries++ {
-		time.Sleep(time.Second)
-		var sslKeysResp tc.DeliveryServiceSSLKeysResponse
-		sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(*ds.XMLID, client.RequestOptions{})
-		*dsSSLKey = sslKeysResp.Response
-		if err == nil && dsSSLKey != nil {
-			break
-		}
-	}
-
-	if err != nil || dsSSLKey == nil {
-		t.Fatalf("unable to get DS %s SSL key: %v", *ds.XMLID, err)
-	}
-	if dsSSLKey.Certificate.Key == "" {
-		t.Errorf("expected a valid key but got nothing")
-	}
-	if dsSSLKey.Certificate.Crt == "" {
-		t.Errorf("expected a valid certificate, but got nothing")
-	}
-	if dsSSLKey.Certificate.CSR == "" {
-		t.Errorf("expected a valid CSR, but got nothing")
-	}
-}
-
-func VerifySSLKeysOnDsCreationTest(t *testing.T) {
-	for _, ds := range testData.DeliveryServices {
-		if !(*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
-			continue
-		}
-		var err error
-		dsSSLKey := new(tc.DeliveryServiceSSLKeys)
-		for tries := 0; tries < 5; tries++ {
-			time.Sleep(time.Second)
-			var sslKeysResp tc.DeliveryServiceSSLKeysResponse
-			sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(*ds.XMLID, client.RequestOptions{})
-			*dsSSLKey = sslKeysResp.Response
-			if err == nil && dsSSLKey != nil {
-				break
+func validateDSExpectedFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		dsResp := resp.([]tc.DeliveryServiceV40)
+		for field, expected := range expectedResp {
+			for _, ds := range dsResp {
+				switch field {
+				case "Active":
+					assert.Equal(t, expected, *ds.Active, "Expected Active to be %v, but got %v", expected, *ds.Active)
+				case "DeepCachingType":
+					assert.Equal(t, expected, *ds.DeepCachingType, "Expected DeepCachingType to be %v, but got %v", expected, *ds.DeepCachingType)
+				case "CDNName":
+					assert.Equal(t, expected, *ds.CDNName, "Expected CDNName to be %v, but got %v", expected, *ds.CDNName)
+				case "ConsistentHashRegex":
+					assert.Equal(t, expected, *ds.ConsistentHashRegex, "Expected ConsistentHashRegex to be %v, but got %v", expected, *ds.ConsistentHashRegex)
+				case "ConsistentHashQueryParams":
+					assert.Exactly(t, expected, ds.ConsistentHashQueryParams, "Expected ConsistentHashQueryParams to be %v, but got %v", expected, ds.ConsistentHashQueryParams)
+				case "DisplayName":
+					assert.Equal(t, expected, *ds.DisplayName, "Expected DisplayName to be %v, but got %v", expected, *ds.DisplayName)
+				case "DSCP":
+					assert.Equal(t, expected, *ds.DSCP, "Expected DSCP to be %v, but got %v", expected, *ds.DSCP)
+				case "FQPacingRate":
+					assert.Equal(t, expected, *ds.FQPacingRate, "Expected FQPacingRate to be %v, but got %v", expected, *ds.FQPacingRate)
+				case "GeoLimit":
+					assert.Equal(t, expected, *ds.GeoLimit, "Expected GeoLimit to be %v, but got &v", expected, ds.GeoLimit)
+				case "GeoLimitCountries":
+					assert.Exactly(t, expected, ds.GeoLimitCountries, "Expected GeoLimitCountries to be %v, but got &v", expected, ds.GeoLimitCountries)
+				case "InitialDispersion":
+					assert.Equal(t, expected, *ds.InitialDispersion, "Expected InitialDispersion to be %v, but got &v", expected, ds.InitialDispersion)
+				case "IPV6RoutingEnabled":
+					assert.Equal(t, expected, *ds.IPV6RoutingEnabled, "Expected IPV6RoutingEnabled to be %v, but got &v", expected, ds.IPV6RoutingEnabled)
+				case "LogsEnabled":
+					assert.Equal(t, expected, *ds.LogsEnabled, "Expected LogsEnabled to be %v, but got %v", expected, *ds.LogsEnabled)
+				case "LongDesc":
+					assert.Equal(t, expected, *ds.LongDesc, "Expected LongDesc to be %v, but got %v", expected, *ds.LongDesc)
+				case "MaxDNSAnswers":
+					assert.Equal(t, expected, *ds.MaxDNSAnswers, "Expected MaxDNSAnswers to be %v, but got %v", expected, *ds.MaxDNSAnswers)
+				case "MaxOriginConnections":
+					assert.Equal(t, expected, *ds.MaxOriginConnections, "Expected MaxOriginConnections to be %v, but got %v", expected, *ds.MaxOriginConnections)
+				case "MaxRequestHeaderSize":
+					assert.Equal(t, expected, *ds.MaxRequestHeaderBytes, "Expected MaxRequestHeaderBytes to be %v, but got %v", expected, *ds.MaxRequestHeaderBytes)
+				case "MissLat":
+					assert.Equal(t, expected, *ds.MissLat, "Expected MissLat to be %v, but got %v", expected, *ds.MissLat)
+				case "MissLong":
+					assert.Equal(t, expected, *ds.MissLong, "Expected MissLong to be %v, but got %v", expected, *ds.MissLong)
+				case "MultiSiteOrigin":
+					assert.Equal(t, expected, *ds.MultiSiteOrigin, "Expected MultiSiteOrigin to be %v, but got %v", expected, *ds.MultiSiteOrigin)
+				case "OrgServerFQDN":
+					assert.Equal(t, expected, *ds.OrgServerFQDN, "Expected OrgServerFQDN to be %v, but got %v", expected, *ds.OrgServerFQDN)
+				case "ProfileName":
+					assert.Equal(t, expected, *ds.ProfileName, "Expected ProfileName to be %v, but got %v", expected, *ds.ProfileName)
+				case "Protocol":
+					assert.Equal(t, expected, *ds.Protocol, "Expected Protocol to be %v, but got %v", expected, *ds.Protocol)
+				case "QStringIgnore":
+					assert.Equal(t, expected, *ds.QStringIgnore, "Expected QStringIgnore to be %v, but got %v", expected, *ds.QStringIgnore)
+				case "RegionalGeoBlocking":
+					assert.Equal(t, expected, *ds.RegionalGeoBlocking, "Expected QStringIgnore to be %v, but got %v", expected, *ds.RegionalGeoBlocking)
+				case "ServiceCategory":
+					assert.Equal(t, expected, *ds.ServiceCategory, "Expected ServiceCategory to be %v, but got %v", expected, *ds.ServiceCategory)
+				case "SigningAlgorithm":
+					assert.Equal(t, expected, *ds.SigningAlgorithm, "Expected SigningAlgorithm to be %v, but got %v", expected, *ds.SigningAlgorithm)
+				case "Tenant":
+					assert.Equal(t, expected, *ds.Tenant, "Expected Tenant to be %v, but got %v", expected, *ds.Tenant)
+				case "Topology":
+					assert.Equal(t, expected, *ds.Topology, "Expected Topology to be %v, but got %v", expected, *ds.Topology)
+				case "TRRequestHeaders":
+					assert.Equal(t, expected, *ds.TRRequestHeaders, "Expected TRRequestHeaders to be %v, but got %v", expected, *ds.TRRequestHeaders)
+				case "TRResponseHeaders":
+					assert.Equal(t, expected, *ds.TRResponseHeaders, "Expected TRResponseHeaders to be %v, but got %v", expected, *ds.TRResponseHeaders)
+				case "Type":
+					assert.Equal(t, expected, *ds.Type, "Expected Type to be %v, but got %v", expected, *ds.Type)
+				case "XMLID":
+					assert.Equal(t, expected, *ds.XMLID, "Expected XMLID to be %v, but got %v", expected, *ds.XMLID)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
 			}
 		}
+	}
+}
 
-		if err != nil || dsSSLKey == nil {
-			t.Fatalf("unable to get DS %s SSL key: %v", *ds.XMLID, err)
-		}
-		if dsSSLKey.Certificate.Key == "" {
-			t.Errorf("expected a valid key but got nothing")
-		}
-		if dsSSLKey.Certificate.Crt == "" {
-			t.Errorf("expected a valid certificate, but got nothing")
-		}
-		if dsSSLKey.Certificate.CSR == "" {
-			t.Errorf("expected a valid CSR, but got nothing")
-		}
+func validatePagination(paginationParam string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		paginationResp := resp.([]tc.DeliveryServiceV40)
 
-		err = deliveryservice.Base64DecodeCertificate(&dsSSLKey.Certificate)
-		if err != nil {
-			t.Fatalf("couldn't decode certificate: %v", err)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("orderby", "id")
+		respBase, _, err := TOSession.GetDeliveryServices(opts)
+		assert.RequireNoError(t, err, "Cannot get Delivery Services: %v - alerts: %+v", err, respBase.Alerts)
+
+		ds := respBase.Response
+		assert.RequireGreaterOrEqual(t, len(ds), 3, "Need at least 3 Delivery Services in Traffic Ops to test pagination support, found: %d", len(ds))
+		switch paginationParam {
+		case "limit:":
+			assert.Exactly(t, ds[:1], paginationResp, "expected GET Delivery Services with limit = 1 to return first result")
+		case "offset":
+			assert.Exactly(t, ds[1:2], paginationResp, "expected GET Delivery Services with limit = 1, offset = 1 to return second result")
+		case "page":
+			assert.Exactly(t, ds[1:2], paginationResp, "expected GET Delivery Services with limit = 1, page = 2 to return second result")
 		}
 	}
 }
 
-func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
-	cdnNameOld := "sslkeytransfer"
-	oldCdn := createBlankCDN(cdnNameOld, t)
-	cdnNameNew := "sslkeytransfer1"
-	newCdn := createBlankCDN(cdnNameNew, t)
+func validateDescSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		dsDescResp := resp.([]tc.DeliveryServiceV40)
+		var descSortedList []string
+		var ascSortedList []string
+		assert.GreaterOrEqual(t, len(dsDescResp), 2, "Need at least 2 XMLIDs in Traffic Ops to test desc sort, found: %d", len(dsDescResp))
+		// Get delivery services in the default ascending order for comparison.
+		dsAscResp, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
+		assert.NoError(t, err, "Unexpected error getting Delivery Services with default sort order: %v - alerts: %+v", err, dsAscResp.Alerts)
+		assert.GreaterOrEqual(t, len(dsAscResp.Response), 2, "Need at least 2 XMLIDs in Traffic Ops to test sort, found %d", len(dsAscResp.Response))
+		// Verify the response match in length, i.e. equal amount of delivery services.
+		assert.Equal(t, len(dsAscResp.Response), len(dsDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(dsAscResp.Response), len(dsDescResp))
+		// Insert xmlIDs to the front of a new list, so they are now reversed to be in ascending order.
+		for _, ds := range dsDescResp {
+			descSortedList = append([]string{*ds.XMLID}, descSortedList...)
+		}
+		// Insert xmlIDs by appending to a new list, so they stay in ascending order.
+		for _, ds := range dsAscResp.Response {
+			ascSortedList = append(ascSortedList, *ds.XMLID)
+		}
+		assert.Exactly(t, ascSortedList, descSortedList, "Delivery Service responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
+	}
+}
 
+func GetCDNId(t *testing.T, cdnName string) int {
 	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "HTTP")
-	types, _, err := TOSession.GetTypes(opts)
-	if err != nil {
-		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
-	}
-	if len(types.Response) < 1 {
-		t.Fatal("expected at least one type")
-	}
+	opts.QueryParameters.Set("name", cdnName)
+	resp, _, err := TOSession.GetCDNs(opts)
 
-	customDS := getCustomDS(oldCdn.ID, types.Response[0].ID, "displayName", "routingName", "https://test.com", "dsID")
+	assert.RequireNoError(t, err, "Get CDNs Request failed with error: %v", err)
+	assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
+	assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
 
-	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error creating a custom Delivery Service: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected Delivery Service creation to create exactly one Delivery Service, Traffic Ops indicates %d were created", len(resp.Response))
-	}
-	ds := resp.Response[0]
-	if ds.ID == nil || ds.XMLID == nil {
-		t.Fatal("Traffic Ops created a Delivery Service with null or undefined XMLID and/or ID")
-	}
-	ds.CDNName = &oldCdn.Name
+	return resp.Response[0].ID
+}
 
-	defer cleanUp(t, ds, oldCdn.ID, newCdn.ID, []string{"1"})
+func GetDeliveryServiceId(t *testing.T, xmlId string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("xmlId", xmlId)
 
-	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
-		BusinessUnit: util.StrPtr("BU"),
-		City:         util.StrPtr("CI"),
-		Organization: util.StrPtr("OR"),
-		HostName:     util.StrPtr("*.test.com"),
-		Country:      util.StrPtr("CO"),
-		State:        util.StrPtr("ST"),
-	}, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("unable to generate sslkeys for cdn %v: %v", oldCdn.Name, err)
-	}
+		resp, _, err := TOSession.GetDeliveryServices(opts)
+		assert.RequireNoError(t, err, "Get Delivery Service Request failed with error: %v", err)
+		assert.RequireEqual(t, 1, len(resp.Response), "Expected delivery service response object length 1, but got %d", len(resp.Response))
+		assert.RequireNotNil(t, resp.Response[0].ID, "Expected id to not be nil")
 
-	var oldCDNKeys []tc.CDNSSLKeys
-	for tries := 0; tries < 5; tries++ {
-		time.Sleep(time.Second)
-		resp, _, err := TOSession.GetCDNSSLKeys(oldCdn.Name, client.RequestOptions{})
-		oldCDNKeys = resp.Response
-		if err == nil && len(oldCDNKeys) > 0 {
-			break
-		}
-	}
-	if err != nil {
-		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
-	}
-	if len(oldCDNKeys) < 1 {
-		t.Fatal("expected at least 1 key")
-	}
-
-	newCDNKeys, _, err := TOSession.GetCDNSSLKeys(newCdn.Name, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
-	}
-
-	ds.RoutingName = util.StrPtr("anothername")
-	_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-	if err == nil {
-		t.Fatal("should not be able to update delivery service (routing name) as it has ssl keys")
-	}
-	ds.RoutingName = util.StrPtr("routingName")
-
-	ds.CDNID = &newCdn.ID
-	ds.CDNName = &newCdn.Name
-	_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-	if err == nil {
-		t.Fatal("should not be able to update delivery service (cdn) as it has ssl keys")
-	}
-
-	// Check new CDN still has an ssl key
-	keys, _, err := TOSession.GetCDNSSLKeys(newCdn.Name, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("unable to get cdn %v keys: %v - alerts: %+v", newCdn.Name, err, keys.Alerts)
-	}
-	if len(keys.Response) != len(newCDNKeys.Response) {
-		t.Fatalf("expected %v keys, got %v", len(newCDNKeys.Response), len(keys.Response))
-	}
-
-	// Check old CDN does not have ssl key
-	keys, _, err = TOSession.GetCDNSSLKeys(oldCdn.Name, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("unable to get cdn %v keys: %v - %+v", oldCdn.Name, err, keys.Alerts)
-	}
-	if len(keys.Response) != len(oldCDNKeys) {
-		t.Fatalf("expected %v key, got %v", len(oldCDNKeys), len(keys.Response))
+		return *resp.Response[0].ID
 	}
 }
 
-func testGettingDeliveryServicesWithIMSAfterModification(h http.Header) func(*testing.T) {
-	return func(t *testing.T) {
-		GetTestDeliveryServicesIMSAfterChange(t, h)
-	}
+func GetProfileId(t *testing.T, profileName string) int {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", profileName)
+	resp, _, err := TOSession.GetProfiles(opts)
+
+	assert.RequireNoError(t, err, "Get Profiles Request failed with error: %v", err)
+	assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
+	assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
+
+	return resp.Response[0].ID
 }
 
-func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {
-	opts := client.RequestOptions{Header: header}
-	resp, reqInf, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("could not get Delivery Services: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusOK {
-		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-	}
+func GetTenantId(t *testing.T, tenantName string) int {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", tenantName)
+	resp, _, err := TOSession.GetTenants(opts)
 
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
+	assert.RequireNoError(t, err, "Get Tenants Request failed with error: %v", err)
+	assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
+	assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
 
-	opts.Header.Set(rfc.IfModifiedSince, timeStr)
-	resp, reqInf, err = TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("could not get Delivery Services: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-	}
+	return resp.Response[0].ID
 }
 
-func PostDeliveryServiceTest(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one testing Delivery Service to test creating Delivery Services")
+func generateDeliveryService(t *testing.T, requestDS map[string]interface{}) map[string]interface{} {
+	// map for the most basic HTTP Delivery Service a user can create
+	genericHTTPDS := map[string]interface{}{
+		"active":               true,
+		"cdnName":              "cdn1",
+		"cdnId":                GetCDNId(t, "cdn1"),
+		"displayName":          "test ds",
+		"dscp":                 0,
+		"geoLimit":             0,
+		"geoProvider":          0,
+		"initialDispersion":    1,
+		"ipv6RoutingEnabled":   false,
+		"logsEnabled":          false,
+		"missLat":              0.0,
+		"missLong":             0.0,
+		"multiSiteOrigin":      false,
+		"orgServerFqdn":        "http://ds.test",
+		"protocol":             0,
+		"profileName":          "ATS_EDGE_TIER_CACHE",
+		"qstringIgnore":        0,
+		"rangeRequestHandling": 0,
+		"regionalGeoBlocking":  false,
+		"routingName":          "ccr-ds1",
+		"tenant":               "tenant1",
+		"type":                 tc.DSTypeHTTP,
+		"typeId":               GetTypeId(t, "HTTP"),
+		"xmlId":                "ds1",
 	}
-	ds := testData.DeliveryServices[0]
-	if ds.XMLID == nil {
-		t.Fatal("Found Delivery Service in testing data with null or undefined XMLID")
+	for k, v := range requestDS {
+		genericHTTPDS[k] = v
 	}
-	xmlid := *ds.XMLID + "-topology-test"
-
-	ds.XMLID = new(string)
-	_, _, err := TOSession.CreateDeliveryService(ds, client.RequestOptions{})
-	if err == nil {
-		t.Error("Expected error with empty xmlid")
-	}
-	ds.XMLID = nil
-	_, _, err = TOSession.CreateDeliveryService(ds, client.RequestOptions{})
-	if err == nil {
-		t.Error("Expected error with nil xmlid")
-	}
-
-	ds.Topology = new(string)
-	ds.XMLID = &xmlid
-
-	_, reqInf, err := TOSession.CreateDeliveryService(ds, client.RequestOptions{})
-	if err == nil {
-		t.Error("Expected error with non-existent Topology")
-	}
-	if reqInf.StatusCode < 400 || reqInf.StatusCode >= 500 {
-		t.Errorf("Expected client-level error creating DS with non-existent Topology, got: %d", reqInf.StatusCode)
-	}
+	return genericHTTPDS
 }
 
 func CreateTestDeliveryServices(t *testing.T) {
-	pl := tc.Parameter{
-		ConfigFile: "remap.config",
-		Name:       "location",
-		Value:      "/remap/config/location/parameter/",
-	}
-	alerts, _, err := TOSession.CreateParameter(pl, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot create parameter: %v - alerts: %+v", err, alerts.Alerts)
-	}
 	for _, ds := range testData.DeliveryServices {
 		ds = ds.RemoveLD1AndLD2()
 		if ds.XMLID == nil {
@@ -983,1939 +767,22 @@ func CreateTestDeliveryServices(t *testing.T) {
 			continue
 		}
 		resp, _, err := TOSession.CreateDeliveryService(ds, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("could not create Delivery Service '%s': %v - alerts: %+v", *ds.XMLID, err, resp.Alerts)
-		}
+		assert.NoError(t, err, "Could not create Delivery Service '%s': %v - alerts: %+v", *ds.XMLID, err, resp.Alerts)
 	}
-}
-
-func GetTestDeliveryServicesIMS(t *testing.T) {
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-
-	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	resp, reqInf, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("could not get Delivery Services: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-	}
-}
-
-// Note that this test will break if anyone ever adds or modifies the test data
-// Delivery Services such that any of them has more than 0 but not 3 Consistent
-// Hashing Query Parameters - OR such that more than (but not less than) 2
-// Delivery Services has more than 0 (but not necessarily exactly 3) Consistent
-// Hashing Query Parameters.
-func GetTestDeliveryServices(t *testing.T) {
-	actualDSes, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, actualDSes.Alerts)
-	}
-	actualDSMap := make(map[string]tc.DeliveryServiceV4, len(actualDSes.Response))
-	for _, ds := range actualDSes.Response {
-		if ds.XMLID == nil {
-			t.Error("Traffic Ops returned a representation of a Delivery Service with null or undefined XMLID")
-			continue
-		}
-		actualDSMap[*ds.XMLID] = ds
-	}
-	cnt := 0
-	for _, ds := range testData.DeliveryServices {
-		if ds.XMLID == nil {
-			t.Error("Delivery Service found in test data with null or undefined XMLID")
-			continue
-		}
-		if _, ok := actualDSMap[*ds.XMLID]; !ok {
-			t.Errorf("GET DeliveryService missing: %s", *ds.XMLID)
-		}
-		// exactly one ds should have exactly 3 query params. the rest should have none
-		if c := len(ds.ConsistentHashQueryParams); c > 0 {
-			if c != 3 {
-				t.Errorf("deliveryservice %s has %d query params; expected 3 or 0", *ds.XMLID, c)
-			}
-			cnt++
-		}
-	}
-	if cnt > 2 {
-		t.Errorf("exactly 2 deliveryservices should have more than one query param; found %d", cnt)
-	}
-}
-
-func GetInactiveTestDeliveryServices(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("active", strconv.FormatBool(false))
-	inactiveDSes, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("cannot get inactive Delivery Services: %v - alerts: %+v", err, inactiveDSes.Alerts)
-	}
-	for _, ds := range inactiveDSes.Response {
-		if ds.Active == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined 'active'")
-			continue
-		}
-		if *ds.Active != false {
-			t.Errorf("expected all delivery services to be inactive, but got atleast one active DS")
-		}
-	}
-
-	opts.QueryParameters.Set("active", strconv.FormatBool(true))
-	activeDSes, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("cannot get active Delivery Services: %v - alerts: %+v", err, activeDSes.Alerts)
-	}
-	for _, ds := range activeDSes.Response {
-		if ds.Active == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined 'active'")
-			continue
-		}
-		if *ds.Active != true {
-			t.Errorf("expected all delivery services to be active, but got atleast one inactive DS")
-		}
-	}
-}
-
-func GetTestDeliveryServicesCapacity(t *testing.T) {
-	actualDSes, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, actualDSes.Alerts)
-	}
-	actualDSMap := map[string]tc.DeliveryServiceV4{}
-	for _, ds := range actualDSes.Response {
-		if ds.ID == nil || ds.XMLID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID and/or ID")
-			continue
-		}
-		actualDSMap[*ds.XMLID] = ds
-		capDS, _, err := TOSession.GetDeliveryServiceCapacity(*ds.ID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf(`cannot get Delivery Service "%s"'s (#%d) Capacity: %v - alerts: %+v`, *ds.XMLID, *ds.ID, err, capDS.Alerts)
-		}
-	}
-
-}
-
-func UpdateTestDeliveryServices(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test updating a Delivery Service")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in the test data with a null or undefined XMLID")
-	}
-
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-
-	var remoteDS tc.DeliveryServiceV4
-	found := false
-	for _, ds := range dses.Response {
-		if ds.XMLID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
-			continue
-		}
-		if *ds.XMLID == *firstDS.XMLID {
-			found = true
-			remoteDS = ds
-			break
-		}
-	}
-	if !found {
-		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
-	}
-	if remoteDS.ID == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined ID") //... or it returned no DSes at all
-	}
-
-	updatedMaxRequestHeaderSize := 131080
-	updatedLongDesc := "something different"
-	updatedMaxDNSAnswers := 164598
-	updatedMaxOriginConnections := 100
-	updatedActive := false
-	updatedDisplayName := "newds1displayname"
-	updatedDscp := 41
-	updatedGeoLimit := 1
-	updatedInitialDispersion := 2
-	updatedIpv6RoutingEnabled := false
-	updatedLogsEnabled := false
-	updatedMissLat := 42.881944
-	updatedMissLong := -88.627778
-	updateMultisiteOrigin := true
-	updatedOrgServerFqdn := "http://origin.example.net"
-	updateProtocol := 2
-	updateQstringIgnore := 0
-	updateRegionalGeoBlocking := true
-
-	remoteDS.MaxRequestHeaderBytes = &updatedMaxRequestHeaderSize
-	remoteDS.LongDesc = &updatedLongDesc
-	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
-	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
-	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
-	remoteDS.Active = &updatedActive
-	remoteDS.DisplayName = &updatedDisplayName
-	remoteDS.DSCP = &updatedDscp
-	remoteDS.GeoLimit = &updatedGeoLimit
-	remoteDS.InitialDispersion = &updatedInitialDispersion
-	remoteDS.IPV6RoutingEnabled = &updatedIpv6RoutingEnabled
-	remoteDS.LogsEnabled = &updatedLogsEnabled
-	remoteDS.MissLat = &updatedMissLat
-	remoteDS.MissLong = &updatedMissLong
-	remoteDS.MultiSiteOrigin = &updateMultisiteOrigin
-	remoteDS.OrgServerFQDN = &updatedOrgServerFqdn
-	remoteDS.Protocol = &updateProtocol
-	remoteDS.QStringIgnore = &updateQstringIgnore
-	remoteDS.RegionalGeoBlocking = &updateRegionalGeoBlocking
-
-	//Get TypeId by TypeName
-	typeOpts := client.NewRequestOptions()
-	typeOpts.QueryParameters.Set("name", "HTTP_LIVE")
-	typeResp, _, err := TOSession.GetTypes(typeOpts)
-	if err != nil {
-		t.Errorf("cannot get type id by name: %v - alerts: %v", err, typeResp.Alerts)
-	}
-	if len(typeResp.Response) == 0 {
-		t.Fatal("got an empty response for types")
-	}
-	remoteDS.TypeID = &typeResp.Response[0].ID
-
-	//Get CDNId by CDNName
-	cdnOpts := client.NewRequestOptions()
-	if len(testData.CDNs) < 1 {
-		t.Fatal("Need at least one CDN to update Delivery Service CDN")
-	}
-	firstCDN := testData.CDNs[0]
-	cdnOpts.QueryParameters.Set("name", firstCDN.Name)
-	cdnResp, _, err := TOSession.GetCDNs(cdnOpts)
-	if err != nil {
-		t.Fatalf("getting CDNs with name '%s': %v - alerts: %+v", "cdn1", err, cdnResp.Alerts)
-	}
-	if len(cdnResp.Response) != 1 {
-		t.Fatalf("expected exactly 1 CDN named '%s' but found %d CDNs", "cdn1", len(cdnResp.Response))
-	}
-	remoteDS.CDNID = &cdnResp.Response[0].ID
-
-	//Get ProfileId by ProfileName
-	profileOpts := client.NewRequestOptions()
-	if len(testData.Profiles) < 1 {
-		t.Fatal("Need at least one Profile to update Delivery Service Profiles")
-	}
-	firstProfile := testData.Profiles[0]
-	profileOpts.QueryParameters.Set("name", firstProfile.Name)
-	profilesResp, _, err := TOSession.GetProfiles(profileOpts)
-	if err != nil {
-		t.Fatalf("couldn't get profiles: %v", err)
-	}
-	if len(profilesResp.Response) != 1 {
-		t.Fatalf("expected just one profile in the response, but got %d", len(profilesResp.Response))
-	}
-	remoteDS.ProfileID = &profilesResp.Response[0].ID
-
-	if updateResp, _, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{}); err != nil {
-		t.Errorf("cannot update Delivery Service: %v - %v", err, updateResp)
-	}
-
-	// Retrieve the delivery service to check whether the values were updated
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("id", strconv.Itoa(*remoteDS.ID))
-	apiResp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("cannot get Delivery Service #%d: %v - alerts: %+v", *remoteDS.ID, err, apiResp.Alerts)
-	}
-	if len(apiResp.Response) != 1 {
-		t.Fatalf("expected exactly one Delivery Service to exist with ID %d, found: %d", *remoteDS.ID, len(apiResp.Response))
-	}
-	resp := apiResp.Response[0]
-	if resp.LongDesc == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined long description")
-	} else if *resp.LongDesc != updatedLongDesc {
-		t.Errorf("long description do not match actual: %s, expected: %s", *resp.LongDesc, updatedLongDesc)
-	}
-
-	if resp.MaxDNSAnswers == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined max DNS answers")
-	} else if *resp.MaxDNSAnswers != updatedMaxDNSAnswers {
-		t.Errorf("max DNS answers do not match actual: %d, expected: %d", *resp.MaxDNSAnswers, updatedMaxDNSAnswers)
-	}
-
-	if resp.MaxOriginConnections == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined max origin connections")
-	} else if *resp.MaxOriginConnections != updatedMaxOriginConnections {
-		t.Errorf("max origin connections do not match actual: %d, expected: %d", resp.MaxOriginConnections, updatedMaxOriginConnections)
-	}
-
-	if resp.MaxRequestHeaderBytes == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined max request header bytes")
-	} else if *resp.MaxRequestHeaderBytes != updatedMaxRequestHeaderSize {
-		t.Errorf("max request header sizes do not match actual: %d, expected: %d", resp.MaxRequestHeaderBytes, updatedMaxRequestHeaderSize)
-	}
-
-	if resp.Active == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined Active")
-	} else if *resp.Active != updatedActive {
-		t.Errorf("Active do not match actual: %t, expected: %t", *resp.Active, updatedActive)
-	}
-
-	if resp.DisplayName == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined DisplayName")
-	} else if *resp.DisplayName != updatedDisplayName {
-		t.Errorf("DisplayName do not match actual: %s, expected: %s", *resp.DisplayName, updatedDisplayName)
-	}
-
-	if resp.DSCP == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined DSCP")
-	} else if *resp.DSCP != updatedDscp {
-		t.Errorf("DSCP do not match actual: %d, expected: %d", resp.DSCP, updatedDscp)
-	}
-
-	if resp.GeoLimit == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined GeoLimit")
-	} else if *resp.GeoLimit != updatedGeoLimit {
-		t.Errorf("GeoLimit do not match actual: %d, expected: %d", resp.GeoLimit, updatedGeoLimit)
-	}
-
-	if resp.InitialDispersion == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined InitialDispersion")
-	} else if *resp.InitialDispersion != updatedInitialDispersion {
-		t.Errorf("InitialDispersion do not match actual: %d, expected: %d", resp.InitialDispersion, updatedInitialDispersion)
-	}
-
-	if resp.IPV6RoutingEnabled == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined IPV6RoutingEnabled")
-	} else if *resp.IPV6RoutingEnabled != updatedIpv6RoutingEnabled {
-		t.Errorf("IPV6RoutingEnabled do not match actual: %t, expected: %t", *resp.IPV6RoutingEnabled, updatedIpv6RoutingEnabled)
-	}
-
-	if resp.LogsEnabled == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined LogsEnabled")
-	} else if *resp.LogsEnabled != updatedLogsEnabled {
-		t.Errorf("LogsEnabled do not match actual: %t, expected: %t", *resp.LogsEnabled, updatedLogsEnabled)
-	}
-
-	if resp.MissLat == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined MissLat")
-	} else if *resp.MissLat != updatedMissLat {
-		t.Errorf("MissLat do not match actual: %b, expected: %b", resp.MissLat, updatedMissLat)
-	}
-
-	if resp.MissLong == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined MissLong")
-	} else if *resp.MissLong != updatedMissLong {
-		t.Errorf("MissLong do not match actual: %b, expected: %b", resp.MissLong, updatedMissLong)
-	}
-
-	if resp.MultiSiteOrigin == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined MultiSiteOrigin")
-	} else if *resp.MultiSiteOrigin != updateMultisiteOrigin {
-		t.Errorf("MultiSiteOrigin do not match actual: %t, expected: %t", *resp.MultiSiteOrigin, updateMultisiteOrigin)
-	}
-
-	if resp.OrgServerFQDN == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined OrgServerFQDN")
-	} else if *resp.OrgServerFQDN != updatedOrgServerFqdn {
-		t.Errorf("OrgServerFQDN do not match actual: %s, expected: %s", *resp.OrgServerFQDN, updatedOrgServerFqdn)
-	}
-
-	if resp.Protocol == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined Protocol")
-	} else if *resp.Protocol != updateProtocol {
-		t.Errorf("Protocol do not match actual: %d, expected: %d", resp.Protocol, updateProtocol)
-	}
-
-	if resp.QStringIgnore == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined QStringIgnore")
-	} else if *resp.QStringIgnore != updateQstringIgnore {
-		t.Errorf("QStringIgnore do not match actual: %d, expected: %d", resp.QStringIgnore, updateQstringIgnore)
-	}
-
-	if resp.RegionalGeoBlocking == nil {
-		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined RegionalGeoBlocking")
-	} else if *resp.RegionalGeoBlocking != updateRegionalGeoBlocking {
-		t.Errorf("RegionalGeoBlocking do not match actual: %t, expected: %t", *resp.RegionalGeoBlocking, updateRegionalGeoBlocking)
-	}
-}
-
-func UpdateNullableTestDeliveryServices(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test updating nullable fields of a Delivery Service")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in the test data with a null or undefined XMLID")
-	}
-
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-
-	var remoteDS tc.DeliveryServiceV4
-	found := false
-	for _, ds := range dses.Response {
-		if ds.XMLID == nil || ds.ID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID and/or ID")
-			continue
-		}
-		if *ds.XMLID == *firstDS.XMLID {
-			found = true
-			remoteDS = ds
-			break
-		}
-	}
-	if !found {
-		t.Fatalf("GET Delivery Services missing: %v", firstDS.XMLID)
-	}
-
-	updatedLongDesc := "something else different"
-	updatedMaxDNSAnswers := 164599
-	remoteDS.LongDesc = &updatedLongDesc
-	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
-
-	if updateResp, _, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{}); err != nil {
-		t.Fatalf("cannot update Delivery Service #%d: %v - alerts: %+v", *remoteDS.ID, err, updateResp)
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("id", strconv.Itoa(*remoteDS.ID))
-	apiResp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("cannot get Delivery Service #%d: %v - alerts: %+v", *remoteDS.ID, err, apiResp.Alerts)
-	}
-	if len(apiResp.Response) != 1 {
-		t.Fatalf("Expected exactly one Delivery Service to exist with ID %d, found: %d", *remoteDS.ID, len(apiResp.Response))
-	}
-	resp := apiResp.Response[0]
-
-	if resp.LongDesc == nil {
-		t.Errorf("results do not match actual: <nil>, expected: %s", updatedLongDesc)
-	} else if *resp.LongDesc != updatedLongDesc {
-		t.Errorf("results do not match actual: %s, expected: %s", *resp.LongDesc, updatedLongDesc)
-	}
-	if resp.MaxDNSAnswers == nil {
-		t.Fatalf("results do not match actual: <nil>, expected: %d", updatedMaxDNSAnswers)
-	} else if *resp.MaxDNSAnswers != updatedMaxDNSAnswers {
-		t.Fatalf("results do not match actual: %d, expected: %d", *resp.MaxDNSAnswers, updatedMaxDNSAnswers)
-	}
-
-}
-
-// UpdateDeliveryServiceWithInvalidTopology ensures that a topology cannot be:
-// - assigned to (CLIENT_)STEERING delivery services
-// - assigned to any delivery services which have required capabilities that the topology can't satisfy
-func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-
-	found := false
-	var nonCSDS *tc.DeliveryServiceV4
-	for _, ds := range dses.Response {
-		if ds.Type == nil || ds.ID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service that had null or undefined Type and/or ID")
-			continue
-		}
-		if *ds.Type == tc.DSTypeClientSteering {
-			found = true
-			ds.Topology = util.StrPtr("my-topology")
-			if _, _, err := TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{}); err == nil {
-				t.Errorf("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")
-			}
-		} else if nonCSDS == nil {
-			nonCSDS = new(tc.DeliveryServiceV4)
-			*nonCSDS = ds
-		}
-	}
-	if !found || nonCSDS == nil {
-		t.Fatal("Expected at least one non-CLIENT_STEERING Delivery Service to exist")
-	}
-
-	nonCSDS.Topology = new(string)
-	_, inf, err := TOSession.UpdateDeliveryService(*nonCSDS.ID, *nonCSDS, client.RequestOptions{})
-	if err == nil {
-		t.Error("Expected an error assigning a non-existent topology")
-	}
-	if inf.StatusCode < 400 || inf.StatusCode >= 500 {
-		t.Errorf("Expected client-level error assigning a non-existent topology, got: %d", inf.StatusCode)
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Add("xmlId", "ds-top-req-cap")
-	dses, _, err = TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("cannot get Delivery Service: %v - alerts: %+v", err, dses.Alerts)
-	}
-	if len(dses.Response) != 1 {
-		t.Fatalf("expected: 1 DS, actual: %d", len(dses.Response))
-	}
-	ds := dses.Response[0]
-	if ds.Topology == nil || ds.ID == nil || ds.XMLID == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service that had null or undefined Topology and/or XMLID and/or ID")
-	}
-	// unassign its topology, add a required capability that its topology
-	// can't satisfy, then attempt to reassign its topology
-	top := *ds.Topology
-	ds.Topology = nil
-	resp, _, err := TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("updating DS to remove topology, expected: no error, actual: %v - alerts: %+v", err, resp.Alerts)
-	}
-	reqCap := tc.DeliveryServicesRequiredCapability{
-		DeliveryServiceID:  ds.ID,
-		RequiredCapability: util.StrPtr("asdf"),
-	}
-	dsrcResp, _, err := TOSession.CreateDeliveryServicesRequiredCapability(reqCap, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("adding 'asdf' required capability to '%s', expected: no error, actual: %v - alerts: %+v", *ds.XMLID, err, dsrcResp.Alerts)
-	}
-	ds.Topology = &top
-	_, reqInf, err := TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-	if err == nil {
-		t.Errorf("updating DS topology which doesn't meet the DS required capabilities - expected: error, actual: nil")
-	}
-	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
-		t.Errorf("updating DS topology which doesn't meet the DS required capabilities - expected: 400-level status code, actual: %d", reqInf.StatusCode)
-	}
-	dsrcResp, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ds.ID, "asdf", client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("removing 'asdf' required capability from '%s', expected: no error, actual: %v - alerts: %+v", *ds.XMLID, err, dsrcResp.Alerts)
-	}
-	_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("updating DS topology - expected: no error, actual: %v", err)
-	}
-
-	const xmlID = "top-ds-in-cdn2"
-	dses, _, err = TOSession.GetDeliveryServices(client.RequestOptions{QueryParameters: url.Values{"xmlId": {xmlID}}})
-	if err != nil {
-		t.Fatalf("getting Delivery Services filtered by XMLID '%s': %v - alerts: %+v", xmlID, err, dses.Alerts)
-	}
-	const expectedSize = 1
-	if len(dses.Response) != expectedSize {
-		t.Fatalf("expected %d Delivery Service with xmlId '%s' but instead received %d Delivery Services", expectedSize, xmlID, len(dses.Response))
-	}
-	ds = dses.Response[0]
-	if ds.ID == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service that had null or undefined ID")
-	}
-	dsTopology := ds.Topology
-	ds.Topology = nil
-	resp, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("updating Delivery Service '%s' (#%d): %v - alerts: %+v", xmlID, *ds.ID, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Delivery Service to have ID %d, found: %d", *ds.ID, len(resp.Response))
-	}
-	ds = resp.Response[0]
-	if ds.CDNID == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service that had null or undefined CDN ID")
-	}
-
-	const cdn1Name = "cdn1"
-	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("name", cdn1Name)
-	cdns, _, err := TOSession.GetCDNs(opts)
-	if err != nil {
-		t.Fatalf("getting CDN %s: %v - alerts: %+v", cdn1Name, err, cdns.Alerts)
-	}
-	if len(cdns.Response) != expectedSize {
-		t.Fatalf("expected %d CDN with name %s but instead received %d CDNs", expectedSize, cdn1Name, len(cdns.Response))
-	}
-	cdn1 := cdns.Response[0]
-	const cacheGroupName = "dtrc1"
-	opts = client.RequestOptions{
-		QueryParameters: url.Values{
-			"name": {cacheGroupName},
-		},
-	}
-	cachegroups, _, err := TOSession.GetCacheGroups(opts)
-	if err != nil {
-		t.Fatalf("getting Cache Group %s: %s", cacheGroupName, err.Error())
-	}
-	if len(cachegroups.Response) != expectedSize {
-		t.Fatalf("expected %d Cache Group with name %s but instead received %d Cache Groups", expectedSize, cacheGroupName, len(cachegroups.Response))
-	}
-	cachegroup := cachegroups.Response[0]
-	if cachegroup.ID == nil {
-		t.Fatalf("Traffic Ops returned a representation for Cache Group '%s' that had null or undefined ID", cacheGroupName)
-	}
-	opts.QueryParameters = url.Values{"cdn": {strconv.Itoa(*ds.CDNID)}, "cachegroup": {strconv.Itoa(*cachegroup.ID)}}
-	servers, _, err := TOSession.GetServers(opts)
-	if err != nil {
-		t.Fatalf("getting Server with params %v: %v - alerts: %+v", opts.QueryParameters, err, servers.Alerts)
-	}
-	if len(servers.Response) != expectedSize {
-		t.Fatalf("expected %d Server returned for query params %v but instead received %d Servers", expectedSize, opts.QueryParameters, len(servers.Response))
-	}
-	server := servers.Response[0]
-	if server.CDNID == nil {
-		t.Error("Traffic Ops returned a representation for a Server that had null or undefined CDN ID")
-		server.CDNID = new(int)
-	}
-	*server.CDNID = cdn1.ID
-
-	if server.ProfileNames[0] == "" || server.ID == nil || server.HostName == nil {
-		t.Fatal("Traffic Ops returned a representation for a Server that had null or undefined Profile and/or Profile ID and/or Profile Description and/or ID and/or Host Name")
-	}
-	// A profile specific to CDN 1 is required
-	opts.QueryParameters.Set("name", server.ProfileNames[0])
-	pr, _, err := TOSession.GetProfiles(opts)
-	if err != nil {
-		t.Fatalf("failed to query profiles: %v", err)
-	}
-	if len(pr.Response) != 1 {
-		t.Fatalf("Expected exactly one Profile to exist, found: %d", len(pr.Response))
-	}
-	profileCopy := tc.ProfileCopy{
-		Name:         server.ProfileNames[0] + "_BUT_IN_CDN1",
-		ExistingID:   pr.Response[0].ID,
-		ExistingName: server.ProfileNames[0],
-		Description:  pr.Response[0].Description,
-	}
-	copyResp, _, err := TOSession.CopyProfile(profileCopy, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("copying Profile %s: %v - alerts: %+v", server.ProfileNames[0], err, copyResp.Alerts)
-	}
-
-	profileOpts := client.NewRequestOptions()
-	profileOpts.QueryParameters.Set("name", profileCopy.Name)
-	profiles, _, err := TOSession.GetProfiles(profileOpts)
-	if err != nil {
-		t.Fatalf("getting Profile %s: %v - alerts: %+v", profileCopy.Name, err, profiles.Alerts)
-	}
-	if len(profiles.Response) != expectedSize {
-		t.Fatalf("expected %d Profile with name %s but instead received %d Profiles", expectedSize, profileCopy.Name, len(profiles.Response))
-	}
-	profile := profiles.Response[0]
-	profile.CDNID = cdn1.ID
-	alerts, _, err := TOSession.UpdateProfile(profile.ID, profile, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("updating Profile %s: %v - alerts: %+v", profile.Name, err, alerts.Alerts)
-	}
-	server.ProfileNames = []string{profile.Name}
-
-	// Empty Cache Group dtrc1 with respect to CDN 2
-	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("updating Server '%s': %v - alerts: %+v", *server.HostName, err, alerts.Alerts)
-	}
-	ds.Topology = dsTopology
-	_, reqInf, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-	if err == nil {
-		t.Fatalf("expected 400-level error assigning Topology %s to Delivery Service %s because Cache Group %s has no Servers in it in CDN %d, no error received", *dsTopology, xmlID, cacheGroupName, *ds.CDNID)
-	}
-	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
-		t.Fatalf("expected %d-level status code but received status code %d", http.StatusBadRequest, reqInf.StatusCode)
-	}
-	*server.CDNID = *ds.CDNID
-	server.ProfileNames = []string{profileCopy.ExistingName}
-
-	// Put things back the way they were
-	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("updating Server '%s': %v - alerts: %+v", *server.HostName, err, alerts.Alerts)
-	}
-
-	alerts, _, err = TOSession.DeleteProfile(profile.ID, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("deleting Profile %s: %v - alerts: %+v", profile.Name, err, alerts.Alerts)
-	}
-
-	resp, reqInf, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("updating Delivery Service '%s': %v - alerts: %+v", xmlID, err, resp.Alerts)
-	}
-}
-
-// UpdateDeliveryServiceTopologyHeaderRewriteFields ensures that a delivery service can only use firstHeaderRewrite,
-// innerHeaderRewrite, or lastHeadeRewrite if a topology is assigned.
-func UpdateDeliveryServiceTopologyHeaderRewriteFields(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-	foundTopology := false
-	for _, ds := range dses.Response {
-		if ds.ID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service that had null or undefined ID")
-			continue
-		}
-		if ds.Topology != nil {
-			foundTopology = true
-		}
-		ds.FirstHeaderRewrite = util.StrPtr("foo")
-		ds.InnerHeaderRewrite = util.StrPtr("bar")
-		ds.LastHeaderRewrite = util.StrPtr("baz")
-		resp, _, err := TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-		if ds.Topology != nil && err != nil {
-			t.Errorf("expected: no error updating topology-based header rewrite fields for topology-based DS, actual: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if ds.Topology == nil && err == nil {
-			t.Error("expected: error updating topology-based header rewrite fields for non-topology-based DS, actual: nil")
-		}
-		ds.FirstHeaderRewrite = nil
-		ds.InnerHeaderRewrite = nil
-		ds.LastHeaderRewrite = nil
-		ds.EdgeHeaderRewrite = util.StrPtr("foo")
-		ds.MidHeaderRewrite = util.StrPtr("bar")
-		resp, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-		if ds.Topology != nil && err == nil {
-			t.Errorf("expected: error updating legacy header rewrite fields for topology-based DS, actual: nil")
-		}
-		if ds.Topology == nil && err != nil {
-			t.Errorf("expected: no error updating legacy header rewrite fields for non-topology-based DS, actual: %v - alerts: %+v", err, resp.Alerts)
-		}
-	}
-	if !foundTopology {
-		t.Errorf("expected: at least one topology-based delivery service, actual: none found")
-	}
-}
-
-// UpdateDeliveryServiceWithInvalidRemapText ensures that a delivery service can't be updated with a remap text value with a line break in it.
-func UpdateDeliveryServiceWithInvalidRemapText(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test updating Delivery Service with invalid remap text")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in the test data that has null or undefined XMLID")
-	}
-
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-
-	var remoteDS tc.DeliveryServiceV4
-	found := false
-	for _, ds := range dses.Response {
-		if ds.XMLID == nil || ds.ID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service that had null or undefined XMLID and/or ID")
-			continue
-		}
-		if *ds.XMLID == *firstDS.XMLID {
-			found = true
-			remoteDS = ds
-			break
-		}
-	}
-	if !found {
-		t.Fatalf("GET Delivery Services missing: %s", *firstDS.XMLID)
-	}
-
-	updatedRemapText := "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua\nline2"
-	remoteDS.RemapText = &updatedRemapText
-
-	if _, _, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{}); err == nil {
-		t.Errorf("Delivery Service successfully updated with invalid remap text: %v", updatedRemapText)
-	}
-}
-
-// UpdateDeliveryServiceWithInvalidSliceRangeRequest ensures that a delivery service can't be updated with a invalid slice range request handler setting.
-func UpdateDeliveryServiceWithInvalidSliceRangeRequest(t *testing.T) {
-	// GET a HTTP / DNS type DS
-	var dsXML *string
-	for _, ds := range testData.DeliveryServices {
-		if ds.Type == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service that had null or undefined Type")
-			continue
-		}
-		if ds.Type.IsDNS() || ds.Type.IsHTTP() {
-			dsXML = ds.XMLID
-			break
-		}
-	}
-	if dsXML == nil {
-		t.Fatal("no HTTP or DNS Delivery Services to test with")
-	}
-
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-
-	var remoteDS tc.DeliveryServiceV4
-	found := false
-	for _, ds := range dses.Response {
-		if ds.XMLID == nil || ds.ID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service that had null or undefined XMLID and/or ID")
-			continue
-		}
-		if *ds.XMLID == *dsXML {
-			found = true
-			remoteDS = ds
-			break
-		}
-	}
-	if !found {
-		t.Fatalf("GET Delivery Services missing: %s", *dsXML)
-	}
-
-	testCases := []struct {
-		description         string
-		rangeRequestSetting *int
-		slicePluginSize     *int
-	}{
-		{
-			description:         "Missing slice plugin size",
-			rangeRequestSetting: util.IntPtr(tc.RangeRequestHandlingSlice),
-			slicePluginSize:     nil,
-		},
-		{
-			description:         "Slice plugin size set with incorrect range request setting",
-			rangeRequestSetting: util.IntPtr(tc.RangeRequestHandlingBackgroundFetch),
-			slicePluginSize:     util.IntPtr(262144),
-		},
-		{
-			description:         "Slice plugin size set to small",
-			rangeRequestSetting: util.IntPtr(tc.RangeRequestHandlingSlice),
-			slicePluginSize:     util.IntPtr(0),
-		},
-		{
-			description:         "Slice plugin size set to large",
-			rangeRequestSetting: util.IntPtr(tc.RangeRequestHandlingSlice),
-			slicePluginSize:     util.IntPtr(40000000),
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			remoteDS.RangeSliceBlockSize = tc.slicePluginSize
-			remoteDS.RangeRequestHandling = tc.rangeRequestSetting
-			if _, _, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{}); err == nil {
-				t.Error("Delivery Service successfully updated with invalid slice plugin configuration")
-			}
-		})
-	}
-
-}
-
-// UpdateValidateORGServerCacheGroup validates ORG server's cachegroup are part of topology's cachegroup
-func UpdateValidateORGServerCacheGroup(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", "ds-top")
-
-	//Get the correct DS
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Delivery Service with the XMLID 'ds-top', found: %d", len(resp.Response))
-	}
-	remoteDS := resp.Response[0]
-	if remoteDS.XMLID == nil || remoteDS.ID == nil || remoteDS.Topology == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service that had null or undefined XMLID and/or ID and/or Topology")
-	}
-
-	//Assign ORG server to DS
-	assignServer := []string{"denver-mso-org-01"}
-	alerts, _, err := TOSession.AssignServersToDeliveryService(assignServer, *remoteDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot assign server to Delivery Services: %v - alerts: %+v", err, alerts)
-	}
-
-	//Update DS's Topology to a non-ORG server's cachegroup
-	origTopo := *remoteDS.Topology
-	remoteDS.Topology = util.StrPtr("another-topology")
-	ds, reqInf, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{})
-	if err == nil {
-		t.Error("should not be able to update Delivery Service changing Topology when servers are assigned, but update was successful")
-	} else {
-		const msg = "the following ORG server cachegroups are not in the delivery service's topology"
-		found := false
-		for _, alert := range ds.Alerts.Alerts {
-			if strings.Contains(alert.Text, msg) && alert.Level == tc.ErrorLevel.String() {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Errorf("expected an error-level alert containing '%s' to be in the response, but it was not found", msg)
-		}
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("expected to fail since ORG server's topology not part of DS. Expected:%v, Got: :%v", http.StatusBadRequest, reqInf.StatusCode)
-	}
-
-	// Retrieve the DS to check if topology was updated with missing ORG server
-	// TODO: clear params?
-	opts.QueryParameters.Set("id", strconv.Itoa(*remoteDS.ID))
-	apiResp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("cannot get Delivery Service #%d: %v - alerts: %+v", *remoteDS.ID, err, apiResp.Alerts)
-	}
-	if len(apiResp.Response) != 1 {
-		t.Fatalf("Expected exactly one Delivery Service to exist with ID %d, found: %d", *remoteDS.ID, len(apiResp.Response))
-	}
-
-	//Set topology back to as it was for further testing
-	remoteDS.Topology = &origTopo
-	resp, _, err = TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("couldn't update DS Topology to '%s': %v - alerts: %+v", *remoteDS.Topology, err, resp.Alerts)
-	}
-}
-
-func GetAccessibleToTest(t *testing.T) {
-	//Every delivery service is associated with the root tenant
-	err := getByTenants(1, len(testData.DeliveryServices))
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	tenant := tc.Tenant{
-		Active:     true,
-		Name:       "the strongest",
-		ParentID:   1,
-		ParentName: "root",
-	}
-
-	resp, _, err := TOSession.CreateTenant(tenant, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Unexpected error creating a tenant: %v - alerts: %+v", err, resp.Alerts)
-	}
-	tenant = resp.Response
-
-	//No delivery services are associated with this new tenant
-	err = getByTenants(tenant.ID, 0)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	//First and only child tenant, no access to root
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "tenant1")
-	childTenant, _, err := TOSession.GetTenants(opts)
-	if err != nil {
-		t.Fatalf("unable to get tenant: %v - alerts: %+v", err, childTenant.Alerts)
-	}
-	if len(childTenant.Response) != 1 {
-		t.Fatalf("Expected exactly one Tenant to exist with the name 'tenant1', found: %d", len(childTenant.Response))
-	}
-
-	// TODO: document that all DSes added to the fixture data need to have the
-	// Tenant 'tenant1' unless you change this code
-	err = getByTenants(childTenant.Response[0].ID, len(testData.DeliveryServices)-1)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	alerts, _, err := TOSession.DeleteTenant(tenant.ID, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("unable to clean up Tenant: %v - alerts: %+v", err, alerts.Alerts)
-	}
-}
-
-func getByTenants(tenantID int, expectedCount int) error {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("accessibleTo", strconv.Itoa(tenantID))
-	deliveryServices, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		return fmt.Errorf("Unexpected error fetching Delivery Services for Tenant #%d: %v - alerts: %+v", tenantID, err, deliveryServices.Alerts)
-	}
-	if len(deliveryServices.Response) != expectedCount {
-		return fmt.Errorf("expected %d delivery service, got %d", expectedCount, len(deliveryServices.Response))
-	}
-	return nil
 }
 
 func DeleteTestDeliveryServices(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-	for _, testDS := range testData.DeliveryServices {
-		if testDS.XMLID == nil {
-			t.Error("Found a Delivery Service in testing data with null or undefined XMLID")
-			continue
-		}
-		var ds tc.DeliveryServiceV4
-		found := false
-		for _, realDS := range dses.Response {
-			if realDS.XMLID == nil || realDS.ID == nil {
-				t.Errorf("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID and/or ID")
-				continue
-			}
-			if *realDS.XMLID == *testDS.XMLID {
-				ds = realDS
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Errorf("Delivery Service not found in Traffic Ops: %s", *testDS.XMLID)
-			continue
-		}
+	assert.NoError(t, err, "Cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 
+	for _, ds := range dses.Response {
 		delResp, _, err := TOSession.DeleteDeliveryService(*ds.ID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot delete DeliveryService by ID: %v - alerts: %+v", err, delResp.Alerts)
-			continue
-		}
-
-		// Retrieve the Server to see if it got deleted
+		assert.NoError(t, err, "Could not delete Delivery Service: %v - alerts: %+v", err, delResp.Alerts)
+		// Retrieve Delivery Service to see if it got deleted
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("id", strconv.Itoa(*ds.ID))
-		foundDS, _, err := TOSession.GetDeliveryServices(opts)
-		if err != nil {
-			t.Errorf("Unexpected error deleting Delivery Service '%s': %v - alelts: %+v", *ds.XMLID, err, foundDS.Alerts)
-		}
-		if len(foundDS.Response) > 0 {
-			t.Errorf("expected Delivery Service: %s to be deleted, but %d exist with same ID (#%d)", *ds.XMLID, len(foundDS.Response), *ds.ID)
-		}
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "location")
-	opts.QueryParameters.Set("configFile", "remap.config")
-	params, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Parameters with name 'location' and configFile 'remap.config': %v - alerts: %+v", err, params.Alerts)
-	}
-	for _, param := range params.Response {
-		deleted, _, err := TOSession.DeleteParameter(param.ID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot delete Parameter by ID (%d): %v - alerts: %+v", param.ID, err, deleted.Alerts)
-		}
-	}
-}
-
-func DeliveryServiceMinorVersionsTest(t *testing.T) {
-	if len(testData.DeliveryServices) < 5 {
-		t.Fatalf("Need at least 5 DSes to test minor versions; got: %d", len(testData.DeliveryServices))
-	}
-	testDS := testData.DeliveryServices[4]
-	if testDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in testing data with a null or undefined XMLID")
-	}
-	if *testDS.XMLID != "ds-test-minor-versions" {
-		t.Errorf("expected XMLID: ds-test-minor-versions, actual: %s", *testDS.XMLID)
-	}
-
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-
-	var ds tc.DeliveryServiceV4
-	found := false
-	for _, d := range dses.Response {
-		if d.XMLID != nil && *d.XMLID == *testDS.XMLID {
-			ds = d
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Fatalf("Delivery Service '%s' not found in Traffic Ops", *testDS.XMLID)
-	}
-
-	// GET latest, verify expected values for 1.3 and 1.4 fields
-	if ds.DeepCachingType == nil {
-		t.Errorf("expected DeepCachingType: %s, actual: nil", testDS.DeepCachingType.String())
-	} else if *ds.DeepCachingType != *testDS.DeepCachingType {
-		t.Errorf("expected DeepCachingType: %s, actual: %s", testDS.DeepCachingType.String(), ds.DeepCachingType.String())
-	}
-	if ds.FQPacingRate == nil {
-		t.Errorf("expected FQPacingRate: %d, actual: nil", testDS.FQPacingRate)
-	} else if *ds.FQPacingRate != *testDS.FQPacingRate {
-		t.Errorf("expected FQPacingRate: %d, actual: %d", testDS.FQPacingRate, *ds.FQPacingRate)
-	}
-	if ds.SigningAlgorithm == nil {
-		t.Errorf("expected SigningAlgorithm: %s, actual: nil", *testDS.SigningAlgorithm)
-	} else if *ds.SigningAlgorithm != *testDS.SigningAlgorithm {
-		t.Errorf("expected SigningAlgorithm: %s, actual: %s", *testDS.SigningAlgorithm, *ds.SigningAlgorithm)
-	}
-	if ds.Tenant == nil {
-		t.Errorf("expected Tenant: %s, actual: nil", *testDS.Tenant)
-	} else if *ds.Tenant != *testDS.Tenant {
-		t.Errorf("expected Tenant: %s, actual: %s", *testDS.Tenant, *ds.Tenant)
-	}
-	if ds.TRRequestHeaders == nil {
-		t.Errorf("expected TRRequestHeaders: %s, actual: nil", *testDS.TRRequestHeaders)
-	} else if *ds.TRRequestHeaders != *testDS.TRRequestHeaders {
-		t.Errorf("expected TRRequestHeaders: %s, actual: %s", *testDS.TRRequestHeaders, *ds.TRRequestHeaders)
-	}
-	if ds.TRResponseHeaders == nil {
-		t.Errorf("expected TRResponseHeaders: %s, actual: nil", *testDS.TRResponseHeaders)
-	} else if *ds.TRResponseHeaders != *testDS.TRResponseHeaders {
-		t.Errorf("expected TRResponseHeaders: %s, actual: %s", *testDS.TRResponseHeaders, *ds.TRResponseHeaders)
-	}
-	if ds.ConsistentHashRegex == nil {
-		t.Errorf("expected ConsistentHashRegex: %s, actual: nil", *testDS.ConsistentHashRegex)
-	} else if *ds.ConsistentHashRegex != *testDS.ConsistentHashRegex {
-		t.Errorf("expected ConsistentHashRegex: %s, actual: %s", *testDS.ConsistentHashRegex, *ds.ConsistentHashRegex)
-	}
-	if ds.ConsistentHashQueryParams == nil {
-		t.Errorf("expected ConsistentHashQueryParams: %v, actual: nil", testDS.ConsistentHashQueryParams)
-	} else if !reflect.DeepEqual(ds.ConsistentHashQueryParams, testDS.ConsistentHashQueryParams) {
-		t.Errorf("expected ConsistentHashQueryParams: %v, actual: %v", testDS.ConsistentHashQueryParams, ds.ConsistentHashQueryParams)
-	}
-	if ds.MaxOriginConnections == nil {
-		t.Errorf("expected MaxOriginConnections: %d, actual: nil", testDS.MaxOriginConnections)
-	} else if *ds.MaxOriginConnections != *testDS.MaxOriginConnections {
-		t.Errorf("expected MaxOriginConnections: %d, actual: %d", testDS.MaxOriginConnections, *ds.MaxOriginConnections)
-	}
-
-	ds.ID = nil
-	_, err = json.Marshal(ds)
-	if err != nil {
-		// TODO: should this actually be doing a POST?
-		t.Errorf("cannot POST deliveryservice, failed to marshal JSON: %s", err.Error())
-	}
-}
-
-func DeliveryServiceTenancyTest(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-	var tenant3DS tc.DeliveryServiceV4
-	foundTenant3DS := false
-	for _, d := range dses.Response {
-		if d.XMLID == nil || d.ID == nil || d.Tenant == nil {
-			t.Error("Traffic Ops returned a representation of a Delivery Service that had null or undefined XMLID and/or ID and/or Tenant")
-			continue
-		}
-		if *d.XMLID == "ds3" {
-			tenant3DS = d
-			foundTenant3DS = true
-		}
-	}
-	if !foundTenant3DS || *tenant3DS.Tenant != "tenant3" {
-		t.Fatal("expected to find deliveryservice 'ds3' with tenant 'tenant3'")
-	}
-
-	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	tenant4TOClient, _, err := client.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v4-client-tests/tenant4user", true, toReqTimeout)
-	if err != nil {
-		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
-	}
-
-	dsesReadableByTenant4, _, err := tenant4TOClient.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("tenant4user cannot GET deliveryservices: %v - alerts: %+v", err, dsesReadableByTenant4.Alerts)
-	}
-
-	// assert that tenant4user cannot read deliveryservices outside of its tenant
-	for _, ds := range dsesReadableByTenant4.Response {
-		if ds.XMLID == nil {
-			t.Error("Traffic Ops returned a representation of a Delivery Service that had null or undefined XMLID")
-			continue
-		}
-		if *ds.XMLID == "ds3" {
-			t.Error("expected tenant4 to be unable to read delivery services from tenant 3")
-		}
-	}
-
-	// assert that tenant4user cannot update tenant3user's deliveryservice
-	if _, _, err = tenant4TOClient.UpdateDeliveryService(*tenant3DS.ID, tenant3DS, client.RequestOptions{}); err == nil {
-		t.Errorf("expected tenant4user to be unable to update tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
-	}
-
-	// assert that tenant4user cannot delete tenant3user's deliveryservice
-	if _, _, err = tenant4TOClient.DeleteDeliveryService(*tenant3DS.ID, client.RequestOptions{}); err == nil {
-		t.Errorf("expected tenant4user to be unable to delete tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
-	}
-
-	// assert that tenant4user cannot create a deliveryservice outside of its tenant
-	tenant3DS.XMLID = util.StrPtr("deliveryservicetenancytest")
-	tenant3DS.DisplayName = util.StrPtr("deliveryservicetenancytest")
-	if _, _, err = tenant4TOClient.CreateDeliveryService(tenant3DS, client.RequestOptions{}); err == nil {
-		t.Error("expected tenant4user to be unable to create a deliveryservice outside of its tenant")
-	}
-}
-
-func VerifyPaginationSupportDS(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	deliveryservice, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, deliveryservice.Alerts)
-	}
-	if len(deliveryservice.Response) < 3 {
-		t.Fatalf("Need at least three Delivery Services to test pagination, found: %d", len(deliveryservice.Response))
-	}
-
-	opts.QueryParameters.Set("limit", "1")
-	deliveryserviceWithLimit, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("cannot Get Delivery Service with Limit: %v - alerts: %+v", err, deliveryserviceWithLimit.Alerts)
-	}
-	if !reflect.DeepEqual(deliveryservice.Response[:1], deliveryserviceWithLimit.Response) {
-		t.Error("expected GET deliveryservice with limit = 1 to return first result")
-	}
-
-	opts.QueryParameters.Set("offset", "1")
-	deliveryserviceWithOffset, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("cannot Get Delivery service with Limit and Offset: %v - alerts: %+v", err, deliveryserviceWithOffset.Alerts)
-	}
-	if !reflect.DeepEqual(deliveryservice.Response[1:2], deliveryserviceWithOffset.Response) {
-		t.Error("expected GET deliveryservice with limit = 1, offset = 1 to return second result")
-	}
-
-	opts.QueryParameters.Del("offset")
-	opts.QueryParameters.Set("page", "2")
-	deliveryserviceWithPage, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("cannot Get Delivery Service with Limit and Page: %v - alerts: %+v", err, deliveryserviceWithPage.Alerts)
-	}
-	if !reflect.DeepEqual(deliveryservice.Response[1:2], deliveryserviceWithPage.Response) {
-		t.Error("expected GET deliveryservice with limit = 1, page = 2 to return second result")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "-2")
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err == nil {
-		t.Error("expected GET deliveryservice to return an error when limit is not bigger than -1")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
-		t.Errorf("expected GET deliveryservice to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "0")
-	resp, _, err = TOSession.GetDeliveryServices(opts)
-	if err == nil {
-		t.Error("expected GET deliveryservice to return an error when offset is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET deliveryservice to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "0")
-	resp, _, err = TOSession.GetDeliveryServices(opts)
-	if err == nil {
-		t.Error("expected GET deliveryservice to return an error when page is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET deliveryservice to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func GetDeliveryServiceByCdn(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test getting Delivery Services by CDN")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.CDNName == nil {
-		t.Fatal("CDN Name is nil in the pre-requisites")
-	}
-
-	opts := client.NewRequestOptions()
-	if firstDS.CDNID == nil {
-		opts.QueryParameters.Set("name", *firstDS.CDNName)
-		cdns, _, err := TOSession.GetCDNs(opts)
-		if err != nil {
-			t.Errorf("Unexpected error getting CDN '%s' by name: %v - alerts: %+v", *firstDS.CDNName, err, cdns.Alerts)
-		}
-		if len(cdns.Response) != 1 {
-			t.Fatalf("Expected exactly one CDN named '%s' to exist, found: %d", *firstDS.CDNName, len(cdns.Response))
-		}
-		firstDS.CDNID = new(int)
-		*firstDS.CDNID = cdns.Response[0].ID
-		opts.QueryParameters.Del("name")
-	}
-
-	opts.QueryParameters.Set("cdn", strconv.Itoa(*firstDS.CDNID))
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by CDN ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("Expected at least one Delivery Service to exist in CDN '%s' (#%d)", *firstDS.CDNName, *firstDS.CDNID)
-	}
-	if resp.Response[0].CDNName == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined CDN Name")
-	}
-	if *resp.Response[0].CDNName != *firstDS.CDNName {
-		t.Errorf("CDN Name expected: '%s', actual: '%s'", *firstDS.CDNName, *resp.Response[0].CDNName)
-	}
-}
-
-func GetDeliveryServiceByInvalidCdn(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("cdn", "10000")
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by presumably non-existent CDN ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Didn't expect to find any Delivery Services in presumably non-existent CDN, found: %d", len(resp.Response))
-	}
-}
-
-func GetDeliveryServiceByInvalidProfile(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("profile", "10000")
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by presumably non-existent Profile ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Didn't expect to find any Delivery Services with presumably non-existent Profile, found: %d", len(resp.Response))
-	}
-}
-
-func GetDeliveryServiceByInvalidTenant(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("tenant", "10000")
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by presumably non-existent Tenant ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Didn't expect to find any Delivery Services with presumably non-existent Tenant, found: %d", len(resp.Response))
-	}
-}
-
-func GetDeliveryServiceByInvalidType(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("type", "10000")
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by presumably non-existent Type ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Didn't expect to find any Delivery Services with presumably non-existent Type, found: %d", len(resp.Response))
-	}
-}
-
-func GetDeliveryServiceByInvalidAccessibleTo(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("accessibleTo", "10000")
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by accessibility to presumably non-existent Tenant ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Didn't expect to find any Delivery Services accessible to presumably non-existent Tenant, found: %d", len(resp.Response))
-	}
-}
-
-func GetDeliveryServiceByInvalidXmlId(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", "test")
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by presumably non-existentXMLID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Didn't expect to find any Delivery Services with presumably non-existent XMLID, found: %d", len(resp.Response))
-	}
-}
-
-func GetTestDeliveryServicesURLSignatureKeys(t *testing.T) {
-	if len(testData.DeliveryServices) == 0 {
-		t.Fatal("couldn't get the xml ID of test DS")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in testing data with a null or undefined XMLID")
-	}
-
-	_, _, err := TOSession.GetDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("failed to get url sig keys: %v", err)
-	}
-}
-
-func CreateTestDeliveryServicesURLSignatureKeys(t *testing.T) {
-	if len(testData.DeliveryServices) == 0 {
-		t.Fatal("couldn't get the xml ID of test DS")
-	}
-	firstDS := testData.DeliveryServices[0]
-
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in testing data with a null or undefined XMLID")
-	}
-
-	resp, _, err := TOSession.CreateDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error creaetting URL signing keys: %v - alerts: %+v", err, resp.Alerts)
-	}
-	firstKeys, _, err := TOSession.GetDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting URL signing keys: %v - alerts: %+v", err, firstKeys.Alerts)
-	}
-	if len(firstKeys.Response) == 0 {
-		t.Errorf("failed to create URL signing keys")
-	}
-	firstKey, ok := firstKeys.Response["key0"]
-	if !ok {
-		t.Fatal("Expected to find 'key0' in URL signing keys, but didn't")
-	}
-
-	// Create new keys again and check that they are different
-	resp, _, err = TOSession.CreateDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error creating URL signing keys: %v - alerts: %+v", err, resp.Alerts)
-	}
-	secondKeys, _, err := TOSession.GetDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting URL signing keys: %v - alerts: %+v", err, secondKeys.Alerts)
-	}
-	if len(secondKeys.Response) == 0 {
-		t.Errorf("failed to create url sig keys")
-	}
-	secondKey, ok := secondKeys.Response["key0"]
-	if !ok {
-		t.Fatal("Expected to find 'key0' in URL signing keys, but didn't")
-	}
-
-	if secondKey == firstKey {
-		t.Errorf("second create did not generate new url sig keys")
-	}
-}
-
-func DeleteTestDeliveryServicesURLSignatureKeys(t *testing.T) {
-	if len(testData.DeliveryServices) == 0 {
-		t.Fatal("couldn't get the xml ID of test DS")
-	}
-	firstDS := testData.DeliveryServices[0]
-
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in testing data with a null or undefined XMLID")
-	}
-
-	resp, _, err := TOSession.DeleteDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error deletining URL signing keys: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-}
-
-func GetTestDeliveryServicesURISigningKeys(t *testing.T) {
-	if len(testData.DeliveryServices) == 0 {
-		t.Fatal("couldn't get the xml ID of test DS")
-	}
-	firstDS := testData.DeliveryServices[0]
-
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in testing data with a null or undefined XMLID")
-	}
-
-	_, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting URI signing keys for Delivery Service '%s': %v", *firstDS.XMLID, err)
-	}
-}
-
-const (
-	keySet1 = `
-{
-  "Kabletown URI Authority 1": {
-    "renewal_kid": "First Key",
-    "keys": [
-      {
-        "alg": "HS256",
-        "kid": "First Key",
-        "kty": "oct",
-        "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
-      }
-    ]
-  }
-}`
-	keySet2 = `
-{
-"Kabletown URI Authority 1": {
-    "renewal_kid": "New First Key",
-    "keys": [
-      {
-        "alg": "HS256",
-        "kid": "New First Key",
-        "kty": "oct",
-        "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
-      }
-    ]
-  }
-}`
-)
-
-func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
-	if len(testData.DeliveryServices) == 0 {
-		t.Fatal("couldn't get the xml ID of test DS")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in testing data with a null or undefined XMLID")
-	}
-
-	var keyset tc.JWKSMap
-
-	if err := json.Unmarshal([]byte(keySet1), &keyset); err != nil {
-		t.Errorf("json.UnMarshal(): expected nil error, actual: %v", err)
-	}
-
-	_, _, err := TOSession.CreateDeliveryServiceURISigningKeys(*firstDS.XMLID, keyset, client.RequestOptions{})
-	if err != nil {
-		t.Error("failed to create uri sig keys: " + err.Error())
-	}
-
-	firstKeysBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Error("failed to get uri sig keys: " + err.Error())
-	}
-
-	firstKeys := tc.JWKSMap{}
-	if err := json.Unmarshal(firstKeysBytes, &firstKeys); err != nil {
-		t.Errorf("failed to unmarshal uri sig keys")
-	}
-
-	kabletownFirstKeys, ok := firstKeys["Kabletown URI Authority 1"]
-	if !ok {
-		t.Fatal("failed to create uri sig keys: 'Kabletown URI Authority 1' not found in response after creation")
-	}
-	if kabletownFirstKeys.Len() < 1 {
-		t.Fatal("failed to create URI signing keys: 'Kabletown URI Authority 1' had zero keys after creation")
-	}
-
-	// Create new keys again and check that they are different
-	var keyset2 tc.JWKSMap
-
-	if err := json.Unmarshal([]byte(keySet2), &keyset2); err != nil {
-		t.Errorf("json.UnMarshal(): expected nil error, actual: %v", err)
-	}
-
-	alerts, _, err := TOSession.CreateDeliveryServiceURISigningKeys(*firstDS.XMLID, keyset2, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error creating URI Signature Keys for Delivery Service '%s': %v - alerts: %+v", *firstDS.XMLID, err, alerts.Alerts)
-	}
-
-	secondKeysBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Error("failed to get uri sig keys: " + err.Error())
-	}
-
-	secondKeys := tc.JWKSMap{}
-	if err := json.Unmarshal(secondKeysBytes, &secondKeys); err != nil {
-		t.Errorf("failed to unmarshal uri sig keys")
-	}
-
-	kabletownSecondKeys, ok := secondKeys["Kabletown URI Authority 1"]
-	if !ok {
-		t.Fatal("failed to create uri sig keys: 'Kabletown URI Authority 1' not found in response after creation")
-	}
-	if kabletownSecondKeys.Len() < 1 {
-		t.Fatal("failed to create URI signing keys: 'Kabletown URI Authority 1' had zero keys after creation")
-	}
-
-	k1, ok := kabletownFirstKeys.Get(0)
-	if !ok {
-		t.Errorf(`failed to get key 0 from kabletownFirstKeys`)
-	}
-	k2, ok := kabletownSecondKeys.Get(0)
-	if !ok {
-		t.Errorf(`failed to get key 0 from kabletownSecondKeys`)
-	}
-
-	if k2.KeyID() == k1.KeyID() {
-		t.Errorf("second create did not generate new uri sig keys - key mismatch")
-	}
-}
-
-func DeleteTestDeliveryServicesURISigningKeys(t *testing.T) {
-	if len(testData.DeliveryServices) == 0 {
-		t.Fatal("couldn't get the xml ID of test DS")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in testing data with a null or undefined XMLID")
-	}
-
-	resp, _, err := TOSession.DeleteDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error deleting URI Signing keys for Delivery Service '%s': %v - alerts: %+v", *firstDS.XMLID, err, resp.Alerts)
-	}
-
-	emptyBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting URI signing keys for Delivery Service '%s': %v", *firstDS.XMLID, err)
-	}
-	emptyMap := make(map[string]interface{})
-	err = json.Unmarshal(emptyBytes, &emptyMap)
-	if err != nil {
-		t.Errorf("unexpected error unmarshalling empty URI signing keys response: %v", err)
-	}
-	renewalKid, hasRenewalKid := emptyMap["renewal_kid"]
-	keys, hasKeys := emptyMap["keys"]
-	if !hasRenewalKid {
-		t.Error("getting empty URI signing keys - expected: 'renewal_kid' key, actual: not present")
-	}
-	if !hasKeys {
-		t.Error("getting empty URI signing keys - expected: 'keys' key, actual: not present")
-	}
-	if renewalKid != nil {
-		t.Errorf("getting empty URI signing keys - expected: 'renewal_kid' value to be nil, actual: %+v", renewalKid)
-	}
-	if keys != nil {
-		t.Errorf("getting empty URI signing keys - expected: 'keys' value to be nil, actual: %+v", keys)
-	}
-}
-
-func GetDeliveryServiceByLogsEnabled(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test getting Delivery Services filtered by their Logs Enabled property")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.LogsEnabled == nil {
-		t.Fatal("Found a Delivery Service in testing data with a null or undefined LogsEnabled")
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("logsEnabled", strconv.FormatBool(*firstDS.LogsEnabled))
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by 'logsEnabled': %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("Expected at least one Delivery Service to exist with Logs Enabled set to %t", *firstDS.LogsEnabled)
-	}
-	if resp.Response[0].LogsEnabled == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined Logs Enabled property")
-	}
-	if *resp.Response[0].LogsEnabled != *firstDS.LogsEnabled {
-		t.Errorf("Logs enabled status expected: %t, actual: %t", *firstDS.LogsEnabled, *resp.Response[0].LogsEnabled)
-	}
-}
-
-// Note this test assumes that the first Delivery Service in the testing data's
-// deliveryservices array has a Profile.
-func GetDeliveryServiceByValidProfile(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test getting Delivery Services filtered by their Profile ID")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.ProfileName == nil {
-		t.Fatal("Profile name is nil in the Pre-requisites")
-	}
-
-	opts := client.NewRequestOptions()
-	if firstDS.ProfileID == nil {
-		opts.QueryParameters.Set("name", *firstDS.ProfileName)
-		profile, _, err := TOSession.GetProfiles(opts)
-		if err != nil {
-			t.Errorf("Unexpected error getting Profiles filtered by name: %v - alerts: %+v", err, profile.Alerts)
-		}
-		if len(profile.Response) != 1 {
-			t.Fatalf("Expected exactly one Profile to exist with name '%s', found %d:", *firstDS.ProfileName, len(profile.Response))
-		}
-		firstDS.ProfileID = new(int)
-		*firstDS.ProfileID = profile.Response[0].ID
-		opts.QueryParameters.Del("name")
-	}
-
-	opts.QueryParameters.Set("profile", strconv.Itoa(*firstDS.ProfileID))
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by Profile ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("Expected at least one Delivery Service to exist with Profile '%s'", *firstDS.ProfileName)
-	}
-	if resp.Response[0].ProfileName == nil {
-		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined Profile Name")
-	}
-	if *resp.Response[0].ProfileName != *firstDS.ProfileName {
-		t.Errorf("Profile name expected: '%s', actual: '%s'", *firstDS.ProfileName, *resp.Response[0].ProfileName)
-	}
-}
-
-func GetDeliveryServiceByValidTenant(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test getting Delivery Services filtered by their Tenant IDs")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.Tenant == nil {
-		t.Fatal("Tenant name is nil in the Pre-requisites")
-	}
-
-	opts := client.NewRequestOptions()
-	if firstDS.TenantID == nil {
-		opts.QueryParameters.Set("name", *firstDS.Tenant)
-		tenants, _, err := TOSession.GetTenants(opts)
-		if err != nil {
-			t.Errorf("Unexpected error getting Tenants filtered by name: %v - alerts: %+v", err, tenants.Alerts)
-		}
-		if len(tenants.Response) != 1 {
-			t.Fatalf("Expected exactly one Tenant to exist with name '%s', found %d:", *firstDS.Tenant, len(tenants.Response))
-		}
-		firstDS.TenantID = new(int)
-		*firstDS.TenantID = tenants.Response[0].ID
-		opts.QueryParameters.Del("name")
-	}
-
-	opts.QueryParameters.Set("tenant", strconv.Itoa(*firstDS.TenantID))
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by Tenant ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("Expected at least one Delivery Service to exist belonging to Tenant '%s'", *firstDS.Tenant)
-	}
-	if resp.Response[0].Tenant == nil {
-		t.Fatal("Traffic Ops returned a representation of a Delivery Service with null or undefined Tenant")
-	}
-	if *resp.Response[0].Tenant != *firstDS.Tenant {
-		t.Errorf("Tenant name expected: '%s', actual: '%s'", *firstDS.Tenant, *resp.Response[0].Tenant)
-	}
-}
-
-func GetDeliveryServiceByValidType(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test getting Delivery Services filtered by Type")
-	}
-	firstDS := testData.DeliveryServices[0]
-	if firstDS.Type == nil {
-		t.Fatal("Type name is nil in the Pre-requisites")
-	}
-
-	opts := client.NewRequestOptions()
-	if firstDS.TypeID == nil {
-		opts.QueryParameters.Set("name", firstDS.Type.String())
-		types, _, err := TOSession.GetTypes(opts)
-		if err != nil {
-			t.Errorf("Unexpected error getting Types filtered by name: %v - alerts: %+v", err, types.Alerts)
-		}
-		if len(types.Response) != 1 {
-			t.Fatalf("Expected exactly one Type to exist with name '%s', found %d:", *firstDS.Type, len(types.Response))
-		}
-		firstDS.TypeID = new(int)
-		*firstDS.TypeID = types.Response[0].ID
-		opts.QueryParameters.Del("name")
-	}
-
-	opts.QueryParameters.Set("type", strconv.Itoa(*firstDS.TypeID))
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by Type ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("Expected at least one Delivery Service to exist with Type '%s' (#%d)", *firstDS.Type, *firstDS.TypeID)
-	}
-	if resp.Response[0].Type == nil {
-		t.Fatal("Traffic Ops returned a representation of a Delivery Service with null or undefined Type Name")
-	}
-	if *resp.Response[0].Type != *firstDS.Type {
-		t.Errorf("Type expected: '%s', actual: '%s'", *firstDS.Type, *resp.Response[0].Type)
-	}
-}
-
-func GetDeliveryServiceByValidXmlId(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test getting Delivery Services filtered by XMLID")
-	}
-	firstDS := testData.DeliveryServices[0]
-
-	if firstDS.XMLID == nil {
-		t.Fatal("Found a Delivery Service in testing data with a null or undefined XMLID")
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", *firstDS.XMLID)
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by XMLID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Delivery Service to exist with XMLID '%s', found: %d", *firstDS.XMLID, len(resp.Response))
-	}
-	if resp.Response[0].XMLID == nil {
-		t.Fatal("Traffic Ops returned a representation of a Delivery Service with null or undefined XMLID")
-	}
-	if *resp.Response[0].XMLID != *firstDS.XMLID {
-		t.Errorf("Delivery Service XMLID expected: %s, actual: %s", *firstDS.XMLID, *resp.Response[0].XMLID)
-	}
-}
-
-func SortTestDeliveryServicesDesc(t *testing.T) {
-	resp, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services with default sort order: %v - alerts: %+v", err, resp.Alerts)
-	}
-	respAsc := resp.Response
-	if len(respAsc) == 0 {
-		t.Fatal("Need at least one Delivery Service in Traffic Ops to test sort order")
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("sortOrder", "desc")
-	resp, _, err = TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services with explicit descending sort order: %v - alerts: %+v", err, resp.Alerts)
-	}
-	respDesc := resp.Response
-	if len(respDesc) == 0 {
-		t.Fatal("Need at least one Delivery Service in Traffic Ops to test sort order")
-	}
-
-	// TODO: test the entire array(s)?
-	// TODO: check that the responses have the same length?
-	// TODO: check that the responses have more than one entry, since otherwise it's trivially sorted anyway?
-	// reverse the descending-sorted response and compare it to the ascending-sorted one
-	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
-		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
-	}
-	if respDesc[0].XMLID != nil && respAsc[0].XMLID != nil {
-		if !reflect.DeepEqual(respDesc[0].XMLID, respAsc[0].XMLID) {
-			t.Errorf("Delivery Service responses are not equal after reversal: %v - %v", *respDesc[0].XMLID, *respAsc[0].XMLID)
-		}
-	}
-}
-
-func addTLSVersionsToDeliveryService(t *testing.T) {
-	me, _, err := TOSession.GetUserCurrent(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Failed to get current User: %v - alerts: %+v", err, me.Alerts)
-	}
-	if me.Response.Tenant == nil || me.Response.TenantID == nil {
-		t.Fatal("Traffic Ops returned a representation for the current user with null or undefined tenant and/or tenantID")
-	}
-
-	var ds tc.DeliveryServiceV4
-	ds.Active = new(bool)
-	ds.CDNName = new(string)
-	ds.DisplayName = new(string)
-	ds.DSCP = new(int)
-	ds.GeoLimit = new(int)
-	ds.GeoProvider = new(int)
-	ds.InitialDispersion = new(int)
-	ds.IPV6RoutingEnabled = new(bool)
-	ds.LogsEnabled = new(bool)
-	ds.MissLat = new(float64)
-	ds.MissLong = new(float64)
-	ds.MultiSiteOrigin = new(bool)
-	ds.OrgServerFQDN = new(string)
-	ds.Protocol = new(int)
-	ds.QStringIgnore = new(int)
-	ds.RangeRequestHandling = new(int)
-	ds.RegionalGeoBlocking = new(bool)
-	ds.Tenant = new(string)
-	ds.TenantID = me.Response.TenantID
-	ds.TLSVersions = []string{
-		"1.1",
-	}
-	ds.Type = new(tc.DSType)
-	ds.XMLID = new(string)
-	*ds.DSCP = 1
-	*ds.InitialDispersion = 1
-	*ds.Tenant = *me.Response.Tenant
-	*ds.DisplayName = "ds-test-tls-versions"
-	*ds.XMLID = "ds-test-tls-versions"
-
-	cdns, _, err := TOSession.GetCDNs(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Failed to get CDNs: %v - alerts: %+v", err, cdns.Alerts)
-	}
-	if len(cdns.Response) < 1 {
-		t.Fatalf("Need at least one CDN to exist in order to test Delivery Service TLS Versions")
-	}
-	ds.CDNID = &cdns.Response[0].ID
-	*ds.CDNName = cdns.Response[0].Name
-
-	*ds.Type = "STEERING"
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", string(*ds.Type))
-	types, _, err := TOSession.GetTypes(opts)
-	if err != nil {
-		t.Fatalf("Failed to get Types: %v - alerts: %+v", err, types.Alerts)
-	}
-	if len(types.Response) != 1 {
-		t.Fatalf("Expected exactly one Type to exist named 'STEERING', found: %d", len(types.Response))
-	}
-	ds.TypeID = &types.Response[0].ID
-
-	_, _, err = TOSession.CreateDeliveryService(ds, client.RequestOptions{})
-	if err == nil {
-		t.Error("Expected an error creating a STEERING Delivery Service with explicit TLS Versions, but didn't")
-	} else if !strings.Contains(err.Error(), "'tlsVersions' must be 'null' for STEERING-Type") {
-		t.Errorf("Expected an error about non-null TLS Versions for STEERING-Type Delivery Services, got: %v", err)
-	}
-
-	*ds.Type = "HTTP"
-	opts.QueryParameters.Set("name", string(*ds.Type))
-	types, _, err = TOSession.GetTypes(opts)
-	if err != nil {
-		t.Fatalf("Failed to get Types: %v - alerts: %+v", err, types.Alerts)
-	}
-	if len(types.Response) != 1 {
-		t.Fatalf("Expected exactly one Type to exist named 'HTTP', found: %d", len(types.Response))
-	}
-	ds.TypeID = &types.Response[0].ID
-
-	*ds.OrgServerFQDN = "https://origin.test"
-	resp, _, err := TOSession.CreateDeliveryService(ds, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error creating a Delivery Service: %v - alerts: %+v", err, resp.Alerts)
-	} else if len(resp.Response) != 1 {
-		t.Errorf("Expected creating a new Delivery Service to create exactly one Delivery Service, but Traffic Ops indicated that %d were created", len(resp.Response))
-	} else if resp.Response[0].ID == nil {
-		t.Error("Traffic Ops returned a representation for a created Delivery Service that had null or undefined ID")
-	} else {
-		alerts, _, err := TOSession.DeleteDeliveryService(*resp.Response[0].ID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("Failed to clean up newly created Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
-		}
-	}
-}
-
-func GetDeliveryServiceByTopology(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", "ds-top")
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("couldn't get ds %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected only one Delivery Service for this XML ds-top")
-	}
-
-	ds := resp.Response[0]
-	opts.QueryParameters.Del("xmlId")
-
-	if ds.Topology == nil {
-		t.Fatalf("No topology found to test GET delivery service by Topology")
-	}
-	opts.QueryParameters.Set("topology", *ds.Topology)
-	resp, _, err = TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("couldn't get ds by topology %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("Expected at least one Delivery Service for this topology")
-	}
-}
-
-func GetDeliveryServiceByServiceCategory(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", "DS5")
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("couldn't get ds %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected only one Delivery Service for this XML DS5")
-	}
-
-	ds := resp.Response[0]
-	opts.QueryParameters.Del("xmlId")
-
-	if ds.ServiceCategory == nil {
-		t.Fatalf("No Service Category found to test GET delivery service by Service Category")
-	}
-	opts.QueryParameters.Set("serviceCategory", *ds.ServiceCategory)
-	resp, _, err = TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("couldn't get ds by service category %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("Expected at least one Delivery Service for this service category")
+		getDS, _, err := TOSession.GetDeliveryServices(opts)
+		assert.NoError(t, err, "Error deleting Delivery Service for '%s' : %v - alerts: %+v", *ds.XMLID, err, getDS.Alerts)
+		assert.Equal(t, 0, len(getDS.Response), "Expected Delivery Service '%s' to be deleted", *ds.XMLID)
 	}
 }

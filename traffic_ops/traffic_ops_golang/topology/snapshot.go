@@ -1,4 +1,4 @@
-package crconfig
+package topology
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,12 +22,14 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/lib/pq"
 )
 
-func makeTopologies(tx *sql.Tx) (map[string]tc.CRConfigTopology, error) {
+// MakeTopologies makes the topologies data for the crconfig and tmconfig snapshots.
+func MakeTopologies(tx *sql.Tx) (map[string]tc.CRConfigTopology, error) {
 	query := `
 SELECT
 	t.name,
