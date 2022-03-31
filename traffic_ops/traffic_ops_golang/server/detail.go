@@ -91,7 +91,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 				routerPortName = interfaces[0].RouterPortName
 			}
 			v11server := tc.ServerDetailV11{}
-			v11server.ServerDetail = server.ServerDetail
+			v11server.ServerDetail, _ = dbhelpers.GetServerDetailFromV4(server.ServerDetailsV40, inf.Tx.Tx)
 			v11server.RouterHostName = &routerHostName
 			v11server.RouterPortName = &routerPortName
 			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
@@ -117,7 +117,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 				routerHostName = interfaces[0].RouterHostName
 				routerPortName = interfaces[0].RouterPortName
 			}
-			v3Server.ServerDetail = server.ServerDetail
+			v3Server.ServerDetail, _ = dbhelpers.GetServerDetailFromV4(server.ServerDetailsV40, inf.Tx.Tx)
 			v3Server.RouterHostName = &routerHostName
 			v3Server.RouterPortName = &routerPortName
 			v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
@@ -209,12 +209,13 @@ server.mgmt_ip_gateway,
 server.mgmt_ip_netmask,
 server.offline_reason,
 pl.name as phys_location,
+(SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server_profile.server=server.id) AS profile_name,
 server.rack,
 st.name as status,
 server.tcp_port,
 t.name as server_type,
 server.xmpp_id,
-server.xmpp_passwd,
+server.xmpp_passwd
 `
 	queryFormatString := `
 SELECT
@@ -228,12 +229,6 @@ JOIN profile p ON server.profile = p.id
 JOIN status st ON server.status = st.id
 JOIN type t ON server.type = t.id
 `
-	profileSelectV3 := `p.name as profile, 
-p.description as profile_desc`
-	profileSelectV4 := `sp.profile_names as profile_names,
-(SELECT ARRAY(SELECT p.description FROM profile p WHERE p.name=ANY(SELECT unnest(sp.profile_names) FROM server_profile sp WHERE sp.server=server.id)))`
-	profileFromV4 := `JOIN server_profile sp ON sp.server = server.id`
-
 	limitStr := ""
 	if limit != 0 {
 		limitStr = " LIMIT " + strconv.Itoa(limit)
@@ -241,9 +236,6 @@ p.description as profile_desc`
 	orderByStr := ""
 	if orderBy != "" {
 		orderByStr = " ORDER BY " + orderBy
-	}
-	if reqVersion.Major >= 4 {
-		queryFormatString = queryFormatString + profileFromV4
 	}
 	idRows, err := AddWhereClauseAndQuery(tx, fmt.Sprintf(queryFormatString, ""), hostName, physLocationID, orderByStr, limitStr)
 	if err != nil {
@@ -262,11 +254,6 @@ p.description as profile_desc`
 	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx)
 	if err != nil {
 		return nil, errors.New("unable to get server interfaces: " + err.Error())
-	}
-	if reqVersion.Major <= 3 {
-		dataFetchQuery = dataFetchQuery + profileSelectV3
-	} else {
-		dataFetchQuery = dataFetchQuery + profileSelectV4
 	}
 	rows, err := AddWhereClauseAndQuery(tx, fmt.Sprintf(queryFormatString, dataFetchQuery), hostName, physLocationID, orderByStr, limitStr)
 	if err != nil {
@@ -287,7 +274,38 @@ p.description as profile_desc`
 
 	for rows.Next() {
 		s := tc.ServerDetailV40{}
-		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Rack, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd, &s.Profiles, &s.ProfileDesc); err != nil {
+		if err := rows.Scan(&s.ID,
+			&s.CacheGroup,
+			&s.CDNName,
+			pq.Array(&s.DeliveryServiceIDs),
+			&s.DomainName,
+			&s.GUID,
+			&s.HostName,
+			&s.HTTPSPort,
+			&s.ILOIPAddress,
+			&s.ILOIPGateway,
+			&s.ILOIPNetmask,
+			&s.ILOPassword,
+			&s.ILOUsername,
+			&serviceAddress,
+			&service6Address,
+			&serviceGateway,
+			&service6Gateway,
+			&serviceNetmask,
+			&serviceInterface,
+			&serviceMtu,
+			&s.MgmtIPAddress,
+			&s.MgmtIPGateway,
+			&s.MgmtIPNetmask,
+			&s.OfflineReason,
+			&s.PhysLocation,
+			pq.Array(&s.ProfileNames),
+			&s.Rack,
+			&s.Status,
+			&s.TCPPort,
+			&s.Type,
+			&s.XMPPID,
+			&s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
 		s.ServerInterfaces = []tc.ServerInterfaceInfoV40{}
