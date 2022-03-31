@@ -84,6 +84,15 @@ func Compare(t *testing.T, expected []string, alertsStrs []string) {
 	}
 }
 
+// String constants for the HTTP verbs/methods being tested
+const (
+	Get             = "GET"
+	Post            = "POST"
+	Put             = "PUT"
+	Delete          = "DELETE"
+	GetAfterChanges = "GET AFTER CHANGES"
+)
+
 // CreateV3Session creates a session for client v4 using the passed in username and password.
 func CreateV3Session(t *testing.T, TrafficOpsURL string, username string, password string, toReqTimeout int) *v3client.Session {
 	userSession, _, err := v3client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v3-client-tests", false, time.Second*time.Duration(toReqTimeout))
