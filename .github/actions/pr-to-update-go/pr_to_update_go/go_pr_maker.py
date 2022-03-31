@@ -368,7 +368,7 @@ class GoPRMaker:
 			branch).decoded_content.decode().strip()
 
 	def set_go_version(self, go_version: str, commit_message: str,
-			source_branch_name: str) -> GitCommit:
+			source_branch_name: str) -> Optional[GitCommit]:
 		"""
 		Makes the commits necessary to change the Go version used by the
 		repository.
