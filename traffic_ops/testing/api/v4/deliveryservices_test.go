@@ -34,9 +34,9 @@ import (
 func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices, DeliveryServicesRequiredCapabilities, DeliveryServiceServerAssignments}, func() {
 
-		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
 		tenant4UserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
