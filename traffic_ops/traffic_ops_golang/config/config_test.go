@@ -98,6 +98,7 @@ const (
 		"pid_file" : "/var/run/traffic_ops.pid",
 		"workers" : 12
 	},
+	"user_cache_refresh_interval_sec": 30,
 	"disable_auto_cert_deletion": true,
 	"traffic_ops_golang" : {
 		"port" : "443",
@@ -236,6 +237,9 @@ func TestLoadConfig(t *testing.T) {
 
 	if cfg.TrafficVaultBackend != "something" {
 		t.Errorf("expected traffic_vault_backend to be 'something', actual: '%s'", cfg.TrafficVaultBackend)
+	}
+	if cfg.UserCacheRefreshIntervalSec != 30 {
+		t.Errorf("expected user_refresh_interval_sec: 30, actual: %d", cfg.UserCacheRefreshIntervalSec)
 	}
 	tvConfig := make(map[string]string)
 	err = json.Unmarshal(cfg.TrafficVaultConfig, &tvConfig)

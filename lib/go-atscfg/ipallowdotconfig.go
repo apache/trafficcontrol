@@ -78,21 +78,6 @@ func MakeIPAllowDotConfig(
 	params := paramsToMultiMap(filterParams(serverParams, IPAllowConfigFileName, "", "", ""))
 
 	ipAllowDat := []ipAllowData{}
-	const ActionAllow = "ip_allow"
-	const ActionDeny = "ip_deny"
-	const MethodAll = "ALL"
-
-	// localhost is trusted.
-	ipAllowDat = append(ipAllowDat, ipAllowData{
-		Src:    `127.0.0.1`,
-		Action: ActionAllow,
-		Method: MethodAll,
-	})
-	ipAllowDat = append(ipAllowDat, ipAllowData{
-		Src:    `::1`,
-		Action: ActionAllow,
-		Method: MethodAll,
-	})
 
 	// default for coalesce_ipv4 = 24, 5 and for ipv6 48, 5; override with the parameters in the server profile.
 	coalesceMaskLenV4 := DefaultCoalesceMaskLenV4
@@ -103,12 +88,8 @@ func MakeIPAllowDotConfig(
 	for name, vals := range params {
 		for _, val := range vals {
 			switch name {
-			case "purge_allow_ip":
-				ipAllowDat = append(ipAllowDat, ipAllowData{
-					Src:    val,
-					Action: ActionAllow,
-					Method: MethodAll,
-				})
+			case ParamPurgeAllowIP:
+				ipAllowDat = append(ipAllowDat, allowAll(val))
 			case ParamCoalesceMaskLenV4:
 				if vi, err := strconv.Atoi(val); err != nil {
 					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
@@ -148,16 +129,10 @@ func MakeIPAllowDotConfig(
 	// for edges deny "PUSH|PURGE|DELETE", allow everything else to everyone.
 	isMid := strings.HasPrefix(server.Type, tc.MidTypePrefix)
 	if !isMid {
-		ipAllowDat = append(ipAllowDat, ipAllowData{
-			Src:    `0.0.0.0-255.255.255.255`,
-			Action: ActionDeny,
-			Method: `PUSH|PURGE|DELETE`,
-		})
-		ipAllowDat = append(ipAllowDat, ipAllowData{
-			Src:    `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`,
-			Action: ActionDeny,
-			Method: `PUSH|PURGE|DELETE`,
-		})
+		ipAllowDat = append([]ipAllowData{allowAll(`127.0.0.1`)}, ipAllowDat...)
+		ipAllowDat = append([]ipAllowData{allowAll(`::1`)}, ipAllowDat...)
+		ipAllowDat = append(ipAllowDat, allowAllButPushPurgeDelete(`0.0.0.0-255.255.255.255`))
+		ipAllowDat = append(ipAllowDat, allowAllButPushPurgeDelete(`::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`))
 	} else {
 
 		ips := []*net.IPNet{}
@@ -209,7 +184,7 @@ func MakeIPAllowDotConfig(
 			// - all monitors, if this server is a Mid
 			//
 			_, isChild := childCGs[*childServer.Cachegroup]
-			if !isChild && (!strings.HasPrefix(server.Type, tc.MidTypePrefix) || (string(childServer.Type) != tc.MonitorTypeName)) {
+			if !isChild && !strings.HasPrefix(server.Type, tc.MidTypePrefix) && string(childServer.Type) != tc.MonitorTypeName {
 				continue
 			}
 
@@ -247,78 +222,27 @@ func MakeIPAllowDotConfig(
 		cidr6s := util.CoalesceCIDRs(ip6s, coalesceNumberV6, coalesceMaskLenV6)
 
 		for _, cidr := range cidrs {
-			ipAllowDat = append(ipAllowDat, ipAllowData{
-				Src:    util.RangeStr(cidr),
-				Action: ActionAllow,
-				Method: MethodAll,
-			})
+			ipAllowDat = append(ipAllowDat, allowAllButPushPurge(util.RangeStr(cidr)))
 		}
 		for _, cidr := range cidr6s {
-			ipAllowDat = append(ipAllowDat, ipAllowData{
-				Src:    util.RangeStr(cidr),
-				Action: ActionAllow,
-				Method: MethodAll,
-			})
+			ipAllowDat = append(ipAllowDat, allowAllButPushPurge(util.RangeStr(cidr)))
 		}
 
 		// allow RFC 1918 server space - TODO JvD: parameterize
-		ipAllowDat = append(ipAllowDat, ipAllowData{
-			Src:    `10.0.0.0-10.255.255.255`,
-			Action: ActionAllow,
-			Method: MethodAll,
-		})
-		ipAllowDat = append(ipAllowDat, ipAllowData{
-			Src:    `172.16.0.0-172.31.255.255`,
-			Action: ActionAllow,
-			Method: MethodAll,
-		})
-		ipAllowDat = append(ipAllowDat, ipAllowData{
-			Src:    `192.168.0.0-192.168.255.255`,
-			Action: ActionAllow,
-			Method: MethodAll,
-		})
+		ipAllowDat = append(ipAllowDat, allowAllButPushPurge(`10.0.0.0-10.255.255.255`))
+		ipAllowDat = append(ipAllowDat, allowAllButPushPurge(`172.16.0.0-172.31.255.255`))
+		ipAllowDat = append(ipAllowDat, allowAllButPushPurge(`192.168.0.0-192.168.255.255`))
 
 		// order matters, so sort before adding the denys
 		sort.Sort(ipAllowDatas(ipAllowDat))
 
-		// start with a deny for PUSH and PURGE - TODO CDL: parameterize
-		// but leave purge open through localhost
-		if isMid { // Edges already deny PUSH and PURGE
-			ipAllowDat = append([]ipAllowData{
-				{
-					Src:    `127.0.0.1`,
-					Action: ActionAllow,
-					Method: `PURGE`,
-				},
-				{
-					Src:    `::1`,
-					Action: ActionAllow,
-					Method: `PURGE`,
-				},
-				{
-					Src:    `0.0.0.0-255.255.255.255`,
-					Action: ActionDeny,
-					Method: `PUSH|PURGE`,
-				},
-				{
-					Src:    `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`,
-					Action: ActionDeny,
-					Method: `PUSH|PURGE`,
-				},
-			}, ipAllowDat...)
-		}
+		// start by allowing everything to localhost, including PURGE and PUSH
+		ipAllowDat = append([]ipAllowData{allowAll(`127.0.0.1`)}, ipAllowDat...)
+		ipAllowDat = append([]ipAllowData{allowAll(`::1`)}, ipAllowDat...)
 
 		// end with a deny
-		ipAllowDat = append(ipAllowDat, ipAllowData{
-			Src:    `0.0.0.0-255.255.255.255`,
-			Action: ActionDeny,
-			Method: MethodAll,
-		})
-		ipAllowDat = append(ipAllowDat, ipAllowData{
-			Src:    `::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`,
-			Action: ActionDeny,
-			Method: MethodAll,
-		})
+		ipAllowDat = append(ipAllowDat, denyAll(`0.0.0.0-255.255.255.255`))
+		ipAllowDat = append(ipAllowDat, denyAll(`::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`))
 	}
 
 	text := makeHdrComment(opt.HdrComment)
@@ -370,4 +294,56 @@ func (ss serversSortByName) Less(i, j int) bool {
 		return true
 	}
 	return *ss[i].HostName < *ss[j].HostName
+}
+
+const ActionAllow = "ip_allow"
+const ActionDeny = "ip_deny"
+const MethodAll = "ALL"
+const MethodPush = "PUSH"
+const MethodPurge = "PURGE"
+const MethodDelete = "DELETE"
+const MethodSeparator = `|`
+
+// allowAllButPushPurge is a helper func to build a ipAllowData for the given range string immediately allowing all Methods except Push and Purge.
+func allowAllButPushPurge(rangeStr string) ipAllowData {
+	// Note denying methods implicitly and immediately allows all other methods!
+	// So Deny PUSH|PURGE will make all other methods
+	// immediately allowed, regardless of any later deny rules!
+	methodPushPurge := strings.Join([]string{MethodPush, MethodPurge}, MethodSeparator)
+	return ipAllowData{
+		Src:    rangeStr,
+		Action: ActionDeny,
+		Method: methodPushPurge,
+	}
+}
+
+// allowAllButPushPurgeDelete is a helper func to build a ipAllowData for the given range string immediately allowing all Methods except PUSH, PURGE, and DELETE.
+func allowAllButPushPurgeDelete(rangeStr string) ipAllowData {
+	// Note denying methods implicitly and immediately allows all other methods!
+	// So Deny PUSH|PURGE will make all other methods
+	// immediately allowed, regardless of any later deny rules!
+	methodPushPurgeDelete := strings.Join([]string{MethodPush, MethodPurge, MethodDelete}, MethodSeparator)
+	return ipAllowData{
+		Src:    rangeStr,
+		Action: ActionDeny,
+		Method: methodPushPurgeDelete,
+	}
+}
+
+// allowAll is a helper func to build a ipAllowData for the given range string immediately allowing all Methods, including Push and Purge.
+func allowAll(rangeStr string) ipAllowData {
+	return ipAllowData{
+		Src:    rangeStr,
+		Action: ActionAllow,
+		Method: MethodAll,
+	}
+}
+
+// denyAll is a helper func to build a ipAllowData for the given range string immediately denying all Methods.
+func denyAll(rangeStr string) ipAllowData {
+	return ipAllowData{
+		Src:    rangeStr,
+		Action: ActionDeny,
+		Method: MethodAll,
+	}
 }
