@@ -226,7 +226,7 @@ AND d.active = true
 			ds.TTL = &ttl
 		}
 
-		protocolStr := getProtocolStr(ttype)
+		protocolStr := tc.GetDSTypeCategory(ttype)
 
 		ds.Protocol = protocolDefault
 		if protocol.Valid {
@@ -454,13 +454,6 @@ and d.active = true
 	return entries, nil
 }
 
-func getProtocolStr(dsType string) string {
-	if strings.HasPrefix(dsType, "DNS") {
-		return "DNS"
-	}
-	return "HTTP"
-}
-
 func getDSRegexesDomains(cdn string, domain string, tx *sql.Tx) (map[string][]*tc.MatchSet, map[string][]string, error) {
 	dsmatchsets := map[string][]*tc.MatchSet{}
 	domains := map[string][]string{}
@@ -498,7 +491,7 @@ order by dr.set_number asc
 		} else {
 			dsNameOrderMap[dsname] = dsNameOrderMap[dsname] + 1
 		}
-		protocolStr := getProtocolStr(dstype)
+		protocolStr := tc.GetDSTypeCategory(dstype)
 
 		dsmatchsets[dsname] = append(dsmatchsets[dsname], nil)
 

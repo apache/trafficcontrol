@@ -388,7 +388,7 @@ func CalcAvailability(
 
 		localCacheStatuses[result.ID] = availStatus
 	}
-	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates)
+	calculateDeliveryServiceState(localStates)
 	localCacheStatusThreadsafe.Set(localCacheStatuses)
 }
 
@@ -433,13 +433,9 @@ func eventDesc(status tc.CacheStatus, message string) string {
 }
 
 //calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func calculateDeliveryServiceState(deliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName, states peer.CRStatesThreadsafe) {
+func calculateDeliveryServiceState(states peer.CRStatesThreadsafe) {
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
-		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
-			log.Infof("CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
-			continue
-		}
 		// NOTE: DisabledLocations is always empty, and it's important that it isn't nil, so it serialises to the JSON `[]` instead of `null`.
 		// It's no longer populated due to it being an unnecessary optimization for Traffic Router, but the field is kept for compatibility.
 		deliveryServiceState.DisabledLocations = []tc.CacheGroupName{}

@@ -37,29 +37,33 @@
 # TRAFFIC_VAULT_PASS
 
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS TO_ADMIN_USER TO_ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY TO_DOMAIN)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS DB_NAME TO_ADMIN_USER TO_ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY TO_DOMAIN TV_DB_NAME TV_SERVER TV_PORT TV_USER TV_USER_PASS TV_AES_KEY_LOCATION)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
 start() {
-  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DATABASECONF" -riakcfg "$RIAKCONF");
+  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DATABASECONF" );
   "${traffic_ops_golang_command[@]}" &
 	exec tail -f $TO_LOG
 }
 
-# generates and saves SSL certificates, database and RIAK config files.
+# generates and saves SSL certificates, database (TO and TV) config files.
 init() {
   # install certificates for TO
   openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/localhost.key -x509 -days 365 \
     -out /etc/pki/tls/certs/localhost.crt -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
   cp /etc/pki/tls/certs/localhost.crt /etc/pki/tls/certs/ca-bundle.crt
+  openssl rand -base64 32 > $TV_AES_KEY_LOCATION
+  chown trafops:trafops $TV_AES_KEY_LOCATION
 
   # update the base_url in cdn.conf
   sed -i -e "s#http://localhost\:3000#http://${TO_HOSTNAME}\:443#" $CDNCONF
 	sed -i -e 's#https://\[::\]#https://127\.0\.0\.1#' $CDNCONF
   sed -i -e 's#"use_ims": false,#"use_ims": true,#' $CDNCONF
+  sed -i -e 's#"traffic_vault_backend": "",#"traffic_vault_backend": "postgres",#' $CDNCONF
+  sed -i -e "s#\"traffic_vault_config\": {},#\"traffic_vault_config\": {\n            \"dbname\": \"$TV_DB_NAME\",\n            \"hostname\": \"$TV_SERVER\",\n            \"user\": \"$TV_USER\",\n            \"password\": \"$TV_USER_PASS\",\n            \"port\": $TV_PORT,\n            \"ssl\": false,\n            \"conn_max_lifetime_seconds\": 60,\n            \"max_connections\": 20,\n            \"max_idle_connections\": 15,\n            \"query_timeout_seconds\": 10,\n            \"aes_key_location\": \"$TV_AES_KEY_LOCATION\"\n        },#" $CDNCONF
   #
   cat > $DATABASECONF << EOM
 {
@@ -73,36 +77,47 @@ init() {
 }
 EOM
 
-  cat > $RIAKCONF << EOM
-{
-  "user": "riakuser",
-  "password": "$RIAK_USER_PASS",
-  "MaxTLSVersion": "1.1",
-  "tlsConfig": {
-    "insecureSkipVerify": true
-  }
-}
-EOM
-
   cat > $DBCONF << EOM
 version: "1.0"
 name: dbconf.yml
 
 development:
   driver: postgres
-  open: host=$DB_SERVER port=5432 user=traffic_ops password=$DB_USER_PASS dbname=to_development sslmode=disable
+  open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=to_development sslmode=disable
 
 test:
   driver: postgres
-  open: host=$DB_SERVER port=5432 user=traffic_ops password=$DB_USER_PASS dbname=to_test sslmode=disable
+  open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=to_test sslmode=disable
 
 integration:
   driver: postgres
-  open: host=$DB_SERVER port=5432 user=traffic_ops password=$DB_USER_PASS dbname=to_integration sslmode=disable
+  open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=to_integration sslmode=disable
 
 production:
   driver: postgres
-  open: host=$DB_SERVER port=5432 user=traffic_ops password=$DB_USER_PASS dbname=traffic_ops sslmode=disable
+  open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=$DB_NAME sslmode=disable
+EOM
+
+
+  cat > $TVCONF << EOM
+version: "1.0"
+name: dbconf.yml
+
+development:
+  driver: postgres
+  open: host=$TV_SERVER port=$TV_PORT user=$TV_USER password=$TV_USER_PASS dbname=tv_development sslmode=disable
+
+test:
+  driver: postgres
+  open: host=$TV_SERVER port=$TV_PORT user=$TV_USER password=$TV_USER_PASS dbname=tv_test sslmode=disable
+
+integration:
+  driver: postgres
+  open: host=$TV_SERVER port=$TV_PORT user=$TV_USER password=$TV_USER_PASS dbname=tv_integration sslmode=disable
+
+production:
+  driver: postgres
+  open: host=$TV_SERVER port=$TV_PORT user=$TV_USER password=$TV_USER_PASS dbname=$TV_DB_NAME sslmode=disable
 EOM
 
   touch $LOG_DEBUG $LOG_ERROR $LOG_EVENT $LOG_INFO $LOG_WARN $TO_LOG
@@ -112,7 +127,9 @@ source /etc/environment
 if [ -z "$INITIALIZED" ]; then init; fi
 
 # create the 'traffic_ops' database, tables and runs migrations
-(cd /opt/traffic_ops/app && db/admin --env=production reset > /admin.log 2>&1)
+(mkdir -p /var/log/traffic_ops/)
+(cd /opt/traffic_ops/app && db/admin --env=production reset > /var/log/traffic_ops/to_admin.log 2>&1)
+(cd /opt/traffic_ops/app && db/admin --trafficvault --env=production reset > /var/log/traffic_ops/tv_admin.log 2>&1)
 
 # start traffic_ops
 start

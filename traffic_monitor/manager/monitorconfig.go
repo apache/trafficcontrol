@@ -225,7 +225,7 @@ func monitorConfigListen(
 		monitorConfig := pollerMonitorCfg.Cfg
 		cdn := pollerMonitorCfg.CDN
 		monitorConfigTS.Set(monitorConfig)
-		if err := toData.Update(toSession, cdn); err != nil {
+		if err := toData.Update(toSession, cdn, monitorConfig); err != nil {
 			log.Errorln("Updating Traffic Ops Data: " + err.Error())
 		}
 

@@ -48,9 +48,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
-	"github.com/dgrijalva/jwt-go"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/lib/pq"
 )
 
@@ -127,8 +128,11 @@ func WriteAndLogErr(w http.ResponseWriter, r *http.Request, bts []byte) {
 	}
 }
 
-// WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
-// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+// WriteResp takes any object, serializes it as JSON, and writes that to w.
+//
+// Any errors are logged and written to w as alerts (if applicable). This is a
+// helper for the common case; not using this in unusual cases is perfectly
+// acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
 	resp := APIResponse{v}
 	WriteRespRaw(w, r, resp)
@@ -145,7 +149,7 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 	respBts, err := json.Marshal(v)
 	if err != nil {
 		log.Errorf("marshalling JSON (raw) for %T: %v", v, err)
-		tc.GetHandleErrorsFunc(w, r)(http.StatusInternalServerError, errors.New(http.StatusText(http.StatusInternalServerError)))
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, nil)
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
@@ -177,7 +181,7 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 	respBts, err := json.Marshal(vals)
 	if err != nil {
 		log.Errorf("marshalling JSON for %T: %v", v, err)
-		tc.GetHandleErrorsFunc(w, r)(http.StatusInternalServerError, errors.New(http.StatusText(http.StatusInternalServerError)))
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, nil)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -305,8 +309,11 @@ func RespWriterVals(w http.ResponseWriter, r *http.Request, tx *sql.Tx, vals map
 	}
 }
 
-// WriteRespAlert creates an alert, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
-// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+// WriteRespAlert creates an alert, serializes it as JSON, and writes that to w.
+//
+// Any errors are logged and written to w as alerts (if applicable). This is a
+// helper for the common case; not using this in unusual cases is perfectly
+// acceptable.
 func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel, msg string) {
 	if respWritten(r) {
 		log.Errorf("WriteRespAlert called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
@@ -1112,21 +1119,15 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 
 func getCookieFromAccessToken(bearerToken string, secret string) (*http.Cookie, error) {
 	var cookie *http.Cookie
-	claims := jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secret), nil
-	})
+	token, err := jwt.Parse([]byte(bearerToken), jwt.WithVerify(jwa.HS256, []byte(secret)))
 	if err != nil {
-		return nil, fmt.Errorf("parsing claims: %w", err)
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 	if token == nil {
 		return nil, errors.New("parsing claims: parsed nil token")
 	}
-	if !token.Valid {
-		return nil, errors.New("invalid token")
-	}
 
-	for key, val := range claims {
+	for key, val := range token.PrivateClaims() {
 		switch key {
 		case MojoCookie:
 			mojoVal, ok := val.(string)

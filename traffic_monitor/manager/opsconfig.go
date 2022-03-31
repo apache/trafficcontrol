@@ -201,20 +201,6 @@ func StartOpsConfigManager(
 			newOpsConfig.CdnName = cdn
 		}
 
-		// fixed an issue when traffic_monitor receives corrupt data, CRConfig, from traffic_ops.
-		// Will loop and retry until a good CRConfig is received from traffic_ops
-		backoff.Reset()
-		for {
-			if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
-				handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))
-				duration := backoff.BackoffDuration()
-				log.Errorf("retrying in %v\n", duration)
-				time.Sleep(duration)
-				continue
-			}
-			break
-		}
-
 		// These must be in a goroutine, because the monitorConfigPoller tick sends to a channel this select listens for. Thus, if we block on sends to the monitorConfigPoller, we have a livelock race condition.
 		// More generically, we're using goroutines as an infinite chan buffer, to avoid potential livelocks
 		for _, subscriber := range opsConfigChangeSubscribers {

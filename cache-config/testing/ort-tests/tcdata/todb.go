@@ -198,19 +198,6 @@ INSERT INTO tenant (name, active, parent_id, last_updated) VALUES ('badtenant', 
 	return nil
 }
 
-// SetupDeliveryServiceTmUsers ...
-func SetupDeliveryServiceTmUsers(db *sql.DB) error {
-
-	sqlStmt := `
-INSERT INTO deliveryservice_tmuser (deliveryservice, tm_user_id, last_updated) VALUES (100, (SELECT id FROM tm_user where username = 'admin') , '2018-01-19 21:19:32.372969');
-`
-	err := execSQL(db, sqlStmt)
-	if err != nil {
-		return execError(sqlStmt, err)
-	}
-	return nil
-}
-
 // SetupJobs ...
 func SetupJobs(db *sql.DB) error {
 
@@ -268,7 +255,6 @@ func (r *TCData) Teardown(db *sql.DB) error {
 	DELETE FROM job;
 	DELETE FROM log;
 	DELETE FROM asn;
-	DELETE FROM deliveryservice_tmuser;
 	DELETE FROM tm_user;
 	DELETE FROM role;
 	DELETE FROM capability;

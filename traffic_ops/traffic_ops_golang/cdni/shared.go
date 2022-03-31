@@ -33,7 +33,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/dgrijalva/jwt-go"
+
+	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/lib/pq"
 )
 
@@ -496,49 +498,25 @@ func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
 		return "", errors.New("bearer token is required")
 	}
 
-	claims := jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(bearerToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(inf.Config.Secrets[0]), nil
-	})
+	token, err := jwt.Parse([]byte(bearerToken),
+		jwt.WithVerify(jwa.HS256, []byte(inf.Config.Secrets[0])),
+	)
 	if err != nil {
-		return "", fmt.Errorf("parsing claims: %w", err)
-	}
-	if !token.Valid {
-		return "", errors.New("invalid token")
+		return "", fmt.Errorf("invalid token: %w", err)
 	}
 
-	var expirationFloat float64
-	var ucdn string
-	var dcdn string
-	for key, val := range claims {
-		switch key {
-		case "iss":
-			if _, ok := val.(string); !ok {
-				return "", errors.New("invalid token - iss (Issuer) must be a string")
-			}
-			ucdn = val.(string)
-		case "aud":
-			if _, ok := val.(string); !ok {
-				return "", errors.New("invalid token - aud (Audience) must be a string")
-			}
-			dcdn = val.(string)
-		case "exp":
-			if _, ok := val.(float64); !ok {
-				return "", errors.New("invalid token - exp (Expiration) must be a float64")
-			}
-			expirationFloat = val.(float64)
-		}
-	}
-
-	expiration := int64(expirationFloat)
-
-	if expiration < time.Now().Unix() {
+	if token.Expiration().Unix() < time.Now().Unix() {
 		return "", errors.New("token is expired")
 	}
-	if dcdn != inf.Config.Cdni.DCdnId {
+
+	if token.Audience() == nil || len(token.Audience()) == 0 {
+		return "", errors.New("invalid token - ucdn must be defined in audience claim")
+	}
+	if token.Audience()[0] != inf.Config.Cdni.DCdnId {
 		return "", errors.New("invalid token - incorrect dcdn")
 	}
 
+	ucdn := token.Issuer()
 	if ucdn != inf.User.UCDN {
 		return "", errors.New("user ucdn did not match token ucdn")
 	}
