@@ -33,14 +33,14 @@ import (
 func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, DeliveryServices, DeliveryServicesRequiredCapabilities, DeliveryServiceServerAssignments}, func() {
 
-		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
 		tenant4UserSession := utils.CreateV3Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
 		methodTests := utils.V3TestCase{
-			"GET": {
+			utils.Get: {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession, RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
@@ -67,7 +67,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 			},
-			"POST": {
+			utils.Post: {
 				"BAD REQUEST when XMLID left EMPTY": {
 					ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
@@ -98,7 +98,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
-			"PUT": {
+			utils.Put: {
 				"OK when VALID request": {
 					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
@@ -262,13 +262,13 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 			},
-			"DELETE": {
+			utils.Delete: {
 				"ERROR when DELETING DS OUTSIDE TENANCY": {
 					EndpointId: GetDeliveryServiceId(t, "ds3"), ClientSession: tenant4UserSession,
 					Expectations: utils.CkRequest(utils.HasError()),
 				},
 			},
-			"GET AFTER CHANGES": {
+			utils.GetAfterChanges: {
 				"OK when CHANGES made": {
 					ClientSession: TOSession, RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -321,28 +321,28 @@ func TestDeliveryServices(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case utils.Get, utils.GetAfterChanges:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetDeliveryServicesV30WithHdr(testCase.RequestHeaders, testCase.RequestParams)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
 						})
-					case "POST":
+					case utils.Post:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.CreateDeliveryServiceV30(ds)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
 						})
-					case "PUT":
+					case utils.Put:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceV30WithHdr(testCase.EndpointId(), ds, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
 						})
-					case "DELETE":
+					case utils.Delete:
 						t.Run(name, func(t *testing.T) {
 							resp, err := testCase.ClientSession.DeleteDeliveryService(strconv.Itoa(testCase.EndpointId()))
 							for _, check := range testCase.Expectations {

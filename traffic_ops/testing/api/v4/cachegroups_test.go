@@ -34,12 +34,12 @@ import (
 func TestCacheGroups(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies}, func() {
 
-		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
 		methodTests := utils.V4TestCase{
-			"GET": {
+			utils.Get: {
 				"OK when VALID NAME parameter AND Lat/Long are 0": {
 					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"name": {"nullLatLongCG"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1), ValidateResponseFields()),
@@ -122,12 +122,12 @@ func TestCacheGroups(t *testing.T) {
 					ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
-			"POST": {
+			utils.Post: {
 				"UNAUTHORIZED when NOT LOGGED IN": {
 					ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
-			"PUT": {
+			utils.Put: {
 				"OK when VALID request": {
 					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
@@ -193,7 +193,7 @@ func TestCacheGroups(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
-			"DELETE": {
+			utils.Delete: {
 				"NOT FOUND when INVALID ID parameter": {
 					EndpointId: func() int { return 111111 }, ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
@@ -203,7 +203,7 @@ func TestCacheGroups(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
-			"GET AFTER CHANGES": {
+			utils.GetAfterChanges: {
 				"OK when CHANGES made": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
@@ -242,28 +242,28 @@ func TestCacheGroups(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case utils.Get, utils.GetAfterChanges:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetCacheGroups(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "POST":
+					case utils.Post:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.CreateCacheGroup(cg, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "PUT":
+					case utils.Put:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.UpdateCacheGroup(testCase.EndpointId(), cg, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "DELETE":
+					case utils.Delete:
 						t.Run(name, func(t *testing.T) {
 							alerts, reqInf, err := testCase.ClientSession.DeleteCacheGroup(testCase.EndpointId(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {

@@ -41,7 +41,7 @@ func TestDeliveryServices(t *testing.T) {
 		tenant4UserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
 		methodTests := utils.V4TestCase{
-			"GET": {
+			utils.Get: {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession, RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
@@ -162,7 +162,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 			},
-			"POST": {
+			utils.Post: {
 				"CREATED when VALID request WITH GEO LIMIT COUNTRIES": {
 					ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
@@ -229,7 +229,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden), utils.ResponseHasLength(0)),
 				},
 			},
-			"PUT": {
+			utils.Put: {
 				"BAD REQUEST when using LONG DESCRIPTION 2 and 3 fields": {
 					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
@@ -447,13 +447,13 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 			},
-			"DELETE": {
+			utils.Delete: {
 				"BAD REQUEST when DELETING DS OUTSIDE TENANCY": {
 					EndpointId: GetDeliveryServiceId(t, "ds3"), ClientSession: tenant4UserSession,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
-			"GET AFTER CHANGES": {
+			utils.GetAfterChanges: {
 				"OK when CHANGES made": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
@@ -507,28 +507,28 @@ func TestDeliveryServices(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case utils.Get, utils.GetAfterChanges:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetDeliveryServices(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "POST":
+					case utils.Post:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.CreateDeliveryService(ds, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "PUT":
+					case utils.Put:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryService(testCase.EndpointId(), ds, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "DELETE":
+					case utils.Delete:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.DeleteDeliveryService(testCase.EndpointId(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {

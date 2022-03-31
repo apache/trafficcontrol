@@ -34,12 +34,12 @@ import (
 func TestASN(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, ASN}, func() {
 
-		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
 		methodTests := utils.V3TestCase{
-			"GET": {
+			utils.Get: {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession, RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
@@ -52,7 +52,7 @@ func TestASN(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
 				},
 			},
-			"PUT": {
+			utils.Put: {
 				"OK when VALID request": {
 					ClientSession: TOSession, EndpointId: GetASNId(t, "8888"),
 					RequestBody: map[string]interface{}{
@@ -63,7 +63,7 @@ func TestASN(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
-			"GET AFTER CHANGES": {
+			utils.GetAfterChanges: {
 				"OK when CHANGES made": {
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC}},
@@ -92,14 +92,14 @@ func TestASN(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case utils.Get, utils.GetAfterChanges:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetASNsWithHeader(&testCase.RequestParams, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
 						})
-					case "PUT":
+					case utils.Put:
 						t.Run(name, func(t *testing.T) {
 							alerts, reqInf, err := testCase.ClientSession.UpdateASNByID(testCase.EndpointId(), asn)
 							for _, check := range testCase.Expectations {

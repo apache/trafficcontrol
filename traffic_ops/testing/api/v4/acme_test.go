@@ -25,7 +25,7 @@ import (
 func TestAcmeAutoRenew(t *testing.T) {
 
 	methodTests := utils.V4TestCase{
-		"POST": {
+		utils.Post: {
 			"OK when VALID request": {
 				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusAccepted)),
 			},
@@ -35,7 +35,7 @@ func TestAcmeAutoRenew(t *testing.T) {
 		t.Run(method, func(t *testing.T) {
 			for name, testCase := range testCases {
 				switch method {
-				case "POST":
+				case utils.Post:
 					t.Run(name, func(t *testing.T) {
 						alerts, reqInf, err := testCase.ClientSession.AutoRenew(testCase.RequestOpts)
 						for _, check := range testCase.Expectations {

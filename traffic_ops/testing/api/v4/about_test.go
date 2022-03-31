@@ -26,7 +26,7 @@ import (
 func TestAbout(t *testing.T) {
 
 	methodTests := utils.V4TestCase{
-		"GET": {
+		utils.Get: {
 			"OK when VALID request": {
 				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 			},
@@ -39,7 +39,7 @@ func TestAbout(t *testing.T) {
 		t.Run(method, func(t *testing.T) {
 			for name, testCase := range testCases {
 				switch method {
-				case "GET":
+				case utils.Get:
 					t.Run(name, func(t *testing.T) {
 						resp, reqInf, err := testCase.ClientSession.GetAbout(testCase.RequestOpts)
 						for _, check := range testCase.Expectations {

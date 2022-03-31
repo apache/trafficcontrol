@@ -35,7 +35,7 @@ func TestCDNLocks(t *testing.T) {
 		opsUserWithLockSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opslockuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
 		methodTests := utils.V4TestCase{
-			"GET": {
+			utils.Get: {
 				"OK when VALID request": {
 					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						utils.ResponseLengthGreaterOrEqual(1)),
@@ -46,7 +46,7 @@ func TestCDNLocks(t *testing.T) {
 						validateGetResponseFields(map[string]interface{}{"username": "opslockuser", "cdn": "cdn2", "message": "test lock for updates", "soft": false})),
 				},
 			},
-			"POST": {
+			utils.Post: {
 				"CREATED when VALID request": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
@@ -58,7 +58,7 @@ func TestCDNLocks(t *testing.T) {
 						validateCreateResponseFields(map[string]interface{}{"username": "admin", "cdn": "cdn3", "message": "snapping cdn", "soft": true})),
 				},
 			},
-			"DELETE": {
+			utils.Delete: {
 				"OK when VALID request": {
 					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -213,21 +213,21 @@ func TestCDNLocks(t *testing.T) {
 					}
 
 					switch method {
-					case "GET":
+					case utils.Get:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetCDNLocks(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "POST":
+					case utils.Post:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.CreateCDNLock(cdnLock, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "DELETE":
+					case utils.Delete:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.DeleteCDNLocks(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
