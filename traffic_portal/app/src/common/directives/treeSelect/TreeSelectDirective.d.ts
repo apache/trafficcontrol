@@ -17,18 +17,51 @@
  * under the License.
  */
 
-export namespace TreeSelectDirective {
-   export interface TreeData {
-       name: string;
-       id: string;
-       children: TreeData[];
-    }
-   export interface RowData {
-       label: string;
-       value: string;
-       depth: number;
-       collapsed: boolean;
-       hidden: boolean;
-       children: RowData[];
-   }
+export interface TreeData {
+	name: string;
+	id: string;
+	children: TreeData[];
+}
+export interface RowData {
+	label: string;
+	value: string;
+	depth: number;
+	collapsed: boolean;
+	hidden: boolean;
+	children: RowData[];
+}
+
+
+/**
+ * Properties added to an Angular Scope either by directive binding or by being
+ * declared in the `link` function.
+ */
+export interface TreeSelectScopeProperties {
+	/** Returns true if the row data should be displayed after filtering. */
+ 	checkFilters: (row: RowData)=>boolean;
+ 	/** When collapse icon is clicked on row data. */
+	collapse: (row: RowData, evt: Event)=>void;
+	/**
+	 * Gets the FontAwesome icon class based on if the row data has children and
+	 * is collapsed.
+	 */
+	getClass: (row: RowData)=>string;
+	/** Used for form validation, will be assigned to an id attribute. */
+	handle: string;
+ 	initialValue: string;
+	/**
+	 * Used to properly update the parent on value change, useful for
+	 * validation.
+	 */
+	onUpdate: (output: {value: string})=>void;
+	searchText: string;
+	/** Updates the selection when clicking a dropdown option. */
+	select: (row: RowData)=>void;
+	selected: RowData | null;
+	shown: boolean;
+	/** Toggle the dropdown menu. */
+	toggle: ()=>void;
+	treeData: Array<TreeData>;
+	/** Non-recursed ordered list of rows to display (before filtering). */
+	treeRows: Array<RowData>;
 }
