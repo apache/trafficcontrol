@@ -24,9 +24,9 @@ module.exports = angular.module('trafficPortal.private.cdniConfigRequests', [])
                 url: 'cdni-config-requests',
                 abstract: true,
                 views: {
-					privateContent: {
-						templateUrl: 'modules/private/cdniConfigRequests/cdniConfigRequests.tpl.html'
-					}
+                    privateContent: {
+                        templateUrl: 'modules/private/cdniConfigRequests/cdniConfigRequests.tpl.html'
+                    }
                 }
             })
         ;
