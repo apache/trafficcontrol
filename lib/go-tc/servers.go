@@ -1267,7 +1267,7 @@ type ServerDetail struct {
 	MgmtIPNetmask      *string           `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
 	OfflineReason      *string           `json:"offlineReason" db:"offline_reason"`
 	PhysLocation       *string           `json:"physLocation" db:"phys_location"`
-	Profiles           *string           `json:"profile" db:"profile"`
+	Profile            *string           `json:"profile" db:"profile"`
 	ProfileDesc        *string           `json:"profileDesc" db:"profile_desc"`
 	Rack               *string           `json:"rack" db:"rack"`
 	Status             *string           `json:"status" db:"status"`
@@ -1299,7 +1299,7 @@ type ServerDetailsV40 struct {
 	MgmtIPNetmask      *string           `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
 	OfflineReason      *string           `json:"offlineReason" db:"offline_reason"`
 	PhysLocation       *string           `json:"physLocation" db:"phys_location"`
-	ProfileNames       []string          `json:"profile_name" db:"profile_name"`
+	ProfileNames       []string          `json:"profileNames" db:"profile_name"`
 	Rack               *string           `json:"rack" db:"rack"`
 	Status             *string           `json:"status" db:"status"`
 	TCPPort            *int              `json:"tcpPort" db:"tcp_port"`
