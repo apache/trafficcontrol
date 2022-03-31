@@ -422,8 +422,7 @@ class GoPRMaker:
 			'parents': [self.repo.get_git_commit(head.sha)],
 		}
 		if self.author:
-			kwargs['author'] = self.author
-			kwargs['committer'] = self.author
+			kwargs.update({'author': self.author, 'committer': self.author})
 		git_commit = self.repo.create_git_commit(**kwargs)
 		self.update_branch(source_branch_name, git_commit.sha)
 		return git_commit
