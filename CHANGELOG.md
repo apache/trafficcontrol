@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Monitor: Add support for `access.log` to TM.
 - Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
 - Added layered profile feature to 4.0 for `GET` servers/, `POST` servers/, `PUT` servers/{id} and `DELETE` servers/{id}.
+- Added layered profile feature to 4.0 for `GET` servers/details.
 
 ### Fixed
 - Update traffic\_portal dependencies to mitigate `npm audit` issues.

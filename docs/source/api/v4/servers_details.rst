@@ -98,8 +98,7 @@ Response Structure
 	:mgmtIpNetmask:  The IPv4 subnet mask of the server's management port
 	:offlineReason:         A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 	:physLocation:          The name of the physical location where the server resides
-	:profile:               The :ref:`profile-name` of the :term:`Profile` used by this server
-	:profileDesc:           A :ref:`profile-description` of the :term:`Profile` used by this server
+	:profileNames:          List of :ref:`profile-name` of the :term:`Profiles` used by this server
 	:rack:  A string indicating "server rack" location
 	:status:                The status of the server
 
@@ -157,8 +156,7 @@ Response Structure
 				"mgmtIpNetmask": "",
 				"offlineReason": "",
 				"physLocation": "Apachecon North America 2018",
-				"profile": "ATS_EDGE_TIER_CACHE",
-				"profileDesc": "Edge Cache - Apache Traffic Server",
+				"profileNames": ["ATS_EDGE_TIER_CACHE"],
 				"rack": "",
 				"status": "REPORTED",
 				"tcpPort": 80,
