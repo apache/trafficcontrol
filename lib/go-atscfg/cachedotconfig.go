@@ -67,13 +67,13 @@ func makeCacheDotConfigEdge(
 	}
 	warnings := []string{}
 
-	if server.ProfileNames == nil && len(server.ProfileNames) == 0 {
+	if len(server.ProfileNames) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing profiles")
 	}
 
 	profileServerIDsMap := map[int]struct{}{}
 	for _, sv := range servers {
-		if sv.ProfileNames == nil && len(sv.ProfileNames) == 0 {
+		if len(sv.ProfileNames) == 0 {
 			warnings = append(warnings, "servers had server with nil profile, skipping!")
 			continue
 		}

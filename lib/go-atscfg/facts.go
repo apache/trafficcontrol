@@ -41,7 +41,7 @@ func Make12MFacts(
 	}
 	warnings := []string{}
 
-	if server.ProfileNames == nil && len(server.ProfileNames) == 0 {
+	if len(server.ProfileNames) == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 
