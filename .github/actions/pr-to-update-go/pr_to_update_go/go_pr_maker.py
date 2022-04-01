@@ -27,8 +27,8 @@ import sys
 from pathlib import PurePath
 from typing import Optional, TypedDict, Any, Union
 
-import dotenv
 import requests
+from dotenv import set_key
 
 from github.Commit import Commit
 from github.ContentFile import ContentFile
@@ -388,7 +388,7 @@ class GoPRMaker:
 			go_version_file_stream.write(f'{go_version}\n')
 		env_file = getenv(ENV_ENV_FILE)
 		env_path = PurePath(os.path.dirname(env_file), ".env")
-		dotenv.set_key(dotenv_path=env_path, key_to_set=GO_VERSION_KEY, value_to_set=go_version,
+		set_key(dotenv_path=env_path, key_to_set=GO_VERSION_KEY, value_to_set=go_version,
 			quote_mode='never')
 		return self.update_files_on_tree(head=master_tip, files_to_check=[go_version_file,
 			env_file], commit_message=commit_message, source_branch_name=source_branch_name)
