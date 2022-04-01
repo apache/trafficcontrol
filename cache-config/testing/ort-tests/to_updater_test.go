@@ -78,7 +78,7 @@ func TestTOUpdater(t *testing.T) {
 		}
 
 		// set config apply time to the config update time to signal the update was applied
-		err = ExecTOUpdater(DefaultCacheHostName, serverStatus.ConfigUpdateTime, nil, util.BoolPtr(true), nil)
+		err = ExecTOUpdater(DefaultCacheHostName, serverStatus.ConfigUpdateTime, nil, util.BoolPtr(false), nil)
 		if err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
@@ -105,7 +105,7 @@ func TestTOUpdater(t *testing.T) {
 
 		// now change the reval stat and put server update status back
 		// set config apply time to the config update time to signal the update was applied
-		err = ExecTOUpdater(DefaultCacheHostName, nil, serverStatus.RevalidateUpdateTime, nil, util.BoolPtr(true))
+		err = ExecTOUpdater(DefaultCacheHostName, nil, serverStatus.RevalidateUpdateTime, nil, util.BoolPtr(false))
 		if err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
@@ -153,10 +153,10 @@ func ExecTOUpdater(host string, configApplyTime, revalApplyTime *time.Time, conf
 
 	// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
 	if configApplyBool != nil {
-		args = append(args, "--set-config-apply-bool="+strconv.FormatBool(*configApplyBool))
+		args = append(args, "--set-update-status="+strconv.FormatBool(*configApplyBool))
 	}
 	if revalApplyBool != nil {
-		args = append(args, "--set-reval-apply-bool="+strconv.FormatBool(*revalApplyBool))
+		args = append(args, "--set-reval-status="+strconv.FormatBool(*revalApplyBool))
 	}
 	// ***
 

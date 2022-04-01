@@ -118,13 +118,13 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
 
     Print the version and exit
 
--y, -\-set-config-apply-bool
+-y, -\-set-update-status
 
     [true or nonexistent] Set the Update Status to false for the server.
     Compatability requirement until ATC (v7.0+) is deployed 
     with the timestamp features.
 
--z, -\-set-reval-apply-bool
+-z, -\-set-reval-status
 
     [true or nonexistent] Set the Reval Status to false for the server.
     Compatability requirement until ATC (v7.0+) is deployed 

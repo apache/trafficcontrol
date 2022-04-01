@@ -86,10 +86,10 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
 	// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
-	const setConfigApplyBoolFlagName = "set-config-apply-bool"
-	configApplyBoolPtr := getopt.BoolLong(setConfigApplyBoolFlagName, 'y', `[true or nonexistent] Set the Update Status to false for the server`)
-	const setRevalApplyBoolFlagName = "set-reval-apply-bool"
-	revalApplyBoolPtr := getopt.BoolLong(setRevalApplyBoolFlagName, 'z', `[true or nonexistent] Set the Reval Status to false for the server`)
+	const setConfigApplyBoolFlagName = "set-update-status"
+	configApplyBoolFlag := getopt.BoolLong(setConfigApplyBoolFlagName, 'y', `[false or nonexistent] Set the Update Status to false for the server`)
+	const setRevalApplyBoolFlagName = "set-reval-status"
+	revalApplyBoolFlag := getopt.BoolLong(setRevalApplyBoolFlagName, 'z', `[false or nonexistent] Set the Reval Status to false for the server`)
 	// ***
 
 	getopt.Parse()
@@ -127,10 +127,31 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	}
 
 	// TODO: Remove once ATC (v7.0+) is deployed
-	if !getopt.IsSet(setConfigApplyBoolFlagName) || *configApplyBoolPtr == false {
+	var configApplyBoolPtr, revalApplyBoolPtr *bool
+	if getopt.IsSet(setConfigApplyBoolFlagName) {
+		if *configApplyBoolFlag {
+			fmt.Println("set-update-status must be false or nonexistent")
+			os.Exit(0)
+		}
+		configApplyBoolPtr = configApplyBoolFlag
+	} else {
 		configApplyBoolPtr = nil
 	}
-	if !getopt.IsSet(setRevalApplyBoolFlagName) || *revalApplyBoolPtr == false {
+	if getopt.IsSet(setRevalApplyBoolFlagName) {
+		if *revalApplyBoolFlag {
+			fmt.Println("set-reval-status must be false or nonexistent")
+			os.Exit(0)
+		}
+		revalApplyBoolPtr = revalApplyBoolFlag
+	} else {
+		revalApplyBoolPtr = nil
+	}
+
+	// Booleans must trump time for backwards compatibility
+	if configApplyTimePtr != nil {
+		configApplyBoolPtr = nil
+	}
+	if revalApplyTimePtr != nil {
 		revalApplyBoolPtr = nil
 	}
 

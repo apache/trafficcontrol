@@ -113,7 +113,7 @@ func TestWaitForParentsTrue(t *testing.T) {
 
 		// un-queue the parent
 
-		if err = ExecTOUpdater(parentCacheHostName, parentStatus.ConfigUpdateTime, parentStatus.RevalidateUpdateTime, util.BoolPtr(true), util.BoolPtr(true)); err != nil {
+		if err = ExecTOUpdater(parentCacheHostName, parentStatus.ConfigUpdateTime, parentStatus.RevalidateUpdateTime, util.BoolPtr(false), util.BoolPtr(false)); err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
 
@@ -138,7 +138,7 @@ func TestWaitForParentsTrue(t *testing.T) {
 		if status, err := getUpdateStatus(parentCacheHostName); err != nil {
 			t.Fatalf("checking '%s' queue status: %v", parentCacheHostName, err)
 		} else if status.UpdatePending {
-			t.Errorf("expected: '%s' to still be queued after unrelated child successful syncds run, actual: %+v", parentCacheHostName, status)
+			t.Errorf("expected: '%s' to not be queued after successful syncds wait-for-parents run, actual: %+v", parentCacheHostName, status)
 		}
 
 	})

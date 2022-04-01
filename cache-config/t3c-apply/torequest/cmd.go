@@ -236,10 +236,10 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 
 	// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
 	if configApplyBool != nil {
-		args = append(args, "--set-config-apply-bool="+strconv.FormatBool(*configApplyBool))
+		args = append(args, "--set-update-status="+strconv.FormatBool(*configApplyBool))
 	}
 	if revalApplyBool != nil {
-		args = append(args, "--set-reval-apply-bool="+strconv.FormatBool(*revalApplyBool))
+		args = append(args, "--set-reval-status="+strconv.FormatBool(*revalApplyBool))
 	}
 	// ***
 

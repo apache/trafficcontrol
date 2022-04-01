@@ -50,7 +50,7 @@ const cfgFmt = `Using Config values:
 
 func TestMain(m *testing.M) {
 	tcd = tcdata.NewTCData()
-	configFileName := flag.String("cfg", "traffic-ops-test.conf", "The config file path")
+	configFileName := flag.String("cfg", "conf/traffic-ops-test.conf", "The config file path")
 	tcFixturesFileName := flag.String("fixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
 	cliIncludeSystemTests := *flag.Bool("includeSystemTests", false, "Whether to enable tests that have environment dependencies beyond a database")
 	flag.Parse()

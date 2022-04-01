@@ -1183,10 +1183,10 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 	// TODO: The boolean flags/representation can be removed after ATC (v7.0+)
 	if !r.Cfg.ReportOnly && !r.Cfg.NoUnsetUpdateFlag {
 		if r.Cfg.Files == t3cutil.ApplyFilesFlagAll {
-			b := true
+			b := false
 			err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil, &b, nil)
 		} else if r.Cfg.Files == t3cutil.ApplyFilesFlagReval {
-			b := true
+			b := false
 			err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime, nil, &b)
 		}
 		if err != nil {
