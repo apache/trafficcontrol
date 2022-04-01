@@ -38,16 +38,14 @@ if ! timeout 10m bash -c 'atc-ready -w'; then
 	exit 1
 fi
 
-to-req() {
-	endpoint="$1"
-	shift
-	local curl_command=(curl --insecure --silent --cookie-jar "$cookie_name" --cookie "$cookie_name" "${TO_URL}/api/${API_VERSION}")
-	"${curl_command[@]}${endpoint}" "$@" | jq
-}
+while IFS= read -r line; do
+	export "$line";
+done < <(<infrastructure/cdn-in-a-box/variables.env sed '/^#/d')
+source infrastructure/cdn-in-a-box/traffic_ops/to-access.sh
 
 # Log in
-login_body="$(<<<{} jq --arg TO_USER "$TO_USER" --arg TO_PASSWORD "$TO_PASSWORD" '.u = $TO_USER | .p = $TO_PASSWORD')"
-to-req /user/login --data "$login_body"
+#login_body="$(<<<{} jq --arg TO_USER "$TO_USER" --arg TO_PASSWORD "$TO_PASSWORD" '.u = $TO_USER | .p = $TO_PASSWORD')"
+#to-post user/login "$login_body"
 
 declare -A service_by_hostname
 service_by_hostname[trafficrouter]=trafficrouter
@@ -76,7 +74,7 @@ JSON
 
 
 	# Get Traffic Router server JSON
-	server="$(to-req "/servers?hostName=${hostname}" | jq '.response[0]')"
+	server="$(to-get "api/$TO_API_VERSION/servers?hostName=${hostname}" | jq '.response[0]')"
 	if [[ -z "$server" ]]; then
 		echo "Could not get JSON for server ${hostname}"
 		exit 1
@@ -85,14 +83,14 @@ JSON
 	# Update Traffic Router's interface with its IP addresses
 	server="$(<<<"$server" jq ".interfaces = [${interface}]")"
 	server_id="$(<<<"$server" jq .id)"
-	if ! to-req "/servers/${server_id}" --request PUT --data "$server"; then
+	if ! to-put "api/$TO_API_VERSION/servers/${server_id}" "$server"; then
 		echo "Could not update server ${hostname} with ${server}"
 	fi
 done
 
 # Snapshot
 cdn_id="$(<<<"$server" jq .cdnId)"
-to-req "/snapshot?cdnID=${cdn_id}" --request PUT
+to-put "api/$TO_API_VERSION/snapshot?cdnID=${cdn_id}"
 
 deliveryservice=cdn.dev-ds.ciab.test
 echo "Waiting for Delivery Service ${deliveryservice} to be available..."
