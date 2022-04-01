@@ -69,6 +69,11 @@ environment file containing a line setting the variable GO_VERSION to the Go
 version (e.g. GO_VERSION=3.2.1).
 """
 
+GO_VERSION_KEY: Final = 'GO_VERSION'
+"""
+The key in the env file whose value corresponds to the Go version to be used by any project
+using the env file
+"""
 
 GIT_AUTHOR_EMAIL_TEMPLATE: Final = '{git_author_name}@users.noreply.github.com'
 """Template used to construct the Git Author's email address."""
@@ -94,4 +99,5 @@ __all__ = [
 	"GO_REPO_NAME",
 	"GO_VERSION_URL",
 	"RELEASE_PAGE_URL",
+	"GO_VERSION_KEY",
 ]
