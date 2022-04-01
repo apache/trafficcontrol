@@ -1752,3 +1752,12 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 	}
 	return regionName, true, nil
 }
+
+// GetProfileIDDesc gets profile ID and desc for V3 servers
+func GetProfileIDDesc(tx *sql.Tx, name string) (id int, desc string) {
+	err := tx.QueryRow(`SELECT id, description from "profile" p WHERE p.name=$1`, name).Scan(&id, &desc)
+	if err != nil {
+		fmt.Errorf("scanning id and description in GetProfileIDDesc: " + err.Error())
+	}
+	return
+}

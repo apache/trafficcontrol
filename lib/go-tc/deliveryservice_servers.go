@@ -16,7 +16,6 @@ package tc
 */
 
 import (
-	"github.com/lib/pq"
 	"time"
 )
 
@@ -157,7 +156,7 @@ type DSServerBaseV4 struct {
 	OfflineReason               *string              `json:"offlineReason" db:"offline_reason"`
 	PhysLocation                *string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID              *int                 `json:"physLocationId" db:"phys_location_id"`
-	ProfileNames                *pq.StringArray      `json:"profileNames" db:"profile_names"`
+	ProfileNames                []string             `json:"profileNames" db:"profile_name"`
 	Rack                        *string              `json:"rack" db:"rack"`
 	Status                      *string              `json:"status" db:"status"`
 	StatusID                    *int                 `json:"statusId" db:"status_id"`
@@ -234,7 +233,7 @@ func (oldBase DSServerBase) ToDSServerBaseV4() DSServerBaseV4 {
 	dsServerBaseV4.OfflineReason = oldBase.OfflineReason
 	dsServerBaseV4.PhysLocation = oldBase.PhysLocation
 	dsServerBaseV4.PhysLocationID = oldBase.PhysLocationID
-	dsServerBaseV4.ProfileNames = &pq.StringArray{*oldBase.Profile}
+	dsServerBaseV4.ProfileNames = []string{*oldBase.Profile}
 	dsServerBaseV4.Rack = oldBase.Rack
 	dsServerBaseV4.Status = oldBase.Status
 	dsServerBaseV4.StatusID = oldBase.StatusID
@@ -275,7 +274,7 @@ func (baseV4 DSServerBaseV4) ToDSServerBase(routerHostName, routerPort, pDesc *s
 	dsServerBase.OfflineReason = baseV4.OfflineReason
 	dsServerBase.PhysLocation = baseV4.PhysLocation
 	dsServerBase.PhysLocationID = baseV4.PhysLocationID
-	dsServerBase.Profile = &(*baseV4.ProfileNames)[0]
+	dsServerBase.Profile = &baseV4.ProfileNames[0]
 	dsServerBase.ProfileDesc = pDesc
 	dsServerBase.ProfileID = pID
 	dsServerBase.Rack = baseV4.Rack

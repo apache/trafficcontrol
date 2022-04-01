@@ -78,9 +78,7 @@ Response Structure
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status (will be empty if not offline)
 :physLocation:   The name of the :term:`Physical Location` at which the server resides
 :physLocationId: An integral, unique identifier for the :term:`Physical Location` at which the server resides
-:profile:        The :ref:`profile-name` of the :term:`Profile` assigned to this server
-:profileDesc:    A :ref:`profile-description` of the :term:`Profile` assigned to this server
-:profileId:      The :ref:`profile-id` of the :term:`Profile` assigned to this server
+:profile:        List of :ref:`profile-name` of the :term:`Profiles` assigned to this server
 :rack:           A string indicating "rack" location
 :routerHostName: The human-readable name of the router
 :routerPortName: The human-readable name of the router port
@@ -135,9 +133,7 @@ Response Structure
 			"offlineReason": "",
 			"physLocation": "Apachecon North America 2018",
 			"physLocationId": 1,
-			"profile": "ATS_EDGE_TIER_CACHE",
-			"profileDesc": "Edge Cache - Apache Traffic Server",
-			"profileId": 9,
+			"profileNames": ["ATS_EDGE_TIER_CACHE"],
 			"rack": "",
 			"routerHostName": "",
 			"routerPortName": "",
