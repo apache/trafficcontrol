@@ -17,18 +17,6 @@
  * under the License.
  */
 
-var UserEditController = function($scope) {
-
-    $scope.settings = {
-        isNew: false,
-        saveLabel: 'Update'
-    };
-
-    $scope.label = function(role) {
-        return role.name;
-    };
-
-};
-
-UserEditController.$inject = ['$scope'];
-module.exports = UserEditController;
+//application directives
+module.exports = angular.module('trafficPortal.directives.treeSelect',[])
+    .directive('treeSelect', require('./TreeSelectDirective'));
