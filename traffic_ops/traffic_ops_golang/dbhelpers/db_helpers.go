@@ -1757,7 +1757,7 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 func GetProfileIDDesc(tx *sql.Tx, name string) (id int, desc string) {
 	err := tx.QueryRow(`SELECT id, description from "profile" p WHERE p.name=$1`, name).Scan(&id, &desc)
 	if err != nil {
-		fmt.Errorf("scanning id and description in GetProfileIDDesc: " + err.Error())
+		log.Errorf("scanning id and description in GetProfileIDDesc: " + err.Error())
 	}
 	return
 }
