@@ -17,226 +17,200 @@
  * under the License.
  */
 
-var TreeSelectDirective = function($document) {
-    return {
-        restrict: "E",
-        require: "^form",
-        templateUrl: "common/directives/treeSelect/tree.select.tpl.html",
-        replace: true,
-        scope: {
-            treeData: '=',
-            initialValue: '<',
-            handle: '@',
-            onUpdate: "&"
-        },
-        link: function(scope, element, attrs, ngFormController) {
-            /**
-             * Non-recursed ordered list of rows to display (before filtering)
-             * @type TreeSelectDirective.RowData[]
-             */
-            scope.treeRows = [];
-            /** @type string */
-            scope.searchText = "";
-            /** @type boolean */
-            scope.shown = false;
-            /** @type TreeSelectDirective.RowData | null */
-            scope.selected = null;
+/** @typedef {import("angular").IController} Controller */
+/** @typedef {import("angular").IDirectiveLinkFn} IDirectiveLinkFn */
+/** @typedef {import("angular").IDocumentService} NGDocument */
+/** @typedef {import("angular").IRootElementService} NGElement */
+/** @typedef {import("angular").IScope} Scope */
 
-            // Bound variables
-            /** @type TreeSelectDirective.TreeData[] */
-            scope.treeData;
-            /** @type string */
-            scope.initialValue;
-            /**
-             * Used for form validation, will be assigned to an id attribute
-             * @type string
-             */
-            scope.handle;
-            /**
-             * Used to properly update the parent on value change, useful for validation.
-             * @callback onUpdate
-             * @param {string} value
-             */
-            scope.onUpdate;
+/** @typedef {import("./TreeSelectDirective").RowData} RowData */
+/** @typedef {import("./TreeSelectDirective").TreeData} TreeData */
+/** @typedef {import("./TreeSelectDirective").TreeSelectScopeProperties} TreeSelectScopeProperties */
 
+/**
+ *
+ * @param {NGDocument} $document
+ * @returns
+ */
+function TreeSelectDirective($document) {
+	return {
+		restrict: "E",
+		require: "^form",
+		templateUrl: "common/directives/treeSelect/tree.select.tpl.html",
+		replace: true,
+		scope: {
+			treeData: '=',
+			initialValue: '<',
+			handle: '@',
+			onUpdate: "&"
+		},
+		/**
+		 * Controller logic for the Directive.
+		 *
+		 * @param {Scope & TreeSelectScopeProperties} scope
+		 * @param {NGElement} element Host element
+		 * @param {unknown} _ Host attribute bindings (unused)
+		 * @param {Controller} ngFormController
+		 */
+		link: function(scope, element, _, ngFormController) {
 
-            element.bind("click",
-                /**
-                 * Handles click events within this element, prevents $document propagation as well as binds
-                 * the close event to it.
-                 * @param evt
-                 */
-                function(evt) {
-                    if(scope.shown) {
-                        evt.stopPropagation();
-                        $document.on("click", closeSelect);
-                    }
-            });
-            /**
-             * Detects when a click is trigger outside this element. Used to close dropdown and ensure
-             * there is no $document event pollution.
-             * @param evt
-             */
-            const closeSelect = function(evt){
-                scope.close();
-                $document.off("click", closeSelect);
-                scope.$apply();
-            };
+			/**
+			 * Close the dropdown menu.
+			 */
+			function close() {
+				scope.shown = false;
+			}
 
-            /**
-             * Initializes treeRows, must be called whenever treeData changes
-             */
-            const reInit = function() {
-                scope.treeRows = [];
-                scope.selected = null;
-                for(const data of scope.treeData) {
-                    if (data !== undefined)
-                        addNode(data, 0);
-                }
-            }
+			/**
+			 * Detects when a click is trigger outside this element. Used to close dropdown and ensure
+			 * there is no $document event pollution.
+			 */
+			function closeSelect() {
+				close();
+				$document.off("click", closeSelect);
+				scope.$apply();
+			};
 
-            /**
-             * Converts a tree data node into row data recursively.
-             * @param {TreeSelectDirective.TreeData} row
-             * @param {number} depth
-             * @returns TreeSelectDirective.RowData
-             */
-            const addNode = function(row, depth) {
-                const node = {
-                    label: row.name,
-                    value: row.id,
-                    depth: depth,
-                    children: [],
-                    collapsed: false,
-                    hidden: false
-                };
-                scope.treeRows.push(node);
-                if(row.id === scope.initialValue || row.name === scope.initialValue) {
-                    scope.selected = node
-                }
-                if(row.children !== null && row.children !== undefined) {
-                    for(const child of row.children) {
-                        if(child === undefined) continue;
-                        node.children.push(addNode(child, depth + 1));
-                    }
-                }
-                return node;
-            }
+			/**
+			 * Converts a tree data node into row data recursively.
+			 *
+			 * @param {TreeData} row
+			 * @param {number} depth
+			 * @returns {RowData}
+			 */
+			function addNode(row, depth) {
+				/** @type {RowData} */
+				const node = {
+					label: row.name,
+					value: row.id,
+					depth: depth,
+					children: [],
+					collapsed: false,
+					hidden: false
+				};
+				scope.treeRows.push(node);
+				if(row.id === scope.initialValue || row.name === scope.initialValue) {
+					scope.selected = node
+				}
+				if(row.children !== null && row.children !== undefined) {
+					for(const child of row.children) {
+						if(child === undefined) continue;
+						node.children.push(addNode(child, depth + 1));
+					}
+				}
+				return node;
+			}
 
-            /**
-             * Collapses a row data and recursively hides and collapses its children.
-             * @param {TreeSelectDirective.RowData} row
-             * @param {boolean?} state
-             */
-            const collapseRecurse = function(row, state) {
-                if(row.children.length === 0) return;
-                for(const treeRow of scope.treeRows) {
-                    if (treeRow.value === row.value) {
-                        if(state === undefined)
-                            treeRow.collapsed = !treeRow.collapsed;
-                        else
-                            treeRow.collapsed = state;
-                        for(const treeChild of treeRow.children) {
-                            treeChild.hidden = treeRow.collapsed;
-                            collapseRecurse(treeChild, treeRow.collapsed);
-                        }
-                    }
-                }
-            }
+			/**
+			 * Collapses a row data and recursively hides and collapses its children.
+			 *
+			 * @param {RowData} row
+			 * @param {boolean} [state]
+			 */
+			 function collapseRecurse(row, state) {
+				if(row.children.length === 0) return;
+				for(const treeRow of scope.treeRows) {
+					if (treeRow.value === row.value) {
+						if(state === undefined)
+							treeRow.collapsed = !treeRow.collapsed;
+						else
+							treeRow.collapsed = state;
+						for(const treeChild of treeRow.children) {
+							treeChild.hidden = treeRow.collapsed;
+							collapseRecurse(treeChild, treeRow.collapsed);
+						}
+					}
+				}
+			}
 
-            /**
-             * Returns true if the inputs letters are also present in text with the same order
-             * @param {string} text
-             * @param {string} input
-             * @returns {boolean}
-             */
-            const fuzzyMatch = function(text, input) {
-                if(input === "") return true;
-                if(text === undefined) return false;
-                text = text.toString().toLowerCase();
-                input = input.toString().toLowerCase();
-                let n = -1;
-                for(const i in input) {
-                    const letter = input[i];
-                    if (!~(n = text.indexOf(letter, n + 1))) return false;
-                }
-                return true;
-            }
+			/**
+			 * Initializes treeRows, must be called whenever treeData changes
+			 */
+			 function reInit() {
+				scope.treeRows = [];
+				scope.selected = null;
+				for(const data of scope.treeData) {
+					if (data !== undefined)
+						addNode(data, 0);
+				}
+			}
 
-            /**
-             * Triggers onUpdate binding
-             */
-            scope.update = function() {
-                scope.onUpdate({value: scope.selected.value ?? ""});
-            }
+			/**
+			 * Returns true if the inputs letters are also present in text with the same order.
+			 *
+			 * @param {string} text
+			 * @param {string} input
+			 * @returns {boolean}
+			 */
+			function fuzzyMatch(text, input) {
+				if(input === "") return true;
+				if(text === undefined) return false;
+				text = text.toString().toLowerCase();
+				input = input.toString().toLowerCase();
+				let n = -1;
+				for(const i of input) {
+					const letter = input[i];
+					if (!~(n = text.indexOf(letter, n + 1))) return false;
+				}
+				return true;
+			}
 
-            /**
-             * Toggle the dropdown menu
-             */
-            scope.toggle = function() {
-                scope.shown = !scope.shown;
-            }
-            /**
-             * Close the dropdown menu.
-             */
-            scope.close = function() {
-                scope.shown = false;
-            }
+			/**
+			 * Triggers onUpdate binding
+			 */
+			function update() {
+				scope.onUpdate({value: scope.selected?.value ?? ""});
+			}
+
+			scope.treeRows = [];
+			scope.searchText = "";
+			scope.shown = false;
+			scope.selected = null;
+
+			element.bind("click",
+				evt => {
+					if(scope.shown) {
+						evt.stopPropagation();
+						$document.on("click", closeSelect);
+					}
+				}
+			);
+
+			scope.toggle = () => scope.shown = !scope.shown;
 
 
-            /**
-             * Updates the selection when clicking a dropdown option
-             * @param {TreeSelectDirective.RowData} row
-             */
-            scope.select = function(row) {
-                scope.selected = row;
-                scope.selection = row.value;
-                scope.update();
+			scope.select = row => {
+				scope.selected = row;
+				update();
 
-                if(row.value !== this.initialValue) {
-                    ngFormController[scope.handle].$setDirty();
-                }
-                scope.close();
-            }
-            /**
-             * When collapse icon is clicked on row data
-             * @param {TreeSelectDirective.RowData} row
-             * @param evt
-             */
-            scope.collapse = function(row, evt) {
-                evt.stopPropagation();
-                return collapseRecurse(row);
-            }
+				if(row.value !== this.initialValue) {
+					ngFormController[scope.handle].$setDirty();
+				}
+				close();
+			}
 
-            /**
-             * Returns true if the row data
-             * @param {TreeSelectDirective.RowData} testRow
-             * @returns {boolean}
-             */
-            scope.checkFilters = function(testRow) {
-                if(testRow.hidden && scope.searchText.length === 0)
-                    return false;
-                return fuzzyMatch(testRow.label, scope.searchText);
-            }
+			scope.collapse = (row, evt) => {
+				evt.stopPropagation();
+				collapseRecurse(row);
+			}
 
-            /**
-             * Gets the FontAwesome icon class based on if the row data has children and is collapsed
-             * @param {TreeSelectDirective.RowData} row
-             * @returns {string}
-             */
-            scope.getClass = function(row) {
-                if(row.collapsed && row.children.length > 0) return "fa-minus";
-                else if(row.children.length > 0) return "fa-plus";
-                else return "fa-users";
-            }
+			scope.checkFilters = testRow => {
+				if(testRow.hidden && scope.searchText.length === 0)
+					return false;
+				return fuzzyMatch(testRow.label, scope.searchText);
+			}
 
-            scope.$watch("treeData", function(newVal, oldVal) {
-                reInit();
-            });
+			scope.getClass = function(row) {
+				if(row.collapsed && row.children.length > 0) return "fa-minus";
+				else if(row.children.length > 0) return "fa-plus";
+				else return "fa-users";
+			}
 
-            ngFormController.$removeControl(ngFormController[scope.handle + "searchText"]);
-        }
-    }
+			scope.$watch("treeData", reInit);
+
+			ngFormController.$removeControl(ngFormController[scope.handle + "searchText"]);
+		}
+	}
 };
 
 TreeSelectDirective.$inject = ['$document'];
