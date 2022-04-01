@@ -417,14 +417,11 @@ class GoPRMaker:
 			['git', 'log', '-1', '--pretty=%T', head.sha]).decode().strip()
 		base_tree = self.repo.get_git_tree(sha=tree_hash)
 		tree = self.repo.create_git_tree(tree_elements, base_tree)
-		kwargs = {
-			'message': commit_message,
-			'tree': tree,
-			'parents': [self.repo.get_git_commit(head.sha)],
-		}
+		kwargs = {}
 		if self.author:
-			kwargs.update({'author': self.author, 'committer': self.author})
-		git_commit = self.repo.create_git_commit(**kwargs)
+			kwargs = {'author': self.author, 'committer': self.author}
+		git_commit = self.repo.create_git_commit(message=commit_message, tree=tree,
+			parents=[self.repo.get_git_commit(head.sha)], **kwargs)
 		self.update_branch(source_branch_name, git_commit.sha)
 		return git_commit
 
