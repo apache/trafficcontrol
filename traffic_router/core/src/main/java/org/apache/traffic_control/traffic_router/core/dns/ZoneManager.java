@@ -1015,7 +1015,7 @@ public class ZoneManager extends Resolver {
 						continue;
 					}
 
-					if (r.getType() == Type.NSEC && r.getName().toString().equals(staticZone.getOrigin().toString())) {
+					if (r.getType() == Type.NSEC && r.getName().toString().equals(staticZone.getOrigin().toString()) && dsRoutingName != null) {
 						final Name dsFQDN = new Name(dsRoutingName, staticZone.getOrigin());
 						if (r instanceof NSECRecord) {
 							final NSECRecord removeRec = new NSECRecord(dsFQDN, r.getDClass(), r.getTTL(), ((NSECRecord) r).getNext(), ((NSECRecord) r).getTypes());
