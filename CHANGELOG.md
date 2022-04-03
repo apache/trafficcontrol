@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added support for a new Traffic Ops GLOBAL profile parameter -- `tm_query_status_override` -- to override which status of Traffic Monitors to query (default: ONLINE).
 - Traffic Ops: added new `cdn.conf` option -- `user_cache_refresh_interval_sec` -- which enables an in-memory users cache to improve performance. Default: 0 (disabled).
 - Traffic Router: Add support for `file`-protocol URLs for the `geolocation.polling.url` for the Geolocation database.
+- Replaces all Traffic Portal Tenant select boxes with a novel tree select box [#6427](https://github.com/apache/trafficcontrol/issues/6427).
 - Traffic Monitor: Add support for `access.log` to TM.
 - Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
 
@@ -28,6 +29,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6590](https://github.com/apache/trafficcontrol/pull/6590) Python client: Corrected parameter name in decorator for get\_parameters\_by\_profile\_id
 - [#6368](https://github.com/apache/trafficcontrol/pull/6368) Fixed validation response message from `/acme_accounts`
 - [#6603](https://github.com/apache/trafficcontrol/issues/6603) Fixed users with "admin" "Priv Level" not having Permission to view or delete DNSSEC keys.
+- Fixed Traffic Router to handle aggressive NSEC correctly.
 - [#6626](https://github.com/apache/trafficcontrol/pull/6626) Fixed t3c Capabilities request failure issue which could result in malformed config.
 - [#6370](https://github.com/apache/trafficcontrol/pull/6370) Fixed docs for `POST` and response code for `PUT` to `/acme_accounts` endpoint
 - Only `operations` and `admin` roles should have the `DELIVERY-SERVICE:UPDATE` permission.

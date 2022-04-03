@@ -447,6 +447,7 @@ var trafficPortal = angular.module('trafficPortal', [
         // directives
         require('./common/directives/match').name,
         require('./common/directives/dragAndDrop').name,
+        require('./common/directives/treeSelect').name,
 
         // services
         require('./common/service/application').name,
