@@ -27,6 +27,12 @@ on:
 jobs:
   pr-to-update-go:
     runs-on: ubuntu-latest
+    env:
+      GIT_AUTHOR_NAME: asf-ci
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
+      GO_VERSION_FILE: GO_VERSION
+      ENV_FILE: .env
     steps:
       - name: Checkout repo
         uses: actions/checkout@master
@@ -42,11 +48,6 @@ jobs:
       - name: Update Go version
         if: ${{ steps.checkout.outcome == 'success' }}
         run: python3 -m pr_to_update_go --update-version-only
-        env:
-          GIT_AUTHOR_NAME: asf-ci
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GO_VERSION_FILE: GO_VERSION
-          ENV_FILE: .env
       - name: Check Go version
         run: echo "::set-output name=value::$(cat GO_VERSION)"
         id: go-version
@@ -57,9 +58,3 @@ jobs:
       - name: PR to Update Go
         if: ${{ steps.checkout.outcome == 'success' }}
         run: python3 -m pr_to_update_go
-        env:
-          GIT_AUTHOR_NAME: asf-ci
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
-          GO_VERSION_FILE: GO_VERSION
-          ENV_FILE: .env
