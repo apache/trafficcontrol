@@ -47,7 +47,7 @@ func Make12MFacts(
 
 	hdr := makeHdrComment(opt.HdrComment)
 	txt := hdr
-	txt += "profile:" + strings.Join(server.ProfileNames, ",") + "\n"
+	txt += "profiles:" + strings.Join(server.ProfileNames, ", ") + "\n"
 
 	return Cfg{
 		Text:        txt,
