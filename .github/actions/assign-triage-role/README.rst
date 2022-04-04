@@ -27,6 +27,8 @@ Environment Variables
 +============================+==================================================================================+
 | ``GITHUB_TOKEN``           | Required. ``${{ github.token }}`` or ``${{ secrets.GITHUB_TOKEN }}``             |
 +----------------------------+----------------------------------------------------------------------------------+
+| ``PR_GITHUB_TOKEN``        | Required. ``${{ github.token }}`` or another token                               |
++----------------------------+----------------------------------------------------------------------------------+
 | ``GIT_AUTHOR_NAME``        | Optional. The username to associate with the commit that updates the Go version. |
 +----------------------------+----------------------------------------------------------------------------------+
 | ``MINIMUM_COMMITS``        | Required. The lowest number of Issue-closing Pull Requests a Contributor can     |

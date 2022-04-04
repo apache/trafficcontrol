@@ -40,6 +40,9 @@ Environment Variables
 +----------------------------+----------------------------------------------------------------------------------+
 | ``GITHUB_TOKEN``           | Required. ``${{ github.token }}`` or ``${{ secrets.GITHUB_TOKEN }}``             |
 +----------------------------+----------------------------------------------------------------------------------+
+| ``PR_GITHUB_TOKEN``        | Optional. A GitHub token other than GitHub Actions so that Actions will run on   |
+|                            | the generated Pull Request                                                       |
++----------------------------+----------------------------------------------------------------------------------+
 | ``GO_VERSION_FILE``        | Required. The file in the repo containing the version of Go used by the repo.    |
 +----------------------------+----------------------------------------------------------------------------------+
 

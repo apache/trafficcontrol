@@ -44,7 +44,7 @@ jobs:
         run: python3 -m pr_to_update_go --update-version-only
         env:
           GIT_AUTHOR_NAME: asf-ci
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GO_VERSION_FILE: GO_VERSION
           ENV_FILE: .env
       - name: Check Go version
@@ -59,6 +59,7 @@ jobs:
         run: python3 -m pr_to_update_go
         env:
           GIT_AUTHOR_NAME: asf-ci
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
           GO_VERSION_FILE: GO_VERSION
           ENV_FILE: .env
