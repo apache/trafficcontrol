@@ -43,7 +43,7 @@ jobs:
         if: ${{ steps.checkout.outcome == 'success' }}
         run: python3 -m pr_to_update_go --update-version-only
         env:
-          GIT_AUTHOR_NAME: asfgit
+          GIT_AUTHOR_NAME: asf-ci
           GITHUB_TOKEN: ${{ github.token }}
           GO_VERSION_FILE: GO_VERSION
           ENV_FILE: .env
@@ -58,7 +58,7 @@ jobs:
         if: ${{ steps.checkout.outcome == 'success' }}
         run: python3 -m pr_to_update_go
         env:
-          GIT_AUTHOR_NAME: asfgit
+          GIT_AUTHOR_NAME: asf-ci
           GITHUB_TOKEN: ${{ github.token }}
           GO_VERSION_FILE: GO_VERSION
           ENV_FILE: .env

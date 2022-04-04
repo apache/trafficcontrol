@@ -60,7 +60,7 @@ Example usage
 	- name: PR to Update Go
 	  run: python3 -m pr_to_update_go
 	  env:
-	    GIT_AUTHOR_NAME: asfgit
+	    GIT_AUTHOR_NAME: asf-ci
 	    GITHUB_TOKEN: ${{ github.token }}
 	    GO_VERSION_FILE: GO_VERSION
 
