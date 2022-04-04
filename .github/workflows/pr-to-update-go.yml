@@ -32,10 +32,10 @@ jobs:
         uses: actions/checkout@master
         if: ${{ (github.repository_owner == 'apache' && github.ref == 'refs/heads/master' ) || github.event_name != 'schedule' }}
         id: checkout
-      - name: Install Python 3.9
+      - name: Install Python 3.10
         uses: actions/setup-python@v2
         if: ${{ steps.checkout.outcome == 'success' }}
-        with: { python-version: 3.9 }
+        with: { python-version: '3.10' }
       - name: Install dependencies
         if: ${{ steps.checkout.outcome == 'success' }}
         run: pip install .github/actions/pr-to-update-go
