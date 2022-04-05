@@ -17,18 +17,19 @@
  * under the License.
  */
 
-var CdniService = function($http, ENV) {
+var CdniService = function($http, ENV, messageModel) {
 
-    this.getCdniConfigRequests = function() {
-        return $http.get(ENV.api.unstable + 'OC/CI/configuration/requests').then(
-            function (result) {
-                return result.data.response;
-            },
-            function (err) {
-                throw err;
-            }
-        )
-    };
+	this.getCdniConfigRequests = function() {
+		return $http.get(ENV.api.unstable + 'OC/CI/configuration/requests').then(
+			function (result) {
+				return result.data.response;
+				},
+			function (err) {
+				messageModel.setMessages(err.data.alerts, true);
+				throw err;
+			}
+		)
+	};
 
 	this.getCdniConfigRequestById = function(id) {
 		return $http.get(ENV.api.unstable + 'OC/CI/configuration/requests?id=' + id).then(
@@ -39,6 +40,7 @@ var CdniService = function($http, ENV) {
 				return result.data.response;
 			},
 			function (err) {
+				messageModel.setMessages(err.data.alerts, true);
 				throw err;
 			}
 		)
@@ -50,6 +52,7 @@ var CdniService = function($http, ENV) {
 				return result.data;
 			},
 			function (err) {
+				messageModel.setMessages(err.data.alerts, true);
 				throw err;
 			}
 		)
@@ -61,11 +64,12 @@ var CdniService = function($http, ENV) {
 				return result.data.response;
 			},
 			function (err) {
+				messageModel.setMessages(err.data.alerts, true);
 				throw err;
 			}
 		)
 	};
 };
 
-CdniService.$inject = ['$http', 'ENV'];
+CdniService.$inject = ['$http', 'ENV', 'messageModel'];
 module.exports = CdniService;
