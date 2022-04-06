@@ -68,5 +68,5 @@ func main() {
 			os.Exit(3)
 		}
 	}
-	cfg.TCCfg.TOClient.WriteFsCookie(toreq.FsCookiePath)
+	cfg.TCCfg.TOClient.WriteFsCookie(toreq.FsCookiePath + cfg.TOUser + ".cookie")
 }
