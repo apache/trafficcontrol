@@ -54,6 +54,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated the Profiles Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated Go version to 1.18
 - Removed the unused `deliveryservice_tmuser` table from Traffic Ops database
+- Adds updates to the trafficcontrol-health-client to, use new ATS Host status formats, detect and use proper
+  traffic_ctl commands, and adds new markup-poll-threshold config.
 
 ## [6.1.0] - 2022-01-18
 ### Added
