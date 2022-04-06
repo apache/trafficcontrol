@@ -212,7 +212,7 @@ export const origins = {
 				{
 					description: "create an Origins",
 					Name: "TP_Origins1",
-					Tenant: "- tenantSame",
+					Tenant: "tenantSame",
 					FQDN: "0",
 					Protocol: "https",
 					deliveryServiceId: "ds1",
@@ -221,7 +221,7 @@ export const origins = {
 				{
 					description: "create multiple Origins with the same Delivery Service",
 					Name: "TP_Origins2",
-					Tenant: "- tenantSame",
+					Tenant: "tenantSame",
 					FQDN: "0",
 					Protocol: "https",
 					deliveryServiceId: "ds1",
@@ -230,7 +230,7 @@ export const origins = {
 				{
 					description: "create multiple Origins with child tenant Delivery Service",
 					Name: "TP_Origins3",
-					Tenant: "- tenantSame",
+					Tenant: "tenantSame",
 					FQDN: "0",
 					Protocol: "https",
 					deliveryServiceId: "ds3",
@@ -280,7 +280,7 @@ export const origins = {
 				{
 					description: "create an Origins",
 					Name: "TP_Origins1",
-					Tenant: "- tenantSame",
+					Tenant: "tenantSame",
 					FQDN: "0",
 					Protocol: "https",
 					deliveryServiceId: "ds1",
@@ -289,7 +289,7 @@ export const origins = {
 				{
 					description: "create multiple Origins with the same Delivery Service",
 					Name: "TP_Origins2",
-					Tenant: "- tenantSame",
+					Tenant: "tenantSame",
 					FQDN: "0",
 					Protocol: "https",
 					deliveryServiceId: "ds1",
@@ -339,7 +339,7 @@ export const origins = {
 				{
 					description: "create an Origins",
 					Name: "TP_Origins1",
-					Tenant: "- tenantSame",
+					Tenant: "tenantSame",
 					FQDN: "0",
 					Protocol: "https",
 					deliveryServiceId: "ds1",

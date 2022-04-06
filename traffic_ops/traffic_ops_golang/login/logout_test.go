@@ -57,12 +57,12 @@ func TestLogout(t *testing.T) {
 	defer db.Close()
 
 	cols := []string{
-		"r.priv_level",
-		"r.id as role",
-		"u.id",
-		"u.username",
-		"COALESCE(u.tenant_id, -1) AS tenant_id",
-		"ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=r.id) AS capabilities",
+		"priv_level",
+		"role",
+		"id",
+		"username",
+		"tenant_id",
+		"capabilities",
 	}
 
 	mock.ExpectBegin()

@@ -18,12 +18,12 @@ package v4
 import (
 	"net/http"
 	"net/url"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -354,4 +354,11 @@ func TestDeliveryServiceServers(t *testing.T) {
 			})
 		}
 	})
+}
+
+func CreateTestDeliveryServiceServerAssignments(t *testing.T) {
+	for _, dss := range testData.DeliveryServiceServerAssignments {
+		resp, _, err := TOSession.AssignServersToDeliveryService(dss.ServerNames, dss.XmlId, client.RequestOptions{})
+		assert.NoError(t, err, "Could not create Delivery Service Server Assignments: %v - alerts: %+v", err, resp.Alerts)
+	}
 }
