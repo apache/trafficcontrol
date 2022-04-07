@@ -1789,17 +1789,13 @@
             "RequiredCapability": "bar"
         },
         {
+            "xmlID": "ds4",
+            "RequiredCapability": "bar"
+        },
+        {
             "xmlID": "msods1",
             "RequiredCapability": "bar"
-        }
-    ],
-    "deliveryServiceServerAssignments": [
-        {
-            "xmlId": "ds-top",
-            "serverNames": ["denver-mso-org-01"]
-        }
-    ],
-    "topologyBasedDeliveryServicesRequiredCapabilities": [
+        },
         {
             "xmlID": "ds-top-req-cap",
             "RequiredCapability": "ram"
@@ -1815,12 +1811,26 @@
     ],
     "deliveryServiceServerAssignments": [
         {
-            "xmlId": "ds3",
-            "serverNames": ["atlanta-edge-16"]
-        },
-        {
             "xmlId": "ds-top",
             "serverNames": ["denver-mso-org-01"]
+        },
+        {
+            "xmlId": "test-ds-server-assignments",
+            "serverNames": ["test-ds-server-assignments", "test-mso-org-01"]
+        }
+    ],
+    "topologyBasedDeliveryServicesRequiredCapabilities": [
+        {
+            "xmlID": "ds-top-req-cap",
+            "RequiredCapability": "ram"
+        },
+        {
+            "xmlID": "ds-top-req-cap",
+            "RequiredCapability": "disk"
+        },
+        {
+            "xmlID": "ds-top-req-cap2",
+            "RequiredCapability": "ram"
         }
     ],
     "divisions": [

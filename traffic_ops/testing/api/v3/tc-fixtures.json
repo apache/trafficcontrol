@@ -1564,14 +1564,34 @@
             "RequiredCapability": "bar"
         },
         {
+            "xmlID": "ds4",
+            "RequiredCapability": "bar"
+        },
+        {
             "xmlID": "msods1",
             "RequiredCapability": "bar"
+        },
+        {
+            "xmlID": "ds-top-req-cap",
+            "RequiredCapability": "ram"
+        },
+        {
+            "xmlID": "ds-top-req-cap",
+            "RequiredCapability": "disk"
+        },
+        {
+            "xmlID": "ds-top-req-cap2",
+            "RequiredCapability": "ram"
         }
     ],
     "deliveryServiceServerAssignments": [
         {
             "xmlId": "ds-top",
             "serverNames": ["denver-mso-org-01"]
+        },
+        {
+            "xmlId": "test-ds-server-assignments",
+            "serverNames": ["test-ds-server-assignments"]
         }
     ],
     "topologyBasedDeliveryServicesRequiredCapabilities": [
@@ -4629,6 +4649,55 @@
             "type": "MID",
             "updPending": false,
             "xmppId": "atlanta-mid-02\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "admin-down-server",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.22/30",
+                            "gateway": "127.0.0.22",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:13:8::1/64",
+                            "gateway": "2345:1234:13:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "ADMIN_DOWN",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "atlanta-edge-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         }
     ],
