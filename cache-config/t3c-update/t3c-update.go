@@ -80,5 +80,5 @@ func main() {
 	} else {
 		log.Infoln("Update successfully completed")
 	}
-
+	cfg.TCCfg.TOClient.WriteFsCookie(toreq.FsCookiePath + cfg.TOUser + ".cookie")
 }
