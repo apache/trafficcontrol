@@ -45,7 +45,6 @@ func (r *TCData) CreateTestTopologies(t *testing.T) {
 		if !reflect.DeepEqual(topology, postResponse.Response) {
 			t.Fatalf("Topology in response should be the same as the one POSTed. expected: %v, actual: %v", topology, postResponse.Response)
 		}
-		t.Logf("Response: %+v", *postResponse)
 	}
 }
 

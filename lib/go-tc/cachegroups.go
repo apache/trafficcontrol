@@ -19,9 +19,7 @@ package tc
  * under the License.
  */
 
-import (
-	"github.com/apache/trafficcontrol/lib/go-util"
-)
+import "github.com/apache/trafficcontrol/lib/go-util"
 
 // CacheGroupsResponse is a list of CacheGroups as a response.
 type CacheGroupsResponse struct {

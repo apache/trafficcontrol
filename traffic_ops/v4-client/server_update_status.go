@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -49,34 +50,29 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool, opts Req
 	return resp, reqInf, err
 }
 
-// SetUpdateServerStatuses updates a server's queue status and/or reval status.
-// Either updateStatus or revalStatus may be nil, in which case that status
-// isn't updated (but not both, because that wouldn't do anything).
-func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool, revalStatus *bool, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+// SetUpdateServerStatusTimes updates a server's config queue status and/or reval status.
+// Each argument individually is optional, however at least one argument must not be nil.
+func (to *Session) SetUpdateServerStatusTimes(serverName string, configApplyTime, revalApplyTime *time.Time, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
-	if updateStatus == nil && revalStatus == nil {
-		return tc.Alerts{}, reqInf, errors.New("either updateStatus or revalStatus must be non-nil; nothing to do")
+	var alerts tc.Alerts
+
+	if configApplyTime == nil && revalApplyTime == nil {
+		return alerts, reqInf, errors.New("one must be non-nil (configApplyTime, revalApplyTime); nothing to do")
 	}
 
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 
-	if updateStatus != nil {
-		if *updateStatus {
-			opts.QueryParameters.Set("updated", "true")
-		} else {
-			opts.QueryParameters.Set("updated", "false")
-		}
+	if configApplyTime != nil {
+		cat := configApplyTime.Format(time.RFC3339Nano)
+		opts.QueryParameters.Set("config_apply_time", cat)
 	}
-	if revalStatus != nil {
-		if *revalStatus {
-			opts.QueryParameters.Set("reval_updated", "true")
-		} else {
-			opts.QueryParameters.Set("reval_updated", "false")
-		}
+	if revalApplyTime != nil {
+		rat := revalApplyTime.Format(time.RFC3339Nano)
+		opts.QueryParameters.Set("revalidate_apply_time", rat)
 	}
-	var alerts tc.Alerts
+
 	path := `/servers/` + url.PathEscape(serverName) + `/update`
 	reqInf, err := to.post(path, opts, nil, &alerts)
 	return alerts, reqInf, err

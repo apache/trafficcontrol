@@ -1825,7 +1825,7 @@
           "lastUpdated": "2018-01-19T19:01:21.499423+00:00",
           "name": "trafficserver",
           "secure": true,
-          "value": "CHANGEME"
+          "value": "8.1.4-0.965df952e.el8.x86_64"
         },
         {
           "configFile": "empty-file.config",
@@ -2222,7 +2222,7 @@
           "lastUpdated": "2018-01-19T19:01:21.499423+00:00",
           "name": "trafficserver",
           "secure": true,
-          "value": "CHANGEME"
+          "value": "8.1.4-0.965df952e.el8.x86_64"
         },
         {
           "configFile": "empty-file.config",
