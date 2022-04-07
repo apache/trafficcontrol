@@ -92,6 +92,14 @@ done
 cdn_id="$(<<<"$server" jq .cdnId)"
 to-put "api/$TO_API_VERSION/snapshot?cdnID=${cdn_id}"
 
+echo "Waiting for Traffic Monitor to serve a snapshot..."
+timeout 5m curl \
+	--retry 99999 \
+	--retry-delay 5 \
+	--show-error \
+	-fIso/dev/null \
+	http://localhost/publish/CrConfig;
+
 deliveryservice=cdn.dev-ds.ciab.test
 echo "Waiting for Delivery Service ${deliveryservice} to be available..."
 if ! timeout 2m bash -c 'atc-ready -d'; then
