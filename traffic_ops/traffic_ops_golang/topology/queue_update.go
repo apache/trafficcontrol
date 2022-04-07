@@ -24,9 +24,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	validation "github.com/go-ozzo/ozzo-validation"
 	"net/http"
 	"strconv"
+
+	validation "github.com/go-ozzo/ozzo-validation"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
