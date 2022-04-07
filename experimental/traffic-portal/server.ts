@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 
-import "zone.js/dist/zone-node";
+import "zone.js/node";
 
 
 import { existsSync, readFileSync } from "fs";

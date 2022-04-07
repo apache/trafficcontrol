@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -791,4 +792,11 @@ func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceV4, tc.ServerV4) {
 	t.Fatal("expected at least one delivery service and server in the same CDN")
 
 	return tc.DeliveryServiceV4{}, tc.ServerV4{}
+}
+
+func CreateTestDeliveryServiceServerAssignments(t *testing.T) {
+	for _, dss := range testData.DeliveryServiceServerAssignments {
+		resp, _, err := TOSession.AssignServersToDeliveryService(dss.ServerNames, dss.XmlId, client.RequestOptions{})
+		assert.NoError(t, err, "Could not create Delivery Service Server Assignments: %v - alerts: %+v", err, resp.Alerts)
+	}
 }

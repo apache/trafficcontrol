@@ -89,6 +89,5 @@ func main() {
 	if cfg.RevalApplyTime != nil && !(*cfg.RevalApplyTime).Round(time.Microsecond).Equal((*cur_status.RevalidateApplyTime).Round(time.Microsecond)) {
 		log.Errorf("Failed to set reval_apply_time.\nSent: %v\nRecv: %v", *cfg.RevalApplyTime, *cur_status.RevalidateApplyTime)
 	}
-
-	log.Infoln("Update completed")
+	cfg.TCCfg.TOClient.WriteFsCookie(toreq.FsCookiePath + cfg.TOUser + ".cookie")
 }

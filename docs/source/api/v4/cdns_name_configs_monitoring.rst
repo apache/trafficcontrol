@@ -59,9 +59,12 @@ Response Structure
 
 :deliveryServices: An array of objects representing each :term:`Delivery Service` provided by this CDN
 
+	:hostRegexes:        An array of strings which are the Delivery Service's HOST_REGEXP-type regexes
 	:status:             The :term:`Delivery Service`'s status
+	:topology:           A string that is the name of the Delivery Service's :term:`Topology` (if assigned one)
 	:totalKbpsThreshold: A threshold rate of data transfer this :term:`Delivery Service` is configured to handle, in Kilobits per second
 	:totalTpsThreshold:  A threshold amount of transactions per second that this :term:`Delivery Service` is configured to handle
+	:type:               A string that is the Delivery Service's type category (``"HTTP"`` or ``"DNS"``)
 	:xmlId:              A string that is the :ref:`Delivery Service's XMLID <ds-xmlid>`
 
 :profiles: An array of the :term:`Profiles` in use by the :term:`cache servers` and :term:`Delivery Services` belonging to this CDN
@@ -81,27 +84,36 @@ Response Structure
 
 	:type: A string that names the :ref:`Profile's Type <profile-type>`
 
+:topologies: A map of :term:`Topology` names to objects
+
+	:nodes: An array of strings which are the names of the EDGE_LOC-type cache groups in the topology
+
 :trafficMonitors: An array of objects representing each Traffic Monitor that monitors this CDN (this is used by Traffic Monitor's "peer polling" function)
 
-	:fqdn:     An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the IPv4 (and/or IPv6) address of the server running this Traffic Monitor instance
-	:hostname: The hostname of the server running this Traffic Monitor instance
-	:ip6:      The IPv6 address of this Traffic Monitor - when applicable
-	:ip:       The IPv4 address of this Traffic Monitor
-	:port:     The port on which this Traffic Monitor listens for incoming connections
-	:profile:  A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this Traffic Monitor
-	:status:   The status of the server running this Traffic Monitor instance
+	:cachegroup: The name of the :term:`Cache Group` to which this Traffic Monitor belongs
+	:fqdn:       An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the IPv4 (and/or IPv6) address of the server running this Traffic Monitor instance
+	:hostname:   The hostname of the server running this Traffic Monitor instance
+	:ip6:        The IPv6 address of this Traffic Monitor - when applicable
+	:ip:         The IPv4 address of this Traffic Monitor
+	:port:       The port on which this Traffic Monitor listens for incoming connections
+	:profile:    A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this Traffic Monitor
+	:status:     The status of the server running this Traffic Monitor instance
 
 :trafficServers: An array of objects that represent the :term:`cache servers` being monitored within this CDN
 
-	:cacheGroup: The :term:`Cache Group` to which this :term:`cache server` belongs
-	:fqdn:       An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the :term:`cache server`'s IPv4 (or IPv6) address
-	:hashId:     The (short) hostname for the :term:`cache server` - named "hashId" for legacy reasons
-	:hostName:   The (short) hostname of the :term:`cache server`
-	:port:       The port on which the :term:`cache server` listens for incoming connections
-	:profile:    A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this :term:`cache server`
-	:status:     The status of the :term:`cache server`
-	:type:       A string that names the :term:`Type` of the :term:`cache server` - should (ideally) be either ``EDGE`` or ``MID``
-	:interfaces: A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
+	:cachegroup:       The :term:`Cache Group` to which this :term:`cache server` belongs
+	:deliveryServices: An array of objects which contain the XML IDs of the delivery services to which this cache server is assigned (this field is omitted entirely if no delivery services are assigned to this cache server)
+
+		:xmlId: A string which is the XML ID of the delivery service
+
+	:fqdn:             An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the :term:`cache server`'s IPv4 (or IPv6) address
+	:hashId:           The (short) hostname for the :term:`cache server` - named "hashId" for legacy reasons
+	:hostName:         The (short) hostname of the :term:`cache server`
+	:port:             The port on which the :term:`cache server` listens for incoming connections
+	:profile:          A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this :term:`cache server`
+	:status:           The status of the :term:`cache server`
+	:type:             A string that names the :term:`Type` of the :term:`cache server` - should (ideally) be either ``EDGE`` or ``MID``
+	:interfaces:       A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
 
 		:ipAddresses: A set of objects representing IP Addresses assigned to this network interface. In most scenarios, only one or two (usually one IPv4 address and one IPv6 address) will be present, but it is illegal for this set to be an empty collection.
 
@@ -133,12 +145,19 @@ Response Structure
 	Transfer-Encoding: chunked
 
 	{ "response": {
+	    "topologies": {
+	        "example-topology": {
+	            "nodes": [
+	                "CDN_in_a_Box_Edge"
+	            ]
+	        }
+	    },
 		"trafficServers": [
 			{
 				"profile": "ATS_EDGE_TIER_CACHE",
 				"status": "REPORTED",
 				"port": 80,
-				"intefaces": [
+				"interfaces": [
 					{
 						"ipAddresses": [
 							{
@@ -168,7 +187,7 @@ Response Structure
 				"profile": "ATS_MID_TIER_CACHE",
 				"status": "REPORTED",
 				"port": 80,
-				"intefaces": [
+				"interfaces": [
 					{
 						"ipAddresses": [
 							{
@@ -254,7 +273,19 @@ Response Structure
 				}
 			}
 		],
-		"deliveryServices": [],
+		"deliveryServices": [
+		    {
+		        "xmlId": "example-ds",
+		        "totalTpsThreshold": 0,
+		        "status": "REPORTED",
+		        "totalKbpsThreshold": 0,
+		        "type": "DNS",
+		        "topology": "example-topology",
+		        "hostRegexes": [
+		            ".*\\.example-ds\\..*"
+		        ]
+		    }
+		],
 		"config": {
 			"health.polling.interval": 6000,
 			"heartbeat.polling.interval": 3000,

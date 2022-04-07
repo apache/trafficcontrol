@@ -68,14 +68,14 @@ func (cl *TOClient) SetURL(newURL string) {
 	}
 }
 
-const FsCookiePath = `/var/lib/trafficcontrol-cache-config/fsCookie`
+const FsCookiePath = `/var/lib/trafficcontrol-cache-config/`
 
 // New logs into Traffic Ops, returning the TOClient which contains the logged-in client.
 func New(url *url.URL, user string, pass string, insecure bool, timeout time.Duration, userAgent string) (*TOClient, error) {
 	log.Infoln("URL: '" + url.String() + "' User: '" + user + "' Pass len: '" + strconv.Itoa(len(pass)) + "'")
 
 	client := &TOClient{}
-	fsCookie, err := torequtil.GetFsCookie(FsCookiePath)
+	fsCookie, err := torequtil.GetFsCookie(FsCookiePath + user + ".cookie")
 	if err != nil {
 		log.Infoln("Error retrieving cookie: ", err)
 	}
