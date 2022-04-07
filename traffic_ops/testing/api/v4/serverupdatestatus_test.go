@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -376,7 +377,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Add("hostName", *testServer.HostName)
-		testVals := func(queue *bool, reval *bool) {
+		testVals := func(configApply, revalApply *time.Time) {
 			resp, _, err := TOSession.GetServers(opts)
 			if err != nil {
 				t.Errorf("cannot get Server by name '%s': %v - alerts: %+v", *testServer.HostName, err, resp.Alerts)
@@ -384,17 +385,31 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
 			}
 
-			existingServer := resp.Response
+			beforeServer := resp.Response[0]
 
-			if existingServer[0].UpdPending == nil {
+			// Ensure baseline
+			if beforeServer.UpdPending == nil {
 				t.Fatalf("Server '%s' had nil UpdPending before update status change", *testServer.HostName)
 			}
-			if existingServer[0].RevalPending == nil {
+			if beforeServer.RevalPending == nil {
 				t.Fatalf("Server '%s' had nil RevalPending before update status change", *testServer.HostName)
 			}
+			if beforeServer.ConfigUpdateTime == nil {
+				t.Fatalf("Server '%s' had nil ConfigUpdateTime before update status change", *testServer.HostName)
+			}
+			if beforeServer.ConfigApplyTime == nil {
+				t.Fatalf("Server '%s' had nil ConfigApplyTime before update status change", *testServer.HostName)
+			}
+			if beforeServer.RevalUpdateTime == nil {
+				t.Fatalf("Server '%s' had nil RevalUpdateTime before update status change", *testServer.HostName)
+			}
+			if beforeServer.RevalApplyTime == nil {
+				t.Fatalf("Server '%s' had nil RevalApplyTime before update status change", *testServer.HostName)
+			}
 
-			if alerts, _, err := TOSession.SetUpdateServerStatuses(*testServer.HostName, queue, reval, client.RequestOptions{}); err != nil {
-				t.Fatalf("UpdateServerStatuses error expected: nil, actual: %v - alerts: %+v", err, alerts.Alerts)
+			// Make change
+			if alerts, _, err := TOSession.SetUpdateServerStatusTimes(*testServer.HostName, configApply, revalApply, client.RequestOptions{}); err != nil {
+				t.Fatalf("SetUpdateServerStatusTimes error. expected: nil, actual: %v - alerts: %+v", err, alerts.Alerts)
 			}
 
 			resp, _, err = TOSession.GetServers(opts)
@@ -404,44 +419,41 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
 			}
 
-			newServer := resp.Response
+			afterServer := resp.Response[0]
 
-			if newServer[0].UpdPending == nil {
+			if afterServer.UpdPending == nil {
 				t.Fatalf("Server '%s' had nil UpdPending after update status change", *testServer.HostName)
 			}
-			if newServer[0].RevalPending == nil {
+			if afterServer.RevalPending == nil {
 				t.Fatalf("Server '%s' had nil RevalPending after update status change", *testServer.HostName)
 			}
 
-			if queue != nil {
-				if *newServer[0].UpdPending != *queue {
-					t.Errorf("set queue update pending to %v, but then got server %v", *queue, *newServer[0].UpdPending)
-				}
-			} else {
-				if *newServer[0].UpdPending != *existingServer[0].UpdPending {
-					t.Errorf("set queue update pending with nil (don't update), but then got server %v which didn't match pre-update value %v", *newServer[0].UpdPending, *existingServer[0].UpdPending)
+			// Ensure values were actually set
+			if configApply != nil {
+				if afterServer.ConfigApplyTime == nil || !afterServer.ConfigApplyTime.Equal(*configApply) {
+					t.Errorf("Failed to set server's ConfigApplyTime. expected: %v actual: %v", *configApply, afterServer.ConfigApplyTime)
 				}
 			}
-			if reval != nil {
-				if *newServer[0].RevalPending != *reval {
-					t.Errorf("set reval update pending to %v, but then got server %v", *reval, *newServer[0].RevalPending)
-				}
-			} else {
-				if *newServer[0].RevalPending != *existingServer[0].RevalPending {
-					t.Errorf("set reval update pending with nil (don't update), but then got server %v which didn't match pre-update value %v", *newServer[0].RevalPending, *existingServer[0].RevalPending)
+			if revalApply != nil {
+				if afterServer.RevalApplyTime == nil || !afterServer.RevalApplyTime.Equal(*revalApply) {
+					t.Errorf("Failed to set server's RevalApplyTime. expected: %v actual: %v", *revalApply, afterServer.RevalApplyTime)
 				}
 			}
+
 		}
 
-		testVals(util.BoolPtr(true), util.BoolPtr(true))
-		testVals(util.BoolPtr(true), util.BoolPtr(false))
-		testVals(util.BoolPtr(false), util.BoolPtr(false))
-		testVals(nil, util.BoolPtr(true))
-		testVals(nil, util.BoolPtr(false))
-		testVals(util.BoolPtr(true), nil)
-		testVals(util.BoolPtr(false), nil)
+		// Postgres stores microsecond precision. There is also some discussion around MacOS losing
+		// precision as well. The nanosecond precision is accurate within go one linux however,
+		// but round trips to and from the database may result in an inaccurate Equals comparison
+		// with the loss of precision. Also, it appears to Round and not Truncate.
+		now := time.Now().Round(time.Microsecond)
 
-		if _, _, err := TOSession.SetUpdateServerStatuses(*testServer.HostName, nil, nil, client.RequestOptions{}); err == nil {
+		// Test setting the values works as expected
+		testVals(util.TimePtr(now), nil) // configApply
+		testVals(nil, util.TimePtr(now)) // revalApply
+
+		// Test sending all nils. Should fail
+		if _, _, err := TOSession.SetUpdateServerStatusTimes(*testServer.HostName, nil, nil, client.RequestOptions{}); err == nil {
 			t.Errorf("UpdateServerStatuses with (nil,nil) expected error, actual nil")
 		}
 	})
@@ -457,7 +469,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 		)
 		cacheGroupNames := []string{edgeCacheGroup, otherEdgeCacheGroup, midCacheGroup}
 		cachesByCacheGroup := map[string]tc.ServerV40{}
-		updateStatusByCacheGroup := map[string]tc.ServerUpdateStatus{}
+		updateStatusByCacheGroup := map[string]tc.ServerUpdateStatusV40{}
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", topologyName)

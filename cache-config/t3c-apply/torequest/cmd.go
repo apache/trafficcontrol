@@ -38,6 +38,7 @@ import (
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -190,8 +191,8 @@ func getChkconfig(cfg config.Cfg) ([]map[string]string, error) {
 	return result, nil
 }
 
-func getUpdateStatus(cfg config.Cfg) (*tc.ServerUpdateStatus, error) {
-	status := tc.ServerUpdateStatus{}
+func getUpdateStatus(cfg config.Cfg) (*atscfg.ServerUpdateStatus, error) {
+	status := atscfg.ServerUpdateStatus{}
 	if err := requestJSON(cfg, "update-status", &status); err != nil {
 		return nil, errors.New("requesting json: " + err.Error())
 	}
@@ -216,7 +217,7 @@ func getPackages(cfg config.Cfg) ([]Package, error) {
 
 // sendUpdate updates the given cache's queue update and reval status in Traffic Ops.
 // Note the statuses are the value to be set, not whether to set the value.
-func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
+func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, configApplyBool, revalApplyBool *bool) error {
 	args := []string{
 		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
 		"--traffic-ops-user=" + cfg.TOUser,
@@ -224,9 +225,23 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 		"--traffic-ops-url=" + cfg.TOURL,
 		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
 		"--cache-host-name=" + cfg.CacheHostName,
-		"--set-update-status=" + strconv.FormatBool(updateStatus),
-		"--set-reval-status=" + strconv.FormatBool(revalStatus),
 	}
+
+	if configApplyTime != nil {
+		args = append(args, "--set-config-apply-time="+(*configApplyTime).Format(time.RFC3339Nano))
+	}
+	if revalApplyTime != nil {
+		args = append(args, "--set-reval-apply-time="+(*revalApplyTime).Format(time.RFC3339Nano))
+	}
+
+	// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
+	if configApplyBool != nil {
+		args = append(args, "--set-update-status="+strconv.FormatBool(*configApplyBool))
+	}
+	if revalApplyBool != nil {
+		args = append(args, "--set-reval-status="+strconv.FormatBool(*revalApplyBool))
+	}
+	// ***
 
 	if cfg.LogLocationErr == log.LogLocationNull {
 		args = append(args, "-s")
@@ -238,6 +253,7 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 		args = append(args, "-v")
 	}
 
+	// TODO: Do these override the values set above? These appear to be the same, dups?
 	if _, used := os.LookupEnv("TO_USER"); !used {
 		args = append(args, "--traffic-ops-user="+cfg.TOUser)
 	}

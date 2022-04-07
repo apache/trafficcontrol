@@ -4919,6 +4919,410 @@
             "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
+            "hostName": "revalpnd-legacy-true",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.43.1/30",
+                            "gateway": "127.0.43.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:43:8::1/64",
+                            "gateway": "2345:1234:43:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": true,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "revalpnd-legacy-true\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "updatepnd-legacy-true",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.44.1/30",
+                            "gateway": "127.0.44.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:44:8::1/64",
+                            "gateway": "2345:1234:44:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": true,
+            "xmppId": "revalpnd-legaacy-true\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+			"configUpdateTime": "2022-01-01T17:00:00-07:00",
+			"configApplyTime": "1969-12-31T17:00:00-07:00",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "config-update-time",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.45.1/30",
+                            "gateway": "127.0.45.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:45:8::1/64",
+                            "gateway": "2345:1234:45:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "config-update-time\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+			"configUpdateTime": "2022-01-01T17:00:00-07:00",
+			"configApplyTime": "1969-12-31T17:00:00-07:00",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "config-update-time-no-updpend",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.45.2/30",
+                            "gateway": "127.0.45.2",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:45:8::2/64",
+                            "gateway": "2345:1234:45:8::2",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "xmppId": "config-update-time-no-updpend\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "reval-update-time",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.46.1/30",
+                            "gateway": "127.0.46.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:46:8::1/64",
+                            "gateway": "2345:1234:46:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
+			"revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "config-update-time\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "reval-update-time-no-revalpend",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.46.2/30",
+                            "gateway": "127.0.46.2",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:46:8::2/64",
+                            "gateway": "2345:1234:46:8::2",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
+			"revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "config-update-time\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+			"configUpdateTime": "2022-01-01T17:00:00-07:00",
+			"configApplyTime": "1969-12-31T17:00:00-07:00",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "config-reval-update-time",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.47.1/30",
+                            "gateway": "127.0.47.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:47:8::1/64",
+                            "gateway": "2345:1234:47:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
+			"revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "config-update-time\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+			"configUpdateTime": "2022-01-01T17:00:00-07:00",
+			"configApplyTime": "1969-12-31T17:00:00-07:00",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "config-reval-update-time-only",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.47.2/30",
+                            "gateway": "127.0.47.2",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:47:8::2/64",
+                            "gateway": "2345:1234:47:8::2",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
+			"revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "xmppId": "config-update-time\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
             "hostName": "admin-down-server",
             "httpsPort": 443,
             "iloIpAddress": "",

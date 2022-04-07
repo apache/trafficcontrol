@@ -780,7 +780,7 @@ s.status as status_id,
 s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
-s.upd_pending as upd_pending
+s.config_update_time > s.config_apply_time AS upd_pending
 `
 
 	queryFormatString := `

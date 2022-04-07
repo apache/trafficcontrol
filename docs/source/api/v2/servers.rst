@@ -70,12 +70,12 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
-:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
-:cdnId:          The integral, unique identifier of the CDN to which the server belongs
-:cdnName:        Name of the CDN to which the server belongs
-:domainName:     The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:guid:           An identifier used to uniquely identify the server
+:cachegroup:   A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
+:cdnId:        The integral, unique identifier of the CDN to which the server belongs
+:cdnName:      Name of the CDN to which the server belongs
+:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:guid:         An identifier used to uniquely identify the server
 
 	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
@@ -124,7 +124,7 @@ Response Structure
 
 :type:       The name of the :term:`Type` of this server
 :typeId:     The integral, unique identifier of the 'type' of this server
-:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Ops ORT
+:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (:term:`t3c`, formerly ORT)
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
 
@@ -243,8 +243,8 @@ Request Structure
 	.. note:: This is typically thought of as synonymous with "HTTP port", as the port specified by ``httpsPort`` may also be used for incoming TCP connections.
 
 :typeId:     The integral, unique identifier of the 'type' of this server
-:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Ops ORT
-:xmppId:    A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
+:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
+:xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: An optional password used in XMPP communications with the server
 
 .. code-block:: http
@@ -294,12 +294,12 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
-:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
-:cdnId:          The integral, unique identifier of the CDN to which the server belongs
-:cdnName:        Name of the CDN to which the server belongs
-:domainName:     The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:guid:           An identifier used to uniquely identify the server
+:cachegroup:   A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
+:cdnId:        The integral, unique identifier of the CDN to which the server belongs
+:cdnName:      Name of the CDN to which the server belongs
+:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:guid:         An identifier used to uniquely identify the server
 
 	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
@@ -317,7 +317,7 @@ Response Structure
 :ip6IsService:   A boolean value which if ``true`` indicates that the IPv6 address will be used for routing content.
 :ip6Gateway:     The IPv6 address of the gateway used by ``interfaceName``
 :ipAddress:      The IPv4 address of ``interfaceName``
-:ipIsService:   A boolean value which if ``true`` indicates that the IPv4 address will be used for routing content.
+:ipIsService:    A boolean value which if ``true`` indicates that the IPv4 address will be used for routing content.
 :ipGateway:      The IPv4 address of the gateway used by ``interfaceName``
 :ipNetmask:      The IPv4 subnet mask used by ``interfaceName``
 :lastUpdated:    The date and time at which this server description was last modified
@@ -348,7 +348,7 @@ Response Structure
 
 :type:       The name of the 'type' of this server
 :typeId:     The integral, unique identifier of the 'type' of this server
-:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Ops ORT
+:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
 
