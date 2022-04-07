@@ -1819,20 +1819,6 @@
             "serverNames": ["test-ds-server-assignments", "test-mso-org-01"]
         }
     ],
-    "topologyBasedDeliveryServicesRequiredCapabilities": [
-        {
-            "xmlID": "ds-top-req-cap",
-            "RequiredCapability": "ram"
-        },
-        {
-            "xmlID": "ds-top-req-cap",
-            "RequiredCapability": "disk"
-        },
-        {
-            "xmlID": "ds-top-req-cap2",
-            "RequiredCapability": "ram"
-        }
-    ],
     "divisions": [
         {
             "name": "division1"
