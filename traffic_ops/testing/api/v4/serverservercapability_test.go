@@ -43,7 +43,7 @@ func TestServerServerCapabilities(t *testing.T) {
 }
 
 func TestServerServerCapabilitiesForTopologies(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, ServerCapabilities, ServerServerCapabilitiesForTopologies, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, ServerCapabilities, ServerServerCapabilitiesForTopologies, DeliveryServicesRequiredCapabilities}, func() {
 		DeleteTestServerServerCapabilitiesForTopologiesValidation(t)
 	})
 }

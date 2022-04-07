@@ -42,7 +42,7 @@ type topologyTestCase struct {
 }
 
 func TestTopologies(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, ServiceCategories, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, ServiceCategories, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
 		GetTestTopologies(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		rfcTime := currentTime.Format(time.RFC1123)
