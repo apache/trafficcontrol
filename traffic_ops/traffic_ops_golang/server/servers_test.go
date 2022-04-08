@@ -379,6 +379,7 @@ func TestGetMidServers(t *testing.T) {
 	}
 
 	cols2 := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
+	cols2 = append(cols2, "config_update_time", "config_apply_time", "revalidate_update_time", "revalidate_apply_time")
 	rows2 := sqlmock.NewRows(cols2)
 
 	cgs := []tc.CacheGroup{}
@@ -477,6 +478,10 @@ func TestGetMidServers(t *testing.T) {
 		ts.UpdPending,
 		ts.XMPPID,
 		ts.XMPPPasswd,
+		ts.ConfigUpdateTime,
+		ts.ConfigApplyTime,
+		ts.RevalUpdateTime,
+		ts.RevalApplyTime,
 	)
 
 	mock.ExpectBegin()

@@ -21,9 +21,11 @@ import (
 	"os/exec"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestTOUpdater(t *testing.T) {
@@ -32,14 +34,14 @@ func TestTOUpdater(t *testing.T) {
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
-		tcdata.DeliveryServices}, func() {
+		tcdata.DeliveryServices, tcdata.InvalidationJobs}, func() {
 
 		// retrieve the current server status
 		output, err := runRequest(DefaultCacheHostName, CMDUpdateStatus)
 		if err != nil {
 			t.Fatalf("t3c-request failed: %v", err)
 		}
-		var serverStatus tc.ServerUpdateStatus
+		var serverStatus atscfg.ServerUpdateStatus
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
 			t.Fatalf("failed to parse t3c-request output: %v", err)
@@ -47,17 +49,17 @@ func TestTOUpdater(t *testing.T) {
 		if serverStatus.HostName != DefaultCacheHostName {
 			t.Fatalf("expected server status host name to be '%s', actual: %s", DefaultCacheHostName, serverStatus.HostName)
 		}
-		if serverStatus.RevalPending != false {
-			t.Fatal("expected RevalPending to be 'false'")
+		if serverStatus.RevalPending != true { // should be true since invalidation jobs were queued
+			t.Fatal("expected RevalPending to be 'true'")
 		}
 		if serverStatus.UpdatePending != false {
 			t.Fatal("expected UpdatePending to be 'false'")
 		}
 
 		// change the server update status
-		err = ExecTOUpdater(DefaultCacheHostName, false, true)
+		err = tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
 		if err != nil {
-			t.Fatalf("t3c-update failed: %v", err)
+			t.Fatalf("failed to set config update: %v", err)
 		}
 		// verify the update status is now 'true'
 		output, err = runRequest(DefaultCacheHostName, CMDUpdateStatus)
@@ -68,15 +70,42 @@ func TestTOUpdater(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
-		if serverStatus.RevalPending != false {
-			t.Fatal("expected RevalPending to be 'false'")
+		if serverStatus.RevalPending != true { // should be true since invalidation jobs were queued
+			t.Fatal("expected RevalPending to be 'true'")
 		}
 		if serverStatus.UpdatePending != true {
 			t.Fatal("expected UpdatePending to be 'true'")
 		}
 
+		// set config apply time to the config update time to signal the update was applied
+		err = ExecTOUpdater(DefaultCacheHostName, serverStatus.ConfigUpdateTime, nil, util.BoolPtr(false), nil)
+		if err != nil {
+			t.Fatalf("t3c-update failed: %v", err)
+		}
+		// verify the update status is now 'false'
+		output, err = runRequest(DefaultCacheHostName, CMDUpdateStatus)
+		if err != nil {
+			t.Fatalf("t3c-request failed: %v", err)
+		}
+		err = json.Unmarshal([]byte(output), &serverStatus)
+		if err != nil {
+			t.Fatalf("failed to parse t3c-request output: %v", err)
+		}
+		if serverStatus.RevalPending != true { // should be true since invalidation jobs were queued
+			t.Fatal("expected RevalPending to be 'true'")
+		}
+		if serverStatus.UpdatePending != false {
+			t.Fatal("expected UpdatePending to be 'false'")
+		}
+		if serverStatus.ConfigApplyTime != nil && serverStatus.ConfigUpdateTime != nil {
+			if !(*serverStatus.ConfigApplyTime).Equal(*serverStatus.ConfigUpdateTime) {
+				t.Fatalf("failed to set config apply time.\nExpc: %v\nRecv: %v", *serverStatus.ConfigUpdateTime, *serverStatus.ConfigApplyTime)
+			}
+		}
+
 		// now change the reval stat and put server update status back
-		err = ExecTOUpdater(DefaultCacheHostName, true, false)
+		// set config apply time to the config update time to signal the update was applied
+		err = ExecTOUpdater(DefaultCacheHostName, nil, serverStatus.RevalidateUpdateTime, nil, util.BoolPtr(false))
 		if err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
@@ -89,17 +118,22 @@ func TestTOUpdater(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
-		if serverStatus.RevalPending != true {
+		if serverStatus.RevalPending != false {
 			t.Fatal("expected RevalPending to be 'false'")
 		}
 		if serverStatus.UpdatePending != false {
-			t.Fatal("expected UpdatePending to be 'true'")
+			t.Fatal("expected UpdatePending to be 'false'")
+		}
+		if serverStatus.RevalidateApplyTime != nil && serverStatus.RevalidateUpdateTime != nil {
+			if !(*serverStatus.RevalidateApplyTime).Equal(*serverStatus.RevalidateUpdateTime) {
+				t.Fatalf("failed to set reval apply time.\nExpc: %v\nRecv: %v", *serverStatus.RevalidateUpdateTime, *serverStatus.RevalidateApplyTime)
+			}
 		}
 
 	})
 }
 
-func ExecTOUpdater(host string, reval_status bool, update_status bool) error {
+func ExecTOUpdater(host string, configApplyTime, revalApplyTime *time.Time, configApplyBool, revalApplyBool *bool) error {
 	args := []string{
 		"update",
 		"--traffic-ops-insecure=true",
@@ -109,9 +143,23 @@ func ExecTOUpdater(host string, reval_status bool, update_status bool) error {
 		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
 		"--cache-host-name=" + host,
 		"-vv",
-		"--set-reval-status=" + strconv.FormatBool(reval_status),
-		"--set-update-status=" + strconv.FormatBool(update_status),
 	}
+	if configApplyTime != nil {
+		args = append(args, "--set-config-apply-time="+(*configApplyTime).Format(time.RFC3339Nano))
+	}
+	if revalApplyTime != nil {
+		args = append(args, "--set-reval-apply-time="+(*revalApplyTime).Format(time.RFC3339Nano))
+	}
+
+	// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
+	if configApplyBool != nil {
+		args = append(args, "--set-update-status="+strconv.FormatBool(*configApplyBool))
+	}
+	if revalApplyBool != nil {
+		args = append(args, "--set-reval-status="+strconv.FormatBool(*revalApplyBool))
+	}
+	// ***
+
 	cmd := exec.Command("t3c", args...)
 	var out bytes.Buffer
 	var errOut bytes.Buffer

@@ -36,6 +36,7 @@ const (
 	Divisions
 	FederationResolvers
 	FederationUsers
+	InvalidationJobs
 	Origins
 	Parameters
 	PhysLocations
@@ -85,6 +86,7 @@ func (r *TCData) WithObjs(t *testing.T, objs []TCObj, f func()) {
 		Divisions:                            {r.CreateTestDivisions, r.DeleteTestDivisions},
 		FederationUsers:                      {r.CreateTestFederationUsers, r.DeleteTestFederationUsers},
 		FederationResolvers:                  {r.CreateTestFederationResolvers, r.DeleteTestFederationResolvers},
+		InvalidationJobs:                     {r.CreateTestInvalidationJobs, r.DeleteTestInvalidationJobs},
 		Origins:                              {r.CreateTestOrigins, r.DeleteTestOrigins},
 		Parameters:                           {r.CreateTestParameters, r.DeleteTestParameters},
 		PhysLocations:                        {r.CreateTestPhysLocations, r.DeleteTestPhysLocations},
