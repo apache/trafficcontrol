@@ -158,7 +158,7 @@ func parseQueryParams(params map[string]string) (*updateValues, error) {
 
 	if !hasConfigApplyTimeParam && !hasRevalidateApplyTimeParam &&
 		!hasConfigUpdatedBoolParam && !hasRevalUpdatedBoolParam {
-		return nil, errors.New("must pass at least one of the following query parameters: 'config_apply_time', 'revalidate_apply_time' ,'update', 'reval_updated'")
+		return nil, errors.New("must pass at least one of the following query parameters: 'config_apply_time', 'revalidate_apply_time' ,'updated', 'reval_updated'")
 
 	}
 	// Prevent collision between booleans and timestamps
