@@ -148,8 +148,7 @@ function TreeSelectDirective($document) {
 				text = text.toString().toLowerCase();
 				input = input.toString().toLowerCase();
 				let n = -1;
-				for(const i of input) {
-					const letter = input[i];
+				for(const letter of input) {
 					if (!~(n = text.indexOf(letter, n + 1))) return false;
 				}
 				return true;
