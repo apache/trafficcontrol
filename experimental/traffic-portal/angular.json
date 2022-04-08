@@ -118,7 +118,8 @@
 						"lintFilePatterns": [
 							"src/**/*.ts",
 							"src/**/*.html",
-							"nightwatch/**/*.ts"
+							"nightwatch/**/*.ts",
+							"nightwatch/**/*.js"
 						]
 					}
 				},

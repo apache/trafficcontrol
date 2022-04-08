@@ -11,9 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {NightwatchBrowser} from "nightwatch";
+import {type NightwatchBrowser} from "nightwatch";
 
-import {GlobalConfig} from "../globals/globals";
+import {type GlobalConfig} from "../globals/globals";
 import {type LoginPageObject} from "../page_objects/login";
 
 module.exports = {

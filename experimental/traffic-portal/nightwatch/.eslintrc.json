@@ -21,7 +21,8 @@
 				]
 			},
 			"files": [
-				"*.ts"
+				"*.ts",
+				"*.js"
 			],
 			"rules": {
 				"@typescript-eslint/naming-convention": [
@@ -30,12 +31,11 @@
 						"selector": "objectLiteralProperty",
 						"format": ["camelCase"],
 						"filter": {
-							"regex": "^[a-zA-Z0-9.,!?_ ]+$",
+							"regex": "^[a-zA-Z0-9.,!?_: ]+$",
 							"match": false
 						}
 					}
-				],
-				"@typescript-eslint/no-unnecessary-type-arguments": 0
+				]
 			}
 		}
 	]

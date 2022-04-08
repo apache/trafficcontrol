@@ -82,7 +82,7 @@
     "@angular-eslint/template-parser": "13.1.0",
     "@angular/cli": "^13.2.0",
     "@angular/compiler-cli": "^13.2.0",
-		"@nightwatch/schematics": "^0.1.9",
+    "@nightwatch/schematics": "^0.1.9",
     "@types/argparse": "^2.0.2",
     "@types/chart.js": "^2.9.34",
     "@types/express": "^4.17.0",

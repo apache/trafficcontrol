@@ -82,24 +82,20 @@ if [[ ! -e "$REPO_DIR" ]]; then
 	ln -s "$REPO_DIR" "${GITHUB_WORKSPACE}"
 fi
 
-to_build() {
-  pushd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
-  if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
-    go mod vendor
-  fi
-  go build .
+pushd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
+if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
+  go mod vendor
+fi
+go build .
 
-  openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";
+openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";
 
-  envsubst <"${resources}/cdn.json" >cdn.conf
-  cp "${resources}/database.json" database.conf
+envsubst <"${resources}/cdn.json" >cdn.conf
+cp "${resources}/database.json" database.conf
 
-  truncate -s0 out.log
-  ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>&1 &
-  popd
-}
-
-to_build
+truncate -s0 out.log
+./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>&1 &
+popd
 
 cd "${REPO_DIR}/experimental/traffic-portal"
 npm ci

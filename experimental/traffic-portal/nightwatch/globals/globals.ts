@@ -12,7 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {NightwatchGlobals} from "nightwatch";
+import {type NightwatchGlobals} from "nightwatch";
 
 /**
  * Defines the configuration used for the testing environment
