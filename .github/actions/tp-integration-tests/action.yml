@@ -32,5 +32,7 @@ inputs:
     description: 'The user to authenticate with for the SMTP server.'
     required: false
 runs:
-  using: 'node12'
-  main: 'dist/tp-integration-tests.js'
+  using: composite
+  steps:
+    - run: ${{ github.action_path }}/entrypoint.sh
+      shell: bash
