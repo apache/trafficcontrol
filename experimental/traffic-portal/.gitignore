@@ -16,6 +16,7 @@
 /nightwatch/tests_output
 /nightwatch/screens
 /out-tsc
+/logs
 # Only exists if Bazel was run
 /bazel-out
 
