@@ -93,17 +93,23 @@ cdn_id="$(<<<"$server" jq .cdnId)"
 to-put "api/$TO_API_VERSION/snapshot?cdnID=${cdn_id}"
 
 echo "Waiting for Traffic Monitor to serve a snapshot..."
-timeout 5m curl \
+if ! timeout 10m curl \
 	--retry 99999 \
 	--retry-delay 5 \
 	--show-error \
 	-fIso/dev/null \
-	http://localhost/publish/CrConfig;
+	http://localhost/publish/CrConfig; then
+	echo "CrConfig was not available from Traffic Monitor within 10 minutes!"
+	trap - ERR
+	echo 'Exiting...'
+	exit 1
+fi
+
 
 deliveryservice=cdn.dev-ds.ciab.test
 echo "Waiting for Delivery Service ${deliveryservice} to be available..."
-if ! timeout 2m bash -c 'atc-ready -d'; then
-	echo "Delivery Service ${deliveryservice} was not available within 2 minutes!"
+if ! timeout 10m bash -c 'atc-ready -d'; then
+	echo "Delivery Service ${deliveryservice} was not available within 10 minutes!"
 	trap - ERR
 	echo 'Exiting...'
 	exit 1
