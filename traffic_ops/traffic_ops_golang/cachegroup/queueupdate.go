@@ -109,7 +109,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 
 	// Queue updates
 	var updatedCaches []tc.CacheName
-	if reqObj.Action == queue {
+	if reqObj.Action == "queue" {
 		updatedCaches, err = dbhelpers.QueueUpdateForServerWithCachegroupCDN(inf.Tx.Tx, cgID, cdnID)
 	} else {
 		updatedCaches, err = dbhelpers.DequeueUpdateForServerWithCachegroupCDN(inf.Tx.Tx, cgID, cdnID)
