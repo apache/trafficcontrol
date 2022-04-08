@@ -268,13 +268,14 @@ func parentAbstractionToParentDotConfig(pa *ParentAbstraction, opt *ParentConfig
 
 	// parent.config dest_domain directives must be unique.
 	// This is the "duplicate origin problem"
-	processedOriginsToDSNames := map[string]string{}
+
+	// Key is ds name, value is uncommented parent.config line
+	parentLines := map[string]string{}
+
+	// Key is fqdn:port, value is ds name
+	fqdnPortToDSNames := map[string]string{}
 
 	for _, svc := range pa.Services {
-		if existingDS, ok := processedOriginsToDSNames[svc.DestDomain]; ok {
-			warnings = append(warnings, "duplicate origin! DS '"+svc.Name+"' and '"+existingDS+"' share origin '"+svc.DestDomain+"': skipping '"+svc.Name+"'!")
-			continue
-		}
 
 		svcLine, svcWarns, err := svc.ToParentDotConfigLine(opt, atsMajorVersion)
 		warnings = append(warnings, svcWarns...)
@@ -283,9 +284,34 @@ func parentAbstractionToParentDotConfig(pa *ParentAbstraction, opt *ParentConfig
 			// TODO don't error? No single delivery service should be able to break others.
 			return "", warnings, errors.New("creating parent.config line from service: " + err.Error())
 		}
-		txt += svcLine + "\n"
 
-		processedOriginsToDSNames[svc.DestDomain] = svc.Name
+		// Check for fqdn/port collision.
+		key := svc.DestDomain + ":" + strconv.Itoa(svc.Port)
+
+		if existingName, ok := fqdnPortToDSNames[key]; ok {
+			warnings = append(warnings, "duplicate origin:port! DS '"+svc.Name+"' and '"+existingName+"' share origin '"+key+"'!")
+
+			if existingLine, ok := parentLines[existingName]; ok {
+				if existingLine == svcLine { // duplicate line
+					warnings = append(warnings, "duplicate origin! DS '"+svc.Name+"' and '"+existingName+"' parent.config lines are duplicates, skipping!")
+					continue
+				} else { // line differs
+					warnings = append(warnings, "duplicate origin! DS '"+svc.Name+"' and '"+existingName+"' parent.config lines differ, exiting!")
+					return "", warnings, errors.New("Duplicate origin/port with different options!")
+				}
+			} else {
+				return "", warnings, errors.New("Existing parent line not found!")
+			}
+		} else {
+			fqdnPortToDSNames[key] = svc.Name
+			parentLines[svc.Name] = svcLine
+		}
+
+		if opt.AddComments && svc.Comment != "" {
+			txt += LineCommentParentDotConfig + " " + svc.Comment + "\n"
+		}
+
+		txt += svcLine + "\n"
 	}
 	return txt, warnings, nil
 }
