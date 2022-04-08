@@ -173,7 +173,7 @@ func deleteDSS(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	serverName, exists, err := dbhelpers.GetServerNameFromID(tx, serverID)
+	serverName, exists, err := dbhelpers.GetServerNameFromID(tx, int64(serverID))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from id: "+err.Error()))
 		return

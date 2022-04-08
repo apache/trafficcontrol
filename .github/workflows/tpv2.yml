@@ -44,7 +44,6 @@ jobs:
         with:
           node-version: 16.x
 
-      # TODO: is this necessary? Why is this necessary?
       - name: Install latest Chrome
         run: sudo apt-get update && sudo apt-get install google-chrome-stable
 

@@ -54,8 +54,9 @@ func TestApplyDiff(t *testing.T) {
 			}
 			// queue and syncds to get changes
 
-			if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
-				t.Fatalf("updating queue status failed: %v", err)
+			err = tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+			if err != nil {
+				t.Fatalf("failed to queue updates: %v", err)
 			}
 			out, code := t3cUpdateReload(DefaultCacheHostName, "syncds")
 			if code != 0 {
@@ -86,8 +87,9 @@ func TestApplyDiff(t *testing.T) {
 
 			// queue and syncds to get changes
 
-			if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
-				t.Fatalf("updating queue status failed: %v", err)
+			err = tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+			if err != nil {
+				t.Fatalf("failed to queue updates: %v", err)
 			}
 			out, code := t3cUpdateReload(DefaultCacheHostName, "syncds")
 			if code != 0 {

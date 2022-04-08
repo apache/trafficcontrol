@@ -37,10 +37,6 @@ var FormTenantController = function(tenant, $scope, $location, formUtils, tenant
         { value: false, label: 'false' }
     ];
 
-    $scope.tenantLabel = function(tenant) {
-        return '-'.repeat(tenant.level) + ' ' + tenant.name;
-    };
-
     $scope.viewUsers = function() {
         $location.path($location.path() + '/users');
     };

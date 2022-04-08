@@ -93,29 +93,20 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := queueUpdates(inf.Tx.Tx, topologyName, reqObj.CDNID, reqObj.Action == "queue"); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Topology queueing updates: "+err.Error()))
-		return
+
+	if reqObj.Action == "queue" {
+		if err := dbhelpers.QueueUpdateForServerWithTopologyCDN(inf.Tx.Tx, topologyName, reqObj.CDNID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("topology queueing updates: %w", err))
+			return
+		}
+	} else {
+		if err := dbhelpers.DequeueUpdateForServerWithTopologyCDN(inf.Tx.Tx, topologyName, reqObj.CDNID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("topology queueing updates: %w", err))
+			return
+		}
 	}
 
 	message := fmt.Sprintf("TOPOLOGY: %s, ACTION: Topology server updates %sd", topologyName, reqObj.Action)
 	api.CreateChangeLogRawTx(api.ApiChange, message, inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, tc.TopologiesQueueUpdate{Action: reqObj.Action, CDNID: reqObj.CDNID, Topology: topologyName})
-}
-
-func queueUpdates(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64, queue bool) error {
-	query := `
-UPDATE server s
-SET upd_pending = $1
-FROM cachegroup c, topology_cachegroup tc, cdn
-WHERE s.cachegroup = c.id
-AND c.name = tc.cachegroup
-AND tc.topology = $2
-AND s.cdn_id = $3
-`
-	var err error
-	if _, err = tx.Exec(query, queue, topologyName, cdnId); err != nil {
-		err = fmt.Errorf("queueing updates: %s", err)
-	}
-	return err
 }

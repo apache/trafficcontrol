@@ -20,20 +20,19 @@ package server
  */
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-// QueueUpdateHandler implements an http handler that updates a server's
-// upd_pending value.
+// QueueUpdateHandler implements an http handler that sets a server's
+// config update time value.
 func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
@@ -54,7 +53,6 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	serverID := int64(inf.IntParams["id"])
-	queue := reqObj.Action == "queue"
 	cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, serverID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
@@ -67,13 +65,14 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	ok, err := queueUpdate(inf.Tx.Tx, serverID, queue)
+
+	if reqObj.Action == "queue" {
+		err = dbhelpers.QueueUpdateForServer(inf.Tx.Tx, serverID)
+	} else {
+		err = dbhelpers.DequeueUpdateForServer(inf.Tx.Tx, serverID)
+	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("queueing updates: %v", err))
-		return
-	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("no server with id '%v' found", serverID), nil)
 		return
 	}
 
@@ -95,19 +94,4 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		ServerID: util.JSONIntStr(serverID),
 		Action:   reqObj.Action,
 	})
-}
-
-// queueUpdate sets the upd_pending column of a server to the value of queue. It
-// returns true if the identified server exists and was updated and false if no
-// server was updated either because it doesn't exist or there was an error.
-func queueUpdate(tx *sql.Tx, serverID int64, queue bool) (bool, error) {
-	const query = `UPDATE server SET upd_pending = $1 WHERE id = $2`
-
-	if result, err := tx.Exec(query, queue, serverID); err != nil {
-		return false, fmt.Errorf("updating server table: %v", err)
-	} else if rc, err := result.RowsAffected(); err != nil {
-		return false, fmt.Errorf("checking rows updated: %v", err)
-	} else {
-		return rc == 1, nil
-	}
 }

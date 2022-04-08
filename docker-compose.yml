@@ -95,6 +95,7 @@ services:
         build:
             context: dev/t3c
             args:
+                - ATS_VERSION=${ATS_VERSION}
                 - GO_VERSION=${GO_VERSION}
         depends_on:
             - trafficops

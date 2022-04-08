@@ -940,7 +940,7 @@ public class ZoneManager extends Resolver {
 			final DNSRouteResult result = trafficRouter.route(request, track);
 
 			if (result != null) {
-				final Zone dynamicZone = fillDynamicZone(dynamicZoneCache, staticZone, request, result);
+				final Zone dynamicZone = fillDynamicZone(getDynamicZoneCache(), staticZone, request, result);
 				track.setResultCode(dynamicZone, request.getName(), request.getQueryType());
 				if (result.getDeliveryService() == null) {
 					builder.deliveryServiceXmlIds(null);
@@ -972,16 +972,23 @@ public class ZoneManager extends Resolver {
 		try {
 			boolean nsSeen = false;
 			final List<Record> records = new ArrayList<>();
-
+			String dsRoutingName = null;
+			boolean routingNameNSECSeen = false;
 			for (final InetRecord address : result.getAddresses()) {
 				final DeliveryService ds = result.getDeliveryService();
 				Name name = request.getName();
 
+				if (ds != null && ds.getRoutingName() != null) {
+					dsRoutingName = ds.getRoutingName();
+				}
 				if (address.getType() == Type.NS) {
 					name = staticZone.getOrigin();
 				} else if (ds != null && (address.getType() == Type.A || address.getType() == Type.AAAA)) {
 					final String routingName = ds.getRoutingName();
 					name = new Name(routingName, staticZone.getOrigin()); // routingname.ds.cdn.tld
+				} else if (ds != null && address.getType() == Type.NSEC && dsRoutingName != null &&
+						address.getTarget().equals(new Name(dsRoutingName, staticZone.getOrigin()).toString())) {
+					routingNameNSECSeen = true;
 				}
 
 				final Record record = createRecord(name, address);
@@ -989,7 +996,6 @@ public class ZoneManager extends Resolver {
 				if (record != null) {
 					records.add(record);
 				}
-
 				if (record instanceof NSRecord) {
 					nsSeen = true;
 				}
@@ -1009,7 +1015,20 @@ public class ZoneManager extends Resolver {
 						continue;
 					}
 
-					records.add(r);
+					if (r.getType() == Type.NSEC && r.getName().toString().equals(staticZone.getOrigin().toString()) && dsRoutingName != null) {
+						final Name dsFQDN = new Name(dsRoutingName, staticZone.getOrigin());
+						if (r instanceof NSECRecord) {
+							final NSECRecord removeRec = new NSECRecord(dsFQDN, r.getDClass(), r.getTTL(), ((NSECRecord) r).getNext(), ((NSECRecord) r).getTypes());
+							if (dsFQDN.compareTo(removeRec.getNext()) < 0 && !routingNameNSECSeen) {
+								records.add(removeRec);
+								routingNameNSECSeen = true;
+							} else {
+								records.add(r);
+							}
+						}
+					} else {
+						records.add(r);
+					}
 				}
 
 			}
@@ -1020,7 +1039,7 @@ public class ZoneManager extends Resolver {
 				}
 
 				try {
-					final ZoneKey zoneKey = signatureManager.generateDynamicZoneKey(staticZone.getOrigin(), records, request.isDnssec());
+					final ZoneKey zoneKey = getSignatureManager().generateDynamicZoneKey(staticZone.getOrigin(), records, request.isDnssec());
 					final Zone zone = dzc.get(zoneKey);
 					return zone;
 				} catch (ExecutionException e) {
@@ -1198,5 +1217,12 @@ public class ZoneManager extends Resolver {
 
 	public CacheStats getDynamicCacheStats() {
 		return dynamicZoneCache.stats();
+	}
+
+	public static SignatureManager getSignatureManager() {
+		return signatureManager;
+	}
+	public static LoadingCache<ZoneKey, Zone> getDynamicZoneCache() {
+		return dynamicZoneCache;
 	}
 }
