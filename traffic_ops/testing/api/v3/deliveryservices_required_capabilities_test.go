@@ -31,7 +31,7 @@ import (
 )
 
 func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, ServiceCategories, DeliveryServices, DeliveryServicesRequiredCapabilities, DeliveryServiceServerAssignments, ServerServerCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments, ServerServerCapabilities, DeliveryServicesRequiredCapabilities}, func() {
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
@@ -121,8 +121,8 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceId(t, "ds4"), ClientSession: TOSession,
-					RequestBody:  map[string]interface{}{"requiredCapability": "bar"},
+					EndpointId: GetDeliveryServiceId(t, "ds-top-req-cap"), ClientSession: TOSession,
+					RequestBody:  map[string]interface{}{"requiredCapability": "ram"},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"NOT FOUND when NON-EXISTENT DELIVERYSERVICEID parameter": {
