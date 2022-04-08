@@ -1789,10 +1789,6 @@
             "RequiredCapability": "bar"
         },
         {
-            "xmlID": "ds4",
-            "RequiredCapability": "bar"
-        },
-        {
             "xmlID": "msods1",
             "RequiredCapability": "bar"
         },
