@@ -96,7 +96,9 @@
 					"builder": "@angular-devkit/build-angular:karma",
 					"options": {
 						"main": "src/test.ts",
-						"codeCoverageExclude": ["src/app/api/**/*"],
+						"codeCoverageExclude": [
+							"src/app/api/**/*"
+						],
 						"polyfills": "src/polyfills.ts",
 						"tsConfig": "tsconfig.spec.json",
 						"karmaConfig": "karma.conf.js",
@@ -115,20 +117,10 @@
 					"options": {
 						"lintFilePatterns": [
 							"src/**/*.ts",
-							"src/**/*.html"
+							"src/**/*.html",
+							"nightwatch/**/*.ts",
+							"nightwatch/**/*.js"
 						]
-					}
-				},
-				"e2e": {
-					"builder": "@angular-devkit/build-angular:protractor",
-					"options": {
-						"protractorConfig": "e2e/protractor.conf.js",
-						"devServerTarget": "traffic-portal:serve"
-					},
-					"configurations": {
-						"production": {
-							"devServerTarget": "traffic-portal:serve:production"
-						}
 					}
 				},
 				"server": {
@@ -176,6 +168,32 @@
 					},
 					"configurations": {
 						"production": {}
+					}
+				},
+				"nightwatch-run": {
+					"builder": "@nightwatch/schematics:nightwatch",
+					"options": {
+						"devServerTarget": "traffic-portal:serve",
+						"tsConfig": "./tsconfig.e2e.json",
+						"config": "./nightwatch/nightwatch.conf.js"
+					},
+					"configurations": {
+						"production": {
+							"devServerTarget": "traffic-portal:serve:production"
+						}
+					}
+				},
+				"e2e": {
+					"builder": "@nightwatch/schematics:nightwatch",
+					"options": {
+						"devServerTarget": "traffic-portal:serve",
+						"tsConfig": "./tsconfig.e2e.json",
+						"config": "./nightwatch/nightwatch.conf.js"
+					},
+					"configurations": {
+						"production": {
+							"devServerTarget": "traffic-portal:serve:production"
+						}
 					}
 				}
 			}
