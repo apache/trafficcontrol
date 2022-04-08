@@ -116,13 +116,16 @@ if ! timeout 10m bash -c 'atc-ready -d'; then
 fi
 
 http_result=0 dns_result=0
+
+http_requests_threshold=1200
+dns_requests_threshold=2500
 # Compile the tests
 go test -c ./traffic_router/ultimate-test-harness
-if ! ./ultimate-test-harness.test -test.v -test.run=^TestHTTPLoad$ -http_requests_threshold=5000; then
+if ! ./ultimate-test-harness.test -test.v -test.run=^TestHTTPLoad$ -http_requests_threshold "$http_requests_threshold"; then
 	http_result=1
 fi
 
-if ! ./ultimate-test-harness.test -test.v -test.run=^TestDNSLoad$ -dns_requests_threshold=20500; then
+if ! ./ultimate-test-harness.test -test.v -test.run=^TestDNSLoad$ -dns_requests_threshold "$dns_requests_threshold"; then
 	dns_result=1
 fi
 if [[ $http_result -eq 0 && $dns_result -eq 0 ]]; then echo
