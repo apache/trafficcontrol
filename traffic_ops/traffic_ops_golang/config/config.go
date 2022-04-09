@@ -36,6 +36,21 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
+type Options struct {
+	Algorithm string `json:"alg"`
+}
+
+type SoaRoute struct {
+	Path   string   `json:"path"`
+	Method string   `json:"method"`
+	Hosts  []string `json:"hosts"`
+	Opts   Options  `json:"opts"`
+}
+
+type SoaConfig struct {
+	Routes []SoaRoute `json:"routes"`
+}
+
 // Config reflects the structure of the cdn.conf file
 type Config struct {
 	URL                         *url.URL `json:"-"`
@@ -285,6 +300,20 @@ func (c Config) EventLog() log.LogLocation {
 
 const BlockStartup = true
 const AllowStartup = false
+
+func LoadSoaConfig(soaConfigPath string) (SoaConfig, error) {
+	confBytes, err := ioutil.ReadFile(soaConfigPath)
+	if err != nil {
+		return SoaConfig{}, fmt.Errorf("reading CDN conf '%s': %v", soaConfigPath, err)
+	}
+
+	cfg := SoaConfig{}
+	err = json.Unmarshal(confBytes, &cfg)
+	if err != nil {
+		return SoaConfig{}, fmt.Errorf("unmarshalling '%s': %v", soaConfigPath, err)
+	}
+	return cfg, nil
+}
 
 func LoadCdnConfig(cdnConfPath string) (Config, error) {
 	// load json from cdn.conf

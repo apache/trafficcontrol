@@ -22,6 +22,7 @@ package main
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -64,6 +65,7 @@ func main() {
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path (DEPRECATED: use traffic_vault_backend = riak and traffic_vault_config in cdn.conf instead)")
+	soaConfigFileName := flag.String("soacfg", "", "The soa config file path")
 	flag.Parse()
 
 	if *showVersion {
@@ -164,7 +166,17 @@ func main() {
 		log.Errorln(debugServer.ListenAndServe())
 	}()
 
-	if err := routing.RegisterRoutes(routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins, TrafficVault: trafficVault}); err != nil {
+	var soaConfig config.SoaConfig
+	if *soaConfigFileName != "" {
+		soaConfig, err = config.LoadSoaConfig(*soaConfigFileName)
+		if err != nil {
+			log.Errorf("error loading soa config: %v", err)
+		}
+	}
+
+	mux := http.NewServeMux()
+	d := routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins, TrafficVault: trafficVault, SOAConfig: soaConfig, Mux: mux}
+	if err := routing.RegisterRoutes(d); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		os.Exit(1)
 	}
@@ -214,7 +226,7 @@ func main() {
 			file.Close()
 		}
 
-		if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
+		if err := http.ListenAndServeTLS("localhost:"+cfg.Port, cfg.CertPath, cfg.KeyPath, mux); err != nil {
 			log.Errorf("stopping server: %v\n", err)
 			os.Exit(1)
 		}
@@ -234,6 +246,12 @@ func main() {
 
 	reloadProfilingConfig := func() {
 		setNewProfilingInfo(*configFileName, &profiling, &profilingLocation, cfg.Version)
+		soaConfig, err = setNewSoaConfig(soaConfigFileName)
+		if err != nil {
+			log.Errorf("could not reload soa config: %v", err)
+		}
+		d.SOAConfig = soaConfig
+		routing.ServeSoaRoutes(d)
 	}
 	signalReloader(unix.SIGHUP, reloadProfilingConfig)
 }
@@ -293,6 +311,18 @@ func setupTrafficVault(riakConfigFileName string, cfg *config.Config) trafficvau
 	return &disabled.Disabled{}
 }
 
+func setNewSoaConfig(soaConfigFileName *string) (config.SoaConfig, error) {
+	if soaConfigFileName == nil {
+		return config.SoaConfig{}, errors.New("no SOA config filename")
+	}
+	soaConfig, err := reloadSoaConfig(*soaConfigFileName)
+	if err != nil {
+		log.Errorf("error reloading config: %v", err)
+		return soaConfig, err
+	}
+	return soaConfig, nil
+}
+
 func setNewProfilingInfo(configFileName string, currentProfilingEnabled *bool, currentProfilingLocation *string, version string) {
 	newProfilingEnabled, newProfilingLocation, err := reloadProfilingInfo(configFileName)
 	if err != nil {
@@ -348,6 +378,12 @@ func reloadProfilingInfo(configFileName string) (bool, string, error) {
 		return false, "", err
 	}
 	return cfg.ProfilingEnabled, profilingLocation, nil
+}
+
+func reloadSoaConfig(soaConfigFileName string) (config.SoaConfig, error) {
+	log.Infoln("reload SOA config")
+	soaConfig, err := config.LoadSoaConfig(soaConfigFileName)
+	return soaConfig, err
 }
 
 func continuousProfile(profiling *bool, profilingDir *string, version string) {

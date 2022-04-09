@@ -23,9 +23,12 @@ package routing
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
@@ -35,6 +38,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
@@ -85,6 +89,8 @@ type ServerData struct {
 	Profiling    *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
 	Plugins      plugin.Plugins
 	TrafficVault trafficvault.TrafficVault
+	SOAConfig    config.SoaConfig
+	Mux          *http.ServeMux
 }
 
 // CompiledRoute ...
@@ -226,6 +232,7 @@ func Handler(
 	getReqID func() uint64,
 	plugins plugin.Plugins,
 	tv trafficvault.TrafficVault,
+	soaConfig config.SoaConfig,
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
@@ -280,8 +287,70 @@ func Handler(
 		h.ServeHTTP(w, r)
 		return
 	}
+	var soaHandled bool
+	for _, soaRoute := range soaConfig.Routes {
+		for _, host := range soaRoute.Hosts {
+			if soaRoute.Path == r.URL.Path {
+				soaHandled = true
+				rp := httputil.NewSingleHostReverseProxy(&url.URL{
+					Scheme:      "https",
+					Opaque:      "",
+					User:        nil,
+					Host:        host,
+					Path:        "",
+					RawPath:     "",
+					ForceQuery:  false,
+					RawQuery:    "",
+					Fragment:    "",
+					RawFragment: "",
+				})
+				rp.Transport = &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				}
+				routeCtx := context.WithValue(ctx, api.DBContextKey, db)
+				routeCtx = context.WithValue(routeCtx, api.PathParamsKey, map[string]string{})
+				r = r.WithContext(routeCtx)
+				r.Header.Add(middleware.RouteID, strconv.Itoa(123456))
+				userErr, sysErr, code := HandleSoaRoute(cfg.Secrets[0], w, r)
+				if userErr != nil || sysErr != nil {
+					w.WriteHeader(code)
+					api.HandleErr(w, r, nil, code, userErr, sysErr)
+					return
+				}
+				rp.ServeHTTP(w, r)
+				return
+			}
+		}
+	}
+	if !soaHandled {
+		catchall.ServeHTTP(w, r)
+	}
+}
 
-	catchall.ServeHTTP(w, r)
+func HandleSoaRoute(secret string, w http.ResponseWriter, r *http.Request) (error, error, int) {
+	var userErr, sysErr error
+	var errCode int
+	var user auth.CurrentUser
+	var inf *api.APIInfo
+
+	user, userErr, sysErr, errCode = api.GetUserFromReq(w, r, secret)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+	if user.PrivLevel < auth.PrivLevelReadOnly {
+		return errors.New("forbidden"), nil, http.StatusForbidden
+	}
+	api.AddUserToReq(r, user)
+
+	var params []string
+
+	inf, userErr, sysErr, errCode = api.NewInfo(r, params, nil)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+	_ = inf.Tx.Tx
+	defer inf.Close()
+	return nil, nil, http.StatusOK
 }
 
 // IsRequestAPIAndUnknownVersion returns true if the request starts with `/api` and is a version not in the list of versions.
@@ -335,10 +404,36 @@ func RegisterRoutes(d ServerData) error {
 
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, d.TrafficVault, w, r)
+	d.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, d.TrafficVault, d.SOAConfig, w, r)
 	})
 	return nil
+}
+
+func ServeSoaRoutes(d ServerData) {
+	for _, soaRoute := range d.SOAConfig.Routes {
+		for _, host := range soaRoute.Hosts {
+			d.Mux = http.NewServeMux()
+			d.Mux.HandleFunc(soaRoute.Path, func(w http.ResponseWriter, r *http.Request) {
+				rp := httputil.NewSingleHostReverseProxy(&url.URL{
+					Scheme:      "https",
+					Opaque:      "",
+					User:        nil,
+					Host:        host,
+					Path:        "",
+					RawPath:     "",
+					ForceQuery:  false,
+					RawQuery:    "",
+					Fragment:    "",
+					RawFragment: "",
+				})
+				rp.Transport = &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				}
+				rp.ServeHTTP(w, r)
+			})
+		}
+	}
 }
 
 // nextReqIDGetter returns a function for getting incrementing identifiers. The returned func is safe for calling with multiple goroutines. Note the returned identifiers will not be unique after the max uint64 value.
