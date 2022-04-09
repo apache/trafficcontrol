@@ -36,3 +36,8 @@ runs:
   steps:
     - run: ${{ github.action_path }}/entrypoint.sh
       shell: bash
+      env:
+        INPUT_SMTP_USER: ${{ inputs.smtp_user }}
+        INPUT_SMTP_PORT: ${{ inputs.smtp_port }}
+        INPUT_SMTP_ADDRESS: ${{ inputs.smtp_address }}
+        INPUT_SMTP_PASSWORD: ${{ inputs.smtp_password }}
