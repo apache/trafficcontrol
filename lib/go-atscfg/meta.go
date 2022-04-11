@@ -452,6 +452,7 @@ func requiredFiles9() []string {
 		"storage.config",
 		"volume.config",
 		"strategies.yaml",
+		"ssl_multicert.config",
 	}
 }
 

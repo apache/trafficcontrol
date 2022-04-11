@@ -21,6 +21,7 @@ package t3cutil
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html"
@@ -33,13 +34,14 @@ import (
 )
 
 type ATSConfigFile struct {
-	Name        string   `json:"name"`
-	Path        string   `json:"path"`
-	ContentType string   `json:"content_type"`
-	LineComment string   `json:"line_comment"`
-	Secure      bool     `json:"secure"`
-	Text        string   `json:"text"`
-	Warnings    []string `json:"warnings"`
+	Name        string          `json:"name"`
+	Path        string          `json:"path"`
+	ContentType string          `json:"content_type"`
+	LineComment string          `json:"line_comment"`
+	Secure      bool            `json:"secure"`
+	Text        string          `json:"text"`
+	MetaData    json.RawMessage `json:"metadata"`
+	Warnings    []string        `json:"warnings"`
 }
 
 // ATSConfigFiles implements sort.Interface and sorts by the Location and then FileNameOnDisk, i.e. the full file path.

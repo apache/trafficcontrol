@@ -87,6 +87,8 @@ func generate(cfg config.Cfg, genInf config.GenInf) ([]t3cutil.ATSConfigFile, er
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
 	args = append(args, "--use-strategies="+cfg.UseStrategies.String())
 
+	log.Warnf("DEBUG e2e genInf.HasClientCerts %v\n", genInf.HasClientCerts)
+
 	if genInf.HasClientCerts {
 		args = append(args, "--extra-certificates="+makeGenerateClientCertsArgVal(genInf.CACertPath))
 
@@ -137,8 +139,20 @@ func makeGenerateClientCertsArgVal(caCertPath string) string {
 	// TODO add support for other directories
 	caCertFile := filepath.Base(caCertPath)
 
-	return util.E2ESSLPathClientBase + `.cert,` + util.E2ESSLPathBase + `.key,` + caCertFile +
-		`;` + util.E2ESSLPathServerBase + `.cert,` + util.E2ESSLPathBase + `.key,` + caCertFile
+	clientCert := []string{
+		util.E2ESSLPathClientBase + `.cert`,
+		util.E2ESSLPathBase + `.key`,
+		caCertFile,
+	}
+	clientCertStr := strings.Join(clientCert, ",")
+
+	extraCerts := []string{
+		clientCertStr,
+	}
+
+	extraCertsStr := strings.Join(extraCerts, ";")
+
+	return extraCertsStr
 }
 
 // preprocess takes the to Data from 't3c-request --get-data=config' and the generated files from 't3c-generate', passes them to `t3c-preprocess`, and returns the result.

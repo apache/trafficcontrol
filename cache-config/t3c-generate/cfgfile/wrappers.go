@@ -251,8 +251,24 @@ func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentT
 }
 
 func MakeSSLMultiCertDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
-	opts := &atscfg.SSLMultiCertDotConfigOpts{HdrComment: hdrCommentTxt, Certificates: cfg.ExtraCertificates}
-	return atscfg.MakeSSLMultiCertDotConfig(toData.Server, toData.DeliveryServices, opts)
+	return atscfg.MakeSSLMultiCertDotConfig(
+		toData.Server,
+		toData.DeliveryServices,
+		toData.DeliveryServiceServers,
+		toData.DeliveryServiceRegexes,
+		toData.CDN,
+		toData.Topologies,
+		toData.CacheGroups,
+		toData.ServerCapabilities,
+		toData.DSRequiredCapabilities,
+		&atscfg.SSLMultiCertDotConfigOpts{
+			HdrComment:          hdrCommentTxt,
+			Certificates:        cfg.ExtraCertificates,
+			InternalHTTPS:       cfg.InternalHTTPS,
+			E2ESSLCAPath:        cfg.ServerCAPath,
+			E2ESSLServerKeyPath: cfg.ClientCertKeyPath,
+		},
+	)
 }
 
 func MakeStorageDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {

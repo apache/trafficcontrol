@@ -31,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // GetAllConfigs gets all config files for cfg.CacheHostName.
@@ -51,19 +52,21 @@ func GetAllConfigs(
 	genTime := time.Now()
 	hdrCommentTxt := makeHeaderComment(*toData.Server.HostName, cfg.AppVersion(), toData.TrafficOpsURL, toData.TrafficOpsAddresses, genTime)
 
-	hasSSLMultiCertConfig := false
 	configs := []t3cutil.ATSConfigFile{}
 	for _, fi := range configFiles {
 		if cfg.RevalOnly && fi.Name != atscfg.RegexRevalidateFileName {
 			continue
 		}
-		txt, contentType, secure, lineComment, warnings, err := GetConfigFile(toData, fi, hdrCommentTxt, cfg)
+		txt, contentType, secure, lineComment, metaData, warnings, err := GetConfigFile(toData, fi, hdrCommentTxt, cfg)
 		if err != nil {
 			return nil, errors.New("getting config file '" + fi.Name + "': " + err.Error())
 		}
-		if fi.Name == atscfg.SSLMultiCertConfigFileName {
-			hasSSLMultiCertConfig = true
+
+		metaDataBts, err := json.Marshal(metaData)
+		if err != nil {
+			return nil, errors.New("marshalling config file '" + fi.Name + "' metadata: " + err.Error())
 		}
+
 		configs = append(configs, t3cutil.ATSConfigFile{
 			Name:        fi.Name,
 			Path:        fi.Path,
@@ -71,11 +74,18 @@ func GetAllConfigs(
 			Secure:      secure,
 			ContentType: contentType,
 			LineComment: lineComment,
+			MetaData:    metaDataBts,
 			Warnings:    warnings,
 		})
 	}
 
-	if hasSSLMultiCertConfig {
+	// TODO currently "EDGE" type servers accept client requests, and "MID" don't.
+	//      But in the future, Topologies shouldn't care about types, and this
+	//      should have the logic for which DSes need which Certs for this Server
+	//      (or probably, move that logic to lib/go-atscfg/meta.go)
+	needsCertsForClients := tc.CacheType(toData.Server.Type) == tc.CacheTypeEdge
+
+	if needsCertsForClients {
 		sslConfigs, err := GetSSLCertsAndKeyFiles(toData)
 		if err != nil {
 			return nil, errors.New("getting ssl key and cert config files: " + err.Error())

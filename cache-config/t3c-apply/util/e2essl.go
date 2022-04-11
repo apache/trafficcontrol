@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -31,7 +32,9 @@ import (
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 const E2ESSLCADestPathCert = "e2e-ssl-ca.cert"
@@ -48,16 +51,14 @@ const e2eSSLCertLifetime = time.Hour * 24 * 7
 // e2eSSLCertRefreshAge is the age to refresh certificates after. TODO make configurable.
 const e2eSSLCertRefreshAge = time.Hour * 24
 
-// E2ESSLKeysExist returns nil if the E2E SSL keys exist, or an error if they don't exist or we were unable to determine.
-func E2ESSLKeysExist(certDir string) error {
+// E2ESSLClientCertExists returns nil if the E2E SSL client cert and key exists, or an error if they don't exist or we were unable to determine.
+func E2ESSLClientCertExists(certDir string) error {
 	// TODO add verifying the files are actually keys?
 	// That would probably be easiest to do by externally calling openssl (rather than Go parsing).
 	files := []string{
 		filepath.Join(certDir, E2ESSLPathBase+".key"),
 		// filepath.Join(certDir, E2ESSLPathClientBase+".csr"),
 		filepath.Join(certDir, E2ESSLPathClientBase+".cert"),
-		// filepath.Join(certDir, E2ESSLPathServerBase+".csr"),
-		filepath.Join(certDir, E2ESSLPathServerBase+".cert"),
 	}
 	for _, file := range files {
 		if _, err := os.Stat(file); os.IsNotExist(err) {
@@ -73,16 +74,20 @@ func E2ESSLKeysExist(certDir string) error {
 	return nil
 }
 
-func E2ESSLGenerateKeys(certDir string, caKeyPath string, caCertPath string) error {
+// E2ESSLGenerateClientCert generates the client cert and key.
+// Note this key is also used for E2ESSL server certs.
+func E2ESSLGenerateClientCert(certDir string, caKeyPath string, caCertPath string) error {
 	clientKey := filepath.Join(certDir, E2ESSLPathBase+".key")
 	clientCSR := filepath.Join(certDir, E2ESSLPathClientBase+".csr")
 	clientCert := filepath.Join(certDir, E2ESSLPathClientBase+".cert")
-	serverCSR := filepath.Join(certDir, E2ESSLPathServerBase+".csr")
-	serverCert := filepath.Join(certDir, E2ESSLPathServerBase+".cert")
 
 	// client cert private key
 	if stdOut, stdErr, code := t3cutil.Do("openssl", "ecparam", "-name", "secp256r1", "-genkey", "-noout", "-out", clientKey); code != 0 {
 		return fmt.Errorf("generating client private key returned code '%v' stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+	}
+
+	if err := E2ESetFileOwnerAndMode(clientKey); err != nil {
+		return fmt.Errorf("setting client private key '%v' owner and mode: %v", clientKey, err)
 	}
 
 	// TODO only get once for the app. Is it needed anywhere else?
@@ -92,27 +97,66 @@ func E2ESSLGenerateKeys(certDir string, caKeyPath string, caCertPath string) err
 		return errors.New("getting hostname: " + err.Error())
 	}
 
-	if err := E2ESSLGenerateCert(caCertPath, caKeyPath, clientKey, clientCSR, clientCert, hostnameFQDN); err != nil {
+	certCN := hostnameFQDN
+	certAltNames := []string{}
+
+	if err := E2ESSLGenerateCert(caCertPath, caKeyPath, clientKey, clientCSR, clientCert, certCN, certAltNames); err != nil {
 		return errors.New("generating client cert: " + err.Error())
-	}
-	if err := E2ESSLGenerateCert(caCertPath, caKeyPath, clientKey, serverCSR, serverCert, "*"); err != nil {
-		return errors.New("generating server cert: " + err.Error())
 	}
 	return nil
 }
 
-func E2ESSLGenerateCert(caCertPath string, caKeyPath string, clientKeyPath string, csrPath string, certPath string, certCN string) error {
+func E2ESSLGenerateCert(caCertPath string, caKeyPath string, clientKeyPath string, csrPath string, certPath string, certCN string, altNames []string) error {
 	certLifetimeDaysStr := strconv.Itoa(int(e2eSSLCertLifetime / time.Hour / 24))
 
 	log.Infof("E2ESSLGenerateCert calling -days %v\n", certLifetimeDaysStr)
 
-	if stdOut, stdErr, code := t3cutil.Do("openssl", "req", "-new", "-sha256", "-key", clientKeyPath, "-subj", "/C=US/ST=CO/O=ApacheTrafficControl/CN="+certCN, "-out", csrPath); code != 0 {
+	csrConfPath := csrPath + ".conf"
+	if err := E2ESSLWriteCSRConf(csrConfPath, certCN, altNames); err != nil {
+		return fmt.Errorf("writing csr conf '%v': %v", csrConfPath, err)
+	}
+
+	if stdOut, stdErr, code := t3cutil.Do("openssl", "req", "-new", "-sha256", "-key", clientKeyPath, "-config", csrConfPath, "-out", csrPath); code != 0 {
 		return fmt.Errorf("generating csr returned code '%v' stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
-	if stdOut, stdErr, code := t3cutil.Do("openssl", "x509", "-req", "-in", csrPath, "-CA", caCertPath, "-CAkey", caKeyPath, "-CAcreateserial", "-out", certPath, "-days", certLifetimeDaysStr, "-sha256"); code != 0 {
+	if stdOut, stdErr, code := t3cutil.Do("openssl", "x509", "-req", "-in", csrPath, "-CA", caCertPath, "-CAkey", caKeyPath, "-CAcreateserial", "-out", certPath, "-days", certLifetimeDaysStr, "-sha256", "-extensions", "v3_req", "-extfile", csrConfPath); code != 0 {
 		return fmt.Errorf("generating certificate returned code '%v' stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
-	return nil
+
+	return E2ESetFileOwnerAndMode(certPath)
+}
+
+func E2ESSLWriteCSRConf(csrConfPath string, certCN string, altNames []string) error {
+	if len(altNames) == 0 {
+		altNames = append(altNames, certCN)
+	}
+	altNamesEntries := []string{}
+	for i, name := range altNames {
+		altNamesEntries = append(altNamesEntries, "DNS."+strconv.Itoa(i)+" = "+name)
+	}
+	altNamesTxt := strings.Join(altNamesEntries, "\n")
+	conf := `
+[req]
+distinguished_name = dn
+req_extensions = v3_req
+prompt = no
+
+[ dn ]
+C=US
+ST=CO
+O=ApacheTrafficControl
+CN = ` + certCN + `
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = critical,nonRepudiation,digitalSignature,keyEncipherment
+extendedKeyUsage=critical,serverAuth,clientAuth
+subjectAltName = @alt_names
+
+[ alt_names ]
+` + altNamesTxt + `
+`
+	return e2eWriteAtomic(csrConfPath, []byte(conf))
 }
 
 // TODO roll client key
@@ -121,20 +165,23 @@ func E2ESSLGenerateCert(caCertPath string, caKeyPath string, clientKeyPath strin
 // TODO add sha512sum, openssl to RPM dependencies
 // TODO refactor to not log. This should act like a library
 
-// E2ESSLRefreshCerts generates new certificates if they're about to expire.
+// E2ESSLRefreshClientCert generates new certificates if they're about to expire.
 // The mustRefresh parameter forces new generation, regardless of expiration. This is most often used when the Certificate Authority has changed.
-func E2ESSLRefreshCerts(certDir string, caKeyPath string, caCertPath string, mustRefresh bool) error {
+func E2ESSLRefreshClientCert(certDir string, caKeyPath string, caCertPath string, mustRefresh bool) error {
 	clientKey := filepath.Join(certDir, E2ESSLPathBase+".key")
 	clientCSR := filepath.Join(certDir, E2ESSLPathClientBase+".csr")
-	serverCSR := filepath.Join(certDir, E2ESSLPathServerBase+".csr")
 	clientCert := filepath.Join(certDir, E2ESSLPathClientBase+".cert")
-	serverCert := filepath.Join(certDir, E2ESSLPathServerBase+".cert")
 
-	if err := E2ESSLRefreshCert(caKeyPath, caCertPath, mustRefresh, clientKey, clientCert, clientCSR); err != nil {
-		return errors.New("refreshing client cert: " + err.Error())
+	hostnameFQDN, err := GetHostnameFQDN()
+	if err != nil {
+		return errors.New("getting hostname: " + err.Error())
 	}
-	if err := E2ESSLRefreshCert(caKeyPath, caCertPath, mustRefresh, clientKey, serverCert, serverCSR); err != nil {
-		return errors.New("refreshing server cert: " + err.Error())
+
+	certCN := hostnameFQDN
+	certAltNames := []string{}
+
+	if err := E2ESSLRefreshCert(caKeyPath, caCertPath, mustRefresh, clientKey, clientCert, clientCSR, certCN, certAltNames); err != nil {
+		return errors.New("refreshing client cert: " + err.Error())
 	}
 	return nil
 }
@@ -191,7 +238,7 @@ func e2eFileChanged(path string) (bool, error) {
 	return changed, nil
 }
 
-func E2ESSLRefreshCert(caKeyPath string, caCertPath string, mustRefresh bool, keyPath string, certPath string, csrPath string) error {
+func E2ESSLRefreshCert(caKeyPath string, caCertPath string, mustRefresh bool, keyPath string, certPath string, csrPath string, certCN string, certAltNames []string) error {
 	if !mustRefresh {
 		expiration, err := GetCertExpiration(certPath)
 		if err != nil {
@@ -205,11 +252,7 @@ func E2ESSLRefreshCert(caKeyPath string, caCertPath string, mustRefresh bool, ke
 		}
 	}
 	if mustRefresh {
-		certCN, err := GetCertCN(certPath)
-		if err != nil {
-			return errors.New("getting cert '" + certPath + "' CN: " + err.Error())
-		}
-		if err := E2ESSLGenerateCert(caCertPath, caKeyPath, keyPath, csrPath, certPath, certCN); err != nil {
+		if err := E2ESSLGenerateCert(caCertPath, caKeyPath, keyPath, csrPath, certPath, certCN, certAltNames); err != nil {
 			return errors.New("generating cert: " + err.Error())
 		}
 	}
@@ -256,7 +299,7 @@ func GetCertCN(certPath string) (string, error) {
 		}
 	}
 	if cn == "" {
-		cn = "*" // if the cert had no CN, replace with a wildcard. TODO warn?
+		return "", fmt.Errorf("Certificate '" + certPath + "' returned empty CN!")
 	}
 	return cn, nil
 }
@@ -269,19 +312,22 @@ func GetHostnameFQDN() (string, error) {
 	return strings.TrimSpace(string(stdOut)), nil
 }
 
-func E2ESSLGenerateKeysIfNotExist(certDir string, caKeyPath string, caCertPath string, e2eCACertDestPath string) error {
+// E2ESSLGenerateOrRefreshClientCert creates the client cert and key if they don't exist,
+// or refreshes them if they do.
+// Note this key is also used for E2E server certs.
+func E2ESSLGenerateOrRefreshClientCert(certDir string, caKeyPath string, caCertPath string, e2eCACertDestPath string) error {
 	caIsNew, err := E2ECheckAndHandleNewCA(caCertPath, caKeyPath, e2eCACertDestPath)
 	if err != nil {
 		return errors.New("checking and refreshing new CA: " + err.Error())
 	}
 	mustRefresh := caIsNew // if the CA is new, we must regenerate certificates
 
-	if err := E2ESSLKeysExist(certDir); err == nil {
-		return E2ESSLRefreshCerts(certDir, caKeyPath, caCertPath, mustRefresh)
+	if err := E2ESSLClientCertExists(certDir); err == nil {
+		return E2ESSLRefreshClientCert(certDir, caKeyPath, caCertPath, mustRefresh)
 	} else if !os.IsNotExist(err) {
 		return errors.New("checking if keys exist: " + err.Error())
 	}
-	if err := E2ESSLGenerateKeys(certDir, caKeyPath, caCertPath); err != nil {
+	if err := E2ESSLGenerateClientCert(certDir, caKeyPath, caCertPath); err != nil {
 		return errors.New("generating keys: " + err.Error())
 	}
 	return nil
@@ -327,20 +373,6 @@ func E2ECheckAndHandleNewCA(caPath string, caKeyPath string, caDestPath string) 
 
 	changed := certChanged || keyChanged
 
-	if !changed {
-		log.Infoln("E2ECheckAndHandleNewCA: ca and key are unchanged")
-		return false, nil
-	}
-
-	log.Infoln("E2ECheckAndHandleNewCA: ca or key changed, rewriting ca")
-
-	// the CA changed, so we need to
-	// 1. copy the ca.new to ca.old
-	// 2. copy the ca to ca.new
-	// 3. copy the cakey.new to cakey.old
-	// 4. copy the cakey to cakey.new
-	// 5. cat ca.new ca.old > etc/trafficserver/ca.cert
-
 	// TODO don't read twice (the fileChanged func probably also loads the file)?
 	// it doesn't really matter, the performance here is negligible.
 	newCA, err := ioutil.ReadFile(caPath)
@@ -357,6 +389,39 @@ func E2ECheckAndHandleNewCA(caPath string, caKeyPath string, caDestPath string) 
 			return false, errors.New("reading previous CA '" + E2ESSLNewCAPath + "': " + err.Error())
 		}
 	}
+
+	if !changed {
+		// even if the ca in etc/trafficcontrol-cache-config is unchanged,
+		// the ca in etc/trafficserver may have been modified or deleted somehow.
+		// Verify it exists, and if not, place it
+
+		_, err := os.Stat(caDestPath)
+		if err != nil && !os.IsNotExist(err) {
+			return false, fmt.Errorf("checking if e2e ca cert '%v' exists: %v", caDestPath, err)
+		}
+		if err == nil {
+			log.Infoln("E2ECheckAndHandleNewCA: ca and key are unchanged")
+			return false, nil
+		}
+
+		log.Infoln("E2ECheckAndHandleNewCA: ca and key are unchanged in t3c lib directory, but changed in ats etc, writing CA to ats etc and will recreate certs")
+
+		oldPlusNew := append(newCA, oldCA...)
+		if err := e2eWriteAtomic(caDestPath, oldPlusNew); err != nil {
+			return false, errors.New("writing concatenated new and old CA '" + caDestPath + "': " + err.Error())
+		}
+
+		return true, nil
+	}
+
+	log.Infoln("E2ECheckAndHandleNewCA: ca or key changed, rewriting ca")
+
+	// the CA changed, so we need to
+	// 1. copy the ca.new to ca.old
+	// 2. copy the ca to ca.new
+	// 3. copy the cakey.new to cakey.old
+	// 4. copy the cakey to cakey.new
+	// 5. cat ca.new ca.old > etc/trafficserver/ca.cert
 
 	newCAKey, err := ioutil.ReadFile(caKeyPath)
 	if err != nil {
@@ -401,12 +466,121 @@ func E2ECheckAndHandleNewCA(caPath string, caKeyPath string, caDestPath string) 
 //
 // This is designed for E2E SSL work, and always writes 0600.
 //
+// After writing, the file's owner is changed to ats.
+//
 func e2eWriteAtomic(path string, bts []byte) error {
 	if err := ioutil.WriteFile(path+".temp", bts, 0600); err != nil {
 		return errors.New("writing temp file '" + path + ".temp" + "': " + err.Error())
 	}
 	if err := os.Rename(path+".temp", path); err != nil {
 		return errors.New("moving temp file to '" + path + "': " + err.Error())
+	}
+
+	return E2ESetFileOwnerAndMode(path)
+}
+
+// E2ESSLGenerateServerCerts generates the End-to-End SSL Server certs, used for
+// internal remap targets to parent caches.
+//
+// If the certs exist, they are refreshed if necessary.
+//
+// Note the key previously generated for client certs is also used for server certs.
+// Note internal sources use a single shared client cert, generated before config and passed to t3c-generate/atscfg.
+//
+// This func called after config generation. t3c-generate/atscfg return metadata about remaps and required server cert paths, which this func will now generate.
+//
+// remapData is the metadata received from ssl_multicert config gen, about remap sources and targets and their required cert paths.
+//
+func E2ESSLGenerateServerCerts(remapData []atscfg.E2ECertMetaData, certDir string, caKeyPath string, caCertPath string, e2eCACertDestPath string) error {
+	remapData = FilterE2EMetaData(remapData)
+	log.Infof("E2ESSL generating %v server certs\n", len(remapData))
+
+	// all certs use a shared key, no reason to make one for each.
+	keyPath := filepath.Join(certDir, E2ESSLPathBase+".key")
+
+	for _, rd := range remapData {
+		certPath := filepath.Join(certDir, rd.CertPath)
+		csrPath := strings.TrimSuffix(certPath, filepath.Ext(certPath)) + ".csr"
+		_, err := os.Stat(certPath)
+		if err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("checking if e2e server cert '%v' exists: %v", certPath, err)
+		}
+		certExists := err == nil
+
+		cnDSName := string(rd.DSName)
+		cnSuffix := ".internal.cdn.comcast.invalid"
+		if len(cnDSName) > (rfc.MaxCertificateCNLen - len(cnSuffix)) {
+			cnDSName = cnDSName[:(rfc.MaxCertificateCNLen-len(cnSuffix)-3)] + "ETC"
+		}
+		certCN := cnDSName + cnSuffix
+		altNames := []string{rd.URI.Hostname()}
+
+		// if the cert exists, check if it needs refreshed
+		if certExists {
+			mustRefresh := false // don't force refresh if it isn't necessary
+			if err := E2ESSLRefreshCert(caKeyPath, caCertPath, mustRefresh, keyPath, certPath, csrPath, certCN, altNames); err != nil {
+				return fmt.Errorf("creating e2e ds '%v' %v server cert '%v': %v", rd.DSName, rd.Type, certPath, err)
+			} else {
+				log.Infof("E2ESSL refreshed ds '" + string(rd.DSName) + "' " + string(rd.Type) + " server cert " + certPath)
+			}
+			continue
+		}
+
+		if err := E2ESSLGenerateCert(caCertPath, caKeyPath, keyPath, csrPath, certPath, certCN, altNames); err != nil {
+			return fmt.Errorf("creating e2e ds '%v' %v server cert '%v': %v", rd.DSName, rd.Type, certPath, err)
+		} else {
+			log.Infof("E2ESSL generated ds '" + string(rd.DSName) + "' " + string(rd.Type) + " server cert " + certPath)
+		}
+	}
+	return nil
+}
+
+// FilterE2EMetaData filters the metadata from atscfg and returns only
+// the DS metadata which need E2E server certs generated.
+func FilterE2EMetaData(mds []atscfg.E2ECertMetaData) []atscfg.E2ECertMetaData {
+	filtered := []atscfg.E2ECertMetaData{}
+	for _, md := range mds {
+		if !md.Internal {
+			continue // non-internal sources (clients) and targets (origins) don't need E2E certs.
+		}
+		if md.Type != atscfg.RemapMapTypeSource {
+			continue // only sources need E2E server certs; targets use a single shared client cert
+		}
+		if md.URI.Scheme != rfc.SchemeHTTPS {
+			continue // http remaps don't need certs
+		}
+		filtered = append(filtered, md)
+	}
+	return filtered
+}
+
+func E2ESetFileOwnerAndMode(filePath string) error {
+	atsUser, err := user.Lookup(config.TrafficServerOwner)
+	if err != nil {
+		// fatal: ATS can't load the file if it doesn't own it
+		return fmt.Errorf("could not lookup the trafficserver, '%s', owner uid: %v", config.TrafficServerOwner, err)
+	}
+	atsUid, err := strconv.Atoi(atsUser.Uid)
+	if err != nil {
+		// fatal: ATS can't load the file if it doesn't own it
+		return fmt.Errorf("got non-integer uid '%v': %v", atsUser.Uid, err)
+	}
+	atsGid, err := strconv.Atoi(atsUser.Gid)
+	if err != nil {
+		// not fatal: ATS will still work if the user is set but not the group
+		log.Errorln("getting ATS user gid: got non-integer '%v', not setting: %v", atsUser.Gid, err)
+		atsGid = -1
+	}
+
+	if err := os.Chown(filePath, atsUid, atsGid); err != nil {
+		// fatal: ATS can't load the file if it doesn't own it
+		return fmt.Errorf("chown ats user for '%v': %v", filePath, err)
+	}
+
+	mode := os.FileMode(0600)
+	if err := os.Chmod(filePath, mode); err != nil {
+		// not fatal: chmod failure isn't good, but ATS will still work
+		log.Errorf("chmod 0600 for '%v': %v", filePath, err)
 	}
 	return nil
 }

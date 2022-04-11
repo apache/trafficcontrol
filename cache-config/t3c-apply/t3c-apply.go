@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	// "encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -136,7 +137,10 @@ func Main() int {
 	e2eSSLCADestDir := filepath.Join(cfg.TsConfigDir, "ssl")
 	e2eCACertDestPath := filepath.Join(e2eSSLCADestDir, e2eSSLCADestFile)
 
-	if _, err := os.Stat(cfg.E2ESSLCACertPath); os.IsNotExist(err) {
+	if !util.MkDirAll(e2eSSLCADestDir, cfg) {
+		// TODO make mkdir return error instead of logging and returning a bool
+		log.Errorf("end-to-end failed to get or create ssl directory, see error log for details")
+	} else if _, err := os.Stat(cfg.E2ESSLCACertPath); os.IsNotExist(err) {
 		log.Errorf("end-to-end ssl certificate authority certificate '%v' does not exist, not creating certificates", cfg.E2ESSLCACertPath)
 	} else if err != nil {
 		log.Errorf("end-to-end ssl certificate authority certificate '%v' error reading file: %v", cfg.E2ESSLCACertPath, err)
@@ -144,7 +148,7 @@ func Main() int {
 		log.Errorf("end-to-end ssl certificate authority key '%v' does not exist, not creating certificates", cfg.E2ESSLCAKeyPath)
 	} else if err != nil {
 		log.Errorf("end-to-end ssl certificate authority key '%v' error reading file: %v", cfg.E2ESSLCACertPath, err)
-	} else if err := util.E2ESSLGenerateKeysIfNotExist(e2eSSLDir, cfg.E2ESSLCAKeyPath, cfg.E2ESSLCACertPath, e2eCACertDestPath); err != nil {
+	} else if err := util.E2ESSLGenerateOrRefreshClientCert(e2eSSLDir, cfg.E2ESSLCAKeyPath, cfg.E2ESSLCACertPath, e2eCACertDestPath); err != nil {
 		log.Errorf("generating end-to-end ssl client certificate: %v", err)
 	} else {
 		log.Errorf("successfully generated end-to-end ssl client certificate " + clientCertBasePath + ".cert")
@@ -253,11 +257,22 @@ func Main() int {
 	}
 
 	log.Debugf("Preparing to fetch the config files for %s, files: %s, syncdsUpdate: %s\n", cfg.CacheHostName, cfg.Files, syncdsUpdate)
-	err = trops.GetConfigFileList(genInf)
+	metaData, err := trops.GetConfigFileList(genInf)
 	if err != nil {
 		log.Errorf("Getting config file list: %s\n", err)
 		return GitCommitAndExit(ExitCodeConfigFilesError, FailureExitMsg, cfg)
 	}
+
+	// debug
+	// debugmdstr, err := json.MarshalIndent(&metaData, "", "  ")
+	// log.Errorf("DEBUG metadata: %+v\n", string(debugmdstr))
+
+	// TODO compare ssl_multicert.config and remap.config metadata, make sure they match
+	e2eMetaData := metaData.SSLMultiCert.E2ECerts
+	if err := util.E2ESSLGenerateServerCerts(e2eMetaData, e2eSSLDir, cfg.E2ESSLCAKeyPath, cfg.E2ESSLCACertPath, e2eCACertDestPath); err != nil {
+		log.Errorf("Generating end-to-end ssl server certificates: %v", err)
+	}
+
 	syncdsUpdate, err = trops.ProcessConfigFiles()
 	if err != nil {
 		log.Errorf("Error while processing config files: %s\n", err.Error())
