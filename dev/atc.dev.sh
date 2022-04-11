@@ -32,9 +32,12 @@ function atc-ready {
 	usage="$(<<-USAGE cat
 		Usage: ${0} [-h] [-w]
 
-		-h, --help  print usage information and exit
-		-w, --wait  wait for ATC to be ready, instead of just checking if it is ready
-		-d, --delivery-service  wait for the ATC delivery service to be ready
+		-h, --help
+		      print usage information and exit
+		-w, --wait
+		      wait for ATC to be ready, instead of just checking if it is ready
+		-d, --delivery-service
+		      wait for the ATC delivery service to be ready
 		USAGE
 	)"
 	if [[ $# -gt 0 ]]; then
