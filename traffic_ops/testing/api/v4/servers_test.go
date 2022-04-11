@@ -1283,9 +1283,6 @@ func UpdateTestServers(t *testing.T) {
 	if *respServer.TypeID != *remoteServer.TypeID {
 		t.Errorf("Type ID is not updated while updating the servers")
 	}
-	if *respServer.UpdPending != *remoteServer.UpdPending {
-		t.Errorf("Updpending is not updated while updating the servers")
-	}
 
 	//Check to verify XMPPID never gets updated
 	remoteServer.XMPPID = &updatedXMPPID

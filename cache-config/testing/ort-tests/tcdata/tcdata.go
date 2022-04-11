@@ -53,6 +53,7 @@ type TrafficControl struct {
 	Divisions                                         []tc.Division                           `json:"divisions"`
 	Federations                                       []tc.CDNFederation                      `json:"federations"`
 	FederationResolvers                               []tc.FederationResolver                 `json:"federation_resolvers"`
+	InvalidationJobs                                  []tc.InvalidationJobInput               `json:"invalidationJobs"`
 	Origins                                           []tc.Origin                             `json:"origins"`
 	Profiles                                          []tc.Profile                            `json:"profiles"`
 	Parameters                                        []tc.Parameter                          `json:"parameters"`
@@ -74,5 +75,4 @@ type TrafficControl struct {
 	SteeringTargets                                   []tc.SteeringTargetNullable             `json:"steeringTargets"`
 	Serverchecks                                      []tc.ServercheckRequestNullable         `json:"serverchecks"`
 	Users                                             []tc.User                               `json:"users"`
-	InvalidationJobs                                  []tc.InvalidationJobInput               `json:"invalidationJobs"`
 }

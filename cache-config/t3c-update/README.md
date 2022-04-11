@@ -53,9 +53,15 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
 
 # OPTIONS
 
--a, -\-set-reval-status
+-q, -\-set-config-apply-time
 
-    [true | false] sets the servers revalidate status (required)
+    [RFC3339Nano Timestamp] sets the server's config apply time.
+    Either this or set-reval-apply-time must be used (Required)
+
+-a, -\-set-reval-apply-time
+
+    [RFC3339Nano Timestamp] sets the server's reval apply time.
+    Either this or set-config-apply-time must be used (Required)
 
 -H, -\-cache-host-name=value
 
@@ -79,10 +85,6 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
 
     Traffic Ops password. Required. May also be set with the
     environment variable TO_PASS
-
--q, -\-set-update-status
-
-    [true | false] sets the servers update status (required)
 
 -s, -\-silent
 
@@ -115,6 +117,18 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
 -V, -\-version
 
     Print the version and exit
+
+-y, -\-set-update-status
+
+    [true or nonexistent] Set the Update Status to false for the server.
+    Compatability requirement until ATC (v7.0+) is deployed 
+    with the timestamp features.
+
+-z, -\-set-reval-status
+
+    [true or nonexistent] Set the Reval Status to false for the server.
+    Compatability requirement until ATC (v7.0+) is deployed 
+    with the timestamp features.
 
 # AUTHORS
 

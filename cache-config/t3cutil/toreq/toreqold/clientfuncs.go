@@ -547,21 +547,21 @@ func (cl *TOClient) GetStatuses() ([]tc.Status, toclientlib.ReqInf, error) {
 }
 
 // GetServerUpdateStatus returns the data, the Traffic Ops address, and any error.
-func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.ServerUpdateStatus, toclientlib.ReqInf, error) {
-	status := tc.ServerUpdateStatus{}
+func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (atscfg.ServerUpdateStatus, toclientlib.ReqInf, error) {
+	status := atscfg.ServerUpdateStatus{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), &status, func(obj interface{}) error {
 		toStatus, toReqInf, err := cl.c.GetServerUpdateStatus(string(cacheHostName))
 		if err != nil {
 			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		status := obj.(*tc.ServerUpdateStatus)
-		*status = toStatus
+		status := obj.(*atscfg.ServerUpdateStatus)
+		*status = serverUpdateStatusToLatest(&toStatus)
 		reqInf = toReqInf
 		return nil
 	})
 	if err != nil {
-		return tc.ServerUpdateStatus{}, reqInf, errors.New("getting server update status: " + err.Error())
+		return atscfg.ServerUpdateStatus{}, reqInf, errors.New("getting server update status: " + err.Error())
 	}
 	return status, reqInf, nil
 }

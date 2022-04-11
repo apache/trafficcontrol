@@ -1041,6 +1041,10 @@ type ServerV40 struct {
 	CommonServerPropertiesV40
 	Interfaces        []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 	StatusLastUpdated *time.Time               `json:"statusLastUpdated" db:"status_last_updated"`
+	ConfigUpdateTime  *time.Time               `json:"configUpdateTime" db:"config_update_time"`
+	ConfigApplyTime   *time.Time               `json:"configApplyTime" db:"config_apply_time"`
+	RevalUpdateTime   *time.Time               `json:"revalUpdateTime" db:"revalidate_update_time"`
+	RevalApplyTime    *time.Time               `json:"revalApplyTime" db:"revalidate_apply_time"`
 }
 
 // ServerV4 is the representation of a Server in the latest minor version of
@@ -1180,6 +1184,46 @@ func (s *ServerV40) ToServerV2FromV4(csp CommonServerProperties) (ServerNullable
 	return legacyServer, nil
 }
 
+// ServerUpdateStatusV4 is the type of each entry in the `response` property of
+// the response from Traffic Ops to GET requests made to its
+// /servers/{{host name}}/update_status in the latest minor API
+// v4.0 endpoint.
+type ServerUpdateStatusV4 ServerUpdateStatusV40
+
+// ServerUpdateStatusV40 is the type of each entry in the `response` property of
+// the response from Traffic Ops to GET requests made to its
+// /servers/{{host name}}/update_status in API v4.0 endpoint.
+type ServerUpdateStatusV40 struct {
+	HostName             string     `json:"host_name"`
+	UpdatePending        bool       `json:"upd_pending"`
+	RevalPending         bool       `json:"reval_pending"`
+	UseRevalPending      bool       `json:"use_reval_pending"`
+	HostId               int        `json:"host_id"`
+	Status               string     `json:"status"`
+	ParentPending        bool       `json:"parent_pending"`
+	ParentRevalPending   bool       `json:"parent_reval_pending"`
+	ConfigUpdateTime     *time.Time `json:"config_update_time"`
+	ConfigApplyTime      *time.Time `json:"config_apply_time"`
+	RevalidateUpdateTime *time.Time `json:"revalidate_update_time"`
+	RevalidateApplyTime  *time.Time `json:"revalidate_apply_time"`
+}
+
+// Downgrade strips the Config and Revalidate timestamps from
+// ServerUpdateStatusV40 to return previous versions of the struct to ensure
+// previous compatibility.
+func (sus ServerUpdateStatusV40) Downgrade() ServerUpdateStatus {
+	return ServerUpdateStatus{
+		HostName:           sus.HostName,
+		UpdatePending:      sus.UpdatePending,
+		RevalPending:       sus.RevalPending,
+		UseRevalPending:    sus.UseRevalPending,
+		HostId:             sus.HostId,
+		Status:             sus.Status,
+		ParentPending:      sus.ParentPending,
+		ParentRevalPending: sus.ParentRevalPending,
+	}
+}
+
 // ServerUpdateStatus is the type of each entry in the `response` property of
 // the response from Traffic Ops to GET requests made to its
 // /servers/{{host name}}/update_status API endpoint.
@@ -1188,6 +1232,9 @@ func (s *ServerV40) ToServerV2FromV4(csp CommonServerProperties) (ServerNullable
 // operations t3c has done/needs to do. For most purposes, using Server
 // structures will be better - especially since the basic principle of this
 // type is predicated on a lie: that server host names are unique.
+//
+// Deprecated: ServerUpdateStatus is for use only in APIs below V4. New code
+// should use ServerUpdateStatusV40 or newer.
 type ServerUpdateStatus struct {
 	HostName           string `json:"host_name"`
 	UpdatePending      bool   `json:"upd_pending"`
@@ -1199,11 +1246,26 @@ type ServerUpdateStatus struct {
 	ParentRevalPending bool   `json:"parent_reval_pending"`
 }
 
+// Upgrade converts the deprecated ServerUpdateStatus to a
+// ServerUpdateStatusV4 struct.
+func (sus ServerUpdateStatus) Upgrade() ServerUpdateStatusV4 {
+	return ServerUpdateStatusV4{
+		HostName:           sus.HostName,
+		UpdatePending:      sus.UpdatePending,
+		RevalPending:       sus.RevalPending,
+		UseRevalPending:    sus.UseRevalPending,
+		HostId:             sus.HostId,
+		Status:             sus.Status,
+		ParentPending:      sus.ParentPending,
+		ParentRevalPending: sus.ParentRevalPending,
+	}
+}
+
 // ServerUpdateStatusResponseV40 is the type of a response from the Traffic
 // Ops API to a request to its /servers/{{host name}}/update_status endpoint
 // in API version 4.0.
 type ServerUpdateStatusResponseV40 struct {
-	Response []ServerUpdateStatus `json:"response"`
+	Response []ServerUpdateStatusV40 `json:"response"`
 	Alerts
 }
 

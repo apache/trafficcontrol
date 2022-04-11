@@ -56,3 +56,8 @@ func dsesToLatest(dses []tc.DeliveryServiceNullableV30) []atscfg.DeliveryService
 	}
 	return atscfg.ToDeliveryServices(newDSes)
 }
+
+func serverUpdateStatusToLatest(status *tc.ServerUpdateStatus) atscfg.ServerUpdateStatus {
+	upgraded := status.Upgrade()
+	return atscfg.ServerUpdateStatus(upgraded)
+}
