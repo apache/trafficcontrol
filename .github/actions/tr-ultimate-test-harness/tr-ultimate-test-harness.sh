@@ -19,63 +19,10 @@
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR;
 set -o xtrace
 set -o errexit -o nounset -o pipefail
-# Constants
-declare -r cookie_name=dev-ciab-cookie
 
 # Get atc-ready function
 source dev/atc.dev.sh
-
 export -f atc-ready
-echo 'Waiting until Traffic Ops is ready to accept requests...'
-if ! timeout 10m bash -c 'atc-ready -w'; then
-	echo 'Traffic Ops was not available within 10 minutes!'
-	trap - ERR
-	echo 'Exiting...'
-	exit 1
-fi
-
-source infrastructure/cdn-in-a-box/traffic_ops/to-access.sh
-
-declare -A service_by_hostname
-service_by_hostname[trafficrouter]=trafficrouter
-service_by_hostname[edge]=t3c
-
-for hostname in trafficrouter edge; do
-	container_id="$(docker-compose ps -q "${service_by_hostname[$hostname]}")"
-	interface="$(<<'JSON' jq
-	{
-		"mtu": 1500,
-		"monitor": true,
-		"ipAddresses": [],
-		"name": "eth0"
-	}
-JSON
-	)"
-	docker_network="$(docker network inspect dev.ciab.test)"
-	for ip_address_field in IPv4Address IPv6Address; do
-		ip_address="$(<<<"$docker_network" jq -r --arg CONTAINER_ID "$container_id" --arg IP_ADDRESS_FIELD "$ip_address_field" '.[0].Containers[$CONTAINER_ID][$IP_ADDRESS_FIELD]')"
-		if [[ "$ip_address" == null ]]; then
-			echo "Could not find ${ip_address_field} for ${hostname} service!"
-			exit 1
-		fi
-		interface="$(<<<"$interface" jq --arg IP_ADDRESS "$ip_address" '.ipAddresses += [{} | .address = $IP_ADDRESS | .serviceAddress = true]')"
-	done
-
-
-	# Get Traffic Router server JSON
-	server="$(to-get "api/$TO_API_VERSION/servers?hostName=${hostname}" | jq '.response[0]')"
-	if [[ -z "$server" ]]; then
-		echo "Could not get JSON for server ${hostname}"
-		exit 1
-	fi
-
-	# Update Traffic Router's interface with its IP addresses
-	server="$(<<<"$server" jq ".interfaces = [${interface}]")"
-	server_id="$(<<<"$server" jq .id)"
-	if ! to-put "api/$TO_API_VERSION/servers/${server_id}" "$server"; then
-		echo "Could not update server ${hostname} with ${server}"
-	fi
-done
 
 # Snapshot
 cdn_id="$(<<<"$server" jq .cdnId)"
