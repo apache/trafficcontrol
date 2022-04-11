@@ -146,6 +146,22 @@ jobs:
           cdn_id="$(<<<"$server" jq .cdnId)"
           to-put "api/$TO_API_VERSION/snapshot?cdnID=${cdn_id}"
 
+      - name: Wait for Traffic Monitor to serve a snapshot
+        run: |
+          echo "Waiting for Traffic Monitor to serve a snapshot..."
+          if ! timeout 10m curl \
+            --retry 99999 \
+            --retry-delay 5 \
+            --show-error \
+            -fIso/dev/null \
+            http://localhost/publish/CrConfig
+          then
+            echo "CrConfig was not available from Traffic Monitor within 10 minutes!"
+            trap - ERR
+            echo 'Exiting...'
+            exit 1
+          fi
+
       - name: Run Traffic Router Ultimate Test Harness
         run: ./.github/actions/tr-ultimate-test-harness/tr-ultimate-test-harness.sh
       - name: Write Dev CDN-in-a-Box logs to files
