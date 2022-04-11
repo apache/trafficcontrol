@@ -80,11 +80,9 @@ jobs:
             ${{ runner.os }}-node-modules-
       - name: Start the Dev CDN in a Box
         run: docker-compose up -d
-      - name: Set interface IP addresses
-        run: |2
+      - name: Wait until Traffic Ops is ready to accept requests
+        run: |
           trap 'echo "Error on line ${LINENO} of setting interface IP addresses"; exit 1' ERR
-          # set -o xtrace
-          # uncomment this line ^ to check interface data
           set -o errexit -o nounset -o pipefail
 
           # Get atc-ready function
@@ -98,6 +96,13 @@ jobs:
             echo 'Exiting...'
             exit 1
           fi
+
+      - name: Set interface IP addresses
+        run: |2
+          trap 'echo "Error on line ${LINENO} of setting interface IP addresses"; exit 1' ERR
+          # set -o xtrace
+          # uncomment this line ^ to check interface data
+          set -o errexit -o nounset -o pipefail
 
           source infrastructure/cdn-in-a-box/traffic_ops/to-access.sh
 
@@ -185,7 +190,7 @@ jobs:
 
       - name: Run Traffic Router Ultimate Test Harness
         run: |
-          trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
+          trap 'echo "Error on line ${LINENO} of running the Trafic Router Ultimate Test Harness"; exit 1' ERR
           set -o errexit -o nounset -o pipefail
 
           http_result=0 dns_result=0
