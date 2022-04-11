@@ -113,9 +113,6 @@ services:
     trafficrouter:
         build:
             context: dev/traffic_router
-            args:
-                - USER=${USER:-atc}
-                - UID=${UID:-1000}
         depends_on:
             - trafficmonitor
         hostname: trafficrouter
@@ -131,7 +128,7 @@ services:
             - 2222:3443
             - 5005:5005
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol
+            - .:/go/src/github.com/apache/trafficcontrol
 networks:
     ciab:
         name: dev.ciab.test
