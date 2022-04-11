@@ -218,8 +218,8 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("expected to get %d server from cdn %s from cachegroup %s in topology %s, got %d servers", expectedLength, cdnName, cacheGroupName, topologyName, len(servers.Response))
 	}
 	server := servers.Response[0]
-	if server.ID == nil || server.CDNID == nil || server.ProfileNames[0] == "" || server.CachegroupID == nil || server.HostName == nil {
-		t.Fatal("Traffic Ops returned a representation for a server with null or undefined ID and/or CDN ID and/or Profile ID and/or Cache Group ID and/or Host Name")
+	if server.ID == nil || server.CDNID == nil || len(server.ProfileNames) == 0 || server.CachegroupID == nil || server.HostName == nil {
+		t.Fatal("Traffic Ops returned a representation for a server with null or undefined ID and/or CDN ID and/or Profile Names and/or Cache Group ID and/or Host Name")
 	}
 
 	_, reqInf, err := TOSession.DeleteServer(*server.ID, client.RequestOptions{})
@@ -617,7 +617,7 @@ func CreateTestServerWithoutProfileID(t *testing.T) {
 	}
 
 	server := resp.Response[0]
-	if server.ProfileNames[0] == "" || server.ID == nil || server.HostName == nil {
+	if len(server.ProfileNames) == 0 || server.ID == nil || server.HostName == nil {
 		t.Fatal("Traffic Ops returned a representation of a server with null or undefined ID and/or Profile and/or Host Name")
 	}
 	originalProfile := server.ProfileNames
@@ -627,7 +627,6 @@ func CreateTestServerWithoutProfileID(t *testing.T) {
 	}
 
 	server.ProfileNames = []string{""}
-	//server.ProfileID = nil
 	_, reqInfo, _ := TOSession.CreateServer(server, client.RequestOptions{})
 	if reqInfo.StatusCode != 400 {
 		t.Fatalf("Expected status code: %v but got: %v", "400", reqInfo.StatusCode)

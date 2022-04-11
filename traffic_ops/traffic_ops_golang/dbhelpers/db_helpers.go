@@ -1789,19 +1789,19 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 	return regionName, true, nil
 }
 
-// GetCommonServerPropertiesFromV4 converts CommonServerPropertiesV40 to CommonServerProperties struct
+// GetCommonServerPropertiesFromV4 converts CommonServerPropertiesV40 to CommonServerProperties struct.
 func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
 	var id int
 	var desc string
 	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (s.ProfileNames)[0])
 	if err != nil {
-		return tc.CommonServerProperties{}, fmt.Errorf("querying profile id and description by profile_name: " + err.Error())
+		return tc.CommonServerProperties{}, fmt.Errorf("querying profile id and description by profile_name: %w", err)
 	}
 	defer log.Close(rows, "closing rows in GetCommonServerPropertiesFromV4")
 
 	for rows.Next() {
 		if err := rows.Scan(&id, &desc); err != nil {
-			return tc.CommonServerProperties{}, fmt.Errorf("scanning profile: " + err.Error())
+			return tc.CommonServerProperties{}, fmt.Errorf("scanning profile: %w", err)
 		}
 	}
 
@@ -1846,43 +1846,43 @@ func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServe
 	}, nil
 }
 
-// UpdateServerProfilesForV4 updates server_profile table via update function for APIv4
-func UpdateServerProfilesForV4(id *int, profile []string, tx *sql.Tx) error {
+// UpdateServerProfilesForV4 updates server_profile table via update function for APIv4.
+func UpdateServerProfilesForV4(id int, profile []string, tx *sql.Tx) error {
 	var profileNames []string
 
 	//Delete existing rows from server_profile to get the priority correct for profile_name changes
-	_, err := tx.Exec("DELETE FROM server_profile WHERE server=$1", *id)
+	_, err := tx.Exec("DELETE FROM server_profile WHERE server=$1", id)
 	if err != nil {
-		return fmt.Errorf("updating server_profile by server id: %v" + strconv.Itoa(*id) + ", error: " + err.Error())
+		return fmt.Errorf("updating server_profile by server id: %d, error: %w", id, err)
 	}
 
 	for i, pName := range profile {
 		query := `INSERT INTO server_profile (server, profile_name, priority) VALUES ($1, $2, $3)`
-		_, err := tx.Exec(query, *id, pName, i)
+		_, err := tx.Exec(query, id, pName, i)
 		if err != nil {
-			return fmt.Errorf("error inserting into server_profile table, %v", err)
+			return fmt.Errorf("error inserting into server_profile table, %w", err)
 		}
 	}
 
-	err = tx.QueryRow("SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server=$1", *id).Scan(pq.Array(&profileNames))
-	if err == sql.ErrNoRows {
-		return fmt.Errorf("selecting server_profile by profile_name: " + err.Error())
+	err = tx.QueryRow("SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server=$1 ORDER BY priority", id).Scan(pq.Array(&profileNames))
+	if err != nil {
+		return fmt.Errorf("selecting server_profile by profile_name: %w", err)
 	}
 	return nil
 }
 
-// UpdateServerProfileTableForV2V3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v2/v3
+// UpdateServerProfileTableForV2V3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v2/v3.
 func UpdateServerProfileTableForV2V3(id *int, newProfile *string, origProfile string, tx *sql.Tx) ([]string, error) {
 	var profileName []string
 	query := `UPDATE server_profile SET profile_name=$1 WHERE server=$2 AND profile_name=$3`
 	_, err := tx.Exec(query, *newProfile, *id, origProfile)
 	if err != nil {
-		return nil, fmt.Errorf("updating server_profile by profile_name: " + err.Error())
+		return nil, fmt.Errorf("updating server_profile by profile_name: %w", err)
 	}
 
 	err = tx.QueryRow("SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server=$1", *id).Scan(pq.Array(&profileName))
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("selecting server_profile by profile_name: " + err.Error())
+		return nil, fmt.Errorf("selecting server_profile by profile_name: %w", err)
 	}
 
 	return profileName, nil

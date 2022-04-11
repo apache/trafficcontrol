@@ -895,7 +895,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 			}
 			v3Server, err := server.ToServerV3FromV4(csp)
 			if err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to V3 format: %v", err))
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to V3 format: %w", err))
 				return
 			}
 			v3Servers = append(v3Servers, v3Server)
@@ -908,7 +908,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	for _, server := range servers {
 		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to query profile: %v", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to query profile: %v", err))
 			return
 		}
 		legacyServer, err := server.ToServerV2FromV4(csp)
@@ -1542,8 +1542,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		if err := dbhelpers.UpdateServerProfilesForV4(server.ID, server.ProfileNames, tx); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		if err := dbhelpers.UpdateServerProfilesForV4(*server.ID, server.ProfileNames, tx); err != nil {
+			userErr, sysErr, errCode := api.ParseDBError(err)
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 	} else if inf.Version.Major >= 3 {
@@ -1566,7 +1567,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.Profile, (original.ProfileNames)[0], tx)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
 			return
 		}
 		if len(profileName) > 1 {
@@ -1591,7 +1592,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(legacyServer.ID, legacyServer.Profile, (original.ProfileNames)[0], tx)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
 			return
 		}
 		if len(profileName) > 1 {
@@ -1795,9 +1796,6 @@ func insertServerProfile(id *int, pName []string, tx *sql.Tx) (error, error, int
 		priority
 	) VALUES 
 	`
-
-	//var priorityArray pq.Int64Array
-	//priorityArray = append(priorityArray, int64(i))
 
 	iSPQueryParts := make([]string, 0, len(pName))
 	iSPQueryValues := make([]interface{}, 0, len(pName))
@@ -2296,7 +2294,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	} else {
 		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to query profile: %v", err))
+			userErr, sysErr, errCode := api.ParseDBError(err)
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
 		serverV2, err := server.ToServerV2FromV4(csp)
