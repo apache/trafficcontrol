@@ -28,7 +28,15 @@ function atc-restart {
 }
 
 function atc-ready {
-	local url="https://localhost:6443/api/4.0/ping";
+	local usage url="https://localhost:6443/api/4.0/ping";
+	usage="$(<<-USAGE cat
+		Usage: ${0} [-h] [-w]
+
+		-h, --help  print usage information and exit
+		-w, --wait  wait for ATC to be ready, instead of just checking if it is ready
+		-d, --delivery-service  wait for the ATC delivery service to be ready
+		USAGE
+	)"
 	if [[ $# -gt 0 ]]; then
 		case "$1" in
 			-w|--wait)
@@ -45,18 +53,10 @@ function atc-ready {
 				done
 				return 0;;
 			-h|--help)
-				echo "Usage: $0 [-h] [-w]";
-				echo "";
-				echo "-h, --help  print usage information and exit";
-				echo "-w, --wait  wait for ATC to be ready, instead of just checking if it is ready";
-				echo "-d, --wait  wait for the ATC delivery service to be ready";
+				echo "$usage";
 				return 0;;
 			*)
-				echo "Usage: $0 [-h] [-w]" >&2;
-				echo "" >&2;
-				echo "-h, --help  print usage information and exit" >&2;
-				echo "-w, --wait  wait for ATC to be ready, instead of just checking if it is ready" >&2;
-				echo "-d, --wait  wait for the ATC delivery service to be ready" >&2;
+				echo "$usage" >&2;
 				return 1;;
 		esac
 	fi
