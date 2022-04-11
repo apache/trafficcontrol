@@ -44,19 +44,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-      - name: Check Go version
-        run: echo "::set-output name=value::$(cat GO_VERSION)"
-        id: go-version
+      - name: Fetch environment variables
+        run: |
+          source dev/atc.dev.sh &&
+          env | grep -e^TO_ -e^UID= >> .env
+      - name: Load environment
+        run: |
+          set -o pipefail &&
+          cat infrastructure/cdn-in-a-box/variables.env .env |
+            sed /^#/d |
+            tee --append "${{ github.env }}"
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: ${{ steps.go-version.outputs.value }}
+          go-version: ${{ env.GO_VERSION }}
       - name: Vendor dependencies
         run: go mod vendor
       - name: Build docker-compose services
         run: |
-          source dev/atc.dev.sh &&
-          docker-compose build --parallel
+          docker-compose build --parallel &&
+          docker-compose pull db
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:

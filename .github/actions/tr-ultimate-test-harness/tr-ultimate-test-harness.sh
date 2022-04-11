@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 # build Docker images faster
-
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR;
 set -o xtrace
 set -o errexit -o nounset -o pipefail
@@ -26,7 +24,7 @@ docker-compose up -d
 # Constants
 declare -r cookie_name=dev-ciab-cookie
 
-# Set TO_USER, TO_PASSWORD, and TO_URL environment variables and get atc-ready function
+# Get atc-ready function
 source dev/atc.dev.sh
 
 export -f atc-ready
@@ -38,9 +36,6 @@ if ! timeout 10m bash -c 'atc-ready -w'; then
 	exit 1
 fi
 
-while IFS= read -r line; do
-	export "$line";
-done < <(<infrastructure/cdn-in-a-box/variables.env sed '/^#/d')
 source infrastructure/cdn-in-a-box/traffic_ops/to-access.sh
 
 # Log in
