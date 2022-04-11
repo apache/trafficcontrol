@@ -36,7 +36,7 @@ function atc-ready {
 					sleep 1;
 				done
 				return 0;;
-			-d|--deliveryservice)
+			-d|--delivery-service)
 				local deliveryservice=cdn.dev-ds.ciab.test
 				until curl -4sfH "Host: ${deliveryservice}" localhost:3080 &&
 								<<<"$(dig +short -4 @localhost -p 3053 "$deliveryservice")" grep -q '^[0-9.]\+$';
