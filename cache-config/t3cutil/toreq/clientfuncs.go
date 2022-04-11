@@ -70,7 +70,7 @@ func (cl *TOClient) GetProfileByName(profileName string, reqHdr http.Header) (tc
 func (cl *TOClient) WriteFsCookie(fileName string) {
 	tmpFileName := fileName + ".tmp"
 	cookie := torequtil.FsCookie{}
-	u, err := url.Parse(cl.c.URL)
+	u, err := url.Parse(cl.URL())
 	if err != nil {
 		log.Warnln("Error parsing Traffic ops URL: ", err)
 		return
