@@ -32,5 +32,12 @@ inputs:
     description: 'The user to authenticate with for the SMTP server.'
     required: false
 runs:
-  using: 'node16'
-  main: 'dist/tpv2-integration-tests.js'
+  using: composite
+  steps:
+    - run: ${{ github.action_path }}/entrypoint.sh
+      shell: bash
+      env:
+        INPUT_SMTP_USER: ${{ inputs.smtp_user }}
+        INPUT_SMTP_PORT: ${{ inputs.smtp_port }}
+        INPUT_SMTP_ADDRESS: ${{ inputs.smtp_address }}
+        INPUT_SMTP_PASSWORD: ${{ inputs.smtp_password }}

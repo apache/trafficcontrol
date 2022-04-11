@@ -89,7 +89,7 @@ jobs:
         id: todb
         uses: ./.github/actions/todb-init
       - name: Run TP
-        uses: ./.github/actions/tp-e2e-tests
+        uses: ./.github/actions/tpv2-integration-tests
         with:
           smtp_address: 172.17.0.1
 
