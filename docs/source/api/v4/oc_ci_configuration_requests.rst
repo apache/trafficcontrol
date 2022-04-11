@@ -25,7 +25,7 @@ Returns the requested updates for :abbr:`CDNi (Content Delivery Network Intercon
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: CDNI-CAPACITY:ADMIN
+:Permissions Required: CDNI-ADMIN:READ
 :Response Type:  Array
 
 Request Structure
