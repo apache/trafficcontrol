@@ -38,10 +38,6 @@ fi
 
 source infrastructure/cdn-in-a-box/traffic_ops/to-access.sh
 
-# Log in
-#login_body="$(<<<{} jq --arg TO_USER "$TO_USER" --arg TO_PASSWORD "$TO_PASSWORD" '.u = $TO_USER | .p = $TO_PASSWORD')"
-#to-post user/login "$login_body"
-
 declare -A service_by_hostname
 service_by_hostname[trafficrouter]=trafficrouter
 service_by_hostname[edge]=t3c
