@@ -1805,21 +1805,6 @@ WHERE server.id = $1;`
 	return nil
 }
 
-// QueueUpdateForServerWithTime sets the config update time for the
-// server to the provided time.
-func QueueUpdateForServerWithTime(tx *sql.Tx, serverID int64, updateTime time.Time) error {
-	query := `
-UPDATE public.server
-SET config_update_time = $1
-WHERE server.id = $2;`
-
-	if _, err := tx.Exec(query, updateTime, serverID); err != nil {
-		return fmt.Errorf("queueing config update for ServerID %d with time %v: %w", serverID, updateTime, err)
-	}
-
-	return nil
-}
-
 // QueueUpdateForServerWithCachegroupCDN sets the config update time
 // for all servers belonging to the specified cachegroup (id) and cdn (id).
 func QueueUpdateForServerWithCachegroupCDN(tx *sql.Tx, cgID int, cdnID int64) ([]tc.CacheName, error) {
@@ -1961,21 +1946,6 @@ WHERE server.id = $1;`
 
 	if _, err := tx.Exec(query, serverID); err != nil {
 		return fmt.Errorf("queueing reval update for ServerID %d: %w", serverID, err)
-	}
-
-	return nil
-}
-
-// QueueRevalForServerWithTime sets the revalidate update time for the
-// server to the provided time.
-func QueueRevalForServerWithTime(tx *sql.Tx, serverID int64, revalTime time.Time) error {
-	query := `
-UPDATE public.server
-SET revalidate_update_time = $1
-WHERE server.id = $2;`
-
-	if _, err := tx.Exec(query, revalTime, serverID); err != nil {
-		return fmt.Errorf("queueing reval update for ServerID %d with time %v: %w", serverID, revalTime, err)
 	}
 
 	return nil
