@@ -13,11 +13,11 @@
 .. limitations under the License.
 ..
 
-.. _to-api-oc-fci-configuration_requests:
+.. _to-api-oc-ci-configuration_requests:
 
-*********************************
-``OC/FCI/configuration/requests``
-*********************************
+********************************
+``OC/CI/configuration/requests``
+********************************
 
 ``GET``
 =======
@@ -40,15 +40,15 @@ Request Structure
 
 Response Structure
 ------------------
-:id:               An integral, unique identifier for the requested configuration updates.
-:ucdn:             The name of the :abbr:`uCDN (Upstream Content Delivery Network)` to which the requested changes apply.
-:data:             An array of generic :abbr:`FCI (Footprint and Capabilities Advertisement Interface)` base objects.
-:host:             The domain to which the requested changes apply.
-:request-type:     A string of the type of configuration update request.
-:async-status-id:  An integral, unique identifier for the associated asynchronous status.
-:capability-type:  A string of the type of base object.
-:capability-value: An array of the value for the base object.
-:footprints:       An array of footprints impacted by this generic base object.
+:id:                     An integral, unique identifier for the requested configuration updates.
+:ucdn:                   The name of the :abbr:`uCDN (Upstream Content Delivery Network)` to which the requested changes apply.
+:data:                   An array of generic :abbr:`FCI (Footprint and Capabilities Advertisement Interface)` base objects.
+:host:                   The domain to which the requested changes apply.
+:requestType:            A string of the type of configuration update request.
+:asyncStatusId:          An integral, unique identifier for the associated asynchronous status.
+:generic-metadata-type:  A string of the type of metadata to follow conforming to :rfc:`8006`.
+:generic-metadata-value: An array of generic metadata value objects conforming to :rfc:`8006` and :abbr:`SVA (Streaming Video Alliance)` specifications.
+:footprints:             An array of footprints impacted by this generic base object.
 
 	.. note:: These are meant to be generic and therefore there is not much information in these documents. For further information please see :rfc:`8006`, :rfc:`8007`, :rfc:`8008`, and the :abbr:`SVA (Streaming Video Alliance)` documents titled `Footprint and Capabilities Interface: Open Caching API`, `Open Caching API Implementation Guidelines`, `Configuration Interface: Part 1 Specification - Overview & Architecture`, `Configuration Interface: Part 2 Specification – CDNi Metadata Model Extensions`, and `Configuration Interface: Part 3 Specification – Publishing Layer APIs`.
 
@@ -89,8 +89,8 @@ Response Structure
 					}
 				],
 				"host": "example.com",
-				"request-type": "hostConfigUpdate",
-				"async-status-id": 0
+				"requestType": "hostConfigUpdate",
+				"asyncStatusId": 0
 			}
 		]
 	}

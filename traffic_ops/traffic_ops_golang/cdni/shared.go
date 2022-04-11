@@ -844,6 +844,6 @@ type ConfigurationUpdateRequest struct {
 	UCDN          string          `json:"ucdn"`
 	Data          json.RawMessage `json:"data"`
 	Host          string          `json:"host"`
-	RequestType   string          `json:"request-type" db:"request_type"`
-	AsyncStatusID int             `json:"async-status-id" db:"async_status_id"`
+	RequestType   string          `json:"requestType" db:"request_type"`
+	AsyncStatusID int             `json:"asyncStatusId" db:"async_status_id"`
 }
