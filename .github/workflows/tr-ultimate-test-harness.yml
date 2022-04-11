@@ -171,6 +171,7 @@ jobs:
         run: go test -c ./traffic_router/ultimate-test-harness
 
       - name: Wait for Delivery Service to become available
+        id: wait-for-ds
         run: |
           trap 'echo "Error on line ${LINENO} of waiting for the Delivery Service to become available"; exit 1' ERR
           set -o errexit -o nounset -o pipefail
@@ -188,26 +189,13 @@ jobs:
               exit 1
           fi
 
-      - name: Run Traffic Router Ultimate Test Harness
-        run: |
-          trap 'echo "Error on line ${LINENO} of running the Trafic Router Ultimate Test Harness"; exit 1' ERR
-          set -o errexit -o nounset -o pipefail
+      - name: Run Traffic Router Ultimate Test Harness HTTP tests
+        run: ./ultimate-test-harness.test -test.v -test.run=^TestHTTPLoad$ -http_requests_threshold=1200
 
-          http_result=0 dns_result=0
-          http_requests_threshold=1200
-          dns_requests_threshold=2500
-          if ! ./ultimate-test-harness.test -test.v -test.run=^TestHTTPLoad$ -http_requests_threshold "$http_requests_threshold"; then
-              http_result=1
-          fi
-          if ! ./ultimate-test-harness.test -test.v -test.run=^TestDNSLoad$ -dns_requests_threshold "$dns_requests_threshold"; then
-              dns_result=1
-          fi
-          if [[ $http_result -eq 0 && $dns_result -eq 0 ]]; then echo
-              echo Tests passed!
-          else
-              echo Tests failed!
-              exit 1
-          fi
+      - name: Run Traffic Router Ultimate Test Harness DNS tests
+        run: ./ultimate-test-harness.test -test.v -test.run=^TestDNSLoad$ -dns_requests_threshold=2500
+        if: ${{ steps.wait-for-ds.outcome == 'success' && always() }}
+
       - name: Write Dev CDN-in-a-Box logs to files
         run: |
           set -o errexit -o nounset
