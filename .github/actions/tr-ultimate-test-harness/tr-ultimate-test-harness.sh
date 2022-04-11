@@ -17,21 +17,7 @@
 # under the License.
 
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR;
-set -o xtrace
 set -o errexit -o nounset -o pipefail
-
-# Get atc-ready function
-source dev/atc.dev.sh
-export -f atc-ready
-
-deliveryservice=cdn.dev-ds.ciab.test
-echo "Waiting for Delivery Service ${deliveryservice} to be available..."
-if ! timeout 10m bash -c 'atc-ready -d'; then
-	echo "Delivery Service ${deliveryservice} was not available within 10 minutes!"
-	trap - ERR
-	echo 'Exiting...'
-	exit 1
-fi
 
 http_result=0 dns_result=0
 

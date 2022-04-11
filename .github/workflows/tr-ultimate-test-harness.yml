@@ -162,6 +162,24 @@ jobs:
             exit 1
           fi
 
+      - name: Wait for Delivery Service to become available
+        run: |
+          trap 'echo "Error on line ${LINENO} of waiting for the Delivery Service to become available"; exit 1' ERR
+          set -o errexit -o nounset -o pipefail
+
+          # Get atc-ready function
+          source dev/atc.dev.sh
+          export -f atc-ready
+
+          deliveryservice=cdn.dev-ds.ciab.test
+          echo "Waiting for Delivery Service ${deliveryservice} to become available..."
+          if ! timeout 10m bash -c 'atc-ready -d'; then
+              echo "Delivery Service ${deliveryservice} was not available within 10 minutes!"
+              trap - ERR
+              echo 'Exiting...'
+              exit 1
+          fi
+
       - name: Run Traffic Router Ultimate Test Harness
         run: ./.github/actions/tr-ultimate-test-harness/tr-ultimate-test-harness.sh
       - name: Write Dev CDN-in-a-Box logs to files
