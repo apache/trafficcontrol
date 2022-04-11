@@ -162,6 +162,9 @@ jobs:
             exit 1
           fi
 
+      - name: Compile the tests
+        run: go test -c ./traffic_router/ultimate-test-harness
+
       - name: Wait for Delivery Service to become available
         run: |
           trap 'echo "Error on line ${LINENO} of waiting for the Delivery Service to become available"; exit 1' ERR

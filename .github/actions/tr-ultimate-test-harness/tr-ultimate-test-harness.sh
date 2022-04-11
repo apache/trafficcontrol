@@ -23,8 +23,6 @@ http_result=0 dns_result=0
 
 http_requests_threshold=1200
 dns_requests_threshold=2500
-# Compile the tests
-go test -c ./traffic_router/ultimate-test-harness
 if ! ./ultimate-test-harness.test -test.v -test.run=^TestHTTPLoad$ -http_requests_threshold "$http_requests_threshold"; then
 	http_result=1
 fi
