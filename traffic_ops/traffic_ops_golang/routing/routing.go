@@ -33,6 +33,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -49,6 +50,21 @@ import (
 
 // RoutePrefix is a prefix that all API routes must match.
 const RoutePrefix = "^api" // TODO config?
+
+var SOAConfig config.SoaConfig
+var Mutex = sync.RWMutex{}
+
+func GetSOAConfig() config.SoaConfig {
+	Mutex.RLock()
+	defer Mutex.RUnlock()
+	return SOAConfig
+}
+
+func SetSOAConfig(soaConfig config.SoaConfig) {
+	Mutex.Lock()
+	defer Mutex.Unlock()
+	SOAConfig = soaConfig
+}
 
 // A Route defines an association with a client request and a handler for that
 // request.
@@ -232,7 +248,6 @@ func Handler(
 	getReqID func() uint64,
 	plugins plugin.Plugins,
 	tv trafficvault.TrafficVault,
-	soaConfig config.SoaConfig,
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
@@ -288,6 +303,7 @@ func Handler(
 		return
 	}
 	var soaHandled bool
+	soaConfig := GetSOAConfig()
 	for _, soaRoute := range soaConfig.Routes {
 		for _, host := range soaRoute.Hosts {
 			if soaRoute.Path == r.URL.Path {
@@ -404,36 +420,11 @@ func RegisterRoutes(d ServerData) error {
 
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
+	SetSOAConfig(d.SOAConfig)
 	d.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, d.TrafficVault, d.SOAConfig, w, r)
+		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, d.TrafficVault, w, r)
 	})
 	return nil
-}
-
-func ServeSoaRoutes(d ServerData) {
-	for _, soaRoute := range d.SOAConfig.Routes {
-		for _, host := range soaRoute.Hosts {
-			d.Mux = http.NewServeMux()
-			d.Mux.HandleFunc(soaRoute.Path, func(w http.ResponseWriter, r *http.Request) {
-				rp := httputil.NewSingleHostReverseProxy(&url.URL{
-					Scheme:      "https",
-					Opaque:      "",
-					User:        nil,
-					Host:        host,
-					Path:        "",
-					RawPath:     "",
-					ForceQuery:  false,
-					RawQuery:    "",
-					Fragment:    "",
-					RawFragment: "",
-				})
-				rp.Transport = &http.Transport{
-					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-				}
-				rp.ServeHTTP(w, r)
-			})
-		}
-	}
 }
 
 // nextReqIDGetter returns a function for getting incrementing identifiers. The returned func is safe for calling with multiple goroutines. Note the returned identifiers will not be unique after the max uint64 value.

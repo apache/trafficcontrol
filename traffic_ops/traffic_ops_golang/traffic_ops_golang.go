@@ -251,7 +251,7 @@ func main() {
 			log.Errorf("could not reload soa config: %v", err)
 		}
 		d.SOAConfig = soaConfig
-		routing.ServeSoaRoutes(d)
+		routing.SetSOAConfig(soaConfig)
 	}
 	signalReloader(unix.SIGHUP, reloadProfilingConfig)
 }
