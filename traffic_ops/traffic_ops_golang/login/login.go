@@ -190,6 +190,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 					Value:    string(jwtSigned),
 					Path:     "/",
 					MaxAge:   httpCookie.MaxAge,
+					Expires:  httpCookie.Expires,
 					HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
 				})
 
