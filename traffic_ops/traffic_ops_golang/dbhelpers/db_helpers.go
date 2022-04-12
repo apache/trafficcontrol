@@ -2055,7 +2055,7 @@ func UpdateServerProfilesForV4(id int, profile []string, tx *sql.Tx) error {
 		}
 	}
 
-	err = tx.QueryRow("SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server=$1 ORDER BY priority", id).Scan(pq.Array(&profileNames))
+	err = tx.QueryRow("SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server=$1 GROUP BY priority", id).Scan(pq.Array(&profileNames))
 	if err != nil {
 		return fmt.Errorf("selecting server_profile by profile_name: %w", err)
 	}
