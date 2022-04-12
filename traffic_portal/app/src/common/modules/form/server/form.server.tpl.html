@@ -112,7 +112,7 @@ under the License.
 
             <label for="profile" ng-class="{'has-error': hasError(serverForm.profile)}">Profile *</label>
             <div ng-class="{'has-error': hasError(serverForm.profile), 'has-feedback': hasError(serverForm.profile)}">
-                <select id="profile" name="profile" class="form-control" ng-model="server.profileNames" multiple ng-options="profile.name as profile.name for profile in profiles" required>
+                <select id="profile" name="profile" class="form-control" ng-model="server.profileNames[0]" ng-options="profile.name as profile.name for profile in profiles" required>
                     <option hidden selected disabled value="">Select...</option>
                 </select>
                 <small class="input-error" ng-show="hasPropertyError(serverForm.profile, 'required')">Required</small>

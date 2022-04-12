@@ -80,6 +80,10 @@ func getTestServers() []ServerAndInterfaces {
 			XMPPPasswd:     util.StrPtr("xmppPasswd"),
 		},
 		StatusLastUpdated: &(time.Time{}),
+		ConfigUpdateTime:  &(time.Time{}),
+		ConfigApplyTime:   &(time.Time{}),
+		RevalUpdateTime:   &(time.Time{}),
+		RevalApplyTime:    &(time.Time{}),
 	}
 
 	mtu := uint64(9500)
@@ -175,7 +179,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
-	cols = append(cols, "statusLastUpdated")
+	cols = append(cols, "status_last_updated", "config_update_time", "config_apply_time", "revalidate_update_time", "revalidate_apply_time")
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -212,12 +216,16 @@ func TestGetServersByCachegroup(t *testing.T) {
 			fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 			*ts.Rack,
 			*ts.RevalPending,
+			*ts.RevalUpdateTime,
+			*ts.RevalApplyTime,
 			*ts.Status,
 			*ts.StatusID,
 			*ts.TCPPort,
 			ts.Type,
 			*ts.TypeID,
 			*ts.UpdPending,
+			*ts.ConfigUpdateTime,
+			*ts.ConfigApplyTime,
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
 			*ts.StatusLastUpdated,
@@ -288,7 +296,7 @@ func TestGetMidServers(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
-	cols = append(cols, "statusLastUpdated")
+	cols = append(cols, "status_last_updated", "config_update_time", "config_apply_time", "revalidate_update_time", "revalidate_apply_time")
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -323,12 +331,16 @@ func TestGetMidServers(t *testing.T) {
 			fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 			*ts.Rack,
 			*ts.RevalPending,
+			*ts.RevalUpdateTime,
+			*ts.RevalApplyTime,
 			*ts.Status,
 			*ts.StatusID,
 			*ts.TCPPort,
 			ts.Type,
 			*ts.TypeID,
 			*ts.UpdPending,
+			*ts.ConfigUpdateTime,
+			*ts.ConfigApplyTime,
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
 			*ts.StatusLastUpdated,
@@ -371,7 +383,7 @@ func TestGetMidServers(t *testing.T) {
 	}
 
 	cols2 := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
-	cols2 = append(cols2, "config_update_time", "config_apply_time", "revalidate_update_time", "revalidate_apply_time", "statusLastUpdated")
+	cols2 = append(cols2, "status_last_updated", "config_update_time", "config_apply_time", "revalidate_update_time", "revalidate_apply_time")
 	rows2 := sqlmock.NewRows(cols2)
 
 	cgs := []tc.CacheGroup{}
@@ -460,18 +472,18 @@ func TestGetMidServers(t *testing.T) {
 		fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 		*ts.Rack,
 		*ts.RevalPending,
+		*ts.RevalUpdateTime,
+		*ts.RevalApplyTime,
 		*ts.Status,
 		*ts.StatusID,
 		*ts.TCPPort,
 		ts.Type,
 		*ts.TypeID,
 		*ts.UpdPending,
+		*ts.ConfigUpdateTime,
+		*ts.ConfigApplyTime,
 		*ts.XMPPID,
 		*ts.XMPPPasswd,
-		ts.ConfigUpdateTime,
-		ts.ConfigApplyTime,
-		ts.RevalUpdateTime,
-		ts.RevalApplyTime,
 		*ts.StatusLastUpdated,
 	)
 

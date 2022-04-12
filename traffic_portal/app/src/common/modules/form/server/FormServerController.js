@@ -22,6 +22,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.IPPattern = serverUtils.IPPattern;
     $scope.IPWithCIDRPattern = serverUtils.IPWithCIDRPattern;
     $scope.IPv4Pattern = serverUtils.IPv4Pattern;
+    $scope.profiles = [];
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
