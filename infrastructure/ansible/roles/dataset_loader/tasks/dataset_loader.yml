@@ -61,6 +61,9 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: update_cdn_out
   failed_when: (update_cdn_out.status == 400 and update_cdn_out.json | to_json | from_json | json_query(error_query) | length != 0) or (update_cdn_out.status > 400 and update_cdn_out.status < 600)
+  no_log: false
+  retries: 10
+  delay: 10
 
 - name: Create additional CDNs having delegations
   uri:
