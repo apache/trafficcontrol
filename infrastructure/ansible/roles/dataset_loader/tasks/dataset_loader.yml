@@ -50,20 +50,17 @@
 
 - name: Update the Primary CDN
   uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/{{ existing_primary_cdn.id }}"
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
     method: PUT
     body: "{{ lookup('template', 'cdn.j2') }}"
   vars:
     name: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].name | default(cdnDelegationPrimary) }}"
-    domainName: "{{ cdnDelegationPrimary }}.{{ (dl_hosts_to | first).split('.')[1:] | join('.') | lower }}"
+    domainName: "{{ cdnDelegationPrimary }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
     dnssecEnabled: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].dnssecEnabled | default(false) | lower }}"
+    cdn_query: "response[?starts_with(domainName,`{{ cdnDelegationPrimary }}`) == `true`].id | [0]"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
-    existing_primary_cdn: "{{ (get_all_cdns.json.response | to_json | lower | from_json) | selectattr('domainname', 'search', ('^'+cdnDelegationPrimary+'\\.')) | list | first }}"
   register: update_cdn_out
   failed_when: (update_cdn_out.status == 400 and update_cdn_out.json | to_json | from_json | json_query(error_query) | length != 0) or (update_cdn_out.status > 400 and update_cdn_out.status < 600)
-  no_log: true
-  retries: 10
-  delay: 10
 
 - name: Create additional CDNs having delegations
   uri:
