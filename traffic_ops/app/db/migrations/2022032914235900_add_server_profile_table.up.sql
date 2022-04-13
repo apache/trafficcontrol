@@ -28,3 +28,11 @@ INSERT into public.server_profile(server, profile_name, priority)
 SELECT s.id, p.name, 0
 FROM public.server AS s
          JOIN public.profile p ON p.id=s.profile;
+
+DROP TRIGGER IF EXISTS before_update_ip_address_trigger on ip_address;
+
+DROP TRIGGER IF EXISTS before_create_ip_address_trigger on ip_address;
+
+DROP TRIGGER IF EXISTS before_update_server_trigger ON server;
+
+DROP TRIGGER IF EXISTS before_create_server_trigger ON server;

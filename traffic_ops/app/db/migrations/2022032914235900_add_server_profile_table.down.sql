@@ -16,3 +16,21 @@
  */
 
 DROP TABLE IF EXISTS public.server_profile;
+
+CREATE TRIGGER before_update_ip_address_trigger
+    BEFORE UPDATE ON ip_address
+    FOR EACH ROW WHEN (NEW.address <> OLD.address)
+    EXECUTE PROCEDURE before_ip_address_table();
+
+CREATE TRIGGER before_create_ip_address_trigger
+    BEFORE INSERT ON ip_address
+    FOR EACH ROW EXECUTE PROCEDURE before_ip_address_table();
+
+CREATE TRIGGER before_update_server_trigger
+    BEFORE UPDATE ON server
+    FOR EACH ROW WHEN (NEW.profile <> OLD.profile)
+    EXECUTE PROCEDURE before_server_table();
+
+CREATE TRIGGER before_create_server_trigger
+    BEFORE INSERT ON server
+    FOR EACH ROW EXECUTE PROCEDURE before_server_table();
