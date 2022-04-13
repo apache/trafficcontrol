@@ -2817,8 +2817,8 @@
                             "serviceAddress": false
                         },
                         {
-                            "address": "128.0.0.13/30",
-                            "gateway": "128.0.0.1",
+                            "address": "127.0.0.13/30",
+                            "gateway": "127.0.0.1",
                             "serviceAddress": true
                         }
                     ],
@@ -3014,8 +3014,8 @@
                             "serviceAddress": false
                         },
                         {
-                            "address": "128.0.0.17/30",
-                            "gateway": "128.0.0.17",
+                            "address": "127.0.0.17/30",
+                            "gateway": "127.0.0.17",
                             "serviceAddress": true
                         }
                     ],
@@ -3352,8 +3352,8 @@
                 {
                     "ipAddresses": [
                         {
-                            "address": "128.0.0.1/30",
-                            "gateway": "128.0.0.1",
+                            "address": "127.0.0.1/30",
+                            "gateway": "127.0.0.1",
                             "serviceAddress": true
                         },
                         {
@@ -4100,8 +4100,8 @@
                             "serviceAddress": false
                         },
                         {
-                            "address": "192.0.3.13/24",
-                            "gateway": "192.0.3.1",
+                            "address": "192.0.2.13/24",
+                            "gateway": "192.0.2.1",
                             "serviceAddress": true
                         }
                     ],
@@ -4947,7 +4947,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": true,
             "status": "REPORTED",
@@ -4996,7 +4996,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -5047,7 +5047,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -5098,7 +5098,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -5146,7 +5146,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
 			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
@@ -5197,7 +5197,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
 			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
 			"revalApplyTime": "1969-12-31T17:00:00-07:00",
@@ -5249,7 +5249,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
 			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
@@ -5302,7 +5302,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
 			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
 			"revalApplyTime": "1969-12-31T17:00:00-07:00",

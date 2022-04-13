@@ -578,7 +578,6 @@ func validateV4(s *tc.ServerV40, tx *sql.Tx) (string, error) {
 	var ipv6 string
 	var serviceInterface string
 	for _, iface := range s.Interfaces {
-
 		ruleName := fmt.Sprintf("interface '%s' ", iface.Name)
 		errs = append(errs, tovalidate.ToErrors(validation.Errors{
 			ruleName + "name":        validation.Validate(iface.Name, validation.Required),
@@ -640,6 +639,7 @@ JOIN profile p on p.Id = s.Profile
 JOIN interface i on i.server = s.ID
 JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
 WHERE ip.service_address = true
+and p.id = $1
 `
 	var rows *sql.Rows
 	var err error
@@ -647,7 +647,11 @@ WHERE ip.service_address = true
 	if s.ID != nil {
 		rows, err = tx.Query(query+" and s.id != $1", *s.ID)
 	} else {
-		rows, err = tx.Query(query)
+		var pid int
+		if err := tx.QueryRow("select id from profile where profile.name=$1", s.ProfileNames[0]).Scan(&pid); err != nil {
+			return "", fmt.Errorf("unable to get profile id for given server's profile name: %v", s.ProfileNames[0])
+		}
+		rows, err = tx.Query(query, pid)
 	}
 	if err != nil {
 		errs = append(errs, errors.New("unable to determine service address uniqueness"))

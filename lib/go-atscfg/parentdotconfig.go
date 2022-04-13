@@ -1918,7 +1918,7 @@ func getProfileParentConfigParams(tcParentConfigParams []tc.Parameter) (map[stri
 func getServerParentConfigParams(server *Server, profileParentConfigParams map[string]map[string]string) map[string]string {
 	// We only need parent.config params, don't need all the params on the server
 	serverParams := map[string]string{}
-	if len(server.ProfileNames) == 0 || server.ProfileNames[0] != "" { // TODO warn/error if false? Servers requires profiles
+	if len(server.ProfileNames) != 0 || server.ProfileNames[0] != "" { // TODO warn/error if false? Servers requires profiles
 		for name, val := range profileParentConfigParams[server.ProfileNames[0]] {
 			if name == ParentConfigParamQStringHandling ||
 				name == ParentConfigParamAlgorithm ||

@@ -2039,7 +2039,11 @@ func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServe
 
 // UpdateServerProfilesForV4 updates server_profile table via update function for APIv4.
 func UpdateServerProfilesForV4(id int, profile []string, tx *sql.Tx) error {
-	var profileNames []string
+	profileNames := make([]string, 0, len(profile))
+	priority := make([]int, 0, len(profile))
+	for i, _ := range profile {
+		priority = append(priority, i)
+	}
 
 	//Delete existing rows from server_profile to get the priority correct for profile_name changes
 	_, err := tx.Exec("DELETE FROM server_profile WHERE server=$1", id)
@@ -2047,17 +2051,22 @@ func UpdateServerProfilesForV4(id int, profile []string, tx *sql.Tx) error {
 		return fmt.Errorf("updating server_profile by server id: %d, error: %w", id, err)
 	}
 
-	for i, pName := range profile {
-		query := `INSERT INTO server_profile (server, profile_name, priority) VALUES ($1, $2, $3)`
-		_, err := tx.Exec(query, id, pName, i)
-		if err != nil {
-			return fmt.Errorf("error inserting into server_profile table, %w", err)
-		}
-	}
-
-	err = tx.QueryRow("SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server=$1 GROUP BY priority", id).Scan(pq.Array(&profileNames))
+	query := `WITH inserted AS (
+		INSERT INTO server_profile
+		SELECT $1, "profile_name", "priority"
+		FROM UNNEST($2::text[], $3::int[]) AS tmp("profile_name", "priority")
+		RETURNING profile_name, priority
+	)
+	SELECT ARRAY_AGG(profile_name)
+	FROM (
+		SELECT profile_name
+		FROM inserted
+		ORDER BY priority ASC
+	) AS returned(profile_name)
+`
+	err = tx.QueryRow(query, id, pq.Array(profile), pq.Array(priority)).Scan(pq.Array(&profileNames))
 	if err != nil {
-		return fmt.Errorf("selecting server_profile by profile_name: %w", err)
+		return fmt.Errorf("failed to insert/read into/from server_profile table, %w", err)
 	}
 	return nil
 }
