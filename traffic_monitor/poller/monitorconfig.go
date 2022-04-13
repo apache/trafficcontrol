@@ -112,6 +112,11 @@ func (p MonitorConfigPoller) Poll() {
 				log.Errorf("MonitorConfigPoller: %s\n %v\n", err, monitorConfig)
 				continue
 			}
+			// poll the CRConfig so that it is synchronized with the TMConfig
+			if _, err := p.Session.CRConfigRaw(p.OpsConfig.CdnName); err != nil {
+				log.Errorf("MonitorConfigPoller: error getting CRConfig: %v", err)
+				continue
+			}
 			p.writeConfig(MonitorCfg{CDN: p.OpsConfig.CdnName, Cfg: *monitorConfig})
 		}
 	}
