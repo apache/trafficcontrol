@@ -304,38 +304,32 @@ func Handler(
 	}
 	var soaHandled bool
 	soaConfig := GetSOAConfig()
-	for _, soaRoute := range soaConfig.Routes {
-		for _, host := range soaRoute.Hosts {
-			if soaRoute.Path == r.URL.Path {
-				soaHandled = true
-				rp := httputil.NewSingleHostReverseProxy(&url.URL{
-					Scheme:      "https",
-					Opaque:      "",
-					User:        nil,
-					Host:        host,
-					Path:        "",
-					RawPath:     "",
-					ForceQuery:  false,
-					RawQuery:    "",
-					Fragment:    "",
-					RawFragment: "",
-				})
-				rp.Transport = &http.Transport{
-					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-				}
-				routeCtx := context.WithValue(ctx, api.DBContextKey, db)
-				routeCtx = context.WithValue(routeCtx, api.PathParamsKey, map[string]string{})
-				r = r.WithContext(routeCtx)
-				r.Header.Add(middleware.RouteID, strconv.Itoa(123456))
-				userErr, sysErr, code := HandleSoaRoute(cfg.Secrets[0], w, r)
-				if userErr != nil || sysErr != nil {
-					w.WriteHeader(code)
-					api.HandleErr(w, r, nil, code, userErr, sysErr)
-					return
-				}
-				rp.ServeHTTP(w, r)
+	for i, soaRoute := range soaConfig.Routes {
+		if soaRoute.Path == r.URL.Path && soaRoute.Method == r.Method {
+			index := soaRoute.Index % len(soaRoute.Hosts)
+			host := soaRoute.Hosts[index]
+			soaRoute.Index++
+			soaConfig.Routes[i] = soaRoute
+			soaHandled = true
+			rp := httputil.NewSingleHostReverseProxy(&url.URL{
+				Host:   host,
+				Scheme: cfg.URL.Scheme,
+			})
+			rp.Transport = &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+			routeCtx := context.WithValue(ctx, api.DBContextKey, db)
+			routeCtx = context.WithValue(routeCtx, api.PathParamsKey, map[string]string{})
+			r = r.WithContext(routeCtx)
+			r.Header.Add(middleware.RouteID, strconv.Itoa(123456))
+			userErr, sysErr, code := HandleSoaRoute(cfg.Secrets[0], w, r)
+			if userErr != nil || sysErr != nil {
+				w.WriteHeader(code)
+				api.HandleErr(w, r, nil, code, userErr, sysErr)
 				return
 			}
+			rp.ServeHTTP(w, r)
+			return
 		}
 	}
 	if !soaHandled {
