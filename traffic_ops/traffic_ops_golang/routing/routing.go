@@ -321,7 +321,7 @@ func Handler(
 			routeCtx := context.WithValue(ctx, api.DBContextKey, db)
 			routeCtx = context.WithValue(routeCtx, api.PathParamsKey, map[string]string{})
 			r = r.WithContext(routeCtx)
-			r.Header.Add(middleware.RouteID, strconv.Itoa(123456))
+			r.Header.Add(middleware.RouteID, strconv.Itoa(soaRoute.ID))
 			userErr, sysErr, code := HandleSoaRoute(cfg.Secrets[0], w, r)
 			if userErr != nil || sysErr != nil {
 				w.WriteHeader(code)

@@ -45,6 +45,7 @@ type SoaRoute struct {
 	Method string   `json:"method"`
 	Hosts  []string `json:"hosts"`
 	Opts   Options  `json:"opts"`
+	ID     int      `json:"route_id"`
 	Index  int
 }
 

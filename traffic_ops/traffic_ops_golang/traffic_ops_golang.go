@@ -226,7 +226,7 @@ func main() {
 			file.Close()
 		}
 
-		if err := http.ListenAndServeTLS("localhost:"+cfg.Port, cfg.CertPath, cfg.KeyPath, mux); err != nil {
+		if err := http.ListenAndServeTLS(server.Addr, cfg.CertPath, cfg.KeyPath, mux); err != nil {
 			log.Errorf("stopping server: %v\n", err)
 			os.Exit(1)
 		}
@@ -249,9 +249,10 @@ func main() {
 		soaConfig, err = setNewSoaConfig(soaConfigFileName)
 		if err != nil {
 			log.Errorf("could not reload soa config: %v", err)
+		} else {
+			d.SOAConfig = soaConfig
+			routing.SetSOAConfig(soaConfig)
 		}
-		d.SOAConfig = soaConfig
-		routing.SetSOAConfig(soaConfig)
 	}
 	signalReloader(unix.SIGHUP, reloadProfilingConfig)
 }
