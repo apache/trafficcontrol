@@ -318,6 +318,10 @@ func Handler(
 			rp.Transport = &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			}
+			rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+				return
+			}
 			routeCtx := context.WithValue(ctx, api.DBContextKey, db)
 			routeCtx = context.WithValue(routeCtx, api.PathParamsKey, map[string]string{})
 			r = r.WithContext(routeCtx)
@@ -328,7 +332,8 @@ func Handler(
 				api.HandleErr(w, r, nil, code, userErr, sysErr)
 				return
 			}
-			rp.ServeHTTP(w, r)
+			backendHandler := middleware.WrapAccessLog(cfg.Secrets[0], rp)
+			backendHandler.ServeHTTP(w, r)
 			return
 		}
 	}
@@ -358,7 +363,6 @@ func HandleSoaRoute(secret string, w http.ResponseWriter, r *http.Request) (erro
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-	_ = inf.Tx.Tx
 	defer inf.Close()
 	return nil, nil, http.StatusOK
 }
