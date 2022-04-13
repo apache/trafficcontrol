@@ -29,8 +29,7 @@ import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 	templateUrl: "./app.component.html",
 })
 export class AppComponent implements OnInit, AfterViewInit {
-	// @ts-ignore
-	@ViewChild("header") private readonly headerRef: TpHeaderComponent;
+	@ViewChild("header") private readonly headerRef!: TpHeaderComponent;
 	/** The app's title */
 	public title = "Traffic Portal";
 
