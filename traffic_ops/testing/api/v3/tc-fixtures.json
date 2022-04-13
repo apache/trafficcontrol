@@ -1546,12 +1546,6 @@
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
             "pattern" : ".*"
-        },
-        {
-            "dsName": "ds1",
-            "typeName": "HOST_REGEXP",
-            "setNumber": 3,
-            "pattern" : ""
         }
     ],
     "deliveryservicesRequiredCapabilities": [
