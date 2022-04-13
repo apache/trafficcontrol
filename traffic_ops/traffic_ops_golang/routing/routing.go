@@ -363,6 +363,8 @@ func HandleBackendRoute(secret string, w http.ResponseWriter, r *http.Request) (
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
+	// Todo: change this to check the actual priv levels
+	// Todo: add permission checks
 	if user.PrivLevel < auth.PrivLevelReadOnly {
 		return errors.New("forbidden"), nil, http.StatusForbidden
 	}
