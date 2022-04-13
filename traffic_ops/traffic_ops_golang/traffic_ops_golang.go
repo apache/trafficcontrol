@@ -65,7 +65,7 @@ func main() {
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path (DEPRECATED: use traffic_vault_backend = riak and traffic_vault_config in cdn.conf instead)")
-	soaConfigFileName := flag.String("soacfg", "", "The soa config file path")
+	backendConfigFileName := flag.String("backendcfg", "", "The backend config file path")
 	flag.Parse()
 
 	if *showVersion {
@@ -166,16 +166,16 @@ func main() {
 		log.Errorln(debugServer.ListenAndServe())
 	}()
 
-	var soaConfig config.SoaConfig
-	if *soaConfigFileName != "" {
-		soaConfig, err = config.LoadSoaConfig(*soaConfigFileName)
+	var backendConfig config.BackendConfig
+	if *backendConfigFileName != "" {
+		backendConfig, err = config.LoadBackendConfig(*backendConfigFileName)
 		if err != nil {
-			log.Errorf("error loading soa config: %v", err)
+			log.Errorf("error loading backend config: %v", err)
 		}
 	}
 
 	mux := http.NewServeMux()
-	d := routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins, TrafficVault: trafficVault, SOAConfig: soaConfig, Mux: mux}
+	d := routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins, TrafficVault: trafficVault, BackendConfig: backendConfig, Mux: mux}
 	if err := routing.RegisterRoutes(d); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		os.Exit(1)
@@ -246,12 +246,12 @@ func main() {
 
 	reloadProfilingConfig := func() {
 		setNewProfilingInfo(*configFileName, &profiling, &profilingLocation, cfg.Version)
-		soaConfig, err = setNewSoaConfig(soaConfigFileName)
+		backendConfig, err = setNewBackendConfig(backendConfigFileName)
 		if err != nil {
-			log.Errorf("could not reload soa config: %v", err)
+			log.Errorf("could not reload backend config: %v", err)
 		} else {
-			d.SOAConfig = soaConfig
-			routing.SetSOAConfig(soaConfig)
+			d.BackendConfig = backendConfig
+			routing.SetBackendConfig(backendConfig)
 		}
 	}
 	signalReloader(unix.SIGHUP, reloadProfilingConfig)
@@ -312,16 +312,16 @@ func setupTrafficVault(riakConfigFileName string, cfg *config.Config) trafficvau
 	return &disabled.Disabled{}
 }
 
-func setNewSoaConfig(soaConfigFileName *string) (config.SoaConfig, error) {
-	if soaConfigFileName == nil {
-		return config.SoaConfig{}, errors.New("no SOA config filename")
+func setNewBackendConfig(backendConfigFileName *string) (config.BackendConfig, error) {
+	if backendConfigFileName == nil {
+		return config.BackendConfig{}, errors.New("no backend config filename")
 	}
-	soaConfig, err := reloadSoaConfig(*soaConfigFileName)
+	backendConfig, err := reloadBackendConfig(*backendConfigFileName)
 	if err != nil {
 		log.Errorf("error reloading config: %v", err)
-		return soaConfig, err
+		return backendConfig, err
 	}
-	return soaConfig, nil
+	return backendConfig, nil
 }
 
 func setNewProfilingInfo(configFileName string, currentProfilingEnabled *bool, currentProfilingLocation *string, version string) {
@@ -381,10 +381,10 @@ func reloadProfilingInfo(configFileName string) (bool, string, error) {
 	return cfg.ProfilingEnabled, profilingLocation, nil
 }
 
-func reloadSoaConfig(soaConfigFileName string) (config.SoaConfig, error) {
-	log.Infoln("reload SOA config")
-	soaConfig, err := config.LoadSoaConfig(soaConfigFileName)
-	return soaConfig, err
+func reloadBackendConfig(backendConfigFileName string) (config.BackendConfig, error) {
+	log.Infoln("reload backend config")
+	backendConfig, err := config.LoadBackendConfig(backendConfigFileName)
+	return backendConfig, err
 }
 
 func continuousProfile(profiling *bool, profilingDir *string, version string) {

@@ -51,19 +51,24 @@ import (
 // RoutePrefix is a prefix that all API routes must match.
 const RoutePrefix = "^api" // TODO config?
 
-var SOAConfig config.SoaConfig
+// BackendConfig stores the current backend config supplied to traffic ops.
+var BackendConfig config.BackendConfig
+
+// Mutex is a mutex for safely reading/ writing to BackendConfig.
 var Mutex = sync.RWMutex{}
 
-func GetSOAConfig() config.SoaConfig {
+// GetBackendConfig returns the current BackendConfig.
+func GetBackendConfig() config.BackendConfig {
 	Mutex.RLock()
 	defer Mutex.RUnlock()
-	return SOAConfig
+	return BackendConfig
 }
 
-func SetSOAConfig(soaConfig config.SoaConfig) {
+// SetBackendConfig sets the BackendConfig to the value supplied.
+func SetBackendConfig(backendConfig config.BackendConfig) {
 	Mutex.Lock()
 	defer Mutex.Unlock()
-	SOAConfig = soaConfig
+	BackendConfig = backendConfig
 }
 
 // A Route defines an association with a client request and a handler for that
@@ -101,12 +106,12 @@ func (r *Route) SetMiddleware(authBase middleware.AuthBase, requestTimeout time.
 // ServerData ...
 type ServerData struct {
 	config.Config
-	DB           *sqlx.DB
-	Profiling    *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
-	Plugins      plugin.Plugins
-	TrafficVault trafficvault.TrafficVault
-	SOAConfig    config.SoaConfig
-	Mux          *http.ServeMux
+	DB            *sqlx.DB
+	Profiling     *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
+	Plugins       plugin.Plugins
+	TrafficVault  trafficvault.TrafficVault
+	BackendConfig config.BackendConfig
+	Mux           *http.ServeMux
 }
 
 // CompiledRoute ...
@@ -302,47 +307,53 @@ func Handler(
 		h.ServeHTTP(w, r)
 		return
 	}
-	var soaHandled bool
-	soaConfig := GetSOAConfig()
-	for i, soaRoute := range soaConfig.Routes {
-		if soaRoute.Path == r.URL.Path && soaRoute.Method == r.Method {
-			index := soaRoute.Index % len(soaRoute.Hosts)
-			host := soaRoute.Hosts[index]
-			soaRoute.Index++
-			soaConfig.Routes[i] = soaRoute
-			soaHandled = true
-			rp := httputil.NewSingleHostReverseProxy(&url.URL{
-				Host:   host,
-				Scheme: cfg.URL.Scheme,
-			})
-			rp.Transport = &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			}
-			rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+	var backendRouteHandled bool
+	backendConfig := GetBackendConfig()
+	for i, backendRoute := range backendConfig.Routes {
+		if backendRoute.Path == r.URL.Path && backendRoute.Method == r.Method {
+			if backendRoute.Opts.Algorithm == "" || backendRoute.Opts.Algorithm == "roundrobin" {
+				index := backendRoute.Index % len(backendRoute.Hosts)
+				host := backendRoute.Hosts[index]
+				backendRoute.Index++
+				backendConfig.Routes[i] = backendRoute
+				backendRouteHandled = true
+				rp := httputil.NewSingleHostReverseProxy(&url.URL{
+					Host:   host,
+					Scheme: cfg.URL.Scheme,
+				})
+				rp.Transport = &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				}
+				rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+					return
+				}
+				routeCtx := context.WithValue(ctx, api.DBContextKey, db)
+				routeCtx = context.WithValue(routeCtx, api.PathParamsKey, map[string]string{})
+				r = r.WithContext(routeCtx)
+				r.Header.Add(middleware.RouteID, strconv.Itoa(backendRoute.ID))
+				userErr, sysErr, code := HandleBackendRoute(cfg.Secrets[0], w, r)
+				if userErr != nil || sysErr != nil {
+					w.WriteHeader(code)
+					api.HandleErr(w, r, nil, code, userErr, sysErr)
+					return
+				}
+				backendHandler := middleware.WrapAccessLog(cfg.Secrets[0], rp)
+				backendHandler.ServeHTTP(w, r)
+				return
+			} else {
+				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("only an algorithm of roundrobin is supported by the backend options currently"), nil)
 				return
 			}
-			routeCtx := context.WithValue(ctx, api.DBContextKey, db)
-			routeCtx = context.WithValue(routeCtx, api.PathParamsKey, map[string]string{})
-			r = r.WithContext(routeCtx)
-			r.Header.Add(middleware.RouteID, strconv.Itoa(soaRoute.ID))
-			userErr, sysErr, code := HandleSoaRoute(cfg.Secrets[0], w, r)
-			if userErr != nil || sysErr != nil {
-				w.WriteHeader(code)
-				api.HandleErr(w, r, nil, code, userErr, sysErr)
-				return
-			}
-			backendHandler := middleware.WrapAccessLog(cfg.Secrets[0], rp)
-			backendHandler.ServeHTTP(w, r)
-			return
 		}
 	}
-	if !soaHandled {
+	if !backendRouteHandled {
 		catchall.ServeHTTP(w, r)
 	}
 }
 
-func HandleSoaRoute(secret string, w http.ResponseWriter, r *http.Request) (error, error, int) {
+// HandleBackendRoute does all the pre processing for the backend routes.
+func HandleBackendRoute(secret string, w http.ResponseWriter, r *http.Request) (error, error, int) {
 	var userErr, sysErr error
 	var errCode int
 	var user auth.CurrentUser
@@ -418,7 +429,7 @@ func RegisterRoutes(d ServerData) error {
 
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
-	SetSOAConfig(d.SOAConfig)
+	SetBackendConfig(d.BackendConfig)
 	d.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, d.TrafficVault, w, r)
 	})

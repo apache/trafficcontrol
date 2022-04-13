@@ -40,7 +40,7 @@ type Options struct {
 	Algorithm string `json:"alg"`
 }
 
-type SoaRoute struct {
+type BackendRoute struct {
 	Path   string   `json:"path"`
 	Method string   `json:"method"`
 	Hosts  []string `json:"hosts"`
@@ -49,8 +49,8 @@ type SoaRoute struct {
 	Index  int
 }
 
-type SoaConfig struct {
-	Routes []SoaRoute `json:"routes"`
+type BackendConfig struct {
+	Routes []BackendRoute `json:"routes"`
 }
 
 // Config reflects the structure of the cdn.conf file
@@ -303,16 +303,16 @@ func (c Config) EventLog() log.LogLocation {
 const BlockStartup = true
 const AllowStartup = false
 
-func LoadSoaConfig(soaConfigPath string) (SoaConfig, error) {
-	confBytes, err := ioutil.ReadFile(soaConfigPath)
+func LoadBackendConfig(backendConfigPath string) (BackendConfig, error) {
+	confBytes, err := ioutil.ReadFile(backendConfigPath)
 	if err != nil {
-		return SoaConfig{}, fmt.Errorf("reading CDN conf '%s': %v", soaConfigPath, err)
+		return BackendConfig{}, fmt.Errorf("reading backend conf '%s': %v", backendConfigPath, err)
 	}
 
-	cfg := SoaConfig{}
+	cfg := BackendConfig{}
 	err = json.Unmarshal(confBytes, &cfg)
 	if err != nil {
-		return SoaConfig{}, fmt.Errorf("unmarshalling '%s': %v", soaConfigPath, err)
+		return BackendConfig{}, fmt.Errorf("unmarshalling '%s': %v", backendConfigPath, err)
 	}
 	return cfg, nil
 }
