@@ -45,20 +45,4 @@ dialog {
 	span {
 		margin-right: 8px;
 	}
-
-	&.success {
-		color: white;
-		background-color: $success;
-	}
-	&.warning {
-		color: white;
-		background-color: $warning;
-	}
-	&.error {
-		background-color: $error;
-		color: white;
-	}
-	&.info {
-		background-color: $theme_tertiary;
-	}
 }

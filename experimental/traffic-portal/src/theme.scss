@@ -12,8 +12,12 @@
 * limitations under the License.
 */
 @use '@angular/material' as mat;
-// Custom Theming for Angular Material
-// For more information: https://material.angular.io/guide/theming
+@use "sass:map";
+
+@import "./app/core/servers/server-details/server-details-theme";
+@import "./app/login/login-theme";
+@import "../node_modules/ag-grid-community/src/styles/ag-grid.scss";
+@import "../node_modules/ag-grid-community/src/styles/ag-theme-material/sass/ag-theme-material-mixin";
 
 @mixin theme-color($config-or-theme) {
 	// Extract the color configuration in case a theme has been passed.
@@ -23,10 +27,16 @@
 	$primary: map-get($config, primary);
 	$accent: map-get($config, accent);
 	$warn: map-get($config, warn);
+	$background: map-get($config, background);
+	$foreground: map-get($config, foreground);
+
+	body {
+		background-color: mat.get-color-from-palette($background, background);
+	}
 
 	.color-primary {
 		// Use mat-color to extract individual colors from a palette.
-		background-color: mat.get-color-from-palette($config);
+		background-color: mat.get-color-from-palette($background, background);
 		color: white;
 		border-color: mat.get-color-from-palette($config, A400);
 	}
@@ -57,6 +67,18 @@
 		background-color: white;
 		color: mat.get-color-from-palette($warn);
 	}
+
+	span.warning {
+		background-color: mat.get-color-from-palette($warn);
+		color: white;
+		&::before {
+			content: " ";
+			font-family: "FontAwesome";
+			color: inherit;
+			padding: 2px 5px;
+		}
+	}
+
 }
 
 @mixin theme-typography($config-or-theme) {
@@ -86,15 +108,59 @@
 	// systems have been explicitly set to `null`.
 	@if $color != null {
 		@include theme-color($color);
+		@include grid-theme($theme);
+		@include login-theme($color);
+		@include server-details-theme($color);
 	}
 	@if $typography != null {
 		@include theme-typography($typography);
 	}
 }
 
-$theme_main: #1565C0;
-$theme_secondary: #C2185B;
-$theme_tertiary: #2E6DA4;
-$error: #E74C3C;
-$warning: #FF9800;
-$success: #1ABB9C;
+@mixin grid-theme($theme) {
+
+	$color: mat.get-color-config($theme);
+	$primary: map-get($color, primary);
+	$accent: map-get($color, accent);
+	$background: map-get($color, background);
+	$foreground: map-get($color, foreground);
+	$ag-grid: map-get($theme, ag-grid);
+
+	.ag-theme-material {
+		@include ag-theme-material((
+			material-primary-color:  mat.get-color-from-palette($primary),
+			material-accent-color: mat.get-color-from-palette($accent),
+			foreground-color: mat.get-color-from-palette($foreground, foreground),
+			background-color: mat.get-color-from-palette($background, background),
+			secondary-foreground-color: mat.get-color-from-palette($foreground, foreground),
+			header-background-color: mat.get-color-from-palette($background, background),
+			row-hover-color: map-get($background, hover),
+			selected-row-background-color: map-get($background, hover),
+			odd-row-background-color: map-get($ag-grid, odd-row-background-color),
+			borders: map-get($ag-grid, borders)
+		));
+	}
+}
+
+@function set-background($theme, $bgcolor) {
+	$color: map.get($theme, color);
+	$bg: map.get($color, background);
+	$bg: map.merge($bg, $bgcolor);
+	$color: map.merge($color, (background: $bg));
+	@return map.merge($theme, (color: $color));
+}
+@function set-foreground($theme, $fgcolor) {
+	$color: map.get($theme, color);
+	$bg: map.get($color, background);
+	$bg: map.merge($bg, $fgcolor);
+	$color: map.merge($color, (background: $bg));
+	@return map.merge($theme, (color: $color));
+}
+@function set-ag-grid($theme, $ag-grid) {
+	@return map.merge($theme, (ag-grid: $ag-grid));
+}
+@function add-extra-colors($theme, $colors) {
+	$color: map.get($theme, color);
+	$color: map.merge($color, $colors);
+	@return map.merge($theme, (color: $color));
+}

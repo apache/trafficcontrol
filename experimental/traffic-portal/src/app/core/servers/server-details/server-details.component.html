@@ -11,130 +11,189 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<tp-header [title]="title"></tp-header>
-<div class="actions-container" *ngIf="!isNew">
-	<button [disabled]="!isCache()" mat-button type="button">Manage Capabilities</button>
-	<button [disabled]="!isCache()" mat-button type="button">Manage Delivery Services</button>
-	<button [disabled]="!isCache()" mat-icon-button type="button" title="queue server updates" *ngIf="!server.updPending"><fa-icon [icon]="updateIcon"></fa-icon></button>
-	<button [disabled]="!isCache()" mat-icon-button type="button" title="clear server updates" *ngIf="server.updPending"><fa-icon [icon]="clearUpdatesIcon"></fa-icon></button>
-	<button type="button" mat-icon-button title="change server status" (click)="changeStatus($event)"><fa-icon [icon]="statusChangeIcon"></fa-icon></button>
-</div>
-<form ngNativeValidate #serverForm="ngForm" (ngSubmit)="submit($event)">
-	<label for="id" *ngIf="!isNew">ID</label>
-	<input type="number" [value]="server.id" readonly *ngIf="!isNew"/>
-	<label for="lastUpdated" *ngIf="!isNew && server.lastUpdated">Last Updated</label>
-	<input id="lastUpdated" *ngIf="!isNew && server.lastUpdated" [value]="server.lastUpdated.toLocaleString()" readonly/>
-	<label for="hostname">Host Name</label>
-	<input type="text" [(ngModel)]="server.hostName" id="hostname" name="hostname" required maxlength="50"/>
-	<label for="domainname">Domain Name</label>
-	<input type="text" [(ngModel)]="server.domainName" id="domainname" name="domainname" required maxlength="50"/>
-	<label for="cachegroup">Cache Group</label>
-	<select name="cachegroup" id="cachegroup" [(ngModel)]="server.cachegroupId" required>
-		<option *ngFor="let cg of cacheGroups" [ngValue]="cg.id">{{cg.name}}</option>
-	</select>
-	<label for="cdn">CDN</label>
-	<select name="cdn" id="cdn" [(ngModel)]="server.cdnId" required>
-		<option *ngFor="let cdn of cdns" [ngValue]="cdn.id">{{cdn.name}}</option>
-	</select>
-	<label for="status">Status</label>
-	<input type="text" id="status" name="status" readonly [value]="server.status" *ngIf="!isNew"/>
-	<select id="status" name="status" *ngIf="isNew" [(ngModel)]="server.statusId" required>
-		<option *ngFor="let status of statuses" [ngValue]="status.id">{{status.name}}</option>
-	</select>
-	<label for="profile">Profile</label>
-	<select id="profile" name="profile" [(ngModel)]="server.profileId" required>
-		<option *ngFor="let profile of profiles" [ngValue]="profile.id">{{profile.name}}</option>
-	</select>
-	<label for="type">Type</label>
-	<select id="type" name="type" [(ngModel)]="server.typeId" required>
-		<option *ngFor="let type of types" [ngValue]="type.id">{{type.name}}</option>
-	</select>
-	<label for="physLocation">Physical Location</label>
-	<select id="physLocation" name="physLocation" [(ngModel)]="server.physLocationId" required>
-		<option *ngFor="let physLocation of physicalLocations" [ngValue]="physLocation.id">{{physLocation.name}}</option>
-	</select>
-	<label for="httpport">HTTP Port</label>
-	<input id="httpport" name="httpport" type="number" [(ngModel)]="server.tcpPort" min="1" max="65535"/>
-	<label for="httpsport">HTTPS Port</label>
-	<input id="httpsport" name="httpsport" type="number" [(ngModel)]="server.httpsPort" min="1" max="65535"/>
-	<fieldset>
-		<legend (click)="hideInterfaces=!hideInterfaces">Interfaces<button name="addInterfaceBtn" class="add-button" type="button" title="add a new interface" (click)="addInterface($event)"><fa-icon [icon]="addIcon"></fa-icon></button></legend>
-		<fieldset [hidden]="hideInterfaces" *ngFor="let inf of server.interfaces; index as infInd">
-			<legend>
-				<label for="{{inf.name}}-name">Name</label>
-				<input type="text" [(ngModel)]="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" class="interface-name-input"/>
-				<button class="remove-button" type="button" title="delete this interface" (click)="deleteInterface(infInd)"><fa-icon [icon]="removeIcon"></fa-icon></button>
-			</legend>
-
+<mat-card>
+	<mat-card-content>
+		<div class="actions-container" *ngIf="!isNew">
+			<button [disabled]="!isCache()" mat-button type="button">Manage Capabilities</button>
+			<button [disabled]="!isCache()" mat-button type="button">Manage Delivery Services</button>
+			<button [disabled]="!isCache()" mat-icon-button type="button" title="queue server updates" *ngIf="!server.updPending"><fa-icon [icon]="updateIcon"></fa-icon></button>
+			<button [disabled]="!isCache()" mat-icon-button type="button" title="clear server updates" *ngIf="server.updPending"><fa-icon [icon]="clearUpdatesIcon"></fa-icon></button>
+			<button type="button" mat-icon-button title="change server status" (click)="changeStatus($event)"><fa-icon [icon]="statusChangeIcon"></fa-icon></button>
+		</div>
+		<form ngNativeValidate #serverForm="ngForm" (ngSubmit)="submit($event)">
+			<mat-form-field>
+				<mat-label>Host Name</mat-label>
+				<input matInput [(ngModel)]="server.hostName" name="hostname" required maxlength="50"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Domain Name</mat-label>
+				<input matInput [(ngModel)]="server.domainName" name="domainname" required maxlength="50"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>CDN</mat-label>
+				<mat-select name="cdn" [(ngModel)]="server.cdnId" required>
+					<mat-option *ngFor="let cdn of cdns" [value]="cdn.id">{{cdn.name}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Cache Group</mat-label>
+				<mat-select name="cachegroup" [(ngModel)]="server.cachegroupId" required>
+					<mat-option *ngFor="let cg of cacheGroups" [value]="cg.id">{{cg.name}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Profile</mat-label>
+				<mat-select name="profile" [(ngModel)]="server.profileId" required>
+					<mat-option *ngFor="let profile of profiles" [value]="profile.id">{{profile.name}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Physical Location</mat-label>
+				<mat-select name="physLocation" [(ngModel)]="server.physLocationId" required>
+					<mat-option *ngFor="let physLocation of physicalLocations" [value]="physLocation.id">{{physLocation.name}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Status</mat-label>
+				<input matInput name="status" disabled [value]="server.status" *ngIf="!isNew"/>
+				<mat-select name="status" *ngIf="isNew" [(ngModel)]="server.statusId" required>
+					<mat-option *ngFor="let status of statuses" [value]="status.id">{{status.name}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field *ngIf="!isNew && server.offlineReason">
+				<mat-label>Offline Reason</mat-label>
+				<input matInput name="offlineReason" disabled [value]="server.offlineReason"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Type</mat-label>
+				<mat-select name="type" [(ngModel)]="server.typeId" required>
+					<mat-option *ngFor="let type of types" [value]="type.id">{{type.name}}</mat-option>
+				</mat-select>
+			</mat-form-field>
 			<div>
-				<label for="{{inf.name}}-monitor">Monitor this interface</label>
-				<input id="{{inf.name}}-monitor" name="{{inf.name}}-monitor" type="checkbox" [(ngModel)]="inf.monitor"/>
-				<label for="{{inf.name}}-mtu"><abbr title="Maximum Transmission Unit">MTU</abbr></label>
-				<input id="{{inf.name}}-mtu" name="{{inf.name}}-mtu" type="number" min="1500" max="9000" step="7500" [(ngModel)]="inf.mtu"/>
-				<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-mtu'], 'min') || hasPropertyError(serverForm[inf.name+'-mtu'], 'max') || hasPropertyError(serverForm[inf.name+'-mtu'], 'step')">Invalid MTU - must be 1500 or 9000</small> -->
-				<label for="{{inf.name}}-max-bandwidth">Maximum Bandwidth</label>
-				<input id="{{inf.name}}-max-bandwidth" [(ngModel)]="inf.maxBandwidth" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
-				<small class="input-warning" [hidden]="inf.maxBandwidth !== 0">Setting Max Bandwidth to zero will cause cache servers to always be unavailable</small>
-				<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-max-bandwidth'], 'min')">Cannot be negative</small> -->
+				<mat-form-field>
+					<mat-label>HTTP Port</mat-label>
+					<input matInput name="httpport" type="number" [(ngModel)]="server.tcpPort" min="1" max="65535"/>
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>HTTPS Port</mat-label>
+					<input matInput name="httpsport" type="number" [(ngModel)]="server.httpsPort" min="1" max="65535"/>
+				</mat-form-field>
 			</div>
-
+			<mat-form-field>
+				<mat-label>Rack</mat-label>
+				<input matInput name="rack" [(ngModel)]="server.rack"/>
+			</mat-form-field>
+			<mat-form-field *ngIf="!isNew">
+				<mat-label>ID</mat-label>
+				<input name="serverId" matInput type="number" [value]="server.id" disabled/>
+			</mat-form-field>
+			<mat-form-field *ngIf="!isNew && server.lastUpdated">
+				<mat-label>Last Updated</mat-label>
+				<input matInput [value]="server.lastUpdated.toLocaleString()" disabled/>
+			</mat-form-field>
+			<mat-form-field *ngIf="!isNew">
+				<mat-label>Hash ID</mat-label>
+				<input matInput disabled name="xmppId" [value]="server.xmppId"/>
+			</mat-form-field>
+			<mat-form-field *ngIf="!isNew && server.statusLastUpdated">
+				<mat-label>Status Last Updated</mat-label>
+				<input matInput name="statusLastUpdated" disabled [value]="server.statusLastUpdated.toLocaleString()"/>
+			</mat-form-field>
 			<fieldset>
-				<legend>IP Addresses<button name="addIPBtn" type="button" title="add new IP Address" class="add-button" (click)="addIP(inf)"><fa-icon [icon]="addIcon"></fa-icon></button></legend>
-				<ul>
-					<li *ngFor="let ip of inf.ipAddresses; index as ipInd" [ngClass]="{'bordered-item': ipInd !== 0}">
-						<label for="{{inf.name}}-{{ip.address}}">Address</label>
-						<input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" class="ip-input" type="text" [(ngModel)]="ip.address" [pattern]="validIPPattern" required placeholder="192.0.2.0/27" />
-						<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'pattern')">Invalid address</small>
-						<small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'required')">Required</small>
-						<small class="input-warning" ng-show="isLargeCIDR(ip.address)">Large CIDR detected. IPv4 with CIDR &lt; 27 or IPv6 with CIDR &lt; 64 can be problematic.</small> -->
-						<label for="{{inf.name}}-{{ip.address}}-gateway">Gateway</label>
-						<input type="text" id="{{inf.name}}-{{ip.address}}-gateway" name="{{inf.name}}-{{ip.address}}-gateway" [(ngModel)]="ip.gateway" [pattern]="validGatewayPattern"/>
-						<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address+'-gateway'], 'pattern')">Invalid gateway</small> -->
-						<label for="{{inf.name}}-{{ip.address}}-serviceAddress">Is a Service Address</label>
-						<input type="checkbox" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" class="service-addr-cb" [(ngModel)]="ip.serviceAddress"/>
-						<button type="button" title="delete this IP address" class="remove-button" style="justify-self: start;" (click)="deleteIP(inf, ipInd)"><fa-icon [icon]="removeIcon"></fa-icon></button>
-					</li>
-				</ul>
-			</fieldset>
-		</fieldset>
-	</fieldset>
-	<fieldset>
-		<legend (click)="hideILO=!hideILO"><abbr title="Integrated Lights-Out Management">ILO</abbr> Details</legend>
-		<div [hidden]="hideILO">
-			<label for="iloIP"><abbr title="Integrated Lights-Out Management">ILO</abbr> IP Address</label>
-			<input type="text" id="iloIP" name="iloIP" [(ngModel)]="server.iloIpAddress"/>
-			<label for="iloGateway"><abbr title="Integrated Lights-Out Management">ILO</abbr> Gateway IP Address</label>
-			<input type="text" id="iloGateway" name="iloGateway" [(ngModel)]="server.iloIpGateway"/>
-			<label for="iloNetmask"><abbr title="Integrated Lights-Out Management">ILO</abbr> IP Netmask</label>
-			<input type="text" id="iloNetmask" name="iloNetmask" [(ngModel)]="server.iloIpNetmask"/>
-			<label for="iloUsername"><abbr title="Integrated Lights-Out Management">ILO</abbr> Username</label>
-			<input type="text" id="iloUsername" name="iloUsername" [(ngModel)]="server.iloUsername"/>
-			<label for="iloPassword"><abbr title="Integrated Lights-Out Management">ILO</abbr> Password</label>
-			<input type="text" id="iloPassword" name="iloPassword" [(ngModel)]="server.iloPassword"/>
-		</div>
-	</fieldset>
-	<fieldset>
-		<legend (click)="hideManagement=!hideManagement">Management Interface Details</legend>
-		<div [hidden]="hideManagement">
-			<label for="mgmtIP">Management IP Address</label>
-			<input type="text" id="mgmtIP" name="mgmtIP" [(ngModel)]="server.mgmtIpAddress"/>
-			<label for="mgmtIpGateway">Management Gateway IP Address</label>
-			<input type="text" id="mgmtIpGateway" name="mgmtIpGateway" [(ngModel)]="server.mgmtIpGateway"/>
-			<label for="mgmtIpNetmask">Management IP Netmask</label>
-			<input type="text" id="mgmtIpNetmask" name="mgmtIpNetmask" [(ngModel)]="server.mgmtIpNetmask"/>
-		</div>
-	</fieldset>
-	<label *ngIf="!isNew" for="offlineReason">Offline Reason</label>
-	<input *ngIf="!isNew" id="offlineReason" name="offlineReason" type="text" readonly [value]="server.offlineReason"/>
-	<label for="rack">Rack</label>
-	<input type="text" id="rack" name="rack" [(ngModel)]="server.rack"/>
-	<label *ngIf="!isNew && server.statusLastUpdated" for="statusLastUpdated">Status Last Updated</label>
-	<input *ngIf="!isNew && server.statusLastUpdated" type="text" id="statusLastUpdated" name="statusLastUpdated" readonly [value]="server.statusLastUpdated.toLocaleString()"/>
-	<label *ngIf="!isNew" for="xmppId">Hash ID</label>
-	<input readonly *ngIf="!isNew" id="xmppId" name="xmppId" [value]="server.xmppId"/>
-	<div class="buttons">
-		<button mat-raised-button>Submit</button>
-	</div>
-</form>
+				<legend (click)="hideInterfaces=!hideInterfaces">Interfaces<button name="addInterfaceBtn" class="add-button" type="button" title="add a new interface" (click)="addInterface($event)"><fa-icon [icon]="addIcon"></fa-icon></button></legend>
+				<fieldset [hidden]="hideInterfaces" *ngFor="let inf of server.interfaces; index as infInd">
+					<legend>
+						<label for="{{inf.name}}-name">Name</label>
+						<input [(ngModel)]="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" class="interface-name-input"/>
+						<button class="remove-button" type="button" title="delete this interface" (click)="deleteInterface(infInd)"><fa-icon [icon]="removeIcon"></fa-icon></button>
+					</legend>
 
+					<div>
+						<mat-checkbox [labelPosition]="'before'" id="{{inf.name}}-monitor" name="{{inf.name}}-monitor" [(ngModel)]="inf.monitor">Monitor this interface</mat-checkbox>
+						<mat-form-field>
+							<mat-label><abbr title="Maximum Transmission Unit">MTU</abbr></mat-label>
+							<input matInput id="{{inf.name}}-mtu" name="{{inf.name}}-mtu" type="number" min="1500" max="9000" step="7500" [(ngModel)]="inf.mtu"/>
+						</mat-form-field>
+						<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-mtu'], 'min') || hasPropertyError(serverForm[inf.name+'-mtu'], 'max') || hasPropertyError(serverForm[inf.name+'-mtu'], 'step')">Invalid MTU - must be 1500 or 9000</small> -->
+						<mat-form-field>
+							<mat-label>Maximum Bandwidth</mat-label>
+							<input matInput id="{{inf.name}}-max-bandwidth" [(ngModel)]="inf.maxBandwidth" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
+							<mat-error class="input-warning" *ngIf="inf.maxBandwidth !== 0">Setting Max Bandwidth to zero will cause cache servers to always be unavailable</mat-error>
+						</mat-form-field>
+						<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-max-bandwidth'], 'min')">Cannot be negative</small> -->
+					</div>
+
+					<fieldset>
+						<legend>IP Addresses<button name="addIPBtn" type="button" title="add new IP Address" class="add-button" (click)="addIP(inf)"><fa-icon [icon]="addIcon"></fa-icon></button></legend>
+						<div *ngFor="let ip of inf.ipAddresses; index as ipInd" [ngClass]="{'bordered-item': ipInd !== 0}">
+							<mat-checkbox [labelPosition]="'before'" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" class="service-addr-cb" [(ngModel)]="ip.serviceAddress">Is a Service Address</mat-checkbox>
+							<mat-form-field>
+								<mat-label>Address</mat-label>
+								<input matInput id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" class="ip-input" [(ngModel)]="ip.address" [pattern]="validIPPattern" required placeholder="192.0.2.0/27" />
+							</mat-form-field>
+							<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'pattern')">Invalid address</small>
+							<small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'required')">Required</small>
+							<small class="input-warning" ng-show="isLargeCIDR(ip.address)">Large CIDR detected. IPv4 with CIDR &lt; 27 or IPv6 with CIDR &lt; 64 can be problematic.</small> -->
+							<mat-form-field>
+								<mat-label>Gateway</mat-label>
+								<input matInput id="{{inf.name}}-{{ip.address}}-gateway" name="{{inf.name}}-{{ip.address}}-gateway" [(ngModel)]="ip.gateway" [pattern]="validGatewayPattern"/>
+							</mat-form-field>
+							<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address+'-gateway'], 'pattern')">Invalid gateway</small> -->
+							<button type="button" title="delete this IP address" class="remove-button" style="justify-self: start;" (click)="deleteIP(inf, ipInd)"><fa-icon [icon]="removeIcon"></fa-icon></button>
+						</div>
+					</fieldset>
+				</fieldset>
+			</fieldset>
+			<fieldset>
+				<legend (click)="hideILO=!hideILO"><abbr title="Integrated Lights-Out Management">ILO</abbr> Details</legend>
+				<div [hidden]="hideILO">
+					<mat-form-field>
+						<mat-label><abbr title="Integrated Lights-Out Management">ILO</abbr> IP Address</mat-label>
+						<input matInput name="iloIP" [(ngModel)]="server.iloIpAddress"/>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label><abbr title="Integrated Lights-Out Management">ILO</abbr> Gateway IP Address</mat-label>
+						<input matInput name="iloGateway" [(ngModel)]="server.iloIpGateway"/>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label><abbr title="Integrated Lights-Out Management">ILO</abbr> IP Netmask</mat-label>
+						<input matInput name="iloNetmask" [(ngModel)]="server.iloIpNetmask"/>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label><abbr title="Integrated Lights-Out Management">ILO</abbr> Username</mat-label>
+						<input matInput name="iloUsername" [(ngModel)]="server.iloUsername"/>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label><abbr title="Integrated Lights-Out Management">ILO</abbr> Password</mat-label>
+						<input matInput name="iloPassword" [(ngModel)]="server.iloPassword"/>
+					</mat-form-field>
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend (click)="hideManagement=!hideManagement">Management Interface Details</legend>
+				<div [hidden]="hideManagement">
+					<mat-form-field>
+						<mat-label>Management IP Address</mat-label>
+						<input matInput name="mgmtIP" [(ngModel)]="server.mgmtIpAddress"/>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>Management Gateway IP Address</mat-label>
+						<input matInput name="mgmtIpGateway" [(ngModel)]="server.mgmtIpGateway"/>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>Management IP Netmask</mat-label>
+						<input matInput name="mgmtIpNetmask" [(ngModel)]="server.mgmtIpNetmask"/>
+					</mat-form-field>
+				</div>
+			</fieldset>
+			<div class="buttons">
+				<button mat-raised-button>Submit</button>
+			</div>
+		</form>
+	</mat-card-content>
+</mat-card>
+
+<!--
 <tp-update-status [servers]="[server]" (done)="doneUpdatingStatus($event)" *ngIf="changeStatusDialogOpen"></tp-update-status>
+-->

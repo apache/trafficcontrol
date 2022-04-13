@@ -19,6 +19,8 @@ import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { UserService } from "src/app/api";
 import type { CurrentUser } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-password-dialog.component";
 
@@ -34,9 +36,9 @@ export class CurrentuserComponent implements OnInit {
 
 	/** The currently logged-in user - or 'null' if not logged-in. */
 	public currentUser: CurrentUser | null = null;
-	/** Whether or not the page is in 'edit' mode. */
+	/** Whether the page is in 'edit' mode. */
 	private editing = false;
-	/** Whether or not the page is in 'edit' mode. */
+	/** Whether the page is in 'edit' mode. */
 	public get editMode(): boolean {
 		return this.editing;
 	}
@@ -53,7 +55,9 @@ export class CurrentuserComponent implements OnInit {
 		private readonly api: UserService,
 		private readonly dialog: MatDialog,
 		private readonly route: ActivatedRoute,
-		private readonly router: Router
+		private readonly router: Router,
+		private readonly headerSvc: TpHeaderService,
+		public readonly themeSvc: ThemeManagerService
 	) {
 		this.currentUser = this.auth.currentUser;
 	}
@@ -68,9 +72,12 @@ export class CurrentuserComponent implements OnInit {
 				r => {
 					if (r) {
 						this.currentUser = this.auth.currentUser;
+						this.headerSvc.setTitle(this.currentUser?.username ?? "");
 					}
 				}
 			);
+		} else {
+			this.headerSvc.setTitle(this.currentUser?.username ?? "");
 		}
 		const edit = this.route.snapshot.queryParamMap.get("edit");
 		if (edit === "true") {

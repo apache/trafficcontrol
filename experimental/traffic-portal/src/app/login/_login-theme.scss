@@ -11,9 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import "src/theme";
+@use '@angular/material' as mat;
+@use "sass:map";
 
+@mixin login-theme($color) {
+	$accent: map.get($color, accent);
 
-mat-form-field {
-	width: 100%;
+	tp-login form {
+		border: 3px outset mat.get-color-from-palette($accent);
+	}
 }

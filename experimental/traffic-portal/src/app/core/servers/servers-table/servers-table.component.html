@@ -11,19 +11,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<tp-header [title]="'Servers'"></tp-header>
 <main>
-	<div>
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
-	</div>
-	<tp-generic-table
-		[data]="servers | async"
-		[cols]="columnDefs"
-		[fuzzySearch]="fuzzySubject"
-		context="servers"
-		[contextMenuItems]="contextMenuItems"
-		(contextMenuAction)="handleContextMenu($event)">
-	</tp-generic-table>
+	<mat-card>
+		<div>
+			<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
+		</div>
+		<tp-generic-table
+			[data]="servers | async"
+			[cols]="columnDefs"
+			[fuzzySearch]="fuzzySubject"
+			context="servers"
+			[contextMenuItems]="contextMenuItems"
+			(contextMenuAction)="handleContextMenu($event)">
+		</tp-generic-table>
+	</mat-card>
 </main>
 
+<!--
 <tp-update-status *ngIf="changeStatusOpen" [servers]="changeStatusServers" (done)="statusUpdated($event)"></tp-update-status>
+-->

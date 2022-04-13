@@ -12,11 +12,6 @@
 * limitations under the License.
 */
 @import 'src/theme';
-h1 {
-	display: inline-block;
-	color: $theme_tertiary;
-	font-size: 3em;
-}
 header {
 	margin: auto;
 	max-width: 85vw;
@@ -24,6 +19,7 @@ header {
 }
 img {
 	height: 3em;
+	vertical-align: text-bottom;
 }
 form {
 	margin: auto;
@@ -33,9 +29,9 @@ form {
 	grid-row-gap: 15px;
 	width: 30em;
 	max-width: 85vw;
-	border: 3px outset $theme_secondary;
 	border-radius: 5px;
 	padding: 15px;
+	background-color: white;
 	label {
 		margin: 5px 0 5px auto;
 		text-align: right;
@@ -51,10 +47,13 @@ form {
 	div {
 		grid-column: span 2;
 		display: grid;
-		grid-template-columns: auto auto 1fr;
+		grid-template-columns: 1fr auto auto;
 
-		button:last-child {
+		button {
 			justify-self: end;
+		}
+		button:first-child {
+			justify-self: baseline;
 		}
 	}
 }

@@ -14,8 +14,10 @@
 
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
+import {MatDialog} from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
+import {Observable, of} from "rxjs";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
@@ -24,6 +26,23 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 
 import { augment, type AugmentedServer, serverIsCache, ServersTableComponent } from "./servers-table.component";
+
+/**
+ * Define the MockDialog
+ */
+class MockDialog {
+
+	/**
+	 * Fake opens the dialog
+	 *
+	 * @returns unknown
+	 */
+	public open(): unknown {
+		return {
+			afterClosed: (): Observable<boolean> => of(true)
+		};
+	}
+}
 
 describe("ServersTableComponent", () => {
 	let component: ServersTableComponent;
@@ -43,7 +62,8 @@ describe("ServersTableComponent", () => {
 				APITestingModule
 			],
 			providers: [
-				{ provide: CurrentUserService, useValue: mockCurrentUserService }
+				{ provide: CurrentUserService, useValue: mockCurrentUserService },
+				{ provide: MatDialog, useClass: MockDialog }
 			]
 		}).compileComponents();
 		fixture = TestBed.createComponent(ServersTableComponent);
@@ -177,19 +197,10 @@ describe("ServersTableComponent", () => {
 			return fail("servers table has no servers even though I just created one");
 		}
 
-		component.changeStatusOpen = true;
-		component.changeStatusServers = [servers[0]];
 		component.servers = new Promise(r=>r([]));
-		component.statusUpdated(false);
-		expect(component.changeStatusOpen).toBeFalse();
-		expect(component.changeStatusServers.length).toBe(0);
 		expect((await component.servers).length).toBe(0);
 
-		component.changeStatusOpen = true;
-		component.changeStatusServers = [servers[0]];
-		component.statusUpdated(true);
-		expect(component.changeStatusOpen).toBeFalse();
-		expect(component.changeStatusServers.length).toBe(0);
+		await component.reloadServers();
 		expect((await component.servers).length).toBeGreaterThan(0);
 	});
 
@@ -202,17 +213,9 @@ describe("ServersTableComponent", () => {
 		expect(router.url).toBe("/core/server/9001");
 		expectAsync(component.handleContextMenu({action: "viewDetails", data: [server]})).toBeRejected();
 
-		component.changeStatusOpen = false;
-		component.changeStatusServers = [];
 		component.handleContextMenu({action: "updateStatus", data: server});
-		expect(component.changeStatusOpen).toBeTrue();
-		expect(component.changeStatusServers).toEqual([server]);
 
-		component.changeStatusOpen = false;
-		component.changeStatusServers = [];
 		component.handleContextMenu({action: "updateStatus", data: [server]});
-		expect(component.changeStatusOpen).toBeTrue();
-		expect(component.changeStatusServers).toEqual([server]);
 
 		const service = TestBed.inject(ServerService);
 		const queueSpy = spyOn(service, "queueUpdates");

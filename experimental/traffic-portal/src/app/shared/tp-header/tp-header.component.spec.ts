@@ -13,6 +13,7 @@
 */
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import {MatMenuModule} from "@angular/material/menu";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { UserService } from "src/app/api";
@@ -31,7 +32,7 @@ describe("TpHeaderComponent", () => {
 		logOutSpy = mockCurrentUserService.logout;
 		TestBed.configureTestingModule({
 			declarations: [ TpHeaderComponent ],
-			imports: [ APITestingModule, HttpClientModule, RouterTestingModule ],
+			imports: [ APITestingModule, HttpClientModule, RouterTestingModule, MatMenuModule ],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 			]

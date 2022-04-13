@@ -11,10 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input } from "@angular/core";
+import { Component } from "@angular/core";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -31,9 +32,13 @@ export class TpHeaderComponent {
 	 *
 	 * If not given, defaults to "Traffic Portal".
 	 */
-	@Input() public title?: string;
+	public title = "";
 
-	constructor(private readonly auth: CurrentUserService, private readonly api: UserService) {
+	public hidden = false;
+
+	constructor(private readonly auth: CurrentUserService, private readonly api: UserService,
+		private readonly themeSvc: ThemeManagerService) {
+		this.themeSvc.initTheme();
 	}
 
 	/**
