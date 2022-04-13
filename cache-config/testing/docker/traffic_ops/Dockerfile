@@ -66,6 +66,7 @@ RUN set -o nounset -o errexit && \
 		perl-Crypt-ScryptKDF \
 		perl-Digest-SHA1     \
 		perl-JSON-PP         \
+		procps		     \
 		python3              \
 		# rsync is used to copy certs in "Shared SSL certificate generation" step
 		rsync;               \
@@ -81,6 +82,8 @@ RUN yum -y install /traffic_ops.rpm && \
 
 ADD cache-config/testing/docker/traffic_ops/run.sh /
 ADD cache-config/testing/ort-tests /ort-tests
+RUN chmod +x /run.sh
 
 EXPOSE 443
-CMD /run.sh
+ENTRYPOINT /run.sh
+
