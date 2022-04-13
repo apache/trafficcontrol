@@ -634,24 +634,22 @@ func validateV4(s *tc.ServerV40, tx *sql.Tx) (string, error) {
 		return serviceInterface, util.JoinErrs(errs)
 	}
 	query := `
-SELECT s.ID, ip.address FROM server s
-JOIN profile p on p.Id = s.Profile
-JOIN interface i on i.server = s.ID
-JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
-WHERE ip.service_address = true
-and p.id = $1
+SELECT tmp.server, ip.address
+FROM (
+  SELECT server, ARRAY_AGG(profile_name order by priority) AS profiles
+	FROM server_profile
+	GROUP BY server
+) AS tmp
+JOIN ip_address ip on ip.server = tmp.server
+WHERE (profiles <@ $1::text[]) AND (profiles @> $1::text[])
 `
 	var rows *sql.Rows
 	var err error
 	//ProfileID already validated
 	if s.ID != nil {
-		rows, err = tx.Query(query+" and s.id != $1", *s.ID)
+		rows, err = tx.Query(query+" and tmp.server != $2", pq.Array(s.ProfileNames), *s.ID)
 	} else {
-		var pid int
-		if err := tx.QueryRow("select id from profile where profile.name=$1", s.ProfileNames[0]).Scan(&pid); err != nil {
-			return "", fmt.Errorf("unable to get profile id for given server's profile name: %v", s.ProfileNames[0])
-		}
-		rows, err = tx.Query(query, pid)
+		rows, err = tx.Query(query, pq.Array(s.ProfileNames))
 	}
 	if err != nil {
 		errs = append(errs, errors.New("unable to determine service address uniqueness"))
