@@ -56,7 +56,8 @@ jobs:
         if: ${{ steps.checkout.outcome == 'success' }}
         run: python3 -m assign_triage_role
         env:
-          GIT_AUTHOR_NAME: asfgit
-          GITHUB_TOKEN: ${{ github.token }}
+          GIT_AUTHOR_NAME: asf-ci
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
           MINIMUM_COMMITS: '${{ github.event.inputs.minimum-commits || env.DEFAULT_MINIMUM_COMMITS }}'
           SINCE_DAYS_AGO: '${{ github.event.inputs.since-days-ago || env.DEFAULT_SINCE_DAYS_AGO }}'
