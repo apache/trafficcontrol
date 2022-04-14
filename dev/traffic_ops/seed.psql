@@ -243,6 +243,11 @@ INSERT INTO "server" (
 )
 ON CONFLICT DO NOTHING;
 
+INSERT into server_profile(server, profile_name, priority)
+SELECT s.id, p.name, 0
+FROM server AS s
+    JOIN profile p ON p.id=s.profile;
+
 INSERT INTO interface (
 	monitor,
 	"name",

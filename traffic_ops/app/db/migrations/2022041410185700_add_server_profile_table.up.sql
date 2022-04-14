@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.server_profile (
                                                      server bigint NOT NULL,
                                                      profile_name text NOT NULL,
                                                      priority int NOT NULL CHECK (priority >= 0),
-                                                     CONSTRAINT pk_server_profile PRIMARY KEY (profile_name, server),
+    CONSTRAINT pk_server_profile PRIMARY KEY (profile_name, server),
     CONSTRAINT fk_server_id FOREIGN KEY (server) REFERENCES public.server(id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_server_profile_name_profile FOREIGN KEY (profile_name) REFERENCES public.profile(name) ON UPDATE CASCADE ON DELETE RESTRICT
     );
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS public.server_profile (
 INSERT into public.server_profile(server, profile_name, priority)
 SELECT s.id, p.name, 0
 FROM public.server AS s
-         JOIN public.profile p ON p.id=s.profile;
+    JOIN public.profile p ON p.id=s.profile;
 
 DROP TRIGGER IF EXISTS before_update_ip_address_trigger on ip_address;
 

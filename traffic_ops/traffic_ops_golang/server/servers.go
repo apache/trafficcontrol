@@ -1793,27 +1793,20 @@ func updateServer(tx *sqlx.Tx, server tc.ServerV40) (int64, int, error, error) {
 }
 
 func insertServerProfile(id int, pName []string, tx *sql.Tx) (error, error, int) {
-	insertSPQuery := `
+	priority := make([]int, 0, len(pName))
+	for i, _ := range pName {
+		priority = append(priority, i)
+	}
+	insertQuery := `
 	INSERT INTO server_profile (
 		server, 
 		profile_name, 
 		priority
-	) VALUES 
+	)SELECT $1, profile_name, priority
+	FROM UNNEST($2::text[], $3::int[]) WITH ORDINALITY AS tmp(profile_name, priority)
 	`
 
-	iSPQueryParts := make([]string, 0, len(pName))
-	iSPQueryValues := make([]interface{}, 0, len(pName))
-	for i, name := range pName {
-		valStart := i * 3
-		iSPQueryParts = append(iSPQueryParts, fmt.Sprintf("($%d, $%d, $%d)", valStart+1, valStart+2, valStart+3))
-		iSPQueryValues = append(iSPQueryValues, id, name, i)
-	}
-
-	insertSPQuery += strings.Join(iSPQueryParts, ",")
-	log.Debugf("Inserting profile information for a new server, query is: %s", insertSPQuery)
-
-	_, err := tx.Exec(insertSPQuery, iSPQueryValues...)
-	if err != nil {
+	if _, err := tx.Exec(insertQuery, id, pq.Array(pName), pq.Array(priority)); err != nil {
 		return api.ParseDBError(err)
 	}
 	return nil, nil, http.StatusOK

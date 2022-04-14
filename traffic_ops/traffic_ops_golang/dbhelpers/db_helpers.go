@@ -1984,6 +1984,9 @@ WHERE server.id = $2;`
 func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
 	var id int
 	var desc string
+	if len(s.ProfileNames) == 0 {
+		return tc.CommonServerProperties{}, fmt.Errorf("profileName doesnot exist in server: %v", *s.ID)
+	}
 	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (s.ProfileNames)[0])
 	if err != nil {
 		return tc.CommonServerProperties{}, fmt.Errorf("querying profile id and description by profile_name: %w", err)
