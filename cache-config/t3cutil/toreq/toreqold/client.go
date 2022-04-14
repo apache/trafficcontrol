@@ -27,6 +27,7 @@ package toreqold
 
 import (
 	"errors"
+	"net/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -47,6 +48,10 @@ func (cl *TOClient) URL() string {
 
 func (cl *TOClient) SetURL(newURL string) {
 	cl.c.URL = newURL
+}
+
+func (cl *TOClient) HTTPClient() *http.Client {
+	return cl.c.Client
 }
 
 func (cl *TOClient) APIVersion() string {

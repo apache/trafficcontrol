@@ -48,8 +48,22 @@ import (
 )
 
 type TOClient struct {
-	c          *toclient.Session
-	old        *toreqold.TOClient
+	// c is the "new" Traffic Ops client, for the latest major API.
+	//
+	// This MUST NOT be accessed without checking for nil.
+	// If the Traffic Ops server doesn't support the latest API, it will fall back,
+	// and c will be nil and old will not, and old must be used.
+	//
+	// **WARNING** This MUST NOT be accessed without checking for nil. See above.
+	c *toclient.Session
+
+	// old is the "old" Traffic Ops client, for the previous major API.
+	// This will be nil unless the Traffic Ops Server doesn't support the latest API,
+	// in which case this will exist and c will be nil.
+	old *toreqold.TOClient
+
+	// NumRetries is the number of times to retry Traffic Ops server failures
+	// before giving up and returning an error to the caller.
 	NumRetries int
 }
 
@@ -68,6 +82,13 @@ func (cl *TOClient) SetURL(newURL string) {
 	}
 }
 
+func (cl *TOClient) HTTPClient() *http.Client {
+	if cl.c == nil {
+		return cl.old.HTTPClient()
+	}
+	return cl.c.Client
+}
+
 const FsCookiePath = `/var/lib/trafficcontrol-cache-config/`
 
 // New logs into Traffic Ops, returning the TOClient which contains the logged-in client.
@@ -83,6 +104,7 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 	log.Infoln("TO URL string: '" + toURLStr + "'")
 	log.Infoln("TO URL: '" + url.String() + "'")
 
+	latestSupported := false
 	if fsCookie.Cookies != nil {
 		toIP, err := net.LookupIP(url.Hostname())
 		if err != nil {
@@ -111,7 +133,7 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 		opts.UserAgent = userAgent
 		opts.RequestTimeout = timeout
 		toClient, inf, err := toclient.Login(toURLStr, user, pass, opts)
-		latestSupported := inf.StatusCode != 404 && inf.StatusCode != 501
+		latestSupported = inf.StatusCode != 404 && inf.StatusCode != 501
 
 		if err != nil && latestSupported {
 			return nil, fmt.Errorf("Logging in to Traffic Ops '%v' code %v: %v", torequtil.MaybeIPStr(inf.RemoteAddr), inf.StatusCode, err)
@@ -127,24 +149,30 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 				return nil, errors.New("checking Traffic Ops '" + torequtil.MaybeIPStr(toAddr) + "' support: " + err.Error())
 			}
 		}
-
 		client = &TOClient{c: toClient}
-		if !latestSupported {
-			log.Warnln("toreqnew.New Traffic Ops '" + torequtil.MaybeIPStr(inf.RemoteAddr) + "' does not support the latest client, falling back ot the previous")
+	}
 
-			oldClient, err := toreqold.New(url, user, pass, insecure, timeout, userAgent)
-			if err != nil {
-				return nil, errors.New("logging into old client: " + err.Error())
-			}
-			client.c = nil
-			client.old = oldClient
+	latestSupported, toAddr, err := IsLatestSupported(client.c)
+	if err != nil {
+		return nil, errors.New("checking Traffic Ops '" + torequtil.MaybeIPStr(toAddr) + "' support: " + err.Error())
+	}
 
-			{
-				newClient := toclient.NewNoAuthSession("", false, "", false, 0) // only used for the version, because toClient could be nil if it had an error
-				log.Infof("cache-config Traffic Ops client: %v not supported, falling back to %v\n", newClient.APIVersion(), oldClient.APIVersion())
-			}
+	if !latestSupported {
+		log.Warnln("toreqnew.New Traffic Ops '" + torequtil.MaybeIPStr(toAddr) + "' does not support the latest client, falling back ot the previous")
+
+		oldClient, err := toreqold.New(url, user, pass, insecure, timeout, userAgent)
+		if err != nil {
+			return nil, errors.New("logging into old client: " + err.Error())
+		}
+		client.c = nil
+		client.old = oldClient
+
+		{
+			newClient := toclient.NewNoAuthSession("", false, "", false, 0) // only used for the version, because toClient could be nil if it had an error
+			log.Infof("cache-config Traffic Ops (cookie login) client: %v not supported, falling back to %v\n", newClient.APIVersion(), oldClient.APIVersion())
 		}
 	}
+
 	return client, nil
 }
 
