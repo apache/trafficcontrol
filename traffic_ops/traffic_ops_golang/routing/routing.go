@@ -321,8 +321,14 @@ func Handler(
 					Host:   host,
 					Scheme: cfg.URL.Scheme,
 				})
-				rp.Transport = &http.Transport{
-					TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Insecure},
+				if backendRoute.Insecure {
+					rp.Transport = &http.Transport{
+						TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+					}
+				} else {
+					rp.Transport = &http.Transport{
+						TLSClientConfig: &tls.Config{},
+					}
 				}
 				rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
 					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)

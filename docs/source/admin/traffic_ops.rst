@@ -602,6 +602,7 @@ This file deals with the configuration parameters of running Traffic Ops as a re
 	:method:            The HTTP method for the above mentioned path, for example, `GET` or `PUT`.
 	:route_id:          The integral identifier for the new route being added.
 	:hosts:             An array of the hosts and ports where the request (if matched) needs to be forwarded to, for example, `cdn-foo-backend-service-host:9090`.
+	:insecure:          A boolean specifying whether or not to enable `InsecureSkipVerify`.
 	:opts:              A collection of key value pairs to control how the requests should be forwarded/ handled, for example, `"alg": "roundrobin"`. Currently, only `roundrobin` is supported (which is also the default if nothing is specified) by Traffic Ops.
 
 Example backends.conf
