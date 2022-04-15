@@ -45,3 +45,4 @@ runs:
         INPUT_SMTP_PORT: ${{ inputs.smtp_port }}
         INPUT_SMTP_ADDRESS: ${{ inputs.smtp_address }}
         INPUT_SMTP_PASSWORD: ${{ inputs.smtp_password }}
+        INPUT_VERSION: ${{ inputs.version }}
