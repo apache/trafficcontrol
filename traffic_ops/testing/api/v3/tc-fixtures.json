@@ -323,51 +323,8 @@
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",
-                "displayName": "Bad Tenant",
-                "dscp": 0,
-                "geoLimit": 0,
-                "geoProvider": 0,
-                "initialDispersion": 3,
-                "logsEnabled": false,
-                "longDesc": "long desc",
-                "regionalGeoBlocking": false,
-                "tenant": "root",
-                "type": "HTTP",
-                "xmlId": "test-ds2"
-            },
-            "status": "draft"
-        },
-        {
-            "changeType": "create",
-            "deliveryService": {
-                "ccrDnsTtl": 30,
-                "deepCachingType": "NEVER",
-                "displayName": "Bad Test Case CDN",
-                "dscp": 0,
-                "geoLimit": 0,
-                "geoProvider": 1,
-                "infoUrl": "xxx",
-                "initialDispersion": 1,
-                "logsEnabled": true,
-                "longDesc": "long desc",
-                "orgServerFqdn": "xxx",
-                "regionalGeoBlocking": true,
-                "routingName": "x routing",
-                "tenant": "tenant1",
-                "type": "HTTP",
-                "xmlId": "test-ds3"
-            },
-            "status": "draft"
-        },
-        {
-            "changeType": "create",
-            "deliveryService": {
-                "active": false,
-                "cdnName": "cdn1",
-                "ccrDnsTtl": 30,
-                "deepCachingType": "NEVER",
-                "displayName": "Testing transitions",
-                "dscp": 3,
+                "displayName": "Good Kabletown CDN",
+                "dscp": 1,
                 "geoLimit": 1,
                 "geoProvider": 1,
                 "initialDispersion": 1,
@@ -377,7 +334,7 @@
                 "routingName": "goodroute",
                 "tenant": "tenant1",
                 "type": "HTTP",
-                "xmlId": "test-transitions"
+                "xmlId": "test-deletion"
             },
             "status": "draft"
         }
