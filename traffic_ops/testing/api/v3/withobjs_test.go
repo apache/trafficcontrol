@@ -76,7 +76,6 @@ const (
 	Tenants
 	ServerCheckExtensions
 	Topologies
-	TopologyBasedDeliveryServiceRequiredCapabilities
 	Types
 	Users
 )
@@ -122,7 +121,6 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	Tenants:                               {CreateTestTenants, DeleteTestTenants},
 	ServerCheckExtensions:                 {CreateTestServerCheckExtensions, DeleteTestServerCheckExtensions},
 	Topologies:                            {CreateTestTopologies, DeleteTestTopologies},
-	TopologyBasedDeliveryServiceRequiredCapabilities: {CreateTestTopologyBasedDeliveryServicesRequiredCapabilities, DeleteTestDeliveryServicesRequiredCapabilities},
-	Types: {CreateTestTypes, DeleteTestTypes},
-	Users: {CreateTestUsers, ForceDeleteTestUsers},
+	Types:                                 {CreateTestTypes, DeleteTestTypes},
+	Users:                                 {CreateTestUsers, ForceDeleteTestUsers},
 }
