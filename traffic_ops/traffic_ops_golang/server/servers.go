@@ -477,7 +477,7 @@ func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
 	var cdnID int
 	if err := tx.QueryRow("SELECT cdn from profile WHERE name=$1", s.ProfileNames[0]).Scan(&cdnID); err != nil {
 		log.Errorf("could not execute select cdnID from profile: %s\n", err)
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			errs = append(errs, fmt.Errorf("no such profileName: '%s'", s.ProfileNames[0]))
 		} else {
 			errs = append(errs, tc.DBError)
