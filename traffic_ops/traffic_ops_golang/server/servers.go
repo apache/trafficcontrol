@@ -478,7 +478,7 @@ func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
 	if err := tx.QueryRow("SELECT cdn from profile WHERE name=$1", s.ProfileNames[0]).Scan(&cdnID); err != nil {
 		log.Errorf("could not execute select cdnID from profile: %s\n", err)
 		if err == sql.ErrNoRows {
-			errs = append(errs, fmt.Errorf("no such profileName: '%v'", s.ProfileNames[0]))
+			errs = append(errs, fmt.Errorf("no such profileName: '%s'", s.ProfileNames[0]))
 		} else {
 			errs = append(errs, tc.DBError)
 		}
@@ -824,7 +824,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		for _, server := range servers {
 			csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
 			if err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to get common server properties from V4 server struct: %v", err))
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to get common server properties from V4 server struct: %w", err))
 				return
 			}
 			v3Server, err := server.ToServerV3FromV4(csp)
@@ -842,7 +842,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	for _, server := range servers {
 		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to get common server properties from V4 server struct: %v", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to get common server properties from V4 server struct: %w", err))
 			return
 		}
 		legacyServer, err := server.ToServerV2FromV4(csp)
@@ -1711,11 +1711,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	} else {
 		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to get common server properties from V4 server struct: %v", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to get common server properties from V4 server struct: %w", err))
 			return
 		}
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %v", err))
+			api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("failed to update server_profile: %w", err))
 			return
 		}
 		v2Server, err := srvr.ToServerV2FromV4(csp)
