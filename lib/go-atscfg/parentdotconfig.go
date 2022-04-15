@@ -1694,6 +1694,9 @@ func getOriginServersAndProfileCaches(
 		} else if cgSv.TypeID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil TypeID, skipping!")
 			continue
+		} else if len(cgSv.ProfileNames) == 0 {
+			warnings = append(warnings, "getting origin servers: got server with no profile names, skipping!")
+			continue
 		} else if cgSv.CDNID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil CDNID, skipping!")
 			continue
