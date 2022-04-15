@@ -61,7 +61,7 @@
     existing_primary_cdn: "{{ (get_all_cdns.json.response | to_json | lower | from_json) | selectattr('domainname', 'search', ('^'+cdnDelegationPrimary+'\\.')) | list | first }}"
   register: update_cdn_out
   failed_when: (update_cdn_out.status == 400 and update_cdn_out.json | to_json | from_json | json_query(error_query) | length != 0) or (update_cdn_out.status > 400 and update_cdn_out.status < 600)
-  no_log: true
+  no_log: false
   retries: 10
   delay: 10
 
