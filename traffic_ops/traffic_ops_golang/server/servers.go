@@ -458,7 +458,6 @@ func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
 		"profileNames":   validation.Validate(s.ProfileNames, validation.NotNil),
 		"statusId":       validation.Validate(s.StatusID, validation.NotNil),
 		"typeId":         validation.Validate(s.TypeID, validation.NotNil),
-		"updPending":     validation.Validate(s.UpdPending, validation.NotNil),
 		"httpsPort":      validation.Validate(s.HTTPSPort, validation.By(tovalidate.IsValidPortNumber)),
 		"tcpPort":        validation.Validate(s.TCPPort, validation.By(tovalidate.IsValidPortNumber)),
 	})
