@@ -641,7 +641,7 @@ FROM (
 	GROUP BY server
 ) AS tmp
 JOIN ip_address ip on ip.server = tmp.server
-WHERE (profiles <@ $1::text[]) AND (profiles @> $1::text[])
+WHERE (profiles = $1::text[])
 `
 	var rows *sql.Rows
 	var err error
