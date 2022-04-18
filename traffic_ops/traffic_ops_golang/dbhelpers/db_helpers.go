@@ -314,7 +314,7 @@ func CheckIfCurrentUserCanModifyCDNWithID(tx *sql.Tx, cdnID int64, user string) 
 // CheckIfCurrentUserCanModifyCachegroup checks if the current user has the lock on the cdns that are associated with the provided cachegroup ID.
 // This will succeed if no other user has a hard lock on any of the CDNs that relate to the cachegroup in question.
 func CheckIfCurrentUserCanModifyCachegroup(tx *sql.Tx, cachegroupID int, user string) (error, error, int) {
-	query := `SELECT username, cdn, soft. shared_usernames FROM cdn_lock WHERE cdn IN (SELECT name FROM cdn WHERE id IN (SELECT cdn_id FROM server WHERE cachegroup = ($1)))`
+	query := `SELECT username, cdn, soft, shared_usernames FROM cdn_lock WHERE cdn IN (SELECT name FROM cdn WHERE id IN (SELECT cdn_id FROM server WHERE cachegroup = ($1)))`
 	var userName string
 	var cdn string
 	var soft bool
