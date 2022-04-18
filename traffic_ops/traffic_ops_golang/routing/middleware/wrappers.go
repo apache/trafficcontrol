@@ -276,6 +276,14 @@ func NotImplementedHandler() http.Handler {
 	})
 }
 
+func BackendErrorHandler(code int, userErr error, sysErr error) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+		w.WriteHeader(code)
+		api.HandleErr(w, r, nil, code, userErr, sysErr)
+	})
+}
+
 // DisabledRouteHandler returns a http.Handler which returns a HTTP 5xx code to the client, and an error message indicating the route is currently disabled.
 // This is used for routes which have been disabled via configuration. See config.ConfigTrafficOpsGolang.RoutingBlacklist.DisabledRoutes.
 func DisabledRouteHandler() http.Handler {

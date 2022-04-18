@@ -41,13 +41,15 @@ type Options struct {
 }
 
 type BackendRoute struct {
-	Path     string   `json:"path"`
-	Method   string   `json:"method"`
-	Hosts    []string `json:"hosts"`
-	Opts     Options  `json:"opts"`
-	ID       int      `json:"route_id"`
-	Insecure bool     `json:"insecure"`
-	Index    int
+	Path        string   `json:"path"`
+	Method      string   `json:"method"`
+	Hosts       []string `json:"hosts"`
+	Opts        Options  `json:"opts"`
+	ID          int      `json:"routeId"`
+	Insecure    bool     `json:"insecure"`
+	Permissions []string `json:"permissions"`
+	PrivLevel   int      `json:"privLevel"`
+	Index       int
 }
 
 type BackendConfig struct {

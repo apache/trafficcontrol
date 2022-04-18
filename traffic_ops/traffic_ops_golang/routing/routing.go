@@ -338,17 +338,18 @@ func Handler(
 				routeCtx = context.WithValue(routeCtx, api.PathParamsKey, map[string]string{})
 				r = r.WithContext(routeCtx)
 				r.Header.Add(middleware.RouteID, strconv.Itoa(backendRoute.ID))
-				userErr, sysErr, code := HandleBackendRoute(cfg.Secrets[0], w, r)
+				userErr, sysErr, code := HandleBackendRoute(cfg, backendRoute, w, r)
 				if userErr != nil || sysErr != nil {
-					w.WriteHeader(code)
-					api.HandleErr(w, r, nil, code, userErr, sysErr)
+					h2 := middleware.WrapAccessLog(cfg.Secrets[0], middleware.BackendErrorHandler(code, userErr, sysErr))
+					h2.ServeHTTP(w, r)
 					return
 				}
 				backendHandler := middleware.WrapAccessLog(cfg.Secrets[0], rp)
 				backendHandler.ServeHTTP(w, r)
 				return
 			} else {
-				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("only an algorithm of roundrobin is supported by the backend options currently"), nil)
+				h2 := middleware.WrapAccessLog(cfg.Secrets[0], middleware.BackendErrorHandler(http.StatusBadRequest, errors.New("only an algorithm of roundrobin is supported by the backend options currently"), nil))
+				h2.ServeHTTP(w, r)
 				return
 			}
 		}
@@ -359,20 +360,36 @@ func Handler(
 }
 
 // HandleBackendRoute does all the pre processing for the backend routes.
-func HandleBackendRoute(secret string, w http.ResponseWriter, r *http.Request) (error, error, int) {
+func HandleBackendRoute(cfg *config.Config, route config.BackendRoute, w http.ResponseWriter, r *http.Request) (error, error, int) {
 	var userErr, sysErr error
 	var errCode int
 	var user auth.CurrentUser
 	var inf *api.APIInfo
 
-	user, userErr, sysErr, errCode = api.GetUserFromReq(w, r, secret)
+	user, userErr, sysErr, errCode = api.GetUserFromReq(w, r, cfg.Secrets[0])
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-	// Todo: change this to check the actual priv levels
-	// Todo: add permission checks
-	if user.PrivLevel < auth.PrivLevelReadOnly {
-		return errors.New("forbidden"), nil, http.StatusForbidden
+	v := api.GetRequestedAPIVersion(r.URL.Path)
+	if v == nil {
+		return errors.New("couldn't get a valid version from the requested path"), nil, http.StatusBadRequest
+	}
+	if v.Major < 4 {
+		if user.PrivLevel < route.PrivLevel {
+			return errors.New("forbidden"), nil, http.StatusForbidden
+		}
+	} else {
+		if !cfg.RoleBasedPermissions {
+			if user.PrivLevel < route.PrivLevel {
+				return errors.New("forbidden"), nil, http.StatusForbidden
+			}
+		} else {
+			missingPerms := user.MissingPermissions(route.Permissions...)
+			if len(missingPerms) != 0 {
+				msg := strings.Join(missingPerms, ", ")
+				return fmt.Errorf("missing required Permissions: %s", msg), nil, http.StatusForbidden
+			}
+		}
 	}
 	api.AddUserToReq(r, user)
 
