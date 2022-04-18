@@ -30,17 +30,35 @@ const (
 	NOTIFY_ALWAYS
 )
 
+// OpsConfig holds configuration for a Traffic Monitor relating to its
+// connections with Traffic Ops **and** settings for its API/web UI server.
 type OpsConfig struct {
-	Username      string `json:"username"`
-	Password      string `json:"password"`
-	Url           string `json:"url"`
-	Insecure      bool   `json:"insecure"`
-	CdnName       string `json:"cdnName"`
-	HttpListener  string `json:"httpListener"`
+	// The name of the CDN to which this Traffic Monitor belongs.
+	CdnName string `json:"cdnName"`
+	// The path to an SSL certificate to use with KeyFile to provide HTTP
+	// encryption for the TM API and web UI.
+	CertFile string `json:"certFile"`
+	// The address on which to listen for HTTP requests.
+	HttpListener string `json:"httpListener"`
+	// The address on which to listen for HTTPS requests. If not set, TM serves
+	// its API and UI over HTTP. If this is set, the HTTP server is only used to
+	// redirect traffic to HTTPS.
 	HttpsListener string `json:"httpsListener"`
-	CertFile      string `json:"certFile"`
-	KeyFile       string `json:"keyFile"`
-	UsingDummyTO  bool   `json:"usingDummyTO"` // only used in the TM UI to indicate if TM started up with on-disk backup snapshots
+	// Controls whether to validate the HTTPS certificate prevented by the
+	// Traffic Ops server.
+	Insecure bool `json:"insecure"`
+	// The path to an SSL key to use with CertFile to provide HTTP encryption
+	// for the TM API and web UI.
+	KeyFile string `json:"keyFile"`
+	// The password of the user identified by Username.
+	Password string `json:"password"`
+	// The URL at which Traffic Ops may be reached.
+	Url string `json:"url"`
+	// The username of the user as whom to authenticate with Traffic Ops.
+	Username string `json:"username"`
+	// Only used in the TM UI to indicate if TM started up with on-disk backup
+	// Snapshots.
+	UsingDummyTO bool `json:"usingDummyTO"`
 }
 
 type Handler interface {
