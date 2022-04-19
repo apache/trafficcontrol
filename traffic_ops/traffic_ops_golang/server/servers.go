@@ -445,7 +445,7 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 	return errs
 }
 
-func validateCommonV40(s *tc.ServerV40, tx *sql.Tx) []error {
+func validateCommonV40(s *tc.ServerV40, tx *sql.Tx) ([]error, error) {
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
@@ -463,7 +463,7 @@ func validateCommonV40(s *tc.ServerV40, tx *sql.Tx) []error {
 	})
 
 	if len(errs) > 0 {
-		return errs
+		return errs, nil
 	}
 
 	if _, err := tc.ValidateTypeID(tx, s.TypeID, "server"); err != nil {
@@ -480,16 +480,16 @@ func validateCommonV40(s *tc.ServerV40, tx *sql.Tx) []error {
 		if errors.Is(err, sql.ErrNoRows) {
 			errs = append(errs, fmt.Errorf("no such profileName: '%s'", s.ProfileNames[0]))
 		} else {
-			errs = append(errs, tc.DBError)
+			return nil, fmt.Errorf("unable to get CDN ID for profile name '%s': %w", s.ProfileNames[0], err)
 		}
-		return errs
+		return errs, nil
 	}
 
 	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
 	if cdnID != *s.CDNID {
 		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%v' does not match Server CDN '%d'", cdnID, s.ProfileNames[0], *s.CDNID))
 	}
-	return errs
+	return errs, nil
 }
 
 func validateV1(s *tc.ServerNullableV11, tx *sql.Tx) error {
@@ -566,9 +566,9 @@ func validateMTU(mtu interface{}) error {
 	return nil
 }
 
-func validateV4(s *tc.ServerV40, tx *sql.Tx) (string, error) {
+func validateV4(s *tc.ServerV40, tx *sql.Tx) (string, error, error) {
 	if len(s.Interfaces) == 0 {
-		return "", errors.New("a server must have at least one interface")
+		return "", errors.New("a server must have at least one interface"), nil
 	}
 	var errs []error
 	var serviceAddrV4Found bool
@@ -629,8 +629,10 @@ func validateV4(s *tc.ServerV40, tx *sql.Tx) (string, error) {
 	if !serviceAddrV6Found && !serviceAddrV4Found {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
-	if errs = append(errs, validateCommonV40(s, tx)...); errs != nil {
-		return serviceInterface, util.JoinErrs(errs)
+	usrErr, sysErr := validateCommonV40(s, tx)
+	errs = append(errs, usrErr...)
+	if sysErr != nil || len(errs) > 0 {
+		return serviceInterface, util.JoinErrs(errs), sysErr
 	}
 	query := `
 SELECT tmp.server, ip.address
@@ -666,7 +668,7 @@ WHERE (profiles = $1::text[])
 		}
 	}
 
-	return serviceInterface, util.JoinErrs(errs)
+	return serviceInterface, util.JoinErrs(errs), nil
 }
 
 func validateV3(s *tc.ServerV30, tx *sql.Tx) (string, error) {
@@ -1479,9 +1481,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			server.StatusLastUpdated = original.StatusLastUpdated
 			statusLastUpdatedTime = *original.StatusLastUpdated
 		}
-		_, err := validateV4(&server, tx)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		_, userErr, sysErr := validateV4(&server, tx)
+		if userErr != nil || sysErr != nil {
+			errCode := http.StatusBadRequest
+			if sysErr != nil {
+				errCode = http.StatusInternalServerError
+			}
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
 		if err := dbhelpers.UpdateServerProfilesForV4(*server.ID, server.ProfileNames, tx); err != nil {
@@ -2099,9 +2105,13 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	server.XMPPID = newUUID()
 
-	_, err := validateV4(&server, inf.Tx.Tx)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+	_, userErr, sysErr := validateV4(&server, inf.Tx.Tx)
+	if userErr != nil || sysErr != nil {
+		errCode := http.StatusBadRequest
+		if sysErr != nil {
+			errCode = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
