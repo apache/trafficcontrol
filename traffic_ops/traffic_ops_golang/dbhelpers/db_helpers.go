@@ -1980,7 +1980,7 @@ WHERE server.id = $2;`
 	return nil
 }
 
-// GetCommonServerPropertiesFromV4 converts CommonServerPropertiesV40 to CommonServerProperties struct.
+// GetCommonServerPropertiesFromV4 converts ServerV40 to CommonServerProperties struct.
 func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
 	var id int
 	var desc string

@@ -445,7 +445,7 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 	return errs
 }
 
-func validateCommonV40(s *tc.CommonServerPropertiesV40, tx *sql.Tx) []error {
+func validateCommonV40(s *tc.ServerV40, tx *sql.Tx) []error {
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
@@ -629,7 +629,7 @@ func validateV4(s *tc.ServerV40, tx *sql.Tx) (string, error) {
 	if !serviceAddrV6Found && !serviceAddrV4Found {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
-	if errs = append(errs, validateCommonV40(&s.CommonServerPropertiesV40, tx)...); errs != nil {
+	if errs = append(errs, validateCommonV40(s, tx)...); errs != nil {
 		return serviceInterface, util.JoinErrs(errs)
 	}
 	query := `
@@ -1288,7 +1288,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 	return ids, nil, nil, http.StatusOK
 }
 
-func checkTypeChangeSafety(server tc.CommonServerPropertiesV40, tx *sqlx.Tx) (error, error, int) {
+func checkTypeChangeSafety(server tc.ServerV40, tx *sqlx.Tx) (error, error, int) {
 	// see if cdn or type changed
 	var cdnID int
 	var typeID int
@@ -1600,7 +1600,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerPropertiesV40, inf.Tx); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode = checkTypeChangeSafety(server, inf.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}

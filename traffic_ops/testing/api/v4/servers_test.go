@@ -1011,26 +1011,24 @@ func UniqueIPProfileTestServers(t *testing.T) {
 		}
 	}
 	_, _, err = TOSession.CreateServer(tc.ServerV40{
-		CommonServerPropertiesV40: tc.CommonServerPropertiesV40{
-			Cachegroup: server.Cachegroup,
-			CDNName:    server.CDNName,
-			DomainName: util.StrPtr("mydomain"),
-			FQDN:       util.StrPtr("myfqdn"),
-			FqdnTime:   time.Time{},
-			HostName:   util.StrPtr("myhostname"),
-			HTTPSPort:  util.IntPtr(443),
-			LastUpdated: &tc.TimeNoMod{
-				Time:  time.Time{},
-				Valid: false,
-			},
-			PhysLocation: server.PhysLocation,
-			ProfileNames: server.ProfileNames,
-			StatusID:     server.StatusID,
-			Type:         server.Type,
-			UpdPending:   util.BoolPtr(false),
-			XMPPID:       &xmppID,
+		Cachegroup: server.Cachegroup,
+		CDNName:    server.CDNName,
+		DomainName: util.StrPtr("mydomain"),
+		FQDN:       util.StrPtr("myfqdn"),
+		FqdnTime:   time.Time{},
+		HostName:   util.StrPtr("myhostname"),
+		HTTPSPort:  util.IntPtr(443),
+		LastUpdated: &tc.TimeNoMod{
+			Time:  time.Time{},
+			Valid: false,
 		},
-		Interfaces: server.Interfaces,
+		PhysLocation: server.PhysLocation,
+		ProfileNames: server.ProfileNames,
+		StatusID:     server.StatusID,
+		Type:         server.Type,
+		UpdPending:   util.BoolPtr(false),
+		XMPPID:       &xmppID,
+		Interfaces:   server.Interfaces,
 	}, client.RequestOptions{})
 
 	if err == nil {
