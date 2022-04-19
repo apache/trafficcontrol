@@ -374,27 +374,15 @@ func HandleBackendRoute(cfg *config.Config, route config.BackendRoute, w http.Re
 	if v == nil {
 		return errors.New("couldn't get a valid version from the requested path"), nil, http.StatusBadRequest
 	}
-	if v.Major < 4 {
-		if user.PrivLevel < route.PrivLevel {
-			return errors.New("forbidden"), nil, http.StatusForbidden
-		}
-	} else {
-		if !cfg.RoleBasedPermissions {
-			if user.PrivLevel < route.PrivLevel {
-				return errors.New("forbidden"), nil, http.StatusForbidden
-			}
-		} else {
-			missingPerms := user.MissingPermissions(route.Permissions...)
-			if len(missingPerms) != 0 {
-				msg := strings.Join(missingPerms, ", ")
-				return fmt.Errorf("missing required Permissions: %s", msg), nil, http.StatusForbidden
-			}
+	if cfg.RoleBasedPermissions {
+		missingPerms := user.MissingPermissions(route.Permissions...)
+		if len(missingPerms) != 0 {
+			msg := strings.Join(missingPerms, ", ")
+			return fmt.Errorf("missing required Permissions: %s", msg), nil, http.StatusForbidden
 		}
 	}
 	api.AddUserToReq(r, user)
-
 	var params []string
-
 	inf, userErr, sysErr, errCode = api.NewInfo(r, params, nil)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode

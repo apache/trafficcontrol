@@ -48,7 +48,6 @@ type BackendRoute struct {
 	ID          int      `json:"routeId"`
 	Insecure    bool     `json:"insecure"`
 	Permissions []string `json:"permissions"`
-	PrivLevel   int      `json:"privLevel"`
 	Index       int
 }
 

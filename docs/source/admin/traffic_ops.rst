@@ -603,7 +603,6 @@ This file deals with the configuration parameters of running Traffic Ops as a re
 	:routeId:           The integral identifier for the new route being added.
 	:hosts:             An array of the hosts and ports where the request (if matched) needs to be forwarded to, for example, `cdn-foo-backend-service-host:9090`.
 	:insecure:          A boolean specifying whether or not to enable `InsecureSkipVerify`. This is an optional parameter, defaulting to `false` when not present.
-	:privLevel:         An integer designating the minimum privilege level required to use this API route.
 	:permissions:       An array of permissions(strings) specifying the permissions required by the user to use this API route.
 	:opts:              A collection of key value pairs to control how the requests should be forwarded/ handled, for example, `"alg": "roundrobin"`. Currently, only `roundrobin` is supported (which is also the default if nothing is specified) by Traffic Ops.
 
