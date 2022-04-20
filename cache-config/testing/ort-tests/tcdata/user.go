@@ -21,7 +21,6 @@ import (
 
 func (r *TCData) CreateTestUsers(t *testing.T) {
 	for _, user := range r.TestData.Users {
-
 		resp, _, err := TOSession.CreateUser(&user)
 		if err != nil {
 			t.Errorf("could not CREATE user: %v", err)
@@ -64,11 +63,10 @@ func (r *TCData) ForceDeleteTestUsers(t *testing.T) {
 func (r *TCData) DeleteTestUsers(t *testing.T) {
 	for _, user := range r.TestData.Users {
 
-		resp, _, err := TOSession.GetUserByUsername(*user.Username)
+		resp, _, err := TOSession.GetUserByUsernameWithHdr(*user.Username, nil)
 		if err != nil {
 			t.Errorf("cannot GET user by name: %s - %v", *user.Username, err)
 		}
-
 		if resp != nil {
 			respUser := resp[0]
 
@@ -78,7 +76,7 @@ func (r *TCData) DeleteTestUsers(t *testing.T) {
 			}
 
 			// Make sure it got deleted
-			resp, _, err := TOSession.GetUserByUsername(*user.Username)
+			resp, _, err := TOSession.GetUserByUsernameWithHdr(*user.Username, nil)
 			if err != nil {
 				t.Errorf("error deleting user by name: %v", err)
 			}
