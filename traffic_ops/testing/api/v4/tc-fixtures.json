@@ -306,6 +306,12 @@
             "cdn": "cdn4",
             "message": "test lock",
             "soft": true
+        },
+        {
+            "userName": "opslockuser",
+            "cdn": "bar",
+            "message": "test lock for cdn actions",
+            "soft": false
         }
     ],
     "deliveryServiceRequestComments": [
