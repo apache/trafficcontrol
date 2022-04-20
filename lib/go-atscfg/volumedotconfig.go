@@ -49,8 +49,8 @@ func MakeVolumeDotConfig(
 	}
 	warnings := []string{}
 
-	if server.Profile == nil {
-		return Cfg{}, makeErr(warnings, "server missing Profile")
+	if len(server.ProfileNames) == 0 {
+		return Cfg{}, makeErr(warnings, "server missing Profiles")
 	}
 
 	paramData, paramWarns := paramsToMap(filterParams(serverParams, VolumeFileName, "", "", ""))

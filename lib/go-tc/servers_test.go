@@ -19,10 +19,12 @@ package tc
  * under the License.
  */
 
-import "fmt"
-import "strings"
-import "testing"
-import "time"
+import (
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+)
 
 func ExampleLegacyInterfaceDetails_ToInterfaces() {
 	lid := LegacyInterfaceDetails{

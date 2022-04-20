@@ -1979,3 +1979,114 @@ WHERE server.id = $2;`
 
 	return nil
 }
+
+// GetCommonServerPropertiesFromV4 converts ServerV40 to CommonServerProperties struct.
+func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
+	var id int
+	var desc string
+	if len(s.ProfileNames) == 0 {
+		return tc.CommonServerProperties{}, fmt.Errorf("profileName doesnot exist in server: %v", *s.ID)
+	}
+	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (s.ProfileNames)[0])
+	if err != nil {
+		return tc.CommonServerProperties{}, fmt.Errorf("querying profile id and description by profile_name: %w", err)
+	}
+	defer log.Close(rows, "closing rows in GetCommonServerPropertiesFromV4")
+
+	for rows.Next() {
+		if err := rows.Scan(&id, &desc); err != nil {
+			return tc.CommonServerProperties{}, fmt.Errorf("scanning profile: %w", err)
+		}
+	}
+
+	return tc.CommonServerProperties{
+		Cachegroup:       s.Cachegroup,
+		CachegroupID:     s.CachegroupID,
+		CDNID:            s.CDNID,
+		CDNName:          s.CDNName,
+		DeliveryServices: s.DeliveryServices,
+		DomainName:       s.DomainName,
+		FQDN:             s.FQDN,
+		FqdnTime:         s.FqdnTime,
+		GUID:             s.GUID,
+		HostName:         s.HostName,
+		HTTPSPort:        s.HTTPSPort,
+		ID:               s.ID,
+		ILOIPAddress:     s.ILOIPAddress,
+		ILOIPGateway:     s.ILOIPGateway,
+		ILOIPNetmask:     s.ILOIPNetmask,
+		ILOPassword:      s.ILOPassword,
+		ILOUsername:      s.ILOUsername,
+		LastUpdated:      s.LastUpdated,
+		MgmtIPAddress:    s.MgmtIPAddress,
+		MgmtIPGateway:    s.MgmtIPGateway,
+		MgmtIPNetmask:    s.MgmtIPNetmask,
+		OfflineReason:    s.OfflineReason,
+		Profile:          &(s.ProfileNames)[0],
+		ProfileDesc:      &desc,
+		ProfileID:        &id,
+		PhysLocation:     s.PhysLocation,
+		PhysLocationID:   s.PhysLocationID,
+		Rack:             s.Rack,
+		RevalPending:     s.RevalPending,
+		Status:           s.Status,
+		StatusID:         s.StatusID,
+		TCPPort:          s.TCPPort,
+		Type:             s.Type,
+		TypeID:           s.TypeID,
+		UpdPending:       s.UpdPending,
+		XMPPID:           s.XMPPID,
+		XMPPPasswd:       s.XMPPPasswd,
+	}, nil
+}
+
+// UpdateServerProfilesForV4 updates server_profile table via update function for APIv4.
+func UpdateServerProfilesForV4(id int, profile []string, tx *sql.Tx) error {
+	profileNames := make([]string, 0, len(profile))
+	priority := make([]int, 0, len(profile))
+	for i, _ := range profile {
+		priority = append(priority, i)
+	}
+
+	//Delete existing rows from server_profile to get the priority correct for profile_name changes
+	_, err := tx.Exec("DELETE FROM server_profile WHERE server=$1", id)
+	if err != nil {
+		return fmt.Errorf("updating server_profile by server id: %d, error: %w", id, err)
+	}
+
+	query := `WITH inserted AS (
+		INSERT INTO server_profile
+		SELECT $1, "profile_name", "priority"
+		FROM UNNEST($2::text[], $3::int[]) AS tmp("profile_name", "priority")
+		RETURNING profile_name, priority
+	)
+	SELECT ARRAY_AGG(profile_name)
+	FROM (
+		SELECT profile_name
+		FROM inserted
+		ORDER BY priority ASC
+	) AS returned(profile_name)
+`
+	err = tx.QueryRow(query, id, pq.Array(profile), pq.Array(priority)).Scan(pq.Array(&profileNames))
+	if err != nil {
+		return fmt.Errorf("failed to insert/read into/from server_profile table, %w", err)
+	}
+	return nil
+}
+
+// UpdateServerProfileTableForV2V3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v2/v3.
+func UpdateServerProfileTableForV2V3(id *int, newProfile *string, origProfile string, tx *sql.Tx) ([]string, error) {
+	var profileName []string
+	query := `UPDATE server_profile SET profile_name=$1 WHERE server=$2 AND profile_name=$3`
+	_, err := tx.Exec(query, *newProfile, *id, origProfile)
+	if err != nil {
+		return nil, fmt.Errorf("updating server_profile by profile_name: %w", err)
+	}
+
+	err = tx.QueryRow("SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server=$1", *id).Scan(pq.Array(&profileName))
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("selecting server_profile by profile_name: %w", err)
+	}
+
+	return profileName, nil
+}
