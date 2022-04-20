@@ -171,7 +171,7 @@ func (r *TCData) SetupTmusers(db *sql.DB) error {
 	sqlStmt := `
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + r.Config.TrafficOps.Users.Disallowed + `','` + encryptedPassword + `', 1, 1);
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + r.Config.TrafficOps.Users.ReadOnly + `','` + encryptedPassword + `', 2, 1);
-INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + r.Config.TrafficOps.Users.Operations + `','` + encryptedPassword + `', 3, 1);
+INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + r.Config.TrafficOps.Users.Operations + `','` + encryptedPassword + `', 4, 1);
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + r.Config.TrafficOps.Users.Admin + `','` + encryptedPassword + `', 4, 1);
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + r.Config.TrafficOps.Users.Portal + `','` + encryptedPassword + `', 5, 1);
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + r.Config.TrafficOps.Users.Federation + `','` + encryptedPassword + `', 6, 1);
