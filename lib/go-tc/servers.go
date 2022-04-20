@@ -87,8 +87,33 @@ type ServerDetailV30 struct {
 
 // ServerDetailV40 is the details for a server for API v4.
 type ServerDetailV40 struct {
-	ServerDetailsV40
-	ServerInterfaces []ServerInterfaceInfoV40 `json:"interfaces"`
+	CacheGroup         *string                  `json:"cachegroup" db:"cachegroup"`
+	CDNName            *string                  `json:"cdnName" db:"cdn_name"`
+	DeliveryServiceIDs []int64                  `json:"deliveryservices,omitempty"`
+	DomainName         *string                  `json:"domainName" db:"domain_name"`
+	GUID               *string                  `json:"guid" db:"guid"`
+	HardwareInfo       map[string]string        `json:"hardwareInfo"`
+	HostName           *string                  `json:"hostName" db:"host_name"`
+	HTTPSPort          *int                     `json:"httpsPort" db:"https_port"`
+	ID                 *int                     `json:"id" db:"id"`
+	ILOIPAddress       *string                  `json:"iloIpAddress" db:"ilo_ip_address"`
+	ILOIPGateway       *string                  `json:"iloIpGateway" db:"ilo_ip_gateway"`
+	ILOIPNetmask       *string                  `json:"iloIpNetmask" db:"ilo_ip_netmask"`
+	ILOPassword        *string                  `json:"iloPassword" db:"ilo_password"`
+	ILOUsername        *string                  `json:"iloUsername" db:"ilo_username"`
+	MgmtIPAddress      *string                  `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPGateway      *string                  `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPNetmask      *string                  `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	OfflineReason      *string                  `json:"offlineReason" db:"offline_reason"`
+	PhysLocation       *string                  `json:"physLocation" db:"phys_location"`
+	ProfileNames       []string                 `json:"profileNames" db:"profile_name"`
+	Rack               *string                  `json:"rack" db:"rack"`
+	Status             *string                  `json:"status" db:"status"`
+	TCPPort            *int                     `json:"tcpPort" db:"tcp_port"`
+	Type               string                   `json:"type" db:"server_type"`
+	XMPPID             *string                  `json:"xmppId" db:"xmpp_id"`
+	XMPPPasswd         *string                  `json:"xmppPasswd" db:"xmpp_passwd"`
+	ServerInterfaces   []ServerInterfaceInfoV40 `json:"interfaces"`
 }
 
 // ServersV1DetailResponse is the JSON object returned for a single server for v1.
@@ -1323,37 +1348,6 @@ type ServerDetail struct {
 	PhysLocation       *string           `json:"physLocation" db:"phys_location"`
 	Profile            *string           `json:"profile" db:"profile"`
 	ProfileDesc        *string           `json:"profileDesc" db:"profile_desc"`
-	Rack               *string           `json:"rack" db:"rack"`
-	Status             *string           `json:"status" db:"status"`
-	TCPPort            *int              `json:"tcpPort" db:"tcp_port"`
-	Type               string            `json:"type" db:"server_type"`
-	XMPPID             *string           `json:"xmppId" db:"xmpp_id"`
-	XMPPPasswd         *string           `json:"xmppPasswd" db:"xmpp_passwd"`
-}
-
-// ServerDetailsV40 is a type that contains a superset of the information available
-// in a ServerNullable.
-type ServerDetailsV40 struct {
-	CacheGroup         *string           `json:"cachegroup" db:"cachegroup"`
-	CDNName            *string           `json:"cdnName" db:"cdn_name"`
-	DeliveryServiceIDs []int64           `json:"deliveryservices,omitempty"`
-	DomainName         *string           `json:"domainName" db:"domain_name"`
-	GUID               *string           `json:"guid" db:"guid"`
-	HardwareInfo       map[string]string `json:"hardwareInfo"`
-	HostName           *string           `json:"hostName" db:"host_name"`
-	HTTPSPort          *int              `json:"httpsPort" db:"https_port"`
-	ID                 *int              `json:"id" db:"id"`
-	ILOIPAddress       *string           `json:"iloIpAddress" db:"ilo_ip_address"`
-	ILOIPGateway       *string           `json:"iloIpGateway" db:"ilo_ip_gateway"`
-	ILOIPNetmask       *string           `json:"iloIpNetmask" db:"ilo_ip_netmask"`
-	ILOPassword        *string           `json:"iloPassword" db:"ilo_password"`
-	ILOUsername        *string           `json:"iloUsername" db:"ilo_username"`
-	MgmtIPAddress      *string           `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIPGateway      *string           `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIPNetmask      *string           `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
-	OfflineReason      *string           `json:"offlineReason" db:"offline_reason"`
-	PhysLocation       *string           `json:"physLocation" db:"phys_location"`
-	ProfileNames       []string          `json:"profileNames" db:"profile_name"`
 	Rack               *string           `json:"rack" db:"rack"`
 	Status             *string           `json:"status" db:"status"`
 	TCPPort            *int              `json:"tcpPort" db:"tcp_port"`

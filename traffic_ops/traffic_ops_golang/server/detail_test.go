@@ -168,9 +168,7 @@ func TestGetDetailServers(t *testing.T) {
 
 func getMockServerDetails() []tc.ServerDetailV40 {
 	srvData := tc.ServerDetailV40{
-		ServerDetailsV40: tc.ServerDetailsV40{
-			ID: util.IntPtr(1),
-		},
+		ID:               util.IntPtr(1),
 		ServerInterfaces: []tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
 	}
 	return []tc.ServerDetailV40{srvData}
