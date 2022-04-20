@@ -17,7 +17,6 @@ package v4
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -116,7 +115,7 @@ func TestCDNLocks(t *testing.T) {
 				},
 				"OK when ADMIN USER DOESNT OWN LOCK FOR DEQUEUE": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"forked-topology"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
 						"action": "dequeue",
 						"cdnId":  GetCDNID(t, "cdn2"),
@@ -236,10 +235,8 @@ func TestCDNLocks(t *testing.T) {
 						} else if getId, ok := testCase.RequestBody["cdnId"]; ok {
 							testCase.RequestBody["cdnId"] = getId.(func() int)()
 							dat, err := json.Marshal(testCase.RequestBody)
-							fmt.Println(testCase.RequestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 							err = json.Unmarshal(dat, &topQueueUp)
-							fmt.Println(topQueueUp)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						} else if typeName, ok := testCase.RequestBody["typeName"]; ok {
 							testCase.RequestBody["typeId"] = GetTypeId(t, typeName.(string))
