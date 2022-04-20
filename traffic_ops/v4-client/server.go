@@ -83,18 +83,6 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		}
 		server.PhysLocationID = &ph.Response[0].ID
 	}
-	if needAndCanFetch(server.ProfileID, server.Profile) {
-		innerOpts := NewRequestOptions()
-		innerOpts.QueryParameters.Set("name", *server.Profile)
-		pr, reqInf, err := to.GetProfiles(innerOpts)
-		if err != nil {
-			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s: %w", *server.Profile, err)
-		}
-		if len(pr.Response) == 0 {
-			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s", *server.Profile)
-		}
-		server.ProfileID = &pr.Response[0].ID
-	}
 	if needAndCanFetch(server.StatusID, server.Status) {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", *server.Status)

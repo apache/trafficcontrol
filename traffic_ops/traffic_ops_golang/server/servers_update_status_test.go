@@ -23,6 +23,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
@@ -41,8 +42,12 @@ func TestGetServerUpdateStatus(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectBegin()
-	serverStatusRow := sqlmock.NewRows([]string{"id", "host_name", "type", "server_reval_pending", "use_reval_pending", "upd_pending", "status", "parent_upd_pending", "parent_reval_pending"})
-	serverStatusRow.AddRow(1, "host_name_1", "EDGE", true, true, true, "ONLINE", true, false)
+	serverStatusRow := sqlmock.NewRows([]string{"id", "host_name", "type", "server_reval_pending", "use_reval_pending",
+		"server_upd_pending", "status", "parent_upd_pending", "parent_reval_pending",
+		"config_update_time", "config_apply_time", "revalidate_update_time", "revalidate_apply_time"})
+	serverStatusRow.AddRow(1, "host_name_1", "EDGE", true, true,
+		true, "ONLINE", true, false,
+		time.Now(), time.Now(), time.Now(), time.Now())
 
 	mock.ExpectQuery("SELECT").WillReturnRows(serverStatusRow)
 	mock.ExpectCommit()

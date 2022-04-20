@@ -89,7 +89,7 @@
           "matchlist": [
             {
               "regex": "\\.*ds0\\.*",
-              "match-type": "regex"
+              "match-type": "HOST"
             }
           ]
         }

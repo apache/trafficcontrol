@@ -34,9 +34,21 @@ mkdir -p "$SRCDIR"
 ln -s "$PWD" "$SRCDIR/trafficcontrol"
 cd "$SRCDIR/trafficcontrol"
 
+printf "about to gofmt, pwd: %s\n" "$(pwd)"
+
 /usr/local/go/bin/go fmt ./...
+printf "gofmt returned %d\n" "$?"
+
+
+git config --global --add safe.directory /github/workspace
+printf "git config add safe.directory returned  %d\n" "$?"
+
+#git status
+
+printf "about to git-diff, pwd: %s\n" "$(pwd)"
 DIFF_FILE="$(mktemp)"
 git diff >"$DIFF_FILE"
+printf "git diff returned %d\n" "$?"
 
 if [ -s "$DIFF_FILE" ]; then
 	./misc/parse_diffs.py <"$DIFF_FILE";

@@ -11,32 +11,32 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@use '@angular/material' as mat;
 
 /* You can add global styles to this file, and also import other style files */
 @import './theme.scss';
 
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
-@import '~@angular/material/theming';
 // Plus imports for other components in your app.
 
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
 // Be sure that you only ever include this mixin once!
-@include mat-core();
+@include mat.core();
 
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue. Available color palettes: https://material.io/design/color/
-$traffic-portal-primary: mat-palette($mat-blue, 800);
-$traffic-portal-accent: mat-palette($mat-pink, 700, 600, 800);
+$traffic-portal-primary: mat.define-palette(mat.$blue-palette, 800);
+$traffic-portal-accent: mat.define-palette(mat.$pink-palette, 700, 600, 800);
 
 // The warn palette is optional (defaults to red).
-$traffic-portal-warn: mat-palette($mat-orange, 500);
+$traffic-portal-warn: mat.define-palette(mat.$orange-palette, 500);
 
 // Create the theme object. A theme consists of configurations for individual
 // theming systems such as "color" or "typography".
-$traffic-portal-theme: mat-light-theme((
+$traffic-portal-theme: mat.define-light-theme((
   color: (
     primary: $traffic-portal-primary,
     accent: $traffic-portal-accent,
@@ -47,7 +47,7 @@ $traffic-portal-theme: mat-light-theme((
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
-@include angular-material-theme($traffic-portal-theme);
+@include mat.all-component-themes($traffic-portal-theme);
 @include theme($traffic-portal-theme);
 
 @font-face {

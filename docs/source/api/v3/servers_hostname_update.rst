@@ -39,18 +39,22 @@ Request Structure
 
 .. table:: Request Query Parameters
 
-	+---------------+----------+--------------------------------------------------------------------------------------+
-	| Name          | Required | Description                                                                          |
-	+===============+==========+======================================================================================+
-	| updated       | no       | The value to set for the queue update flag on this server. May be 'true' or 'false'. |
-	+---------------+----------+--------------------------------------------------------------------------------------+
-	| reval_updated | no       | The value to set for the queue update flag on this server. May be 'true' or 'false'. |
-	+---------------+----------+--------------------------------------------------------------------------------------+
+	+----------------------------+----------+--------------------------------------------------------------------------------------+
+	| Name                       | Required | Description                                                                          |
+	+============================+==========+======================================================================================+
+	| updated (Deprecated)       | no       | The value to set for the queue update flag on this server. May be 'true' or 'false'. |
+	+----------------------------+----------+--------------------------------------------------------------------------------------+
+	| reval_updated (Deprecated) | no       | The value to set for the queue update flag on this server. May be 'true' or 'false'. |
+	+----------------------------+----------+--------------------------------------------------------------------------------------+
+
+	.. deprecated:: v3.1 Traffic Ops API
+
+		The boolean values above have resulted in an unintended race condition. These fields are removed in APIv4 and replaced.
 
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/3.0/servers/my-edge/update?updated=true&reval_updated=false HTTP/1.1
+	POST /api/3.0/servers/my-edge/update?updated=true&reval_updated=false HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

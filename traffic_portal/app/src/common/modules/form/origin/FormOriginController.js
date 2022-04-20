@@ -69,10 +69,6 @@ var FormOriginController = function(origin, $scope, $window, $location, formUtil
         { value: 'https', label: 'https' }
     ];
 
-    $scope.tenantLabel = function(tenant) {
-        return '-'.repeat(tenant.level) + ' ' + tenant.name;
-    };
-
     $scope.nullifyIfEmptyIP = function(origin) {
         origin.ipAddress = origin.ipAddress == '' ? null : origin.ipAddress;
         origin.ip6Address = origin.ip6Address == '' ? null : origin.ip6Address;

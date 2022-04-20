@@ -31,7 +31,7 @@ import (
 )
 
 func TestServerServerCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, ServerCapabilities, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, ServerCapabilities, ServerServerCapabilities, DeliveryServicesRequiredCapabilities}, func() {
 		SortTestServerServerCapabilities(t)
 		GetTestServerServerCapabilitiesIMS(t)
 		GetTestServerServerCapabilities(t)
@@ -39,11 +39,6 @@ func TestServerServerCapabilities(t *testing.T) {
 		UpdateTestServerServerCapabilities(t)
 		GetTestPaginationSupportSsc(t)
 		DeleteTestServerServerCapabilityWithInvalidData(t)
-	})
-}
-
-func TestServerServerCapabilitiesForTopologies(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, ServerCapabilities, ServerServerCapabilitiesForTopologies, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
 		DeleteTestServerServerCapabilitiesForTopologiesValidation(t)
 	})
 }
@@ -385,9 +380,6 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 			DeliveryService: dsReqCap.DeliveryServiceID,
 		})
 		assignedServers[*ssc.ServerID] = true
-	}
-	if len(dsServers) == 0 {
-		t.Fatalf("test requires at least one server with a capability that is required by at least one delivery service")
 	}
 
 	// Delete should fail as their delivery services now require the capabilities

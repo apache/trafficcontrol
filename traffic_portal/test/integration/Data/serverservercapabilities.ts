@@ -269,7 +269,7 @@ export const serverServerCapabilities = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 0,
-					profileId: 0,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -294,12 +294,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileId"
 						}
 					]
 				},
@@ -341,7 +335,7 @@ export const serverServerCapabilities = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 2,
-					profileId: 9,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -366,12 +360,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileId"
 						}
 					]
 				},
@@ -413,7 +401,7 @@ export const serverServerCapabilities = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 2,
-					profileId: 9,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -438,12 +426,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileId"
 						}
 					]
 				},
@@ -485,7 +467,7 @@ export const serverServerCapabilities = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 2,
-					profileId: 9,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -510,12 +492,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileId"
 						}
 					]
 				},
@@ -557,7 +533,7 @@ export const serverServerCapabilities = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 2,
-					profileId: 9,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -582,12 +558,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileId"
 						}
 					]
 				},
@@ -629,7 +599,7 @@ export const serverServerCapabilities = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 2,
-					profileId: 9,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -654,12 +624,6 @@ export const serverServerCapabilities = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileId"
 						}
 					]
 				}

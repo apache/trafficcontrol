@@ -325,7 +325,6 @@ func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
-	log.Debugf("about to run exec query: %s with origin: %++v", updateQuery(), origin)
 	resultRows, err := origin.ReqInfo.Tx.NamedQuery(updateQuery(), origin)
 	if err != nil {
 		return api.ParseDBError(err)

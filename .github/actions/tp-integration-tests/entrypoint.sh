@@ -24,17 +24,11 @@ onFail() {
   if [[ -f tp.log ]]; then
     mv tp.log Reports/pm2.log
   fi
-  if [[ -f access.log ]]; then
-    mv access.log Reports/tp-access.log
-  fi
-  if [[ -f out.log ]]; then
-    mv out.log Reports/node.log
+  if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang/out.log" ]]; then
+    mv "${REPO_DIR}/traffic_ops/traffic_ops_golang/out.log" Reports/to.log
   fi
   docker logs $CHROMIUM_CONTAINER > Reports/chromium.log 2>&1;
   docker logs $HUB_CONTAINER > Reports/hub.log 2>&1;
-  if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang" ]]; then
-    cp "${REPO_DIR}/traffic_ops/traffic_ops_golang" Reports/to.log;
-  fi
   echo "Detailed logs produced info Reports artifact"
   exit 1
 }
@@ -95,36 +89,29 @@ if [[ ! -e "$REPO_DIR" ]]; then
 	ln -s "$REPO_DIR" "${GITHUB_WORKSPACE}"
 fi
 
-to_build() {
-  pushd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
-  if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
-    go mod vendor
-  fi
-  go build .
+pushd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
+if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
+  go mod vendor
+fi
+go build .
 
-  openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";
+openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";
 
-  envsubst <"${resources}/cdn.json" >cdn.conf
-  cp "${resources}/database.json" database.conf
+envsubst <"${resources}/cdn.json" >cdn.conf
+cp "${resources}/database.json" database.conf
 
-  truncate -s0 out.log
-  ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>&1 &
-  popd
-}
+truncate -s0 out.log
+./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>&1 &
+popd
 
-tp_build() {
-  pushd "${REPO_DIR}/traffic_portal"
-  npm ci
-  grunt dist
+pushd "${REPO_DIR}/traffic_portal"
+npm ci
+grunt dist
 
-  cp "${resources}/config.js" ./conf/
-  touch tp.log access.log out.log err.log
-  sudo pm2 start server.js -l out.log
-  popd
-}
-
-to_build
-tp_build
+cp "${resources}/config.js" ./conf/
+truncate -s0 out.log
+sudo pm2 start server.js -l out.log
+popd
 
 cd "${REPO_DIR}/traffic_portal/test/integration"
 npm ci

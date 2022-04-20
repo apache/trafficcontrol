@@ -167,7 +167,7 @@ s.status as status_id,
 s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
-s.upd_pending as upd_pending,
+s.config_update_time > s.config_apply_time AS upd_pending,
 ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities,
 ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability) as deliveryservice_capabilities
 `
@@ -242,7 +242,7 @@ ARRAY(select drc.required_capability from deliveryservices_required_capability d
 			}
 		}
 		if len(*s.ServerInterfaces) == 0 {
-			return nil, errors.New(fmt.Sprintf("no interfaces found on eligible server"))
+			return nil, fmt.Errorf("no interfaces found on eligible server. id: %d hostname: %s", *s.ID, *s.HostName)
 		}
 
 		eligible := true

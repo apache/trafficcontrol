@@ -18,8 +18,8 @@ limitations under the License.
 	<label for="u">Username</label><input required autocomplete="username" autofocus type="text" [formControl]="u" name="u" id="u"/>
 	<label for="p">Password</label><input required autocomplete="current-password" type="password" [formControl]="p" name="p" id="p"/>
 	<div>
-		<button mat-raised-button>Login</button>
-		<button mat-button color="accent" type="button" (click)="resetPassword()">Forgot Password</button>
-		<button mat-raised-button color="warn" type="reset">Clear</button>
+		<button name="login" mat-raised-button>Login</button>
+		<button name="reset" mat-button color="accent" type="button" (click)="resetPassword()">Forgot Password</button>
+		<button name="clear" mat-raised-button color="warn" type="reset">Clear</button>
 	</div>
 </form>

@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology"
 )
 
 // Make creates and returns the CRConfig from the database.
@@ -52,7 +53,7 @@ func Make(tx *sql.Tx, cdn, user, toHost, toVersion string, useClientReqHost bool
 	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, tx); err != nil {
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
 	}
-	if crc.Topologies, err = makeTopologies(tx); err != nil {
+	if crc.Topologies, err = topology.MakeTopologies(tx); err != nil {
 		return nil, errors.New("Error getting Topologies: " + err.Error())
 	}
 

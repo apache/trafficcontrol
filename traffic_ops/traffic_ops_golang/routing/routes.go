@@ -317,7 +317,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `servers/{id}/status$`, Handler: server.UpdateStatusHandler, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "STATUS:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4766638513},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `servers/{id}/queue_update$`, Handler: server.QueueUpdateHandler, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:QUEUE", "SERVER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 41894713},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `servers/{host_name}/update_status$`, Handler: server.GetServerUpdateStatusHandler, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4384515993},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `servers/{id-or-name}/update$`, Handler: server.UpdateHandler, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 443813233},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `servers/{id-or-name}/update$`, Handler: server.UpdateHandlerV4, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 443813233},
 
 		//Server: CRUD
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `servers/?$`, Handler: server.Read, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER:READ", "DELIVERY-SERVICE:READ", "CDN:READ", "PHYSICAL-LOCATION:READ", "CACHE-GROUP:READ", "TYPE:READ", "PROFILE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 47209592853},
@@ -487,7 +487,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `deliveryservices/?$`, Handler: api.ReadHandler(&deliveryservice.TODeliveryService{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"DELIVERY-SERVICE:READ", "CDN:READ", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 42383172943},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `deliveryservices/?$`, Handler: deliveryservice.CreateV40, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"DELIVERY-SERVICE:CREATE", "DELIVERY-SERVICE:READ", "CDN:READ", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4064315323},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `deliveryservices/{id}/?$`, Handler: deliveryservice.UpdateV40, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"DELIVERY-SERVICE:UPDATE", "DELIVERY-SERVICE:READ", "CDN:READ", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 47665675673},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `deliveryservices/{id}/safe/?$`, Handler: deliveryservice.UpdateSafe, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"DELIVERY-SERVICE-SAFE:UPDATE", "DELIVERY-SERVICE:READ", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4472109313},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `deliveryservices/{id}/safe/?$`, Handler: deliveryservice.UpdateSafe, RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: []string{"DELIVERY-SERVICE-SAFE:UPDATE", "DELIVERY-SERVICE:READ", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4472109313},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodDelete, Path: `deliveryservices/{id}/?$`, Handler: api.DeleteHandler(&deliveryservice.TODeliveryService{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"DELIVERY-SERVICE:DELETE", "DELIVERY-SERVICE:READ", "CDN:READ", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4226420743},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `deliveryservices/{id}/servers/eligible/?$`, Handler: deliveryservice.GetServersEligible, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"DELIVERY-SERVICE:READ", "SERVER:READ", "CACHE-GROUP:READ", "TYPE:READ", "CDN:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4747615843},
 
@@ -875,7 +875,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodGet, Path: `deliveryservices/?$`, Handler: api.ReadHandler(&deliveryservice.TODeliveryService{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 22383172943},
 		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPost, Path: `deliveryservices/?$`, Handler: deliveryservice.CreateV30, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2064314323},
 		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPut, Path: `deliveryservices/{id}/?$`, Handler: deliveryservice.UpdateV30, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 27665675273},
-		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPut, Path: `deliveryservices/{id}/safe/?$`, Handler: deliveryservice.UpdateSafe, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2472109313},
+		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodPut, Path: `deliveryservices/{id}/safe/?$`, Handler: deliveryservice.UpdateSafe, RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2472109313},
 		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodDelete, Path: `deliveryservices/{id}/?$`, Handler: api.DeleteHandler(&deliveryservice.TODeliveryService{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2226420743},
 		{Version: api.Version{Major: 3, Minor: 0}, Method: http.MethodGet, Path: `deliveryservices/{id}/servers/eligible/?$`, Handler: deliveryservice.GetServersEligible, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2747615843},
 
@@ -1239,7 +1239,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodGet, Path: `deliveryservices/?$`, Handler: api.ReadHandler(&deliveryservice.TODeliveryService{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2238317294},
 		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPost, Path: `deliveryservices/?$`, Handler: deliveryservice.CreateV15, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 206431432},
 		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPut, Path: `deliveryservices/{id}/?$`, Handler: deliveryservice.UpdateV15, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 2766567527},
-		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPut, Path: `deliveryservices/{id}/safe/?$`, Handler: deliveryservice.UpdateSafe, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 247210931},
+		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodPut, Path: `deliveryservices/{id}/safe/?$`, Handler: deliveryservice.UpdateSafe, RequiredPrivLevel: auth.PrivLevelUnauthenticated, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 247210931},
 		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodDelete, Path: `deliveryservices/{id}/?$`, Handler: api.DeleteHandler(&deliveryservice.TODeliveryService{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 222642074},
 		{Version: api.Version{Major: 2, Minor: 0}, Method: http.MethodGet, Path: `deliveryservices/{id}/servers/eligible/?$`, Handler: deliveryservice.GetServersEligible, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 274761584},
 
@@ -1314,14 +1314,12 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 func MemoryStatsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		stats := runtime.MemStats{}
 		runtime.ReadMemStats(&stats)
 
 		bytes, err := json.Marshal(stats)
 		if err != nil {
-			log.Errorln("unable to marshal stats: " + err.Error())
-			handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("unable to marshal stats: %w", err))
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -1331,13 +1329,11 @@ func MemoryStatsHandler() http.HandlerFunc {
 
 func DBStatsHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		stats := db.DB.Stats()
 
 		bytes, err := json.Marshal(stats)
 		if err != nil {
-			log.Errorln("unable to marshal stats: " + err.Error())
-			handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("unable to marshal stats: %w", err))
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")

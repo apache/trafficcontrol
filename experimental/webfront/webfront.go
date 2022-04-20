@@ -148,7 +148,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		token, err := jwt.ParseHeader(
 			r.Header,
 			`Authorization`,
-			jwt.WithVerify(jwa.HS256, os.Args[2]),
+			jwt.WithVerify(jwa.HS256, []byte(os.Args[2])),
 		)
 		if err != nil {
 			Logger.Println("Token Error:", err.Error())

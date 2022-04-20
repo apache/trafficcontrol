@@ -109,29 +109,29 @@ to-post() {
 	local t
 	local data
 	if [[ -z "$2" ]]; then
-		data=""
+		data=()
 	elif [[ -f "$2" ]]; then
-		data="--data @$2"
+		data=(--data "@${2}")
 	else
 		t=$(mktemp)
-		echo $2 >$t
-		data="--data @$t"
+		echo "$2" >$t
+		data=(--data "@${t}")
 	fi
 	to-auth && \
-	    curl $CURLAUTH $CURLOPTS -H 'Content-Type: application/json;charset=UTF-8' --cookie "$COOKIEJAR" -X POST $data "$TO_URL/$1"
+	    curl $CURLAUTH $CURLOPTS -H 'Content-Type: application/json;charset=UTF-8' --cookie "$COOKIEJAR" -X POST "${data[@]}" "$TO_URL/$1"
 	[[ -n $t ]] && rm -f "$t"
 }
 
 to-put() {
 	if [[ $# -lt 2 || -z "$2" ]]; then
-		data=""
+		data=()
 	elif [[ -f "$2" ]]; then
-		data="--data @$2"
+		data=(--data "@${2}")
 	else
-		data="--data $2"
+		data=(--data "${2}")
 	fi
 	to-auth && \
-	    curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X PUT $data "$TO_URL/$1"
+	    curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X PUT "${data[@]}" "$TO_URL/$1"
 }
 
 to-delete() {

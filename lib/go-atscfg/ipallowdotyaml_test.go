@@ -101,29 +101,18 @@ func TestMakeIPAllowDotYAML(t *testing.T) {
 
 	lines = lines[1:] // remove comment line
 
+	groups := strings.Split(txt, `apply: in`)
+
 	/* Test that PUSH and PURGE are denied ere the allowance of anything else. */
 	{
-		ip4deny := false
-		ip6deny := false
-	eachLine:
-		for i, line := range lines {
-			if strings.Contains(line, `0.0.0.0/0`) && strings.Contains(lines[i+1], `deny`) && strings.Contains(lines[i+3], `PUSH`) && strings.Contains(lines[i+4], `PURGE`) {
-				ip4deny = true
-				continue
+		for _, group := range groups {
+			if strings.Contains(group, "ALL") &&
+				strings.Contains(group, "ip_allow") &&
+				!(strings.Contains(group, `ip_addrs: ::1`) ||
+					strings.Contains(group, `ip_addrs: 127.0`) ||
+					strings.Contains(group, `ip_addrs: 192.168.2.99`)) {
+				t.Fatalf("Expected the only rules allowing ALL (i.e. PUSH and PURGE) to be localhost and purge_allow_ip, actual: rule '%v'", group)
 			}
-
-			if strings.Contains(line, `::/0`) && strings.Contains(lines[i+1], `deny`) && strings.Contains(lines[i+3], `PUSH`) && strings.Contains(lines[i+4], `PURGE`) {
-				ip6deny = true
-				continue
-			}
-
-			if strings.Contains(line, `: allow`) && !(strings.Contains(lines[i-1], `127.0.0.1`) || strings.Contains(lines[i-1], `::1`)) {
-				if !(ip4deny && ip6deny) {
-					t.Errorf("Expected denies for PUSH and PURGE before any ips are allowed; pre-denial allowance on line %d: '%v' v4 %v v6 %v text %v", i+1, line, ip4deny, ip6deny, txt)
-				}
-				break eachLine
-			}
-
 		}
 	}
 
@@ -397,29 +386,16 @@ func TestMakeIPAllowDotYAMLTopologies(t *testing.T) {
 
 	lines = lines[1:] // remove comment line
 
+	groups := strings.Split(txt, `apply: in`)
+
 	/* Test that PUSH and PURGE are denied ere the allowance of anything else. */
 	{
-		ip4deny := false
-		ip6deny := false
-	eachLine:
-		for i, line := range lines {
-			if strings.Contains(line, `0.0.0.0/0`) && strings.Contains(lines[i+1], `deny`) && strings.Contains(lines[i+3], `PUSH`) && strings.Contains(lines[i+4], `PURGE`) {
-				ip4deny = true
-				continue
+		for _, group := range groups {
+			if strings.Contains(group, "ALL") && strings.Contains(group, "ip_allow") && !(strings.Contains(group, `ip_addrs: ::1`) ||
+				strings.Contains(group, `ip_addrs: 127.0`) ||
+				strings.Contains(group, `ip_addrs: 192.168.2.99`)) {
+				t.Fatalf("Expected the only rules allowing ALL (i.e. PUSH and PURGE) to be localhost and purge_allow_ip, actual: rule '%v'", group)
 			}
-
-			if strings.Contains(line, `::/0`) && strings.Contains(lines[i+1], `deny`) && strings.Contains(lines[i+3], `PUSH`) && strings.Contains(lines[i+4], `PURGE`) {
-				ip6deny = true
-				continue
-			}
-
-			if strings.Contains(line, `: allow`) && !(strings.Contains(lines[i-1], `127.0.0.1`) || strings.Contains(lines[i-1], `::1`)) {
-				if !(ip4deny && ip6deny) {
-					t.Errorf("Expected denies for PUSH and PURGE before any ips are allowed; pre-denial allowance on line %d: '%v' v4 %v v6 %v text %v", i+1, line, ip4deny, ip6deny, txt)
-				}
-				break eachLine
-			}
-
 		}
 	}
 

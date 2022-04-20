@@ -36,7 +36,7 @@ from assign_triage_role.constants import (GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE
 	APACHE_LICENSE_YAML, GIT_AUTHOR_EMAIL_TEMPLATE, SINGLE_PR_TEMPLATE_FILE,
 	SINGLE_CONTRIBUTOR_TEMPLATE_FILE, PR_TEMPLATE_FILE, EMPTY_CONTRIB_LIST_LIST,
 	EMPTY_LIST_OF_CONTRIBUTORS, CONGRATS, EXPIRE, GITHUB_REPOSITORY, GIT_AUTHOR_NAME,
-	GITHUB_REPOSITORY_OWNER, MINIMUM_COMMITS, SINCE_DAYS_AGO, GITHUB_REF_NAME)
+	GITHUB_REPOSITORY_OWNER, MINIMUM_COMMITS, SINCE_DAYS_AGO, GITHUB_REF_NAME, PR_GITHUB_TOKEN)
 
 
 class TriageRoleAssigner(Github):
@@ -328,4 +328,8 @@ class TriageRoleAssigner(Github):
 		if not self.branch_exists(source_branch_name):
 			self.push_changes(source_branch_name, commit_message)
 		self.repo.get_git_ref(f"heads/{source_branch_name}")
+
+		pr_github_token = PR_GITHUB_TOKEN
+		self.__init__(login_or_token=pr_github_token)
+
 		self.create_pr(prs_by_contributor, commit_message, source_branch_name)
