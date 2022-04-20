@@ -166,13 +166,13 @@ func CreateRouteMap(rs []Route, disabledRouteIDs []int, perlHandler http.Handler
 		versionI := indexOfApiVersion(versions, r.Version)
 		nextMajorVer := r.Version.Major + 1
 		_, isDisabledRoute := disabledRoutes[r.ID]
+		r.SetMiddleware(authBase, requestTimeout)
 		for _, version := range versions[versionI:] {
 			if version.Major >= nextMajorVer {
 				break
 			}
 			vstr := strconv.FormatUint(version.Major, 10) + "." + strconv.FormatUint(version.Minor, 10)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
-			r.SetMiddleware(authBase, requestTimeout)
 
 			if isDisabledRoute {
 				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.WrapAccessLog(authBase.Secret, middleware.DisabledRouteHandler()), ID: r.ID})
