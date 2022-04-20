@@ -50,7 +50,7 @@ Response Structure
 :generic-metadata-value: An array of generic metadata value objects conforming to :rfc:`8006` and :abbr:`SVA (Streaming Video Alliance)` specifications.
 :footprints:             An array of footprints impacted by this generic base object.
 
-	.. note:: These are meant to be generic and therefore there is not much information in these documents. For further information please see :rfc:`8006`, :rfc:`8007`, :rfc:`8008`, and the :abbr:`SVA (Streaming Video Alliance)` documents titled `Footprint and Capabilities Interface: Open Caching API`, `Open Caching API Implementation Guidelines`, `Configuration Interface: Part 1 Specification - Overview & Architecture`, `Configuration Interface: Part 2 Specification – CDNi Metadata Model Extensions`, and `Configuration Interface: Part 3 Specification – Publishing Layer APIs`.
+.. note:: These are meant to be generic and therefore there is not much information in these documents. For further information please see :rfc:`8006`, :rfc:`8007`, :rfc:`8008`, and the :abbr:`SVA (Streaming Video Alliance)` documents titled `Footprint and Capabilities Interface: Open Caching API`, `Open Caching API Implementation Guidelines`, `Configuration Interface: Part 1 Specification - Overview & Architecture`, `Configuration Interface: Part 2 Specification – CDNi Metadata Model Extensions`, and `Configuration Interface: Part 3 Specification – Publishing Layer APIs`.
 
 .. code-block:: json
 	:caption: Example /OC/CI/configuration/requests Response
