@@ -16,192 +16,192 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/url"
 	"sort"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestCDNs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters}, func() {
-		GetTestCDNsIMS(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		SortTestCDNs(t)
-		UpdateTestCDNs(t)
-		UpdateTestCDNsWithHeaders(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestCDNsWithHeaders(t, header)
-		GetTestCDNs(t)
-		GetTestCDNsIMSAfterChange(t, header)
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession, RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						utils.ResponseLengthGreaterOrEqual(1), validateCDNSort()),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession, RequestParams: url.Values{"name": {"cdn1"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateCDNFields(map[string]interface{}{"Name": "cdn1"})),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId: GetCDNID(t, "cdn1"), ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"dnssecEnabled": false,
+						"domainName":    "newDomain",
+						"name":          "cdn1",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Headers": {
+					EndpointId: GetCDNID(t, "cdn1"), ClientSession: TOSession,
+					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestBody: map[string]interface{}{
+						"dnssecEnabled": false,
+						"domainName":    "newDomain",
+						"name":          "cdn1",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId: GetCDNID(t, "cdn1"), ClientSession: TOSession,
+					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					RequestBody: map[string]interface{}{
+						"dnssecEnabled": false,
+						"domainName":    "newDomain",
+						"name":          "cdn1",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					cdn := tc.CDN{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &cdn)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							if name == "OK when VALID NAME parameter" {
+								resp, reqInf, err := testCase.ClientSession.GetCDNByNameWithHdr(testCase.RequestParams["name"][0], testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetCDNsWithHdr(testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateCDNByIDWithHdr(testCase.EndpointId(), cdn, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteCDNByID(testCase.EndpointId())
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestCDNsWithHeaders(t *testing.T, header http.Header) {
-	firstCDN := testData.CDNs[0]
-	// Retrieve the CDN by name so we can get the id for the Update
-	resp, _, err := TOSession.GetCDNByNameWithHdr(firstCDN.Name, header)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
-	}
-	if len(resp) > 0 {
-		remoteCDN := resp[0]
-		remoteCDN.DomainName = "domain2"
-		_, reqInf, err := TOSession.UpdateCDNByIDWithHdr(remoteCDN.ID, remoteCDN, header)
-		if err == nil {
-			t.Errorf("Expected error about Precondition Failed, got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-		}
-	}
-}
-
-func GetTestCDNsIMSAfterChange(t *testing.T, header http.Header) {
-	for _, cdn := range testData.CDNs {
-		_, reqInf, err := TOSession.GetCDNByNameWithHdr(cdn.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
-	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	for _, cdn := range testData.CDNs {
-		_, reqInf, err := TOSession.GetCDNByNameWithHdr(cdn.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+func validateCDNFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		cdnResp := resp.([]tc.CDN)
+		for field, expected := range expectedResp {
+			for _, cdn := range cdnResp {
+				switch field {
+				case "Name":
+					assert.Equal(t, expected, cdn.Name, "Expected Name to be %v, but got %v", expected, cdn.Name)
+				case "DomainName":
+					assert.Equal(t, expected, cdn.DomainName, "Expected DomainName to be %v, but got %v", expected, cdn.DomainName)
+				case "DNSSECEnabled":
+					assert.Equal(t, expected, cdn.DNSSECEnabled, "Expected DNSSECEnabled to be %v, but got %v", expected, cdn.DNSSECEnabled)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
 		}
 	}
 }
 
-func GetTestCDNsIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	for _, cdn := range testData.CDNs {
-		futureTime := time.Now().AddDate(0, 0, 1)
-		time := futureTime.Format(time.RFC1123)
-		header.Set(rfc.IfModifiedSince, time)
-		_, reqInf, err := TOSession.GetCDNByNameWithHdr(cdn.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+func validateCDNSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		var sortedList []string
+		cdnResp := resp.([]tc.CDN)
+
+		for _, cdn := range cdnResp {
+			sortedList = append(sortedList, cdn.Name)
 		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+
+		res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+			return sortedList[p] < sortedList[q]
+		})
+		assert.Equal(t, res, true, "List is not sorted by their names: %v", sortedList)
+	}
+}
+
+func GetCDNID(t *testing.T, cdnName string) func() int {
+	return func() int {
+		cdnsResp, _, err := TOSession.GetCDNByNameWithHdr(cdnName, http.Header{})
+		assert.NoError(t, err, "Get CDNs Request failed with error:", err)
+		assert.Equal(t, 1, len(cdnsResp), "Expected response object length 1, but got %d", len(cdnsResp))
+		assert.NotNil(t, cdnsResp[0].ID, "Expected id to not be nil")
+		return cdnsResp[0].ID
 	}
 }
 
 func CreateTestCDNs(t *testing.T) {
-
 	for _, cdn := range testData.CDNs {
 		resp, _, err := TOSession.CreateCDN(cdn)
-		t.Log("Response: ", resp)
-		if err != nil {
-			t.Errorf("could not CREATE cdns: %v", err)
-		}
-	}
-
-}
-
-func SortTestCDNs(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetCDNsWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, resp[i].Name)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UpdateTestCDNs(t *testing.T) {
-
-	firstCDN := testData.CDNs[0]
-	// Retrieve the CDN by name so we can get the id for the Update
-	resp, _, err := TOSession.GetCDNByName(firstCDN.Name)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
-	}
-	remoteCDN := resp[0]
-	expectedCDNDomain := "domain2"
-	remoteCDN.DomainName = expectedCDNDomain
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
-	if err != nil {
-		t.Errorf("cannot UPDATE CDN by id: %v - %v", err, alert)
-	}
-
-	// Retrieve the CDN to check CDN name got updated
-	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: '$%s', %v", firstCDN.Name, err)
-	}
-	respCDN := resp[0]
-	if respCDN.DomainName != expectedCDNDomain {
-		t.Errorf("results do not match actual: %s, expected: %s", respCDN.DomainName, expectedCDNDomain)
-	}
-
-}
-
-func GetTestCDNs(t *testing.T) {
-
-	for _, cdn := range testData.CDNs {
-		resp, _, err := TOSession.GetCDNByName(cdn.Name)
-		if err != nil {
-			t.Errorf("cannot GET CDN by name: %v - %v", err, resp)
-		}
+		assert.NoError(t, err, "Could not create CDN: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
 func DeleteTestCDNs(t *testing.T) {
+	resp, _, err := TOSession.GetCDNsWithHdr(http.Header{})
+	assert.NoError(t, err, "Cannot get CDNs: %v", err)
+	for _, cdn := range resp {
+		delResp, _, err := TOSession.DeleteCDNByID(cdn.ID)
+		assert.NoError(t, err, "Cannot delete CDN '%s' (#%d): %v - alerts: %+v", cdn.Name, cdn.ID, err, delResp.Alerts)
 
-	for _, cdn := range testData.CDNs {
-		// Retrieve the CDN by name so we can get the id for the Update
-		resp, _, err := TOSession.GetCDNByName(cdn.Name)
-		if err != nil {
-			t.Errorf("cannot GET CDN by name: %v - %v", cdn.Name, err)
-		}
-		if len(resp) > 0 {
-			respCDN := resp[0]
-
-			_, _, err := TOSession.DeleteCDNByID(respCDN.ID)
-			if err != nil {
-				t.Errorf("cannot DELETE CDN by name: '%s' %v", respCDN.Name, err)
-			}
-
-			// Retrieve the CDN to see if it got deleted
-			cdns, _, err := TOSession.GetCDNByName(cdn.Name)
-			if err != nil {
-				t.Errorf("error deleting CDN name: %s", err.Error())
-			}
-			if len(cdns) > 0 {
-				t.Errorf("expected CDN name: %s to be deleted", cdn.Name)
-			}
-		}
+		// Retrieve the CDN to see if it got deleted
+		cdns, _, err := TOSession.GetCDNByIDWithHdr(cdn.ID, http.Header{})
+		assert.NoError(t, err, "Error deleting CDN '%s': %v", cdn.Name, err)
+		assert.Equal(t, 0, len(cdns), "Expected CDN '%s' to be deleted", cdn.Name)
 	}
 }
