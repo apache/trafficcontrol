@@ -917,11 +917,9 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 //
 // Deprecated: Traffic Ops API version 3 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerV30) UpgradeToV40() (ServerV40, error) {
-	upgraded := ServerV40{
-		CommonServerProperties: s.CommonServerProperties,
-		StatusLastUpdated:      s.StatusLastUpdated,
-	}
+func (s ServerV30) UpgradeToV40(profileNames []string) (ServerV40, error) {
+	upgraded := UpdateServerPropertiesV40(profileNames, s.CommonServerProperties)
+	upgraded.StatusLastUpdated = s.StatusLastUpdated
 	infs, err := ToInterfacesV4(s.Interfaces, s.RouterHostName, s.RouterPortName)
 	if err != nil {
 		return upgraded, err
@@ -936,7 +934,7 @@ func (s ServerV30) UpgradeToV40() (ServerV40, error) {
 //
 // Deprecated: Traffic Ops API version 2 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
+func (s ServerNullableV2) UpgradeToV40(profileNames []string) (ServerV40, error) {
 	ipv4IsService := false
 	if s.IPIsService != nil {
 		ipv4IsService = *s.IPIsService
@@ -945,9 +943,7 @@ func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
 	if s.IP6IsService != nil {
 		ipv6IsService = *s.IP6IsService
 	}
-	upgraded := ServerV40{
-		CommonServerProperties: s.CommonServerProperties,
-	}
+	upgraded := UpdateServerPropertiesV40(profileNames, s.CommonServerProperties)
 
 	infs, err := s.LegacyInterfaceDetails.ToInterfacesV4(ipv4IsService, ipv6IsService, s.RouterHostName, s.RouterPortName)
 	if err != nil {
@@ -957,9 +953,84 @@ func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
 	return upgraded, nil
 }
 
+// UpdateServerPropertiesV40 updates CommonServerProperties of V2 and V3 to ServerV40
+func UpdateServerPropertiesV40(profileNames []string, properties CommonServerProperties) ServerV40 {
+	return ServerV40{
+		Cachegroup:       properties.Cachegroup,
+		CachegroupID:     properties.CachegroupID,
+		CDNID:            properties.CDNID,
+		CDNName:          properties.CDNName,
+		DeliveryServices: properties.DeliveryServices,
+		DomainName:       properties.DomainName,
+		FQDN:             properties.FQDN,
+		FqdnTime:         properties.FqdnTime,
+		GUID:             properties.GUID,
+		HostName:         properties.HostName,
+		HTTPSPort:        properties.HTTPSPort,
+		ID:               properties.ID,
+		ILOIPAddress:     properties.ILOIPAddress,
+		ILOIPGateway:     properties.ILOIPGateway,
+		ILOIPNetmask:     properties.ILOIPNetmask,
+		ILOPassword:      properties.ILOPassword,
+		ILOUsername:      properties.ILOUsername,
+		LastUpdated:      properties.LastUpdated,
+		MgmtIPAddress:    properties.MgmtIPAddress,
+		MgmtIPGateway:    properties.MgmtIPGateway,
+		MgmtIPNetmask:    properties.MgmtIPNetmask,
+		OfflineReason:    properties.OfflineReason,
+		ProfileNames:     profileNames,
+		PhysLocation:     properties.PhysLocation,
+		PhysLocationID:   properties.PhysLocationID,
+		Rack:             properties.Rack,
+		RevalPending:     properties.RevalPending,
+		Status:           properties.Status,
+		StatusID:         properties.StatusID,
+		TCPPort:          properties.TCPPort,
+		Type:             properties.Type,
+		TypeID:           properties.TypeID,
+		UpdPending:       properties.UpdPending,
+		XMPPID:           properties.XMPPID,
+		XMPPPasswd:       properties.XMPPPasswd,
+	}
+}
+
 // ServerV40 is the representation of a Server in version 4.0 of the Traffic Ops API.
 type ServerV40 struct {
-	CommonServerProperties
+	Cachegroup        *string                  `json:"cachegroup" db:"cachegroup"`
+	CachegroupID      *int                     `json:"cachegroupId" db:"cachegroup_id"`
+	CDNID             *int                     `json:"cdnId" db:"cdn_id"`
+	CDNName           *string                  `json:"cdnName" db:"cdn_name"`
+	DeliveryServices  *map[string][]string     `json:"deliveryServices,omitempty"`
+	DomainName        *string                  `json:"domainName" db:"domain_name"`
+	FQDN              *string                  `json:"fqdn,omitempty"`
+	FqdnTime          time.Time                `json:"-"`
+	GUID              *string                  `json:"guid" db:"guid"`
+	HostName          *string                  `json:"hostName" db:"host_name"`
+	HTTPSPort         *int                     `json:"httpsPort" db:"https_port"`
+	ID                *int                     `json:"id" db:"id"`
+	ILOIPAddress      *string                  `json:"iloIpAddress" db:"ilo_ip_address"`
+	ILOIPGateway      *string                  `json:"iloIpGateway" db:"ilo_ip_gateway"`
+	ILOIPNetmask      *string                  `json:"iloIpNetmask" db:"ilo_ip_netmask"`
+	ILOPassword       *string                  `json:"iloPassword" db:"ilo_password"`
+	ILOUsername       *string                  `json:"iloUsername" db:"ilo_username"`
+	LastUpdated       *TimeNoMod               `json:"lastUpdated" db:"last_updated"`
+	MgmtIPAddress     *string                  `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPGateway     *string                  `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPNetmask     *string                  `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	OfflineReason     *string                  `json:"offlineReason" db:"offline_reason"`
+	PhysLocation      *string                  `json:"physLocation" db:"phys_location"`
+	PhysLocationID    *int                     `json:"physLocationId" db:"phys_location_id"`
+	ProfileNames      []string                 `json:"profileNames" db:"profile_name"`
+	Rack              *string                  `json:"rack" db:"rack"`
+	RevalPending      *bool                    `json:"revalPending" db:"reval_pending"`
+	Status            *string                  `json:"status" db:"status"`
+	StatusID          *int                     `json:"statusId" db:"status_id"`
+	TCPPort           *int                     `json:"tcpPort" db:"tcp_port"`
+	Type              string                   `json:"type" db:"server_type"`
+	TypeID            *int                     `json:"typeId" db:"server_type_id"`
+	UpdPending        *bool                    `json:"updPending" db:"upd_pending"`
+	XMPPID            *string                  `json:"xmppId" db:"xmpp_id"`
+	XMPPPasswd        *string                  `json:"xmppPasswd" db:"xmpp_passwd"`
 	Interfaces        []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 	StatusLastUpdated *time.Time               `json:"statusLastUpdated" db:"status_last_updated"`
 	ConfigUpdateTime  *time.Time               `json:"configUpdateTime" db:"config_update_time"`
@@ -1026,7 +1097,7 @@ func (s *ServerV30) ToServerV2() (ServerNullableV2, error) {
 //
 // Deprecated: Traffic Ops API version 3 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
+func (s *ServerV40) ToServerV3FromV4(csp CommonServerProperties) (ServerV30, error) {
 	routerHostName := ""
 	routerPortName := ""
 	interfaces := make([]ServerInterfaceInfo, 0)
@@ -1046,7 +1117,7 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 		interfaces = append(interfaces, i)
 	}
 	serverV30 := ServerV30{
-		CommonServerProperties: s.CommonServerProperties,
+		CommonServerProperties: csp,
 		Interfaces:             interfaces,
 		StatusLastUpdated:      s.StatusLastUpdated,
 	}
@@ -1063,12 +1134,12 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 //
 // Deprecated: Traffic Ops API version 2 is deprecated, new code should use
 // ServerV40 or newer structures.
-func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
+func (s *ServerV40) ToServerV2FromV4(csp CommonServerProperties) (ServerNullableV2, error) {
 	routerHostName := ""
 	routerPortName := ""
 	legacyServer := ServerNullableV2{
 		ServerNullableV11: ServerNullableV11{
-			CommonServerProperties: s.CommonServerProperties,
+			CommonServerProperties: csp,
 		},
 		IPIsService:  new(bool),
 		IP6IsService: new(bool),
