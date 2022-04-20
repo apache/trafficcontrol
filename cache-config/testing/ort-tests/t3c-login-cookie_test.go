@@ -1,7 +1,6 @@
 package orttest
 
 import (
-	"fmt"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
@@ -38,6 +37,7 @@ func TestT3cCookie(t *testing.T) {
 		t.Run("use cookie for any other", doTestT3cCookieOther)
 	})
 }
+
 func doTestT3cCookieAdmin(t *testing.T) {
 	cookieFile := CookieDir + tcd.Config.TrafficOps.Users.Admin + ".cookie"
 	var cookieTimeStamp *int64
@@ -48,8 +48,7 @@ func doTestT3cCookieAdmin(t *testing.T) {
 			cookieTimeStamp = &t
 		}
 	}
-	stdOut, err, exitCode := t3cLoginCookie(DefaultCacheHostName, tcd.Config.TrafficOps.Users.Admin)
-	fmt.Println("ADMIN_ERROR:", err)
+	stdOut, exitCode := t3cLoginCookie(DefaultCacheHostName, tcd.Config.TrafficOps.Users.Admin)
 	if exitCode != 0 {
 		t.Fatalf("t3c update failed with exitcode %d output: %s", exitCode, stdOut)
 	}
@@ -67,23 +66,18 @@ func doTestT3cCookieAdmin(t *testing.T) {
 }
 
 func doTestT3cCookieOther(t *testing.T) {
-	stdOut, err, exitCode := t3cLoginCookie(DefaultCacheHostName, tcd.Config.TrafficOps.Users.Operations)
-	fmt.Println(stdOut)
-	fmt.Println("NONADMIN_ERROR:", err)
+	stdOut, exitCode := t3cLoginCookie(DefaultCacheHostName, tcd.Config.TrafficOps.Users.Operations)
 	if exitCode != 0 {
 		t.Fatalf("t3c update failed with exitcode %d output: %s", exitCode, stdOut)
 	}
-	if strings.Contains(stdOut, "with Cookie") {
-		t.Error("cookie file timestamps match, expected new cookie file to be written after login")
-	}
-	if strings.Contains(stdOut, "Error retrieving cookie") {
-		t.Fatal("Cookie file didn't exist, expected new cookie to be written.")
+	if !strings.Contains(stdOut, "Error retrieving cookie") {
+		t.Error("found existing cookie, expected error retrieving cookie")
 	}
 }
 
-func t3cLoginCookie(host string, user string) (string, string, int) {
+func t3cLoginCookie(host string, user string) (string, int) {
 	args := []string{
-		"apply",
+		"update",
 		"--traffic-ops-insecure=true",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + user,
@@ -91,10 +85,9 @@ func t3cLoginCookie(host string, user string) (string, string, int) {
 		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
 		"--cache-host-name=" + host,
 		"-vv",
-		"--omit-via-string-release=true",
-		"--git=" + "yes",
-		"--run-mode=syncds",
+		"--set-reval-status=false",
+		"--set-update-status=false",
 	}
-	stdOut, stdErr, exitCode := t3cutil.Do("t3c", args...)
-	return string(stdOut), string(stdErr), exitCode
+	_, stdErr, exitCode := t3cutil.Do("t3c", args...)
+	return string(stdErr), exitCode
 }
