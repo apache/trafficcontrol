@@ -187,13 +187,13 @@ func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, day
 	}
 	defer iaRows.Close()
 
-	var inactiveList []string
+	inactiveList := map[string]bool{}
 	for iaRows.Next() {
 		var inactiveXmlId string
 		if err = iaRows.Scan(&inactiveXmlId); err != nil {
 			return []tc.SSLKeyExpirationInformation{}, err
 		}
-		inactiveList = append(inactiveList, inactiveXmlId)
+		inactiveList[inactiveXmlId] = true
 	}
 
 	query := "SELECT deliveryservice, cdn, provider, expiration FROM sslkey WHERE version='latest'"
@@ -215,7 +215,7 @@ func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, day
 		if err = rows.Scan(&expirationInfo.DeliveryService, &expirationInfo.CDN, &expirationInfo.Provider, &expirationInfo.Expiration); err != nil {
 			return []tc.SSLKeyExpirationInformation{}, err
 		}
-		if util.ContainsStr(inactiveList, expirationInfo.DeliveryService) {
+		if inactiveList[expirationInfo.DeliveryService] {
 			continue
 		}
 		expirationInfo.Federated = util.ContainsStr(fedList, expirationInfo.DeliveryService)
