@@ -32,7 +32,7 @@ import (
 )
 
 func TestDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices, DeliveryServicesRequiredCapabilities, DeliveryServiceServerAssignments}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices, ServerServerCapabilities, DeliveryServicesRequiredCapabilities, DeliveryServiceServerAssignments}, func() {
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
@@ -240,14 +240,14 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointId: GetDeliveryServiceId(t, "ds2"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"maxRequestHeaderBytes": 131080,
 						"longDesc":              "something different",
 						"maxDNSAnswers":         164598,
 						"maxOriginConnections":  100,
 						"active":                false,
-						"displayName":           "newds1displayname",
+						"displayName":           "newds2displayname",
 						"dscp":                  41,
 						"geoLimit":              1,
 						"initialDispersion":     2,
@@ -258,13 +258,15 @@ func TestDeliveryServices(t *testing.T) {
 						"multiSiteOrigin":       true,
 						"orgServerFqdn":         "http://origin.example.net",
 						"protocol":              2,
+						"routingName":           "ccr-ds2",
 						"qStringIgnore":         0,
 						"regionalGeoBlocking":   true,
+						"xmlId":                 "ds2",
 					}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateDSExpectedFields(map[string]interface{}{"MaxRequestHeaderSize": 131080,
 							"LongDesc": "something different", "MaxDNSAnswers": 164598, "MaxOriginConnections": 100,
-							"Active": false, "DisplayName": "newds1displayname", "DSCP": 41, "GeoLimit": 1,
+							"Active": false, "DisplayName": "newds2displayname", "DSCP": 41, "GeoLimit": 1,
 							"InitialDispersion": 2, "IPV6RoutingEnabled": false, "LogsEnabled": false, "MissLat": 42.881944,
 							"MissLong": -88.627778, "MultiSiteOrigin": true, "OrgServerFQDN": "http://origin.example.net",
 							"Protocol": 2, "QStringIgnore": 0, "RegionalGeoBlocking": true,
@@ -381,12 +383,13 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when DS with NO TOPOLOGY updates LEGACY HEADER REWRITE FIELDS": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointId: GetDeliveryServiceId(t, "ds2"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"profileId":         GetProfileId(t, "ATS_EDGE_TIER_CACHE"),
 						"edgeHeaderRewrite": "foo",
 						"midHeaderRewrite":  "bar",
-						"xmlId":             "ds1",
+						"routingName":       "ccr-ds2",
+						"xmlId":             "ds2",
 					}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},

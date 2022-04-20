@@ -287,7 +287,7 @@ func (ssc *TOServerServerCapability) Create() (error, error, int) {
 	tx := ssc.APIInfo().Tx
 
 	// Check existence prior to checking type
-	_, exists, err := dbhelpers.GetServerNameFromID(tx.Tx, *ssc.ServerID)
+	_, exists, err := dbhelpers.GetServerNameFromID(tx.Tx, int64(*ssc.ServerID))
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}

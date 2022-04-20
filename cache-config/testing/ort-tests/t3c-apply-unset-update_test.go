@@ -24,7 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
 func verifyUpdateStatusIsFalse() error {
@@ -32,7 +32,7 @@ func verifyUpdateStatusIsFalse() error {
 	if err != nil {
 		return fmt.Errorf("t3c-request failed: %w", err)
 	}
-	serverStatus := tc.ServerUpdateStatus{}
+	serverStatus := atscfg.ServerUpdateStatus{}
 	if err = json.Unmarshal([]byte(output), &serverStatus); err != nil {
 		return fmt.Errorf("failed to parse t3c-request output: %w", err)
 	}
@@ -53,7 +53,7 @@ func verifyUpdateStatusIsTrue() error {
 	if err != nil {
 		return fmt.Errorf("update-status run failed: %w", err)
 	}
-	serverStatus := tc.ServerUpdateStatus{}
+	serverStatus := atscfg.ServerUpdateStatus{}
 	if err = json.Unmarshal([]byte(output), &serverStatus); err != nil {
 		return fmt.Errorf("failed to parse update-status output: %w", err)
 	}
@@ -89,8 +89,9 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 		}
 
 		// set the update flag, so syncds will run
-		if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
-			t.Fatalf("t3c-update failed: %v", err)
+		err := tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
+		if err != nil {
+			t.Fatalf("failed to queue updates: %v", err)
 		}
 
 		if err := verifyUpdateStatusIsTrue(); err != nil {

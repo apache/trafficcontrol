@@ -31,8 +31,6 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
-
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -45,41 +43,43 @@ type ServerAndInterfaces struct {
 func getTestServers() []ServerAndInterfaces {
 	servers := []ServerAndInterfaces{}
 	testServer := tc.ServerV40{
-		CommonServerPropertiesV40: tc.CommonServerPropertiesV40{
-			Cachegroup:     util.StrPtr("Cachegroup"),
-			CachegroupID:   util.IntPtr(1),
-			CDNID:          util.IntPtr(1),
-			CDNName:        util.StrPtr("cdnName"),
-			DomainName:     util.StrPtr("domainName"),
-			GUID:           util.StrPtr("guid"),
-			HostName:       util.StrPtr("server1"),
-			HTTPSPort:      util.IntPtr(443),
-			ID:             util.IntPtr(1),
-			ILOIPAddress:   util.StrPtr("iloIpAddress"),
-			ILOIPGateway:   util.StrPtr("iloIpGateway"),
-			ILOIPNetmask:   util.StrPtr("iloIpNetmask"),
-			ILOPassword:    util.StrPtr("iloPassword"),
-			ILOUsername:    util.StrPtr("iloUsername"),
-			LastUpdated:    &tc.TimeNoMod{Time: time.Now()},
-			MgmtIPAddress:  util.StrPtr("mgmtIpAddress"),
-			MgmtIPGateway:  util.StrPtr("mgmtIpGateway"),
-			MgmtIPNetmask:  util.StrPtr("mgmtIpNetmask"),
-			OfflineReason:  util.StrPtr("offlineReason"),
-			PhysLocation:   util.StrPtr("physLocation"),
-			PhysLocationID: util.IntPtr(1),
-			ProfileNames:   []string{"profile"},
-			Rack:           util.StrPtr("rack"),
-			RevalPending:   util.BoolPtr(true),
-			Status:         util.StrPtr("status"),
-			StatusID:       util.IntPtr(1),
-			TCPPort:        util.IntPtr(80),
-			Type:           "EDGE",
-			TypeID:         util.IntPtr(1),
-			UpdPending:     util.BoolPtr(true),
-			XMPPID:         util.StrPtr("xmppId"),
-			XMPPPasswd:     util.StrPtr("xmppPasswd"),
-		},
+		Cachegroup:        util.StrPtr("Cachegroup"),
+		CachegroupID:      util.IntPtr(1),
+		CDNID:             util.IntPtr(1),
+		CDNName:           util.StrPtr("cdnName"),
+		DomainName:        util.StrPtr("domainName"),
+		GUID:              util.StrPtr("guid"),
+		HostName:          util.StrPtr("server1"),
+		HTTPSPort:         util.IntPtr(443),
+		ID:                util.IntPtr(1),
+		ILOIPAddress:      util.StrPtr("iloIpAddress"),
+		ILOIPGateway:      util.StrPtr("iloIpGateway"),
+		ILOIPNetmask:      util.StrPtr("iloIpNetmask"),
+		ILOPassword:       util.StrPtr("iloPassword"),
+		ILOUsername:       util.StrPtr("iloUsername"),
+		LastUpdated:       &tc.TimeNoMod{Time: time.Now()},
+		MgmtIPAddress:     util.StrPtr("mgmtIpAddress"),
+		MgmtIPGateway:     util.StrPtr("mgmtIpGateway"),
+		MgmtIPNetmask:     util.StrPtr("mgmtIpNetmask"),
+		OfflineReason:     util.StrPtr("offlineReason"),
+		PhysLocation:      util.StrPtr("physLocation"),
+		PhysLocationID:    util.IntPtr(1),
+		ProfileNames:      []string{"profile"},
+		Rack:              util.StrPtr("rack"),
+		RevalPending:      util.BoolPtr(true),
+		Status:            util.StrPtr("status"),
+		StatusID:          util.IntPtr(1),
+		TCPPort:           util.IntPtr(80),
+		Type:              "EDGE",
+		TypeID:            util.IntPtr(1),
+		UpdPending:        util.BoolPtr(true),
+		XMPPID:            util.StrPtr("xmppId"),
+		XMPPPasswd:        util.StrPtr("xmppPasswd"),
 		StatusLastUpdated: &(time.Time{}),
+		ConfigUpdateTime:  &(time.Time{}),
+		ConfigApplyTime:   &(time.Time{}),
+		RevalUpdateTime:   &(time.Time{}),
+		RevalApplyTime:    &(time.Time{}),
 	}
 
 	mtu := uint64(9500)
@@ -142,7 +142,7 @@ func TestUpdateServer(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT ARRAY").WillReturnRows(dsrows)
 
-	s := tc.CommonServerPropertiesV40{
+	s := tc.ServerV40{
 		CDNID:    testServers[0].Server.CDNID,
 		FqdnTime: time.Time{},
 		TypeID:   testServers[0].Server.TypeID,
@@ -174,8 +174,12 @@ func TestGetServersByCachegroup(t *testing.T) {
 	unfilteredCols := []string{"count"}
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
-	cols := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
-	cols = append(cols, "statusLastUpdated")
+	cols := []string{"cachegroup", "cachegroup_id", "cdn_id", "cdn_name", "domain_name", "guid", "host_name",
+		"https_port", "id", "ilo_ip_address", "ilo_ip_gateway", "ilo_ip_netmask", "ilo_password", "ilo_username",
+		"last_updated", "mgmt_ip_address", "mgmt_ip_gateway", "mgmt_ip_netmask", "offline_reason", "phys_location",
+		"phys_location_id", "profile_name", "rack", "reval_pending", "revalidate_update_time", "revalidate_apply_time",
+		"status", "status_id", "tcp_port", "server_type", "server_type_id", "upd_pending", "config_update_time",
+		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated"}
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -212,12 +216,16 @@ func TestGetServersByCachegroup(t *testing.T) {
 			fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 			*ts.Rack,
 			*ts.RevalPending,
+			*ts.RevalUpdateTime,
+			*ts.RevalApplyTime,
 			*ts.Status,
 			*ts.StatusID,
 			*ts.TCPPort,
 			ts.Type,
 			*ts.TypeID,
 			*ts.UpdPending,
+			*ts.ConfigUpdateTime,
+			*ts.ConfigApplyTime,
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
 			*ts.StatusLastUpdated,
@@ -287,8 +295,12 @@ func TestGetMidServers(t *testing.T) {
 	unfilteredCols := []string{"count"}
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
-	cols := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
-	cols = append(cols, "statusLastUpdated")
+	cols := []string{"cachegroup", "cachegroup_id", "cdn_id", "cdn_name", "domain_name", "guid", "host_name",
+		"https_port", "id", "ilo_ip_address", "ilo_ip_gateway", "ilo_ip_netmask", "ilo_password", "ilo_username",
+		"last_updated", "mgmt_ip_address", "mgmt_ip_gateway", "mgmt_ip_netmask", "offline_reason", "phys_location",
+		"phys_location_id", "profile_name", "rack", "reval_pending", "revalidate_update_time", "revalidate_apply_time",
+		"status", "status_id", "tcp_port", "server_type", "server_type_id", "upd_pending", "config_update_time",
+		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated"}
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -323,12 +335,16 @@ func TestGetMidServers(t *testing.T) {
 			fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 			*ts.Rack,
 			*ts.RevalPending,
+			*ts.RevalUpdateTime,
+			*ts.RevalApplyTime,
 			*ts.Status,
 			*ts.StatusID,
 			*ts.TCPPort,
 			ts.Type,
 			*ts.TypeID,
 			*ts.UpdPending,
+			*ts.ConfigUpdateTime,
+			*ts.ConfigApplyTime,
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
 			*ts.StatusLastUpdated,
@@ -370,8 +386,12 @@ func TestGetMidServers(t *testing.T) {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}
 
-	cols2 := test.ColsFromStructByTag("db", tc.CommonServerPropertiesV40{})
-	cols2 = append(cols2, "statusLastUpdated")
+	cols2 := []string{"cachegroup", "cachegroup_id", "cdn_id", "cdn_name", "domain_name", "guid", "host_name",
+		"https_port", "id", "ilo_ip_address", "ilo_ip_gateway", "ilo_ip_netmask", "ilo_password", "ilo_username",
+		"last_updated", "mgmt_ip_address", "mgmt_ip_gateway", "mgmt_ip_netmask", "offline_reason", "phys_location",
+		"phys_location_id", "profile_name", "rack", "reval_pending", "revalidate_update_time", "revalidate_apply_time",
+		"status", "status_id", "tcp_port", "server_type", "server_type_id", "upd_pending", "config_update_time",
+		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated"}
 	rows2 := sqlmock.NewRows(cols2)
 
 	cgs := []tc.CacheGroup{}
@@ -460,12 +480,16 @@ func TestGetMidServers(t *testing.T) {
 		fmt.Sprintf("{%s}", strings.Join(ts.ProfileNames, ",")),
 		*ts.Rack,
 		*ts.RevalPending,
+		*ts.RevalUpdateTime,
+		*ts.RevalApplyTime,
 		*ts.Status,
 		*ts.StatusID,
 		*ts.TCPPort,
 		ts.Type,
 		*ts.TypeID,
 		*ts.UpdPending,
+		*ts.ConfigUpdateTime,
+		*ts.ConfigApplyTime,
 		*ts.XMPPID,
 		*ts.XMPPPasswd,
 		*ts.StatusLastUpdated,

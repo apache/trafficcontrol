@@ -162,7 +162,7 @@ func makeParentDotConfigData(
 		return nil, warnings, errors.New("server CDNName missing")
 	} else if server.Cachegroup == nil || *server.Cachegroup == "" {
 		return nil, warnings, errors.New("server Cachegroup missing")
-	} else if server.ProfileNames == nil || len(server.ProfileNames) == 0 {
+	} else if len(server.ProfileNames) == 0 {
 		return nil, warnings, errors.New("server Profile missing")
 	} else if server.TCPPort == nil {
 		return nil, warnings, errors.New("server TCPPort missing")
@@ -1694,6 +1694,9 @@ func getOriginServersAndProfileCaches(
 		} else if cgSv.TypeID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil TypeID, skipping!")
 			continue
+		} else if len(cgSv.ProfileNames) == 0 {
+			warnings = append(warnings, "getting origin servers: got server with no profile names, skipping!")
+			continue
 		} else if cgSv.CDNID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil CDNID, skipping!")
 			continue
@@ -1757,7 +1760,7 @@ func getParentConfigProfileParams(
 	warnings := []string{}
 	parentConfigServerCacheProfileParams := map[string]profileCache{} // map[profileName]ProfileCache
 	for _, cgServer := range cgServers {
-		if cgServer.ProfileNames == nil {
+		if len(cgServer.ProfileNames) == 0 {
 			warnings = append(warnings, "getting parent config profile params: server has nil profiles, skipping!")
 			continue
 		}
@@ -1918,7 +1921,7 @@ func getProfileParentConfigParams(tcParentConfigParams []tc.Parameter) (map[stri
 func getServerParentConfigParams(server *Server, profileParentConfigParams map[string]map[string]string) map[string]string {
 	// We only need parent.config params, don't need all the params on the server
 	serverParams := map[string]string{}
-	if server.ProfileNames == nil || server.ProfileNames[0] != "" { // TODO warn/error if false? Servers requires profiles
+	if len(server.ProfileNames) != 0 || server.ProfileNames[0] != "" { // TODO warn/error if false? Servers requires profiles
 		for name, val := range profileParentConfigParams[server.ProfileNames[0]] {
 			if name == ParentConfigParamQStringHandling ||
 				name == ParentConfigParamAlgorithm ||

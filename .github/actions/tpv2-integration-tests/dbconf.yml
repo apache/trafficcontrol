@@ -14,34 +14,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+version: "1.0"
+name: dbconf.yml
 
-############################################################
-# Dockerfile to initialized Traffic Ops Database container
-# Based on CentOS 7.2
-############################################################
+test:
+  driver: postgres
+  open: host=172.17.0.1 port=5432 user=traffic_ops password=twelve dbname=traffic_ops sslmode=disable
 
-FROM centos/systemd
-
-RUN yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-
-RUN yum -y install \
-  postgresql13 \
-  nmap-ncat && \
-  yum clean all
-
-ENV POSTGRES_HOME $POSTGRES_HOME
-ENV PGPASSWORD $PGPASSWORD
-ENV DB_USERNAME $DB_USERNAME
-ENV DB_NAME $DB_NAME
-ENV DB_USER_PASS $DB_USER_PASS
-ENV DB_SERVER $DB_SERVER
-ENV DB_PORT $DB_PORT
-
-# Uses the same DB server/port
-ENV TV_DB_NAME $TV_DB_NAME
-ENV TV_USER $TV_USER
-ENV TV_USER_PASS $TV_USER_PASS
-ENV TV_SERVER $TV_SERVER
-
-ADD db_init/dbInit.sh /
-CMD /dbInit.sh

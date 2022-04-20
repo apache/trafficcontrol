@@ -140,7 +140,7 @@ func QueueUpdatesByProfile(t *testing.T) {
 	}
 	server := testData.Servers[0]
 	opts := client.NewRequestOptions()
-	if server.CDNName == nil || server.ProfileNames[0] == "" {
+	if server.CDNName == nil || len(server.ProfileNames) == 0 {
 		t.Fatalf("server doesn't have a CDN name or a profile name...quitting")
 	}
 

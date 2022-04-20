@@ -45,7 +45,7 @@ export class OriginsPage extends BasePage {
     private btnCreateNewOrigins = element(by.xpath("//button[@title='Create Origin']"));
     private txtSearch = element(by.id('originsTable_filter')).element(by.css('label input'));
     private txtName = element(by.name('name'));
-    private txtTenantId = element(by.name('tenantId'));
+    private selTenant = element(by.name('tenantId'));
     private txtFQDN = element(by.name('fqdn'));
     private txtProtocol = element(by.name('protocol'));
     private txtDeliveryService = element(by.name("deliveryServiceId"));
@@ -70,7 +70,8 @@ export class OriginsPage extends BasePage {
         await snp.NavigateToOriginsPage();
         await this.btnCreateNewOrigins.click();
         await this.txtName.sendKeys(origins.Name + this.randomize);
-        await this.txtTenantId.sendKeys(origins.Tenant);
+        await this.selTenant.click();
+        await element(by.name(origins.Tenant + this.randomize)).click();
         await this.txtFQDN.sendKeys(origins.FQDN);
         await this.txtProtocol.sendKeys(origins.Protocol);
         await this.txtDeliveryService.click();

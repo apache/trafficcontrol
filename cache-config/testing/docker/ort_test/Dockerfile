@@ -31,7 +31,7 @@ MAINTAINER dev@trafficcontrol.apache.org
 EXPOSE 80 443
 
 RUN yum install -y epel-release && \
-	yum install -y initscripts git jq gcc lua && \
+	yum install -y initscripts git jq gcc lua nmap-ncat && \
 	yum clean all
 
 # Note that if more than one t3c RPM matches this wildcard, this Dockerfile will

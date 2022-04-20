@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -895,6 +896,7 @@ func CDNExists(cdnName string, tx *sql.Tx) (bool, error) {
 	return true, nil
 }
 
+// GetCDNNameFromID gets the CDN name from the given CDN ID.
 func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = $1`, id).Scan(&name); err != nil {
@@ -1080,7 +1082,7 @@ func GetServerIDFromName(serverName string, tx *sql.Tx) (int, bool, error) {
 	return id, true, nil
 }
 
-func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
+func GetServerNameFromID(tx *sql.Tx, id int64) (string, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT host_name FROM server WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
@@ -1789,19 +1791,211 @@ func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
 	return regionName, true, nil
 }
 
-// GetCommonServerPropertiesFromV4 converts CommonServerPropertiesV40 to CommonServerProperties struct
+// QueueUpdateForServer sets the config update time for the server to now.
+func QueueUpdateForServer(tx *sql.Tx, serverID int64) error {
+	query := `
+UPDATE public.server
+SET config_update_time = now()
+WHERE server.id = $1;`
+
+	if _, err := tx.Exec(query, serverID); err != nil {
+		return fmt.Errorf("queueing config update for ServerID %d: %w", serverID, err)
+	}
+
+	return nil
+}
+
+// QueueUpdateForServerWithCachegroupCDN sets the config update time
+// for all servers belonging to the specified cachegroup (id) and cdn (id).
+func QueueUpdateForServerWithCachegroupCDN(tx *sql.Tx, cgID int, cdnID int64) ([]tc.CacheName, error) {
+	q := `
+UPDATE public.server
+SET config_update_time = now()
+WHERE server.cachegroup = $1 AND server.cdn_id = $2
+RETURNING server.host_name;`
+	rows, err := tx.Query(q, cgID, cdnID)
+	if err != nil {
+		return nil, fmt.Errorf("updating server config_update_time: %w", err)
+	}
+	defer log.Close(rows, "error closing rows for QueueUpdateForServerWithCachegroupCDN")
+	names := []tc.CacheName{}
+	for rows.Next() {
+		name := ""
+		if err := rows.Scan(&name); err != nil {
+			return nil, fmt.Errorf("scanning queue updates: %w", err)
+		}
+		names = append(names, tc.CacheName(name))
+	}
+	return names, nil
+}
+
+// QueueUpdateForServerWithTopologyCDN sets the config update time
+// for all servers within the specific topology (name) and cdn (id).
+func QueueUpdateForServerWithTopologyCDN(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64) error {
+	query := `
+UPDATE public.server
+SET config_update_time = now()
+FROM public.cachegroup AS cg
+INNER JOIN public.topology_cachegroup AS tc ON tc.cachegroup = cg."name"
+WHERE cg.id = server.cachegroup
+AND tc.topology = $1
+AND server.cdn_id = $2;`
+	var err error
+	if _, err = tx.Exec(query, topologyName, cdnId); err != nil {
+		err = fmt.Errorf("queueing updates: %w", err)
+	}
+	return err
+}
+
+// DequeueUpdateForServer sets the config update time equal to the
+// config apply time, thereby effectively dequeueing any pending
+// updates for the server specified.
+func DequeueUpdateForServer(tx *sql.Tx, serverID int64) error {
+	query := `
+UPDATE public.server
+SET config_update_time = config_apply_time
+WHERE server.id = $1;`
+
+	if _, err := tx.Exec(query, serverID); err != nil {
+		return fmt.Errorf("applying config update for ServerID %d: %w", serverID, err)
+	}
+
+	return nil
+}
+
+// DequeueUpdateForServerWithCachegroupCDN sets the config update time equal to
+// the config apply time, thereby effectively dequeueing any pending
+// updates for the servers specified by the cachegroup (id) and the cdn (id).
+func DequeueUpdateForServerWithCachegroupCDN(tx *sql.Tx, cgID int, cdnID int64) ([]tc.CacheName, error) {
+	q := `
+UPDATE public.server
+SET config_update_time = config_apply_time
+WHERE server.cachegroup = $1
+AND server.cdn_id = $2
+RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);`
+	rows, err := tx.Query(q, cgID, cdnID)
+	if err != nil {
+		return nil, fmt.Errorf("querying queue updates: %w", err)
+	}
+	defer log.Close(rows, "error closing rows for DequeueUpdateForServerWithCachegroupCDN")
+	names := []tc.CacheName{}
+	for rows.Next() {
+		name := ""
+		if err := rows.Scan(&name); err != nil {
+			return nil, fmt.Errorf("scanning queue updates: %w", err)
+		}
+		names = append(names, tc.CacheName(name))
+	}
+	return names, nil
+}
+
+// DequeueUpdateForServerWithTopologyCDN sets the config update time equal to
+// the config apply time, thereby effectively dequeueing any pending
+// updates for the servers specified by the topology (name) and the cdn (id).
+func DequeueUpdateForServerWithTopologyCDN(tx *sql.Tx, topologyName tc.TopologyName, cdnId int64) error {
+	query := `
+UPDATE public.server
+SET config_update_time = config_apply_time
+FROM cachegroup cg
+INNER JOIN topology_cachegroup tc ON tc.cachegroup = cg."name"
+WHERE cg.id = server.cachegroup
+AND tc.topology = $1
+AND server.cdn_id = $2;`
+	var err error
+	if _, err = tx.Exec(query, topologyName, cdnId); err != nil {
+		err = fmt.Errorf("queueing updates: %w", err)
+	}
+	return err
+}
+
+// SetApplyUpdateForServer sets the config apply time for the server to now.
+func SetApplyUpdateForServer(tx *sql.Tx, serverID int64) error {
+	query := `
+UPDATE public.server
+SET config_apply_time = now()
+WHERE server.id = $1;`
+
+	if _, err := tx.Exec(query, serverID); err != nil {
+		return fmt.Errorf("applying config update for ServerID %d: %w", serverID, err)
+	}
+
+	return nil
+}
+
+// SetApplyUpdateForServerWithTime sets the config apply time for the
+// server to the provided time.
+func SetApplyUpdateForServerWithTime(tx *sql.Tx, serverID int64, applyUpdateTime time.Time) error {
+	query := `
+UPDATE public.server
+SET config_apply_time = $1
+WHERE server.id = $2;`
+
+	if _, err := tx.Exec(query, applyUpdateTime, serverID); err != nil {
+		return fmt.Errorf("applying config update for ServerID %d with time %v: %w", serverID, applyUpdateTime, err)
+	}
+
+	return nil
+}
+
+// QueueRevalForServer sets the revalidate update time for the server to now.
+func QueueRevalForServer(tx *sql.Tx, serverID int64) error {
+	query := `
+UPDATE public.server
+SET revalidate_update_time = now()
+WHERE server.id = $1;`
+
+	if _, err := tx.Exec(query, serverID); err != nil {
+		return fmt.Errorf("queueing reval update for ServerID %d: %w", serverID, err)
+	}
+
+	return nil
+}
+
+// SetApplyRevalForServer sets the revalidate apply time for the server to now.
+func SetApplyRevalForServer(tx *sql.Tx, serverID int64) error {
+	query := `
+UPDATE public.server
+SET revalidate_apply_time = now()
+WHERE server.id = $1;`
+
+	if _, err := tx.Exec(query, serverID); err != nil {
+		return fmt.Errorf("queueing reval update for ServerID %d: %w", serverID, err)
+	}
+
+	return nil
+}
+
+// SetApplyRevalForServerWithTime sets the revalidate apply time for the
+// server to the provided time.
+func SetApplyRevalForServerWithTime(tx *sql.Tx, serverID int64, applyRevalTime time.Time) error {
+	query := `
+UPDATE public.server
+SET revalidate_apply_time = $1
+WHERE server.id = $2;`
+
+	if _, err := tx.Exec(query, applyRevalTime, serverID); err != nil {
+		return fmt.Errorf("applying config update for ServerID %d with time %v: %w", serverID, applyRevalTime, err)
+	}
+
+	return nil
+}
+
+// GetCommonServerPropertiesFromV4 converts ServerV40 to CommonServerProperties struct.
 func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
 	var id int
 	var desc string
+	if len(s.ProfileNames) == 0 {
+		return tc.CommonServerProperties{}, fmt.Errorf("profileName doesnot exist in server: %v", *s.ID)
+	}
 	rows, err := tx.Query("SELECT id, description from profile WHERE name=$1", (s.ProfileNames)[0])
 	if err != nil {
-		return tc.CommonServerProperties{}, fmt.Errorf("querying profile id and description by profile_name: " + err.Error())
+		return tc.CommonServerProperties{}, fmt.Errorf("querying profile id and description by profile_name: %w", err)
 	}
 	defer log.Close(rows, "closing rows in GetCommonServerPropertiesFromV4")
 
 	for rows.Next() {
 		if err := rows.Scan(&id, &desc); err != nil {
-			return tc.CommonServerProperties{}, fmt.Errorf("scanning profile: " + err.Error())
+			return tc.CommonServerProperties{}, fmt.Errorf("scanning profile: %w", err)
 		}
 	}
 
@@ -1846,43 +2040,52 @@ func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServe
 	}, nil
 }
 
-// UpdateServerProfilesForV4 updates server_profile table via update function for APIv4
-func UpdateServerProfilesForV4(id *int, profile []string, tx *sql.Tx) error {
-	var profileNames []string
+// UpdateServerProfilesForV4 updates server_profile table via update function for APIv4.
+func UpdateServerProfilesForV4(id int, profile []string, tx *sql.Tx) error {
+	profileNames := make([]string, 0, len(profile))
+	priority := make([]int, 0, len(profile))
+	for i, _ := range profile {
+		priority = append(priority, i)
+	}
 
 	//Delete existing rows from server_profile to get the priority correct for profile_name changes
-	_, err := tx.Exec("DELETE FROM server_profile WHERE server=$1", *id)
+	_, err := tx.Exec("DELETE FROM server_profile WHERE server=$1", id)
 	if err != nil {
-		return fmt.Errorf("updating server_profile by server id: %v" + strconv.Itoa(*id) + ", error: " + err.Error())
+		return fmt.Errorf("updating server_profile by server id: %d, error: %w", id, err)
 	}
 
-	for i, pName := range profile {
-		query := `INSERT INTO server_profile (server, profile_name, priority) VALUES ($1, $2, $3)`
-		_, err := tx.Exec(query, *id, pName, i)
-		if err != nil {
-			return fmt.Errorf("error inserting into server_profile table, %v", err)
-		}
-	}
-
-	err = tx.QueryRow("SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server=$1", *id).Scan(pq.Array(&profileNames))
-	if err == sql.ErrNoRows {
-		return fmt.Errorf("selecting server_profile by profile_name: " + err.Error())
+	query := `WITH inserted AS (
+		INSERT INTO server_profile
+		SELECT $1, "profile_name", "priority"
+		FROM UNNEST($2::text[], $3::int[]) AS tmp("profile_name", "priority")
+		RETURNING profile_name, priority
+	)
+	SELECT ARRAY_AGG(profile_name)
+	FROM (
+		SELECT profile_name
+		FROM inserted
+		ORDER BY priority ASC
+	) AS returned(profile_name)
+`
+	err = tx.QueryRow(query, id, pq.Array(profile), pq.Array(priority)).Scan(pq.Array(&profileNames))
+	if err != nil {
+		return fmt.Errorf("failed to insert/read into/from server_profile table, %w", err)
 	}
 	return nil
 }
 
-// UpdateServerProfileTableForV2V3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v2/v3
+// UpdateServerProfileTableForV2V3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v2/v3.
 func UpdateServerProfileTableForV2V3(id *int, newProfile *string, origProfile string, tx *sql.Tx) ([]string, error) {
 	var profileName []string
 	query := `UPDATE server_profile SET profile_name=$1 WHERE server=$2 AND profile_name=$3`
 	_, err := tx.Exec(query, *newProfile, *id, origProfile)
 	if err != nil {
-		return nil, fmt.Errorf("updating server_profile by profile_name: " + err.Error())
+		return nil, fmt.Errorf("updating server_profile by profile_name: %w", err)
 	}
 
 	err = tx.QueryRow("SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server=$1", *id).Scan(pq.Array(&profileName))
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("selecting server_profile by profile_name: " + err.Error())
+		return nil, fmt.Errorf("selecting server_profile by profile_name: %w", err)
 	}
 
 	return profileName, nil

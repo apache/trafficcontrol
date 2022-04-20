@@ -39,21 +39,25 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	serverUpdateStatus, err := getServerUpdateStatus(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
+	serverUpdateStatuses, err := getServerUpdateStatus(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	if inf.Version == nil || inf.Version.Major < 4 {
-		api.WriteRespRaw(w, r, serverUpdateStatus)
+		var downgradedStatuses []tc.ServerUpdateStatus
+		for _, status := range serverUpdateStatuses {
+			downgradedStatuses = append(downgradedStatuses, status.Downgrade())
+		}
+		api.WriteRespRaw(w, r, downgradedStatuses)
 	} else {
-		api.WriteResp(w, r, serverUpdateStatus)
+		api.WriteResp(w, r, serverUpdateStatuses)
 	}
 }
 
-func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatus, error) {
+func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatusV40, error) {
 
-	updateStatuses := []tc.ServerUpdateStatus{}
+	updateStatuses := []tc.ServerUpdateStatusV40{}
 
 	selectQuery := `
 /* topology_ancestors finds the ancestor topology nodes of the topology node for
@@ -82,15 +86,26 @@ UNION ALL
  * ancestor topology node found by topology_ancestors.
  */
 ), server_topology_ancestors AS (
-SELECT s.id, s.cachegroup, s.cdn_id, s.upd_pending, s.reval_pending, s.status, ta.base_server_id
+SELECT s.id, 
+	s.cachegroup,
+	s.cdn_id,
+	s.config_update_time > s.config_apply_time AS upd_pending,
+	s.revalidate_update_time > s.revalidate_apply_time AS reval_pending,
+	s.status,
+	ta.base_server_id
 	FROM server s
 	JOIN cachegroup c ON s.cachegroup = c.id
 	JOIN topology_ancestors ta ON c."name" = ta.cachegroup
 	JOIN status ON status.id = s.status
 	WHERE status.name = ANY($1::TEXT[])
 ), parentservers AS (
-SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending, ps.status
-		FROM server ps
+SELECT ps.id, 
+	ps.cachegroup,
+	ps.cdn_id,
+	ps.config_update_time > ps.config_apply_time AS upd_pending,
+	ps.revalidate_update_time > ps.revalidate_apply_time AS reval_pending,
+	ps.status
+	FROM server ps
 	LEFT JOIN status AS pstatus ON pstatus.id = ps.status
 	LEFT JOIN type t ON ps."type" = t.id
 	WHERE pstatus.name = ANY($1::TEXT[])
@@ -106,9 +121,9 @@ SELECT
 	s.id,
 	s.host_name,
 	type.name AS type,
-	(s.reval_pending::BOOLEAN) AS server_reval_pending,
+	s.revalidate_update_time > s.revalidate_apply_time AS server_reval_pending,
 	use_reval_pending.value,
-	s.upd_pending,
+	s.config_update_time > s.config_apply_time AS server_upd_pending,
 	status.name AS status,
 	/* True if the cachegroup parent or any ancestor topology node has pending updates. */
 	TRUE IN (
@@ -123,7 +138,11 @@ SELECT
 		WHERE sta.base_server_id = s.id
 		AND sta.cdn_id = s.cdn_id
 		UNION SELECT COALESCE(BOOL_OR(ps.reval_pending), FALSE)
-	) AS parent_reval_pending
+	) AS parent_reval_pending,
+	s.config_update_time,
+	s.config_apply_time,
+	s.revalidate_update_time,
+	s.revalidate_apply_time
 	FROM use_reval_pending,
 		 server s
 LEFT JOIN status ON s.status = status.id
@@ -132,7 +151,7 @@ LEFT JOIN type ON type.id = s.type
 LEFT JOIN parentservers ps ON ps.cachegroup = cg.parent_cachegroup_id
 	AND ps.cdn_id = s.cdn_id
 WHERE s.host_name = $5
-GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, s.upd_pending, status.name
+GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, server_upd_pending, status.name, config_update_time, config_apply_time, revalidate_update_time, revalidate_apply_time
 ORDER BY s.id
 `
 
@@ -146,9 +165,9 @@ ORDER BY s.id
 	defer log.Close(rows, "getServerUpdateStatus(): unable to close db connection")
 
 	for rows.Next() {
-		var us tc.ServerUpdateStatus
+		var us tc.ServerUpdateStatusV40
 		var serverType string
-		if err := rows.Scan(&us.HostId, &us.HostName, &serverType, &us.RevalPending, &us.UseRevalPending, &us.UpdatePending, &us.Status, &us.ParentPending, &us.ParentRevalPending); err != nil {
+		if err := rows.Scan(&us.HostId, &us.HostName, &serverType, &us.RevalPending, &us.UseRevalPending, &us.UpdatePending, &us.Status, &us.ParentPending, &us.ParentRevalPending, &us.ConfigUpdateTime, &us.ConfigApplyTime, &us.RevalidateUpdateTime, &us.RevalidateApplyTime); err != nil {
 			log.Errorf("could not scan server update status: %s\n", err)
 			return nil, tc.DBError
 		}

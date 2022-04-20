@@ -67,7 +67,7 @@ func GetDataFuncs() map[string]func(TCCfg, io.Writer) error {
 	}
 }
 
-func GetServerUpdateStatus(cfg TCCfg) (*tc.ServerUpdateStatus, error) {
+func GetServerUpdateStatus(cfg TCCfg) (*atscfg.ServerUpdateStatus, error) {
 	status, _, err := cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server '" + cfg.CacheHostName + "' update status: " + err.Error())
@@ -157,7 +157,7 @@ func GetPackages(cfg TCCfg) ([]Package, error) {
 	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
-	} else if server.ProfileNames == nil {
+	} else if len(server.ProfileNames) == 0 {
 		return nil, errors.New("getting server: nil profile")
 	}
 	params, _, err := cfg.TOClient.GetServerProfileParameters(server.ProfileNames[0], nil)
@@ -196,7 +196,7 @@ func GetChkconfig(cfg TCCfg) ([]ChkConfigEntry, error) {
 	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
-	} else if server.ProfileNames == nil {
+	} else if len(server.ProfileNames) == 0 {
 		return nil, errors.New("getting server: nil profile")
 	}
 	params, _, err := cfg.TOClient.GetServerProfileParameters(server.ProfileNames[0], nil)
@@ -219,20 +219,24 @@ type ChkConfigEntry struct {
 }
 
 // SetUpdateStatus sets the queue and reval status of serverName in Traffic Ops.
-func SetUpdateStatus(cfg TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
+func SetUpdateStatus(cfg TCCfg, serverName tc.CacheName, configApply, revalApply *time.Time) error {
 	// TODO need to move to toreq, add fallback
-	reqInf, err := cfg.TOClient.SetServerUpdateStatus(serverName, &queue, &revalPending)
+	reqInf, err := cfg.TOClient.SetServerUpdateStatus(serverName, configApply, revalApply)
 	if err != nil {
 		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
 	}
 	return nil
 }
 
-func jsonBoolStr(b bool) string {
-	if b {
-		return `true`
+// SetUpdateStatusCompat sets the queue and reval status of serverName in Traffic Ops.
+// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
+func SetUpdateStatusCompat(cfg TCCfg, serverName tc.CacheName, configApply, revalApply *time.Time, configApplyBool, revalApplyBool *bool) error {
+	// TODO need to move to toreq, add fallback
+	reqInf, err := cfg.TOClient.SetServerUpdateStatusBoolCompat(serverName, configApply, revalApply, configApplyBool, revalApplyBool)
+	if err != nil {
+		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
 	}
-	return `false`
+	return nil
 }
 
 // WriteConfig writes the Traffic Ops data necessary to generate config to output.

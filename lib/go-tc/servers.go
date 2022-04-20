@@ -700,44 +700,6 @@ type CommonServerProperties struct {
 	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-type CommonServerPropertiesV40 struct {
-	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
-	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
-	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
-	CDNName          *string              `json:"cdnName" db:"cdn_name"`
-	DeliveryServices *map[string][]string `json:"deliveryServices,omitempty"`
-	DomainName       *string              `json:"domainName" db:"domain_name"`
-	FQDN             *string              `json:"fqdn,omitempty"`
-	FqdnTime         time.Time            `json:"-"`
-	GUID             *string              `json:"guid" db:"guid"`
-	HostName         *string              `json:"hostName" db:"host_name"`
-	HTTPSPort        *int                 `json:"httpsPort" db:"https_port"`
-	ID               *int                 `json:"id" db:"id"`
-	ILOIPAddress     *string              `json:"iloIpAddress" db:"ilo_ip_address"`
-	ILOIPGateway     *string              `json:"iloIpGateway" db:"ilo_ip_gateway"`
-	ILOIPNetmask     *string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
-	ILOPassword      *string              `json:"iloPassword" db:"ilo_password"`
-	ILOUsername      *string              `json:"iloUsername" db:"ilo_username"`
-	LastUpdated      *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
-	MgmtIPAddress    *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIPGateway    *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIPNetmask    *string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
-	OfflineReason    *string              `json:"offlineReason" db:"offline_reason"`
-	PhysLocation     *string              `json:"physLocation" db:"phys_location"`
-	PhysLocationID   *int                 `json:"physLocationId" db:"phys_location_id"`
-	ProfileNames     []string             `json:"profileNames" db:"profile_name"`
-	Rack             *string              `json:"rack" db:"rack"`
-	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
-	Status           *string              `json:"status" db:"status"`
-	StatusID         *int                 `json:"statusId" db:"status_id"`
-	TCPPort          *int                 `json:"tcpPort" db:"tcp_port"`
-	Type             string               `json:"type" db:"server_type"`
-	TypeID           *int                 `json:"typeId" db:"server_type_id"`
-	UpdPending       *bool                `json:"updPending" db:"upd_pending"`
-	XMPPID           *string              `json:"xmppId" db:"xmpp_id"`
-	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
-}
-
 // ServerNullableV11 is a server as it appeared in API version 1.1.
 type ServerNullableV11 struct {
 	LegacyInterfaceDetails
@@ -956,10 +918,8 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 // Deprecated: Traffic Ops API version 3 is deprecated, new code should use
 // ServerV40 or newer structures.
 func (s ServerV30) UpgradeToV40(profileNames []string) (ServerV40, error) {
-	upgraded := ServerV40{
-		CommonServerPropertiesV40: UpdateCommonServerPropertiesV40(profileNames, s.CommonServerProperties),
-		StatusLastUpdated:         s.StatusLastUpdated,
-	}
+	upgraded := UpdateServerPropertiesV40(profileNames, s.CommonServerProperties)
+	upgraded.StatusLastUpdated = s.StatusLastUpdated
 	infs, err := ToInterfacesV4(s.Interfaces, s.RouterHostName, s.RouterPortName)
 	if err != nil {
 		return upgraded, err
@@ -983,9 +943,7 @@ func (s ServerNullableV2) UpgradeToV40(profileNames []string) (ServerV40, error)
 	if s.IP6IsService != nil {
 		ipv6IsService = *s.IP6IsService
 	}
-	upgraded := ServerV40{
-		CommonServerPropertiesV40: UpdateCommonServerPropertiesV40(profileNames, s.CommonServerProperties),
-	}
+	upgraded := UpdateServerPropertiesV40(profileNames, s.CommonServerProperties)
 
 	infs, err := s.LegacyInterfaceDetails.ToInterfacesV4(ipv4IsService, ipv6IsService, s.RouterHostName, s.RouterPortName)
 	if err != nil {
@@ -995,9 +953,9 @@ func (s ServerNullableV2) UpgradeToV40(profileNames []string) (ServerV40, error)
 	return upgraded, nil
 }
 
-// UpdateCommonServerPropertiesV40 updates CommonServerProperties of V2 and V3 to CommonServerPropertiesV40
-func UpdateCommonServerPropertiesV40(profileNames []string, properties CommonServerProperties) CommonServerPropertiesV40 {
-	return CommonServerPropertiesV40{
+// UpdateServerPropertiesV40 updates CommonServerProperties of V2 and V3 to ServerV40
+func UpdateServerPropertiesV40(profileNames []string, properties CommonServerProperties) ServerV40 {
+	return ServerV40{
 		Cachegroup:       properties.Cachegroup,
 		CachegroupID:     properties.CachegroupID,
 		CDNID:            properties.CDNID,
@@ -1038,9 +996,47 @@ func UpdateCommonServerPropertiesV40(profileNames []string, properties CommonSer
 
 // ServerV40 is the representation of a Server in version 4.0 of the Traffic Ops API.
 type ServerV40 struct {
-	CommonServerPropertiesV40
+	Cachegroup        *string                  `json:"cachegroup" db:"cachegroup"`
+	CachegroupID      *int                     `json:"cachegroupId" db:"cachegroup_id"`
+	CDNID             *int                     `json:"cdnId" db:"cdn_id"`
+	CDNName           *string                  `json:"cdnName" db:"cdn_name"`
+	DeliveryServices  *map[string][]string     `json:"deliveryServices,omitempty"`
+	DomainName        *string                  `json:"domainName" db:"domain_name"`
+	FQDN              *string                  `json:"fqdn,omitempty"`
+	FqdnTime          time.Time                `json:"-"`
+	GUID              *string                  `json:"guid" db:"guid"`
+	HostName          *string                  `json:"hostName" db:"host_name"`
+	HTTPSPort         *int                     `json:"httpsPort" db:"https_port"`
+	ID                *int                     `json:"id" db:"id"`
+	ILOIPAddress      *string                  `json:"iloIpAddress" db:"ilo_ip_address"`
+	ILOIPGateway      *string                  `json:"iloIpGateway" db:"ilo_ip_gateway"`
+	ILOIPNetmask      *string                  `json:"iloIpNetmask" db:"ilo_ip_netmask"`
+	ILOPassword       *string                  `json:"iloPassword" db:"ilo_password"`
+	ILOUsername       *string                  `json:"iloUsername" db:"ilo_username"`
+	LastUpdated       *TimeNoMod               `json:"lastUpdated" db:"last_updated"`
+	MgmtIPAddress     *string                  `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPGateway     *string                  `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPNetmask     *string                  `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	OfflineReason     *string                  `json:"offlineReason" db:"offline_reason"`
+	PhysLocation      *string                  `json:"physLocation" db:"phys_location"`
+	PhysLocationID    *int                     `json:"physLocationId" db:"phys_location_id"`
+	ProfileNames      []string                 `json:"profileNames" db:"profile_name"`
+	Rack              *string                  `json:"rack" db:"rack"`
+	RevalPending      *bool                    `json:"revalPending" db:"reval_pending"`
+	Status            *string                  `json:"status" db:"status"`
+	StatusID          *int                     `json:"statusId" db:"status_id"`
+	TCPPort           *int                     `json:"tcpPort" db:"tcp_port"`
+	Type              string                   `json:"type" db:"server_type"`
+	TypeID            *int                     `json:"typeId" db:"server_type_id"`
+	UpdPending        *bool                    `json:"updPending" db:"upd_pending"`
+	XMPPID            *string                  `json:"xmppId" db:"xmpp_id"`
+	XMPPPasswd        *string                  `json:"xmppPasswd" db:"xmpp_passwd"`
 	Interfaces        []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 	StatusLastUpdated *time.Time               `json:"statusLastUpdated" db:"status_last_updated"`
+	ConfigUpdateTime  *time.Time               `json:"configUpdateTime" db:"config_update_time"`
+	ConfigApplyTime   *time.Time               `json:"configApplyTime" db:"config_apply_time"`
+	RevalUpdateTime   *time.Time               `json:"revalUpdateTime" db:"revalidate_update_time"`
+	RevalApplyTime    *time.Time               `json:"revalApplyTime" db:"revalidate_apply_time"`
 }
 
 // ServerV4 is the representation of a Server in the latest minor version of
@@ -1180,6 +1176,46 @@ func (s *ServerV40) ToServerV2FromV4(csp CommonServerProperties) (ServerNullable
 	return legacyServer, nil
 }
 
+// ServerUpdateStatusV4 is the type of each entry in the `response` property of
+// the response from Traffic Ops to GET requests made to its
+// /servers/{{host name}}/update_status in the latest minor API
+// v4.0 endpoint.
+type ServerUpdateStatusV4 ServerUpdateStatusV40
+
+// ServerUpdateStatusV40 is the type of each entry in the `response` property of
+// the response from Traffic Ops to GET requests made to its
+// /servers/{{host name}}/update_status in API v4.0 endpoint.
+type ServerUpdateStatusV40 struct {
+	HostName             string     `json:"host_name"`
+	UpdatePending        bool       `json:"upd_pending"`
+	RevalPending         bool       `json:"reval_pending"`
+	UseRevalPending      bool       `json:"use_reval_pending"`
+	HostId               int        `json:"host_id"`
+	Status               string     `json:"status"`
+	ParentPending        bool       `json:"parent_pending"`
+	ParentRevalPending   bool       `json:"parent_reval_pending"`
+	ConfigUpdateTime     *time.Time `json:"config_update_time"`
+	ConfigApplyTime      *time.Time `json:"config_apply_time"`
+	RevalidateUpdateTime *time.Time `json:"revalidate_update_time"`
+	RevalidateApplyTime  *time.Time `json:"revalidate_apply_time"`
+}
+
+// Downgrade strips the Config and Revalidate timestamps from
+// ServerUpdateStatusV40 to return previous versions of the struct to ensure
+// previous compatibility.
+func (sus ServerUpdateStatusV40) Downgrade() ServerUpdateStatus {
+	return ServerUpdateStatus{
+		HostName:           sus.HostName,
+		UpdatePending:      sus.UpdatePending,
+		RevalPending:       sus.RevalPending,
+		UseRevalPending:    sus.UseRevalPending,
+		HostId:             sus.HostId,
+		Status:             sus.Status,
+		ParentPending:      sus.ParentPending,
+		ParentRevalPending: sus.ParentRevalPending,
+	}
+}
+
 // ServerUpdateStatus is the type of each entry in the `response` property of
 // the response from Traffic Ops to GET requests made to its
 // /servers/{{host name}}/update_status API endpoint.
@@ -1188,6 +1224,9 @@ func (s *ServerV40) ToServerV2FromV4(csp CommonServerProperties) (ServerNullable
 // operations t3c has done/needs to do. For most purposes, using Server
 // structures will be better - especially since the basic principle of this
 // type is predicated on a lie: that server host names are unique.
+//
+// Deprecated: ServerUpdateStatus is for use only in APIs below V4. New code
+// should use ServerUpdateStatusV40 or newer.
 type ServerUpdateStatus struct {
 	HostName           string `json:"host_name"`
 	UpdatePending      bool   `json:"upd_pending"`
@@ -1199,11 +1238,26 @@ type ServerUpdateStatus struct {
 	ParentRevalPending bool   `json:"parent_reval_pending"`
 }
 
+// Upgrade converts the deprecated ServerUpdateStatus to a
+// ServerUpdateStatusV4 struct.
+func (sus ServerUpdateStatus) Upgrade() ServerUpdateStatusV4 {
+	return ServerUpdateStatusV4{
+		HostName:           sus.HostName,
+		UpdatePending:      sus.UpdatePending,
+		RevalPending:       sus.RevalPending,
+		UseRevalPending:    sus.UseRevalPending,
+		HostId:             sus.HostId,
+		Status:             sus.Status,
+		ParentPending:      sus.ParentPending,
+		ParentRevalPending: sus.ParentRevalPending,
+	}
+}
+
 // ServerUpdateStatusResponseV40 is the type of a response from the Traffic
 // Ops API to a request to its /servers/{{host name}}/update_status endpoint
 // in API version 4.0.
 type ServerUpdateStatusResponseV40 struct {
-	Response []ServerUpdateStatus `json:"response"`
+	Response []ServerUpdateStatusV40 `json:"response"`
 	Alerts
 }
 

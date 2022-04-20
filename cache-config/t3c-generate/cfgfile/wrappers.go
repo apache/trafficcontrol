@@ -23,6 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 //
@@ -217,6 +218,9 @@ func MakeRegexRevalidateDotConfig(toData *t3cutil.ConfigData, fileName string, h
 }
 
 func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
+	remapAndCacheKeyParams := []tc.Parameter{}
+	remapAndCacheKeyParams = append(remapAndCacheKeyParams, toData.RemapConfigParams...)
+	remapAndCacheKeyParams = append(remapAndCacheKeyParams, toData.CacheKeyConfigParams...)
 	return atscfg.MakeRemapDotConfig(
 		toData.Server,
 		toData.DeliveryServices,
@@ -224,7 +228,7 @@ func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentT
 		toData.DeliveryServiceRegexes,
 		toData.ServerParams,
 		toData.CDN,
-		append(toData.RemapConfigParams, toData.CacheKeyConfigParams...),
+		remapAndCacheKeyParams,
 		toData.Topologies,
 		toData.CacheGroups,
 		toData.ServerCapabilities,

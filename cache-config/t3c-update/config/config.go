@@ -43,8 +43,10 @@ type Cfg struct {
 	LoginDispersion  time.Duration
 	CacheHostName    string
 	GetData          string
-	UpdatePending    bool
-	RevalPending     bool
+	ConfigApplyTime  *time.Time
+	RevalApplyTime   *time.Time
+	ConfigApplyBool  *bool
+	RevalApplyBool   *bool
 	t3cutil.TCCfg
 	Version     string
 	GitRevision string
@@ -69,10 +71,10 @@ func Usage() {
 func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	dispersionPtr := getopt.IntLong("login-dispersion", 'l', 0, "[seconds] wait a random number of seconds between 0 and [seconds] before login to traffic ops, default 0")
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
-	const setUpdateStatusFlagName = "set-update-status"
-	updatePendingPtr := getopt.BoolLong(setUpdateStatusFlagName, 'q', "[true | false] sets the servers update status")
-	const setRevalStatusFlagName = "set-reval-status"
-	revalPendingPtr := getopt.BoolLong(setRevalStatusFlagName, 'a', "[true | false] sets the servers revalidate status")
+	const setConfigApplyTimeFlagName = "set-config-apply-time"
+	configApplyTimeStringPtr := getopt.StringLong(setConfigApplyTimeFlagName, 'q', "", "[RFC3339Nano Timestamp] sets the server's config apply time")
+	const setRevalApplyTimeFlagName = "set-reval-apply-time"
+	revalApplyTimeStringPtr := getopt.StringLong(setRevalApplyTimeFlagName, 'a', "", "[RFC3339Nano Timestamp] sets the server's reval apply time")
 	toInsecurePtr := getopt.BoolLong("traffic-ops-insecure", 'I', "[true | false] ignore certificate errors from Traffic Ops")
 	toTimeoutMSPtr := getopt.IntLong("traffic-ops-timeout-milliseconds", 't', 30000, "Timeout in milli-seconds for Traffic Ops requests, default is 30000")
 	toURLPtr := getopt.StringLong("traffic-ops-url", 'u', "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with     the environment variable TO_URL")
@@ -82,6 +84,13 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	versionPtr := getopt.BoolLong("version", 'V', "Print the version")
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
 	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
+
+	// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
+	const setConfigApplyBoolFlagName = "set-update-status"
+	configApplyBoolFlag := getopt.BoolLong(setConfigApplyBoolFlagName, 'y', `[false or nonexistent] Set the Update Status to false for the server`)
+	const setRevalApplyBoolFlagName = "set-reval-status"
+	revalApplyBoolFlag := getopt.BoolLong(setRevalApplyBoolFlagName, 'z', `[false or nonexistent] Set the Reval Status to false for the server`)
+	// ***
 
 	getopt.Parse()
 
@@ -93,14 +102,57 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 		os.Exit(0)
 	}
 
-	if !getopt.IsSet(setRevalStatusFlagName) {
-		fmt.Println("--set-reval-status is required")
+	// Verify at least one flag is passed
+	if (!getopt.IsSet(setConfigApplyTimeFlagName) && !getopt.IsSet(setRevalApplyTimeFlagName)) &&
+		(!getopt.IsSet(setConfigApplyBoolFlagName) && !getopt.IsSet(setRevalApplyBoolFlagName)) { // TODO: Remove once ATC (v7.0+) is deployed
+		fmt.Printf("Must set either %s or %s. One is at least required.\n", setConfigApplyTimeFlagName, setRevalApplyTimeFlagName)
 		os.Exit(0)
 	}
-	if !getopt.IsSet(setUpdateStatusFlagName) {
-		fmt.Printf("DEBUG %v\n", *updatePendingPtr)
-		fmt.Println("--set-update-status is required")
-		os.Exit(0)
+
+	var configApplyTimePtr, revalApplyTimePtr *time.Time
+	// Validate that it can be parsed to a valid timestamp
+	if getopt.IsSet(setConfigApplyTimeFlagName) {
+		parsed, err := time.Parse(time.RFC3339Nano, *configApplyTimeStringPtr)
+		if err != nil {
+			fmt.Printf("%s must be a valid RFC3339Nano timestamp", setConfigApplyTimeFlagName)
+		}
+		configApplyTimePtr = &parsed
+	}
+	if getopt.IsSet(setRevalApplyTimeFlagName) {
+		parsed, err := time.Parse(time.RFC3339Nano, *revalApplyTimeStringPtr)
+		if err != nil {
+			fmt.Printf("%s must be a valid RFC3339Nano timestamp", setRevalApplyTimeFlagName)
+		}
+		revalApplyTimePtr = &parsed
+	}
+
+	// TODO: Remove once ATC (v7.0+) is deployed
+	var configApplyBoolPtr, revalApplyBoolPtr *bool
+	if getopt.IsSet(setConfigApplyBoolFlagName) {
+		if *configApplyBoolFlag {
+			fmt.Println("set-update-status must be false or nonexistent")
+			os.Exit(0)
+		}
+		configApplyBoolPtr = configApplyBoolFlag
+	} else {
+		configApplyBoolPtr = nil
+	}
+	if getopt.IsSet(setRevalApplyBoolFlagName) {
+		if *revalApplyBoolFlag {
+			fmt.Println("set-reval-status must be false or nonexistent")
+			os.Exit(0)
+		}
+		revalApplyBoolPtr = revalApplyBoolFlag
+	} else {
+		revalApplyBoolPtr = nil
+	}
+
+	// Booleans must trump time for backwards compatibility
+	if configApplyTimePtr != nil {
+		configApplyBoolPtr = nil
+	}
+	if revalApplyTimePtr != nil {
+		revalApplyBoolPtr = nil
 	}
 
 	logLocationError := log.LogLocationStderr
@@ -165,8 +217,10 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 		LogLocationInfo:  logLocationInfo,
 		LogLocationWarn:  logLocationWarn,
 		LoginDispersion:  dispersion,
-		UpdatePending:    *updatePendingPtr,
-		RevalPending:     *revalPendingPtr,
+		ConfigApplyTime:  configApplyTimePtr,
+		RevalApplyTime:   revalApplyTimePtr,
+		ConfigApplyBool:  configApplyBoolPtr,
+		RevalApplyBool:   revalApplyBoolPtr,
 		TCCfg: t3cutil.TCCfg{
 			CacheHostName: cacheHostName,
 			GetData:       "update-status",

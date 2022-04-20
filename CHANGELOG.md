@@ -13,14 +13,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added support for a new Traffic Ops GLOBAL profile parameter -- `tm_query_status_override` -- to override which status of Traffic Monitors to query (default: ONLINE).
 - Traffic Ops: added new `cdn.conf` option -- `user_cache_refresh_interval_sec` -- which enables an in-memory users cache to improve performance. Default: 0 (disabled).
 - Traffic Router: Add support for `file`-protocol URLs for the `geolocation.polling.url` for the Geolocation database.
+- Replaces all Traffic Portal Tenant select boxes with a novel tree select box [#6427](https://github.com/apache/trafficcontrol/issues/6427).
 - Traffic Monitor: Add support for `access.log` to TM.
 - Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
+- [Traffic Ops | Traffic Go Clients | T3C] Add additional timestamp fields to server for queuing and dequeueing config and revalidate updates.
 - Added layered profile feature to 4.0 for `GET` servers/, `POST` servers/, `PUT` servers/{id} and `DELETE` servers/{id}.
 - Added layered profile feature to 4.0 for `GET` servers/details.
 
 ### Fixed
 - Update traffic\_portal dependencies to mitigate `npm audit` issues.
 - Fixed a cdn-in-a-box build issue when using `RHEL_VERSION=7`
+- `dequeueing` server updates should not require checking for cdn locks.
 - Fixed Traffic Ops ignoring the configured database port value, which was prohibiting the use of anything other than port 5432 (the PostgreSQL default)
 - [#6580](https://github.com/apache/trafficcontrol/issues/6580) Fixed cache config generation remap.config targets for MID-type servers in a Topology with other caches as parents and HTTPS origins.
 - Traffic Router: fixed a null pointer exception that caused snapshots to be rejected if a topology cachegroup did not have any online/reported/admin\_down caches
@@ -30,11 +33,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6590](https://github.com/apache/trafficcontrol/pull/6590) Python client: Corrected parameter name in decorator for get\_parameters\_by\_profile\_id
 - [#6368](https://github.com/apache/trafficcontrol/pull/6368) Fixed validation response message from `/acme_accounts`
 - [#6603](https://github.com/apache/trafficcontrol/issues/6603) Fixed users with "admin" "Priv Level" not having Permission to view or delete DNSSEC keys.
+- Fixed Traffic Router to handle aggressive NSEC correctly.
 - [#6626](https://github.com/apache/trafficcontrol/pull/6626) Fixed t3c Capabilities request failure issue which could result in malformed config.
 - [#6370](https://github.com/apache/trafficcontrol/pull/6370) Fixed docs for `POST` and response code for `PUT` to `/acme_accounts` endpoint
 - Only `operations` and `admin` roles should have the `DELIVERY-SERVICE:UPDATE` permission.
 - [#6369](https://github.com/apache/trafficcontrol/pull/6369) Fixed `/acme_accounts` endpoint to validate email and URL fields
 - Fixed searching of the ds parameter merge_parent_groups slice.
+- t3c-generate fix for combining remapconfig and cachekeyconfig parameters for MakeRemapDotConfig call.
 
 ### Removed
 - Remove traffic\_portal dependencies to mitigate `npm audit` issues, specifically `grunt-concurrent`, `grunt-contrib-concat`, `grunt-contrib-cssmin`, `grunt-contrib-jsmin`, `grunt-contrib-uglify`, `grunt-contrib-htmlmin`, `grunt-newer`, and `grunt-wiredep`
@@ -53,6 +58,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated the Profiles Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated Go version to 1.18
 - Removed the unused `deliveryservice_tmuser` table from Traffic Ops database
+- Adds updates to the trafficcontrol-health-client to, use new ATS Host status formats, detect and use proper
+  traffic_ctl commands, and adds new markup-poll-threshold config.
 
 ## [6.1.0] - 2022-01-18
 ### Added

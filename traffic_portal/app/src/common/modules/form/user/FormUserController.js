@@ -43,10 +43,6 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
         return role.name;
     };
 
-    $scope.tenantLabel = function(tenant) {
-        return '-'.repeat(tenant.level) + ' ' + tenant.name;
-    };
-
     $scope.labelize = stringUtils.labelize;
 
     $scope.navigateToPath = locationUtils.navigateToPath;

@@ -272,7 +272,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			return errors.New("server '" + cacheHostName + " missing CDNName")
 		} else if server.CDNID == nil {
 			return errors.New("server '" + cacheHostName + " missing CDNID")
-		} else if server.ProfileNames == nil {
+		} else if len(server.ProfileNames) == 0 {
 			return errors.New("server '" + cacheHostName + " missing Profile")
 		}
 
@@ -468,7 +468,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.ProfileNames != nil && oldServer.ProfileNames[0] == server.ProfileNames[0] {
+				if oldCfg != nil && len(oldServer.ProfileNames) != 0 && oldServer.ProfileNames[0] == server.ProfileNames[0] {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.ServerParams)
 				}
 				params, reqInf, err := toClient.GetServerProfileParameters(server.ProfileNames[0], reqHdr)
@@ -519,7 +519,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.ProfileNames != nil && oldServer.ProfileNames[0] == server.ProfileNames[0] {
+				if oldCfg != nil && len(oldServer.ProfileNames) != 0 && oldServer.ProfileNames[0] == server.ProfileNames[0] {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.Profile)
 				}
 				profile, reqInf, err := toClient.GetProfileByName(server.ProfileNames[0], reqHdr)
