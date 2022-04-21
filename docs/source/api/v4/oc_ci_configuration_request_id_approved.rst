@@ -25,7 +25,7 @@ Triggers an asynchronous task to update the configuration for the :abbr:`uCDN (U
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: CDNI-CAPACITY:ADMIN
+:Permissions Required: CDNI-ADMIN:READ, CDNI-ADMIN:UPDATE
 :Response Type:  Object
 
 Request Structure
