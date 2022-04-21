@@ -710,7 +710,8 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			v11server := tc.DSServerV11{}
-			v11server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort)
+			pid, pdesc := dbhelpers.GetProfileIDDesc(inf.Tx.Tx, srv.ProfileNames[0])
+			v11server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort, &pdesc, &pid)
 
 			v11server.LegacyInterfaceDetails = legacyInterface
 
@@ -735,7 +736,8 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			v3server := tc.DSServer{}
-			v3server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort)
+			pid, pdesc := dbhelpers.GetProfileIDDesc(inf.Tx.Tx, srv.ProfileNames[0])
+			v3server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort, &pdesc, &pid)
 
 			v3server.ServerInterfaces = &v3Interfaces
 
@@ -771,9 +773,7 @@ s.mgmt_ip_netmask,
 s.offline_reason,
 pl.name as phys_location,
 s.phys_location as phys_location_id,
-p.name as profile,
-p.description as profile_desc,
-s.profile as profile_id,
+(SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server_profile.server=s.id) as profile_name,
 s.rack,
 st.name as status,
 s.status as status_id,
@@ -847,9 +847,7 @@ WHERE s.id in (select server from deliveryservice_server where deliveryservice =
 			&s.OfflineReason,
 			&s.PhysLocation,
 			&s.PhysLocationID,
-			&s.Profile,
-			&s.ProfileDesc,
-			&s.ProfileID,
+			pq.Array(&s.ProfileNames),
 			&s.Rack,
 			&s.Status,
 			&s.StatusID,
