@@ -17,9 +17,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Monitor: Add support for `access.log` to TM.
 - Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
 - [Traffic Ops | Traffic Go Clients | T3C] Add additional timestamp fields to server for queuing and dequeueing config and revalidate updates.
-- Added layered profile feature to 4.0 for `GET` servers/, `POST` servers/, `PUT` servers/{id} and `DELETE` servers/{id}.
+- Added layered profile feature to 4.0 for `GET` /servers/, `POST` /servers/, `PUT` /servers/{id} and `DELETE` /servers/{id}.
 - Added a Traffic Ops endpoint and Traffic Portal page to view all CDNi configuration update requests and approve or deny.
-- Added layered profile feature to 4.0 for `GET` servers/details.
+- Added layered profile feature to 4.0 for `GET` /servers/details.
+- Added layered profile feature to 4.0 for `GET` /deliveryservices/{id}/servers/ and /deliveryservices/{id}/servers/eligible.
 
 ### Fixed
 - Update traffic\_portal dependencies to mitigate `npm audit` issues.
