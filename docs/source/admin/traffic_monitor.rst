@@ -80,7 +80,7 @@ traffic_monitor.cfg
 	.. Note:: ``both`` will poll IPv4 and IPv6 and report on availability based on if the respective IP addresses are defined on the server. So if only an IPv4 address is defined and the protocol is set to ``both`` then it will only show the availability over IPv4, but if both addresses are defined then it will show availability based on IPv4 and IPv6.
 
 :``crconfig_backup_file``:   The path to a file within which a backup of the most recently fetched CDN :term:`Snapshot` will be stored. Default is ``/opt/traffic_monitor/crconfig.backup``.
-:``crconfig_history_count``: The number of historical CDN Snapshots to store, which can then be retrieved through the :ref:`tm-api`. Default is 20,000.
+:``crconfig_history_count``: The number of historical CDN Snapshots to store, which can then be retrieved through the :ref:`tm-api`. Default is 100.
 :``distributed_polling``:    A boolean that controls whether `Distributed Polling`_ is enabled. Default is ``false``.
 
 	.. seealso:: The `Distributed Polling`_ section has more information on this setting.

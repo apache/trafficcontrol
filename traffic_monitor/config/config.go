@@ -193,7 +193,7 @@ func GetAccessLogWriter(cfg Config) (io.WriteCloser, error) {
 var DefaultConfig = Config{
 	CachePollingProtocol:         Both,
 	CRConfigBackupFile:           CRConfigBackupFile,
-	CRConfigHistoryCount:         20000,
+	CRConfigHistoryCount:         100,
 	HealthFlushInterval:          200 * time.Millisecond,
 	HTTPPollingFormat:            HTTPPollingFormat,
 	HTTPTimeout:                  2 * time.Second,
