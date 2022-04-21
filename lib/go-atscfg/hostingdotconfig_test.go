@@ -33,8 +33,7 @@ func TestMakeHostingDotConfig(t *testing.T) {
 	server := makeGenericServer()
 	server.HostName = util.StrPtr("server0")
 	server.CDNName = &cdnName
-	server.ProfileID = util.IntPtr(46)
-	server.Profile = util.StrPtr("serverprofile")
+	server.ProfileNames = []string{"serverprofile"}
 	hdr := "myHeaderComment"
 
 	serverParams := []tc.Parameter{
@@ -42,19 +41,19 @@ func TestMakeHostingDotConfig(t *testing.T) {
 			Name:       ParamRAMDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamRAMDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + *server.Profile + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 		tc.Parameter{
 			Name:       ParamDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + *server.Profile + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 		tc.Parameter{
 			Name:       "somethingelse",
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "somethingelse-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + *server.Profile + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 	}
 
@@ -126,9 +125,8 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 	server.Cachegroup = util.StrPtr("edgeCG")
 	server.CDNName = &cdnName
 	server.CDNID = util.IntPtr(400)
-	server.ProfileID = util.IntPtr(46)
 	server.ID = util.IntPtr(899)
-	server.Profile = util.StrPtr("serverprofile")
+	server.ProfileNames = []string{"serverprofile"}
 	hdr := "myHeaderComment"
 
 	serverParams := []tc.Parameter{
@@ -136,19 +134,19 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 			Name:       ParamRAMDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamRAMDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + *server.Profile + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 		tc.Parameter{
 			Name:       ParamDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + *server.Profile + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 		tc.Parameter{
 			Name:       "somethingelse",
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "somethingelse-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + *server.Profile + `"]`),
+			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
 	}
 

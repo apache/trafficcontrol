@@ -199,14 +199,14 @@ JOIN topology_descendants td ON c."name" = td.cachegroup
 )
 UPDATE public.server
 SET config_update_time = now()
-WHERE (server.cdn_id = $1
-	   AND server.cachegroup IN (
+WHERE server.cdn_id = $1
+	   AND (server.cachegroup IN (
 			SELECT id
 			FROM cachegroup
 			WHERE parent_cachegroup_id = $2
 				OR secondary_parent_cachegroup_id = $2
-			))
-		OR server.cachegroup IN (SELECT stc.id FROM server_topology_descendants stc);
+			)
+			OR server.cachegroup IN (SELECT stc.id FROM server_topology_descendants stc));
 `
 	if _, err := tx.Exec(q, cdnID, parentCachegroupID); err != nil {
 		return errors.New("queueing updates on child caches: " + err.Error())

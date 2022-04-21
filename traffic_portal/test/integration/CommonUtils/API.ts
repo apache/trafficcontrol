@@ -337,6 +337,11 @@ export class API {
                 }
             }
         }
+        if(hasProperty(data, 'profileNames', "Array")){
+            for (const index in data.profileNames) {
+                data.profileNames[index] = data.profileNames[index]+randomize
+            }
+        }
     }
 
     public async UseAPI(data: Array<APIData>): Promise<void> {

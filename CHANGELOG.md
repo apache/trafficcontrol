@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Monitor: Add support for `access.log` to TM.
 - Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
 - [Traffic Ops | Traffic Go Clients | T3C] Add additional timestamp fields to server for queuing and dequeueing config and revalidate updates.
+- Added layered profile feature to 4.0 for `GET` servers/, `POST` servers/, `PUT` servers/{id} and `DELETE` servers/{id}.
+- Added a Traffic Ops endpoint and Traffic Portal page to view all CDNi configuration update requests and approve or deny.
 
 ### Fixed
 - Update traffic\_portal dependencies to mitigate `npm audit` issues.
@@ -37,6 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Only `operations` and `admin` roles should have the `DELIVERY-SERVICE:UPDATE` permission.
 - [#6369](https://github.com/apache/trafficcontrol/pull/6369) Fixed `/acme_accounts` endpoint to validate email and URL fields
 - Fixed searching of the ds parameter merge_parent_groups slice.
+- Fixed TO API `PUT /servers/:id/status` to only queue updates on the same CDN as the updated server
 - t3c-generate fix for combining remapconfig and cachekeyconfig parameters for MakeRemapDotConfig call.
 
 ### Removed
