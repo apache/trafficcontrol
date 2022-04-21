@@ -136,10 +136,6 @@ type Config struct {
 	MaxEvents uint64 `json:"max_events"`
 	// The interval on which to poll for this TM's CDN's "monitoring config".
 	MonitorConfigPollingInterval time.Duration `json:"-"`
-	// This appears to do nothing.
-	//
-	// Deprecated: This serves no purpose and will be removed in the future.
-	PeerOptimistic bool `json:"peer_optimistic"`
 	// Specifies the minimum number of peers that must be available in order to
 	// participate in the optimistic health protocol.
 	PeerOptimisticQuorumMin int `json:"peer_optimistic_quorum_min"`
@@ -205,7 +201,6 @@ var DefaultConfig = Config{
 	LogLocationWarning:           LogLocationStdout,
 	MaxEvents:                    200,
 	MonitorConfigPollingInterval: 5 * time.Second,
-	PeerOptimistic:               true,
 	PeerOptimisticQuorumMin:      0,
 	ServeReadTimeout:             10 * time.Second,
 	ServeWriteTimeout:            10 * time.Second,

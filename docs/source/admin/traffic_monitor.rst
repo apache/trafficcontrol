@@ -93,21 +93,16 @@ traffic_monitor.cfg
 
 	.. seealso:: The `HTTP Accept Header Configuration`_ section has more information on this setting.
 
-:``http_timeout_ms``:      Sets the timeout duration - in milliseconds - for all HTTP operations (both peer-polling and stat/health data polling). Default is 2000.
-:``log_location_access``:  A logfile location to which access logs will be written, or ``null`` to not log access events.\ [#log-locations]_ Default is ``null``
-:``log_location_debug``:   A logfile location to which debug logs will be written, or ``null`` to not log debug messages.\ [#log-locations]_ Default is ``null``
-:``log_location_error``:   A logfile location to which error logs will be written, or ``null`` to not log error messages.\ [#log-locations]_ Default is "stderr".
-:``log_location_event``:   A logfile location to which event logs will be written, or ``null`` to not log events.\ [#log-locations]_ Default is "stdout"
-:``log_location_info``:    A logfile location to which informational logs will be written, or ``null`` to not log informational messages.\ [#log-locations]_ Default is ``null``
-:``log_location_warning``: A logfile location to which warning logs will be written, or ``null`` to not log warning messages.\ [#log-locations]_ Default is "stdout"
-:``max_events``:           The maximum number of changes to stored aggregate data that should be retained at any one time. Default is 200.
+:``http_timeout_ms``:                    Sets the timeout duration - in milliseconds - for all HTTP operations (both peer-polling and stat/health data polling). Default is 2000.
+:``log_location_access``:                A logfile location to which access logs will be written, or ``null`` to not log access events.\ [#log-locations]_ Default is ``null``
+:``log_location_debug``:                 A logfile location to which debug logs will be written, or ``null`` to not log debug messages.\ [#log-locations]_ Default is ``null``
+:``log_location_error``:                 A logfile location to which error logs will be written, or ``null`` to not log error messages.\ [#log-locations]_ Default is "stderr".
+:``log_location_event``:                 A logfile location to which event logs will be written, or ``null`` to not log events.\ [#log-locations]_ Default is "stdout"
+:``log_location_info``:                  A logfile location to which informational logs will be written, or ``null`` to not log informational messages.\ [#log-locations]_ Default is ``null``
+:``log_location_warning``:               A logfile location to which warning logs will be written, or ``null`` to not log warning messages.\ [#log-locations]_ Default is "stdout"
+:``max_events``:                         The maximum number of changes to stored aggregate data that should be retained at any one time. Default is 200.
 :``monitor_config_polling_interval_ms``: The interval - in milliseconds - on which to poll Traffic Ops for this Traffic Monitor's "monitoring configuration" as returned by :ref:`to-api-cdns-name-configs-monitoring`.
-:``peer_optimistic``:      This is a legacy field that does nothing. However, if present in the configuration file, this must be a valid boolean or Traffic Monitor will refuse to load the configuration file. Default is ``true``.
-
-	.. deprecated:: ATCv7
-		The dependency on this field being valid will be removed in the future. It already has no effect.
-
-:``peer_optimistic_quorum_min``: Specifies the minimum number of peers that must be available in order to participate in the optimistic health protocol. Default is zero.
+:``peer_optimistic_quorum_min``:         Specifies the minimum number of peers that must be available in order to participate in the optimistic health protocol. Default is zero.
 
 	.. seealso:: The `Peering and Optimistic Quorum`_ section has more information on this setting.
 
