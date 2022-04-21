@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Only `operations` and `admin` roles should have the `DELIVERY-SERVICE:UPDATE` permission.
 - [#6369](https://github.com/apache/trafficcontrol/pull/6369) Fixed `/acme_accounts` endpoint to validate email and URL fields
 - Fixed searching of the ds parameter merge_parent_groups slice.
+- Fixed TO API `PUT /servers/:id/status` to only queue updates on the same CDN as the updated server
 - t3c-generate fix for combining remapconfig and cachekeyconfig parameters for MakeRemapDotConfig call.
 
 ### Removed
