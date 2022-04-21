@@ -94,11 +94,11 @@ func (status TOStatus) GetAuditName() string {
 
 func (status TOStatus) GetType() string { return "status" }
 
-func (status TOStatus) Validate() error {
+func (status TOStatus) Validate() (error, error) {
 	errs := validation.Errors{
 		"name": validation.Validate(status.Name, validation.NotNil, validation.Required),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (st *TOStatus) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {

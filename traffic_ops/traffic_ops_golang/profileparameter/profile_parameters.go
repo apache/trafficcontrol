@@ -98,15 +98,15 @@ func (pp *TOProfileParameter) SetKeys(keys map[string]interface{}) {
 	pp.ParameterID = &paramId
 }
 
-// Validate fulfills the api.Validator interface
-func (pp *TOProfileParameter) Validate() error {
+// Validate fulfills the api.Validator interface.
+func (pp *TOProfileParameter) Validate() (error, error) {
 
 	errs := validation.Errors{
 		"profileId":   validation.Validate(pp.ProfileID, validation.Required),
 		"parameterId": validation.Validate(pp.ParameterID, validation.Required),
 	}
 
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 //The TOProfileParameter implementation of the Creator interface

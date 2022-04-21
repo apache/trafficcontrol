@@ -58,7 +58,7 @@ func TestGetServerUpdateStatus(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	result, err := getServerUpdateStatus(tx, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}, "host_name_1")
+	result, err, _ := getServerUpdateStatus(tx, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}, "host_name_1")
 	if err != nil {
 		t.Errorf("getServerUpdateStatus: %v", err)
 	}
