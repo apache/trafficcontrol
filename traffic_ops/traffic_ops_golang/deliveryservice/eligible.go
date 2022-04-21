@@ -82,7 +82,11 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			v11server := tc.DSServerV11{}
-			pid, pdesc := dbhelpers.GetProfileIDDesc(inf.Tx.Tx, *v11server.Profile)
+			if len(srv.ProfileNames) == 0 {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("profile name for server: "+*srv.HostName+" not found"), nil)
+				return
+			}
+			pid, pdesc := dbhelpers.GetProfileIDDesc(inf.Tx.Tx, srv.ProfileNames[0])
 			v11server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort, &pdesc, &pid)
 
 			v11server.LegacyInterfaceDetails = legacyInterface
@@ -108,7 +112,11 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			v3server := tc.DSServer{}
-			pid, pdesc := dbhelpers.GetProfileIDDesc(inf.Tx.Tx, *v3server.Profile)
+			if len(srv.ProfileNames) == 0 {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("profile name for server: "+*srv.HostName+" not found"), nil)
+				return
+			}
+			pid, pdesc := dbhelpers.GetProfileIDDesc(inf.Tx.Tx, srv.ProfileNames[0])
 			v3server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort, &pdesc, &pid)
 
 			v3server.ServerInterfaces = &v3Interfaces
