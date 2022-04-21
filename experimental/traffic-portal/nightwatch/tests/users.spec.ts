@@ -17,8 +17,16 @@ import { LoginPageObject } from "nightwatch/page_objects/login";
 import type { GlobalConfig } from "../globals/globals";
 import type { UsersPageObject } from "../page_objects/users";
 
-module.exports = {
-	"Filter by username": async (browser: NightwatchBrowser): Promise<void> => {
+/**
+ * A test suite is a mapping of test descriptions to the functions that
+ * implement the thereby described test.
+ */
+interface TestSuite {
+	[description: string]: (browser: NightwatchBrowser) => (void | Promise<void>);
+};
+
+const suite: TestSuite = {
+	"Filter by username": async browser => {
 		const username = (browser.globals as GlobalConfig).adminUser;
 		const password = (browser.globals as GlobalConfig).adminPass;
 
@@ -45,7 +53,7 @@ module.exports = {
 		);
 	},
 	// Uncomment when user details page exists
-	// "View user details":  (browser: NightwatchBrowser): void => {
+	// "View user details":  browser => {
 	// 	const username = (browser.globals as GlobalConfig).adminUser;
 	// 	const password = (browser.globals as GlobalConfig).adminPass;
 
@@ -59,3 +67,5 @@ module.exports = {
 	// 	userRow.mouseButtonClick("right").click("button[name=View-User-Details]").assert.urlContains(username);
 	// }
 };
+
+export default suite;

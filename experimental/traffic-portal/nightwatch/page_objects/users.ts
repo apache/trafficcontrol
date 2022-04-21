@@ -13,7 +13,9 @@
 */
 import {
 	EnhancedElementInstance,
-	EnhancedPageObject, EnhancedSectionInstance, NightwatchAPI
+	EnhancedPageObject,
+	EnhancedSectionInstance,
+	NightwatchAPI
 } from "nightwatch";
 
 /**
