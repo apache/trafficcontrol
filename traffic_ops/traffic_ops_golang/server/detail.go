@@ -93,7 +93,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 			v11server := tc.ServerDetailV11{}
 			v11server.ServerDetail, err = dbhelpers.GetServerDetailFromV4(server, inf.Tx.Tx)
 			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("failed to GetServerDetailFromV4: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to GetServerDetailFromV4: %w", err))
 				return
 			}
 			v11server.RouterHostName = &routerHostName
@@ -123,7 +123,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			v3Server.ServerDetail, err = dbhelpers.GetServerDetailFromV4(server, inf.Tx.Tx)
 			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("failed to GetServerDetailFromV4: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to GetServerDetailFromV4: %w", err))
 				return
 			}
 			v3Server.RouterHostName = &routerHostName
