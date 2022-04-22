@@ -57,7 +57,7 @@ user_tenant_children AS (
   SELECT t.id, t.name, t.active, t.parent_id
   FROM tenant t JOIN user_tenant_children ON user_tenant_children.id = t.parent_id
 )
-SELECT id as tenant_list FROM user_tenant_children) and u.username = ANY($2) and rc.cap_name='CDN-LOCK:CREATE'`
+SELECT id as tenant_list FROM user_tenant_children) and u.username = ANY($2) and (rc.cap_name='ALL' or rc.cap_name='CDN-LOCK:CREATE')`
 
 // Read is the handler for GET requests to /cdn_locks.
 func Read(w http.ResponseWriter, r *http.Request) {
