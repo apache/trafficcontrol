@@ -63,7 +63,7 @@ function atc-ready {
 				return 1;;
 		esac
 	fi
-	curl -skL "$url" >/dev/null 2>&1;
+	timeout 1s curl -skL "$url" >/dev/null 2>&1;
 	return $?;
 }
 
