@@ -165,7 +165,7 @@ func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, day
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
 
-	var fedList []string
+	fedMap := map[string]bool{}
 	fedRows, err := tx.Query("SELECT DISTINCT(ds.xml_id) FROM federation_deliveryservice AS fd JOIN deliveryservice AS ds ON ds.id = fd.deliveryservice")
 	if err != nil {
 		return []tc.SSLKeyExpirationInformation{}, err
@@ -177,7 +177,7 @@ func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, day
 		if err = fedRows.Scan(&fedString); err != nil {
 			return []tc.SSLKeyExpirationInformation{}, err
 		}
-		fedList = append(fedList, fedString)
+		fedMap[fedString] = true
 	}
 
 	inactiveQuery := "SELECT xml_id FROM deliveryservice WHERE NOT active"
@@ -218,7 +218,7 @@ func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, day
 		if inactiveList[expirationInfo.DeliveryService] {
 			continue
 		}
-		expirationInfo.Federated = util.ContainsStr(fedList, expirationInfo.DeliveryService)
+		expirationInfo.Federated = fedMap[expirationInfo.DeliveryService]
 
 		expirationInfos = append(expirationInfos, expirationInfo)
 	}
