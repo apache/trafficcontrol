@@ -20,7 +20,7 @@ import {
 import { TableSectionCommands, TABLE_COMMANDS } from "../globals/tables";
 
 /**
- * Defines the commands for the users table section.
+ * Defines the commands for the servers table section.
  */
 type ServersTableSectionCommands = TableSectionCommands;
 
@@ -33,7 +33,7 @@ const serversPageObject = {
 			} as ServersTableSectionCommands,
 			elements: {
 			},
-			selector: "tp-servers"
+			selector: "servers-table main"
 		}
 	},
 	url(): string {
@@ -42,12 +42,12 @@ const serversPageObject = {
 };
 
 /**
- * Defines the users table section.
+ * Defines the servers table section.
  */
 type ServersTableSection = EnhancedSectionInstance<ServersTableSectionCommands, typeof serversPageObject.sections.serversTable.elements>;
 
 /**
- * The type of the users table page object as provided by the Nightwatch API at
+ * The type of the servers table page object as provided by the Nightwatch API at
  * runtime.
  */
 export type ServersPageObject = EnhancedPageObject<{}, {}, { serversTable: ServersTableSection }>;
