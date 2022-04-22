@@ -11,24 +11,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import type { NightwatchBrowser } from "nightwatch";
-import { LoginPageObject } from "nightwatch/page_objects/login";
-
-import type { GlobalConfig } from "../globals/globals";
+import type { TestSuite } from "../globals";
+import { LoginPageObject } from "../page_objects/login";
 import type { UsersPageObject } from "../page_objects/users";
-
-/**
- * A test suite is a mapping of test descriptions to the functions that
- * implement the thereby described test.
- */
-interface TestSuite {
-	[description: string]: (browser: NightwatchBrowser) => (void | Promise<void>);
-}
 
 const suite: TestSuite = {
 	"Filter by username": async browser => {
-		const username = (browser.globals as GlobalConfig).adminUser;
-		const password = (browser.globals as GlobalConfig).adminPass;
+		const username = browser.globals.adminUser;
+		const password = browser.globals.adminPass;
 
 		const loginPage: LoginPageObject = browser.page.login();
 		loginPage.navigate().section.loginForm.login(username, password);
@@ -54,8 +44,8 @@ const suite: TestSuite = {
 	},
 	// Uncomment when user details page exists
 	// "View user details":  browser => {
-	// 	const username = (browser.globals as GlobalConfig).adminUser;
-	// 	const password = (browser.globals as GlobalConfig).adminPass;
+	// 	const username = browser.globals.adminUser;
+	// 	const password = browser.globals.adminPass;
 
 	// 	const loginPage: LoginPageObject = browser.page.login();
 	// 	loginPage.navigate().section.loginForm.login(username, password);

@@ -12,54 +12,26 @@
 * limitations under the License.
 */
 import {
-	EnhancedElementInstance,
 	EnhancedPageObject,
 	EnhancedSectionInstance,
 	NightwatchAPI
 } from "nightwatch";
 
+import { TableSectionCommands, TABLE_COMMANDS } from "../globals/tables";
+
 /**
  * Defines the commands for the users table section.
  */
-interface UsersTableSectionCommands extends EnhancedSectionInstance, EnhancedElementInstance<EnhancedPageObject> {
-	getColumnState(column: string): Promise<boolean>;
-	searchText(text: string): this;
-	toggleColumn(column: string): this;
-}
+type UsersTableSectionCommands = TableSectionCommands;
 
 const usersPageObject = {
 	api: {} as NightwatchAPI,
 	sections: {
 		usersTable: {
 			commands: {
-				async getColumnState(column: string): Promise<boolean> {
-					return new Promise((resolve, reject) => {
-						this.click("@columnMenu").getElementProperty(`input[name='column-${column}']`, "checked",
-							result => {
-								if (typeof result.value !== "boolean") {
-									console.error("incorrect type for 'checked' DOM property:", result.value);
-									reject(new Error(`incorrect type for 'checked' DOM property: ${typeof result.value}`));
-									return;
-								}
-								resolve(result.value);
-							}
-						).click("@columnMenu");
-					});
-				},
-				searchText(text: string): UsersTableSectionCommands  {
-					 return this.setValue("@searchbox", text);
-				},
-				toggleColumn(column: string): UsersTableSectionCommands {
-					return this.click("@columnMenu").click(`input[name='${column}']`).click("@columnMenu");
-				},
+				...TABLE_COMMANDS
 			} as UsersTableSectionCommands,
 			elements: {
-				columnMenu: {
-					selector: "button.dropdown-toggle"
-				},
-				searchbox: {
-					selector: "input[name='fuzzControl']"
-				},
 			},
 			selector: "main > main"
 		}
