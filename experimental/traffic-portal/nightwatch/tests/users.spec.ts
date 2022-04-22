@@ -23,7 +23,7 @@ import type { UsersPageObject } from "../page_objects/users";
  */
 interface TestSuite {
 	[description: string]: (browser: NightwatchBrowser) => (void | Promise<void>);
-};
+}
 
 const suite: TestSuite = {
 	"Filter by username": async browser => {
