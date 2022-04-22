@@ -12,10 +12,7 @@
 * limitations under the License.
 */
 
-import type { EnhancedElementInstance, EnhancedPageObject, EnhancedSectionInstance, NightwatchCallbackResult } from "nightwatch";
-
-/** Shorthand type for the argument passed to an element query callback. */
-type ElementResult = NightwatchCallbackResult<Array<{ELEMENT: string}>> & {status: 0};
+import type { EnhancedElementInstance, EnhancedPageObject, EnhancedSectionInstance } from "nightwatch";
 
 /**
  * TableSectionCommands is the base type for page object sections representing
@@ -25,7 +22,6 @@ export interface TableSectionCommands extends EnhancedSectionInstance, EnhancedE
 	getColumnState(column: string): Promise<boolean>;
 	searchText<T extends this>(text: string): T;
 	toggleColumn<T extends this>(column: string): T;
-	rows(visibleOnly?: boolean): Promise<ElementResult>;
 }
 
 /**
@@ -92,42 +88,11 @@ export function toggleColumn<T extends TableSectionCommands>(this: T, column: st
 }
 
 /**
- * Gets the rows of the table.
- *
- * @param this Special parameter that tells the compiler what `this` is in a
- * valid context for this function.
- * @param visibleOnly If `true` (default), only rows that are visible will be
- * returned. "Visible" meaning rows that are not filtered out, not necessarily
- * those that are actually scrolled into view.
- * @returns The table rows - either all of them or only the visible ones as
- * specified by `visibleOnly`.
- */
-export async function rows<T extends TableSectionCommands>(this: T, visibleOnly = true): Promise<ElementResult> {
-	const selector = visibleOnly ? ".ag-row:not(.ag-hidden .ag-row)" : ".ag-row";
-	return new Promise(
-		(resolve, reject) => {
-			this.api.elements("css selector", selector,
-				result => {
-					if (result.status === 0) {
-						resolve(result);
-						return;
-					}
-					const {fileName, lineNumber} = result.value.stackTrace.slice(-1)[0];
-					console.error(`${fileName}:${lineNumber}: ${result.value.message}`);
-					reject(result.state instanceof Error ? result.state : new Error(result.state));
-				}
-			);
-		}
-	);
-}
-
-/**
  * This is meant to be mixed-in to generic table page object command sections,
  * to most easily provide all the functionality of a table.
  */
 export const TABLE_COMMANDS = {
 	getColumnState,
-	rows,
 	searchText,
 	toggleColumn
 };
