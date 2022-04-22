@@ -23,31 +23,22 @@ const suite: TestSuite = {
 		const loginPage: LoginPageObject = browser.page.login();
 		loginPage.navigate().section.loginForm.login(username, password);
 
-		const page: ServersPageObject = browser.waitForElementPresent("main").page.servers();
-		let tbl = page.navigate().waitForElementPresent(".ag-row").section.serversTable;
-		let rows = await tbl.rows();
-		browser.assert.equal(rows.value.length > 0, true);
+		const page: ServersPageObject = browser.waitForElementPresent("main").page.servers().navigate();
+
+		let tbl = page.waitForElementPresent(".ag-row").section.serversTable;
 
 		tbl = tbl.searchText("edge");
 		tbl.parent.assert.urlContains("search=edge");
-
-		rows = await tbl.rows();
-		browser.assert.equal(rows.value.length, 1);
-	},
-	// Uncomment when user details page exists
-	// "View user details":  browser => {
-	// 	const username = (browser.globals as GlobalConfig).adminUser;
-	// 	const password = (browser.globals as GlobalConfig).adminPass;
-
-	// 	const loginPage: LoginPageObject = browser.page.login();
-	// 	loginPage.navigate().section.loginForm.login(username, password);
-
-	// 	const page: UsersPageObject = browser.waitForElementPresent("main").page.users();
-	// 	const tbl = page.navigate().waitForElementPresent(".ag-row").section.usersTable.searchText(username);
-
-	// 	const userRow = tbl.parent.api.moveToElement(".ag-row:not(.ag-hidden .ag-row)", 2, 2, 100, {pointer: 0, viewport: 0});
-	// 	userRow.mouseButtonClick("right").click("button[name=View-User-Details]").assert.urlContains(username);
-	// }
+		tbl.api.elements("css selector", ".ag-row:not(.ag-hidden .ag-row)",
+			result => {
+				if (result.status === 1) {
+					browser.assert.equal(true, false, `failed to select ag-grid rows: ${result.value.message}`);
+					return;
+				}
+				browser.assert.equal(result.value.length, 1);
+			}
+		);
+	}
 };
 
 export default suite;
