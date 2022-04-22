@@ -402,6 +402,10 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 	if !strings.Contains(txtx, `secondary_parent="my-parent-1.my-parent-1-domain`) {
 		t.Errorf("expected secondary parent 'my-parent-1.my-parent-1-domain', actual: '%v'", txt)
 	}
+
+	if strings.Contains(txtx, "parent_retry") {
+		t.Errorf("Did not expect parent_retry parameter at edge/inner: '%v'", txt)
+	}
 }
 
 func TestMakeParentDotConfigMSONoPrimaryParent(t *testing.T) {
@@ -1727,31 +1731,31 @@ func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
 			Profiles:   []byte(`["serverprofile"]`),
 		},
 		tc.Parameter{
-			Name:       ParentConfigParamMSOAlgorithm,
+			Name:       "mso." + ParentConfigParamAlgorithm,
 			ConfigFile: "parent.config",
 			Value:      "consistent_hash",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
 		tc.Parameter{
-			Name:       ParentConfigParamMSOParentRetry,
+			Name:       "mso." + ParentConfigParamParentRetry,
 			ConfigFile: "parent.config",
 			Value:      "both",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
 		tc.Parameter{
-			Name:       ParentConfigParamMSOUnavailableServerRetryResponses,
+			Name:       "mso." + ParentConfigParamUnavailableServerRetryResponses,
 			ConfigFile: "parent.config",
 			Value:      `"400,503"`,
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
 		tc.Parameter{
-			Name:       ParentConfigParamMSOMaxSimpleRetries,
+			Name:       "mso." + ParentConfigParamMaxSimpleRetries,
 			ConfigFile: "parent.config",
 			Value:      "14",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
 		tc.Parameter{
-			Name:       ParentConfigParamMSOMaxUnavailableServerRetries,
+			Name:       "mso." + ParentConfigParamMaxUnavailableServerRetries,
 			ConfigFile: "parent.config",
 			Value:      "9",
 			Profiles:   []byte(`["ds1Profile"]`),
@@ -3708,6 +3712,747 @@ func TestMakeParentDotConfigTopologiesServerMultipleProfileParams(t *testing.T) 
 	if !strings.Contains(txt, "myorigin1.mydomain.example.net:80|100") {
 		t.Errorf("expected origin 0 with profiles [1,0] to have weight 100 from profile 0, actual: '%v'", txt)
 	}
+}
+
+func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
+
+	// Non Toplogy ds
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("https://ds0.example.net")
+	ds0.ProfileID = util.IntPtr(311)
+	ds0.ProfileName = util.StrPtr("ds0Profile")
+
+	// Non Toplogy ds, MSO
+	ds1 := makeParentDS()
+	ds1Type := tc.DSTypeHTTP
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds1.OrgServerFQDN = util.StrPtr("https://ds1.example.net")
+	ds1.ProfileID = util.IntPtr(312)
+	ds1.ProfileName = util.StrPtr("ds0Profile")
+	ds1.MultiSiteOrigin = util.BoolPtr(true)
+
+	dses := []DeliveryService{*ds0, *ds1}
+
+	parentConfigParams := []tc.Parameter{
+		{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+	}
+
+	// Create set of DS params
+	params := map[string]string{
+		ParentConfigParamAlgorithm:            "strict",
+		"mso." + ParentConfigParamAlgorithm:   "strict",
+		"first." + ParentConfigParamAlgorithm: "true",
+		"inner." + ParentConfigParamAlgorithm: "latched",
+		"last." + ParentConfigParamAlgorithm:  "true",
+
+		ParentConfigParamSecondaryMode:            "exhaust",
+		"mso." + ParentConfigParamSecondaryMode:   "exhaust",
+		"first." + ParentConfigParamSecondaryMode: "alternate",
+		"inner." + ParentConfigParamSecondaryMode: "peering",
+		"last." + ParentConfigParamSecondaryMode:  "alternate",
+
+		ParentConfigParamParentRetry:            "unavailable_server_retry",
+		"mso." + ParentConfigParamParentRetry:   "unavailable_server_retry",
+		"first." + ParentConfigParamParentRetry: "both",
+		"inner." + ParentConfigParamParentRetry: "both",
+		"last." + ParentConfigParamParentRetry:  "both",
+
+		ParentConfigParamSimpleServerRetryResponses:            `"401"`,
+		"mso." + ParentConfigParamSimpleServerRetryResponses:   `"401"`,
+		"first." + ParentConfigParamSimpleServerRetryResponses: `"401,402"`,
+		"inner." + ParentConfigParamSimpleServerRetryResponses: `"401,402,403"`,
+		"last." + ParentConfigParamSimpleServerRetryResponses:  `"401,402"`,
+
+		ParentConfigParamUnavailableServerRetryResponses:            `"501"`,
+		"mso." + ParentConfigParamUnavailableServerRetryResponses:   `"501"`,
+		"first." + ParentConfigParamUnavailableServerRetryResponses: `"501,502"`,
+		"inner." + ParentConfigParamUnavailableServerRetryResponses: `"501,502,503"`,
+		"last." + ParentConfigParamUnavailableServerRetryResponses:  `"501,502"`,
+
+		ParentConfigParamMaxSimpleRetries:            "11",
+		"mso." + ParentConfigParamMaxSimpleRetries:   "11",
+		"first." + ParentConfigParamMaxSimpleRetries: "12",
+		"inner." + ParentConfigParamMaxSimpleRetries: "13",
+		"last." + ParentConfigParamMaxSimpleRetries:  "12",
+
+		ParentConfigParamMaxUnavailableServerRetries:            "21",
+		"mso." + ParentConfigParamMaxUnavailableServerRetries:   "21",
+		"first." + ParentConfigParamMaxUnavailableServerRetries: "22",
+		"inner." + ParentConfigParamMaxUnavailableServerRetries: "23",
+		"last." + ParentConfigParamMaxUnavailableServerRetries:  "22",
+	}
+
+	// Assign them to the profile
+	for key, val := range params {
+		tcparam := tc.Parameter{
+			Name:       key,
+			ConfigFile: "parent.config",
+			Value:      val,
+			Profiles:   []byte(`["ds0Profile"]`),
+		}
+		parentConfigParams = append(parentConfigParams, tcparam)
+	}
+
+	serverParams := []tc.Parameter{
+		{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "9",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	edge := makeTestParentServer()
+	edge.Cachegroup = util.StrPtr("edgeCG")
+	edge.CachegroupID = util.IntPtr(400)
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG0")
+	mid0.CachegroupID = util.IntPtr(500)
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG1")
+	mid1.CachegroupID = util.IntPtr(501)
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid0, "192.168.2.3")
+
+	org0 := makeTestParentServer()
+	org0.Cachegroup = util.StrPtr("orgCG0")
+	org0.CachegroupID = util.IntPtr(502)
+	org0.HostName = util.StrPtr("myorg0")
+	org0.ID = util.IntPtr(47)
+	setIP(org0, "192.168.2.4")
+	org0.Type = tc.OriginTypeName
+	org0.TypeID = util.IntPtr(991)
+
+	org1 := makeTestParentServer()
+	org1.Cachegroup = util.StrPtr("orgCG1")
+	org1.CachegroupID = util.IntPtr(503)
+	org1.HostName = util.StrPtr("myorg1")
+	org1.ID = util.IntPtr(48)
+	setIP(org1, "192.168.2.5")
+	org1.Type = tc.OriginTypeName
+	org1.TypeID = util.IntPtr(991)
+
+	servers := []Server{*edge, *mid0, *mid1, *org0, *org1}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1, 2},
+				},
+				{
+					Cachegroup: "midCG0",
+					Parents:    []int{3, 4},
+				},
+				{
+					Cachegroup: "midCG1",
+					Parents:    []int{3, 4},
+				},
+				{
+					Cachegroup: "orgCG0",
+				},
+				{
+					Cachegroup: "orgCG1",
+				},
+			},
+		},
+	}
+
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = edge.Cachegroup
+	eCG.ID = edge.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG0 := &tc.CacheGroupNullable{}
+	mCG0.Name = mid0.Cachegroup
+	mCG0.ID = mid0.CachegroupID
+	mCG0.ParentName = org0.Cachegroup
+	mCG0.ParentCachegroupID = org0.CachegroupID
+	mCG0.SecondaryParentName = org1.Cachegroup
+	mCG0.SecondaryParentCachegroupID = org1.CachegroupID
+	mCGType0 := tc.CacheGroupMidTypeName
+	mCG0.Type = &mCGType0
+
+	mCG1 := &tc.CacheGroupNullable{}
+	mCG1.Name = mid1.Cachegroup
+	mCG1.ID = mid1.CachegroupID
+	mCG1.ParentName = org1.Cachegroup
+	mCG1.ParentCachegroupID = org1.CachegroupID
+	mCG1.SecondaryParentName = org0.Cachegroup
+	mCG1.SecondaryParentCachegroupID = org0.CachegroupID
+	mCGType1 := tc.CacheGroupMidTypeName
+	mCG1.Type = &mCGType1
+
+	oCG0 := &tc.CacheGroupNullable{}
+	oCG0.Name = org0.Cachegroup
+	oCG0.ID = org0.CachegroupID
+	oCGType0 := tc.CacheGroupOriginTypeName
+	oCG0.Type = &oCGType0
+
+	oCG1 := &tc.CacheGroupNullable{}
+	oCG1.Name = org1.Cachegroup
+	oCG1.ID = org1.CachegroupID
+	oCGType1 := tc.CacheGroupOriginTypeName
+	oCG1.Type = &oCGType1
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG0, *mCG1, *oCG0, *oCG1}
+
+	dss := []DeliveryServiceServer{
+		{Server: *edge.ID, DeliveryService: *ds0.ID},
+		{Server: *mid0.ID, DeliveryService: *ds0.ID},
+		{Server: *mid1.ID, DeliveryService: *ds0.ID},
+		{Server: *org0.ID, DeliveryService: *ds0.ID},
+		{Server: *org1.ID, DeliveryService: *ds0.ID},
+
+		{Server: *edge.ID, DeliveryService: *ds1.ID},
+		{Server: *mid0.ID, DeliveryService: *ds1.ID},
+		{Server: *mid1.ID, DeliveryService: *ds1.ID},
+		{Server: *org0.ID, DeliveryService: *ds1.ID},
+		{Server: *org1.ID, DeliveryService: *ds1.ID},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	dsstrs := []string{
+		`dest_domain=ds0.example.net `,
+		`dest_domain=ds1.example.net `,
+	}
+
+	{ // test edge config
+		cfg, err := MakeParentDotConfig(dses, edge, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, hdr.HdrComment)
+
+		needs := []string{
+			` secondary_mode=2`,
+			` round_robin=consistent_hash`,
+			` go_direct=false`,
+			` parent_is_proxy=true`,
+			` parent_retry=both`,
+			` max_simple_retries=12`,
+			` max_unavailable_server_retries=22`,
+			` simple_server_retry_responses="401,402"`,
+			` unavailable_server_retry_responses="501,502"`,
+		}
+
+		for _, dsstr := range dsstrs {
+			cnt := strings.Count(txt, dsstr)
+			if 1 != cnt {
+				t.Errorf("Expected one entry for %s got %d\n%v", dsstr, cnt, txt)
+			} else {
+				lines := strings.Split(txt, "\n")
+				dsline := lineWhichContains(lines, dsstr)
+				missing := missingFrom(dsline, needs)
+				if 0 < len(missing) {
+					t.Errorf("Missing required string(s) from line: %v\n%v", missing, dsline)
+				}
+			}
+		}
+	}
+
+	{ // test mid config
+		cfg, err := MakeParentDotConfig(dses, mid0, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, hdr.HdrComment)
+
+		needs := []string{
+			` round_robin=true`,
+			` go_direct=true`,
+			` parent_is_proxy=false`,
+			` parent_retry=both`,
+			` max_simple_retries=12`,
+			` max_unavailable_server_retries=22`,
+			` simple_server_retry_responses="401,402"`,
+			` unavailable_server_retry_responses="501,502"`,
+		}
+
+		{
+			dsstr := "dest_domain=ds1.example.net"
+			cnt := strings.Count(txt, dsstr)
+			if 1 != cnt {
+				t.Errorf("Expected one entry for %s got %d\n%v", dsstr, cnt, txt)
+			} else {
+				lines := strings.Split(txt, "\n")
+				dsline := lineWhichContains(lines, dsstr)
+				missing := missingFrom(dsline, needs)
+				if 0 < len(missing) {
+					t.Errorf("Missing required string(s) from line: %v\n%v", missing, dsline)
+				}
+			}
+		}
+	}
+}
+
+func TestMakeParentDotConfigFirstInnerLastTopology(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
+
+	// Toplogy ds, MSO
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+	ds0.ProfileID = util.IntPtr(311)
+	ds0.ProfileName = util.StrPtr("ds0Profile")
+	ds0.MultiSiteOrigin = util.BoolPtr(true)
+	ds0.Topology = util.StrPtr("t0")
+
+	// Toplogy ds, non MSO
+	ds1 := makeParentDS()
+	ds1.ID = util.IntPtr(44)
+	ds1Type := tc.DSTypeHTTP
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+	ds1.ProfileID = util.IntPtr(311)
+	ds1.ProfileName = util.StrPtr("ds0Profile")
+	ds1.Topology = util.StrPtr("t0")
+
+	dses := []DeliveryService{*ds0, *ds1}
+
+	parentConfigParams := []tc.Parameter{
+		{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+	}
+
+	// Create set of DS params
+	params := map[string]string{
+		ParentConfigParamAlgorithm:            "strict",
+		"mso." + ParentConfigParamAlgorithm:   "strict",
+		"first." + ParentConfigParamAlgorithm: "true",
+		"inner." + ParentConfigParamAlgorithm: "latched",
+		"last." + ParentConfigParamAlgorithm:  "true",
+
+		ParentConfigParamSecondaryMode:            "exhaust",
+		"mso." + ParentConfigParamSecondaryMode:   "exhaust",
+		"first." + ParentConfigParamSecondaryMode: "alternate",
+		"inner." + ParentConfigParamSecondaryMode: "peering",
+		"last." + ParentConfigParamSecondaryMode:  "alternate",
+
+		ParentConfigParamParentRetry:            "unavailable_server_retry",
+		"mso." + ParentConfigParamParentRetry:   "unavailable_server_retry",
+		"first." + ParentConfigParamParentRetry: "both",
+		"inner." + ParentConfigParamParentRetry: "both",
+		"last." + ParentConfigParamParentRetry:  "both",
+
+		ParentConfigParamSimpleServerRetryResponses:            `"401"`,
+		"mso." + ParentConfigParamSimpleServerRetryResponses:   `"401"`,
+		"first." + ParentConfigParamSimpleServerRetryResponses: `"401,402"`,
+		"inner." + ParentConfigParamSimpleServerRetryResponses: `"401,403"`,
+		"last." + ParentConfigParamSimpleServerRetryResponses:  `"401,404"`,
+
+		ParentConfigParamUnavailableServerRetryResponses:            `"501"`,
+		"mso." + ParentConfigParamUnavailableServerRetryResponses:   `"501"`,
+		"first." + ParentConfigParamUnavailableServerRetryResponses: `"501,502"`,
+		"inner." + ParentConfigParamUnavailableServerRetryResponses: `"501,503"`,
+		"last." + ParentConfigParamUnavailableServerRetryResponses:  `"501,504"`,
+
+		ParentConfigParamMaxSimpleRetries:            "11",
+		"mso." + ParentConfigParamMaxSimpleRetries:   "11",
+		"first." + ParentConfigParamMaxSimpleRetries: "12",
+		"inner." + ParentConfigParamMaxSimpleRetries: "13",
+		"last." + ParentConfigParamMaxSimpleRetries:  "14",
+
+		ParentConfigParamMaxUnavailableServerRetries:            "21",
+		"mso." + ParentConfigParamMaxUnavailableServerRetries:   "21",
+		"first." + ParentConfigParamMaxUnavailableServerRetries: "22",
+		"inner." + ParentConfigParamMaxUnavailableServerRetries: "23",
+		"last." + ParentConfigParamMaxUnavailableServerRetries:  "24",
+	}
+
+	// Assign them to the profile
+	for key, val := range params {
+		tcparam := tc.Parameter{
+			Name:       key,
+			ConfigFile: "parent.config",
+			Value:      val,
+			Profiles:   []byte(`["ds0Profile"]`),
+		}
+		parentConfigParams = append(parentConfigParams, tcparam)
+	}
+
+	serverParams := []tc.Parameter{
+		{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "9",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	edge := makeTestParentServer()
+	edge.Cachegroup = util.StrPtr("edgeCG")
+	edge.CachegroupID = util.IntPtr(400)
+	edge.HostName = util.StrPtr("edge")
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG0")
+	mid0.CachegroupID = util.IntPtr(500)
+	mid0.HostName = util.StrPtr("mid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG1")
+	mid1.CachegroupID = util.IntPtr(501)
+	mid1.HostName = util.StrPtr("mid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	opl0 := makeTestParentServer()
+	opl0.Cachegroup = util.StrPtr("oplCG0")
+	opl0.CachegroupID = util.IntPtr(502)
+	opl0.HostName = util.StrPtr("opl0")
+	opl0.ID = util.IntPtr(47)
+	setIP(opl0, "192.168.2.4")
+
+	opl1 := makeTestParentServer()
+	opl1.Cachegroup = util.StrPtr("oplCG1")
+	opl1.CachegroupID = util.IntPtr(503)
+	opl1.HostName = util.StrPtr("opl1")
+	opl1.ID = util.IntPtr(48)
+	setIP(opl1, "192.168.2.5")
+
+	org0 := makeTestParentServer()
+	org0.Cachegroup = util.StrPtr("orgCG0")
+	org0.CachegroupID = util.IntPtr(504)
+	org0.HostName = util.StrPtr("org0")
+	org0.ID = util.IntPtr(49)
+	setIP(org0, "192.168.2.6")
+	org0.Type = tc.OriginTypeName
+	org0.TypeID = util.IntPtr(991)
+
+	org1 := makeTestParentServer()
+	org1.Cachegroup = util.StrPtr("orgCG1")
+	org1.CachegroupID = util.IntPtr(505)
+	org1.HostName = util.StrPtr("org1")
+	org1.ID = util.IntPtr(50)
+	setIP(org1, "192.168.2.7")
+	org1.Type = tc.OriginTypeName
+	org1.TypeID = util.IntPtr(991)
+
+	servers := []Server{*edge, *mid0, *mid1, *opl0, *opl1, *org0, *org1}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1, 2},
+				},
+				{
+					Cachegroup: "midCG0",
+					Parents:    []int{3, 4},
+				},
+				{
+					Cachegroup: "midCG1",
+					Parents:    []int{3, 4},
+				},
+				{
+					Cachegroup: "oplCG0",
+					Parents:    []int{5, 6},
+				},
+				{
+					Cachegroup: "oplCG1",
+					Parents:    []int{5, 6},
+				},
+				{
+					Cachegroup: "orgCG0",
+				},
+				{
+					Cachegroup: "orgCG1",
+				},
+			},
+		},
+	}
+
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = edge.Cachegroup
+	eCG.ID = edge.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG0 := &tc.CacheGroupNullable{}
+	mCG0.Name = mid0.Cachegroup
+	mCG0.ID = mid0.CachegroupID
+	mCG0.ParentName = opl0.Cachegroup
+	mCG0.ParentCachegroupID = opl0.CachegroupID
+	mCG0.SecondaryParentName = opl1.Cachegroup
+	mCG0.SecondaryParentCachegroupID = opl1.CachegroupID
+	mCGType0 := tc.CacheGroupMidTypeName
+	mCG0.Type = &mCGType0
+
+	mCG1 := &tc.CacheGroupNullable{}
+	mCG1.Name = mid1.Cachegroup
+	mCG1.ID = mid1.CachegroupID
+	mCG1.ParentName = opl1.Cachegroup
+	mCG1.ParentCachegroupID = opl1.CachegroupID
+	mCG1.SecondaryParentName = opl0.Cachegroup
+	mCG1.SecondaryParentCachegroupID = opl0.CachegroupID
+	mCGType1 := tc.CacheGroupMidTypeName
+	mCG1.Type = &mCGType1
+
+	oplCG0 := &tc.CacheGroupNullable{}
+	oplCG0.Name = opl0.Cachegroup
+	oplCG0.ID = opl0.CachegroupID
+	oplCG0.ParentName = org0.Cachegroup
+	oplCG0.ParentCachegroupID = org0.CachegroupID
+	oplCG0.SecondaryParentName = org1.Cachegroup
+	oplCG0.SecondaryParentCachegroupID = org1.CachegroupID
+	oplCGType0 := tc.CacheGroupMidTypeName
+	oplCG0.Type = &oplCGType0
+
+	oplCG1 := &tc.CacheGroupNullable{}
+	oplCG1.Name = opl1.Cachegroup
+	oplCG1.ID = opl1.CachegroupID
+	oplCG1.ParentName = org1.Cachegroup
+	oplCG1.ParentCachegroupID = org1.CachegroupID
+	oplCG1.SecondaryParentName = org0.Cachegroup
+	oplCG1.SecondaryParentCachegroupID = org0.CachegroupID
+	oplCGType1 := tc.CacheGroupMidTypeName
+	oplCG1.Type = &oplCGType1
+
+	oCG0 := &tc.CacheGroupNullable{}
+	oCG0.Name = org0.Cachegroup
+	oCG0.ID = org0.CachegroupID
+	oCGType0 := tc.CacheGroupOriginTypeName
+	oCG0.Type = &oCGType0
+
+	oCG1 := &tc.CacheGroupNullable{}
+	oCG1.Name = org1.Cachegroup
+	oCG1.ID = org1.CachegroupID
+	oCGType1 := tc.CacheGroupOriginTypeName
+	oCG1.Type = &oCGType1
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG0, *mCG1, *oplCG0, *oplCG1, *oCG0, *oCG1}
+
+	dss := []DeliveryServiceServer{
+		/*
+			{Server: *edge.ID, DeliveryService: *ds0.ID},
+			{Server: *mid0.ID, DeliveryService: *ds0.ID},
+			{Server: *mid1.ID, DeliveryService: *ds0.ID},
+			{Server: *opl0.ID, DeliveryService: *ds0.ID},
+			{Server: *opl1.ID, DeliveryService: *ds0.ID},
+			{Server: *org0.ID, DeliveryService: *ds0.ID},
+			{Server: *org1.ID, DeliveryService: *ds0.ID},
+
+			{Server: *edge.ID, DeliveryService: *ds1.ID},
+			{Server: *mid0.ID, DeliveryService: *ds1.ID},
+			{Server: *mid1.ID, DeliveryService: *ds1.ID},
+			{Server: *opl0.ID, DeliveryService: *ds1.ID},
+			{Server: *opl1.ID, DeliveryService: *ds1.ID},
+			{Server: *org0.ID, DeliveryService: *ds1.ID},
+			{Server: *org1.ID, DeliveryService: *ds1.ID},
+		*/
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	dsstrs := []string{
+		`dest_domain=ds0.example.net `,
+		`dest_domain=ds1.example.net `,
+	}
+
+	{ // test edge config
+		cfg, err := MakeParentDotConfig(dses, edge, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, hdr.HdrComment)
+
+		needs := []string{
+			` secondary_mode=2`,
+			` round_robin=consistent_hash`,
+			` go_direct=false`,
+			` parent_is_proxy=true`,
+			` parent_retry=both`,
+			` max_simple_retries=12`,
+			` max_unavailable_server_retries=22`,
+			` simple_server_retry_responses="401,402"`,
+			` unavailable_server_retry_responses="501,502"`,
+		}
+
+		for _, dsstr := range dsstrs {
+			cnt := strings.Count(txt, dsstr)
+			if 1 != cnt {
+				t.Errorf("Expected one entry for %s got %d\n%v", dsstr, cnt, txt)
+			} else {
+				lines := strings.Split(txt, "\n")
+				dsline := lineWhichContains(lines, dsstr)
+				missing := missingFrom(dsline, needs)
+				if 0 < len(missing) {
+					t.Errorf("Missing required string(s) from line: %v\n%v", missing, dsline)
+				}
+			}
+		}
+	}
+
+	{ // test mid config
+		cfg, err := MakeParentDotConfig(dses, mid0, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, hdr.HdrComment)
+
+		needs := []string{
+			` round_robin=consistent_hash`,
+			` go_direct=false`,
+			` parent_is_proxy=true`,
+			` parent_retry=both`,
+			` max_simple_retries=13`,
+			` max_unavailable_server_retries=23`,
+			` simple_server_retry_responses="401,403"`,
+			` unavailable_server_retry_responses="501,503"`,
+		}
+
+		for _, dsstr := range dsstrs {
+			cnt := strings.Count(txt, dsstr)
+			if 1 != cnt {
+				t.Errorf("Expected one entry for %s got %d\n%v", dsstr, cnt, txt)
+			} else {
+				lines := strings.Split(txt, "\n")
+				dsline := lineWhichContains(lines, dsstr)
+				missing := missingFrom(dsline, needs)
+				if 0 < len(missing) {
+					t.Errorf("Missing required string(s) from line: %v\n%v", missing, dsline)
+				}
+			}
+		}
+	}
+
+	{ // test opl config
+		cfg, err := MakeParentDotConfig(dses, opl0, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, hdr.HdrComment)
+
+		needs := []string{
+			` round_robin=true`,
+			` go_direct=true`,
+			` parent_is_proxy=false`,
+			` parent_retry=both`,
+			` max_simple_retries=14`,
+			` max_unavailable_server_retries=24`,
+			` simple_server_retry_responses="401,404"`,
+			` unavailable_server_retry_responses="501,504"`,
+		}
+
+		dsstr := `dest_domain=ds1.example.net `
+		cnt := strings.Count(txt, dsstr)
+		if 1 != cnt {
+			t.Errorf("Expected one entry for %s got %d\n%v", dsstr, cnt, txt)
+		} else {
+			lines := strings.Split(txt, "\n")
+			dsline := lineWhichContains(lines, dsstr)
+			missing := missingFrom(dsline, needs)
+			if 0 < len(missing) {
+				t.Errorf("Missing required string(s) from line: %v\n%v", missing, dsline)
+			}
+		}
+	}
+}
+
+// returns which elements in "needs" is missing from "line"
+func missingFrom(line string, needs []string) []string {
+	misses := []string{}
+	for _, need := range needs {
+		if !strings.Contains(line, need) {
+			misses = append(misses, need)
+		}
+	}
+	return misses
+}
+
+// returns first line which contains
+func lineWhichContains(lines []string, str string) (res string) {
+	for _, line := range lines {
+		if strings.Contains(line, str) {
+			res = line
+			break
+		}
+	}
+	return res
 }
 
 // warningsContains returns whether the given warnings has str as a substring of any warning.

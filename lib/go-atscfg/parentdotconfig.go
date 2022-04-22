@@ -39,20 +39,7 @@ const LineCommentParentDotConfig = LineCommentHash
 const ParentConfigFileName = "parent.config"
 
 const ParentConfigParamQStringHandling = "psel.qstring_handling"
-const ParentConfigParamMSOAlgorithm = "mso.algorithm"
-const ParentConfigParamMSOParentRetry = "mso.parent_retry"
-const ParentConfigParamMSOUnavailableServerRetryResponses = "mso.unavailable_server_retry_responses"
-const ParentConfigParamMSOMaxSimpleRetries = "mso.max_simple_retries"
-const ParentConfigParamMSOMaxUnavailableServerRetries = "mso.max_unavailable_server_retries"
 const ParentConfigParamMergeGroups = "merge_parent_groups"
-const ParentConfigParamAlgorithm = "algorithm"
-const ParentConfigParamQString = "qstring"
-const ParentConfigParamSecondaryMode = "try_all_primaries_before_secondary"
-
-const ParentConfigParamParentRetry = "parent_retry"
-const ParentConfigParamUnavailableServerRetryResponses = "unavailable_server_retry_responses"
-const ParentConfigParamMaxSimpleRetries = "max_simple_retries"
-const ParentConfigParamMaxUnavailableServerRetries = "max_unavailable_server_retries"
 
 const ParentConfigDSParamDefaultMSOAlgorithm = ParentAbstractionServiceRetryPolicyConsistentHash
 const ParentConfigDSParamDefaultMSOParentRetry = "both"
@@ -66,6 +53,15 @@ const ParentConfigCacheParamUseIP = "use_ip_address"
 const ParentConfigCacheParamRank = "rank"
 const ParentConfigCacheParamNotAParent = "not_a_parent"
 const StrategyConfigUsePeering = "use_peering"
+
+const ParentConfigParamAlgorithm = "algorithm"
+const ParentConfigParamSecondaryMode = "try_all_primaries_before_secondary"
+const ParentConfigParamQString = "qstring"
+const ParentConfigParamParentRetry = "parent_retry"
+const ParentConfigParamMaxSimpleRetries = "max_simple_retries"
+const ParentConfigParamMaxUnavailableServerRetries = "max_unavailable_server_retries"
+const ParentConfigParamSimpleServerRetryResponses = "simple_server_retry_responses"
+const ParentConfigParamUnavailableServerRetryResponses = "unavailable_server_retry_responses"
 
 type OriginHost string
 type OriginFQDN string
@@ -357,14 +353,11 @@ func makeParentDotConfigData(
 			continue
 		}
 
-		// Note these Parameters are only used for MSO for legacy DeliveryServiceServers DeliveryServices (except QueryStringHandling which is used by all DeliveryServices).
-		//      Topology DSes use them for all DSes, MSO and non-MSO.
-		dsParams, dsParamsWarnings := getParentDSParams(ds, profileParentConfigParams)
-		warnings = append(warnings, dsParamsWarnings...)
+		isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
 
 		// TODO put these in separate functions. No if-statement should be this long.
 		if ds.Topology != nil && *ds.Topology != "" {
-			txt, topoWarnings, err := getTopologyParentConfigLine(
+			pasvc, topoWarnings, err := getTopologyParentConfigLine(
 				server,
 				serversWithParams,
 				&ds,
@@ -374,7 +367,8 @@ func makeParentDotConfigData(
 				serverCapabilities,
 				dsRequiredCapabilities,
 				cacheGroups,
-				dsParams,
+				profileParentConfigParams,
+				isMSO,
 				atsMajorVer,
 				dsOrigins[DeliveryServiceID(*ds.ID)],
 				opt.AddComments,
@@ -386,214 +380,231 @@ func makeParentDotConfigData(
 				continue
 			}
 
-			if txt != nil { // will be nil with no error if this server isn't in the Topology, or if it doesn't have the Required Capabilities
-				parentAbstraction.Services = append(parentAbstraction.Services, txt)
-			}
-		} else if cacheIsTopLevel {
-			parentQStr := false
-			if dsParams.QueryStringHandling == "" && dsParams.Algorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
-				parentQStr = true
-			}
-
-			orgFQDNStr := *ds.OrgServerFQDN
-			// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
-			if isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds); !isLastCacheTier {
-				orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
-			}
-			orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
-			warnings = append(warnings, orgWarns...)
-			if err != nil {
-				warnings = append(warnings, "DS '"+*ds.XMLID+"' has malformed origin URI: '"+orgFQDNStr+"': skipping!"+err.Error())
-				continue
-			}
-
-			textLine := &ParentAbstractionService{}
-			textLine.Name = *ds.XMLID
-
-			if ds.OriginShield != nil && *ds.OriginShield != "" {
-
-				policy := ParentAbstractionServiceRetryPolicyConsistentHash
-				if parentSelectAlg := serverParams[ParentConfigParamAlgorithm]; strings.TrimSpace(parentSelectAlg) != "" {
-					paramPolicy := ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy(parentSelectAlg)
-					if paramPolicy != ParentAbstractionServiceRetryPolicyInvalid {
-						policy = paramPolicy
-					} else {
-						warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamAlgorithm+" parameter '"+parentSelectAlg+"', not using!")
-					}
-				}
-				textLine.Comment = makeParentComment(opt.AddComments, *ds.XMLID, "")
-				textLine.DestDomain = orgURI.Hostname()
-				textLine.Port, err = strconv.Atoi(orgURI.Port())
-				if err != nil {
-					if strings.ToLower(orgURI.Scheme) == "https" {
-						textLine.Port = 443
-					} else {
-						textLine.Port = 80
-					}
-					warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(textLine.Port)+"! : "+err.Error())
-				}
-
-				fqdnPort := strings.Split(*ds.OriginShield, ":")
-				parent := &ParentAbstractionServiceParent{}
-				parent.FQDN = fqdnPort[0]
-				if len(fqdnPort) > 1 {
-					parent.Port, err = strconv.Atoi(fqdnPort[1])
-					if err != nil {
-						parent.Port = 80
-						warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+*ds.OriginShield+"': using "+strconv.Itoa(parent.Port)+"! : "+err.Error())
-					}
-				} else {
-					parent.Port = 80
-					warnings = append(warnings, "DS '"+*ds.XMLID+"' had no origin port: '"+*ds.OriginShield+"': using "+strconv.Itoa(parent.Port)+"!")
-				}
-				textLine.Parents = append(textLine.Parents, parent)
-				textLine.RetryPolicy = policy
-				textLine.GoDirect = true
-
-				// textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " parent=" + *ds.OriginShield + " " + algorithm + " go_direct=true\n"
-
-			} else if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin {
-				textLine.Comment = makeParentComment(opt.AddComments, *ds.XMLID, "")
-				textLine.DestDomain = orgURI.Hostname()
-				textLine.Port, err = strconv.Atoi(orgURI.Port())
-				if err != nil {
-					textLine.Port = 80
-					warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(textLine.Port)+"! : "+err.Error())
-				}
-
-				// textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " "
-				if len(parentInfos) == 0 {
-				}
-
-				if len(parentInfos[OriginHost(orgURI.Hostname())]) == 0 {
-					// TODO error? emulates Perl
-					warnings = append(warnings, "DS "+*ds.XMLID+" has no parent servers")
-				}
-
-				parents, secondaryParents, secondaryMode, parentWarns := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
-				warnings = append(warnings, parentWarns...)
-				textLine.Parents = parents
-				textLine.SecondaryParents = secondaryParents
-				textLine.SecondaryMode = secondaryMode
-				textLine.RetryPolicy = dsParams.Algorithm // TODO convert
-				textLine.IgnoreQueryStringInParentSelection = !parentQStr
-				textLine.GoDirect = true
-
-				// textLine += parents + secondaryParents + ` round_robin=` + dsParams.Algorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
-				prWarns := []string{}
-				textLine.MaxSimpleRetries, textLine.MaxMarkdownRetries, textLine.MarkdownResponseCodes, textLine.ErrorResponseCodes, prWarns = getParentRetryStr(true, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
-				warnings = append(warnings, prWarns...)
-
-				parentAbstraction.Services = append(parentAbstraction.Services, textLine)
+			if pasvc != nil { // will be nil with no error if this server isn't in the Topology, or if it doesn't have the Required Capabilities
+				parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
 			}
 		} else {
-			queryStringHandling := ParentSelectParamQStringHandlingToBool(serverParams[ParentConfigParamQStringHandling]) // "qsh" in Perl
-			if queryStringHandling == nil && serverParams[ParentConfigParamQStringHandling] != "" {
-				warnings = append(warnings, "Server Parameter '"+ParentConfigParamQStringHandling+"' value '"+serverParams[ParentConfigParamQStringHandling]+"' malformed, not using!")
+			isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds)
+			serverPlacement := TopologyPlacement{
+				IsLastCacheTier:  isLastCacheTier,
+				IsFirstCacheTier: !isLastCacheTier,
 			}
 
-			roundRobin := ParentAbstractionServiceRetryPolicyConsistentHash
-			// roundRobin := `round_robin=consistent_hash`
-			goDirect := false
-			// goDirect := `go_direct=false`
+			dsParams, dswarns := getParentDSParams(ds, profileParentConfigParams, serverPlacement, isMSO)
+			warnings = append(warnings, dswarns...)
 
-			parents, secondaryParents, secondaryMode, parentWarns := getParentStrs(&ds, dsRequiredCapabilities, parentInfos[deliveryServicesAllParentsKey], atsMajorVer, dsParams.TryAllPrimariesBeforeSecondary)
-			warnings = append(warnings, parentWarns...)
-
-			text := &ParentAbstractionService{}
-			text.Name = *ds.XMLID
-
-			// peering ring check
-			if dsParams.UsePeering {
-				secondaryMode = ParentAbstractionServiceParentSecondaryModePeering
-			}
-
-			orgFQDNStr := *ds.OrgServerFQDN
-			// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
-			if isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds); !isLastCacheTier {
-				orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
-			}
-			orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
-			warnings = append(warnings, orgWarns...)
-			if err != nil {
-				warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
-				continue
-			}
-
-			text.Comment = makeParentComment(opt.AddComments, *ds.XMLID, "")
-
-			// TODO encode this in a DSType func, IsGoDirect() ?
-			if *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive {
-				text.DestDomain = orgURI.Hostname()
-				text.Port, err = strconv.Atoi(orgURI.Port())
-				if err != nil {
-					if strings.ToLower(orgURI.Scheme) == "https" {
-						text.Port = 443
-					} else {
-						text.Port = 80
-					}
-					warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(text.Port)+"! : "+err.Error())
+			if cacheIsTopLevel {
+				parentQStr := false
+				if dsParams.QueryStringHandling == "" && dsParams.Algorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
+					parentQStr = true
 				}
-				text.GoDirect = true
 
-				text.Parents = []*ParentAbstractionServiceParent{&ParentAbstractionServiceParent{
-					FQDN:   text.DestDomain,
-					Port:   text.Port,
-					Weight: 1.0,
-				}}
+				orgFQDNStr := *ds.OrgServerFQDN
+				// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
+				if !isLastCacheTier {
+					orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+				}
+				orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
+				warnings = append(warnings, orgWarns...)
+				if err != nil {
+					warnings = append(warnings, "DS '"+*ds.XMLID+"' has malformed origin URI: '"+orgFQDNStr+"': skipping!"+err.Error())
+					continue
+				}
 
-				// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
+				pasvc := &ParentAbstractionService{}
+				pasvc.Name = *ds.XMLID
 
+				if ds.OriginShield != nil && *ds.OriginShield != "" {
+
+					policy := ParentAbstractionServiceRetryPolicyConsistentHash
+
+					if parentSelectAlg := serverParams[ParentConfigParamAlgorithm]; strings.TrimSpace(parentSelectAlg) != "" {
+						paramPolicy := ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy(parentSelectAlg)
+						if paramPolicy != ParentAbstractionServiceRetryPolicyInvalid {
+							policy = paramPolicy
+						} else {
+							warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamAlgorithm+" parameter '"+parentSelectAlg+"', not using!")
+						}
+					}
+					pasvc.Comment = makeParentComment(opt.AddComments, *ds.XMLID, "")
+					pasvc.DestDomain = orgURI.Hostname()
+					pasvc.Port, err = strconv.Atoi(orgURI.Port())
+					if err != nil {
+						if strings.ToLower(orgURI.Scheme) == "https" {
+							pasvc.Port = 443
+						} else {
+							pasvc.Port = 80
+						}
+						warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(pasvc.Port)+"! : "+err.Error())
+					}
+
+					fqdnPort := strings.Split(*ds.OriginShield, ":")
+					parent := &ParentAbstractionServiceParent{}
+					parent.FQDN = fqdnPort[0]
+					if len(fqdnPort) > 1 {
+						parent.Port, err = strconv.Atoi(fqdnPort[1])
+						if err != nil {
+							parent.Port = 80
+							warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+*ds.OriginShield+"': using "+strconv.Itoa(parent.Port)+"! : "+err.Error())
+						}
+					} else {
+						parent.Port = 80
+						warnings = append(warnings, "DS '"+*ds.XMLID+"' had no origin port: '"+*ds.OriginShield+"': using "+strconv.Itoa(parent.Port)+"!")
+					}
+					pasvc.Parents = append(pasvc.Parents, parent)
+					pasvc.RetryPolicy = policy
+					pasvc.GoDirect = true
+
+					// textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " parent=" + *ds.OriginShield + " " + algorithm + " go_direct=true\n"
+
+				} else if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin {
+					pasvc.Comment = makeParentComment(opt.AddComments, *ds.XMLID, "")
+					pasvc.DestDomain = orgURI.Hostname()
+					pasvc.Port, err = strconv.Atoi(orgURI.Port())
+					if err != nil {
+						pasvc.Port = 80
+						warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(pasvc.Port)+"! : "+err.Error())
+					}
+
+					// textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " "
+					if len(parentInfos) == 0 {
+					}
+
+					if len(parentInfos[OriginHost(orgURI.Hostname())]) == 0 {
+						// TODO error? emulates Perl
+						warnings = append(warnings, "DS "+*ds.XMLID+" has no parent servers")
+					}
+
+					parents, secondaryParents, secondaryMode, parentWarns := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
+					warnings = append(warnings, parentWarns...)
+					pasvc.Parents = parents
+					pasvc.SecondaryParents = secondaryParents
+					pasvc.SecondaryMode = secondaryMode
+					pasvc.RetryPolicy = dsParams.Algorithm // TODO convert
+					pasvc.IgnoreQueryStringInParentSelection = !parentQStr
+					pasvc.GoDirect = true
+
+					// textLine += parents + secondaryParents + ` round_robin=` + dsParams.Algorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
+
+					prWarns := dsParams.FillParentSvcRetries(cacheIsTopLevel, atsMajorVer, pasvc)
+					warnings = append(warnings, prWarns...)
+
+					parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
+				}
 			} else {
-				// check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
-				// then edges will use the qstring handling value specified in the parameter for all profiles.
-
-				// If there is no defined parameter in the profile, then check the delivery service profile.
-				// If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
-				// This is used only if not overridden by a server profile qstring handling parameter.
-
-				// TODO refactor this logic, hard to understand (transliterated from Perl)
-				dsQSH := queryStringHandling
-				if dsQSH == nil {
-					dsQSH = ParentSelectParamQStringHandlingToBool(dsParams.QueryStringHandling)
-					if dsQSH == nil && dsParams.QueryStringHandling != "" {
-						warnings = append(warnings, "Delivery Service parameter '"+ParentConfigParamQStringHandling+"' value '"+dsParams.QueryStringHandling+"' malformed, not using!")
-					}
-
-				}
-				parentQStr := dsQSH
-				if parentQStr == nil {
-					v := false
-					parentQStr = &v
-				}
-				if ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp && dsQSH == nil {
-					v := true
-					parentQStr = &v
-				}
-				if parentQStr == nil {
-					b := !DefaultIgnoreQueryStringInParentSelection
-					parentQStr = &b
+				queryStringHandling := ParentSelectParamQStringHandlingToBool(serverParams[ParentConfigParamQStringHandling]) // "qsh" in Perl
+				if queryStringHandling == nil && serverParams[ParentConfigParamQStringHandling] != "" {
+					warnings = append(warnings, "Server Parameter '"+ParentConfigParamQStringHandling+"' value '"+serverParams[ParentConfigParamQStringHandling]+"' malformed, not using!")
 				}
 
-				text.DestDomain = orgURI.Hostname()
-				text.Port, err = strconv.Atoi(orgURI.Port())
+				roundRobin := ParentAbstractionServiceRetryPolicyConsistentHash
+				// roundRobin := `round_robin=consistent_hash`
+				goDirect := false
+				// goDirect := `go_direct=false`
+
+				parents, secondaryParents, secondaryMode, parentWarns := getParentStrs(&ds, dsRequiredCapabilities, parentInfos[deliveryServicesAllParentsKey], atsMajorVer, dsParams.TryAllPrimariesBeforeSecondary)
+				warnings = append(warnings, parentWarns...)
+
+				pasvc := &ParentAbstractionService{}
+				pasvc.Name = *ds.XMLID
+
+				// peering ring check
+				if dsParams.UsePeering {
+					secondaryMode = ParentAbstractionServiceParentSecondaryModePeering
+				}
+
+				orgFQDNStr := *ds.OrgServerFQDN
+				// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
+				if !isLastCacheTier {
+					orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+				}
+				orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
+				warnings = append(warnings, orgWarns...)
 				if err != nil {
-					if strings.ToLower(orgURI.Scheme) == "https" {
-						text.Port = 443
-					} else {
-						text.Port = 80
-					}
-					warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(text.Port)+"! : "+err.Error())
+					warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
+					continue
 				}
-				text.Parents = parents
-				text.SecondaryParents = secondaryParents
-				text.SecondaryMode = secondaryMode
-				text.RetryPolicy = roundRobin
-				text.GoDirect = goDirect
-				text.IgnoreQueryStringInParentSelection = !*parentQStr
-				// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
+
+				pasvc.Comment = makeParentComment(opt.AddComments, *ds.XMLID, "")
+
+				// TODO encode this in a DSType func, IsGoDirect() ?
+				if *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive {
+					pasvc.DestDomain = orgURI.Hostname()
+					pasvc.Port, err = strconv.Atoi(orgURI.Port())
+					if err != nil {
+						if strings.ToLower(orgURI.Scheme) == "https" {
+							pasvc.Port = 443
+						} else {
+							pasvc.Port = 80
+						}
+						warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(pasvc.Port)+"! : "+err.Error())
+					}
+
+					pasvc.GoDirect = true
+
+					pasvc.Parents = []*ParentAbstractionServiceParent{&ParentAbstractionServiceParent{
+						FQDN:   pasvc.DestDomain,
+						Port:   pasvc.Port,
+						Weight: 1.0,
+					}}
+
+					// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
+				} else {
+
+					// check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
+					// then edges will use the qstring handling value specified in the parameter for all profiles.
+
+					// If there is no defined parameter in the profile, then check the delivery service profile.
+					// If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
+					// This is used only if not overridden by a server profile qstring handling parameter.
+
+					// TODO refactor this logic, hard to understand (transliterated from Perl)
+					dsQSH := queryStringHandling
+					if dsQSH == nil {
+						dsQSH = ParentSelectParamQStringHandlingToBool(dsParams.QueryStringHandling)
+						if dsQSH == nil && dsParams.QueryStringHandling != "" {
+							warnings = append(warnings, "Delivery Service parameter '"+ParentConfigParamQStringHandling+"' value '"+dsParams.QueryStringHandling+"' malformed, not using!")
+						}
+
+					}
+					parentQStr := dsQSH
+					if parentQStr == nil {
+						v := false
+						parentQStr = &v
+					}
+					if ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp && dsQSH == nil {
+						v := true
+						parentQStr = &v
+					}
+					if parentQStr == nil {
+						b := !DefaultIgnoreQueryStringInParentSelection
+						parentQStr = &b
+					}
+
+					pasvc.DestDomain = orgURI.Hostname()
+					pasvc.Port, err = strconv.Atoi(orgURI.Port())
+					if err != nil {
+						if strings.ToLower(orgURI.Scheme) == "https" {
+							pasvc.Port = 443
+						} else {
+							pasvc.Port = 80
+						}
+						warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(pasvc.Port)+"! : "+err.Error())
+					}
+					pasvc.Parents = parents
+					pasvc.SecondaryParents = secondaryParents
+					pasvc.SecondaryMode = secondaryMode
+					pasvc.RetryPolicy = roundRobin
+					pasvc.GoDirect = goDirect
+					pasvc.IgnoreQueryStringInParentSelection = !*parentQStr
+					// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
+				}
+
+				prWarns := dsParams.FillParentSvcRetries(cacheIsTopLevel, atsMajorVer, pasvc)
+				warnings = append(warnings, prWarns...)
+
+				parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
 			}
-			parentAbstraction.Services = append(parentAbstraction.Services, text)
 		}
 	}
 
@@ -802,32 +813,94 @@ type originURI struct {
 const deliveryServicesAllParentsKey = "all_parents"
 
 type parentDSParams struct {
-	Algorithm                       ParentAbstractionServiceRetryPolicy
+	Algorithm           ParentAbstractionServiceRetryPolicy
+	QueryStringHandling string
+
+	HasRetryParams                  bool
 	ParentRetry                     string
-	UnavailableServerRetryResponses string
 	MaxSimpleRetries                string
 	MaxUnavailableServerRetries     string
-	QueryStringHandling             string
+	SimpleServerRetryResponses      string
+	UnavailableServerRetryResponses string
 	TryAllPrimariesBeforeSecondary  bool
-	UsePeering                      bool
-	MergeGroups                     []string
+
+	UsePeering  bool
+	MergeGroups []string
+}
+
+func (dsp *parentDSParams) FillParentRetries(prefix string, dsParams map[string]string, dsid string) (bool, []string) {
+	var warnings []string
+	var key string
+	hasValues := false
+
+	key = prefix + ParentConfigParamAlgorithm
+	if v, ok := dsParams[key]; ok && strings.TrimSpace(v) != "" {
+		policy := ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy(v)
+		if policy != ParentAbstractionServiceRetryPolicyInvalid {
+			dsp.Algorithm = policy
+			hasValues = true
+		} else {
+			warnings = append(warnings, "DS '"+dsid+"' had malformed "+key+" parameter '"+v+"', not using!")
+		}
+	}
+
+	key = prefix + ParentConfigParamParentRetry
+	if v, ok := dsParams[key]; ok {
+		dsp.ParentRetry = v
+		hasValues = true
+	}
+
+	key = prefix + ParentConfigParamMaxSimpleRetries
+	if v, ok := dsParams[key]; ok {
+		dsp.MaxSimpleRetries = v
+		hasValues = true
+	}
+	key = prefix + ParentConfigParamMaxUnavailableServerRetries
+	if v, ok := dsParams[key]; ok {
+		dsp.MaxUnavailableServerRetries = v
+		hasValues = true
+	}
+
+	key = prefix + ParentConfigParamSimpleServerRetryResponses
+	if v, ok := dsParams[key]; ok {
+		if unavailableServerRetryResponsesValid(v) {
+			dsp.SimpleServerRetryResponses = v
+			hasValues = true
+		} else {
+			warnings = append(warnings, "DS '"+dsid+"' had malformed "+key+" parameter '"+v+"', not using!")
+		}
+	}
+	key = prefix + ParentConfigParamUnavailableServerRetryResponses
+	if v, ok := dsParams[key]; ok {
+		if unavailableServerRetryResponsesValid(v) {
+			dsp.UnavailableServerRetryResponses = v
+			hasValues = true
+		} else {
+			warnings = append(warnings, "DS '"+dsid+"' had malformed "+key+" parameter '"+v+"', not using!")
+		}
+	}
+
+	return hasValues, warnings
 }
 
 // getDSParams returns the Delivery Service Profile Parameters used in parent.config, and any warnings.
 // If Parameters don't exist, defaults are returned. Non-MSO Delivery Services default to no custom retry logic (we should reevaluate that).
 // Note these Parameters are only used for MSO for legacy DeliveryServiceServers DeliveryServices.
 //      Topology DSes use them for all DSes, MSO and non-MSO.
-func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]map[string]string) (parentDSParams, []string) {
+func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]map[string]string, serverPlacement TopologyPlacement, isMSO bool) (parentDSParams, []string) {
 	warnings := []string{}
 	params := parentDSParams{}
-	isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
-	if isMSO {
+
+	// Default values
+	if serverPlacement.IsLastCacheTier && isMSO {
 		params.Algorithm = ParentConfigDSParamDefaultMSOAlgorithm
 		params.ParentRetry = ParentConfigDSParamDefaultMSOParentRetry
 		params.UnavailableServerRetryResponses = ParentConfigDSParamDefaultMSOUnavailableServerRetryResponses
 		params.MaxSimpleRetries = strconv.Itoa(ParentConfigDSParamDefaultMaxSimpleRetries)
 		params.MaxUnavailableServerRetries = strconv.Itoa(ParentConfigDSParamDefaultMaxUnavailableServerRetries)
+		params.HasRetryParams = true
 	}
+
 	if ds.ProfileName == nil || *ds.ProfileName == "" {
 		return params, warnings
 	}
@@ -840,68 +913,65 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 			params.UsePeering = true
 		}
 	}
+
 	// the following may be blank, no default
 	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling]
 	params.MergeGroups = strings.Split(dsParams[ParentConfigParamMergeGroups], " ")
 
-	// TODO deprecate & remove "mso." Parameters - there was never a reason to restrict these settings to MSO.
-	if isMSO {
-		if v, ok := dsParams[ParentConfigParamMSOAlgorithm]; ok && strings.TrimSpace(v) != "" {
-			policy := ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy(v)
-			if policy != ParentAbstractionServiceRetryPolicyInvalid {
-				params.Algorithm = policy
-			} else {
-				warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamMSOAlgorithm+" parameter '"+v+"', not using!")
-			}
-		}
-		if v, ok := dsParams[ParentConfigParamMSOParentRetry]; ok {
-			params.ParentRetry = v
-		}
-		if v, ok := dsParams[ParentConfigParamMSOUnavailableServerRetryResponses]; ok {
-			if v != "" && !unavailableServerRetryResponsesValid(v) {
-				warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamMSOUnavailableServerRetryResponses+" parameter '"+v+"', not using!")
-			} else if v != "" {
-				params.UnavailableServerRetryResponses = v
-			}
-		}
-		if v, ok := dsParams[ParentConfigParamMSOMaxSimpleRetries]; ok {
-			params.MaxSimpleRetries = v
-		}
-		if v, ok := dsParams[ParentConfigParamMSOMaxUnavailableServerRetries]; ok {
-			params.MaxUnavailableServerRetries = v
-		}
-	}
-
-	// Even if the DS is MSO, non-"mso." Parameters override "mso." ones, because they're newer.
-	if v, ok := dsParams[ParentConfigParamAlgorithm]; ok && strings.TrimSpace(v) != "" {
-		policy := ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy(v)
-		if policy != ParentAbstractionServiceRetryPolicyInvalid {
-			params.Algorithm = policy
-		} else {
-			warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamAlgorithm+" parameter '"+v+"', not using!")
-		}
-	}
-	if v, ok := dsParams[ParentConfigParamParentRetry]; ok {
-		params.ParentRetry = v
-	}
-	if v, ok := dsParams[ParentConfigParamUnavailableServerRetryResponses]; ok {
-		if v != "" && !unavailableServerRetryResponsesValid(v) {
-			warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamUnavailableServerRetryResponses+" parameter '"+v+"', not using!")
-		} else if v != "" {
-			params.UnavailableServerRetryResponses = v
-		}
-	}
-	if v, ok := dsParams[ParentConfigParamMaxSimpleRetries]; ok {
-		params.MaxSimpleRetries = v
-	}
-	if v, ok := dsParams[ParentConfigParamMaxUnavailableServerRetries]; ok {
-		params.MaxUnavailableServerRetries = v
-	}
 	if v, ok := dsParams[ParentConfigParamSecondaryMode]; ok {
+		params.TryAllPrimariesBeforeSecondary = true
 		if v != "" {
 			warnings = append(warnings, "DS '"+*ds.XMLID+"' had Parameter "+ParentConfigParamSecondaryMode+" which is used if it exists, the value is ignored! Non-empty value '"+v+"' will be ignored!")
 		}
-		params.TryAllPrimariesBeforeSecondary = true
+	}
+
+	// progressively fill in the params
+	if serverPlacement.IsLastCacheTier {
+		// mso. prefix lowest priority
+		if isMSO {
+			_, warns := params.FillParentRetries("mso.", dsParams, *ds.XMLID)
+			warnings = append(warnings, warns...)
+		}
+
+		// no prefix next priority
+		_, warns := params.FillParentRetries("", dsParams, *ds.XMLID)
+		warnings = append(warnings, warns...)
+
+		// last. prefix highest priority
+		_, warns = params.FillParentRetries("last.", dsParams, *ds.XMLID)
+		warnings = append(warnings, warns...)
+
+		params.HasRetryParams = true
+
+	} else if serverPlacement.IsInnerCacheTier {
+
+		hasVals, warns := params.FillParentRetries("inner.", dsParams, *ds.XMLID)
+		warnings = append(warnings, warns...)
+
+		// Normal inner behavior has no parent retry strings
+		params.HasRetryParams = hasVals
+
+		key := "inner." + ParentConfigParamSecondaryMode
+		if v, ok := dsParams[key]; ok {
+			params.TryAllPrimariesBeforeSecondary = true
+			if v != "" {
+				warnings = append(warnings, "DS '"+*ds.XMLID+"' had Parameter "+key+" which is used if it exists, the value is ignored! Non-empty value '"+v+"' will be ignored!")
+			}
+		}
+	} else { // if serverPlacement.IsFirstCacheTier {
+		hasVals, warns := params.FillParentRetries("first.", dsParams, *ds.XMLID)
+		warnings = append(warnings, warns...)
+
+		// Normal first behavior has no parent retry strings
+		params.HasRetryParams = hasVals
+
+		key := "inner." + ParentConfigParamSecondaryMode
+		if v, ok := dsParams[key]; ok {
+			params.TryAllPrimariesBeforeSecondary = true
+			if v != "" {
+				warnings = append(warnings, "DS '"+*ds.XMLID+"' had Parameter "+key+" which is used if it exists, the value is ignored! Non-empty value '"+v+"' will be ignored!")
+			}
+		}
 	}
 
 	return params, warnings
@@ -919,7 +989,8 @@ func getTopologyParentConfigLine(
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
-	dsParams parentDSParams,
+	profileParentConfigParams map[string]map[string]string,
+	isMSO bool,
 	atsMajorVer int,
 	dsOrigins map[ServerID]struct{},
 	addComments bool,
@@ -935,13 +1006,16 @@ func getTopologyParentConfigLine(
 	}
 
 	serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
-
 	if err != nil {
 		return nil, warnings, errors.New("getting topology placement: " + err.Error())
 	}
+
 	if !serverPlacement.InTopology {
 		return nil, warnings, nil // server isn't in topology, no error
 	}
+
+	dsParams, dswarns := getParentDSParams(*ds, profileParentConfigParams, serverPlacement, isMSO)
+	warnings = append(warnings, dswarns...)
 
 	orgFQDNStr := *ds.OrgServerFQDN
 	// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
@@ -954,11 +1028,11 @@ func getTopologyParentConfigLine(
 		return nil, warnings, errors.New("DS '" + *ds.XMLID + "' has malformed origin URI: '" + *ds.OrgServerFQDN + "': skipping!" + err.Error())
 	}
 
-	txt := &ParentAbstractionService{}
-	txt.Name = *ds.XMLID
-	txt.Comment = makeParentComment(addComments, *ds.XMLID, *ds.Topology)
-	txt.DestDomain = orgURI.Hostname()
-	txt.Port, err = strconv.Atoi(orgURI.Port())
+	pasvc := &ParentAbstractionService{}
+	pasvc.Name = *ds.XMLID
+	pasvc.Comment = makeParentComment(addComments, *ds.XMLID, *ds.Topology)
+	pasvc.DestDomain = orgURI.Hostname()
+	pasvc.Port, err = strconv.Atoi(orgURI.Port())
 	if err != nil {
 		return nil, warnings, fmt.Errorf("parent %v port '%v' was not an integer", orgURI, orgURI.Port())
 	}
@@ -966,6 +1040,7 @@ func getTopologyParentConfigLine(
 
 	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, serversWithParams, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins, dsParams.MergeGroups)
 	warnings = append(warnings, parentWarnings...)
+
 	if err != nil {
 		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
 	}
@@ -979,22 +1054,22 @@ func getTopologyParentConfigLine(
 		}
 	}
 
-	txt.Parents = parents
+	pasvc.Parents = parents
 	// txt += ` parent="` + strings.Join(parents, `;`) + `"`
 	if len(secondaryParents) > 0 {
-		txt.SecondaryParents = secondaryParents
+		pasvc.SecondaryParents = secondaryParents
 		// txt += ` secondary_parent="` + strings.Join(secondaryParents, `;`) + `"`
 
 		secondaryModeStr, secondaryModeWarnings := getSecondaryModeStr(dsParams.TryAllPrimariesBeforeSecondary, atsMajorVer, tc.DeliveryServiceName(*ds.XMLID))
 		warnings = append(warnings, secondaryModeWarnings...)
 		// txt += secondaryModeStr
-		txt.SecondaryMode = secondaryModeStr // TODO convert
+		pasvc.SecondaryMode = secondaryModeStr // TODO convert
 	}
 
-	txt.RetryPolicy = getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
+	pasvc.RetryPolicy = getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
 	// txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
 
-	txt.GoDirect = getTopologyGoDirect(ds, serverPlacement.IsLastTier, serverPlacement.IsLastCacheTier)
+	pasvc.GoDirect = getTopologyGoDirect(ds, serverPlacement)
 	// txt += ` go_direct=` + getTopologyGoDirect(ds, serverPlacement.IsLastTier)
 
 	// TODO convert
@@ -1009,7 +1084,7 @@ func getTopologyParentConfigLine(
 	}
 
 	tqWarns := []string{}
-	txt.IgnoreQueryStringInParentSelection, tqWarns = getTopologyQueryStringIgnore(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm, useQueryStringInParentSelection)
+	pasvc.IgnoreQueryStringInParentSelection, tqWarns = getTopologyQueryStringIgnore(ds, serverParams, serverPlacement, dsParams.Algorithm, useQueryStringInParentSelection)
 	warnings = append(warnings, tqWarns...)
 
 	// txt += ` qstring=` + getTopologyQueryString(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm, dsParams.QueryStringHandling)
@@ -1018,23 +1093,22 @@ func getTopologyParentConfigLine(
 	// txt += getTopologyParentIsProxyStr(serverPlacement.IsLastCacheTier)
 
 	// TODO convert
-	prWarns := []string{}
-	txt.MaxSimpleRetries, txt.MaxMarkdownRetries, txt.MarkdownResponseCodes, txt.ErrorResponseCodes, prWarns = getParentRetryStr(serverPlacement.IsLastCacheTier, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
+	prWarns := dsParams.FillParentSvcRetries(serverPlacement.IsLastCacheTier, atsMajorVer, pasvc)
 	warnings = append(warnings, prWarns...)
 
 	// txt += getParentRetryStr(serverPlacement.IsLastCacheTier, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
 	// txt += "\n"
 
 	if dsParams.UsePeering {
-		txt.SecondaryMode = ParentAbstractionServiceParentSecondaryModePeering
+		pasvc.SecondaryMode = ParentAbstractionServiceParentSecondaryModePeering
 	}
 
-	return txt, warnings, nil
+	return pasvc, warnings, nil
 }
 
-// getParentRetryStr builds the parent retry directive(s).
+// getParentRetries builds the parent retry directive(s).
 //
-// Returns the MaxSimpleRetries, MaxMarkdownRetries, MarkdownResponseCodes, and ErrorResponseCodes.
+// Returns the MaxSimpleRetries, MaxMarkdownRetries, ErrorREsponseCodes, MarkdownResponseCodes.
 //
 // If atsMajorVer < 6, "" is returned (ATS 5 and below don't support retry directives).
 // If isLastCacheTier is false, "" is returned. This argument exists to simplify usage.
@@ -1045,71 +1119,77 @@ func getTopologyParentConfigLine(
 //
 // Does not return errors. If any input is malformed, warnings are returned and that value is set to -1.
 //
-func getParentRetryStr(isLastCacheTier bool, atsMajorVer int, parentRetry string, unavailableServerRetryResponses string, maxSimpleRetries string, maxUnavailableServerRetries string) (int, int, []int, []int, []string) {
+func (dsparams parentDSParams) FillParentSvcRetries(isLastCacheTier bool, atsMajorVer int, pasvc *ParentAbstractionService) []string {
 	warnings := []string{}
-	if !isLastCacheTier || // allow !isLastCacheTier, to simplify usage.
-		parentRetry == "" || // allow parentRetry to be empty, to simplify usage.
+
+	if !dsparams.HasRetryParams || // allow parentRetry to be empty, to simplify usage.
 		atsMajorVer < 6 { // ATS 5 and below don't support parent_retry directives
 		// warnings = append(warnings, "ATS 5 doesn't support parent retry, not using parent retry values")
-		return -1, -1, nil, nil, warnings // TODO move to formatter?
+		pasvc.MaxSimpleRetries = -1
+		pasvc.MaxMarkdownRetries = -1
+		pasvc.ErrorResponseCodes = nil
+		pasvc.MarkdownResponseCodes = nil
+		return warnings
 	}
 
-	err := error(nil)
+	// Set initial defaults
+	pasvc.MaxSimpleRetries = 0
+	pasvc.MaxMarkdownRetries = 0
+	pasvc.ErrorResponseCodes = []int{}
+	pasvc.MarkdownResponseCodes = []int{}
 
-	maxSimpleRetriesInt := ParentConfigDSParamDefaultMaxSimpleRetries
-	if maxSimpleRetries != "" {
-		maxSimpleRetriesInt, err = strconv.Atoi(maxSimpleRetries)
-		if err != nil {
-			maxSimpleRetriesInt = ParentConfigDSParamDefaultMaxSimpleRetries
-			warnings = append(warnings, "malformed maxSimpleRetries '"+maxSimpleRetries+"', using default "+strconv.Itoa(maxSimpleRetriesInt))
+	if isLastCacheTier {
+		pasvc.MaxSimpleRetries = ParentConfigDSParamDefaultMaxSimpleRetries
+		pasvc.MaxMarkdownRetries = ParentConfigDSParamDefaultMaxUnavailableServerRetries
+	}
+
+	if dsparams.MaxSimpleRetries != "" {
+		if retriesint, err := strconv.Atoi(dsparams.MaxSimpleRetries); err == nil {
+			pasvc.MaxSimpleRetries = retriesint
+		} else {
+			warnings = append(warnings, "malformed maxSimpleRetries '"+dsparams.MaxSimpleRetries+"', using default "+strconv.Itoa(pasvc.MaxSimpleRetries))
 		}
 	}
 
-	maxUnavailableServerRetriesInt := ParentConfigDSParamDefaultMaxUnavailableServerRetries
-	if maxUnavailableServerRetries != "" {
-		maxUnavailableServerRetriesInt, err = strconv.Atoi(maxUnavailableServerRetries)
-		if err != nil {
-			maxUnavailableServerRetriesInt = ParentConfigDSParamDefaultMaxUnavailableServerRetries
-			warnings = append(warnings, "malformed maxUnavailableServerRetries '"+maxUnavailableServerRetries+"', using default "+strconv.Itoa(maxUnavailableServerRetriesInt))
+	if dsparams.MaxUnavailableServerRetries != "" {
+		if retriesint, err := strconv.Atoi(dsparams.MaxUnavailableServerRetries); err == nil {
+			pasvc.MaxMarkdownRetries = retriesint
+		} else {
+			warnings = append(warnings, "malformed maxUnavailableServerRetries '"+dsparams.MaxUnavailableServerRetries+"', using default "+strconv.Itoa(pasvc.MaxMarkdownRetries))
 		}
 	}
 
-	unavailableServerRetryResponsesInts, err := ParseRetryResponses(unavailableServerRetryResponses)
-	if err != nil {
-		warnings = append(warnings, "malformed unavailableServerRetryResponses '"+unavailableServerRetryResponses+"', using default")
-		unavailableServerRetryResponsesInts = []int{}
+	// simple retry responses only supported int ATS for 9.1.x and above
+	if simpleResponseInts, err := ParseRetryResponses(dsparams.SimpleServerRetryResponses); err == nil {
+		pasvc.ErrorResponseCodes = simpleResponseInts
+	} else {
+		warnings = append(warnings, "malformed simpleServerRetryResponses '"+dsparams.SimpleServerRetryResponses+"', using default")
 	}
 
-	simpleRetryResponsesInts := []int{}
-	// TODO add support for 9.1
-	// simpleRetryResponsesInts, err := ParseRetryResponses(simpleRetryResponses)
-	// if err != nil {
-	// 	warnings = append(warnings, "malformed simpleRetryResponses '"+simpleRetryResponses+"', using default")
-	// 	simpleRetryResponsesInts = []int{}
-	// }
+	if unavailResponseInts, err := ParseRetryResponses(dsparams.UnavailableServerRetryResponses); err == nil {
+		pasvc.MarkdownResponseCodes = unavailResponseInts
+	} else {
+		warnings = append(warnings, "malformed unavailableServerRetryResponses '"+dsparams.UnavailableServerRetryResponses+"', using default")
+	}
 
 	// TODO make consts
-	switch strings.ToLower(strings.TrimSpace(parentRetry)) {
+	switch strings.ToLower(strings.TrimSpace(dsparams.ParentRetry)) {
 	case "simple_retry":
-		unavailableServerRetryResponsesInts = []int{}
-		if len(simpleRetryResponsesInts) == 0 {
-			simpleRetryResponsesInts = append(simpleRetryResponsesInts, DefaultSimpleRetryCodes...)
+		if len(pasvc.ErrorResponseCodes) == 0 {
+			pasvc.ErrorResponseCodes = DefaultSimpleRetryCodes
 		}
 	case "unavailable_server_retry":
-		simpleRetryResponsesInts = []int{}
-		if len(unavailableServerRetryResponsesInts) == 0 {
-			unavailableServerRetryResponsesInts = append(unavailableServerRetryResponsesInts, DefaultUnavailableServerRetryCodes...)
+		if len(pasvc.MarkdownResponseCodes) == 0 {
+			pasvc.MarkdownResponseCodes = DefaultUnavailableServerRetryCodes
 		}
 	case "both":
-		if len(unavailableServerRetryResponsesInts) == 0 {
-			unavailableServerRetryResponsesInts = append(unavailableServerRetryResponsesInts, DefaultUnavailableServerRetryCodes...)
+		if len(pasvc.ErrorResponseCodes) == 0 {
+			pasvc.ErrorResponseCodes = DefaultSimpleRetryCodes
 		}
-		if len(simpleRetryResponsesInts) == 0 {
-			simpleRetryResponsesInts = append(simpleRetryResponsesInts, DefaultSimpleRetryCodes...)
+		if len(pasvc.MarkdownResponseCodes) == 0 {
+			pasvc.MarkdownResponseCodes = DefaultUnavailableServerRetryCodes
 		}
 	default:
-		unavailableServerRetryResponsesInts = []int{}
-		simpleRetryResponsesInts = []int{}
 	}
 
 	// txt := ` parent_retry=` + parentRetry
@@ -1117,7 +1197,7 @@ func getParentRetryStr(isLastCacheTier bool, atsMajorVer int, parentRetry string
 	// 	txt += ` unavailable_server_retry_responses=` + unavailableServerRetryResponses
 	// }
 	// txt += ` max_simple_retries=` + maxSimpleRetries + ` max_unavailable_server_retries=` + maxUnavailableServerRetries
-	return maxSimpleRetriesInt, maxUnavailableServerRetriesInt, unavailableServerRetryResponsesInts, simpleRetryResponsesInts, warnings
+	return warnings
 }
 
 // getSecondaryModeStr returns the secondary_mode string, and any warnings.
@@ -1163,17 +1243,14 @@ func getTopologyRoundRobin(
 	return ParentAbstractionServiceRetryPolicyConsistentHash
 }
 
-func getTopologyGoDirect(ds *DeliveryService, serverIsLastTier bool, serverIsLastCacheTier bool) bool {
-	if serverIsLastCacheTier {
+func getTopologyGoDirect(ds *DeliveryService, serverPlacement TopologyPlacement) bool {
+	if serverPlacement.IsLastCacheTier {
 		return true
-	}
-	if !serverIsLastTier {
+	} else if !serverPlacement.IsLastTier {
 		return false
-	}
-	if ds.OriginShield != nil && *ds.OriginShield != "" {
+	} else if ds.OriginShield != nil && *ds.OriginShield != "" {
 		return true
-	}
-	if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin {
+	} else if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin {
 		return false
 	}
 	return true
@@ -1182,12 +1259,12 @@ func getTopologyGoDirect(ds *DeliveryService, serverIsLastTier bool, serverIsLas
 func getTopologyQueryStringIgnore(
 	ds *DeliveryService,
 	serverParams map[string]string,
-	serverIsLastTier bool,
+	serverPlacement TopologyPlacement,
 	algorithm ParentAbstractionServiceRetryPolicy,
 	qStringHandling *bool,
 ) (bool, []string) {
 	warnings := []string{}
-	if serverIsLastTier {
+	if serverPlacement.IsLastCacheTier {
 		if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin && qStringHandling == nil && algorithm == ParentAbstractionServiceRetryPolicyConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
 			return false, warnings
 		}
