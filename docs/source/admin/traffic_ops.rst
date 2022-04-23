@@ -682,7 +682,7 @@ You must then take the output file :file:`trafficops.csr` and submit a request t
 	sudo cp trafficops.crt /etc/pki/tls/certs
 	sudo chown trafops:trafops /etc/pki/tls/certs/trafficops.crt
 
-If necessary, install the :abbr:`CA (Certificate Authority) certificate's ``.pem`` and ``.crt`` files in ``/etc/pki/tls/certs``.
+If necessary, install the :abbr:`CA (Certificate Authority) certificate's` ``.pem`` and ``.crt`` files in ``/etc/pki/tls/certs``.
 
 You will need to update `cdn.conf`_ with any necessary changes.
 
