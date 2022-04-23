@@ -308,7 +308,7 @@ The TightVNC optional container provides a basic lightweight window manager (flu
 			`"-f $PWD/docker-compose.yml "` \
 			`"-f $PWD/docker-compose.expose-ports.yml "` \
 			`"-f $PWD/optional/docker-compose.vnc.yml "` \
-			`"-f $PWD/optional/docker-compose.vnc.expose-ports.yml"
+			`"-f $PWD/optional/docker-compose.vnc.expose-ports.yml "`
 		docker volume prune -f
 		mydc build
 		mydc kill
