@@ -200,7 +200,7 @@ Importing the :abbr:`CA (Certificate Authority)` Certificate on OSX
 #. The CIAB root :abbr:`CA (Certificate Authority)` certificate appears in login.
 #. Copy the CIAB root :abbr:`CA (Certificate Authority)` certificate to System.
 #. Open the CIAB root :abbr:`CA (Certificate Authority)` certificate, expand :guilabel:`Trust`, select :guilabel:`Use System Defaults`, and save your changes.
-#. Reopen the CIAB root :abbr:`CA (Certificate Authority)` certificate, expand :guilabel:`Trust, select :guilabel:`Always Trust`, and save your changes.
+#. Reopen the CIAB root :abbr:`CA (Certificate Authority)` certificate, expand :guilabel:`Trust`, select :guilabel:`Always Trust`, and save your changes.
 #. Delete the CIAB root :abbr:`CA (Certificate Authority)` certificate from login.
 #. Repeat the previous steps with the Intermediate :abbr:`CA (Certificate Authority)` certificate to import it as well
 #. Restart all HTTPS clients (browsers, etc).
