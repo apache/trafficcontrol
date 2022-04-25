@@ -145,7 +145,7 @@ When processing configuration files, if ``traffic_ops_ort`` encounters any of th
 	| ``__SERVER_TCP_PORT__`` | If the :term:`cache server` on which ``t3c`` is being run has a    |
 	|                         | TCP port configured to something besides ``80``, this will be      |
 	|                         | replaced with that TCP port value. *If it* **is** *set to*         |
-	|                         | * ``80``, this string will simply be removed,* **NOT** *replaced*  |
+	|                         | ``80``*, this string will simply be removed,* **NOT** *replaced*  |
 	|                         | *with* **ANYTHING**.                                               |
 	+-------------------------+--------------------------------------------------------------------+
 	| ``##OVERRIDE##``        | This string is only valid in the content of files named            |
