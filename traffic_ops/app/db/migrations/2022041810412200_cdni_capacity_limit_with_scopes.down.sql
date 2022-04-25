@@ -19,7 +19,7 @@
  * Previously, only total and host limits were set. Now with the scope field, it is not as limited so downgrading
  * cannot put the data back in the old tables since it wont necessarily fit into those buckets.
 */
-CREATE TABLE IF NOT EXISTS cdni_total_limits (
+CREATE TABLE IF NOT EXISTS public.cdni_total_limits (
                                                  limit_type text NOT NULL,
                                                  maximum_hard bigint NOT NULL,
                                                  maximum_soft bigint NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS cdni_total_limits (
     CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE
     );
 
-CREATE TABLE IF NOT EXISTS cdni_host_limits (
+CREATE TABLE IF NOT EXISTS public.cdni_host_limits (
                                                 limit_type text NOT NULL,
                                                 maximum_hard bigint NOT NULL,
                                                 maximum_soft bigint NOT NULL,
@@ -46,6 +46,6 @@ CREATE TABLE IF NOT EXISTS cdni_host_limits (
     CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS cdni_limits;
+DROP TABLE IF EXISTS public.cdni_limits;
 
-ALTER TABLE cdni_telemetry DROP COLUMN IF EXISTS configuration_url;
+ALTER TABLE public.cdni_telemetry DROP COLUMN IF EXISTS configuration_url;

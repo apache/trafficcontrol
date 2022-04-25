@@ -15,7 +15,7 @@
  * the License.
  */
 
-CREATE TABLE IF NOT EXISTS cdni_limits (
+CREATE TABLE IF NOT EXISTS public.cdni_limits (
                                 id bigserial NOT NULL,
                                 limit_id text NOT NULL,
                                 scope_type text,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS cdni_limits (
     CONSTRAINT fk_cdni_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-INSERT INTO cdni_limits (limit_id,
+INSERT INTO public.cdni_limits (limit_id,
                          scope_type,
                          scope_value,
                          limit_type,
@@ -50,9 +50,9 @@ SELECT CONCAT('host_limit_', chl.limit_type, '_', chl.telemetry_metric),
        chl.telemetry_id,
        chl.telemetry_metric,
        chl.capability_id
-FROM cdni_host_limits as chl;
+FROM public.cdni_host_limits as chl;
 
-INSERT INTO cdni_limits (limit_id,
+INSERT INTO public.cdni_limits (limit_id,
                          scope_type,
                          scope_value,
                          limit_type,
@@ -70,9 +70,9 @@ SELECT CONCAT('total_limit_', thl.limit_type, '_', thl.telemetry_metric),
        thl.telemetry_id,
        thl.telemetry_metric,
        thl.capability_id
-FROM cdni_total_limits as thl;
+FROM public.cdni_total_limits as thl;
 
-DROP TABLE IF EXISTS cdni_total_limits;
-DROP TABLE IF EXISTS cdni_host_limits;
+DROP TABLE IF EXISTS public.cdni_total_limits;
+DROP TABLE IF EXISTS public.cdni_host_limits;
 
-ALTER TABLE cdni_telemetry ADD COLUMN configuration_url text DEFAULT '';
+ALTER TABLE public.cdni_telemetry ADD COLUMN configuration_url text DEFAULT '';
