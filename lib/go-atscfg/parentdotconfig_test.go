@@ -452,7 +452,7 @@ func TestMakeParentDotConfigMSONoPrimaryParent(t *testing.T) {
 	mid0.CachegroupID = util.IntPtr(500)
 	mid0.HostName = util.StrPtr("my-parent-0")
 	mid0.DomainName = util.StrPtr("my-parent-0-domain")
-	mid0.Status = util.StrPtr("ADMIN_DOWN")
+	mid0.Status = util.StrPtr(string(tc.CacheStatusAdminDown))
 	mid0.ID = util.IntPtr(45)
 	setIP(mid0, "192.168.2.2")
 
@@ -3110,7 +3110,7 @@ func TestMakeParentDotConfigHTTPSOriginTopologyNoPrimaryParent(t *testing.T) {
 	mid0.CachegroupID = util.IntPtr(500)
 	mid0.HostName = util.StrPtr("mymid")
 	mid0.ID = util.IntPtr(45)
-	mid0.Status = util.StrPtr("ADMIN_DOWN")
+	mid0.Status = util.StrPtr(string(tc.CacheStatusAdminDown))
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
