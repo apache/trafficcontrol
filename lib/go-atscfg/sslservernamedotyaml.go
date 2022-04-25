@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"errors"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -73,6 +74,7 @@ var tlsVersionsToATS = map[TLSVersion]string{
 
 const SSLServerNameYAMLParamEnableH2 = "enable_h2"
 const SSLServerNameYAMLParamTLSVersions = "tls_versions"
+const SSLServerNameYAMLParamDisableInternalValidation = "disable_internal_certificate_validation"
 
 // DefaultDefaultTLSVersions is the list of TLS versions to enable by default, if no Parameter exists and no Opt is passed to the Make func.
 // By default, we enable all, even insecure versions.
@@ -189,11 +191,21 @@ func MakeSSLServerNameYAML(
 type SSLData struct {
 	DSName       string
 	RequestFQDNs []string
+	OriginFQDN   string
 	EnableH2     bool
 	TLSVersions  []TLSVersion
+	// IsParent is whether this server will be receiving child requests for this Delivery Service.
+	IsParent bool
+	// IsChild is whether this server will be sending requests to a parent for this Delivery Service.
+	IsChild bool
+	// IsEdge is whether this server will be accepting requests from external clients for this Delivery Service.
+	IsEdge bool
+	// DisableInternalValidation is whether to disable certificate validation for internal traffic.
+	DisableInternalValidation bool
 }
 
 // GetServerSSLData gets the SSLData for all Delivery Services assigned to the given Server, any warnings, and any error.
+// The returned SSLData OriginFQDN may be empty, if the Delivery Service had no OrgServerFQDN or it was malformed.
 func GetServerSSLData(
 	server *Server,
 	dses []DeliveryService,
@@ -266,6 +278,7 @@ func GetServerSSLData(
 
 		enableH2 := defaultEnableH2
 		tlsVersions := defaultTLSVersions
+		disableInternalValidation := false
 
 		dsTLSVersions := []TLSVersion{}
 		for _, tlsVersion := range ds.TLSVersions {
@@ -285,6 +298,15 @@ func GetServerSSLData(
 
 		if paramValEnableH2 != "" {
 			enableH2 = strings.HasPrefix(paramValEnableH2, "t") || strings.HasPrefix(paramValEnableH2, "y")
+		}
+
+		paramDisableInternalValidation := dsParentConfigParams[SSLServerNameYAMLParamDisableInternalValidation]
+		paramDisableInternalValidation = strings.TrimSpace(paramDisableInternalValidation)
+		paramDisableInternalValidation = strings.ToLower(paramDisableInternalValidation)
+		if strings.HasPrefix(paramDisableInternalValidation, "t") ||
+			strings.HasPrefix(paramDisableInternalValidation, "y") ||
+			strings.HasPrefix(paramDisableInternalValidation, "1") {
+			disableInternalValidation = true
 		}
 
 		paramValTLSVersions := dsParentConfigParams[SSLServerNameYAMLParamTLSVersions]
@@ -323,11 +345,33 @@ func GetServerSSLData(
 			tlsVersions = paramTLSVersions
 		}
 
+		isParent, isChild, isEdge, err := dsCacheIsParentChildEdge(&ds, server, nameTopologies, cacheGroups)
+		if err != nil {
+			warnings = append(warnings, "error checking if ds '"+*ds.XMLID+"' is a parent of the server, skipping! error: "+err.Error())
+			continue
+		}
+
+		originFQDN := ""
+		if ds.OrgServerFQDN != nil {
+			// The DS OrgServerFQDN is actually the URI with https?://, and could theoretically have a path.
+			// So the easiest way to be sure we have an FQDN is to parse it.
+			if originURL, err := url.Parse(*ds.OrgServerFQDN); err != nil {
+				warnings = append(warnings, "ds '"+*ds.XMLID+"' had malformed OrgServerFQDN '"+*ds.OrgServerFQDN+"', sni.yaml may be malformed:"+err.Error())
+			} else {
+				originFQDN = originURL.Hostname()
+			}
+		}
+
 		sslDatas = append(sslDatas, SSLData{
-			DSName:       *ds.XMLID,
-			RequestFQDNs: requestFQDNs,
-			EnableH2:     enableH2,
-			TLSVersions:  tlsVersions,
+			DSName:                    *ds.XMLID,
+			RequestFQDNs:              requestFQDNs,
+			OriginFQDN:                originFQDN,
+			EnableH2:                  enableH2,
+			TLSVersions:               tlsVersions,
+			IsParent:                  isParent,
+			IsChild:                   isChild,
+			IsEdge:                    isEdge,
+			DisableInternalValidation: disableInternalValidation,
 		})
 	}
 

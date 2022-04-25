@@ -63,6 +63,20 @@ type HeaderRewriteDotConfigOpts struct {
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
 	// To omit the header comment, pass the empty string.
 	HdrComment string
+
+	E2ESSLData HeaderRewriteE2EInf
+}
+
+type HeaderRewriteE2EInf struct {
+	// ServerCAPath is the path to the Certificate Authority used to sign client certificates which will be presented by parent caches to child caches.
+	// This is relative to records.config proxy.config.ssl.client.cert.path.
+	ServerCAPath string
+	// ClientCertPath is the path to the client certificate presented by child caches to parent caches.
+	// This is relative to records.config proxy.config.ssl.client.cert.path.
+	ClientCertPath string
+	// ClientCertKeyPath is the path to the key for the client certificate presented by child caches to parent caches.
+	// This is relative to records.config proxy.config.ssl.client.private_key.path.
+	ClientCertKeyPath string
 }
 
 // MakeHeaderRewriteDotConfig makes the header rewrite file for
@@ -185,7 +199,7 @@ func MakeHeaderRewriteDotConfig(
 	// NOTE!! Custom TC injections MUST NOT EVER have a `[L]`. Doing so will break custom header rewrites!
 	// NOTE!! The TC injections MUST be come before custom rewrites (EdgeHeaderRewrite, InnerHeaderRewrite, etc).
 	//        If they're placed after, custom rewrites with [L] directives will result in them being applied inconsistently and incorrectly.
-	text += makeATCHeaderRewriteDirectives(ds, headerRewriteTxt, serverIsLastTier, numLastTierServers, atsMajorVersion, atsRqstMaxHdrSize)
+	text += makeATCHeaderRewriteDirectives(ds, headerRewriteTxt, serverIsLastTier, numLastTierServers, atsMajorVersion, atsRqstMaxHdrSize, opt.E2ESSLData)
 
 	if headerRewriteTxt != nil && *headerRewriteTxt != "" {
 		hdrRw := returnRe.ReplaceAllString(*headerRewriteTxt, "\n")
@@ -461,9 +475,10 @@ var returnRe = regexp.MustCompile(`\s*__RETURN__\s*`)
 //        If they're placed after, custom rewrites with [L] directives will result in them being applied inconsistently and incorrectly.
 //
 // The headerRewriteTxt is the custom header rewrite from the Delivery Service. This should be used for any logic that depends on it. The various header rewrite fields (EdgeHeaderRewrite, InnerHeaderRewrite, etc should never be used inside this function, since this function doesn't know what tier the server is at. This function should not insert the headerRewriteText, but may use it to make decisions about what to insert.
-func makeATCHeaderRewriteDirectives(ds *DeliveryService, headerRewriteTxt *string, serverIsLastTier bool, numLastTierServers int, atsMajorVersion int, atsRqstMaxHdrSize int) string {
+func makeATCHeaderRewriteDirectives(ds *DeliveryService, headerRewriteTxt *string, serverIsLastTier bool, numLastTierServers int, atsMajorVersion int, atsRqstMaxHdrSize int, e2eSSLData HeaderRewriteE2EInf) string {
 	return makeATCHeaderRewriteDirectiveMaxOriginConns(ds, headerRewriteTxt, serverIsLastTier, numLastTierServers, atsMajorVersion) +
-		makeATCHeaderRewriteDirectiveServiceCategoryHdr(ds, headerRewriteTxt) + makeATCHeaderRewriteDirectiveMaxRequestHeaderSize(ds, serverIsLastTier, atsRqstMaxHdrSize)
+		makeATCHeaderRewriteDirectiveServiceCategoryHdr(ds, headerRewriteTxt) + makeATCHeaderRewriteDirectiveMaxRequestHeaderSize(ds, serverIsLastTier, atsRqstMaxHdrSize) +
+		makeATCHeaderRewriteDirectiveE2ESSL(ds, serverIsLastTier, e2eSSLData)
 }
 
 // makeATCHeaderRewriteDirectiveMaxOriginConns generates the Max Origin Connections header rewrite text, which may be empty.
@@ -512,6 +527,35 @@ func makeATCHeaderRewriteDirectiveServiceCategoryHdr(ds *DeliveryService, header
 cond %{REMAP_PSEUDO_HOOK}
 set-header ` + ServiceCategoryHeader + ` "` + *ds.XMLID + `|` + escapedServiceCategory + `"
 `
+}
+
+func makeATCHeaderRewriteDirectiveE2ESSL(ds *DeliveryService, serverIsLastTier bool, e2eSSLData HeaderRewriteE2EInf) string {
+	if e2eSSLData == (HeaderRewriteE2EInf{}) {
+		return "" // no e2e SSL data => nothing to add
+	}
+
+	txt := ""
+	if !serverIsLastTier {
+		// These configs are for the child->parent client certs,
+		// and for children accepting the parent CA.
+		// So, they go on everything that's a child, i.e. everything but the last cache tier.
+		txt += `
+cond %{REMAP_PSEUDO_HOOK}
+`
+		if e2eSSLData.ServerCAPath != "" {
+			txt += `set-config proxy.config.ssl.client.CA.cert.filename ` + e2eSSLData.ServerCAPath + `
+`
+		}
+		if e2eSSLData.ClientCertPath != "" {
+			txt += `set-config proxy.config.ssl.client.cert.filename ` + e2eSSLData.ClientCertPath + `
+`
+		}
+		if e2eSSLData.ClientCertKeyPath != "" {
+			txt += `set-config proxy.config.ssl.client.private_key.filename ` + e2eSSLData.ClientCertKeyPath + `
+`
+		}
+	}
+	return txt
 }
 
 func makeATCHeaderRewriteDirectiveMaxRequestHeaderSize(ds *DeliveryService, serverIsLastTier bool, atsRqstMaxHdrSize int) string {

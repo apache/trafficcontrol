@@ -21,6 +21,7 @@ package rfc
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -55,6 +56,14 @@ const (
 	ContentTypeURIList        = "text/uri-list"            // RFC2483§5
 	Gzip                      = "gzip"                     // RFC7230§4.2.3
 )
+
+const SchemeHTTP = "http"   // RFC7230§2.7.1
+const SchemeHTTPS = "https" // RFC7230§2.7.2
+
+const DefaultHTTPPort = 80   // RFC7230§2.7.1
+const DefaultHTTPSPort = 443 // RFC7230§2.7.2
+
+const MaxCertificateCNLen = 64 // RFC5280§A.1
 
 // LastModifiedFormat is the format used by dates in the HTTP Last-Modified
 // header.
@@ -198,4 +207,17 @@ func GetHTTPDeltaSeconds(m map[string][]string, key string) (time.Duration, bool
 		return 0, false
 	}
 	return time.Duration(seconds) * time.Second, true
+}
+
+// URLPortOrDefault is a helper func which returns the port of uri if it exists,
+// or the default of uri's scheme (80 for http, 443 for https) if the scheme exists,
+// or 80 if neither port nor scheme exist.
+func URLPortOrDefault(uri *url.URL) string {
+	if port := uri.Port(); port != "" {
+		return port
+	}
+	if uri.Scheme == SchemeHTTPS {
+		return strconv.Itoa(DefaultHTTPSPort)
+	}
+	return strconv.Itoa(DefaultHTTPPort)
 }

@@ -38,6 +38,13 @@ import (
 
 const TrafficOpsProxyParameterName = `tm.rev_proxy.url`
 
+//
+type GenConfigData struct {
+	ConfigData
+}
+
+// ConfigData is the data from Traffic Ops necessary to generate cache config.
+// See also GenConfigData.
 type ConfigData struct {
 	// Servers must be all the servers from Traffic Ops. May include servers not on the current cdn.
 	Servers []atscfg.Server `json:"servers,omitempty"`

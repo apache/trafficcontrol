@@ -61,6 +61,12 @@ type Cfg struct {
 	DefaultTLSVersions []atscfg.TLSVersion
 	Version            string
 	GitRevision        string
+	ExtraCertificates  []atscfg.SSLMultiCertDotConfigCertInf
+	ClientCAPath       string
+	ServerCAPath       string
+	ClientCertPath     string
+	ClientCertKeyPath  string
+	InternalHTTPS      atscfg.InternalHTTPS
 }
 
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
@@ -73,6 +79,7 @@ func (cfg Cfg) AppVersion() string { return t3cutil.VersionStr(AppName, cfg.Vers
 
 // GetCfg gets the application configuration, from arguments and environment variables.
 func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
+
 	version := getopt.BoolLong("version", 'V', "Print version information and exit.")
 	listPlugins := getopt.BoolLong("list-plugins", 'l', "Print the list of plugins.")
 	help := getopt.BoolLong("help", 'h', "Print usage information and exit")
@@ -90,6 +97,17 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	const useStrategiesFlagName = "use-strategies"
 	const defaultUseStrategies = t3cutil.UseStrategiesFlagFalse
 	useStrategiesPtr := getopt.EnumLong(useStrategiesFlagName, 0, []string{string(t3cutil.UseStrategiesFlagTrue), string(t3cutil.UseStrategiesFlagCore), string(t3cutil.UseStrategiesFlagFalse), string(t3cutil.UseStrategiesFlagCore), ""}, "", "[true | core| false] whether to generate config using strategies.yaml instead of parent.config. If true use the parent_select plugin, if 'core' use ATS core strategies, if false use parent.config.")
+
+	extraCertsStr := getopt.StringLong("extra-certificates", 0, "", `List of extra certificates to add to the ATS ssl_multicert.config file. Paths will be inserted into the file verbatim, and must be relative to the ATS records.config proxy.config.ssl.server.cert.path (typically etc/trafficserver/ssl). Each cert, key, and optional CA path must be comma-separated, and each set of certs must be semicolon-delimited. For example, '--extra-certificates=e2e-client.cert,e2e-client.key,e2essl-ca.cert;e2e-server.cert,e2e-server.key,e2e-ca.cert;some-other.cert,some-other.key'`)
+
+	serverCAPath := getopt.StringLong("server-ca-path", 0, "", `the path to the Certificate Authority used to sign certificates which will be presented by parent caches to child caches. This must be relative to the ATS proxy.config.ssl.server.cert.path (e.g. etc/trafficserver/ssl/)`)
+	clientCAPath := getopt.StringLong("client-ca-path", 0, "", `the path to the Certificate Authority used to sign client certificates which will be presented by child caches to parent caches. This must be relative to the ATS config directory (e.g. etc/trafficserver/), _not_ the proxy.config.ssl.server.cert.path (e.g. etc/trafficserver/ssl/)`)
+	clientCertPath := getopt.StringLong("client-cert-path", 0, "", `ClientCertPath is the path to the client certificate presented by child caches to parent caches. Relative to records.config proxy.config.ssl.client.cert.path`)
+	clientCertKeyPath := getopt.StringLong("client-cert-key-path", 0, "", `ClientCertKeyPath is the path to the key for the client certificate presented by child caches to parent caches. Relative to records.config proxy.config.ssl.client.private_key.path`)
+
+	const internalHTTPSFlagName = "internal-https"
+	const defaultInternalHTTPS = atscfg.InternalHTTPSNo
+	internalHTTPSPtr := getopt.EnumLong(internalHTTPSFlagName, 0, []string{string(atscfg.InternalHTTPSNo), string(atscfg.InternalHTTPSYes), string(atscfg.InternalHTTPSNoChild), ""}, "", "[no | yes | no-child] Whether to use HTTPS for internal cache communication. The no-child flag will generate config for both http and https on parents, and http on children; this makes it possible to upgrade without downtime: generate 'no-child' on all caches first, then 'yes'. Default is 'no'.")
 
 	getopt.Parse()
 
@@ -124,6 +142,10 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
 	}
 
+	if *internalHTTPSPtr == "" {
+		*internalHTTPSPtr = defaultInternalHTTPS.String()
+	}
+
 	defaultTLSVersions := atscfg.DefaultDefaultTLSVersions
 
 	*defaultTLSVersionsStr = strings.TrimSpace(*defaultTLSVersionsStr)
@@ -144,6 +166,30 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		*useStrategiesPtr = defaultUseStrategies.String()
 	}
 
+	warnMsgs := []string{}
+
+	extraCertsArr := strings.Split(strings.TrimSpace(*extraCertsStr), `;`)
+	extraCerts := []atscfg.SSLMultiCertDotConfigCertInf{}
+	for _, certEntry := range extraCertsArr {
+		certEntry = strings.TrimSpace(certEntry)
+		if certEntry == "" {
+			continue // skip empty fields
+		}
+		certEntryArr := strings.Split(certEntry, `,`)
+		if len(certEntryArr) < 2 {
+			warnMsgs = append(warnMsgs, "--extra-certificates was malformed, entry '"+certEntry+"' was not a cert-key pair, skipping!")
+			continue
+		}
+		cert := atscfg.SSLMultiCertDotConfigCertInf{CertPath: certEntryArr[0], KeyPath: certEntryArr[1]}
+		if len(certEntryArr) > 2 {
+			cert.CAPath = certEntryArr[2]
+		}
+		if len(certEntryArr) > 3 {
+			warnMsgs = append(warnMsgs, "--extra-certificates was malformed, entry '"+certEntry+"' had more than 3 entries (cert, key, ca), ignoring entries after the 3rd!")
+		}
+		extraCerts = append(extraCerts, cert)
+	}
+
 	cfg := Cfg{
 		LogLocationErr:     logLocationError,
 		LogLocationWarn:    logLocationWarn,
@@ -161,9 +207,18 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		Version:            appVersion,
 		GitRevision:        gitRevision,
 		UseStrategies:      t3cutil.UseStrategiesFlag(*useStrategiesPtr),
+		ExtraCertificates:  extraCerts,
+		ClientCAPath:       *clientCAPath,
+		ServerCAPath:       *serverCAPath,
+		ClientCertPath:     *clientCertPath,
+		ClientCertKeyPath:  *clientCertKeyPath,
+		InternalHTTPS:      atscfg.InternalHTTPS(*internalHTTPSPtr),
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
+	}
+	for _, warnMsg := range warnMsgs {
+		log.Warnln(warnMsg)
 	}
 	return cfg, nil
 }

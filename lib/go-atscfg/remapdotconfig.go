@@ -21,12 +21,12 @@ package atscfg
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -54,7 +54,35 @@ type RemapDotConfigOpts struct {
 	// UseCoreStrategies is whether to use the ATS core strategies, rather than the parent_select plugin.
 	// This has no effect if UseStrategies is false.
 	UseStrategiesCore bool
+
+	// InternalHTTPS is whether to generate rules for internal https communication.
+	// If omitted, the default is 'no'
+	InternalHTTPS InternalHTTPS
 }
+
+// RemapDotConfigMetaData contains metadata needed by config generation,
+// in addition to the file itself.
+type RemapDotConfigMetaData struct {
+	// InternalRemapSourceURIs is the list of URIs (including scheme and port)
+	// for which this cache is acting as a parent cache to other CDN child caches.
+	InternalRemapSourceURIs []string `json:"internal_remap_source_uris"`
+
+	// InternalRemapTargetURIs is the list of URIs (including scheme and port)
+	// for which this cache is requesting a parent CDN cache, rather than a real origin.
+	InternalRemapTargetURIs []string `json:"internal_remap_target_uris"`
+}
+
+// CombineMetaData combines the data in mda and mdb and returns a RemapDotConfigMetaData
+// with the data of both.
+// Note it may modify or return mda, mdb, or both.
+func CombineMetaData(mda RemapDotConfigMetaData, mdb RemapDotConfigMetaData) RemapDotConfigMetaData {
+	mda.InternalRemapSourceURIs = append(mda.InternalRemapSourceURIs, mdb.InternalRemapSourceURIs...)
+	mda.InternalRemapTargetURIs = append(mda.InternalRemapTargetURIs, mdb.InternalRemapTargetURIs...)
+	return mda
+}
+
+// IsCfgMetaData implements CfgMetaData.
+func (md RemapDotConfigMetaData) IsCfgMetaData() {}
 
 func MakeRemapDotConfig(
 	server *Server,
@@ -73,6 +101,9 @@ func MakeRemapDotConfig(
 ) (Cfg, error) {
 	if opt == nil {
 		opt = &RemapDotConfigOpts{}
+	}
+	if opt.InternalHTTPS == InternalHTTPSInvalid {
+		opt.InternalHTTPS = DefaultInternalHTTPS
 	}
 	warnings := []string{}
 
@@ -116,10 +147,11 @@ func MakeRemapDotConfig(
 	hdr := makeHdrComment(opt.HdrComment)
 	txt := ""
 	typeWarns := []string{}
+	metaData := RemapDotConfigMetaData{}
 	if tc.CacheTypeFromString(server.Type) == tc.CacheTypeMid {
-		txt, typeWarns, err = getServerConfigRemapDotConfigForMid(atsMajorVersion, dsProfilesConfigParams, dses, dsRegexes, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		txt, metaData, typeWarns, err = getServerConfigRemapDotConfigForMid(atsMajorVersion, dsProfilesConfigParams, dses, dsRegexes, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, configDir, opt)
 	} else {
-		txt, typeWarns, err = getServerConfigRemapDotConfigForEdge(dsProfilesConfigParams, serverPackageParamData, dses, dsRegexes, atsMajorVersion, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, cdnDomain, configDir, opt)
+		txt, metaData, typeWarns, err = getServerConfigRemapDotConfigForEdge(dsProfilesConfigParams, serverPackageParamData, dses, dsRegexes, atsMajorVersion, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, cdnDomain, configDir, opt)
 	}
 	warnings = append(warnings, typeWarns...)
 	if err != nil {
@@ -130,6 +162,7 @@ func MakeRemapDotConfig(
 		Text:        txt,
 		ContentType: ContentTypeRemapDotConfig,
 		LineComment: LineCommentRemapDotConfig,
+		MetaData:    metaData,
 		Warnings:    warnings,
 	}, nil
 }
@@ -256,21 +289,29 @@ func getServerConfigRemapDotConfigForMid(
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	configDir string,
 	opts *RemapDotConfigOpts,
-) (string, []string, error) {
+) (string, RemapDotConfigMetaData, []string, error) {
+
 	warnings := []string{}
 	midRemaps := map[string]string{}
 	preRemapLines := []string{}
 	postRemapLines := []string{}
+	metaData := RemapDotConfigMetaData{}
+
 	for _, ds := range dses {
 		if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
+		}
+
+		_, isChild, _, err := dsCacheIsParentChildEdge(&ds, server, nameTopologies, cacheGroups)
+		if err != nil {
+			return "", RemapDotConfigMetaData{}, warnings, errors.New("checking ds '" + *ds.XMLID + "' server parentage: " + err.Error())
 		}
 
 		topology, hasTopology := nameTopologies[TopologyName(*ds.Topology)]
 		if *ds.Topology != "" && hasTopology {
 			topoIncludesServer, err := topologyIncludesServerNullable(topology, server)
 			if err != nil {
-				return "", warnings, errors.New("getting Topology Server inclusion: " + err.Error())
+				return "", RemapDotConfigMetaData{}, warnings, errors.New("getting Topology Server inclusion: " + err.Error())
 			}
 			if !topoIncludesServer {
 				continue
@@ -299,7 +340,7 @@ func getServerConfigRemapDotConfigForMid(
 		if *ds.Topology != "" {
 			topoTxt, err := makeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups)
 			if err != nil {
-				return "", warnings, err
+				return "", RemapDotConfigMetaData{}, warnings, err
 			}
 			midRemap += topoTxt
 		} else if (ds.MidHeaderRewrite != nil && *ds.MidHeaderRewrite != "") || (ds.MaxOriginConnections != nil && *ds.MaxOriginConnections > 0) || (ds.ServiceCategory != nil && *ds.ServiceCategory != "") {
@@ -334,7 +375,7 @@ func getServerConfigRemapDotConfigForMid(
 
 		isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
 		if err != nil {
-			return "", warnings, errors.New("determining if cache is the last tier: " + err.Error())
+			return "", RemapDotConfigMetaData{}, warnings, errors.New("determining if cache is the last tier: " + err.Error())
 		}
 
 		mapTo := *ds.OrgServerFQDN
@@ -346,7 +387,17 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		if midRemap != "" {
-			midRemaps[remapFrom] = mapTo + midRemap
+			target := *ds.OrgServerFQDN
+			if isChild {
+				// if we're a child requesting of a parent, make the target scheme the internal HTTPS setting
+				if opts.InternalHTTPS == InternalHTTPSNo || opts.InternalHTTPS == InternalHTTPSNoChild {
+					target = strings.Replace(target, `https://`, `http://`, -1)
+				} else {
+					target = strings.Replace(target, `http://`, `https://`, -1)
+				}
+				metaData.InternalRemapTargetURIs = append(metaData.InternalRemapTargetURIs, target)
+			}
+			midRemaps[remapFrom] = target + midRemap
 		}
 
 		// Any raw pre or post pend
@@ -362,9 +413,18 @@ func getServerConfigRemapDotConfigForMid(
 	}
 
 	textLines := []string{}
-
-	for originFQDN, midRemap := range midRemaps {
-		textLines = append(textLines, "map "+originFQDN+" "+midRemap+"\n")
+	for originURI, midRemap := range midRemaps {
+		// above, we made originURI always be http.
+		// Now, we decide whether to insert http, https, or both, based on the InternalHTTPS setting
+		if opts.InternalHTTPS == InternalHTTPSNo || opts.InternalHTTPS == InternalHTTPSNoChild {
+			textLines = append(textLines, "map "+originURI+" "+midRemap+"\n")
+			metaData.InternalRemapSourceURIs = append(metaData.InternalRemapSourceURIs, originURI)
+		}
+		if opts.InternalHTTPS == InternalHTTPSYes || opts.InternalHTTPS == InternalHTTPSNoChild {
+			originURIHTTPS := strings.Replace(originURI, `http://`, `https://`, -1)
+			textLines = append(textLines, "map "+originURIHTTPS+" "+midRemap+"\n")
+			metaData.InternalRemapSourceURIs = append(metaData.InternalRemapSourceURIs, originURIHTTPS)
+		}
 	}
 
 	sort.Strings(preRemapLines)
@@ -378,7 +438,7 @@ func getServerConfigRemapDotConfigForMid(
 	remapLinesAll = append(remapLinesAll, postRemapLines...)
 
 	text := header + strings.Join(remapLinesAll, "")
-	return text, warnings, nil
+	return text, metaData, warnings, nil
 }
 
 // getServerConfigRemapDotConfigForEdge returns the remap lines, any warnings, and any error.
@@ -397,9 +457,10 @@ func getServerConfigRemapDotConfigForEdge(
 	cdnDomain string,
 	configDir string,
 	opts *RemapDotConfigOpts,
-) (string, []string, error) {
+) (string, RemapDotConfigMetaData, []string, error) {
 	warnings := []string{}
 	textLines := []string{}
+	metaData := RemapDotConfigMetaData{}
 	preRemapLines := []string{}
 	postRemapLines := []string{}
 
@@ -412,7 +473,7 @@ func getServerConfigRemapDotConfigForEdge(
 		if *ds.Topology != "" && hasTopology {
 			topoIncludesServer, err := topologyIncludesServerNullable(topology, server)
 			if err != nil {
-				return "", warnings, errors.New("getting topology server inclusion: " + err.Error())
+				return "", RemapDotConfigMetaData{}, warnings, errors.New("getting topology server inclusion: " + err.Error())
 			}
 			if !topoIncludesServer {
 				continue
@@ -449,9 +510,14 @@ func getServerConfigRemapDotConfigForEdge(
 				}
 				remapWarns := []string{}
 				dsLines := RemapLines{}
-				dsLines, remapWarns, err = buildEdgeRemapLine(atsMajorVersion, server, serverPackageParamData, remapText, ds, line.From, line.To, profileremapConfigParams, cacheGroups, nameTopologies, configDir, opts)
+				dsMetaData := RemapDotConfigMetaData{}
+				dsLines, dsMetaData, remapWarns, err = buildEdgeRemapLine(atsMajorVersion, server, serverPackageParamData, remapText, ds, line.From, line.To, profileremapConfigParams, cacheGroups, nameTopologies, configDir, opts)
 				warnings = append(warnings, remapWarns...)
+				if err != nil {
+					return "", RemapDotConfigMetaData{}, warnings, errors.New("building edge remap line for ds '" + *ds.XMLID + "': " + err.Error())
+				}
 				remapText = dsLines.Text
+				metaData = CombineMetaData(metaData, dsMetaData)
 
 				// Add to pre/post remap lines if this is last tier
 				if len(dsLines.Pre) > 0 || len(dsLines.Post) > 0 {
@@ -460,7 +526,7 @@ func getServerConfigRemapDotConfigForEdge(
 				}
 
 				if err != nil {
-					return "", warnings, err
+					return "", RemapDotConfigMetaData{}, warnings, err
 				}
 				if hasTopology {
 					remapText += " # topology '" + topology.Name + "'"
@@ -481,7 +547,7 @@ func getServerConfigRemapDotConfigForEdge(
 
 	text := header
 	text += strings.Join(remapLinesAll, "")
-	return text, warnings, nil
+	return text, metaData, warnings, nil
 }
 
 type RemapLines struct {
@@ -506,22 +572,27 @@ func buildEdgeRemapLine(
 	nameTopologies map[TopologyName]tc.Topology,
 	configDir string,
 	opts *RemapDotConfigOpts,
-) (RemapLines, []string, error) {
+) (RemapLines, RemapDotConfigMetaData, []string, error) {
 	warnings := []string{}
 	remapLines := RemapLines{}
+	metaData := RemapDotConfigMetaData{}
 
 	// ds = 'remap' in perl
 	mapFrom = strings.Replace(mapFrom, `__http__`, *server.HostName, -1)
 
 	isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
 	if err != nil {
-		return remapLines, warnings, errors.New("determining if cache is the last tier: " + err.Error())
+		return remapLines, RemapDotConfigMetaData{}, warnings, errors.New("determining if cache is the last tier: " + err.Error())
 	}
 
-	// if this remap is going to a parent, use http not https.
-	// cache-to-cache communication inside the CDN is always http (though that's likely to change in the future)
+	// if this remap is going to a parent, use the internal protocol, not the origin protocol
 	if !isLastCache {
-		mapTo = strings.Replace(mapTo, `https://`, `http://`, -1)
+		if opts.InternalHTTPS == InternalHTTPSNo || opts.InternalHTTPS == InternalHTTPSNoChild {
+			mapTo = strings.Replace(mapTo, `https://`, `http://`, -1)
+		} else {
+			mapTo = strings.Replace(mapTo, `http://`, `https://`, -1)
+		}
+		metaData.InternalRemapTargetURIs = append(metaData.InternalRemapTargetURIs, mapTo)
 	}
 
 	text += "map	" + mapFrom + "     " + mapTo
@@ -537,7 +608,7 @@ func buildEdgeRemapLine(
 	if *ds.Topology != "" {
 		topoTxt, err := makeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(*server.Cachegroup), nameTopologies[TopologyName(*ds.Topology)], cacheGroups)
 		if err != nil {
-			return remapLines, warnings, err
+			return remapLines, RemapDotConfigMetaData{}, warnings, err
 		}
 		text += topoTxt
 	} else if (ds.EdgeHeaderRewrite != nil && *ds.EdgeHeaderRewrite != "") || (ds.ServiceCategory != nil && *ds.ServiceCategory != "") || (ds.MaxOriginConnections != nil && *ds.MaxOriginConnections != 0) {
@@ -631,7 +702,7 @@ func buildEdgeRemapLine(
 		remapLines.Pre, remapLines.Post = lastPrePostRemapLinesFor(dsConfigParamsMap, *ds.XMLID)
 	}
 
-	return remapLines, warnings, nil
+	return remapLines, metaData, warnings, nil
 }
 
 func strategyDirective(strategyName string, configDir string, opt *RemapDotConfigOpts) string {

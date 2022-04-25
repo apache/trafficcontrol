@@ -80,6 +80,10 @@ type ParentConfigOpts struct {
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
 	// To omit the header comment, pass the empty string.
 	HdrComment string
+
+	// InternalHTTPS is whether to generate rules for internal https communication.
+	// If omitted, the default is 'no'
+	InternalHTTPS InternalHTTPS
 }
 
 func MakeParentDotConfig(
@@ -155,6 +159,8 @@ func makeParentDotConfigData(
 	}
 	parentAbstraction := &ParentAbstraction{}
 	warnings := []string{}
+
+	warnings = append(warnings, fmt.Sprintf("DEBUG MakeParentDotConfig got opts %+v\n", *opt))
 
 	if server.HostName == nil || *server.HostName == "" {
 		return nil, warnings, errors.New("server HostName missing")
@@ -287,7 +293,9 @@ func makeParentDotConfigData(
 		parentServerDSes[dss.Server][dss.DeliveryService] = struct{}{}
 	}
 
-	originServers, profileCaches, orgProfWarns, err := getOriginServersAndProfileCaches(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities)
+	// this is for child requests to parents, so we only want 'yes', not 'no-child' or 'no'
+	internalHTTPS := opt.InternalHTTPS == InternalHTTPSYes
+	originServers, profileCaches, orgProfWarns, err := getOriginServersAndProfileCaches(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities, internalHTTPS)
 	warnings = append(warnings, orgProfWarns...)
 	if err != nil {
 		return nil, warnings, errors.New("getting origin servers and profile caches: " + err.Error())
@@ -347,6 +355,7 @@ func makeParentDotConfigData(
 				atsMajorVer,
 				dsOrigins[DeliveryServiceID(*ds.ID)],
 				opt.AddComments,
+				opt.InternalHTTPS,
 			)
 			warnings = append(warnings, topoWarnings...)
 			if err != nil {
@@ -365,9 +374,15 @@ func makeParentDotConfigData(
 			}
 
 			orgFQDNStr := *ds.OrgServerFQDN
-			// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
+			// if this cache isn't the last tier, i.e. we're not going to the origin, change to the internal protocol
 			if isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds); !isLastCacheTier {
-				orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+				if opt.InternalHTTPS == InternalHTTPSYes {
+					orgFQDNStr = strings.Replace(orgFQDNStr, `http://`, `https://`, -1)
+					orgFQDNStr = strings.Replace(orgFQDNStr, `:80`, `:443`, -1)
+				} else {
+					orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+					orgFQDNStr = strings.Replace(orgFQDNStr, `:443`, `:80`, -1)
+				}
 			}
 			orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
 			warnings = append(warnings, orgWarns...)
@@ -473,9 +488,15 @@ func makeParentDotConfigData(
 			text.Name = *ds.XMLID
 
 			orgFQDNStr := *ds.OrgServerFQDN
-			// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
+			// if this cache isn't the last tier, i.e. we're not going to the origin, use the internal protocol
 			if isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds); !isLastCacheTier {
-				orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+				if opt.InternalHTTPS == InternalHTTPSYes {
+					orgFQDNStr = strings.Replace(orgFQDNStr, `http://`, `https://`, -1)
+					orgFQDNStr = strings.Replace(orgFQDNStr, `:80`, `:443`, -1)
+				} else {
+					orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+					orgFQDNStr = strings.Replace(orgFQDNStr, `:443`, `:80`, -1)
+				}
 			}
 			orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
 			warnings = append(warnings, orgWarns...)
@@ -923,6 +944,7 @@ func getTopologyParentConfigLine(
 	atsMajorVer int,
 	dsOrigins map[ServerID]struct{},
 	addComments bool,
+	internalHTTPS InternalHTTPS,
 ) (*ParentAbstractionService, []string, error) {
 	warnings := []string{}
 	if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
@@ -944,9 +966,15 @@ func getTopologyParentConfigLine(
 	}
 
 	orgFQDNStr := *ds.OrgServerFQDN
-	// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
+	// if this cache isn't the last tier, i.e. we're not going to the origin, use the internal protocol
 	if !serverPlacement.IsLastCacheTier {
-		orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+		if internalHTTPS == InternalHTTPSYes {
+			orgFQDNStr = strings.Replace(orgFQDNStr, `http://`, `https://`, -1)
+			orgFQDNStr = strings.Replace(orgFQDNStr, `:80`, `:443`, -1)
+		} else {
+			orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+			orgFQDNStr = strings.Replace(orgFQDNStr, `:443`, `:80`, -1)
+		}
 	}
 	orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
 	warnings = append(warnings, orgWarns...)
@@ -964,7 +992,10 @@ func getTopologyParentConfigLine(
 	}
 	// txt += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port()
 
-	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins, dsParams.MergeGroups)
+	internalChildHTTPS := internalHTTPS == InternalHTTPSYes
+
+	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins, dsParams.MergeGroups, internalChildHTTPS)
+
 	warnings = append(warnings, parentWarnings...)
 	if err != nil {
 		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
@@ -1208,12 +1239,14 @@ func getTopologyQueryStringIgnore(
 
 // serverParentageParams gets the Parameters used for parent= line, or defaults if they don't exist
 // Returns the Parameters used for parent= lines for the given server, and any warnings.
-func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (profileCache, []string) {
+func serverParentageParams(sv *Server, params []parameterWithProfilesMap, internalHTTPS bool) (profileCache, []string) {
 	warnings := []string{}
 	// TODO deduplicate with atstccfg/parentdotconfig.go
 	profileCache := defaultProfileCache()
-	if sv.TCPPort != nil {
+	if !internalHTTPS && sv.TCPPort != nil {
 		profileCache.Port = *sv.TCPPort
+	} else if internalHTTPS && sv.HTTPSPort != nil {
+		profileCache.Port = *sv.HTTPSPort
 	}
 	for _, param := range params {
 		if _, ok := param.ProfileNames[(sv.ProfileNames)[0]]; !ok {
@@ -1286,6 +1319,7 @@ func getTopologyParents(
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	dsOrigins map[ServerID]struct{}, // for Topology DSes, MSO still needs DeliveryServiceServer assignments.
 	dsMergeGroups []string, // sorted parent merge groups for this ds
+	internalHTTPS bool,
 ) ([]*ParentAbstractionServiceParent, []*ParentAbstractionServiceParent, []string, error) {
 	warnings := []string{}
 	// If it's the last tier, then the parent is the origin.
@@ -1350,7 +1384,7 @@ func getTopologyParents(
 
 	serversWithParams := []serverWithParams{}
 	for _, sv := range servers {
-		serverParentParams, parentWarns := serverParentageParams(&sv, parentConfigParams)
+		serverParentParams, parentWarns := serverParentageParams(&sv, parentConfigParams, internalHTTPS)
 		warnings = append(warnings, parentWarns...)
 		serversWithParams = append(serversWithParams, serverWithParams{
 			Server: sv,
@@ -1634,6 +1668,7 @@ func getOriginServersAndProfileCaches(
 	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
 	dses []DeliveryService,
 	serverCapabilities map[int]map[ServerCapability]struct{},
+	internalHTTPS bool,
 ) (map[OriginHost][]cgServer, map[ProfileID]profileCache, []string, error) {
 	warnings := []string{}
 	originServers := map[OriginHost][]cgServer{}  // "deliveryServices" in Perl
@@ -1682,8 +1717,11 @@ func getOriginServersAndProfileCaches(
 		} else if cgSv.HostName == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil HostName, skipping!")
 			continue
-		} else if cgSv.TCPPort == nil {
+		} else if !internalHTTPS && cgSv.TCPPort == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil TCPPort, skipping!")
+			continue
+		} else if internalHTTPS && cgSv.HTTPSPort == nil {
+			warnings = append(warnings, "getting origin servers: got server with nil HTTPSPort but internalHTTPS=true, skipping!")
 			continue
 		} else if cgSv.CachegroupID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil CachegroupID, skipping!")
@@ -1715,7 +1753,6 @@ func getOriginServersAndProfileCaches(
 			ServerID:     ServerID(*cgSv.ID),
 			ServerHost:   *cgSv.HostName,
 			ServerIP:     ipAddr.String(),
-			ServerPort:   *cgSv.TCPPort,
 			CacheGroupID: *cgSv.CachegroupID,
 			Status:       *cgSv.StatusID,
 			Type:         *cgSv.TypeID,
@@ -1723,6 +1760,11 @@ func getOriginServersAndProfileCaches(
 			TypeName:     cgSv.Type,
 			Domain:       *cgSv.DomainName,
 			Capabilities: serverCapabilities[*cgSv.ID],
+		}
+		if internalHTTPS {
+			realCGServer.ServerPort = *cgSv.HTTPSPort
+		} else {
+			realCGServer.ServerPort = *cgSv.TCPPort
 		}
 
 		if cgSv.Type == tc.OriginTypeName {

@@ -20,6 +20,7 @@ package torequest
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -35,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
@@ -102,6 +104,11 @@ type ConfigFile struct {
 	Uid               int         // owner uid, default is 0
 	Gid               int         // owner gid, default is 0
 	Warnings          []string
+}
+
+type MetaData struct {
+	Remap        atscfg.RemapDotConfigMetaData
+	SSLMultiCert atscfg.SSLMultiCertDotConfigMetaData
 }
 
 func (u UpdateStatus) String() string {
@@ -606,7 +613,7 @@ func (r *TrafficOpsReq) GetConfigFile(name string) (*ConfigFile, bool) {
 
 // GetConfigFileList fetches and parses the multipart config files
 // for a cache from traffic ops and loads them into the configFiles map.
-func (r *TrafficOpsReq) GetConfigFileList() error {
+func (r *TrafficOpsReq) GetConfigFileList(genInf config.GenInf) (MetaData, error) {
 	var atsUid int = 0
 	var atsGid int = 0
 
@@ -627,14 +634,15 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 		}
 	}
 
-	allFiles, err := generate(r.Cfg)
+	allFiles, err := generate(r.Cfg, genInf)
 	if err != nil {
-		return errors.New("requesting data generating config files: " + err.Error())
+		return MetaData{}, errors.New("requesting data generating config files: " + err.Error())
 	}
 
 	r.configFiles = map[string]*ConfigFile{}
 	r.configFileWarnings = map[string][]string{}
 	var mode os.FileMode
+	metaData := MetaData{}
 	for _, file := range allFiles {
 		if file.Secure {
 			mode = 0600
@@ -658,9 +666,24 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 			}
 			r.configFileWarnings[file.Name] = append(r.configFileWarnings[file.Name], warn)
 		}
+
+		// remap.config has the metadata we need about internal sources and targets,
+		// which is needed for E2ESSL cert generation.
+		if file.Name == "remap.config" && file.MetaData != nil {
+			// r.configFileWarnings[file.Name] = append(r.configFileWarnings[file.Name], fmt.Sprintf("remap.config metadata: '''%+v'''", string(file.MetaData)))
+			if err := json.Unmarshal(file.MetaData, &metaData.Remap); err != nil {
+				return MetaData{}, fmt.Errorf("decoding remap.config metadata '%+v': %v", string(file.MetaData), err)
+			}
+		} else if file.Name == "ssl_multicert.config" && file.MetaData != nil {
+			// r.configFileWarnings[file.Name] = append(r.configFileWarnings[file.Name], fmt.Sprintf("ssl_multicert.config metadata: '''%+v'''", string(file.MetaData)))
+			if err := json.Unmarshal(file.MetaData, &metaData.SSLMultiCert); err != nil {
+				return MetaData{}, fmt.Errorf("decoding ssl_multicert.config metadata '%+v': %v", string(file.MetaData), err)
+			}
+		}
+
 	}
 
-	return nil
+	return metaData, nil
 }
 
 func (r *TrafficOpsReq) PrintWarnings() {
@@ -690,7 +713,7 @@ func (r *TrafficOpsReq) GetHeaderComment() string {
 }
 
 // CheckRevalidateState retrieves and returns the revalidate status from Traffic Ops.
-func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, error) {
+func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool, genInf config.GenInf) (UpdateStatus, error) {
 	log.Infoln("Checking revalidate state.")
 	if !sleepOverride &&
 		(r.Cfg.ReportOnly || r.Cfg.Files != t3cutil.ApplyFilesFlagReval) {
@@ -742,7 +765,7 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 }
 
 // CheckSYncDSState retrieves and returns the DS Update status from Traffic Ops.
-func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
+func (r *TrafficOpsReq) CheckSyncDSState(genInf config.GenInf) (UpdateStatus, error) {
 	updateStatus := UpdateTropsNotNeeded
 	randDispSec := time.Duration(0)
 	log.Debugln("Checking syncds state.")
@@ -779,7 +802,7 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 			}
 		} else if !r.Cfg.IgnoreUpdateFlag {
 			log.Errorln("no queued update needs to be applied.  Running revalidation before exiting.")
-			r.RevalidateWhileSleeping()
+			r.RevalidateWhileSleeping(genInf)
 			return UpdateTropsNotNeeded, nil
 		} else {
 			log.Errorln("Traffic Ops is signaling that no update is waiting to be applied.")
@@ -1032,8 +1055,8 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 	return nil
 }
 
-func (r *TrafficOpsReq) RevalidateWhileSleeping() (UpdateStatus, error) {
-	updateStatus, err := r.CheckRevalidateState(true)
+func (r *TrafficOpsReq) RevalidateWhileSleeping(genInf config.GenInf) (UpdateStatus, error) {
+	updateStatus, err := r.CheckRevalidateState(true, genInf)
 	if err != nil {
 		return updateStatus, err
 	}
@@ -1043,7 +1066,7 @@ func (r *TrafficOpsReq) RevalidateWhileSleeping() (UpdateStatus, error) {
 		// The better solution is to gut the RevalidateWhileSleeping stuff, once TO can handle more load
 		r.Cfg.WaitForParents = true
 
-		err = r.GetConfigFileList()
+		_, err = r.GetConfigFileList(genInf)
 		if err != nil {
 			return updateStatus, err
 		}
