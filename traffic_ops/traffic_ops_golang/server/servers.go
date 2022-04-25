@@ -475,20 +475,23 @@ func validateCommonV40(s *tc.ServerV40, tx *sql.Tx) ([]error, error) {
 	}
 
 	var cdnID int
-	if err := tx.QueryRow("SELECT cdn from profile WHERE name=$1", s.ProfileNames[0]).Scan(&cdnID); err != nil {
-		log.Errorf("could not execute select cdnID from profile: %s\n", err)
-		if errors.Is(err, sql.ErrNoRows) {
-			errs = append(errs, fmt.Errorf("no such profileName: '%s'", s.ProfileNames[0]))
-		} else {
-			return nil, fmt.Errorf("unable to get CDN ID for profile name '%s': %w", s.ProfileNames[0], err)
+	for _, profile := range s.ProfileNames {
+		if err := tx.QueryRow("SELECT cdn from profile WHERE name=$1", profile).Scan(&cdnID); err != nil {
+			log.Errorf("could not execute select cdnID from profile: %s\n", err)
+			if errors.Is(err, sql.ErrNoRows) {
+				errs = append(errs, fmt.Errorf("no such profileName: '%s'", profile))
+			} else {
+				return nil, fmt.Errorf("unable to get CDN ID for profile name '%s': %w", profile, err)
+			}
+			return errs, nil
 		}
-		return errs, nil
+
+		log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
+		if cdnID != *s.CDNID {
+			errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%v' does not match Server CDN '%d'", cdnID, profile, *s.CDNID))
+		}
 	}
 
-	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
-	if cdnID != *s.CDNID {
-		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%v' does not match Server CDN '%d'", cdnID, s.ProfileNames[0], *s.CDNID))
-	}
 	return errs, nil
 }
 
@@ -1859,7 +1862,6 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	origProfiles := []string{*server.Profile}
 	serverID, err := createServerV2(inf.Tx, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
@@ -1877,6 +1879,14 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+
+	var origProfile string
+	err = inf.Tx.Tx.QueryRow("SELECT name from profile where id = $1", server.ProfileID).Scan(&origProfile)
+	if err != nil && err != sql.ErrNoRows {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("retreiving profile with id %d", *server.ProfileID))
+		return
+	}
+	var origProfiles = []string{origProfile}
 
 	userErr, sysErr, statusCode := insertServerProfile(int(serverID), origProfiles, inf.Tx.Tx)
 	if userErr != nil || sysErr != nil {
@@ -1978,7 +1988,6 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
-	origProfiles := []string{*server.Profile}
 
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
@@ -2009,6 +2018,13 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	userErr, sysErr, errCode := createInterfaces(int(serverID), interfaces, inf.Tx.Tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	var origProfiles []string
+	err = inf.Tx.Tx.QueryRow("SELECT name from profile where id = $1", server.ProfileID).Scan(&origProfiles)
+	if err != nil && err != sql.ErrNoRows {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("retreiving profile with id %d", *server.ProfileID))
 		return
 	}
 
