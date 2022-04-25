@@ -18,6 +18,7 @@ package org.apache.traffic_control.traffic_router.core.external;
 import org.apache.traffic_control.traffic_router.core.util.CidrAddress;
 import org.apache.traffic_control.traffic_router.core.util.ExternalTest;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
+import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,7 +59,7 @@ public class ConsistentHashTest {
 	public void before() throws Exception {
 		closeableHttpClient = HttpClientBuilder.create().build();
 
-		String resourcePath = "api/2.0/steering";
+		String resourcePath = "api/"+TrafficOpsUtils.TO_API_VERSION+"/steering";
 		InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
 
 		if (inputStream == null) {
