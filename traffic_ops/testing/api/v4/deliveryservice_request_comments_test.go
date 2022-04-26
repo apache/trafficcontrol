@@ -42,15 +42,18 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 		methodTests := utils.V4TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when VALID ID parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(GetDSRequestCommentId(t, "admin")())}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(GetDSRequestCommentId(t, "admin")())}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
 				},
 				"VALIDATE SORT when DEFAULT is ASC ORDER": {
 					ClientSession: TOSession,
@@ -59,7 +62,8 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId: GetDSRequestCommentId(t, "admin"), ClientSession: TOSession,
+					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"deliveryServiceRequestId": GetDSRequestId(t, "test-ds1")(),
 						"value":                    "updated comment",
@@ -67,16 +71,18 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Header": {
-					EndpointId: GetDSRequestCommentId(t, "admin"), ClientSession: TOSession,
-					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody:  map[string]interface{}{},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody:   map[string]interface{}{},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId: GetDSRequestCommentId(t, "admin"), ClientSession: TOSession,
-					RequestBody:  map[string]interface{}{},
-					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{},
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 			},
 			"GET AFTER CHANGES": {
