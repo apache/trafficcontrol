@@ -478,7 +478,7 @@ The integration tests are run using :manpage:`go-test(1)`, with two configuratio
 
 	Specify the path to a file containing static data for the tests to use. This should almost never be used, because many of the tests depend on the data having a certain content and structure. If not specified, it will attempt to read a file named ``tc-fixtures.json`` in the working directory.
 
-.. option:: --includeSystemTests ``no``/``yes``
+.. option:: --includeSystemTests {no|yes}
 
 	Specify whether to run tests that depend on additional components like an SMTP server or a Traffic Vault server. Default: ``no``
 
