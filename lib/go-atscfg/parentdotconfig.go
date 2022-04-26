@@ -1000,7 +1000,13 @@ func getTopologyParentConfigLine(
 		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
 	}
 	if len(parents) == 0 {
-		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': no parents found! skipping! (Does your Topology have a CacheGroup with no servers in it?)")
+		if len(secondaryParents) > 0 {
+			warnings = append(warnings, "getting topology parents for '"+*ds.XMLID+"': no parents found! using secondary parents")
+			parents = secondaryParents
+			secondaryParents = nil
+		} else {
+			return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': no parents found! skipping! (Does your Topology have a CacheGroup with no servers in it?)")
+		}
 	}
 
 	txt.Parents = parents
