@@ -2091,6 +2091,43 @@ func UpdateServerProfileTableForV2V3(id *int, newProfile *string, origProfile st
 	return profileName, nil
 }
 
+// GetServerDetailFromV4 function converts server details from V4 to V3/V2
+func GetServerDetailFromV4(sd tc.ServerDetailV40, tx *sql.Tx) (tc.ServerDetail, error) {
+	var profileDesc *string
+	if err := tx.QueryRow(`SELECT p.description FROM profile p WHERE p.name=$1`, sd.ProfileNames[0]).Scan(&profileDesc); err != nil {
+		return tc.ServerDetail{}, fmt.Errorf("querying profile description by profile name: %w", err)
+	}
+	return tc.ServerDetail{
+		CacheGroup:         sd.CacheGroup,
+		CDNName:            sd.CDNName,
+		DeliveryServiceIDs: sd.DeliveryServiceIDs,
+		DomainName:         sd.DomainName,
+		GUID:               sd.GUID,
+		HardwareInfo:       sd.HardwareInfo,
+		HostName:           sd.HostName,
+		HTTPSPort:          sd.HTTPSPort,
+		ID:                 sd.ID,
+		ILOIPAddress:       sd.ILOIPAddress,
+		ILOIPGateway:       sd.ILOIPGateway,
+		ILOIPNetmask:       sd.ILOIPNetmask,
+		ILOPassword:        sd.ILOPassword,
+		ILOUsername:        sd.ILOUsername,
+		MgmtIPAddress:      sd.MgmtIPAddress,
+		MgmtIPGateway:      sd.MgmtIPGateway,
+		MgmtIPNetmask:      sd.MgmtIPNetmask,
+		OfflineReason:      sd.OfflineReason,
+		PhysLocation:       sd.PhysLocation,
+		Profile:            &sd.ProfileNames[0],
+		ProfileDesc:        profileDesc,
+		Rack:               sd.Rack,
+		Status:             sd.Status,
+		TCPPort:            sd.TCPPort,
+		Type:               sd.Type,
+		XMPPID:             sd.XMPPID,
+		XMPPPasswd:         sd.XMPPPasswd,
+	}, nil
+}
+
 // GetProfileIDDesc gets profile ID and desc for V3 servers
 func GetProfileIDDesc(tx *sql.Tx, name string) (id int, desc string) {
 	err := tx.QueryRow(`SELECT id, description from "profile" p WHERE p.name=$1`, name).Scan(&id, &desc)
