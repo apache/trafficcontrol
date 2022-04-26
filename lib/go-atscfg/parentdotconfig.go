@@ -65,6 +65,7 @@ const ParentConfigCacheParamPort = "port"
 const ParentConfigCacheParamUseIP = "use_ip_address"
 const ParentConfigCacheParamRank = "rank"
 const ParentConfigCacheParamNotAParent = "not_a_parent"
+const StrategyConfigUsePeering = "use_peering"
 
 type OriginHost string
 type OriginFQDN string
@@ -237,6 +238,7 @@ func makeParentDotConfigData(
 
 	nameTopologies := makeTopologyNameMap(topologies)
 
+	cgPeers := map[int]Server{}   // map[serverID]server
 	cgServers := map[int]Server{} // map[serverID]server
 	for _, sv := range servers {
 		if sv.ID == nil {
@@ -258,6 +260,15 @@ func makeParentDotConfigData(
 		if *sv.CDNName != *server.CDNName {
 			continue
 		}
+		// save cachegroup peer servers
+		if *sv.CDNName == *server.CDNName && *sv.Cachegroup == *server.Cachegroup {
+			if *sv.Status == string(tc.CacheStatusReported) || *sv.Status == string(tc.CacheStatusOnline) {
+				if _, ok := cgPeers[*sv.ID]; !ok {
+					cgPeers[*sv.ID] = sv
+				}
+			}
+			continue
+		}
 		if _, ok := parentCacheGroups[*sv.Cachegroup]; !ok {
 			continue
 		}
@@ -270,6 +281,15 @@ func makeParentDotConfigData(
 			continue
 		}
 		cgServers[*sv.ID] = sv
+	}
+
+	// save the cache group peers
+	for _, v := range cgPeers {
+		peer := &ParentAbstractionServiceParent{}
+		peer.FQDN = *v.HostName + "." + *v.DomainName
+		peer.Port = *v.TCPPort
+		peer.Weight = 0.999
+		parentAbstraction.Peers = append(parentAbstraction.Peers, peer)
 	}
 
 	cgServerIDs := map[int]struct{}{}
@@ -471,6 +491,11 @@ func makeParentDotConfigData(
 
 			text := &ParentAbstractionService{}
 			text.Name = *ds.XMLID
+
+			// peering ring check
+			if dsParams.UsePeering {
+				secondaryMode = ParentAbstractionServiceParentSecondaryModePeering
+			}
 
 			orgFQDNStr := *ds.OrgServerFQDN
 			// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
@@ -814,6 +839,7 @@ type parentDSParams struct {
 	MaxUnavailableServerRetries     string
 	QueryStringHandling             string
 	TryAllPrimariesBeforeSecondary  bool
+	UsePeering                      bool
 	MergeGroups                     []string
 }
 
@@ -839,7 +865,11 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	if !ok {
 		return params, warnings
 	}
-
+	if val, ok := dsParams[StrategyConfigUsePeering]; ok {
+		if val == "true" {
+			params.UsePeering = true
+		}
+	}
 	// the following may be blank, no default
 	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling]
 	params.MergeGroups = strings.Split(dsParams[ParentConfigParamMergeGroups], " ")
@@ -970,7 +1000,13 @@ func getTopologyParentConfigLine(
 		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
 	}
 	if len(parents) == 0 {
-		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': no parents found! skipping! (Does your Topology have a CacheGroup with no servers in it?)")
+		if len(secondaryParents) > 0 {
+			warnings = append(warnings, "getting topology parents for '"+*ds.XMLID+"': no parents found! using secondary parents")
+			parents = secondaryParents
+			secondaryParents = nil
+		} else {
+			return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': no parents found! skipping! (Does your Topology have a CacheGroup with no servers in it?)")
+		}
 	}
 
 	txt.Parents = parents

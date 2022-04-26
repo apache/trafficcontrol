@@ -388,7 +388,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			midCacheGroup       = "topology-mid-cg-04"
 		)
 		cacheGroupNames := []string{edgeCacheGroup, otherEdgeCacheGroup, midCacheGroup}
-		cachesByCacheGroup := map[string]tc.ServerV30{}
+		cachesByCDNCacheGroup := make(map[string]map[string][]tc.ServerV30)
 		updateStatusByCacheGroup := map[string]tc.ServerUpdateStatus{}
 
 		forkedTopology, _, err := TOSession.GetTopology(topologyName)
@@ -417,14 +417,32 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			cacheGroup := cacheGroups[0]
 
 			params := url.Values{"cachegroup": []string{strconv.Itoa(*cacheGroup.ID)}}
-			cachesByCacheGroup[cacheGroupName], _, err = TOSession.GetFirstServer(&params, nil)
+			srvs, _, err := TOSession.GetServersWithHdr(&params, nil)
 			if err != nil {
-				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
+				t.Fatalf("unable to get a server from cachegroup %s: %v - alerts: %+v", cacheGroupName, err, srvs.Alerts)
+			}
+			if len(srvs.Response) < 1 {
+				t.Fatalf("Expected at least one server in Cache Group #%d - found none", *cacheGroup.ID)
+			}
+			for _, s := range srvs.Response {
+				if _, ok := cachesByCDNCacheGroup[*s.CDNName]; !ok {
+					cachesByCDNCacheGroup[*s.CDNName] = make(map[string][]tc.ServerV30)
+				}
+				cachesByCDNCacheGroup[*s.CDNName][cacheGroupName] = append(cachesByCDNCacheGroup[*s.CDNName][cacheGroupName], s)
 			}
 		}
+		cdnNames := make([]string, 0, len(cachesByCDNCacheGroup))
+		for cdn := range cachesByCDNCacheGroup {
+			cdnNames = append(cdnNames, cdn)
+		}
+		if len(cdnNames) < 2 {
+			t.Fatalf("expected servers in at least two CDNs, actual number of CDNs: %d", len(cdnNames))
+		}
+		cdn1 := cdnNames[0]
+		cdn2 := cdnNames[1]
 
 		// update status of MID server to OFFLINE
-		_, _, err = TOSession.UpdateServerStatus(*cachesByCacheGroup[midCacheGroup].ID, tc.ServerPutStatus{
+		_, _, err = TOSession.UpdateServerStatus(*cachesByCDNCacheGroup[cdn1][midCacheGroup][0].ID, tc.ServerPutStatus{
 			Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
 			OfflineReason: util.StrPtr("testing")})
 		if err != nil {
@@ -432,43 +450,64 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 		}
 
 		for _, cacheGroupName := range cacheGroupNames {
-			params := url.Values{"cachegroup": []string{strconv.Itoa(*cachesByCacheGroup[cacheGroupName].CachegroupID)}}
-			cachesByCacheGroup[cacheGroupName], _, err = TOSession.GetFirstServer(&params, nil)
+			cgID := *cachesByCDNCacheGroup[cdn1][cacheGroupName][0].CachegroupID
+			params := url.Values{"cachegroup": []string{strconv.Itoa(cgID)}}
+			srvs, _, err := TOSession.GetServersWithHdr(&params, nil)
 			if err != nil {
-				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
+				t.Fatalf("unable to get a server from cachegroup %s: %v - alerts: %+v", cacheGroupName, err, srvs.Alerts)
+			}
+			if len(srvs.Response) < 1 {
+				t.Fatalf("Expected at least one Server in Cache Group #%d, found none", cgID)
+			}
+			for _, s := range srvs.Response {
+				if s.HostName == nil || s.UpdPending == nil || s.ID == nil {
+					t.Fatal("Traffic Ops returned a representation of a server with null or undefined Host Name and/or ID and/or Update Pending flag")
+				}
+				if len(cachesByCDNCacheGroup[*s.CDNName][cacheGroupName]) > 0 {
+					cachesByCDNCacheGroup[*s.CDNName][cacheGroupName] = []tc.ServerV30{}
+				}
+				cachesByCDNCacheGroup[*s.CDNName][cacheGroupName] = append(cachesByCDNCacheGroup[*s.CDNName][cacheGroupName], s)
 			}
 		}
 		for _, cacheGroupName := range cacheGroupNames {
-			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName)
+			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCDNCacheGroup[cdn1][cacheGroupName][0].HostName)
 			if err != nil {
 				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
 			}
 		}
-		// updating the server status does not queue updates within the same cachegroup
-		if *cachesByCacheGroup[midCacheGroup].UpdPending {
-			t.Fatalf("expected UpdPending: %t, actual: %t", false, *cachesByCacheGroup[midCacheGroup].UpdPending)
+		// updating the server status does not queue updates within the same cachegroup in same CDN
+		if *cachesByCDNCacheGroup[cdn1][midCacheGroup][0].UpdPending {
+			t.Fatalf("expected UpdPending: %t, actual: %t", false, *cachesByCDNCacheGroup[cdn1][midCacheGroup][0].UpdPending)
+		}
+		// updating the server status does not queue updates within the same cachegroup in different CDN
+		if *cachesByCDNCacheGroup[cdn2][midCacheGroup][0].UpdPending {
+			t.Fatalf("expected UpdPending: %t, actual: %t", false, *cachesByCDNCacheGroup[cdn2][midCacheGroup][0].UpdPending)
 		}
 		// edgeCacheGroup is a descendant of midCacheGroup
-		if !*cachesByCacheGroup[edgeCacheGroup].UpdPending {
-			t.Fatalf("expected UpdPending: %t, actual: %t", true, *cachesByCacheGroup[edgeCacheGroup].UpdPending)
+		if !*cachesByCDNCacheGroup[cdn1][edgeCacheGroup][0].UpdPending {
+			t.Fatalf("expected UpdPending: %t, actual: %t", true, *cachesByCDNCacheGroup[cdn1][edgeCacheGroup][0].UpdPending)
+		}
+		// descendant of midCacheGroup in different CDN should not be queued
+		if *cachesByCDNCacheGroup[cdn2][edgeCacheGroup][0].UpdPending {
+			t.Fatalf("expected UpdPending: %t, actual: %t", false, *cachesByCDNCacheGroup[cdn2][edgeCacheGroup][0].UpdPending)
 		}
 		if !updateStatusByCacheGroup[edgeCacheGroup].UpdatePending {
 			t.Fatalf("expected UpdPending: %t, actual: %t", true, updateStatusByCacheGroup[edgeCacheGroup].UpdatePending)
 		}
 		// otherEdgeCacheGroup is not a descendant of midCacheGroup but is still in the same topology
-		if *cachesByCacheGroup[otherEdgeCacheGroup].UpdPending {
-			t.Fatalf("expected UpdPending: %t, actual: %t", false, *cachesByCacheGroup[otherEdgeCacheGroup].UpdPending)
+		if *cachesByCDNCacheGroup[cdn1][otherEdgeCacheGroup][0].UpdPending {
+			t.Fatalf("expected UpdPending: %t, actual: %t", false, *cachesByCDNCacheGroup[cdn1][otherEdgeCacheGroup][0].UpdPending)
 		}
 		if updateStatusByCacheGroup[otherEdgeCacheGroup].UpdatePending {
 			t.Fatalf("expected UpdPending: %t, actual: %t", false, updateStatusByCacheGroup[otherEdgeCacheGroup].UpdatePending)
 		}
 
-		_, _, err = TOSession.SetServerQueueUpdate(*cachesByCacheGroup[midCacheGroup].ID, true)
+		_, _, err = TOSession.SetServerQueueUpdate(*cachesByCDNCacheGroup[cdn1][midCacheGroup][0].ID, true)
 		if err != nil {
-			t.Fatalf("cannot update server status on %s: %s", *cachesByCacheGroup[midCacheGroup].HostName, err.Error())
+			t.Fatalf("cannot update server status on %s: %s", *cachesByCDNCacheGroup[cdn1][midCacheGroup][0].HostName, err.Error())
 		}
 		for _, cacheGroupName := range cacheGroupNames {
-			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName)
+			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCDNCacheGroup[cdn1][cacheGroupName][0].HostName)
 			if err != nil {
 				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
 			}
@@ -487,20 +526,20 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			t.Fatalf("expected UpdPending: %t, actual: %t", false, updateStatusByCacheGroup[otherEdgeCacheGroup].ParentPending)
 		}
 
-		edgeHostName := *cachesByCacheGroup[edgeCacheGroup].HostName
-		*cachesByCacheGroup[edgeCacheGroup].HostName = *cachesByCacheGroup[midCacheGroup].HostName
-		_, _, err = TOSession.UpdateServerByIDWithHdr(*cachesByCacheGroup[edgeCacheGroup].ID, cachesByCacheGroup[edgeCacheGroup], nil)
+		edgeHostName := *cachesByCDNCacheGroup[cdn1][edgeCacheGroup][0].HostName
+		*cachesByCDNCacheGroup[cdn1][edgeCacheGroup][0].HostName = *cachesByCDNCacheGroup[cdn1][midCacheGroup][0].HostName
+		_, _, err = TOSession.UpdateServerByIDWithHdr(*cachesByCDNCacheGroup[cdn1][edgeCacheGroup][0].ID, cachesByCDNCacheGroup[cdn1][edgeCacheGroup][0], nil)
 		if err != nil {
-			t.Fatalf("unable to update %s's hostname to %s: %s", edgeHostName, *cachesByCacheGroup[midCacheGroup].HostName, err)
+			t.Fatalf("unable to update %s's hostname to %s: %s", edgeHostName, *cachesByCDNCacheGroup[cdn1][midCacheGroup][0].HostName, err)
 		}
 
-		_, _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[midCacheGroup].HostName)
+		_, _, err = TOSession.GetServerUpdateStatus(*cachesByCDNCacheGroup[cdn1][midCacheGroup][0].HostName)
 		if err != nil {
-			t.Fatalf("expected no error getting server updates for a non-unique hostname %s, got %s", *cachesByCacheGroup[midCacheGroup].HostName, err)
+			t.Fatalf("expected no error getting server updates for a non-unique hostname %s, got %s", *cachesByCDNCacheGroup[cdn1][midCacheGroup][0].HostName, err)
 		}
 
-		*cachesByCacheGroup[edgeCacheGroup].HostName = edgeHostName
-		_, _, err = TOSession.UpdateServerByIDWithHdr(*cachesByCacheGroup[edgeCacheGroup].ID, cachesByCacheGroup[edgeCacheGroup], nil)
+		*cachesByCDNCacheGroup[cdn1][edgeCacheGroup][0].HostName = edgeHostName
+		_, _, err = TOSession.UpdateServerByIDWithHdr(*cachesByCDNCacheGroup[cdn1][edgeCacheGroup][0].ID, cachesByCDNCacheGroup[cdn1][edgeCacheGroup][0], nil)
 		if err != nil {
 			t.Fatalf("unable to revert %s's hostname back to %s: %s", edgeHostName, edgeHostName, err)
 		}
