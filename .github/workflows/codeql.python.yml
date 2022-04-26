@@ -23,6 +23,7 @@ on:
   pull_request:
     branches: [ master ]
     paths:
+      - .github/workflows/codeql.python.yml
       - "**/*.py"
     types: [opened, reopened, ready_for_review, synchronize]
 
