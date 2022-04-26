@@ -60,7 +60,7 @@ traffic_ops.cfg
 :``certFile``:      The path to an SSL certificate file that corresponds to ``keyFile`` which will be used for Traffic Monitor's HTTPS API server.
 :``httpListener``:  Sets the address and port on which Traffic Monitor will listen for HTTP requests in the format :samp:`{address}:{port}`. If ``address`` is omitted, Traffic Monitor will listen on all available addresses.
 :``httpsListener``: Sets the address and port on which Traffic Monitor will listen for HTTPS requests in the format :samp:`{address}:{port}`. If ``address`` is omitted, Traffic Monitor will listen on all available addresses. If not provided, ``null``, or the empty string, Traffic Monitor will only serve HTTP, and ``keyFile`` and ``certFile`` are not used. If this is provided, the ``httpListener`` address will be used only to redirect clients to use HTTPS.
-:``insecure``:      A boolean that controls whether to validate the HTTPS certificate prevented by the Traffic Ops server.
+:``insecure``:      A boolean that controls whether to validate the HTTPS certificate presented by the Traffic Ops server.
 :``keyFile``:       The path to an SSL key file that corresponds to ``certFile`` which will be used for Traffic Monitor's HTTPS API server.
 :``password``:      The password of the user identified by ``username``.
 :``url``:           The URL at which Traffic Ops may be reached e.g. ``"https://trafficops.infra.ciab.test"``.
@@ -73,7 +73,14 @@ traffic_ops.cfg
 
 traffic_monitor.cfg
 """""""""""""""""""
-:file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times, initial poll intervals, and the polling protocols. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops which will override the options in this file and begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
+:file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times, initial poll intervals, and the polling protocols. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops, and any :term:`Parameters` set on the Monitor's :term:`Profile` that configure the same thing as a field in this configuration file will take precedence over said fields. The :term:`Parameters` known to override configuration here are
+
+- ``tm.polling.interval``
+- ``health.polling.interval``
+- ``peers.polling.interval``
+- ``heartbeat.polling.interval``
+
+Upon receiving this configuration, Traffic Monitor begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
 
 :``cache_polling_protocol``: Defines the internet protocol used to communicate with :term:`cache servers`. This can be "ipv4only" to only allow IPv4 communication, "ipv6only" to only allow IPv6 communication, or "both" to alternate between each version. Default is "both".
 
