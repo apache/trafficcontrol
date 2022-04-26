@@ -58,8 +58,8 @@ traffic_ops.cfg
 
 :``cdnName``:       The name of the CDN to which this Traffic Monitor belongs. Used to fetch configuration and to determine which :term:`cache servers` to monitor.
 :``certFile``:      The path to an SSL certificate file that corresponds to ``keyFile`` which will be used for Traffic Monitor's HTTPS API server.
-:``httpListener``:  Sets the address on which Traffic Monitor will listen for HTTP requests.
-:``httpsListener``: Sets the address on which Traffic Monitor will listen for HTTPS requests. If not provided, ``null``, or the empty string, Traffic Monitor will only serve HTTP, and ``keyFile`` and ``certFile`` are not used. If this is provided, the ``httpListener`` address will be used only to redirect clients to use HTTPS.
+:``httpListener``:  Sets the address and port on which Traffic Monitor will listen for HTTP requests in the format :samp:`{address}:{port}`. If ``address`` is omitted, Traffic Monitor will listen on all available addresses.
+:``httpsListener``: Sets the address and port on which Traffic Monitor will listen for HTTPS requests in the format :samp:`{address}:{port}`. If ``address`` is omitted, Traffic Monitor will listen on all available addresses. If not provided, ``null``, or the empty string, Traffic Monitor will only serve HTTP, and ``keyFile`` and ``certFile`` are not used. If this is provided, the ``httpListener`` address will be used only to redirect clients to use HTTPS.
 :``insecure``:      A boolean that controls whether to validate the HTTPS certificate prevented by the Traffic Ops server.
 :``keyFile``:       The path to an SSL key file that corresponds to ``certFile`` which will be used for Traffic Monitor's HTTPS API server.
 :``password``:      The password of the user identified by ``username``.
