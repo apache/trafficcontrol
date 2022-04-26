@@ -17,3 +17,4 @@
 
 DROP TABLE IF EXISTS public.cdn_lock_user;
 ALTER TABLE public.cdn_lock DROP CONSTRAINT cdn_lock_cdn_username_unique;
+

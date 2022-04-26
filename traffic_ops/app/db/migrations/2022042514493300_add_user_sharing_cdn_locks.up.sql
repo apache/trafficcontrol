@@ -24,3 +24,4 @@ CREATE TABLE IF NOT EXISTS public.cdn_lock_user (
     CONSTRAINT fk_shared_username FOREIGN KEY (username) REFERENCES public.tm_user(username),
     CONSTRAINT fk_owner FOREIGN KEY (owner, cdn) REFERENCES public.cdn_lock(username, cdn) ON DELETE CASCADE
     );
+
