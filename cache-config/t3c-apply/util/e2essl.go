@@ -81,6 +81,8 @@ func E2ESSLGenerateClientCert(certDir string, caKeyPath string, caCertPath strin
 	clientCSR := filepath.Join(certDir, E2ESSLPathClientBase+".csr")
 	clientCert := filepath.Join(certDir, E2ESSLPathClientBase+".cert")
 
+	// TODO parameterize. It should be possible to configure the key algorithm, size, and other params, by passing flags to t3c-apply.
+
 	// client cert private key
 	if stdOut, stdErr, code := t3cutil.Do(`sh`, `-c`, `(umask 060; openssl ecparam -name secp256r1 -genkey -noout -out `+clientKey+`)`); code != 0 {
 		return fmt.Errorf("generating client private key returned code '%v' stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
