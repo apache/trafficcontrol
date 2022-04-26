@@ -167,8 +167,6 @@ Traffic Ops Project Tree Overview
 		- tocookie/ - Defines the method of generating the ``mojolicious`` cookie used by Traffic Ops for authentication
 		- vendor/ - contains "vendored" Go packages from third party sources
 
-	- v1-client - The official Traffic Ops Go client package for working with the version 1 :ref:`to-api`.
-	- v2-client - The official Traffic Ops Go client package for working with the version 2 :ref:`to-api`.
 	- v3-client - The official Traffic Ops Go client package for working with the version 3 :ref:`to-api`.
 	- v4-client - The official Traffic Ops Go client package for working with the version 4 :ref:`to-api`.
 	- vendor/ - contains "vendored" Go packages from third party sources
