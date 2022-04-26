@@ -406,6 +406,10 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	} else {
 		crConfig = &response.Response
 		configBytes, err = json.Marshal(crConfig)
+		if err != nil {
+			crConfig = nil
+			log.Warnln("failed to marshal CRConfig using up-to-date client: " + err.Error())
+		}
 	}
 
 	if err == nil {
