@@ -82,7 +82,7 @@ func E2ESSLGenerateClientCert(certDir string, caKeyPath string, caCertPath strin
 	clientCert := filepath.Join(certDir, E2ESSLPathClientBase+".cert")
 
 	// client cert private key
-	if stdOut, stdErr, code := t3cutil.Do("openssl", "ecparam", "-name", "secp256r1", "-genkey", "-noout", "-out", clientKey); code != 0 {
+	if stdOut, stdErr, code := t3cutil.Do(`sh`, `-c`, `(umask 060; openssl ecparam -name secp256r1 -genkey -noout -out `+clientKey+`)`); code != 0 {
 		return fmt.Errorf("generating client private key returned code '%v' stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
 
