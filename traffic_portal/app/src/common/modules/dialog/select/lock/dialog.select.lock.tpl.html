@@ -42,13 +42,17 @@ under the License.
         <div class="row">
             <div class="col-sm-12 col-md-12">
                 <div class="form-group">
-                    <label class="control-label" for="sharedUserNames">Usernames to share lock with</label>
-                    <input id="sharedUserNames" name="sharedUserNames" type="text" class="form-control" ng-list ng-model="lock.sharedUserNames" maxlength="256">
-                    <div class="helptext">
-                        A comma separated list of usernames that you want your lock to be shared with.
-                    </div>
+                    <label class="has-tooltip control-label" for="users">Shared Usernames
+                        <div class="helptooltip">
+                            <div class="helptext">The usernames with which the creator wants to share their lock.</div>
+                        </div>
+                    </label>
+                    <select id="users" name="users" class="form-control" ng-model="lock.sharedUserNames" multiple ng-options="user.username as user.username for user in users" required>
+                        <option disabled hidden selected value="">Select...</option>
+                    </select>
                 </div>
             </div>
+        </div>
         </div>
         <div class="row">
             <div class="col-sm-12 col-md-12">

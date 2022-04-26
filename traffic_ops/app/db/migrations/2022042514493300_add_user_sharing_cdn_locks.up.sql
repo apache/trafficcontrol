@@ -15,4 +15,12 @@
  * the License.
  */
 
-ALTER TABLE public.cdn_lock ADD COLUMN shared_usernames text[] DEFAULT NULL;
+ALTER TABLE public.cdn_lock ADD CONSTRAINT cdn_lock_cdn_username_unique UNIQUE (username, cdn);
+CREATE TABLE IF NOT EXISTS public.cdn_lock_user (
+                                                     owner text NOT NULL,
+                                                     cdn text NOT NULL,
+                                                     username text NOT NULL,
+    CONSTRAINT pk_cdn_lock_user PRIMARY KEY (owner, cdn, username),
+    CONSTRAINT fk_shared_username FOREIGN KEY (username) REFERENCES public.tm_user(username),
+    CONSTRAINT fk_owner FOREIGN KEY (owner, cdn) REFERENCES public.cdn_lock(username, cdn) ON DELETE CASCADE
+    );

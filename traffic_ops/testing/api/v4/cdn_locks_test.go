@@ -57,7 +57,7 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated),
 						validateCreateResponseFields(map[string]interface{}{"username": "admin", "cdn": "cdn3", "message": "snapping cdn", "soft": true})),
 				},
-				"CREATED when INVALID shared username": {
+				"NOT CREATED when INVALID shared username": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"cdn":             "bar",
