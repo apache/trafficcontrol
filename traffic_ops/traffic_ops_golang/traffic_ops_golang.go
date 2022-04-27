@@ -169,13 +169,14 @@ func main() {
 	var backendConfig config.BackendConfig
 	if *backendConfigFileName != "" {
 		backendConfig, err = config.LoadBackendConfig(*backendConfigFileName)
+		routing.SetBackendConfig(backendConfig)
 		if err != nil {
 			log.Errorf("error loading backend config: %v", err)
 		}
 	}
 
 	mux := http.NewServeMux()
-	d := routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins, TrafficVault: trafficVault, BackendConfig: backendConfig, Mux: mux}
+	d := routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins, TrafficVault: trafficVault, Mux: mux}
 	if err := routing.RegisterRoutes(d); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		os.Exit(1)
@@ -246,11 +247,10 @@ func main() {
 
 	reloadProfilingAndBackendConfig := func() {
 		setNewProfilingInfo(*configFileName, &profiling, &profilingLocation, cfg.Version)
-		backendConfig, err = setNewBackendConfig(backendConfigFileName)
+		backendConfig, err = getNewBackendConfig(backendConfigFileName)
 		if err != nil {
 			log.Errorf("could not reload backend config: %v", err)
 		} else {
-			d.BackendConfig = backendConfig
 			routing.SetBackendConfig(backendConfig)
 		}
 	}
@@ -312,11 +312,12 @@ func setupTrafficVault(riakConfigFileName string, cfg *config.Config) trafficvau
 	return &disabled.Disabled{}
 }
 
-func setNewBackendConfig(backendConfigFileName *string) (config.BackendConfig, error) {
+func getNewBackendConfig(backendConfigFileName *string) (config.BackendConfig, error) {
 	if backendConfigFileName == nil {
 		return config.BackendConfig{}, errors.New("no backend config filename")
 	}
-	backendConfig, err := reloadBackendConfig(*backendConfigFileName)
+	log.Infoln("setting new backend config to %s", *backendConfigFileName)
+	backendConfig, err := config.LoadBackendConfig(*backendConfigFileName)
 	if err != nil {
 		log.Errorf("error reloading config: %v", err)
 		return backendConfig, err
@@ -379,12 +380,6 @@ func reloadProfilingInfo(configFileName string) (bool, string, error) {
 		return false, "", err
 	}
 	return cfg.ProfilingEnabled, profilingLocation, nil
-}
-
-func reloadBackendConfig(backendConfigFileName string) (config.BackendConfig, error) {
-	log.Infoln("reload backend config")
-	backendConfig, err := config.LoadBackendConfig(backendConfigFileName)
-	return backendConfig, err
 }
 
 func continuousProfile(profiling *bool, profilingDir *string, version string) {

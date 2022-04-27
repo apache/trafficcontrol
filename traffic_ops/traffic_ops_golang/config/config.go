@@ -40,10 +40,16 @@ type Options struct {
 	Algorithm string `json:"alg"`
 }
 
+type Host struct {
+	Protocol string `json:"protocol"`
+	Hostname string `json:"hostname"`
+	Port     int    `json:"port"`
+}
+
 type BackendRoute struct {
 	Path        string   `json:"path"`
 	Method      string   `json:"method"`
-	Hosts       []string `json:"hosts"`
+	Hosts       []Host   `json:"hosts"`
 	Opts        Options  `json:"opts"`
 	ID          int      `json:"routeId"`
 	Insecure    bool     `json:"insecure"`
@@ -316,10 +322,15 @@ func LoadBackendConfig(backendConfigPath string) (BackendConfig, error) {
 	if err != nil {
 		return BackendConfig{}, fmt.Errorf("unmarshalling '%s': %v", backendConfigPath, err)
 	}
-	//ToDo: do more validation here
 	for _, r := range cfg.Routes {
 		if r.Opts.Algorithm != "" && r.Opts.Algorithm != "roundrobin" {
 			return cfg, errors.New("algorithm can only be roundrobin or blank")
+		}
+		for _, h := range r.Hosts {
+			rawURL := h.Protocol + "://" + h.Hostname + ":" + strconv.Itoa(h.Port)
+			if _, err = url.ParseRequestURI(rawURL); err != nil {
+				return cfg, fmt.Errorf("couldn't convert host info into a valid URI: %v", err)
+			}
 		}
 	}
 	return cfg, nil

@@ -51,24 +51,26 @@ import (
 // RoutePrefix is a prefix that all API routes must match.
 const RoutePrefix = "^api" // TODO config?
 
-// BackendConfig stores the current backend config supplied to traffic ops.
-var BackendConfig config.BackendConfig
+type backendConfigSynced struct {
+	cfg config.BackendConfig
+	*sync.RWMutex
+}
 
-// Mutex is a mutex for safely reading/ writing to BackendConfig.
-var Mutex = sync.RWMutex{}
+// backendCfg stores the current backend config supplied to traffic ops.
+var backendCfg = backendConfigSynced{RWMutex: &sync.RWMutex{}}
 
 // GetBackendConfig returns the current BackendConfig.
 func GetBackendConfig() config.BackendConfig {
-	Mutex.RLock()
-	defer Mutex.RUnlock()
-	return BackendConfig
+	backendCfg.RLock()
+	defer backendCfg.RUnlock()
+	return backendCfg.cfg
 }
 
 // SetBackendConfig sets the BackendConfig to the value supplied.
 func SetBackendConfig(backendConfig config.BackendConfig) {
-	Mutex.Lock()
-	defer Mutex.Unlock()
-	BackendConfig = backendConfig
+	backendCfg.RLock()
+	defer backendCfg.RUnlock()
+	backendCfg.cfg = backendConfig
 }
 
 // A Route defines an association with a client request and a handler for that
@@ -106,12 +108,11 @@ func (r *Route) SetMiddleware(authBase middleware.AuthBase, requestTimeout time.
 // ServerData ...
 type ServerData struct {
 	config.Config
-	DB            *sqlx.DB
-	Profiling     *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
-	Plugins       plugin.Plugins
-	TrafficVault  trafficvault.TrafficVault
-	BackendConfig config.BackendConfig
-	Mux           *http.ServeMux
+	DB           *sqlx.DB
+	Profiling    *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
+	Plugins      plugin.Plugins
+	TrafficVault trafficvault.TrafficVault
+	Mux          *http.ServeMux
 }
 
 // CompiledRoute ...
@@ -310,7 +311,26 @@ func Handler(
 	var backendRouteHandled bool
 	backendConfig := GetBackendConfig()
 	for i, backendRoute := range backendConfig.Routes {
-		if backendRoute.Path == r.URL.Path && backendRoute.Method == r.Method {
+		var params []string
+		routeParams := map[string]string{}
+		if backendRoute.Method == r.Method {
+			for open := strings.Index(backendRoute.Path, "{"); open > 0; open = strings.Index(backendRoute.Path, "{") {
+				close := strings.Index(backendRoute.Path, "}")
+				if close < 0 {
+					panic("malformed route")
+				}
+				param := backendRoute.Path[open+1 : close]
+				params = append(params, param)
+				backendRoute.Path = backendRoute.Path[:open] + `([^/]+)` + backendRoute.Path[close+1:]
+			}
+			regex := regexp.MustCompile(backendRoute.Path)
+			match := regex.FindStringSubmatch(requested)
+			if len(match) == 0 {
+				continue
+			}
+			for i, v := range params {
+				routeParams[v] = match[i+1]
+			}
 			if backendRoute.Opts.Algorithm == "" || backendRoute.Opts.Algorithm == "roundrobin" {
 				index := backendRoute.Index % len(backendRoute.Hosts)
 				host := backendRoute.Hosts[index]
@@ -318,8 +338,8 @@ func Handler(
 				backendConfig.Routes[i] = backendRoute
 				backendRouteHandled = true
 				rp := httputil.NewSingleHostReverseProxy(&url.URL{
-					Host:   host,
-					Scheme: cfg.URL.Scheme,
+					Host:   host.Hostname + ":" + strconv.Itoa(host.Port),
+					Scheme: host.Protocol,
 				})
 				rp.Transport = &http.Transport{
 					TLSClientConfig: &tls.Config{InsecureSkipVerify: backendRoute.Insecure},
@@ -329,7 +349,7 @@ func Handler(
 					return
 				}
 				routeCtx := context.WithValue(ctx, api.DBContextKey, db)
-				routeCtx = context.WithValue(routeCtx, api.PathParamsKey, map[string]string{})
+				routeCtx = context.WithValue(routeCtx, api.PathParamsKey, routeParams)
 				routeCtx = context.WithValue(routeCtx, middleware.RouteID, strconv.Itoa(backendRoute.ID))
 				r = r.WithContext(routeCtx)
 				userErr, sysErr, code := HandleBackendRoute(cfg, backendRoute, w, r)
@@ -432,7 +452,6 @@ func RegisterRoutes(d ServerData) error {
 
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
-	SetBackendConfig(d.BackendConfig)
 	d.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, d.TrafficVault, w, r)
 	})
