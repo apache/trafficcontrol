@@ -42,18 +42,21 @@ func TestDeliveryServiceRequests(t *testing.T) {
 		methodTests := utils.V4TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID XMLID parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"xmlId": {"test-ds1"}}},
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"xmlId": {"test-ds1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateGetDSRequestFields(map[string]interface{}{"XMLID": "test-ds1"})),
 				},
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceRequestId(t, "test-ds1"), ClientSession: TOSession,
+					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": generateDeliveryService(t, map[string]interface{}{
@@ -66,7 +69,8 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when UPDATING STATUS FROM DRAFT TO SUBMITTED": {
-					EndpointId: GetDeliveryServiceRequestId(t, "test-ds1"), ClientSession: TOSession,
+					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": generateDeliveryService(t, map[string]interface{}{
@@ -79,7 +83,8 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						validatePutDSRequestFields(map[string]interface{}{"STATUS": tc.RequestStatusSubmitted})),
 				},
 				"BAD REQUEST when using LONG DESCRIPTION 2 and 3 fields": {
-					EndpointId: GetDeliveryServiceRequestId(t, "test-ds1"), ClientSession: TOSession,
+					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": generateDeliveryService(t, map[string]interface{}{
@@ -93,21 +98,24 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Header": {
-					EndpointId: GetDeliveryServiceRequestId(t, "test-ds1"), ClientSession: TOSession,
-					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody:  map[string]interface{}{},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody:   map[string]interface{}{},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId: GetDeliveryServiceRequestId(t, "test-ds1"), ClientSession: TOSession,
-					RequestBody:  map[string]interface{}{},
-					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{},
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 			},
 			"POST": {
 				"CREATED when VALID request": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": generateDeliveryService(t, map[string]interface{}{
 							"ccrDnsTtl":          30,
@@ -125,7 +133,8 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
 				},
 				"BAD REQUEST when MISSING REQUIRED FIELDS": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": map[string]interface{}{
 							"type":  "HTTP",
@@ -136,7 +145,8 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when VALIDATION RULES ARE NOT FOLLOWED": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": map[string]interface{}{
 							"ccrDnsTtl":            30,
@@ -168,7 +178,8 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when NON-DRAFT": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": map[string]interface{}{
 							"active":               false,
@@ -198,7 +209,8 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ALREADY EXISTS": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": map[string]interface{}{
 							"active":               true,
@@ -230,8 +242,9 @@ func TestDeliveryServiceRequests(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceRequestId(t, "test-deletion"), ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					EndpointId:    GetDeliveryServiceRequestId(t, "test-deletion"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 			"GET AFTER CHANGES": {
