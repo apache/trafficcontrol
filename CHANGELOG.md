@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Replaces all Traffic Portal Tenant select boxes with a novel tree select box [#6427](https://github.com/apache/trafficcontrol/issues/6427).
 - Traffic Monitor: Add support for `access.log` to TM.
 - Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
+- Added functionality for CDN locks, so that they can be shared amongst a list of specified usernames. 
 - [Traffic Ops | Traffic Go Clients | T3C] Add additional timestamp fields to server for queuing and dequeueing config and revalidate updates.
 - Added layered profile feature to 4.0 for `GET` /servers/, `POST` /servers/, `PUT` /servers/{id} and `DELETE` /servers/{id}.
 - Added a Traffic Ops endpoint and Traffic Portal page to view all CDNi configuration update requests and approve or deny.
