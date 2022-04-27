@@ -439,7 +439,7 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	}
 	defer s.crConfigHist.Add(hist)
 
-	if crConfig != nil {
+	if crConfig == nil {
 		if err = json.Unmarshal(configBytes, crConfig); err != nil {
 			err = errors.New("invalid JSON: " + err.Error())
 			hist.Err = err
