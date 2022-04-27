@@ -316,7 +316,7 @@ func getNewBackendConfig(backendConfigFileName *string) (config.BackendConfig, e
 	if backendConfigFileName == nil {
 		return config.BackendConfig{}, errors.New("no backend config filename")
 	}
-	log.Infoln("setting new backend config to %s", *backendConfigFileName)
+	log.Infof("setting new backend config to %s", *backendConfigFileName)
 	backendConfig, err := config.LoadBackendConfig(*backendConfigFileName)
 	if err != nil {
 		log.Errorf("error reloading config: %v", err)
