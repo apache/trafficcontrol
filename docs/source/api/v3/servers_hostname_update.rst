@@ -47,9 +47,9 @@ Request Structure
 	| reval_updated (Deprecated) | no       | The value to set for the queue update flag on this server. May be 'true' or 'false'. |
 	+----------------------------+----------+--------------------------------------------------------------------------------------+
 
-	.. deprecated:: v3.1 Traffic Ops API
+.. deprecated:: 3.1
 
-		The boolean values above have resulted in an unintended race condition. These fields are removed in APIv4 and replaced.
+	The boolean values above have resulted in an unintended race condition. These fields are removed in APIv4 and replaced.
 
 .. code-block:: http
 	:caption: Request Example
