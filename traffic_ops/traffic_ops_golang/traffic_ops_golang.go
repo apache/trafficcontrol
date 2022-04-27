@@ -225,8 +225,8 @@ func main() {
 		} else {
 			file.Close()
 		}
-
-		if err := http.ListenAndServeTLS(server.Addr, cfg.CertPath, cfg.KeyPath, mux); err != nil {
+		server.Handler = mux
+		if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
 			log.Errorf("stopping server: %v\n", err)
 			os.Exit(1)
 		}
@@ -244,7 +244,7 @@ func main() {
 		continuousProfile(&profiling, &profilingLocation, cfg.Version)
 	}
 
-	reloadProfilingConfig := func() {
+	reloadProfilingAndBackendConfig := func() {
 		setNewProfilingInfo(*configFileName, &profiling, &profilingLocation, cfg.Version)
 		backendConfig, err = setNewBackendConfig(backendConfigFileName)
 		if err != nil {
@@ -254,7 +254,7 @@ func main() {
 			routing.SetBackendConfig(backendConfig)
 		}
 	}
-	signalReloader(unix.SIGHUP, reloadProfilingConfig)
+	signalReloader(unix.SIGHUP, reloadProfilingAndBackendConfig)
 }
 
 func setupTrafficVault(riakConfigFileName string, cfg *config.Config) trafficvault.TrafficVault {

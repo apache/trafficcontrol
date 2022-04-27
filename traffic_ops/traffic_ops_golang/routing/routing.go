@@ -297,8 +297,8 @@ func Handler(
 		}
 
 		routeCtx := context.WithValue(ctx, api.PathParamsKey, params)
+		routeCtx = context.WithValue(routeCtx, middleware.RouteID, strconv.Itoa(compiledRoute.ID))
 		r = r.WithContext(routeCtx)
-		r.Header.Add(middleware.RouteID, strconv.Itoa(compiledRoute.ID))
 		compiledRoute.Handler(w, r)
 		return
 	}
@@ -321,14 +321,8 @@ func Handler(
 					Host:   host,
 					Scheme: cfg.URL.Scheme,
 				})
-				if backendRoute.Insecure {
-					rp.Transport = &http.Transport{
-						TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-					}
-				} else {
-					rp.Transport = &http.Transport{
-						TLSClientConfig: &tls.Config{},
-					}
+				rp.Transport = &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: backendRoute.Insecure},
 				}
 				rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
 					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
@@ -336,8 +330,8 @@ func Handler(
 				}
 				routeCtx := context.WithValue(ctx, api.DBContextKey, db)
 				routeCtx = context.WithValue(routeCtx, api.PathParamsKey, map[string]string{})
+				routeCtx = context.WithValue(routeCtx, middleware.RouteID, strconv.Itoa(backendRoute.ID))
 				r = r.WithContext(routeCtx)
-				r.Header.Add(middleware.RouteID, strconv.Itoa(backendRoute.ID))
 				userErr, sysErr, code := HandleBackendRoute(cfg, backendRoute, w, r)
 				if userErr != nil || sysErr != nil {
 					h2 := middleware.WrapAccessLog(cfg.Secrets[0], middleware.BackendErrorHandler(code, userErr, sysErr))
@@ -369,10 +363,6 @@ func HandleBackendRoute(cfg *config.Config, route config.BackendRoute, w http.Re
 	user, userErr, sysErr, errCode = api.GetUserFromReq(w, r, cfg.Secrets[0])
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
-	}
-	v := api.GetRequestedAPIVersion(r.URL.Path)
-	if v == nil {
-		return errors.New("couldn't get a valid version from the requested path"), nil, http.StatusBadRequest
 	}
 	if cfg.RoleBasedPermissions {
 		missingPerms := user.MissingPermissions(route.Permissions...)

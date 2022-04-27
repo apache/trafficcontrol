@@ -316,6 +316,12 @@ func LoadBackendConfig(backendConfigPath string) (BackendConfig, error) {
 	if err != nil {
 		return BackendConfig{}, fmt.Errorf("unmarshalling '%s': %v", backendConfigPath, err)
 	}
+	//ToDo: do more validation here
+	for _, r := range cfg.Routes {
+		if r.Opts.Algorithm != "" && r.Opts.Algorithm != "roundrobin" {
+			return cfg, errors.New("algorithm can only be roundrobin or blank")
+		}
+	}
 	return cfg, nil
 }
 
