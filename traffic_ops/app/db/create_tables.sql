@@ -1895,6 +1895,7 @@ CREATE TABLE IF NOT EXISTS tm_user (
     token text,
     registration_sent timestamp with time zone,
     tenant_id bigint NOT NULL,
+    last_authenticated timestamp with time zone,
     CONSTRAINT idx_89765_primary PRIMARY KEY (id)
 );
 
