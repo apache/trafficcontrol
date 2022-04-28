@@ -2040,18 +2040,6 @@ ALTER TABLE type_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE type_id_seq OWNED BY type.id;
 
---
--- Name: user_role; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE IF NOT EXISTS user_role (
-    user_id bigint NOT NULL,
-    role_id bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
-);
-
-ALTER TABLE user_role OWNER TO traffic_ops;
-
 DO $$ BEGIN
 IF NOT EXISTS (SELECT FROM information_schema.tables
     WHERE table_name = 'profile_type_values'
@@ -2988,8 +2976,7 @@ DO $$
         'topology',
         'topology_cachegroup',
         'topology_cachegroup_parents',
-        'type',
-        'user_role'
+        'type'
     ] AS VARCHAR[]);
     table_name TEXT;
     trigger_name TEXT := 'on_delete_current_timestamp';
@@ -3101,8 +3088,7 @@ DECLARE
         'topology',
         'topology_cachegroup',
         'topology_cachegroup_parents',
-        'type',
-        'user_role'
+        'type'
     ] AS VARCHAR[]);
     table_name TEXT;
     trigger_name TEXT := 'on_update_current_timestamp';
@@ -3940,24 +3926,6 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
 
     ALTER TABLE ONLY tm_user
         ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL;
-END IF;
-
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_user_id' AND table_name = 'user_role') THEN
-    --
-    -- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY user_role
-        ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES tm_user (id) ON DELETE CASCADE;
-END IF;
-
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_role_id' AND table_name = 'user_role') THEN
-    --
-    -- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY user_role
-        ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE RESTRICT;
 END IF;
 END$$;
 
