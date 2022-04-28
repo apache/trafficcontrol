@@ -2535,6 +2535,14 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND c
     CREATE INDEX IF NOT EXISTS idx_89593_fk_job_user_id1 ON job USING btree (job_user);
 END IF;
 
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND column_name = 'start_time') THEN
+    --
+    -- Name: job_start_time_idx; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX IF NOT EXISTS job_start_time_idx ON job (start_time DESC NULLS LAST);
+END IF;
+
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'log' AND column_name = 'tm_user') THEN
     --
     -- Name: idx_89634_fk_log_1; Type: INDEX; Schema: public; Owner: traffic_ops
