@@ -1494,7 +1494,7 @@ ALTER SEQUENCE region_id_seq OWNED BY region.id;
 CREATE TABLE IF NOT EXISTS role (
     id bigint,
     name text NOT NULL,
-    description text,
+    description text NOT NULL,
     priv_level bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT role_name_unique UNIQUE (name),
@@ -3905,15 +3905,6 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
 
     ALTER TABLE ONLY role_capability
         ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE CASCADE;
-END IF;
-
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cap_name' AND table_name = 'role_capability') THEN
-    --
-    -- Name: fk_cap_name; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY role_capability
-        ADD CONSTRAINT fk_cap_name FOREIGN KEY (cap_name) REFERENCES capability (name) ON DELETE RESTRICT;
 END IF;
 
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'snapshot_cdn_fkey' AND table_name = 'snapshot') THEN
