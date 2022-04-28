@@ -646,7 +646,6 @@ CREATE TABLE IF NOT EXISTS deliveryservice (
     geo_provider smallint DEFAULT '0'::smallint,
     geo_limit_countries text,
     logs_enabled boolean DEFAULT false,
-    multi_site_origin_algorithm smallint,
     geolimit_redirect_url text,
     tenant_id bigint NOT NULL,
     routing_name text NOT NULL DEFAULT 'cdn',
