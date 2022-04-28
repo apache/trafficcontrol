@@ -872,13 +872,17 @@ ALTER SEQUENCE hwinfo_id_seq OWNED BY hwinfo.id;
 CREATE TABLE IF NOT EXISTS interface (
     max_bandwidth bigint DEFAULT NULL CHECK (max_bandwidth IS NULL OR max_bandwidth >= 0),
     monitor boolean NOT NULL,
-    mtu bigint DEFAULT 1500 CHECK (mtu IS NULL OR mtu > 1280),
+    mtu bigint DEFAULT 1500,
     name text NOT NULL CHECK (name != ''),
     server bigint NOT NULL,
     router_host_name text NOT NULL DEFAULT '',
     router_port_name text NOT NULL DEFAULT '',
     PRIMARY KEY (name, server)
 );
+
+ALTER TABLE interface
+ADD CONSTRAINT interface_mtu_check
+CHECK (((mtu IS NULL) OR (mtu >= 1280)));
 
 --
 -- Name: ip_address; Type: TABLE; Schema: public; Owner: traffic_ops
