@@ -76,6 +76,8 @@ CREATE TABLE IF NOT EXISTS sslkey (
     deliveryservice text NOT NULL,
     cdn text NOT NULL,
     version text NOT NULL,
+    provider text,
+    expiration timestamp with time zone NOT NULL DEFAULT now(),
     last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
@@ -210,4 +212,3 @@ CREATE TRIGGER url_sig_key_last_updated
 --
 -- PostgreSQL database dump complete
 --
-
