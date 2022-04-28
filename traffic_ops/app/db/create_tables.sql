@@ -463,6 +463,17 @@ ALTER TABLE cdn_id_seq OWNER TO traffic_ops;
 ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 
 --
+-- Name: cdn_notification; Type: TABLE; Schema: public; Owner: traffic_ops
+
+CREATE TABLE cdn_notification (
+    cdn text NOT NULL,
+    "user" text NOT NULL,
+    notification text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT pk_cdn_notification PRIMARY KEY (cdn),
+);
+
+--
 -- Name: coordinate; Type: TABLE; Schema: public: Owner: traffic_ops
 --
 
@@ -2868,6 +2879,7 @@ DECLARE
         'cachegroup_parameter',
         'capability',
         'cdn',
+        'cdn_notification',
         'coordinate',
         'deliveryservice',
         'deliveryservice_regex',
@@ -2941,6 +2953,26 @@ END$$;
 
 -- New code block to deallocate table_name variable to avoid identifier collision
 DO $$ BEGIN
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_notification_cdn' AND table_name = 'cdn_notification') THEN
+    --
+    -- Name: fk_notification_cdn; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cdn_notification
+        ADD CONSTRAINT fk_notification_cdn FOREIGN KEY (cdn) REFERENCES cdn(name) ON DELETE CASCADE ON UPDATE CASCADE;
+
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_notification_user' AND table_name = 'cdn_notification') THEN
+    --
+    -- Name: fk_notification_user; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cdn_notification
+        ADD CONSTRAINT fk_notification_user FOREIGN KEY ("user") REFERENCES tm_user(username) ON DELETE CASCADE ON UPDATE CASCADE;
+
+END IF;
+
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_atsprofile_atsparameters_atsparameters1' AND table_name = 'profile_parameter') THEN
     --
     -- Name: fk_atsprofile_atsparameters_atsparameters1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
