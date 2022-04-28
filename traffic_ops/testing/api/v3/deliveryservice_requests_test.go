@@ -323,9 +323,7 @@ func validateGetDSRequestFields(expectedResp map[string]interface{}) utils.CkReq
 func CreateTestDeliveryServiceRequests(t *testing.T) {
 	for _, dsr := range testData.DeliveryServiceRequests {
 		respDSR, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-		if err != nil {
-			t.Errorf("Could not create Delivery Service Requests: %v - alerts: %+v", err, respDSR.Alerts)
-		}
+		assert.NoError(t, err, "Could not create Delivery Service Requests: %v - alerts: %+v", err, respDSR.Alerts)
 	}
 }
 
