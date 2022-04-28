@@ -143,6 +143,42 @@ LANGUAGE plpgsql;
 
 ALTER FUNCTION public.on_delete_current_timestamp_last_updated() OWNER TO traffic_ops;
 
+--
+-- Name: update_ds_timestamp_on_insert(); Type: FUNCTION; Schema: public; Owner: traffic_ops
+--
+
+CREATE OR REPLACE FUNCTION update_ds_timestamp_on_insert()
+    RETURNS trigger
+    AS $$
+BEGIN
+    UPDATE deliveryservice
+    SET last_updated=now()
+    WHERE id IN (
+        SELECT deliveryservice
+        FROM CAST(NEW AS deliveryservice_tls_version)
+    );
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+--
+-- Name: update_ds_timestamp_on_delete(); Type: FUNCTION; Schema: public; Owner: traffic_ops
+--
+
+CREATE OR REPLACE FUNCTION update_ds_timestamp_on_delete()
+    RETURNS trigger
+    AS $$
+BEGIN
+    UPDATE deliveryservice
+    SET last_updated=now()
+    WHERE id IN (
+        SELECT deliveryservice
+        FROM CAST(OLD AS deliveryservice_tls_version)
+    );
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -762,6 +798,35 @@ CREATE TABLE IF NOT EXISTS deliveryservice_server (
 
 
 ALTER TABLE deliveryservice_server OWNER TO traffic_ops;
+
+--
+-- Name: deliveryservice_tls_version; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS deliveryservice_tls_version (
+    deliveryservice bigint NOT NULL,
+    tls_version text NOT NULL,
+    CONSTRAINT deliveryservice_tls_version_pkey PRIMARY KEY (deliveryservice, tls_version),
+    CONSTRAINT deliveryservice_tls_version_tls_version_check CHECK (tls_version <> '')
+);
+
+ALTER TABLE deliveryservice_tls_version OWNER TO traffic_ops;
+
+--
+-- Name: update_ds_timestamp_on_tls_version_insertion; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+DROP TRIGGER IF EXISTS update_ds_timestamp_on_tls_version_insertion on deliveryservice_tls_version;
+CREATE TRIGGER update_ds_timestamp_on_tls_version_insertion
+    AFTER INSERT ON deliveryservice_tls_version
+    FOR EACH ROW EXECUTE PROCEDURE update_ds_timestamp_on_insert();
+
+--
+-- Name: update_ds_timestamp_on_tls_version_delete; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+DROP TRIGGER IF EXISTS update_ds_timestamp_on_tls_version_delete on deliveryservice_tls_version;
+CREATE TRIGGER update_ds_timestamp_on_tls_version_delete
+    AFTER DELETE ON deliveryservice_tls_version
+    FOR EACH ROW EXECUTE PROCEDURE update_ds_timestamp_on_delete();
 
 --
 -- Name: deliveryservice_tmuser; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -3099,6 +3164,17 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
     ALTER TABLE ONLY deliveryservice
         ADD CONSTRAINT deliveryservice_service_category_fkey FOREIGN KEY (service_category) REFERENCES service_category(name) ON UPDATE CASCADE;
 END IF;
+
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'deliveryservice_tls_version_deliveryservice_fkey' AND table_name = 'deliveryservice_tls_version') THEN
+    --
+    -- Name: deliveryservice_tls_version_deliveryservice_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_tls_version
+        ADD CONSTRAINT deliveryservice_tls_version_deliveryservice_fkey FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE;
+END IF;
+
 
 IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'ip_address_server_fkey' AND table_name = 'ip_address') THEN
     --
