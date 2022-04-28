@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS sslkey (
     deliveryservice text NOT NULL,
     cdn text NOT NULL,
     version text NOT NULL,
-    provider text,
+    provider text NOT NULL,
     expiration timestamp with time zone NOT NULL DEFAULT now(),
     last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
