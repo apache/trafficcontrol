@@ -3014,14 +3014,14 @@ BEGIN
             IF table_name = 'topology' THEN
                 EXECUTE FORMAT('
                         CREATE INDEX IF NOT EXISTS %s_last_updated_idx
-                               ON %s_cachegroup (last_updated DESC NULLS LAST);
+                               ON %s (last_updated DESC NULLS LAST);
                         ',
                         QUOTE_IDENT(table_name),
                         QUOTE_IDENT(table_name)
                     );
             ELSIF table_name = 'phys_location' THEN
             EXECUTE FORMAT('
-                        CREATE INDEX IF NOT EXISTS pys_location_last_updated_idx
+                        CREATE INDEX IF NOT EXISTS phys_location_last_updated_idx
                                ON %s (last_updated DESC NULLS LAST);
                         ',
                         QUOTE_IDENT(table_name)
