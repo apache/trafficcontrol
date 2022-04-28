@@ -335,6 +335,42 @@ ALTER TABLE asn_id_seq OWNER TO traffic_ops;
 ALTER SEQUENCE asn_id_seq OWNED BY asn.id;
 
 --
+-- Name: async_status; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS async_status (
+    id bigint NOT NULL,
+    status TEXT NOT NULL,
+    message TEXT,
+    start_time timestamp with time zone DEFAULT now() NOT NULL,
+    end_time timestamp with time zone,
+
+    CONSTRAINT async_status_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE async_status OWNER TO traffic_ops;
+
+--
+-- Name: async_status_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
+--
+
+CREATE SEQUENCE IF NOT EXISTS async_status_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE async_status_id_seq OWNER TO traffic_ops;
+
+--
+-- Name: async_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
+--
+
+ALTER SEQUENCE async_status_id_seq OWNED BY async_status.id;
+
+--
 -- Name: cachegroup; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -1911,6 +1947,12 @@ END$$;
 --
 
 ALTER TABLE ONLY asn ALTER COLUMN id SET DEFAULT nextval('asn_id_seq'::regclass);
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY async_status ALTER COLUMN id SET DEFAULT nextval('async_status_id_seq'::regclass);
 
 
 --
