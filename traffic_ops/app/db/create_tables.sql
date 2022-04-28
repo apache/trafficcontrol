@@ -499,6 +499,22 @@ ALTER TABLE cdn_id_seq OWNER TO traffic_ops;
 ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 
 --
+-- Name: cdn_lock; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS public.cdn_lock (
+    username text NOT NULL,
+    cdn text NOT NULL,
+    message text,
+    soft boolean NOT NULL DEFAULT TRUE,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT pk_cdn_lock PRIMARY KEY ("cdn")
+);
+
+
+ALTER TABLE cdn_lock OWNER TO traffic_ops;
+
+--
 -- Name: cdn_notification; Type: TABLE; Schema: public; Owner: traffic_ops
 
 CREATE TABLE cdn_notification (
@@ -2971,6 +2987,7 @@ DECLARE
         'cachegroup_parameter',
         'capability',
         'cdn',
+        'cdn_lock',
         'cdn_notification',
         'coordinate',
         'deliveryservice',
@@ -3730,6 +3747,25 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
     ALTER TABLE ONLY origin
         ADD CONSTRAINT origin_tenant_fkey FOREIGN KEY (tenant) REFERENCES tenant (id) ON DELETE RESTRICT;
 END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fkey_lock_cdn' AND table_name = 'cdn_lock') THEN
+    --
+    -- Name: fk_lock_cdn; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cdn_lock
+        ADD CONSTRAINT fk_lock_cdn FOREIGN KEY ("cdn") REFERENCES cdn(name) ON DELETE CASCADE ON UPDATE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fkey_lock_username' AND table_name = 'cdn_lock') THEN
+    --
+    -- Name: fk_lock_username; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cdn_lock
+        ADD CONSTRAINT fk_lock_username FOREIGN KEY ("username") REFERENCES tm_user(username) ON DELETE CASCADE ON UPDATE CASCADE;
+END IF;
+
 
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'cachegroup_coordinate_fkey' AND table_name = 'cachegroup') THEN
     --
