@@ -1100,62 +1100,19 @@ CREATE TRIGGER before_update_ip_address_trigger
 
 CREATE TABLE IF NOT EXISTS job (
     id bigint NOT NULL,
-    agent bigint,
-    object_type text,
-    object_name text,
-    keyword text NOT NULL,
-    parameters text,
+    ttl_hr integer,
     asset_url text NOT NULL,
-    asset_type text NOT NULL,
-    status bigint NOT NULL,
     start_time timestamp with time zone NOT NULL,
     entered_time timestamp with time zone NOT NULL,
     job_user bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     job_deliveryservice bigint,
+    invalidation_type text NOT NULL DEFAULT 'REFRESH',
     CONSTRAINT idx_89593_primary PRIMARY KEY (id)
 );
 
 
 ALTER TABLE job OWNER TO traffic_ops;
-
---
--- Name: job_agent; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE IF NOT EXISTS job_agent (
-    id bigint NOT NULL,
-    name text,
-    description text,
-    active integer DEFAULT 0 NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT job_agent_name_unique UNIQUE (name),
-    CONSTRAINT idx_89603_primary PRIMARY KEY (id)
-);
-
-
-ALTER TABLE job_agent OWNER TO traffic_ops;
-
---
--- Name: job_agent_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
---
-
-CREATE SEQUENCE IF NOT EXISTS job_agent_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE job_agent_id_seq OWNER TO traffic_ops;
-
---
--- Name: job_agent_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
---
-
-ALTER SEQUENCE job_agent_id_seq OWNED BY job_agent.id;
-
 
 --
 -- Name: job_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
@@ -1176,42 +1133,6 @@ ALTER TABLE job_id_seq OWNER TO traffic_ops;
 --
 
 ALTER SEQUENCE job_id_seq OWNED BY job.id;
-
---
--- Name: job_status; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE IF NOT EXISTS job_status (
-    id bigint NOT NULL,
-    name text,
-    description text,
-    last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT job_status_name_unique UNIQUE (name),
-    CONSTRAINT idx_89624_primary PRIMARY KEY (id)
-);
-
-
-ALTER TABLE job_status OWNER TO traffic_ops;
-
---
--- Name: job_status_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
---
-
-CREATE SEQUENCE IF NOT EXISTS job_status_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE job_status_id_seq OWNER TO traffic_ops;
-
---
--- Name: job_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
---
-
-ALTER SEQUENCE job_status_id_seq OWNED BY job_status.id;
 
 CREATE TABLE IF NOT EXISTS last_deleted (
     table_name text NOT NULL PRIMARY KEY,
@@ -2135,20 +2056,6 @@ ALTER TABLE ONLY job ALTER COLUMN id SET DEFAULT nextval('job_id_seq'::regclass)
 -- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
-ALTER TABLE ONLY job_agent ALTER COLUMN id SET DEFAULT nextval('job_agent_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job_status ALTER COLUMN id SET DEFAULT nextval('job_status_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
---
-
 ALTER TABLE ONLY log ALTER COLUMN id SET DEFAULT nextval('log_id_seq'::regclass);
 
 
@@ -2491,28 +2398,12 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'hwinfo' AN
     CREATE UNIQUE INDEX IF NOT EXISTS idx_89583_serverid ON hwinfo USING btree (serverid, description);
 END IF;
 
-IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND column_name = 'agent') THEN
-    --
-    -- Name: idx_89593_fk_job_agent_id1; Type: INDEX; Schema: public; Owner: traffic_ops
-    --
-
-    CREATE INDEX IF NOT EXISTS idx_89593_fk_job_agent_id1 ON job USING btree (agent);
-END IF;
-
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND column_name = 'job_deliveryservice') THEN
     --
     -- Name: idx_89593_fk_job_deliveryservice1; Type: INDEX; Schema: public; Owner: traffic_ops
     --
 
     CREATE INDEX IF NOT EXISTS idx_89593_fk_job_deliveryservice1 ON job USING btree (job_deliveryservice);
-END IF;
-
-IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND column_name = 'status') THEN
-    --
-    -- Name: idx_89593_fk_job_status_id1; Type: INDEX; Schema: public; Owner: traffic_ops
-    --
-
-    CREATE INDEX IF NOT EXISTS idx_89593_fk_job_status_id1 ON job USING btree (status);
 END IF;
 
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND column_name = 'job_user') THEN
@@ -2948,8 +2839,6 @@ DO $$
         'federation_tmuser',
         'hwinfo',
         'job',
-        'job_agent',
-        'job_status',
         'log',
         'origin',
         'parameter',
@@ -3065,8 +2954,6 @@ DECLARE
         'federation_tmuser',
         'hwinfo',
         'job',
-        'job_agent',
-        'job_status',
         'log',
         'origin',
         'parameter',
@@ -3540,15 +3427,6 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
         ADD CONSTRAINT interface_server_fkey FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE ON UPDATE CASCADE;
 END IF;
 
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_agent_id1' AND table_name = 'job') THEN
-    --
-    -- Name: fk_job_agent_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY job
-        ADD CONSTRAINT fk_job_agent_id1 FOREIGN KEY (agent) REFERENCES job_agent(id) ON DELETE CASCADE;
-END IF;
-
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_deliveryservice1' AND table_name = 'job') THEN
     --
     -- Name: fk_job_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3556,15 +3434,6 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
 
     ALTER TABLE ONLY job
         ADD CONSTRAINT fk_job_deliveryservice1 FOREIGN KEY (job_deliveryservice) REFERENCES deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE;
-END IF;
-
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_status_id1' AND table_name = 'job') THEN
-    --
-    -- Name: fk_job_status_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY job
-        ADD CONSTRAINT fk_job_status_id1 FOREIGN KEY (status) REFERENCES job_status(id);
 END IF;
 
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_user_id1' AND table_name = 'job') THEN
