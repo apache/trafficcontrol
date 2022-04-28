@@ -38,7 +38,8 @@ const suite: TestSuite = {
 					browser.assert.equal(true, false, `failed to select ag-grid rows: ${result.value.message}`);
 					return;
 				}
-				browser.assert.equal(result.value.length, 1);
+				browser.assert.equal(result.value.length, 1)
+					.end();
 			}
 		);
 	},

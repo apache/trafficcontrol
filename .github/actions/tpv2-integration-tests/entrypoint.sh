@@ -98,7 +98,6 @@ truncate -s0 out.log
 popd
 
 cd "${REPO_DIR}/experimental/traffic-portal"
-npm ci
 npx ng serve &
 
 # Wait for tp/to build

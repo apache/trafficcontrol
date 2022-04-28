@@ -23,13 +23,9 @@ export interface GlobalConfig extends NightwatchGlobals {
 	trafficOpsURL: string;
 }
 const config = {
-	chrome_headless: {},
-	default: {
-		adminPass: "twelve12",
-		adminUser: "admin",
-		trafficOpsURL: "https://localhost:6443"
-	}
+	adminPass: "twelve12",
+	adminUser: "admin",
+	trafficOpsURL: "https://localhost:6443"
 };
-config.chrome_headless = config.default;
 
 module.exports = config;
