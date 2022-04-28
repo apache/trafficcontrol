@@ -1874,7 +1874,7 @@ CREATE TABLE IF NOT EXISTS tenant (
 
 CREATE TABLE IF NOT EXISTS tm_user (
     id bigint NOT NULL,
-    username text,
+    username text NOT NULL,
     public_ssh_key text,
     role bigint,
     uid bigint,
