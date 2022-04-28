@@ -690,9 +690,32 @@ CREATE TABLE IF NOT EXISTS deliveryservice_request (
     id bigserial,
     last_edited_by_id bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    deliveryservice jsonb NOT NULL,
+    deliveryservice jsonb DEFAULT NULL,
     status workflow_states NOT NULL,
-    CONSTRAINT deliveryservice_request_pkey PRIMARY KEY (id)
+    original jsonb DEFAULT NULL,
+    CONSTRAINT deliveryservice_request_pkey PRIMARY KEY (id),
+    CONSTRAINT appropriate_requested_and_original_for_change_type CHECK (
+        (change_type = 'delete' AND original IS NOT NULL AND deliveryservice IS NULL)
+        OR
+        (change_type = 'create' AND original IS NULL AND deliveryservice IS NOT NULL)
+        OR (
+            change_type = 'update' AND
+            deliveryservice IS NOT NULL AND
+            (
+                (
+                    (status = 'complete' OR status = 'rejected' OR status = 'pending')
+                    AND
+                    original IS NOT NULL
+                )
+                OR
+                (
+                    (status = 'draft' OR status = 'submitted')
+                    AND
+                    original IS NULL
+                )
+            )
+        )
+    )
 );
 
 ALTER TABLE deliveryservice_request OWNER TO traffic_ops;
