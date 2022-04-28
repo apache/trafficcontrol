@@ -3102,7 +3102,7 @@ IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constrain
     --
 
     ALTER TABLE ONLY deliveryservices_required_capability
-        ADD CONSTRAINT fk_required_capability FOREIGN KEY (required_capability) REFERENCES server_capability(name) ON DELETE RESTRICT;
+        ADD CONSTRAINT fk_required_capability FOREIGN KEY (required_capability) REFERENCES server_capability(name) ON UPDATE CASCADE ON DELETE RESTRICT;
 END IF;
 
 IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'deliveryservice_topology_fkey' AND table_name = 'deliveryservice') THEN
@@ -3129,7 +3129,7 @@ IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constrain
     --
 
     ALTER TABLE ONLY server_server_capability
-        ADD CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON DELETE RESTRICT;
+        ADD CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON UPDATE CASCADE ON DELETE RESTRICT;
 END IF;
 
 IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'fk_deliveryservice' AND table_name = 'deliveryservice_consistent_hash_query_param') THEN
