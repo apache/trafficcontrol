@@ -875,6 +875,8 @@ CREATE TABLE IF NOT EXISTS interface (
     mtu bigint DEFAULT 1500 CHECK (mtu IS NULL OR mtu > 1280),
     name text NOT NULL CHECK (name != ''),
     server bigint NOT NULL,
+    router_host_name text NOT NULL DEFAULT '',
+    router_port_name text NOT NULL DEFAULT '',
     PRIMARY KEY (name, server)
 );
 
@@ -1387,8 +1389,6 @@ CREATE TABLE IF NOT EXISTS server (
     ilo_ip_gateway text,
     ilo_username text,
     ilo_password text,
-    router_host_name text,
-    router_port_name text,
     guid text,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     https_port bigint,
@@ -3735,4 +3735,3 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 -- PostgreSQL database dump complete
 --
-
