@@ -881,7 +881,8 @@ ALTER SEQUENCE division_id_seq OWNED BY division.id;
 
 CREATE TABLE IF NOT EXISTS dnschallenges (
     fqdn text NOT NULL,
-    record text NOT NULL
+    record text NOT NULL,
+    xml_id text NOT NULL
 );
 
 --
