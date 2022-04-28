@@ -502,12 +502,33 @@ ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 -- Name: cdn_notification; Type: TABLE; Schema: public; Owner: traffic_ops
 
 CREATE TABLE cdn_notification (
+    id bigint NOT NULL,
     cdn text NOT NULL,
     "user" text NOT NULL,
     notification text,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT pk_cdn_notification PRIMARY KEY (cdn),
+    CONSTRAINT pk_cdn_notification PRIMARY KEY (id)
 );
+
+--
+-- Name: cdn_notification_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
+--
+
+CREATE SEQUENCE IF NOT EXISTS cdn_notification_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE cdn_notification_id_seq OWNER TO traffic_ops;
+
+--
+-- Name: cdn_notification_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
+--
+
+ALTER SEQUENCE cdn_notification_id_seq OWNED BY cdn.id;
 
 --
 -- Name: coordinate; Type: TABLE; Schema: public: Owner: traffic_ops
@@ -1967,6 +1988,12 @@ ALTER TABLE ONLY cachegroup ALTER COLUMN id SET DEFAULT nextval('cachegroup_id_s
 --
 
 ALTER TABLE ONLY cdn ALTER COLUMN id SET DEFAULT nextval('cdn_id_seq'::regclass);
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdn_notification ALTER COLUMN id SET DEFAULT nextval('cdn_notification_id_seq'::regclass);
 
 
 --
