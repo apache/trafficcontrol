@@ -68,8 +68,8 @@ func GetBackendConfig() config.BackendConfig {
 
 // SetBackendConfig sets the BackendConfig to the value supplied.
 func SetBackendConfig(backendConfig config.BackendConfig) {
-	backendCfg.RLock()
-	defer backendCfg.RUnlock()
+	backendCfg.Lock()
+	defer backendCfg.Unlock()
 	backendCfg.cfg = backendConfig
 }
 
