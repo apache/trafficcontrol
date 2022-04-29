@@ -29,7 +29,7 @@ Assign a :term:`Delivery Service Request` to a user.
 Request Structure
 -----------------
 :id:       The integral, unique identifier assigned to the :term:`DSR <Delivery Service Request>`
-:assignee: The username of the user to whom the :term:`Delivery Service Request` is assigned.
+:assigneeId: The username of the user to whom the :term:`Delivery Service Request` is assigned.
 
 .. code-block:: http
 	:caption: Request Example
@@ -43,13 +43,12 @@ Request Structure
 	Content-Length: 28
 
 	{
-		"id": 1,
 		"assigneeId": 2
 	}
 
 Response Structure
 ------------------
-:assignee:        The username of the user to whom the :term:`Delivery Service Request` is assigned.
+:assigneeId:        The username of the user to whom the :term:`Delivery Service Request` is assigned.
 :author:          The author of the :term:`Delivery Service Request`
 :authorId:        The integral, unique identifier assigned to the author
 :changeType:      The change type of the :term:`DSR <Delivery Service Request>`. It can be ``create``, ``update``, or ``delete``....
@@ -166,7 +165,6 @@ Response Structure
 		],
 		"response": {
 			"assigneeId": 2,
-			"assignee": "admin",
 			"authorId": 2,
 			"author": "admin",
 			"changeType": "update",
