@@ -32,6 +32,27 @@ import (
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
+// this resets the IDs of things attached to a DS, which needs to be done
+// because the WithObjs flow destroys and recreates those object IDs
+// non-deterministically with each test - BUT, the client method permanently
+// alters the DSR structures by adding these referential IDs. Older clients
+// got away with it by not making 'DeliveryService' a pointer, but to add
+// original/requested fields you need to sometimes allow each to be nil, so
+// this is a problem that needs to be solved at some point.
+// A better solution _might_ be to reload all the test fixtures every time
+// to wipe any and all referential modifications made to any test data, but
+// for now that's overkill.
+func resetDS(ds *tc.DeliveryServiceV4) {
+	if ds == nil {
+		return
+	}
+	ds.CDNID = nil
+	ds.ID = nil
+	ds.ProfileID = nil
+	ds.TenantID = nil
+	ds.TypeID = nil
+}
+
 func TestDeliveryServiceRequests(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests}, func() {
 
@@ -349,6 +370,8 @@ func validatePutDSRequestFields(expectedResp map[string]interface{}) utils.CkReq
 
 func CreateTestDeliveryServiceRequests(t *testing.T) {
 	for _, dsr := range testData.DeliveryServiceRequests {
+		resetDS(dsr.Original)
+		resetDS(dsr.Requested)
 		respDSR, _, err := TOSession.CreateDeliveryServiceRequest(dsr, client.RequestOptions{})
 		assert.NoError(t, err, "Could not create Delivery Service Requests: %v - alerts: %+v", err, respDSR.Alerts)
 	}
