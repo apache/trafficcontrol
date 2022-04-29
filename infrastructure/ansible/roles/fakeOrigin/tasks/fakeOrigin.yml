@@ -24,8 +24,8 @@
   delay: 5
 
 - name: Copy config.json file
-  template:
-    src: "config.json.j2"
+  copy:
+    content: "{{ lookup('template', 'config.json.j2') | to_nice_json }}"
     dest: "{{ fo_conf_dir }}/config.json"
     owner: root
     group: root
