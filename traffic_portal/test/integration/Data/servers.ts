@@ -312,7 +312,7 @@ export const servers = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 0,
-					profileId: 0,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -337,12 +337,6 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileId"
 						}
 					]
 				},
@@ -384,7 +378,7 @@ export const servers = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 0,
-					profileId: 0,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -409,12 +403,6 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileId"
 						}
 					]
 				},
@@ -456,7 +444,7 @@ export const servers = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 0,
-					profileId: 0,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -481,12 +469,6 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileId"
 						}
 					]
 				},
@@ -528,7 +510,7 @@ export const servers = {
 					mgmtIpNetmask: "",
 					offlineReason: "",
 					physLocationId: 0,
-					profileId: 0,
+					profileNames: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
@@ -553,12 +535,6 @@ export const servers = {
 							queryKey: "name",
 							queryValue: "testCG",
 							replace: "cachegroupId"
-						},
-						{
-							route: "/profiles",
-							queryKey: "name",
-							queryValue: "testProfile",
-							replace: "profileId"
 						}
 					]
 				}

@@ -57,8 +57,6 @@ func MakeConfigFilesList(
 		return nil, warnings, errors.New("this server missing Cachegroup")
 	} else if server.CachegroupID == nil {
 		return nil, warnings, errors.New("this server missing CachegroupID")
-	} else if server.ProfileID == nil {
-		return nil, warnings, errors.New("server missing ProfileID")
 	} else if server.TCPPort == nil {
 		return nil, warnings, errors.New("server missing TCPPort")
 	} else if server.HostName == nil {
@@ -69,7 +67,7 @@ func MakeConfigFilesList(
 		return nil, warnings, errors.New("server missing CDNName")
 	} else if server.ID == nil {
 		return nil, warnings, errors.New("server missing ID")
-	} else if server.Profile == nil {
+	} else if len(server.ProfileNames) == 0 {
 		return nil, warnings, errors.New("server missing Profile")
 	}
 

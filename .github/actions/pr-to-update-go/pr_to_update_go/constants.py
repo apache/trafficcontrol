@@ -19,6 +19,8 @@ Environment variable names, and the meanings of the values of those variables:
 	ENV_GITHUB_REPOSITORY       - The "name" of the repository set by GHA (e.g. octocat/Hello-World)
 	ENV_GITHUB_REPOSITORY_OWNER - The repository owner's name set by GHA (e.g. octocat)
 	ENV_GITHUB_TOKEN            - The token used to access the GitHub API - set by GHA
+	PR_GITHUB_TOKEN             - The token used to access the GitHub API for creating the Pull
+	                              Request- set by GHA
 	ENV_GO_VERSION_FILE         - The repository-relative path to the file containing the Go version
 	ENV_ENV_FILE                - The repository-relative path to an environment file containing
 	                              a line setting the variable GO_VERSION to the Go version
@@ -54,6 +56,13 @@ ENV_GITHUB_TOKEN: Final = 'GITHUB_TOKEN'
 """
 The name of the environment variable set to token used to access the GitHub
 API - set by GHA.
+"""
+
+ENV_PR_GITHUB_TOKEN: Final = 'PR_GITHUB_TOKEN'
+"""
+The name of the environment variable set to token used to access the GitHub
+API, but only for creating the Pull Request, so that Actions will run on the
+generated Pull Request - set by GHA.
 """
 
 ENV_GO_VERSION_FILE: Final = 'GO_VERSION_FILE'
@@ -93,6 +102,7 @@ __all__ = [
 	"ENV_GITHUB_REPOSITORY",
 	"ENV_GITHUB_REPOSITORY_OWNER",
 	"ENV_GITHUB_TOKEN",
+	"ENV_PR_GITHUB_TOKEN"
 	"ENV_GO_VERSION_FILE",
 	"ENV_ENV_FILE",
 	"GIT_AUTHOR_EMAIL_TEMPLATE",

@@ -41,6 +41,21 @@ under the License.
         </div>
         <div class="row">
             <div class="col-sm-12 col-md-12">
+                <div class="form-group">
+                    <label class="has-tooltip control-label" for="users">Shared Usernames
+                        <div class="helptooltip">
+                            <div class="helptext">The usernames with which the creator wants to share their lock.</div>
+                        </div>
+                    </label>
+                    <select id="users" name="users" class="form-control" ng-model="lock.sharedUserNames" multiple ng-options="user.username as user.username for user in users" required>
+                        <option disabled hidden selected value="">Select...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12 col-md-12">
                 <fieldset class="form-group">
                     <legend>Type</legend>
                     <div class="fieldset-body">

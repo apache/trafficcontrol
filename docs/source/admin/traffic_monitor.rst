@@ -48,17 +48,92 @@ These are the recommended hardware specifications for a production deployment of
 Configuring Traffic Monitor
 ===========================
 
-Configuration Overview
-----------------------
-Traffic Monitor is configured via two JSON configuration files, :file:`traffic_ops.cfg` and :file:`traffic_monitor.cfg`, by default located in the ``conf`` directory in the install location. :file:`traffic_ops.cfg` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. :file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times, initial poll intervals, and the polling protocols. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
+Configuration Files
+-------------------
+Traffic Monitor is configured via two JSON configuration files, :file:`traffic_ops.cfg` and :file:`traffic_monitor.cfg`, by default located in the ``conf`` directory in the install location.
 
-Polling protocol can be set for caches (``cache_polling_protocol`` in :file:`traffic_monitor.cfg`) and has 3 options:
+traffic_ops.cfg
+"""""""""""""""
+:file:`traffic_ops.cfg` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. However, this *also* sets some settings relating to the Traffic Monitor API server.
 
-:ipv4only: Traffic Monitor will communicate with caches only over IPv4
-:ipv6only: Traffic Monitor will communicate with caches only over IPv6
-:both (the default): Traffic Monitor will alternate its communication between IPv4 and IPv6 (note: this does not affect the polling frequency so if polling frequency is 1 second IPv4 will be polled every 2 seconds)
+:``cdnName``:       The name of the CDN to which this Traffic Monitor belongs. Used to fetch configuration and to determine which :term:`cache servers` to monitor.
+:``certFile``:      The path to an SSL certificate file that corresponds to ``keyFile`` which will be used for Traffic Monitor's HTTPS API server.
+:``httpListener``:  Sets the address and port on which Traffic Monitor will listen for HTTP requests in the format :samp:`{address}:{port}`. If ``address`` is omitted, Traffic Monitor will listen on all available addresses.
+:``httpsListener``: Sets the address and port on which Traffic Monitor will listen for HTTPS requests in the format :samp:`{address}:{port}`. If ``address`` is omitted, Traffic Monitor will listen on all available addresses. If not provided, ``null``, or the empty string, Traffic Monitor will only serve HTTP, and ``keyFile`` and ``certFile`` are not used. If this is provided, the ``httpListener`` address will be used only to redirect clients to use HTTPS.
+:``insecure``:      A boolean that controls whether to validate the HTTPS certificate presented by the Traffic Ops server.
+:``keyFile``:       The path to an SSL key file that corresponds to ``certFile`` which will be used for Traffic Monitor's HTTPS API server.
+:``password``:      The password of the user identified by ``username``.
+:``url``:           The URL at which Traffic Ops may be reached e.g. ``"https://trafficops.infra.ciab.test"``.
+:``username``:      The username of the user as whom to authenticate with Traffic Ops.
+:``usingDummyTO``:  A boolean with no real effect. This value is used internally within the runtime of Traffic Monitor, and should never be set manually in its configuration file.
 
-.. Note:: ``both`` will poll IPv4 and IPv6 and report on availability based on if the respective IP addresses are defined on the server.  So if only an IPv4 address is defined and the protocol is set to ``both`` then it will only show the availability over IPv4, but if both addresses are defined then it will show availability based on IPv4 and IPv6.
+	.. deprecated:: ATCv7
+		The dependency on this field being valid will be removed in the future. It already has no effect.
+
+
+traffic_monitor.cfg
+"""""""""""""""""""
+:file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times, initial poll intervals, and the polling protocols. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops, and any :term:`Parameters` set on the Monitor's :term:`Profile` that configure the same thing as a field in this configuration file will take precedence over said fields. The :term:`Parameters` known to override configuration here are
+
+- ``tm.polling.interval``
+- ``health.polling.interval``
+- ``peers.polling.interval``
+- ``heartbeat.polling.interval``
+
+Upon receiving this configuration, Traffic Monitor begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
+
+:``cache_polling_protocol``: Defines the internet protocol used to communicate with :term:`cache servers`. This can be "ipv4only" to only allow IPv4 communication, "ipv6only" to only allow IPv6 communication, or "both" to alternate between each version. Default is "both".
+
+	.. Note:: ``both`` will poll IPv4 and IPv6 and report on availability based on if the respective IP addresses are defined on the server. So if only an IPv4 address is defined and the protocol is set to ``both`` then it will only show the availability over IPv4, but if both addresses are defined then it will show availability based on IPv4 and IPv6.
+
+:``crconfig_backup_file``:   The path to a file within which a backup of the most recently fetched CDN :term:`Snapshot` will be stored. Default is ``/opt/traffic_monitor/crconfig.backup``.
+:``crconfig_history_count``: The number of historical CDN Snapshots to store, which can then be retrieved through the :ref:`tm-api`. Default is 100.
+:``distributed_polling``:    A boolean that controls whether `Distributed Polling`_ is enabled. Default is ``false``.
+
+	.. seealso:: The `Distributed Polling`_ section has more information on this setting.
+
+:``health_flush_interval_ms``: Defines an interval as a number of milliseconds on which Traffic Monitor will flush its collected health data such that it is made available through the :ref:`tm-api`. Default is 200.
+
+	.. seealso:: The `Stat and Health Flush Configuration`_ section has more information on this setting.
+
+:``http_polling_format``: A MIME-Type that will be sent in the :mailheader:`Accept` HTTP header in requests to :term:`cache servers` for health and stats data. Default is :mimetype:`text/json` (**not** :mimetype:`application/json`).
+
+	.. seealso:: The `HTTP Accept Header Configuration`_ section has more information on this setting.
+
+:``http_timeout_ms``:                    Sets the timeout duration - in milliseconds - for all HTTP operations (both peer-polling and stat/health data polling). Default is 2000.
+:``log_location_access``:                A logfile location to which access logs will be written, or ``null`` to not log access events.\ [#log-locations]_ Default is ``null``
+:``log_location_debug``:                 A logfile location to which debug logs will be written, or ``null`` to not log debug messages.\ [#log-locations]_ Default is ``null``
+:``log_location_error``:                 A logfile location to which error logs will be written, or ``null`` to not log error messages.\ [#log-locations]_ Default is "stderr".
+:``log_location_event``:                 A logfile location to which event logs will be written, or ``null`` to not log events.\ [#log-locations]_ Default is "stdout"
+:``log_location_info``:                  A logfile location to which informational logs will be written, or ``null`` to not log informational messages.\ [#log-locations]_ Default is ``null``
+:``log_location_warning``:               A logfile location to which warning logs will be written, or ``null`` to not log warning messages.\ [#log-locations]_ Default is "stdout"
+:``max_events``:                         The maximum number of changes to stored aggregate data that should be retained at any one time. Default is 200.
+:``monitor_config_polling_interval_ms``: The interval - in milliseconds - on which to poll Traffic Ops for this Traffic Monitor's "monitoring configuration" as returned by :ref:`to-api-cdns-name-configs-monitoring`.
+:``peer_optimistic_quorum_min``:         Specifies the minimum number of peers that must be available in order to participate in the optimistic health protocol. Default is zero.
+
+	.. seealso:: The `Peering and Optimistic Quorum`_ section has more information on this setting.
+
+:``serve_read_timeout_ms``:   Sets the timeout - in milliseconds - of the Traffic Monitor API server for reading incoming requests. Default is 10,000.
+:``serve_write_timeout_ms``:  Sets the timeout - in milliseconds - of the Traffic Monitor API server for writing responses. Default is 10,000.
+:``short_hostname_override``: Sets a hostname for the Traffic Monitor. It will behave as though this were its hostname, rather than the hostname actually reported by the operating system. If not provided, ``null``, or the empty string, the Traffic Monitor will use the hostname provided by its host operating system. Default is the empty string.
+:``stat_buffer_interval_ms``: An interval - in milliseconds - for which to buffer collected stats before processing them. If this is not provided, ``null``, or zero, then all stats will be processed immediately. Default is zero.
+
+	.. seealso:: The `Stat and Health Flush Configuration`_ section has more information on this setting.
+
+:``stat_flush_interval_ms``: Defines an interval as a number of milliseconds on which Traffic Monitor will flush its collected stats data such that it is made available through the :ref:`tm-api`. Default is 200.
+
+	.. seealso:: The `Stat and Health Flush Configuration`_ section has more information on this setting.
+
+:``stat_polling``: A boolean that controls whether :term:`cache servers` are polled for stats data. Default is ``true``.
+
+	.. seealso:: The `Optional Stat Polling`_ section has more information on this setting.
+
+:``static_file_dir``: The directory within which Traffic Monitor will look for its web interface's static files. Default is ``/opt/traffic_monitor/static``.
+:``tmconfig_backup_file``: A file location to which a backup of the "monitoring configuration" as returned by :ref:`to-api-cdns-name-configs-monitoring` currently in use by Traffic Monitor will be written. Default is ``/opt/traffic_monitor/tmconfig.backup``.
+:``traffic_ops_disk_retry_max``: The number of times Traffic Monitor should attempt to log in to Traffic Ops before using its backup monitoring configuration and CDN Snapshot (if those exist). Default is 2.
+:``traffic_ops_max_retry_interval_ms``: Traffic Monitor will exponentially increase the amount of time it waits between attempts to log in to Traffic Ops each time it fails (up to a maximum number of times set by ``traffic_ops_disk_retry_max``). This controls the maximum amount of time - in milliseconds - that this waiting duration will be. Default is 60,000.
+:``traffic_ops_min_retry_interval_ms``: Traffic Monitor will exponentially increase the amount of time it waits between attempts to log in to Traffic Ops each time it fails (up to a maximum number of times set by ``traffic_ops_disk_retry_max``). This controls the minimum amount of time - in milliseconds - that this waiting duration will be. Default is 100.
+
 
 Optional Stat Polling
 ---------------------
@@ -121,3 +196,5 @@ Importantly, though, a statistics provider *must* respond to HTTP GET requests o
 When using the ``stats_over_http`` extension this can be provided by the ``system_stats`` plugin which will inject that information in to the ATS stats which then get returned by ``stats_over_http``. The ``system_stats`` plugin can be used with any custom implementations as it is already included and built with ATS when building with experimental-plugins enabled.
 
 There are other optional and/or :term:`Delivery Service`-related statistics that may cause Traffic Stats to not have the right information if not provided, but the above are essential for implementing :ref:`health-proto`.
+
+.. [#log-locations] These respect the rules and special string constants of :atc-godoc:`lib/go-log`.

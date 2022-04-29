@@ -47,6 +47,9 @@ require (
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/pkg/errors v0.9.1
 	go.etcd.io/bbolt v1.3.6
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/net v0.0.0-20211013171255-e13a2654a71e
+	golang.org/x/sys v0.0.0-20211013075003-97ac67df715c
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -78,12 +81,6 @@ require (
 require (
 	github.com/Shopify/sarama v1.27.2
 	github.com/klauspost/compress v1.13.6 // indirect
-)
-
-require (
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
-	golang.org/x/net v0.0.0-20211013171255-e13a2654a71e
-	golang.org/x/sys v0.0.0-20211013075003-97ac67df715c
 )
 
 require (

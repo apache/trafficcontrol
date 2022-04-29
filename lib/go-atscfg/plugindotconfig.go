@@ -45,8 +45,8 @@ func MakePluginDotConfig(
 		opt = &PluginDotConfigOpts{}
 	}
 	warnings := []string{}
-	if server.Profile == nil {
-		return Cfg{}, makeErr(warnings, "server profile missing")
+	if len(server.ProfileNames) == 0 {
+		return Cfg{}, makeErr(warnings, "server missing profiles")
 	}
 
 	paramData, paramWarns := paramsToMap(filterParams(serverParams, PluginFileName, "", "", "location"))

@@ -19,6 +19,8 @@ package atscfg
  * under the License.
  */
 
+import "strings"
+
 const ContentType12MFacts = ContentTypeTextASCII
 const LineComment12MFacts = LineCommentHash
 
@@ -39,13 +41,13 @@ func Make12MFacts(
 	}
 	warnings := []string{}
 
-	if server.Profile == nil {
+	if len(server.ProfileNames) == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 
 	hdr := makeHdrComment(opt.HdrComment)
 	txt := hdr
-	txt += "profile:" + *server.Profile + "\n"
+	txt += "profiles:" + strings.Join(server.ProfileNames, ", ") + "\n"
 
 	return Cfg{
 		Text:        txt,

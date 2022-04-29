@@ -75,7 +75,7 @@ func (cl *TOClient) WriteFsCookie(fileName string) {
 		log.Warnln("Error parsing Traffic ops URL: ", err)
 		return
 	}
-	for _, c := range cl.c.Client.Jar.Cookies(u) {
+	for _, c := range cl.HTTPClient().Jar.Cookies(u) {
 		fsCookie := torequtil.Cookie{Cookie: &http.Cookie{
 			Name:  c.Name,
 			Value: c.Value,
@@ -701,7 +701,7 @@ func (cl *TOClient) GetStatuses(reqHdr http.Header) ([]tc.Status, toclientlib.Re
 	err := torequtil.GetRetry(cl.NumRetries, "statuses", &statuses, func(obj interface{}) error {
 		toStatus, toReqInf, err := cl.c.GetStatuses(*ReqOpts(reqHdr))
 		if err != nil {
-			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+			return errors.New("getting server update statuses from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		status := obj.(*[]tc.Status)
 		*status = toStatus.Response
@@ -709,7 +709,7 @@ func (cl *TOClient) GetStatuses(reqHdr http.Header) ([]tc.Status, toclientlib.Re
 		return nil
 	})
 	if err != nil {
-		return nil, reqInf, errors.New("getting server update status: " + err.Error())
+		return nil, reqInf, errors.New("getting server update statuses: " + err.Error())
 	}
 	return statuses, reqInf, nil
 }

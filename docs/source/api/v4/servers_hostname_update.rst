@@ -52,7 +52,7 @@ Request Structure
 	| revalidate_apply_time      | no       | The value to set for when a reval update is applied for this server. Must be a valid RFC333Nano timestamp.   |
 	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
 
-	.. note:: While none of the timestamps is required individually, at least one must be sent to the API.
+.. note:: While none of the timestamps is required individually, at least one must be sent to the API.
 
 .. code-block:: http
 	:caption: Request Example

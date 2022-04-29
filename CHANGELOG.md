@@ -16,7 +16,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Replaces all Traffic Portal Tenant select boxes with a novel tree select box [#6427](https://github.com/apache/trafficcontrol/issues/6427).
 - Traffic Monitor: Add support for `access.log` to TM.
 - Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
+- Added functionality for CDN locks, so that they can be shared amongst a list of specified usernames. 
 - [Traffic Ops | Traffic Go Clients | T3C] Add additional timestamp fields to server for queuing and dequeueing config and revalidate updates.
+- Added layered profile feature to 4.0 for `GET` /servers/, `POST` /servers/, `PUT` /servers/{id} and `DELETE` /servers/{id}.
+- Added a Traffic Ops endpoint and Traffic Portal page to view all CDNi configuration update requests and approve or deny.
+- Added layered profile feature to 4.0 for `GET` /servers/details.
+- Added layered profile feature to 4.0 for `GET` /deliveryservices/{id}/servers/ and /deliveryservices/{id}/servers/eligible.
 
 ### Fixed
 - Update traffic\_portal dependencies to mitigate `npm audit` issues.
@@ -37,7 +42,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Only `operations` and `admin` roles should have the `DELIVERY-SERVICE:UPDATE` permission.
 - [#6369](https://github.com/apache/trafficcontrol/pull/6369) Fixed `/acme_accounts` endpoint to validate email and URL fields
 - Fixed searching of the ds parameter merge_parent_groups slice.
+- Fixed TO API `PUT /servers/:id/status` to only queue updates on the same CDN as the updated server
 - t3c-generate fix for combining remapconfig and cachekeyconfig parameters for MakeRemapDotConfig call.
+- [#6780](https://github.com/apache/trafficcontrol/issues/6780) Fixed t3c to use secondary parents when there are no primary parents available.
 
 ### Removed
 - Remove traffic\_portal dependencies to mitigate `npm audit` issues, specifically `grunt-concurrent`, `grunt-contrib-concat`, `grunt-contrib-cssmin`, `grunt-contrib-jsmin`, `grunt-contrib-uglify`, `grunt-contrib-htmlmin`, `grunt-newer`, and `grunt-wiredep`
@@ -46,6 +53,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Dropped CentOS 8 support
 
 ### Changed
+- [#6654](https://github.com/apache/trafficcontrol/issues/6654) Traffic Monitor now uses the TO API 4.0 by default and falls back to 3.1
 - Added Rocky Linux 8 support
 - Traffic Monitors now peer with other Traffic Monitors of the same status (e.g. ONLINE with ONLINE, OFFLINE with OFFLINE), instead of all peering with ONLINE.
 - Changed the Traffic Ops user last_authenticated update query to only update once per minute to avoid row-locking when the same user logs in frequently.
@@ -56,6 +64,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated the Profiles Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated Go version to 1.18
 - Removed the unused `deliveryservice_tmuser` table from Traffic Ops database
+- Adds updates to the trafficcontrol-health-client to, use new ATS Host status formats, detect and use proper
+  traffic_ctl commands, and adds new markup-poll-threshold config.
+- Traffic Monitor now defaults to 100 historical "CRConfig" Snapshots stored internally if not specified in configuration (previous default was 20,000)
 
 ## [6.1.0] - 2022-01-18
 ### Added

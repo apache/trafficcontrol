@@ -281,16 +281,20 @@
     ],
     "deliveryServiceRequestComments": [
         {
-            "value": "this is comment one"
+            "value": "this is comment one",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment two"
+            "value": "this is comment two",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment three"
+            "value": "this is comment three",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment four"
+            "value": "this is comment four",
+            "xmlId": "test-ds1"
         }
     ],
     "deliveryServiceRequests": [
@@ -1503,12 +1507,6 @@
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
             "pattern" : ".*"
-        },
-        {
-            "dsName": "ds1",
-            "typeName": "HOST_REGEXP",
-            "setNumber": 3,
-            "pattern" : ""
         }
     ],
     "deliveryservicesRequiredCapabilities": [

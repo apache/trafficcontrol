@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-update/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -89,5 +90,5 @@ func main() {
 	if cfg.RevalApplyTime != nil && !(*cfg.RevalApplyTime).Round(time.Microsecond).Equal((*cur_status.RevalidateApplyTime).Round(time.Microsecond)) {
 		log.Errorf("Failed to set reval_apply_time.\nSent: %v\nRecv: %v", *cfg.RevalApplyTime, *cur_status.RevalidateApplyTime)
 	}
-	cfg.TCCfg.TOClient.WriteFsCookie(toreq.FsCookiePath + cfg.TOUser + ".cookie")
+	cfg.TCCfg.TOClient.WriteFsCookie(torequtil.CookieCachePath(cfg.TOUser))
 }

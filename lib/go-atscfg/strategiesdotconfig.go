@@ -147,6 +147,8 @@ func getStrategySecondaryMode(mode ParentAbstractionServiceParentSecondaryMode) 
 		return `exhaust_ring`
 	case ParentAbstractionServiceParentSecondaryModeAlternate:
 		return `alternate_ring`
+	case ParentAbstractionServiceParentSecondaryModePeering:
+		return `peering_ring`
 	default:
 		return getStrategySecondaryMode(ParentAbstractionServiceParentSecondaryModeDefault)
 	}
@@ -162,11 +164,18 @@ func getStrategyErrorCodes(codes []int) string {
 
 func getStrategyGroups(svc *ParentAbstractionService) string {
 	txt := ""
-	if len(svc.Parents) != 0 {
-		txt += "\n" + `      - *group_parents_` + svc.Name
-	}
-	if len(svc.SecondaryParents) != 0 {
-		txt += "\n" + `      - *group_secondary_parents_` + svc.Name
+	if getStrategySecondaryMode(svc.SecondaryMode) == "peering_ring" {
+		txt += "\n" + `      - *peers_group`
+		if len(svc.Parents) != 0 {
+			txt += "\n" + `      - *group_parents_` + svc.Name
+		}
+	} else {
+		if len(svc.Parents) != 0 {
+			txt += "\n" + `      - *group_parents_` + svc.Name
+		}
+		if len(svc.SecondaryParents) != 0 {
+			txt += "\n" + `      - *group_secondary_parents_` + svc.Name
+		}
 	}
 	return txt
 }
@@ -182,6 +191,9 @@ func getStrategyStrategiesSection(pa *ParentAbstraction) string {
 			txt += "\n" + `    hash_key: path`
 		}
 		txt += "\n" + `    go_direct: ` + strconv.FormatBool(svc.GoDirect)
+		if getStrategySecondaryMode(svc.SecondaryMode) == "peering_ring" {
+			txt += "\n" + `    cache_peer_result: ` + strconv.FormatBool(svc.CachePeerResult)
+		}
 		txt += "\n" + `    groups:`
 		txt += getStrategyGroups(svc)
 		// TODO make strategies for both? add to parent?
@@ -237,6 +249,13 @@ func getStrategyGroupsSection(pa *ParentAbstraction) string {
 			txt += "\n" + `      weight: ` + strconv.FormatFloat(parent.Weight, 'f', 3, 64)
 		}
 	}
+	if len(pa.Peers) != 0 {
+		txt += "\n" + `  - &peers_group`
+		for i, peer := range pa.Peers {
+			txt += "\n" + `    - << *peer` + strconv.Itoa(i+1)
+			txt += "\n" + `      weight: ` + strconv.FormatFloat(peer.Weight, 'f', 3, 64)
+		}
+	}
 	return txt
 }
 
@@ -256,6 +275,22 @@ func getStrategyHostsSection(pa *ParentAbstraction) string {
 			txt += getStrategyHostsSectionHost(svc, parent)
 		}
 	}
+	if len(pa.Peers) != 0 {
+		count := 1
+		for _, peer := range pa.Peers {
+			txt += getStrategyHostsSectionPeer(peer, count)
+			count++
+		}
+	}
+	return txt
+}
+
+func getStrategyHostsSectionPeer(peer *ParentAbstractionServiceParent, count int) string {
+	txt := ""
+	txt += "\n" + `  - &peer` + strconv.Itoa(count)
+	txt += "\n" + `    host: ` + peer.FQDN
+	txt += "\n" + `    protocol:`
+	txt += "\n" + `      - port: ` + strconv.Itoa(peer.Port)
 	return txt
 }
 

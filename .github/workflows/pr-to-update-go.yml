@@ -27,26 +27,27 @@ on:
 jobs:
   pr-to-update-go:
     runs-on: ubuntu-latest
+    env:
+      GIT_AUTHOR_NAME: asf-ci
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
+      GO_VERSION_FILE: GO_VERSION
+      ENV_FILE: .env
     steps:
       - name: Checkout repo
         uses: actions/checkout@master
         if: ${{ (github.repository_owner == 'apache' && github.ref == 'refs/heads/master' ) || github.event_name != 'schedule' }}
         id: checkout
-      - name: Install Python 3.9
+      - name: Install Python 3.10
         uses: actions/setup-python@v2
         if: ${{ steps.checkout.outcome == 'success' }}
-        with: { python-version: 3.9 }
+        with: { python-version: '3.10' }
       - name: Install dependencies
         if: ${{ steps.checkout.outcome == 'success' }}
         run: pip install .github/actions/pr-to-update-go
       - name: Update Go version
         if: ${{ steps.checkout.outcome == 'success' }}
         run: python3 -m pr_to_update_go --update-version-only
-        env:
-          GIT_AUTHOR_NAME: asfgit
-          GITHUB_TOKEN: ${{ github.token }}
-          GO_VERSION_FILE: GO_VERSION
-          ENV_FILE: .env
       - name: Check Go version
         run: echo "::set-output name=value::$(cat GO_VERSION)"
         id: go-version
@@ -57,8 +58,3 @@ jobs:
       - name: PR to Update Go
         if: ${{ steps.checkout.outcome == 'success' }}
         run: python3 -m pr_to_update_go
-        env:
-          GIT_AUTHOR_NAME: asfgit
-          GITHUB_TOKEN: ${{ github.token }}
-          GO_VERSION_FILE: GO_VERSION
-          ENV_FILE: .env
