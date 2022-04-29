@@ -52,8 +52,8 @@
 - name: Run Traffic Ops Postinstall
   block:
     - name: Render Traffic Ops Postinstall Answers
-      template:
-        src: "postinstall.input.j2"
+      copy:
+        content: "{{ lookup('template','postinstall.input.j2') | to_nice_json }}"
         owner: "{{ to_user }}"
         group: "{{ to_group }}"
         mode: 0600
