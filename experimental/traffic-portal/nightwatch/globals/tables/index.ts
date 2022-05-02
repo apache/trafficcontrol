@@ -55,9 +55,10 @@ export async function getColumnState(this: TableSectionCommands, column: string)
 					reject(new Error(`incorrect type for 'checked' DOM property: ${typeof result.value}`));
 					return;
 				}
+				this.click(columnMenuSelector);
 				resolve(result.value);
 			}
-		).click(columnMenuSelector);
+		);
 	});
 }
 
