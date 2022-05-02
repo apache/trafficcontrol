@@ -40,7 +40,7 @@
     "lint": "ng lint",
     "e2e": "npm run e2e:build && ./node_modules/.bin/nightwatch --config './nightwatch/nightwatch.conf.js'",
     "e2e:build": "./node_modules/.bin/tsc -p ./nightwatch/tsconfig.e2e.json",
-    "e2e:ci": "npm run e2e:build && ./node_modules/.bin/nightwatch --env chrome_headless --config './nightwatch/nightwatch.conf.js'",
+    "e2e:ci": "npm run e2e:build && ./node_modules/.bin/nightwatch --env chrome_headless --config './nightwatch/nightwatch.conf.js' --window-size 1920,1080",
     "dev:ssr": "ng run traffic-portal:serve-ssr",
     "serve:ssr": "node dist/traffic-portal/server/main.js",
     "build:ssr": "ng build --configuration production && ng run traffic-portal:server:production",
