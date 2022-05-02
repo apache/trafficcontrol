@@ -38,6 +38,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Cache node modules
+        id: restore-npm-cache
         uses: actions/cache@v3
         with:
           path: ./experimental/traffic-portal/node_modules
@@ -51,6 +52,7 @@ jobs:
           node-version: 16.x
 
       - name: NPM install
+        if: steps.restore-npm-cache.cache-hit != 'true'
         run: |
           cd experimental/traffic-portal/
           npm install
@@ -68,6 +70,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Cache node modules
+        id: restore-npm-cache
         uses: actions/cache@v3
         with:
           path: ./experimental/traffic-portal/node_modules
@@ -81,6 +84,7 @@ jobs:
           node-version: 16.x
 
       - name: NPM install
+        if: steps.restore-npm-cache.cache-hit != 'true'
         run: |
           cd experimental/traffic-portal/
           npm install
@@ -98,6 +102,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Cache node modules
+        id: restore-npm-cache
         uses: actions/cache@v3
         with:
           path: ./experimental/traffic-portal/node_modules
@@ -114,6 +119,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install google-chrome-stable
 
       - name: NPM install
+        if: steps.restore-npm-cache.cache-hit != 'true'
         run: |
           cd experimental/traffic-portal/
           npm install
@@ -166,6 +172,7 @@ jobs:
       - name: Import cached Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
       - name: Cache node modules
+        id: restore-npm-cache
         uses: actions/cache@v3
         with:
           path: ./experimental/traffic-portal/node_modules
@@ -201,6 +208,7 @@ jobs:
           openssl rand 32 | base64 | tee "${GITHUB_WORKSPACE}/aes.key"
           openssl req -new -x509 -nodes -newkey rsa:4096 -out traffic_ops/traffic_ops_golang/localhost.crt -keyout traffic_ops/traffic_ops_golang/localhost.key -subj "/CN=tptests"
       - name: NPM install
+        if: steps.restore-npm-cache.cache-hit != 'true'
         run: |
           cd experimental/traffic-portal
           npm install
