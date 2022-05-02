@@ -17,6 +17,7 @@ package org.apache.traffic_control.traffic_router.core.external;
 
 import org.apache.traffic_control.traffic_router.core.http.RouterFilter;
 import org.apache.traffic_control.traffic_router.core.util.ExternalTest;
+import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -140,7 +141,7 @@ public class SteeringTest {
 
 	@Before
 	public void before() throws Exception {
-		steeringDeliveryServiceId = setupSteering(targetDomains, targetWeights, "api/2.0/steering");
+		steeringDeliveryServiceId = setupSteering(targetDomains, targetWeights, "api/"+TrafficOpsUtils.TO_API_VERSION+"/steering");
 		setupCrConfig();
 
 		httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
@@ -272,7 +273,7 @@ public class SteeringTest {
 		Map<String, String> domains = new HashMap<>();
 		Map<String, Integer> weights = new HashMap<>();
 
-		setupSteering(domains, weights, "api/2.0/steering2");
+		setupSteering(domains, weights, "api/"+TrafficOpsUtils.TO_API_VERSION+"/steering2");
 
 		List<String> randomPaths = new ArrayList<>();
 
