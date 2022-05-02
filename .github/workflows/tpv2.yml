@@ -213,8 +213,9 @@ jobs:
           name: ${{ github.job }}
           path: |
             traffic_ops/traffic_ops_golang/out.log
-            experimental/traffic-portal/nightwatch/screens
             experimental/traffic-portal/logs
+            experimental/traffic-portal/nightwatch/junit
+            experimental/traffic-portal/nightwatch/screens
             experimental/traffic-portal/tests_output
 
       - name: Save Alpine Docker image
