@@ -19,21 +19,8 @@
 
 # tp-integration-tests javascript action
 this action runs the traffic portal integration tests
-- requires an smtp service (see `smtp_address` input)
 
 ## inputs
-
-### `smtp_address`
-**required** the address of an smtp server for use by traffic ops.
-
-### `smtp_port`
-**required** the address of an smtp server for use by traffic ops. required but defaults to `25`.
-
-### `smtp_user`
-**optional** the user to authenticate with for the smtp server.
-
-### `smtp_password`
-**optional** the password to authenticate with for the smtp server.
 
 ## outputs
 
@@ -90,7 +77,4 @@ jobs:
         uses: ./.github/actions/todb-init
       - name: Run TP
         uses: ./.github/actions/tpv2-integration-tests
-        with:
-          smtp_address: 172.17.0.1
-
 ```
