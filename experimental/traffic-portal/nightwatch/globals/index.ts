@@ -1,5 +1,4 @@
 /*
-*
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -12,20 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {type NightwatchGlobals} from "nightwatch";
+
+import type { NightwatchBrowser } from "nightwatch";
+
+import type { GlobalConfig } from "./globals";
 
 /**
- * Defines the configuration used for the testing environment
+ * A test suite is a mapping of test descriptions to the functions that
+ * implement the thereby described test.
  */
-export interface GlobalConfig extends NightwatchGlobals {
-	adminPass: string;
-	adminUser: string;
-	trafficOpsURL: string;
+export interface TestSuite {
+	[description: string]: (browser: NightwatchBrowser & {globals: GlobalConfig}) => (void | Promise<void>);
 }
-const config = {
-	adminPass: "twelve12",
-	adminUser: "admin",
-	trafficOpsURL: "https://localhost:6443"
-};
-
-module.exports = config;

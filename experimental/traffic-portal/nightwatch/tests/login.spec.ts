@@ -11,13 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {type NightwatchBrowser} from "nightwatch";
+import type { TestSuite } from "../globals";
+import type { LoginPageObject } from "../page_objects/login";
 
-import {type GlobalConfig} from "../globals/globals";
-import {type LoginPageObject} from "../page_objects/login";
-
-module.exports = {
-	"Clear form test": (browser: NightwatchBrowser): void => {
+const suite: TestSuite = {
+	"Clear form test": browser => {
 		const page: LoginPageObject = browser.page.login();
 		page.navigate()
 			.section.loginForm
@@ -27,7 +25,7 @@ module.exports = {
 			.assert.containsText("@passwordTxt", "")
 			.end();
 	},
-	"Incorrect password test":  (browser: NightwatchBrowser): void => {
+	"Incorrect password test":  browser => {
 		const page: LoginPageObject = browser.page.login();
 		page.navigate()
 			.section.loginForm
@@ -38,14 +36,15 @@ module.exports = {
 			.assert.containsText("@snackbarEle", "Invalid")
 			.end();
 	},
-	"Login test": (browser: NightwatchBrowser): void => {
+	"Login test": browser => {
 		const page: LoginPageObject = browser.page.login();
-		const globals = browser.globals as GlobalConfig;
 		page.navigate()
 			.section.loginForm
-			.login(globals.adminUser, globals.adminPass)
+			.login(browser.globals.adminUser, browser.globals.adminPass)
 			.parent
 			.assert.containsText("@snackbarEle", "Success")
 			.end();
 	}
 };
+
+export default suite;

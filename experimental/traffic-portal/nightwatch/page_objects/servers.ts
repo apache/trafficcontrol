@@ -20,36 +20,36 @@ import {
 import { TableSectionCommands, TABLE_COMMANDS } from "../globals/tables";
 
 /**
- * Defines the commands for the users table section.
+ * Defines the commands for the servers table section.
  */
-type UsersTableSectionCommands = TableSectionCommands;
+type ServersTableSectionCommands = TableSectionCommands;
 
-const usersPageObject = {
+const serversPageObject = {
 	api: {} as NightwatchAPI,
 	sections: {
-		usersTable: {
+		serversTable: {
 			commands: {
 				...TABLE_COMMANDS
-			} as UsersTableSectionCommands,
+			} as ServersTableSectionCommands,
 			elements: {
 			},
-			selector: "main > main"
+			selector: "servers-table main"
 		}
 	},
 	url(): string {
-		return `${this.api.launchUrl}/core/users`;
+		return `${this.api.launchUrl}/core/servers`;
 	}
 };
 
 /**
- * Defines the users table section.
+ * Defines the servers table section.
  */
-type UsersTableSection = EnhancedSectionInstance<UsersTableSectionCommands, typeof usersPageObject.sections.usersTable.elements>;
+type ServersTableSection = EnhancedSectionInstance<ServersTableSectionCommands, typeof serversPageObject.sections.serversTable.elements>;
 
 /**
- * The type of the users table page object as provided by the Nightwatch API at
+ * The type of the servers table page object as provided by the Nightwatch API at
  * runtime.
  */
-export type UsersPageObject = EnhancedPageObject<{}, {}, { usersTable: UsersTableSection }>;
+export type ServersPageObject = EnhancedPageObject<{}, {}, { serversTable: ServersTableSection }>;
 
-export default usersPageObject;
+export default serversPageObject;
