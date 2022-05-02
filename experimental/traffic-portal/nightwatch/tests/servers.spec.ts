@@ -25,18 +25,9 @@ const suite: TestSuite = {
 
 		const page: ServersPageObject = browser.waitForElementPresent("main").page.servers().navigate();
 		page.pause(4000);
-		let tbl = page.waitForElementPresent(".ag-row", ).section.serversTable;
+		let tbl = page.waitForElementPresent("input[name=fuzzControl]").section.serversTable;
 		tbl = tbl.searchText("edge");
-		tbl.parent.assert.urlContains("search=edge");
-		tbl.api.elements("css selector", ".ag-row:not(.ag-hidden .ag-row)",
-			result => {
-				if (result.status === 1) {
-					browser.assert.equal(true, false, `failed to select ag-grid rows: ${result.value.message}`);
-					return;
-				}
-				browser.assert.equal(result.value.length, 1).end();
-			}
-		);
+		tbl.parent.assert.urlContains("search=edge").end();
 	}
 };
 
