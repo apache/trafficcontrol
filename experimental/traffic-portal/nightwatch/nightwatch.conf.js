@@ -62,7 +62,8 @@ module.exports = {
 			desiredCapabilities: {
 				"goog:chromeOptions": {
 					args: [
-						"--headless"
+						"--headless",
+						"--window-size=1920,1080"
 					]
 				}
 			},
