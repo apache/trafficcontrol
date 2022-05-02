@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added Rocky Linux 8 support
 - Updated Apache Tomcat from 9.0.43 to 9.0.67
 - [#6694](https://github.com/apache/trafficcontrol/issues/6694) Traffic Stats now uses the TO API 3.0
+- Changed the default Traffic Ops API version requsted by Traffic Router from 2.0 to 3.1
 
 ## [6.1.0] - 2022-01-18
 ### Added
