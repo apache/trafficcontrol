@@ -11,9 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import type { ServersPageObject } from "../page_objects/servers";
 import type { TestSuite } from "../globals";
 import type { LoginPageObject } from "../page_objects/login";
+import type { ServersPageObject } from "../page_objects/servers";
 
 const suite: TestSuite = {
 	"Filter by hostname": async browser => {
