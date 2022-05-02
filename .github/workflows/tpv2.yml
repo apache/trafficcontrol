@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-name: Lint and Test Experimental Traffic Portal
+name: Experimental Traffic Portal v2
 
 env:
   # alpine:3.13
