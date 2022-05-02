@@ -107,10 +107,12 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		str = fmt.Sprintf(" profileID: %d", profileID)
 	}
 
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-		return
+	if reqObj.Action == "queue" {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
 	}
 
 	// Ignore pagination to prevent possibility of not updating the entirity the requested CDN. Likewise, ignore orderby as nonessential.

@@ -143,9 +143,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 type updateValues struct {
 	configUpdateBool *bool // Deprecated, prefer timestamps
 	revalUpdateBool  *bool // Deprecated, prefer timestamps
-	configUpdateTime *time.Time
 	configApplyTime  *time.Time
-	revalUpdateTime  *time.Time
 	revalApplyTime   *time.Time
 }
 
@@ -155,49 +153,30 @@ func parseQueryParams(params map[string]string) (*updateValues, error) {
 	// Verify query string parameters
 	configUpdatedBoolParam, hasConfigUpdatedBoolParam := params["updated"]     // Deprecated, but still required for backwards compatibility
 	revalUpdatedBoolParam, hasRevalUpdatedBoolParam := params["reval_updated"] // Deprecated, but still required for backwards compatibility
-	configUpdateTimeParam, hasConfigUpdateTimeParam := params["config_update_time"]
-	revalidateUpdateTimeParam, hasRevalidateUpdateTimeParam := params["revalidate_update_time"]
 	configApplyTimeParam, hasConfigApplyTimeParam := params["config_apply_time"]
 	revalidateApplyTimeParam, hasRevalidateApplyTimeParam := params["revalidate_apply_time"]
 
 	if !hasConfigApplyTimeParam && !hasRevalidateApplyTimeParam &&
-		!hasConfigUpdateTimeParam && !hasRevalidateUpdateTimeParam &&
 		!hasConfigUpdatedBoolParam && !hasRevalUpdatedBoolParam {
-		return nil, errors.New("must pass at least one query parameter: 'config_apply_time', 'revalidate_apply_time', 'config_update_time', 'revalidate_update_time' (may also pass bool `update` `reval_updated`)")
+		return nil, errors.New("must pass at least one of the following query parameters: 'config_apply_time', 'revalidate_apply_time' ,'updated', 'reval_updated'")
 
 	}
 	// Prevent collision between booleans and timestamps
-	if (hasConfigUpdateTimeParam || hasConfigApplyTimeParam) && hasConfigUpdatedBoolParam {
-		return nil, errors.New("conflicting parameters. may not pass `updated` along with either `config_update_time` or `config_apply_time`")
+	if hasConfigApplyTimeParam && hasConfigUpdatedBoolParam {
+		return nil, errors.New("conflicting parameters. may not pass 'updated' along with 'config_apply_time'")
 
 	}
-	if (hasRevalidateUpdateTimeParam || hasRevalidateApplyTimeParam) && hasRevalUpdatedBoolParam {
-		return nil, errors.New("conflicting parameters. may not pass `reval_updated` along with either `revalidate_update_time` or `revalidate_apply_time`")
+	if hasRevalidateApplyTimeParam && hasRevalUpdatedBoolParam {
+		return nil, errors.New("conflicting parameters. may not pass 'reval_updated' along with 'revalidate_apply_time'")
 
 	}
 
 	// Validate and parse parameters before attempting to apply them (don't want to partially apply various status before an error)
 	// Timestamps
-	if hasConfigUpdateTimeParam {
-		configUpdateTime, err := time.Parse(time.RFC3339Nano, configUpdateTimeParam)
-		if err != nil {
-			return nil, errors.New("query parameter 'config_update_time' must be valid RFC3339Nano format")
-		}
-		paramValues.configUpdateTime = &configUpdateTime
-	}
-
-	if hasRevalidateUpdateTimeParam {
-		revalUpdateTime, err := time.Parse(time.RFC3339Nano, revalidateUpdateTimeParam)
-		if err != nil {
-			return nil, errors.New("query parameter 'revalidate_update_time' must be valid RFC3339Nano format")
-		}
-		paramValues.revalUpdateTime = &revalUpdateTime
-	}
-
 	if hasConfigApplyTimeParam {
 		configApplyTime, err := time.Parse(time.RFC3339Nano, configApplyTimeParam)
 		if err != nil {
-			return nil, errors.New("query parameter 'config_apply_time' must be valid RFC3339Nano format")
+			return nil, errors.New("query parameter 'config_apply_time' must be valid RFC3339Nano format:" + err.Error())
 		}
 		paramValues.configApplyTime = &configApplyTime
 	}
@@ -205,33 +184,24 @@ func parseQueryParams(params map[string]string) (*updateValues, error) {
 	if hasRevalidateApplyTimeParam {
 		revalApplyTime, err := time.Parse(time.RFC3339Nano, revalidateApplyTimeParam)
 		if err != nil {
-			return nil, errors.New("query parameter 'revalidate_apply_time' must be valid RFC3339Nano format")
+			return nil, errors.New("query parameter 'revalidate_apply_time' must be valid RFC3339Nano format:" + err.Error())
 		}
 		paramValues.revalApplyTime = &revalApplyTime
 	}
 
 	// Booleans
-	configUpdatedBool := strings.ToLower(configUpdatedBoolParam)
-	revalUpdatedBool := strings.ToLower(revalUpdatedBoolParam)
-
-	if hasConfigUpdatedBoolParam && configUpdatedBool != `t` && configUpdatedBool != `true` && configUpdatedBool != `f` && configUpdatedBool != `false` {
-		return nil, errors.New("query parameter 'updated' must be 'true' or 'false'")
-	}
-	if hasRevalUpdatedBoolParam && revalUpdatedBool != `t` && revalUpdatedBool != `true` && revalUpdatedBool != `f` && revalUpdatedBool != `false` {
-		return nil, errors.New("query parameter 'reval_updated' must be 'true' or 'false'")
-	}
-
-	strToBool := func(s string) bool {
-		return strings.HasPrefix(s, "t")
-	}
-
 	if hasConfigUpdatedBoolParam {
-		updateBool := strToBool(configUpdatedBool)
-		paramValues.configUpdateBool = &updateBool
+		updatedBool, err := strconv.ParseBool(configUpdatedBoolParam)
+		if err != nil {
+			return nil, errors.New("query parameter 'updated' must be a boolean")
+		}
+		paramValues.configUpdateBool = &updatedBool
 	}
-
 	if hasRevalUpdatedBoolParam {
-		revalUpdatedBool := strToBool(revalUpdatedBool)
+		revalUpdatedBool, err := strconv.ParseBool(revalUpdatedBoolParam)
+		if err != nil {
+			return nil, errors.New("query parameter 'reval_updated' must be a boolean")
+		}
 		paramValues.revalUpdateBool = &revalUpdatedBool
 	}
 	return &paramValues, nil
@@ -240,19 +210,6 @@ func parseQueryParams(params map[string]string) (*updateValues, error) {
 // setUpdateStatuses set timestamps for config update/apply and revalidation
 // update/apply. If any value is nil, no changes occur
 func setUpdateStatuses(tx *sql.Tx, serverID int64, values updateValues) error {
-
-	if values.configUpdateTime != nil {
-		if err := dbhelpers.QueueUpdateForServerWithTime(tx, serverID, *values.configUpdateTime); err != nil {
-			return fmt.Errorf("setting config apply time: %w", err)
-		}
-	}
-
-	if values.revalUpdateTime != nil {
-		if err := dbhelpers.QueueRevalForServerWithTime(tx, serverID, *values.revalUpdateTime); err != nil {
-			return fmt.Errorf("setting reval apply time: %w", err)
-		}
-	}
-
 	if values.configApplyTime != nil {
 		if err := dbhelpers.SetApplyUpdateForServerWithTime(tx, serverID, *values.configApplyTime); err != nil {
 			return fmt.Errorf("setting config apply time: %w", err)
@@ -301,12 +258,6 @@ func responseMessage(idOrName string, values updateValues) string {
 		respMsg += " reval_updated=" + strconv.FormatBool(*values.revalUpdateBool)
 	}
 
-	if values.configUpdateTime != nil {
-		respMsg += " config_update_time=" + (*values.configUpdateTime).Format(time.RFC3339Nano)
-	}
-	if values.revalUpdateTime != nil {
-		respMsg += " revalidate_update_time=" + (*values.revalUpdateTime).Format(time.RFC3339Nano)
-	}
 	if values.configApplyTime != nil {
 		respMsg += " config_apply_time=" + (*values.configApplyTime).Format(time.RFC3339Nano)
 	}
@@ -317,7 +268,7 @@ func responseMessage(idOrName string, values updateValues) string {
 	return respMsg
 }
 
-// UpdateHandler implements an http handler that updates a server's config update and reval times.
+// UpdateHandlerV4 implements an http handler that updates a server's config update and reval times.
 func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id-or-name"}, nil)
 	if userErr != nil || sysErr != nil {

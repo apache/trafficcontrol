@@ -43,21 +43,21 @@ Request Structure
 	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
 	| Name                       | Required | Description                                                                                                  |
 	+============================+==========+==============================================================================================================+
-	| config_update_time         | no       | The value to set for when a queue update is requested for this server. Must be a valid RFC333Nano timestamp. |
+	| updated                    | no       | The value to set for the queue update flag on this server. May be 'true' or 'false'.                         |
+	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| reval_updated              | no       | The value to set for the reval update flag on this server. May be 'true' or 'false'.                         |
 	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
 	| config_apply_time          | no       | The value to set for when a queue update is applied for this server. Must be a valid RFC333Nano timestamp.   |
-	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
-	| revalidate_update_time     | no       | The value to set for when a reval update is requested for this server. Must be a valid RFC333Nano timestamp. |
 	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
 	| revalidate_apply_time      | no       | The value to set for when a reval update is applied for this server. Must be a valid RFC333Nano timestamp.   |
 	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
 
-	.. note:: While none of the timestamps is required individually, at least one must be sent to the API.
+.. note:: While none of the timestamps is required individually, at least one must be sent to the API.
 
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/4.0/servers/my-edge/update?config_update_time=2022-01-31T12%3A00%3A00.123456-07%3A00&revalidate_update_time=2022-01-31T12%3A00%3A00.123456-07%3A00 HTTP/1.1
+	POST /api/4.0/servers/my-edge/update?config_apply_time=2022-01-31T12%3A00%3A00.123456-07%3A00&revalidate_apply_time=2022-01-31T12%3A00%3A00.123456-07%3A00 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -87,7 +87,7 @@ Response Structure
 		"alerts" :
 			[
 				{
-					"text" : "successfully set server 'my-edge' config_update_time=2022-01-31T12:00:00.123456-07:00 revalidate_update_time=2022-01-31T12:00:00.123456-07:00",
+					"text" : "successfully set server 'my-edge' config_apply_time=2022-01-31T12:00:00.123456-07:00 revalidate_apply_time=2022-01-31T12:00:00.123456-07:00",
 					"level" : "success"
 				}
 			]

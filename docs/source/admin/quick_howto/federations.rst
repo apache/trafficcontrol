@@ -48,7 +48,7 @@ Configure Federations
 	.. code-block:: shell
 		:caption: Example cURL Command
 
-		curl -i -XPOST "http://localhost:3000/api/2.0/user/login" -H "Content-Type: application/json" -d '{ "u": "federation_user1", "p": "password" }'
+		curl -i -XPOST "http://localhost:3000/api/4.0/user/login" -H "Content-Type: application/json" -d '{ "u": "federation_user1", "p": "password" }'
 
 	.. code-block:: http
 		:caption: Example API Response
@@ -74,7 +74,7 @@ Configure Federations
 	.. code-block:: shell
 		:caption: Example cURL Command
 
-		curl -ki -H "Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1MTI2LCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---06b4f870d809d82a91433e92eae8320875c3e8b0;" -XPUT 'http://localhost:3000/api/2.0/federations' -d '
+		curl -ki -H "Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1MTI2LCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---06b4f870d809d82a91433e92eae8320875c3e8b0;" -XPUT 'http://localhost:3000/api/4.0/federations' -d '
 		{"federations": [
 			{ "deliveryService": "images-c1",
 				"mappings":

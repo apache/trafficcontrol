@@ -65,6 +65,7 @@ const ParentConfigCacheParamPort = "port"
 const ParentConfigCacheParamUseIP = "use_ip_address"
 const ParentConfigCacheParamRank = "rank"
 const ParentConfigCacheParamNotAParent = "not_a_parent"
+const StrategyConfigUsePeering = "use_peering"
 
 type OriginHost string
 type OriginFQDN string
@@ -162,7 +163,7 @@ func makeParentDotConfigData(
 		return nil, warnings, errors.New("server CDNName missing")
 	} else if server.Cachegroup == nil || *server.Cachegroup == "" {
 		return nil, warnings, errors.New("server Cachegroup missing")
-	} else if server.Profile == nil || *server.Profile == "" {
+	} else if len(server.ProfileNames) == 0 {
 		return nil, warnings, errors.New("server Profile missing")
 	} else if server.TCPPort == nil {
 		return nil, warnings, errors.New("server TCPPort missing")
@@ -237,6 +238,7 @@ func makeParentDotConfigData(
 
 	nameTopologies := makeTopologyNameMap(topologies)
 
+	cgPeers := map[int]Server{}   // map[serverID]server
 	cgServers := map[int]Server{} // map[serverID]server
 	for _, sv := range servers {
 		if sv.ID == nil {
@@ -258,6 +260,15 @@ func makeParentDotConfigData(
 		if *sv.CDNName != *server.CDNName {
 			continue
 		}
+		// save cachegroup peer servers
+		if *sv.CDNName == *server.CDNName && *sv.Cachegroup == *server.Cachegroup {
+			if *sv.Status == string(tc.CacheStatusReported) || *sv.Status == string(tc.CacheStatusOnline) {
+				if _, ok := cgPeers[*sv.ID]; !ok {
+					cgPeers[*sv.ID] = sv
+				}
+			}
+			continue
+		}
 		if _, ok := parentCacheGroups[*sv.Cachegroup]; !ok {
 			continue
 		}
@@ -270,6 +281,15 @@ func makeParentDotConfigData(
 			continue
 		}
 		cgServers[*sv.ID] = sv
+	}
+
+	// save the cache group peers
+	for _, v := range cgPeers {
+		peer := &ParentAbstractionServiceParent{}
+		peer.FQDN = *v.HostName + "." + *v.DomainName
+		peer.Port = *v.TCPPort
+		peer.Weight = 0.999
+		parentAbstraction.Peers = append(parentAbstraction.Peers, peer)
 	}
 
 	cgServerIDs := map[int]struct{}{}
@@ -471,6 +491,11 @@ func makeParentDotConfigData(
 
 			text := &ParentAbstractionService{}
 			text.Name = *ds.XMLID
+
+			// peering ring check
+			if dsParams.UsePeering {
+				secondaryMode = ParentAbstractionServiceParentSecondaryModePeering
+			}
 
 			orgFQDNStr := *ds.OrgServerFQDN
 			// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
@@ -814,6 +839,7 @@ type parentDSParams struct {
 	MaxUnavailableServerRetries     string
 	QueryStringHandling             string
 	TryAllPrimariesBeforeSecondary  bool
+	UsePeering                      bool
 	MergeGroups                     []string
 }
 
@@ -839,7 +865,11 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	if !ok {
 		return params, warnings
 	}
-
+	if val, ok := dsParams[StrategyConfigUsePeering]; ok {
+		if val == "true" {
+			params.UsePeering = true
+		}
+	}
 	// the following may be blank, no default
 	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling]
 	params.MergeGroups = strings.Split(dsParams[ParentConfigParamMergeGroups], " ")
@@ -970,7 +1000,13 @@ func getTopologyParentConfigLine(
 		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
 	}
 	if len(parents) == 0 {
-		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': no parents found! skipping! (Does your Topology have a CacheGroup with no servers in it?)")
+		if len(secondaryParents) > 0 {
+			warnings = append(warnings, "getting topology parents for '"+*ds.XMLID+"': no parents found! using secondary parents")
+			parents = secondaryParents
+			secondaryParents = nil
+		} else {
+			return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': no parents found! skipping! (Does your Topology have a CacheGroup with no servers in it?)")
+		}
 	}
 
 	txt.Parents = parents
@@ -1216,7 +1252,7 @@ func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (profi
 		profileCache.Port = *sv.TCPPort
 	}
 	for _, param := range params {
-		if _, ok := param.ProfileNames[*sv.Profile]; !ok {
+		if _, ok := param.ProfileNames[(sv.ProfileNames)[0]]; !ok {
 			continue
 		}
 		switch param.Name {
@@ -1694,8 +1730,8 @@ func getOriginServersAndProfileCaches(
 		} else if cgSv.TypeID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil TypeID, skipping!")
 			continue
-		} else if cgSv.ProfileID == nil {
-			warnings = append(warnings, "getting origin servers: got server with nil ProfileID, skipping!")
+		} else if len(cgSv.ProfileNames) == 0 {
+			warnings = append(warnings, "getting origin servers: got server with no profile names, skipping!")
 			continue
 		} else if cgSv.CDNID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil CDNID, skipping!")
@@ -1719,7 +1755,6 @@ func getOriginServersAndProfileCaches(
 			CacheGroupID: *cgSv.CachegroupID,
 			Status:       *cgSv.StatusID,
 			Type:         *cgSv.TypeID,
-			ProfileID:    ProfileID(*cgSv.ProfileID),
 			CDN:          *cgSv.CDNID,
 			TypeName:     cgSv.Type,
 			Domain:       *cgSv.DomainName,
@@ -1741,8 +1776,8 @@ func getOriginServersAndProfileCaches(
 		}
 
 		if _, profileCachesHasProfile := profileCaches[realCGServer.ProfileID]; !profileCachesHasProfile {
-			if profileCache, profileParamsHasProfile := profileParams[*cgSv.Profile]; !profileParamsHasProfile {
-				warnings = append(warnings, fmt.Sprintf("cachegroup has server with profile %+v but that profile has no parameters\n", *cgSv.ProfileID))
+			if profileCache, profileParamsHasProfile := profileParams[cgSv.ProfileNames[0]]; !profileParamsHasProfile {
+				warnings = append(warnings, fmt.Sprintf("cachegroup has server with profile %+v but that profile has no parameters\n", cgSv.ProfileNames[0]))
 				profileCaches[realCGServer.ProfileID] = defaultProfileCache()
 			} else {
 				profileCaches[realCGServer.ProfileID] = profileCache
@@ -1761,17 +1796,17 @@ func getParentConfigProfileParams(
 	warnings := []string{}
 	parentConfigServerCacheProfileParams := map[string]profileCache{} // map[profileName]ProfileCache
 	for _, cgServer := range cgServers {
-		if cgServer.Profile == nil {
-			warnings = append(warnings, "getting parent config profile params: server has nil profile, skipping!")
+		if len(cgServer.ProfileNames) == 0 {
+			warnings = append(warnings, "getting parent config profile params: server has nil profiles, skipping!")
 			continue
 		}
-		profileCache, ok := parentConfigServerCacheProfileParams[*cgServer.Profile]
+		profileCache, ok := parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]]
 		if !ok {
 			profileCache = defaultProfileCache()
 		}
-		params, ok := profileParentConfigParams[*cgServer.Profile]
+		params, ok := profileParentConfigParams[cgServer.ProfileNames[0]]
 		if !ok {
-			parentConfigServerCacheProfileParams[*cgServer.Profile] = profileCache
+			parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]] = profileCache
 			continue
 		}
 		for name, val := range params {
@@ -1803,7 +1838,7 @@ func getParentConfigProfileParams(
 				profileCache.NotAParent = val != "false"
 			}
 		}
-		parentConfigServerCacheProfileParams[*cgServer.Profile] = profileCache
+		parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]] = profileCache
 	}
 	return parentConfigServerCacheProfileParams, warnings
 }
@@ -1922,8 +1957,8 @@ func getProfileParentConfigParams(tcParentConfigParams []tc.Parameter) (map[stri
 func getServerParentConfigParams(server *Server, profileParentConfigParams map[string]map[string]string) map[string]string {
 	// We only need parent.config params, don't need all the params on the server
 	serverParams := map[string]string{}
-	if server.Profile == nil || *server.Profile != "" { // TODO warn/error if false? Servers requires profiles
-		for name, val := range profileParentConfigParams[*server.Profile] {
+	if len(server.ProfileNames) != 0 || server.ProfileNames[0] != "" { // TODO warn/error if false? Servers requires profiles
+		for name, val := range profileParentConfigParams[server.ProfileNames[0]] {
 			if name == ParentConfigParamQStringHandling ||
 				name == ParentConfigParamAlgorithm ||
 				name == ParentConfigParamQString {

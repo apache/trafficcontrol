@@ -28,6 +28,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -35,12 +36,30 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const CookieCacheDir = `/var/lib/trafficcontrol-cache-config/`
+
+func CookieCacheFileName(userName string) string {
+	return userName + ".cookie"
+}
+
+func CookieCachePath(userName string) string {
+	return filepath.Join(CookieCacheDir, CookieCacheFileName(userName))
+}
+
 type Cookie struct {
 	Cookie *http.Cookie `json:"cookie"`
 }
 
 type FsCookie struct {
 	Cookies []Cookie `json:"cookies"`
+}
+
+func (fc *FsCookie) GetHTTPCookies() []*http.Cookie {
+	cookies := []*http.Cookie{}
+	for _, cookie := range fc.Cookies {
+		cookies = append(cookies, cookie.Cookie)
+	}
+	return cookies
 }
 
 // GetRetry attempts to get the given object, retrying with exponential backoff up to cfg.NumRetries.

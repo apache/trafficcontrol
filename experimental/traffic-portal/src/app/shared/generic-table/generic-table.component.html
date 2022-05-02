@@ -23,7 +23,7 @@ limitations under the License.
 		<menu class="column-settings" *ngIf="showMenu" (click)="$event.stopPropagation()">
 			<li role="menuitem" *ngFor="let c of columns; orderBy:'colDef.headerName'">
 				<div class="checkbox">
-					<label><input type="checkbox" [checked]="c.isVisible()" (click)="toggleVisibility(c.getColId())">{{c.getColDef().headerName}}</label>
+					<label><input name="column-{{c.getColDef().headerName}}" type="checkbox" [checked]="c.isVisible()" (click)="toggleVisibility(c.getColId())">{{c.getColDef().headerName}}</label>
 				</div>
 			</li>
 		</menu>
@@ -47,7 +47,7 @@ limitations under the License.
 	<ul>
 		<li *ngFor="let item of contextMenuItems" role="menuitem">
 			<a *ngIf="!isAction(item)" [href]="item.href" [target]="item.newTab ? '_blank' : '_self'">{{item.name}}</a>
-			<button *ngIf="isAction(item)" type="button" (click)="emitContextMenuAction(item.action, item.multiRow, $event)" [disabled]="isDisabled(item)">{{item.name}}</button>
+			<button name="{{itemName(item)}}" *ngIf="isAction(item)" type="button" (click)="emitContextMenuAction(item.action, item.multiRow, $event)" [disabled]="isDisabled(item)">{{item.name}}</button>
 		</li>
 	</ul>
 </menu>

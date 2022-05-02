@@ -167,8 +167,6 @@ Traffic Ops Project Tree Overview
 		- tocookie/ - Defines the method of generating the ``mojolicious`` cookie used by Traffic Ops for authentication
 		- vendor/ - contains "vendored" Go packages from third party sources
 
-	- v1-client - The official Traffic Ops Go client package for working with the version 1 :ref:`to-api`.
-	- v2-client - The official Traffic Ops Go client package for working with the version 2 :ref:`to-api`.
 	- v3-client - The official Traffic Ops Go client package for working with the version 3 :ref:`to-api`.
 	- v4-client - The official Traffic Ops Go client package for working with the version 4 :ref:`to-api`.
 	- vendor/ - contains "vendored" Go packages from third party sources
@@ -478,7 +476,7 @@ The integration tests are run using :manpage:`go-test(1)`, with two configuratio
 
 	Specify the path to a file containing static data for the tests to use. This should almost never be used, because many of the tests depend on the data having a certain content and structure. If not specified, it will attempt to read a file named ``tc-fixtures.json`` in the working directory.
 
-.. option:: --includeSystemTests ``no``/``yes``
+.. option:: --includeSystemTests {no|yes}
 
 	Specify whether to run tests that depend on additional components like an SMTP server or a Traffic Vault server. Default: ``no``
 

@@ -16,7 +16,9 @@ package v4
 */
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"testing"
@@ -24,220 +26,180 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestDeliveryServiceRequestComments(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests, DeliveryServiceRequestComments}, func() {
-		GetTestDeliveryServiceRequestCommentsIMS(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		header.Set(rfc.IfModifiedSince, time)
-		SortTestDeliveryServiceRequestComments(t)
-		UpdateTestDeliveryServiceRequestComments(t)
-		UpdateTestDeliveryServiceRequestCommentsWithHeaders(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestDeliveryServiceRequestCommentsWithHeaders(t, header)
-		GetTestDeliveryServiceRequestComments(t)
-		GetTestDeliveryServiceRequestCommentsIMSAfterChange(t, header)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when VALID ID parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(GetDSRequestCommentId(t, "admin")())}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
+				},
+				"VALIDATE SORT when DEFAULT is ASC ORDER": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSortedDSRequestComments()),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"deliveryServiceRequestId": GetDSRequestId(t, "test-ds1")(),
+						"value":                    "updated comment",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Header": {
+					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody:   map[string]interface{}{},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{},
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					comment := tc.DeliveryServiceRequestComment{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &comment)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceRequestComments(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestComment(testCase.EndpointId(), comment, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestDeliveryServiceRequestCommentsWithHeaders(t *testing.T, header http.Header) {
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	comments, _, _ := TOSession.GetDeliveryServiceRequestComments(opts)
+func GetDSRequestCommentId(t *testing.T, author string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("author", author)
 
-	if len(comments.Response) > 0 {
-		firstComment := comments.Response[0]
-		newFirstCommentValue := "new comment value"
-		firstComment.Value = newFirstCommentValue
+		resp, _, err := TOSession.GetDeliveryServiceRequestComments(opts)
+		assert.RequireNoError(t, err, "Get Delivery Service Request Comments failed with error: %v", err)
+		assert.RequireGreaterOrEqual(t, len(resp.Response), 1, "Expected delivery service request comments response object length of atleast 1, but got %d", len(resp.Response))
+		assert.RequireNotNil(t, resp.Response[0].ID, "Expected id to not be nil")
 
-		_, reqInf, err := TOSession.UpdateDeliveryServiceRequestComment(firstComment.ID, firstComment, opts)
-		if err == nil {
-			t.Errorf("expected precondition failed error, but got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-		}
+		return resp.Response[0].ID
 	}
 }
 
-func GetTestDeliveryServiceRequestCommentsIMSAfterChange(t *testing.T, header http.Header) {
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	resp, reqInf, err := TOSession.GetDeliveryServiceRequestComments(opts)
-	if err != nil {
-		t.Fatalf("could not get Delivery Service Request Comments: %v - alerts: %+v", err, resp.Alerts)
+func GetDSRequestId(t *testing.T, xmlId string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("xmlId", xmlId)
+
+		resp, _, err := TOSession.GetDeliveryServiceRequests(opts)
+		assert.RequireNoError(t, err, "Get Delivery Service Requests failed with error: %v", err)
+		assert.RequireGreaterOrEqual(t, len(resp.Response), 1, "Expected delivery service requests response object length of atleast 1, but got %d", len(resp.Response))
+		assert.RequireNotNil(t, resp.Response[0].ID, "Expected id to not be nil")
+
+		return *resp.Response[0].ID
 	}
-	if reqInf.StatusCode != http.StatusOK {
-		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-	}
-	opts.Header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	resp, reqInf, err = TOSession.GetDeliveryServiceRequestComments(opts)
-	if err != nil {
-		t.Fatalf("could not get Delivery Service Request Comments: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+}
+
+func validateSortedDSRequestComments() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, err error) {
+		var sortedList []string
+		dsReqComments := resp.([]tc.DeliveryServiceRequestComment)
+
+		for _, comment := range dsReqComments {
+			sortedList = append(sortedList, comment.XMLID)
+		}
+
+		res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+			return sortedList[p] < sortedList[q]
+		})
+		assert.Equal(t, res, true, "List is not sorted by their names: %v", sortedList)
 	}
 }
 
 func CreateTestDeliveryServiceRequestComments(t *testing.T) {
-	if len(testData.DeliveryServiceRequests) < 1 {
-		t.Fatal("Need at least one Delivery Service Request to test creating Delivery Service Request Comments")
-	}
-
-	// Retrieve a delivery service request by xmlId so we can get the ID needed to create a dsr comment
-	dsr := testData.DeliveryServiceRequests[0]
-	var ds *tc.DeliveryServiceV4
-	if dsr.ChangeType == tc.DSRChangeTypeDelete {
-		ds = dsr.Original
-	} else {
-		ds = dsr.Requested
-	}
-	resetDS(ds)
-	if ds == nil || ds.XMLID == nil {
-		t.Fatal("first DSR in the test data had a nil Delivery Service, or one with no XMLID")
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", *ds.XMLID)
-	resp, _, err := TOSession.GetDeliveryServiceRequests(opts)
-	if err != nil {
-		t.Fatalf("cannot get Delivery Service Request by XMLID '%s': %v - alerts: %+v", *ds.XMLID, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("found %d Delivery Service request by XMLID '%s, expected exactly one", len(resp.Response), *ds.XMLID)
-	}
-	respDSR := resp.Response[0]
-	if respDSR.ID == nil {
-		t.Fatalf("got Delivery Service Request with xml_id '%s' that had a null ID", *ds.XMLID)
-	}
-
 	for _, comment := range testData.DeliveryServiceRequestComments {
-		comment.DeliveryServiceRequestID = *respDSR.ID
-		resp, _, err := TOSession.CreateDeliveryServiceRequestComment(comment, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("could not create Delivery Service Request Comment: %v - alerts: %+v", err, resp.Alerts)
-		}
-	}
-}
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("xmlId", comment.XMLID)
+		resp, _, err := TOSession.GetDeliveryServiceRequests(opts)
+		assert.NoError(t, err, "Cannot get Delivery Service Request by XMLID '%s': %v - alerts: %+v", comment.XMLID, err, resp.Alerts)
+		assert.Equal(t, len(resp.Response), 1, "Found %d Delivery Service request by XMLID '%s, expected exactly one", len(resp.Response), comment.XMLID)
+		assert.NotNil(t, resp.Response[0].ID, "Got Delivery Service Request with xml_id '%s' that had a null ID", comment.XMLID)
 
-func SortTestDeliveryServiceRequestComments(t *testing.T) {
-	var sortedList []string
-	resp, _, err := TOSession.GetDeliveryServiceRequestComments(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-	}
-	for _, dsrc := range resp.Response {
-		sortedList = append(sortedList, dsrc.XMLID)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
-
-	comments, _, err := TOSession.GetDeliveryServiceRequestComments(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Service Request Comments: %v - alerts: %+v", err, comments.Alerts)
-	}
-	if len(comments.Response) < 1 {
-		t.Fatal("Expected at least one Delivery Service Request Comment to exist in Traffic Ops - none did")
-	}
-	firstComment := comments.Response[0]
-	newFirstCommentValue := "new comment value"
-	firstComment.Value = newFirstCommentValue
-
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateDeliveryServiceRequestComment(firstComment.ID, firstComment, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update Delivery Service Request Comment #%d: %v - alerts: %+v", firstComment.ID, err, alert.Alerts)
-	}
-
-	// Retrieve the delivery service request comment to check that the value got updated
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("id", strconv.Itoa(firstComment.ID))
-	resp, _, err := TOSession.GetDeliveryServiceRequestComments(opts)
-	if err != nil {
-		t.Errorf("cannot get Delivery Service Request Comment #%d: %v - alerts: %+v", firstComment.ID, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Delivery Service Request Comment to exist with ID %d, found: %d", firstComment.ID, len(resp.Response))
-	}
-	respDSRC := resp.Response[0]
-	if respDSRC.Value != newFirstCommentValue {
-		t.Errorf("results do not match actual: %s, expected: %s", respDSRC.Value, newFirstCommentValue)
-	}
-
-}
-
-func GetTestDeliveryServiceRequestCommentsIMS(t *testing.T) {
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-
-	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	resp, reqInf, err := TOSession.GetDeliveryServiceRequestComments(opts)
-	if err != nil {
-		t.Fatalf("could not get Delivery Service Request Comments: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-	}
-}
-
-func GetTestDeliveryServiceRequestComments(t *testing.T) {
-	comments, _, err := TOSession.GetDeliveryServiceRequestComments(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Service Request Comments: %v - alerts: %+v", err, comments.Alerts)
-	}
-
-	opts := client.NewRequestOptions()
-	for _, comment := range comments.Response {
-		opts.QueryParameters.Set("id", strconv.Itoa(comment.ID))
-		resp, _, err := TOSession.GetDeliveryServiceRequestComments(opts)
-		if err != nil {
-			t.Errorf("cannot get Delivery Service Request Comment by id %d: %v - alerts: %+v", comment.ID, err, resp.Alerts)
-		}
+		comment.DeliveryServiceRequestID = *resp.Response[0].ID
+		alerts, _, err := TOSession.CreateDeliveryServiceRequestComment(comment, client.RequestOptions{})
+		assert.NoError(t, err, "Could not create Delivery Service Request Comment: %v - alerts: %+v", err, alerts.Alerts)
 	}
 }
 
 func DeleteTestDeliveryServiceRequestComments(t *testing.T) {
 	comments, _, err := TOSession.GetDeliveryServiceRequestComments(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Service Request Comments: %v - alerts: %+v", err, comments.Alerts)
-	}
+	assert.NoError(t, err, "Unexpected error getting Delivery Service Request Comments: %v - alerts: %+v", err, comments.Alerts)
 
-	opts := client.NewRequestOptions()
 	for _, comment := range comments.Response {
 		resp, _, err := TOSession.DeleteDeliveryServiceRequestComment(comment.ID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot delete Delivery Service Request Comment #%d: %v - alerts: %+v", comment.ID, err, resp.Alerts)
-		}
+		assert.NoError(t, err, "Cannot delete Delivery Service Request Comment #%d: %v - alerts: %+v", comment.ID, err, resp.Alerts)
 
 		// Retrieve the delivery service request comment to see if it got deleted
+		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("id", strconv.Itoa(comment.ID))
 		comments, _, err := TOSession.GetDeliveryServiceRequestComments(opts)
-		if err != nil {
-			t.Errorf("Unexpected error fetching Delivery Service Request Comment %d after deletion: %v - alerts: %+v", comment.ID, err, comments.Alerts)
-		}
-		if len(comments.Response) > 0 {
-			t.Errorf("expected Delivery Service Request Comment #%d to be deleted, but it was found in Traffic Ops", comment.ID)
-		}
+		assert.NoError(t, err, "Unexpected error fetching Delivery Service Request Comment %d after deletion: %v - alerts: %+v", comment.ID, err, comments.Alerts)
+		assert.Equal(t, len(comments.Response), 0, "Expected Delivery Service Request Comment #%d to be deleted, but it was found in Traffic Ops", comment.ID)
 	}
 }

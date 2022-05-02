@@ -16,208 +16,118 @@
 package v4
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"testing"
-	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestDeliveryServicesRegexes(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, DeliveryServicesRegexes}, func() {
-		QueryDSRegexTest(t)
-		QueryDSRegexTestIMS(t)
-		CreateTestDSRegexWithMissingPattern(t)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"OK when VALID request": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(3)),
+				},
+				"OK when VALID ID parameter": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestOpts:  client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(getDSRegexID(t, "ds1"))}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
+				},
+			},
+			"POST": {
+				"BAD REQUEST when MISSING REGEX PATTERN": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"type":      GetTypeId(t, "HOST_REGEXP"),
+						"setNumber": 3,
+						"pattern":   "",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+
+					dsRegex := tc.DeliveryServiceRegexPost{}
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &dsRegex)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceRegexesByDSID(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.PostDeliveryServiceRegexesByDSID(testCase.EndpointId(), dsRegex, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+
+					}
+				}
+			})
+		}
 	})
 }
 
+func getDSRegexID(t *testing.T, dsName string) int {
+	resp, _, err := TOSession.GetDeliveryServiceRegexesByDSID(GetDeliveryServiceId(t, dsName)(), client.RequestOptions{})
+	assert.RequireNoError(t, err, "Get Delivery Service Regex failed with error: %v", err)
+	assert.RequireGreaterOrEqual(t, len(resp.Response), 1, "Expected delivery service regex response object length 1, but got %d", len(resp.Response))
+	assert.RequireNotNil(t, resp.Response[0].ID, "Expected id to not be nil")
+
+	return resp.Response[0].ID
+}
+
 func CreateTestDeliveryServicesRegexes(t *testing.T) {
-	db, err := OpenConnection()
-	if err != nil {
-		t.Fatal("cannot open db")
-	}
-	defer func() {
-		err := db.Close()
-		if err != nil {
-			t.Errorf("unable to close connection to db, error: %v", err)
+	for _, dsRegex := range testData.DeliveryServicesRegexes {
+		dsID := GetDeliveryServiceId(t, dsRegex.DSName)()
+		typeId := GetTypeId(t, dsRegex.TypeName)
+		dsRegexPost := tc.DeliveryServiceRegexPost{
+			Type:      typeId,
+			SetNumber: dsRegex.SetNumber,
+			Pattern:   dsRegex.Pattern,
 		}
-	}()
-
-	dbRegexInsertTemplate := "INSERT INTO regex (pattern, type) VALUES ('%v', '%v');"
-	dbRegexQueryTemplate := "SELECT id FROM regex order by id desc limit 1;"
-	dbDSRegexInsertTemplate := "INSERT INTO deliveryservice_regex (deliveryservice, regex, set_number) VALUES ('%v', '%v', '%v');"
-
-	for i, regex := range testData.DeliveryServicesRegexes {
-		loadDSRegexIDs(t, &regex)
-
-		err = execSQL(db, fmt.Sprintf(dbRegexInsertTemplate, regex.Pattern, regex.Type))
-		if err != nil {
-			t.Fatalf("unable to create regex: %v", err)
-		}
-
-		row := db.QueryRow(dbRegexQueryTemplate)
-		err = row.Scan(&regex.ID)
-		if err != nil {
-			t.Fatalf("unable to query regex: %v", err)
-		}
-
-		err = execSQL(db, fmt.Sprintf(dbDSRegexInsertTemplate, regex.DSID, regex.ID, regex.SetNumber))
-		if err != nil {
-			t.Fatalf("unable to create ds regex %v", err)
-		}
-
-		testData.DeliveryServicesRegexes[i] = regex
+		alerts, _, err := TOSession.PostDeliveryServiceRegexesByDSID(dsID, dsRegexPost, client.RequestOptions{})
+		assert.NoError(t, err, "Could not create Delivery Service Regex: %v - alerts: %+v", err, alerts)
 	}
 }
 
 func DeleteTestDeliveryServicesRegexes(t *testing.T) {
 	db, err := OpenConnection()
-	if err != nil {
-		t.Fatal("cannot open db")
-	}
+	assert.RequireNoError(t, err, "Cannot open db: %v", err)
 	defer func() {
 		err := db.Close()
-		if err != nil {
-			t.Errorf("unable to close connection to db, error: %v", err)
-		}
+		assert.NoError(t, err, "Unable to close connection to db: %v", err)
 	}()
 
 	for _, regex := range testData.DeliveryServicesRegexes {
 		err = execSQL(db, fmt.Sprintf("DELETE FROM deliveryservice_regex WHERE deliveryservice = '%v' and regex ='%v';", regex.DSID, regex.ID))
-		if err != nil {
-			t.Fatalf("unable to delete deliveryservice_regex by regex %v and ds %v: %v", regex.ID, regex.DSID, err)
-		}
+		assert.RequireNoError(t, err, "Unable to delete deliveryservice_regex by regex %v and ds %v: %v", regex.ID, regex.DSID, err)
 
 		err := execSQL(db, fmt.Sprintf("DELETE FROM regex WHERE Id = '%v';", regex.ID))
-		if err != nil {
-			t.Fatalf("unable to delete regex %v: %v", regex.ID, err)
-		}
-	}
-}
-
-// Note that this test is liable to break if the structure of the Delivery
-// Service Regular Expressions in the test data is changed at all.
-func CreateTestDSRegexWithMissingPattern(t *testing.T) {
-	if len(testData.DeliveryServicesRegexes) < 4 {
-		t.Fatal("Need at least 4 Delivery Service Regular Expressions to test creating a Delivery Service Regular Expression with a missing pattern")
-	}
-	var regex = testData.DeliveryServicesRegexes[3]
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", regex.DSName)
-	ds, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("unable to get ds '%s': %v - alerts: %+v", regex.DSName, err, ds.Alerts)
-	}
-	if len(ds.Response) == 0 {
-		t.Fatalf("unable to get ds %v", regex.DSName)
-	}
-
-	var dsID int
-	if ds.Response[0].ID == nil {
-		t.Fatal("ds has a nil id")
-	} else {
-		dsID = *ds.Response[0].ID
-	}
-
-	regexPost := tc.DeliveryServiceRegexPost{Type: regex.Type, SetNumber: regex.SetNumber, Pattern: regex.Pattern}
-
-	_, reqInfo, _ := TOSession.PostDeliveryServiceRegexesByDSID(dsID, regexPost, client.RequestOptions{})
-	if reqInfo.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected: %v, but got: %v", http.StatusBadRequest, reqInfo.StatusCode)
-	}
-}
-
-func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
-	if test == nil {
-		t.Error("loadDSRegexIDs called with nil test")
-		return
-	}
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", test.TypeName)
-	dsTypes, _, err := TOSession.GetTypes(opts)
-	if err != nil {
-		t.Errorf("unable to get Types filtered by name '%s': %v - alerts: %+v", test.TypeName, err, dsTypes.Alerts)
-		return
-	}
-	if len(dsTypes.Response) < 1 {
-		t.Errorf("could not find any types by name '%s'", test.TypeName)
-		return
-	}
-	test.Type = dsTypes.Response[0].ID
-
-	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", test.DSName)
-	dses, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("unable to ds by xmlid %v: %v - alerts: %+v", test.DSName, err, dses.Alerts)
-		return
-	}
-	if len(dses.Response) != 1 {
-		t.Errorf("unable to find ds by xmlid %v", test.DSName)
-		return
-	}
-	if dses.Response[0].ID == nil {
-		t.Error("Delivery Service had a null or undefined ID")
-		return
-	}
-	test.DSID = *dses.Response[0].ID
-}
-
-func QueryDSRegexTestIMS(t *testing.T) {
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-
-	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	opts.QueryParameters.Set("xmlId", "ds1")
-	resp, reqInf, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by XMLID 'ds1': %v - alerts: %+v", err, resp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-	}
-}
-
-// Note that this test will break if the Delivery Service in the test data with
-// the XMLID 'ds1' is removed or altered such that its regular expressions are
-// different than at the time of this writing.
-func QueryDSRegexTest(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", "ds1")
-	ds, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("unable to get ds 'ds1': %v - alerts: %+v", err, ds.Alerts)
-	}
-	if len(ds.Response) == 0 {
-		t.Fatal("unable to get ds ds1")
-	}
-	var dsID int
-	if ds.Response[0].ID == nil {
-		t.Fatal("ds has a nil id")
-	} else {
-		dsID = *ds.Response[0].ID
-	}
-
-	dsRegexes, _, err := TOSession.GetDeliveryServiceRegexesByDSID(dsID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error fetching Regular Expressions for Delivery Service 'ds1' (#%d): %v - alerts: %+v", dsID, err, dsRegexes.Alerts)
-	}
-	if len(dsRegexes.Response) != 4 {
-		t.Fatalf("expected to get 4 Regular Expressions for Delivery Service 'ds1' (#%d), got: %d", dsID, len(dsRegexes.Response))
-	}
-	regExpID := dsRegexes.Response[0].ID
-	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("id", strconv.Itoa(regExpID))
-	dsRegexes, _, err = TOSession.GetDeliveryServiceRegexesByDSID(dsID, opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Regular Expressions for Delivery Service 'ds1' (#%d) filtered by Regular Expression ID %d: %v - alerts: %+v", dsID, regExpID, err, dsRegexes.Alerts)
-	}
-	if len(dsRegexes.Response) != 1 {
-		t.Fatalf("expected to get 1 Regular Expression for Delivery Service 'ds1' (#%d) that has ID %d, got: %d", dsID, regExpID, len(dsRegexes.Response))
+		assert.RequireNoError(t, err, "Unable to delete regex %v: %v", regex.ID, err)
 	}
 }

@@ -16,6 +16,7 @@
 package org.apache.traffic_control.traffic_router.core.ds;
 
 import org.apache.traffic_control.traffic_router.core.util.AbstractResourceWatcher;
+import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,7 +24,7 @@ public class SteeringWatcher extends AbstractResourceWatcher {
 	private static final Logger LOGGER = LogManager.getLogger(SteeringWatcher.class);
 	private SteeringRegistry steeringRegistry;
 
-	public static final String DEFAULT_STEERING_DATA_URL = "https://${toHostname}/api/2.0/steering";
+	public static final String DEFAULT_STEERING_DATA_URL = "https://${toHostname}/api/"+TrafficOpsUtils.TO_API_VERSION+"/steering";
 
 	public SteeringWatcher() {
 		setDatabaseUrl(DEFAULT_STEERING_DATA_URL);

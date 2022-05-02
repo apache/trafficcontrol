@@ -533,7 +533,7 @@ func (cl *TOClient) GetStatuses() ([]tc.Status, toclientlib.ReqInf, error) {
 	err := torequtil.GetRetry(cl.NumRetries, "statuses", &statuses, func(obj interface{}) error {
 		toStatus, toReqInf, err := cl.c.GetStatuses()
 		if err != nil {
-			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+			return errors.New("getting old server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		status := obj.(*[]tc.Status)
 		*status = toStatus
@@ -541,7 +541,7 @@ func (cl *TOClient) GetStatuses() ([]tc.Status, toclientlib.ReqInf, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, reqInf, errors.New("getting server update status: " + err.Error())
+		return nil, reqInf, errors.New("getting old server update status: " + err.Error())
 	}
 	return statuses, reqInf, nil
 }
