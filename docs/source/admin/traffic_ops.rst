@@ -590,16 +590,14 @@ This file sets authentication options for connections to Riak when used as the T
 
 .. impl-detail:: The name of this file is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
 
-.. _backends.conf:
-
 backends.conf
 """""""""""""
 This file deals with the configuration parameters of running Traffic Ops as a reverse proxy for certain endpoints that need to be served externally by other backend services. It is a JSON-format set of options and their respective values. `traffic_ops_golang`_ will use whatever file is specified (if any) by its :option:`--backendcfg` option. The keys of the file are described below.
 
 :routes: This is an array of options to configure Traffic Ops to forward requests of specified types to the appropriate backends.
 
-	:path:              The regex matching the endpoint that will be served by the backend, for example, `^api/4.0/foo?$`.
-	:method:            The HTTP method for the above mentioned path, for example, `GET` or `PUT`.
+	:path:              The regex matching the endpoint that will be served by the backend, for example, :regexp:`^api/4.0/foo?$`.
+	:method:            The HTTP method for the above mentioned path, for example, ``GET`` or ``PUT``.
 	:routeId:           The integral identifier for the new route being added.
 	:hosts:             An array of the host object, which specifies the protocol, hostname and port where the request (if matched) needs to be forwarded to.
 
@@ -607,9 +605,9 @@ This file deals with the configuration parameters of running Traffic Ops as a re
 		:hostname:     The hostname of the server where the backend service is running.
 		:port:         The port (integer) on the backend server where the service is running.
 
-	:insecure:          A boolean specifying whether or not TO should verify the backend server's certificate chain and host name. This is not recommended for production use. This is an optional parameter, defaulting to `false` when not present.
+	:insecure:          A boolean specifying whether or not TO should verify the backend server's certificate chain and host name. This is not recommended for production use. This is an optional parameter, defaulting to ``false`` when not present.
 	:permissions:       An array of permissions (strings) specifying the permissions required by the user to use this API route.
-	:opts:              A collection of key value pairs to control how the requests should be forwarded/ handled, for example, `"alg": "roundrobin"`. Currently, only `roundrobin` is supported (which is also the default if nothing is specified) by Traffic Ops.
+	:opts:              A collection of key value pairs to control how the requests should be forwarded/ handled, for example, ``"alg": "roundrobin"``. Currently, only ``roundrobin`` is supported (which is also the default if nothing is specified) by Traffic Ops.
 
 Example backends.conf
 '''''''''''''''''''''

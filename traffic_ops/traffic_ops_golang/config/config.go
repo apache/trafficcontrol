@@ -36,16 +36,19 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
+// Options is a structure used to hold the route configuration options that can be supplied for the backend routes.
 type Options struct {
 	Algorithm string `json:"alg"`
 }
 
+// Host is a structure that holds the host info for the backend route.
 type Host struct {
 	Protocol string `json:"protocol"`
 	Hostname string `json:"hostname"`
 	Port     int    `json:"port"`
 }
 
+// BackendRoute holds all the information about a configured route, for which Traffic Ops serves as a reverse proxy.
 type BackendRoute struct {
 	Path        string   `json:"path"`
 	Method      string   `json:"method"`
@@ -57,6 +60,7 @@ type BackendRoute struct {
 	Index       int
 }
 
+// BackendConfig is a structure that holds the configuration supplied to Traffic Ops, which makes it act as a reverse proxy to the specified routes.
 type BackendConfig struct {
 	Routes []BackendRoute `json:"routes"`
 }
