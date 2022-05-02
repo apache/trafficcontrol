@@ -11,6 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import type { ServersPageObject } from "../page_objects/servers";
 import type { TestSuite } from "../globals";
 import type { LoginPageObject } from "../page_objects/login";
 
@@ -22,20 +23,20 @@ const suite: TestSuite = {
 		const loginPage: LoginPageObject = browser.page.login();
 		loginPage.navigate().section.loginForm.login(username, password);
 
-		browser.waitForElementPresent("main").page.servers().navigate()
-			.waitForElementPresent(".ag-row").section.serversTable
-			.searchText("edge")
-			.parent.assert.urlContains("search=edge")
-			.api.elements("css selector", ".ag-row:not(.ag-hidden .ag-row)",
-				(result: { status: number; value: { message: unknown; length: unknown } }) => {
-					if (result.status === 1) {
-						browser.assert.equal(true, false, `failed to select ag-grid rows: ${result.value.message}`);
-						return;
-					}
-					browser.assert.equal(result.value.length, 1)
-						.end();
+		const page: ServersPageObject = browser.waitForElementPresent("main").page.servers().navigate();
+		page.pause(4000);
+		let tbl = page.waitForElementPresent(".ag-row", ).section.serversTable;
+		tbl = tbl.searchText("edge");
+		tbl.parent.assert.urlContains("search=edge");
+		tbl.api.elements("css selector", ".ag-row:not(.ag-hidden .ag-row)",
+			result => {
+				if (result.status === 1) {
+					browser.assert.equal(true, false, `failed to select ag-grid rows: ${result.value.message}`);
+					return;
 				}
-			);
+				browser.assert.equal(result.value.length, 1).end();
+			}
+		);
 	}
 };
 
