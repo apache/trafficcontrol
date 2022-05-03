@@ -12,6 +12,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import * as https from "https";
+
+import axios, {AxiosError} from "axios";
 import type {NightwatchBrowser, NightwatchGlobals} from "nightwatch";
 import type {CommonPageObject} from "nightwatch/page_objects/common";
 import type {DeliveryServiceCardPageObject} from "nightwatch/page_objects/deliveryServiceCard";
@@ -20,8 +23,6 @@ import type {DeliveryServiceInvalidPageObject} from "nightwatch/page_objects/del
 import type {LoginPageObject} from "nightwatch/page_objects/login";
 import type {ServersPageObject} from "nightwatch/page_objects/servers";
 import type {UsersPageObject} from "nightwatch/page_objects/users";
-import axios, {AxiosError} from "axios";
-import * as https from "https";
 import {
 	CDN,
 	GeoLimit, GeoProvider, LoginRequest,
