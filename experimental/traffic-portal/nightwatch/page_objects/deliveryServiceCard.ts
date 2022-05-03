@@ -47,7 +47,7 @@ const deliveryServiceCardPageObject = {
 								reject(new Error(`Unable to find by css mat-card#${xmlId}`));
 								return;
 							}
-							this.waitForElementVisible(`div#${xmlId}Content`,
+							this.waitForElementVisible(`mat-card#${xmlId} mat-card-content > div`,
 								undefined, undefined, undefined, () => {
 									resolve(true);
 								});
@@ -57,7 +57,7 @@ const deliveryServiceCardPageObject = {
 				async viewDetails(xmlId: string): Promise<boolean> {
 					await this.expandDS(xmlId);
 					return new Promise((resolve) => {
-						this.click("css selector", `a#${xmlId}Details`, () => {
+						this.click("css selector", `mat-card#${xmlId} mat-card-actions > a`, () => {
 							browser.assert.urlContains("deliveryservice");
 							resolve(true);
 						});

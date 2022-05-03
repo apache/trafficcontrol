@@ -20,6 +20,16 @@ import type {DeliveryServiceInvalidPageObject} from "nightwatch/page_objects/del
 import type {LoginPageObject} from "nightwatch/page_objects/login";
 import type {ServersPageObject} from "nightwatch/page_objects/servers";
 import type {UsersPageObject} from "nightwatch/page_objects/users";
+import axios, {AxiosError} from "axios";
+import * as https from "https";
+import {
+	CDN,
+	GeoLimit, GeoProvider, LoginRequest,
+	Protocol,
+	RequestDeliveryService,
+	ResponseCDN,
+	ResponseDeliveryService
+} from "trafficops-types";
 
 /**
  * Defines the global nightwatch browser type with our types mixed in.
@@ -48,6 +58,90 @@ const globals = {
 	adminPass: "twelve12",
 	adminUser: "admin",
 	apiVersion: "4.0",
+	before: async (done: () => void): Promise<void> => {
+		const apiUrl = `${globals.trafficOpsURL}/api/${globals.apiVersion}`;
+		const client = axios.create({
+			httpsAgent: new https.Agent({
+				rejectUnauthorized: false
+			})
+		});
+		let accessToken = "";
+		const loginReq: LoginRequest = {
+			p: globals.adminPass,
+			u: globals.adminUser
+		};
+		try {
+			const resp = await client.post(`${apiUrl}/user/login`, JSON.stringify(loginReq));
+			if(resp.headers["set-cookie"]) {
+				for (const cookie of resp.headers["set-cookie"]) {
+					if(cookie.indexOf("access_token") > -1) {
+						accessToken = cookie;
+						break;
+					}
+				}
+			}
+		} catch (e) {
+			console.error((e as AxiosError).message);
+			return Promise.reject();
+		}
+		if(accessToken === "") {
+			console.error("Access token is not set");
+			return Promise.reject();
+		}
+		client.defaults.headers.common = { Cookie: accessToken };
+
+		const cdn: CDN = {
+			dnssecEnabled: false, domainName: "tests.com", name: "testCDN"
+		};
+		let respCDN: ResponseCDN;
+		try {
+			let resp = await client.post(`${apiUrl}/cdns`, JSON.stringify(cdn));
+			respCDN = resp.data.response;
+
+			const ds: RequestDeliveryService = {
+				active: false,
+				cacheurl: null,
+				cdnId: respCDN.id,
+				displayName: "test DS",
+				dscp: 0,
+				ecsEnabled: false,
+				edgeHeaderRewrite: null,
+				fqPacingRate: null,
+				geoLimit: GeoLimit.NONE,
+				geoProvider: GeoProvider.MAX_MIND,
+				httpBypassFqdn: null,
+				infoUrl: null,
+				initialDispersion: 1,
+				ipv6RoutingEnabled: false,
+				logsEnabled: false,
+				maxOriginConnections: 0,
+				maxRequestHeaderBytes: 0,
+				midHeaderRewrite: null,
+				missLat: 0,
+				missLong: 0,
+				multiSiteOrigin: false,
+				orgServerFqdn: "http://test.com",
+				profileId: 1,
+				protocol: Protocol.HTTP,
+				qstringIgnore: 0,
+				rangeRequestHandling: 0,
+				regionalGeoBlocking: false,
+				remapText: null,
+				routingName: "test",
+				signed: false,
+				tenantId: 1,
+				typeId: 1,
+				xmlId: "testDS"
+			};
+			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
+			const respDS: ResponseDeliveryService = resp.data.response[0];
+			console.log(`Successfully created DS '${respDS.displayName}'`);
+		} catch(e) {
+			console.error((e as AxiosError).message);
+			return Promise.reject();
+		}
+		done();
+	},
 	trafficOpsURL: "https://localhost:6443"
 };
 

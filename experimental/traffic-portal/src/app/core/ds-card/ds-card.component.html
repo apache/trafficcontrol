@@ -19,7 +19,7 @@ limitations under the License.
 		<mat-card-subtitle>{{deliveryService.type ? deliveryService.type : ''}}</mat-card-subtitle>
 	</mat-card-title-group>
 	<mat-card-content class="card-content" *ngIf="open" [@enterAnimation]>
-		<div id="{{deliveryService.xmlId}}Content">
+		<div>
 			<span>Key:&nbsp;{{deliveryService.xmlId}}&nbsp;({{deliveryService.id}})</span><br/>
 			<span *ngIf="deliveryService.protocol">Protocol:&nbsp;{{protocolString}}</span>
 			<mat-divider></mat-divider>
@@ -57,7 +57,7 @@ limitations under the License.
 		</div>
 	</mat-card-content>
 	<mat-card-actions *ngIf="open">
-		<a id="{{deliveryService.xmlId}}Details" mat-raised-button color="accent" class="view-details" routerLink="/core/deliveryservice/{{deliveryService.id}}" title="View Details" aria-label="View Details">
+		<a mat-raised-button color="accent" class="view-details" routerLink="/core/deliveryservice/{{deliveryService.id}}" title="View Details" aria-label="View Details">
 			View Details
 		</a>
 	</mat-card-actions>
