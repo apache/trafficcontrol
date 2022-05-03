@@ -11,22 +11,24 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import type { GlobalConfig } from "nightwatch/globals/globals";
-import { LoginPageObject } from "nightwatch/page_objects/login";
+import type {AugmentedBrowser} from "nightwatch/globals/globals";
 import type { UsersPageObject } from "nightwatch/page_objects/users";
 
 describe("Users Spec", () => {
+	let augBrowser: AugmentedBrowser;
+	before(() => {
+		augBrowser = browser as AugmentedBrowser;
+	});
 	beforeEach(() => {
-		const globals = browser.globals as GlobalConfig;
-		(browser.page.login() as LoginPageObject)
+		augBrowser.page.login()
 			.navigate().section.loginForm
-			.loginAndWait(globals.adminUser, globals.adminPass);
+			.loginAndWait(augBrowser.globals.adminUser, augBrowser.globals.adminPass);
 	});
 
 	it("Filter by username", async () => {
-		const username = (browser.globals as GlobalConfig).adminUser;
+		const username = augBrowser.globals.adminUser;
 
-		const page: UsersPageObject = browser.waitForElementPresent("main").page.users();
+		const page: UsersPageObject = augBrowser.waitForElementPresent("main").page.users();
 		page.navigate()
 			.waitForElementPresent(".ag-row");
 		let tbl = page.section.usersTable;

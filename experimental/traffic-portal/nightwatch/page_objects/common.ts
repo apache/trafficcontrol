@@ -15,7 +15,7 @@
 import {EnhancedPageObject} from "nightwatch";
 
 /**
- * asdf
+ * Defines the type for the common PO
  */
 export type CommonPageObject = EnhancedPageObject<{}, typeof commonPageObject.elements>;
 
