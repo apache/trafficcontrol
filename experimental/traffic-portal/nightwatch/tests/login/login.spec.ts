@@ -11,40 +11,39 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import type { TestSuite } from "../globals";
-import type { LoginPageObject } from "../page_objects/login";
 
-const suite: TestSuite = {
-	"Clear form test": browser => {
-		const page: LoginPageObject = browser.page.login();
-		page.navigate()
-			.section.loginForm
+import {AugmentedBrowser} from "nightwatch/globals/globals";
+
+describe("Login Spec", () => {
+	let augBrowser: AugmentedBrowser;
+	before(() => {
+		augBrowser = browser as AugmentedBrowser;
+	});
+
+	it("Clear form test", () => {
+		augBrowser.page.login()
+			.navigate().section.loginForm
 			.fillOut("test", "asdf")
 			.click("@clearBtn")
 			.assert.containsText("@usernameTxt", "")
 			.assert.containsText("@passwordTxt", "")
 			.end();
-	},
-	"Incorrect password test":  browser => {
-		const page: LoginPageObject = browser.page.login();
-		page.navigate()
-			.section.loginForm
+	});
+	it("Incorrect password test", () => {
+		augBrowser.page.login()
+			.navigate().section.loginForm
 			.login("test", "asdf")
 			.assert.value("@usernameTxt", "test")
 			.assert.value("@passwordTxt", "asdf");
-		page
+		browser.page.common()
 			.assert.containsText("@snackbarEle", "Invalid")
 			.end();
-	},
-	"Login test": browser => {
-		const page: LoginPageObject = browser.page.login();
-		page.navigate()
+	});
+	it("Login test", () => {
+		augBrowser.page.login()
+			.navigate()
 			.section.loginForm
-			.login(browser.globals.adminUser, browser.globals.adminPass)
-			.parent
-			.assert.containsText("@snackbarEle", "Success")
+			.loginAndWait(augBrowser.globals.adminUser, augBrowser.globals.adminPass)
 			.end();
-	}
-};
-
-export default suite;
+	});
+});

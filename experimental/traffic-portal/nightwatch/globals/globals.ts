@@ -12,7 +12,28 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {type NightwatchGlobals} from "nightwatch";
+import type {NightwatchBrowser, NightwatchGlobals} from "nightwatch";
+import type {CommonPageObject} from "nightwatch/page_objects/common";
+import type {DeliveryServiceCardPageObject} from "nightwatch/page_objects/deliveryServiceCard";
+import type {DeliveryServiceDetailPageObject} from "nightwatch/page_objects/deliveryServiceDetail";
+import type {DeliveryServiceInvalidPageObject} from "nightwatch/page_objects/deliveryServiceInvalidationJobs";
+import type {LoginPageObject} from "nightwatch/page_objects/login";
+import type {ServersPageObject} from "nightwatch/page_objects/servers";
+import type {UsersPageObject} from "nightwatch/page_objects/users";
+
+/**
+ * Defines the global nightwatch browser type with our types mixed in.
+ */
+export type AugmentedBrowser = NightwatchBrowser & {globals: GlobalConfig} & {page:
+{
+	common: () => CommonPageObject;
+	deliveryServiceCard: () => DeliveryServiceCardPageObject;
+	deliveryServiceDetail: () => DeliveryServiceDetailPageObject;
+	deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;
+	login: () => LoginPageObject;
+	servers: () => ServersPageObject;
+	users: () => UsersPageObject;
+};};
 
 /**
  * Defines the configuration used for the testing environment
@@ -21,11 +42,13 @@ export interface GlobalConfig extends NightwatchGlobals {
 	adminPass: string;
 	adminUser: string;
 	trafficOpsURL: string;
+	apiVersion: string;
 }
-const config = {
+const globals = {
 	adminPass: "twelve12",
 	adminUser: "admin",
+	apiVersion: "4.0",
 	trafficOpsURL: "https://localhost:6443"
 };
 
-module.exports = config;
+module.exports = globals;

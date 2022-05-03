@@ -35,14 +35,14 @@ limitations under the License.
 				<input matInput [formControl]="toTime" type="time" title="To (time)" name="totime">
 			</mat-form-field>
 		</div>
-		<button mat-raised-button>Refresh</button>
+		<button name="timespanRefresh" mat-raised-button>Refresh</button>
 	</form>
 	<mat-divider></mat-divider>
-	<canvas linechart chartTitle="Bandwidth of Cache Tiers" [chartDataSets]="bandwidthData" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
+	<canvas linechart chartTitle="Bandwidth of Cache Tiers" id="bandwidthData" [chartDataSets]="bandwidthData" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
 		Your browser does not support canvases or Javascript. Normally, this would be a graph of bandwidth data.
 	</canvas>
 	<mat-divider></mat-divider>
-	 <canvas linechart chartTitle="Transactions at the Edge Tier" [chartDataSets]="tpsChartData" chartYAxisLabel="Transactions Per Second" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
+	 <canvas linechart chartTitle="Transactions at the Edge Tier" id="tpsChartData" [chartDataSets]="tpsChartData" chartYAxisLabel="Transactions Per Second" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
 		Your browser does not support canvases or Javascript. Normally, this would be a graph of transaction data.
 	</canvas>
 	<a mat-fab id="invalidate" routerLink="/core/deliveryservice/{{deliveryservice.id}}/invalidation-jobs" title="invalidate content" aria-label="invalidate content">
