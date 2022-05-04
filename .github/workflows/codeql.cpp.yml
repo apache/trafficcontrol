@@ -1,0 +1,72 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: CodeQL - C++
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    paths:
+      - .github/workflows/codeql.cpp.yml
+      - '**.c'
+      - '**.cc'
+      - '**.cpp'
+      - '**.h'
+    types: [ opened, reopened, ready_for_review, synchronize ]
+
+jobs:
+  analyze:
+    name: Analyze C++
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Apache Traffic Server RPM
+        run: |2
+          set -o errexit -o pipefail
+          <<'SHELL_COMMANDS' docker run --rm -i rockylinux:8 |
+            set -o errexit
+            cd /etc/yum.repos.d
+            curl -sLOf --compressed 'https://copr.fedorainfracloud.org/coprs/jered/trafficserver/repo/epel-8/jered-trafficserver-epel-8.repo'
+            dnf -y install yum-utils
+            yumdownloader --urls trafficserver-devel
+          SHELL_COMMANDS
+            tee docker-output
+          rpm_url="$(<docker-output grep -m1 ^http)"
+          curl --compressed -Lfso trafficserver-devel.rpm "$rpm_url"
+
+      - name: Install Apt RPM package
+        run: sudo apt-get install -y --no-install-recommends rpm
+
+      - name: Install Traffic Server RPM
+        run: sudo rpm -Uvh --nodeps trafficserver-devel.rpm
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: cpp
+
+      - name: Build astats_over_http plugin
+        working-directory: traffic_server/plugins/astats_over_http
+        run: tsxs -v -c astats_over_http.c -o astats_over_http.so
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
