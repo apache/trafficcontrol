@@ -24,7 +24,8 @@ on:
     branches: [ master ]
     paths:
       - .github/workflows/codeql.javascript.yml
-      - "**/*.js"
+      - "**.js"
+      - "**.ts"
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
