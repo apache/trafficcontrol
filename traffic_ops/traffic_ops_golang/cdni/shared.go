@@ -44,8 +44,8 @@ const (
 	AllFootprintQuery = `SELECT footprint_type, footprint_value::text[], capability_id FROM cdni_footprints`
 
 	limitsQuery = `
-SELECT limit_id, scope_type, scope_value, limit_type, maximum_hard, maximum_soft, ctl.telemetry_id, ctl.telemetry_metric, t.id, t.type, tm.name, ctl.capability_id 
-FROM cdni_limits AS ctl 
+SELECT limit_id, scope_type, scope_value, limit_type, maximum_hard, maximum_soft, cl.telemetry_id, cl.telemetry_metric, t.id, t.type, tm.name, cl.capability_id 
+FROM cdni_limits AS cl 
 LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id 
 LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name`
 
@@ -53,9 +53,9 @@ LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name`
 	SelectCapabilityUpdateQuery     = `SELECT ucdn, data, async_status_id, request_type, host FROM cdni_capability_updates WHERE id = $1`
 	SelectAllCapabilityUpdatesQuery = `SELECT id, ucdn, data, request_type, host FROM cdni_capability_updates`
 
-	DeleteCapabilityUpdateQuery                    = `DELETE FROM cdni_capability_updates WHERE id = $1`
-	UpdateTotalLimitsByCapabilityAndLimitTypeQuery = `UPDATE cdni_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3`
-	hostQuery                                      = `SELECT count(*) FROM cdni_limits WHERE $1 = ANY(scope_value)`
+	DeleteCapabilityUpdateQuery               = `DELETE FROM cdni_capability_updates WHERE id = $1`
+	UpdateLimitsByCapabilityAndLimitTypeQuery = `UPDATE cdni_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3`
+	hostQuery                                 = `SELECT count(*) FROM cdni_limits WHERE $1 = ANY(scope_value)`
 
 	hostConfigLabel = "hostConfigUpdate"
 )
@@ -416,7 +416,7 @@ func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				query := UpdateTotalLimitsByCapabilityAndLimitTypeQuery
+				query := UpdateLimitsByCapabilityAndLimitTypeQuery
 				queryParams := []interface{}{capLim.LimitValue, capId, capLim.LimitType}
 				if host != "" {
 					query = query + " AND $4 = ANY(scope_value)"
@@ -629,11 +629,9 @@ func getTelemetriesMap(tx *sql.Tx) (map[int][]Telemetry, error) {
 	telemetryMap := map[int][]Telemetry{}
 	for rows.Next() {
 		telemetry := Telemetry{}
-		configUrl := ""
-		if err := rows.Scan(&telemetry.Id, &telemetry.Type, &telemetry.CapabilityId, &configUrl); err != nil {
+		if err := rows.Scan(&telemetry.Id, &telemetry.Type, &telemetry.CapabilityId, &telemetry.Configuration.Url); err != nil {
 			return nil, errors.New("scanning telemetry: " + err.Error())
 		}
-		telemetry.Configuration.Url = configUrl
 
 		telemetryMap[telemetry.CapabilityId] = append(telemetryMap[telemetry.CapabilityId], telemetry)
 	}

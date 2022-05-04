@@ -95,12 +95,14 @@ func getCapacities(inf *api.APIInfo, ucdn string) (Capabilities, error) {
 	return fciCaps, nil
 }
 
+// CapabilityQueryResponse contains data about the capability query.
 type CapabilityQueryResponse struct {
 	Id   int    `json:"id" db:"id"`
 	Type string `json:"type" db:"type"`
 	UCdn string `json:"ucdn" db:"ucdn"`
 }
 
+// LimitsQueryResponse contains information about the limits query.
 type LimitsQueryResponse struct {
 	Scope          *LimitScope `json:"scope,omitempty"`
 	LimitId        string      `json:"limitId" db:"limit_id"`
@@ -116,12 +118,8 @@ type LimitsQueryResponse struct {
 	CapabilityId   int         `json:"-"`
 }
 
+// LimitScope contains information for a specific limit.
 type LimitScope struct {
 	ScopeType  *string  `json:"type" db:"scope_type"`
 	ScopeValue []string `json:"value" db:"scope_value"`
-}
-
-type HostLimitsResponse struct {
-	Host string `json:"host" db:"host"`
-	LimitsQueryResponse
 }
