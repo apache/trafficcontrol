@@ -149,6 +149,7 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/users"
     method: POST
     body: "{{ lookup('template', 'user.j2') }}"
+    body_format: json
   with_items: "{{ dl_ds_merged_users }}"
   vars:
     role_query: "response[?name == '{{ item.role | default('read-only') }}'].id | [0]"
