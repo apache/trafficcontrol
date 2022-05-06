@@ -86,6 +86,10 @@ func MakeLoggingDotYAML(
 			}
 			text += indentSpaces + " - name: " + logFormatName + " \n"
 			text += indentSpaces + "   format: '" + format + "'\n"
+			interval := paramData[logFormatField+".Interval"]
+			if interval != "" {
+				text += indentSpaces + "   interval: '" + interval + "'\n"
+			}
 		}
 	}
 
