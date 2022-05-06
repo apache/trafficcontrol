@@ -2066,4 +2066,4 @@ dl_ds_default_federations:
 dl_cdn:
   name: "{{ name }}"
   domainName: "{{ domainName }}"
-  dnssecEnabled: "{{ dnssecEnabled }}"
+  dnssecEnabled: "{{ dnssecEnabled | bool }}"
