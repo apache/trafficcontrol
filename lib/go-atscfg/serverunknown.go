@@ -75,7 +75,7 @@ func MakeServerUnknown(
 		txt += pa.Val + "\n"
 	}
 
-	txt = strings.Replace(txt, `__HOSTNAME__`, *server.HostName+`.`+*server.DomainName, -1)
+	txt = strings.Replace(txt, `__HOSTNAME__`, *server.HostName, -1)
 	txt = strings.Replace(txt, `__RETURN__`, "\n", -1)
 
 	lineComment := getServerUnknownConfigCommentType(params)
