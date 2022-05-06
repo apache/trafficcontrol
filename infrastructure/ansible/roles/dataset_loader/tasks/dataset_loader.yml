@@ -52,7 +52,7 @@
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/{{ existing_primary_cdn.id }}"
     method: PUT
-    body: "{{ dl_cdn | from_json }}"
+    body: "{{ lookup('template', 'cdn.j2') }}"
   vars:
     name: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].name | default(cdnDelegationPrimary) }}"
     domainName: "{{ cdnDelegationPrimary }}.{{ (dl_hosts_to | first).split('.')[1:] | join('.') | lower }}"
@@ -61,7 +61,7 @@
     existing_primary_cdn: "{{ (get_all_cdns.json.response | to_json | lower | from_json) | selectattr('domainname', 'search', ('^'+cdnDelegationPrimary+'\\.')) | list | first }}"
   register: update_cdn_out
   failed_when: (update_cdn_out.status == 400 and update_cdn_out.json | to_json | from_json | json_query(error_query) | length != 0) or (update_cdn_out.status > 400 and update_cdn_out.status < 600)
-  no_log: false
+  no_log: true
   retries: 10
   delay: 10
 
@@ -69,7 +69,7 @@
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns"
     method: POST
-    body: "{{ dl_cdn | from_json }}"
+    body: "{{ lookup('template', 'cdn.j2') }}"
   with_items: "{{ cdnDelegationList | difference(cdnDelegationPrimary) | intersect(dl_ds_merged_cdns | map('lower') | list) + cdnDelegationList | difference(dl_ds_merged_cdns | map('lower') | list)}}"
   vars:
     name: "{{ item.name | default(item) }}"
@@ -78,7 +78,7 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_cdns_out
   failed_when: (create_cdns_out.status == 400 and create_cdns_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cdns_out.status > 400 and create_cdns_out.status < 600)
-  no_log: false
+  no_log: true
   retries: 10
   delay: 10
 

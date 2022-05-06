@@ -2061,9 +2061,3 @@ dl_ds_default_federations:
           - '::/0'
       ttl: 60
     user: '{{ dl_ds_default_federation_user }}'
-
-# CDN
-dl_cdn:
-  name: "{{ name }}"
-  domainName: "{{ domainName }}"
-  dnssecEnabled: "{{ dnssecEnabled }}"
