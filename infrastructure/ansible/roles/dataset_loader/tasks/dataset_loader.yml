@@ -52,7 +52,7 @@
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/{{ existing_primary_cdn.id }}"
     method: PUT
-    body: "{{ lookup('template', 'cdn.j2') }}"
+    body: "{{ dl_cdn }}"
   vars:
     name: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].name | default(cdnDelegationPrimary) }}"
     domainName: "{{ cdnDelegationPrimary }}.{{ (dl_hosts_to | first).split('.')[1:] | join('.') | lower }}"
@@ -69,7 +69,7 @@
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns"
     method: POST
-    body: "{{ lookup('template', 'cdn.j2') }}"
+    body: "{{ dl_cdn }}"
   with_items: "{{ cdnDelegationList | difference(cdnDelegationPrimary) | intersect(dl_ds_merged_cdns | map('lower') | list) + cdnDelegationList | difference(dl_ds_merged_cdns | map('lower') | list)}}"
   vars:
     name: "{{ item.name | default(item) }}"
