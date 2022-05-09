@@ -83,7 +83,7 @@ const globals = {
 			}
 		} catch (e) {
 			console.error((e as AxiosError).message);
-			return Promise.reject();
+			throw e;
 		}
 		if(accessToken === "") {
 			console.error("Access token is not set");
@@ -139,7 +139,7 @@ const globals = {
 			console.log(`Successfully created DS '${respDS.displayName}'`);
 		} catch(e) {
 			console.error((e as AxiosError).message);
-			return Promise.reject();
+			throw e;
 		}
 		done();
 	},

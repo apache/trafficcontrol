@@ -42,7 +42,6 @@ describe("Servers Spec", () => {
 	it("Filter by hostname", async () => {
 		const page = augBrowser.page.servers();
 		page.navigate()
-			.pause(4000)
 			.waitForElementPresent("input[name=fuzzControl]");
 		page.section.serversTable.searchText("edge");
 		page.assert.urlContains("search=edge")
