@@ -144,6 +144,11 @@
   delay: 10
   until: get_all_types['status']|default(0) == 200
 
+- debug:
+    msg: "{{ dl_ds_merged_users }}"
+
+- fail:
+
 - name: Create Users
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/users"
