@@ -19,6 +19,14 @@ import (
 	"testing"
 )
 
+var statusNameMap = map[string]bool{
+	"ADMIN_DOWN": true,
+	"ONLINE":     true,
+	"OFFLINE":    true,
+	"REPORTED":   true,
+	"PRE_PROD":   true,
+}
+
 func (r *TCData) CreateTestStatuses(t *testing.T) {
 
 	for _, status := range r.TestData.Statuses {
@@ -46,17 +54,43 @@ func (r *TCData) DeleteTestStatuses(t *testing.T) {
 		respStatus := resp[0]
 
 		delResp, _, err := TOSession.DeleteStatusByID(respStatus.ID)
-		if err != nil {
-			t.Errorf("cannot DELETE Status by name: %v - %v", err, delResp)
-		}
+		if _, ok := statusNameMap[*status.Name]; !ok {
+			if err != nil {
+				t.Errorf("cannot DELETE Status by name: %v - %v", err, delResp)
+			}
 
-		// Retrieve the Status to see if it got deleted
-		types, _, err := TOSession.GetStatusByName(*status.Name)
-		if err != nil {
-			t.Errorf("error deleting Status name: %v", err)
+			// Retrieve the Status to see if it got deleted
+			types, _, err := TOSession.GetStatusByName(*status.Name)
+			if err != nil {
+				t.Errorf("error deleting Status name: %v", err)
+			}
+			if len(types) > 0 {
+				t.Errorf("expected Status name: %s to be deleted", *status.Name)
+			}
+		} else {
+			if err == nil {
+				t.Errorf("expected an error while trying to delete a reserved status, but got nothing")
+			}
 		}
-		if len(types) > 0 {
-			t.Errorf("expected Status name: %s to be deleted", *status.Name)
-		}
+	}
+	r.ForceDeleteStatuses(t)
+}
+
+// ForceDeleteStatuses forcibly deletes the statuses from the db.
+func (r *TCData) ForceDeleteStatuses(t *testing.T) {
+
+	// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
+	//  Connects directly to the DB to remove users rather than going thru the client.
+	//  This is required here because the DeleteUser action does not really delete users,  but disables them.
+	db, err := r.OpenConnection()
+	if err != nil {
+		t.Error("cannot open db")
+	}
+	defer db.Close()
+
+	q := `DELETE FROM status`
+	err = execSQL(db, q)
+	if err != nil {
+		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
 	}
 }
