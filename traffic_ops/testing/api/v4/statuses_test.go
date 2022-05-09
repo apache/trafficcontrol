@@ -26,6 +26,14 @@ import (
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
+var statusNameMap = map[string]bool{
+	"ADMIN_DOWN": true,
+	"ONLINE":     true,
+	"OFFLINE":    true,
+	"REPORTED":   true,
+	"PRE_PROD":   true,
+}
+
 func TestStatuses(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Statuses}, func() {
 		GetTestStatusesIMS(t)
@@ -52,31 +60,33 @@ func UpdateTestStatusesWithHeaders(t *testing.T, header http.Header) {
 		t.Fatal("Need at least one Status to test updating a status with an HTTP header")
 	}
 
-	firstStatus := testData.Statuses[0]
-	if firstStatus.Name == nil {
-		t.Fatal("cannot update test statuses: first test data status must have a name")
-	}
-
-	// Retrieve the Status by name so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	opts.QueryParameters.Set("name", *firstStatus.Name)
-	resp, _, err := TOSession.GetStatuses(opts)
-	if err != nil {
-		t.Errorf("cannot get Status by name '%s': %v - alerts %+v", *firstStatus.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) > 0 {
-		remoteStatus := resp.Response[0]
-		expectedStatusDesc := "new description"
-		remoteStatus.Description = expectedStatusDesc
-
-		opts.QueryParameters.Del("name")
-		_, reqInf, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, opts)
-		if err == nil {
-			t.Errorf("Expected error about precondition failed, but got none")
+	for _, status := range testData.Statuses {
+		if status.Name == nil {
+			t.Fatal("cannot update test statuses: test data status must have a name")
 		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %d", reqInf.StatusCode)
+		if _, ok := statusNameMap[*status.Name]; !ok {
+			// Retrieve the Status by name so we can get the id for the Update
+			opts := client.NewRequestOptions()
+			opts.Header = header
+			opts.QueryParameters.Set("name", *status.Name)
+			resp, _, err := TOSession.GetStatuses(opts)
+			if err != nil {
+				t.Errorf("cannot get Status by name '%s': %v - alerts %+v", *status.Name, err, resp.Alerts)
+			}
+			if len(resp.Response) > 0 {
+				remoteStatus := resp.Response[0]
+				expectedStatusDesc := "new description"
+				remoteStatus.Description = expectedStatusDesc
+
+				opts.QueryParameters.Del("name")
+				_, reqInf, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, opts)
+				if err == nil {
+					t.Errorf("Expected error about precondition failed, but got none")
+				}
+				if reqInf.StatusCode != http.StatusPreconditionFailed {
+					t.Errorf("Expected status code 412, got %d", reqInf.StatusCode)
+				}
+			}
 		}
 	}
 }
@@ -171,45 +181,50 @@ func UpdateTestStatuses(t *testing.T) {
 	if len(testData.Statuses) < 1 {
 		t.Fatal("Need at least one Status to test updating a Status")
 	}
-	firstStatus := testData.Statuses[0]
-	if firstStatus.Name == nil {
-		t.Fatal("cannot update test statuses: first test data status must have a name")
-	}
+	for _, status := range testData.Statuses {
+		if status.Name == nil {
+			t.Fatal("cannot update test statuses: test data status must have a name")
+		}
+		// Retrieve the Status by name so we can get the id for the Update
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", *status.Name)
+		resp, _, err := TOSession.GetStatuses(opts)
+		if err != nil {
+			t.Errorf("cannot get Status by name '%s': %v - alerts: %+v", *status.Name, err, resp.Alerts)
+		}
+		if len(resp.Response) != 1 {
+			t.Fatalf("Expected exactly one Status to exist with name '%s', found: %d", *status.Name, len(resp.Response))
+		}
+		remoteStatus := resp.Response[0]
+		expectedStatusDesc := "new description"
+		remoteStatus.Description = expectedStatusDesc
+		alert, _, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, client.RequestOptions{})
 
-	// Retrieve the Status by name so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", *firstStatus.Name)
-	resp, _, err := TOSession.GetStatuses(opts)
-	if err != nil {
-		t.Errorf("cannot get Status by name '%s': %v - alerts: %+v", *firstStatus.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Status to exist with name '%s', found: %d", *firstStatus.Name, len(resp.Response))
-	}
-	remoteStatus := resp.Response[0]
-	expectedStatusDesc := "new description"
-	remoteStatus.Description = expectedStatusDesc
+		if _, ok := statusNameMap[*status.Name]; ok {
+			if err == nil {
+				t.Errorf("expected an error about while updating a reserved status, but got nothing")
+			}
+		} else {
+			if err != nil {
+				t.Errorf("cannot update Status: %v - alerts: %+v", err, alert.Alerts)
+			}
 
-	alert, _, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update Status: %v - alerts: %+v", err, alert.Alerts)
+			// Retrieve the Status to check Status name got updated
+			opts.QueryParameters.Del("name")
+			opts.QueryParameters.Set("id", strconv.Itoa(remoteStatus.ID))
+			resp, _, err = TOSession.GetStatuses(opts)
+			if err != nil {
+				t.Errorf("cannot get Status '%s' by ID %d: %v - alerts: %+v", *status.Name, remoteStatus.ID, err, resp.Alerts)
+			}
+			if len(resp.Response) != 1 {
+				t.Fatalf("Expected exactly one Status to exist with ID %d, found: %d", remoteStatus.ID, len(resp.Response))
+			}
+			respStatus := resp.Response[0]
+			if respStatus.Description != expectedStatusDesc {
+				t.Errorf("results do not match actual: %s, expected: %s", respStatus.Name, expectedStatusDesc)
+			}
+		}
 	}
-
-	// Retrieve the Status to check Status name got updated
-	opts.QueryParameters.Del("name")
-	opts.QueryParameters.Set("id", strconv.Itoa(remoteStatus.ID))
-	resp, _, err = TOSession.GetStatuses(opts)
-	if err != nil {
-		t.Errorf("cannot get Status '%s' by ID %d: %v - alerts: %+v", *firstStatus.Name, remoteStatus.ID, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Status to exist with ID %d, found: %d", remoteStatus.ID, len(resp.Response))
-	}
-	respStatus := resp.Response[0]
-	if respStatus.Description != expectedStatusDesc {
-		t.Errorf("results do not match actual: %s, expected: %s", respStatus.Name, expectedStatusDesc)
-	}
-
 }
 
 func GetTestStatuses(t *testing.T) {
@@ -232,8 +247,6 @@ func DeleteTestStatuses(t *testing.T) {
 		if status.Name == nil {
 			t.Fatal("cannot get test statuses: test data statuses must have names")
 		}
-
-		// Retrieve the Status by name so we can get the id for the Update
 		opts.QueryParameters.Set("name", *status.Name)
 		resp, _, err := TOSession.GetStatuses(opts)
 		if err != nil {
@@ -242,17 +255,44 @@ func DeleteTestStatuses(t *testing.T) {
 		respStatus := resp.Response[0]
 
 		delResp, _, err := TOSession.DeleteStatus(respStatus.ID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot delete Status: %v - alerts: %+v", err, delResp.Alerts)
-		}
+		if _, ok := statusNameMap[*status.Name]; !ok {
+			// Retrieve the Status by name so we can get the id for the Update
+			if err != nil {
+				t.Errorf("cannot delete Status: %v - alerts: %+v", err, delResp.Alerts)
+			}
 
-		// Retrieve the Status to see if it got deleted
-		resp, _, err = TOSession.GetStatuses(opts)
-		if err != nil {
-			t.Errorf("Unexpected error getting Statuses filtered by name after deletion: %v - alerts: %+v", err, resp.Alerts)
+			// Retrieve the Status to see if it got deleted
+			resp, _, err = TOSession.GetStatuses(opts)
+			if err != nil {
+				t.Errorf("Unexpected error getting Statuses filtered by name after deletion: %v - alerts: %+v", err, resp.Alerts)
+			}
+			if len(resp.Response) > 0 {
+				t.Errorf("expected Status '%s' to be deleted, but it was found in Traffic Ops", *status.Name)
+			}
+		} else {
+			if err == nil {
+				t.Errorf("expected an error while trying to delete a reserved status, but got nothing")
+			}
 		}
-		if len(resp.Response) > 0 {
-			t.Errorf("expected Status '%s' to be deleted, but it was found in Traffic Ops", *status.Name)
-		}
+	}
+	ForceDeleteStatuses(t)
+}
+
+// ForceDeleteStatuses forcibly deletes the statuses from the db.
+func ForceDeleteStatuses(t *testing.T) {
+
+	// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
+	//  Connects directly to the DB to remove users rather than going thru the client.
+	//  This is required here because the DeleteUser action does not really delete users,  but disables them.
+	db, err := OpenConnection()
+	if err != nil {
+		t.Error("cannot open db")
+	}
+	defer db.Close()
+
+	q := `DELETE FROM status`
+	err = execSQL(db, q)
+	if err != nil {
+		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
 	}
 }

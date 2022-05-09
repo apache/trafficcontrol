@@ -40,6 +40,14 @@ type TOStatus struct {
 	tc.StatusNullable
 }
 
+var statusNameMap = map[tc.CacheStatus]bool{
+	tc.CacheStatusAdminDown: true,
+	tc.CacheStatusOnline:    true,
+	tc.CacheStatusOffline:   true,
+	tc.CacheStatusReported:  true,
+	tc.CacheStatusPreProd:   true,
+}
+
 func (v *TOStatus) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "status")
 }
@@ -119,9 +127,29 @@ func (st *TOStatus) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	return readVals, nil, nil, errCode, maxTime
 }
 
-func (st *TOStatus) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, st) }
-func (st *TOStatus) Create() (error, error, int)              { return api.GenericCreate(st) }
-func (st *TOStatus) Delete() (error, error, int)              { return api.GenericDelete(st) }
+func (st *TOStatus) Update(h http.Header) (error, error, int) {
+	var statusName string
+	err := st.APIInfo().Tx.QueryRow(`SELECT name from status WHERE id = $1`, *st.ID).Scan(&statusName)
+	if err != nil {
+		return nil, fmt.Errorf("error querying status name from ID: %v", err), http.StatusInternalServerError
+	}
+	if _, ok := statusNameMap[tc.CacheStatus(statusName)]; ok {
+		return fmt.Errorf("cannot modify %s status", statusName), nil, http.StatusForbidden
+	}
+	return api.GenericUpdate(h, st)
+}
+func (st *TOStatus) Create() (error, error, int) { return api.GenericCreate(st) }
+func (st *TOStatus) Delete() (error, error, int) {
+	var statusName string
+	err := st.APIInfo().Tx.QueryRow(`SELECT name from status WHERE id = $1`, *st.ID).Scan(&statusName)
+	if err != nil {
+		return nil, fmt.Errorf("error querying status name from ID: %v", err), http.StatusInternalServerError
+	}
+	if _, ok := statusNameMap[tc.CacheStatus(statusName)]; ok {
+		return fmt.Errorf("cannot delete %s status", statusName), nil, http.StatusForbidden
+	}
+	return api.GenericDelete(st)
+}
 
 func selectQuery() string {
 	return `
