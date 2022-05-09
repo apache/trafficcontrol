@@ -596,7 +596,7 @@ This file deals with the configuration parameters of running Traffic Ops as a re
 
 :routes: This is an array of options to configure Traffic Ops to forward requests of specified types to the appropriate backends.
 
-	:path:              The regex matching the endpoint that will be served by the backend, for example, :regexp:`^api/4.0/foo?$`.
+	:path:              The regex matching the endpoint that will be served by the backend, for example, :regexp:`^/api/4.0/foo?$`.
 	:method:            The HTTP method for the above mentioned path, for example, ``GET`` or ``PUT``.
 	:routeId:           The integral identifier for the new route being added.
 	:hosts:             An array of the host object, which specifies the protocol, hostname and port where the request (if matched) needs to be forwarded to.

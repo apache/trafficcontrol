@@ -324,7 +324,7 @@ func Handler(
 				backendRoute.Path = backendRoute.Path[:open] + `([^/]+)` + backendRoute.Path[close+1:]
 			}
 			regex := regexp.MustCompile(backendRoute.Path)
-			match := regex.FindStringSubmatch(requested)
+			match := regex.FindStringSubmatch(r.URL.Path)
 			if len(match) == 0 {
 				continue
 			}
