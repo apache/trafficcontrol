@@ -164,9 +164,9 @@
     phoneNumber: "{{ item.phoneNumber | default(omit) }}"
     postalCode: "{{ item.postalCode | default(omit) }}"
     publicSshKey: "{{ item.publicSshKey | default(omit) }}"
-    role: "{{ get_all_roles.json | json_query(role_query) }}"
+    role: "{{ get_all_roles.json | to_json | from_json | json_query(role_query) }}"
     stateOrProvince: "{{ item.stateOrProvince | default(omit) }}"
-    tenantId: "{{ get_all_tenants.json | json_query(tenant_query) | default(omit) }}"
+    tenantId: "{{ get_all_tenants.json | to_json | from_json | json_query(tenant_query) | default(omit) }}"
     username: "{{ item.username }}"
 
 - fail:
