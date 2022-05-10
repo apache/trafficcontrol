@@ -15,6 +15,7 @@
 import * as https from "https";
 
 import axios, {AxiosError} from "axios";
+import {NightwatchBrowser} from "nightwatch";
 import type {CommonPageObject} from "nightwatch/page_objects/common";
 import type {DeliveryServiceCardPageObject} from "nightwatch/page_objects/deliveryServiceCard";
 import type {DeliveryServiceDetailPageObject} from "nightwatch/page_objects/deliveryServiceDetail";
@@ -60,6 +61,10 @@ declare module "nightwatch" {
 const globals = {
 	adminPass: "twelve12",
 	adminUser: "admin",
+	afterEach: (browser: NightwatchBrowser, done: () => void): void => {
+		browser.end();
+		done();
+	},
 	apiVersion: "4.0",
 	before: async (done: () => void): Promise<void> => {
 		const apiUrl = `${globals.trafficOpsURL}/api/${globals.apiVersion}`;
@@ -144,6 +149,15 @@ const globals = {
 			throw e;
 		}
 		done();
+	},
+	beforeEach: (browser: NightwatchBrowser, done: () => void): void => {
+		browser.page.login()
+			.navigate().section.loginForm
+			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
+		// This ensures that we call done after loginAndWait is finished
+		browser.pause(1, () => {
+			done();
+		});
 	},
 	trafficOpsURL: "https://localhost:6443",
 	uniqueString: new Date().getTime().toString()

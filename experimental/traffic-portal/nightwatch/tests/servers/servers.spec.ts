@@ -27,18 +27,11 @@
 */
 
 describe("Servers Spec", () => {
-	beforeEach(() => {
-		browser.page.login()
-			.navigate().section.loginForm
-			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
-	});
-
 	it("Filter by hostname", async () => {
 		const page = browser.page.servers();
 		page.navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		page.section.serversTable.searchText("edge");
-		page.assert.urlContains("search=edge")
-			.end();
+		page.assert.urlContains("search=edge");
 	});
 });

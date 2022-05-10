@@ -21,7 +21,6 @@ describe("Login Spec", () => {
 			.click("@clearBtn")
 			.assert.containsText("@usernameTxt", "")
 			.assert.containsText("@passwordTxt", "")
-			.end();
 	});
 	it("Incorrect password test", () => {
 		browser.page.login()
@@ -31,13 +30,11 @@ describe("Login Spec", () => {
 			.assert.value("@passwordTxt", "asdf");
 		browser.page.common()
 			.assert.containsText("@snackbarEle", "Invalid")
-			.end();
 	});
 	it("Login test", () => {
 		browser.page.login()
 			.navigate()
 			.section.loginForm
 			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass)
-			.end();
 	});
 });

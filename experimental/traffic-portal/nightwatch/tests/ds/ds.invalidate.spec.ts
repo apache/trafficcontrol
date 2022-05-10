@@ -12,13 +12,10 @@
  * limitations under the License.
  */
 
-
 describe("DS Invalidation Jobs Spec", () => {
 	beforeEach(() => {
-		browser.page.login()
-			.navigate().section.loginForm
-			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
 		browser.page.deliveryServiceCard()
+			.navigate()
 			.section.cards
 			.viewDetails(`testDS${browser.globals.uniqueString}`);
 		browser.page.deliveryServiceDetail()
@@ -28,8 +25,7 @@ describe("DS Invalidation Jobs Spec", () => {
 
 	it("Verify page", () => {
 		browser.page.deliveryServiceInvalidationJobs()
-			.assert.enabled("@addButton")
-			.end();
+			.assert.enabled("@addButton");
 	});
 
 	it("Manage Job", async () => {
@@ -62,7 +58,6 @@ describe("DS Invalidation Jobs Spec", () => {
 		page
 			.click({index: 1, selector: "li.invalidation-job button"});
 		common
-			.assert.containsText("@snackbarEle", "was deleted")
-			.end();
+			.assert.containsText("@snackbarEle", "was deleted");
 	});
 });

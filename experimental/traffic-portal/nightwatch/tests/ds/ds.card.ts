@@ -13,18 +13,11 @@
  */
 
 describe("DS Card Spec", () => {
-	beforeEach(() => {
-		browser.page.login()
-			.navigate().section.loginForm
-			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
-	});
-
 	it("Verify expand test", async (): Promise<void> => {
 		await browser.page.deliveryServiceCard()
 			.navigate()
 			.section.cards
 			.expandDS(`testDS${browser.globals.uniqueString}`);
-		browser.end();
 	});
 
 	it("Verify detail test", async (): Promise<void> => {
@@ -32,6 +25,5 @@ describe("DS Card Spec", () => {
 			.navigate()
 			.section.cards
 			.viewDetails(`testDS${browser.globals.uniqueString}`);
-		browser.end();
 	});
 });

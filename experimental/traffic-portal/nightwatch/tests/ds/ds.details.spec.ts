@@ -14,10 +14,8 @@
 
 describe("DS Detail Spec", () => {
 	beforeEach(() => {
-		browser.page.login()
-			.navigate().section.loginForm
-			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
 		browser.page.deliveryServiceCard()
+			.navigate()
 			.section.cards
 			.viewDetails(`testDS${browser.globals.uniqueString}`);
 	});
@@ -33,8 +31,7 @@ describe("DS Detail Spec", () => {
 			.assert.enabled("@fromTime")
 			.assert.enabled("@toDate")
 			.assert.enabled("@toTime")
-			.assert.enabled("@refreshBtn")
-			.end();
+			.assert.enabled("@refreshBtn");
 	});
 
 	it("Default values test", (): void => {
@@ -49,7 +46,6 @@ describe("DS Detail Spec", () => {
 			.assert.value("@fromDate", date)
 			.assert.value("@fromTime", "00:00")
 			.assert.value("@toDate", date)
-			.assert.value("@toTime", time)
-			.end();
+			.assert.value("@toTime", time);
 	});
 });

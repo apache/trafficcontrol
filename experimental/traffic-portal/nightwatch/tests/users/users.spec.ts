@@ -14,12 +14,6 @@
 import type { UsersPageObject } from "nightwatch/page_objects/users";
 
 describe("Users Spec", () => {
-	beforeEach(() => {
-		browser.page.login()
-			.navigate().section.loginForm
-			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
-	});
-
 	it("Filter by username", async () => {
 		const username = browser.globals.adminUser;
 
@@ -40,8 +34,7 @@ describe("Users Spec", () => {
 					browser.assert.equal(true, false, `failed to select ag-grid rows: ${result.value.message}`);
 					return;
 				}
-				browser.assert.equal(result.value.length, 1)
-					.end();
+				browser.assert.equal(result.value.length, 1);
 			}
 		);
 	});
