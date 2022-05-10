@@ -13,7 +13,7 @@ limitations under the License.
 -->
 <tp-header title="{{deliveryservice ? deliveryservice.displayName : 'Loading'}} - Content Invalidation Jobs"></tp-header>
 <ul>
-	<li *ngFor="let j of jobs">
+	<li class="invalidation-job" *ngFor="let j of jobs">
 		<code>{{j.assetUrl}}</code> (active from <time [dateTime]="j.startTime">{{j.startTime | date:'medium'}}</time> to <time [dateTime]="endDate(j)">{{endDate(j) | date:'medium'}})</time>
 		<button
 			mat-icon-button
