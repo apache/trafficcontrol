@@ -374,10 +374,8 @@ const (
 	// by Traffic Monitor. The vast majority of cache servers should have this
 	// Status.
 	CacheStatusReported = CacheStatus("REPORTED")
-	// TODO: fix this description
-	// CacheStatusPreProd represents a cache server which is polled for health
-	// by Traffic Monitor. The vast majority of cache servers should have this
-	// Status.
+	// CacheStatusPreProd represents a cache server that is not deployed to "production",
+	// but is ready for it.
 	CacheStatusPreProd = CacheStatus("PRE_PROD")
 	// CacheStatusInvalid represents an unrecognized Status value. Note that
 	// this is not actually "invalid", because Statuses may have any unique

@@ -149,8 +149,8 @@ func DeleteTestStatuses(t *testing.T) {
 func ForceDeleteStatuses(t *testing.T) {
 
 	// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
-	//  Connects directly to the DB to remove users rather than going thru the client.
-	//  This is required here because the DeleteUser action does not really delete users,  but disables them.
+	//  Connects directly to the DB to remove statuses rather than going thru the client.
+	//  This is required to delte the special statuses.
 	db, err := OpenConnection()
 	if err != nil {
 		t.Error("cannot open db")

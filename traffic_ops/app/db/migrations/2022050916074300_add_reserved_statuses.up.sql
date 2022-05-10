@@ -20,3 +20,4 @@ INSERT INTO public.status ("name", description) VALUES ('OFFLINE', 'Server is Of
 INSERT INTO public.status ("name", description) VALUES ('REPORTED', 'Server is online and reported in the health protocol.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", description) VALUES ('ADMIN_DOWN', 'Sever is administrative down and does not receive traffic.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", description) VALUES ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT ("name") DO NOTHING;
+
