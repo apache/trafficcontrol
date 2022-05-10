@@ -26,7 +26,7 @@ describe("DS Invalidation Jobs Spec", () => {
 			.loginAndWait(augBrowser.globals.adminUser, augBrowser.globals.adminPass);
 		augBrowser.page.deliveryServiceCard()
 			.section.cards
-			.viewDetails("testDS");
+			.viewDetails(`testDS${augBrowser.globals.uniqueString}`);
 		augBrowser.page.deliveryServiceDetail()
 			.click("@invalidateJobs")
 			.assert.urlContains("invalidation-jobs");

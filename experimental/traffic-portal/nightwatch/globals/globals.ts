@@ -54,6 +54,7 @@ export interface GlobalConfig extends NightwatchGlobals {
 	adminUser: string;
 	trafficOpsURL: string;
 	apiVersion: string;
+	uniqueString: string;
 }
 const globals = {
 	adminPass: "twelve12",
@@ -92,7 +93,7 @@ const globals = {
 		client.defaults.headers.common = { Cookie: accessToken };
 
 		const cdn: CDN = {
-			dnssecEnabled: false, domainName: "tests.com", name: "testCDN"
+			dnssecEnabled: false, domainName: `tests${globals.uniqueString}.com`, name: `testCDN${globals.uniqueString}`
 		};
 		let respCDN: ResponseCDN;
 		try {
@@ -103,7 +104,7 @@ const globals = {
 				active: false,
 				cacheurl: null,
 				cdnId: respCDN.id,
-				displayName: "test DS",
+				displayName: `test DS${globals.uniqueString}`,
 				dscp: 0,
 				ecsEnabled: false,
 				edgeHeaderRewrite: null,
@@ -132,7 +133,7 @@ const globals = {
 				signed: false,
 				tenantId: 1,
 				typeId: 1,
-				xmlId: "testDS"
+				xmlId: `testDS${globals.uniqueString}`
 			};
 			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
 			const respDS: ResponseDeliveryService = resp.data.response[0];
@@ -143,7 +144,8 @@ const globals = {
 		}
 		done();
 	},
-	trafficOpsURL: "https://localhost:6443"
+	trafficOpsURL: "https://localhost:6443",
+	uniqueString: new Date().getTime().toString()
 };
 
 module.exports = globals;

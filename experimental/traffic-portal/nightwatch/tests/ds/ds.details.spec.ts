@@ -26,7 +26,7 @@ describe("DS Detail Spec", () => {
 			.loginAndWait(augBrowser.globals.adminUser, augBrowser.globals.adminPass);
 		augBrowser.page.deliveryServiceCard()
 			.section.cards
-			.viewDetails("testDS");
+			.viewDetails(`testDS${augBrowser.globals.uniqueString}`);
 	});
 
 	it("Verify page test", (): void => {

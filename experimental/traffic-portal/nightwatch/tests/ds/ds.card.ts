@@ -30,7 +30,7 @@ describe("DS Card Spec", () => {
 		await augBrowser.page.deliveryServiceCard()
 			.navigate()
 			.section.cards
-			.expandDS("testDS");
+			.expandDS(`testDS${augBrowser.globals.uniqueString}`);
 		augBrowser.end();
 	});
 
@@ -38,7 +38,7 @@ describe("DS Card Spec", () => {
 		await augBrowser.page.deliveryServiceCard()
 			.navigate()
 			.section.cards
-			.viewDetails("testDS");
+			.viewDetails(`testDS${augBrowser.globals.uniqueString}`);
 		augBrowser.end();
 	});
 });
