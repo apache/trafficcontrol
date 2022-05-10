@@ -60,7 +60,7 @@ func (r *TCData) DeleteTestStatuses(t *testing.T) {
 		respStatus := resp[0]
 
 		delResp, _, err := TOSession.DeleteStatusByID(respStatus.ID)
-		if tc.IsReservedStatus(*status.Name) {
+		if !tc.IsReservedStatus(*status.Name) {
 			if err != nil {
 				t.Errorf("cannot DELETE Status by name: %v - %v", err, delResp)
 			}
