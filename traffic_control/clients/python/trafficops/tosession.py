@@ -1652,7 +1652,7 @@ class TOSession(RestApiSession):
 	def get_server_details(self, name=None):
 		"""
 		Get servers/details
-		:ref:`to-api-servers-details`
+		:ref:`to-api-v3-servers-details`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
