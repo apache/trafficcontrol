@@ -62,8 +62,9 @@ const globals = {
 	adminPass: "twelve12",
 	adminUser: "admin",
 	afterEach: (browser: NightwatchBrowser, done: () => void): void => {
-		browser.end();
-		done();
+		browser.end(() => {
+			done();
+		});
 	},
 	apiVersion: "4.0",
 	before: async (done: () => void): Promise<void> => {
