@@ -15,5 +15,3 @@
  * the License.
  */
 
-DELETE FROM public.status WHERE name IN ('ONLINE', 'OFFLINE', 'REPORTED', 'ADMIN_DOWN', 'PRE_PROD');
-

@@ -17,33 +17,39 @@ package tcdata
 
 import (
 	"testing"
-)
 
-var statusNameMap = map[string]bool{
-	"ADMIN_DOWN": true,
-	"ONLINE":     true,
-	"OFFLINE":    true,
-	"REPORTED":   true,
-	"PRE_PROD":   true,
-}
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
 
 func (r *TCData) CreateTestStatuses(t *testing.T) {
 
-	for _, status := range r.TestData.Statuses {
-		resp, _, err := TOSession.CreateStatusNullable(status)
-		t.Log("Response: ", resp)
-		if err != nil {
-			t.Errorf("could not CREATE types: %v", err)
-		}
+	response, _, err := TOSession.GetStatusesWithHdr(nil)
+	if err != nil {
+		t.Errorf("could not get statuses: %v", err)
+	}
+	statusNameMap := make(map[string]bool, 0)
+	for _, r := range response {
+		statusNameMap[r.Name] = true
 	}
 
+	for _, status := range r.TestData.Statuses {
+		if status.Name != nil {
+			if _, ok := statusNameMap[*status.Name]; !ok {
+				resp, _, err := TOSession.CreateStatusNullable(status)
+				t.Log("Response: ", resp)
+				if err != nil {
+					t.Errorf("could not CREATE status: %v", err)
+				}
+			}
+		}
+	}
 }
 
 func (r *TCData) DeleteTestStatuses(t *testing.T) {
 
 	for _, status := range r.TestData.Statuses {
 		if status.Name == nil {
-			t.Fatal("cannot get ftest statuses: test data statuses must have names")
+			t.Fatal("cannot get test statuses: test data statuses must have names")
 		}
 
 		// Retrieve the Status by name so we can get the id for the Update
@@ -54,7 +60,7 @@ func (r *TCData) DeleteTestStatuses(t *testing.T) {
 		respStatus := resp[0]
 
 		delResp, _, err := TOSession.DeleteStatusByID(respStatus.ID)
-		if _, ok := statusNameMap[*status.Name]; !ok {
+		if tc.IsReservedStatus(*status.Name) {
 			if err != nil {
 				t.Errorf("cannot DELETE Status by name: %v - %v", err, delResp)
 			}
@@ -67,30 +73,8 @@ func (r *TCData) DeleteTestStatuses(t *testing.T) {
 			if len(types) > 0 {
 				t.Errorf("expected Status name: %s to be deleted", *status.Name)
 			}
-		} else {
-			if err == nil {
-				t.Errorf("expected an error while trying to delete a reserved status, but got nothing")
-			}
+		} else if err == nil {
+			t.Errorf("expected an error while trying to delete a reserved status, but got nothing")
 		}
-	}
-	r.ForceDeleteStatuses(t)
-}
-
-// ForceDeleteStatuses forcibly deletes the statuses from the db.
-func (r *TCData) ForceDeleteStatuses(t *testing.T) {
-
-	// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
-	//  Connects directly to the DB to remove statuses rather than going thru the client.
-	//  This is required to delte the special statuses.
-	db, err := r.OpenConnection()
-	if err != nil {
-		t.Error("cannot open db")
-	}
-	defer db.Close()
-
-	q := `DELETE FROM status`
-	err = execSQL(db, q)
-	if err != nil {
-		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
 	}
 }

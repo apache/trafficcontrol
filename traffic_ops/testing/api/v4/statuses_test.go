@@ -23,16 +23,9 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
-
-var statusNameMap = map[string]bool{
-	"ADMIN_DOWN": true,
-	"ONLINE":     true,
-	"OFFLINE":    true,
-	"REPORTED":   true,
-	"PRE_PROD":   true,
-}
 
 func TestStatuses(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Statuses}, func() {
@@ -64,7 +57,7 @@ func UpdateTestStatusesWithHeaders(t *testing.T, header http.Header) {
 		if status.Name == nil {
 			t.Fatal("cannot update test statuses: test data status must have a name")
 		}
-		if _, ok := statusNameMap[*status.Name]; !ok {
+		if !tc.IsReservedStatus(*status.Name) {
 			// Retrieve the Status by name so we can get the id for the Update
 			opts := client.NewRequestOptions()
 			opts.Header = header
@@ -152,13 +145,26 @@ func GetTestStatusesIMS(t *testing.T) {
 }
 
 func CreateTestStatuses(t *testing.T) {
-	for _, status := range testData.Statuses {
-		resp, _, err := TOSession.CreateStatus(status, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("could not create Status: %v - alerts: %+v", err, resp.Alerts)
-		}
+	response, _, err := TOSession.GetStatuses(client.NewRequestOptions())
+	if err != nil {
+		t.Errorf("could not get statuses: %v", err)
+	}
+	statusNameMap := make(map[string]bool, 0)
+	for _, r := range response.Response {
+		statusNameMap[r.Name] = true
 	}
 
+	for _, status := range testData.Statuses {
+		if status.Name != nil {
+			if _, ok := statusNameMap[*status.Name]; !ok {
+				resp, _, err := TOSession.CreateStatus(status, client.NewRequestOptions())
+				t.Log("Response: ", resp)
+				if err != nil {
+					t.Errorf("could not create Status: %v - alerts: %+v", err, resp.Alerts)
+				}
+			}
+		}
+	}
 }
 
 func SortTestStatuses(t *testing.T) {
@@ -200,7 +206,7 @@ func UpdateTestStatuses(t *testing.T) {
 		remoteStatus.Description = expectedStatusDesc
 		alert, _, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, client.RequestOptions{})
 
-		if _, ok := statusNameMap[*status.Name]; ok {
+		if tc.IsReservedStatus(*status.Name) {
 			if err == nil {
 				t.Errorf("expected an error about while updating a reserved status, but got nothing")
 			}
@@ -255,7 +261,7 @@ func DeleteTestStatuses(t *testing.T) {
 		respStatus := resp.Response[0]
 
 		delResp, _, err := TOSession.DeleteStatus(respStatus.ID, client.RequestOptions{})
-		if _, ok := statusNameMap[*status.Name]; !ok {
+		if !tc.IsReservedStatus(*status.Name) {
 			// Retrieve the Status by name so we can get the id for the Update
 			if err != nil {
 				t.Errorf("cannot delete Status: %v - alerts: %+v", err, delResp.Alerts)
@@ -269,30 +275,8 @@ func DeleteTestStatuses(t *testing.T) {
 			if len(resp.Response) > 0 {
 				t.Errorf("expected Status '%s' to be deleted, but it was found in Traffic Ops", *status.Name)
 			}
-		} else {
-			if err == nil {
-				t.Errorf("expected an error while trying to delete a reserved status, but got nothing")
-			}
+		} else if err == nil {
+			t.Errorf("expected an error while trying to delete a reserved status, but got nothing")
 		}
-	}
-	ForceDeleteStatuses(t)
-}
-
-// ForceDeleteStatuses forcibly deletes the statuses from the db.
-func ForceDeleteStatuses(t *testing.T) {
-
-	// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
-	//  Connects directly to the DB to remove statuses rather than going thru the client.
-	//  This is required to delte the special statuses.
-	db, err := OpenConnection()
-	if err != nil {
-		t.Error("cannot open db")
-	}
-	defer db.Close()
-
-	q := `DELETE FROM status`
-	err = execSQL(db, q)
-	if err != nil {
-		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
 	}
 }
