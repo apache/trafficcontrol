@@ -29,9 +29,6 @@ const (
 	// apiServers is the API version-relative path to the /servers API
 	// endpoint.
 	apiServers = "/servers"
-	// apiServersDetails is the API version-relative path to the
-	// /servers/details API endpoint.
-	apiServersDetails = "/servers/details"
 )
 
 func needAndCanFetch(id *int, name *string) bool {
@@ -124,14 +121,6 @@ func (to *Session) UpdateServer(id int, server tc.ServerV4, opts RequestOptions)
 func (to *Session) GetServers(opts RequestOptions) (tc.ServersV4Response, toclientlib.ReqInf, error) {
 	var data tc.ServersV4Response
 	reqInf, err := to.get(apiServers, opts, &data)
-	return data, reqInf, err
-}
-
-// GetServersDetails retrieves the Server Details of the Server with the given
-// (short) Hostname.
-func (to *Session) GetServersDetails(opts RequestOptions) (tc.ServersV4DetailResponse, toclientlib.ReqInf, error) {
-	var data tc.ServersV4DetailResponse
-	reqInf, err := to.get(apiServersDetails, opts, &data)
 	return data, reqInf, err
 }
 
