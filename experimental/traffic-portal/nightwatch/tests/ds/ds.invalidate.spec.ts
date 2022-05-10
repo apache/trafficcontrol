@@ -12,40 +12,34 @@
  * limitations under the License.
  */
 
-import {AugmentedBrowser} from "nightwatch/globals/globals";
 
 describe("DS Invalidation Jobs Spec", () => {
-	let augBrowser: AugmentedBrowser;
-	before(() => {
-		augBrowser = browser as AugmentedBrowser;
-	});
-
 	beforeEach(() => {
-		augBrowser.page.login()
+		browser.page.login()
 			.navigate().section.loginForm
-			.loginAndWait(augBrowser.globals.adminUser, augBrowser.globals.adminPass);
-		augBrowser.page.deliveryServiceCard()
+			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
+		browser.page.deliveryServiceCard()
 			.section.cards
-			.viewDetails(`testDS${augBrowser.globals.uniqueString}`);
-		augBrowser.page.deliveryServiceDetail()
+			.viewDetails(`testDS${browser.globals.uniqueString}`);
+		browser.page.deliveryServiceDetail()
 			.click("@invalidateJobs")
 			.assert.urlContains("invalidation-jobs");
 	});
 
 	it("Verify page", () => {
-		augBrowser.page.deliveryServiceInvalidationJobs()
+		browser.page.deliveryServiceInvalidationJobs()
 			.assert.enabled("@addButton")
 			.end();
 	});
 
 	it("Manage Job", async () => {
-		const page = augBrowser.page.deliveryServiceInvalidationJobs();
-		const common = augBrowser.page.common();
+		const page = browser.page.deliveryServiceInvalidationJobs();
+		const common = browser.page.common();
 		page
 			.click("@addButton");
 		const startDate = new Date();
 		startDate.setDate(startDate.getDate() + 1);
-		augBrowser.waitForElementVisible("tp-new-invalidation-job-dialog")
+		browser.waitForElementVisible("tp-new-invalidation-job-dialog")
 			.assert.value("input[name='startDate']", startDate.toLocaleDateString())
 			.setValue("input[name='regexp']", "/invalidateMe")
 			.click("button#submit");
@@ -57,7 +51,7 @@ describe("DS Invalidation Jobs Spec", () => {
 			.assert.enabled({index: 1, selector: "li.invalidation-job button"});
 		page
 			.click({index: 0, selector: "li.invalidation-job button"});
-		augBrowser.waitForElementVisible("tp-new-invalidation-job-dialog")
+		browser.waitForElementVisible("tp-new-invalidation-job-dialog")
 			.assert.value("input[name='startDate']", startDate.toLocaleDateString())
 			.assert.value("input[name='regexp']", "invalidateMe")
 			.setValue("input[name='regexp']", "/invalidateMe2")

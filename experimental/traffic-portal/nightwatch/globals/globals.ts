@@ -15,7 +15,6 @@
 import * as https from "https";
 
 import axios, {AxiosError} from "axios";
-import type {NightwatchBrowser, NightwatchGlobals} from "nightwatch";
 import type {CommonPageObject} from "nightwatch/page_objects/common";
 import type {DeliveryServiceCardPageObject} from "nightwatch/page_objects/deliveryServiceCard";
 import type {DeliveryServiceDetailPageObject} from "nightwatch/page_objects/deliveryServiceDetail";
@@ -32,30 +31,32 @@ import {
 	ResponseDeliveryService
 } from "trafficops-types";
 
-/**
- * Defines the global nightwatch browser type with our types mixed in.
- */
-export type AugmentedBrowser = NightwatchBrowser & {globals: GlobalConfig} & {page:
-{
-	common: () => CommonPageObject;
-	deliveryServiceCard: () => DeliveryServiceCardPageObject;
-	deliveryServiceDetail: () => DeliveryServiceDetailPageObject;
-	deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;
-	login: () => LoginPageObject;
-	servers: () => ServersPageObject;
-	users: () => UsersPageObject;
-};};
+declare module "nightwatch" {
+	/**
+	 * Defines the global nightwatch browser type with our types mixed in.
+	 */
+	export interface NightwatchCustomPageObjects {
+		common: () => CommonPageObject;
+		deliveryServiceCard: () => DeliveryServiceCardPageObject;
+		deliveryServiceDetail: () => DeliveryServiceDetailPageObject;
+		deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;
+		login: () => LoginPageObject;
+		servers: () => ServersPageObject;
+		users: () => UsersPageObject;
+	}
 
-/**
- * Defines the configuration used for the testing environment
- */
-export interface GlobalConfig extends NightwatchGlobals {
-	adminPass: string;
-	adminUser: string;
-	trafficOpsURL: string;
-	apiVersion: string;
-	uniqueString: string;
+	/**
+	 * Defines the additional types needed for the test environment.
+	 */
+	export interface NightwatchGlobals {
+		adminPass: string;
+		adminUser: string;
+		trafficOpsURL: string;
+		apiVersion: string;
+		uniqueString: string;
+	}
 }
+
 const globals = {
 	adminPass: "twelve12",
 	adminUser: "admin",

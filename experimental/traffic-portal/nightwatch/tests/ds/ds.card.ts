@@ -12,33 +12,26 @@
  * limitations under the License.
  */
 
-import {type AugmentedBrowser} from "nightwatch/globals/globals";
-
 describe("DS Card Spec", () => {
-	let augBrowser: AugmentedBrowser;
-	before(() => {
-		augBrowser = browser as AugmentedBrowser;
-	});
-
 	beforeEach(() => {
-		augBrowser.page.login()
+		browser.page.login()
 			.navigate().section.loginForm
-			.loginAndWait(augBrowser.globals.adminUser, augBrowser.globals.adminPass);
+			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
 	});
 
 	it("Verify expand test", async (): Promise<void> => {
-		await augBrowser.page.deliveryServiceCard()
+		await browser.page.deliveryServiceCard()
 			.navigate()
 			.section.cards
-			.expandDS(`testDS${augBrowser.globals.uniqueString}`);
-		augBrowser.end();
+			.expandDS(`testDS${browser.globals.uniqueString}`);
+		browser.end();
 	});
 
 	it("Verify detail test", async (): Promise<void> => {
-		await augBrowser.page.deliveryServiceCard()
+		await browser.page.deliveryServiceCard()
 			.navigate()
 			.section.cards
-			.viewDetails(`testDS${augBrowser.globals.uniqueString}`);
-		augBrowser.end();
+			.viewDetails(`testDS${browser.globals.uniqueString}`);
+		browser.end();
 	});
 });

@@ -12,25 +12,18 @@
 * limitations under the License.
 */
 
-import {type AugmentedBrowser} from "nightwatch/globals/globals";
-
 describe("DS Detail Spec", () => {
-	let augBrowser: AugmentedBrowser;
-	before(() => {
-		augBrowser = browser as AugmentedBrowser;
-	});
-
 	beforeEach(() => {
-		augBrowser.page.login()
+		browser.page.login()
 			.navigate().section.loginForm
-			.loginAndWait(augBrowser.globals.adminUser, augBrowser.globals.adminPass);
-		augBrowser.page.deliveryServiceCard()
+			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
+		browser.page.deliveryServiceCard()
 			.section.cards
-			.viewDetails(`testDS${augBrowser.globals.uniqueString}`);
+			.viewDetails(`testDS${browser.globals.uniqueString}`);
 	});
 
 	it("Verify page test", (): void => {
-		const page = augBrowser.page.deliveryServiceDetail();
+		const page = browser.page.deliveryServiceDetail();
 		page.assert.visible("@bandwidthChart")
 			.assert.visible("@tpsChart")
 			.assert.enabled("@invalidateJobs");
@@ -45,7 +38,7 @@ describe("DS Detail Spec", () => {
 	});
 
 	it("Default values test", (): void => {
-		const page = augBrowser.page.deliveryServiceDetail();
+		const page = browser.page.deliveryServiceDetail();
 		const now = new Date();
 		const nowString = now.toISOString();
 		const date = nowString.split("T")[0];

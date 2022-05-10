@@ -12,16 +12,10 @@
 * limitations under the License.
 */
 
-import {AugmentedBrowser} from "nightwatch/globals/globals";
-
 describe("Login Spec", () => {
-	let augBrowser: AugmentedBrowser;
-	before(() => {
-		augBrowser = browser as AugmentedBrowser;
-	});
 
 	it("Clear form test", () => {
-		augBrowser.page.login()
+		browser.page.login()
 			.navigate().section.loginForm
 			.fillOut("test", "asdf")
 			.click("@clearBtn")
@@ -30,7 +24,7 @@ describe("Login Spec", () => {
 			.end();
 	});
 	it("Incorrect password test", () => {
-		augBrowser.page.login()
+		browser.page.login()
 			.navigate().section.loginForm
 			.login("test", "asdf")
 			.assert.value("@usernameTxt", "test")
@@ -40,10 +34,10 @@ describe("Login Spec", () => {
 			.end();
 	});
 	it("Login test", () => {
-		augBrowser.page.login()
+		browser.page.login()
 			.navigate()
 			.section.loginForm
-			.loginAndWait(augBrowser.globals.adminUser, augBrowser.globals.adminPass)
+			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass)
 			.end();
 	});
 });

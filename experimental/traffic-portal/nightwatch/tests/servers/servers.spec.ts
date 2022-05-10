@@ -25,22 +25,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {AugmentedBrowser} from "nightwatch/globals/globals";
 
 describe("Servers Spec", () => {
-	let augBrowser: AugmentedBrowser;
-	before(() => {
-		augBrowser = browser as AugmentedBrowser;
-	});
-
 	beforeEach(() => {
-		augBrowser.page.login()
+		browser.page.login()
 			.navigate().section.loginForm
-			.loginAndWait(augBrowser.globals.adminUser, augBrowser.globals.adminPass);
+			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
 	});
 
 	it("Filter by hostname", async () => {
-		const page = augBrowser.page.servers();
+		const page = browser.page.servers();
 		page.navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		page.section.serversTable.searchText("edge");
