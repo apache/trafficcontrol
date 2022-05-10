@@ -145,7 +145,29 @@
   until: get_all_types['status']|default(0) == 200
 
 - debug:
-    msg: "{{ dl_ds_merged_users }}"
+    msg: "{{ lookup('template', 'user.j2') }}"
+  with_items: "{{ dl_ds_merged_users }}"
+  vars:
+    role_query: "response[?name == '{{ item.role | default('read-only') }}'].id | [0]"
+    tenant_query: "response[?name == '{{ item.tenant | default('root') }}'].id | [0]"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    user_password: "{{ item.password | default( lookup('password', '/dev/null length=32 chars=ascii_letters') ) }}"
+    addressLine1: "{{ item.addressLine1 | default(omit) }}"
+    addressLine2: "{{ item.addressLine2 | default(omit) }}"
+    city: "{{ item.city | default(omit) }}"
+    confirmLocalPasswd: "{{ user_password }}"
+    company: "{{ item.company | default(omit) }}"
+    email: "{{ item.email }}"
+    fullName: "{{ item.fullName }}"
+    localPasswd: "{{ user_password }}"
+    newUser: "{{ item.newUser | default(omit) }}"
+    phoneNumber: "{{ item.phoneNumber | default(omit) }}"
+    postalCode: "{{ item.postalCode | default(omit) }}"
+    publicSshKey: "{{ item.publicSshKey | default(omit) }}"
+    role: "{{ get_all_roles.json | json_query(role_query) }}"
+    stateOrProvince: "{{ item.stateOrProvince | default(omit) }}"
+    tenantId: "{{ get_all_tenants.json | json_query(tenant_query) | default(omit) }}"
+    username: "{{ item.username }}"
 
 - fail:
 
