@@ -21,8 +21,10 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestCacheGroupsDeliveryServices(t *testing.T) {
@@ -49,7 +51,7 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 							GetDeliveryServiceId(t, "ds3")(),
 						},
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCGDSServerAssignments()),
 				},
 			},
 		}
@@ -71,6 +73,34 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 		}
 
 	})
+}
+
+func validateCGDSServerAssignments() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		cgDsResp := resp.(tc.CacheGroupPostDSResp)
+		params := url.Values{}
+		for _, serverName := range cgDsResp.ServerNames {
+			params.Set("hostName", string(serverName))
+			resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+			assert.NoError(t, err, "Error: Getting server: %v - alerts: %+v", err, resp.Alerts)
+			assert.Equal(t, len(resp.Response), 1, "Error: Getting servers: expected 1 got %v", len(resp.Response))
+
+			serverDSes, _, err := TOSession.GetDeliveryServicesByServerV30WithHdr(*resp.Response[0].ID, nil)
+			assert.NoError(t, err, "Error: Getting Delivery Service Servers #%d: %v", *resp.Response[0].ID, err)
+			for _, dsID := range cgDsResp.DeliveryServices {
+				found := false
+				for _, serverDS := range serverDSes {
+					if *serverDS.ID == dsID {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("POST succeeded, but didn't assign delivery service %v to server", dsID)
+				}
+			}
+		}
+	}
 }
 
 func CreateTestCachegroupsDeliveryServices(t *testing.T) {
