@@ -161,17 +161,12 @@ func validateCDNFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 
 func validateCDNSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
-		var sortedList []string
+		var cdnNames []string
 		cdnResp := resp.([]tc.CDN)
-
 		for _, cdn := range cdnResp {
-			sortedList = append(sortedList, cdn.Name)
+			cdnNames = append(cdnNames, cdn.Name)
 		}
-
-		res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-			return sortedList[p] < sortedList[q]
-		})
-		assert.Equal(t, res, true, "List is not sorted by their names: %v", sortedList)
+		assert.Equal(t, true, sort.StringsAreSorted(cdnNames), "List is not sorted by their names: %v", cdnNames)
 	}
 }
 

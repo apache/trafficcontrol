@@ -45,10 +45,10 @@ func RefreshDNSSECKeys(t *testing.T) {
 
 	loc := reqInf.RespHeaders.Get("Location")
 	if loc == "" {
-		t.Errorf("Refreshing DNSSEC keys - Expected: non-empty 'Location' response header, Actual: empty")
+		t.Fatalf("Refreshing DNSSEC keys - Expected: non-empty 'Location' response header, Actual: empty")
 	}
 	asyncID, err := strconv.Atoi(strings.Split(loc, "/")[4])
-	assert.NoError(t, err, "Parsing async_status ID from 'Location' response header - Expected: no error, Actual: %v", err)
+	assert.RequireNoError(t, err, "Parsing async_status ID from 'Location' response header - Expected: no error, Actual: %v", err)
 
 	status, _, err := TOSession.GetAsyncStatus(asyncID, client.RequestOptions{})
 	assert.NoError(t, err, "Getting async status id %d - Expected: no error, Actual: %v", asyncID, err)
@@ -106,6 +106,9 @@ func GenerateDNSSECKeys(t *testing.T) {
 	res, _, err = TOSession.GetCDNDNSSECKeys(firstCDN.Name, client.RequestOptions{})
 	assert.NoError(t, err, "Unexpected error getting CDN DNSSEC keys: %v - alerts: %+v", err, res.Alerts)
 
+	if _, ok := res.Response[firstCDN.Name]; !ok {
+		t.Fatalf("getting CDN DNSSEC keys - expected: key %s, actual: missing", firstCDN.Name)
+	}
 	newKSK := res.Response
 	if reflect.DeepEqual(originalKSK[firstCDN.Name].KSK, newKSK[firstCDN.Name].KSK) {
 		t.Error("Generating CDN DNSSEC KSK - Expected: KSK to be different, Actual: KSK is the same")
