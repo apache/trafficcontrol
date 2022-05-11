@@ -56,7 +56,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if hostName == "" && physLocationIDStr == "" {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Missing required fields: 'hostname' or 'physLocationID'"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing required fields: 'hostName' or 'physLocationID'"), nil)
 		return
 	}
 	orderBy := "hostName"
