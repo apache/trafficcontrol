@@ -673,22 +673,6 @@ func (r *TrafficOpsReq) PrintWarnings() {
 	log.Infoln("======== End warning summary ========")
 }
 
-// GetHeaderComment looks up the tm.toolname parameter from traffic ops.
-func (r *TrafficOpsReq) GetHeaderComment() string {
-	result, err := getSystemInfo(r.Cfg)
-	if err != nil {
-		log.Errorln("getting system info: " + err.Error())
-		return "" // failing to get the toolname is an error, but not fatal
-	}
-	toolName := result["tm.toolname"]
-	if toolName, ok := toolName.(string); ok {
-		log.Infof("Found tm.toolname: %v\n", toolName)
-		return toolName
-	}
-	log.Errorln("Did not find tm.toolname!")
-	return "" // not having a tm.toolname Parameter is an error, but not fatal
-}
-
 // CheckRevalidateState retrieves and returns the revalidate status from Traffic Ops.
 func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, error) {
 	log.Infoln("Checking revalidate state.")
