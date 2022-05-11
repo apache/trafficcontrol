@@ -307,13 +307,13 @@ func makeParentDotConfigData(
 		parentServerDSes[dss.Server][dss.DeliveryService] = struct{}{}
 	}
 
-	originServers, profileCaches, orgProfWarns, err := getOriginServersAndProfileCaches(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities)
+	originServers, orgProfWarns, err := getOriginServers(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities)
 	warnings = append(warnings, orgProfWarns...)
 	if err != nil {
 		return nil, warnings, errors.New("getting origin servers and profile caches: " + err.Error())
 	}
 
-	parentInfos, piWarns := makeParentInfo(serverParentCGData, serverCDNDomain, profileCaches, originServers)
+	parentInfos, piWarns := makeParentInfo(serverParentCGData, serverCDNDomain, originServers, serverCapabilities)
 	warnings = append(warnings, piWarns...)
 
 	dsOrigins, dsOriginWarns := makeDSOrigins(dss, dses, servers)
@@ -634,27 +634,6 @@ func makeParentComment(addComments bool, dsName string, topology string) string 
 	return "ds '" + dsName + "' topology '" + topology + "'"
 }
 
-type parentConfigDS struct {
-	Name                 tc.DeliveryServiceName
-	QStringIgnore        tc.QStringIgnore
-	OriginFQDN           string
-	MultiSiteOrigin      bool
-	OriginShield         string
-	Type                 tc.DSType
-	QStringHandling      string
-	RequiredCapabilities map[ServerCapability]struct{}
-	Topology             string
-}
-
-type parentConfigDSTopLevel struct {
-	parentConfigDS
-	MSOAlgorithm                       string
-	MSOParentRetry                     string
-	MSOUnavailableServerRetryResponses string
-	MSOMaxSimpleRetries                string
-	MSOMaxUnavailableServerRetries     string
-}
-
 type parentInfo struct {
 	Host            string
 	Port            int
@@ -713,7 +692,7 @@ func (s parentInfoSortByRank) Less(i, j int) bool {
 
 type serverWithParams struct {
 	Server
-	Params profileCache
+	Params parentServerParams
 }
 
 type serversWithParamsSortByRank []serverWithParams
@@ -762,14 +741,6 @@ func (ss serversWithParamsSortByRank) Less(i, j int) bool {
 	return bytes.Compare(iIP, jIP) <= 0
 }
 
-type parentConfigDSTopLevelSortByName []parentConfigDSTopLevel
-
-func (s parentConfigDSTopLevelSortByName) Len() int      { return len(s) }
-func (s parentConfigDSTopLevelSortByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s parentConfigDSTopLevelSortByName) Less(i, j int) bool {
-	return strings.Compare(string(s[i].Name), string(s[j].Name)) < 0
-}
-
 type dsesSortByName []DeliveryService
 
 func (s dsesSortByName) Len() int      { return len(s) }
@@ -784,7 +755,7 @@ func (s dsesSortByName) Less(i, j int) bool {
 	return *s[i].XMLID < *s[j].XMLID
 }
 
-type profileCache struct {
+type parentServerParams struct {
 	Weight     string
 	Port       int
 	UseIP      bool
@@ -794,32 +765,14 @@ type profileCache struct {
 
 const DefaultParentWeight = 0.999
 
-func defaultProfileCache() profileCache {
-	return profileCache{
+func defaultParentServerParams() parentServerParams {
+	return parentServerParams{
 		Weight:     strconv.FormatFloat(DefaultParentWeight, 'f', 3, 64),
 		Port:       0,
 		UseIP:      false,
 		Rank:       1,
 		NotAParent: false,
 	}
-}
-
-// cgServer is the server table data needed when selecting the servers assigned to a cachegroup.
-type cgServer struct {
-	ServerID       ServerID
-	ServerHost     string
-	ServerIP       string
-	ServerPort     int
-	CacheGroupID   int
-	CacheGroupName string
-	Status         int
-	Type           int
-	ProfileID      ProfileID
-	ProfileName    string
-	CDN            int
-	TypeName       string
-	Domain         string
-	Capabilities   map[ServerCapability]struct{}
 }
 
 type originURI struct {
@@ -1244,12 +1197,12 @@ func getTopologyQueryStringIgnore(
 
 // serverParentageParams gets the Parameters used for parent= line, or defaults if they don't exist
 // Returns the Parameters used for parent= lines for the given server, and any warnings.
-func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (profileCache, []string) {
+func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (parentServerParams, []string) {
 	warnings := []string{}
 	// TODO deduplicate with atstccfg/parentdotconfig.go
-	profileCache := defaultProfileCache()
+	parentServerParams := defaultParentServerParams()
 	if sv.TCPPort != nil {
-		profileCache.Port = *sv.TCPPort
+		parentServerParams.Port = *sv.TCPPort
 	}
 	for _, param := range params {
 		if _, ok := param.ProfileNames[(sv.ProfileNames)[0]]; !ok {
@@ -1257,31 +1210,31 @@ func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (profi
 		}
 		switch param.Name {
 		case ParentConfigCacheParamWeight:
-			profileCache.Weight = param.Value
+			parentServerParams.Weight = param.Value
 		case ParentConfigCacheParamPort:
 			if i, err := strconv.Atoi(param.Value); err != nil {
 				warnings = append(warnings, "port param is not an integer, skipping! : "+err.Error())
 			} else {
-				profileCache.Port = i
+				parentServerParams.Port = i
 			}
 		case ParentConfigCacheParamUseIP:
-			profileCache.UseIP = param.Value == "1"
+			parentServerParams.UseIP = param.Value == "1"
 		case ParentConfigCacheParamRank:
 
 			if i, err := strconv.Atoi(param.Value); err != nil {
 				warnings = append(warnings, "rank param is not an integer, skipping! : "+err.Error())
 			} else {
-				profileCache.Rank = i
+				parentServerParams.Rank = i
 			}
 		case ParentConfigCacheParamNotAParent:
-			profileCache.NotAParent = param.Value != "false"
+			parentServerParams.NotAParent = param.Value != "false"
 		}
 	}
 
-	return profileCache, warnings
+	return parentServerParams, warnings
 }
 
-func serverParentStr(sv *Server, svParams profileCache) (*ParentAbstractionServiceParent, error) {
+func serverParentStr(sv *Server, svParams parentServerParams) (*ParentAbstractionServiceParent, error) {
 	if svParams.NotAParent {
 		return nil, nil
 	}
@@ -1608,17 +1561,16 @@ func getMSOParentStrs(
 func makeParentInfo(
 	serverParentCGData serverParentCacheGroupData,
 	serverDomain string, // getCDNDomainByProfileID(tx, server.ProfileID)
-	profileCaches map[ProfileID]profileCache, // getServerParentCacheGroupProfiles(tx, server)
-	originServers map[OriginHost][]cgServer, // getServerParentCacheGroupProfiles(tx, server)
+	originServers map[OriginHost][]serverWithParams,
+	serverCapabilities map[int]map[ServerCapability]struct{},
 ) (map[OriginHost][]parentInfo, []string) {
 	warnings := []string{}
 	parentInfos := map[OriginHost][]parentInfo{}
 
 	// note servers also contains an "all" key
 	for originHost, servers := range originServers {
-		for _, row := range servers {
-			profile := profileCaches[row.ProfileID]
-			if profile.NotAParent {
+		for _, sv := range servers {
+			if sv.Params.NotAParent {
 				continue
 			}
 			// Perl has this check, but we only select servers ("deliveryServices" in Perl) with the right CDN in the first place
@@ -1626,26 +1578,32 @@ func makeParentInfo(
 			// 	continue
 			// }
 
-			weight, err := strconv.ParseFloat(profile.Weight, 64)
+			weight, err := strconv.ParseFloat(sv.Params.Weight, 64)
 			if err != nil {
-				warnings = append(warnings, "profile "+strconv.Itoa(int(row.ProfileID))+" had malformed weight, using default!")
+				warnings = append(warnings, "server "+*sv.HostName+" profile had malformed weight, using default!")
 				weight = DefaultParentWeight
 			}
 
+			ipAddr := getServerIPAddress(&sv.Server)
+			if ipAddr == nil {
+				warnings = append(warnings, "making parent info: got server with no valid IP Address, skipping!")
+				continue
+			}
+
 			parentInf := parentInfo{
-				Host:            row.ServerHost,
-				Port:            profile.Port,
-				Domain:          row.Domain,
+				Host:            *sv.HostName,
+				Port:            sv.Params.Port,
+				Domain:          *sv.DomainName,
 				Weight:          weight,
-				UseIP:           profile.UseIP,
-				Rank:            profile.Rank,
-				IP:              row.ServerIP,
-				PrimaryParent:   serverParentCGData.ParentID == row.CacheGroupID,
-				SecondaryParent: serverParentCGData.SecondaryParentID == row.CacheGroupID,
-				Capabilities:    row.Capabilities,
+				UseIP:           sv.Params.UseIP,
+				Rank:            sv.Params.Rank,
+				IP:              ipAddr.String(),
+				PrimaryParent:   serverParentCGData.ParentID == *sv.CachegroupID,
+				SecondaryParent: serverParentCGData.SecondaryParentID == *sv.CachegroupID,
+				Capabilities:    serverCapabilities[*sv.ID],
 			}
 			if parentInf.Port < 1 {
-				parentInf.Port = row.ServerPort
+				parentInf.Port = *sv.TCPPort
 			}
 			parentInfos[originHost] = append(parentInfos[originHost], parentInf)
 		}
@@ -1663,22 +1621,21 @@ func unavailableServerRetryResponsesValid(s string) bool {
 	return re.MatchString(s)
 }
 
-// getOriginServersAndProfileCaches returns the origin servers, ProfileCaches, any warnings, and any error.
-func getOriginServersAndProfileCaches(
+// getOriginServers returns the origin servers with parameters, any warnings, and any error.
+func getOriginServers(
 	cgServers map[int]Server,
 	parentServerDSes map[int]map[int]struct{},
 	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
 	dses []DeliveryService,
 	serverCapabilities map[int]map[ServerCapability]struct{},
-) (map[OriginHost][]cgServer, map[ProfileID]profileCache, []string, error) {
+) (map[OriginHost][]serverWithParams, []string, error) {
 	warnings := []string{}
-	originServers := map[OriginHost][]cgServer{}  // "deliveryServices" in Perl
-	profileCaches := map[ProfileID]profileCache{} // map[profileID]ProfileCache
+	originServers := map[OriginHost][]serverWithParams{}
 
 	dsIDMap := map[int]DeliveryService{}
 	for _, ds := range dses {
 		if ds.ID == nil {
-			return nil, nil, warnings, errors.New("delivery services got nil ID!")
+			return nil, warnings, errors.New("delivery services got nil ID!")
 		}
 		if !ds.Type.IsHTTP() && !ds.Type.IsDNS() {
 			continue // skip ANY_MAP, STEERING, etc
@@ -1705,13 +1662,19 @@ func getOriginServersAndProfileCaches(
 	dsOrigins, dsOriginWarns, err := getDSOrigins(allDSMap)
 	warnings = append(warnings, dsOriginWarns...)
 	if err != nil {
-		return nil, nil, warnings, errors.New("getting DS origins: " + err.Error())
+		return nil, warnings, errors.New("getting DS origins: " + err.Error())
 	}
 
 	profileParams, profParamWarns := getParentConfigProfileParams(cgServers, profileParentConfigParams)
 	warnings = append(warnings, profParamWarns...)
 
 	for _, cgSv := range cgServers {
+		parentServerParams, profileParamsHasProfile := profileParams[cgSv.ProfileNames[0]]
+		if !profileParamsHasProfile {
+			warnings = append(warnings, fmt.Sprintf("cachegroup has server %+v profile with no parameters\n", *cgSv.HostName))
+			parentServerParams = defaultParentServerParams()
+		}
+
 		if cgSv.ID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil ID, skipping!")
 			continue
@@ -1747,20 +1710,6 @@ func getOriginServersAndProfileCaches(
 			continue
 		}
 
-		realCGServer := cgServer{
-			ServerID:     ServerID(*cgSv.ID),
-			ServerHost:   *cgSv.HostName,
-			ServerIP:     ipAddr.String(),
-			ServerPort:   *cgSv.TCPPort,
-			CacheGroupID: *cgSv.CachegroupID,
-			Status:       *cgSv.StatusID,
-			Type:         *cgSv.TypeID,
-			CDN:          *cgSv.CDNID,
-			TypeName:     cgSv.Type,
-			Domain:       *cgSv.DomainName,
-			Capabilities: serverCapabilities[*cgSv.ID],
-		}
-
 		if cgSv.Type == tc.OriginTypeName {
 			for dsID, _ := range parentServerDSes[*cgSv.ID] { // map[serverID][]dsID
 				orgURI := dsOrigins[dsID]
@@ -1769,44 +1718,41 @@ func getOriginServersAndProfileCaches(
 					continue
 				}
 				orgHost := OriginHost(orgURI.Host)
-				originServers[orgHost] = append(originServers[orgHost], realCGServer)
+				originServers[orgHost] = append(originServers[orgHost], serverWithParams{
+					Server: cgSv,
+					Params: parentServerParams,
+				})
 			}
 		} else {
-			originServers[deliveryServicesAllParentsKey] = append(originServers[deliveryServicesAllParentsKey], realCGServer)
-		}
-
-		if _, profileCachesHasProfile := profileCaches[realCGServer.ProfileID]; !profileCachesHasProfile {
-			if profileCache, profileParamsHasProfile := profileParams[cgSv.ProfileNames[0]]; !profileParamsHasProfile {
-				warnings = append(warnings, fmt.Sprintf("cachegroup has server with profile %+v but that profile has no parameters\n", cgSv.ProfileNames[0]))
-				profileCaches[realCGServer.ProfileID] = defaultProfileCache()
-			} else {
-				profileCaches[realCGServer.ProfileID] = profileCache
-			}
+			originServers[deliveryServicesAllParentsKey] = append(originServers[deliveryServicesAllParentsKey], serverWithParams{
+				Server: cgSv,
+				Params: parentServerParams,
+			})
 		}
 	}
 
-	return originServers, profileCaches, warnings, nil
+	return originServers, warnings, nil
 }
 
 // GetParentConfigProfileParams returns the parent config profile params, and any warnings.
 func getParentConfigProfileParams(
 	cgServers map[int]Server,
 	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
-) (map[string]profileCache, []string) {
+) (map[string]parentServerParams, []string) {
 	warnings := []string{}
-	parentConfigServerCacheProfileParams := map[string]profileCache{} // map[profileName]ProfileCache
+	parentConfigServerCacheProfileParams := map[string]parentServerParams{} // map[profileName]parentServerParams
 	for _, cgServer := range cgServers {
 		if len(cgServer.ProfileNames) == 0 {
 			warnings = append(warnings, "getting parent config profile params: server has nil profiles, skipping!")
 			continue
 		}
-		profileCache, ok := parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]]
+		serverParams, ok := parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]]
 		if !ok {
-			profileCache = defaultProfileCache()
+			serverParams = defaultParentServerParams()
 		}
 		params, ok := profileParentConfigParams[cgServer.ProfileNames[0]]
 		if !ok {
-			parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]] = profileCache
+			parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]] = serverParams
 			continue
 		}
 		for name, val := range params {
@@ -1816,29 +1762,29 @@ func getParentConfigProfileParams(
 				// if err != nil {
 				// 	warnings = append(warnings, "parent.config generation: weight param is not a float, skipping! : " + err.Error())
 				// } else {
-				// 	profileCache.Weight = f
+				// 	parentServerParams.Weight = f
 				// }
 				// TODO validate float?
-				profileCache.Weight = val
+				serverParams.Weight = val
 			case ParentConfigCacheParamPort:
 				if i, err := strconv.Atoi(val); err != nil {
 					warnings = append(warnings, "port param is not an integer, skipping! : "+err.Error())
 				} else {
-					profileCache.Port = i
+					serverParams.Port = i
 				}
 			case ParentConfigCacheParamUseIP:
-				profileCache.UseIP = val == "1"
+				serverParams.UseIP = val == "1"
 			case ParentConfigCacheParamRank:
 				if i, err := strconv.Atoi(val); err != nil {
 					warnings = append(warnings, "rank param is not an integer, skipping! : "+err.Error())
 				} else {
-					profileCache.Rank = i
+					serverParams.Rank = i
 				}
 			case ParentConfigCacheParamNotAParent:
-				profileCache.NotAParent = val != "false"
+				serverParams.NotAParent = val != "false"
 			}
 		}
-		parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]] = profileCache
+		parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]] = serverParams
 	}
 	return parentConfigServerCacheProfileParams, warnings
 }
