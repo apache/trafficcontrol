@@ -145,7 +145,7 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"CDN DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointId: GetCDNID(t, "bar"), ClientSession: opsUserWithLockSession,
+					EndpointId: GetCDNID(t, "cdndelete"), ClientSession: opsUserWithLockSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {

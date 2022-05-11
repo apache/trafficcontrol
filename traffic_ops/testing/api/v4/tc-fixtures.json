@@ -286,6 +286,11 @@
             "dnssecEnabled": false,
             "domainName": "test.bar.net",
             "name": "bar"
+        },
+        {
+            "dnssecEnabled": false,
+            "domainName": "test.delete.net",
+            "name": "cdndelete"
         }
     ],
     "cdnlocks": [
@@ -309,8 +314,8 @@
         },
         {
             "userName": "opslockuser",
-            "cdn": "bar",
-            "message": "test lock for cdn actions",
+            "cdn": "cdndelete",
+            "message": "test lock for deleting cdn action",
             "soft": false
         }
     ],
