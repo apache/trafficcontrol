@@ -145,24 +145,10 @@ func GetTestStatusesIMS(t *testing.T) {
 }
 
 func CreateTestStatuses(t *testing.T) {
-	response, _, err := TOSession.GetStatuses(client.NewRequestOptions())
-	if err != nil {
-		t.Errorf("could not get statuses: %v", err)
-	}
-	statusNameMap := make(map[string]bool, 0)
-	for _, r := range response.Response {
-		statusNameMap[r.Name] = true
-	}
-
 	for _, status := range testData.Statuses {
-		if status.Name != nil {
-			if _, ok := statusNameMap[*status.Name]; !ok {
-				resp, _, err := TOSession.CreateStatus(status, client.NewRequestOptions())
-				t.Log("Response: ", resp)
-				if err != nil {
-					t.Errorf("could not create Status: %v - alerts: %+v", err, resp.Alerts)
-				}
-			}
+		resp, _, err := TOSession.CreateStatus(status, client.RequestOptions{})
+		if err != nil {
+			t.Errorf("could not create Status: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 }
@@ -253,6 +239,7 @@ func DeleteTestStatuses(t *testing.T) {
 		if status.Name == nil {
 			t.Fatal("cannot get test statuses: test data statuses must have names")
 		}
+		// Retrieve the Status by name so we can get the id for the Update
 		opts.QueryParameters.Set("name", *status.Name)
 		resp, _, err := TOSession.GetStatuses(opts)
 		if err != nil {
@@ -261,22 +248,17 @@ func DeleteTestStatuses(t *testing.T) {
 		respStatus := resp.Response[0]
 
 		delResp, _, err := TOSession.DeleteStatus(respStatus.ID, client.RequestOptions{})
-		if !tc.IsReservedStatus(*status.Name) {
-			// Retrieve the Status by name so we can get the id for the Update
-			if err != nil {
-				t.Errorf("cannot delete Status: %v - alerts: %+v", err, delResp.Alerts)
-			}
+		if err != nil {
+			t.Errorf("cannot delete Status: %v - alerts: %+v", err, delResp.Alerts)
+		}
 
-			// Retrieve the Status to see if it got deleted
-			resp, _, err = TOSession.GetStatuses(opts)
-			if err != nil {
-				t.Errorf("Unexpected error getting Statuses filtered by name after deletion: %v - alerts: %+v", err, resp.Alerts)
-			}
-			if len(resp.Response) > 0 {
-				t.Errorf("expected Status '%s' to be deleted, but it was found in Traffic Ops", *status.Name)
-			}
-		} else if err == nil {
-			t.Errorf("expected an error while trying to delete a reserved status, but got nothing")
+		// Retrieve the Status to see if it got deleted
+		resp, _, err = TOSession.GetStatuses(opts)
+		if err != nil {
+			t.Errorf("Unexpected error getting Statuses filtered by name after deletion: %v - alerts: %+v", err, resp.Alerts)
+		}
+		if len(resp.Response) > 0 {
+			t.Errorf("expected Status '%s' to be deleted, but it was found in Traffic Ops", *status.Name)
 		}
 	}
 }

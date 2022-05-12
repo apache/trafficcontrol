@@ -40,14 +40,6 @@ type TOStatus struct {
 	tc.StatusNullable
 }
 
-var statusNameMap = map[tc.CacheStatus]bool{
-	tc.CacheStatusAdminDown: true,
-	tc.CacheStatusOnline:    true,
-	tc.CacheStatusOffline:   true,
-	tc.CacheStatusReported:  true,
-	tc.CacheStatusPreProd:   true,
-}
-
 func (v *TOStatus) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "status")
 }

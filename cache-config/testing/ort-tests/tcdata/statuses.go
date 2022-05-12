@@ -17,30 +17,14 @@ package tcdata
 
 import (
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func (r *TCData) CreateTestStatuses(t *testing.T) {
-
-	response, _, err := TOSession.GetStatusesWithHdr(nil)
-	if err != nil {
-		t.Errorf("could not get statuses: %v", err)
-	}
-	statusNameMap := make(map[string]bool, 0)
-	for _, r := range response {
-		statusNameMap[r.Name] = true
-	}
-
 	for _, status := range r.TestData.Statuses {
-		if status.Name != nil {
-			if _, ok := statusNameMap[*status.Name]; !ok {
-				resp, _, err := TOSession.CreateStatusNullable(status)
-				t.Log("Response: ", resp)
-				if err != nil {
-					t.Errorf("could not CREATE status: %v", err)
-				}
-			}
+		resp, _, err := TOSession.CreateStatusNullable(status)
+		t.Log("Response: ", resp)
+		if err != nil {
+			t.Errorf("could not CREATE status: %v", err)
 		}
 	}
 }
@@ -60,21 +44,17 @@ func (r *TCData) DeleteTestStatuses(t *testing.T) {
 		respStatus := resp[0]
 
 		delResp, _, err := TOSession.DeleteStatusByID(respStatus.ID)
-		if !tc.IsReservedStatus(*status.Name) {
-			if err != nil {
-				t.Errorf("cannot DELETE Status by name: %v - %v", err, delResp)
-			}
+		if err != nil {
+			t.Errorf("cannot DELETE Status by ID: %v - %v", err, delResp)
+		}
 
-			// Retrieve the Status to see if it got deleted
-			types, _, err := TOSession.GetStatusByName(*status.Name)
-			if err != nil {
-				t.Errorf("error deleting Status name: %v", err)
-			}
-			if len(types) > 0 {
-				t.Errorf("expected Status name: %s to be deleted", *status.Name)
-			}
-		} else if err == nil {
-			t.Errorf("expected an error while trying to delete a reserved status, but got nothing")
+		// Retrieve the Status to see if it got deleted
+		statuses, _, err := TOSession.GetStatusByName(*status.Name)
+		if err != nil {
+			t.Errorf("error getting Status name: %v", err)
+		}
+		if len(statuses) > 0 {
+			t.Errorf("expected Status name: %s to be deleted", *status.Name)
 		}
 	}
 }
