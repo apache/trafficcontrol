@@ -122,6 +122,7 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 	var topology string
 	var cacheGroupNameMap = make(map[string]bool)
 	var cacheCapabilities = make(map[string]bool)
+	var skip bool
 
 	if deliveryService, ok = crConfig.DeliveryServices[string(ds)]; !ok {
 		log.Errorln("delivery service not found in CRConfig")
@@ -163,13 +164,17 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 			if _, ok := cacheGroupNameMap[*cache.CacheGroup]; !ok {
 				continue
 			}
-		}
-		cacheCapabilities = make(map[string]bool)
-		for _, cap := range cache.Capabilities {
-			cacheCapabilities[cap] = true
-		}
-		for _, rc := range deliveryService.RequiredCapabilities {
-			if _, ok = cacheCapabilities[rc]; !ok {
+			cacheCapabilities = make(map[string]bool)
+			for _, cap := range cache.Capabilities {
+				cacheCapabilities[cap] = true
+			}
+			for _, rc := range deliveryService.RequiredCapabilities {
+				if _, ok = cacheCapabilities[rc]; !ok {
+					skip = true
+					continue
+				}
+			}
+			if skip {
 				continue
 			}
 		}
