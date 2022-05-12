@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -115,13 +116,39 @@ func getMonitorHealth(tx *sql.Tx, ds tc.DeliveryServiceName, monitorFQDNs []stri
 
 // addHealth adds the given cache states to the given data and totals, and returns the new data and totals
 func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (map[tc.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64) {
+
+	var deliveryService tc.CRConfigDeliveryService
+	var ok bool
+	var topology string
+	var cacheGroupNameMap = make(map[string]bool)
+	var cacheCapabilities = make(map[string]bool)
+
+	if deliveryService, ok = crConfig.DeliveryServices[string(ds)]; !ok {
+		log.Errorln("delivery service not found in CRConfig")
+		return map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0
+	}
+
+	if deliveryService.Topology != nil {
+		topology = *deliveryService.Topology
+		if topology != "" {
+			if top, ok := crConfig.Topologies[topology]; !ok {
+				log.Errorf("CRConfig topologies does not contain DS topology: %s", topology)
+			} else {
+				for _, n := range top.Nodes {
+					cacheGroupNameMap[n] = true
+				}
+			}
+		}
+	}
 	for cacheName, avail := range crStates.Caches {
 		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
 			continue // TODO warn?
 		}
-		if _, ok := cache.DeliveryServices[string(ds)]; !ok {
-			continue
+		if topology == "" {
+			if _, ok := cache.DeliveryServices[string(ds)]; !ok {
+				continue
+			}
 		}
 		if cache.ServerStatus == nil || *cache.ServerStatus != tc.CRConfigServerStatus(tc.CacheStatusReported) {
 			continue
@@ -132,7 +159,20 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 		if cache.CacheGroup == nil {
 			continue // TODO warn?
 		}
-
+		if topology != "" {
+			if _, ok := cacheGroupNameMap[*cache.CacheGroup]; !ok {
+				continue
+			}
+		}
+		cacheCapabilities = make(map[string]bool)
+		for _, cap := range cache.Capabilities {
+			cacheCapabilities[cap] = true
+		}
+		for _, rc := range deliveryService.RequiredCapabilities {
+			if _, ok = cacheCapabilities[rc]; !ok {
+				continue
+			}
+		}
 		cgHealth := data[tc.CacheGroupName(*cache.CacheGroup)]
 		cgHealth.Name = tc.CacheGroupName(*cache.CacheGroup)
 		if avail.IsAvailable {
