@@ -33,8 +33,8 @@ func TestCDNsDNSSEC(t *testing.T) {
 		t.Skip()
 	}
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices}, func() {
-		GenerateDNSSECKeys(t)
-		RefreshDNSSECKeys(t) // NOTE: testing refresh last (while no keys exist) because it's asynchronous and might affect other tests
+		t.Run("GENERATE DNSSEC KEYS", func(t *testing.T) { GenerateDNSSECKeys(t) })
+		t.Run("REFRESH DNSSEC KEYS", func(t *testing.T) { RefreshDNSSECKeys(t) }) // NOTE: testing refresh last (while no keys exist) because it's asynchronous and might affect other tests
 	})
 }
 
