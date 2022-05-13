@@ -245,7 +245,7 @@ type UserV4 UserV40
 type UserV40 struct {
 	AddressLine1   *string `json:"addressLine1" db:"address_line1"`
 	AddressLine2   *string `json:"addressLine2" db:"address_line2"`
-	ChangeLogCount *int    `json:"changeLogCount" db:"change_log_count"`
+	ChangeLogCount int     `json:"changeLogCount" db:"change_log_count"`
 	City           *string `json:"city" db:"city"`
 	Company        *string `json:"company" db:"company"`
 	Country        *string `json:"country" db:"country"`
@@ -322,7 +322,7 @@ type CurrentUserUpdateRequestUser struct {
 
 // Upgrade converts an APIv3 and earlier "current user" to an APIv4 User.
 // Fields not present in earlier API versions need to be passed explicitly
-func (u UserCurrent) Upgrade(registrationSent, lastAuthenticated *time.Time, ucdn string, changeLogCount *int) UserV4 {
+func (u UserCurrent) Upgrade(registrationSent, lastAuthenticated *time.Time, ucdn string, changeLogCount int) UserV4 {
 	var ret UserV4
 	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
 	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
