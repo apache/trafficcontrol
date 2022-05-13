@@ -51,6 +51,9 @@ func ToErrors(err map[string]error) []error {
 // Because multiple errors are collapsed, errors cannot be wrapped and therefore
 // error identity cannot be preserved.
 func ToError(err map[string]error) error {
+	if len(err) == 0 {
+		return nil
+	}
 	var b strings.Builder
 	for key, value := range err {
 		if value != nil {
@@ -60,6 +63,10 @@ func ToError(err map[string]error) error {
 			b.WriteString(value.Error())
 			b.WriteString(", ")
 		}
+	}
+	msg := strings.TrimSuffix(b.String(), ", ")
+	if msg == "" {
+		return nil
 	}
 	return errors.New(strings.TrimSuffix(b.String(), ", "))
 }

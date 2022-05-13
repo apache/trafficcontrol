@@ -15,6 +15,7 @@ package tovalidate
 import (
 	"errors"
 	"fmt"
+	"testing"
 )
 
 func ExampleToError() {
@@ -22,6 +23,29 @@ func ExampleToError() {
 		"propA": errors.New("bad value"),
 		"propB": errors.New("cannot be blank"),
 	}
-	fmt.Println(ToError(errs))
-	// Output: 'propA' bad value, 'propB' cannot be blank
+	err := ToError(errs).Error()
+	// Iteration order of Go maps is random, so this is the best we can do.
+	fmt.Println(
+		err == "'propA' bad value, 'propB' cannot be blank" ||
+			err == "'propB' cannot be blank, 'propA' bad value",
+	)
+	// Output: true
+}
+
+func TestToError(t *testing.T) {
+	var errs map[string]error
+	err := ToError(errs)
+	if err != nil {
+		t.Error("a nil error map should yield a nil error, got:", err)
+	}
+	errs = map[string]error{}
+	err = ToError(errs)
+	if err != nil {
+		t.Error("an empty error map should yield a nil error, got:", err)
+	}
+	errs["something"] = nil
+	err = ToError(errs)
+	if err != nil {
+		t.Error("an error map with no non-nil errors should yield a nil error, got:", err)
+	}
 }
