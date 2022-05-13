@@ -399,7 +399,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 
 		hashPass, err := auth.DerivePassword(*user.LocalPassword)
 		if err != nil {
-			sysErr = fmt.Errorf("Hashing new password: %w", err)
+			sysErr = fmt.Errorf("hashing new password: %w", err)
 			errCode = http.StatusInternalServerError
 			api.HandleErr(w, r, tx, errCode, nil, sysErr)
 			return
@@ -444,11 +444,11 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ok, err := tenant.IsResourceAuthorizedToUserTx(*user.TenantID, inf.User, tx); err != nil {
-		if err == sql.ErrNoRows {
-			userErr = errors.New("No such tenant!")
+		if errors.Is(err, sql.ErrNoRows) {
+			userErr = errors.New("no such tenant")
 			errCode = http.StatusNotFound
 		} else {
-			sysErr = fmt.Errorf("Checking user %s permissions on tenant #%d: %v", inf.User.UserName, *user.TenantID, err)
+			sysErr = fmt.Errorf("checking user %s permissions on tenant #%d: %w", inf.User.UserName, *user.TenantID, err)
 			errCode = http.StatusInternalServerError
 		}
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -464,7 +464,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 
 	if *user.Username != inf.User.UserName {
 		if ok, err := dbhelpers.UsernameExists(*user.Username, tx); err != nil {
-			sysErr = fmt.Errorf("Checking existence of user %s: %w", *user.Username, err)
+			sysErr = fmt.Errorf("checking existence of user %s: %w", *user.Username, err)
 			errCode = http.StatusInternalServerError
 			api.HandleErr(w, r, tx, errCode, nil, sysErr)
 			return
@@ -480,7 +480,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 
 	if err = updateLegacyUser(&user, tx, changePasswd, changeConfirmPasswd); err != nil {
 		errCode = http.StatusInternalServerError
-		sysErr = fmt.Errorf("updating user: %w", err)
+		sysErr = fmt.Errorf("updating legacy user: %w", err)
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
@@ -524,7 +524,7 @@ func validateV4(user tc.UserV4, inf *api.APIInfo) (error, error) {
 
 	if user.Username != inf.User.UserName {
 		if ok, err := dbhelpers.UsernameExists(user.Username, inf.Tx.Tx); err != nil {
-			return nil, fmt.Errorf("Checking existence of user %s: %w", user.Username, err)
+			return nil, fmt.Errorf("checking existence of user %s: %w", user.Username, err)
 		} else if ok {
 			return fmt.Errorf("username %s already exists", user.Username), nil
 		}
@@ -601,7 +601,7 @@ func ReplaceCurrentV4(w http.ResponseWriter, r *http.Request) {
 
 	if err := updateUser(&user, tx, changePasswd); err != nil {
 		errCode = http.StatusInternalServerError
-		sysErr = fmt.Errorf("updating user: %v", err)
+		sysErr = fmt.Errorf("updating user: %w", err)
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
@@ -659,14 +659,14 @@ func updateLegacyUser(u *tc.User, tx *sql.Tx, changePassword bool, changeConfirm
 	if changePassword {
 		_, err = tx.Exec(replacePasswordQuery, u.LocalPassword, u.ID)
 		if err != nil {
-			return fmt.Errorf("resetting password: %v", err)
+			return fmt.Errorf("resetting password: %w", err)
 		}
 	}
 
 	if changeConfirmPasswd {
 		_, err = tx.Exec(replaceConfirmPasswordQuery, u.ConfirmLocalPassword, u.ID)
 		if err != nil {
-			return fmt.Errorf("resetting confirm password: %v", err)
+			return fmt.Errorf("resetting confirm password: %w", err)
 		}
 	}
 
@@ -730,7 +730,7 @@ func updateUser(u *tc.UserV4, tx *sql.Tx, changePassword bool) error {
 	if changePassword {
 		_, err = tx.Exec(replacePasswordQuery, u.LocalPassword, u.ID)
 		if err != nil {
-			return fmt.Errorf("resetting password: %v", err)
+			return fmt.Errorf("resetting password: %w", err)
 		}
 	}
 
