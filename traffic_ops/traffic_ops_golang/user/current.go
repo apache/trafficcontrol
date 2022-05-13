@@ -74,12 +74,13 @@ SET
 	phone_number=$9,
 	postal_code=$10,
 	public_ssh_key=$11,
-	state_or_province=$12,
-	tenant_id=$13,
+	role=$12,
+	state_or_province=$13,
+	tenant_id=$14,
 	token=NULL,
-	uid=$14,
-	username=$15
-WHERE id=$16
+	uid=$15,
+	username=$16
+WHERE id=$17
 RETURNING
 	address_line1,
 	address_line2,
@@ -100,13 +101,13 @@ RETURNING
 		SELECT role.name
 		FROM role
 		WHERE role.id=tm_user.role
-	) AS role_name,
+	),
 	state_or_province,
 	(
 		SELECT tenant.name
 		FROM tenant
 		WHERE tenant.id=tm_user.tenant_id
-	) AS tenant,
+	),
 	tenant_id,
 	uid,
 	username
@@ -127,20 +128,25 @@ SET
 	phone_number=$9,
 	postal_code=$10,
 	public_ssh_key=$11,
-	state_or_province=$12,
-	tenant_id=$13,
+	role=(
+		SELECT role.id
+		FROM role
+		WHERE name=$12
+	),
+	state_or_province=$13,
+	tenant_id=$14,
 	token=NULL,
-	ucdn=$14,
-	uid=$15,
-	username=$16
-WHERE id=$17
+	ucdn=$15,
+	uid=$16,
+	username=$17
+WHERE id=$18
 RETURNING
 	address_line1,
 	address_line2,
 	(
 		SELECT count(l.tm_user)
 		FROM log AS l
-		WHERE l.tm_user = u.id
+		WHERE l.tm_user = tm_user.id
 	),
 	city,
 	company,
@@ -222,6 +228,7 @@ u.new_user,
 u.phone_number,
 u.postal_code,
 u.public_ssh_key,
+u.registration_sent,
 r.name as "role",
 u.state_or_province,
 t.name as tenant,
@@ -546,6 +553,9 @@ func ReplaceCurrentV4(w http.ResponseWriter, r *http.Request) {
 	}
 	// Token must never be updated this way
 	user.Token = nil
+
+	user.ID = new(int)
+	*user.ID = inf.User.ID
 
 	userErr, sysErr = validateV4(user, inf)
 	if userErr != nil || sysErr != nil {
