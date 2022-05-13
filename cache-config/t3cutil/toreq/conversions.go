@@ -192,3 +192,52 @@ func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configApplyTi
 	reqInf, err := cl.c.TOClient.Req(http.MethodPost, path, nil, opts.Header, &alerts)
 	return alerts, reqInf, err
 }
+
+// GetServersCompat gets servers from any Traffic Ops built from the ATC `master` branch, and converts the different formats to the latest.
+// This makes t3c work with old or new Traffic Ops deployed from `master`,
+// though it doesn't make a version of t3c older than this work with a new TO,
+// which isn't logically possible from the client.
+func (cl *TOClient) GetServersCompat(opts toclient.RequestOptions) (tc.ServersV4Response, toclientlib.ReqInf, error) {
+	path := "/servers"
+	objs := struct {
+		Response []ServerV40PlusLegacy `json:"response"`
+		tc.Alerts
+	}{}
+
+	if len(opts.QueryParameters) > 0 {
+		path += "?" + opts.QueryParameters.Encode()
+	}
+	reqInf, err := cl.c.TOClient.Req(http.MethodGet, path, nil, opts.Header, &objs)
+	if err != nil {
+		return tc.ServersV4Response{}, reqInf, errors.New("request: " + err.Error())
+	}
+
+	resp := tc.ServersV4Response{Alerts: objs.Alerts}
+	for _, sv := range objs.Response {
+		newSv, err := ServerV40FromLegacy(sv)
+		if err != nil {
+			return tc.ServersV4Response{}, reqInf, errors.New("converting server from possible legacy format: " + err.Error())
+		}
+		resp.Response = append(resp.Response, newSv)
+	}
+	return resp, reqInf, nil
+}
+
+type ServerV40PlusLegacy struct {
+	tc.ServerV40
+	Profile     string `json:"profile" db:"profile"`
+	ProfileDesc string `json:"profileDesc" db:"profile_desc"`
+	ProfileID   int    `json:"profileId" db:"profile_id"`
+}
+
+func ServerV40FromLegacy(old ServerV40PlusLegacy) (tc.ServerV40, error) {
+	new := old.ServerV40
+	if len(new.ProfileNames) != 0 {
+		return new, nil
+	}
+	if old.Profile == "" {
+		return tc.ServerV40{}, errors.New("got server with neither profileNames nor profile")
+	}
+	new.ProfileNames = []string{old.Profile}
+	return new, nil
+}
