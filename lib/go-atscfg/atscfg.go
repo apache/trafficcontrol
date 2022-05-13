@@ -755,3 +755,107 @@ func FilterServers(servers []Server, filter func(sv *Server) bool) []Server {
 	}
 	return filteredServers
 }
+
+// GetDSParameters returns the parameters for the given Delivery Service.
+func GetDSParameters(
+	ds *DeliveryService,
+	params []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.Parameter, error) {
+	profileNames := []string{}
+	if ds.ProfileName != nil {
+		profileNames = append(profileNames, *ds.ProfileName)
+	}
+	return LayerProfiles(profileNames, params)
+}
+
+// GetServerParameters returns the parameters for the given Server, per the Layered Profiles feature.
+// See LayerProfiles.
+func GetServerParameters(
+	server *Server,
+	params []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.Parameter, error) {
+	return LayerProfiles(server.ProfileNames, params)
+}
+
+// LayerProfiles takes an ordered list of profile names (presumably from a Server or Delivery Service),
+// and the Parameters from Traffic Ops (which includes Profile-Parameters data),
+// and layers the parameters according to the ordered list of profiles.
+//
+// Returns the appropriate parameters for the Server, Delivery Service,
+// or other object containing an ordered list of profiles.
+func LayerProfiles(
+	profileNames []string, // from a Server, Delivery Service, or other object with "layered profiles".
+	tcParams []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.Parameter, error) {
+	params, err := tcParamsToParamsWithProfiles(tcParams)
+	if err != nil {
+		return nil, errors.New("parsing parameters profiles: " + err.Error())
+	}
+	return layerProfilesFromWith(profileNames, params), nil
+}
+
+// layerProfilesFromWith is like LayerProfiles if you already have a []parameterWithProfiles.
+func layerProfilesFromWith(profileNames []string, params []parameterWithProfiles) []tc.Parameter {
+	paramsMap := parameterWithProfilesToMap(params)
+	return layerProfilesFromMap(profileNames, paramsMap)
+}
+
+// layerProfilesFromMap is like LayerProfiles if you already have a []parameterWithProfilesMap.
+func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesMap) []tc.Parameter {
+	// ParamKey is the key for a Parameter, which
+	// if there's another Parameter with the same key in a subsequent profile
+	// in the ordered list, the last Parameter with this key will be used.
+	type ParamKey struct {
+		Name       string
+		ConfigFile string
+	}
+
+	getParamKey := func(pa tc.Parameter) ParamKey { return ParamKey{Name: pa.Name, ConfigFile: pa.ConfigFile} }
+
+	allProfileParams := map[string][]tc.Parameter{}
+
+	for _, param := range params {
+		for profile, _ := range param.ProfileNames {
+			allProfileParams[profile] = append(allProfileParams[profile], param.Parameter)
+		}
+	}
+
+	layeredParamMap := map[ParamKey]tc.Parameter{}
+
+	for _, profileName := range profileNames {
+		profileParams := allProfileParams[profileName]
+		for _, param := range profileParams {
+			paramkey := getParamKey(param)
+			// because profileNames is ordered, this will cause subsequent params
+			// on other profiles to override previous ones, "layering" like we want.
+			layeredParamMap[paramkey] = param
+		}
+	}
+
+	layeredParams := []tc.Parameter{}
+	for _, param := range layeredParamMap {
+		layeredParams = append(layeredParams, param)
+	}
+	return layeredParams
+}
+
+// ServerProfilesMatch returns whether both servers have the same Profiles in the same order,
+// and thus will have the same Parameters.
+func ServerProfilesMatch(sa *Server, sb *Server) bool {
+	return ProfilesMatch(sa.ProfileNames, sb.ProfileNames)
+}
+
+// ProfilesMatch takes two ordered lists of profile names (such as from Servers or Delivery Services)
+// and returns whether they contain the same profiles in the same order,
+// and thus whether they will contain the same Parameters.
+func ProfilesMatch(pa []string, pb []string) bool {
+	if len(pa) != len(pb) {
+		return false
+	}
+	for i, _ := range pa {
+		if pa[i] != pb[i] {
+			return false
+		}
+	}
+	return true
+}

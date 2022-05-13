@@ -1197,17 +1197,16 @@ func getTopologyQueryStringIgnore(
 
 // serverParentageParams gets the Parameters used for parent= line, or defaults if they don't exist
 // Returns the Parameters used for parent= lines for the given server, and any warnings.
-func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (parentServerParams, []string) {
+func serverParentageParams(sv *Server, allParentConfigParams []parameterWithProfilesMap) (parentServerParams, []string) {
 	warnings := []string{}
 	// TODO deduplicate with atstccfg/parentdotconfig.go
 	parentServerParams := defaultParentServerParams()
 	if sv.TCPPort != nil {
 		parentServerParams.Port = *sv.TCPPort
 	}
-	for _, param := range params {
-		if _, ok := param.ProfileNames[(sv.ProfileNames)[0]]; !ok {
-			continue
-		}
+
+	serverParentConfigParams := layerProfilesFromMap(sv.ProfileNames, allParentConfigParams)
+	for _, param := range serverParentConfigParams {
 		switch param.Name {
 		case ParentConfigCacheParamWeight:
 			parentServerParams.Weight = param.Value
