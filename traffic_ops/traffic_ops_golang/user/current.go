@@ -106,27 +106,26 @@ func Current(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	currentUser, role, err := getUser(inf.Tx.Tx, inf.User.ID)
+	currentUser, role, localUser, err := getUser(inf.Tx.Tx, inf.User.ID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting current user: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting current user: %w", err))
 		return
 	}
 
 	version := inf.Version
 	if version == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, fmt.Errorf("TOUsers.Read called with invalid API version"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("TOUsers.Read called with invalid API version"), nil)
 		return
 	}
 	if version.Major >= 4 {
 		api.WriteResp(w, r, currentUser)
 	} else {
-		legacyUser := currentUser.Downgrade()
-		legacyUser.Role = &role
+		legacyUser := currentUser.ToLegacyCurrentUser(role, localUser)
 		api.WriteResp(w, r, legacyUser)
 	}
 }
 
-func getUser(tx *sql.Tx, id int) (tc.UserCurrentV4, int, error) {
+func getUser(tx *sql.Tx, id int) (tc.UserV4, int, bool, error) {
 	q := `
 SELECT
 u.address_line1,
@@ -144,8 +143,8 @@ u.new_user,
 u.phone_number,
 u.postal_code,
 u.public_ssh_key,
-u.role,
-r.name as role_name,
+r.name as "role",
+u.role as role_id,
 u.state_or_province,
 t.name as tenant,
 u.tenant_id,
@@ -155,14 +154,14 @@ LEFT JOIN role as r ON r.id = u.role
 INNER JOIN tenant as t ON t.id = u.tenant_id
 WHERE u.id=$1
 `
-	u := tc.UserCurrentV4{}
-	localPassword := sql.NullString{}
+	var u tc.UserV4
+	var localPassword sql.NullString
 	var role int
-	if err := tx.QueryRow(q, id).Scan(&u.AddressLine1, &u.AddressLine2, &u.City, &u.Company, &u.Country, &u.Email, &u.FullName, &u.ID, &u.LastUpdated, &u.LastAuthenticated, &localPassword, &u.NewUser, &u.PhoneNumber, &u.PostalCode, &u.PublicSSHKey, &role, &u.Role, &u.StateOrProvince, &u.Tenant, &u.TenantID, &u.UserName); err != nil {
-		return tc.UserCurrentV4{}, role, errors.New("querying current user: " + err.Error())
+	err := tx.QueryRow(q, id).Scan(&u.AddressLine1, &u.AddressLine2, &u.City, &u.Company, &u.Country, &u.Email, &u.FullName, &u.ID, &u.LastUpdated, &u.LastAuthenticated, &localPassword, &u.NewUser, &u.PhoneNumber, &u.PostalCode, &u.PublicSSHKey, &role, &u.Role, &u.StateOrProvince, &u.Tenant, &u.TenantID, &u.Username)
+	if err != nil {
+		err = fmt.Errorf("querying current user: %w", err)
 	}
-	u.LocalUser = util.BoolPtr(localPassword.Valid)
-	return u, role, nil
+	return u, role, localPassword.Valid, err
 }
 
 func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
