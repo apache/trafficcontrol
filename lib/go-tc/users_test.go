@@ -59,7 +59,6 @@ func TestUserV4_ToLegacyCurrentUser(t *testing.T) {
 	addressLine2 := "Address Line 2"
 	city := "City"
 	company := "Company"
-	confirmLocalPassword := "Confirm LocalPasswd"
 	country := "Country"
 	email := "em@i.l"
 	fullName := "Full Name"
@@ -84,32 +83,31 @@ func TestUserV4_ToLegacyCurrentUser(t *testing.T) {
 	username := "Username"
 
 	user := UserV4{
-		AddressLine1:         &addressLine1,
-		AddressLine2:         &addressLine2,
-		City:                 &city,
-		Company:              &company,
-		ConfirmLocalPassword: &confirmLocalPassword,
-		Country:              &country,
-		Email:                &email,
-		FullName:             &fullName,
-		GID:                  &gid,
-		ID:                   &id,
-		LastAuthenticated:    &lastAuthenticated,
-		LastUpdated:          lastUpdated,
-		LocalPassword:        &localPassword,
-		NewUser:              newUser,
-		PhoneNumber:          &phoneNumber,
-		PostalCode:           &postalCode,
-		PublicSSHKey:         &publicSSHKey,
-		RegistrationSent:     &registrationSent,
-		Role:                 role,
-		StateOrProvince:      &stateOrProvince,
-		Tenant:               &tenant,
-		TenantID:             tenantID,
-		Token:                &token,
-		UCDN:                 "UCDN",
-		UID:                  &uid,
-		Username:             username,
+		AddressLine1:      &addressLine1,
+		AddressLine2:      &addressLine2,
+		City:              &city,
+		Company:           &company,
+		Country:           &country,
+		Email:             &email,
+		FullName:          &fullName,
+		GID:               &gid,
+		ID:                &id,
+		LastAuthenticated: &lastAuthenticated,
+		LastUpdated:       lastUpdated,
+		LocalPassword:     &localPassword,
+		NewUser:           newUser,
+		PhoneNumber:       &phoneNumber,
+		PostalCode:        &postalCode,
+		PublicSSHKey:      &publicSSHKey,
+		RegistrationSent:  &registrationSent,
+		Role:              role,
+		StateOrProvince:   &stateOrProvince,
+		Tenant:            &tenant,
+		TenantID:          tenantID,
+		Token:             &token,
+		UCDN:              "UCDN",
+		UID:               &uid,
+		Username:          username,
 	}
 
 	currentUser := user.ToLegacyCurrentUser(roleID, localUser)
@@ -225,7 +223,6 @@ func TestUser_UpgradeFromLegacyUser(t *testing.T) {
 	compareStrPtrs(t, "AddressLine2", user.AddressLine2, upgraded.AddressLine2, "upgrade")
 	compareStrPtrs(t, "City", user.City, upgraded.City, "upgrade")
 	compareStrPtrs(t, "Company", user.Company, upgraded.Company, "upgrade")
-	compareStrPtrs(t, "ConfirmLocalPassword", user.ConfirmLocalPassword, upgraded.ConfirmLocalPassword, "upgrade")
 	compareStrPtrs(t, "Country", user.Country, upgraded.Country, "upgrade")
 	compareStrPtrs(t, "Email", user.Email, upgraded.Email, "upgrade")
 	compareStrPtrs(t, "FullName", user.FullName, upgraded.FullName, "upgrade")
@@ -271,7 +268,6 @@ func TestUserV4_Downgrade(t *testing.T) {
 	addressLine2 := "Address Line 2"
 	city := "City"
 	company := "Company"
-	confirmLocalPassword := "Confirm LocalPasswd"
 	country := "Country"
 	email := "em@i.l"
 	fullName := "Full Name"
@@ -304,7 +300,6 @@ func TestUserV4_Downgrade(t *testing.T) {
 	user.AddressLine2 = &addressLine2
 	user.City = &city
 	user.Company = &company
-	user.ConfirmLocalPassword = &confirmLocalPassword
 	user.Country = &country
 	user.Email = &email
 	user.GID = &gid
@@ -342,8 +337,8 @@ func TestUserV4_Downgrade(t *testing.T) {
 	}
 	if downgraded.ConfirmLocalPassword == nil {
 		t.Error("ConfirmLocalPassword became nil after downgrade")
-	} else if *downgraded.ConfirmLocalPassword != confirmLocalPassword {
-		t.Errorf("Incorrect ConfirmLocalPassword after downgrade; want: '%s', got: '%s'", confirmLocalPassword, *downgraded.ConfirmLocalPassword)
+	} else if *downgraded.ConfirmLocalPassword != localPassword {
+		t.Errorf("Incorrect ConfirmLocalPassword after downgrade; want: '%s', got: '%s'", localPassword, *downgraded.ConfirmLocalPassword)
 	}
 	if downgraded.Country == nil {
 		t.Error("Country became nil after downgrade")
