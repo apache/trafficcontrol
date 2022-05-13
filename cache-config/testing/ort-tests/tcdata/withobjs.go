@@ -49,7 +49,6 @@ const (
 	ServerServerCapabilities
 	Servers
 	ServiceCategories
-	Statuses
 	StaticDNSEntries
 	SteeringTargets
 	Tenants
@@ -99,7 +98,6 @@ func (r *TCData) WithObjs(t *testing.T, objs []TCObj, f func()) {
 		ServerServerCapabilities:             {r.CreateTestServerServerCapabilities, r.DeleteTestServerServerCapabilities},
 		Servers:                              {r.CreateTestServers, r.DeleteTestServers},
 		ServiceCategories:                    {r.CreateTestServiceCategories, r.DeleteTestServiceCategories},
-		Statuses:                             {r.CreateTestStatuses, r.DeleteTestStatuses},
 		StaticDNSEntries:                     {r.CreateTestStaticDNSEntries, r.DeleteTestStaticDNSEntries},
 		SteeringTargets:                      {r.SetupSteeringTargets, r.DeleteTestSteeringTargets},
 		Tenants:                              {r.CreateTestTenants, r.DeleteTestTenants},

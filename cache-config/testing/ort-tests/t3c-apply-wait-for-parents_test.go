@@ -36,7 +36,7 @@ const childCacheHostName = DefaultCacheHostName
 func TestWaitForParentsTrue(t *testing.T) {
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
-		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
+		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
@@ -147,7 +147,7 @@ func TestWaitForParentsTrue(t *testing.T) {
 func TestWaitForParentsDefaultReval(t *testing.T) {
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
-		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
+		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
@@ -216,7 +216,7 @@ func TestWaitForParentsDefaultReval(t *testing.T) {
 func TestWaitForParentsFalse(t *testing.T) {
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
-		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
+		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
