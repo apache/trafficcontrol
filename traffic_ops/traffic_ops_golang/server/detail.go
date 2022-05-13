@@ -169,13 +169,13 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 // Use an empty string for the hostname to not filter by hostname, use -1 as
 // physLocationID to not filter by Physical Location.
 func AddWhereClauseAndQuery(tx *sql.Tx, q string, hostName string, physLocationID int, orderByStr string, limitStr string) (*sql.Rows, error) {
-	if hostName != "" && physLocationID != -1 {
+	if hostName != "" && physLocationID != 0 {
 		q += ` WHERE server.host_name = $1::text AND server.phys_location = $2::bigint` + orderByStr + limitStr
 		return tx.Query(q, hostName, physLocationID)
 	} else if hostName != "" {
 		q += ` WHERE server.host_name = $1::text` + orderByStr + limitStr
 		return tx.Query(q, hostName)
-	} else if physLocationID != -1 {
+	} else if physLocationID != 0 {
 		q += ` WHERE server.phys_location = $1::int` + orderByStr + limitStr
 		return tx.Query(q, physLocationID)
 	} else {
@@ -344,7 +344,7 @@ JOIN type t ON server.type = t.id
 			&s.XMPPPasswd,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("srror scanning detail server: %w", err)
+			return nil, fmt.Errorf("scanning detail server: %w", err)
 		}
 		s.ServerInterfaces = []tc.ServerInterfaceInfoV40{}
 		if interfacesMap, ok := serversMap[*s.ID]; ok {
