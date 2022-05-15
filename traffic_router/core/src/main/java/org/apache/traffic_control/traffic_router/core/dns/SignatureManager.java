@@ -272,7 +272,7 @@ public final class SignatureManager {
 		final ObjectMapper mapper = new ObjectMapper();
 
 		try {
-			final String keyUrl = trafficOpsUtils.getUrl("keystore.api.url", "https://${toHostname}/api/2.0/cdns/name/${cdnName}/dnsseckeys");
+			final String keyUrl = trafficOpsUtils.getUrl("keystore.api.url", "https://${toHostname}/api/"+TrafficOpsUtils.TO_API_VERSION+"/cdns/name/${cdnName}/dnsseckeys");
 			final JsonNode config = cacheRegister.getConfig();
 			final int timeout = JsonUtils.optInt(config, "keystore.fetch.timeout", 30000); // socket timeouts are in ms
 			final int retries = JsonUtils.optInt(config, "keystore.fetch.retries", 5);

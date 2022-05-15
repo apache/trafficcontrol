@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	testutil "github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -35,7 +36,7 @@ const childCacheHostName = DefaultCacheHostName
 func TestWaitForParentsTrue(t *testing.T) {
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
-		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
+		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
@@ -60,13 +61,14 @@ func TestWaitForParentsTrue(t *testing.T) {
 
 		// queue on both child and parent
 
-		if err := ExecTOUpdater(childCacheHostName, false, true); err != nil {
+		err := tcd.QueueUpdatesForServer(childCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
-		if err := ExecTOUpdater(parentCacheHostName, false, true); err != nil {
+		err = tcd.QueueUpdatesForServer(parentCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on parent failed: %v", err)
 		}
-
 		// verify child has parent-pending in TO status endpoint.
 
 		if status, err := getUpdateStatus(childCacheHostName); err != nil {
@@ -102,15 +104,16 @@ func TestWaitForParentsTrue(t *testing.T) {
 			t.Errorf("expected: '%s' to still be queued after failed syncds run, actual: %+v", childCacheHostName, status)
 		}
 
-		if status, err := getUpdateStatus(parentCacheHostName); err != nil {
+		parentStatus, err := getUpdateStatus(parentCacheHostName)
+		if err != nil {
 			t.Fatalf("checking '%s' queue status: %v", parentCacheHostName, err)
-		} else if !status.UpdatePending {
-			t.Errorf("expected: '%s' to still be queued after unrelated child failed syncds run, actual: %+v", parentCacheHostName, status)
+		} else if !parentStatus.UpdatePending {
+			t.Errorf("expected: '%s' to still be queued after unrelated child failed syncds run, actual: %+v", parentCacheHostName, parentStatus)
 		}
 
 		// un-queue the parent
 
-		if err = ExecTOUpdater(parentCacheHostName, false, false); err != nil {
+		if err = ExecTOUpdater(parentCacheHostName, parentStatus.ConfigUpdateTime, parentStatus.RevalidateUpdateTime, util.BoolPtr(false), util.BoolPtr(false)); err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
 
@@ -135,7 +138,7 @@ func TestWaitForParentsTrue(t *testing.T) {
 		if status, err := getUpdateStatus(parentCacheHostName); err != nil {
 			t.Fatalf("checking '%s' queue status: %v", parentCacheHostName, err)
 		} else if status.UpdatePending {
-			t.Errorf("expected: '%s' to still be queued after unrelated child successful syncds run, actual: %+v", parentCacheHostName, status)
+			t.Errorf("expected: '%s' to not be queued after successful syncds wait-for-parents run, actual: %+v", parentCacheHostName, status)
 		}
 
 	})
@@ -144,7 +147,7 @@ func TestWaitForParentsTrue(t *testing.T) {
 func TestWaitForParentsDefaultReval(t *testing.T) {
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
-		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
+		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
@@ -169,13 +172,14 @@ func TestWaitForParentsDefaultReval(t *testing.T) {
 
 		// queue both child and parent
 
-		if err := ExecTOUpdater(childCacheHostName, false, true); err != nil {
+		err := tcd.QueueUpdatesForServer(childCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
-		if err := ExecTOUpdater(parentCacheHostName, false, true); err != nil {
+		err = tcd.QueueUpdatesForServer(parentCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on parent failed: %v", err)
 		}
-
 		// verify child has parent-pending in TO status endpoint.
 
 		if status, err := getUpdateStatus(childCacheHostName); err != nil {
@@ -212,7 +216,7 @@ func TestWaitForParentsDefaultReval(t *testing.T) {
 func TestWaitForParentsFalse(t *testing.T) {
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
-		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
+		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
@@ -237,10 +241,12 @@ func TestWaitForParentsFalse(t *testing.T) {
 
 		// queue both child and parent
 
-		if err := ExecTOUpdater(childCacheHostName, false, true); err != nil {
+		err := tcd.QueueUpdatesForServer(childCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on child failed: %v", err)
 		}
-		if err := ExecTOUpdater(parentCacheHostName, false, true); err != nil {
+		err = tcd.QueueUpdatesForServer(parentCacheHostName, true)
+		if err != nil {
 			t.Fatalf("queue updates on parent failed: %v", err)
 		}
 
@@ -301,12 +307,12 @@ func TestWaitForParentsFalse(t *testing.T) {
 	})
 }
 
-func getUpdateStatus(hostName string) (tc.ServerUpdateStatus, error) {
-	st := tc.ServerUpdateStatus{}
+func getUpdateStatus(hostName string) (atscfg.ServerUpdateStatus, error) {
+	st := atscfg.ServerUpdateStatus{}
 	if output, err := runRequest(hostName, CMDUpdateStatus); err != nil {
-		return tc.ServerUpdateStatus{}, errors.New("t3c-request failed: " + err.Error())
+		return atscfg.ServerUpdateStatus{}, errors.New("t3c-request failed: " + err.Error())
 	} else if err = json.Unmarshal([]byte(output), &st); err != nil {
-		return tc.ServerUpdateStatus{}, errors.New("unmarshalling t3c-request json output: " + err.Error())
+		return atscfg.ServerUpdateStatus{}, errors.New("unmarshalling t3c-request json output: " + err.Error())
 	}
 	return st, nil
 }

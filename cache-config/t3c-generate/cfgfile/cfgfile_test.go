@@ -311,9 +311,7 @@ func randServer() *atscfg.Server {
 	sv.OfflineReason = randStr()
 	sv.PhysLocation = randStr()
 	sv.PhysLocationID = randInt()
-	sv.Profile = randStr()
-	sv.ProfileDesc = randStr()
-	sv.ProfileID = randInt()
+	sv.ProfileNames = []string{*randStr()}
 	sv.Rack = randStr()
 	sv.RevalPending = randBool()
 	sv.Status = randStr()

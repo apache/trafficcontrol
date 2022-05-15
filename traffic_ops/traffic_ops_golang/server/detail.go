@@ -56,7 +56,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if hostName == "" && physLocationIDStr == "" {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Missing required fields: 'hostname' or 'physLocationID'"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing required fields: 'hostName' or 'physLocationID'"), nil)
 		return
 	}
 	orderBy := "hostName"
@@ -91,7 +91,11 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 				routerPortName = interfaces[0].RouterPortName
 			}
 			v11server := tc.ServerDetailV11{}
-			v11server.ServerDetail = server.ServerDetail
+			v11server.ServerDetail, err = dbhelpers.GetServerDetailFromV4(server, inf.Tx.Tx)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to GetServerDetailFromV4: %w", err))
+				return
+			}
 			v11server.RouterHostName = &routerHostName
 			v11server.RouterPortName = &routerPortName
 			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
@@ -117,7 +121,11 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 				routerHostName = interfaces[0].RouterHostName
 				routerPortName = interfaces[0].RouterPortName
 			}
-			v3Server.ServerDetail = server.ServerDetail
+			v3Server.ServerDetail, err = dbhelpers.GetServerDetailFromV4(server, inf.Tx.Tx)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to GetServerDetailFromV4: %w", err))
+				return
+			}
 			v3Server.RouterHostName = &routerHostName
 			v3Server.RouterPortName = &routerPortName
 			v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
@@ -209,8 +217,7 @@ server.mgmt_ip_gateway,
 server.mgmt_ip_netmask,
 server.offline_reason,
 pl.name as phys_location,
-p.name as profile,
-p.description as profile_desc,
+(SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server_profile.server=server.id) AS profile_name,
 server.rack,
 st.name as status,
 server.tcp_port,
@@ -275,7 +282,38 @@ JOIN type t ON server.type = t.id
 
 	for rows.Next() {
 		s := tc.ServerDetailV40{}
-		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
+		if err := rows.Scan(&s.ID,
+			&s.CacheGroup,
+			&s.CDNName,
+			pq.Array(&s.DeliveryServiceIDs),
+			&s.DomainName,
+			&s.GUID,
+			&s.HostName,
+			&s.HTTPSPort,
+			&s.ILOIPAddress,
+			&s.ILOIPGateway,
+			&s.ILOIPNetmask,
+			&s.ILOPassword,
+			&s.ILOUsername,
+			&serviceAddress,
+			&service6Address,
+			&serviceGateway,
+			&service6Gateway,
+			&serviceNetmask,
+			&serviceInterface,
+			&serviceMtu,
+			&s.MgmtIPAddress,
+			&s.MgmtIPGateway,
+			&s.MgmtIPNetmask,
+			&s.OfflineReason,
+			&s.PhysLocation,
+			pq.Array(&s.ProfileNames),
+			&s.Rack,
+			&s.Status,
+			&s.TCPPort,
+			&s.Type,
+			&s.XMPPID,
+			&s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
 		s.ServerInterfaces = []tc.ServerInterfaceInfoV40{}

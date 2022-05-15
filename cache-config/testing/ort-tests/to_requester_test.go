@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -34,7 +35,7 @@ type Package struct {
 func TestTORequester(t *testing.T) {
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
-		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
+		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
@@ -111,7 +112,7 @@ func TestTORequester(t *testing.T) {
 		if err != nil {
 			t.Fatalf("t3c-request exec failed: %v", err)
 		}
-		var serverStatus tc.ServerUpdateStatus
+		var serverStatus atscfg.ServerUpdateStatus
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
 			t.Fatalf("failed to parse t3c-request output: %v", err)

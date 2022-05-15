@@ -19,7 +19,7 @@
 ***********
 Traffic Ops
 ***********
-Traffic Ops is quite possible the single most complex and most important Traffic Control component. It has many different configuration options that affect a wide range of other components and their interactions.
+Traffic Ops is quite possibly the single most complex and most important Traffic Control component. It has many different configuration options that affect a wide range of other components and their interactions.
 
 .. _to-install:
 
@@ -257,7 +257,7 @@ While this section contains instructions for running Traffic Ops manually, the o
 
 traffic_ops_golang
 ------------------
-``traffic_ops_golang [--version] [--plugins] [--api-routes] --cfg CONFIG_PATH --dbcfg DB_CONFIG_PATH [--riakcfg RIAK_CONFIG_PATH]``
+``traffic_ops_golang [--version] [--plugins] [--api-routes] --cfg CONFIG_PATH --dbcfg DB_CONFIG_PATH [--riakcfg RIAK_CONFIG_PATH] [--backendcfg BACKEND_CONFIG_PATH]``
 
 .. option:: --cfg CONFIG_PATH
 
@@ -281,6 +281,10 @@ traffic_ops_golang
 		This optional command line flag specifies the absolute or relative path to a configuration file used by Traffic Ops to establish connections to Riak when used as the Traffic Vault backend - `riak.conf`_. Please use ``"traffic_vault_backend": "riak"`` and ``"traffic_vault_config": {...}`` (with the contents of `riak.conf`_) instead.
 
 	.. impl-detail:: The name of this flag is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
+
+.. option:: --backendcfg BACKEND_CONFIG_PATH
+
+	This optional command line flag specifies the absolute or relative path to a configuration file used by Traffic Ops to act as a reverse proxy and forward requests on the specified paths to the corresponding hosts - `backends.conf`_
 
 .. option:: --version
 
@@ -586,6 +590,32 @@ This file sets authentication options for connections to Riak when used as the T
 
 .. impl-detail:: The name of this file is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
 
+backends.conf
+"""""""""""""
+This file deals with the configuration parameters of running Traffic Ops as a reverse proxy for certain endpoints that need to be served externally by other backend services. It is a JSON-format set of options and their respective values. `traffic_ops_golang`_ will use whatever file is specified (if any) by its :option:`--backendcfg` option. The keys of the file are described below.
+
+:routes: This is an array of options to configure Traffic Ops to forward requests of specified types to the appropriate backends.
+
+	:path:              The regex matching the endpoint that will be served by the backend, for example, :regexp:`^/api/4.0/foo?$`.
+	:method:            The HTTP method for the above mentioned path, for example, ``GET`` or ``PUT``.
+	:routeId:           The integral identifier for the new route being added.
+	:hosts:             An array of the host object, which specifies the protocol, hostname and port where the request (if matched) needs to be forwarded to.
+
+		:protocol:     The protocol/scheme to be followed while forwarding the requests to the backend service.
+		:hostname:     The hostname of the server where the backend service is running.
+		:port:         The port (integer) on the backend server where the service is running.
+
+	:insecure:          A boolean specifying whether or not TO should verify the backend server's certificate chain and host name. This is not recommended for production use. This is an optional parameter, defaulting to ``false`` when not present.
+	:permissions:       An array of permissions (strings) specifying the permissions required by the user to use this API route.
+	:opts:              A collection of key value pairs to control how the requests should be forwarded/ handled, for example, ``"alg": "roundrobin"``. Currently, only ``roundrobin`` is supported (which is also the default if nothing is specified) by Traffic Ops.
+
+Example backends.conf
+'''''''''''''''''''''
+.. include:: ../../../traffic_ops/app/conf/backends.conf
+	:code: json
+	:tab-width: 4
+
+
 Installing the SSL Certificate
 ------------------------------
 By default, Traffic Ops runs as an SSL web server (that is, over HTTPS), and a certificate needs to be installed.
@@ -682,7 +712,7 @@ You must then take the output file :file:`trafficops.csr` and submit a request t
 	sudo cp trafficops.crt /etc/pki/tls/certs
 	sudo chown trafops:trafops /etc/pki/tls/certs/trafficops.crt
 
-If necessary, install the :abbr:`CA (Certificate Authority) certificate's ``.pem`` and ``.crt`` files in ``/etc/pki/tls/certs``.
+If necessary, install the :abbr:`CA (Certificate Authority)` certificate's ``.pem`` and ``.crt`` files in ``/etc/pki/tls/certs``.
 
 You will need to update `cdn.conf`_ with any necessary changes.
 

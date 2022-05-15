@@ -27,6 +27,8 @@ Environment Variables
 +============================+==================================================================================+
 | ``GITHUB_TOKEN``           | Required. ``${{ github.token }}`` or ``${{ secrets.GITHUB_TOKEN }}``             |
 +----------------------------+----------------------------------------------------------------------------------+
+| ``PR_GITHUB_TOKEN``        | Required. ``${{ github.token }}`` or another token                               |
++----------------------------+----------------------------------------------------------------------------------+
 | ``GIT_AUTHOR_NAME``        | Optional. The username to associate with the commit that updates the Go version. |
 +----------------------------+----------------------------------------------------------------------------------+
 | ``MINIMUM_COMMITS``        | Required. The lowest number of Issue-closing Pull Requests a Contributor can     |
@@ -51,7 +53,7 @@ Example usage
 	- name: Assign Triage Role
 	  run: python3 -m assign_triage_role
 	  env:
-	    GIT_AUTHOR_NAME: asfgit
+	    GIT_AUTHOR_NAME: asf-ci
 	    GITHUB_TOKEN: ${{ github.token }}
 	    MINIMUM_COMMITS: 5
 	    SINCE_DAYS_AGO: 45

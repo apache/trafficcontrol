@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -52,31 +53,33 @@ func UpdateTestStatusesWithHeaders(t *testing.T, header http.Header) {
 		t.Fatal("Need at least one Status to test updating a status with an HTTP header")
 	}
 
-	firstStatus := testData.Statuses[0]
-	if firstStatus.Name == nil {
-		t.Fatal("cannot update test statuses: first test data status must have a name")
-	}
-
-	// Retrieve the Status by name so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	opts.QueryParameters.Set("name", *firstStatus.Name)
-	resp, _, err := TOSession.GetStatuses(opts)
-	if err != nil {
-		t.Errorf("cannot get Status by name '%s': %v - alerts %+v", *firstStatus.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) > 0 {
-		remoteStatus := resp.Response[0]
-		expectedStatusDesc := "new description"
-		remoteStatus.Description = expectedStatusDesc
-
-		opts.QueryParameters.Del("name")
-		_, reqInf, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, opts)
-		if err == nil {
-			t.Errorf("Expected error about precondition failed, but got none")
+	for _, status := range testData.Statuses {
+		if status.Name == nil {
+			t.Fatal("cannot update test statuses: test data status must have a name")
 		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %d", reqInf.StatusCode)
+		if !tc.IsReservedStatus(*status.Name) {
+			// Retrieve the Status by name so we can get the id for the Update
+			opts := client.NewRequestOptions()
+			opts.Header = header
+			opts.QueryParameters.Set("name", *status.Name)
+			resp, _, err := TOSession.GetStatuses(opts)
+			if err != nil {
+				t.Errorf("cannot get Status by name '%s': %v - alerts %+v", *status.Name, err, resp.Alerts)
+			}
+			if len(resp.Response) > 0 {
+				remoteStatus := resp.Response[0]
+				expectedStatusDesc := "new description"
+				remoteStatus.Description = expectedStatusDesc
+
+				opts.QueryParameters.Del("name")
+				_, reqInf, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, opts)
+				if err == nil {
+					t.Errorf("Expected error about precondition failed, but got none")
+				}
+				if reqInf.StatusCode != http.StatusPreconditionFailed {
+					t.Errorf("Expected status code 412, got %d", reqInf.StatusCode)
+				}
+			}
 		}
 	}
 }
@@ -148,7 +151,6 @@ func CreateTestStatuses(t *testing.T) {
 			t.Errorf("could not create Status: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
-
 }
 
 func SortTestStatuses(t *testing.T) {
@@ -171,45 +173,50 @@ func UpdateTestStatuses(t *testing.T) {
 	if len(testData.Statuses) < 1 {
 		t.Fatal("Need at least one Status to test updating a Status")
 	}
-	firstStatus := testData.Statuses[0]
-	if firstStatus.Name == nil {
-		t.Fatal("cannot update test statuses: first test data status must have a name")
-	}
+	for _, status := range testData.Statuses {
+		if status.Name == nil {
+			t.Fatal("cannot update test statuses: test data status must have a name")
+		}
+		// Retrieve the Status by name so we can get the id for the Update
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", *status.Name)
+		resp, _, err := TOSession.GetStatuses(opts)
+		if err != nil {
+			t.Errorf("cannot get Status by name '%s': %v - alerts: %+v", *status.Name, err, resp.Alerts)
+		}
+		if len(resp.Response) != 1 {
+			t.Fatalf("Expected exactly one Status to exist with name '%s', found: %d", *status.Name, len(resp.Response))
+		}
+		remoteStatus := resp.Response[0]
+		expectedStatusDesc := "new description"
+		remoteStatus.Description = expectedStatusDesc
+		alert, _, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, client.RequestOptions{})
 
-	// Retrieve the Status by name so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", *firstStatus.Name)
-	resp, _, err := TOSession.GetStatuses(opts)
-	if err != nil {
-		t.Errorf("cannot get Status by name '%s': %v - alerts: %+v", *firstStatus.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Status to exist with name '%s', found: %d", *firstStatus.Name, len(resp.Response))
-	}
-	remoteStatus := resp.Response[0]
-	expectedStatusDesc := "new description"
-	remoteStatus.Description = expectedStatusDesc
+		if tc.IsReservedStatus(*status.Name) {
+			if err == nil {
+				t.Errorf("expected an error about while updating a reserved status, but got nothing")
+			}
+		} else {
+			if err != nil {
+				t.Errorf("cannot update Status: %v - alerts: %+v", err, alert.Alerts)
+			}
 
-	alert, _, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update Status: %v - alerts: %+v", err, alert.Alerts)
+			// Retrieve the Status to check Status name got updated
+			opts.QueryParameters.Del("name")
+			opts.QueryParameters.Set("id", strconv.Itoa(remoteStatus.ID))
+			resp, _, err = TOSession.GetStatuses(opts)
+			if err != nil {
+				t.Errorf("cannot get Status '%s' by ID %d: %v - alerts: %+v", *status.Name, remoteStatus.ID, err, resp.Alerts)
+			}
+			if len(resp.Response) != 1 {
+				t.Fatalf("Expected exactly one Status to exist with ID %d, found: %d", remoteStatus.ID, len(resp.Response))
+			}
+			respStatus := resp.Response[0]
+			if respStatus.Description != expectedStatusDesc {
+				t.Errorf("results do not match actual: %s, expected: %s", respStatus.Name, expectedStatusDesc)
+			}
+		}
 	}
-
-	// Retrieve the Status to check Status name got updated
-	opts.QueryParameters.Del("name")
-	opts.QueryParameters.Set("id", strconv.Itoa(remoteStatus.ID))
-	resp, _, err = TOSession.GetStatuses(opts)
-	if err != nil {
-		t.Errorf("cannot get Status '%s' by ID %d: %v - alerts: %+v", *firstStatus.Name, remoteStatus.ID, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Status to exist with ID %d, found: %d", remoteStatus.ID, len(resp.Response))
-	}
-	respStatus := resp.Response[0]
-	if respStatus.Description != expectedStatusDesc {
-		t.Errorf("results do not match actual: %s, expected: %s", respStatus.Name, expectedStatusDesc)
-	}
-
 }
 
 func GetTestStatuses(t *testing.T) {
@@ -232,7 +239,6 @@ func DeleteTestStatuses(t *testing.T) {
 		if status.Name == nil {
 			t.Fatal("cannot get test statuses: test data statuses must have names")
 		}
-
 		// Retrieve the Status by name so we can get the id for the Update
 		opts.QueryParameters.Set("name", *status.Name)
 		resp, _, err := TOSession.GetStatuses(opts)

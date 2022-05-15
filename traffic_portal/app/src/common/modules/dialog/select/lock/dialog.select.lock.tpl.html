@@ -41,6 +41,21 @@ under the License.
         </div>
         <div class="row">
             <div class="col-sm-12 col-md-12">
+                <div class="form-group">
+                    <label class="has-tooltip control-label" for="users">Shared Usernames
+                        <div class="helptooltip">
+                            <div class="helptext">The usernames with which the creator wants to share their lock.</div>
+                        </div>
+                    </label>
+                    <select id="users" name="users" class="form-control" ng-model="lock.sharedUserNames" multiple ng-options="user.username as user.username for user in users" required>
+                        <option disabled hidden selected value="">Select...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12 col-md-12">
                 <fieldset class="form-group">
                     <legend>Type</legend>
                     <div class="fieldset-body">
@@ -51,7 +66,7 @@ under the License.
                         </label>
                         <input id="soft" name="lockType" type="radio" ng-model="lock.soft" ng-value="true" required>
                         <label class="has-tooltip" for="hard">Hard<div class="helptooltip">
-                            <div class="helptext">A <dfn>hard</dfn> lock will prevent others from queueing server updates or snapshotting the locked CDN. It will also block others from making changes that would change the state of the locked CDN.
+                            <div class="helptext">A <dfn>hard</dfn> lock will prevent others from queueing server updates or snapshotting the locked CDN. It will also block others from making changes (except clearing updates) that would change the state of the locked CDN.
                             </div>
                         </div>
                         </label>

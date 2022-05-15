@@ -344,6 +344,18 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * Generates an HTML "name" attribute value for a context menu item.
+	 *
+	 * @param item The item for which a name will be generated.
+	 * @returns A name for the given `item`. This is **not** guaranteed to be
+	 * unique - in particular if any item names differ only by non-"word"
+	 * characters, the output of this will collide.
+	 */
+	public itemName(item: ContextMenuItem<T>): string {
+		return item.name.replace(/\W+/g, "-");
+	}
+
+	/**
 	 * Checks if external filtering should be performed.
 	 *
 	 * @returns whether or not a fuzzy search filter was provided.

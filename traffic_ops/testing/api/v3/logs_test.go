@@ -16,29 +16,54 @@ package v3
 */
 
 import (
+	"net/http"
+	"net/url"
+	"strconv"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestLogs(t *testing.T) {
 	WithObjs(t, []TCObj{Roles, Tenants, Users}, func() { // Objs added to create logs when this test is run alone
-		GetTestLogs(t)
-		GetTestLogsByLimit(t)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"OK when VALID request": {
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"RESPONSE LENGTH matches LIMIT parameter": {
+					ClientSession: TOSession, RequestParams: url.Values{"limit": {"10"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						utils.ResponseHasLength(10)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							if name == "RESPONSE LENGTH matches LIMIT parameter" {
+								limit, _ := strconv.Atoi(testCase.RequestParams["limit"][0])
+								resp, reqInf, err := testCase.ClientSession.GetLogsByLimit(limit)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetLogs()
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							}
+						})
+					}
+				}
+			})
+		}
 	})
-}
-
-func GetTestLogs(t *testing.T) {
-	_, _, err := TOSession.GetLogs()
-	if err != nil {
-		t.Fatalf("error getting logs: " + err.Error())
-	}
-}
-
-func GetTestLogsByLimit(t *testing.T) {
-	toLogs, _, err := TOSession.GetLogsByLimit(10)
-	if err != nil {
-		t.Fatalf("error getting logs: " + err.Error())
-	}
-	if len(toLogs) != 10 {
-		t.Fatalf("GET logs by limit: incorrect number of logs returned (%v)", len(toLogs))
-	}
 }

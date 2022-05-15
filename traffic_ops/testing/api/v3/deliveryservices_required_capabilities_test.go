@@ -16,524 +16,231 @@ package v3
 */
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
-		GetTestDeliveryServicesRequiredCapabilitiesIMS(t)
-		InvalidDeliveryServicesRequiredCapabilityAddition(t)
-		GetTestDeliveryServicesRequiredCapabilities(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t, header)
-	})
-}
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments, ServerServerCapabilities, DeliveryServicesRequiredCapabilities}, func() {
 
-func TestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
-		GetTestDeliveryServicesRequiredCapabilities(t)
-		OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t)
-	})
-}
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing.T) {
-	resp, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("ds-top-req-cap2", nil)
-	if err != nil {
-		t.Errorf("getting delivery service by xml ID: %v", err.Error())
-	}
-	if len(resp) != 1 {
-		t.Fatalf("expected to get only one delivery service in the response, but got %d", len(resp))
-	}
-	if resp[0].ID == nil {
-		t.Fatalf("no ID in the resulting delivery service")
-	}
-	dsID := *resp[0].ID
-	params := url.Values{}
-	_, _, err = TOSession.AssignServersToDeliveryService([]string{"denver-mso-org-01"}, "ds-top-req-cap2")
-	if err != nil {
-		t.Errorf("assigning ORG server to ds-top delivery service: %v", err.Error())
-	}
-	params.Add("dsId", strconv.Itoa(dsID))
-	params.Add("type", tc.OriginTypeName)
-	responseServers, _, err := TOSession.GetServersWithHdr(&params, nil)
-	if err != nil {
-		t.Fatalf("getting servers for ds-top-req-cap2 delivery service: %v", err.Error())
-	}
-	if len(responseServers.Response) != 1 {
-		t.Fatalf("expected just one ORG server in the response, but got %d", len(responseServers.Response))
-	}
-	if responseServers.Response[0].HostName == nil {
-		t.Fatal("expected a valid host name for the resulting ORG server, but got nothing")
-	}
-	if *responseServers.Response[0].HostName != "denver-mso-org-01" {
-		t.Errorf("expected host name of the resulting ORG server to be %v, but got %v", "denver-mso-org-01", *responseServers.Response[0].HostName)
-	}
-}
-
-func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, header http.Header) {
-	data := testData.DeliveryServicesRequiredCapabilities
-	ds1 := helperGetDeliveryServiceID(t, data[0].XMLID)
-
-	testCases := []struct {
-		description string
-		capability  tc.DeliveryServicesRequiredCapability
-	}{
-		{
-			description: "get all deliveryservices required capabilities",
-		},
-		{
-			description: fmt.Sprintf("get all deliveryservices required capabilities by deliveryServiceID: %d", *ds1),
-			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID: ds1,
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession, RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when VALID DELIVERYSERVICEID parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"deliveryServiceId": {"ds1"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSRCExpectedFields(map[string]interface{}{"DeliveryServiceId": "ds1"})),
+				},
+				"OK when VALID XMLID parameter": {
+					ClientSession: TOSession, RequestParams: url.Values{"xmlID": {"ds2"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSRCExpectedFields(map[string]interface{}{"XMLID": "ds2"})),
+				},
+				"OK when VALID REQUIREDCAPABILITY parameter": {
+					ClientSession: TOSession, RequestParams: url.Values{"requiredCapability": {"bar"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateDSRCExpectedFields(map[string]interface{}{"RequiredCapability": "bar"})),
+				},
 			},
-		},
-		{
-			description: fmt.Sprintf("get all deliveryservices required capabilities by xmlID: %s", *data[0].XMLID),
-			capability: tc.DeliveryServicesRequiredCapability{
-				XMLID: data[0].XMLID,
+			"POST": {
+				"BAD REQUEST when REASSIGNING REQUIRED CAPABILITY to DELIVERY SERVICE": {
+					ClientSession: TOSession, RequestBody: map[string]interface{}{
+						"deliveryServiceID":  GetDeliveryServiceId(t, "ds1")(),
+						"requiredCapability": "foo",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when SERVERS DONT have CAPABILITY": {
+					ClientSession: TOSession, RequestBody: map[string]interface{}{
+						"deliveryServiceID":  GetDeliveryServiceId(t, "test-ds-server-assignments")(),
+						"requiredCapability": "disk",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when DELIVERY SERVICE HAS TOPOLOGY where SERVERS DONT have CAPABILITY": {
+					ClientSession: TOSession, RequestBody: map[string]interface{}{
+						"deliveryServiceID":  GetDeliveryServiceId(t, "ds-top-req-cap")(),
+						"requiredCapability": "bar",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when DELIVERY SERVICE ID EMPTY": {
+					ClientSession: TOSession, RequestBody: map[string]interface{}{
+						"requiredCapability": "bar",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when REQUIRED CAPABILITY EMPTY": {
+					ClientSession: TOSession, RequestBody: map[string]interface{}{
+						"deliveryServiceID": GetDeliveryServiceId(t, "ds1")(),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"NOT FOUND when NON-EXISTENT REQUIRED CAPABILITY": {
+					ClientSession: TOSession, RequestBody: map[string]interface{}{
+						"deliveryServiceID":  GetDeliveryServiceId(t, "ds1")(),
+						"requiredCapability": "bogus",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"NOT FOUND when NON-EXISTENT DELIVERY SERVICE ID": {
+					ClientSession: TOSession, RequestBody: map[string]interface{}{
+						"deliveryServiceID":  -1,
+						"requiredCapability": "foo",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"BAD REQUEST when INVALID DELIVERY SERVICE TYPE": {
+					ClientSession: TOSession, RequestBody: map[string]interface{}{
+						"deliveryServiceID":  GetDeliveryServiceId(t, "anymap-ds")(),
+						"requiredCapability": "foo",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
 			},
-		},
-		{
-			description: fmt.Sprintf("get all deliveryservices required capabilities by requiredCapability: %s", *data[0].RequiredCapability),
-			capability: tc.DeliveryServicesRequiredCapability{
-				RequiredCapability: data[0].RequiredCapability,
+			"DELETE": {
+				"OK when VALID request": {
+					EndpointId: GetDeliveryServiceId(t, "ds-top-req-cap"), ClientSession: TOSession,
+					RequestBody:  map[string]interface{}{"requiredCapability": "ram"},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"NOT FOUND when NON-EXISTENT DELIVERYSERVICEID parameter": {
+					EndpointId: func() int { return -1 }, ClientSession: TOSession,
+					RequestBody:  map[string]interface{}{"requiredCapability": "foo"},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"NOT FOUND when NON-EXISTENT REQUIREDCAPABILITY parameter": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					RequestBody:  map[string]interface{}{"requiredCapability": "bogus"},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
 			},
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
-			if err != nil {
-				t.Fatalf("Expected no error, but got %v", err.Error())
-			}
-			if reqInf.StatusCode != http.StatusOK {
-				t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-			}
-		})
-	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
-			if err != nil {
-				t.Fatalf("Expected no error, but got %v", err.Error())
-			}
-			if reqInf.StatusCode != http.StatusNotModified {
-				t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-			}
-		})
-	}
-}
-
-func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	data := testData.DeliveryServicesRequiredCapabilities
-	ds1 := helperGetDeliveryServiceID(t, data[0].XMLID)
-
-	testCases := []struct {
-		description string
-		capability  tc.DeliveryServicesRequiredCapability
-		expectFunc  func(tc.DeliveryServicesRequiredCapability, []tc.DeliveryServicesRequiredCapability)
-	}{
-		{
-			description: "get all deliveryservices required capabilities",
-			expectFunc: func(expect tc.DeliveryServicesRequiredCapability, actual []tc.DeliveryServicesRequiredCapability) {
-				if len(actual) != len(testData.DeliveryServicesRequiredCapabilities) {
-					t.Errorf("expected length: %d, actual: %d", len(testData.DeliveryServicesRequiredCapabilities), len(actual))
-				}
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession: TOSession, RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
-		},
-		{
-			description: fmt.Sprintf("get all deliveryservices required capabilities by deliveryServiceID: %d", *ds1),
-			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID: ds1,
-			},
-			expectFunc: func(dsRequiredCapability tc.DeliveryServicesRequiredCapability, dsReqCaps []tc.DeliveryServicesRequiredCapability) {
-				for _, dsrc := range dsReqCaps {
-					if *dsrc.DeliveryServiceID != *dsRequiredCapability.DeliveryServiceID {
-						t.Errorf("expected: all delivery service IDs to equal %d, actual: found %d", *dsRequiredCapability.DeliveryServiceID, *dsrc.DeliveryServiceID)
-					}
-				}
-			},
-		},
-		{
-			description: fmt.Sprintf("get all deliveryservices required capabilities by xmlID: %s", *data[0].XMLID),
-			capability: tc.DeliveryServicesRequiredCapability{
-				XMLID: data[0].XMLID,
-			},
-			expectFunc: func(dsRequiredCapability tc.DeliveryServicesRequiredCapability, dsReqCaps []tc.DeliveryServicesRequiredCapability) {
-				for _, dsrc := range dsReqCaps {
-					if *dsrc.XMLID != *dsRequiredCapability.XMLID {
-						t.Errorf("expected: all delivery service XMLIDs to equal %s, actual: found %s", *dsRequiredCapability.XMLID, *dsrc.XMLID)
-					}
-				}
-			},
-		},
-		{
-			description: fmt.Sprintf("get all deliveryservices required capabilities by requiredCapability: %s", *data[0].RequiredCapability),
-			capability: tc.DeliveryServicesRequiredCapability{
-				RequiredCapability: data[0].RequiredCapability,
-			},
-			expectFunc: func(dsRequiredCapability tc.DeliveryServicesRequiredCapability, dsReqCaps []tc.DeliveryServicesRequiredCapability) {
-				for _, dsrc := range dsReqCaps {
-					if *dsrc.RequiredCapability != *dsRequiredCapability.RequiredCapability {
-						t.Errorf("expected: all delivery service required capabilities to equal %s, actual: found %s", *dsRequiredCapability.RequiredCapability, *dsrc.RequiredCapability)
-					}
-				}
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, nil)
-			if err != nil {
-				t.Fatalf("%s; got err= %v; expected err= nil", tc.description, err)
-			}
-			tc.expectFunc(tc.capability, capabilities)
-		})
-	}
-}
-
-func GetTestDeliveryServicesRequiredCapabilitiesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	data := testData.DeliveryServicesRequiredCapabilities
-	ds1 := helperGetDeliveryServiceID(t, data[0].XMLID)
-
-	testCases := []struct {
-		description string
-		capability  tc.DeliveryServicesRequiredCapability
-	}{
-		{
-			description: "get all deliveryservices required capabilities",
-		},
-		{
-			description: fmt.Sprintf("get all deliveryservices required capabilities by deliveryServiceID: %d", *ds1),
-			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID: ds1,
-			},
-		},
-		{
-			description: fmt.Sprintf("get all deliveryservices required capabilities by xmlID: %s", *data[0].XMLID),
-			capability: tc.DeliveryServicesRequiredCapability{
-				XMLID: data[0].XMLID,
-			},
-		},
-		{
-			description: fmt.Sprintf("get all deliveryservices required capabilities by requiredCapability: %s", *data[0].RequiredCapability),
-			capability: tc.DeliveryServicesRequiredCapability{
-				RequiredCapability: data[0].RequiredCapability,
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
-			if err != nil {
-				t.Fatalf("Expected no error, but got %v", err.Error())
-			}
-			if reqInf.StatusCode != http.StatusNotModified {
-				t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-			}
-		})
-	}
-}
-
-func CreateTestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
-	for _, td := range testData.TopologyBasedDeliveryServicesRequiredCapabilities {
-
-		c := tc.DeliveryServicesRequiredCapability{
-			DeliveryServiceID:  helperGetDeliveryServiceID(t, td.XMLID),
-			RequiredCapability: td.RequiredCapability,
 		}
 
-		_, _, err := TOSession.CreateDeliveryServicesRequiredCapability(c)
-		if err != nil {
-			t.Fatalf("cannot create delivery service required capability: %v", err)
-		}
-	}
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					dsrc := tc.DeliveryServicesRequiredCapability{}
 
-	invalid := tc.DeliveryServicesRequiredCapability{
-		DeliveryServiceID:  helperGetDeliveryServiceID(t, util.StrPtr("ds-top-req-cap")),
-		RequiredCapability: util.StrPtr("asdf"),
-	}
-	_, reqInf, err := TOSession.CreateDeliveryServicesRequiredCapability(invalid)
-	if err == nil {
-		t.Fatal("when adding delivery service required capability to a delivery service with a topology that " +
-			"doesn't have cachegroups with at least one server with the required capabilities - expected: error, actual: nil")
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("when adding delivery service required capability to a delivery service with a topology that "+
-			"doesn't have cachegroups with at least one server with the required capabilities - expected status code: "+
-			"%d, actual: %d", http.StatusBadRequest, reqInf.StatusCode)
+					var deliveryServiceId *int
+					var xmlId *string
+					var capability *string
+
+					if val, ok := testCase.RequestParams["deliveryServiceId"]; ok {
+						if _, err := strconv.Atoi(val[0]); err != nil {
+							dsId := GetDeliveryServiceId(t, val[0])()
+							deliveryServiceId = &dsId
+						}
+					}
+					if val, ok := testCase.RequestParams["xmlID"]; ok {
+						xmlId = &val[0]
+					}
+					if val, ok := testCase.RequestParams["requiredCapability"]; ok {
+						capability = &val[0]
+					}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &dsrc)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServiceId, xmlId, capability, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, tc.Alerts{}, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateDeliveryServicesRequiredCapability(dsrc)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteDeliveryServicesRequiredCapability(testCase.EndpointId(), testCase.RequestBody["requiredCapability"].(string))
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
+	})
+
+}
+
+func validateDSRCExpectedFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		dsrcResp := resp.([]tc.DeliveryServicesRequiredCapability)
+		for field, expected := range expectedResp {
+			for _, dsrc := range dsrcResp {
+				switch field {
+				case "DeliveryServiceID":
+					assert.Equal(t, expected, *dsrc.DeliveryServiceID, "Expected deliveryServiceId to be %v, but got %v", expected, dsrc.DeliveryServiceID)
+				case "XMLID":
+					assert.Equal(t, expected, *dsrc.XMLID, "Expected xmlID to be %v, but got %v", expected, dsrc.XMLID)
+				case "RequiredCapability":
+					assert.Equal(t, expected, *dsrc.RequiredCapability, "Expected requiredCapability to be %v, but got %v", expected, dsrc.RequiredCapability)
+				}
+			}
+		}
 	}
 }
 
 func CreateTestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	data := testData.DeliveryServicesRequiredCapabilities
-	if len(data) == 0 {
-		t.Fatal("there must be at least one test ds required capability defined")
-	}
-	ds1 := helperGetDeliveryServiceID(t, data[0].XMLID)
-	amDS := helperGetDeliveryServiceID(t, util.StrPtr("anymap-ds"))
-	testCases := []struct {
-		description string
-		capability  tc.DeliveryServicesRequiredCapability
-	}{
-		{
-			description: fmt.Sprintf("re-assign a deliveryservice to a required capability; deliveryServiceID: %d, requiredCapability: %s", *ds1, *data[0].RequiredCapability),
-			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID:  ds1,
-				RequiredCapability: data[0].RequiredCapability,
-			},
-		},
-		{
-			description: fmt.Sprintf("assign a deliveryservice to a required capability with no delivery service id; deliveryServiceID: 0, requiredCapability: %s", *data[0].RequiredCapability),
-			capability: tc.DeliveryServicesRequiredCapability{
-				RequiredCapability: data[0].RequiredCapability,
-			},
-		},
-		{
-			description: fmt.Sprintf("assign a deliveryservice to a required capability with no requiredCapability; deliveryServiceID: %d, requiredCapability: 0", *ds1),
-			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID: ds1,
-			},
-		},
-		{
-			description: fmt.Sprintf("assign a deliveryservice to a required capability with an invalid required capability; deliveryServiceID: %d, requiredCapability: bogus", *ds1),
-			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID:  ds1,
-				RequiredCapability: util.StrPtr("bogus"),
-			},
-		},
-		{
-			description: fmt.Sprintf("assign a deliveryservice to a required capability with an invalid delivery service id; deliveryServiceID: -1, requiredCapability: %s", *data[0].RequiredCapability),
-			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID:  util.IntPtr(-1),
-				RequiredCapability: data[0].RequiredCapability,
-			},
-		},
-		{
-			description: "assign a deliveryservice to a required capability with an invalid deliveryservice type",
-			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID:  amDS,
-				RequiredCapability: data[0].RequiredCapability,
-			},
-		},
-	}
-
 	// Assign all required capability to delivery services listed in `tc-fixtures.json`.
-	for _, td := range testData.DeliveryServicesRequiredCapabilities {
-		var dsID int
-		if td.DeliveryServiceID != nil {
-			dsID = *td.DeliveryServiceID
+	for _, dsrc := range testData.DeliveryServicesRequiredCapabilities {
+		dsId := GetDeliveryServiceId(t, *dsrc.XMLID)()
+		dsrc = tc.DeliveryServicesRequiredCapability{
+			DeliveryServiceID:  &dsId,
+			RequiredCapability: dsrc.RequiredCapability,
 		}
-
-		var capability string
-		if td.RequiredCapability != nil {
-			capability = *td.RequiredCapability
-		}
-
-		t.Run(fmt.Sprintf("assign a deliveryservice to a required capability; deliveryServiceID: %d, requiredCapability: %s", dsID, capability), func(t *testing.T) {
-			cap := tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID:  helperGetDeliveryServiceID(t, td.XMLID),
-				RequiredCapability: td.RequiredCapability,
-			}
-
-			_, _, err := TOSession.CreateDeliveryServicesRequiredCapability(cap)
-			if err != nil {
-				t.Fatalf(err.Error())
-			}
-		})
+		resp, _, err := TOSession.CreateDeliveryServicesRequiredCapability(dsrc)
+		assert.NoError(t, err, "Unexpected error creating a Delivery Service/Required Capability relationship: %v - alerts: %+v", err, resp.Alerts)
 	}
-
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			_, _, err := TOSession.CreateDeliveryServicesRequiredCapability(tc.capability)
-			if err == nil {
-				t.Fatalf("%s; expected err", tc.description)
-			}
-		})
-	}
-}
-
-func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
-	// Tests that a capability cannot be made required if the DS's services do not have it assigned
-
-	// Get Delivery Capability for a DS
-	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, util.StrPtr("ds1"), nil, nil)
-	if err != nil {
-		t.Fatalf("cannot GET delivery service required capabilities: %v", err)
-	}
-	if len(capabilities) == 0 {
-		t.Fatal("delivery service ds1 needs at least one capability required")
-	}
-
-	// First assign current capabilities to edge server so we can assign it to the DS
-	// TODO: DON'T hard-code hostnames!
-	params := url.Values{}
-	params.Add("hostName", "atlanta-edge-01")
-	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
-	if err != nil {
-		t.Fatalf("cannot GET Server by hostname: %v", err)
-	}
-	servers := resp.Response
-	if len(servers) < 1 {
-		t.Fatal("need at least one server to test invalid ds required capability assignment")
-	}
-
-	if servers[0].ID == nil {
-		t.Fatal("server 'atlanta-edge-01' had nil ID")
-	}
-
-	dsID := capabilities[0].DeliveryServiceID
-	sID := *servers[0].ID
-	serverCaps := []tc.ServerServerCapability{}
-
-	for _, cap := range capabilities {
-		sCap := tc.ServerServerCapability{
-			ServerID:         &sID,
-			ServerCapability: cap.RequiredCapability,
-		}
-		_, _, err := TOSession.CreateServerServerCapability(sCap)
-		if err != nil {
-			t.Errorf("could not POST the server capability %v to server %v: %v", *cap.RequiredCapability, sID, err)
-		}
-		serverCaps = append(serverCaps, sCap)
-	}
-
-	// Assign server to ds
-	_, _, err = TOSession.CreateDeliveryServiceServers(*dsID, []int{sID}, false)
-	if err != nil {
-		t.Fatalf("cannot CREATE server delivery service assignement: %v", err)
-	}
-
-	// Create new bogus server capability
-	_, _, err = TOSession.CreateServerCapability(tc.ServerCapability{
-		Name: "newcap",
-	})
-	if err != nil {
-		t.Fatalf("cannot CREATE newcap server capability: %v", err)
-	}
-
-	// Attempt to assign to DS should fail
-	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(tc.DeliveryServicesRequiredCapability{
-		DeliveryServiceID:  dsID,
-		RequiredCapability: util.StrPtr("newcap"),
-	})
-	if err == nil {
-		t.Fatal("expected error requiring a capability that is not associated on the delivery service's servers")
-	}
-
-	// Disassociate server from DS
-	setInactive(t, *dsID)
-	_, _, err = TOSession.DeleteDeliveryServiceServer(*dsID, sID)
-	if err != nil {
-		t.Fatalf("could not DELETE the server %v from ds %v: %v", sID, *dsID, err)
-	}
-
-	// Remove server capabilities from server
-	for _, ssc := range serverCaps {
-		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
-		if err != nil {
-			t.Errorf("could not DELETE the server capability %v from server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
-		}
-	}
-
-	// Delete server capability
-	_, _, err = TOSession.DeleteServerCapability("newcap")
-	if err != nil {
-		t.Fatalf("cannot DELETE newcap server capability: %v", err)
-	}
-
 }
 
 func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	// Get Required Capabilities to delete them
-	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, nil, nil, nil)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	if len(capabilities) < 1 {
-		t.Fatal("no delivery services returned")
-	}
+	dsrcs, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, nil, nil, nil)
+	assert.NoError(t, err, "Error getting Delivery Service/Required Capability relationships: %v - resp: %+v", err, dsrcs)
 
-	type testCase struct {
-		description string
-		capability  tc.DeliveryServicesRequiredCapability
-		err         string
+	for _, dsrc := range dsrcs {
+		alerts, _, err := TOSession.DeleteDeliveryServicesRequiredCapability(*dsrc.DeliveryServiceID, *dsrc.RequiredCapability)
+		assert.NoError(t, err, "Error deleting a relationship between a Delivery Service and a Capability: %v - alerts: %+v", err, alerts.Alerts)
 	}
-
-	testCases := []testCase{
-		testCase{
-			description: fmt.Sprintf("delete a deliveryservices required capability with an invalid delivery service id; deliveryServiceID: -1, requiredCapability: %s", *capabilities[0].RequiredCapability),
-			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID:  util.IntPtr(-1),
-				RequiredCapability: capabilities[0].RequiredCapability,
-			},
-			err: "no deliveryservice.RequiredCapability with that key found",
-		},
-		testCase{
-			description: fmt.Sprintf("delete a deliveryservices required capability with an invalid required capability; deliveryServiceID: %d, requiredCapability: bogus", *capabilities[0].DeliveryServiceID),
-			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID:  capabilities[0].DeliveryServiceID,
-				RequiredCapability: util.StrPtr("bogus"),
-			},
-			err: "no deliveryservice.RequiredCapability with that key found",
-		},
-	}
-
-	for _, c := range capabilities {
-		t := testCase{
-			description: fmt.Sprintf("delete a deliveryservices required capability; deliveryServiceID: %d, requiredCapability: %s", *c.DeliveryServiceID, *c.RequiredCapability),
-			capability:  c,
-		}
-		testCases = append(testCases, t)
-	}
-
-	for _, c := range testCases {
-		t.Run(c.description, func(t *testing.T) {
-			_, _, err := TOSession.DeleteDeliveryServicesRequiredCapability(*c.capability.DeliveryServiceID, *c.capability.RequiredCapability)
-			if err != nil && !strings.Contains(err.Error(), c.err) {
-				t.Fatalf("%s; got err= %s; expected err= %s", c.description, err, c.err)
-			}
-		})
-	}
-}
-
-func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
-	t.Helper()
-	if xmlID == nil {
-		t.Fatal("xml id must not be nil")
-	}
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(*xmlID, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(ds) < 1 {
-		t.Fatalf("cannot GET deliveyservice by xml id: %v. Response did not include record.", *xmlID)
-	}
-	return ds[0].ID
 }

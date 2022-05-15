@@ -37,13 +37,13 @@ const ServerCheck_Get_Endpoint = "GET /servercheck"
 
 const serverInfoQuery = `
 SELECT server.host_name AS hostName,
-       server.id AS id,
-       profile.name AS profile,
-       status.name AS adminState,
-       cachegroup.name AS cacheGroup,
-       type.name AS type,
-       server.upd_pending AS updPending,
-       server.reval_pending AS revalPending
+	server.id AS id,
+	profile.name AS profile,
+	status.name AS adminState,
+	cachegroup.name AS cacheGroup,
+	type.name AS type,
+	server.config_update_time > server.config_apply_time AS upd_pending,
+	server.revalidate_update_time > server.revalidate_apply_time AS reval_pending
 FROM server
 LEFT JOIN profile ON server.profile = profile.id
 LEFT JOIN status ON server.status = status.id
@@ -153,7 +153,7 @@ func CreateUpdateServercheck(w http.ResponseWriter, r *http.Request) {
 
 func getServerID(id *int, hostname *string, tx *sql.Tx) (int, bool, error) {
 	if id != nil {
-		_, exists, err := dbhelpers.GetServerNameFromID(tx, *id)
+		_, exists, err := dbhelpers.GetServerNameFromID(tx, int64(*id))
 		return *id, exists, err
 	}
 	sID, exists, err := dbhelpers.GetServerIDFromName(*hostname, tx)

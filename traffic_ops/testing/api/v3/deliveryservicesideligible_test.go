@@ -18,47 +18,36 @@ package v3
 import (
 	"net/http"
 	"testing"
-	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestDeliveryServicesEligible(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
-		GetTestDeliveryServicesEligibleIMS(t)
-		GetTestDeliveryServicesEligible(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"OK when VALID request": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+				},
+			},
+		}
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServicesEligibleWithHdr(testCase.EndpointId(), testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, tc.Alerts{}, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
-}
-
-func GetTestDeliveryServicesEligibleIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetDeliveryServicesNullableWithHdr(header)
-	if err != nil {
-		t.Fatalf("could not GET eligible delivery services: %v", err)
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-	}
-}
-
-func GetTestDeliveryServicesEligible(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
-	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v", err)
-	}
-	if len(dses) == 0 {
-		t.Error("GET DeliveryServices returned no delivery services, need at least 1 to test")
-	}
-	dsID := dses[0].ID
-	servers, _, err := TOSession.GetDeliveryServicesEligible(*dsID)
-	if err != nil {
-		t.Errorf("getting delivery services eligible: %v", err)
-	}
-	if len(servers) == 0 {
-		t.Error("getting delivery services eligible returned no servers")
-	}
 }

@@ -154,7 +154,7 @@ func MakeHeaderRewriteDotConfig(
 	atsMajorVersion, verWarns := getATSMajorVersion(tcServerParams)
 	warnings = append(warnings, verWarns...)
 
-	assignedTierPeers, assignWarns := getAssignedTierPeers(server, ds, servers, deliveryServiceServers, cacheGroupsArr, serverCapabilities, requiredCapabilities[*ds.ID])
+	assignedTierPeers, assignWarns := getAssignedTierPeers(server, ds, topology, servers, deliveryServiceServers, cacheGroupsArr, serverCapabilities, requiredCapabilities[*ds.ID])
 	warnings = append(warnings, assignWarns...)
 
 	dsOnlinePeerCount := 0
@@ -282,6 +282,7 @@ func serverIsMid(server *Server) bool {
 func getAssignedTierPeers(
 	server *Server,
 	ds *DeliveryService,
+	topology tc.Topology,
 	servers []Server,
 	deliveryServiceServers []DeliveryServiceServer,
 	cacheGroups []tc.CacheGroupNullable,
@@ -289,7 +290,7 @@ func getAssignedTierPeers(
 	dsRequiredCapabilities map[ServerCapability]struct{},
 ) ([]Server, []string) {
 	if ds.Topology != nil {
-		return getTopologyTierServers(dsRequiredCapabilities, tc.CacheGroupName(*server.Cachegroup), servers, serverCapabilities)
+		return getTopologyTierServers(dsRequiredCapabilities, tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, servers, serverCapabilities)
 	}
 	if serverIsMid(server) {
 		return getAssignedMids(server, ds, servers, deliveryServiceServers, cacheGroups)
@@ -422,14 +423,14 @@ func getAssignedMids(
 	return assignedMids, warnings
 }
 
-// getTopologyDSServerCount returns the servers in cg which will be used to serve ds.
+// getTopologyTierServers returns the servers in the same tier as cg which will be used to serve ds.
 // This should only be used for DSes with Topologies.
-// It returns all servers in CG with the Capabilities of ds in cg.
-// It will not be the number of servers for Delivery Services not using Topologies, which use DeliveryService-Server assignments instead.
+// It returns all servers in with the Capabilities of ds in the same tier as cg.
 // Returns the servers, and any warnings.
-func getTopologyTierServers(dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, servers []Server, serverCapabilities map[int]map[ServerCapability]struct{}) ([]Server, []string) {
+func getTopologyTierServers(dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, topology tc.Topology, cacheGroups []tc.CacheGroupNullable, servers []Server, serverCapabilities map[int]map[ServerCapability]struct{}) ([]Server, []string) {
 	warnings := []string{}
 	topoServers := []Server{}
+	cacheGroupsInSameTier := getCachegroupsInSameTopologyTier(string(cg), cacheGroups, topology)
 	for _, sv := range servers {
 		if sv.Cachegroup == nil {
 			warnings = append(warnings, "Servers had server with nil cachegroup, skipping!")
@@ -439,7 +440,7 @@ func getTopologyTierServers(dsRequiredCapabilities map[ServerCapability]struct{}
 			continue
 		}
 
-		if *sv.Cachegroup != string(cg) {
+		if !cacheGroupsInSameTier[*sv.Cachegroup] {
 			continue
 		}
 		if !hasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities) {
@@ -448,6 +449,73 @@ func getTopologyTierServers(dsRequiredCapabilities map[ServerCapability]struct{}
 		topoServers = append(topoServers, sv)
 	}
 	return topoServers, warnings
+}
+
+func getCachegroupsInSameTopologyTier(cg string, cacheGroups []tc.CacheGroupNullable, topology tc.Topology) map[string]bool {
+	cacheGroupMap := make(map[string]tc.CacheGroupNullable)
+	originCacheGroups := make(map[string]bool)
+	for _, cg := range cacheGroups {
+		if cg.Name == nil || cg.Type == nil {
+			continue
+		}
+		cacheGroupMap[*cg.Name] = cg
+		if *cg.Type == tc.CacheGroupOriginTypeName {
+			originCacheGroups[*cg.Name] = true
+		}
+	}
+	originNodes := make(map[int]bool)
+	nodeIndex := -1
+	for i, node := range topology.Nodes {
+		if node.Cachegroup == cg {
+			nodeIndex = i
+		}
+		if originCacheGroups[node.Cachegroup] {
+			originNodes[i] = true
+		}
+	}
+	nodesWithSameOriginDistances := getNodesWithSameOriginDistances(nodeIndex, topology, originNodes)
+	cacheGroupsInSameTopologyTier := make(map[string]bool)
+	for _, nodeI := range nodesWithSameOriginDistances {
+		cacheGroupsInSameTopologyTier[topology.Nodes[nodeI].Cachegroup] = true
+	}
+	return cacheGroupsInSameTopologyTier
+}
+
+func getNodesWithSameOriginDistances(nodeIndex int, topology tc.Topology, originNodes map[int]bool) []int {
+	originDistances := make(map[int]int)
+	nodeDistance := -1
+	for i := range topology.Nodes {
+		d := getOriginDistance(topology, i, originNodes, originDistances)
+		if nodeIndex == i {
+			nodeDistance = d
+		}
+	}
+	sameDistances := make([]int, 0)
+	for i, d := range originDistances {
+		if d == nodeDistance {
+			sameDistances = append(sameDistances, i)
+		}
+	}
+	return sameDistances
+}
+
+func getOriginDistance(topology tc.Topology, nodeIndex int, originNodes map[int]bool, originDistances map[int]int) int {
+	if originDistance, ok := originDistances[nodeIndex]; ok {
+		return originDistance
+	}
+	parents := topology.Nodes[nodeIndex].Parents
+	if len(parents) == 0 {
+		originDistances[nodeIndex] = 1
+		return originDistances[nodeIndex]
+	}
+	for _, p := range parents {
+		if originNodes[p] {
+			originDistances[nodeIndex] = 1
+			return originDistances[nodeIndex]
+		}
+	}
+	originDistances[nodeIndex] = 1 + getOriginDistance(topology, parents[0], originNodes, originDistances)
+	return originDistances[nodeIndex]
 }
 
 var returnRe = regexp.MustCompile(`\s*__RETURN__\s*`)

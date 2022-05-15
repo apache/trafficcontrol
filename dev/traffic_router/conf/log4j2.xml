@@ -27,7 +27,7 @@
 		<Logger name="org.apache.traffic_control.traffic_router.core.access" level="INFO" additivity="false">
 			<AppenderRef ref="stdout"/>
 		</Logger>
-		<Root level="ALL" additivity="false">
+		<Root level="WARN" additivity="false">
 			<AppenderRef ref="stdout"/>
 		</Root>
 	</Loggers>

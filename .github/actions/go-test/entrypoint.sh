@@ -37,5 +37,5 @@ fi
 
 # Need to fetch golang.org/x/* dependencies
 go mod vendor -v
-go test $INPUT_DIR
+go test --buildvcs=false $INPUT_DIR
 exit $?

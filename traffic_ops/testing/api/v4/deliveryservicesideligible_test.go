@@ -18,51 +18,35 @@ package v4
 import (
 	"net/http"
 	"testing"
-	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestDeliveryServicesEligible(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
-		GetTestDeliveryServicesEligibleIMS(t)
-		GetTestDeliveryServicesEligible(t)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"OK when VALID request": {
+					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+				},
+			},
+		}
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServicesEligible(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
-}
-
-func GetTestDeliveryServicesEligibleIMS(t *testing.T) {
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-
-	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	resp, reqInf, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Fatalf("could not get eligible delivery services: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-	}
-}
-
-func GetTestDeliveryServicesEligible(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
-	}
-	if len(dses.Response) == 0 {
-		t.Fatal("GET DeliveryServices returned no delivery services, need at least 1 to test")
-	}
-	dsID := dses.Response[0].ID
-	if dsID == nil {
-		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined ID")
-	}
-	servers, _, err := TOSession.GetDeliveryServicesEligible(*dsID, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("getting Delivery Services eligible: %v - alerts: %+v", err, servers.Alerts)
-	}
-	if len(servers.Response) == 0 {
-		t.Error("getting delivery services eligible returned no servers")
-	}
 }

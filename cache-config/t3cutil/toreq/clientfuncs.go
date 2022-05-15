@@ -29,6 +29,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -69,12 +70,12 @@ func (cl *TOClient) GetProfileByName(profileName string, reqHdr http.Header) (tc
 func (cl *TOClient) WriteFsCookie(fileName string) {
 	tmpFileName := fileName + ".tmp"
 	cookie := torequtil.FsCookie{}
-	u, err := url.Parse(cl.c.URL)
+	u, err := url.Parse(cl.URL())
 	if err != nil {
 		log.Warnln("Error parsing Traffic ops URL: ", err)
 		return
 	}
-	for _, c := range cl.c.Client.Jar.Cookies(u) {
+	for _, c := range cl.HTTPClient().Jar.Cookies(u) {
 		fsCookie := torequtil.Cookie{Cookie: &http.Cookie{
 			Name:  c.Name,
 			Value: c.Value,
@@ -129,7 +130,7 @@ func (cl *TOClient) GetServers(reqHdr http.Header) ([]atscfg.Server, toclientlib
 	servers := []atscfg.Server{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "servers", &servers, func(obj interface{}) error {
-		toServers, toReqInf, err := cl.c.GetServers(*ReqOpts(reqHdr))
+		toServers, toReqInf, err := cl.GetServersCompat(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting servers from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
@@ -157,7 +158,7 @@ func (cl *TOClient) GetServerByHostName(serverHostName string, reqHdr http.Heade
 	err := torequtil.GetRetry(cl.NumRetries, "server-name-"+serverHostName, &server, func(obj interface{}) error {
 		params := url.Values{}
 		params.Add("hostName", serverHostName)
-		toServers, toReqInf, err := cl.c.GetServers(toclient.RequestOptions{
+		toServers, toReqInf, err := cl.GetServersCompat(toclient.RequestOptions{
 			QueryParameters: params,
 			Header:          reqHdr,
 		})
@@ -700,7 +701,7 @@ func (cl *TOClient) GetStatuses(reqHdr http.Header) ([]tc.Status, toclientlib.Re
 	err := torequtil.GetRetry(cl.NumRetries, "statuses", &statuses, func(obj interface{}) error {
 		toStatus, toReqInf, err := cl.c.GetStatuses(*ReqOpts(reqHdr))
 		if err != nil {
-			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+			return errors.New("getting server update statuses from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		status := obj.(*[]tc.Status)
 		*status = toStatus.Response
@@ -708,47 +709,88 @@ func (cl *TOClient) GetStatuses(reqHdr http.Header) ([]tc.Status, toclientlib.Re
 		return nil
 	})
 	if err != nil {
-		return nil, reqInf, errors.New("getting server update status: " + err.Error())
+		return nil, reqInf, errors.New("getting server update statuses: " + err.Error())
 	}
 	return statuses, reqInf, nil
 }
 
 // GetServerUpdateStatus returns the data, the Traffic Ops address, and any error.
-func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr http.Header) (tc.ServerUpdateStatus, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr http.Header) (atscfg.ServerUpdateStatus, toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		return cl.old.GetServerUpdateStatus(cacheHostName)
 	}
 
-	status := tc.ServerUpdateStatus{}
+	status := atscfg.ServerUpdateStatus{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), &status, func(obj interface{}) error {
 		toStatus, toReqInf, err := cl.c.GetServerUpdateStatus(string(cacheHostName), *ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		status := obj.(*tc.ServerUpdateStatus)
+		status := obj.(*atscfg.ServerUpdateStatus)
 		if len(toStatus.Response) != 1 {
 			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + "expected 1 update_status for the server, got " + strconv.Itoa(len(toStatus.Response)))
 		}
-		*status = toStatus.Response[0]
+
+		*status = serverUpdateStatusesToLatest(toStatus.Response)[0]
 		reqInf = toReqInf
 		return nil
 	})
 	if err != nil {
-		return tc.ServerUpdateStatus{}, reqInf, errors.New("getting server update status: " + err.Error())
+		return atscfg.ServerUpdateStatus{}, reqInf, errors.New("getting server update status: " + err.Error())
 	}
 	return status, reqInf, nil
 }
 
 // SetServerUpdateStatus sets the server's update and reval statuses in Traffic Ops.
-func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, updateStatus *bool, revalStatus *bool) (toclientlib.ReqInf, error) {
+func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, configApply, revalApply *time.Time) (toclientlib.ReqInf, error) {
 	if cl.c == nil {
+		var updateStatus, revalStatus *bool
+		if configApply != nil {
+			*updateStatus = true
+			revalStatus = nil
+		}
+		if revalApply != nil {
+			*revalStatus = true
+			updateStatus = nil
+		}
 		return cl.old.SetServerUpdateStatus(cacheHostName, updateStatus, revalStatus)
 	}
 
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "set_server_update_status_"+string(cacheHostName), nil, func(obj interface{}) error {
-		_, toReqInf, err := cl.c.SetUpdateServerStatuses(string(cacheHostName), updateStatus, revalStatus, *ReqOpts(nil))
+		_, toReqInf, err := cl.c.SetUpdateServerStatusTimes(string(cacheHostName), configApply, revalApply, *ReqOpts(nil))
+		if err != nil {
+			return errors.New("setting server update status in Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		reqInf = toReqInf
+		return nil
+	})
+	if err != nil {
+		return reqInf, errors.New("getting server update status: " + err.Error())
+	}
+	return reqInf, nil
+}
+
+// SetServerUpdateStatusBoolCompat sets the server's update and reval statuses in Traffic Ops.
+// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
+func (cl *TOClient) SetServerUpdateStatusBoolCompat(cacheHostName tc.CacheName, configApply, revalApply *time.Time, configApplyBool, revalApplyBool *bool) (toclientlib.ReqInf, error) {
+	if cl.c == nil {
+		var updateStatus, revalStatus *bool
+		if configApply != nil || configApplyBool != nil {
+			*updateStatus = true
+			revalStatus = nil
+		}
+		if revalApply != nil || revalApplyBool != nil {
+			*revalStatus = true
+			updateStatus = nil
+		}
+		return cl.old.SetServerUpdateStatus(cacheHostName, updateStatus, revalStatus)
+	}
+
+	reqInf := toclientlib.ReqInf{}
+	err := torequtil.GetRetry(cl.NumRetries, "set_server_update_status_"+string(cacheHostName), nil, func(obj interface{}) error {
+		_, toReqInf, err := cl.SetServerUpdateStatusCompat(string(cacheHostName), configApply, revalApply, configApplyBool, revalApplyBool, *ReqOpts(nil))
 		if err != nil {
 			return errors.New("setting server update status in Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}

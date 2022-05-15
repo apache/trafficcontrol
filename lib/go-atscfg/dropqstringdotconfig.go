@@ -46,7 +46,7 @@ func MakeDropQStringDotConfig(
 	}
 	warnings := []string{}
 
-	if server.Profile == nil {
+	if len(server.ProfileNames) == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 

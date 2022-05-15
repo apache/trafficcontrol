@@ -142,7 +142,7 @@ export class UsersComponent implements OnInit {
 			field: "tenant",
 			headerName: "Tenant",
 			hide: false,
-			valueGetter: (params: ValueGetterParams): string => `${params.data.tenant} #${params.data.tenantId}`
+			valueGetter: (params: ValueGetterParams): string => `${params.data.tenant} (#${params.data.tenantId})`
 		},
 		{
 			field: "uid",

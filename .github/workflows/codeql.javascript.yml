@@ -23,7 +23,9 @@ on:
   pull_request:
     branches: [ master ]
     paths:
-      - "**/*.js"
+      - .github/workflows/codeql.javascript.yml
+      - "**.js"
+      - "**.ts"
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
@@ -37,14 +39,14 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v1
+      uses: github/codeql-action/init@v2
       with:
         languages: javascript
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v1
+      uses: github/codeql-action/autobuild@v2
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v1
+      uses: github/codeql-action/analyze@v2

@@ -43,6 +43,7 @@ from github.Repository import Repository
 from pr_to_update_go.constants import (
 	ENV_ENV_FILE,
 	ENV_GITHUB_TOKEN,
+	ENV_PR_GITHUB_TOKEN,
 	GO_VERSION_URL,
 	ENV_GITHUB_REPOSITORY,
 	ENV_GITHUB_REPOSITORY_OWNER,
@@ -459,6 +460,16 @@ class GoPRMaker:
 
 		milestone_url = self.get_go_milestone(latest_go_version)
 		pr_body = _get_pr_body(latest_go_version, milestone_url)
+
+		try:
+			pr_github_token = getenv(ENV_PR_GITHUB_TOKEN)
+			self.gh_api = Github(login_or_token=pr_github_token)
+			self.repo = self.get_repo(getenv(ENV_GITHUB_REPOSITORY))
+		except KeyError:
+			print(f'Token in {ENV_PR_GITHUB_TOKEN} is invalid, creating the PR using the '
+			      f'{ENV_GITHUB_TOKEN} token')
+			pass
+
 		pull_request = self.repo.create_pull(
 			title=commit_message,
 			body=pr_body,

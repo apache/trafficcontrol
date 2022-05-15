@@ -16,17 +16,39 @@ package v3
 */
 
 import (
+	"net/http"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestPing(t *testing.T) {
-	_, _, err := TOSession.Ping()
-	if err != nil {
-		t.Errorf("could not Ping authenticated: %v", err)
+
+	methodTests := utils.V3TestCase{
+		"GET": {
+			"OK when VALID request": {
+				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+			},
+			"OK when UNAUTHENTICATED": {
+				ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+			},
+		},
 	}
 
-	_, _, err = NoAuthTOSession.Ping()
-	if err != nil {
-		t.Errorf("could not Ping unauthenticated: %v", err)
+	for method, testCases := range methodTests {
+		t.Run(method, func(t *testing.T) {
+			for name, testCase := range testCases {
+				switch method {
+				case "GET":
+					t.Run(name, func(t *testing.T) {
+						resp, reqInf, err := testCase.ClientSession.Ping()
+						for _, check := range testCase.Expectations {
+							check(t, reqInf, resp, tc.Alerts{}, err)
+						}
+					})
+				}
+			}
+		})
 	}
 }

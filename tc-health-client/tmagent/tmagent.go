@@ -49,6 +49,14 @@ const (
 	StrategiesFile = "strategies.yaml"
 )
 
+// this global is used to auto select the
+// proper ATS traffic_ctl command to use
+// when querying host status. for ATS
+// version 10 and greater this will remain
+// at 0.  For ATS version 9, this will be
+// auto updated to 1
+var traffic_ctl_index = 0
+
 type ParentAvailable interface {
 	available(reasonCode string) bool
 }
@@ -85,6 +93,7 @@ type ParentStatus struct {
 	ManualReason         bool
 	LastTmPoll           int64
 	UnavailablePollCount int
+	MarkUpPollCount      int
 }
 
 // used to get the overall parent availablity from the
@@ -531,6 +540,7 @@ func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool)
 		activeReason := pv.ActiveReason
 		localReason := pv.LocalReason
 		unavailablePollCount := pv.UnavailablePollCount
+		markUpPollCount := pv.MarkUpPollCount
 
 		log.Debugf("hostName: %s, UnavailablePollCount: %d, available: %v", hostName, unavailablePollCount, available)
 
@@ -544,22 +554,31 @@ func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool)
 				err = c.execTrafficCtl(fqdn, available)
 				if err != nil {
 					log.Errorln(err.Error())
-				}
-				if err == nil {
+				} else {
 					hostAvailable = false
+					// reset the poll counts
+					markUpPollCount = 0
+					unavailablePollCount = 0
 					log.Infof("marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
 				}
 			}
 		} else { // available
 			// marking the host up
-			err = c.execTrafficCtl(fqdn, available)
-			if err == nil {
-				hostAvailable = true
-				// reset the unavilable poll count
-				unavailablePollCount = 0
-				log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
-			} else {
+			markUpPollCount += 1
+			if markUpPollCount < c.Cfg.MarkUpPollThreshold {
+				log.Infof("TM indicates %s is available but the MarkUpPollThreshold has not been reached", hostName)
 				hostAvailable = false
+			} else {
+				err = c.execTrafficCtl(fqdn, available)
+				if err != nil {
+					log.Errorln(err.Error())
+				} else {
+					hostAvailable = true
+					// reset the poll counts
+					unavailablePollCount = 0
+					markUpPollCount = 0
+					log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
+				}
 			}
 		}
 
@@ -576,6 +595,7 @@ func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool)
 			pv.ActiveReason = activeReason
 			pv.LocalReason = localReason
 			pv.UnavailablePollCount = unavailablePollCount
+			pv.MarkUpPollCount = markUpPollCount
 			c.Parents[hostName] = pv
 			log.Debugf("Updated parent status: %v", pv)
 		}
@@ -587,15 +607,35 @@ func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool)
 // subsystem.
 func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error {
 	tc := filepath.Join(c.TrafficServerBinDir, TrafficCtl)
-
-	cmd := exec.Command(tc, "metric", "match", "host_status")
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("%s error: %s", TrafficCtl, stderr.String())
+
+	// auto select traffic_ctl command for ATS version 9 or 10 and later
+	for i := traffic_ctl_index; i <= 1; i++ {
+		var err error
+		switch i {
+		case 0: // ATS version 10 and later
+			cmd := exec.Command(tc, "host", "status")
+			cmd.Stdout = &stdout
+			cmd.Stderr = &stderr
+			err = cmd.Run()
+		case 1: // ATS version 9
+			cmd := exec.Command(tc, "metric", "match", "host_status")
+			cmd.Stdout = &stdout
+			cmd.Stderr = &stderr
+			err = cmd.Run()
+		}
+		if err == nil {
+			break
+		}
+		if err != nil && i == 0 {
+			log.Infof("%s command used is not for ATS version 10 or later, downgrading to ATS version 9\n", TrafficCtl)
+			traffic_ctl_index = 1
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("%s error: %s", TrafficCtl, stderr.String())
+		}
 	}
 
 	if len((stdout.Bytes())) > 0 {
@@ -607,55 +647,66 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 		scanner := bufio.NewScanner(bytes.NewReader(stdout.Bytes()))
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
-			if strings.HasPrefix(line, "proxy.process.host_status.") {
-				fields := strings.Split(line, " ")
-				if len(fields) > 0 {
-					fqdnField := strings.Split(fields[0], "proxy.process.host_status.")
-					if len(fqdnField) > 0 {
-						fqdn = fqdnField[1]
+			fields := strings.Split(line, " ")
+			/*
+			 * For ATS Version 9, the host status uses internal stats and prefixes
+			 * the fqdn field from the output of the traffic_ctl host status and metric
+			 * match commands with "proxy.process.host_status".  Going forward starting
+			 * with ATS Version 10, internal stats are no-longer used and the fqdn field
+			 * is no-longer prefixed with the "proxy.process.host_status" string.
+			 */
+			if len(fields) == 2 {
+				// check for ATS version 9 output.
+				fqdnField := strings.Split(fields[0], "proxy.process.host_status.")
+				if len(fqdnField) == 2 { // ATS version 9
+					fqdn = fqdnField[1]
+				} else { // ATS version 10 and greater
+					fqdn = fqdnField[0]
+				}
+				statField := strings.Split(fields[1], ",")
+				if len(statField) == 5 {
+					if strings.HasPrefix(statField[1], "ACTIVE:UP") {
+						activeReason = true
+					} else if strings.HasPrefix(statField[1], "ACTIVE:DOWN") {
+						activeReason = false
 					}
-					statField := strings.Split(fields[1], ",")
-					if len(statField) == 5 {
-						if strings.HasPrefix(statField[1], "ACTIVE:UP") {
-							activeReason = true
-						} else if strings.HasPrefix(statField[1], "ACTIVE:DOWN") {
-							activeReason = false
-						}
-						if strings.HasPrefix(statField[2], "LOCAL:UP") {
-							localReason = true
-						} else if strings.HasPrefix(statField[2], "LOCAL:DOWN") {
-							localReason = false
-						}
-						if strings.HasPrefix(statField[3], "MANUAL:UP") {
-							manualReason = true
-						} else if strings.HasPrefix(statField[3], "MANUAL:DOWN") {
-							manualReason = false
-						}
+					if strings.HasPrefix(statField[2], "LOCAL:UP") {
+						localReason = true
+					} else if strings.HasPrefix(statField[2], "LOCAL:DOWN") {
+						localReason = false
 					}
-					pstat := ParentStatus{
-						Fqdn:                 fqdn,
-						ActiveReason:         activeReason,
-						LocalReason:          localReason,
-						ManualReason:         manualReason,
-						LastTmPoll:           0,
-						UnavailablePollCount: 0,
+					if strings.HasPrefix(statField[3], "MANUAL:UP") {
+						manualReason = true
+					} else if strings.HasPrefix(statField[3], "MANUAL:DOWN") {
+						manualReason = false
 					}
-					hostName = parseFqdn(fqdn)
-					pv, ok := parentStatus[hostName]
-					// create the ParentStatus struct and add it to the
-					// Parents map only if an entry in the map does not
-					// already exist.
-					if !ok {
+				}
+				pstat := ParentStatus{
+					Fqdn:                 fqdn,
+					ActiveReason:         activeReason,
+					LocalReason:          localReason,
+					ManualReason:         manualReason,
+					LastTmPoll:           0,
+					UnavailablePollCount: 0,
+					MarkUpPollCount:      0,
+				}
+				log.Debugf("processed host status record: %v\n", pstat)
+				hostName = parseFqdn(fqdn)
+				pv, ok := parentStatus[hostName]
+				// create the ParentStatus struct and add it to the
+				// Parents map only if an entry in the map does not
+				// already exist.
+				if !ok {
+					parentStatus[hostName] = pstat
+					log.Infof("added Host '%s' from ATS Host Status to the parents map\n", hostName)
+				} else {
+					available := pstat.available(c.Cfg.ReasonCode)
+					if pv.available(c.Cfg.ReasonCode) != available {
+						log.Infof("host status for '%s' has changed to %s\n", hostName, pstat.Status())
+						pstat.LastTmPoll = pv.LastTmPoll
+						pstat.UnavailablePollCount = pv.UnavailablePollCount
+						pstat.MarkUpPollCount = pv.MarkUpPollCount
 						parentStatus[hostName] = pstat
-						log.Infof("added Host '%s' from ATS Host Status to the parents map\n", hostName)
-					} else {
-						available := pstat.available(c.Cfg.ReasonCode)
-						if pv.available(c.Cfg.ReasonCode) != available {
-							log.Infof("host status for '%s' has changed to %s\n", hostName, pstat.Status())
-							pstat.LastTmPoll = pv.LastTmPoll
-							pstat.UnavailablePollCount = pv.UnavailablePollCount
-							parentStatus[hostName] = pstat
-						}
 					}
 				}
 			}
