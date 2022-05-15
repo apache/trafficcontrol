@@ -148,29 +148,29 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
         ADD CONSTRAINT url_sig_key_pkey PRIMARY KEY (deliveryservice);
 END IF;
 
-IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'sslkey' AND column_name = 'cdn') THEN
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'sslkey' AND column_name = 'cdn') THEN
     --
     -- Name: sslkey_cdn_idx; Type: INDEX; Schema: public; Owner: traffic_vault
     --
 
-    CREATE INDEX sslkey_cdn_idx ON sslkey USING btree (cdn);
+    CREATE INDEX IF NOT EXISTS sslkey_cdn_idx ON sslkey USING btree (cdn);
 END IF;
 
-IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'sslkey' AND column_name = 'deliveryservice') THEN
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'sslkey' AND column_name = 'deliveryservice') THEN
     --
     -- Name: sslkey_deliveryservice_idx; Type: INDEX; Schema: public; Owner: traffic_vault
     --
 
-    CREATE INDEX sslkey_deliveryservice_idx ON sslkey USING btree (deliveryservice);
+    CREATE INDEX IF NOT EXISTS sslkey_deliveryservice_idx ON sslkey USING btree (deliveryservice);
 END IF;
 
 
-IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'sslkey' AND column_name = 'version') THEN
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'sslkey' AND column_name = 'version') THEN
     --
     -- Name: sslkey_version_idx; Type: INDEX; Schema: public; Owner: traffic_vault
     --
 
-    CREATE INDEX sslkey_version_idx ON sslkey USING btree (version);
+    CREATE INDEX IF NOT EXISTS sslkey_version_idx ON sslkey USING btree (version);
 END IF;
 END$$;
 
