@@ -107,6 +107,10 @@ func CacheTypeFromString(s string) CacheType {
 	return CacheTypeInvalid
 }
 
+func IsCacheType(s string) bool {
+	return CacheTypeFromString(s) != CacheTypeInvalid
+}
+
 // InterfaceName is the name of a server interface.
 type InterfaceName string
 
