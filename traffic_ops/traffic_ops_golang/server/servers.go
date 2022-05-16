@@ -898,7 +898,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"id":               {Column: "s.id", Checker: api.IsInt},
 		"hostName":         {Column: "s.host_name", Checker: nil},
 		"physLocation":     {Column: "s.phys_location", Checker: api.IsInt},
-		"profileId":        {Column: "s.profile", Checker: api.IsInt},
 		"status":           {Column: "st.name", Checker: nil},
 		"topology":         {Column: "tc.topology", Checker: nil},
 		"type":             {Column: "t.name", Checker: nil},
@@ -908,6 +907,20 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	if version.Major >= 3 {
 		queryParamsToSQLCols["cachegroupName"] = dbhelpers.WhereColumnInfo{
 			Column:  "cg.name",
+			Checker: nil,
+		}
+	}
+
+	if version.Major <= 3 {
+		queryParamsToSQLCols["profileId"] = dbhelpers.WhereColumnInfo{
+			Column:  "s.profile",
+			Checker: api.IsInt,
+		}
+	}
+
+	if version.Major >= 4 {
+		queryParamsToSQLCols["profileName"] = dbhelpers.WhereColumnInfo{
+			Column:  "p.name",
 			Checker: nil,
 		}
 	}
