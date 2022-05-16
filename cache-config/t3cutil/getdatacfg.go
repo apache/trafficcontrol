@@ -48,8 +48,14 @@ type ConfigData struct {
 	// GlobalParams must be all Parameters in Traffic Ops on the tc.GlobalProfileName Profile. Must not include other parameters.
 	GlobalParams []tc.Parameter `json:"global_parameters,omitempty"`
 
-	// ServerParams must be all Parameters on the Profile of the current server. Must not include other Parameters.
-	ServerParams []tc.Parameter `json:"server_parameters,omitempty"`
+	// ServerProfilesParams must be all Parameters on the Profiles of the current server. Must not include other Parameters.
+	ServerProfilesParams map[atscfg.ProfileName][]tc.Parameter `json:"server_profiles_parameters,omitempty"`
+
+	// ServerParams is constructed from Server and ServerParams. Must not include other Parameters.
+	// It's ok for other apps using this data to serialize and deserialize this to pass it around,
+	// but t3c-request must always use ServerProfilesParams to re-populate this, and do If-Modified-Since requests from that.
+	// This must never be used in an If-Modified-Since check, or populated wholesale from a single profile's endpoint.
+	ServerParams []tc.Parameter `json:"server_params,omitempty"`
 
 	// CacheKeyConfigParams must be all Parameters with the "cachekey.config" (compat)
 	CacheKeyConfigParams []tc.Parameter `json:"cachekey_config_parameters,omitempty"`
@@ -77,9 +83,6 @@ type ConfigData struct {
 
 	// DeliveryServiceRegexes must be all regexes on all delivery services on this server's cdn.
 	DeliveryServiceRegexes []tc.DeliveryServiceRegexes `json:"delivery_service_regexes,omitempty"`
-
-	// Profile must be the Profile of the server being requested.
-	Profile tc.Profile `json:"profile,omitempty"`
 
 	// URISigningKeys must be a map of every delivery service which is URI Signed, to its keys.
 	URISigningKeys map[tc.DeliveryServiceName][]byte `json:"uri_signing_keys,omitempty"`
@@ -113,7 +116,7 @@ type ConfigDataMetaData struct {
 	Servers                ReqMetaData                            `json:"servers"`
 	CacheGroups            ReqMetaData                            `json:"cache_groups"`
 	GlobalParams           ReqMetaData                            `json:"global_parameters"`
-	ServerParams           ReqMetaData                            `json:"server_parameters"`
+	ServerProfilesParams   map[atscfg.ProfileName]ReqMetaData     `json:"server_profiles_parameters"`
 	CacheKeyConfigParams   ReqMetaData                            `json:"cachekey_config_parameters"`
 	RemapConfigParams      ReqMetaData                            `json:"remap_config_parameters"`
 	ParentConfigParams     ReqMetaData                            `json:"parent_config_parameters"`
@@ -122,7 +125,6 @@ type ConfigDataMetaData struct {
 	Jobs                   ReqMetaData                            `json:"jobs"`
 	CDN                    ReqMetaData                            `json:"cdn"`
 	DeliveryServiceRegexes ReqMetaData                            `json:"delivery_service_regexes"`
-	Profile                ReqMetaData                            `json:"profile"`
 	URISigningKeys         map[tc.DeliveryServiceName]ReqMetaData `json:"uri_signing_keys"`
 	URLSigKeys             map[tc.DeliveryServiceName]ReqMetaData `json:"url_sig_keys"`
 	ServerCapabilities     ReqMetaData                            `json:"server_capabilities"`
@@ -179,6 +181,9 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 	toIPs := &sync.Map{} // each Traffic Ops request could get a different IP, so track them all
 	toData := &ConfigData{}
 	toData.MetaData.CacheHostName = cacheHostName
+
+	serverProfilesParams := &sync.Map{}         // map[atscfg.ProfileName][]tc.Parameter
+	serverProfilesParamsMetaData := &sync.Map{} // map[atscfg.ProfileName]ReqMetaData
 
 	{
 		reqHdr := (http.Header)(nil)
@@ -464,33 +469,42 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 			return util.JoinErrs(runParallel(fs))
 		}
-		serverParamsF := func() error {
-			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
+
+		// TODO use a single func/request, when TO has an endpoint to get all params on multiple profiles with a single request, e.g. `/parameters?profiles=a,b,c`
+		serverParamsF := func(profileName atscfg.ProfileName) error {
+			defer func(start time.Time) { log.Infof("serverParamsF(%v) took %v\n", profileName, time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && len(oldServer.ProfileNames) != 0 && oldServer.ProfileNames[0] == server.ProfileNames[0] {
-					reqHdr = MakeReqHdr(oldCfg.MetaData.ServerParams)
+				if oldCfg != nil {
+					if md, ok := oldCfg.MetaData.ServerProfilesParams[profileName]; ok {
+						reqHdr = MakeReqHdr(md)
+					}
 				}
-				params, reqInf, err := toClient.GetServerProfileParameters(server.ProfileNames[0], reqHdr)
-				log.Infoln(toreq.RequestInfoStr(reqInf, "GetURLSigKeys("+server.ProfileNames[0]+")"))
+				params, reqInf, err := toClient.GetServerProfileParameters(string(profileName), reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetServerProfileParameters("+string(profileName)+")"))
 				if err != nil {
-					return errors.New("getting server profile '" + server.ProfileNames[0] + "' parameters: " + err.Error())
+					return errors.New("getting server profile '" + string(profileName) + "' parameters: " + err.Error())
 				} else if len(params) == 0 {
-					return errors.New("getting server profile '" + server.ProfileNames[0] + "' parameters: no parameters (profile not found?)")
+					return errors.New("getting server profile '" + string(profileName) + "' parameters: no parameters (profile not found?)")
 				}
 
 				if reqInf.StatusCode == http.StatusNotModified {
 					log.Infof("Getting config: %v not modified, using old config", "ServerParams")
-					toData.ServerParams = oldCfg.ServerParams
+					serverProfilesParams.Store(profileName, oldCfg.ServerProfilesParams[profileName])
 				} else {
-					log.Infof("Getting config: %v is modified, using new response", "ServerParams")
-					toData.ServerParams = params
+					log.Infof("Getting config: %v is modified, using new response", "ServerProfileParams("+string(profileName))
+					serverProfilesParams.Store(profileName, params)
 				}
-				toData.MetaData.ServerParams = MakeReqMetaData(reqInf.RespHeaders)
+				serverProfilesParamsMetaData.Store(profileName, MakeReqMetaData(reqInf.RespHeaders))
 				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
 			return nil
 		}
+		serverParamsFs := []func() error{}
+		for _, profileName := range server.ProfileNames {
+			serverParamsFs = append(serverParamsFs, func() error { return serverParamsF(atscfg.ProfileName(profileName)) })
+		}
+
 		cdnF := func() error {
 			defer func(start time.Time) { log.Infof("cdnF took %v\n", time.Since(start)) }(time.Now())
 			{
@@ -511,30 +525,6 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					toData.CDN = &cdn
 				}
 				toData.MetaData.CDN = MakeReqMetaData(reqInf.RespHeaders)
-				toIPs.Store(reqInf.RemoteAddr, nil)
-			}
-			return nil
-		}
-		profileF := func() error {
-			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
-			{
-				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && len(oldServer.ProfileNames) != 0 && oldServer.ProfileNames[0] == server.ProfileNames[0] {
-					reqHdr = MakeReqHdr(oldCfg.MetaData.Profile)
-				}
-				profile, reqInf, err := toClient.GetProfileByName(server.ProfileNames[0], reqHdr)
-				log.Infoln(toreq.RequestInfoStr(reqInf, "GetProfileByName("+server.ProfileNames[0]+")"))
-				if err != nil {
-					return errors.New("getting profile '" + server.ProfileNames[0] + "': " + err.Error())
-				}
-				if reqInf.StatusCode == http.StatusNotModified {
-					log.Infof("Getting config: %v not modified, using old config", "Profile")
-					toData.Profile = oldCfg.Profile
-				} else {
-					log.Infof("Getting config: %v is modified, using new response", "Profile")
-					toData.Profile = profile
-				}
-				toData.MetaData.Profile = MakeReqMetaData(reqInf.RespHeaders)
 				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
 			return nil
@@ -563,7 +553,8 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			}
 			return nil
 		}
-		fs := []func() error{dsF, serverParamsF, cdnF, profileF, jobsF}
+		fs := []func() error{dsF, cdnF, jobsF}
+		fs = append(fs, serverParamsFs...)
 		if !revalOnly {
 			fs = append([]func() error{sslF}, fs...) // skip ssl keys for reval only, which doesn't need them
 		}
@@ -787,7 +778,50 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 	}
 	toData.TrafficOpsURL = toClient.URL()
 
+	toData.ServerProfilesParams = map[atscfg.ProfileName][]tc.Parameter{}
+	serverProfilesParams.Range(func(key, val interface{}) bool {
+		profileName := key.(atscfg.ProfileName)
+		params := val.([]tc.Parameter)
+		toData.ServerProfilesParams[profileName] = params
+		return true
+	})
+
+	toData.MetaData.ServerProfilesParams = map[atscfg.ProfileName]ReqMetaData{}
+	serverProfilesParamsMetaData.Range(func(key, val interface{}) bool {
+		profileName := key.(atscfg.ProfileName)
+		metaData := val.(ReqMetaData)
+		toData.MetaData.ServerProfilesParams[profileName] = metaData
+		return true
+	})
+
+	err := error(nil)
+	toData.ServerParams, err = atscfg.GetServerParameters(toData.Server, combineParams(toData.ServerProfilesParams))
+	if err != nil {
+		errs = append(errs, err)
+	}
+
 	return toData, util.JoinErrs(errs)
+}
+
+// combineParams combines all the params from different profiles into
+// a single array of parameters.
+func combineParams(profileParams map[atscfg.ProfileName][]tc.Parameter) []tc.Parameter {
+	allParams := map[atscfg.ProfileID]tc.Parameter{}
+	for profileName, params := range profileParams {
+		for _, param := range params {
+			// the /profile/name/parameters endpoint doesn't return profiles like all the other endpoints,
+			// and we need it to layer, so fake it
+			if len(param.Profiles) == 0 {
+				param.Profiles = []byte(`["` + string(profileName) + `"]`)
+			}
+			allParams[atscfg.ProfileID(param.ID)] = param
+		}
+	}
+	paramsArr := []tc.Parameter{}
+	for _, param := range allParams {
+		paramsArr = append(paramsArr, param)
+	}
+	return paramsArr
 }
 
 // runParallel runs all funcs in fs in parallel goroutines, and returns after all funcs have returned.
