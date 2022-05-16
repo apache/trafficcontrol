@@ -50,6 +50,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6780](https://github.com/apache/trafficcontrol/issues/6780) Fixed t3c to use secondary parents when there are no primary parents available.
 - Correction where using the placeholder __HOSTNAME__ in "unknown" files (others than the defaults ones), was being replaced by the full FQDN instead of the shot hostname.
 - [#6800](https://github.com/apache/trafficcontrol/issues/6800) Fixed incorrect error message for `/server/details` associated with query parameters.
+- [#6712](https://github.com/apache/trafficcontrol/issues/6712) - Fixed error when loading the Traffic Vault schema from `create_tables.sql` more than once.
 
 ### Removed
 - Remove traffic\_portal dependencies to mitigate `npm audit` issues, specifically `grunt-concurrent`, `grunt-contrib-concat`, `grunt-contrib-cssmin`, `grunt-contrib-jsmin`, `grunt-contrib-uglify`, `grunt-contrib-htmlmin`, `grunt-newer`, and `grunt-wiredep`
