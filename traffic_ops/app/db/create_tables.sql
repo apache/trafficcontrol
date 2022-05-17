@@ -559,7 +559,7 @@ CREATE TABLE cdn_notification (
     "user" text NOT NULL,
     notification text,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT pk_cdn_notification PRIMARY KEY (id)
+    CONSTRAINT cdn_notification_pkey PRIMARY KEY (id)
 );
 
 --
