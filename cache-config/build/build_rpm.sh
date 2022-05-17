@@ -116,6 +116,12 @@ initBuildArea() {
 	)
 
 	(
+		cd t3c-tail;
+		go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags";
+		buildManpage 't3c-tail';
+	)
+
+	(
 		cd t3c-preprocess;
 		go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags";
 		buildManpage 't3c-preprocess';
