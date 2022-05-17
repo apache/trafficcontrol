@@ -16,51 +16,67 @@ package v4
 */
 
 import (
+	"net/http"
+	"net/url"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestLogs(t *testing.T) {
 	WithObjs(t, []TCObj{Roles, Tenants, Users}, func() { // Objs added to create logs when this test is run alone
-		GetTestLogs(t)
-		GetTestLogsByLimit(t)
-		GetTestLogsByUsername(t)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"OK when VALID request": {
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"OK when VALID USERNAME parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"username": {"admin"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateLogsFields(map[string]interface{}{"User": "admin"})),
+				},
+				"RESPONSE LENGTH matches LIMIT parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"10"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						utils.ResponseHasLength(10)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetLogs(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func GetTestLogs(t *testing.T) {
-	resp, _, err := TOSession.GetLogs(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("error getting logs: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func GetTestLogsByLimit(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("limit", "10")
-	toLogs, _, err := TOSession.GetLogs(opts)
-	if err != nil {
-		t.Errorf("error getting logs: %v - alerts: %+v", err, toLogs.Alerts)
-	}
-	if len(toLogs.Response) != 10 {
-		t.Fatalf("Get logs by limit: incorrect number of logs returned (%d)", len(toLogs.Response))
-	}
-}
-
-func GetTestLogsByUsername(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("username", "admin")
-	toLogs, _, err := TOSession.GetLogs(opts)
-	if err != nil {
-		t.Errorf("error getting logs: %v - alerts: %+v", err, toLogs.Alerts)
-	}
-	if len(toLogs.Response) <= 0 {
-		t.Fatalf("Get logs by username: incorrect number of logs returned (%d)", len(toLogs.Response))
-	}
-	for _, user := range toLogs.Response {
-		if *user.User != TOSession.UserName {
-			t.Errorf("incorrect username seen in logs, expected: `admin`, got: %v", *user.User)
+func validateLogsFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		logs := resp.([]tc.Log)
+		for field, expected := range expectedResp {
+			for _, log := range logs {
+				switch field {
+				case "User":
+					assert.Equal(t, expected, *log.User, "Expected User to be %v, but got %v", expected, *log.User)
+				}
+			}
 		}
 	}
 }

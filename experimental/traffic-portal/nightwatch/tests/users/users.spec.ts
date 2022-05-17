@@ -11,26 +11,22 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import type { TestSuite } from "../globals";
-import { LoginPageObject } from "../page_objects/login";
-import type { UsersPageObject } from "../page_objects/users";
+import type { UsersPageObject } from "nightwatch/page_objects/users";
 
-const suite: TestSuite = {
-	"Filter by username": async browser => {
+describe("Users Spec", () => {
+	it("Filter by username", async () => {
 		const username = browser.globals.adminUser;
-		const password = browser.globals.adminPass;
-
-		const loginPage: LoginPageObject = browser.page.login();
-		loginPage.navigate().section.loginForm.login(username, password);
 
 		const page: UsersPageObject = browser.waitForElementPresent("main").page.users();
-		let tbl = page.navigate().waitForElementPresent(".ag-row").section.usersTable;
+		page.navigate()
+			.waitForElementPresent(".ag-row");
+		let tbl = page.section.usersTable;
 		if (! await tbl.getColumnState("Username")) {
 			tbl = tbl.toggleColumn("Username");
 		}
 
 		tbl = tbl.searchText(username);
-		tbl.parent.assert.urlContains(`search=${username}`);
+		page.assert.urlContains(`search=${username}`);
 
 		tbl.api.elements("css selector", ".ag-row:not(.ag-hidden .ag-row)",
 			result => {
@@ -38,11 +34,10 @@ const suite: TestSuite = {
 					browser.assert.equal(true, false, `failed to select ag-grid rows: ${result.value.message}`);
 					return;
 				}
-				browser.assert.equal(result.value.length, 1)
-					.end();
+				browser.assert.equal(result.value.length, 1);
 			}
 		);
-	},
+	});
 	// Uncomment when user details page exists
 	// "View user details":  browser => {
 	// 	const username = browser.globals.adminUser;
@@ -57,6 +52,4 @@ const suite: TestSuite = {
 	// 	const userRow = tbl.parent.api.moveToElement(".ag-row:not(.ag-hidden .ag-row)", 2, 2, 100, {pointer: 0, viewport: 0});
 	// 	userRow.mouseButtonClick("right").click("button[name=View-User-Details]").assert.urlContains(username);
 	// }
-};
-
-export default suite;
+});

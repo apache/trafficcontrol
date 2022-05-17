@@ -130,7 +130,7 @@ func (cl *TOClient) GetServers(reqHdr http.Header) ([]atscfg.Server, toclientlib
 	servers := []atscfg.Server{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "servers", &servers, func(obj interface{}) error {
-		toServers, toReqInf, err := cl.c.GetServers(*ReqOpts(reqHdr))
+		toServers, toReqInf, err := cl.GetServersCompat(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting servers from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
@@ -158,7 +158,7 @@ func (cl *TOClient) GetServerByHostName(serverHostName string, reqHdr http.Heade
 	err := torequtil.GetRetry(cl.NumRetries, "server-name-"+serverHostName, &server, func(obj interface{}) error {
 		params := url.Values{}
 		params.Add("hostName", serverHostName)
-		toServers, toReqInf, err := cl.c.GetServers(toclient.RequestOptions{
+		toServers, toReqInf, err := cl.GetServersCompat(toclient.RequestOptions{
 			QueryParameters: params,
 			Header:          reqHdr,
 		})

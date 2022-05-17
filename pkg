@@ -101,9 +101,11 @@ while getopts h78abdf:lopqvsSL opt; do
 			failure=1;
 			;;
 		7)
+			BASE_IMAGE=centos
 			RHEL_VERSION=7
 			;;
 		8)
+			BASE_IMAGE=rockylinux
 			RHEL_VERSION=8
 			;;
 		a)
@@ -195,6 +197,11 @@ fi
 
 shift $((OPTIND-1))
 
+# Mark BASE_IMAGE for export
+export BASE_IMAGE;
+if [[ -n "$BASE_IMAGE" ]]; then
+	RUN_OPTIONS+=(-e BASE_IMAGE);
+fi
 # Mark RHEL_VERSION for export
 export RHEL_VERSION;
 if [[ -n "$RHEL_VERSION" ]]; then

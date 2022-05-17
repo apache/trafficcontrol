@@ -23,18 +23,23 @@ package routing
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
@@ -45,6 +50,28 @@ import (
 
 // RoutePrefix is a prefix that all API routes must match.
 const RoutePrefix = "^api" // TODO config?
+
+type backendConfigSynced struct {
+	cfg config.BackendConfig
+	*sync.RWMutex
+}
+
+// backendCfg stores the current backend config supplied to traffic ops.
+var backendCfg = backendConfigSynced{RWMutex: &sync.RWMutex{}}
+
+// GetBackendConfig returns the current BackendConfig.
+func GetBackendConfig() config.BackendConfig {
+	backendCfg.RLock()
+	defer backendCfg.RUnlock()
+	return backendCfg.cfg
+}
+
+// SetBackendConfig sets the BackendConfig to the value supplied.
+func SetBackendConfig(backendConfig config.BackendConfig) {
+	backendCfg.Lock()
+	defer backendCfg.Unlock()
+	backendCfg.cfg = backendConfig
+}
 
 // A Route defines an association with a client request and a handler for that
 // request.
@@ -85,6 +112,7 @@ type ServerData struct {
 	Profiling    *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
 	Plugins      plugin.Plugins
 	TrafficVault trafficvault.TrafficVault
+	Mux          *http.ServeMux
 }
 
 // CompiledRoute ...
@@ -270,8 +298,8 @@ func Handler(
 		}
 
 		routeCtx := context.WithValue(ctx, api.PathParamsKey, params)
+		routeCtx = context.WithValue(routeCtx, middleware.RouteID, strconv.Itoa(compiledRoute.ID))
 		r = r.WithContext(routeCtx)
-		r.Header.Add(middleware.RouteID, strconv.Itoa(compiledRoute.ID))
 		compiledRoute.Handler(w, r)
 		return
 	}
@@ -280,8 +308,97 @@ func Handler(
 		h.ServeHTTP(w, r)
 		return
 	}
+	var backendRouteHandled bool
+	backendConfig := GetBackendConfig()
+	for i, backendRoute := range backendConfig.Routes {
+		var params []string
+		routeParams := map[string]string{}
+		if backendRoute.Method == r.Method {
+			for open := strings.Index(backendRoute.Path, "{"); open > 0; open = strings.Index(backendRoute.Path, "{") {
+				close := strings.Index(backendRoute.Path, "}")
+				if close < 0 {
+					panic("malformed route")
+				}
+				param := backendRoute.Path[open+1 : close]
+				params = append(params, param)
+				backendRoute.Path = backendRoute.Path[:open] + `([^/]+)` + backendRoute.Path[close+1:]
+			}
+			regex := regexp.MustCompile(backendRoute.Path)
+			match := regex.FindStringSubmatch(r.URL.Path)
+			if len(match) == 0 {
+				continue
+			}
+			for i, v := range params {
+				routeParams[v] = match[i+1]
+			}
+			if backendRoute.Opts.Algorithm == "" || backendRoute.Opts.Algorithm == "roundrobin" {
+				index := backendRoute.Index % len(backendRoute.Hosts)
+				host := backendRoute.Hosts[index]
+				backendRoute.Index++
+				backendConfig.Routes[i] = backendRoute
+				backendRouteHandled = true
+				rp := httputil.NewSingleHostReverseProxy(&url.URL{
+					Host:   host.Hostname + ":" + strconv.Itoa(host.Port),
+					Scheme: host.Protocol,
+				})
+				rp.Transport = &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: backendRoute.Insecure},
+				}
+				rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
+					return
+				}
+				routeCtx := context.WithValue(ctx, api.DBContextKey, db)
+				routeCtx = context.WithValue(routeCtx, api.PathParamsKey, routeParams)
+				routeCtx = context.WithValue(routeCtx, middleware.RouteID, strconv.Itoa(backendRoute.ID))
+				r = r.WithContext(routeCtx)
+				userErr, sysErr, code := HandleBackendRoute(cfg, backendRoute, w, r)
+				if userErr != nil || sysErr != nil {
+					h2 := middleware.WrapAccessLog(cfg.Secrets[0], middleware.BackendErrorHandler(code, userErr, sysErr))
+					h2.ServeHTTP(w, r)
+					return
+				}
+				backendHandler := middleware.WrapAccessLog(cfg.Secrets[0], rp)
+				backendHandler.ServeHTTP(w, r)
+				return
+			} else {
+				h2 := middleware.WrapAccessLog(cfg.Secrets[0], middleware.BackendErrorHandler(http.StatusBadRequest, errors.New("only an algorithm of roundrobin is supported by the backend options currently"), nil))
+				h2.ServeHTTP(w, r)
+				return
+			}
+		}
+	}
+	if !backendRouteHandled {
+		catchall.ServeHTTP(w, r)
+	}
+}
 
-	catchall.ServeHTTP(w, r)
+// HandleBackendRoute does all the pre processing for the backend routes.
+func HandleBackendRoute(cfg *config.Config, route config.BackendRoute, w http.ResponseWriter, r *http.Request) (error, error, int) {
+	var userErr, sysErr error
+	var errCode int
+	var user auth.CurrentUser
+	var inf *api.APIInfo
+
+	user, userErr, sysErr, errCode = api.GetUserFromReq(w, r, cfg.Secrets[0])
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+	if cfg.RoleBasedPermissions {
+		missingPerms := user.MissingPermissions(route.Permissions...)
+		if len(missingPerms) != 0 {
+			msg := strings.Join(missingPerms, ", ")
+			return fmt.Errorf("missing required Permissions: %s", msg), nil, http.StatusForbidden
+		}
+	}
+	api.AddUserToReq(r, user)
+	var params []string
+	inf, userErr, sysErr, errCode = api.NewInfo(r, params, nil)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+	defer inf.Close()
+	return nil, nil, http.StatusOK
 }
 
 // IsRequestAPIAndUnknownVersion returns true if the request starts with `/api` and is a version not in the list of versions.
@@ -335,7 +452,7 @@ func RegisterRoutes(d ServerData) error {
 
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	d.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, d.TrafficVault, w, r)
 	})
 	return nil

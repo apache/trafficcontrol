@@ -50,6 +50,10 @@ func MakeLoggingDotYAML(
 	warnings := []string{}
 	requiredIndent := 0
 
+	if server.HostName == nil {
+		return Cfg{}, makeErr(warnings, "this server missing HostName")
+	}
+
 	if len(server.ProfileNames) == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
@@ -82,7 +86,7 @@ func MakeLoggingDotYAML(
 			format := paramData[logFormatField+".Format"]
 			if format == "" {
 				// TODO determine if the line should be excluded. Perl includes it anyway, without checking.
-				warnings = append(warnings, fmt.Sprintf("profile '%v' has logging.yaml format '%v' Name Parameter but no Format Parameter. Setting blank Format!\n", server.ProfileNames, logFormatField))
+				warnings = append(warnings, fmt.Sprintf("server '%v' profile has logging.yaml format '%v' Name Parameter but no Format Parameter. Setting blank Format!\n", *server.HostName, logFormatField))
 			}
 			text += indentSpaces + " - name: " + logFormatName + " \n"
 			text += indentSpaces + "   format: '" + format + "'\n"
@@ -99,7 +103,7 @@ func MakeLoggingDotYAML(
 			filter := paramData[logFilterField+".Filter"]
 			if filter == "" {
 				// TODO determine if the line should be excluded. Perl includes it anyway, without checking.
-				warnings = append(warnings, fmt.Sprintf("profile '%v' has logging.yaml filter '%v' Name Parameter but no Filter Parameter. Setting blank Filter!\n", server.ProfileNames, logFilterField))
+				warnings = append(warnings, fmt.Sprintf("server '%v' profile has logging.yaml filter '%v' Name Parameter but no Filter Parameter. Setting blank Filter!\n", *server.HostName, logFilterField))
 			}
 			logFilterType := paramData[logFilterField+".Type"]
 			if logFilterType == "" {

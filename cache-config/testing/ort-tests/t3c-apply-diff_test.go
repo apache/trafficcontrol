@@ -28,7 +28,7 @@ import (
 func TestApplyDiff(t *testing.T) {
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
-		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
+		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {

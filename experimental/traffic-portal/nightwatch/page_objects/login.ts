@@ -22,6 +22,7 @@ import {
 interface LoginFormSectionCommands extends EnhancedSectionInstance, EnhancedElementInstance<EnhancedPageObject> {
 	fillOut(username: string, password: string): this;
 	login(username: string, password: string): this;
+	loginAndWait(username: string, password: string): this;
 }
 
 /**
@@ -32,27 +33,28 @@ type LoginFormSection = EnhancedSectionInstance<LoginFormSectionCommands, typeof
 /**
  * Define the type for our PO
  */
-export type LoginPageObject = EnhancedPageObject<{}, typeof loginPageObject.elements, { loginForm: LoginFormSection }>;
+export type LoginPageObject = EnhancedPageObject<{}, {}, { loginForm: LoginFormSection }>;
 
 const loginPageObject = {
 	api: {} as NightwatchAPI,
-	elements: {
-		snackbarEle: {
-			selector: "simple-snack-bar"
-		}
-	},
 	sections: {
 		loginForm: {
 			commands: {
-				fillOut(username: string, password: string): LoginFormSectionCommands  {
-					 return this
+				fillOut(username: string, password: string): LoginFormSectionCommands {
+					return this
 						.setValue("@usernameTxt", username)
 						.setValue("@passwordTxt", password);
 				},
 				login(username: string, password: string): LoginFormSectionCommands {
-					 return this.fillOut(username, password)
+					return this.fillOut(username, password)
 						.click("@loginBtn");
 				},
+				loginAndWait(username: string, password: string): LoginFormSectionCommands {
+					const ret = this.login(username, password);
+					browser.page.common()
+						.assert.containsText("@snackbarEle", "Success");
+					return ret;
+				}
 			} as LoginFormSectionCommands,
 			elements: {
 				clearBtn: {

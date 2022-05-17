@@ -31,7 +31,7 @@ func TestT3cCreateEmptyFile(t *testing.T) {
 	// t3c must create semantically blank files. Failing to do so will cause other config files that reference them to fail.
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
-		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
+		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
