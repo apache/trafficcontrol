@@ -1469,8 +1469,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	originalStatusID := *original.StatusID
 
 	var server tc.ServerV40
-	var serverV3 tc.ServerV30
 	var statusLastUpdatedTime time.Time
+	server.ID = new(int)
+	*server.ID = inf.IntParams["id"]
 	if inf.Version.Major >= 4 {
 		if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1499,6 +1500,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if inf.Version.Major >= 3 {
+		var serverV3 tc.ServerV30
+		serverV3.ID = new(int)
+		*serverV3.ID = inf.IntParams["id"]
 		if err := json.NewDecoder(r.Body).Decode(&serverV3); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
@@ -1516,7 +1520,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.Profile, (original.ProfileNames)[0], tx)
+		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.ProfileID, (original.ProfileNames)[0], tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
 			return
@@ -1532,6 +1536,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		var legacyServer tc.ServerNullableV2
+		legacyServer.ID = new(int)
+		*legacyServer.ID = inf.IntParams["id"]
 		if err := json.NewDecoder(r.Body).Decode(&legacyServer); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
@@ -1541,7 +1547,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(legacyServer.ID, legacyServer.Profile, (original.ProfileNames)[0], tx)
+		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(legacyServer.ID, legacyServer.ProfileID, (original.ProfileNames)[0], tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
 			return
@@ -1575,8 +1581,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	server.ID = new(int)
-	*server.ID = inf.IntParams["id"]
 	status, ok, err := dbhelpers.GetStatusByID(*server.StatusID, tx)
 	if err != nil {
 		sysErr = fmt.Errorf("getting server #%d status (#%d): %v", id, *server.StatusID, err)
