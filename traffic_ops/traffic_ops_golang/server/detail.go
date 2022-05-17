@@ -37,13 +37,6 @@ import (
 	"github.com/lib/pq"
 )
 
-type serverDetailResponse struct {
-	Limit    int         `json:"limit"`
-	OrderBy  string      `json:"orderby"`
-	Response interface{} `json:"response"`
-	Size     int         `json:"size"`
-}
-
 // GetDetailParamHandler handles GET requests to /servers/details (the name
 // includes "Param" for legacy reasons).
 //
@@ -89,14 +82,11 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err, &alt)
 	}
-	resp := serverDetailResponse{
-		Limit:   limit,
-		OrderBy: orderBy,
-		Size:    len(servers),
-	}
+	var resp interface{}
+	size := len(servers)
 
 	if inf.Version.Major <= 2 {
-		v11ServerList := make([]tc.ServerDetailV11, 0, resp.Size)
+		v11ServerList := make([]tc.ServerDetailV11, 0, size)
 		for _, server := range servers {
 			interfaces := server.ServerInterfaces
 			routerHostName := ""
@@ -123,9 +113,9 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 
 			v11ServerList = append(v11ServerList, v11server)
 		}
-		resp.Response = v11ServerList
+		resp = v11ServerList
 	} else if inf.Version.Major <= 3 {
-		v3ServerList := make([]tc.ServerDetailV30, 0, resp.Size)
+		v3ServerList := make([]tc.ServerDetailV30, 0, size)
 		for _, server := range servers {
 			v3Server := tc.ServerDetailV30{}
 			interfaces := server.ServerInterfaces
@@ -151,13 +141,18 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 			v3Server.ServerInterfaces = &v3Interfaces
 			v3ServerList = append(v3ServerList, v3Server)
 		}
-		resp.Response = v3ServerList
+		resp = v3ServerList
 	} else {
 		api.WriteRespAlertNotFound(w, r)
+		return
 	}
 
-	alerts := api.CreateDeprecationAlerts(&alt)
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, resp)
+	api.WriteRespVals(w, r, resp, map[string]interface{}{
+		"alerts":  api.CreateDeprecationAlerts(&alt).Alerts,
+		"limit":   limit,
+		"orderby": orderBy,
+		"size":    size,
+	})
 }
 
 // AddWhereClauseAndQuery adds a WHERE clause to the query given in `q` (does
