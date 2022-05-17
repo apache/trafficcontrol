@@ -84,6 +84,17 @@ var TableCertExpirationsController = function(tableName, certExpirations, $scope
 				// Event is outside the digest cycle, so we need to trigger one.
 				$scope.$apply();
 			}
+		},
+		rowClassRules: {
+			'expired-cert': function(params) {
+				let now = new Date();
+				return params.data.expiration < now;
+			},
+			'soon-expired-cert': function(params) {
+				let thirtyDays = new Date();
+				thirtyDays.setDate(thirtyDays.getDate()+30);
+				return params.data.expiration >= new Date() && params.data.expiration <= thirtyDays;
+			}
 		}
 	};
 

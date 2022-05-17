@@ -219,6 +219,12 @@ div.dropdown button.menu-item-button {
       text-decoration: line-through;
     }
   }
+  .ag-row.expired-cert {
+    background-color: #f8d7da;
+  }
+  .ag-row.soon-expired-cert {
+    background-color: #fff3cd;
+  }
 }
 
 div.grid-comp {
