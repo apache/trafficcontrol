@@ -17,11 +17,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Monitor: Add support for `access.log` to TM.
 - Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
 - [Traffic Ops] Added support for backend configurations so that Traffic Ops can act as a reverse proxy for these services [#6754](https://github.com/apache/trafficcontrol/pull/6754).
-- Added functionality for CDN locks, so that they can be shared amongst a list of specified usernames. 
+- Added functionality for CDN locks, so that they can be shared amongst a list of specified usernames.
 - [Traffic Ops | Traffic Go Clients | T3C] Add additional timestamp fields to server for queuing and dequeueing config and revalidate updates.
 - Added layered profile feature to 4.0 for `GET` /servers/, `POST` /servers/, `PUT` /servers/{id} and `DELETE` /servers/{id}.
 - Added a Traffic Ops endpoint and Traffic Portal page to view all CDNi configuration update requests and approve or deny.
-- Added layered profile feature to 4.0 for `GET` /servers/details.
 - Added layered profile feature to 4.0 for `GET` /deliveryservices/{id}/servers/ and /deliveryservices/{id}/servers/eligible.
 
 ### Fixed
@@ -57,6 +56,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Replace `forever` with `pm2` for process management of the traffic portal node server to remediate security issues.
 - Removed the Traffic Monitor `peer_polling_protocol` option. Traffic Monitor now just uses hostnames to request peer states, which can be handled via IPv4 or IPv6 depending on the underlying IP version in use.
 - Dropped CentOS 8 support
+- The `/servers/details` endpoint of the Traffic Ops API has been dropped in version 4.0, and marked deprecated in earlier versions.
 
 ### Changed
 - [#6654](https://github.com/apache/trafficcontrol/issues/6654) Traffic Monitor now uses the TO API 4.0 by default and falls back to 3.1
