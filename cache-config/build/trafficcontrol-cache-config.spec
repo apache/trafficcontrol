@@ -123,6 +123,14 @@ go_t3c_preprocess_dir="$ccpath"/t3c-preprocess
 	cp "$TC_DIR"/"$ccdir"/t3c-preprocess/t3c-preprocess.1 .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
+# copy t3c-tail binary
+go_t3c_tail_dir="$ccpath"/t3c-tail
+( mkdir -p "$go_t3c_tail_dir" && \
+	cd "$go_t3c_tail_dir" && \
+	cp "$TC_DIR"/"$ccdir"/t3c-tail/t3c-tail .
+	cp "$TC_DIR"/"$ccdir"/t3c-tail/t3c-tail.1 .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
 %install
 ccdir="cache-config/"
 installdir="/usr/bin"
@@ -164,6 +172,10 @@ gzip -c -9 "$src"/t3c-update/t3c-update.1 > ${RPM_BUILD_ROOT}/"$mandir"/"$man1di
 t3c_diff_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-diff
 cp -p "$t3c_diff_src"/t3c-diff ${RPM_BUILD_ROOT}/"$installdir"
 gzip -c -9 "$src"/t3c-diff/t3c-diff.1 > ${RPM_BUILD_ROOT}/"$mandir"/"$man1dir"/t3c-diff.1.gz
+
+t3c_tail_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-tail
+cp -p "$t3c_tail_src"/t3c-tail ${RPM_BUILD_ROOT}/"$installdir"
+gzip -c -9 "$src"/t3c-tail/t3c-tail.1 > ${RPM_BUILD_ROOT}/"$mandir"/"$man1dir"/t3c-tail.1.gz
 
 t3c_check_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-check
 cp -p "$t3c_check_src"/t3c-check ${RPM_BUILD_ROOT}/"$installdir"
@@ -224,6 +236,7 @@ fi
 /usr/bin/t3c-generate
 /usr/bin/t3c-preprocess
 /usr/bin/t3c-request
+/usr/bin/t3c-tail
 /usr/bin/t3c-update
 /usr/share/man/man1/t3c.1.gz
 /usr/share/man/man1/t3c-apply.1.gz
@@ -234,6 +247,7 @@ fi
 /usr/share/man/man1/t3c-generate.1.gz
 /usr/share/man/man1/t3c-preprocess.1.gz
 /usr/share/man/man1/t3c-request.1.gz
+/usr/share/man/man1/t3c-tail.1.gz
 /usr/share/man/man1/t3c-update.1.gz
 
 %dir /var/lib/trafficcontrol-cache-config
