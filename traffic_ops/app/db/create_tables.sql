@@ -580,7 +580,7 @@ ALTER TABLE cdn_notification_id_seq OWNER TO traffic_ops;
 -- Name: cdn_notification_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
-ALTER SEQUENCE cdn_notification_id_seq OWNED BY cdn.id;
+ALTER SEQUENCE cdn_notification_id_seq OWNED BY cdn_notification.id;
 
 --
 -- Name: coordinate; Type: TABLE; Schema: public: Owner: traffic_ops
