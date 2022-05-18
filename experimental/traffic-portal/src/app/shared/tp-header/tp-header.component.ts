@@ -16,6 +16,7 @@ import { Component } from "@angular/core";
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -37,8 +38,26 @@ export class TpHeaderComponent {
 	public hidden = false;
 
 	constructor(private readonly auth: CurrentUserService, private readonly api: UserService,
-		private readonly themeSvc: ThemeManagerService) {
+		public readonly themeSvc: ThemeManagerService, private readonly headerSvc: TpHeaderService) {
 		this.themeSvc.initTheme();
+
+		this.headerSvc.getTitle().subscribe(title => {
+			this.title = title;
+		});
+
+		this.headerSvc.getHidden().subscribe(hidden => {
+			this.hidden = hidden;
+		});
+
+		this.auth.userChanged.subscribe(() => {
+			if(this.auth.loggedIn) {
+				this.hidden = false;
+			}
+		});
+
+		if(this.auth.loggedIn) {
+			this.hidden = false;
+		}
 	}
 
 	/**

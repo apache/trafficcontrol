@@ -12,13 +12,11 @@
 * limitations under the License.
 */
 
-import {AfterViewInit, Component, OnInit, ViewChild} from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import { Router } from "@angular/router";
 
 import { CurrentUser } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import {TpHeaderComponent} from "src/app/shared/tp-header/tp-header.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * The most basic component that contains everything else. This should be kept pretty simple.
@@ -28,30 +26,20 @@ import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 	styleUrls: ["./app.component.scss"],
 	templateUrl: "./app.component.html",
 })
-export class AppComponent implements OnInit, AfterViewInit {
-	@ViewChild("header") private readonly headerRef!: TpHeaderComponent;
-	/** The app's title */
-	public title = "Traffic Portal";
+export class AppComponent implements OnInit {
 
 	/** The currently logged-in user */
 	public currentUser: CurrentUser | null = null;
 
-	constructor(private readonly router: Router, private readonly auth: CurrentUserService, private readonly headerSvc: TpHeaderService) {
+	constructor(private readonly router: Router, private readonly auth: CurrentUserService) {
 	}
 
 	/**
 	 * Logs the currently logged-in user out.
 	 */
-	public logout(): void {
+	public async logout(): Promise<void> {
 		this.auth.logout();
-		this.router.navigate(["/login"]);
-	}
-
-	/**
-	 * Angular lifecycle hook, sets header text.
-	 */
-	public ngAfterViewInit(): void {
-		this.headerSvc.registerHeader(this.headerRef);
+		await this.router.navigate(["/login"]);
 	}
 
 	/**

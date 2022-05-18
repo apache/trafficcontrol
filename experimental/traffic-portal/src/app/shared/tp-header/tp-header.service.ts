@@ -12,8 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-
-import {TpHeaderComponent} from "src/app/shared/tp-header/tp-header.component";
+import {ReplaySubject} from "rxjs";
 
 /**
  *
@@ -22,15 +21,31 @@ import {TpHeaderComponent} from "src/app/shared/tp-header/tp-header.component";
 	providedIn: "root"
 })
 export class TpHeaderService {
-	private header?: TpHeaderComponent;
+	private readonly headerTitle: ReplaySubject<string>;
+	private readonly headerHidden: ReplaySubject<boolean>;
+
+	constructor() {
+		this.headerTitle = new ReplaySubject(1);
+		this.headerHidden = new ReplaySubject(1);
+		this.headerHidden.next(true);
+	}
 
 	/**
-	 * Register the header component
+	 * Gets the header title.
 	 *
-	 * @param header The header to register
+	 * @returns Subject containing the header title.
 	 */
-	public registerHeader(header: TpHeaderComponent): void {
-		this.header = header;
+	public getTitle(): ReplaySubject<string> {
+		return this.headerTitle;
+	}
+
+	/**
+	 * Gets the header hidden state.
+	 *
+	 * @returns Subject containing header visibility state.
+	 */
+	public getHidden(): ReplaySubject<boolean> {
+		return this.headerHidden;
 	}
 
 	/**
@@ -39,9 +54,7 @@ export class TpHeaderService {
 	 * @param title Title to use
 	 */
 	public setTitle(title: string): void {
-		if(this.header) {
-			this.header.title = title;
-		}
+		this.headerTitle.next(title);
 	}
 
 	/**
@@ -50,8 +63,6 @@ export class TpHeaderService {
 	 * @param hidden Header visibility state
 	 */
 	public setHidden(hidden: boolean): void {
-		if(this.header) {
-			this.header.hidden = hidden;
-		}
+		this.headerHidden.next(hidden);
 	}
 }

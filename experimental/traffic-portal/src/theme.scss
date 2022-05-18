@@ -15,7 +15,6 @@
 @use "sass:map";
 
 @import "./app/core/servers/server-details/server-details-theme";
-@import "./app/login/login-theme";
 @import "../node_modules/ag-grid-community/src/styles/ag-grid.scss";
 @import "../node_modules/ag-grid-community/src/styles/ag-theme-material/sass/ag-theme-material-mixin";
 
@@ -109,7 +108,6 @@
 	@if $color != null {
 		@include theme-color($color);
 		@include grid-theme($theme);
-		@include login-theme($color);
 		@include server-details-theme($color);
 	}
 	@if $typography != null {

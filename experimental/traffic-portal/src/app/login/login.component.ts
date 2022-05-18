@@ -33,6 +33,9 @@ export class LoginComponent implements OnInit {
 	/** The URL to which to redirect users after successful login. */
 	private returnURL = "";
 
+	/** Controls if the password is shown in plain text */
+	public hide = true;
+
 	/** The user-entered username. */
 	public u = new FormControl("");
 	/** The user-entered password. */

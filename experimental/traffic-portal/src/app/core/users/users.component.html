@@ -11,19 +11,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<main>
-	<mat-card>
-		<div>
-			<input type="search" name="fuzzControl" aria-label="Fuzzy Search Users" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()"/>
-		</div>
-		<tp-generic-table
-			[data]="users"
-			[cols]="columnDefs"
-			[fuzzySearch]="fuzzySubject"
-			context="users"
-			[contextMenuItems]="contextMenuItems"
-			(contextMenuAction)="handleContextMenu($event)">
-		</tp-generic-table>
-	</mat-card>
+<mat-card>
+	<div>
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Users" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()"/>
+	</div>
+	<tp-generic-table
+		[data]="users"
+		[cols]="columnDefs"
+		[fuzzySearch]="fuzzySubject"
+		context="users"
+		[contextMenuItems]="contextMenuItems"
+		(contextMenuAction)="handleContextMenu($event)">
+	</tp-generic-table>
 	<div id="loading" *ngIf="loading"><tp-loading></tp-loading></div>
-</main>
+</mat-card>
