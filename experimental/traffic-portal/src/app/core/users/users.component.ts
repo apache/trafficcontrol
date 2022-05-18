@@ -176,7 +176,7 @@ export class UsersComponent implements OnInit {
 		this.roles = new Map((await this.api.getRoles()).map(r => [r.id, r.name]));
 		this.users = orderBy(await this.api.getUsers(), "fullName");
 		this.loading = false;
-		this.headerSvc.setTitle("Users");
+		this.headerSvc.headerTitle.next("Users");
 	}
 
 	/**

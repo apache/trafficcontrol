@@ -17,13 +17,14 @@ import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/t
 import {MatDialog} from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import {Observable, of} from "rxjs";
+import {Observable, of, ReplaySubject} from "rxjs";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { defaultServer, type Server } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { augment, type AugmentedServer, serverIsCache, ServersTableComponent } from "./servers-table.component";
 
@@ -51,6 +52,8 @@ describe("ServersTableComponent", () => {
 
 	beforeEach(() => {
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"]);
+
+		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 		TestBed.configureTestingModule({
 			declarations: [ ServersTableComponent, TpHeaderComponent ],
 			imports: [
@@ -63,7 +66,8 @@ describe("ServersTableComponent", () => {
 			],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: MatDialog, useClass: MockDialog }
+				{ provide: MatDialog, useClass: MockDialog },
+				{ provide: TpHeaderService, useValue: headerSvc}
 			]
 		}).compileComponents();
 		fixture = TestBed.createComponent(ServersTableComponent);

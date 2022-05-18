@@ -21,48 +21,12 @@ import {ReplaySubject} from "rxjs";
 	providedIn: "root"
 })
 export class TpHeaderService {
-	private readonly headerTitle: ReplaySubject<string>;
-	private readonly headerHidden: ReplaySubject<boolean>;
+	public readonly headerTitle: ReplaySubject<string>;
+	public readonly headerHidden: ReplaySubject<boolean>;
 
 	constructor() {
 		this.headerTitle = new ReplaySubject(1);
 		this.headerHidden = new ReplaySubject(1);
 		this.headerHidden.next(true);
-	}
-
-	/**
-	 * Gets the header title.
-	 *
-	 * @returns Subject containing the header title.
-	 */
-	public getTitle(): ReplaySubject<string> {
-		return this.headerTitle;
-	}
-
-	/**
-	 * Gets the header hidden state.
-	 *
-	 * @returns Subject containing header visibility state.
-	 */
-	public getHidden(): ReplaySubject<boolean> {
-		return this.headerHidden;
-	}
-
-	/**
-	 * Sets the title of the header
-	 *
-	 * @param title Title to use
-	 */
-	public setTitle(title: string): void {
-		this.headerTitle.next(title);
-	}
-
-	/**
-	 * Sets whether or nto to hide the header
-	 *
-	 * @param hidden Header visibility state
-	 */
-	public setHidden(hidden: boolean): void {
-		this.headerHidden.next(hidden);
 	}
 }

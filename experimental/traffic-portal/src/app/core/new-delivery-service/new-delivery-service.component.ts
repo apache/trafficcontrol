@@ -138,7 +138,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		if (!success || this.auth.currentUser === null) {
 			return;
 		}
-		this.headerSvc.setTitle("New Delivery Service");
+		this.headerSvc.headerTitle.next("New Delivery Service");
 
 		this.deliveryService.tenant = this.auth.currentUser.tenant;
 		this.deliveryService.tenantId = this.auth.currentUser.tenantId;
@@ -232,7 +232,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * Updates the header text based on the status of the current delivery service
 	 */
 	public updateDisplayName(): void {
-		this.headerSvc.setTitle(this.displayName.value === "" ? "New Delivery Service" : this.displayName.value);
+		this.headerSvc.headerTitle.next(this.displayName.value === "" ? "New Delivery Service" : this.displayName.value);
 	}
 
 	/**

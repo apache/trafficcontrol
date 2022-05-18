@@ -36,13 +36,11 @@ describe("TpHeaderService", () => {
 	});
 
 	it("set header component", () => {
-		service.registerHeader(mockHeaderComp);
-
 		expect(mockHeaderComp).toBeTruthy();
 		expect(mockHeaderComp?.hidden).toBeFalse();
 		expect(mockHeaderComp?.title).toBe("");
 
-		service.setHidden(true);
-		service.setTitle("something else");
+		service.headerHidden.next(true);
+		service.headerTitle.next("something else");
 	});
 });

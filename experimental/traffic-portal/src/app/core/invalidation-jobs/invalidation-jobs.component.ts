@@ -70,7 +70,7 @@ export class InvalidationJobsComponent implements OnInit {
 	 * Traffic Ops and setting the pageload date/time.
 	 */
 	public ngOnInit(): void {
-		this.headerSvc.setTitle("Loading - Content Invalidation Jobs");
+		this.headerSvc.headerTitle.next("Loading - Content Invalidation Jobs");
 		this.now = new Date();
 		const idParam = this.route.snapshot.paramMap.get("id");
 		if (!idParam) {
@@ -86,7 +86,7 @@ export class InvalidationJobsComponent implements OnInit {
 		this.dsAPI.getDeliveryServices(this.dsID).then(
 			r => {
 				this.deliveryservice = r;
-				this.headerSvc.setTitle(`${this.deliveryservice.displayName} - Content Invalidation Jobs`);
+				this.headerSvc.headerTitle.next(`${this.deliveryservice.displayName} - Content Invalidation Jobs`);
 			}
 		);
 	}

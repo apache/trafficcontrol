@@ -50,13 +50,24 @@ export async function getColumnState(this: TableSectionCommands, column: string)
 	return new Promise((resolve, reject) => {
 		this.click(columnMenuSelector).parent.getElementProperty(`mat-checkbox[ng-reflect-name='${column}']`, "classList",
 			result => {
-				if (typeof result.value !== "string") {
+				let checked = false;
+				if (typeof result.value === "string") {
+					checked = result.value.indexOf("mat-checkbox-checked") > -1;
+				} else if (Array.isArray(result.value)) {
+					for(const cls of result.value) {
+						if (cls.indexOf("mat-checkbox-checked") > -1) {
+							checked = true;
+							break;
+						}
+					}
+					checked = result.value.indexOf("mat-checkbox-checked") > -1;
+				} else {
 					console.error("incorrect type for 'classList' DOM property:", result.value);
 					reject(new Error(`incorrect type for 'classList' DOM property: ${typeof result.value}`));
 					return;
 				}
 				this.parent.click("body", () => {
-					resolve(result.value.indexOf("mat-checkbox-checked") > -1);
+					resolve(checked);
 				});
 			}
 		);

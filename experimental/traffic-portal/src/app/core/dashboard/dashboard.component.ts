@@ -116,7 +116,7 @@ export class DashboardComponent implements OnInit {
 			}
 		);
 
-		this.headerSvc.setTitle("");
+		this.headerSvc.headerTitle.next("");
 	}
 
 	/**

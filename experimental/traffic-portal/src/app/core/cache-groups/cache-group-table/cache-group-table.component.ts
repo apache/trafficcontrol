@@ -154,7 +154,7 @@ export class CacheGroupTableComponent implements OnInit {
 				console.error("Failed to get query parameters:", e);
 			}
 		);
-		this.headerSvc.setTitle("Cache Groups");
+		this.headerSvc.headerTitle.next("Cache Groups");
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */

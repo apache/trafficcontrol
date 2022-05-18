@@ -54,7 +54,7 @@ export class LoginComponent implements OnInit {
 	 * string parameters.
 	 */
 	public ngOnInit(): void {
-		this.headerSvc.setHidden(true);
+		this.headerSvc.headerHidden.next(true);
 		const params = this.route.snapshot.queryParamMap;
 		this.returnURL = params.get("returnUrl") ?? "core";
 		const token = params.get("token");
@@ -62,7 +62,7 @@ export class LoginComponent implements OnInit {
 			this.auth.login(token).then(
 				response => {
 					if (response) {
-						this.headerSvc.setHidden(false);
+						this.headerSvc.headerHidden.next(false);
 						this.router.navigate(["/core/me"], {queryParams: {edit: true, updatePassword: true}});
 					}
 				},
@@ -82,7 +82,7 @@ export class LoginComponent implements OnInit {
 		this.auth.login(this.u.value, this.p.value).then(
 			response => {
 				if (response) {
-					this.headerSvc.setHidden(false);
+					this.headerSvc.headerHidden.next(false);
 					this.router.navigate([this.returnURL]);
 				}
 			},

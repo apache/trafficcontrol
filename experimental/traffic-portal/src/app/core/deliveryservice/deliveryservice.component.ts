@@ -125,7 +125,7 @@ export class DeliveryserviceComponent implements OnInit {
 				this.deliveryservice = d;
 				this.loadBandwidth();
 				this.loadTPS();
-				this.headerSvc.setTitle(d.displayName);
+				this.headerSvc.headerTitle.next(d.displayName);
 			}
 		);
 	}

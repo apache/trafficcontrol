@@ -192,7 +192,7 @@ export class ServerDetailsComponent implements OnInit {
 			this.serverService.getServers(Number(ID)).then(
 				s => {
 					this.server = s;
-					this.headerSvc.setTitle(`Server #${this.server.id}`);
+					this.headerSvc.headerTitle.next(`Server #${this.server.id}`);
 				}
 			).catch(
 				e => {
@@ -211,7 +211,7 @@ export class ServerDetailsComponent implements OnInit {
 				mtu: null,
 				name: "",
 			}];
-			this.headerSvc.setTitle("New Server");
+			this.headerSvc.headerTitle.next("New Server");
 		}
 	}
 

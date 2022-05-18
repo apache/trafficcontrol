@@ -41,11 +41,11 @@ export class TpHeaderComponent {
 		public readonly themeSvc: ThemeManagerService, private readonly headerSvc: TpHeaderService) {
 		this.themeSvc.initTheme();
 
-		this.headerSvc.getTitle().subscribe(title => {
+		this.headerSvc.headerTitle.subscribe(title => {
 			this.title = title;
 		});
 
-		this.headerSvc.getHidden().subscribe(hidden => {
+		this.headerSvc.headerHidden.subscribe(hidden => {
 			this.hidden = hidden;
 		});
 

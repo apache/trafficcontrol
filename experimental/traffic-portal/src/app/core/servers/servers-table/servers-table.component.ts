@@ -360,7 +360,7 @@ export class ServersTableComponent implements OnInit {
 			}
 		);
 
-		this.headerSvc.setTitle("Servers");
+		this.headerSvc.headerTitle.next("Servers");
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */

@@ -72,12 +72,12 @@ export class CurrentuserComponent implements OnInit {
 				r => {
 					if (r) {
 						this.currentUser = this.auth.currentUser;
-						this.headerSvc.setTitle(this.currentUser?.username ?? "");
+						this.headerSvc.headerTitle.next(this.currentUser?.username ?? "");
 					}
 				}
 			);
 		} else {
-			this.headerSvc.setTitle(this.currentUser?.username ?? "");
+			this.headerSvc.headerTitle.next(this.currentUser?.username ?? "");
 		}
 		const edit = this.route.snapshot.queryParamMap.get("edit");
 		if (edit === "true") {

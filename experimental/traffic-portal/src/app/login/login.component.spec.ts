@@ -18,8 +18,10 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
+import {ReplaySubject} from "rxjs";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { LoginComponent } from "./login.component";
 
@@ -48,6 +50,8 @@ describe("LoginComponent", () => {
 		const dialog = jasmine.createSpyObj(["open"]);
 		dialogSpy = dialog.open;
 
+		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+
 		TestBed.configureTestingModule({
 			declarations: [ LoginComponent ],
 			imports: [
@@ -65,7 +69,8 @@ describe("LoginComponent", () => {
 			],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: MatDialog, useValue: dialog}
+				{ provide: MatDialog, useValue: dialog},
+				{ provide: TpHeaderService, useValue: headerSvc}
 			]
 		}).compileComponents();
 		fixture = TestBed.createComponent(LoginComponent);
