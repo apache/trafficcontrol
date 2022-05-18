@@ -562,6 +562,8 @@ CREATE TABLE cdn_notification (
     CONSTRAINT cdn_notification_pkey PRIMARY KEY (id)
 );
 
+ALTER TABLE cdn_notification OWNER TO traffic_ops;
+
 --
 -- Name: cdn_notification_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
