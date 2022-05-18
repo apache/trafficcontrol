@@ -125,7 +125,8 @@ func TestValidate(t *testing.T) {
 		api.APIInfoImpl{},
 		tc.ASNNullable{ASN: &i, CachegroupID: &i},
 	}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(asn.Validate())))
+	err, _ := asn.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 	expected := util.JoinErrsStr([]error{
 		errors.New(`'asn' must be no less than 0`),
 		errors.New(`'cachegroupId' must be no less than 0`),

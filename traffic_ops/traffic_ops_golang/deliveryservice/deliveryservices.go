@@ -1284,8 +1284,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		accessibleTo, _ := strconv.Atoi(accessibleTo)
 		accessibleTenants, err := tenant.GetUserTenantIDListTx(tx.Tx, accessibleTo)
 		if err != nil {
-			log.Errorln("unable to get tenants: " + err.Error())
-			return nil, nil, tc.DBError, http.StatusInternalServerError, &maxTime
+			return nil, nil, fmt.Errorf("unable to get tenants: %w", err), http.StatusInternalServerError, &maxTime
 		}
 		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
 		queryValues["accessibleTo"] = pq.Array(accessibleTenants)

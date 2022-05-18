@@ -40,7 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 )
@@ -97,7 +97,7 @@ func (user *TOUser) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	}
 }
 
-func (user *TOUser) Validate() error {
+func (user *TOUser) Validate() (error, error) {
 
 	validateErrs := validation.Errors{
 		"email":    validation.Validate(user.Email, validation.Required, is.Email),
@@ -111,11 +111,11 @@ func (user *TOUser) Validate() error {
 	if user.LocalPassword != nil {
 		_, err := auth.IsGoodLoginPair(*user.Username, *user.LocalPassword)
 		if err != nil {
-			return err
+			return err, nil
 		}
 	}
 
-	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs)), nil
 }
 
 func (user *TOUser) postValidate() error {

@@ -138,7 +138,8 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	p := TOProfile{}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(p.Validate())))
+	err, _ := p.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 	expected := util.JoinErrsStr(test.SortErrors([]error{
 		errors.New("'cdn' cannot be blank"),
 		errors.New("'description' cannot be blank"),
@@ -159,7 +160,7 @@ func TestValidate(t *testing.T) {
 	p.Type = new(string)
 	*p.Type = "type"
 
-	err := p.Validate()
+	err, _ = p.Validate()
 	if !strings.Contains(err.Error(), "cannot contain spaces") {
 		t.Error("Expected an error about the Profile name containing spaces")
 	}

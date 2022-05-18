@@ -107,12 +107,12 @@ func (v *TOServerCapability) GetType() string {
 	return "server capability"
 }
 
-func (v *TOServerCapability) Validate() error {
+func (v *TOServerCapability) Validate() (error, error) {
 	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
 	errs := validation.Errors{
 		"name": validation.Validate(v.Name, validation.Required, rule),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (v *TOServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {

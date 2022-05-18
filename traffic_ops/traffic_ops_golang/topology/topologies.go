@@ -89,7 +89,7 @@ func (topology *TOTopology) GetType() string {
 }
 
 // Validate is a requirement of the api.Validator interface.
-func (topology *TOTopology) Validate() error {
+func (topology *TOTopology) Validate() (error, error) {
 	currentTopoName := topology.APIInfoImpl.ReqInfo.Params["name"]
 	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters.")
 	rules := validation.Errors{}
@@ -117,12 +117,7 @@ func (topology *TOTopology) Validate() error {
 		cacheGroupNames[index] = node.Cachegroup
 	}
 	if cacheGroupMap, userErr, sysErr, _ = cachegroup.GetCacheGroupsByName(cacheGroupNames, topology.APIInfoImpl.ReqInfo.Tx); userErr != nil || sysErr != nil {
-		var err error
-		message := "could not get cachegroups"
-		if userErr != nil {
-			err = fmt.Errorf("%s: %s", message, userErr.Error())
-		}
-		return err
+		return userErr, sysErr
 	}
 	cacheGroups = make([]tc.CacheGroupNullable, len(topology.Nodes))
 	for index, node := range topology.Nodes {
@@ -133,7 +128,7 @@ func (topology *TOTopology) Validate() error {
 	}
 	rules["duplicate cachegroup name"] = checkUniqueCacheGroupNames(topology.Nodes)
 	if !cacheGroupsExist {
-		return util.JoinErrs(tovalidate.ToErrors(rules))
+		return util.JoinErrs(tovalidate.ToErrors(rules)), nil
 	}
 
 	for index, node := range topology.Nodes {
@@ -146,8 +141,7 @@ func (topology *TOTopology) Validate() error {
 	}
 	dsCDNs, err := dbhelpers.GetDeliveryServiceCDNsByTopology(topology.ReqInfo.Tx.Tx, currentTopoName)
 	if err != nil {
-		log.Errorf("validating topology: %v", err)
-		return errors.New("unable to validate topology")
+		return errors.New("unable to validate topology"), fmt.Errorf("validating Topology: %w", err)
 	}
 	rules["empty cachegroups"] = topology_validation.CheckForEmptyCacheGroups(topology.ReqInfo.Tx, cacheGroupIds, dsCDNs, false, nil)
 	rules["required capabilities"] = topology.validateDSRequiredCapabilities(currentTopoName)
@@ -155,17 +149,13 @@ func (topology *TOTopology) Validate() error {
 	//Get current Topology-CG for the requested change.
 	topoCachegroupNames := topology.getCachegroupNames()
 	userErr, sysErr, _ = dbhelpers.CheckTopologyOrgServerCGInDSCG(topology.ReqInfo.Tx.Tx, dsCDNs, currentTopoName, topoCachegroupNames)
-	if userErr != nil {
-		return userErr
-	}
-	if sysErr != nil {
-		log.Errorf("error while validate topology: %s", sysErr.Error())
-		return errors.New("unable to validate topology")
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr
 	}
 
 	/* Only perform further checks if everything so far is valid */
 	if err = util.JoinErrs(tovalidate.ToErrors(rules)); err != nil {
-		return err
+		return err, nil
 	}
 
 	for _, leafMid := range checkForLeafMids(topology.Nodes, cacheGroups) {
@@ -174,7 +164,7 @@ func (topology *TOTopology) Validate() error {
 	_, rules["topology cycles"] = checkForCycles(topology.Nodes)
 	rules["super-topology cycles"] = topology.checkForCyclesAcrossTopologies()
 
-	return util.JoinErrs(tovalidate.ToErrors(rules))
+	return util.JoinErrs(tovalidate.ToErrors(rules)), nil
 }
 
 func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[string][]string, error) {
