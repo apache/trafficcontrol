@@ -743,7 +743,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		return
 	}
 
-	servers, _, err := to.GetServers()
+	servers, _, err := to.GetServers(nil)
 	if err != nil {
 		msg := fmt.Sprintf("Error getting server list from %v: %v ", config.ToURL, err)
 		if init {
