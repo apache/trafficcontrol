@@ -40,7 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 
 	"github.com/Shopify/sarama"
 	"github.com/cihub/seelog"
