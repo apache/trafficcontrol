@@ -252,7 +252,7 @@ func getStrategyGroupsSection(pa *ParentAbstraction) string {
 	if len(pa.Peers) != 0 {
 		txt += "\n" + `  - &peers_group`
 		for i, peer := range pa.Peers {
-			txt += "\n" + `    - << *peer` + strconv.Itoa(i+1)
+			txt += "\n" + `    - <<: *peer` + strconv.Itoa(i+1)
 			txt += "\n" + `      weight: ` + strconv.FormatFloat(peer.Weight, 'f', 3, 64)
 		}
 	}
