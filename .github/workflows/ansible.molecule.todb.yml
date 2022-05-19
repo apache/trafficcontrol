@@ -20,8 +20,6 @@ name: Molecule - TODB
 on:
   create:
   push:
-    branches:
-      - master
     paths:
       - .github/workflows/ansible.molecule.todb.yml
       - infrastructure/ansible/roles/molecule_shared/**
