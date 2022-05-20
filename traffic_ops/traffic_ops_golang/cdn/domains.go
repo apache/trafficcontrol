@@ -35,7 +35,7 @@ import (
 func selectMaxLastUpdatedQuery() string {
 	return `SELECT max(t) from (
 		SELECT max(profile.last_updated) as t FROM profile
-JOIN cdn ON profile.cdn = cdn.id WHERE profile.type = 'TR_PROFILE'
+JOIN cdn ON profile.cdn = cdn.id WHERE profile.type = '` + tc.TrafficRouterProfileType + `'
 UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='profile') as res`
 }
@@ -46,7 +46,7 @@ func getDomainsList(useIMS bool, header http.Header, tx *sqlx.Tx) ([]tc.Domain, 
 	domains := []tc.Domain{}
 
 	q := `SELECT p.id, p.name, p.description, domain_name FROM profile AS p
-	JOIN cdn ON p.cdn = cdn.id WHERE p.type = 'TR_PROFILE'`
+	JOIN cdn ON p.cdn = cdn.id WHERE p.type = '` + tc.TrafficRouterProfileType + `'`
 
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, header, nil, selectMaxLastUpdatedQuery())

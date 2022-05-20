@@ -453,10 +453,9 @@ func UpdateTestProfiles(t *testing.T) {
 	expectedCDNId := cdns.Response[0].ID
 	expectedName := "testing"
 	expectedRoutingDisabled := true
-	expectedType := "TR_PROFILE"
 
 	remoteProfile.Description = expectedProfileDesc
-	remoteProfile.Type = expectedType
+	remoteProfile.Type = tc.TrafficRouterProfileType
 	remoteProfile.CDNID = expectedCDNId
 	remoteProfile.Name = expectedName
 	remoteProfile.RoutingDisabled = expectedRoutingDisabled
@@ -480,8 +479,8 @@ func UpdateTestProfiles(t *testing.T) {
 	if respProfile.Description != expectedProfileDesc {
 		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
 	}
-	if respProfile.Type != expectedType {
-		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Type, expectedType)
+	if respProfile.Type != tc.TrafficRouterProfileType {
+		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Type, tc.TrafficRouterProfileType)
 	}
 	if respProfile.CDNID != expectedCDNId {
 		t.Errorf("results do not match actual: %d, expected: %d", respProfile.CDNID, expectedCDNId)
