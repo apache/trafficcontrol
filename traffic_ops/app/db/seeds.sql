@@ -79,6 +79,9 @@ INSERT INTO public.role ("name", "description", priv_level) VALUES ('admin', 'Ha
 INSERT INTO public.role ("name", "description", priv_level) VALUES ('operations', 'Has all reads and most write capabilities', 20) ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.role ("name", "description", priv_level) VALUES ('read-only', 'Has access to all read capabilities', 10) ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.role ("name", "description", priv_level) VALUES ('disallowed', 'Block all access', 0) ON CONFLICT ("name") DO NOTHING;
+INSERT INTO public.role ("name", "description", priv_level) VALUES ('portal','Portal User', 2) ON CONFLICT DO NOTHING;
+INSERT INTO public.role ("name", "description", priv_level) VALUES ('steering','Steering User', 15) ON CONFLICT DO NOTHING;
+INSERT INTO public.role ("name", "description", priv_level) VALUES ('federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
 
 -- roles_capabilities
 -- out of the box, the admin role has ALL capabilities
