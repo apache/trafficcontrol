@@ -57,14 +57,12 @@ FROM server AS s
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 `
 
-const joinProfileV3 = `JOIN profile p ON s.profile = p.id
-`
-
-const joinProfileV4 = `JOIN server_profile sp ON s.id = sp.server
+const joinProfileV4 = `JOIN server_profile sp ON p.name = sp.profile_name AND s.id = sp.server
 `
 
 /* language=SQL */
@@ -993,10 +991,14 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	var queryString, countQueryString string
-	queryString = selectQuery + joinProfileV3
-	countQueryString = serverCountQuery + joinProfileV3
+	queryString = selectQuery
+	countQueryString = serverCountQuery
 	if version.Major >= 4 {
-		queryString = selectQuery + joinProfileV4
+		if _, ok := params["profileName"]; ok {
+			queryString = selectQuery + `JOIN server_profile sp ON s.id = sp.server`
+		} else {
+			queryString = selectQuery + joinProfileV4
+		}
 		countQueryString = serverCountQuery + joinProfileV4
 	}
 
@@ -1228,7 +1230,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		filters["mid_ids"] = pq.Array(midIDs)
 
 		// Query to select only those mids that match the required capabilities of the DS
-		query = selectQuery + joinProfileV3 + midWhereClause + `
+		query = selectQuery + midWhereClause + `
 		AND s.id IN (
 		WITH capabilities AS (
 		SELECT ARRAY_AGG(ssc.server_capability), server
@@ -1246,7 +1248,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		)`
 	} else {
 		// TODO: include secondary parent?
-		query = selectQuery + joinProfileV3 + midWhereClause
+		query = selectQuery + midWhereClause
 	}
 
 	if cdnID > 0 {
@@ -1699,7 +1701,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if version.Major <= 4 {
 		selquery = selectQuery + joinProfileV4 + where
 	} else {
-		selquery = selectQuery + joinProfileV3 + where
+		selquery = selectQuery + where
 	}
 	var srvr tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&srvr.Cachegroup,
@@ -1943,7 +1945,7 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	}
 
 	where := `WHERE s.id = $1`
-	selquery := selectQuery + joinProfileV3 + where
+	selquery := selectQuery + where
 	var s4 tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&s4.Cachegroup,
 		&s4.CachegroupID,
@@ -2088,7 +2090,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	}
 
 	where := `WHERE s.id = $1`
-	selquery := selectQuery + joinProfileV3 + where
+	selquery := selectQuery + where
 	var s4 tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&s4.Cachegroup,
 		&s4.CachegroupID,
