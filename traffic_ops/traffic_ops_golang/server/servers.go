@@ -993,12 +993,12 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	var queryString, countQueryString string
+	queryString = selectQuery + joinProfileV3
+	countQueryString = serverCountQuery + joinProfileV3
 	if _, ok := params["profileName"]; ok {
 		queryString = selectQuery + joinProfileV4
 		countQueryString = serverCountQuery + joinProfileV4
 	}
-	queryString = selectQuery + joinProfileV3
-	countQueryString = serverCountQuery + joinProfileV3
 
 	countQuery := countQueryString + queryAddition + where
 	// If we are querying for a DS that has reqd capabilities, we need to make sure that we also include all the ORG servers directly assigned to this DS
