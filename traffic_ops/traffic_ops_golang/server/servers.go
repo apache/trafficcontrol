@@ -57,9 +57,14 @@ FROM server AS s
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
+`
+
+const joinProfileV3 = `JOIN profile p ON s.profile = p.id
+`
+
+const joinProfileV4 = `JOIN server_profile sp ON s.id = sp.server
 `
 
 /* language=SQL */
@@ -920,7 +925,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	if version.Major >= 4 {
 		queryParamsToSQLCols["profileName"] = dbhelpers.WhereColumnInfo{
-			Column:  "p.name",
+			Column:  "sp.profile_name",
 			Checker: nil,
 		}
 	}
@@ -986,10 +991,18 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		return nil, 0, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
-	countQuery := serverCountQuery + queryAddition + where
+	var queryString, countQueryString string
+	if _, ok := params["profileName"]; ok {
+		queryString = selectQuery + joinProfileV4
+		countQueryString = serverCountQuery + joinProfileV4
+	}
+	queryString = selectQuery + joinProfileV3
+	countQueryString = serverCountQuery + joinProfileV3
+
+	countQuery := countQueryString + queryAddition + where
 	// If we are querying for a DS that has reqd capabilities, we need to make sure that we also include all the ORG servers directly assigned to this DS
 	if _, ok := params["dsId"]; ok && dsHasRequiredCapabilities {
-		countQuery = `SELECT (` + countQuery + `) + (` + serverCountQuery + originServerQuery + `) AS total`
+		countQuery = `SELECT (` + countQuery + `) + (` + countQueryString + originServerQuery + `) AS total`
 	}
 	serverCount, err = getServerCount(tx, countQuery, queryValues)
 	if err != nil {
@@ -1008,10 +1021,10 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		log.Debugln("Non IMS request")
 	}
 
-	query := selectQuery + queryAddition + where + orderBy + pagination
+	query := queryString + queryAddition + where + orderBy + pagination
 	// If you're looking to get the servers for a particular delivery service, make sure you're also querying the ORG servers from the deliveryservice_server table
 	if _, ok := params[`dsId`]; ok {
-		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + originServerQuery
+		query = `(` + queryString + queryAddition + where + orderBy + pagination + `) UNION ` + queryString + originServerQuery
 	}
 
 	log.Debugln("Query is ", query)
@@ -1214,7 +1227,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		filters["mid_ids"] = pq.Array(midIDs)
 
 		// Query to select only those mids that match the required capabilities of the DS
-		query = selectQuery + midWhereClause + `
+		query = selectQuery + joinProfileV3 + midWhereClause + `
 		AND s.id IN (
 		WITH capabilities AS (
 		SELECT ARRAY_AGG(ssc.server_capability), server
@@ -1232,7 +1245,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		)`
 	} else {
 		// TODO: include secondary parent?
-		query = selectQuery + midWhereClause
+		query = selectQuery + joinProfileV3 + midWhereClause
 	}
 
 	if cdnID > 0 {
@@ -1669,7 +1682,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	where := `WHERE s.id = $1`
-	selquery := selectQuery + where
+	var selquery string
+	if version.Major <= 4 {
+		selquery = selectQuery + joinProfileV4 + where
+	} else {
+		selquery = selectQuery + joinProfileV3 + where
+	}
 	var srvr tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&srvr.Cachegroup,
 		&srvr.CachegroupID,
@@ -1908,7 +1926,7 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	}
 
 	where := `WHERE s.id = $1`
-	selquery := selectQuery + where
+	selquery := selectQuery + joinProfileV3 + where
 	var s4 tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&s4.Cachegroup,
 		&s4.CachegroupID,
@@ -2049,7 +2067,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	}
 
 	where := `WHERE s.id = $1`
-	selquery := selectQuery + where
+	selquery := selectQuery + joinProfileV3 + where
 	var s4 tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&s4.Cachegroup,
 		&s4.CachegroupID,
@@ -2183,7 +2201,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	}
 
 	where := `WHERE s.id = $1`
-	selquery := selectQuery + where
+	selquery := selectQuery + joinProfileV4 + where
 	var srvr tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&srvr.Cachegroup,
 		&srvr.CachegroupID,
