@@ -20,8 +20,6 @@ name: Molecule - FO
 on:
   create:
   push:
-    branches:
-      - master
     paths:
       - .github/workflows/ansible.molecule.fo.yml
       - infrastructure/ansible/roles/molecule_shared/**

@@ -181,7 +181,8 @@ func TestCreateInvalidType(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	p := TOType{}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(p.Validate())))
+	err, _ := p.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 	expected := util.JoinErrsStr(test.SortErrors([]error{
 		errors.New("'name' cannot be blank"),
 		errors.New("'description' cannot be blank"),

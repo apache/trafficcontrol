@@ -20,6 +20,9 @@
 *******************
 Retrieves details of :ref:`tp-configure-servers`.
 
+.. deprecated:: 3.1
+	This endpoint has been removed from the latest version of the API, and clients are advised to use :ref:`to-api-v3-servers` instead.
+
 
 ``GET``
 =======

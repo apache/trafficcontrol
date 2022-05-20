@@ -407,7 +407,7 @@ func newUUID() *string {
 	return &uuidReference
 }
 
-func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
+func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) ([]error, error) {
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
@@ -425,7 +425,7 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 	})
 
 	if len(errs) > 0 {
-		return errs
+		return errs, nil
 	}
 
 	if _, err := tc.ValidateTypeID(tx, s.TypeID, "server"); err != nil {
@@ -434,20 +434,18 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 
 	var cdnID int
 	if err := tx.QueryRow("SELECT cdn from profile WHERE id=$1", s.ProfileID).Scan(&cdnID); err != nil {
-		log.Errorf("could not execute select cdnID from profile: %s\n", err)
-		if err == sql.ErrNoRows {
-			errs = append(errs, fmt.Errorf("no such profileId: '%d'", *s.ProfileID))
-		} else {
-			errs = append(errs, tc.DBError)
+		if errors.Is(err, sql.ErrNoRows) {
+			errs = append(errs, fmt.Errorf("no such Profile: #%d", *s.ProfileID))
+			return errs, nil
 		}
-		return errs
+		return nil, fmt.Errorf("could not execute select cdnID from profile: %w", err)
 	}
 
 	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
 	if cdnID != *s.CDNID {
 		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, *s.ProfileID, *s.CDNID))
 	}
-	return errs
+	return errs, nil
 }
 
 func validateCommonV40(s *tc.ServerV40, tx *sql.Tx) ([]error, error) {
@@ -500,7 +498,7 @@ func validateCommonV40(s *tc.ServerV40, tx *sql.Tx) ([]error, error) {
 	return errs, nil
 }
 
-func validateV1(s *tc.ServerNullableV11, tx *sql.Tx) error {
+func validateV1(s *tc.ServerNullableV11, tx *sql.Tx) (error, error) {
 	if s.IP6Address != nil && len(strings.TrimSpace(*s.IP6Address)) == 0 {
 		s.IP6Address = nil
 	}
@@ -525,16 +523,17 @@ func validateV1(s *tc.ServerNullableV11, tx *sql.Tx) error {
 	}
 
 	errs = append(errs, tovalidate.ToErrors(validateErrs)...)
-	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
+	commonErrs, sysErr := validateCommon(&s.CommonServerProperties, tx)
+	errs = append(errs, commonErrs...)
 
-	return util.JoinErrs(errs)
+	return util.JoinErrs(errs), sysErr
 }
 
-func validateV2(s *tc.ServerNullableV2, tx *sql.Tx) error {
+func validateV2(s *tc.ServerNullableV2, tx *sql.Tx) (error, error) {
 	var errs []error
 
-	if err := validateV1(&s.ServerNullableV11, tx); err != nil {
-		return err
+	if userErr, sysErr := validateV1(&s.ServerNullableV11, tx); userErr != nil || sysErr != nil {
+		return userErr, sysErr
 	}
 
 	// default boolean value is false
@@ -556,7 +555,7 @@ func validateV2(s *tc.ServerNullableV2, tx *sql.Tx) error {
 	if *s.IP6IsService && (s.IP6Address == nil || *s.IP6Address == "") {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
-	return util.JoinErrs(errs)
+	return util.JoinErrs(errs), nil
 }
 
 func validateMTU(mtu interface{}) error {
@@ -679,10 +678,10 @@ WHERE (profiles = $1::text[])
 	return serviceInterface, util.JoinErrs(errs), nil
 }
 
-func validateV3(s *tc.ServerV30, tx *sql.Tx) (string, error) {
+func validateV3(s *tc.ServerV30, tx *sql.Tx) (string, error, error) {
 
 	if len(s.Interfaces) == 0 {
-		return "", errors.New("a server must have at least one interface")
+		return "", errors.New("a server must have at least one interface"), nil
 	}
 	var errs []error
 	var serviceAddrV4Found bool
@@ -745,8 +744,10 @@ func validateV3(s *tc.ServerV30, tx *sql.Tx) (string, error) {
 		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
 
-	if errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...); errs != nil {
-		return serviceInterface, util.JoinErrs(errs)
+	commonErrs, sysErr := validateCommon(&s.CommonServerProperties, tx)
+	errs = append(errs, commonErrs...)
+	if len(errs) > 0 || sysErr != nil {
+		return serviceInterface, util.JoinErrs(errs), sysErr
 	}
 	query := `
 SELECT s.ID, ip.address FROM server s
@@ -765,7 +766,7 @@ and p.id = $1
 		rows, err = tx.Query(query, *s.ProfileID)
 	}
 	if err != nil {
-		errs = append(errs, errors.New("unable to determine service address uniqueness"))
+		return serviceInterface, util.JoinErrs(errs), fmt.Errorf("unable to determine service address uniqueness: querying: %w", err)
 	} else if rows != nil {
 		defer rows.Close()
 		for rows.Next() {
@@ -773,14 +774,14 @@ and p.id = $1
 			var ipaddress string
 			err = rows.Scan(&id, &ipaddress)
 			if err != nil {
-				errs = append(errs, errors.New("unable to determine service address uniqueness"))
+				return serviceInterface, util.JoinErrs(errs), fmt.Errorf("unable to determine service address uniqueness: scanning: %w", err)
 			} else if (ipaddress == ipv4 || ipaddress == ipv6) && (s.ID == nil || *s.ID != id) {
 				errs = append(errs, fmt.Errorf("there exists a server with id %v on the same profile that has the same service address %s", id, ipaddress))
 			}
 		}
 	}
 
-	return serviceInterface, util.JoinErrs(errs)
+	return serviceInterface, util.JoinErrs(errs), nil
 }
 
 // Read is the handler for GET requests to /servers.
@@ -1495,8 +1496,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	originalStatusID := *original.StatusID
 
 	var server tc.ServerV40
-	var serverV3 tc.ServerV30
 	var statusLastUpdatedTime time.Time
+	server.ID = new(int)
+	*server.ID = inf.IntParams["id"]
 	if inf.Version.Major >= 4 {
 		if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1525,6 +1527,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if inf.Version.Major >= 3 {
+		var serverV3 tc.ServerV30
+		serverV3.ID = new(int)
+		*serverV3.ID = inf.IntParams["id"]
 		if err := json.NewDecoder(r.Body).Decode(&serverV3); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
@@ -1537,12 +1542,16 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			serverV3.StatusLastUpdated = original.StatusLastUpdated
 			statusLastUpdatedTime = *original.StatusLastUpdated
 		}
-		_, err := validateV3(&serverV3, tx)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		_, userErr, sysErr := validateV3(&serverV3, tx)
+		if userErr != nil || sysErr != nil {
+			code := http.StatusBadRequest
+			if sysErr != nil {
+				code = http.StatusInternalServerError
+			}
+			api.HandleErr(w, r, tx, code, userErr, sysErr)
 			return
 		}
-		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.Profile, (original.ProfileNames)[0], tx)
+		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.ProfileID, (original.ProfileNames)[0], tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
 			return
@@ -1558,16 +1567,22 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		var legacyServer tc.ServerNullableV2
+		legacyServer.ID = new(int)
+		*legacyServer.ID = inf.IntParams["id"]
 		if err := json.NewDecoder(r.Body).Decode(&legacyServer); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		err := validateV2(&legacyServer, tx)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		userErr, sysErr := validateV2(&legacyServer, tx)
+		if userErr != nil || sysErr != nil {
+			code := http.StatusBadRequest
+			if sysErr != nil {
+				code = http.StatusInternalServerError
+			}
+			api.HandleErr(w, r, tx, code, userErr, sysErr)
 			return
 		}
-		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(legacyServer.ID, legacyServer.Profile, (original.ProfileNames)[0], tx)
+		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(legacyServer.ID, legacyServer.ProfileID, (original.ProfileNames)[0], tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
 			return
@@ -1601,8 +1616,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	server.ID = new(int)
-	*server.ID = inf.IntParams["id"]
 	status, ok, err := dbhelpers.GetStatusByID(*server.StatusID, tx)
 	if err != nil {
 		sysErr = fmt.Errorf("getting server #%d status (#%d): %v", id, *server.StatusID, err)
@@ -1838,8 +1851,8 @@ func insertServerProfile(id int, pName []string, tx *sql.Tx) (error, error, int)
 	}
 	insertQuery := `
 	INSERT INTO server_profile (
-		server, 
-		profile_name, 
+		server,
+		profile_name,
 		priority
 	)SELECT $1, profile_name, priority
 	FROM UNNEST($2::text[], $3::int[]) WITH ORDINALITY AS tmp(profile_name, priority)
@@ -1874,8 +1887,12 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	server.XMPPID = newUUID()
 
-	if err := validateV2(&server, inf.Tx.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+	if userErr, sysErr := validateV2(&server, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		code := http.StatusBadRequest
+		if sysErr != nil {
+			code = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
 		return
 	}
 
@@ -2011,9 +2028,13 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	server.XMPPID = newUUID()
 
-	_, err := validateV3(&server, inf.Tx.Tx)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+	_, userErr, sysErr := validateV3(&server, inf.Tx.Tx)
+	if userErr != nil || sysErr != nil {
+		code := http.StatusBadRequest
+		if sysErr != nil {
+			code = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
 		return
 	}
 

@@ -111,7 +111,8 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidation(t *testing.T) {
 	div := TODivision{}
-	errs := test.SortErrors(test.SplitErrors(div.Validate()))
+	err, _ := div.Validate()
+	errs := test.SortErrors(test.SplitErrors(err))
 	expected := []error{}
 
 	if reflect.DeepEqual(expected, errs) {

@@ -42,7 +42,6 @@ func TestServers(t *testing.T) {
 		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestServers(t)
 		UpdateTestServersWithHeaders(t, header)
-		GetTestServersDetails(t)
 		GetTestServers(t)
 		GetTestServersIMSAfterChange(t, header)
 		GetTestServersQueryParameters(t)
@@ -653,38 +652,6 @@ func GetTestServers(t *testing.T) {
 			t.Errorf("cannot get Server by Host Name '%s': %v - alerts: %+v", *server.HostName, err, resp.Alerts)
 		} else if resp.Summary.Count != 1 {
 			t.Errorf("incorrect server count, expected: 1, actual: %d", resp.Summary.Count)
-		}
-	}
-}
-
-func GetTestServersDetails(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, server := range testData.Servers {
-		if server.HostName == nil {
-			t.Errorf("found server with nil hostname: %+v", server)
-			continue
-		}
-		opts.QueryParameters.Set("hostName", *server.HostName)
-		resp, _, err := TOSession.GetServersDetails(opts)
-		if err != nil {
-			t.Errorf("cannot get Server Details: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if len(resp.Response) == 0 {
-			t.Fatal("no servers in response, quitting")
-		}
-		if len(resp.Response[0].ServerInterfaces) == 0 {
-			t.Fatalf("no interfaces to check, quitting")
-		}
-		if len(server.Interfaces) == 0 {
-			t.Fatalf("no interfaces to check, quitting")
-		}
-
-		// just check the first interface for noe
-		if resp.Response[0].ServerInterfaces[0].RouterHostName != server.Interfaces[0].RouterHostName {
-			t.Errorf("expected router host name to be %s, but got %s", server.Interfaces[0].RouterHostName, resp.Response[0].ServerInterfaces[0].RouterHostName)
-		}
-		if resp.Response[0].ServerInterfaces[0].RouterPortName != server.Interfaces[0].RouterPortName {
-			t.Errorf("expected router port to be %s, but got %s", server.Interfaces[0].RouterPortName, resp.Response[0].ServerInterfaces[0].RouterPortName)
 		}
 	}
 }

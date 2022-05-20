@@ -34,11 +34,6 @@ type ErrorConstant string
 // Error converts ErrorConstants to a string.
 func (e ErrorConstant) Error() string { return string(e) }
 
-// DBError is an error message for database errors.
-//
-// Deprecated: Since internal errors are not returned to users, there's no reason not to include more detail in an error message than this.
-const DBError = ErrorConstant("database access error")
-
 // NilTenantError can used when a Tenantable object finds that TentantID in the
 // request is nil.
 const NilTenantError = ErrorConstant("tenancy is enabled but request tenantID is nil")

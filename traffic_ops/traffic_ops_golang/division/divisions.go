@@ -95,11 +95,11 @@ func (division TODivision) GetType() string {
 	return "division"
 }
 
-func (division TODivision) Validate() error {
+func (division TODivision) Validate() (error, error) {
 	errs := validation.Errors{
 		"name": validation.Validate(division.Name, validation.NotNil, validation.Required),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (dv *TODivision) Create() (error, error, int) { return api.GenericCreate(dv) }

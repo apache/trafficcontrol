@@ -94,16 +94,16 @@ func (typ *TOType) GetType() string {
 	return "type"
 }
 
-func (typ *TOType) Validate() error {
+func (typ *TOType) Validate() (error, error) {
 	errs := validation.Errors{
 		"name":         validation.Validate(typ.Name, validation.Required),
 		"description":  validation.Validate(typ.Description, validation.Required),
 		"use_in_table": validation.Validate(typ.UseInTable, validation.Required),
 	}
 	if errs != nil {
-		return util.JoinErrs(tovalidate.ToErrors(errs))
+		return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 	}
-	return nil
+	return nil, nil
 }
 
 func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {

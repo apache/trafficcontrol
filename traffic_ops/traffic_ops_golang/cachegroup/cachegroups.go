@@ -247,28 +247,31 @@ func (cg *TOCacheGroup) ValidateTypeInTopology() error {
 	return fmt.Errorf("cannot change type of cachegroup %s from %s to %s because it is in use by a topology", *cg.Name, typeNameByID[previousTypeID], typeNameByID[*cg.TypeID])
 }
 
-// Validate fulfills the api.Validator interface
-func (cg TOCacheGroup) Validate() error {
+// Validate fulfills the api.Validator interface.
+//
+// TODO: A lot of database operations here either swallow their errors or return
+// them to the client.
+func (cg TOCacheGroup) Validate() (error, error) {
 	if _, err := tc.ValidateTypeID(cg.ReqInfo.Tx.Tx, cg.TypeID, "cachegroup"); err != nil {
-		return err
+		return err, nil
 	}
 
 	if cg.Fallbacks != nil && len(*cg.Fallbacks) > 0 {
 		isValid, err := cg.isAllowedToFallback(*cg.TypeID)
 		if err != nil {
-			return err
+			return err, nil
 		}
 		if !isValid {
-			return errors.New("the cache group " + *cg.Name + " is not allowed to have fallbacks.  It must be of type EDGE_LOC.")
+			return errors.New("the cache group " + *cg.Name + " is not allowed to have fallbacks. It must be of type EDGE_LOC."), nil
 		}
 
 		for _, fallback := range *cg.Fallbacks {
 			isValid, err = cg.isValidCacheGroupFallback(fallback)
 			if err != nil {
-				return err
+				return err, nil
 			}
 			if !isValid {
-				return errors.New("the cache group " + fallback + " is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
+				return errors.New("the cache group " + fallback + " is not valid as a fallback. It must exist as a cache group and be of type EDGE_LOC."), nil
 			}
 		}
 	}
@@ -287,7 +290,7 @@ func (cg TOCacheGroup) Validate() error {
 		"localizationMethods":         validation.Validate(cg.LocalizationMethods, validation.By(tovalidate.IsPtrToSliceOfUniqueStringersICase("CZ", "DEEP_CZ", "GEO"))),
 		"type":                        cg.ValidateTypeInTopology(),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 //The TOCacheGroup implementation of the Creator interface
@@ -393,10 +396,10 @@ func (cg *TOCacheGroup) createCacheGroupFallbacks() error {
 func (cg *TOCacheGroup) isValidCacheGroupFallback(fallbackName string) (bool, error) {
 	var isValid bool
 	query := `SELECT(
-SELECT cachegroup.id 
-FROM cachegroup 
-JOIN type on type.id = cachegroup.type 
-WHERE cachegroup.name = $1 
+SELECT cachegroup.id
+FROM cachegroup
+JOIN type on type.id = cachegroup.type
+WHERE cachegroup.name = $1
 AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
@@ -411,9 +414,9 @@ AND (type.name = 'EDGE_LOC')
 func (cg *TOCacheGroup) isAllowedToFallback(cacheGroupType int) (bool, error) {
 	var isValid bool
 	query := `SELECT(
-SELECT type.name 
-FROM type 
-WHERE type.id = $1 
+SELECT type.name
+FROM type
+WHERE type.id = $1
 AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 

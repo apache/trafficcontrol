@@ -231,7 +231,8 @@ func TestValidate(t *testing.T) {
 			LastUpdated:         &lu,
 		},
 	}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
+	err, _ = c.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'latitude' Must be a floating point number within the range +-90`),
@@ -272,9 +273,12 @@ func TestValidate(t *testing.T) {
 			LastUpdated:         &lu,
 		},
 	}
-	err = c.Validate()
+	err, sysErr := c.Validate()
 	if err != nil {
-		t.Errorf("expected nil, got %s", err)
+		t.Errorf("expected nil user error, got: %s", err)
+	}
+	if sysErr != nil {
+		t.Errorf("expected nil system error, got: %s", sysErr)
 	}
 }
 

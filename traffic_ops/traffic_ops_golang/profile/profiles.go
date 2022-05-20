@@ -102,7 +102,7 @@ func (prof *TOProfile) GetType() string {
 	return "profile"
 }
 
-func (prof *TOProfile) Validate() error {
+func (prof *TOProfile) Validate() (error, error) {
 	errs := validation.Errors{
 		NameQueryParam: validation.Validate(prof.Name, validation.By(
 			func(value interface{}) error {
@@ -124,9 +124,9 @@ func (prof *TOProfile) Validate() error {
 		TypeQueryParam:        validation.Validate(prof.Type, validation.Required),
 	}
 	if errs != nil {
-		return util.JoinErrs(tovalidate.ToErrors(errs))
+		return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 	}
-	return nil
+	return nil, nil
 }
 
 func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {

@@ -120,15 +120,15 @@ func IsValidCDNName(str string) bool {
 	return i == -1
 }
 
-// Validate fulfills the api.Validator interface
-func (cdn TOCDN) Validate() error {
+// Validate fulfills the api.Validator interface.
+func (cdn TOCDN) Validate() (error, error) {
 	validName := validation.NewStringRule(IsValidCDNName, "invalid characters found - Use alphanumeric . or - .")
 	validDomainName := validation.NewStringRule(govalidator.IsDNSName, "not a valid domain name")
 	errs := validation.Errors{
 		"name":       validation.Validate(cdn.Name, validation.Required, validName),
 		"domainName": validation.Validate(cdn.DomainName, validation.Required, validDomainName),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (cdn *TOCDN) Create() (error, error, int) {
