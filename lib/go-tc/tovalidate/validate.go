@@ -39,7 +39,7 @@ func ToErrors(err map[string]error) []error {
 	vErrors := []error{}
 	for key, value := range err {
 		if value != nil {
-			errMsg := fmt.Errorf("'%v' %v", key, value)
+			errMsg := fmt.Errorf("'%v' %w", key, value)
 			vErrors = append(vErrors, errMsg)
 		}
 	}
@@ -68,5 +68,5 @@ func ToError(err map[string]error) error {
 	if msg == "" {
 		return nil
 	}
-	return errors.New(strings.TrimSuffix(b.String(), ", "))
+	return errors.New(msg)
 }
