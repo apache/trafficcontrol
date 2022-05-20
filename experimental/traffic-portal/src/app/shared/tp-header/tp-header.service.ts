@@ -27,6 +27,6 @@ export class TpHeaderService {
 	constructor() {
 		this.headerTitle = new ReplaySubject(1);
 		this.headerHidden = new ReplaySubject(1);
-		this.headerHidden.next(true);
+		this.headerHidden.next(false);
 	}
 }

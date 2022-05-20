@@ -12,7 +12,8 @@
 * limitations under the License.
 */
 
-import {EventEmitter, Injectable} from "@angular/core";
+import {DOCUMENT} from "@angular/common";
+import {EventEmitter, Inject, Injectable} from "@angular/core";
 
 /**
  * Defines a theme. If fileName is null, it is the default theme
@@ -29,16 +30,20 @@ export interface Theme {
 	providedIn: "root"
 })
 export class ThemeManagerService {
-	private static readonly STORAGE_KEY = "current-theme-name";
-	private static readonly LINK_KEY = "themer";
+	private readonly storageKey = "current-theme-name";
+	private readonly linkClass = "themer";
 
 	public themeChanged = new EventEmitter<Theme>();
+
+	constructor(@Inject(DOCUMENT) private readonly document: Document) {
+		this.initTheme();
+	}
 
 	/**
 	 * Initialize the theme service
 	 */
 	public initTheme(): void {
-		const themeName = ThemeManagerService.loadStoredTheme();
+		const themeName = this.loadStoredTheme();
 		if(themeName) {
 			this.loadTheme(themeName);
 		}
@@ -63,8 +68,8 @@ export class ThemeManagerService {
 			this.clearTheme();
 			return;
 		}
-		ThemeManagerService.getThemeLinkElement().setAttribute("href", theme.fileName);
-		ThemeManagerService.storeTheme(theme);
+		this.getThemeLinkElement().setAttribute("href", theme.fileName);
+		this.storeTheme(theme);
 		this.themeChanged.emit(theme);
 	}
 
@@ -72,10 +77,10 @@ export class ThemeManagerService {
 	 * Revert to the default theme
 	 */
 	public clearTheme(): void {
-		const linkEl = ThemeManagerService.getExistingThemeLinkElement();
+		const linkEl = this.getExistingThemeLinkElement();
 		if(linkEl) {
-			document.head.removeChild(linkEl);
-			ThemeManagerService.clearStoredTheme();
+			this.document.head.removeChild(linkEl);
+			this.clearStoredTheme();
 			this.themeChanged.emit(this.themes[0]);
 		}
 	}
@@ -84,11 +89,10 @@ export class ThemeManagerService {
 	 * Stores theme in localStorage
 	 *
 	 * @param theme Theme to be stored
-	 * @private
 	 */
-	private static storeTheme(theme: Theme): void {
+	private storeTheme(theme: Theme): void {
 		try {
-			window.localStorage.setItem(this.STORAGE_KEY, JSON.stringify(theme));
+			window.localStorage.setItem(this.storageKey, JSON.stringify(theme));
 		} catch (e) {
 			console.error(`Unable to store theme into local storage: ${e}`);
 		}
@@ -97,12 +101,11 @@ export class ThemeManagerService {
 	/**
 	 * Retrieves theme saved in localStorage
 	 *
-	 * @private
 	 * @returns The stored theme name or null
 	 */
-	private static loadStoredTheme(): Theme | null {
+	private loadStoredTheme(): Theme | null {
 		try {
-			return JSON.parse(window.localStorage.getItem(this.STORAGE_KEY) ?? "");
+			return JSON.parse(window.localStorage.getItem(this.storageKey) ?? "");
 		} catch (e) {
 			console.error(`Unable to load theme from local storage: ${e}`);
 		}
@@ -111,11 +114,9 @@ export class ThemeManagerService {
 
 	/**
 	 * Clears theme saved in local storage
-	 *
-	 * @private
 	 */
-	private static clearStoredTheme(): void {
-		window.localStorage.removeItem(this.STORAGE_KEY);
+	private clearStoredTheme(): void {
+		window.localStorage.removeItem(this.storageKey);
 	}
 
 	/**
@@ -124,31 +125,29 @@ export class ThemeManagerService {
 	 * @private
 	 * @returns The html element
 	 */
-	private static getThemeLinkElement(): Element {
+	private getThemeLinkElement(): Element {
 		return this.getExistingThemeLinkElement() || this.createThemeLinkElement();
 	}
 
 	/**
 	 * Creates the link element used for loading themes
 	 *
-	 * @private
 	 * @returns The html element
 	 */
-	private static createThemeLinkElement(): Element {
-		const linkEl = document.createElement("link");
+	private createThemeLinkElement(): Element {
+		const linkEl = this.document.createElement("link");
 		linkEl.setAttribute("rel", "stylesheet");
-		linkEl.classList.add(this.LINK_KEY);
-		document.head.appendChild(linkEl);
+		linkEl.classList.add(this.linkClass);
+		this.document.head.appendChild(linkEl);
 		return linkEl;
 	}
 
 	/**
 	 * Gets the link element used for loading themes
 	 *
-	 * @private
 	 * @returns The html element or null
 	 */
-	private static getExistingThemeLinkElement(): Element | null {
-		return document.head.querySelector(`link[rel="stylesheet"].${this.LINK_KEY}`);
+	private getExistingThemeLinkElement(): Element | null {
+		return this.document.head.querySelector(`link[rel="stylesheet"].${this.linkClass}`);
 	}
 }

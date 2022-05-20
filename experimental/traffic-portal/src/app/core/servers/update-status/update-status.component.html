@@ -11,20 +11,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<h2 mat-dialog-title>Change status for {{serverName}}</h2>
-<div mat-dialog-content>
-	<mat-form-field appearance="fill">
-		<mat-label for="status">New Status</mat-label>
-		<mat-select id="status" name="status" [(ngModel)]="status" required>
-			<mat-option *ngFor="let status of statuses" [value]="status" [disabled]="status.id === currentStatus">{{status.name}}</mat-option>
-		</mat-select>
-	</mat-form-field>
-	<mat-form-field *ngIf="isOffline" appearance="fill">
-		<mat-label for="offlineReason">Offline Reason</mat-label>
-		<input matInput [(ngModel)]="offlineReason" id="offlineReason" name="offlineReason" required maxlength="100"/>
-	</mat-form-field>
-</div>
-<div mat-dialog-actions>
-	<button mat-raised-button disabled="{{status === null || isOffline && offlineReason === ''}}" (click)="submit()">Submit</button>
-	<button mat-raised-button color="warn" type="button" (click)="cancel()">Cancel</button>
-</div>
+<form (ngSubmit)="submit($event)" method="dialog" ngNativeValidate>
+	<h2 mat-dialog-title>Change status for {{serverName}}</h2>
+	<div mat-dialog-content>
+		<mat-form-field appearance="fill" *ngIf="true">
+			<mat-label>New Status</mat-label>
+			<select name="status" [(ngModel)]="status" required matNativeControl>
+				<option *ngFor="let status of statuses" [value]="status" [disabled]="status.id === currentStatus">{{status.name}}</option>
+			</select>
+		</mat-form-field>
+		<mat-form-field *ngIf="isOffline" appearance="fill">
+			<mat-label>Offline Reason</mat-label>
+			<input matInput [(ngModel)]="offlineReason" id="offlineReason" name="offlineReason" required maxlength="100"/>
+		</mat-form-field>
+	</div>
+	<div mat-dialog-actions>
+		<button mat-raised-button type="submit">Submit</button>
+		<button mat-raised-button color="warn" type="button" (click)="cancel()">Cancel</button>
+	</div>
+</form>

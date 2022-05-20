@@ -12,13 +12,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <mat-card>
-	<ul>
-		<li class="invalidation-job" *ngFor="let j of jobs">
-			<div>
+	<mat-list>
+		<mat-list-item *ngFor="let j of jobs">
+			<div class="invalidation-job">
 				<div class="invalidation-info">
 					<span>{{j.assetUrl}} (active from <time [dateTime]="j.startTime">{{j.startTime | date:'medium'}}</time> to <time [dateTime]="endDate(j)">{{endDate(j) | date:'medium'}})</time></span>
 				</div>
-				<div class="spacer"></div>
 				<div class="invalidation-actions">
 					<button
 						mat-icon-button
@@ -42,8 +41,8 @@ limitations under the License.
 					</button>
 				</div>
 			</div>
-		</li>
-	</ul>
+		</mat-list-item>
+	</mat-list>
 	<span *ngIf="jobs.length === 0">No invalidation jobs for {{deliveryservice.displayName}}</span>
 	<button mat-fab type="button" id="new" title="Create a new content invalidation job for this Delivery Service" (click)="newJob()"><fa-icon [icon]="addIcon"></fa-icon></button>
 </mat-card>

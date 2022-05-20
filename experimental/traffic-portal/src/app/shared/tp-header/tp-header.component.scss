@@ -22,13 +22,17 @@ mat-toolbar {
 
 	transition: font-size 0.5s;
 
-	img {
+	a {
 		height: 90%;
-		display: inline-block;
-		max-width: 3em;
+		margin-left: 5px;
 		overflow: hidden;
 		cursor: pointer;
-		margin-left: 5px;
+		display: inline-block;
+
+		img {
+			height: 100%;
+			max-width: 3em;
+		}
 	}
 
 	h1 {
@@ -51,6 +55,10 @@ nav {
 			display: flex;
 		}
 	}
+}
+
+a.mat-menu-item {
+	text-transform: uppercase;
 }
 
 nav#expanded > ul {

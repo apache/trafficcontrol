@@ -12,20 +12,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <mat-toolbar color="primary" *ngIf="!hidden">
-	<img src="/assets/logo.svg" alt="Apache Traffic Control logo" routerLink="/core/"/>
+	<a routerLink="/core/">
+		<img src="/assets/logo.svg" alt="ATC logo/home redirect"/>
+	</a>
 	<h1>{{title ? title : 'Welcome to Traffic Portal!'}}</h1>
 	<div></div>
 	<nav id="expanded">
 		<ul>
-			<li><button mat-button routerLink="/core/">Home</button></li>
-			<li *ngIf="hasPermission('USER:READ')"><button mat-button routerLink="/core/users">Users</button></li>
-			<li *ngIf="hasPermission('SERVER:READ')"><button mat-button routerLink="/core/servers">Servers</button></li>
+			<li><a mat-button routerLink="/core/">Home</a></li>
+			<li *ngIf="hasPermission('USER:READ')"><a mat-button routerLink="/core/users">Users</a></li>
+			<li *ngIf="hasPermission('SERVER:READ')"><a mat-button routerLink="/core/servers">Servers</a></li>
 			<li>
 				<button mat-icon-button [matMenuTriggerFor]="expandedMenu">
 					<mat-icon>manage_accounts</mat-icon>
 				</button>
 				<mat-menu #expandedMenu="matMenu">
-					<button mat-menu-item routerLink="/core/me">Profile</button>
+					<a mat-menu-item routerLink="/core/me">Profile</a>
 					<button mat-menu-item (click)="logout()">Logout</button>
 					<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
 				</mat-menu>
@@ -35,10 +37,10 @@ limitations under the License.
 	<nav id="collapsed">
 		<button mat-icon-button [matMenuTriggerFor]="collapsedMenu"><mat-icon>menu</mat-icon></button>
 		<mat-menu #collapsedMenu="matMenu">
-			<button mat-menu-item routerLink="/core/">Home</button>
-			<button *ngIf="hasPermission('USER:READ')" mat-menu-item routerLink="/core/users">Users</button>
-			<button *ngIf="hasPermission('SERVER:READ')" mat-menu-item routerLink="/core/servers">Servers</button>
-			<button mat-menu-item href="/core/me">Profile</button>
+			<a mat-menu-item routerLink="/core/">Home</a>
+			<a *ngIf="hasPermission('USER:READ')" mat-menu-item routerLink="/core/users">Users</a>
+			<a *ngIf="hasPermission('SERVER:READ')" mat-menu-item routerLink="/core/servers">Servers</a>
+			<a mat-menu-item routerLink="/core/me">Profile</a>
 			<button mat-menu-item (click)="logout()">Logout</button>
 			<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
 		</mat-menu>

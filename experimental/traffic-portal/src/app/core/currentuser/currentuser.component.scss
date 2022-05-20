@@ -25,13 +25,20 @@ mat-card {
 
 form {
 	margin: 3em auto;
-	display: grid;
-	grid-template-areas:
-		"a a . z z"
-		"b b . c c"
-		"d d d d d"
-		"e e e e e"
-		"f g h i j"
-		"k l . . m";
-	grid-column-gap: 5px;
+
+	mat-card-content {
+		display: grid;
+		grid-template-areas:
+			"a a . z z"
+			"b b . c c"
+			"d d d d d"
+			"e e e e e"
+			"f g h i j";
+		grid-column-gap: 5px;
+	}
+	mat-card-actions {
+		display: grid;
+		margin-bottom: 0;
+		grid-template-areas: "k l . . . m";
+	}
 }

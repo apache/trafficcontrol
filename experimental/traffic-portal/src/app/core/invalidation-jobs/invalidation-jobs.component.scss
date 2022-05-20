@@ -21,17 +21,17 @@
 h2 {
 	text-align: center;
 }
-
 mat-card {
 	width: fit-content;
 	min-width: 50%;
 	margin: 1em auto;
 	min-height: 50px;
 
-	li {
-		& > div {
-			display: grid;
-			grid-template-columns: auto 1fr auto;
+	mat-list-item {
+		div.invalidation-job {
+			width: 100%;
+			justify-content: space-between;
+			display: flex;
 		}
 
 		div.invalidation-info span {

@@ -25,7 +25,7 @@ limitations under the License.
 			<mat-form-field appearance="fill">
 				<mat-label>Password</mat-label>
 				<input matInput required [type]="hide ? 'password' : 'text'" [formControl]="p" id="p"/>
-				<button mat-icon-button matSuffix (click)="hide = !hide">
+				<button mat-icon-button type="button" matSuffix (click)="hide = !hide">
 					<mat-icon>{{hide ? "visibility_off" : "visibility"}}</mat-icon>
 				</button>
 			</mat-form-field>

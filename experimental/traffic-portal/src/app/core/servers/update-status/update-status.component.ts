@@ -94,7 +94,9 @@ export class UpdateStatusComponent implements OnInit {
 	 *
 	 * @param e The submission event.
 	 */
-	public async submit(): Promise<void> {
+	public async submit(e: Event): Promise<void> {
+		e.preventDefault();
+		e.stopPropagation();
 		let observables;
 		if (this.isOffline) {
 			observables = this.servers.map(

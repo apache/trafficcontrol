@@ -120,19 +120,19 @@ describe("UpdateStatusComponent", () => {
 
 		const srv = await service.createServer({...defaultServer});
 		component.servers = [srv];
-		await component.submit();
+		await component.submit(new Event("click"));
 		expect(mockMatDialog.close.calls.count()).toBe(1);
 
 		result = true;
 		mockMatDialog.afterClosed.and.returnValue(of(result));
 		component.status = (await service.getStatuses()).find(s=>s.name==="OFFLINE") ?? null;
-		await component.submit();
+		await component.submit(new Event("click"));
 		expect(mockMatDialog.close.calls.count()).toBe(2);
 
 		result = false;
 		mockMatDialog.afterClosed.and.returnValue(of(result));
 		component.status = {description: "", name: "no such status"};
-		await component.submit();
+		await component.submit(new Event("click"));
 		expect(mockMatDialog.close.calls.count()).toBe(3);
 	});
 });

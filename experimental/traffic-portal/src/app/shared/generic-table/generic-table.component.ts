@@ -427,6 +427,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	 * @param col The ID of a column to toggle.
 	 */
 	public toggleVisibility($event: Event, col: string): void {
+		$event.stopPropagation();
 		if (this.columnAPI) {
 			const column = this.columnAPI.getColumn(col);
 			if (!column) {
@@ -436,7 +437,6 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			const visible = column.isVisible();
 			this.columnAPI.setColumnVisible(col, !visible);
 		}
-		$event.stopPropagation();
 	}
 
 	/**

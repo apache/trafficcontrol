@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component } from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
@@ -26,7 +26,7 @@ import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 	styleUrls: ["./tp-header.component.scss"],
 	templateUrl: "./tp-header.component.html"
 })
-export class TpHeaderComponent {
+export class TpHeaderComponent implements OnInit {
 
 	/**
 	 * The title to be used in the header.
@@ -37,10 +37,10 @@ export class TpHeaderComponent {
 
 	public hidden = false;
 
-	constructor(private readonly auth: CurrentUserService, private readonly api: UserService,
-		public readonly themeSvc: ThemeManagerService, private readonly headerSvc: TpHeaderService) {
-		this.themeSvc.initTheme();
-
+	/**
+	 * Angular lifecycle hook
+	 */
+	public ngOnInit(): void {
 		this.headerSvc.headerTitle.subscribe(title => {
 			this.title = title;
 		});
@@ -48,16 +48,10 @@ export class TpHeaderComponent {
 		this.headerSvc.headerHidden.subscribe(hidden => {
 			this.hidden = hidden;
 		});
+	}
 
-		this.auth.userChanged.subscribe(() => {
-			if(this.auth.loggedIn) {
-				this.hidden = false;
-			}
-		});
-
-		if(this.auth.loggedIn) {
-			this.hidden = false;
-		}
+	constructor(private readonly auth: CurrentUserService, private readonly api: UserService,
+		public readonly themeSvc: ThemeManagerService, private readonly headerSvc: TpHeaderService) {
 	}
 
 	/**
