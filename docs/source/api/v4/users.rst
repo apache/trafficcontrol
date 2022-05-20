@@ -154,7 +154,7 @@ Response Structure
 Creates a new user.
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [1]_
+:Roles Required: "admin" or "operations"\ [#tenancy]_
 :Permissions Required: USER:CREATE, USER:READ
 :Response Type:  Object
 
@@ -302,4 +302,4 @@ Response Structure
 		"username": "mike"
 	}}
 
-.. [tenancy] While no roles are required, this endpoint does respect tenancy. A user will only be able to see, create, delete or modify other users belonging to the same tenant, or its descendants.
+.. [#tenancy] While no roles are required, this endpoint does respect tenancy. A user will only be able to see, create, delete or modify other users belonging to the same tenant, or its descendants.
