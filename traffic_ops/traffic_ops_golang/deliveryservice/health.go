@@ -22,10 +22,10 @@ package deliveryservice
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -103,8 +103,11 @@ func getMonitorHealth(tx *sql.Tx, ds tc.DeliveryServiceName, monitorFQDNs []stri
 			errs = append(errs, errors.New("getting CRConfig for delivery service '"+string(ds)+"' monitor '"+monitorFQDN+"': "+err.Error()))
 			continue
 		}
-		cgData, totalOnline, totalOffline = addHealth(ds, cgData, totalOnline, totalOffline, crStates, crConfig)
-
+		err, cgData, totalOnline, totalOffline = addHealth(ds, cgData, totalOnline, totalOffline, crStates, crConfig)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
 		healthData := tc.HealthData{TotalOffline: totalOffline, TotalOnline: totalOnline, CacheGroups: []tc.HealthDataCacheGroup{}}
 		for _, health := range cgData {
 			healthData.CacheGroups = append(healthData.CacheGroups, health)
@@ -115,29 +118,26 @@ func getMonitorHealth(tx *sql.Tx, ds tc.DeliveryServiceName, monitorFQDNs []stri
 }
 
 // addHealth adds the given cache states to the given data and totals, and returns the new data and totals
-func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (map[tc.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64) {
+func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (error, map[tc.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64) {
 
 	var deliveryService tc.CRConfigDeliveryService
 	var ok bool
 	var topology string
 	var cacheGroupNameMap = make(map[string]bool)
-	var cacheCapabilities = make(map[string]bool)
 	var skip bool
 
 	if deliveryService, ok = crConfig.DeliveryServices[string(ds)]; !ok {
-		log.Errorln("delivery service not found in CRConfig")
-		return map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0
+		return errors.New("delivery service not found in CRConfig"), map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0
 	}
-
 	if deliveryService.Topology != nil {
+		var top tc.CRConfigTopology
 		topology = *deliveryService.Topology
 		if topology != "" {
-			if top, ok := crConfig.Topologies[topology]; !ok {
-				log.Errorf("CRConfig topologies does not contain DS topology: %s", topology)
-			} else {
-				for _, n := range top.Nodes {
-					cacheGroupNameMap[n] = true
-				}
+			if top, ok = crConfig.Topologies[topology]; !ok {
+				return fmt.Errorf("CRConfig topologies does not contain DS topology: %s", topology), map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0
+			}
+			for _, n := range top.Nodes {
+				cacheGroupNameMap[n] = true
 			}
 		}
 	}
@@ -164,14 +164,14 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 			if _, ok := cacheGroupNameMap[*cache.CacheGroup]; !ok {
 				continue
 			}
-			cacheCapabilities = make(map[string]bool)
+			cacheCapabilities := make(map[string]struct{}, len(cache.Capabilities))
 			for _, cap := range cache.Capabilities {
-				cacheCapabilities[cap] = true
+				cacheCapabilities[cap] = struct{}{}
 			}
 			for _, rc := range deliveryService.RequiredCapabilities {
 				if _, ok = cacheCapabilities[rc]; !ok {
 					skip = true
-					continue
+					break
 				}
 			}
 			if skip {
@@ -189,5 +189,5 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 		}
 		data[tc.CacheGroupName(*cache.CacheGroup)] = cgHealth
 	}
-	return data, totalOnline, totalOffline
+	return nil, data, totalOnline, totalOffline
 }

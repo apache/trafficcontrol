@@ -16,126 +16,91 @@ package deliveryservice
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
-
-	"encoding/json"
 	"testing"
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-const crConfigJson = `
-{
-  "config": {},
-  "contentServers": {
-    "cache1": {
-      "cacheGroup": "cg1",
-      "capabilities": [
-        "cap1",
-        "cap2"
-      ],
-      "status": "REPORTED",
-      "type": "EDGE",
-      "deliveryServices": {
-        "ds1": [
-          "edge.ds1.test.net"
-        ]
-       }
-    },
-    "cache2": {
-      "cacheGroup": "cg2",
-      "capabilities": [
-        "cap2",
-        "cap3"
-      ],
-      "status": "REPORTED",
-      "type": "EDGE"
-    },
-    "cache3": {
-      "cacheGroup": "cg2",
-      "capabilities": [
-        "cap3",
-        "cap4"
-      ],
-      "status": "REPORTED",
-      "type": "EDGE"
-    }
-  },
-  "deliveryServices": {
-    "ds1": {},
-    "ds2-topology": {
-      "topology": "test_topology",
-      "requiredCapabilities": ["cap2"]
-    }
-  },
-  "contentRouters": {
-    "tr1": {}
-  },
-  "edgeLocations": {
-    "edge1": {}
-  },
-  "trafficRouterLocations": {
-    "tr-loc": {}
-  },
-  "monitors": {
-    "tm-host": {}
-  },
-  "stats": {},
-  "topologies": {
-    "test_topology": {
-      "nodes": [
-        "cg2"
-      ]
-    }
-  }
-}
-`
-const crStatesJson = `
-{
-  "caches": {
-    "cache1": {
-      "isAvailable": true,
-      "ipv4Available": true,
-      "ipv6Available": true,
-      "status": "REPORTED - available",
-      "lastPoll": "2022-05-11T19:50:55.036253631Z"
-    },
-    "cache2": {
-      "isAvailable": true,
-      "ipv4Available": true,
-      "ipv6Available": true,
-      "status": "REPORTED - available",
-      "lastPoll": "2022-05-11T19:51:06.965095596Z"
-    },
-    "cache3": {
-      "isAvailable": true,
-      "ipv4Available": true,
-      "ipv6Available": true,
-      "status": "REPORTED - available",
-      "lastPoll": "2022-05-11T19:51:06.965095596Z"
-    }
-  },
-  "deliveryServices": {
-    "ds1": {
-      "disabledLocations": [],
-      "isAvailable": true
-    },
-    "ds2-topology": {
-      "disabledLocations": [],
-      "isAvailable": true
-    }
-  }
-}
-`
-
 func TestAddHealth(t *testing.T) {
-	crStates := tc.CRStates{}
-	crConfig := tc.CRConfig{}
-	err := json.Unmarshal([]byte(crStatesJson), &crStates)
-	if err != nil {
-		t.Fatalf("error unmarshalling crStates: %v", err)
+	crStates := tc.CRStates{
+		Caches: map[tc.CacheName]tc.IsAvailable{
+			"cache1": {
+				IsAvailable:   true,
+				Ipv4Available: true,
+				Ipv6Available: true,
+				Status:        "REPORTED - available",
+				LastPoll:      time.Now(),
+			},
+			"cache2": {
+				IsAvailable:   true,
+				Ipv4Available: true,
+				Ipv6Available: true,
+				Status:        "REPORTED - available",
+				LastPoll:      time.Now(),
+			},
+			"cache3": {
+				IsAvailable:   true,
+				Ipv4Available: true,
+				Ipv6Available: true,
+				Status:        "REPORTED - available",
+				LastPoll:      time.Now(),
+			},
+		},
+		DeliveryService: map[tc.DeliveryServiceName]tc.CRStatesDeliveryService{
+			"ds1": {
+				DisabledLocations: []tc.CacheGroupName{},
+				IsAvailable:       true,
+			},
+			"ds2-topology": {
+				DisabledLocations: []tc.CacheGroupName{},
+				IsAvailable:       true,
+			},
+		},
 	}
-	err = json.Unmarshal([]byte(crConfigJson), &crConfig)
-	if err != nil {
-		t.Fatalf("error unmarshalling crConfig: %v", err)
+
+	status := tc.CRConfigServerStatus("REPORTED")
+	crConfig := tc.CRConfig{
+		Config: nil,
+		ContentServers: map[string]tc.CRConfigTrafficOpsServer{
+			"cache1": {
+				CacheGroup:   util.StrPtr("cg1"),
+				Capabilities: []string{"cap1", "cap2"},
+				ServerStatus: &status,
+				ServerType:   util.StrPtr("EDGE"),
+				DeliveryServices: map[string][]string{
+					"ds1": {"edge.ds1.test.net"},
+				},
+			},
+			"cache2": {
+				CacheGroup:   util.StrPtr("cg2"),
+				Capabilities: []string{"cap2", "cap3"},
+				ServerStatus: &status,
+				ServerType:   util.StrPtr("EDGE"),
+			},
+			"cache3": {
+				CacheGroup:   util.StrPtr("cg2"),
+				Capabilities: []string{"cap3", "cap4"},
+				ServerStatus: &status,
+				ServerType:   util.StrPtr("EDGE"),
+			},
+		},
+		ContentRouters: nil,
+		DeliveryServices: map[string]tc.CRConfigDeliveryService{
+			"ds1": {},
+			"ds2-topology": {
+				Topology:             util.StrPtr("test_topology"),
+				RequiredCapabilities: []string{"cap2"},
+			},
+		},
+		EdgeLocations:   nil,
+		RouterLocations: nil,
+		Monitors:        nil,
+		Stats:           tc.CRConfigStats{},
+		Topologies: map[string]tc.CRConfigTopology{
+			"test_topology": {Nodes: []string{"cg2"}},
+		},
 	}
 	data := make(map[tc.CacheGroupName]tc.HealthDataCacheGroup)
 	data[tc.CacheGroupName("cache1")] = tc.HealthDataCacheGroup{
@@ -153,12 +118,18 @@ func TestAddHealth(t *testing.T) {
 		Online:  0,
 		Name:    "cg2",
 	}
-	_, available, unAvailable := addHealth("ds1", data, 0, 0, crStates, crConfig)
+	err, _, available, unAvailable := addHealth("ds1", data, 0, 0, crStates, crConfig)
+	if err != nil {
+		t.Fatalf("expected no error while adding health of ds1, but got %v", err)
+	}
 	if available != 1 || unAvailable != 0 {
 		t.Errorf("expected ds1 to have 1 online and 0 offline caches, but got %d online and %d offline instead", available, unAvailable)
 	}
 	// Even though there are 2 REPORTED EDGE caches in cg2, the result should just include 1, because one of them should get filtered out because it's missing a required capability (cap2)
-	_, available, unAvailable = addHealth("ds2-topology", data, 0, 0, crStates, crConfig)
+	err, _, available, unAvailable = addHealth("ds2-topology", data, 0, 0, crStates, crConfig)
+	if err != nil {
+		t.Fatalf("expected no error while adding health of ds2, but got %v", err)
+	}
 	if available != 1 || unAvailable != 0 {
 		t.Errorf("expected ds2-topology to have 1 online and 0 offline caches, but got %d online and %d offline instead", available, unAvailable)
 	}
