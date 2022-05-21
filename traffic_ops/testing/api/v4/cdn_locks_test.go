@@ -106,11 +106,11 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"SERVERS QUEUE UPDATES": {
 				"OK when USER OWNS LOCK": {
-					EndpointId: getServerID(t, "cdn2-test-edge"), ClientSession: opsUserWithLockSession,
+					EndpointId: GetServerId(t, "cdn2-test-edge"), ClientSession: opsUserWithLockSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointId: getServerID(t, "cdn2-test-edge"), ClientSession: TOSession,
+					EndpointId: GetServerId(t, "cdn2-test-edge"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
@@ -133,7 +133,7 @@ func TestCDNLocks(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
-				"Ok when ADMIN USER DOESNT OWN LOCK FOR DEQUEUE": {
+				"OK when ADMIN USER DOESNT OWN LOCK FOR DEQUEUE": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
@@ -199,6 +199,80 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
+			"SERVER POST": {
+				"OK when USER OWNS LOCK": {
+					ClientSession: opsUserWithLockSession,
+					RequestBody: generateServer(t, map[string]interface{}{
+						"cdnId":        GetCDNId(t, "cdn2"),
+						"profileNames": []string{"EDGEInCDN2"},
+					}),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					ClientSession: TOSession,
+					RequestBody: generateServer(t, map[string]interface{}{
+						"cdnId":        GetCDNId(t, "cdn2"),
+						"profileNames": []string{"EDGEInCDN2"},
+						"interfaces": []map[string]interface{}{{
+							"ipAddresses": []map[string]interface{}{{
+								"address":        "127.0.0.2/30",
+								"serviceAddress": true,
+							}},
+							"name": "eth0",
+						}},
+					}),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"SERVER PUT": {
+				"OK when USER OWNS LOCK": {
+					EndpointId:    GetServerId(t, "edge1-cdn2"),
+					ClientSession: opsUserWithLockSession,
+					RequestBody: generateServer(t, generateServer(t, map[string]interface{}{
+						"id":           GetServerId(t, "edge1-cdn2")(),
+						"cdnId":        GetCDNId(t, "cdn2"),
+						"profileNames": []string{"EDGEInCDN2"},
+						"interfaces": []map[string]interface{}{{
+							"ipAddresses": []map[string]interface{}{{
+								"address":        "0.0.0.1",
+								"serviceAddress": true,
+							}},
+							"name": "eth0",
+						}},
+					})),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId:    GetServerId(t, "dtrc-edge-07"),
+					ClientSession: TOSession,
+					RequestBody: generateServer(t, generateServer(t, map[string]interface{}{
+						"id":           GetServerId(t, "dtrc-edge-07")(),
+						"cdnId":        GetCDNId(t, "cdn2"),
+						"cachegroupId": GetCacheGroupId(t, "dtrc2")(),
+						"profileNames": []string{"CDN2_EDGE"},
+						"interfaces": []map[string]interface{}{{
+							"ipAddresses": []map[string]interface{}{{
+								"address":        "192.0.2.11/24",
+								"serviceAddress": true,
+							}},
+							"name": "eth0",
+						}},
+					})),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"SERVER DELETE": {
+				"OK when USER OWNS LOCK": {
+					EndpointId:    GetServerId(t, "atlanta-mid-17"),
+					ClientSession: opsUserWithLockSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId:    GetServerId(t, "denver-mso-org-02"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
 		}
 
 		for method, testCases := range methodTests {
@@ -209,6 +283,7 @@ func TestCDNLocks(t *testing.T) {
 					cdnLock := tc.CDNLock{}
 					cacheGroup := tc.CacheGroupNullable{}
 					ds := tc.DeliveryServiceV4{}
+					server := tc.ServerV4{}
 					topQueueUp := tc.TopologiesQueueUpdateRequest{}
 
 					if testCase.RequestOpts.QueryParameters.Has("topology") {
@@ -220,6 +295,11 @@ func TestCDNLocks(t *testing.T) {
 							dat, err := json.Marshal(testCase.RequestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 							err = json.Unmarshal(dat, &ds)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						} else if _, ok := testCase.RequestBody["hostName"]; ok {
+							dat, err := json.Marshal(testCase.RequestBody)
+							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+							err = json.Unmarshal(dat, &server)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						} else if getId, ok := testCase.RequestBody["cdnId"]; ok {
 							testCase.RequestBody["cdnId"] = getId.(func() int)()
@@ -326,6 +406,33 @@ func TestCDNLocks(t *testing.T) {
 								}
 							})
 						}
+					case "SERVER POST":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.CreateServer(server, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
+					case "SERVER PUT":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.UpdateServer(testCase.EndpointId(), server, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
+					case "SERVER DELETE":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.DeleteServer(testCase.EndpointId(), testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
 					}
 				}
 			})
@@ -362,18 +469,6 @@ func getCDNID(t *testing.T, cdnName string) func() int {
 		assert.Equal(t, 1, len(cdnsResp.Response), "Expected response object length 1, but got %d", len(cdnsResp.Response))
 		assert.NotNil(t, cdnsResp.Response[0].ID, "Expected id to not be nil")
 		return cdnsResp.Response[0].ID
-	}
-}
-
-func getServerID(t *testing.T, hostName string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("hostName", hostName)
-		serversResp, _, err := TOSession.GetServers(opts)
-		assert.NoError(t, err, "Get Servers Request failed with error:", err)
-		assert.Equal(t, 1, len(serversResp.Response), "Expected response object length 1, but got %d", len(serversResp.Response))
-		assert.NotNil(t, serversResp.Response[0].ID, "Expected id to not be nil")
-		return *serversResp.Response[0].ID
 	}
 }
 
