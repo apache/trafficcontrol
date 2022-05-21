@@ -319,7 +319,7 @@ func TestServers(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"CONFLICT when DELETING SERVER when its the ONLY EDGE SERVER ASSIGNED": {
-					EndpointId:    getServerID(t, "test-ds-server-assignments"),
+					EndpointId:    GetServerId(t, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
