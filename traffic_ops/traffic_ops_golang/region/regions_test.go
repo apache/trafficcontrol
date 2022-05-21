@@ -118,7 +118,8 @@ func TestValidation(t *testing.T) {
 		LastUpdated:  tc.TimeNoMod{Time: time.Now()},
 	}
 	testTORegion := TORegion{Region: testRegion}
-	errs := test.SortErrors(test.SplitErrors(testTORegion.Validate()))
+	err, _ := testTORegion.Validate()
+	errs := test.SortErrors(test.SplitErrors(err))
 
 	if len(errs) > 0 {
 		t.Errorf(`expected no errors,  got %v`, errs)
@@ -130,7 +131,8 @@ func TestValidation(t *testing.T) {
 		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 	}
 	testTORegionNoDivision := TORegion{Region: testRegionNoDivision}
-	errs = test.SortErrors(test.SplitErrors(testTORegionNoDivision.Validate()))
+	err, _ = testTORegionNoDivision.Validate()
+	errs = test.SortErrors(test.SplitErrors(err))
 	if len(errs) == 0 {
 		t.Errorf(`expected an error with a nil division id, received no error`)
 	} else {

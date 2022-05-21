@@ -94,14 +94,14 @@ func (region *TORegion) GetType() string {
 	return "region"
 }
 
-func (region *TORegion) Validate() error {
+func (region *TORegion) Validate() (error, error) {
 	if len(region.Name) < 1 {
-		return errors.New(`region 'name' is required`)
+		return errors.New(`region 'name' is required`), nil
 	}
 	if region.Division == 0 {
-		return errors.New(`region 'division' is required`)
+		return errors.New(`region 'division' is required`), nil
 	}
-	return nil
+	return nil, nil
 }
 
 func (rg *TORegion) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {

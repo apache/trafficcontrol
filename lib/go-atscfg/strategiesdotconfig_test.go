@@ -445,4 +445,9 @@ func TestMakeStrategiesHTTPSOrigin(t *testing.T) {
 	if strings.Contains(txt, "port: 443") {
 		t.Errorf("expected edge parent.config of https origin to use internal http port 80 and not https/443, actual: '%v'", txt)
 	}
+
+	// checks for properly-formed merge keys
+	if strings.Contains(cfg.Text, "<< ") {
+		t.Errorf("expected yaml merge keys to be '<<: ', actual malformed '<< ': %v", cfg.Text)
+	}
 }

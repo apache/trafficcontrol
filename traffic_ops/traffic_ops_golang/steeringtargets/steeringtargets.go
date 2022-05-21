@@ -94,7 +94,7 @@ func (st TOSteeringTargetV11) GetType() string {
 	return "steeringtarget"
 }
 
-func (st TOSteeringTargetV11) Validate() error {
+func (st TOSteeringTargetV11) Validate() (error, error) {
 	return st.SteeringTargetNullable.Validate(st.ReqInfo.Tx.Tx)
 }
 

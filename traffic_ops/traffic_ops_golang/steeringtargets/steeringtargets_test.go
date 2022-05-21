@@ -20,12 +20,13 @@ package steeringtargets
  */
 
 import (
+	"testing"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"testing"
 )
 
 func TestInvalidSteeringTargetType(t *testing.T) {
@@ -82,7 +83,7 @@ func TestInvalidSteeringTargetType(t *testing.T) {
 		LastUpdated:            nil,
 	}
 
-	err = stObj.Validate()
+	err, _ = stObj.Validate()
 	if err == nil {
 		t.Fatal("expected user error to say that type is invalid, got no error instead")
 	}

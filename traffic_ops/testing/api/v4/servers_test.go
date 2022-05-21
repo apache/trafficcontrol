@@ -460,6 +460,7 @@ func validateExpectedServers(expectedHostnames []string) utils.CkReqFunc {
 	}
 }
 
+
 func validateServerTypeIsNotMid() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
@@ -475,7 +476,6 @@ func validateServerTypeIsNotMid() utils.CkReqFunc {
 func validateServerPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		paginationResp := resp.([]tc.ServerV40)
-
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
 		respBase, _, err := TOSession.GetServers(opts)

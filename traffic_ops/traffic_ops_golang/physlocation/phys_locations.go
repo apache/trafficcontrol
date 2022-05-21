@@ -90,7 +90,7 @@ func (pl *TOPhysLocation) GetType() string {
 	return "physLocation"
 }
 
-func (pl *TOPhysLocation) Validate() error {
+func (pl *TOPhysLocation) Validate() (error, error) {
 	errs := validation.Errors{
 		"address":   validation.Validate(pl.Address, validation.Required),
 		"city":      validation.Validate(pl.City, validation.Required),
@@ -101,9 +101,9 @@ func (pl *TOPhysLocation) Validate() error {
 		"zip":       validation.Validate(pl.Zip, validation.Required),
 	}
 	if errs != nil {
-		return util.JoinErrs(tovalidate.ToErrors(errs))
+		return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 	}
-	return nil
+	return nil, nil
 }
 
 func (pl *TOPhysLocation) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {

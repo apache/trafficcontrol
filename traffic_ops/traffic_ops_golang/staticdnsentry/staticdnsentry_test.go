@@ -89,7 +89,8 @@ func TestValidate(t *testing.T) {
 	reqInfo := api.APIInfo{Tx: tx}
 	// invalid name, empty domainname
 	ts := TOStaticDNSEntry{APIInfoImpl: api.APIInfoImpl{ReqInfo: &reqInfo}}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(ts.Validate())))
+	err, _ = ts.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'address' cannot be blank`),

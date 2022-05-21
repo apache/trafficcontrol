@@ -311,9 +311,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `servercheck/extensions$`, Handler: extensions.Get, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER-CHECK:READ", "SERVER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4834985993},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodDelete, Path: `servercheck/extensions/{id}$`, Handler: extensions.Delete, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER-CHECK:DELETE", "SERVER-CHECK:READ", "SERVER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4804982993},
 
-		//Server Details
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `servers/details/?$`, Handler: server.GetDetailParamHandler, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER:READ", "DELIVERY-SERVICE:READ", "CDN:READ", "PHYSICAL-LOCATION:READ", "CACHE-GROUP:READ", "TYPE:READ", "PROFILE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 42612647143},
-
 		//Server status
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `servers/{id}/status$`, Handler: server.UpdateStatusHandler, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "STATUS:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4766638513},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `servers/{id}/queue_update$`, Handler: server.QueueUpdateHandler, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:QUEUE", "SERVER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 41894713},
