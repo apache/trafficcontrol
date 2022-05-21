@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"math/rand"
 	"regexp"
 	"testing"
 
@@ -37,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
 
 func checkLogOutput(t *testing.T, buffer *bytes.Buffer, toData todata.TOData, caches []tc.CacheName) {
@@ -309,23 +309,23 @@ func getMockTOData() todata.TOData {
 
 	caches := []tc.CacheName{}
 	for i := 0; i < numCaches; i++ {
-		caches = append(caches, tc.CacheName(randStr()))
+		caches = append(caches, tc.CacheName(*test.RandStr()))
 	}
 
 	dses := []tc.DeliveryServiceName{}
 	for i := 0; i < numDSes; i++ {
-		dses = append(dses, tc.DeliveryServiceName(randStr()))
+		dses = append(dses, tc.DeliveryServiceName(*test.RandStr()))
 	}
 
 	cgs := []tc.CacheGroupName{}
 	for i := 0; i < numCGs; i++ {
-		cgs = append(cgs, tc.CacheGroupName(randStr()))
+		cgs = append(cgs, tc.CacheGroupName(*test.RandStr()))
 	}
 
 	serverDSes := map[tc.CacheName][]tc.DeliveryServiceName{}
 	for _, ca := range caches {
 		for i := 0; i < numCacheDSes; i++ {
-			serverDSes[ca] = append(serverDSes[ca], dses[rand.Intn(len(dses))])
+			serverDSes[ca] = append(serverDSes[ca], dses[*test.RandIntn(len(dses))])
 		}
 	}
 
@@ -338,12 +338,12 @@ func getMockTOData() todata.TOData {
 
 	serverCGs := map[tc.CacheName]tc.CacheGroupName{}
 	for _, cache := range caches {
-		serverCGs[cache] = cgs[rand.Intn(len(cgs))]
+		serverCGs[cache] = cgs[*test.RandIntn(len(cgs))]
 	}
 
 	serverTypes := map[tc.CacheName]tc.CacheType{}
 	for _, cache := range caches {
-		serverTypes[cache] = types[rand.Intn(len(types))]
+		serverTypes[cache] = types[*test.RandIntn(len(types))]
 	}
 
 	tod := todata.New()
@@ -371,7 +371,7 @@ func randPrecomputedData(toData todata.TOData) cache.PrecomputedData {
 	return cache.PrecomputedData{
 		DeliveryServiceStats: dsStats,
 		OutBytes:             dsTotal,
-		MaxKbps:              rand.Int63(),
+		MaxKbps:              *test.RandInt64(),
 		Errors:               randErrs(),
 		Reporting:            true,
 	}
@@ -387,39 +387,25 @@ func randDsStats(toData todata.TOData) map[string]*cache.DSStat {
 
 func randAStat() *cache.DSStat {
 	return &cache.DSStat{
-		InBytes:   uint64(rand.Intn(1000)),
-		OutBytes:  uint64(rand.Intn(1000)),
-		Status2xx: uint64(rand.Intn(1000)),
-		Status3xx: uint64(rand.Intn(1000)),
-		Status4xx: uint64(rand.Intn(1000)),
-		Status5xx: uint64(rand.Intn(1000)),
+		InBytes:   uint64(*test.RandIntn(1000)),
+		OutBytes:  uint64(*test.RandIntn(1000)),
+		Status2xx: uint64(*test.RandIntn(1000)),
+		Status3xx: uint64(*test.RandIntn(1000)),
+		Status4xx: uint64(*test.RandIntn(1000)),
+		Status5xx: uint64(*test.RandIntn(1000)),
 	}
 }
 
 func randErrs() []error {
-	if randBool() {
+	if *test.RandBool() {
 		return []error{}
 	}
 	num := 5
 	errs := []error{}
 	for i := 0; i < num; i++ {
-		errs = append(errs, errors.New(randStr()))
+		errs = append(errs, errors.New(*test.RandStr()))
 	}
 	return errs
-}
-
-func randBool() bool {
-	return rand.Int()%2 == 0
-}
-
-func randStr() string {
-	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_"
-	num := 100
-	s := ""
-	for i := 0; i < num; i++ {
-		s += string(chars[rand.Intn(len(chars))])
-	}
-	return s
 }
 
 func TestAddLastStatsToStatCacheStatsNilVals(t *testing.T) {

@@ -21,7 +21,6 @@ package threadsafe
 
 import (
 	"fmt"
-	"math/rand"
 	"net/url"
 	"strings"
 	"testing"
@@ -30,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -38,7 +38,7 @@ func randResultStatHistory() ResultStatHistory {
 
 	num := 5
 	for i := 0; i < num; i++ {
-		hist.Store(tc.CacheName(randStr()), randResultStatValHistory())
+		hist.Store(tc.CacheName(*test.RandStr()), randResultStatValHistory())
 	}
 	return hist
 }
@@ -48,7 +48,7 @@ func randResultStatValHistory() ResultStatValHistory {
 	num := 5
 	numSlice := 5
 	for i := 0; i < num; i++ {
-		cacheName := randStr()
+		cacheName := *test.RandStr()
 		vals := []tc.ResultStatVal{}
 		for j := 0; j < numSlice; j++ {
 			vals = append(vals, randResultStatVal())
@@ -60,9 +60,9 @@ func randResultStatValHistory() ResultStatValHistory {
 
 func randResultStatVal() tc.ResultStatVal {
 	return tc.ResultStatVal{
-		Val:  uint64(rand.Int63()),
+		Val:  uint64(*test.RandInt64()),
 		Time: time.Now(),
-		Span: uint64(rand.Int63()),
+		Span: uint64(*test.RandInt64()),
 	}
 }
 
@@ -72,7 +72,7 @@ func randResultInfoHistory() cache.ResultInfoHistory {
 	num := 5
 	infNum := 5
 	for i := 0; i < num; i++ {
-		cacheName := tc.CacheName(randStr())
+		cacheName := tc.CacheName(*test.RandStr())
 		for j := 0; j < infNum; j++ {
 			hist[cacheName] = append(hist[cacheName], randResultInfo())
 		}
@@ -82,38 +82,24 @@ func randResultInfoHistory() cache.ResultInfoHistory {
 
 func randResultInfo() cache.ResultInfo {
 	return cache.ResultInfo{
-		ID:          randStr(),
-		Error:       fmt.Errorf(randStr()),
+		ID:          *test.RandStr(),
+		Error:       fmt.Errorf(*test.RandStr()),
 		Time:        time.Now(),
-		RequestTime: time.Millisecond * time.Duration(rand.Int()),
+		RequestTime: time.Millisecond * time.Duration(*test.RandInt()),
 		Vitals:      randVitals(),
-		PollID:      uint64(rand.Int63()),
-		Available:   randBool(),
+		PollID:      uint64(*test.RandInt64()),
+		Available:   *test.RandBool(),
 	}
 }
 
 func randVitals() cache.Vitals {
 	return cache.Vitals{
-		LoadAvg:    rand.Float64(),
-		BytesOut:   rand.Uint64(),
-		BytesIn:    rand.Uint64(),
-		KbpsOut:    rand.Int63(),
-		MaxKbpsOut: rand.Int63(),
+		LoadAvg:    *test.RandFloat64(),
+		BytesOut:   *test.RandUint64(),
+		BytesIn:    *test.RandUint64(),
+		KbpsOut:    *test.RandInt64(),
+		MaxKbpsOut: *test.RandInt64(),
 	}
-}
-
-func randStr() string {
-	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_"
-	num := 100
-	s := ""
-	for i := 0; i < num; i++ {
-		s += string(chars[rand.Intn(len(chars))])
-	}
-	return s
-}
-
-func randBool() bool {
-	return rand.Int()%2 == 0
 }
 
 type DummyFilterNever struct {

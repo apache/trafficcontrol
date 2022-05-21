@@ -22,7 +22,6 @@ package cache
 import (
 	"bytes"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"os"
 	"testing"
@@ -30,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/poller"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
 
 func TestAstatsJson(t *testing.T) {
@@ -192,18 +192,18 @@ func getMockTOData(dsNameFQDNs map[tc.DeliveryServiceName]string) todata.TOData 
 func getMockRawStats(cacheName string, dsNameFQDNs map[tc.DeliveryServiceName]string) map[string]interface{} {
 	st := map[string]interface{}{}
 	for _, dsFQDN := range dsNameFQDNs {
-		st["plugin.remap_stats."+dsFQDN+".in_bytes"] = float64(rand.Uint64())
-		st["plugin.remap_stats."+dsFQDN+".out_bytes"] = float64(rand.Uint64())
-		st["plugin.remap_stats."+dsFQDN+".status_2xx"] = float64(rand.Uint64())
-		st["plugin.remap_stats."+dsFQDN+".status_3xx"] = float64(rand.Uint64())
-		st["plugin.remap_stats."+dsFQDN+".status_4xx"] = float64(rand.Uint64())
-		st["plugin.remap_stats."+dsFQDN+".status_5xx"] = float64(rand.Uint64())
+		st["plugin.remap_stats."+dsFQDN+".in_bytes"] = float64(*test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".out_bytes"] = float64(*test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".status_2xx"] = float64(*test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".status_3xx"] = float64(*test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".status_4xx"] = float64(*test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".status_5xx"] = float64(*test.RandUint64())
 	}
 	return st
 }
 
 func getMockStatistics(infSpeed int64, outBytes uint64) Statistics {
-	infName := randStr()
+	infName := *test.RandStr()
 	return Statistics{
 		Loadavg: Loadavg{
 			One:              1.2,
@@ -220,7 +220,7 @@ func getMockStatistics(infSpeed int64, outBytes uint64) Statistics {
 				BytesIn:  12234567,
 			},
 		},
-		NotAvailable: randBool(),
+		NotAvailable: *test.RandBool(),
 	}
 
 }

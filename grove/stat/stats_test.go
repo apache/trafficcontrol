@@ -15,13 +15,13 @@ package stat
 */
 
 import (
-	"math/rand"
 	"net"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/grove/remapdata"
 	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
 
 func StatsInc(m *web.ConnMap, num int, addrs *[]string) {
@@ -73,7 +73,7 @@ func GenGUIDStr() string {
 	alphabet := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_")
 	s := make([]rune, length)
 	for i := range s {
-		s[i] = alphabet[rand.Intn(len(alphabet))]
+		s[i] = alphabet[*test.RandIntn(len(alphabet))]
 	}
 	return string(s)
 }

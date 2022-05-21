@@ -21,7 +21,6 @@ package cfgfile
 
 import (
 	"bytes"
-	"math/rand"
 	"strings"
 	"testing"
 	"time"
@@ -31,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
 
 func TestWriteConfigs(t *testing.T) {
@@ -134,50 +134,10 @@ func removeComments(configs string) string {
 	return strings.Join(newLines, "\n")
 }
 
-func randBool() *bool {
-	b := rand.Int()%2 == 0
-	return &b
-}
-
-func randStr() *string {
-	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_"
-	num := 100
-	s := ""
-	for i := 0; i < num; i++ {
-		s += string(chars[rand.Intn(len(chars))])
-	}
-	return &s
-}
-
-func randInt() *int {
-	i := rand.Int()
-	return &i
-}
-
-func randInt64() *int64 {
-	i := int64(rand.Int63())
-	return &i
-}
-
-func randUint64() *uint64 {
-	i := uint64(rand.Int63())
-	return &i
-}
-
-func randUint() *uint {
-	i := uint(rand.Int())
-	return &i
-}
-
-func randFloat64() *float64 {
-	f := rand.Float64()
-	return &f
-}
-
 func randDSS() tc.DeliveryServiceServer {
 	return tc.DeliveryServiceServer{
-		Server:          randInt(),
-		DeliveryService: randInt(),
+		Server:          test.RandInt(),
+		DeliveryService: test.RandInt(),
 	}
 }
 
@@ -186,49 +146,49 @@ func randDS() *atscfg.DeliveryService {
 	dsTypeHTTP := tc.DSTypeHTTP
 	protocol := tc.DSProtocolHTTP
 	ds := atscfg.DeliveryService{}
-	ds.EcsEnabled = *randBool()
-	ds.RangeSliceBlockSize = randInt()
-	ds.ConsistentHashRegex = randStr()
+	ds.EcsEnabled = *test.RandBool()
+	ds.RangeSliceBlockSize = test.RandInt()
+	ds.ConsistentHashRegex = test.RandStr()
 	ds.ConsistentHashQueryParams = []string{
-		*randStr(),
-		*randStr(),
+		*test.RandStr(),
+		*test.RandStr(),
 	}
-	ds.MaxOriginConnections = randInt()
+	ds.MaxOriginConnections = test.RandInt()
 	ds.DeepCachingType = &deepCachingTypeNever
-	ds.FQPacingRate = randInt()
-	ds.SigningAlgorithm = randStr()
-	ds.Tenant = randStr()
-	ds.TRResponseHeaders = randStr()
-	ds.TRRequestHeaders = randStr()
-	ds.Active = randBool()
-	ds.AnonymousBlockingEnabled = randBool()
-	ds.CCRDNSTTL = randInt()
-	ds.CDNID = randInt()
-	ds.CDNName = randStr()
-	ds.CheckPath = randStr()
-	ds.DisplayName = randStr()
-	ds.DNSBypassCNAME = randStr()
-	ds.DNSBypassIP = randStr()
-	ds.DNSBypassIP6 = randStr()
-	ds.DNSBypassTTL = randInt()
-	ds.DSCP = randInt()
-	ds.EdgeHeaderRewrite = randStr()
-	ds.GeoLimit = randInt()
+	ds.FQPacingRate = test.RandInt()
+	ds.SigningAlgorithm = test.RandStr()
+	ds.Tenant = test.RandStr()
+	ds.TRResponseHeaders = test.RandStr()
+	ds.TRRequestHeaders = test.RandStr()
+	ds.Active = test.RandBool()
+	ds.AnonymousBlockingEnabled = test.RandBool()
+	ds.CCRDNSTTL = test.RandInt()
+	ds.CDNID = test.RandInt()
+	ds.CDNName = test.RandStr()
+	ds.CheckPath = test.RandStr()
+	ds.DisplayName = test.RandStr()
+	ds.DNSBypassCNAME = test.RandStr()
+	ds.DNSBypassIP = test.RandStr()
+	ds.DNSBypassIP6 = test.RandStr()
+	ds.DNSBypassTTL = test.RandInt()
+	ds.DSCP = test.RandInt()
+	ds.EdgeHeaderRewrite = test.RandStr()
+	ds.GeoLimit = test.RandInt()
 	ds.GeoLimitCountries = nil
-	ds.GeoLimitRedirectURL = randStr()
-	ds.GeoProvider = randInt()
-	ds.GlobalMaxMBPS = randInt()
-	ds.GlobalMaxTPS = randInt()
-	ds.HTTPBypassFQDN = randStr()
-	ds.ID = randInt()
-	ds.InfoURL = randStr()
-	ds.InitialDispersion = randInt()
-	ds.IPV6RoutingEnabled = randBool()
+	ds.GeoLimitRedirectURL = test.RandStr()
+	ds.GeoProvider = test.RandInt()
+	ds.GlobalMaxMBPS = test.RandInt()
+	ds.GlobalMaxTPS = test.RandInt()
+	ds.HTTPBypassFQDN = test.RandStr()
+	ds.ID = test.RandInt()
+	ds.InfoURL = test.RandStr()
+	ds.InitialDispersion = test.RandInt()
+	ds.IPV6RoutingEnabled = test.RandBool()
 	ds.LastUpdated = &tc.TimeNoMod{Time: time.Now()}
-	ds.LogsEnabled = randBool()
-	ds.LongDesc = randStr()
-	ds.LongDesc1 = randStr()
-	ds.LongDesc2 = randStr()
+	ds.LogsEnabled = test.RandBool()
+	ds.LongDesc = test.RandStr()
+	ds.LongDesc1 = test.RandStr()
+	ds.LongDesc2 = test.RandStr()
 	ds.MatchList = &[]tc.DeliveryServiceMatch{
 		{
 			Type:      tc.DSMatchTypeHostRegex,
@@ -236,68 +196,68 @@ func randDS() *atscfg.DeliveryService {
 			Pattern:   `\.*foo\.*`,
 		},
 	}
-	ds.MaxDNSAnswers = randInt()
-	ds.MidHeaderRewrite = randStr()
-	ds.MissLat = randFloat64()
-	ds.MissLong = randFloat64()
-	ds.MultiSiteOrigin = randBool()
-	ds.OriginShield = randStr()
-	ds.OrgServerFQDN = util.StrPtr("http://" + *(randStr()))
-	ds.ProfileDesc = randStr()
-	ds.ProfileID = randInt()
-	ds.ProfileName = randStr()
+	ds.MaxDNSAnswers = test.RandInt()
+	ds.MidHeaderRewrite = test.RandStr()
+	ds.MissLat = test.RandFloat64()
+	ds.MissLong = test.RandFloat64()
+	ds.MultiSiteOrigin = test.RandBool()
+	ds.OriginShield = test.RandStr()
+	ds.OrgServerFQDN = util.StrPtr("http://" + *(test.RandStr()))
+	ds.ProfileDesc = test.RandStr()
+	ds.ProfileID = test.RandInt()
+	ds.ProfileName = test.RandStr()
 	ds.Protocol = &protocol
-	ds.QStringIgnore = randInt()
-	ds.RangeRequestHandling = randInt()
-	ds.RegexRemap = randStr()
-	ds.RegionalGeoBlocking = randBool()
-	ds.RemapText = randStr()
-	ds.RoutingName = randStr()
-	ds.Signed = *randBool()
-	ds.SSLKeyVersion = randInt()
-	ds.TenantID = randInt()
+	ds.QStringIgnore = test.RandInt()
+	ds.RangeRequestHandling = test.RandInt()
+	ds.RegexRemap = test.RandStr()
+	ds.RegionalGeoBlocking = test.RandBool()
+	ds.RemapText = test.RandStr()
+	ds.RoutingName = test.RandStr()
+	ds.Signed = *test.RandBool()
+	ds.SSLKeyVersion = test.RandInt()
+	ds.TenantID = test.RandInt()
 	ds.Type = &dsTypeHTTP
-	ds.TypeID = randInt()
-	ds.XMLID = randStr()
+	ds.TypeID = test.RandInt()
+	ds.XMLID = test.RandStr()
 	ds.ExampleURLs = []string{
-		*randStr(),
-		*randStr(),
+		*test.RandStr(),
+		*test.RandStr(),
 	}
 	return &ds
 }
 
 func randServer() *atscfg.Server {
 	sv := &atscfg.Server{}
-	sv.Cachegroup = randStr()
-	sv.CachegroupID = randInt()
-	sv.CDNID = randInt()
-	sv.CDNName = randStr()
-	sv.DomainName = randStr()
-	sv.FQDN = randStr()
+	sv.Cachegroup = test.RandStr()
+	sv.CachegroupID = test.RandInt()
+	sv.CDNID = test.RandInt()
+	sv.CDNName = test.RandStr()
+	sv.DomainName = test.RandStr()
+	sv.FQDN = test.RandStr()
 	sv.FqdnTime = time.Now()
-	sv.GUID = randStr()
-	sv.HostName = randStr()
-	sv.HTTPSPort = randInt()
-	sv.ID = randInt()
-	sv.ILOIPAddress = randStr()
-	sv.ILOIPGateway = randStr()
-	sv.ILOIPNetmask = randStr()
-	sv.ILOPassword = randStr()
-	sv.ILOUsername = randStr()
+	sv.GUID = test.RandStr()
+	sv.HostName = test.RandStr()
+	sv.HTTPSPort = test.RandInt()
+	sv.ID = test.RandInt()
+	sv.ILOIPAddress = test.RandStr()
+	sv.ILOIPGateway = test.RandStr()
+	sv.ILOIPNetmask = test.RandStr()
+	sv.ILOPassword = test.RandStr()
+	sv.ILOUsername = test.RandStr()
 
 	sv.Interfaces = []tc.ServerInterfaceInfoV40{}
 	{
 		ssi := tc.ServerInterfaceInfoV40{}
-		ssi.Name = *randStr()
+		ssi.Name = *test.RandStr()
 		ssi.IPAddresses = []tc.ServerIPAddress{
 			tc.ServerIPAddress{
-				Address:        *randStr(),
-				Gateway:        randStr(),
+				Address:        *test.RandStr(),
+				Gateway:        test.RandStr(),
 				ServiceAddress: true,
 			},
 			tc.ServerIPAddress{
-				Address:        *randStr(),
-				Gateway:        randStr(),
+				Address:        *test.RandStr(),
+				Gateway:        test.RandStr(),
 				ServiceAddress: true,
 			},
 		}
@@ -305,53 +265,53 @@ func randServer() *atscfg.Server {
 	}
 
 	sv.LastUpdated = &tc.TimeNoMod{Time: time.Now()}
-	sv.MgmtIPAddress = randStr()
-	sv.MgmtIPGateway = randStr()
-	sv.MgmtIPNetmask = randStr()
-	sv.OfflineReason = randStr()
-	sv.PhysLocation = randStr()
-	sv.PhysLocationID = randInt()
-	sv.ProfileNames = []string{*randStr()}
-	sv.Rack = randStr()
-	sv.RevalPending = randBool()
-	sv.Status = randStr()
-	sv.StatusID = randInt()
-	sv.TCPPort = randInt()
-	sv.Type = *randStr()
-	sv.TypeID = randInt()
-	sv.UpdPending = randBool()
-	sv.XMPPID = randStr()
-	sv.XMPPPasswd = randStr()
+	sv.MgmtIPAddress = test.RandStr()
+	sv.MgmtIPGateway = test.RandStr()
+	sv.MgmtIPNetmask = test.RandStr()
+	sv.OfflineReason = test.RandStr()
+	sv.PhysLocation = test.RandStr()
+	sv.PhysLocationID = test.RandInt()
+	sv.ProfileNames = []string{*test.RandStr()}
+	sv.Rack = test.RandStr()
+	sv.RevalPending = test.RandBool()
+	sv.Status = test.RandStr()
+	sv.StatusID = test.RandInt()
+	sv.TCPPort = test.RandInt()
+	sv.Type = *test.RandStr()
+	sv.TypeID = test.RandInt()
+	sv.UpdPending = test.RandBool()
+	sv.XMPPID = test.RandStr()
+	sv.XMPPPasswd = test.RandStr()
 	return sv
 }
 
 func randCacheGroup() *tc.CacheGroupNullable {
 	return &tc.CacheGroupNullable{
-		ID:        randInt(),
-		Name:      randStr(),
-		ShortName: randStr(),
-		Latitude:  randFloat64(),
-		Longitude: randFloat64(),
-		// ParentName:                  randStr(),
-		// ParentCachegroupID:          randInt(),
-		// SecondaryParentName:         randStr(),
-		// SecondaryParentCachegroupID: randInt(),
-		FallbackToClosest: randBool(),
-		Type:              randStr(),
-		TypeID:            randInt(),
+		ID:        test.RandInt(),
+		Name:      test.RandStr(),
+		ShortName: test.RandStr(),
+		Latitude:  test.RandFloat64(),
+		Longitude: test.RandFloat64(),
+		// ParentName:                  test.RandStr(),
+		// ParentCachegroupID:          test.RandInt(),
+		// SecondaryParentName:         test.RandStr(),
+		// SecondaryParentCachegroupID: test.RandInt(),
+		FallbackToClosest: test.RandBool(),
+		Type:              test.RandStr(),
+		TypeID:            test.RandInt(),
 		LastUpdated:       &tc.TimeNoMod{Time: time.Now()},
 		Fallbacks: &[]string{
-			*randStr(),
-			*randStr(),
+			*test.RandStr(),
+			*test.RandStr(),
 		},
 	}
 }
 
 func randParam() *tc.Parameter {
 	return &tc.Parameter{
-		ConfigFile: *randStr(),
-		Name:       *randStr(),
-		Value:      *randStr(),
+		ConfigFile: *test.RandStr(),
+		Name:       *test.RandStr(),
+		Value:      *test.RandStr(),
 		Profiles:   []byte(`[]`),
 	}
 }
@@ -359,21 +319,21 @@ func randParam() *tc.Parameter {
 func randJob() *atscfg.InvalidationJob {
 	now := time.Now()
 	return &atscfg.InvalidationJob{
-		AssetURL:         *randStr(),
-		CreatedBy:        *randStr(),
+		AssetURL:         *test.RandStr(),
+		CreatedBy:        *test.RandStr(),
 		StartTime:        now,
-		ID:               *randUint64(),
-		DeliveryService:  *randStr(),
-		TTLHours:         *randUint(),
+		ID:               *test.RandUint64(),
+		DeliveryService:  *test.RandStr(),
+		TTLHours:         *test.RandUint(),
 		InvalidationType: tc.REFRESH,
 	}
 }
 
 func randCDN() *tc.CDN {
 	return &tc.CDN{
-		DNSSECEnabled: *randBool(),
-		DomainName:    *randStr(),
-		Name:          *randStr(),
+		DNSSECEnabled: *test.RandBool(),
+		DomainName:    *test.RandStr(),
+		Name:          *test.RandStr(),
 	}
 }
 
@@ -383,26 +343,26 @@ func randDSRs() *tc.DeliveryServiceRegexes {
 			*randDSR(),
 			*randDSR(),
 		},
-		DSName: *randStr(),
+		DSName: *test.RandStr(),
 	}
 }
 
 func randDSR() *tc.DeliveryServiceRegex {
 	return &tc.DeliveryServiceRegex{
 		Type:      string(tc.DSMatchTypeHostRegex),
-		SetNumber: *randInt(),
+		SetNumber: *test.RandInt(),
 		Pattern:   `\.*foo\.*`,
 	}
 }
 
 func randCDNSSLKeys() *tc.CDNSSLKeys {
 	return &tc.CDNSSLKeys{
-		DeliveryService: *randStr(),
+		DeliveryService: *test.RandStr(),
 		Certificate: tc.CDNSSLKeysCertificate{
-			Crt: *randStr(),
-			Key: *randStr(),
+			Crt: *test.RandStr(),
+			Key: *test.RandStr(),
 		},
-		Hostname: *randStr(),
+		Hostname: *test.RandStr(),
 	}
 }
 
@@ -501,37 +461,37 @@ func MakeFakeTOData() *t3cutil.ConfigData {
 			*dsr1,
 		},
 		URISigningKeys: map[tc.DeliveryServiceName][]byte{
-			tc.DeliveryServiceName(*randStr()): []byte(*randStr()),
-			tc.DeliveryServiceName(*randStr()): []byte(*randStr()),
+			tc.DeliveryServiceName(*test.RandStr()): []byte(*test.RandStr()),
+			tc.DeliveryServiceName(*test.RandStr()): []byte(*test.RandStr()),
 		},
 		URLSigKeys: map[tc.DeliveryServiceName]tc.URLSigKeys{
-			tc.DeliveryServiceName(*randStr()): map[string]string{
-				*randStr(): *randStr(),
-				*randStr(): *randStr(),
+			tc.DeliveryServiceName(*test.RandStr()): map[string]string{
+				*test.RandStr(): *test.RandStr(),
+				*test.RandStr(): *test.RandStr(),
 			},
-			tc.DeliveryServiceName(*randStr()): map[string]string{
-				*randStr(): *randStr(),
-				*randStr(): *randStr(),
+			tc.DeliveryServiceName(*test.RandStr()): map[string]string{
+				*test.RandStr(): *test.RandStr(),
+				*test.RandStr(): *test.RandStr(),
 			},
 		},
 		ServerCapabilities: map[int]map[atscfg.ServerCapability]struct{}{
-			*randInt(): map[atscfg.ServerCapability]struct{}{
-				atscfg.ServerCapability(*randStr()): struct{}{},
-				atscfg.ServerCapability(*randStr()): struct{}{},
+			*test.RandInt(): map[atscfg.ServerCapability]struct{}{
+				atscfg.ServerCapability(*test.RandStr()): struct{}{},
+				atscfg.ServerCapability(*test.RandStr()): struct{}{},
 			},
-			*randInt(): map[atscfg.ServerCapability]struct{}{
-				atscfg.ServerCapability(*randStr()): struct{}{},
-				atscfg.ServerCapability(*randStr()): struct{}{},
+			*test.RandInt(): map[atscfg.ServerCapability]struct{}{
+				atscfg.ServerCapability(*test.RandStr()): struct{}{},
+				atscfg.ServerCapability(*test.RandStr()): struct{}{},
 			},
 		},
 		DSRequiredCapabilities: map[int]map[atscfg.ServerCapability]struct{}{
-			*randInt(): map[atscfg.ServerCapability]struct{}{
-				atscfg.ServerCapability(*randStr()): struct{}{},
-				atscfg.ServerCapability(*randStr()): struct{}{},
+			*test.RandInt(): map[atscfg.ServerCapability]struct{}{
+				atscfg.ServerCapability(*test.RandStr()): struct{}{},
+				atscfg.ServerCapability(*test.RandStr()): struct{}{},
 			},
-			*randInt(): map[atscfg.ServerCapability]struct{}{
-				atscfg.ServerCapability(*randStr()): struct{}{},
-				atscfg.ServerCapability(*randStr()): struct{}{},
+			*test.RandInt(): map[atscfg.ServerCapability]struct{}{
+				atscfg.ServerCapability(*test.RandStr()): struct{}{},
+				atscfg.ServerCapability(*test.RandStr()): struct{}{},
 			},
 		},
 		SSLKeys: []tc.CDNSSLKeys{

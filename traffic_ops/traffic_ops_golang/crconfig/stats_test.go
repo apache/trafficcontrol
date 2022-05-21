@@ -25,14 +25,15 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
 
 func ExpectedMakeStats() tc.CRConfigStats {
 	return tc.CRConfigStats{
-		CDNName:   randStr(),
-		TMHost:    randStr(),
-		TMUser:    randStr(),
-		TMVersion: randStr(),
+		CDNName:   test.RandStr(),
+		TMHost:    test.RandStr(),
+		TMUser:    test.RandStr(),
+		TMVersion: test.RandStr(),
 	}
 }
 

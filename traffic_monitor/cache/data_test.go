@@ -22,40 +22,26 @@ package cache
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
-
-func randBool() bool {
-	return rand.Int()%2 == 0
-}
-
-func randStr() string {
-	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_"
-	num := 100
-	s := ""
-	for i := 0; i < num; i++ {
-		s += string(chars[rand.Intn(len(chars))])
-	}
-	return s
-}
 
 func randAvailableStatuses() AvailableStatuses {
 	a := AvailableStatuses{}
 	num := 100
 	for i := 0; i < num; i++ {
-		cacheName := randStr()
-		a[cacheName] = AvailableStatus{
+		cacheName := test.RandStr()
+		a[*cacheName] = AvailableStatus{
 			Available: AvailableTuple{
-				IPv4: randBool(),
-				IPv6: randBool(),
+				IPv4: *test.RandBool(),
+				IPv6: *test.RandBool(),
 			},
-			Status: randStr(),
+			Status: *test.RandStr(),
 		}
 	}
 	return a
@@ -65,7 +51,7 @@ func randStrIfaceMap() map[string]interface{} {
 	m := map[string]interface{}{}
 	num := 5
 	for i := 0; i < num; i++ {
-		m[randStr()] = randStr()
+		m[*test.RandStr()] = *test.RandStr()
 	}
 	return m
 }
@@ -77,18 +63,18 @@ func randStats() (Statistics, map[string]interface{}) {
 func randStatistics() Statistics {
 	return Statistics{
 		Loadavg: Loadavg{
-			One:              rand.Float64(),
-			Five:             rand.Float64(),
-			Fifteen:          rand.Float64(),
-			CurrentProcesses: rand.Uint64(),
-			TotalProcesses:   rand.Uint64(),
-			LatestPID:        rand.Int63(),
+			One:              *test.RandFloat64(),
+			Five:             *test.RandFloat64(),
+			Fifteen:          *test.RandFloat64(),
+			CurrentProcesses: *test.RandUint64(),
+			TotalProcesses:   *test.RandUint64(),
+			LatestPID:        *test.RandInt64(),
 		},
 		Interfaces: map[string]Interface{
-			randStr(): Interface{
-				Speed:    rand.Int63(),
-				BytesIn:  rand.Uint64(),
-				BytesOut: rand.Uint64(),
+			*test.RandStr(): Interface{
+				Speed:    *test.RandInt64(),
+				BytesIn:  *test.RandUint64(),
+				BytesOut: *test.RandUint64(),
 			},
 		},
 	}
@@ -96,34 +82,34 @@ func randStatistics() Statistics {
 
 func randVitals() Vitals {
 	return Vitals{
-		LoadAvg:    rand.Float64(),
-		BytesOut:   rand.Uint64(),
-		BytesIn:    rand.Uint64(),
-		KbpsOut:    rand.Int63(),
-		MaxKbpsOut: rand.Int63(),
+		LoadAvg:    *test.RandFloat64(),
+		BytesOut:   *test.RandUint64(),
+		BytesIn:    *test.RandUint64(),
+		KbpsOut:    *test.RandInt64(),
+		MaxKbpsOut: *test.RandInt64(),
 	}
 }
 
 func randStatMeta() dsdata.StatMeta {
-	return dsdata.StatMeta{Time: rand.Int63()}
+	return dsdata.StatMeta{Time: *test.RandInt64()}
 }
 
 func randStatCacheStats() dsdata.StatCacheStats {
 	return dsdata.StatCacheStats{
-		OutBytes:    dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
-		IsAvailable: dsdata.StatBool{Value: randBool(), StatMeta: randStatMeta()},
-		Status5xx:   dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
-		Status4xx:   dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
-		Status3xx:   dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
-		Status2xx:   dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
-		InBytes:     dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
-		Kbps:        dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
-		Tps5xx:      dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
-		Tps4xx:      dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
-		Tps3xx:      dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
-		Tps2xx:      dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
-		ErrorString: dsdata.StatString{Value: randStr(), StatMeta: randStatMeta()},
-		TpsTotal:    dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
+		OutBytes:    dsdata.StatInt{Value: *test.RandInt64(), StatMeta: randStatMeta()},
+		IsAvailable: dsdata.StatBool{Value: *test.RandBool(), StatMeta: randStatMeta()},
+		Status5xx:   dsdata.StatInt{Value: *test.RandInt64(), StatMeta: randStatMeta()},
+		Status4xx:   dsdata.StatInt{Value: *test.RandInt64(), StatMeta: randStatMeta()},
+		Status3xx:   dsdata.StatInt{Value: *test.RandInt64(), StatMeta: randStatMeta()},
+		Status2xx:   dsdata.StatInt{Value: *test.RandInt64(), StatMeta: randStatMeta()},
+		InBytes:     dsdata.StatFloat{Value: *test.RandFloat64(), StatMeta: randStatMeta()},
+		Kbps:        dsdata.StatFloat{Value: *test.RandFloat64(), StatMeta: randStatMeta()},
+		Tps5xx:      dsdata.StatFloat{Value: *test.RandFloat64(), StatMeta: randStatMeta()},
+		Tps4xx:      dsdata.StatFloat{Value: *test.RandFloat64(), StatMeta: randStatMeta()},
+		Tps3xx:      dsdata.StatFloat{Value: *test.RandFloat64(), StatMeta: randStatMeta()},
+		Tps2xx:      dsdata.StatFloat{Value: *test.RandFloat64(), StatMeta: randStatMeta()},
+		ErrorString: dsdata.StatString{Value: *test.RandStr(), StatMeta: randStatMeta()},
+		TpsTotal:    dsdata.StatFloat{Value: *test.RandFloat64(), StatMeta: randStatMeta()},
 	}
 }
 
@@ -131,27 +117,27 @@ func randStatCommon() dsdata.StatCommon {
 	cachesReporting := map[tc.CacheName]bool{}
 	num := 5
 	for i := 0; i < num; i++ {
-		cachesReporting[tc.CacheName(randStr())] = randBool()
+		cachesReporting[tc.CacheName(*test.RandStr())] = *test.RandBool()
 	}
 	return dsdata.StatCommon{
-		CachesConfiguredNum: dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
+		CachesConfiguredNum: dsdata.StatInt{Value: *test.RandInt64(), StatMeta: randStatMeta()},
 		CachesReporting:     cachesReporting,
-		ErrorStr:            dsdata.StatString{Value: randStr(), StatMeta: randStatMeta()},
-		StatusStr:           dsdata.StatString{Value: randStr(), StatMeta: randStatMeta()},
-		IsHealthy:           dsdata.StatBool{Value: randBool(), StatMeta: randStatMeta()},
-		IsAvailable:         dsdata.StatBool{Value: randBool(), StatMeta: randStatMeta()},
-		CachesAvailableNum:  dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
+		ErrorStr:            dsdata.StatString{Value: *test.RandStr(), StatMeta: randStatMeta()},
+		StatusStr:           dsdata.StatString{Value: *test.RandStr(), StatMeta: randStatMeta()},
+		IsHealthy:           dsdata.StatBool{Value: *test.RandBool(), StatMeta: randStatMeta()},
+		IsAvailable:         dsdata.StatBool{Value: *test.RandBool(), StatMeta: randStatMeta()},
+		CachesAvailableNum:  dsdata.StatInt{Value: *test.RandInt64(), StatMeta: randStatMeta()},
 	}
 }
 
 func randAStat() *DSStat {
 	return &DSStat{
-		InBytes:   rand.Uint64(),
-		OutBytes:  rand.Uint64(),
-		Status2xx: rand.Uint64(),
-		Status3xx: rand.Uint64(),
-		Status4xx: rand.Uint64(),
-		Status5xx: rand.Uint64(),
+		InBytes:   *test.RandUint64(),
+		OutBytes:  *test.RandUint64(),
+		Status2xx: *test.RandUint64(),
+		Status3xx: *test.RandUint64(),
+		Status4xx: *test.RandUint64(),
+		Status5xx: *test.RandUint64(),
 	}
 }
 
@@ -159,18 +145,18 @@ func randDsStats() map[string]*DSStat {
 	num := 5
 	a := map[string]*DSStat{}
 	for i := 0; i < num; i++ {
-		a[randStr()] = randAStat()
+		a[*test.RandStr()] = randAStat()
 	}
 	return a
 }
 func randErrs() []error {
-	if randBool() {
+	if *test.RandBool() {
 		return []error{}
 	}
 	num := 5
 	errs := []error{}
 	for i := 0; i < num; i++ {
-		errs = append(errs, errors.New(randStr()))
+		errs = append(errs, errors.New(*test.RandStr()))
 	}
 	return errs
 }
@@ -178,26 +164,26 @@ func randErrs() []error {
 func randPrecomputedData() PrecomputedData {
 	return PrecomputedData{
 		DeliveryServiceStats: randDsStats(),
-		OutBytes:             rand.Uint64(),
-		MaxKbps:              rand.Int63(),
+		OutBytes:             *test.RandUint64(),
+		MaxKbps:              *test.RandInt64(),
 		Errors:               randErrs(),
-		Reporting:            randBool(),
+		Reporting:            *test.RandBool(),
 	}
 }
 
 func randResult() Result {
 	stats, misc := randStats()
 	return Result{
-		ID:              randStr(),
-		Error:           fmt.Errorf(randStr()),
+		ID:              *test.RandStr(),
+		Error:           fmt.Errorf(*test.RandStr()),
 		Statistics:      stats,
 		Time:            time.Now(),
-		RequestTime:     time.Millisecond * time.Duration(rand.Int()),
+		RequestTime:     time.Millisecond * time.Duration(*test.RandInt()),
 		Vitals:          randVitals(),
-		PollID:          uint64(rand.Int63()),
+		PollID:          uint64(*test.RandInt64()),
 		PollFinished:    make(chan uint64),
 		PrecomputedData: randPrecomputedData(),
-		Available:       randBool(),
+		Available:       *test.RandBool(),
 		Miscellaneous:   misc,
 	}
 }
@@ -215,7 +201,7 @@ func randResultHistory() ResultHistory {
 	a := ResultHistory{}
 	num := 5
 	for i := 0; i < num; i++ {
-		a[tc.CacheName(randStr())] = randResultSlice()
+		a[tc.CacheName(*test.RandStr())] = randResultSlice()
 	}
 	return a
 }
@@ -231,7 +217,7 @@ func TestResultHistoryCopy(t *testing.T) {
 		}
 
 		// verify a and b don't point to the same map
-		a[tc.CacheName(randStr())] = randResultSlice()
+		a[tc.CacheName(*test.RandStr())] = randResultSlice()
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map: %+v", a)
 		}
@@ -248,13 +234,13 @@ func TestAvailableStatusesCopy(t *testing.T) {
 			t.Errorf("expected a and b DeepEqual, actual copied map not equal: a: %v b: %v", a, b)
 		}
 
-		cacheName := randStr()
+		cacheName := *test.RandStr()
 		a[cacheName] = AvailableStatus{
 			Available: AvailableTuple{
-				randBool(),
-				randBool(),
+				*test.RandBool(),
+				*test.RandBool(),
 			},
-			Status: randStr(),
+			Status: *test.RandStr(),
 		}
 
 		if reflect.DeepEqual(a, b) {
