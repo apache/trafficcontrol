@@ -109,12 +109,6 @@ func TestDeliveryServiceServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
-			"SERVER DELETE": {
-				"CONFLICT when DELETING SERVER when its the ONLY EDGE SERVER ASSIGNED": {
-					EndpointId: getServerID(t, "test-ds-server-assignments"), ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
-				},
-			},
 			"SERVER STATUS PUT": {
 				"BAD REQUEST when UPDATING SERVER STATUS when ONLY EDGE SERVER ASSIGNED": {
 					EndpointId: getServerID(t, "test-ds-server-assignments"), ClientSession: TOSession,
@@ -165,13 +159,6 @@ func TestDeliveryServiceServers(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.CreateDeliveryServiceServers(dsID, serverIDs, replace)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
-							}
-						})
-					case "SERVER DELETE":
-						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteServerByID(testCase.EndpointId())
-							for _, check := range testCase.Expectations {
-								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "SERVER STATUS PUT":
