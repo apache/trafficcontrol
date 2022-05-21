@@ -1543,6 +1543,10 @@
         {
             "xmlId": "test-ds-server-assignments",
             "serverNames": ["test-ds-server-assignments"]
+        },
+        {
+            "xmlId": "ds1",
+            "serverNames": ["atlanta-edge-14"]
         }
     ],
     "topologyBasedDeliveryServicesRequiredCapabilities": [

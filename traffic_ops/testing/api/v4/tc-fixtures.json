@@ -1753,6 +1753,10 @@
         {
             "xmlId": "test-ds-server-assignments",
             "serverNames": ["test-ds-server-assignments", "test-mso-org-01"]
+        },
+        {
+            "xmlId": "ds1",
+            "serverNames": ["atlanta-edge-14"]
         }
     ],
     "divisions": [
