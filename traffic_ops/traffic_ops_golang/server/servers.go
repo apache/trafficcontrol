@@ -62,6 +62,9 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 `
 
+const joinProfileV4 = `JOIN server_profile sp ON p.name = sp.profile_name AND s.id = sp.server
+`
+
 /* language=SQL */
 const dssTopologiesJoinSubquery = `
 (SELECT
@@ -899,7 +902,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"id":               {Column: "s.id", Checker: api.IsInt},
 		"hostName":         {Column: "s.host_name", Checker: nil},
 		"physLocation":     {Column: "s.phys_location", Checker: api.IsInt},
-		"profileId":        {Column: "s.profile", Checker: api.IsInt},
 		"status":           {Column: "st.name", Checker: nil},
 		"topology":         {Column: "tc.topology", Checker: nil},
 		"type":             {Column: "t.name", Checker: nil},
@@ -909,6 +911,20 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	if version.Major >= 3 {
 		queryParamsToSQLCols["cachegroupName"] = dbhelpers.WhereColumnInfo{
 			Column:  "cg.name",
+			Checker: nil,
+		}
+	}
+
+	if version.Major <= 3 {
+		queryParamsToSQLCols["profileId"] = dbhelpers.WhereColumnInfo{
+			Column:  "s.profile",
+			Checker: api.IsInt,
+		}
+	}
+
+	if version.Major >= 4 {
+		queryParamsToSQLCols["profileName"] = dbhelpers.WhereColumnInfo{
+			Column:  "sp.profile_name",
 			Checker: nil,
 		}
 	}
@@ -974,10 +990,22 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		return nil, 0, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
-	countQuery := serverCountQuery + queryAddition + where
+	var queryString, countQueryString string
+	queryString = selectQuery
+	countQueryString = serverCountQuery
+	if version.Major >= 4 {
+		if _, ok := params["profileName"]; ok {
+			queryString = selectQuery + `JOIN server_profile sp ON s.id = sp.server`
+		} else {
+			queryString = selectQuery + joinProfileV4
+		}
+		countQueryString = serverCountQuery + joinProfileV4
+	}
+
+	countQuery := countQueryString + queryAddition + where
 	// If we are querying for a DS that has reqd capabilities, we need to make sure that we also include all the ORG servers directly assigned to this DS
 	if _, ok := params["dsId"]; ok && dsHasRequiredCapabilities {
-		countQuery = `SELECT (` + countQuery + `) + (` + serverCountQuery + originServerQuery + `) AS total`
+		countQuery = `SELECT (` + countQuery + `) + (` + countQueryString + originServerQuery + `) AS total`
 	}
 	serverCount, err = getServerCount(tx, countQuery, queryValues)
 	if err != nil {
@@ -996,10 +1024,10 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		log.Debugln("Non IMS request")
 	}
 
-	query := selectQuery + queryAddition + where + orderBy + pagination
+	query := queryString + queryAddition + where + orderBy + pagination
 	// If you're looking to get the servers for a particular delivery service, make sure you're also querying the ORG servers from the deliveryservice_server table
 	if _, ok := params[`dsId`]; ok {
-		query = `(` + selectQuery + queryAddition + where + orderBy + pagination + `) UNION ` + selectQuery + originServerQuery
+		query = `(` + queryString + queryAddition + where + orderBy + pagination + `) UNION ` + queryString + originServerQuery
 	}
 
 	log.Debugln("Query is ", query)
@@ -1669,7 +1697,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	where := `WHERE s.id = $1`
-	selquery := selectQuery + where
+	var selquery string
+	if version.Major <= 4 {
+		selquery = selectQuery + joinProfileV4 + where
+	} else {
+		selquery = selectQuery + where
+	}
 	var srvr tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&srvr.Cachegroup,
 		&srvr.CachegroupID,
@@ -2191,7 +2224,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	}
 
 	where := `WHERE s.id = $1`
-	selquery := selectQuery + where
+	selquery := selectQuery + joinProfileV4 + where
 	var srvr tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&srvr.Cachegroup,
 		&srvr.CachegroupID,

@@ -51,7 +51,7 @@ Request Structure
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| id             | no       | Return only the server with this integral, unique identifier                                                      |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| profileId      | no       | Return only those servers that are using the :term:`Profile` that has this :ref:`profile-id`                      |
+	| profileName    | no       | Return only those servers that are using the :term:`Profile` that has this :ref:`profile-name`                    |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| status         | no       | Return only those servers with this status - see :ref:`health-proto`                                              |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+

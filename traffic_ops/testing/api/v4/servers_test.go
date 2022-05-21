@@ -935,12 +935,12 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if len(pr.Response) != 1 {
 		t.Error("Found server with no Profile ID")
 	} else {
-		profileID := pr.Response[0].ID
-		opts.QueryParameters.Add("profileId", strconv.Itoa(profileID))
+		profileName := pr.Response[0].Name
+		opts.QueryParameters.Add("profileName", profileName)
 		if resp, _, err := TOSession.GetServers(opts); err != nil {
 			t.Errorf("Error getting servers by Profile ID: %v - alerts: %+v", err, resp.Alerts)
 		}
-		opts.QueryParameters.Del("profileId")
+		opts.QueryParameters.Del("profileName")
 	}
 
 	cgs, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
