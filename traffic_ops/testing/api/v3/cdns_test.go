@@ -32,6 +32,7 @@ import (
 
 func TestCDNs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters}, func() {
+
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
@@ -39,31 +40,36 @@ func TestCDNs(t *testing.T) {
 		methodTests := utils.V3TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					ClientSession: TOSession, RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						utils.ResponseLengthGreaterOrEqual(1), validateCDNSort()),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1), validateCDNSort()),
 				},
 				"OK when VALID NAME parameter": {
-					ClientSession: TOSession, RequestParams: url.Values{"name": {"cdn1"}},
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"cdn1"}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						validateCDNFields(map[string]interface{}{"Name": "cdn1"})),
 				},
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId: GetCDNID(t, "cdn1"), ClientSession: TOSession,
+					EndpointId:    GetCDNID(t, "cdn1"),
+					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"dnssecEnabled": false,
-						"domainName":    "newDomain",
+						"domainName":    "domain2",
 						"name":          "cdn1",
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateCDNUpdateFields("cdn1", map[string]interface{}{"DomainName": "domain2"})),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Headers": {
-					EndpointId: GetCDNID(t, "cdn1"), ClientSession: TOSession,
+					EndpointId:     GetCDNID(t, "cdn1"),
+					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: map[string]interface{}{
 						"dnssecEnabled": false,
@@ -73,7 +79,8 @@ func TestCDNs(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId: GetCDNID(t, "cdn1"), ClientSession: TOSession,
+					EndpointId:     GetCDNID(t, "cdn1"),
+					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					RequestBody: map[string]interface{}{
 						"dnssecEnabled": false,
@@ -159,8 +166,18 @@ func validateCDNFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	}
 }
 
+func validateCDNUpdateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		cdn, _, err := TOSession.GetCDNByNameWithHdr(name, nil)
+		assert.NoError(t, err, "Error getting CDN: %v", err)
+		assert.Equal(t, 1, len(cdn), "Expected one CDN returned Got: %d", len(cdn))
+		validateCDNFields(expectedResp)(t, toclientlib.ReqInf{}, cdn, tc.Alerts{}, nil)
+	}
+}
+
 func validateCDNSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected CDN response to not be nil.")
 		var cdnNames []string
 		cdnResp := resp.([]tc.CDN)
 		for _, cdn := range cdnResp {
@@ -173,9 +190,9 @@ func validateCDNSort() utils.CkReqFunc {
 func GetCDNID(t *testing.T, cdnName string) func() int {
 	return func() int {
 		cdnsResp, _, err := TOSession.GetCDNByNameWithHdr(cdnName, http.Header{})
-		assert.NoError(t, err, "Get CDNs Request failed with error:", err)
-		assert.Equal(t, 1, len(cdnsResp), "Expected response object length 1, but got %d", len(cdnsResp))
-		assert.NotNil(t, cdnsResp[0].ID, "Expected id to not be nil")
+		assert.RequireNoError(t, err, "Get CDNs Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(cdnsResp), "Expected response object length 1, but got %d", len(cdnsResp))
+		assert.RequireNotNil(t, cdnsResp[0].ID, "Expected id to not be nil")
 		return cdnsResp[0].ID
 	}
 }

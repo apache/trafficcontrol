@@ -34,6 +34,7 @@ import (
 
 func TestCDNs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters}, func() {
+
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
@@ -41,60 +42,72 @@ func TestCDNs(t *testing.T) {
 		methodTests := utils.V4TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						utils.ResponseLengthGreaterOrEqual(1), validateCDNSort()),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1), validateCDNSort()),
 				},
 				"OK when VALID NAME parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"name": {"cdn1"}}},
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"cdn1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						validateCDNFields(map[string]interface{}{"Name": "cdn1"})),
 				},
 				"OK when VALID DOMAINNAME parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"domainName": {"test.cdn2.net"}}},
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"domainName": {"test.cdn2.net"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						validateCDNFields(map[string]interface{}{"DomainName": "test.cdn2.net"})),
 				},
 				"OK when VALID DNSSECENABLED parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"dnssecEnabled": {"false"}}},
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dnssecEnabled": {"false"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateCDNFields(map[string]interface{}{"DNSSECEnabled": false})),
 				},
 				"VALID when SORTORDER param is DESC": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNDescSort()),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNDescSort()),
 				},
 				"FIRST RESULT when LIMIT=1": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNPagination("limit")),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNPagination("limit")),
 				},
 				"SECOND RESULT when LIMIT=1 OFFSET=1": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNPagination("offset")),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNPagination("offset")),
 				},
 				"SECOND RESULT when LIMIT=1 PAGE=2": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNPagination("page")),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNPagination("page")),
 				},
 				"BAD REQUEST when INVALID LIMIT parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID OFFSET parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID PAGE parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
 			"POST": {
 				"BAD REQUEST when CDN ALREADY EXISTS": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"name":          "cdn3",
 						"dnssecEnabled": false,
 						"domainName":    "test.cdn3.net",
@@ -102,7 +115,8 @@ func TestCDNs(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when EMPTY NAME": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"name":          "",
 						"dnssecEnabled": false,
 						"domainName":    "test.noname.net",
@@ -110,7 +124,8 @@ func TestCDNs(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when EMPTY DOMAIN NAME": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"name":          "nodomain",
 						"dnssecEnabled": false,
 						"domainName":    "",
@@ -120,17 +135,20 @@ func TestCDNs(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId: GetCDNID(t, "cdn1"), ClientSession: TOSession,
+					EndpointId:    GetCDNID(t, "cdn1"),
+					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"dnssecEnabled": false,
-						"domainName":    "newDomain",
+						"domainName":    "domain2",
 						"name":          "cdn1",
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateCDNUpdateFields("cdn1", map[string]interface{}{"DomainName": "domain2"})),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Headers": {
-					EndpointId: GetCDNID(t, "cdn1"), ClientSession: TOSession,
-					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					EndpointId:    GetCDNID(t, "cdn1"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: map[string]interface{}{
 						"dnssecEnabled": false,
 						"domainName":    "newDomain",
@@ -139,8 +157,9 @@ func TestCDNs(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId: GetCDNID(t, "cdn1"), ClientSession: TOSession,
-					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					EndpointId:    GetCDNID(t, "cdn1"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					RequestBody: map[string]interface{}{
 						"dnssecEnabled": false,
 						"domainName":    "newDomain",
@@ -151,8 +170,9 @@ func TestCDNs(t *testing.T) {
 			},
 			"DELETE": {
 				"NOT FOUND when INVALID ID parameter": {
-					EndpointId: func() int { return 111111 }, ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+					EndpointId:    func() int { return 111111 },
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 			},
 			"GET AFTER CHANGES": {
@@ -213,6 +233,7 @@ func TestCDNs(t *testing.T) {
 
 func validateCDNFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected CDN response to not be nil.")
 		cdnResp := resp.([]tc.CDN)
 		for field, expected := range expectedResp {
 			for _, cdn := range cdnResp {
@@ -231,8 +252,20 @@ func validateCDNFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	}
 }
 
+func validateCDNUpdateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", name)
+		cdn, _, err := TOSession.GetCDNs(opts)
+		assert.NoError(t, err, "Error getting CDN: %v - alerts: %+v", err, cdn.Alerts)
+		assert.Equal(t, 1, len(cdn.Response), "Expected one CDN returned Got: %d", len(cdn.Response))
+		validateCDNFields(expectedResp)(t, toclientlib.ReqInf{}, cdn.Response, tc.Alerts{}, nil)
+	}
+}
+
 func validateCDNPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected CDN response to not be nil.")
 		paginationResp := resp.([]tc.CDN)
 
 		opts := client.NewRequestOptions()
@@ -255,6 +288,7 @@ func validateCDNPagination(paginationParam string) utils.CkReqFunc {
 
 func validateCDNSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected CDN response to not be nil.")
 		var cdnNames []string
 		cdnResp := resp.([]tc.CDN)
 		for _, cdn := range cdnResp {
@@ -266,16 +300,16 @@ func validateCDNSort() utils.CkReqFunc {
 
 func validateCDNDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected CDN response to not be nil.")
 		cdnDescResp := resp.([]tc.CDN)
 		var descSortedList []string
 		var ascSortedList []string
-		assert.GreaterOrEqual(t, len(cdnDescResp), 2, "Need at least 2 CDNs in Traffic Ops to test desc sort, found: %d", len(cdnDescResp))
+		assert.RequireGreaterOrEqual(t, len(cdnDescResp), 2, "Need at least 2 CDNs in Traffic Ops to test desc sort, found: %d", len(cdnDescResp))
 		// Get CDNs in the default ascending order for comparison.
 		cdnAscResp, _, err := TOSession.GetCDNs(client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error getting CDNs with default sort order: %v - alerts: %+v", err, cdnAscResp.Alerts)
-		assert.GreaterOrEqual(t, len(cdnAscResp.Response), 2, "Need at least 2 CDNs in Traffic Ops to test sort, found %d", len(cdnAscResp.Response))
+		assert.RequireNoError(t, err, "Unexpected error getting CDNs with default sort order: %v - alerts: %+v", err, cdnAscResp.Alerts)
 		// Verify the response match in length, i.e. equal amount of CDNs.
-		assert.Equal(t, len(cdnAscResp.Response), len(cdnDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(cdnAscResp.Response), len(cdnDescResp))
+		assert.RequireEqual(t, len(cdnAscResp.Response), len(cdnDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(cdnAscResp.Response), len(cdnDescResp))
 		// Insert CDN names to the front of a new list, so they are now reversed to be in ascending order.
 		for _, cdn := range cdnDescResp {
 			descSortedList = append([]string{cdn.Name}, descSortedList...)
@@ -293,9 +327,9 @@ func GetCDNID(t *testing.T, cdnName string) func() int {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", cdnName)
 		cdnsResp, _, err := TOSession.GetCDNs(opts)
-		assert.NoError(t, err, "Get CDNs Request failed with error:", err)
-		assert.Equal(t, 1, len(cdnsResp.Response), "Expected response object length 1, but got %d", len(cdnsResp.Response))
-		assert.NotNil(t, cdnsResp.Response[0].ID, "Expected id to not be nil")
+		assert.RequireNoError(t, err, "Get CDNs Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(cdnsResp.Response), "Expected response object length 1, but got %d", len(cdnsResp.Response))
+		assert.RequireNotNil(t, cdnsResp.Response[0].ID, "Expected id to not be nil")
 		return cdnsResp.Response[0].ID
 	}
 }

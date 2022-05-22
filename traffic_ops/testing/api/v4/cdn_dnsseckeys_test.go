@@ -47,7 +47,9 @@ func RefreshDNSSECKeys(t *testing.T) {
 	if loc == "" {
 		t.Fatalf("Refreshing DNSSEC keys - Expected: non-empty 'Location' response header, Actual: empty")
 	}
-	asyncID, err := strconv.Atoi(strings.Split(loc, "/")[4])
+	locSplit := strings.Split(loc, "/")
+	assert.RequireGreaterOrEqual(t, len(locSplit), 5, "Expected 'Location' response header to split into at least 5 parts, Got: %v", len(locSplit))
+	asyncID, err := strconv.Atoi(locSplit[4])
 	assert.RequireNoError(t, err, "Parsing async_status ID from 'Location' response header - Expected: no error, Actual: %v", err)
 
 	status, _, err := TOSession.GetAsyncStatus(asyncID, client.RequestOptions{})
@@ -56,13 +58,13 @@ func RefreshDNSSECKeys(t *testing.T) {
 }
 
 func GenerateDNSSECKeys(t *testing.T) {
-	assert.GreaterOrEqual(t, len(testData.CDNs), 1, "Need at least one CDN to test updating CDNs")
+	assert.RequireGreaterOrEqual(t, len(testData.CDNs), 1, "Need at least one CDN to test updating CDNs")
 	firstCDN := testData.CDNs[0]
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", firstCDN.Name)
 	cdns, _, err := TOSession.GetCDNs(opts)
-	assert.NoError(t, err, "Unexpected error getting CDNs filtered by name '%s': %v - alerts: %+v", firstCDN.Name, err, cdns.Alerts)
-	assert.Equal(t, len(cdns.Response), 1, "Expected exactly one CDN named '%s' to exist, found: %d", firstCDN.Name, len(cdns.Response))
+	assert.RequireNoError(t, err, "Unexpected error getting CDNs filtered by name '%s': %v - alerts: %+v", firstCDN.Name, err, cdns.Alerts)
+	assert.RequireEqual(t, len(cdns.Response), 1, "Expected exactly one CDN named '%s' to exist, found: %d", firstCDN.Name, len(cdns.Response))
 
 	cdn := cdns.Response[0]
 
@@ -139,8 +141,8 @@ func GenerateDNSSECKeys(t *testing.T) {
 	customDS := getCustomDS(cdn.ID, types.Response[0].ID, dsXMLID, "cdn", "https://testdnssecgen.example.com", dsXMLID)
 	ds, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	assert.NoError(t, err, "Unexpected error creating Delivery Service: %v - alerts: %+v", err, ds.Alerts)
-	assert.Equal(t, len(ds.Response), 1, "Expected creating a Delivery Service to create exactly one Delivery Service, Traffic Ops returned: %d", len(ds.Response))
-	assert.NotNil(t, ds.Response[0].ID, nil, "Traffic Ops returned a representation for a created Delivery Service with null or undefined ID")
+	assert.RequireEqual(t, len(ds.Response), 1, "Expected creating a Delivery Service to create exactly one Delivery Service, Traffic Ops returned: %d", len(ds.Response))
+	assert.RequireNotNil(t, ds.Response[0].ID, nil, "Traffic Ops returned a representation for a created Delivery Service with null or undefined ID")
 
 	res, _, err = TOSession.GetCDNDNSSECKeys(firstCDN.Name, client.RequestOptions{})
 	assert.RequireNoError(t, err, "Unexpected error getting CDN DNSSEC keys: %v - alerts: %+v", err, res.Alerts)
