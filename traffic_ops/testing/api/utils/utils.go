@@ -31,6 +31,15 @@ import (
 	v4client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
+// String constants for the HTTP verbs/methods being tested
+const (
+	Get             = "GET"
+	Post            = "POST"
+	Put             = "PUT"
+	Delete          = "DELETE"
+	GetAfterChanges = "GET AFTER CHANGES"
+)
+
 type ErrorAndMessage struct {
 	Error   error
 	Message string
@@ -138,6 +147,7 @@ func CkRequest(c ...CkReqFunc) []CkReqFunc {
 // NoError checks that no error was returned (i.e. `nil`).
 func NoError() CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, _ tc.Alerts, err error) {
+		t.Helper()
 		assert.NoError(t, err, "Expected no error. Got: %v", err)
 	}
 }
@@ -145,6 +155,7 @@ func NoError() CkReqFunc {
 // HasError checks that an error was returned (i.e. not `nil`).
 func HasError() CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, alerts tc.Alerts, err error) {
+		t.Helper()
 		assert.Error(t, err, "Expected error. Got: %v", alerts)
 	}
 }
@@ -152,6 +163,7 @@ func HasError() CkReqFunc {
 // HasStatus checks that the status code from the request is as expected.
 func HasStatus(expectedStatus int) CkReqFunc {
 	return func(t *testing.T, reqInf toclientlib.ReqInf, _ interface{}, _ tc.Alerts, _ error) {
+		t.Helper()
 		assert.Equal(t, expectedStatus, reqInf.StatusCode, "Expected Status Code: %d Got: %d", expectedStatus, reqInf.StatusCode)
 	}
 }
@@ -160,6 +172,7 @@ func HasStatus(expectedStatus int) CkReqFunc {
 // Determines that response is a slice before checking the length of the reflected value.
 func ResponseHasLength(expected int) CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		t.Helper()
 		rt := reflect.TypeOf(resp)
 		switch rt.Kind() {
 		case reflect.Slice:
@@ -175,6 +188,7 @@ func ResponseHasLength(expected int) CkReqFunc {
 // Determines that response is a slice before checking the length of the reflected value.
 func ResponseLengthGreaterOrEqual(expected int) CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		t.Helper()
 		rt := reflect.TypeOf(resp)
 		switch rt.Kind() {
 		case reflect.Slice:
