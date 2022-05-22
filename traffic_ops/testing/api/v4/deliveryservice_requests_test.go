@@ -61,7 +61,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
 		methodTests := utils.V4TestCase{
-			"GET": {
+			utils.Get: {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
@@ -74,7 +74,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						validateGetDSRequestFields(map[string]interface{}{"XMLID": "test-ds1"})),
 				},
 			},
-			"PUT": {
+			utils.Put: {
 				"OK when VALID request": {
 					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
 					ClientSession: TOSession,
@@ -133,7 +133,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 			},
-			"POST": {
+			utils.Post: {
 				"CREATED when VALID request": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
@@ -261,14 +261,14 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
-			"DELETE": {
+			utils.Delete: {
 				"OK when VALID request": {
 					EndpointId:    GetDeliveryServiceRequestId(t, "test-deletion"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
-			"GET AFTER CHANGES": {
+			utils.GetAfterChanges: {
 				"OK when CHANGES made": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
@@ -290,28 +290,28 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case utils.Get, utils.GetAfterChanges:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceRequests(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "POST":
+					case utils.Post:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.CreateDeliveryServiceRequest(dsReq, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "PUT":
+					case utils.Put:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequest(testCase.EndpointId(), dsReq, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "DELETE":
+					case utils.Delete:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.DeleteDeliveryServiceRequest(testCase.EndpointId(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -340,6 +340,7 @@ func GetDeliveryServiceRequestId(t *testing.T, xmlId string) func() int {
 
 func validateGetDSRequestFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Delivery Service Request response to not be nil.")
 		dsReqResp := resp.([]tc.DeliveryServiceRequestV40)
 		for field, expected := range expectedResp {
 			for _, ds := range dsReqResp {
@@ -356,6 +357,7 @@ func validateGetDSRequestFields(expectedResp map[string]interface{}) utils.CkReq
 
 func validatePutDSRequestFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Delivery Service Request response to not be nil.")
 		dsReqResp := resp.(tc.DeliveryServiceRequestV40)
 		for field, expected := range expectedResp {
 			switch field {

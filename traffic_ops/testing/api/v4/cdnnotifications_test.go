@@ -30,14 +30,17 @@ import (
 
 func TestCDNNotifications(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, CDNNotifications}, func() {
+
 		methodTests := utils.V4TestCase{
-			"GET": {
+			utils.Get: {
 				"OK when VALID request": {
-					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+					ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						utils.ResponseLengthGreaterOrEqual(1)),
 				},
 				"OK when VALID CDN parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn2"}}},
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn2"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						validateCDNNotificationFields(map[string]interface{}{"Notification": "test notification: cdn2"})),
 				},
@@ -48,7 +51,7 @@ func TestCDNNotifications(t *testing.T) {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
 					switch method {
-					case "GET":
+					case utils.Get:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetCDNNotifications(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -64,6 +67,7 @@ func TestCDNNotifications(t *testing.T) {
 
 func validateCDNNotificationFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected CDN Notification response to not be nil.")
 		notifications := resp.([]tc.CDNNotification)
 		for field, expected := range expectedResp {
 			for _, notification := range notifications {

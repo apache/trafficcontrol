@@ -29,8 +29,9 @@ import (
 
 func TestCacheGroupsDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, CacheGroupsDeliveryServices}, func() {
+
 		methodTests := utils.V4TestCase{
-			"POST": {
+			utils.Post: {
 				"BAD REQUEST assigning TOPOLOGY-BASED DS to CACHEGROUP": {
 					EndpointId:    GetCacheGroupId(t, "cachegroup3"),
 					ClientSession: TOSession,
@@ -60,7 +61,7 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
 					switch method {
-					case "POST":
+					case utils.Post:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.SetCacheGroupDeliveryServices(testCase.EndpointId(), testCase.RequestBody["deliveryServices"].([]int), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -77,13 +78,14 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 
 func validateCGDSServerAssignments() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Cache Group Delivery Service response to not be nil.")
 		cgDsResp := resp.(tc.CacheGroupPostDSResp)
 		opts := client.NewRequestOptions()
 		for _, serverName := range cgDsResp.ServerNames {
 			opts.QueryParameters.Set("hostName", string(serverName))
 			resp, _, err := TOSession.GetServers(opts)
-			assert.NoError(t, err, "Error: Getting server: %v - alerts: %+v", err, resp.Alerts)
-			assert.Equal(t, len(resp.Response), 1, "Error: Getting servers: expected 1 got %v", len(resp.Response))
+			assert.RequireNoError(t, err, "Error: Getting server: %v - alerts: %+v", err, resp.Alerts)
+			assert.RequireEqual(t, len(resp.Response), 1, "Error: Getting servers: expected 1 got %v", len(resp.Response))
 
 			serverDSes, _, err := TOSession.GetDeliveryServicesByServer(*resp.Response[0].ID, client.RequestOptions{})
 			assert.NoError(t, err, "Error: Getting Delivery Service Servers #%d: %v - alerts: %+v", *resp.Response[0].ID, err, serverDSes.Alerts)

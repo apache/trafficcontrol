@@ -39,29 +39,33 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
 		methodTests := utils.V4TestCase{
-			"GET": {
+			utils.Get: {
 				"NOT MODIFIED when NO CHANGES made": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when VALID DELIVERYSERVICEID parameter": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"deliveryServiceId": {"ds1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateDSRCExpectedFields(map[string]interface{}{"DeliveryServiceId": "ds1"})),
+						validateDSRCFields(map[string]interface{}{"DeliveryServiceId": "ds1"})),
 				},
 				"OK when VALID XMLID parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"xmlID": {"ds2"}}},
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"xmlID": {"ds2"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateDSRCExpectedFields(map[string]interface{}{"XMLID": "ds2"})),
+						validateDSRCFields(map[string]interface{}{"XMLID": "ds2"})),
 				},
 				"OK when VALID REQUIREDCAPABILITY parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"requiredCapability": {"bar"}}},
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"requiredCapability": {"bar"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateDSRCExpectedFields(map[string]interface{}{"RequiredCapability": "bar"})),
+						validateDSRCFields(map[string]interface{}{"RequiredCapability": "bar"})),
 				},
 				"FIRST RESULT when LIMIT=1": {
 					ClientSession: TOSession,
@@ -79,95 +83,110 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDSRCPagination("page")),
 				},
 				"BAD REQUEST when INVALID LIMIT parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID OFFSET parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID PAGE parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
-			"POST": {
+			utils.Post: {
 				"BAD REQUEST when REASSIGNING REQUIRED CAPABILITY to DELIVERY SERVICE": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"deliveryServiceID":  GetDeliveryServiceId(t, "ds1")(),
 						"requiredCapability": "foo",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when SERVERS DONT have CAPABILITY": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"deliveryServiceID":  GetDeliveryServiceId(t, "test-ds-server-assignments")(),
 						"requiredCapability": "disk",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when DELIVERY SERVICE HAS TOPOLOGY where SERVERS DONT have CAPABILITY": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"deliveryServiceID":  GetDeliveryServiceId(t, "ds-top-req-cap")(),
 						"requiredCapability": "bar",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when DELIVERY SERVICE ID EMPTY": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"requiredCapability": "bar",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when REQUIRED CAPABILITY EMPTY": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"deliveryServiceID": GetDeliveryServiceId(t, "ds1")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when NON-EXISTENT REQUIRED CAPABILITY": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"deliveryServiceID":  GetDeliveryServiceId(t, "ds1")(),
 						"requiredCapability": "bogus",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when NON-EXISTENT DELIVERY SERVICE ID": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"deliveryServiceID":  -1,
 						"requiredCapability": "foo",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when INVALID DELIVERY SERVICE TYPE": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
 						"deliveryServiceID":  GetDeliveryServiceId(t, "anymap-ds")(),
 						"requiredCapability": "foo",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
-			"DELETE": {
+			utils.Delete: {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceId(t, "ds-top-req-cap"), ClientSession: TOSession,
-					RequestBody:  map[string]interface{}{"requiredCapability": "ram"},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					EndpointId:    GetDeliveryServiceId(t, "ds-top-req-cap"),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{"requiredCapability": "ram"},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"NOT FOUND when NON-EXISTENT DELIVERYSERVICEID parameter": {
-					EndpointId: func() int { return -1 }, ClientSession: TOSession,
-					RequestBody:  map[string]interface{}{"requiredCapability": "foo"},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+					EndpointId:    func() int { return -1 },
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{"requiredCapability": "foo"},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when NON-EXISTENT REQUIREDCAPABILITY parameter": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
-					RequestBody:  map[string]interface{}{"requiredCapability": "bogus"},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{"requiredCapability": "bogus"},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 			},
-			"GET AFTER CHANGES": {
+			utils.GetAfterChanges: {
 				"OK when CHANGES made": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -191,21 +210,21 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case utils.Get, utils.GetAfterChanges:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetDeliveryServicesRequiredCapabilities(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "POST":
+					case utils.Post:
 						t.Run(name, func(t *testing.T) {
 							alerts, reqInf, err := testCase.ClientSession.CreateDeliveryServicesRequiredCapability(dsrc, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
-					case "DELETE":
+					case utils.Delete:
 						t.Run(name, func(t *testing.T) {
 							alerts, reqInf, err := testCase.ClientSession.DeleteDeliveryServicesRequiredCapability(testCase.EndpointId(), testCase.RequestBody["requiredCapability"].(string), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -220,8 +239,9 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 }
 
-func validateDSRCExpectedFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+func validateDSRCFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Delivery Service Required Capabilities response to not be nil")
 		dsrcResp := resp.([]tc.DeliveryServicesRequiredCapability)
 		for field, expected := range expectedResp {
 			for _, dsrc := range dsrcResp {
@@ -240,6 +260,7 @@ func validateDSRCExpectedFields(expectedResp map[string]interface{}) utils.CkReq
 
 func validateDSRCPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Delivery Service Required Capabilities response to not be nil")
 		paginationResp := resp.([]tc.DeliveryServicesRequiredCapability)
 
 		opts := client.NewRequestOptions()

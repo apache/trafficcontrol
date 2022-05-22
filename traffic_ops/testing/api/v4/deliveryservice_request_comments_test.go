@@ -40,7 +40,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
 		methodTests := utils.V4TestCase{
-			"GET": {
+			utils.Get: {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
@@ -60,7 +60,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSortedDSRequestComments()),
 				},
 			},
-			"PUT": {
+			utils.Put: {
 				"OK when VALID request": {
 					EndpointId:    GetDSRequestCommentId(t, "admin"),
 					ClientSession: TOSession,
@@ -85,7 +85,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 			},
-			"GET AFTER CHANGES": {
+			utils.GetAfterChanges: {
 				"OK when CHANGES made": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
@@ -107,14 +107,14 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case utils.Get, utils.GetAfterChanges:
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceRequestComments(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					case "PUT":
+					case utils.Put:
 						t.Run(name, func(t *testing.T) {
 							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestComment(testCase.EndpointId(), comment, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -158,6 +158,7 @@ func GetDSRequestId(t *testing.T, xmlId string) func() int {
 
 func validateSortedDSRequestComments() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, err error) {
+		assert.RequireNotNil(t, resp, "Expected Delivery Service Request Comments response to not be nil.")
 		var sortedList []string
 		dsReqComments := resp.([]tc.DeliveryServiceRequestComment)
 
