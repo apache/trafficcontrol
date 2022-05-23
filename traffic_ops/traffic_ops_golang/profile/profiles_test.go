@@ -42,7 +42,6 @@ func getTestProfiles() []tc.ProfileNullable {
 	ID := 1
 	name := "profile1"
 	description := "desc1"
-	pt := "TR_PROFILE"
 	cdnID := 1
 	cdnName := "cdn1"
 	rd := true
@@ -55,7 +54,7 @@ func getTestProfiles() []tc.ProfileNullable {
 		CDNName:         &cdnName,
 		CDNID:           &cdnID,
 		RoutingDisabled: &rd,
-		Type:            &pt,
+		Type:            util.StrPtr(tc.TrafficRouterProfileType),
 	}
 	profiles = append(profiles, testCase)
 

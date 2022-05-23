@@ -142,7 +142,7 @@ traffic_router_zonemanager_timeout() {
   fi;
 
   local modified_crconfig crconfig_path zonemanager_timeout;
-  crconfig_path=/traffic_ops_data/profiles/040-CCR_CIAB.json;
+  crconfig_path=/traffic_ops_data/profiles/040-TRAFFIC_ROUTER.json;
   modified_crconfig="$(mktemp)";
   # 5 minutes, which is the default zonemanager.cache.maintenance.interval value
   zonemanager_timeout="$(( 60 * 5 ))";
