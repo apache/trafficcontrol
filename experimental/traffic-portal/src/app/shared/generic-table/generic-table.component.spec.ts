@@ -13,6 +13,7 @@
 */
 
 import { type ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatMenuModule } from "@angular/material/menu";
 import { RouterTestingModule } from "@angular/router/testing";
 import { AgGridModule } from "ag-grid-angular";
 import type { CellContextMenuEvent, ColDef, GridApi, RowNode, ValueGetterParams } from "ag-grid-community";
@@ -144,7 +145,8 @@ describe("GenericTableComponent", () => {
 			],
 			imports: [
 				AgGridModule.withComponents([]),
-				RouterTestingModule
+				RouterTestingModule,
+				MatMenuModule
 			]
 		}).compileComponents();
 
@@ -254,7 +256,7 @@ describe("GenericTableComponent", () => {
 	it("fuzzy filters", async () => {
 		await fixture.whenStable();
 		fuzzySearch.next("");
-		component.toggleVisibility("lastUpdated");
+		component.toggleVisibility(new Event("toggle"), "lastUpdated");
 		const api = component.gridOptions.api;
 		if (!api) {
 			return fail("api not set after rendering is complete");
@@ -296,22 +298,22 @@ describe("GenericTableComponent", () => {
 		await fixture.whenStable();
 		for (const col of component.columns) {
 			if (!col.isVisible()) {
-				component.toggleVisibility(col.getId());
+				component.toggleVisibility(new Event("toggle"), col.getId());
 			}
 		}
 
 		for (const col of component.columns) {
 			expect(col.isVisible()).toBeTrue();
-			component.toggleVisibility(col.getId());
+			component.toggleVisibility(new Event("toggle"), col.getId());
 			expect(col.isVisible()).toBeFalse();
 		}
 
-		component.toggleVisibility("not a real column ID");
+		component.toggleVisibility(new Event("toggle"), "not a real column ID");
 		for (const col of component.columns) {
 			expect(col.isVisible()).toBeFalse();
-			component.toggleVisibility(col.getId());
+			component.toggleVisibility(new Event("toggle"), col.getId());
 		}
-		component.toggleVisibility("not a real column ID");
+		component.toggleVisibility(new Event("toggle"), "not a real column ID");
 		for (const col of component.columns) {
 			expect(col.isVisible()).toBeTrue();
 		}

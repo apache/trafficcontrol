@@ -432,8 +432,7 @@ INSERT INTO parameter (config_file, name, value)
 	for rows.Next() {
 		var ID int64
 		if err := rows.Scan(&ID); err != nil {
-			log.Errorf("could not scan parameter ID: %s\n", err)
-			return nil, tc.DBError
+			return nil, fmt.Errorf("could not scan parameter ID: %w", err)
 		}
 		parameterIds = append(parameterIds, ID)
 	}

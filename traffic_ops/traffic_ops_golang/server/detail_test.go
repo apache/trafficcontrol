@@ -13,7 +13,9 @@ package server
 */
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -75,8 +77,7 @@ func TestGetDetailServers(t *testing.T) {
 		"mgmt_ip_netmask",
 		"offline_reason",
 		"phys_location",
-		"profile",
-		"profile_desc",
+		"profile_name",
 		"rack",
 		"status",
 		"tcp_port",
@@ -93,8 +94,6 @@ func TestGetDetailServers(t *testing.T) {
 	serviceNetmask := util.StrPtr("")
 	serviceInterface := util.StrPtr("")
 	serviceMtu := util.StrPtr("")
-	//routerHostName := util.StrPtr("")
-	//routerPort := util.StrPtr("")
 
 	for _, sd := range testServerDetails {
 		detailRows = detailRows.AddRow(
@@ -123,8 +122,7 @@ func TestGetDetailServers(t *testing.T) {
 			sd.MgmtIPNetmask,
 			sd.OfflineReason,
 			sd.PhysLocation,
-			sd.Profile,
-			sd.ProfileDesc,
+			fmt.Sprintf("{%s}", strings.Join(sd.ProfileNames, ",")),
 			sd.Rack,
 			sd.Status,
 			sd.TCPPort,
@@ -143,7 +141,7 @@ func TestGetDetailServers(t *testing.T) {
 	mock.ExpectQuery("SELECT serverid").WillReturnRows(hwInfoRows)
 	mock.ExpectCommit()
 
-	actualSrvs, err := getDetailServers(db.MustBegin().Tx, &auth.CurrentUser{PrivLevel: 30}, "test", 1, "id", 10, api.Version{Major: 3})
+	actualSrvs, err := getDetailServers(db.MustBegin().Tx, &auth.CurrentUser{PrivLevel: 30}, "test", 1, "id", 10, api.Version{Major: 4})
 	if err != nil {
 		t.Fatalf("an error '%s' occurred during read", err)
 	}
@@ -170,9 +168,7 @@ func TestGetDetailServers(t *testing.T) {
 
 func getMockServerDetails() []tc.ServerDetailV40 {
 	srvData := tc.ServerDetailV40{
-		ServerDetail: tc.ServerDetail{
-			ID: util.IntPtr(1),
-		},
+		ID:               util.IntPtr(1),
 		ServerInterfaces: []tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
 	}
 	return []tc.ServerDetailV40{srvData}

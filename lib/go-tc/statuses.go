@@ -70,3 +70,21 @@ type StatusNullable struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        *string    `json:"name" db:"name"`
 }
+
+// IsReservedStatus returns true if the passed in status name is reserved, and false if it isn't.
+// Currently, the reserved statuses are OFFLINE, ONLINE, REPORTED, PRE_PROD and ADMIN_DOWN.
+func IsReservedStatus(status string) bool {
+	switch CacheStatus(status) {
+	case CacheStatusOffline:
+		fallthrough
+	case CacheStatusReported:
+		fallthrough
+	case CacheStatusOnline:
+		fallthrough
+	case CacheStatusPreProd:
+		fallthrough
+	case CacheStatusAdminDown:
+		return true
+	}
+	return false
+}

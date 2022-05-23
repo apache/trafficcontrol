@@ -1,0 +1,53 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a href="#!/cdni-config-requests">CDNi Requests</a></li>
+            <li class="active">{{reqId}}</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="cdniRequestForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group">
+                <label for="newData" class="control-label col-md-2 col-sm-2 col-xs-12">Updated Data</label>
+                <div class="col-md-10 col-sm-10 col-xs-12" style="padding-top: 10px">
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <textarea id="newData" name="newData" type="text" class="form-control" ng-model="cdniRequest.data" rows="25" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="currentConfig" class="control-label col-md-2 col-sm-2 col-xs-12">Current Data</label>
+                <div class="col-md-10 col-sm-10 col-xs-12" style="padding-top: 10px">
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <textarea id="currentConfig" name="currentConfig" type="text" class="form-control" ng-model="currentConfig" rows="25" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" ng-click="respondToRequest(true)">Approve</button>
+                <button type="button" class="btn btn-danger" ng-click="respondToRequest(false)">Deny</button>
+            </div>
+        </form>
+    </div>
+</div>

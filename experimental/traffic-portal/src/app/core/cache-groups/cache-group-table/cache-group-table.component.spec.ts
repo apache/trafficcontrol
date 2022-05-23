@@ -15,8 +15,10 @@ import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed, fakeAsync } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
+import {ReplaySubject} from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
+import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
 import { CacheGroupTableComponent } from "./cache-group-table.component";
 
@@ -24,6 +26,7 @@ describe("CacheGroupTableComponent", () => {
 	let component: CacheGroupTableComponent;
 	let fixture: ComponentFixture<CacheGroupTableComponent>;
 
+	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ CacheGroupTableComponent ],
@@ -33,6 +36,9 @@ describe("CacheGroupTableComponent", () => {
 				ReactiveFormsModule,
 				RouterTestingModule
 			],
+			providers: [
+				{ provide: TpHeaderService, useValue: headerSvc}
+			]
 		}).compileComponents();
 		fixture = TestBed.createComponent(CacheGroupTableComponent);
 		component = fixture.componentInstance;

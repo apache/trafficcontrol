@@ -105,8 +105,9 @@ WHERE tm_user.email = $1
 // CheckIfCurrentUserHasCdnLock checks if the current user has the lock on the cdn that the requested operation is to be performed on.
 // This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
 func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, int) {
-	query := `SELECT username FROM cdn_lock WHERE cdn=$1`
+	query := `SELECT c.username, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames FROM cdn_lock c LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn WHERE c.cdn=$1 GROUP BY c.username`
 	var userName string
+	var sharedUserNames []string
 	rows, err := tx.Query(query, cdn)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -116,12 +117,17 @@ func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, i
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&userName)
+		err = rows.Scan(&userName, pq.Array(&sharedUserNames))
 		if err != nil {
 			return nil, errors.New("scanning cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
 		}
 	}
 	if userName != "" && user != userName {
+		for _, u := range sharedUserNames {
+			if u == user {
+				return nil, nil, http.StatusOK
+			}
+		}
 		return errors.New("user " + user + " currently does not have the lock on cdn " + cdn), nil, http.StatusForbidden
 	}
 	return nil, nil, http.StatusOK
@@ -211,9 +217,10 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 // CheckIfCurrentUserCanModifyCDNs checks if the current user has the lock on the list of cdns that the requested operation is to be performed on.
 // This will succeed if the either there is no lock by any user on any of the CDNs, or if the current user has the lock on any of the CDNs.
 func CheckIfCurrentUserCanModifyCDNs(tx *sql.Tx, cdns []string, user string) (error, error, int) {
-	query := `SELECT username, soft, cdn FROM cdn_lock WHERE cdn=ANY($1)`
+	query := `SELECT c.username, c.soft, c.cdn, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames FROM cdn_lock c LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn WHERE c.cdn=ANY($1) GROUP BY c.username, c.soft, c.cdn`
 	var userName, cdn string
 	var soft bool
+	var sharedUserNames []string
 	rows, err := tx.Query(query, pq.Array(cdns))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -223,11 +230,16 @@ func CheckIfCurrentUserCanModifyCDNs(tx *sql.Tx, cdns []string, user string) (er
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&userName, &soft, &cdn)
+		err = rows.Scan(&userName, &soft, &cdn, pq.Array(&sharedUserNames))
 		if err != nil {
 			return nil, errors.New("scanning cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
 		}
 		if userName != "" && user != userName && !soft {
+			for _, u := range sharedUserNames {
+				if u == user {
+					return nil, nil, http.StatusOK
+				}
+			}
 			return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
 		}
 	}
@@ -258,9 +270,10 @@ func CheckIfCurrentUserCanModifyCDNsByID(tx *sql.Tx, cdns []int, user string) (e
 // CheckIfCurrentUserCanModifyCDN checks if the current user has the lock on the cdn that the requested operation is to be performed on.
 // This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
 func CheckIfCurrentUserCanModifyCDN(tx *sql.Tx, cdn, user string) (error, error, int) {
-	query := `SELECT username, soft FROM cdn_lock WHERE cdn=$1`
+	query := `SELECT c.username, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames FROM cdn_lock c LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn WHERE c.cdn=$1 GROUP BY c.username, c.soft`
 	var userName string
 	var soft bool
+	var sharedUserNames []string
 	rows, err := tx.Query(query, cdn)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -270,11 +283,16 @@ func CheckIfCurrentUserCanModifyCDN(tx *sql.Tx, cdn, user string) (error, error,
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&userName, &soft)
+		err = rows.Scan(&userName, &soft, pq.Array(&sharedUserNames))
 		if err != nil {
 			return nil, errors.New("scanning cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
 		}
 		if userName != "" && user != userName && !soft {
+			for _, u := range sharedUserNames {
+				if u == user {
+					return nil, nil, http.StatusOK
+				}
+			}
 			return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
 		}
 	}
@@ -296,10 +314,21 @@ func CheckIfCurrentUserCanModifyCDNWithID(tx *sql.Tx, cdnID int64, user string) 
 // CheckIfCurrentUserCanModifyCachegroup checks if the current user has the lock on the cdns that are associated with the provided cachegroup ID.
 // This will succeed if no other user has a hard lock on any of the CDNs that relate to the cachegroup in question.
 func CheckIfCurrentUserCanModifyCachegroup(tx *sql.Tx, cachegroupID int, user string) (error, error, int) {
-	query := `SELECT username, cdn, soft FROM cdn_lock WHERE cdn IN (SELECT name FROM cdn WHERE id IN (SELECT cdn_id FROM server WHERE cachegroup = ($1)))`
+	query := `
+SELECT c.username, c.cdn, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames 
+FROM cdn_lock c LEFT JOIN cdn_lock_user u 
+    ON c.username = u.owner 
+           AND c.cdn = u.cdn 
+WHERE c.cdn IN (
+    SELECT name FROM cdn 
+    WHERE id IN (
+        SELECT cdn_id FROM server 
+        WHERE cachegroup = ($1))) 
+GROUP BY c.username, c.cdn, c.soft`
 	var userName string
 	var cdn string
 	var soft bool
+	var sharedUserNames []string
 	rows, err := tx.Query(query, cachegroupID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -309,11 +338,16 @@ func CheckIfCurrentUserCanModifyCachegroup(tx *sql.Tx, cachegroupID int, user st
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&userName, &cdn, &soft)
+		err = rows.Scan(&userName, &cdn, &soft, pq.Array(&sharedUserNames))
 		if err != nil {
 			return nil, errors.New("scanning cdn_lock for user " + user + " and cachegroup ID " + strconv.Itoa(cachegroupID) + ": " + err.Error()), http.StatusInternalServerError
 		}
 		if userName != "" && user != userName && !soft {
+			for _, u := range sharedUserNames {
+				if u == user {
+					return nil, nil, http.StatusOK
+				}
+			}
 			return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
 		}
 	}
@@ -323,10 +357,20 @@ func CheckIfCurrentUserCanModifyCachegroup(tx *sql.Tx, cachegroupID int, user st
 // CheckIfCurrentUserCanModifyCachegroups checks if the current user has the lock on the cdns that are associated with the provided cachegroup IDs.
 // This will succeed if no other user has a hard lock on any of the CDNs that relate to the cachegroups in question.
 func CheckIfCurrentUserCanModifyCachegroups(tx *sql.Tx, cachegroupIDs []int, user string) (error, error, int) {
-	query := `SELECT username, cdn, soft FROM cdn_lock WHERE cdn IN (SELECT name FROM cdn WHERE id IN (SELECT cdn_id FROM server WHERE cachegroup = ANY($1)))`
+	query := `SELECT c.username, c.cdn, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames FROM cdn_lock c 
+    LEFT JOIN cdn_lock_user u 
+        ON c.username = u.owner 
+               AND c.cdn = u.cdn 
+WHERE c.cdn IN (
+    SELECT name FROM cdn 
+    WHERE id IN (
+        SELECT cdn_id FROM server 
+        WHERE cachegroup = ANY($1)))
+        GROUP BY c.username, c.cdn, c.soft`
 	var userName string
 	var cdn string
 	var soft bool
+	var sharedUserNames []string
 	rows, err := tx.Query(query, pq.Array(cachegroupIDs))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -336,11 +380,16 @@ func CheckIfCurrentUserCanModifyCachegroups(tx *sql.Tx, cachegroupIDs []int, use
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&userName, &cdn, &soft)
+		err = rows.Scan(&userName, &cdn, &soft, pq.Array(&sharedUserNames))
 		if err != nil {
 			return nil, errors.New("scanning cachegroups cdn_lock for user " + user + ": " + err.Error()), http.StatusInternalServerError
 		}
 		if userName != "" && user != userName && !soft {
+			for _, u := range sharedUserNames {
+				if u == user {
+					return nil, nil, http.StatusOK
+				}
+			}
 			return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
 		}
 	}
@@ -2075,10 +2124,17 @@ func UpdateServerProfilesForV4(id int, profile []string, tx *sql.Tx) error {
 }
 
 // UpdateServerProfileTableForV2V3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v2/v3.
-func UpdateServerProfileTableForV2V3(id *int, newProfile *string, origProfile string, tx *sql.Tx) ([]string, error) {
+func UpdateServerProfileTableForV2V3(id *int, newProfileId *int, origProfile string, tx *sql.Tx) ([]string, error) {
 	var profileName []string
+
+	var newProfile string
+	err := tx.QueryRow("SELECT name from profile where id = $1", *newProfileId).Scan(&newProfile)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("selecting profile by name: %w", err)
+	}
+
 	query := `UPDATE server_profile SET profile_name=$1 WHERE server=$2 AND profile_name=$3`
-	_, err := tx.Exec(query, *newProfile, *id, origProfile)
+	_, err = tx.Exec(query, newProfile, *id, origProfile)
 	if err != nil {
 		return nil, fmt.Errorf("updating server_profile by profile_name: %w", err)
 	}
@@ -2089,4 +2145,50 @@ func UpdateServerProfileTableForV2V3(id *int, newProfile *string, origProfile st
 	}
 
 	return profileName, nil
+}
+
+// GetServerDetailFromV4 function converts server details from V4 to V3/V2
+func GetServerDetailFromV4(sd tc.ServerDetailV40, tx *sql.Tx) (tc.ServerDetail, error) {
+	var profileDesc *string
+	if err := tx.QueryRow(`SELECT p.description FROM profile p WHERE p.name=$1`, sd.ProfileNames[0]).Scan(&profileDesc); err != nil {
+		return tc.ServerDetail{}, fmt.Errorf("querying profile description by profile name: %w", err)
+	}
+	return tc.ServerDetail{
+		CacheGroup:         sd.CacheGroup,
+		CDNName:            sd.CDNName,
+		DeliveryServiceIDs: sd.DeliveryServiceIDs,
+		DomainName:         sd.DomainName,
+		GUID:               sd.GUID,
+		HardwareInfo:       sd.HardwareInfo,
+		HostName:           sd.HostName,
+		HTTPSPort:          sd.HTTPSPort,
+		ID:                 sd.ID,
+		ILOIPAddress:       sd.ILOIPAddress,
+		ILOIPGateway:       sd.ILOIPGateway,
+		ILOIPNetmask:       sd.ILOIPNetmask,
+		ILOPassword:        sd.ILOPassword,
+		ILOUsername:        sd.ILOUsername,
+		MgmtIPAddress:      sd.MgmtIPAddress,
+		MgmtIPGateway:      sd.MgmtIPGateway,
+		MgmtIPNetmask:      sd.MgmtIPNetmask,
+		OfflineReason:      sd.OfflineReason,
+		PhysLocation:       sd.PhysLocation,
+		Profile:            &sd.ProfileNames[0],
+		ProfileDesc:        profileDesc,
+		Rack:               sd.Rack,
+		Status:             sd.Status,
+		TCPPort:            sd.TCPPort,
+		Type:               sd.Type,
+		XMPPID:             sd.XMPPID,
+		XMPPPasswd:         sd.XMPPPasswd,
+	}, nil
+}
+
+// GetProfileIDDesc gets profile ID and desc for V3 servers
+func GetProfileIDDesc(tx *sql.Tx, name string) (id int, desc string) {
+	err := tx.QueryRow(`SELECT id, description from "profile" p WHERE p.name=$1`, name).Scan(&id, &desc)
+	if err != nil {
+		log.Errorf("scanning id and description in GetProfileIDDesc: " + err.Error())
+	}
+	return
 }

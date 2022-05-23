@@ -16,19 +16,38 @@ package v4
 */
 
 import (
+	"net/http"
 	"testing"
 
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestPing(t *testing.T) {
-	resp, _, err := TOSession.Ping(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("could not ping while authenticated: %v - alerts: %+v", err, resp.Alerts)
+
+	methodTests := utils.V4TestCase{
+		"GET": {
+			"OK when VALID request": {
+				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+			},
+			"OK when UNAUTHENTICATED": {
+				ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+			},
+		},
 	}
 
-	resp, _, err = NoAuthTOSession.Ping(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("could not ping while unauthenticated: %v - alerts: %+v", err, resp.Alerts)
+	for method, testCases := range methodTests {
+		t.Run(method, func(t *testing.T) {
+			for name, testCase := range testCases {
+				switch method {
+				case "GET":
+					t.Run(name, func(t *testing.T) {
+						resp, reqInf, err := testCase.ClientSession.Ping(testCase.RequestOpts)
+						for _, check := range testCase.Expectations {
+							check(t, reqInf, resp.Ping, resp.Alerts, err)
+						}
+					})
+				}
+			}
+		})
 	}
 }

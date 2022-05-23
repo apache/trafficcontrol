@@ -84,7 +84,7 @@ func (origin *TOOrigin) GetType() string {
 	return "origin"
 }
 
-func (origin *TOOrigin) Validate() error {
+func (origin *TOOrigin) Validate() (error, error) {
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 	validProtocol := validation.NewStringRule(tovalidate.IsOneOfStringICase("http", "https"), "must be http or https")
@@ -103,7 +103,7 @@ func (origin *TOOrigin) Validate() error {
 		"protocol":          validation.Validate(origin.Protocol, validation.Required, validProtocol),
 		"tenantId":          validation.Validate(origin.TenantID, validation.Min(1)),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs)), nil
 }
 
 // GetTenantID returns a pointer to the Origin's tenant ID from the Tx, whether or not the Origin exists, and any error encountered
@@ -182,8 +182,7 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 	if err != nil {
-		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, nil, tc.DBError, http.StatusInternalServerError, nil
+		return nil, nil, fmt.Errorf("received error querying for user's tenants: %w", err), http.StatusInternalServerError, nil
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "o.tenant", tenantIDs)
 

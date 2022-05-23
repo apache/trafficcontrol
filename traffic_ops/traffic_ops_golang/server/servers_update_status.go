@@ -21,6 +21,7 @@ package server
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	"github.com/lib/pq"
@@ -39,7 +40,7 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	serverUpdateStatuses, err := getServerUpdateStatus(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
+	serverUpdateStatuses, err, _ := getServerUpdateStatus(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -55,7 +56,7 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatusV40, error) {
+func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatusV40, error, error) {
 
 	updateStatuses := []tc.ServerUpdateStatusV40{}
 
@@ -86,7 +87,7 @@ UNION ALL
  * ancestor topology node found by topology_ancestors.
  */
 ), server_topology_ancestors AS (
-SELECT s.id, 
+SELECT s.id,
 	s.cachegroup,
 	s.cdn_id,
 	s.config_update_time > s.config_apply_time AS upd_pending,
@@ -99,7 +100,7 @@ SELECT s.id,
 	JOIN status ON status.id = s.status
 	WHERE status.name = ANY($1::TEXT[])
 ), parentservers AS (
-SELECT ps.id, 
+SELECT ps.id,
 	ps.cachegroup,
 	ps.cdn_id,
 	ps.config_update_time > ps.config_apply_time AS upd_pending,
@@ -160,7 +161,7 @@ ORDER BY s.id
 	rows, err := tx.Query(selectQuery, pq.Array(cacheStatusesToCheck), tc.UseRevalPendingParameterName, tc.GlobalConfigFileName, pq.Array(cacheGroupTypes), hostName)
 	if err != nil {
 		log.Errorf("could not execute query: %s\n", err)
-		return nil, tc.DBError
+		return nil, nil, fmt.Errorf("could not execute query: %w", err)
 	}
 	defer log.Close(rows, "getServerUpdateStatus(): unable to close db connection")
 
@@ -168,10 +169,9 @@ ORDER BY s.id
 		var us tc.ServerUpdateStatusV40
 		var serverType string
 		if err := rows.Scan(&us.HostId, &us.HostName, &serverType, &us.RevalPending, &us.UseRevalPending, &us.UpdatePending, &us.Status, &us.ParentPending, &us.ParentRevalPending, &us.ConfigUpdateTime, &us.ConfigApplyTime, &us.RevalidateUpdateTime, &us.RevalidateApplyTime); err != nil {
-			log.Errorf("could not scan server update status: %s\n", err)
-			return nil, tc.DBError
+			return nil, nil, fmt.Errorf("could not scan server update status: %w", err)
 		}
 		updateStatuses = append(updateStatuses, us)
 	}
-	return updateStatuses, nil
+	return updateStatuses, nil, nil
 }

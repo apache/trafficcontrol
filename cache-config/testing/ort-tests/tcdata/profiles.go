@@ -22,27 +22,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// CreateBadProfiles ensures that profiles can't be created with bad values
-func (r *TCData) CreateBadProfiles(t *testing.T) {
-
-	// blank profile
-	prs := []tc.Profile{
-		tc.Profile{Type: "", Name: "", Description: "", CDNID: 0},
-		tc.Profile{Type: "ATS_PROFILE", Name: "badprofile", Description: "description", CDNID: 0},
-		tc.Profile{Type: "ATS_PROFILE", Name: "badprofile", Description: "", CDNID: 1},
-		tc.Profile{Type: "ATS_PROFILE", Name: "", Description: "description", CDNID: 1},
-		tc.Profile{Type: "", Name: "badprofile", Description: "description", CDNID: 1},
-	}
-
-	for _, pr := range prs {
-		resp, _, err := TOSession.CreateProfile(pr)
-
-		if err == nil {
-			t.Errorf("Creating bad profile %+v succeeded, response: %+v", pr, resp)
-		}
-	}
-}
-
 func (r *TCData) CreateTestProfiles(t *testing.T) {
 
 	for _, pr := range r.TestData.Profiles {

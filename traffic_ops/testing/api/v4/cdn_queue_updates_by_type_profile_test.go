@@ -175,7 +175,7 @@ func QueueUpdatesByProfile(t *testing.T) {
 
 	// Get all the servers for the same CDN and profile as that of the first server
 	opts.QueryParameters.Set("cdn", strconv.Itoa(cdns.Response[0].ID))
-	opts.QueryParameters.Set("profileId", strconv.Itoa(profiles.Response[0].ID))
+	opts.QueryParameters.Set("profileName", profiles.Response[0].Name)
 	serverIDMap := make(map[int]bool, 0)
 	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {

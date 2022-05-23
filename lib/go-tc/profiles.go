@@ -34,6 +34,32 @@ import (
 	"github.com/lib/pq"
 )
 
+// These are the valid values for the Type property of a Profile. No other
+// values will be accepted, and these are not configurable.
+const (
+	CacheServerProfileType     = "ATS_PROFILE"
+	DeliveryServiceProfileType = "DS_PROFILE"
+	ElasticSearchProfileType   = "ES_PROFILE"
+	GroveProfileType           = "GROVE_PROFILE"
+	InfluxdbProfileType        = "INFLUXDB_PROFILE"
+	KafkaProfileType           = "KAFKA_PROFILE"
+	LogstashProfileType        = "LOGSTASH_PROFILE"
+	OriginProfileType          = "ORG_PROFILE"
+	// RiakProfileType is the type of a Profile used on the legacy RiakKV system
+	// which used to be used as a back-end for Traffic Vault.
+	//
+	// Deprecated: Support for Riak as a Traffic Vault back-end is being dropped
+	// in the near future. Profiles of type UnknownProfileType should be used on
+	// PostgreSQL database servers instead.
+	RiakProfileType           = "RIAK_PROFILE"
+	SplunkProfileType         = "SPLUNK_PROFILE"
+	TrafficMonitorProfileType = "TM_PROFILE"
+	TrafficPortalProfileType  = "TP_PROFILE"
+	TrafficRouterProfileType  = "TR_PROFILE"
+	TrafficStatsProfileType   = "TS_PROFILE"
+	UnkownProfileType         = "UNK_PROFILE"
+)
+
 // ProfilesResponse is a list of profiles returned by GET requests.
 type ProfilesResponse struct {
 	Response []Profile `json:"response"`
@@ -190,7 +216,7 @@ func (profileImport *ProfileImportRequest) Validate(tx *sql.Tx) error {
 			log.Errorf("%v: %v", errString, err.Error())
 			errs = append(errs, errors.New(errString))
 		} else if ok {
-			errs = append(errs, fmt.Errorf("A profile with the name \"%v\" already exists", *profile.Name))
+			errs = append(errs, fmt.Errorf("a profile with the name \"%s\" already exists", *profile.Name))
 		}
 	}
 

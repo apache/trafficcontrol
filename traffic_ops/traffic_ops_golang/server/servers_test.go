@@ -575,7 +575,7 @@ func TestV3Validations(t *testing.T) {
 
 	tx := db.MustBegin().Tx
 
-	_, err = validateV3(&testServer, tx)
+	_, err, _ = validateV3(&testServer, tx)
 	if err != nil {
 		t.Errorf("Unexpected error validating test server: %v", err)
 	}
@@ -587,7 +587,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(&testServer, tx)
+	_, err, _ = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no interfaces to be invalid")
 	} else {
@@ -601,7 +601,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(&testServer, tx)
+	_, err, _ = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with nil interfaces to be invalid")
 	} else {
@@ -618,7 +618,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(&testServer, tx)
+	_, err, _ = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server an MTU < 1280 to be invalid")
 	} else {
@@ -634,7 +634,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(&testServer, tx)
+	_, err, _ = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no IP addresses to be invalid")
 	} else {
@@ -649,7 +649,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(&testServer, tx)
+	_, err, _ = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with nil IP addresses to be invalid")
 	} else {
@@ -670,7 +670,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(&testServer, tx)
+	_, err, _ = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no service addresses to be invalid")
 	} else {
@@ -684,7 +684,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(&testServer, tx)
+	_, err, _ = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with too many interfaces with service addresses to be invalid")
 	} else {
@@ -704,7 +704,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(&testServer, tx)
+	_, err, _ = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no service addresses to be invalid")
 	} else {

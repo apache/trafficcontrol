@@ -17,27 +17,8 @@
 
 name: 'tpv2-integration-tests'
 description: 'Runs Traffic Portalv2 Integration tests'
-inputs:
-  smtp_address:
-    description: 'Address of an SMTP server to use for the Traffic Ops API tests'
-    required: true
-  smtp_port:
-    description: 'Port of an SMTP server to use for the Traffic Ops API tests'
-    required: true
-    default: '25'
-  smtp_user:
-    description: 'The user to authenticate with for the SMTP server.'
-    required: false
-  smtp_password:
-    description: 'The user to authenticate with for the SMTP server.'
-    required: false
 runs:
   using: composite
   steps:
     - run: ${{ github.action_path }}/entrypoint.sh
       shell: bash
-      env:
-        INPUT_SMTP_USER: ${{ inputs.smtp_user }}
-        INPUT_SMTP_PORT: ${{ inputs.smtp_port }}
-        INPUT_SMTP_ADDRESS: ${{ inputs.smtp_address }}
-        INPUT_SMTP_PASSWORD: ${{ inputs.smtp_password }}

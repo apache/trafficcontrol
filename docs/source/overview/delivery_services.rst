@@ -295,7 +295,7 @@ Geo Limit Redirect URL
 If `Geo Limit`_ is being used with this Delivery Service, this is optionally a URL to which clients will be redirected when Traffic Router determines that they are not in a geographic zone that permits their access to the Delivery Service content. This changes the response from Traffic Router from ``503 Service Unavailable`` to ``302 Found`` with a provided location that will be this URL. There is no restriction on the provided URL; it may even be the path to a resource served by this Delivery Service. In fact, this field need not even be a full URL, it can be a relative path. Both of these cases are handled specially by Traffic Router.
 
 - If the provided URL is a resource served by the Delivery Service (e.g. if the client requests ``http://cdn.dsXMLID.somedomain.example.com/index.html`` but are denied access by `Geo Limit`_ and the Geo Limit Redirect URL is something like ``http://cdn.dsXMLID.somedomain.example.com/help.php``), Traffic Router will find an appropriate :term:`Edge-tier cache server` and redirect the client, ignoring Geo Limit restrictions *for this request only*.
-- If the provided "URL" is actually a relative path, it will be considered *relative to the requested Delivery Service :abbr:`FQDN (Fully Qualified Domain Name)`*. This means that e.g. if the client requests ``http://cdn.dsXMLID.somedomain.example.com/index.html`` but are denied access by `Geo Limit`_ and the Geo Limit Redirect URL is something like ``/help.php``, Traffic Router will find an appropriate :term:`Edge-tier cache server` and redirect the client to it as though they had requested ``http://cdn.dsXMLID.somedomain.example.com/help.php``, ignoring `Geo Limit`_ restrictions *for this request only*.
+- If the provided "URL" is actually a relative path, it will be considered *relative to the requested Delivery Service* :abbr:`FQDN (Fully Qualified Domain Name)`. This means that e.g. if the client requests ``http://cdn.dsXMLID.somedomain.example.com/index.html`` but are denied access by `Geo Limit`_ and the Geo Limit Redirect URL is something like ``/help.php``, Traffic Router will find an appropriate :term:`Edge-tier cache server` and redirect the client to it as though they had requested ``http://cdn.dsXMLID.somedomain.example.com/help.php``, ignoring `Geo Limit`_ restrictions *for this request only*.
 
 .. table:: Aliases
 
@@ -996,6 +996,10 @@ The following :term:`Parameters` must have the :ref:`Config File <parameter-conf
 	.. impl-detail:: This :term:`Parameter` does not affect the contents of ``parent.config``, but instead either ``ssl_server_name.yaml`` in :abbr:`ATS (Apache Traffic Server)` 8 or ``sni.yaml`` in :abbr:`ATS (Apache Traffic Server)` 9. It has the ``parent.config`` :ref:`parameter-config-file` value for consistency.
 
 	.. caution:: The actual permitted TLS versions are the union of those laid out in this :term:`Parameter` and those configured as the `TLS Versions`_ property of the Delivery Service.
+
+- ``use_peering`` - on a Deliver Service :term:`Profile`, if this exists and is ``true``, the ``strategy ring_mode`` will be set to ``peering_ring`` for large library DNS support.
+
+	.. impl-detail:: This :term:`Parameter` does not affect the contents of ``parent.config``, but instead ``strategies.yaml`` in :abbr:`ATS (Apache Traffic Server)` 9. It has the ``parent.config`` :ref:`parameter-config-file` value for consistency.
 
 	.. deprecated:: ATCv6.2
 		In :ref:`to-api` version 4 (unstable at the time of this writing), TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.

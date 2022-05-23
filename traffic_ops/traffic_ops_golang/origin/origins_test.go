@@ -186,7 +186,8 @@ func TestValidate(t *testing.T) {
 		FQDN:              nil,
 		Protocol:          nil,
 	}}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
+	err, _ := c.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'deliveryServiceId' is required`),
@@ -218,7 +219,7 @@ func TestValidate(t *testing.T) {
 		Protocol:          &pro,
 		LastUpdated:       &lu,
 	}}
-	err := c.Validate()
+	err, _ = c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)
 	}
@@ -323,7 +324,8 @@ func TestValidate(t *testing.T) {
 				c.IP6Address = &tc.Str
 				value = tc.Str
 			}
-			errStr := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
+			err, _ = c.Validate()
+			errStr := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 			if !reflect.DeepEqual(util.JoinErrsStr(tc.ExpectedErrors), errStr) {
 				t.Errorf("given: '%v', expected %s, got %s", value, tc.ExpectedErrors, errStr)
 			}

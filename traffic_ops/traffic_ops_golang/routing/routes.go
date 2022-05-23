@@ -134,8 +134,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		// CDNI integration
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `OC/FCI/advertisement/?$`, Handler: cdni.GetCapabilities, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729077},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `OC/CI/configuration/?$`, Handler: cdni.PutConfiguration, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729078},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `OC/CI/configuration/{host}?$`, Handler: cdni.PutHostConfiguration, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729079},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `OC/CI/configuration/request/{id}/{approved}?$`, Handler: cdni.PutConfigurationResponse, RequiredPrivLevel: auth.PrivLevelAdmin, RequiredPermissions: []string{"CDNI-CAPACITY:ADMIN"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729080},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `OC/CI/configuration/{host}$`, Handler: cdni.PutHostConfiguration, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729079},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `OC/CI/configuration/request/{id}/{approved}$`, Handler: cdni.PutConfigurationResponse, RequiredPrivLevel: auth.PrivLevelAdmin, RequiredPermissions: []string{"CDNI-ADMIN:READ", "CDNI-ADMIN:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729080},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `OC/CI/configuration/requests/?$`, Handler: cdni.GetRequests, RequiredPrivLevel: auth.PrivLevelAdmin, RequiredPermissions: []string{"CDNI-ADMIN:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729081},
 
 		// SSL Keys
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `sslkey_expirations/?$`, Handler: deliveryservice.GetSSlKeyExpirationInformation, RequiredPrivLevel: auth.PrivLevelAdmin, RequiredPermissions: []string{"SSL-KEY-EXPIRATION:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 41357729075},
@@ -247,7 +248,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `users/?$`, Handler: user.Create, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"USER:CREATE", "USER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4762448163},
 
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `user/current/?$`, Handler: user.Current, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 46107016143},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `user/current/?$`, Handler: user.ReplaceCurrent, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 4203},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `user/current/?$`, Handler: user.ReplaceCurrentV4, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 4203},
 
 		//Parameter: CRUD
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `parameters/?$`, Handler: api.ReadHandler(&parameter.TOParameter{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"PARAMETER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 42125542923},
@@ -309,9 +310,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `servercheck/extensions$`, Handler: extensions.Create, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER-CHECK:CREATE", "SERVER-CHECK:READ", "SERVER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4804985993},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `servercheck/extensions$`, Handler: extensions.Get, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER-CHECK:READ", "SERVER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4834985993},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodDelete, Path: `servercheck/extensions/{id}$`, Handler: extensions.Delete, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER-CHECK:DELETE", "SERVER-CHECK:READ", "SERVER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4804982993},
-
-		//Server Details
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `servers/details/?$`, Handler: server.GetDetailParamHandler, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER:READ", "DELIVERY-SERVICE:READ", "CDN:READ", "PHYSICAL-LOCATION:READ", "CACHE-GROUP:READ", "TYPE:READ", "PROFILE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 42612647143},
 
 		//Server status
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `servers/{id}/status$`, Handler: server.UpdateStatusHandler, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "STATUS:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4766638513},

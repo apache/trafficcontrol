@@ -119,7 +119,7 @@ func (param *TOParameter) GetType() string {
 }
 
 // Validate fulfills the api.Validator interface
-func (param TOParameter) Validate() error {
+func (param TOParameter) Validate() (error, error) {
 	// Test
 	// - Secure Flag is always set to either 1/0
 	// - Admin rights only
@@ -133,7 +133,7 @@ func (param TOParameter) Validate() error {
 		errs[atscfg.ParentConfigFileName+" "+atscfg.ParentConfigCacheParamWeight] = validation.Validate(*param.Value, tovalidate.StringIsValidFloat())
 	}
 
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (pa *TOParameter) Create() (error, error, int) {

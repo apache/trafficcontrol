@@ -6,7 +6,8 @@
 		"target": "es5",
 		"types": [
 			"node",
-			"nightwatch"
+			"nightwatch",
+			"mocha"
 		],
 		"rootDirs": ["./page_objects", "./tests", "./globals"]
 	}

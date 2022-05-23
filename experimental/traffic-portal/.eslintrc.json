@@ -177,6 +177,12 @@
 						"ignoreParameters": true
 					}
 				],
+				"@typescript-eslint/no-invalid-this": [
+					"error",
+					{
+						"capIsConstructor": false
+					}
+				],
 				"@typescript-eslint/no-invalid-void-type": "error",
 				"@typescript-eslint/no-misused-new": "error",
 				"@typescript-eslint/no-misused-promises": "error",
@@ -308,12 +314,7 @@
 				"no-else-return": "error",
 				"no-empty": "error",
 				"no-extra-bind": "error",
-				"no-invalid-this": [
-					"error",
-					{
-						"capIsConstructor": false
-					}
-				],
+				"no-invalid-this": "off",
 				"no-multiple-empty-lines": [
 					"error",
 					{

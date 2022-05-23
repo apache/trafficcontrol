@@ -121,15 +121,15 @@ func (ten *TOTenant) SetKeys(keys map[string]interface{}) {
 	ten.ID = &i
 }
 
-// Validate fulfills the api.Validator interface
-func (ten TOTenant) Validate() error {
+// Validate fulfills the api.Validator interface.
+func (ten TOTenant) Validate() (error, error) {
 	errs := validation.Errors{
 		"name":       validation.Validate(ten.Name, validation.Required),
 		"active":     validation.Validate(ten.Active), // only validate it's boolean
 		"parentId":   validation.Validate(ten.ParentID, validation.Required, validation.Min(1)),
 		"parentName": nil,
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (ten *TOTenant) Create() (error, error, int) { return api.GenericCreate(ten) }

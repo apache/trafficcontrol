@@ -81,16 +81,7 @@ func makeCacheDotConfigEdge(
 			warnings = append(warnings, "servers had server with nil id, skipping!")
 			continue
 		}
-		if len(sv.ProfileNames) != len(server.ProfileNames) {
-			continue
-		}
-		profilesTheSame := true
-		for i, _ := range server.ProfileNames {
-			if sv.ProfileNames[i] != server.ProfileNames[i] {
-				profilesTheSame = false
-			}
-		}
-		if !profilesTheSame {
+		if !ServerProfilesMatch(server, &sv) {
 			continue
 		}
 		profileServerIDsMap[*sv.ID] = struct{}{}

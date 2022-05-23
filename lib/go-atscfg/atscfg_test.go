@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -107,6 +108,133 @@ func TestGetATSMajorVersionFromATSVersion(t *testing.T) {
 		if actual, err := getATSMajorVersionFromATSVersion(input); err == nil {
 			t.Errorf("input %v expected: error, actual: nil error '%v'", input, actual)
 		}
+	}
+}
+
+func TestLayerProfiles(t *testing.T) {
+	profileNames := []string{
+		"FOO",
+		"BAR",
+		"BAZ",
+	}
+
+	allParams := []tc.Parameter{
+		{
+			ConfigFile: "cfg_a",
+			ID:         1000,
+			Name:       "param_a",
+			Profiles:   json.RawMessage(`["FOO"]`),
+			Value:      "alpha",
+		},
+		{
+			ConfigFile: "cfg_a",
+			ID:         1000,
+			Name:       "param_a",
+			Profiles:   json.RawMessage(`["BAR"]`),
+			Value:      "beta",
+		},
+		{
+			ConfigFile: "cfg_b",
+			ID:         1000,
+			Name:       "param_a",
+			Profiles:   json.RawMessage(`["BAR"]`),
+			Value:      "gamma",
+		},
+		{
+			ConfigFile: "cfg_c",
+			ID:         1000,
+			Name:       "param_c",
+			Profiles:   json.RawMessage(`["BAZ"]`),
+			Value:      "epsilon",
+		},
+		{
+			ConfigFile: "cfg_c",
+			ID:         1000,
+			Name:       "param_c",
+			Profiles:   json.RawMessage(`["BAR"]`),
+			Value:      "delta",
+		},
+		{
+			ConfigFile: "cfg_a",
+			ID:         1000,
+			Name:       "param_b",
+			Profiles:   json.RawMessage(`["BAR"]`),
+			Value:      "zeta",
+		},
+		{
+			ConfigFile: "cfg_d",
+			ID:         1000,
+			Name:       "param_d",
+			Profiles:   json.RawMessage(`["BAR"]`),
+			Value:      "eta",
+		},
+		{
+			ConfigFile: "cfg_d",
+			ID:         1000,
+			Name:       "param_d",
+			Profiles:   json.RawMessage(`["BAZ"]`),
+			Value:      "theta",
+		},
+		{
+			ConfigFile: "cfg_d",
+			ID:         1000,
+			Name:       "param_d",
+			Profiles:   json.RawMessage(`["FOO"]`),
+			Value:      "iota",
+		},
+	}
+
+	// per the params, on the layered profiles "FOO,BAR,BAZ" (in that order):
+	// (1) beta in BAR should override alpha FOO,
+	//    because they share the ConfigFile+Name key and BAR is later in the layering
+	// (2) gamma should be added, but not override
+	//    because the key is ConfigFile+Name, which isn't on any previous profile
+	// (3) epsilon in BAZ should override delta in BAR
+	//    because they share the ConfigFile+Name key and BAZ is later in the layering
+	//    - this tests the parameters being in a different order than (1)
+	// (4) zeta should be added, but not override
+	//    because the key is ConfigFile+Name, which isn't on any previous profile
+	//    - this tests the name matching but not config file, reverse of (2).
+	// (5) theta in BAZ should override eta and iota in FOO and BAR
+	//    because they share the ConfigFile+Name key and BAZ is last in the layering
+	//    - this tests multiple overrides
+
+	layeredParams, err := LayerProfiles(profileNames, allParams)
+	if err != nil {
+		t.Fatalf("expected LayerProfiles nil error, actual: %+v", err)
+	}
+
+	vals := map[string]struct{}{}
+	for _, param := range layeredParams {
+		vals[param.Value] = struct{}{}
+	}
+
+	if _, ok := vals["alpha"]; ok {
+		t.Errorf("expected: param 'beta' to override 'alpha', actual: alpha in layered parameters")
+	}
+	if _, ok := vals["beta"]; !ok {
+		t.Errorf("expected: param 'beta' to override 'alpha', actual: beta not in layered parameters")
+	}
+	if _, ok := vals["gamma"]; !ok {
+		t.Errorf("expected: param 'gamma' with no ConfigFile+Name in another profile to be in layered parameters, actual: gamma not in layered parameters")
+	}
+	if _, ok := vals["delta"]; ok {
+		t.Errorf("expected: param 'epsilon' to override 'delta' in prior profile, actual: delta in layered parameters")
+	}
+	if _, ok := vals["epsilon"]; !ok {
+		t.Errorf("expected: param 'epsilon' to override 'delta' in prior profile, actual: epsilon not in layered parameters")
+	}
+	if _, ok := vals["zeta"]; !ok {
+		t.Errorf("expected: param 'zeta' with no ConfigFile+Name in another profile to be in layered parameters, actual: zeta not in layered parameters")
+	}
+	if _, ok := vals["theta"]; !ok {
+		t.Errorf("expected: param 'theta' to override 'eta' and 'iota' in prior profile, actual: theta not in layered parameters")
+	}
+	if _, ok := vals["eta"]; ok {
+		t.Errorf("expected: param 'theta' to override 'eta' and 'iota' in prior profile, actual: eta in layered parameters")
+	}
+	if _, ok := vals["iota"]; ok {
+		t.Errorf("expected: param 'theta' to override 'eta' and 'iota' in prior profile, actual: iota in layered parameters")
 	}
 }
 

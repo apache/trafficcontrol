@@ -11,42 +11,42 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<tp-header title="{{deliveryservice.displayName}}"></tp-header>
-
 <main>
-	<form name="timespan" (ngSubmit)="newDateRange()" ngNativeValidate>
-		<div>
-			<mat-form-field>
-				<mat-label>From</mat-label>
-				<input matInput [formControl]="fromDate" type="date" title="From (date)" name="fromdate"/>
-			</mat-form-field>
-			<mat-form-field>
-				<mat-label>At</mat-label>
-				<input matInput [formControl]="fromTime" type="time" title="From (time)" name="fromtime" value="00:00">
-			</mat-form-field>
-		</div>
-		<div>
-			<mat-form-field>
-				<mat-label>To</mat-label>
-				<input matInput [formControl]="toDate" type="date" title="To (date)" name="todate"/>
-			</mat-form-field>
-			<mat-form-field>
-				<mat-label>At</mat-label>
-				<input matInput [formControl]="toTime" type="time" title="To (time)" name="totime">
-			</mat-form-field>
-		</div>
-		<button mat-raised-button>Refresh</button>
-	</form>
-	<mat-divider></mat-divider>
-	<canvas linechart chartTitle="Bandwidth of Cache Tiers" [chartDataSets]="bandwidthData" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
-		Your browser does not support canvases or Javascript. Normally, this would be a graph of bandwidth data.
-	</canvas>
-	<mat-divider></mat-divider>
-	 <canvas linechart chartTitle="Transactions at the Edge Tier" [chartDataSets]="tpsChartData" chartYAxisLabel="Transactions Per Second" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
-		Your browser does not support canvases or Javascript. Normally, this would be a graph of transaction data.
-	</canvas>
-	<a mat-fab id="invalidate" routerLink="/core/deliveryservice/{{deliveryservice.id}}/invalidation-jobs" title="invalidate content" aria-label="invalidate content">
-		<!-- <img src="assets/invalidate.svg" title="Invalidate Content"> -->
-		<fa-icon [icon]="invalidateIcon"></fa-icon>
-	</a>
+	<mat-card>
+		<form name="timespan" (ngSubmit)="newDateRange()" ngNativeValidate>
+			<div>
+				<mat-form-field>
+					<mat-label>From</mat-label>
+					<input matInput [formControl]="fromDate" type="date" title="From (date)" name="fromdate"/>
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>At</mat-label>
+					<input matInput [formControl]="fromTime" type="time" title="From (time)" name="fromtime" value="00:00">
+				</mat-form-field>
+			</div>
+			<div>
+				<mat-form-field>
+					<mat-label>To</mat-label>
+					<input matInput [formControl]="toDate" type="date" title="To (date)" name="todate"/>
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>At</mat-label>
+					<input matInput [formControl]="toTime" type="time" title="To (time)" name="totime">
+				</mat-form-field>
+			</div>
+			<button name="timespanRefresh" mat-raised-button>Refresh</button>
+		</form>
+		<mat-divider></mat-divider>
+		<canvas linechart chartTitle="Bandwidth of Cache Tiers" id="bandwidthData" [chartDataSets]="bandwidthData" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
+			Your browser does not support canvases or Javascript. Normally, this would be a graph of bandwidth data.
+		</canvas>
+		<mat-divider></mat-divider>
+		 <canvas linechart chartTitle="Transactions at the Edge Tier" id="tpsChartData" [chartDataSets]="tpsChartData" chartYAxisLabel="Transactions Per Second" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
+			Your browser does not support canvases or Javascript. Normally, this would be a graph of transaction data.
+		</canvas>
+		<a mat-fab id="invalidate" routerLink="/core/deliveryservice/{{deliveryservice.id}}/invalidation-jobs" title="invalidate content" aria-label="invalidate content">
+			<!-- <img src="assets/invalidate.svg" title="Invalidate Content"> -->
+			<fa-icon [icon]="invalidateIcon"></fa-icon>
+		</a>
+	</mat-card>
 </main>

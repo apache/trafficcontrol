@@ -134,8 +134,8 @@ func TestInterfaces(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
-	p := TOPhysLocation{}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(p.Validate())))
+	err, _ := (&TOPhysLocation{}).Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 	expected := util.JoinErrsStr(test.SortErrors([]error{
 		errors.New("'state' cannot be blank"),
 		errors.New("'zip' cannot be blank"),

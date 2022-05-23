@@ -1,7 +1,7 @@
 {
 	"hypnotoad": {
 		"listen": [
-			"https://not-a-real-host.test:1?cert=$PWD/localhost.crt&key=$PWD/localhost.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+			"https://not-a-real-host.test:1?cert=$GITHUB_WORKSPACE/traffic_ops/traffic_ops_golang/localhost.crt&key=$GITHUB_WORKSPACE/traffic_ops/traffic_ops_golang/localhost.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
 		],
 		"user": "trafops",
 		"group": "trafops",
@@ -35,7 +35,7 @@
 			"max_connections": 500,
 			"max_idle_connections": 30,
 			"query_timeout_seconds": 10,
-			"aes_key_location": "/aes.key"
+			"aes_key_location": "$GITHUB_WORKSPACE/aes.key"
 		},
 		"supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
 	},
@@ -59,9 +59,9 @@
 	"inactivity_timeout": 60,
 	"smtp": {
 		"enabled": true,
-		"user": "$INPUT_SMTP_USER",
-		"password": "$INPUT_SMTP_PASSWORD",
-		"address": "${INPUT_SMTP_ADDRESS}:${INPUT_SMTP_PORT}"
+		"user": "",
+		"password": "",
+		"address": "172.17.0.1:25"
 	},
 	"InfluxEnabled": false
 }

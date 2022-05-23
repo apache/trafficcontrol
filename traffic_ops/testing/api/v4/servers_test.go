@@ -42,7 +42,6 @@ func TestServers(t *testing.T) {
 		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestServers(t)
 		UpdateTestServersWithHeaders(t, header)
-		GetTestServersDetails(t)
 		GetTestServers(t)
 		GetTestServersIMSAfterChange(t, header)
 		GetTestServersQueryParameters(t)
@@ -72,11 +71,10 @@ func CUDServerWithLocks(t *testing.T) {
 
 	// Create a new user with operations level privileges
 	user1 := tc.UserV4{
-		Username:             "lock_user1",
-		RegistrationSent:     new(time.Time),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		Role:                 "operations",
+		Username:         "lock_user1",
+		RegistrationSent: new(time.Time),
+		LocalPassword:    util.StrPtr("test_pa$$word"),
+		Role:             "operations",
 	}
 	user1.Email = util.StrPtr("lockuseremail@domain.com")
 	user1.TenantID = resp.Response[0].ID
@@ -657,38 +655,6 @@ func GetTestServers(t *testing.T) {
 	}
 }
 
-func GetTestServersDetails(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, server := range testData.Servers {
-		if server.HostName == nil {
-			t.Errorf("found server with nil hostname: %+v", server)
-			continue
-		}
-		opts.QueryParameters.Set("hostName", *server.HostName)
-		resp, _, err := TOSession.GetServersDetails(opts)
-		if err != nil {
-			t.Errorf("cannot get Server Details: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if len(resp.Response) == 0 {
-			t.Fatal("no servers in response, quitting")
-		}
-		if len(resp.Response[0].ServerInterfaces) == 0 {
-			t.Fatalf("no interfaces to check, quitting")
-		}
-		if len(server.Interfaces) == 0 {
-			t.Fatalf("no interfaces to check, quitting")
-		}
-
-		// just check the first interface for noe
-		if resp.Response[0].ServerInterfaces[0].RouterHostName != server.Interfaces[0].RouterHostName {
-			t.Errorf("expected router host name to be %s, but got %s", server.Interfaces[0].RouterHostName, resp.Response[0].ServerInterfaces[0].RouterHostName)
-		}
-		if resp.Response[0].ServerInterfaces[0].RouterPortName != server.Interfaces[0].RouterPortName {
-			t.Errorf("expected router port to be %s, but got %s", server.Interfaces[0].RouterPortName, resp.Response[0].ServerInterfaces[0].RouterPortName)
-		}
-	}
-}
-
 func GetTestServersQueryParameters(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{QueryParameters: url.Values{"xmlId": []string{"ds1"}}})
 	if err != nil {
@@ -968,12 +934,12 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if len(pr.Response) != 1 {
 		t.Error("Found server with no Profile ID")
 	} else {
-		profileID := pr.Response[0].ID
-		opts.QueryParameters.Add("profileId", strconv.Itoa(profileID))
+		profileName := pr.Response[0].Name
+		opts.QueryParameters.Add("profileName", profileName)
 		if resp, _, err := TOSession.GetServers(opts); err != nil {
 			t.Errorf("Error getting servers by Profile ID: %v - alerts: %+v", err, resp.Alerts)
 		}
-		opts.QueryParameters.Del("profileId")
+		opts.QueryParameters.Del("profileName")
 	}
 
 	cgs, _, err := TOSession.GetCacheGroups(client.RequestOptions{})

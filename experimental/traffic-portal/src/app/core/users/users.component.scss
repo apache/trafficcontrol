@@ -11,36 +11,41 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import 'src/theme';
 #users {
 	width: 80%;
 	margin: auto;
 }
 
-main > div {
-	width: 50%;
-	margin: auto;
-	padding-right: 10px;
-	position: sticky;
-	top: 0;
-	z-index: 2;
-	input {
-		width: 100%;
-		margin: 15px 0;
+mat-card {
+	width: fit-content;
+	min-width: 50%;
+	margin: 1em auto;
+
+	div {
+		width: 50%;
+		margin: auto;
+		padding-right: 10px;
+		position: sticky;
+		top: 0;
+		z-index: 2;
+		input {
+			width: 100%;
+			margin: 0 0 15px;
+		}
+
 	}
 
 }
-
 // Low-res monitors
 @media(max-width: 1230px) {
-	main > div {
-		margin: auto auto auto 15%;
+	mat-card > div {
+		width: 75%;
 	}
 }
 
 // Anything less than this is probably a phone
 @media(max-width: 630px) {
-	main > div {
+	mat-card > div {
 		width: 75%;
 		margin: auto;
 		position: fixed;
@@ -54,7 +59,7 @@ main > div {
 }
 
 @media(max-width: 480px) {
-	main > div {
+	mat-card > div {
 		left: 7px;
 		width: calc(100vw - 4em);
 	}

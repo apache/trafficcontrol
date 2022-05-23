@@ -15,9 +15,9 @@
 
 /* You can add global styles to this file, and also import other style files */
 @import './theme.scss';
-
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
+@import '~@angular/material/theming';
 // Plus imports for other components in your app.
 
 // Include the common styles for Angular Material. We include this here so that you only
@@ -25,17 +25,12 @@
 // Be sure that you only ever include this mixin once!
 @include mat.core();
 
-// Define the palettes for your theme using the Material Design palettes available in palette.scss
-// (imported above). For each palette, you can optionally specify a default, lighter, and darker
-// hue. Available color palettes: https://material.io/design/color/
+// Define the default theme
 $traffic-portal-primary: mat.define-palette(mat.$blue-palette, 800);
 $traffic-portal-accent: mat.define-palette(mat.$pink-palette, 700, 600, 800);
-
-// The warn palette is optional (defaults to red).
 $traffic-portal-warn: mat.define-palette(mat.$orange-palette, 500);
-
-// Create the theme object. A theme consists of configurations for individual
-// theming systems such as "color" or "typography".
+$traffic-portal-success: mat.define-palette(mat.$teal-palette, 300);
+$traffic-portal-error: mat.define-palette(mat.$deep-orange-palette, 600);
 $traffic-portal-theme: mat.define-light-theme((
   color: (
     primary: $traffic-portal-primary,
@@ -44,9 +39,15 @@ $traffic-portal-theme: mat.define-light-theme((
   )
 ));
 
-// Include theme styles for core and each component used in your app.
-// Alternatively, you can import and @include the theme mixins for each component
-// that you are using.
+$traffic-portal-theme: set-ag-grid($traffic-portal-theme, (
+	odd-row-background-color: map-get(mat.$gray-palette,100),
+	borders: true,
+));
+$traffic-portal-theme: add-extra-colors($traffic-portal-theme, (
+	success: $traffic-portal-success,
+	error: $traffic-portal-error,
+));
+
 @include mat.all-component-themes($traffic-portal-theme);
 @include theme($traffic-portal-theme);
 
@@ -94,20 +95,8 @@ $traffic-portal-theme: mat.define-light-theme((
 }
 
 body {
-	background-color: white;
 	margin: 0;
 	overflow-x: hidden;
-}
-
-span.warning {
-	background-color: $warning;
-	color: white;
-	&::before {
-		content: " ";
-		font-family: "FontAwesome";
-		color: inherit;
-		padding: 2px 5px;
-	}
 }
 
 .mat-button-base {
@@ -124,12 +113,6 @@ h1, h2, h3, h4, h5, h6, label, legend {
 	font-family: 'Ubuntu', 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
-@import "../node_modules/ag-grid-community/src/styles/ag-grid.scss";
-@import "../node_modules/ag-grid-community/src/styles/ag-theme-alpine/sass/ag-theme-alpine-mixin.scss";
-
-.ag-theme-alpine {
-	@include ag-theme-alpine();
-}
 
 .ag-header-cell-menu-button {
 	cursor: pointer;

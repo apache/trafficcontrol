@@ -112,14 +112,14 @@ func (ssc *TOServerServerCapability) GetType() string {
 	return "server server_capability"
 }
 
-// Validate fulfills the api.Validator interface
-func (ssc TOServerServerCapability) Validate() error {
+// Validate fulfills the api.Validator interface.
+func (ssc TOServerServerCapability) Validate() (error, error) {
 	errs := validation.Errors{
 		ServerQueryParam:           validation.Validate(ssc.ServerID, validation.Required),
 		ServerCapabilityQueryParam: validation.Validate(ssc.ServerCapability, validation.Required),
 	}
 
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (ssc *TOServerServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
@@ -375,7 +375,7 @@ SELECT ARRAY(
 	SELECT dsrc.deliveryservice_id
 	FROM deliveryservices_required_capability as dsrc
 	WHERE deliveryservice_id IN (
-		SELECT deliveryservice 
+		SELECT deliveryservice
 		FROM deliveryservice_server
 		WHERE server = $1)
 	AND dsrc.required_capability = $2)`

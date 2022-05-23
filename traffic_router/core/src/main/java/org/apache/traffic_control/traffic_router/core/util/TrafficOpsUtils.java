@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TrafficOpsUtils {
+	public static final String TO_API_VERSION = "3.1";
+
 	private String username;
 	private String password;
 	private String hostname;
@@ -53,7 +55,7 @@ public class TrafficOpsUtils {
 	}
 
 	public String getAuthUrl() {
-		return getUrl("api.auth.url", "https://${toHostname}/api/2.0/user/login");
+		return getUrl("api.auth.url", "https://${toHostname}/api/"+TO_API_VERSION+"/user/login");
 	}
 
 	public String getUsername() {

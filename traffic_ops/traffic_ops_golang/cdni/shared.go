@@ -43,29 +43,24 @@ const (
 	CapabilityQuery   = `SELECT id, type, ucdn FROM cdni_capabilities WHERE type = $1 AND ucdn = $2`
 	AllFootprintQuery = `SELECT footprint_type, footprint_value::text[], capability_id FROM cdni_footprints`
 
-	totalLimitsQuery = `
-SELECT limit_type, maximum_hard, maximum_soft, ctl.telemetry_id, ctl.telemetry_metric, t.id, t.type, tm.name, ctl.capability_id 
-FROM cdni_total_limits AS ctl 
+	limitsQuery = `
+SELECT limit_id, scope_type, scope_value, limit_type, maximum_hard, maximum_soft, cl.telemetry_id, cl.telemetry_metric, t.id, t.type, tm.name, cl.capability_id 
+FROM cdni_limits AS cl 
 LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id 
 LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name`
 
-	hostLimitsQuery = `
-SELECT limit_type, maximum_hard, maximum_soft, chl.telemetry_id, chl.telemetry_metric, t.id, t.type, tm.name, host, chl.capability_id 
-FROM cdni_host_limits AS chl 
-LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id 
-LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name 
-ORDER BY host DESC`
+	InsertCapabilityUpdateQuery     = `INSERT INTO cdni_capability_updates (ucdn, data, async_status_id, request_type, host) VALUES ($1, $2, $3, $4, $5)`
+	SelectCapabilityUpdateQuery     = `SELECT ucdn, data, async_status_id, request_type, host FROM cdni_capability_updates WHERE id = $1`
+	SelectAllCapabilityUpdatesQuery = `SELECT id, ucdn, data, request_type, host FROM cdni_capability_updates`
 
-	InsertCapabilityUpdateQuery                    = `INSERT INTO cdni_capability_updates (ucdn, data, async_status_id, request_type, host) VALUES ($1, $2, $3, $4, $5)`
-	SelectCapabilityUpdateQuery                    = `SELECT ucdn, data, async_status_id, request_type, host FROM cdni_capability_updates WHERE id = $1`
-	DeleteCapabilityUpdateQuery                    = `DELETE FROM cdni_capability_updates WHERE id = $1`
-	UpdateTotalLimitsByCapabilityAndLimitTypeQuery = `UPDATE cdni_total_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3`
-	UpdateHostLimitsByCapabilityAndLimitTypeQuery  = `UPDATE cdni_host_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3 AND host = $4`
-	hostQuery                                      = `SELECT count(*) FROM cdni_host_limits WHERE host = $1`
+	DeleteCapabilityUpdateQuery               = `DELETE FROM cdni_capability_updates WHERE id = $1`
+	UpdateLimitsByCapabilityAndLimitTypeQuery = `UPDATE cdni_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3`
+	hostQuery                                 = `SELECT count(*) FROM cdni_limits WHERE $1 = ANY(scope_value)`
 
 	hostConfigLabel = "hostConfigUpdate"
 )
 
+// GetCapabilities returns the CDNi capability limits.
 func GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -127,6 +122,7 @@ func getBearerToken(r *http.Request) string {
 	return ""
 }
 
+// PutHostConfiguration adds the requested CDNi configuration update for a specific host to the queue and adds an async status.
 func PutHostConfiguration(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"host"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -204,6 +200,7 @@ func PutHostConfiguration(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 }
 
+// PutConfiguration adds the requested CDNi configuration update to the queue and adds an async status.
 func PutConfiguration(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -274,6 +271,50 @@ func PutConfiguration(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 }
 
+// GetRequests returns the CDNi configuration update requests.
+func GetRequests(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var rows *sql.Rows
+	var err error
+
+	idParam := inf.Params["id"]
+	if idParam != "" {
+		id, parseErr := strconv.Atoi(idParam)
+		if parseErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("id must be an integer"), nil)
+			return
+		}
+		rows, err = inf.Tx.Tx.Query(SelectAllCapabilityUpdatesQuery+" WHERE id = $1", id)
+	} else {
+		rows, err = inf.Tx.Tx.Query(SelectAllCapabilityUpdatesQuery)
+	}
+
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("querying for capability update requests: %w", err))
+		return
+	}
+	defer log.Close(rows, "closing capabilities update query")
+	requests := []ConfigurationUpdateRequest{}
+	for rows.Next() {
+		var request ConfigurationUpdateRequest
+		if err := rows.Scan(&request.ID, &request.UCDN, &request.Data, &request.RequestType, &request.Host); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning db rows: %w", err))
+			return
+		}
+		requests = append(requests, request)
+	}
+
+	api.WriteResp(w, r, requests)
+
+}
+
+// PutConfigurationResponse approves or denies a CDNi configuration request and updates the configuration and async status appropriately.
 func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"approved", "id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
@@ -375,10 +416,10 @@ func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				query := UpdateTotalLimitsByCapabilityAndLimitTypeQuery
+				query := UpdateLimitsByCapabilityAndLimitTypeQuery
 				queryParams := []interface{}{capLim.LimitValue, capId, capLim.LimitType}
 				if host != "" {
-					query = UpdateHostLimitsByCapabilityAndLimitTypeQuery
+					query = query + " AND $4 = ANY(scope_value)"
 					queryParams = []interface{}{capLim.LimitValue, capId, capLim.LimitType, host}
 				}
 
@@ -510,7 +551,7 @@ func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
 	}
 
 	if token.Audience() == nil || len(token.Audience()) == 0 {
-		return "", errors.New("invalid token - ucdn must be defined in audience claim")
+		return "", errors.New("invalid token - dcdn must be defined in audience claim")
 	}
 	if token.Audience()[0] != inf.Config.Cdni.DCdnId {
 		return "", errors.New("invalid token - incorrect dcdn")
@@ -554,48 +595,32 @@ func getFootprintMap(tx *sql.Tx) (map[int][]Footprint, error) {
 	return footprintMap, nil
 }
 
-func getTotalLimitsMap(tx *sql.Tx) (map[int][]TotalLimitsQueryResponse, error) {
-	tlRows, err := tx.Query(totalLimitsQuery)
+func getLimitsMap(tx *sql.Tx) (map[int][]LimitsQueryResponse, error) {
+	rows, err := tx.Query(limitsQuery)
 	if err != nil {
-		return nil, fmt.Errorf("querying total limits: %w", err)
+		return nil, fmt.Errorf("querying limits: %w", err)
 	}
 
-	defer log.Close(tlRows, "closing total capacity limits query")
-	totalLimitsMap := map[int][]TotalLimitsQueryResponse{}
-	for tlRows.Next() {
-		var totalLimit TotalLimitsQueryResponse
-		if err := tlRows.Scan(&totalLimit.LimitType, &totalLimit.MaximumHard, &totalLimit.MaximumSoft, &totalLimit.TelemetryId, &totalLimit.TelemetryMetic, &totalLimit.Id, &totalLimit.Type, &totalLimit.Name, &totalLimit.CapabilityId); err != nil {
+	defer log.Close(rows, "closing capacity limits query")
+	limitsMap := map[int][]LimitsQueryResponse{}
+	for rows.Next() {
+		var limit LimitsQueryResponse
+		var scope LimitScope
+		if err := rows.Scan(&limit.LimitId, &scope.ScopeType, pq.Array(&scope.ScopeValue), &limit.LimitType, &limit.MaximumHard, &limit.MaximumSoft, &limit.TelemetryId, &limit.TelemetryMetic, &limit.Id, &limit.Type, &limit.Name, &limit.CapabilityId); err != nil {
 			return nil, fmt.Errorf("scanning db rows: %w", err)
 		}
-
-		totalLimitsMap[totalLimit.CapabilityId] = append(totalLimitsMap[totalLimit.CapabilityId], totalLimit)
-	}
-
-	return totalLimitsMap, nil
-}
-
-func getHostLimitsMap(tx *sql.Tx) (map[int][]HostLimitsResponse, error) {
-	hlRows, err := tx.Query(hostLimitsQuery)
-	if err != nil {
-		return nil, fmt.Errorf("querying host limits: %w", err)
-	}
-
-	defer log.Close(hlRows, "closing host capacity limits query")
-	hostLimitsMap := map[int][]HostLimitsResponse{}
-	for hlRows.Next() {
-		var hostLimit HostLimitsResponse
-		if err := hlRows.Scan(&hostLimit.LimitType, &hostLimit.MaximumHard, &hostLimit.MaximumSoft, &hostLimit.TelemetryId, &hostLimit.TelemetryMetic, &hostLimit.Id, &hostLimit.Type, &hostLimit.Name, &hostLimit.Host, &hostLimit.CapabilityId); err != nil {
-			return nil, fmt.Errorf("scanning db rows: %w", err)
+		if scope.ScopeType != nil {
+			limit.Scope = &scope
 		}
 
-		hostLimitsMap[hostLimit.CapabilityId] = append(hostLimitsMap[hostLimit.CapabilityId], hostLimit)
+		limitsMap[limit.CapabilityId] = append(limitsMap[limit.CapabilityId], limit)
 	}
 
-	return hostLimitsMap, nil
+	return limitsMap, nil
 }
 
 func getTelemetriesMap(tx *sql.Tx) (map[int][]Telemetry, error) {
-	rows, err := tx.Query(`SELECT id, type, capability_id FROM cdni_telemetry`)
+	rows, err := tx.Query(`SELECT id, type, capability_id, configuration_url FROM cdni_telemetry`)
 	if err != nil {
 		return nil, errors.New("querying cdni telemetry: " + err.Error())
 	}
@@ -604,7 +629,7 @@ func getTelemetriesMap(tx *sql.Tx) (map[int][]Telemetry, error) {
 	telemetryMap := map[int][]Telemetry{}
 	for rows.Next() {
 		telemetry := Telemetry{}
-		if err := rows.Scan(&telemetry.Id, &telemetry.Type, &telemetry.CapabilityId); err != nil {
+		if err := rows.Scan(&telemetry.Id, &telemetry.Type, &telemetry.CapabilityId, &telemetry.Configuration.Url); err != nil {
 			return nil, errors.New("scanning telemetry: " + err.Error())
 		}
 
@@ -634,49 +659,58 @@ func getTelemetryMetricsMap(tx *sql.Tx) (map[string][]Metric, error) {
 	return telemetryMetricMap, nil
 }
 
+// Capabilities contains an array of CDNi capabilities.
 type Capabilities struct {
 	Capabilities []Capability `json:"capabilities"`
 }
 
+// Capability contains information about a CDNi capability.
 type Capability struct {
 	CapabilityType  SupportedCapabilities `json:"capability-type"`
 	CapabilityValue interface{}           `json:"capability-value"`
 	Footprints      []Footprint           `json:"footprints"`
 }
 
+// CapacityCapabilityValue contains the total and host capability limits.
 type CapacityCapabilityValue struct {
-	TotalLimits []Limit     `json:"total-limits"`
-	HostLimits  []HostLimit `json:"host-limits"`
-}
-
-type HostLimit struct {
-	Host   string  `json:"host"`
 	Limits []Limit `json:"limits"`
 }
 
+// Limit contains the information for a capacity limit.
 type Limit struct {
+	Id              string            `json:"id"`
+	Scope           *LimitScope       `json:"scope,omitempty"`
 	LimitType       CapacityLimitType `json:"limit-type"`
 	MaximumHard     int64             `json:"maximum-hard"`
 	MaximumSoft     int64             `json:"maximum-soft"`
 	TelemetrySource TelemetrySource   `json:"telemetry-source"`
 }
 
+// TelemetrySource contains the information for a telemetry source.
 type TelemetrySource struct {
 	Id     string `json:"id"`
 	Metric string `json:"metric"`
 }
 
+// TelemetryCapabilityValue contains an array of telemetry sources.
 type TelemetryCapabilityValue struct {
 	Sources []Telemetry `json:"sources"`
 }
 
+// Telemetry contains the information for a telemetry metric.
 type Telemetry struct {
-	Id           string              `json:"id"`
-	Type         TelemetrySourceType `json:"type"`
-	CapabilityId int                 `json:"-"`
-	Metrics      []Metric            `json:"metrics"`
+	Id            string                 `json:"id"`
+	Type          TelemetrySourceType    `json:"type"`
+	CapabilityId  int                    `json:"-"`
+	Metrics       []Metric               `json:"metrics"`
+	Configuration TelemetryConfiguration `json:"configuration"`
 }
 
+type TelemetryConfiguration struct {
+	Url string `json:"url"`
+}
+
+// Metric contains the metric information for a telemetry metric.
 type Metric struct {
 	Name            string `json:"name"`
 	TimeGranularity int    `json:"time-granularity"`
@@ -685,12 +719,14 @@ type Metric struct {
 	TelemetryId     string `json:"-"`
 }
 
+// Footprint contains the information for a footprint.
 type Footprint struct {
 	FootprintType  FootprintType `json:"footprint-type" db:"footprint_type"`
 	FootprintValue []string      `json:"footprint-value" db:"footprint_value"`
 	CapabilityId   int           `json:"-"`
 }
 
+// CapacityLimitType is a string of the capacity limit type.
 type CapacityLimitType string
 
 const (
@@ -702,6 +738,7 @@ const (
 	CacheSize                        = "cache-size"
 )
 
+// SupportedCapabilities is a string of the supported capabilities.
 type SupportedCapabilities string
 
 const (
@@ -709,6 +746,7 @@ const (
 	FciCapacityLimits                       = "FCI.CapacityLimits"
 )
 
+// SupportedGenericMetadataType is a string of the supported metadata type.
 type SupportedGenericMetadataType string
 
 const (
@@ -723,12 +761,14 @@ func (s SupportedGenericMetadataType) isValid() bool {
 	return false
 }
 
+// TelemetrySourceType is a string of the telemetry source type. Right now only "generic" is supported.
 type TelemetrySourceType string
 
 const (
 	Generic TelemetrySourceType = "generic"
 )
 
+// FootprintType is a string of the footprint type.
 type FootprintType string
 
 const (
@@ -738,32 +778,48 @@ const (
 	CountryCode               = "countrycode"
 )
 
+// GenericHostMetadata contains the generic CDNi metadata for a requested update to a specific host.
 type GenericHostMetadata struct {
 	Host         string           `json:"host"`
 	HostMetadata HostMetadataList `json:"host-metadata"`
 }
 
+// GenericRequestMetadata contains the generic CDNi metadata for a requested update.
 type GenericRequestMetadata struct {
 	Type     string          `json:"type"`
 	Metadata json.RawMessage `json:"metadata"`
 	Host     string          `json:"host,omitempty"`
 }
 
+// HostMetadataList contains CDNi metadata for a specific host.
 type HostMetadataList struct {
 	Metadata json.RawMessage `json:"metadata"`
 }
 
+// GenericMetadata contains generic CDNi metadata.
 type GenericMetadata struct {
 	Type  SupportedGenericMetadataType `json:"generic-metadata-type"`
 	Value json.RawMessage              `json:"generic-metadata-value"`
 }
 
+// CapacityRequestedLimits contains the requested capacity limits.
 type CapacityRequestedLimits struct {
 	RequestedLimits []CapacityLimit `json:"requested-limits"`
 }
 
+// CapacityLimit contains the limit information for a given footprint.
 type CapacityLimit struct {
 	LimitType  string      `json:"limit-type"`
 	LimitValue int64       `json:"limit-value"`
 	Footprints []Footprint `json:"footprints"`
+}
+
+// ConfigurationUpdateRequest contains information about a requested CDNi configuration update request.
+type ConfigurationUpdateRequest struct {
+	ID            int             `json:"id"`
+	UCDN          string          `json:"ucdn"`
+	Data          json.RawMessage `json:"data"`
+	Host          string          `json:"host"`
+	RequestType   string          `json:"requestType" db:"request_type"`
+	AsyncStatusID int             `json:"asyncStatusId" db:"async_status_id"`
 }

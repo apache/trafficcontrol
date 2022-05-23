@@ -16,18 +16,41 @@ package v4
 */
 
 import (
+	"net/http"
 	"testing"
 
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestTrafficVaultPing(t *testing.T) {
-	if includeSystemTests {
-		WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
-			_, _, err := TOSession.TrafficVaultPing(client.RequestOptions{})
-			if err != nil {
-				t.Errorf("could not ping Traffic Vault: %v", err)
-			}
-		})
+
+	if !includeSystemTests {
+		t.Skip()
 	}
+
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"OK when VALID request": {
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.TrafficVaultPing(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
+	})
 }

@@ -44,11 +44,12 @@ Request Structure
 
 Response Structure
 ------------------
-:userName:       The username for which the lock exists.
-:cdn:            The name of the CDN for which the lock exists.
-:message:        The message or reason that the user specified while acquiring the lock.
-:soft:           Whether or not this is a soft(shared) lock.
-:lastUpdated:    Time that this lock was last updated(created).
+:userName:         The username for which the lock exists.
+:cdn:              The name of the CDN for which the lock exists.
+:message:          The message or reason that the user specified while acquiring the lock.
+:soft:             Whether or not this is a soft(shared) lock.
+:sharedUserNames:  An array of the usernames that the creator of the lock has shared their lock with.
+:lastUpdated:      Time that this lock was last updated(created).
 
 .. code-block:: http
 	:caption: Response Example
@@ -62,6 +63,9 @@ Response Structure
 			"cdn": "bar",
 			"message": "acquiring lock to snap CDN",
 			"soft": true,
+			"sharedUserNames": [
+				"user1"
+			],
 			"lastUpdated": "2021-05-26T09:31:57-06"
 		}
 	]}
@@ -78,9 +82,10 @@ Allows user to acquire a lock on a CDN.
 Request Structure
 -----------------
 The request body must be a single ``CDN Lock`` object with the following keys:
-:cdn:            The name of the CDN for which the user wants to acquire a lock.
-:message:        The message or reason for the user to acquire the lock. This is an optional field.
-:soft:           Whether or not this is a soft(shared) lock. This is an optional field; ``soft`` will be set to ``true`` by default.
+:cdn:             The name of the CDN for which the user wants to acquire a lock.
+:message:         The message or reason for the user to acquire the lock. This is an optional field.
+:sharedUserNames: An array of the usernames that the creator of the lock wants to share their lock with. This is an optional field.
+:soft:            Whether or not this is a soft(shared) lock. This is an optional field; ``soft`` will be set to ``true`` by default.
 
 .. code-block:: http
 	:caption: Request Example
@@ -96,16 +101,20 @@ The request body must be a single ``CDN Lock`` object with the following keys:
 	{
 		"cdn": "bar",
 		"message": "acquiring lock to snap CDN",
+		"sharedUserNames": [
+				"user1"
+		],
 		"soft": true
 	}
 
 Response Structure
 ------------------
-:userName:       The username for which the lock was created.
-:cdn:            The name of the CDN for which the lock was created.
-:message:        The message or reason that the user specified while acquiring the lock.
-:soft:           Whether or not this is a soft(shared) lock.
-:lastUpdated:    Time that this lock was last updated(created).
+:userName:         The username for which the lock was created.
+:cdn:              The name of the CDN for which the lock was created.
+:message:          The message or reason that the user specified while acquiring the lock.
+:soft:             Whether or not this is a soft(shared) lock.
+:sharedUserNames:  An array of the usernames that the creator of the lock has shared their lock with.
+:lastUpdated:      Time that this lock was last updated(created).
 
 .. code-block:: http
 	:caption: Response Example
@@ -133,6 +142,9 @@ Response Structure
 		"cdn": "bar",
 		"message": "acquiring lock to snap CDN",
 		"soft": true,
+		"sharedUserNames": [
+			"user1"
+		],
 		"lastUpdated": "2021-05-26T10:59:10-06"
 	}}
 
@@ -196,5 +208,8 @@ Response Structure
 		"cdn": "bar",
 		"message": "acquiring lock to snap CDN",
 		"soft": true,
+		"sharedUserNames": [
+			"user1"
+		],
 		"lastUpdated": "2021-05-26T10:59:10-06"
 	}}

@@ -62,10 +62,12 @@ module.exports = {
 			desiredCapabilities: {
 				"goog:chromeOptions": {
 					args: [
-						"--headless"
+						"--headless",
+						"--window-size=1920,1080"
 					]
 				}
 			},
+			enable_fail_fast: false,
 
 			extends: "chrome"
 		},
@@ -75,6 +77,7 @@ module.exports = {
 				browserName: "chrome"
 			},
 			disable_error_log: false,
+			enable_fail_fast: true,
 			launch_url: "http://localhost:4200",
 			output_folder: "nightwatch/junit",
 			screenshots: {

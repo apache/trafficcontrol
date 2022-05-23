@@ -46,12 +46,7 @@ func getCapacities(inf *api.APIInfo, ucdn string) (Capabilities, error) {
 		return Capabilities{}, err
 	}
 
-	totalLimitsMap, err := getTotalLimitsMap(inf.Tx.Tx)
-	if err != nil {
-		return Capabilities{}, err
-	}
-
-	hostLimitsMap, err := getHostLimitsMap(inf.Tx.Tx)
+	limitsMap, err := getLimitsMap(inf.Tx.Tx)
 	if err != nil {
 		return Capabilities{}, err
 	}
@@ -64,65 +59,33 @@ func getCapacities(inf *api.APIInfo, ucdn string) (Capabilities, error) {
 		if fciCap.Footprints == nil {
 			fciCap.Footprints = []Footprint{}
 		}
-		totalLimits := totalLimitsMap[cap.Id]
-		if totalLimits == nil {
-			totalLimits = []TotalLimitsQueryResponse{}
-		}
-		hostLimits := hostLimitsMap[cap.Id]
-		if hostLimits == nil {
-			hostLimits = []HostLimitsResponse{}
+		limits := limitsMap[cap.Id]
+		if limits == nil {
+			limits = []LimitsQueryResponse{}
 		}
 
-		returnedTotalLimits := []Limit{}
-		for _, tl := range totalLimits {
+		returnedLimits := []Limit{}
+		for _, l := range limits {
 			returnedTotalLimit := Limit{
-				LimitType:   CapacityLimitType(tl.LimitType),
-				MaximumHard: tl.MaximumHard,
-				MaximumSoft: tl.MaximumSoft,
+				Id:          l.LimitId,
+				LimitType:   CapacityLimitType(l.LimitType),
+				MaximumHard: l.MaximumHard,
+				MaximumSoft: l.MaximumSoft,
 				TelemetrySource: TelemetrySource{
-					Id:     tl.TelemetryId,
-					Metric: tl.TelemetryMetic,
-				},
-			}
-			returnedTotalLimits = append(returnedTotalLimits, returnedTotalLimit)
-		}
-
-		returnedHostLimits := []HostLimit{}
-		hostToLimitMap := map[string][]Limit{}
-		for _, hl := range hostLimits {
-			limit := Limit{
-				LimitType:   CapacityLimitType(hl.LimitType),
-				MaximumHard: hl.MaximumHard,
-				MaximumSoft: hl.MaximumSoft,
-				TelemetrySource: TelemetrySource{
-					Id:     hl.TelemetryId,
-					Metric: hl.TelemetryMetic,
+					Id:     l.TelemetryId,
+					Metric: l.TelemetryMetic,
 				},
 			}
 
-			if val, ok := hostToLimitMap[hl.Host]; ok {
-				val = append(val, limit)
-				hostToLimitMap[hl.Host] = val
-			} else {
-				hlList := []Limit{}
-				hlList = append(hlList, limit)
-				hostToLimitMap[hl.Host] = hlList
-			}
-		}
+			returnedTotalLimit.Scope = l.Scope
 
-		for h, l := range hostToLimitMap {
-			returnedHostLimit := HostLimit{
-				Host:   h,
-				Limits: l,
-			}
-			returnedHostLimits = append(returnedHostLimits, returnedHostLimit)
+			returnedLimits = append(returnedLimits, returnedTotalLimit)
 		}
 
 		fciCap.CapabilityType = FciCapacityLimits
 		fciCap.CapabilityValue = []CapacityCapabilityValue{
 			{
-				TotalLimits: returnedTotalLimits,
-				HostLimits:  returnedHostLimits,
+				Limits: returnedLimits,
 			},
 		}
 
@@ -132,25 +95,31 @@ func getCapacities(inf *api.APIInfo, ucdn string) (Capabilities, error) {
 	return fciCaps, nil
 }
 
+// CapabilityQueryResponse contains data about the capability query.
 type CapabilityQueryResponse struct {
 	Id   int    `json:"id" db:"id"`
 	Type string `json:"type" db:"type"`
 	UCdn string `json:"ucdn" db:"ucdn"`
 }
 
-type TotalLimitsQueryResponse struct {
-	LimitType      string `json:"limit_type" db:"limit_type"`
-	MaximumHard    int64  `json:"maximum_hard" db:"maximum_hard"`
-	MaximumSoft    int64  `json:"maximum_soft" db:"maximum_soft"`
-	TelemetryId    string `json:"telemetry_id" db:"telemetry_id"`
-	TelemetryMetic string `json:"telemetry_metric" db:"telemetry_metric"`
-	UCdn           string `json:"ucdn" db:"ucdn"`
-	Id             string `json:"id" db:"id"`
-	Type           string `json:"type" db:"type"`
-	Name           string `json:"name" db:"name"`
-	CapabilityId   int    `json:"-"`
+// LimitsQueryResponse contains information about the limits query.
+type LimitsQueryResponse struct {
+	Scope          *LimitScope `json:"scope,omitempty"`
+	LimitId        string      `json:"limitId" db:"limit_id"`
+	LimitType      string      `json:"limitType" db:"limit_type"`
+	MaximumHard    int64       `json:"maximum_hard" db:"maximum_hard"`
+	MaximumSoft    int64       `json:"maximum_soft" db:"maximum_soft"`
+	TelemetryId    string      `json:"telemetry_id" db:"telemetry_id"`
+	TelemetryMetic string      `json:"telemetry_metric" db:"telemetry_metric"`
+	UCdn           string      `json:"ucdn" db:"ucdn"`
+	Id             string      `json:"id" db:"id"`
+	Type           string      `json:"type" db:"type"`
+	Name           string      `json:"name" db:"name"`
+	CapabilityId   int         `json:"-"`
 }
-type HostLimitsResponse struct {
-	Host string `json:"host" db:"host"`
-	TotalLimitsQueryResponse
+
+// LimitScope contains information for a specific limit.
+type LimitScope struct {
+	ScopeType  *string  `json:"type" db:"scope_type"`
+	ScopeValue []string `json:"value" db:"scope_value"`
 }

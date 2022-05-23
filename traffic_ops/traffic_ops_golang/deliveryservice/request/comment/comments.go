@@ -31,7 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 //we need a type alias to define functions on
@@ -98,12 +98,12 @@ func (comment TODeliveryServiceRequestComment) GetType() string {
 	return "deliveryservice_request_comment"
 }
 
-func (comment TODeliveryServiceRequestComment) Validate() error {
+func (comment TODeliveryServiceRequestComment) Validate() (error, error) {
 	errs := validation.Errors{
 		"deliveryServiceRequestId": validation.Validate(comment.DeliveryServiceRequestID, validation.NotNil),
 		"value":                    validation.Validate(comment.Value, validation.NotNil),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (comment *TODeliveryServiceRequestComment) Create() (error, error, int) {

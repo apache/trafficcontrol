@@ -136,7 +136,8 @@ func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	n := "not_a_valid_cdn"
 	c := TOCDN{CDNNullable: tc.CDNNullable{Name: &n}}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
+	err, _ := c.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'domainName' cannot be blank`),
@@ -151,7 +152,7 @@ func TestValidate(t *testing.T) {
 	n = "This.is.2.a-Valid---CDNNAME."
 	d := `awesome-cdn.example.net`
 	c = TOCDN{CDNNullable: tc.CDNNullable{Name: &n, DomainName: &d}}
-	err := c.Validate()
+	err, _ = c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)
 	}

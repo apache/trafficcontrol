@@ -28,6 +28,7 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -36,27 +37,32 @@ import (
 	"github.com/lib/pq"
 )
 
+// GetDetailParamHandler handles GET requests to /servers/details (the name
+// includes "Param" for legacy reasons).
+//
+// Deprecated: This endpoint has been removed from APIv4.
 func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
+	alt := "/servers"
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, &alt)
 		return
 	}
 	defer inf.Close()
 
 	hostName := inf.Params["hostName"]
 	physLocationIDStr := inf.Params["physLocationID"]
-	physLocationID := -1
+	var physLocationID int
 	if physLocationIDStr != "" {
-		err := error(nil)
+		var err error
 		physLocationID, err = strconv.Atoi(physLocationIDStr)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("physLocationID parameter is not an integer"), nil)
+			api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("physLocationID parameter is not an integer"), err, &alt)
 			return
 		}
 	}
 	if hostName == "" && physLocationIDStr == "" {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Missing required fields: 'hostname' or 'physLocationID'"), nil)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing required fields: 'hostName' or 'physLocationID'"), nil, &alt)
 		return
 	}
 	orderBy := "hostName"
@@ -65,22 +71,22 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := 1000
 	if limitStr, ok := inf.Params["limit"]; ok {
-		err := error(nil)
+		var err error
 		limit, err = strconv.Atoi(limitStr)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("limit parameter is not an integer"), nil)
+			api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("limit parameter is not an integer"), err, &alt)
 			return
 		}
 	}
 	servers, err := getDetailServers(inf.Tx.Tx, inf.User, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit, *inf.Version)
-	respVals := map[string]interface{}{
-		"orderby": orderBy,
-		"limit":   limit,
-		"size":    len(servers),
+	if err != nil {
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err, &alt)
 	}
+	var resp interface{}
+	size := len(servers)
 
 	if inf.Version.Major <= 2 {
-		v11ServerList := []tc.ServerDetailV11{}
+		v11ServerList := make([]tc.ServerDetailV11, 0, size)
 		for _, server := range servers {
 			interfaces := server.ServerInterfaces
 			routerHostName := ""
@@ -91,22 +97,25 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 				routerPortName = interfaces[0].RouterPortName
 			}
 			v11server := tc.ServerDetailV11{}
-			v11server.ServerDetail = server.ServerDetail
+			v11server.ServerDetail, err = dbhelpers.GetServerDetailFromV4(server, inf.Tx.Tx)
+			if err != nil {
+				api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to GetServerDetailFromV4: %w", err), &alt)
+				return
+			}
 			v11server.RouterHostName = &routerHostName
 			v11server.RouterPortName = &routerPortName
 			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
 			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("converting to server detail v11: %w", err), &alt)
 				return
 			}
 			v11server.LegacyInterfaceDetails = legacyInterface
 
 			v11ServerList = append(v11ServerList, v11server)
 		}
-		api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(v11ServerList, err)
-		return
+		resp = v11ServerList
 	} else if inf.Version.Major <= 3 {
-		v3ServerList := []tc.ServerDetailV30{}
+		v3ServerList := make([]tc.ServerDetailV30, 0, size)
 		for _, server := range servers {
 			v3Server := tc.ServerDetailV30{}
 			interfaces := server.ServerInterfaces
@@ -117,31 +126,51 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 				routerHostName = interfaces[0].RouterHostName
 				routerPortName = interfaces[0].RouterPortName
 			}
-			v3Server.ServerDetail = server.ServerDetail
+			v3Server.ServerDetail, err = dbhelpers.GetServerDetailFromV4(server, inf.Tx.Tx)
+			if err != nil {
+				api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to GetServerDetailFromV4: %w", err), &alt)
+				return
+			}
 			v3Server.RouterHostName = &routerHostName
 			v3Server.RouterPortName = &routerPortName
 			v3Interfaces, err := tc.V4InterfaceInfoToV3Interfaces(interfaces)
 			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v3: "+err.Error()))
+				api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("converting to server detail v3: %w", err), &alt)
 				return
 			}
 			v3Server.ServerInterfaces = &v3Interfaces
 			v3ServerList = append(v3ServerList, v3Server)
 		}
-		api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(v3ServerList, err)
+		resp = v3ServerList
+	} else {
+		api.WriteRespAlertNotFound(w, r)
 		return
 	}
-	api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(servers, err)
+
+	api.WriteRespVals(w, r, resp, map[string]interface{}{
+		"alerts":  api.CreateDeprecationAlerts(&alt).Alerts,
+		"limit":   limit,
+		"orderby": orderBy,
+		"size":    size,
+	})
 }
 
+// AddWhereClauseAndQuery adds a WHERE clause to the query given in `q` (does
+// NOT check for existing WHERE clauses or that the end of the string is the
+// proper place to put one!) that limits the query results to those with the
+// given hostname and/or Physical Location ID and, with orderByStr and limitStr
+// appended (in that order), returns the result of querying the given
+// transaction.
+// Use an empty string for the hostname to not filter by hostname, use -1 as
+// physLocationID to not filter by Physical Location.
 func AddWhereClauseAndQuery(tx *sql.Tx, q string, hostName string, physLocationID int, orderByStr string, limitStr string) (*sql.Rows, error) {
-	if hostName != "" && physLocationID != -1 {
+	if hostName != "" && physLocationID != 0 {
 		q += ` WHERE server.host_name = $1::text AND server.phys_location = $2::bigint` + orderByStr + limitStr
 		return tx.Query(q, hostName, physLocationID)
 	} else if hostName != "" {
 		q += ` WHERE server.host_name = $1::text` + orderByStr + limitStr
 		return tx.Query(q, hostName)
-	} else if physLocationID != -1 {
+	} else if physLocationID != 0 {
 		q += ` WHERE server.phys_location = $1::int` + orderByStr + limitStr
 		return tx.Query(q, physLocationID)
 	} else {
@@ -149,6 +178,40 @@ func AddWhereClauseAndQuery(tx *sql.Tx, q string, hostName string, physLocationI
 		return tx.Query(q) // Should never happen for API <1.3, which don't allow querying without hostName or physLocation
 	}
 }
+
+const dataFetchQuery = `,
+cg.name AS cachegroup,
+cdn.name AS cdn_name,
+ARRAY(select deliveryservice from deliveryservice_server where server = server.id),
+server.domain_name,
+server.guid,
+server.host_name,
+server.https_port,
+server.ilo_ip_address,
+server.ilo_ip_gateway,
+server.ilo_ip_netmask,
+server.ilo_password,
+server.ilo_username,
+(SELECT address FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_ip,
+(SELECT address FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_ip6,
+(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_gateway,
+(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_gateway6,
+(SELECT host(netmask(ip_address.address)) FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_netmask,
+(SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS interface_name,
+(SELECT mtu FROM interface WHERE server.id = interface.server AND interface.name = (SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id)) AS interface_mtu,
+server.mgmt_ip_address,
+server.mgmt_ip_gateway,
+server.mgmt_ip_netmask,
+server.offline_reason,
+pl.name as phys_location,
+(SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server_profile.server=server.id) AS profile_name,
+server.rack,
+st.name as status,
+server.tcp_port,
+t.name as server_type,
+server.xmpp_id,
+server.xmpp_passwd
+`
 
 func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV40, error) {
 	allowedOrderByCols := map[string]string{
@@ -184,40 +247,6 @@ func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physL
 		return nil, errors.New("orderBy '" + orderBy + "' not permitted")
 	}
 
-	dataFetchQuery := `,
-cg.name AS cachegroup,
-cdn.name AS cdn_name,
-ARRAY(select deliveryservice from deliveryservice_server where server = server.id),
-server.domain_name,
-server.guid,
-server.host_name,
-server.https_port,
-server.ilo_ip_address,
-server.ilo_ip_gateway,
-server.ilo_ip_netmask,
-server.ilo_password,
-server.ilo_username,
-(SELECT address FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_ip,
-(SELECT address FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_ip6,
-(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_gateway,
-(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_gateway6,
-(SELECT host(netmask(ip_address.address)) FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_netmask,
-(SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS interface_name,
-(SELECT mtu FROM interface WHERE server.id = interface.server AND interface.name = (SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id)) AS interface_mtu,
-server.mgmt_ip_address,
-server.mgmt_ip_gateway,
-server.mgmt_ip_netmask,
-server.offline_reason,
-pl.name as phys_location,
-p.name as profile,
-p.description as profile_desc,
-server.rack,
-st.name as status,
-server.tcp_port,
-t.name as server_type,
-server.xmpp_id,
-server.xmpp_passwd
-`
 	queryFormatString := `
 SELECT
 	server.id
@@ -240,43 +269,77 @@ JOIN type t ON server.type = t.id
 	}
 	idRows, err := AddWhereClauseAndQuery(tx, fmt.Sprintf(queryFormatString, ""), hostName, physLocationID, orderByStr, limitStr)
 	if err != nil {
-		return nil, errors.New("querying delivery service eligible servers: " + err.Error())
+		return nil, fmt.Errorf("querying delivery service eligible servers: %w", err)
 	}
-	defer idRows.Close()
+	defer log.Close(idRows, "getting IDs for server details names")
 	var serverIDs []int
 	for idRows.Next() {
 		var serverID *int
 		err := idRows.Scan(&serverID)
 		if err != nil {
-			return nil, errors.New("querying delivery service eligible server ids: " + err.Error())
+			return nil, fmt.Errorf("querying delivery service eligible server ids: %w", err)
 		}
 		serverIDs = append(serverIDs, *serverID)
 	}
 	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx)
 	if err != nil {
-		return nil, errors.New("unable to get server interfaces: " + err.Error())
+		return nil, fmt.Errorf("unable to get server interfaces: %w", err)
 	}
 	rows, err := AddWhereClauseAndQuery(tx, fmt.Sprintf(queryFormatString, dataFetchQuery), hostName, physLocationID, orderByStr, limitStr)
 	if err != nil {
-		return nil, errors.New("Error querying detail servers: " + err.Error())
+		return nil, fmt.Errorf("querying detail servers: %w", err)
 	}
 
-	defer rows.Close()
+	defer log.Close(rows, "getting server details data")
 	sIDs := []int{}
 	servers := []tc.ServerDetailV40{}
 
-	serviceAddress := util.StrPtr("")
-	service6Address := util.StrPtr("")
-	serviceGateway := util.StrPtr("")
-	service6Gateway := util.StrPtr("")
-	serviceNetmask := util.StrPtr("")
-	serviceInterface := util.StrPtr("")
-	serviceMtu := util.StrPtr("")
+	serviceAddress := new(string)
+	service6Address := new(string)
+	serviceGateway := new(string)
+	service6Gateway := new(string)
+	serviceNetmask := new(string)
+	serviceInterface := new(string)
+	serviceMtu := new(string)
 
 	for rows.Next() {
 		s := tc.ServerDetailV40{}
-		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
-			return nil, errors.New("Error scanning detail server: " + err.Error())
+		err = rows.Scan(
+			&s.ID,
+			&s.CacheGroup,
+			&s.CDNName,
+			pq.Array(&s.DeliveryServiceIDs),
+			&s.DomainName,
+			&s.GUID,
+			&s.HostName,
+			&s.HTTPSPort,
+			&s.ILOIPAddress,
+			&s.ILOIPGateway,
+			&s.ILOIPNetmask,
+			&s.ILOPassword,
+			&s.ILOUsername,
+			&serviceAddress,
+			&service6Address,
+			&serviceGateway,
+			&service6Gateway,
+			&serviceNetmask,
+			&serviceInterface,
+			&serviceMtu,
+			&s.MgmtIPAddress,
+			&s.MgmtIPGateway,
+			&s.MgmtIPNetmask,
+			&s.OfflineReason,
+			&s.PhysLocation,
+			pq.Array(&s.ProfileNames),
+			&s.Rack,
+			&s.Status,
+			&s.TCPPort,
+			&s.Type,
+			&s.XMPPID,
+			&s.XMPPPasswd,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scanning detail server: %w", err)
 		}
 		s.ServerInterfaces = []tc.ServerInterfaceInfoV40{}
 		if interfacesMap, ok := serversMap[*s.ID]; ok {
@@ -297,16 +360,16 @@ JOIN type t ON server.type = t.id
 
 	rows, err = tx.Query(`SELECT serverid, description, val from hwinfo where serverid = ANY($1);`, pq.Array(sIDs))
 	if err != nil {
-		return nil, errors.New("Error querying detail servers hardware info: " + err.Error())
+		return nil, fmt.Errorf("querying detail servers hardware info: %w", err)
 	}
-	defer rows.Close()
+	defer log.Close(rows, "getting hwinfo data")
 	hwInfos := map[int]map[string]string{}
 	for rows.Next() {
 		serverID := 0
 		desc := ""
 		val := ""
 		if err := rows.Scan(&serverID, &desc, &val); err != nil {
-			return nil, errors.New("Error scanning detail server hardware info: " + err.Error())
+			return nil, fmt.Errorf("scanning detail server hardware info: %w", err)
 		}
 
 		hwInfo, ok := hwInfos[serverID]

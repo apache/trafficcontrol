@@ -110,9 +110,6 @@ func TestConfigLoad(t *testing.T) {
 	if c.ShortHostnameOverride != "foobar" {
 		t.Errorf("ShortHostnameOverride - expected: foobar, actual: %s", c.ShortHostnameOverride)
 	}
-	if c.PeerOptimistic != false {
-		t.Errorf("PeerOmptimistic - expected: false, actual: %t", c.PeerOptimistic)
-	}
 	if c.PeerOptimisticQuorumMin != 3 {
 		t.Errorf("PeerOmptimisticQuorumMin - expected: 3, actual: %d", c.PeerOptimisticQuorumMin)
 	}
@@ -141,9 +138,6 @@ func TestConfigLoadDefaults(t *testing.T) {
 	c, err := LoadBytes([]byte(`{}`))
 	if err != nil {
 		t.Fatalf("loading empty config bytes - expected: no error, actual: %v", err)
-	}
-	if c.PeerOptimistic != true {
-		t.Errorf("PeerOptimistic default - expected: true, actual: %t", c.PeerOptimistic)
 	}
 	if c.StatPolling != true {
 		t.Errorf("StatPolling default - expected: true, actual: %t", c.StatPolling)

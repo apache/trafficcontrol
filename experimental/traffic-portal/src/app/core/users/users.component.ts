@@ -18,6 +18,7 @@ import { BehaviorSubject } from "rxjs";
 import { UserService } from "src/app/api";
 import type { User } from "src/app/models";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { orderBy } from "src/app/utils";
 
 /**
@@ -142,7 +143,7 @@ export class UsersComponent implements OnInit {
 			field: "tenant",
 			headerName: "Tenant",
 			hide: false,
-			valueGetter: (params: ValueGetterParams): string => `${params.data.tenant} #${params.data.tenantId}`
+			valueGetter: (params: ValueGetterParams): string => `${params.data.tenant} (#${params.data.tenantId})`
 		},
 		{
 			field: "uid",
@@ -165,7 +166,7 @@ export class UsersComponent implements OnInit {
 		}
 	];
 
-	constructor(private readonly api: UserService) {
+	constructor(private readonly api: UserService, private readonly headerSvc: TpHeaderService) {
 	}
 
 	/**
@@ -175,6 +176,7 @@ export class UsersComponent implements OnInit {
 		this.roles = new Map((await this.api.getRoles()).map(r => [r.id, r.name]));
 		this.users = orderBy(await this.api.getUsers(), "fullName");
 		this.loading = false;
+		this.headerSvc.headerTitle.next("Users");
 	}
 
 	/**

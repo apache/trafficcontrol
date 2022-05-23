@@ -321,16 +321,20 @@
     ],
     "deliveryServiceRequestComments": [
         {
-            "value": "this is comment one"
+            "value": "this is comment one",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment two"
+            "value": "this is comment two",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment three"
+            "value": "this is comment three",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment four"
+            "value": "this is comment four",
+            "xmlId": "test-ds1"
         }
     ],
     "deliveryServiceRequests": [
@@ -371,66 +375,8 @@
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",
-                "displayName": "Bad Tenant",
-                "dscp": 0,
-                "geoLimit": 0,
-                "geoProvider": 0,
-                "initialDispersion": 3,
-                "ipv6RoutingEnabled": true,
-                "logsEnabled": false,
-                "longDesc": "long desc",
-                "missLat": 0.0,
-                "missLong": 0.0,
-                "multiSiteOrigin": false,
-                "orgServerFqdn": "http://example.test",
-                "protocol": 0,
-                "qstringIgnore": 0,
-                "rangeRequestHandling": 0,
-                "regionalGeoBlocking": false,
-                "tenant": "root",
-                "type": "HTTP",
-                "xmlId": "test-ds2"
-            },
-            "status": "draft"
-        },
-        {
-            "changeType": "create",
-            "requested": {
-                "ccrDnsTtl": 30,
-                "deepCachingType": "NEVER",
-                "displayName": "Bad Test Case CDN",
-                "dscp": 0,
-                "geoLimit": 0,
-                "geoProvider": 1,
-                "infoUrl": "xxx",
-                "initialDispersion": 1,
-                "ipv6RoutingEnabled": true,
-                "logsEnabled": true,
-                "longDesc": "long desc",
-                "missLat": 0.0,
-                "missLong": 0.0,
-                "multiSiteOrigin": false,
-                "orgServerFqdn": "http://example.test",
-                "protocol": 0,
-                "qstringIgnore": 0,
-                "rangeRequestHandling": 0,
-                "regionalGeoBlocking": true,
-                "routingName": "x routing",
-                "tenant": "tenant1",
-                "type": "HTTP",
-                "xmlId": "test-ds3"
-            },
-            "status": "draft"
-        },
-        {
-            "changeType": "create",
-            "requested": {
-                "active": false,
-                "cdnName": "cdn1",
-                "ccrDnsTtl": 30,
-                "deepCachingType": "NEVER",
-                "displayName": "Testing transitions",
-                "dscp": 3,
+                "displayName": "Good Kabletown CDN",
+                "dscp": 1,
                 "geoLimit": 1,
                 "geoProvider": 1,
                 "initialDispersion": 1,
@@ -448,7 +394,7 @@
                 "routingName": "goodroute",
                 "tenant": "tenant1",
                 "type": "HTTP",
-                "xmlId": "test-transitions"
+                "xmlId": "test-deletion"
             },
             "status": "draft"
         }
@@ -5016,8 +4962,8 @@
         {
             "cachegroup": "cachegroup1",
             "cdnName": "cdn1",
-			"configUpdateTime": "2022-01-01T17:00:00-07:00",
-			"configApplyTime": "1969-12-31T17:00:00-07:00",
+            "configUpdateTime": "2022-01-01T17:00:00-07:00",
+            "configApplyTime": "1969-12-31T17:00:00-07:00",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "config-update-time",
@@ -5067,8 +5013,8 @@
         {
             "cachegroup": "cachegroup1",
             "cdnName": "cdn1",
-			"configUpdateTime": "2022-01-01T17:00:00-07:00",
-			"configApplyTime": "1969-12-31T17:00:00-07:00",
+            "configUpdateTime": "2022-01-01T17:00:00-07:00",
+            "configApplyTime": "1969-12-31T17:00:00-07:00",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "config-update-time-no-updpend",
@@ -5156,8 +5102,8 @@
             "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
-			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
-			"revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "revalUpdateTime": "2022-01-01T17:00:00-07:00",
+            "revalApplyTime": "1969-12-31T17:00:00-07:00",
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
@@ -5206,8 +5152,8 @@
             "physLocation": "Denver",
             "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
-			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
-			"revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "revalUpdateTime": "2022-01-01T17:00:00-07:00",
+            "revalApplyTime": "1969-12-31T17:00:00-07:00",
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
@@ -5218,8 +5164,8 @@
         {
             "cachegroup": "cachegroup1",
             "cdnName": "cdn1",
-			"configUpdateTime": "2022-01-01T17:00:00-07:00",
-			"configApplyTime": "1969-12-31T17:00:00-07:00",
+            "configUpdateTime": "2022-01-01T17:00:00-07:00",
+            "configApplyTime": "1969-12-31T17:00:00-07:00",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "config-reval-update-time",
@@ -5259,8 +5205,8 @@
             "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
-			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
-			"revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "revalUpdateTime": "2022-01-01T17:00:00-07:00",
+            "revalApplyTime": "1969-12-31T17:00:00-07:00",
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
@@ -5271,8 +5217,8 @@
         {
             "cachegroup": "cachegroup1",
             "cdnName": "cdn1",
-			"configUpdateTime": "2022-01-01T17:00:00-07:00",
-			"configApplyTime": "1969-12-31T17:00:00-07:00",
+            "configUpdateTime": "2022-01-01T17:00:00-07:00",
+            "configApplyTime": "1969-12-31T17:00:00-07:00",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "config-reval-update-time-only",
@@ -5311,8 +5257,8 @@
             "physLocation": "Denver",
             "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
-			"revalUpdateTime": "2022-01-01T17:00:00-07:00",
-			"revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "revalUpdateTime": "2022-01-01T17:00:00-07:00",
+            "revalApplyTime": "1969-12-31T17:00:00-07:00",
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
@@ -5503,28 +5449,8 @@
     ],
     "statuses": [
         {
-            "description": "Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches",
-            "name": "OFFLINE"
-        },
-        {
-            "description": "Edge: Puts server in CCR config file in this state, and CCR will always route traffic to it. Mid: Server will be included in parent.config files for its edges",
-            "name": "ONLINE"
-        },
-        {
-            "description": "Edge: Puts server in CCR config file in this state, and CCR will adhere to the health protocol. Mid: N/A for now",
-            "name": "REPORTED"
-        },
-        {
-            "description": "Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches",
-            "name": "ADMIN_DOWN"
-        },
-        {
             "description": "Edge: 12M will not include caches in this state in CCR config files. Mid: N/A for now",
             "name": "CCR_IGNORE"
-        },
-        {
-            "description": "Pre Production. Not active in any configuration.",
-            "name": "PRE_PROD"
         },
         {
             "name": "TEST_NULL_DESCRIPTION"
