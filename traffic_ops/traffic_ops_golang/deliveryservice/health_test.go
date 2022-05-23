@@ -118,7 +118,7 @@ func TestAddHealth(t *testing.T) {
 		Online:  0,
 		Name:    "cg2",
 	}
-	err, _, available, unAvailable := addHealth("ds1", data, 0, 0, crStates, crConfig)
+	_, available, unAvailable, err := addHealth("ds1", data, 0, 0, crStates, crConfig)
 	if err != nil {
 		t.Fatalf("expected no error while adding health of ds1, but got %v", err)
 	}
@@ -126,7 +126,7 @@ func TestAddHealth(t *testing.T) {
 		t.Errorf("expected ds1 to have 1 online and 0 offline caches, but got %d online and %d offline instead", available, unAvailable)
 	}
 	// Even though there are 2 REPORTED EDGE caches in cg2, the result should just include 1, because one of them should get filtered out because it's missing a required capability (cap2)
-	err, _, available, unAvailable = addHealth("ds2-topology", data, 0, 0, crStates, crConfig)
+	_, available, unAvailable, err = addHealth("ds2-topology", data, 0, 0, crStates, crConfig)
 	if err != nil {
 		t.Fatalf("expected no error while adding health of ds2, but got %v", err)
 	}

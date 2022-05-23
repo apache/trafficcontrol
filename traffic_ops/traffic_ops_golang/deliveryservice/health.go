@@ -103,7 +103,7 @@ func getMonitorHealth(tx *sql.Tx, ds tc.DeliveryServiceName, monitorFQDNs []stri
 			errs = append(errs, errors.New("getting CRConfig for delivery service '"+string(ds)+"' monitor '"+monitorFQDN+"': "+err.Error()))
 			continue
 		}
-		err, cgData, totalOnline, totalOffline = addHealth(ds, cgData, totalOnline, totalOffline, crStates, crConfig)
+		cgData, totalOnline, totalOffline, err = addHealth(ds, cgData, totalOnline, totalOffline, crStates, crConfig)
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -118,7 +118,7 @@ func getMonitorHealth(tx *sql.Tx, ds tc.DeliveryServiceName, monitorFQDNs []stri
 }
 
 // addHealth adds the given cache states to the given data and totals, and returns the new data and totals
-func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (error, map[tc.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64) {
+func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (map[tc.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64, error) {
 
 	var deliveryService tc.CRConfigDeliveryService
 	var ok bool
@@ -127,14 +127,14 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 	var skip bool
 
 	if deliveryService, ok = crConfig.DeliveryServices[string(ds)]; !ok {
-		return errors.New("delivery service not found in CRConfig"), map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0
+		return map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0, errors.New("delivery service not found in CRConfig")
 	}
 	if deliveryService.Topology != nil {
 		var top tc.CRConfigTopology
 		topology = *deliveryService.Topology
 		if topology != "" {
 			if top, ok = crConfig.Topologies[topology]; !ok {
-				return fmt.Errorf("CRConfig topologies does not contain DS topology: %s", topology), map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0
+				return map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0, fmt.Errorf("CRConfig topologies does not contain DS topology: %s", topology)
 			}
 			for _, n := range top.Nodes {
 				cacheGroupNameMap[n] = true
@@ -189,5 +189,5 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 		}
 		data[tc.CacheGroupName(*cache.CacheGroup)] = cgHealth
 	}
-	return nil, data, totalOnline, totalOffline
+	return data, totalOnline, totalOffline, nil
 }
