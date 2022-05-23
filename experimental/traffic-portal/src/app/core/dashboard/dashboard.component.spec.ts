@@ -16,6 +16,7 @@ import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/t
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
+import {ReplaySubject} from "rxjs";
 
 import { DeliveryServiceService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
@@ -25,6 +26,7 @@ import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { DsCardComponent } from "../ds-card/ds-card.component";
 
@@ -38,6 +40,7 @@ describe("DashboardComponent", () => {
 	beforeEach(async () => {
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"],
 			{capabilities: new Set<string>()});
+		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 
 		await TestBed.configureTestingModule({
 			declarations: [
@@ -59,6 +62,7 @@ describe("DashboardComponent", () => {
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 				AlertService,
+				{ provide: TpHeaderService, useValue: headerSvc}
 			]
 		}).compileComponents();
 		const service = TestBed.inject(DeliveryServiceService);

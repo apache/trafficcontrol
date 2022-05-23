@@ -12,8 +12,9 @@
 * limitations under the License.
 */
 
-main {
-	margin: 0 15px;
+mat-card {
+	margin: 1em auto;
+	width: fit-content;
 }
 
 #edit {
@@ -24,13 +25,20 @@ main {
 
 form {
 	margin: 3em auto;
-	width: 60vw;
-	display: grid;
-	grid-template-areas:
-		"a a . z z"
-		"b b . c c"
-		"d d d d d"
-		"e e e e e"
-		"f g h i j"
-		"k l . . m";
+
+	mat-card-content {
+		display: grid;
+		grid-template-areas:
+			"a a . z z"
+			"b b . c c"
+			"d d d d d"
+			"e e e e e"
+			"f g h i j";
+		grid-column-gap: 5px;
+	}
+	mat-card-actions {
+		display: grid;
+		margin-bottom: 0;
+		grid-template-areas: "k l . . . m";
+	}
 }

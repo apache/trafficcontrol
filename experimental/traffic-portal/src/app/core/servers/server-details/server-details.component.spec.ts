@@ -15,6 +15,10 @@
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatInputModule} from "@angular/material/input";
+import {MatSelectModule} from "@angular/material/select";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 import { faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
 
@@ -39,6 +43,10 @@ describe("ServerDetailsComponent", () => {
 				]),
 				FormsModule,
 				ReactiveFormsModule,
+				MatSelectModule,
+				MatFormFieldModule,
+				MatInputModule,
+				BrowserAnimationsModule,
 				APITestingModule
 			],
 		}).compileComponents();
@@ -117,7 +125,6 @@ describe("ServerDetailsComponent", () => {
 		tick();
 		expect(component.isNew).toBeFalse();
 		expect(component.server.id).toBeDefined();
-		expect(component.title).toContain("Server #");
 	}));
 
 	it("opens the 'change status' dialog", () => {

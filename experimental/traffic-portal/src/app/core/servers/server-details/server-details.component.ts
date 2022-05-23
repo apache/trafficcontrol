@@ -20,6 +20,7 @@ import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } fro
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
 import { ServerService } from "src/app/api/server.service";
 import { CacheGroup, CDN, DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { IP, IP_WITH_CIDR } from "src/app/utils";
 
 /**
@@ -52,16 +53,6 @@ export class ServerDetailsComponent implements OnInit {
 	 * Controls whether or not the "change status" dialog is open
 	 */
 	public changeStatusDialogOpen = false;
-
-	/**
-	 * The page title.
-	 */
-	public get title(): string {
-		if (this.isNew) {
-			return "New Server";
-		}
-		return `Server #${this.server.id}`;
-	}
 
 	/**
 	 * Tracks whether ILO details should be hidden.
@@ -141,7 +132,8 @@ export class ServerDetailsComponent implements OnInit {
 		private readonly cdnService: CDNService,
 		private readonly profileService: ProfileService,
 		private readonly typeService: TypeService,
-		private readonly physlocService: PhysicalLocationService
+		private readonly physlocService: PhysicalLocationService,
+		private readonly headerSvc: TpHeaderService
 	) {
 		this.server = DUMMY_SERVER;
 	}
@@ -200,6 +192,7 @@ export class ServerDetailsComponent implements OnInit {
 			this.serverService.getServers(Number(ID)).then(
 				s => {
 					this.server = s;
+					this.headerSvc.headerTitle.next(`Server #${this.server.id}`);
 				}
 			).catch(
 				e => {
@@ -218,6 +211,7 @@ export class ServerDetailsComponent implements OnInit {
 				mtu: null,
 				name: "",
 			}];
+			this.headerSvc.headerTitle.next("New Server");
 		}
 	}
 

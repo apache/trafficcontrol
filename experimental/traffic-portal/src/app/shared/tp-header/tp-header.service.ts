@@ -11,32 +11,22 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-main {
-	width: 80%;
-	margin: 1em auto 0;
-}
+import { Injectable } from "@angular/core";
+import {ReplaySubject} from "rxjs";
 
-hr {
-	margin: 5vh 0;
-}
+/**
+ *
+ */
+@Injectable({
+	providedIn: "root"
+})
+export class TpHeaderService {
+	public readonly headerTitle: ReplaySubject<string>;
+	public readonly headerHidden: ReplaySubject<boolean>;
 
-form {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	justify-items: center;
-	margin-bottom: 16px;
-
-	button {
-		margin-top: 15px;
-		grid-column: 1 / span 2;
-	}
-}
-
-#invalidate {
-	right: 5px;
-	position: fixed;
-	bottom: 5px;
-	img {
-		height: 2em;
+	constructor() {
+		this.headerTitle = new ReplaySubject(1);
+		this.headerHidden = new ReplaySubject(1);
+		this.headerHidden.next(false);
 	}
 }

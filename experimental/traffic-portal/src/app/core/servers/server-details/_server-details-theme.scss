@@ -1,0 +1,50 @@
+/*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+@use '@angular/material' as mat;
+@use "sass:map";
+
+@mixin server-details-theme($color) {
+	$primary: map.get($color, primary);
+	$accent: map.get($color, accent);
+	$error: map.get($color, error);
+	$background: map.get($color, background);
+	$foreground: map.get($color, foreground);
+	tp-server-details form fieldset {
+		color: mat.get-color-from-palette($foreground, text);
+		background-color: mat.get-color-from-palette($background, background);
+
+		legend {
+			background-color: mat.get-color-from-palette($background, card);
+		}
+
+		button {
+			&.add-button {
+				background-color: mat.get-color-from-palette($accent);
+				border-color: mat.get-color-from-palette($primary, lighter);
+
+				&:hover {
+					background-color: mat.get-color-from-palette($primary, 900);
+				}
+			}
+
+			&.remove-button {
+				background-color: mat.get-color-from-palette($error);
+
+				&:hover {
+					background-color: mat.get-color-from-palette($error, 900);
+				}
+			}
+		}
+	}
+}

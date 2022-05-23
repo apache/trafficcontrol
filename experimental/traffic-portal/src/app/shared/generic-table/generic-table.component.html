@@ -12,27 +12,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <div class="extra-actions">
-	<button type="button" title="select all rows" (click)="selectAll()">Select All</button>
-	<button type="button" title="de-select all rows" (click)="selectAll(true)">De-Select All</button>
-	<button type="button" (click)="download()" title="save as CSV"><fa-icon [icon]="downloadIcon"></fa-icon></button>
+	<button mat-flat-button color="accent" type="button" title="select all rows" (click)="selectAll()">Select All</button>
+	<button mat-flat-button color="accent" type="button" title="de-select all rows" (click)="selectAll(true)">De-Select All</button>
+	<button mat-flat-button color="accent" type="button" (click)="download()" title="save as CSV"><fa-icon [icon]="downloadIcon"></fa-icon></button>
 	<div class="toggle-columns" role="group" title="Select Table Columns">
-		<button type="button" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" (click)="toggleMenu($event)">
+		<button mat-flat-button color="accent" [matMenuTriggerFor]="menu">
 			<fa-icon [icon]="columnsIcon"></fa-icon>&nbsp;
 			<fa-icon [icon]="caretIcon" class="caret" [ngClass]="{'rotate': showMenu}"></fa-icon>
 		</button>
-		<menu class="column-settings" *ngIf="showMenu" (click)="$event.stopPropagation()">
-			<li role="menuitem" *ngFor="let c of columns; orderBy:'colDef.headerName'">
-				<div class="checkbox">
-					<label><input name="column-{{c.getColDef().headerName}}" type="checkbox" [checked]="c.isVisible()" (click)="toggleVisibility(c.getColId())">{{c.getColDef().headerName}}</label>
-				</div>
-			</li>
-		</menu>
+		<mat-menu #menu="matMenu">
+			<button mat-menu-item *ngFor="let c of columns; orderBy:'colDef.headerName'" (click)="toggleVisibility($event, c.getColId())">
+				<mat-checkbox [checked]="c.isVisible()" (click)="$event.preventDefault()" [name]="c.getColDef().headerName">
+					{{c.getColDef().headerName}}
+				</mat-checkbox>
+			</button>
+		</mat-menu>
 	</div>
 </div>
 <ag-grid-angular
 	[rowData]="data"
 	[columnDefs]="cols"
-	class="ag-theme-alpine"
+	class="ag-theme-material"
 	[frameworkComponents]="components"
 	[gridOptions]="gridOptions"
 	(gridReady)="setAPI($event)"

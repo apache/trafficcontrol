@@ -11,10 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input } from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -24,16 +26,32 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 	styleUrls: ["./tp-header.component.scss"],
 	templateUrl: "./tp-header.component.html"
 })
-export class TpHeaderComponent {
+export class TpHeaderComponent implements OnInit {
 
 	/**
 	 * The title to be used in the header.
 	 *
 	 * If not given, defaults to "Traffic Portal".
 	 */
-	@Input() public title?: string;
+	public title = "";
 
-	constructor(private readonly auth: CurrentUserService, private readonly api: UserService) {
+	public hidden = false;
+
+	/**
+	 * Angular lifecycle hook
+	 */
+	public ngOnInit(): void {
+		this.headerSvc.headerTitle.subscribe(title => {
+			this.title = title;
+		});
+
+		this.headerSvc.headerHidden.subscribe(hidden => {
+			this.hidden = hidden;
+		});
+	}
+
+	constructor(private readonly auth: CurrentUserService, private readonly api: UserService,
+		public readonly themeSvc: ThemeManagerService, private readonly headerSvc: TpHeaderService) {
 	}
 
 	/**
