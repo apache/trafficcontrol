@@ -1545,7 +1545,7 @@
             "serverNames": ["test-ds-server-assignments"]
         },
         {
-            "xmlId": "ds1",
+            "xmlId": "ds3",
             "serverNames": ["atlanta-edge-14"]
         }
     ],

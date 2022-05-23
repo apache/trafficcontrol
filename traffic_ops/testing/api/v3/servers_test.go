@@ -17,7 +17,6 @@ package v3
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -458,7 +457,6 @@ func GetServerId(t *testing.T, hostName string) func() int {
 	return func() int {
 		params := url.Values{}
 		params.Set("hostName", hostName)
-		fmt.Println(hostName)
 		serversResp, _, err := TOSession.GetServersWithHdr(&params, nil)
 		assert.RequireNoError(t, err, "Get Servers Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(serversResp.Response), "Expected response object length 1, but got %d", len(serversResp.Response))
@@ -528,7 +526,7 @@ func UpdateTestServerStatusLastUpdated(t *testing.T) {
 
 func UpdateDSGetServerDSID(t *testing.T) {
 	const hostName = "atlanta-edge-14"
-	const xmlId = "ds1"
+	const xmlId = "ds3"
 	var topology = "mso-topology"
 	var firstHeaderRewrite = "first header rewrite"
 	var innerHeaderRewrite = "inner header rewrite"

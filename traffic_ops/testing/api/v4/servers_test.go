@@ -596,7 +596,7 @@ func UpdateTestServerStatusLastUpdated(t *testing.T) {
 
 func UpdateDSGetServerDSID(t *testing.T) {
 	const hostName = "atlanta-edge-14"
-	const xmlId = "ds1"
+	const xmlId = "ds3"
 	var topology = "mso-topology"
 	var firstHeaderRewrite = "first header rewrite"
 	var innerHeaderRewrite = "inner header rewrite"
