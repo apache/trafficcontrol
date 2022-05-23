@@ -248,7 +248,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `users/?$`, Handler: user.Create, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"USER:CREATE", "USER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4762448163},
 
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `user/current/?$`, Handler: user.Current, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 46107016143},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `user/current/?$`, Handler: user.ReplaceCurrent, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 4203},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `user/current/?$`, Handler: user.ReplaceCurrentV4, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 4203},
 
 		//Parameter: CRUD
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `parameters/?$`, Handler: api.ReadHandler(&parameter.TOParameter{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"PARAMETER:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 42125542923},

@@ -65,11 +65,10 @@ func CUDProfileWithLocks(t *testing.T) {
 
 	// Create a new user with operations level privileges
 	user1 := tc.UserV4{
-		Username:             "lock_user1",
-		RegistrationSent:     new(time.Time),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		Role:                 "operations",
+		Username:         "lock_user1",
+		RegistrationSent: new(time.Time),
+		LocalPassword:    util.StrPtr("test_pa$$word"),
+		Role:             "operations",
 	}
 	user1.Email = util.StrPtr("lockuseremail@domain.com")
 	user1.TenantID = resp.Response[0].ID
