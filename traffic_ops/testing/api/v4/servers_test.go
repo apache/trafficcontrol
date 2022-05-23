@@ -83,7 +83,7 @@ func TestServers(t *testing.T) {
 				},
 				"OK when VALID PROFILENAME parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"profileName": {strconv.Itoa(GetProfileId(t, "EDGE1"))}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"profileName": {"EDGE1"}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 				"OK when VALID STATUS parameter": {
