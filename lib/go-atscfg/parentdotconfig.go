@@ -535,6 +535,13 @@ func makeParentDotConfigData(
 					warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(text.Port)+"! : "+err.Error())
 				}
 				text.GoDirect = true
+
+				text.Parents = []*ParentAbstractionServiceParent{&ParentAbstractionServiceParent{
+					FQDN:   text.DestDomain,
+					Port:   text.Port,
+					Weight: 1.0,
+				}}
+
 				// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
 
 			} else {
