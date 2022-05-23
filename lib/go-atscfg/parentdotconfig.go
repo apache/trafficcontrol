@@ -1018,6 +1018,10 @@ func getTopologyParentConfigLine(
 	// txt += getParentRetryStr(serverPlacement.IsLastCacheTier, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
 	// txt += "\n"
 
+	if dsParams.UsePeering {
+		txt.SecondaryMode = ParentAbstractionServiceParentSecondaryModePeering
+	}
+
 	return txt, warnings, nil
 }
 
