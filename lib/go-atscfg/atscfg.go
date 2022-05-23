@@ -46,6 +46,7 @@ type DeliveryServiceID int
 type ProfileID int
 type ServerID int
 
+type ProfileName string
 type TopologyName string
 type CacheGroupType string
 type ServerCapability string
