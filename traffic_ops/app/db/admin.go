@@ -413,7 +413,7 @@ func runMigrations() {
 	}
 	if upErr := migrateInstance.Up(); errors.Is(upErr, migrate.ErrNoChange) {
 		if !migratedFromGoose {
-			println(upErr.Error())
+			fmt.Fprintln(os.Stderr, upErr.Error())
 		}
 	} else if upErr != nil {
 		die("Error running migrate up: " + upErr.Error())
