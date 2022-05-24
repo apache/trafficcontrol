@@ -452,7 +452,7 @@ func getDBVersion() {
 	if dbVersionDirty {
 		fmt.Printf(" (dirty)")
 	}
-	println()
+	fmt.Println()
 }
 
 func seed() {
