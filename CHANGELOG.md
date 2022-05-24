@@ -76,6 +76,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Adds updates to the trafficcontrol-health-client to, use new ATS Host status formats, detect and use proper
   traffic_ctl commands, and adds new markup-poll-threshold config.
 - Traffic Monitor now defaults to 100 historical "CRConfig" Snapshots stored internally if not specified in configuration (previous default was 20,000)
+- [#4351](https://github.com/apache/trafficcontrol/issues/4351) Updated message to an informative one when deleting a delivery service.
 
 ## [6.1.0] - 2022-01-18
 ### Added
