@@ -449,7 +449,11 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 			errHandler(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		successHandler(w, r, obj.GetType()+" was deleted.")
+		if obj.GetType() == "ds" {
+			successHandler(w, r, obj.GetType()+" was deleted. Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect.")
+		} else {
+			successHandler(w, r, obj.GetType()+" was deleted.")
+		}
 	}
 }
 
