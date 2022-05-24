@@ -246,7 +246,7 @@ func createDB() {
 	}
 	createDBCmd := exec.Command("createdb", "-h", hostIP, "-p", hostPort, "-U", dbSuperUser, "-e", "--owner", dbUser, dbName)
 	out, err = createDBCmd.CombinedOutput()
-	fmt.Printf("%s", out)
+	fmt.Println(string(out))
 	if err != nil {
 		die("Can't create db " + dbName + ": " + err.Error())
 	}
@@ -256,7 +256,7 @@ func dropDB() {
 	fmt.Println("Dropping database: " + dbName)
 	cmd := exec.Command("dropdb", "-h", hostIP, "-p", hostPort, "-U", dbSuperUser, "-e", "--if-exists", dbName)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
+	fmt.Println(string(out))
 	if err != nil {
 		die("Can't drop db " + dbName + ": " + err.Error())
 	}
@@ -318,7 +318,7 @@ func createUser() {
 	}
 	createUserCmd := exec.Command("psql", "-h", hostIP, "-p", hostPort, "-U", dbSuperUser, "-etAc", "CREATE USER "+dbUser+" WITH LOGIN ENCRYPTED PASSWORD '"+dbPassword+"'")
 	out, err = createUserCmd.CombinedOutput()
-	fmt.Printf("%s", out)
+	fmt.Println(string(out))
 	if err != nil {
 		die("Can't create user " + dbUser)
 	}
@@ -327,7 +327,7 @@ func createUser() {
 func dropUser() {
 	cmd := exec.Command("dropuser", "-h", hostIP, "-p", hostPort, "-U", dbSuperUser, "-i", "-e", dbUser)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
+	fmt.Println(string(out))
 	if err != nil {
 		die("Can't drop user " + dbUser)
 	}
@@ -336,7 +336,7 @@ func dropUser() {
 func showUsers() {
 	cmd := exec.Command("psql", "-h", hostIP, "-p", hostPort, "-U", dbSuperUser, "-ec", `\du`)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
+	fmt.Println(string(out))
 	if err != nil {
 		die("Can't show users")
 	}
@@ -468,7 +468,7 @@ func seed() {
 	cmd.Stdin = bytes.NewBuffer(seedsBytes)
 	cmd.Env = append(os.Environ(), "PGPASSWORD="+dbPassword)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
+	fmt.Println(string(out))
 	if err != nil {
 		die("Can't patch database w/ required data")
 	}
@@ -488,7 +488,7 @@ func loadSchema() {
 	cmd.Stdin = bytes.NewBuffer(schemaBytes)
 	cmd.Env = append(os.Environ(), "PGPASSWORD="+dbPassword)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
+	fmt.Println(string(out))
 	if err != nil {
 		die("Can't create database tables")
 	}
@@ -507,7 +507,7 @@ func patch() {
 	cmd.Stdin = bytes.NewBuffer(patchesBytes)
 	cmd.Env = append(os.Environ(), "PGPASSWORD="+dbPassword)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
+	fmt.Printf(string(out))
 	if err != nil {
 		die("Can't patch database w/ required data")
 	}
