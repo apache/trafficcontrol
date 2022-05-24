@@ -68,7 +68,7 @@ func (conf dbConfig) getEnvironmentConfig(env string) (envConfig, error) {
 	}
 }
 
-// the possible environments to use
+// the possible environments to use.
 const (
 	envDevelopment = "development"
 	envTest        = "test"
@@ -76,7 +76,7 @@ const (
 	envProduction  = "production"
 )
 
-// keys in the database config's "open" string value
+// keys in the database config's "open" string value.
 const (
 	hostKey     = "host"
 	portKey     = "port"
@@ -86,7 +86,7 @@ const (
 	sslModeKey  = "sslmode"
 )
 
-// available commands
+// available commands.
 const (
 	cmdCreateDB        = "createdb"
 	cmdDropDB          = "dropdb"
@@ -127,20 +127,20 @@ const (
 	defaultTrafficVaultSchemaPath     = defaultTrafficVaultDir + "create_tables.sql"
 )
 
-// Default connection information
+// Default connection information.
 const (
 	defaultEnvironment = envDevelopment
 	defaultDBSuperUser = "postgres"
 )
 
 const (
-	// 2021012200000000_max_request_header_bytes_default_zero.sql
+	// 2021012200000000_max_request_header_bytes_default_zero.sql.
 	lastSquashedMigrationTimestamp uint = 2021012200000000
-	// 2021012700000000_update_interfaces_multiple_routers.up.sql
+	// 2021012700000000_update_interfaces_multiple_routers.up.sql.
 	firstMigrationTimestamp uint = 2021012700000000
 )
 
-// globals that are passed in via CLI flags and used in commands
+// globals that are passed in via CLI flags and used in commands.
 var (
 	environment    string
 	trafficVault   bool
@@ -148,7 +148,7 @@ var (
 	dbVersionDirty bool
 )
 
-// globals that are parsed out of DBConfigFile and used in commands
+// globals that are parsed out of DBConfigFile and used in commands.
 var (
 	connectionString string
 	dbDriver         string
