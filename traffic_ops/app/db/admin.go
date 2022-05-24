@@ -294,8 +294,8 @@ func createMigration() {
 		if migrationFile, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644); err != nil {
 			die("Creating migration " + filename + ": " + err.Error())
 		}
-		defer log.Close(migrationFile, "Closing migration "+filename)
-		if migrationFile.Write([]byte(apacheLicense2)); err != nil {
+		defer log.Close(migrationFile, "closing migration "+filename)
+		if _, err = migrationFile.Write([]byte(apacheLicense2)); err != nil {
 			die("Writing content to migration " + filename + ": " + err.Error())
 		}
 		fmt.Printf("Created migration %s\n", filename)
@@ -364,7 +364,7 @@ func maybeMigrateFromGoose() bool {
 	if versionErr == nil {
 		return false
 	}
-	if versionErr != migrate.ErrNilVersion {
+	if !errors.Is(versionErr, migrate.ErrNilVersion) {
 		die("Error running migrate version: " + versionErr.Error())
 	}
 	if err := migrateInstance.Steps(1); err != nil {
@@ -387,16 +387,16 @@ func runFirstMigration() error {
 	}
 	firstMigration, firstMigrationName, migrationReadErr := sourceDriver.ReadUp(firstMigrationTimestamp)
 	if migrationReadErr != nil {
-		return fmt.Errorf("reading migration %s: %s", firstMigrationName, migrationReadErr.Error())
+		return fmt.Errorf("reading migration %s: %w", firstMigrationName, migrationReadErr)
 	}
 	if setDirtyVersionErr := dbDriver.SetVersion(int(firstMigrationTimestamp), true); setDirtyVersionErr != nil {
-		return fmt.Errorf("setting the dirty version: %s", setDirtyVersionErr.Error())
+		return fmt.Errorf("setting the dirty version: %w", setDirtyVersionErr)
 	}
 	if migrateErr := dbDriver.Run(firstMigration); migrateErr != nil {
-		return fmt.Errorf("running the migration: %s", migrateErr.Error())
+		return fmt.Errorf("running the migration: %w", migrateErr)
 	}
 	if setVersionErr := dbDriver.SetVersion(int(firstMigrationTimestamp), false); setVersionErr != nil {
-		return fmt.Errorf("setting the version after successfully running the migration: %s", setVersionErr.Error())
+		return fmt.Errorf("setting the version after successfully running the migration: %w", setVersionErr)
 	}
 	return nil
 }
