@@ -298,7 +298,7 @@ func createMigration() {
 		if _, err = migrationFile.Write([]byte(apacheLicense2)); err != nil {
 			die("Writing content to migration " + filename + ": " + err.Error())
 		}
-		fmt.Printf("Created migration %s\n", filename)
+		fmt.Println("Created migration ", filename)
 	}
 }
 
@@ -595,7 +595,6 @@ func collapse(o1, o2, name, def string, dest *string) {
 		die("conflicting definitions of '" + name + "' - must be specified only once\n" + usage())
 	}
 	*dest = o1
-	return
 }
 
 func main() {
