@@ -42,11 +42,11 @@ describe("DS Invalidation Jobs Spec", () => {
 		common
 			.assert.containsText("@snackbarEle", "created")
 			.click("simple-snack-bar button");
-		page.assert.visible({index: 0, selector: "li.invalidation-job"})
-			.assert.enabled({index: 0, selector: "li.invalidation-job button"})
-			.assert.enabled({index: 1, selector: "li.invalidation-job button"});
+		page.assert.visible({index: 0, selector: "div.invalidation-job"})
+			.assert.enabled({index: 0, selector: "div.invalidation-job button"})
+			.assert.enabled({index: 1, selector: "div.invalidation-job button"});
 		page
-			.click({index: 0, selector: "li.invalidation-job button"});
+			.click({index: 0, selector: "div.invalidation-job button"});
 		browser.waitForElementVisible("tp-new-invalidation-job-dialog")
 			.assert.value("input[name='startDate']", startDate.toLocaleDateString())
 			.assert.value("input[name='regexp']", "invalidateMe")
@@ -56,7 +56,7 @@ describe("DS Invalidation Jobs Spec", () => {
 			.assert.containsText("@snackbarEle", "created")
 			.click("simple-snack-bar button");
 		page
-			.click({index: 1, selector: "li.invalidation-job button"});
+			.click({index: 1, selector: "div.invalidation-job button"});
 		common
 			.assert.containsText("@snackbarEle", "was deleted");
 	});

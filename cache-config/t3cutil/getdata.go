@@ -159,16 +159,22 @@ func GetPackages(cfg TCCfg) ([]Package, error) {
 		return nil, errors.New("getting server: " + err.Error())
 	} else if len(server.ProfileNames) == 0 {
 		return nil, errors.New("getting server: nil profile")
+	} else if server.HostName == nil {
+		return nil, errors.New("getting server: nil hostName")
 	}
-	params, _, err := cfg.TOClient.GetServerProfileParameters(server.ProfileNames[0], nil)
+	allPackageParams, reqInf, err := cfg.TOClient.GetConfigFileParameters(atscfg.PackagesParamConfigFile, nil)
+	log.Infoln(toreq.RequestInfoStr(reqInf, "GetPackages.GetConfigFileParameters("+atscfg.PackagesParamConfigFile+")"))
 	if err != nil {
-		return nil, errors.New("getting server profile '" + server.ProfileNames[0] + "' parameters: " + err.Error())
+		return nil, errors.New("getting server '" + *server.HostName + "' package parameters: " + err.Error())
 	}
+
+	serverPackageParams, err := atscfg.GetServerParameters(server, allPackageParams)
+	if err != nil {
+		return nil, errors.New("calculating server '" + *server.HostName + "' package parameters: " + err.Error())
+	}
+
 	packages := []Package{}
-	for _, param := range params {
-		if param.ConfigFile != atscfg.PackagesParamConfigFile {
-			continue
-		}
+	for _, param := range serverPackageParams {
 		packages = append(packages, Package{Name: param.Name, Version: param.Value})
 	}
 	return packages, nil
@@ -198,16 +204,23 @@ func GetChkconfig(cfg TCCfg) ([]ChkConfigEntry, error) {
 		return nil, errors.New("getting server: " + err.Error())
 	} else if len(server.ProfileNames) == 0 {
 		return nil, errors.New("getting server: nil profile")
+	} else if server.HostName == nil {
+		return nil, errors.New("getting server: nil hostName")
 	}
-	params, _, err := cfg.TOClient.GetServerProfileParameters(server.ProfileNames[0], nil)
+
+	allChkconfigParams, reqInf, err := cfg.TOClient.GetConfigFileParameters(atscfg.ChkconfigParamConfigFile, nil)
+	log.Infoln(toreq.RequestInfoStr(reqInf, "GetChkconfig.GetConfigFileParameters("+atscfg.ChkconfigParamConfigFile+")"))
 	if err != nil {
-		return nil, errors.New("getting server profile '" + server.ProfileNames[0] + "' parameters: " + err.Error())
+		return nil, errors.New("getting server '" + *server.HostName + "' chkconfig parameters: " + err.Error())
 	}
+
+	serverChkconfigParams, err := atscfg.GetServerParameters(server, allChkconfigParams)
+	if err != nil {
+		return nil, errors.New("calculating server '" + *server.HostName + "' chkconfig parameters: " + err.Error())
+	}
+
 	chkconfig := []ChkConfigEntry{}
-	for _, param := range params {
-		if param.ConfigFile != atscfg.ChkconfigParamConfigFile {
-			continue
-		}
+	for _, param := range serverChkconfigParams {
 		chkconfig = append(chkconfig, ChkConfigEntry{Name: param.Name, Val: param.Value})
 	}
 	return chkconfig, nil

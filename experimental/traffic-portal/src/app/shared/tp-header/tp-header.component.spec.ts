@@ -13,11 +13,14 @@
 */
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import {MatMenuModule} from "@angular/material/menu";
 import { RouterTestingModule } from "@angular/router/testing";
+import {of, ReplaySubject} from "rxjs";
 
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { TpHeaderComponent } from "./tp-header.component";
 
@@ -27,13 +30,16 @@ describe("TpHeaderComponent", () => {
 	let logOutSpy: jasmine.Spy;
 
 	beforeEach(waitForAsync(() => {
-		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"]);
+		const mockCurrentUserService = jasmine.createSpyObj(
+			["updateCurrentUser", "hasPermission", "login", "logout"], {userChanged: of(null)});
 		logOutSpy = mockCurrentUserService.logout;
+		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 		TestBed.configureTestingModule({
 			declarations: [ TpHeaderComponent ],
-			imports: [ APITestingModule, HttpClientModule, RouterTestingModule ],
+			imports: [ APITestingModule, HttpClientModule, RouterTestingModule, MatMenuModule ],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
+				{ provide: TpHeaderService, useValue: headerSvc}
 			]
 		}).compileComponents();
 	}));

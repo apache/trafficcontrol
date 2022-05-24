@@ -996,10 +996,11 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	if version.Major >= 4 {
 		if _, ok := params["profileName"]; ok {
 			queryString = selectQuery + `JOIN server_profile sp ON s.id = sp.server`
+			countQueryString = serverCountQuery + `JOIN server_profile sp ON s.id = sp.server`
 		} else {
 			queryString = selectQuery + joinProfileV4
+			countQueryString = serverCountQuery + joinProfileV4
 		}
-		countQueryString = serverCountQuery + joinProfileV4
 	}
 
 	countQuery := countQueryString + queryAddition + where

@@ -11,67 +11,75 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<tp-header [title]="currentUser ? currentUser.username : ''"></tp-header>
+<mat-card>
+	<mat-card-content *ngIf="currentUser && !editMode">
+		<h1><span *ngIf=currentUser.fullName>{{currentUser.fullName}}, </span>{{currentUser.roleName}} user</h1>
+		<address>
+			<p *ngIf="currentUser.email || currentUser.phoneNumber"><a *ngIf=currentUser.email href="mailto:{{currentUser.email}}">{{currentUser.email}}</a><span *ngIf="currentUser.email && currentUser.phoneNumber">, </span><a *ngIf="currentUser.phoneNumber" href="tel:{{currentUser.phoneNumber}}">{{currentUser.phoneNumber}}</a></p>
+			<p *ngIf=currentUser.addressLine1>{{currentUser.addressLine1}}</p>
+			<p *ngIf=currentUser.addressLine2>{{currentUser.addressLine2}}</p>
+			<p *ngIf=currentUser.company>{{currentUser.company}}</p>
+			<p *ngIf="currentUser.city || currentUser.country || currentUser.stateOrProvince || currentUser.postalCode"><span *ngIf="currentUser.city">{{currentUser.city}}<span *ngIf="currentUser.country || currentUser.stateOrProvince || currentUser.postalCode">&nbsp;</span></span><span *ngIf="currentUser.stateOrProvince">{{currentUser.stateOrProvince}}<span *ngIf="currentUser.country || currentUser.postalCode">, </span></span><span *ngIf="currentUser.country">{{currentUser.country}}<span *ngIf="currentUser.postalCode">, </span></span><span *ngIf=currentUser.postalCode>{{currentUser.postalCode}}</span></p>
+		</address>
+		<div>
+			<h2>User Theme</h2>
+			<button mat-button type="button" (click)="themeSvc.loadTheme(theme)" *ngFor="let theme of themeSvc.themes">{{theme.name}}</button>
+		</div>
+	</mat-card-content>
 
-<main *ngIf="currentUser && !editMode">
-<h1><span *ngIf=currentUser.fullName>{{currentUser.fullName}}, </span>{{currentUser.roleName}} user</h1>
-<address>
-	<p *ngIf="currentUser.email || currentUser.phoneNumber"><a *ngIf=currentUser.email href="mailto:{{currentUser.email}}">{{currentUser.email}}</a><span *ngIf="currentUser.email && currentUser.phoneNumber">, </span><a *ngIf="currentUser.phoneNumber" href="tel:{{currentUser.phoneNumber}}">{{currentUser.phoneNumber}}</a></p>
-	<p *ngIf=currentUser.addressLine1>{{currentUser.addressLine1}}</p>
-	<p *ngIf=currentUser.addressLine2>{{currentUser.addressLine2}}</p>
-	<p *ngIf=currentUser.company>{{currentUser.company}}</p>
-	<p *ngIf="currentUser.city || currentUser.country || currentUser.stateOrProvince || currentUser.postalCode"><span *ngIf="currentUser.city">{{currentUser.city}}<span *ngIf="currentUser.country || currentUser.stateOrProvince || currentUser.postalCode">&nbsp;</span></span><span *ngIf="currentUser.stateOrProvince">{{currentUser.stateOrProvince}}<span *ngIf="currentUser.country || currentUser.postalCode">, </span></span><span *ngIf="currentUser.country">{{currentUser.country}}<span *ngIf="currentUser.postalCode">, </span></span><span *ngIf=currentUser.postalCode>{{currentUser.postalCode}}</span></p>
-</address>
-</main>
-
-<form *ngIf="editMode && editUser" ngNativeValidate (submit)="submitEdit($event)">
-	<mat-form-field style="grid-area: a-start;">
-		<mat-label>Username</mat-label>
-		<input matInput [(ngModel)]="editUser.username" name="username" type="text" required/>
-	</mat-form-field>
-	<mat-form-field style="grid-area: z;">
-		<mat-label>Full Name</mat-label>
-		<input matInput [(ngModel)]="editUser.fullName" name="fullName" type="text" required/>
-	</mat-form-field>
-	<mat-form-field style="grid-area: b;">
-		<mat-label>Email</mat-label>
-		<input matInput [(ngModel)]="editUser.email" name="email" type="email"/>
-	</mat-form-field>
-	<mat-form-field style="grid-area: c;">
-		<mat-label>Telephone</mat-label>
-		<input matInput [(ngModel)]="editUser.phoneNumber" name="phoneNumber" type="tel"/>
-	</mat-form-field>
-	<mat-form-field style="grid-area: d;">
-		<mat-label>Address Line 1</mat-label>
-		<input matInput [(ngModel)]="editUser.addressLine1" name="addressLine1" type="text"/>
-	</mat-form-field>
-	<mat-form-field style="grid-area: e;">
-		<mat-label>Address Line 2</mat-label>
-		<input matInput [(ngModel)]="editUser.addressLine2" name="addressLine2" type="text"/>
-	</mat-form-field>
-	<mat-form-field style="grid-area: f;">
-		<mat-label>Company</mat-label>
-		<input matInput [(ngModel)]="editUser.company" name="company" type="text"/>
-	</mat-form-field>
-	<mat-form-field style="grid-area: g;">
-		<mat-label>City</mat-label>
-		<input matInput [(ngModel)]="editUser.city" name="city" type="text"/>
-	</mat-form-field>
-	<mat-form-field style="grid-area: h;">
-		<mat-label>State or Province</mat-label>
-		<input matInput [(ngModel)]="editUser.stateOrProvince" name="stateOrProvince" type="text"/>
-	</mat-form-field>
-	<mat-form-field style="grid-area: i;">
-		<mat-label>Country</mat-label>
-		<input matInput [(ngModel)]="editUser.country" name="country" type="text"/>
-	</mat-form-field>
-	<mat-form-field style="grid-area: j;">
-		<mat-label>Postal Code</mat-label>
-		<input matInput [(ngModel)]="editUser.postalCode" name="postalCode" type="text"/>
-	</mat-form-field>
-	<button mat-raised-button style="grid-area: k;">Submit</button>
-	<button mat-raised-button color="accent" style="grid-area: l;" type="button" (click)="updatePassword()">Update Password</button>
-	<button type="button" mat-raised-button color="warn" (click)="cancelEdit()" style="grid-area: m;">Cancel</button>
-</form>
+	<form *ngIf="editMode && editUser" ngNativeValidate (submit)="submitEdit($event)">
+		<mat-card-content>
+			<mat-form-field style="grid-area: a-start;">
+				<mat-label>Username</mat-label>
+				<input matInput [(ngModel)]="editUser.username" name="username" type="text" required/>
+			</mat-form-field>
+			<mat-form-field style="grid-area: z;">
+				<mat-label>Full Name</mat-label>
+				<input matInput [(ngModel)]="editUser.fullName" name="fullName" type="text" required/>
+			</mat-form-field>
+			<mat-form-field style="grid-area: b;">
+				<mat-label>Email</mat-label>
+				<input matInput [(ngModel)]="editUser.email" name="email" type="email"/>
+			</mat-form-field>
+			<mat-form-field style="grid-area: c;">
+				<mat-label>Telephone</mat-label>
+				<input matInput [(ngModel)]="editUser.phoneNumber" name="phoneNumber" type="tel"/>
+			</mat-form-field>
+			<mat-form-field style="grid-area: d;">
+				<mat-label>Address Line 1</mat-label>
+				<input matInput [(ngModel)]="editUser.addressLine1" name="addressLine1" type="text"/>
+			</mat-form-field>
+			<mat-form-field style="grid-area: e;">
+				<mat-label>Address Line 2</mat-label>
+				<input matInput [(ngModel)]="editUser.addressLine2" name="addressLine2" type="text"/>
+			</mat-form-field>
+			<mat-form-field style="grid-area: f;">
+				<mat-label>Company</mat-label>
+				<input matInput [(ngModel)]="editUser.company" name="company" type="text"/>
+			</mat-form-field>
+			<mat-form-field style="grid-area: g;">
+				<mat-label>City</mat-label>
+				<input matInput [(ngModel)]="editUser.city" name="city" type="text"/>
+			</mat-form-field>
+			<mat-form-field style="grid-area: h;">
+				<mat-label>State or Province</mat-label>
+				<input matInput [(ngModel)]="editUser.stateOrProvince" name="stateOrProvince" type="text"/>
+			</mat-form-field>
+			<mat-form-field style="grid-area: i;">
+				<mat-label>Country</mat-label>
+				<input matInput [(ngModel)]="editUser.country" name="country" type="text"/>
+			</mat-form-field>
+			<mat-form-field style="grid-area: j;">
+				<mat-label>Postal Code</mat-label>
+				<input matInput [(ngModel)]="editUser.postalCode" name="postalCode" type="text"/>
+			</mat-form-field>
+		</mat-card-content>
+		<mat-card-actions>
+			<button mat-raised-button style="grid-area: k;">Submit</button>
+			<button mat-raised-button color="accent" style="grid-area: l;" type="button" (click)="updatePassword()">Update Password</button>
+			<button type="button" mat-raised-button color="warn" (click)="cancelEdit()" style="grid-area: m;">Cancel</button>
+		</mat-card-actions>
+	</form>
+</mat-card>
 
 <button mat-fab id="edit" title="Edit Profile" type="button" (click)="edit()" *ngIf="!editMode"><fa-icon [icon]="editIcon"></fa-icon></button>

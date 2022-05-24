@@ -17,13 +17,14 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import { type Observable, of } from "rxjs";
+import {type Observable, of, ReplaySubject} from "rxjs";
 
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { defaultDeliveryService, type InvalidationJob, JobType } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { CustomvalidityDirective } from "src/app/shared/validation/customvalidity.directive";
 
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
@@ -37,6 +38,7 @@ describe("InvalidationJobsComponent", () => {
 	beforeEach(async () => {
 		// mock the API
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"]);
+		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 
 		await TestBed.configureTestingModule({
 			declarations: [
@@ -58,7 +60,8 @@ describe("InvalidationJobsComponent", () => {
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 				{ provide: MatDialog, useValue: {open: (): {afterClosed: () => Observable<unknown>} => ({
 					afterClosed: () => of(true)
-				})}}
+				})}},
+				{ provide: TpHeaderService, useValue: headerSvc}
 			]
 		}).compileComponents();
 

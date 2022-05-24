@@ -45,11 +45,8 @@ func (to *Session) GetUserCurrent(opts RequestOptions) (UserCurrentResponseV4, t
 
 // UpdateCurrentUser replaces the current user data with the provided tc.UserV4 structure.
 func (to *Session) UpdateCurrentUser(u tc.UserV4, opts RequestOptions) (tc.UpdateUserResponseV4, toclientlib.ReqInf, error) {
-	user := struct {
-		User tc.UserV4 `json:"user"`
-	}{u}
 	var clientResp tc.UpdateUserResponseV4
-	reqInf, err := to.put("/user/current", opts, user, &clientResp)
+	reqInf, err := to.put("/user/current", opts, u, &clientResp)
 	return clientResp, reqInf, err
 }
 

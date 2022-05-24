@@ -197,8 +197,19 @@ func makeParentDotConfigData(
 	// parentConfigParams are the parent.config params for all profiles (needed for parents)
 	parentConfigParams := parameterWithProfilesToMap(parentConfigParamsWithProfiles)
 
+	serversWithParams := []serverWithParams{}
+	for _, sv := range servers {
+		serverParentParams, parentWarns := serverParentageParams(&sv, parentConfigParams)
+		warnings = append(warnings, parentWarns...)
+		serversWithParams = append(serversWithParams, serverWithParams{
+			Server: sv,
+			Params: serverParentParams,
+		})
+	}
+	sort.Sort(serversWithParamsSortByRank(serversWithParams))
+
 	// serverParams are the parent.config params for this particular server
-	serverParams := getServerParentConfigParams(server, profileParentConfigParams)
+	serverParams := getServerParentConfigParams(server, parentConfigParams)
 
 	parentCacheGroups := map[string]struct{}{}
 	if cacheIsTopLevel {
@@ -238,9 +249,9 @@ func makeParentDotConfigData(
 
 	nameTopologies := makeTopologyNameMap(topologies)
 
-	cgPeers := map[int]Server{}   // map[serverID]server
-	cgServers := map[int]Server{} // map[serverID]server
-	for _, sv := range servers {
+	cgPeers := map[int]serverWithParams{}   // map[serverID]server
+	cgServers := map[int]serverWithParams{} // map[serverID]server
+	for _, sv := range serversWithParams {
 		if sv.ID == nil {
 			warnings = append(warnings, "TO servers had server with missing ID, skipping!")
 			continue
@@ -307,7 +318,7 @@ func makeParentDotConfigData(
 		parentServerDSes[dss.Server][dss.DeliveryService] = struct{}{}
 	}
 
-	originServers, orgProfWarns, err := getOriginServers(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities)
+	originServers, orgProfWarns, err := getOriginServers(cgServers, parentServerDSes, dses, serverCapabilities)
 	warnings = append(warnings, orgProfWarns...)
 	if err != nil {
 		return nil, warnings, errors.New("getting origin servers and profile caches: " + err.Error())
@@ -355,7 +366,7 @@ func makeParentDotConfigData(
 		if ds.Topology != nil && *ds.Topology != "" {
 			txt, topoWarnings, err := getTopologyParentConfigLine(
 				server,
-				servers,
+				serversWithParams,
 				&ds,
 				serverParams,
 				parentConfigParams,
@@ -524,9 +535,16 @@ func makeParentDotConfigData(
 					warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(text.Port)+"! : "+err.Error())
 				}
 				text.GoDirect = true
-				// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
-			} else {
 
+				text.Parents = []*ParentAbstractionServiceParent{&ParentAbstractionServiceParent{
+					FQDN:   text.DestDomain,
+					Port:   text.Port,
+					Weight: 1.0,
+				}}
+
+				// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
+
+			} else {
 				// check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
 				// then edges will use the qstring handling value specified in the parameter for all profiles.
 
@@ -575,7 +593,6 @@ func makeParentDotConfigData(
 				text.IgnoreQueryStringInParentSelection = !*parentQStr
 				// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
 			}
-
 			parentAbstraction.Services = append(parentAbstraction.Services, text)
 		}
 	}
@@ -894,7 +911,7 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 // If the given DS is not used by the server, returns a nil ParentAbstractionService and nil error.
 func getTopologyParentConfigLine(
 	server *Server,
-	servers []Server,
+	serversWithParams []serverWithParams,
 	ds *DeliveryService,
 	serverParams map[string]string,
 	parentConfigParams []parameterWithProfilesMap, // all params with configFile parent.config
@@ -947,7 +964,7 @@ func getTopologyParentConfigLine(
 	}
 	// txt += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port()
 
-	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins, dsParams.MergeGroups)
+	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, serversWithParams, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins, dsParams.MergeGroups)
 	warnings = append(warnings, parentWarnings...)
 	if err != nil {
 		return nil, warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
@@ -1007,6 +1024,10 @@ func getTopologyParentConfigLine(
 
 	// txt += getParentRetryStr(serverPlacement.IsLastCacheTier, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
 	// txt += "\n"
+
+	if dsParams.UsePeering {
+		txt.SecondaryMode = ParentAbstractionServiceParentSecondaryModePeering
+	}
 
 	return txt, warnings, nil
 }
@@ -1262,11 +1283,11 @@ func serverParentStr(sv *Server, svParams parentServerParams) (*ParentAbstractio
 	}, nil
 }
 
-// GetTopologyParents returns the parents, secondary parents, any warnings, and any error.
+// getTopologyParents returns the parents, secondary parents, any warnings, and any error.
 func getTopologyParents(
 	server *Server,
 	ds *DeliveryService,
-	servers []Server,
+	serversWithParams []serverWithParams,
 	parentConfigParams []parameterWithProfilesMap, // all params with configFile parent.config
 	topology tc.Topology,
 	serverIsLastTier bool,
@@ -1335,17 +1356,6 @@ func getTopologyParents(
 
 	parentStrs := []*ParentAbstractionServiceParent{}
 	secondaryParentStrs := []*ParentAbstractionServiceParent{}
-
-	serversWithParams := []serverWithParams{}
-	for _, sv := range servers {
-		serverParentParams, parentWarns := serverParentageParams(&sv, parentConfigParams)
-		warnings = append(warnings, parentWarns...)
-		serversWithParams = append(serversWithParams, serverWithParams{
-			Server: sv,
-			Params: serverParentParams,
-		})
-	}
-	sort.Sort(serversWithParamsSortByRank(serversWithParams))
 
 	for _, sv := range serversWithParams {
 		if sv.ID == nil {
@@ -1622,9 +1632,8 @@ func unavailableServerRetryResponsesValid(s string) bool {
 
 // getOriginServers returns the origin servers with parameters, any warnings, and any error.
 func getOriginServers(
-	cgServers map[int]Server,
+	cgServers map[int]serverWithParams,
 	parentServerDSes map[int]map[int]struct{},
-	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
 	dses []DeliveryService,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 ) (map[OriginHost][]serverWithParams, []string, error) {
@@ -1664,16 +1673,7 @@ func getOriginServers(
 		return nil, warnings, errors.New("getting DS origins: " + err.Error())
 	}
 
-	profileParams, profParamWarns := getParentConfigProfileParams(cgServers, profileParentConfigParams)
-	warnings = append(warnings, profParamWarns...)
-
 	for _, cgSv := range cgServers {
-		parentServerParams, profileParamsHasProfile := profileParams[cgSv.ProfileNames[0]]
-		if !profileParamsHasProfile {
-			warnings = append(warnings, fmt.Sprintf("cachegroup has server %+v profile with no parameters\n", *cgSv.HostName))
-			parentServerParams = defaultParentServerParams()
-		}
-
 		if cgSv.ID == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil ID, skipping!")
 			continue
@@ -1703,7 +1703,7 @@ func getOriginServers(
 			continue
 		}
 
-		ipAddr := getServerIPAddress(&cgSv)
+		ipAddr := getServerIPAddress(&cgSv.Server)
 		if ipAddr == nil {
 			warnings = append(warnings, "getting origin servers: got server with no valid IP Address, skipping!")
 			continue
@@ -1717,75 +1717,14 @@ func getOriginServers(
 					continue
 				}
 				orgHost := OriginHost(orgURI.Host)
-				originServers[orgHost] = append(originServers[orgHost], serverWithParams{
-					Server: cgSv,
-					Params: parentServerParams,
-				})
+				originServers[orgHost] = append(originServers[orgHost], cgSv)
 			}
 		} else {
-			originServers[deliveryServicesAllParentsKey] = append(originServers[deliveryServicesAllParentsKey], serverWithParams{
-				Server: cgSv,
-				Params: parentServerParams,
-			})
+			originServers[deliveryServicesAllParentsKey] = append(originServers[deliveryServicesAllParentsKey], cgSv)
 		}
 	}
 
 	return originServers, warnings, nil
-}
-
-// GetParentConfigProfileParams returns the parent config profile params, and any warnings.
-func getParentConfigProfileParams(
-	cgServers map[int]Server,
-	profileParentConfigParams map[string]map[string]string, // map[profileName][paramName]paramVal
-) (map[string]parentServerParams, []string) {
-	warnings := []string{}
-	parentConfigServerCacheProfileParams := map[string]parentServerParams{} // map[profileName]parentServerParams
-	for _, cgServer := range cgServers {
-		if len(cgServer.ProfileNames) == 0 {
-			warnings = append(warnings, "getting parent config profile params: server has nil profiles, skipping!")
-			continue
-		}
-		serverParams, ok := parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]]
-		if !ok {
-			serverParams = defaultParentServerParams()
-		}
-		params, ok := profileParentConfigParams[cgServer.ProfileNames[0]]
-		if !ok {
-			parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]] = serverParams
-			continue
-		}
-		for name, val := range params {
-			switch name {
-			case ParentConfigCacheParamWeight:
-				// f, err := strconv.ParseFloat(param.Val, 64)
-				// if err != nil {
-				// 	warnings = append(warnings, "parent.config generation: weight param is not a float, skipping! : " + err.Error())
-				// } else {
-				// 	parentServerParams.Weight = f
-				// }
-				// TODO validate float?
-				serverParams.Weight = val
-			case ParentConfigCacheParamPort:
-				if i, err := strconv.Atoi(val); err != nil {
-					warnings = append(warnings, "port param is not an integer, skipping! : "+err.Error())
-				} else {
-					serverParams.Port = i
-				}
-			case ParentConfigCacheParamUseIP:
-				serverParams.UseIP = val == "1"
-			case ParentConfigCacheParamRank:
-				if i, err := strconv.Atoi(val); err != nil {
-					warnings = append(warnings, "rank param is not an integer, skipping! : "+err.Error())
-				} else {
-					serverParams.Rank = i
-				}
-			case ParentConfigCacheParamNotAParent:
-				serverParams.NotAParent = val != "false"
-			}
-		}
-		parentConfigServerCacheProfileParams[cgServer.ProfileNames[0]] = serverParams
-	}
-	return parentConfigServerCacheProfileParams, warnings
 }
 
 // getDSOrigins takes a map[deliveryServiceID]DeliveryService, and returns a map[DeliveryServiceID]OriginURI, any warnings, and any error.
@@ -1882,7 +1821,6 @@ func getProfileParentConfigParams(tcParentConfigParams []tc.Parameter) (map[stri
 		warnings = append(warnings, "error getting profiles from Traffic Ops Parameters, Parameters will not be considered for generation! : "+err.Error())
 		parentConfigParamsWithProfiles = []parameterWithProfiles{}
 	}
-	// parentConfigParams := parameterWithProfilesToMap(parentConfigParamsWithProfiles)
 
 	// this is an optimization, to avoid looping over all params, for every DS. Instead, we loop over all params only once, and put them in a profile map.
 	profileParentConfigParams := map[string]map[string]string{} // map[profileName][paramName]paramVal
@@ -1899,16 +1837,17 @@ func getProfileParentConfigParams(tcParentConfigParams []tc.Parameter) (map[stri
 
 // getServerParentConfigParams returns a map[name]value.
 // Intended to be called with the result of getProfileParentConfigParams.
-func getServerParentConfigParams(server *Server, profileParentConfigParams map[string]map[string]string) map[string]string {
+func getServerParentConfigParams(server *Server, allParentConfigParams []parameterWithProfilesMap) map[string]string {
 	// We only need parent.config params, don't need all the params on the server
 	serverParams := map[string]string{}
-	if len(server.ProfileNames) != 0 || server.ProfileNames[0] != "" { // TODO warn/error if false? Servers requires profiles
-		for name, val := range profileParentConfigParams[server.ProfileNames[0]] {
-			if name == ParentConfigParamQStringHandling ||
-				name == ParentConfigParamAlgorithm ||
-				name == ParentConfigParamQString {
-				serverParams[name] = val
-			}
+	serverParentConfigParams := layerProfilesFromMap(server.ProfileNames, allParentConfigParams)
+	for _, pa := range serverParentConfigParams {
+		name := pa.Name
+		val := pa.Value
+		if name == ParentConfigParamQStringHandling ||
+			name == ParentConfigParamAlgorithm ||
+			name == ParentConfigParamQString {
+			serverParams[name] = val
 		}
 	}
 	return serverParams
