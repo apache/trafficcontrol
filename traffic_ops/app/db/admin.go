@@ -394,7 +394,10 @@ func runFirstMigration() error {
 }
 
 func runMigrations() {
-	migratedFromGoose := initMigrate()
+	migratedFromGoose, migrationsShouldRun := initMigrate()
+	if !migrationsShouldRun {
+		return
+	}
 	if !TrafficVault && DBVersion == LastSquashedMigrationTimestamp && !DBVersionDirty {
 		if migrateErr := runFirstMigration(); migrateErr != nil {
 			die(fmt.Sprintf("Error migrating from DB version %d to %d: %s", LastSquashedMigrationTimestamp, FirstMigrationTimestamp, migrateErr.Error()))
@@ -679,7 +682,13 @@ func main() {
 	}
 }
 
-func initMigrate() bool {
+// initMigrate initializes Migrate and returns whether a migration from Goose to
+// Migrate was performed during said initialization and whether or not there are
+// any actual migrations to run.
+//
+// If the second return value is false, then the global "Migrate" variable IS
+// NOT SET so the caller must skip all migrations.
+func initMigrate() (bool, bool) {
 	var err error
 	ConnectionString = fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
 	if TrafficVault {
@@ -687,11 +696,11 @@ func initMigrate() bool {
 	} else {
 		Migrate, err = migrate.New("file:"+dbMigrationsDir, ConnectionString)
 	}
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		die("Starting Migrate: " + err.Error())
 	}
 	Migrate.Log = &Log{}
-	return maybeMigrateFromGoose()
+	return maybeMigrateFromGoose(), err == nil
 }
 
 // Log represents the logger
