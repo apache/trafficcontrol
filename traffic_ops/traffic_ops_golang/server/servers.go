@@ -1499,6 +1499,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	originalStatusID := *original.StatusID
 
 	var server tc.ServerV40
+	var serverV3 tc.ServerV30
+	var legacyServer tc.ServerNullableV2
 	var statusLastUpdatedTime time.Time
 	server.ID = new(int)
 	*server.ID = inf.IntParams["id"]
@@ -1524,13 +1526,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
-		if err := dbhelpers.UpdateServerProfilesForV4(*server.ID, server.ProfileNames, tx); err != nil {
-			userErr, sysErr, errCode := api.ParseDBError(err)
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-			return
-		}
 	} else if inf.Version.Major >= 3 {
-		var serverV3 tc.ServerV30
 		serverV3.ID = new(int)
 		*serverV3.ID = inf.IntParams["id"]
 		if err := json.NewDecoder(r.Body).Decode(&serverV3); err != nil {
@@ -1554,22 +1550,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, code, userErr, sysErr)
 			return
 		}
-		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.ProfileID, (original.ProfileNames)[0], tx)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
-			return
-		}
-		if len(profileName) > 1 {
-			profileName = []string{profileName[0]}
-		}
-		server, err = serverV3.UpgradeToV40(profileName)
-		if err != nil {
-			sysErr = fmt.Errorf("error upgrading valid V3 server to V4 structure: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
 	} else {
-		var legacyServer tc.ServerNullableV2
 		legacyServer.ID = new(int)
 		*legacyServer.ID = inf.IntParams["id"]
 		if err := json.NewDecoder(r.Body).Decode(&legacyServer); err != nil {
@@ -1583,20 +1564,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 				code = http.StatusInternalServerError
 			}
 			api.HandleErr(w, r, tx, code, userErr, sysErr)
-			return
-		}
-		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(legacyServer.ID, legacyServer.ProfileID, (original.ProfileNames)[0], tx)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
-			return
-		}
-		if len(profileName) > 1 {
-			profileName = []string{profileName[0]}
-		}
-		server, err = legacyServer.UpgradeToV40(profileName)
-		if err != nil {
-			sysErr = fmt.Errorf("error upgrading valid V2 server to V3 structure: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 	}
@@ -1677,6 +1644,44 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		userErr, sysErr, statusCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+
+	if inf.Version.Major >= 4 {
+		if err := dbhelpers.UpdateServerProfilesForV4(*server.ID, server.ProfileNames, tx); err != nil {
+			userErr, sysErr, errCode := api.ParseDBError(err)
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+	} else if inf.Version.Major >= 3 {
+		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.ProfileID, (original.ProfileNames)[0], tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
+			return
+		}
+		if len(profileName) > 1 {
+			profileName = []string{profileName[0]}
+		}
+		server, err = serverV3.UpgradeToV40(profileName)
+		if err != nil {
+			sysErr = fmt.Errorf("error upgrading valid V3 server to V4 structure: %v", err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+	} else {
+		profileName, err := dbhelpers.UpdateServerProfileTableForV2V3(legacyServer.ID, legacyServer.ProfileID, (original.ProfileNames)[0], tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
+			return
+		}
+		if len(profileName) > 1 {
+			profileName = []string{profileName[0]}
+		}
+		server, err = legacyServer.UpgradeToV40(profileName)
+		if err != nil {
+			sysErr = fmt.Errorf("error upgrading valid V2 server to V3 structure: %v", err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 	}
