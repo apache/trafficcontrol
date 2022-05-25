@@ -107,7 +107,8 @@ func CacheTypeFromString(s string) CacheType {
 	return CacheTypeInvalid
 }
 
-func IsCacheType(s string) bool {
+// IsValidCacheType returns true if the given string represents a valid cache type.
+func IsValidCacheType(s string) bool {
 	return CacheTypeFromString(s) != CacheTypeInvalid
 }
 

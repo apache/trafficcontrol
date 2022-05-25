@@ -59,7 +59,7 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getServerUpdateStatus(tx *sql.Tx, hostName string) ([]tc.ServerUpdateStatusV40, error, error) {
-	if serverUpdateStatusCacheIsEnabled() {
+	if serverUpdateStatusCacheIsInitialized() {
 		return getServerUpdateStatusFromCache(hostName), nil, nil
 	}
 
@@ -190,7 +190,7 @@ type serverUpdateStatuses struct {
 
 var serverUpdateStatusCache = serverUpdateStatuses{RWMutex: &sync.RWMutex{}}
 
-func serverUpdateStatusCacheIsEnabled() bool {
+func serverUpdateStatusCacheIsInitialized() bool {
 	if serverUpdateStatusCache.enabled {
 		serverUpdateStatusCache.RLock()
 		defer serverUpdateStatusCache.RUnlock()
@@ -242,7 +242,7 @@ func refreshServerUpdateStatusCache(db *sql.DB, timeout time.Duration) {
 
 type serverInfo struct {
 	id               int
-	hostname         string
+	hostName         string
 	typeName         string
 	cdnId            int
 	status           string
@@ -290,7 +290,7 @@ const getTopologyCacheGroupParentsQuery = `
 		cg_child.id,
 		ARRAY_AGG(DISTINCT cg_parent.id)
 	FROM topology_cachegroup_parents tcp
-	JOIN topology_cachegroup tc_child on tc_child.id = tcp.child
+	JOIN topology_cachegroup tc_child ON tc_child.id = tcp.child
 	JOIN cachegroup cg_child ON cg_child.name = tc_child.cachegroup
 	JOIN topology_cachegroup tc_parent ON tc_parent.id = tcp.parent
 	JOIN cachegroup cg_parent ON cg_parent.name = tc_parent.cachegroup
@@ -326,7 +326,7 @@ func getServerUpdateStatuses(db *sql.DB, timeout time.Duration) (map[string][]tc
 	defer log.Close(serverRows, "closing server rows")
 	for serverRows.Next() {
 		s := serverInfo{}
-		if err := serverRows.Scan(&s.id, &s.hostname, &s.typeName, &s.cdnId, &s.status, &s.cachegroup, &s.configUpdateTime, &s.configApplyTime, &s.revalUpdateTime, &s.revalApplyTime); err != nil {
+		if err := serverRows.Scan(&s.id, &s.hostName, &s.typeName, &s.cdnId, &s.status, &s.cachegroup, &s.configUpdateTime, &s.configApplyTime, &s.revalUpdateTime, &s.revalApplyTime); err != nil {
 			return nil, fmt.Errorf("scanning servers: %w", err)
 		}
 		serversByID[s.id] = s
@@ -337,7 +337,7 @@ func getServerUpdateStatuses(db *sql.DB, timeout time.Duration) (map[string][]tc
 			revalPendingByCDNCachegroup[s.cdnId] = make(map[int]bool)
 		}
 		status := tc.CacheStatusFromString(s.status)
-		if tc.IsCacheType(s.typeName) && (status == tc.CacheStatusOnline || status == tc.CacheStatusReported || status == tc.CacheStatusAdminDown) {
+		if tc.IsValidCacheType(s.typeName) && (status == tc.CacheStatusOnline || status == tc.CacheStatusReported || status == tc.CacheStatusAdminDown) {
 			if s.configUpdateTime.After(*s.configApplyTime) {
 				updatePendingByCDNCachegroup[s.cdnId][s.cachegroup] = true
 			}
@@ -399,7 +399,7 @@ func getServerUpdateStatuses(db *sql.DB, timeout time.Duration) (map[string][]tc
 	serverUpdateStatuses := make(map[string][]tc.ServerUpdateStatusV40, len(serversByID))
 	for serverID, server := range serversByID {
 		updateStatus := tc.ServerUpdateStatusV40{
-			HostName:             server.hostname,
+			HostName:             server.hostName,
 			UpdatePending:        server.configUpdateTime.After(*server.configApplyTime),
 			RevalPending:         server.revalUpdateTime.After(*server.revalApplyTime),
 			UseRevalPending:      useRevalPending,
@@ -412,7 +412,7 @@ func getServerUpdateStatuses(db *sql.DB, timeout time.Duration) (map[string][]tc
 			RevalidateUpdateTime: server.revalUpdateTime,
 			RevalidateApplyTime:  server.revalApplyTime,
 		}
-		serverUpdateStatuses[server.hostname] = append(serverUpdateStatuses[server.hostname], updateStatus)
+		serverUpdateStatuses[server.hostName] = append(serverUpdateStatuses[server.hostName], updateStatus)
 	}
 	return serverUpdateStatuses, nil
 }
