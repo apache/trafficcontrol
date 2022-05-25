@@ -301,7 +301,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 						function() {
 							messageModel.setMessages([
 								{ level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted.' },
-								{ level: 'info', text: 'Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect.' }
+								{ level: 'info', text: 'Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take effect.' }
 							], true);
 							locationUtils.navigateToPath('/delivery-services');
 						},

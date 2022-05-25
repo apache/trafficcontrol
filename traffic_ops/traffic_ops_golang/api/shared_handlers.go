@@ -326,7 +326,7 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 		func(w http.ResponseWriter, r *http.Request, message string) {
 			if deleter.GetType() == "ds" {
 				alerts := tc.CreateAlerts(tc.SuccessLevel, message)
-				alerts.AddNewAlert(tc.InfoLevel, "Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect.")
+				alerts.AddNewAlert(tc.InfoLevel, "Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take effect.")
 				WriteAlerts(w, r, http.StatusOK, alerts)
 			} else {
 				WriteRespAlert(w, r, tc.SuccessLevel, message)
