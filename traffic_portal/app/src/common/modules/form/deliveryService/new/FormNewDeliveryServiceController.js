@@ -112,7 +112,7 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, topolog
 						then(
 							function(result) {
 								createDeliveryServiceCreateRequest(dsRequest, options.comment, true);
-								messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] created' } ], true);
+								messageModel.setMessages(result.data.alerts, true);
 								locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
 							},
 							function(fault) {
@@ -132,7 +132,7 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, topolog
 			deliveryServiceService.createDeliveryService(deliveryService).
 				then(
 					function(result) {
-						messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] created' } ], true);
+						messageModel.setMessages(result.data.alerts, true);
 						locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
 					},
 					function(fault) {
