@@ -324,7 +324,13 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 		deleter,
 		HandleErr,
 		func(w http.ResponseWriter, r *http.Request, message string) {
-			WriteRespAlert(w, r, tc.SuccessLevel, message)
+			if deleter.GetType() == "ds" {
+				alerts := tc.CreateAlerts(tc.SuccessLevel, message)
+				alerts.AddNewAlert(tc.InfoLevel, "Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect.")
+				WriteAlerts(w, r, http.StatusOK, alerts)
+			} else {
+				WriteRespAlert(w, r, tc.SuccessLevel, message)
+			}
 		},
 	)
 }
@@ -449,11 +455,7 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 			errHandler(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		if obj.GetType() == "ds" {
-			successHandler(w, r, obj.GetType()+" was deleted. Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect.")
-		} else {
-			successHandler(w, r, obj.GetType()+" was deleted.")
-		}
+		successHandler(w, r, obj.GetType()+" was deleted.")
 	}
 }
 

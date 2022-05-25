@@ -357,17 +357,17 @@ export const deliveryservices = {
 				{
 					description: "delete a delivery service",
 					Name: "tpdservice1",
-					validationMessage: "Delivery service [ tpdservice1 ] deleted. Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect."
+					validationMessage: "Delivery service [ tpdservice1 ] deleted."
 				},
 				{
 					description: "delete a delivery service",
 					Name: "tpdservice2",
-					validationMessage: "Delivery service [ tpdservice2 ] deleted. Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect."
+					validationMessage: "Delivery service [ tpdservice2 ] deleted."
 				},
 				{
 					description: "delete a delivery service",
 					Name: "tpdservice3",
-					validationMessage: "Delivery service [ tpdservice3 ] deleted. Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect."
+					validationMessage: "Delivery service [ tpdservice3 ] deleted."
 				}
 			]
 		},
@@ -479,17 +479,17 @@ export const deliveryservices = {
 				{
 					description: "delete a delivery service",
 					Name: "optpdservice1",
-					validationMessage: "Delivery service [ optpdservice1 ] deleted. Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect."
+					validationMessage: "Delivery service [ optpdservice1 ] deleted."
 				},
 				{
 					description: "delete a delivery service",
 					Name: "optpdservice2",
-					validationMessage: "Delivery service [ optpdservice2 ] deleted. Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect."
+					validationMessage: "Delivery service [ optpdservice2 ] deleted."
 				},
 				{
 					description: "delete a delivery service",
 					Name: "optpdservice3",
-					validationMessage: "Delivery service [ optpdservice3 ] deleted. Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take affect."
+					validationMessage: "Delivery service [ optpdservice3 ] deleted."
 				}
 			]
 		}
