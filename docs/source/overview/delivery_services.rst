@@ -1003,6 +1003,8 @@ The following :term:`Parameters` must have the :ref:`Config File <parameter-conf
 
 	.. impl-detail:: This :term:`Parameter` does not affect the contents of ``parent.config``, but instead ``strategies.yaml`` in :abbr:`ATS (Apache Traffic Server)` 9. It has the ``parent.config`` :ref:`parameter-config-file` value for consistency.
 
+- ``merge_parent_groups`` - on a Deliver Service :term:`Profile`, if this exists, moves each of the space-separated :term:`Cache Groups` named in the :ref:`parameter-value` from the secondary parent list into the primary parent list. This can be used to combine all parents into a single consistent hash ring.
+
 	.. deprecated:: ATCv6.2
 		In :ref:`to-api` version 4 (unstable at the time of this writing), TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.
 
@@ -1043,10 +1045,6 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| mso.unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |
 	|                                             |                                                                            | currently "unavailable".                                                            |
-	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| merge_parent_groups                         | `parent`_ and `secondary_parent`_                                          | Moves each of the space-separated :term:`Cache Groups` named in the                 |
-	|                                             |                                                                            | :ref:`parameter-value` from the secondary parent list into the primary parent list. |
-	|                                             |                                                                            | This can be used to combine all parents into a single consistent hash ring.         |
 	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
 
 .. warning:: The ``mso.simple_retry_response_codes`` :term:`Parameter` has no apparent, possible use according to the :abbr:`ATS (Apache Traffic Server)` `parent.config documentation <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_. Whether or not it has any effect - let alone the *intended* effect - is not known, and its use is therefore strongly discouraged.
