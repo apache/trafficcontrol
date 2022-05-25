@@ -32,8 +32,8 @@ import (
 
 func ExpectedGetConfigParams(domain string) []CRConfigConfigParameter {
 	return []CRConfigConfigParameter{
-		{"tld.ttls.foo" + *test.RandStr(), *test.RandStr()},
-		{"tld.soa.bar" + *test.RandStr(), *test.RandStr()},
+		{"tld.ttls.foo" + test.RandStr(), test.RandStr()},
+		{"tld.soa.bar" + test.RandStr(), test.RandStr()},
 		{"domain_name", domain},
 	}
 }

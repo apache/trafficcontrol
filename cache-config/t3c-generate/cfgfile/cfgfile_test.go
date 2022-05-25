@@ -136,8 +136,8 @@ func removeComments(configs string) string {
 
 func randDSS() tc.DeliveryServiceServer {
 	return tc.DeliveryServiceServer{
-		Server:          test.RandInt(),
-		DeliveryService: test.RandInt(),
+		Server:          util.IntPtr(test.RandInt()),
+		DeliveryService: util.IntPtr(test.RandInt()),
 	}
 }
 
@@ -146,49 +146,49 @@ func randDS() *atscfg.DeliveryService {
 	dsTypeHTTP := tc.DSTypeHTTP
 	protocol := tc.DSProtocolHTTP
 	ds := atscfg.DeliveryService{}
-	ds.EcsEnabled = *test.RandBool()
-	ds.RangeSliceBlockSize = test.RandInt()
-	ds.ConsistentHashRegex = test.RandStr()
+	ds.EcsEnabled = test.RandBool()
+	ds.RangeSliceBlockSize = util.IntPtr(test.RandInt())
+	ds.ConsistentHashRegex = util.StrPtr(test.RandStr())
 	ds.ConsistentHashQueryParams = []string{
-		*test.RandStr(),
-		*test.RandStr(),
+		test.RandStr(),
+		test.RandStr(),
 	}
-	ds.MaxOriginConnections = test.RandInt()
+	ds.MaxOriginConnections = util.IntPtr(test.RandInt())
 	ds.DeepCachingType = &deepCachingTypeNever
-	ds.FQPacingRate = test.RandInt()
-	ds.SigningAlgorithm = test.RandStr()
-	ds.Tenant = test.RandStr()
-	ds.TRResponseHeaders = test.RandStr()
-	ds.TRRequestHeaders = test.RandStr()
-	ds.Active = test.RandBool()
-	ds.AnonymousBlockingEnabled = test.RandBool()
-	ds.CCRDNSTTL = test.RandInt()
-	ds.CDNID = test.RandInt()
-	ds.CDNName = test.RandStr()
-	ds.CheckPath = test.RandStr()
-	ds.DisplayName = test.RandStr()
-	ds.DNSBypassCNAME = test.RandStr()
-	ds.DNSBypassIP = test.RandStr()
-	ds.DNSBypassIP6 = test.RandStr()
-	ds.DNSBypassTTL = test.RandInt()
-	ds.DSCP = test.RandInt()
-	ds.EdgeHeaderRewrite = test.RandStr()
-	ds.GeoLimit = test.RandInt()
+	ds.FQPacingRate = util.IntPtr(test.RandInt())
+	ds.SigningAlgorithm = util.StrPtr(test.RandStr())
+	ds.Tenant = util.StrPtr(test.RandStr())
+	ds.TRResponseHeaders = util.StrPtr(test.RandStr())
+	ds.TRRequestHeaders = util.StrPtr(test.RandStr())
+	ds.Active = util.BoolPtr(test.RandBool())
+	ds.AnonymousBlockingEnabled = util.BoolPtr(test.RandBool())
+	ds.CCRDNSTTL = util.IntPtr(test.RandInt())
+	ds.CDNID = util.IntPtr(test.RandInt())
+	ds.CDNName = util.StrPtr(test.RandStr())
+	ds.CheckPath = util.StrPtr(test.RandStr())
+	ds.DisplayName = util.StrPtr(test.RandStr())
+	ds.DNSBypassCNAME = util.StrPtr(test.RandStr())
+	ds.DNSBypassIP = util.StrPtr(test.RandStr())
+	ds.DNSBypassIP6 = util.StrPtr(test.RandStr())
+	ds.DNSBypassTTL = util.IntPtr(test.RandInt())
+	ds.DSCP = util.IntPtr(test.RandInt())
+	ds.EdgeHeaderRewrite = util.StrPtr(test.RandStr())
+	ds.GeoLimit = util.IntPtr(test.RandInt())
 	ds.GeoLimitCountries = nil
-	ds.GeoLimitRedirectURL = test.RandStr()
-	ds.GeoProvider = test.RandInt()
-	ds.GlobalMaxMBPS = test.RandInt()
-	ds.GlobalMaxTPS = test.RandInt()
-	ds.HTTPBypassFQDN = test.RandStr()
-	ds.ID = test.RandInt()
-	ds.InfoURL = test.RandStr()
-	ds.InitialDispersion = test.RandInt()
-	ds.IPV6RoutingEnabled = test.RandBool()
+	ds.GeoLimitRedirectURL = util.StrPtr(test.RandStr())
+	ds.GeoProvider = util.IntPtr(test.RandInt())
+	ds.GlobalMaxMBPS = util.IntPtr(test.RandInt())
+	ds.GlobalMaxTPS = util.IntPtr(test.RandInt())
+	ds.HTTPBypassFQDN = util.StrPtr(test.RandStr())
+	ds.ID = util.IntPtr(test.RandInt())
+	ds.InfoURL = util.StrPtr(test.RandStr())
+	ds.InitialDispersion = util.IntPtr(test.RandInt())
+	ds.IPV6RoutingEnabled = util.BoolPtr(test.RandBool())
 	ds.LastUpdated = &tc.TimeNoMod{Time: time.Now()}
-	ds.LogsEnabled = test.RandBool()
-	ds.LongDesc = test.RandStr()
-	ds.LongDesc1 = test.RandStr()
-	ds.LongDesc2 = test.RandStr()
+	ds.LogsEnabled = util.BoolPtr(test.RandBool())
+	ds.LongDesc = util.StrPtr(test.RandStr())
+	ds.LongDesc1 = util.StrPtr(test.RandStr())
+	ds.LongDesc2 = util.StrPtr(test.RandStr())
 	ds.MatchList = &[]tc.DeliveryServiceMatch{
 		{
 			Type:      tc.DSMatchTypeHostRegex,
@@ -196,68 +196,68 @@ func randDS() *atscfg.DeliveryService {
 			Pattern:   `\.*foo\.*`,
 		},
 	}
-	ds.MaxDNSAnswers = test.RandInt()
-	ds.MidHeaderRewrite = test.RandStr()
-	ds.MissLat = test.RandFloat64()
-	ds.MissLong = test.RandFloat64()
-	ds.MultiSiteOrigin = test.RandBool()
-	ds.OriginShield = test.RandStr()
-	ds.OrgServerFQDN = util.StrPtr("http://" + *(test.RandStr()))
-	ds.ProfileDesc = test.RandStr()
-	ds.ProfileID = test.RandInt()
-	ds.ProfileName = test.RandStr()
+	ds.MaxDNSAnswers = util.IntPtr(test.RandInt())
+	ds.MidHeaderRewrite = util.StrPtr(test.RandStr())
+	ds.MissLat = util.FloatPtr(test.RandFloat64())
+	ds.MissLong = util.FloatPtr(test.RandFloat64())
+	ds.MultiSiteOrigin = util.BoolPtr(test.RandBool())
+	ds.OriginShield = util.StrPtr(test.RandStr())
+	ds.OrgServerFQDN = util.StrPtr("http://" + test.RandStr())
+	ds.ProfileDesc = util.StrPtr(test.RandStr())
+	ds.ProfileID = util.IntPtr(test.RandInt())
+	ds.ProfileName = util.StrPtr(test.RandStr())
 	ds.Protocol = &protocol
-	ds.QStringIgnore = test.RandInt()
-	ds.RangeRequestHandling = test.RandInt()
-	ds.RegexRemap = test.RandStr()
-	ds.RegionalGeoBlocking = test.RandBool()
-	ds.RemapText = test.RandStr()
-	ds.RoutingName = test.RandStr()
-	ds.Signed = *test.RandBool()
-	ds.SSLKeyVersion = test.RandInt()
-	ds.TenantID = test.RandInt()
+	ds.QStringIgnore = util.IntPtr(test.RandInt())
+	ds.RangeRequestHandling = util.IntPtr(test.RandInt())
+	ds.RegexRemap = util.StrPtr(test.RandStr())
+	ds.RegionalGeoBlocking = util.BoolPtr(test.RandBool())
+	ds.RemapText = util.StrPtr(test.RandStr())
+	ds.RoutingName = util.StrPtr(test.RandStr())
+	ds.Signed = *util.BoolPtr(test.RandBool())
+	ds.SSLKeyVersion = util.IntPtr(test.RandInt())
+	ds.TenantID = util.IntPtr(test.RandInt())
 	ds.Type = &dsTypeHTTP
-	ds.TypeID = test.RandInt()
-	ds.XMLID = test.RandStr()
+	ds.TypeID = util.IntPtr(test.RandInt())
+	ds.XMLID = util.StrPtr(test.RandStr())
 	ds.ExampleURLs = []string{
-		*test.RandStr(),
-		*test.RandStr(),
+		test.RandStr(),
+		test.RandStr(),
 	}
 	return &ds
 }
 
 func randServer() *atscfg.Server {
 	sv := &atscfg.Server{}
-	sv.Cachegroup = test.RandStr()
-	sv.CachegroupID = test.RandInt()
-	sv.CDNID = test.RandInt()
-	sv.CDNName = test.RandStr()
-	sv.DomainName = test.RandStr()
-	sv.FQDN = test.RandStr()
+	sv.Cachegroup = util.StrPtr(test.RandStr())
+	sv.CachegroupID = util.IntPtr(test.RandInt())
+	sv.CDNID = util.IntPtr(test.RandInt())
+	sv.CDNName = util.StrPtr(test.RandStr())
+	sv.DomainName = util.StrPtr(test.RandStr())
+	sv.FQDN = util.StrPtr(test.RandStr())
 	sv.FqdnTime = time.Now()
-	sv.GUID = test.RandStr()
-	sv.HostName = test.RandStr()
-	sv.HTTPSPort = test.RandInt()
-	sv.ID = test.RandInt()
-	sv.ILOIPAddress = test.RandStr()
-	sv.ILOIPGateway = test.RandStr()
-	sv.ILOIPNetmask = test.RandStr()
-	sv.ILOPassword = test.RandStr()
-	sv.ILOUsername = test.RandStr()
+	sv.GUID = util.StrPtr(test.RandStr())
+	sv.HostName = util.StrPtr(test.RandStr())
+	sv.HTTPSPort = util.IntPtr(test.RandInt())
+	sv.ID = util.IntPtr(test.RandInt())
+	sv.ILOIPAddress = util.StrPtr(test.RandStr())
+	sv.ILOIPGateway = util.StrPtr(test.RandStr())
+	sv.ILOIPNetmask = util.StrPtr(test.RandStr())
+	sv.ILOPassword = util.StrPtr(test.RandStr())
+	sv.ILOUsername = util.StrPtr(test.RandStr())
 
 	sv.Interfaces = []tc.ServerInterfaceInfoV40{}
 	{
 		ssi := tc.ServerInterfaceInfoV40{}
-		ssi.Name = *test.RandStr()
+		ssi.Name = test.RandStr()
 		ssi.IPAddresses = []tc.ServerIPAddress{
 			tc.ServerIPAddress{
-				Address:        *test.RandStr(),
-				Gateway:        test.RandStr(),
+				Address:        test.RandStr(),
+				Gateway:        util.StrPtr(test.RandStr()),
 				ServiceAddress: true,
 			},
 			tc.ServerIPAddress{
-				Address:        *test.RandStr(),
-				Gateway:        test.RandStr(),
+				Address:        test.RandStr(),
+				Gateway:        util.StrPtr(test.RandStr()),
 				ServiceAddress: true,
 			},
 		}
@@ -265,53 +265,53 @@ func randServer() *atscfg.Server {
 	}
 
 	sv.LastUpdated = &tc.TimeNoMod{Time: time.Now()}
-	sv.MgmtIPAddress = test.RandStr()
-	sv.MgmtIPGateway = test.RandStr()
-	sv.MgmtIPNetmask = test.RandStr()
-	sv.OfflineReason = test.RandStr()
-	sv.PhysLocation = test.RandStr()
-	sv.PhysLocationID = test.RandInt()
-	sv.ProfileNames = []string{*test.RandStr()}
-	sv.Rack = test.RandStr()
-	sv.RevalPending = test.RandBool()
-	sv.Status = test.RandStr()
-	sv.StatusID = test.RandInt()
-	sv.TCPPort = test.RandInt()
-	sv.Type = *test.RandStr()
-	sv.TypeID = test.RandInt()
-	sv.UpdPending = test.RandBool()
-	sv.XMPPID = test.RandStr()
-	sv.XMPPPasswd = test.RandStr()
+	sv.MgmtIPAddress = util.StrPtr(test.RandStr())
+	sv.MgmtIPGateway = util.StrPtr(test.RandStr())
+	sv.MgmtIPNetmask = util.StrPtr(test.RandStr())
+	sv.OfflineReason = util.StrPtr(test.RandStr())
+	sv.PhysLocation = util.StrPtr(test.RandStr())
+	sv.PhysLocationID = util.IntPtr(test.RandInt())
+	sv.ProfileNames = []string{test.RandStr()}
+	sv.Rack = util.StrPtr(test.RandStr())
+	sv.RevalPending = util.BoolPtr(test.RandBool())
+	sv.Status = util.StrPtr(test.RandStr())
+	sv.StatusID = util.IntPtr(test.RandInt())
+	sv.TCPPort = util.IntPtr(test.RandInt())
+	sv.Type = test.RandStr()
+	sv.TypeID = util.IntPtr(test.RandInt())
+	sv.UpdPending = util.BoolPtr(test.RandBool())
+	sv.XMPPID = util.StrPtr(test.RandStr())
+	sv.XMPPPasswd = util.StrPtr(test.RandStr())
 	return sv
 }
 
 func randCacheGroup() *tc.CacheGroupNullable {
 	return &tc.CacheGroupNullable{
-		ID:        test.RandInt(),
-		Name:      test.RandStr(),
-		ShortName: test.RandStr(),
-		Latitude:  test.RandFloat64(),
-		Longitude: test.RandFloat64(),
-		// ParentName:                  test.RandStr(),
-		// ParentCachegroupID:          test.RandInt(),
-		// SecondaryParentName:         test.RandStr(),
-		// SecondaryParentCachegroupID: test.RandInt(),
-		FallbackToClosest: test.RandBool(),
-		Type:              test.RandStr(),
-		TypeID:            test.RandInt(),
+		ID:        util.IntPtr(test.RandInt()),
+		Name:      util.StrPtr(test.RandStr()),
+		ShortName: util.StrPtr(test.RandStr()),
+		Latitude:  util.FloatPtr(test.RandFloat64()),
+		Longitude: util.FloatPtr(test.RandFloat64()),
+		// ParentName:                  util.StrPtr(test.RandStr()),
+		// ParentCachegroupID:          util.IntPtr(test.RandInt()),
+		// SecondaryParentName:         util.StrPtr(test.RandStr()),
+		// SecondaryParentCachegroupID: util.IntPtr(test.RandInt()),
+		FallbackToClosest: util.BoolPtr(test.RandBool()),
+		Type:              util.StrPtr(test.RandStr()),
+		TypeID:            util.IntPtr(test.RandInt()),
 		LastUpdated:       &tc.TimeNoMod{Time: time.Now()},
 		Fallbacks: &[]string{
-			*test.RandStr(),
-			*test.RandStr(),
+			test.RandStr(),
+			test.RandStr(),
 		},
 	}
 }
 
 func randParam() *tc.Parameter {
 	return &tc.Parameter{
-		ConfigFile: *test.RandStr(),
-		Name:       *test.RandStr(),
-		Value:      *test.RandStr(),
+		ConfigFile: test.RandStr(),
+		Name:       test.RandStr(),
+		Value:      test.RandStr(),
 		Profiles:   []byte(`[]`),
 	}
 }
@@ -319,21 +319,21 @@ func randParam() *tc.Parameter {
 func randJob() *atscfg.InvalidationJob {
 	now := time.Now()
 	return &atscfg.InvalidationJob{
-		AssetURL:         *test.RandStr(),
-		CreatedBy:        *test.RandStr(),
+		AssetURL:         test.RandStr(),
+		CreatedBy:        test.RandStr(),
 		StartTime:        now,
-		ID:               *test.RandUint64(),
-		DeliveryService:  *test.RandStr(),
-		TTLHours:         *test.RandUint(),
+		ID:               test.RandUint64(),
+		DeliveryService:  test.RandStr(),
+		TTLHours:         test.RandUint(),
 		InvalidationType: tc.REFRESH,
 	}
 }
 
 func randCDN() *tc.CDN {
 	return &tc.CDN{
-		DNSSECEnabled: *test.RandBool(),
-		DomainName:    *test.RandStr(),
-		Name:          *test.RandStr(),
+		DNSSECEnabled: test.RandBool(),
+		DomainName:    test.RandStr(),
+		Name:          test.RandStr(),
 	}
 }
 
@@ -343,26 +343,26 @@ func randDSRs() *tc.DeliveryServiceRegexes {
 			*randDSR(),
 			*randDSR(),
 		},
-		DSName: *test.RandStr(),
+		DSName: test.RandStr(),
 	}
 }
 
 func randDSR() *tc.DeliveryServiceRegex {
 	return &tc.DeliveryServiceRegex{
 		Type:      string(tc.DSMatchTypeHostRegex),
-		SetNumber: *test.RandInt(),
+		SetNumber: test.RandInt(),
 		Pattern:   `\.*foo\.*`,
 	}
 }
 
 func randCDNSSLKeys() *tc.CDNSSLKeys {
 	return &tc.CDNSSLKeys{
-		DeliveryService: *test.RandStr(),
+		DeliveryService: test.RandStr(),
 		Certificate: tc.CDNSSLKeysCertificate{
-			Crt: *test.RandStr(),
-			Key: *test.RandStr(),
+			Crt: test.RandStr(),
+			Key: test.RandStr(),
 		},
-		Hostname: *test.RandStr(),
+		Hostname: test.RandStr(),
 	}
 }
 
@@ -461,37 +461,37 @@ func MakeFakeTOData() *t3cutil.ConfigData {
 			*dsr1,
 		},
 		URISigningKeys: map[tc.DeliveryServiceName][]byte{
-			tc.DeliveryServiceName(*test.RandStr()): []byte(*test.RandStr()),
-			tc.DeliveryServiceName(*test.RandStr()): []byte(*test.RandStr()),
+			tc.DeliveryServiceName(test.RandStr()): []byte(test.RandStr()),
+			tc.DeliveryServiceName(test.RandStr()): []byte(test.RandStr()),
 		},
 		URLSigKeys: map[tc.DeliveryServiceName]tc.URLSigKeys{
-			tc.DeliveryServiceName(*test.RandStr()): map[string]string{
-				*test.RandStr(): *test.RandStr(),
-				*test.RandStr(): *test.RandStr(),
+			tc.DeliveryServiceName(test.RandStr()): map[string]string{
+				test.RandStr(): test.RandStr(),
+				test.RandStr(): test.RandStr(),
 			},
-			tc.DeliveryServiceName(*test.RandStr()): map[string]string{
-				*test.RandStr(): *test.RandStr(),
-				*test.RandStr(): *test.RandStr(),
+			tc.DeliveryServiceName(test.RandStr()): map[string]string{
+				test.RandStr(): test.RandStr(),
+				test.RandStr(): test.RandStr(),
 			},
 		},
 		ServerCapabilities: map[int]map[atscfg.ServerCapability]struct{}{
-			*test.RandInt(): map[atscfg.ServerCapability]struct{}{
-				atscfg.ServerCapability(*test.RandStr()): struct{}{},
-				atscfg.ServerCapability(*test.RandStr()): struct{}{},
+			test.RandInt(): map[atscfg.ServerCapability]struct{}{
+				atscfg.ServerCapability(test.RandStr()): struct{}{},
+				atscfg.ServerCapability(test.RandStr()): struct{}{},
 			},
-			*test.RandInt(): map[atscfg.ServerCapability]struct{}{
-				atscfg.ServerCapability(*test.RandStr()): struct{}{},
-				atscfg.ServerCapability(*test.RandStr()): struct{}{},
+			test.RandInt(): map[atscfg.ServerCapability]struct{}{
+				atscfg.ServerCapability(test.RandStr()): struct{}{},
+				atscfg.ServerCapability(test.RandStr()): struct{}{},
 			},
 		},
 		DSRequiredCapabilities: map[int]map[atscfg.ServerCapability]struct{}{
-			*test.RandInt(): map[atscfg.ServerCapability]struct{}{
-				atscfg.ServerCapability(*test.RandStr()): struct{}{},
-				atscfg.ServerCapability(*test.RandStr()): struct{}{},
+			test.RandInt(): map[atscfg.ServerCapability]struct{}{
+				atscfg.ServerCapability(test.RandStr()): struct{}{},
+				atscfg.ServerCapability(test.RandStr()): struct{}{},
 			},
-			*test.RandInt(): map[atscfg.ServerCapability]struct{}{
-				atscfg.ServerCapability(*test.RandStr()): struct{}{},
-				atscfg.ServerCapability(*test.RandStr()): struct{}{},
+			test.RandInt(): map[atscfg.ServerCapability]struct{}{
+				atscfg.ServerCapability(test.RandStr()): struct{}{},
+				atscfg.ServerCapability(test.RandStr()): struct{}{},
 			},
 		},
 		SSLKeys: []tc.CDNSSLKeys{

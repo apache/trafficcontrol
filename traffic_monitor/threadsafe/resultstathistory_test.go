@@ -38,7 +38,7 @@ func randResultStatHistory() ResultStatHistory {
 
 	num := 5
 	for i := 0; i < num; i++ {
-		hist.Store(tc.CacheName(*test.RandStr()), randResultStatValHistory())
+		hist.Store(tc.CacheName(test.RandStr()), randResultStatValHistory())
 	}
 	return hist
 }
@@ -48,7 +48,7 @@ func randResultStatValHistory() ResultStatValHistory {
 	num := 5
 	numSlice := 5
 	for i := 0; i < num; i++ {
-		cacheName := *test.RandStr()
+		cacheName := test.RandStr()
 		vals := []tc.ResultStatVal{}
 		for j := 0; j < numSlice; j++ {
 			vals = append(vals, randResultStatVal())
@@ -60,9 +60,9 @@ func randResultStatValHistory() ResultStatValHistory {
 
 func randResultStatVal() tc.ResultStatVal {
 	return tc.ResultStatVal{
-		Val:  uint64(*test.RandInt64()),
+		Val:  uint64(test.RandInt64()),
 		Time: time.Now(),
-		Span: uint64(*test.RandInt64()),
+		Span: uint64(test.RandInt64()),
 	}
 }
 
@@ -72,7 +72,7 @@ func randResultInfoHistory() cache.ResultInfoHistory {
 	num := 5
 	infNum := 5
 	for i := 0; i < num; i++ {
-		cacheName := tc.CacheName(*test.RandStr())
+		cacheName := tc.CacheName(test.RandStr())
 		for j := 0; j < infNum; j++ {
 			hist[cacheName] = append(hist[cacheName], randResultInfo())
 		}
@@ -82,23 +82,23 @@ func randResultInfoHistory() cache.ResultInfoHistory {
 
 func randResultInfo() cache.ResultInfo {
 	return cache.ResultInfo{
-		ID:          *test.RandStr(),
-		Error:       fmt.Errorf(*test.RandStr()),
+		ID:          test.RandStr(),
+		Error:       fmt.Errorf(test.RandStr()),
 		Time:        time.Now(),
-		RequestTime: time.Millisecond * time.Duration(*test.RandInt()),
+		RequestTime: time.Millisecond * time.Duration(test.RandInt()),
 		Vitals:      randVitals(),
-		PollID:      uint64(*test.RandInt64()),
-		Available:   *test.RandBool(),
+		PollID:      uint64(test.RandInt64()),
+		Available:   test.RandBool(),
 	}
 }
 
 func randVitals() cache.Vitals {
 	return cache.Vitals{
-		LoadAvg:    *test.RandFloat64(),
-		BytesOut:   *test.RandUint64(),
-		BytesIn:    *test.RandUint64(),
-		KbpsOut:    *test.RandInt64(),
-		MaxKbpsOut: *test.RandInt64(),
+		LoadAvg:    test.RandFloat64(),
+		BytesOut:   test.RandUint64(),
+		BytesIn:    test.RandUint64(),
+		KbpsOut:    test.RandInt64(),
+		MaxKbpsOut: test.RandInt64(),
 	}
 }
 

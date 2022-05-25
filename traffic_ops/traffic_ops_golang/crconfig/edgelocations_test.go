@@ -34,25 +34,25 @@ import (
 func ExpectedMakeLocations() (map[string]tc.CRConfigLatitudeLongitude, map[string]tc.CRConfigLatitudeLongitude) {
 	return map[string]tc.CRConfigLatitudeLongitude{
 			"cache0": tc.CRConfigLatitudeLongitude{
-				Lat:                 *test.RandFloat64(),
-				Lon:                 *test.RandFloat64(),
+				Lat:                 test.RandFloat64(),
+				Lon:                 test.RandFloat64(),
 				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodCZ},
 			},
 			"cache1": tc.CRConfigLatitudeLongitude{
-				Lat:                 *test.RandFloat64(),
-				Lon:                 *test.RandFloat64(),
+				Lat:                 test.RandFloat64(),
+				Lon:                 test.RandFloat64(),
 				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodCZ},
 			},
 		},
 		map[string]tc.CRConfigLatitudeLongitude{
 			"router0": tc.CRConfigLatitudeLongitude{
-				Lat:                 *test.RandFloat64(),
-				Lon:                 *test.RandFloat64(),
+				Lat:                 test.RandFloat64(),
+				Lon:                 test.RandFloat64(),
 				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ},
 			},
 			"router1": tc.CRConfigLatitudeLongitude{
-				Lat:                 *test.RandFloat64(),
-				Lon:                 *test.RandFloat64(),
+				Lat:                 test.RandFloat64(),
+				Lon:                 test.RandFloat64(),
 				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ},
 			},
 		}

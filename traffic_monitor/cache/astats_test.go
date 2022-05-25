@@ -192,18 +192,18 @@ func getMockTOData(dsNameFQDNs map[tc.DeliveryServiceName]string) todata.TOData 
 func getMockRawStats(cacheName string, dsNameFQDNs map[tc.DeliveryServiceName]string) map[string]interface{} {
 	st := map[string]interface{}{}
 	for _, dsFQDN := range dsNameFQDNs {
-		st["plugin.remap_stats."+dsFQDN+".in_bytes"] = float64(*test.RandUint64())
-		st["plugin.remap_stats."+dsFQDN+".out_bytes"] = float64(*test.RandUint64())
-		st["plugin.remap_stats."+dsFQDN+".status_2xx"] = float64(*test.RandUint64())
-		st["plugin.remap_stats."+dsFQDN+".status_3xx"] = float64(*test.RandUint64())
-		st["plugin.remap_stats."+dsFQDN+".status_4xx"] = float64(*test.RandUint64())
-		st["plugin.remap_stats."+dsFQDN+".status_5xx"] = float64(*test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".in_bytes"] = float64(test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".out_bytes"] = float64(test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".status_2xx"] = float64(test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".status_3xx"] = float64(test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".status_4xx"] = float64(test.RandUint64())
+		st["plugin.remap_stats."+dsFQDN+".status_5xx"] = float64(test.RandUint64())
 	}
 	return st
 }
 
 func getMockStatistics(infSpeed int64, outBytes uint64) Statistics {
-	infName := *test.RandStr()
+	infName := test.RandStr()
 	return Statistics{
 		Loadavg: Loadavg{
 			One:              1.2,
@@ -220,7 +220,7 @@ func getMockStatistics(infSpeed int64, outBytes uint64) Statistics {
 				BytesIn:  12234567,
 			},
 		},
-		NotAvailable: *test.RandBool(),
+		NotAvailable: test.RandBool(),
 	}
 
 }

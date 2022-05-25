@@ -35,52 +35,52 @@ import (
 )
 
 func randServer(ipService bool, ip6Service bool) tc.CRConfigTrafficOpsServer {
-	status := tc.CRConfigServerStatus(*test.RandStr())
-	cachegroup := test.RandStr()
+	status := tc.CRConfigServerStatus(test.RandStr())
+	cachegroup := util.StrPtr(test.RandStr())
 	ip := new(string)
 	ip6 := new(string)
 	inf := new(string)
 
 	if ipService {
-		ip = test.RandomIPv4()
-		inf = test.RandStr()
+		ip = util.StrPtr(test.RandomIPv4())
+		inf = util.StrPtr(test.RandStr())
 	}
 	if ip6Service {
-		ip6 = test.RandomIPv6()
-		inf = test.RandStr()
+		ip6 = util.StrPtr(test.RandomIPv6())
+		inf = util.StrPtr(test.RandStr())
 	}
 
 	return tc.CRConfigTrafficOpsServer{
 		CacheGroup:      cachegroup,
 		Capabilities:    test.RandStrArray(),
-		Fqdn:            test.RandStr(),
-		HashCount:       test.RandInt(),
-		HashId:          test.RandStr(),
-		HttpsPort:       test.RandInt(),
+		Fqdn:            util.StrPtr(test.RandStr()),
+		HashCount:       util.IntPtr(test.RandInt()),
+		HashId:          util.StrPtr(test.RandStr()),
+		HttpsPort:       util.IntPtr(test.RandInt()),
 		InterfaceName:   inf,
 		Ip:              ip,
 		Ip6:             ip6,
 		LocationId:      cachegroup,
-		Port:            test.RandInt(),
-		Profile:         test.RandStr(),
+		Port:            util.IntPtr(test.RandInt()),
+		Profile:         util.StrPtr(test.RandStr()),
 		ServerStatus:    &status,
-		ServerType:      test.RandStr(),
-		RoutingDisabled: *test.RandInt64(),
+		ServerType:      util.StrPtr(test.RandStr()),
+		RoutingDisabled: test.RandInt64(),
 	}
 }
 
 func ExpectedGetServerParams() map[string]ServerParams {
 	return map[string]ServerParams{
 		"cache0": ServerParams{
-			APIPort:          test.RandStr(),
-			SecureAPIPort:    test.RandStr(),
-			Weight:           test.RandFloat64(),
-			WeightMultiplier: test.RandFloat64(),
+			APIPort:          util.StrPtr(test.RandStr()),
+			SecureAPIPort:    util.StrPtr(test.RandStr()),
+			Weight:           util.FloatPtr(test.RandFloat64()),
+			WeightMultiplier: util.FloatPtr(test.RandFloat64()),
 		},
 		"cache1": ServerParams{
-			APIPort:          test.RandStr(),
-			Weight:           test.RandFloat64(),
-			WeightMultiplier: test.RandFloat64(),
+			APIPort:          util.StrPtr(test.RandStr()),
+			Weight:           util.FloatPtr(test.RandFloat64()),
+			WeightMultiplier: util.FloatPtr(test.RandFloat64()),
 		},
 	}
 }
@@ -541,7 +541,7 @@ func TestGetServerDSes(t *testing.T) {
 }
 
 func ExpectedGetCDNInfo() (string, bool) {
-	return *test.RandStr(), *test.RandBool()
+	return test.RandStr(), test.RandBool()
 }
 
 func MockGetCDNInfo(mock sqlmock.Sqlmock, expectedDomain string, expectedDNSSECEnabled bool, cdn string) {
@@ -586,7 +586,7 @@ func TestGetCDNInfo(t *testing.T) {
 }
 
 func ExpectedGetCDNNameFromID() string {
-	return *test.RandStr()
+	return test.RandStr()
 }
 
 func MockGetCDNNameFromID(mock sqlmock.Sqlmock, expected string, cdnID int) {

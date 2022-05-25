@@ -59,7 +59,7 @@ func getMockLastHealthTimes() map[tc.CacheName]time.Duration {
 	mockTimes := map[tc.CacheName]time.Duration{}
 	numCaches := 10
 	for i := 0; i < numCaches; i++ {
-		mockTimes[tc.CacheName(*test.RandStr())] = time.Duration(*test.RandInt())
+		mockTimes[tc.CacheName(test.RandStr())] = time.Duration(test.RandInt())
 	}
 	return mockTimes
 }
@@ -67,7 +67,7 @@ func getMockLastHealthTimes() map[tc.CacheName]time.Duration {
 func getMockCRStatesDeliveryService() tc.CRStatesDeliveryService {
 	return tc.CRStatesDeliveryService{
 		DisabledLocations: []tc.CacheGroupName{},
-		IsAvailable:       *test.RandBool(),
+		IsAvailable:       test.RandBool(),
 	}
 }
 
@@ -76,18 +76,18 @@ func getMockPeerStates() peer.CRStatesThreadsafe {
 
 	numCaches := 10
 	for i := 0; i < numCaches; i++ {
-		ps.SetCache(tc.CacheName(*test.RandStr()), tc.IsAvailable{IsAvailable: *test.RandBool()})
+		ps.SetCache(tc.CacheName(test.RandStr()), tc.IsAvailable{IsAvailable: test.RandBool()})
 	}
 
 	numDSes := 10
 	for i := 0; i < numDSes; i++ {
-		ps.SetDeliveryService(tc.DeliveryServiceName(*test.RandStr()), getMockCRStatesDeliveryService())
+		ps.SetDeliveryService(tc.DeliveryServiceName(test.RandStr()), getMockCRStatesDeliveryService())
 	}
 	return ps
 }
 
 func getRandDuration() time.Duration {
-	return time.Duration(*test.RandInt64())
+	return time.Duration(test.RandInt64())
 }
 
 func getResult(name tc.TrafficMonitorName, availabilityType AvailabilityType) peer.Result {
@@ -96,7 +96,7 @@ func getResult(name tc.TrafficMonitorName, availabilityType AvailabilityType) pe
 	availability := true
 
 	if availabilityType == Random {
-		availability = *test.RandBool()
+		availability = test.RandBool()
 	} else if availabilityType == Unavailable {
 		availability = false
 	}
@@ -104,9 +104,9 @@ func getResult(name tc.TrafficMonitorName, availabilityType AvailabilityType) pe
 	return peer.Result{
 		ID:         name,
 		Available:  availability,
-		Errors:     []error{errors.New(*test.RandStr())},
+		Errors:     []error{errors.New(test.RandStr())},
 		PeerStates: peerStates.Get(),
-		PollID:     *test.RandUint64(),
+		PollID:     test.RandUint64(),
 		// PollFinished chan<- uint64,
 		Time: time.Now(),
 	}
@@ -119,7 +119,7 @@ func getMockCRStatesPeers(quorumMin int, numPeers int, availabilityType Availabi
 
 	randPeers := map[tc.TrafficMonitorName]struct{}{}
 	for i := 0; i < numPeers; i++ {
-		randPeers[tc.TrafficMonitorName(*test.RandStr())] = struct{}{}
+		randPeers[tc.TrafficMonitorName(test.RandStr())] = struct{}{}
 	}
 
 	for peer, _ := range randPeers {
@@ -191,9 +191,9 @@ func TestGetStats(t *testing.T) {
 	appData := getMockStaticAppData()
 	pollingInterval := 5 * time.Second
 	lastHealthTimes := getMockLastHealthTimes()
-	fetchCount := uint64(*test.RandInt())
-	healthIteration := uint64(*test.RandInt())
-	errCount := uint64(*test.RandInt())
+	fetchCount := uint64(test.RandInt())
+	healthIteration := uint64(test.RandInt())
+	errCount := uint64(test.RandInt())
 	crStatesPeers := getMockCRStatesPeers(1, 10, Random)
 
 	statsBts, err := getStats(appData, pollingInterval, lastHealthTimes, fetchCount, healthIteration, errCount, crStatesPeers)

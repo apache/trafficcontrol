@@ -73,7 +73,7 @@ func GenGUIDStr() string {
 	alphabet := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_")
 	s := make([]rune, length)
 	for i := range s {
-		s[i] = alphabet[*test.RandIntn(len(alphabet))]
+		s[i] = alphabet[test.RandIntn(len(alphabet))]
 	}
 	return string(s)
 }

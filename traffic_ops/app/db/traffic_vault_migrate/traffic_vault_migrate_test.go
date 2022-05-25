@@ -187,7 +187,7 @@ func TestRiakBackend(t *testing.T) {
 func TestPGBackend(t *testing.T) {
 	data := make([]byte, 32)
 	for i, _ := range data {
-		data[i] = byte('a' + rune(*test.RandIntn(26)))
+		data[i] = byte('a' + rune(test.RandIntn(26)))
 	}
 	pg := PGBackend{
 		cfg: PGConfig{
