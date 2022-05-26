@@ -74,8 +74,8 @@ func TestT3CJobs(t *testing.T) {
 			}
 			if strings.Contains(line, "refresh-test") {
 				sawRefresh = true
-				if !strings.HasSuffix(line, "STALE") {
-					t.Errorf("expected regex_revalidate.config refresh-test line to contain 'STALE', actual: %s", line)
+				if strings.HasSuffix(line, "STALE") || strings.HasSuffix(line, "MISS") {
+					t.Errorf("expected regex_revalidate.config refresh-test line to contain no type, actual: %s", line)
 				}
 			}
 			if strings.Contains(line, "refetch-test") {
