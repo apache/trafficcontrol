@@ -271,7 +271,7 @@ func validateDivisionDescSort() utils.CkReqFunc {
 		// Get Divisions in the default ascending order for comparison.
 		divisionAscResp, _, err := TOSession.GetDivisions(client.RequestOptions{})
 		assert.RequireNoError(t, err, "Unexpected error getting Divisions with default sort order: %v - alerts: %+v", err, divisionAscResp.Alerts)
-		// Verify the response match in length, i.e. equal amount of CDNs.
+		// Verify the response match in length, i.e. equal amount of Divisions.
 		assert.RequireEqual(t, len(divisionAscResp.Response), len(divisionDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(divisionAscResp.Response), len(divisionDescResp))
 		// Insert Division names to the front of a new list, so they are now reversed to be in ascending order.
 		for _, division := range divisionDescResp {
