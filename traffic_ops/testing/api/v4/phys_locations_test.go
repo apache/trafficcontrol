@@ -112,7 +112,6 @@ func TestPhysLocations(t *testing.T) {
 						validatePhysicalLocationUpdateCreateFields("testPhysicalLocation", map[string]interface{}{"Name": "testPhysicalLocation"})),
 				},
 				"BAD REQUEST when REGION ID does NOT MATCH REGION NAME": {
-					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"address":   "1234 southern way",
