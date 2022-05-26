@@ -996,12 +996,12 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	if version.Major >= 4 {
 		if _, ok := params["profileName"]; ok {
 			queryString = selectQuery + `JOIN server_profile sp ON s.id = sp.server`
+			countQueryString = serverCountQuery + `JOIN server_profile sp ON s.id = sp.server`
 		} else {
 			queryString = selectQuery + joinProfileV4
+			countQueryString = serverCountQuery + joinProfileV4
 		}
-		countQueryString = serverCountQuery + joinProfileV4
 	}
-
 	countQuery := countQueryString + queryAddition + where
 	// If we are querying for a DS that has reqd capabilities, we need to make sure that we also include all the ORG servers directly assigned to this DS
 	if _, ok := params["dsId"]; ok && dsHasRequiredCapabilities {
