@@ -16,436 +16,304 @@ package v4
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestDivisions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
-		GetTestDivisionsIMS(t)
-		TryToDeleteDivision(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		SortTestDivisions(t)
-		SortTestDivisionDesc(t)
-		UpdateTestDivisions(t)
-		UpdateTestDivisionsWithHeaders(t, header)
-		GetTestDivisionsIMSAfterChange(t, header)
-		GetTestDivisions(t)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestDivisionsWithHeaders(t, header)
-		GetTestPaginationSupportDivision(t)
-		GetDivisionByInvalidId(t)
-		GetDivisionByInvalidName(t)
-		DeleteTestDivisionsByInvalidId(t)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDivisionSort()),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"division1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateDivisionFields(map[string]interface{}{"Name": "division1"})),
+				},
+				"EMPTY RESPONSE when INVALID ID parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {"10000"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when INVALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"abcd"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"VALID when SORTORDER param is DESC": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDivisionDescSort()),
+				},
+				"FIRST RESULT when LIMIT=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDivisionPagination("limit")),
+				},
+				"SECOND RESULT when LIMIT=1 OFFSET=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDivisionPagination("offset")),
+				},
+				"SECOND RESULT when LIMIT=1 PAGE=2": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDivisionPagination("page")),
+				},
+				"BAD REQUEST when INVALID LIMIT parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID OFFSET parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID PAGE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetDivisionID(t, "cdn-div2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name": "testdivision",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateDivisionUpdateCreateFields("testdivision", map[string]interface{}{"Name": "testdivision"})),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:    GetDivisionID(t, "division1"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody: map[string]interface{}{
+						"name": "division1",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetDivisionID(t, "division1"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name": "division1",
+					},
+					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"BAD REQUEST when DIVISION in use by REGION": {
+					EndpointId:    GetDivisionID(t, "division1"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"NOT FOUND when INVALID ID parameter": {
+					EndpointId:    func() int { return 111111 },
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					division := tc.Division{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &division)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetDivisions(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateDivision(division, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateDivision(testCase.EndpointId(), division, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteDivision(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestDivisionsWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Divisions) < 1 {
-		t.Error("Need at least one Division to test updating a Division with HTTP headers")
-		return
-	}
-	firstDivision := testData.Divisions[0]
-
-	// Retrieve the Division by division so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	opts.QueryParameters.Set("name", firstDivision.Name)
-	resp, _, err := TOSession.GetDivisions(opts)
-	if err != nil {
-		t.Errorf("cannot get Division '%s': %v - alerts: %+v", firstDivision.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) > 0 {
-		remoteDivision := resp.Response[0]
-		expectedDivision := "division-test"
-		remoteDivision.Name = expectedDivision
-
-		opts.QueryParameters.Del("name")
-		_, reqInf, err := TOSession.UpdateDivision(remoteDivision.ID, remoteDivision, opts)
-		if err == nil {
-			t.Errorf("Expected error about precondition failed, but got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+func validateDivisionFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Division response to not be nil.")
+		divisionResp := resp.([]tc.Division)
+		for field, expected := range expectedResp {
+			for _, division := range divisionResp {
+				switch field {
+				case "Name":
+					assert.Equal(t, expected, division.Name, "Expected Name to be %v, but got %s", expected, division.Name)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
 		}
 	}
 }
 
-func GetTestDivisionsIMSAfterChange(t *testing.T, header http.Header) {
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	for _, division := range testData.Divisions {
-		opts.QueryParameters.Set("name", division.Name)
-		resp, reqInf, err := TOSession.GetDivisions(opts)
-		if err != nil {
-			t.Errorf("could not get Divisions: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
+func validateDivisionUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", name)
+		divisions, _, err := TOSession.GetDivisions(opts)
+		assert.RequireNoError(t, err, "Error getting Division: %v - alerts: %+v", err, divisions.Alerts)
+		assert.RequireEqual(t, 1, len(divisions.Response), "Expected one Division returned Got: %d", len(divisions.Response))
+		validateDivisionFields(expectedResp)(t, toclientlib.ReqInf{}, divisions.Response, tc.Alerts{}, nil)
 	}
+}
 
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
+func validateDivisionPagination(paginationParam string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		paginationResp := resp.([]tc.Division)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("orderby", "id")
+		respBase, _, err := TOSession.GetDivisions(opts)
+		assert.RequireNoError(t, err, "Cannot get Divisions: %v - alerts: %+v", err, respBase.Alerts)
 
-	opts.Header = make(map[string][]string)
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	for _, division := range testData.Divisions {
-		opts.QueryParameters.Set("name", division.Name)
-		resp, reqInf, err := TOSession.GetDivisions(opts)
-		if err != nil {
-			t.Errorf("could not get Divisions: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
+		division := respBase.Response
+		assert.RequireGreaterOrEqual(t, len(division), 2, "Need at least 2 Divisions in Traffic Ops to test pagination support, found: %d", len(division))
+		switch paginationParam {
+		case "limit:":
+			assert.Exactly(t, division[:1], paginationResp, "expected GET Divisions with limit = 1 to return first result")
+		case "offset":
+			assert.Exactly(t, division[1:2], paginationResp, "expected GET Divisions with limit = 1, offset = 1 to return second result")
+		case "page":
+			assert.Exactly(t, division[1:2], paginationResp, "expected GET Divisions with limit = 1, page = 2 to return second result")
 		}
 	}
 }
 
-func GetTestDivisionsIMS(t *testing.T) {
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-
-	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	for _, division := range testData.Divisions {
-		opts.QueryParameters.Set("name", division.Name)
-		resp, reqInf, err := TOSession.GetDivisions(opts)
-		if err != nil {
-			t.Errorf("could not get Divisions: %v - alerts: %+v", err, resp.Alerts)
+func validateDivisionSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Division response to not be nil.")
+		var divisionNames []string
+		divisionResp := resp.([]tc.Division)
+		for _, division := range divisionResp {
+			divisionNames = append(divisionNames, division.Name)
 		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+		assert.Equal(t, true, sort.StringsAreSorted(divisionNames), "List is not sorted by their names: %v", divisionNames)
 	}
 }
 
-func TryToDeleteDivision(t *testing.T) {
-	if len(testData.Divisions) < 1 {
-		t.Fatal("Need at least one Division to attempt to delete Divisions")
-	}
-	division := testData.Divisions[0]
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", division.Name)
-
-	resp, _, err := TOSession.GetDivisions(opts)
-	if err != nil {
-		t.Errorf("cannot get Division '%s': %v - alerts %+v", division.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Division to exist with name '%s', found: %d", division.Name, len(resp.Response))
-	}
-	division = resp.Response[0]
-
-	alerts, _, err := TOSession.DeleteDivision(division.ID, client.RequestOptions{})
-	if err == nil {
-		t.Fatal("should not be able to delete a Division prematurely")
-	}
-
-	found := false
-	for _, alert := range alerts.Alerts {
-		if strings.Contains(alert.Text, "Resource not found.") {
-			t.Errorf("Division with name '%s' does not exist", division.Name)
+func validateDivisionDescSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Division response to not be nil.")
+		divisionDescResp := resp.([]tc.Division)
+		var descSortedList []string
+		var ascSortedList []string
+		assert.RequireGreaterOrEqual(t, len(divisionDescResp), 2, "Need at least 2 Divisions in Traffic Ops to test desc sort, found: %d", len(divisionDescResp))
+		// Get Divisions in the default ascending order for comparison.
+		divisionAscResp, _, err := TOSession.GetDivisions(client.RequestOptions{})
+		assert.RequireNoError(t, err, "Unexpected error getting Divisions with default sort order: %v - alerts: %+v", err, divisionAscResp.Alerts)
+		// Verify the response match in length, i.e. equal amount of CDNs.
+		assert.RequireEqual(t, len(divisionAscResp.Response), len(divisionDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(divisionAscResp.Response), len(divisionDescResp))
+		// Insert Division names to the front of a new list, so they are now reversed to be in ascending order.
+		for _, division := range divisionDescResp {
+			descSortedList = append([]string{division.Name}, descSortedList...)
 		}
-		if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "cannot delete division because it is being used by a region") {
-			found = true
+		// Insert Division names by appending to a new list, so they stay in ascending order.
+		for _, division := range divisionAscResp.Response {
+			ascSortedList = append(ascSortedList, division.Name)
 		}
+		assert.Exactly(t, ascSortedList, descSortedList, "Division responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
 	}
-	if !found {
-		t.Errorf("unexpected error occured: %v - alerts: %+v", err, alerts)
-	}
+}
 
+func GetDivisionID(t *testing.T, divisionName string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", divisionName)
+		divisionsResp, _, err := TOSession.GetDivisions(opts)
+		assert.RequireNoError(t, err, "Get Divisions Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(divisionsResp.Response), "Expected response object length 1, but got %d", len(divisionsResp.Response))
+		return divisionsResp.Response[0].ID
+	}
 }
 
 func CreateTestDivisions(t *testing.T) {
 	for _, division := range testData.Divisions {
 		resp, _, err := TOSession.CreateDivision(division, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("could not create Division '%s': %v - alerts: %+v", division.Name, err, resp.Alerts)
-		}
-	}
-}
-
-func SortTestDivisions(t *testing.T) {
-	resp, _, err := TOSession.GetDivisions(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	sortedList := make([]string, 0, len(resp.Response))
-	for _, division := range resp.Response {
-		sortedList = append(sortedList, division.Name)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func SortTestDivisionDesc(t *testing.T) {
-	respAsc, _, err := TOSession.GetDivisions(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Expected no error, but got error in Division Ascending: %v - alerts: %+v", err, respAsc.Alerts)
-	}
-	if len(respAsc.Response) < 1 {
-		t.Fatal("Need at least one Division in Traffic Ops to test default vs explicit sort order")
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("sortOrder", "desc")
-	respDesc, _, err := TOSession.GetDivisions(opts)
-	if err != nil {
-		t.Errorf("Expected no error, but got error in Division Descending: %v - alerts: %+v", err, respDesc.Alerts)
-	}
-	if len(respDesc.Response) < 1 {
-		t.Fatal("Traffic Ops returned at least one Division using default sort order, but zero Divisions using explicit 'desc' sort order")
-	}
-
-	if len(respAsc.Response) != len(respDesc.Response) {
-		t.Fatalf("Ascending sort response lists %d Divisions, descending lists %d; these should/must be the same", len(respAsc.Response), len(respDesc.Response))
-	}
-
-	// TODO: check that the whole thing is sorted, not just the first/last elements?
-	// TODO: verify more than one in each response - list of length one is trivially sorted both ascending and descending
-
-	// reverse the descending-sorted response and compare it to the ascending-sorted one
-	for start, end := 0, len(respDesc.Response)-1; start < end; start, end = start+1, end-1 {
-		respDesc.Response[start], respDesc.Response[end] = respDesc.Response[end], respDesc.Response[start]
-	}
-	if len(respDesc.Response[0].Name) > 0 && len(respAsc.Response[0].Name) > 0 {
-		if respDesc.Response[0].Name != respAsc.Response[0].Name {
-			t.Errorf("Division responses are not equal after reversal: %s - %s", respDesc.Response[0].Name, respAsc.Response[0].Name)
-		}
-	} else {
-		t.Errorf("Division name shouldn't be empty while sorting the response")
-	}
-}
-
-func UpdateTestDivisions(t *testing.T) {
-	if len(testData.Divisions) < 1 {
-		t.Fatal("Need at least one Division to test updating Divisions")
-	}
-	firstDivision := testData.Divisions[0]
-
-	// Retrieve the Division by division so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", firstDivision.Name)
-	resp, _, err := TOSession.GetDivisions(opts)
-	if err != nil {
-		t.Errorf("cannot get Division '%s': %v - alerts: %+v", firstDivision.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Division to exist with name '%s', found: %d", firstDivision.Name, len(resp.Response))
-	}
-	remoteDivision := resp.Response[0]
-	expectedDivision := "division-test"
-	remoteDivision.Name = expectedDivision
-
-	alert, _, err := TOSession.UpdateDivision(remoteDivision.ID, remoteDivision, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update Division '%s' (#%d): %v - alerts: %+v", firstDivision.Name, remoteDivision.ID, err, alert.Alerts)
-	}
-
-	// Retrieve the Division to check division got updated
-	opts.QueryParameters.Del("name")
-	opts.QueryParameters.Set("id", strconv.Itoa(remoteDivision.ID))
-	resp, _, err = TOSession.GetDivisions(opts)
-	if err != nil {
-		t.Errorf("cannot get Division #%d: %v - alerts: %+v", remoteDivision.ID, err, resp.Alerts)
-	}
-	if len(resp.Response) > 0 {
-		respDivision := resp.Response[0]
-		if respDivision.Name != expectedDivision {
-			t.Errorf("results do not match actual: %s, expected: %s", respDivision.Name, expectedDivision)
-		}
-
-		// Set the name back to the fixture value so we can delete it after
-		remoteDivision.Name = firstDivision.Name
-		alert, _, err = TOSession.UpdateDivision(remoteDivision.ID, remoteDivision, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot update Division #%d: %v - alerts: %+v", remoteDivision.ID, err, alert.Alerts)
-		}
-	}
-}
-
-func GetTestDivisions(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, division := range testData.Divisions {
-		opts.QueryParameters.Set("name", division.Name)
-		resp, _, err := TOSession.GetDivisions(opts)
-		if err != nil {
-			t.Errorf("cannot get Division '%s': %v - alerts: %+v", division.Name, err, resp)
-		}
+		assert.RequireNoError(t, err, "Could not create Division '%s': %v - alerts: %+v", division.Name, err, resp.Alerts)
 	}
 }
 
 func DeleteTestDivisions(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, division := range testData.Divisions {
-		// Retrieve the Division by name so we can get the id
-		opts.QueryParameters.Set("name", division.Name)
-		resp, _, err := TOSession.GetDivisions(opts)
-		if err != nil {
-			t.Errorf("cannot get Division '%s': %v - alerts: %+v", division.Name, err, resp.Alerts)
-		}
-		if len(resp.Response) != 1 {
-			t.Errorf("Expected exactly one Division to exist with the name '%s', found: %d", division.Name, len(resp.Response))
-			continue
-		}
-		respDivision := resp.Response[0]
-
-		delResp, _, err := TOSession.DeleteDivision(respDivision.ID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot DELETE Division '%s' (#%d): %v - alerts: %+v", division.Name, respDivision.ID, err, delResp.Alerts)
-		}
-
+	divisions, _, err := TOSession.GetDivisions(client.RequestOptions{})
+	assert.NoError(t, err, "Cannot get Divisions: %v - alerts: %+v", err, divisions.Alerts)
+	for _, division := range divisions.Response {
+		alerts, _, err := TOSession.DeleteDivision(division.ID, client.RequestOptions{})
+		assert.NoError(t, err, "Unexpected error deleting Division '%s' (#%d): %v - alerts: %+v", division.Name, division.ID, err, alerts.Alerts)
 		// Retrieve the Division to see if it got deleted
-		resp, _, err = TOSession.GetDivisions(opts)
-		if err != nil {
-			t.Errorf("error fetching Division '%s' after deletion: %v - alerts: %+v", division.Name, err, resp.Alerts)
-		}
-		if len(resp.Response) > 0 {
-			t.Errorf("expected Division : %s to be deleted, but it was returned by Traffic Ops", division.Name)
-		}
-	}
-}
-
-func GetTestPaginationSupportDivision(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetDivisions(opts)
-	if err != nil {
-		t.Fatalf("cannot get Divisions: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) < 2 {
-		t.Fatalf("Need at least 2 Divisions to test Division pagination, only found: %d", len(resp.Response))
-	}
-	divisions := resp.Response
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	divisionsWithLimit, _, err := TOSession.GetDivisions(opts)
-	if err == nil {
-		if !reflect.DeepEqual(divisions[:1], divisionsWithLimit.Response) {
-			t.Error("expected GET Divisions with limit = 1 to return first result")
-		}
-	} else {
-		t.Errorf("Unexpected error getting Divisions with a limit: %v - alerts: %+v", err, divisionsWithLimit.Alerts)
-	}
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "1")
-	divisionsWithOffset, _, err := TOSession.GetDivisions(opts)
-	if err == nil {
-		if !reflect.DeepEqual(divisions[1:2], divisionsWithOffset.Response) {
-			t.Error("expected GET Divisions with limit = 1, offset = 1 to return second result")
-		}
-	} else {
-		t.Errorf("Unexpected error getting Divisions with a limit and an offset: %v - alerts: %+v", err, divisionsWithOffset.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "2")
-	divisionsWithPage, _, err := TOSession.GetDivisions(opts)
-	if err == nil {
-		if !reflect.DeepEqual(divisions[1:2], divisionsWithPage.Response) {
-			t.Error("expected GET Divisions with limit = 1, page = 2 to return second result")
-		}
-	} else {
-		t.Errorf("Unexpected error getting Divisions with a limit and a page: %v - alerts: %+v", err, divisionsWithPage.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "-2")
-	resp, _, err = TOSession.GetDivisions(opts)
-	if err == nil {
-		t.Error("expected GET Divisions to return an error when limit is not bigger than -1")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
-		t.Errorf("expected GET Divisions to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "0")
-	resp, _, err = TOSession.GetDivisions(opts)
-	if err == nil {
-		t.Error("expected GET Divisions to return an error when offset is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET Divisions to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "0")
-	resp, _, err = TOSession.GetDivisions(opts)
-	if err == nil {
-		t.Error("expected GET Divisions to return an error when offset is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET Divisions to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "0")
-	resp, _, err = TOSession.GetDivisions(opts)
-	if err == nil {
-		t.Error("expected GET Divisions to return an error when page is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET Divisions to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func GetDivisionByInvalidId(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("id", "10000")
-	resp, _, err := TOSession.GetDivisions(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Division by presumably invalid ID (10000): %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Expected to find exactly zero Divisions with presumably invalid ID (10000), found: %d", len(resp.Response))
-	}
-}
-
-func GetDivisionByInvalidName(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "abcd")
-	resp, _, err := TOSession.GetDivisions(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Division by presumably invalid name ('abcd'): %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Expected to find exactly zero Divisions with presumably invalid name ('abcd'), found: %d", len(resp.Response))
-	}
-}
-
-func DeleteTestDivisionsByInvalidId(t *testing.T) {
-	delResp, _, err := TOSession.DeleteDivision(10000, client.RequestOptions{})
-	if err == nil {
-		t.Errorf("Expected an error deleting Division with presumably invalid ID (10000), didn't get one - alerts: %+v", delResp.Alerts)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("id", strconv.Itoa(division.ID))
+		getDivision, _, err := TOSession.GetDivisions(opts)
+		assert.NoError(t, err, "Error getting Division '%s' after deletion: %v - alerts: %+v", division.Name, err, getDivision.Alerts)
+		assert.Equal(t, 0, len(getDivision.Response), "Expected Division '%s' to be deleted, but it was found in Traffic Ops", division.Name)
 	}
 }
