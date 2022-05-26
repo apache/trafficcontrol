@@ -41,6 +41,12 @@ const DefaultMaxRevalDurationDays = 90
 const JobKeywordPurge = "PURGE"
 const RegexRevalidateMinTTL = time.Hour
 
+type RevalType string
+
+const MISS = RevalType("MISS")
+const STALE = RevalType("STALE")
+const DefaultRevalType = STALE
+
 const ContentTypeRegexRevalidateDotConfig = ContentTypeTextASCII
 const LineCommentRegexRevalidateDotConfig = LineCommentHash
 
@@ -110,8 +116,8 @@ func MakeRegexRevalidateDotConfig(
 	txt := makeHdrComment(opt.HdrComment)
 	for _, job := range cfgJobs {
 		txt += job.AssetURL + " " + strconv.FormatInt(job.PurgeEnd.Unix(), 10)
-		if job.Type != "" {
-			txt += " " + job.Type
+		if job.Type != "" && job.Type != DefaultRevalType {
+			txt += " " + string(job.Type)
 		}
 		txt += "\n"
 	}
@@ -127,7 +133,7 @@ func MakeRegexRevalidateDotConfig(
 type revalJob struct {
 	AssetURL string
 	PurgeEnd time.Time
-	Type     string // MISS or STALE (default)
+	Type     RevalType // MISS or STALE (default)
 }
 
 type jobsSort []revalJob
@@ -188,13 +194,10 @@ func filterJobs(tcJobs []InvalidationJob, maxReval time.Duration, minTTL time.Du
 	return newJobs
 }
 
-const MISS = "MISS"
-const STALE = "STALE"
-
 // processRefetch determines the type of Invalidation, returns the corresponding jobtype
 // and "cleans" the regex URL for the asset to be invalidated. REFETCH trumps REFRESH,
 // whether in the AssetURL or as InvalidationType
-func processRefetch(invalidationType, assetURL string) (string, string) {
+func processRefetch(invalidationType, assetURL string) (RevalType, string) {
 
 	if (len(invalidationType) > 0 && invalidationType == tc.REFETCH) || strings.HasSuffix(assetURL, RefetchSuffix) {
 		assetURL = strings.TrimSuffix(assetURL, RefetchSuffix)
