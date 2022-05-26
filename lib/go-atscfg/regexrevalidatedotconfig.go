@@ -43,9 +43,9 @@ const RegexRevalidateMinTTL = time.Hour
 
 type RevalType string
 
-const MISS = RevalType("MISS")
-const STALE = RevalType("STALE")
-const DefaultRevalType = STALE
+const RevalTypeMiss = RevalType("MISS")
+const RevalTypeStale = RevalType("STALE")
+const RevalTypeDefault = RevalTypeStale
 
 const ContentTypeRegexRevalidateDotConfig = ContentTypeTextASCII
 const LineCommentRegexRevalidateDotConfig = LineCommentHash
@@ -116,7 +116,7 @@ func MakeRegexRevalidateDotConfig(
 	txt := makeHdrComment(opt.HdrComment)
 	for _, job := range cfgJobs {
 		txt += job.AssetURL + " " + strconv.FormatInt(job.PurgeEnd.Unix(), 10)
-		if job.Type != "" && job.Type != DefaultRevalType {
+		if job.Type != "" && job.Type != RevalTypeDefault {
 			txt += " " + string(job.Type)
 		}
 		txt += "\n"
@@ -133,7 +133,7 @@ func MakeRegexRevalidateDotConfig(
 type revalJob struct {
 	AssetURL string
 	PurgeEnd time.Time
-	Type     RevalType // MISS or STALE (default)
+	Type     RevalType // RevalTypeMiss or RevalTypeStale (default)
 }
 
 type jobsSort []revalJob
@@ -201,11 +201,11 @@ func processRefetch(invalidationType, assetURL string) (RevalType, string) {
 
 	if (len(invalidationType) > 0 && invalidationType == tc.REFETCH) || strings.HasSuffix(assetURL, RefetchSuffix) {
 		assetURL = strings.TrimSuffix(assetURL, RefetchSuffix)
-		return MISS, assetURL
+		return RevalTypeMiss, assetURL
 	}
 
 	// Default value. Either the InvalidationType == REFRESH
 	// or the suffix is ##REFRESH## or neither
 	assetURL = strings.TrimSuffix(assetURL, RefreshSuffix)
-	return STALE, assetURL
+	return RevalTypeStale, assetURL
 }
