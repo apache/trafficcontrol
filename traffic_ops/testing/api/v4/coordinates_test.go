@@ -16,462 +16,348 @@ package v4
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 	"sort"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestCoordinates(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Coordinates}, func() {
-		GetTestCoordinatesIMS(t)
-		GetTestCoordinates(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		SortTestCoordinates(t)
-		SortTestCoordinatesDesc(t)
-		UpdateTestCoordinates(t)
-		UpdateTestCoordinatesWithHeaders(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestCoordinatesWithHeaders(t, header)
-		GetTestCoordinatesIMSAfterChange(t, header)
-		GetTestCoordinatesByInvalidId(t)
-		GetTestCoordiantesByInvalidName(t)
-		GetTestPaginationSupportCoordinates(t)
-		CreateTestCoordinatesWithInvalidName(t)
-		CreateTestCoordinatesWithInvalidLatitude(t)
-		CreateTestCoordinatesWithInvalidLogitude(t)
-		UpdateTestCoordinatesByInvalidId(t)
-		DeleteTestCoordinatesByInvalidId(t)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCoordinateSort()),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"coordinate1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateCoordinateFields(map[string]interface{}{"Name": "coordinate1"})),
+				},
+				"EMPTY RESPONSE when INVALID ID parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {"10000"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when INVALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"abcd"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"VALID when SORTORDER param is DESC": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCoordinateDescSort()),
+				},
+				"FIRST RESULT when LIMIT=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCoordinatePagination("limit")),
+				},
+				"SECOND RESULT when LIMIT=1 OFFSET=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCoordinatePagination("offset")),
+				},
+				"SECOND RESULT when LIMIT=1 PAGE=2": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCoordinatePagination("page")),
+				},
+				"BAD REQUEST when INVALID LIMIT parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID OFFSET parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID PAGE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"POST": {
+				"BAD REQUEST when INVALID NAME": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"latitude":  1.1,
+						"longitude": 2.2,
+						"name":      "",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID LATITUDE": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"latitude":  20000,
+						"longitude": 2.2,
+						"name":      "testlatitude",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID LONGITUDE": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"latitude":  1.1,
+						"longitude": 20000,
+						"name":      "testlongitude",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetCoordinateID(t, "coordinate2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"latitude":  7.7,
+						"longitude": 8.8,
+						"name":      "coordinate2",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateCoordinateUpdateCreateFields("coordinate2", map[string]interface{}{"Latitude": 7.7, "Longitude": 8.8})),
+				},
+				"NOT FOUND when INVALID ID parameter": {
+					EndpointId: func() int { return 111111 },
+					RequestBody: map[string]interface{}{
+						"latitude":  1.1,
+						"longitude": 2.2,
+						"name":      "coordinate1",
+					},
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:    GetCoordinateID(t, "coordinate1"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody: map[string]interface{}{
+						"latitude":  1.1,
+						"longitude": 2.2,
+						"name":      "coordinate1",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetCoordinateID(t, "coordinate1"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"latitude":  1.1,
+						"longitude": 2.2,
+						"name":      "coordinate1",
+					},
+					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"NOT FOUND when INVALID ID parameter": {
+					EndpointId:    func() int { return 12345 },
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					coordinate := tc.Coordinate{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &coordinate)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetCoordinates(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateCoordinate(coordinate, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateCoordinate(testCase.EndpointId(), coordinate, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteCoordinate(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestCoordinatesWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Coordinates) < 1 {
-		t.Error("Need at least one Coordinate to test updating a Coordinate with an HTTP header")
-		return
-	}
-	firstCoord := testData.Coordinates[0]
-
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	opts.QueryParameters.Set("name", firstCoord.Name)
-
-	resp, _, err := TOSession.GetCoordinates(opts)
-	if err != nil {
-		t.Errorf("cannot get Coordinate '%s' from Traffic Ops: %v - alerts: %+v", firstCoord.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) > 0 {
-		coord := resp.Response[0]
-		expectedLat := 12.34
-		coord.Latitude = expectedLat
-
-		opts.QueryParameters.Del("name")
-		_, reqInf, err := TOSession.UpdateCoordinate(coord.ID, coord, opts)
-		if err == nil {
-			t.Errorf("Expected error about precondition failed, but got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-		}
-	} else {
-		t.Errorf("No Coordinates available to update")
-	}
-}
-
-func GetTestCoordinatesIMSAfterChange(t *testing.T, header http.Header) {
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	for _, coord := range testData.Coordinates {
-		opts.QueryParameters.Set("name", coord.Name)
-		resp, reqInf, err := TOSession.GetCoordinates(opts)
-		if err != nil {
-			t.Errorf("could not get Coordinate '%s' from Traffic Ops: %v - alerts: %+v", coord.Name, err, resp.Alerts)
-			return
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
-			return
-		}
-	}
-
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-
-	opts.Header.Set(rfc.IfModifiedSince, timeStr)
-
-	for _, coord := range testData.Coordinates {
-		opts.QueryParameters.Set("name", coord.Name)
-		resp, reqInf, err := TOSession.GetCoordinates(opts)
-		if err != nil {
-			t.Fatalf("could not get Coordinate '%s' from Traffic Ops: %v - alerts: %+v", coord.Name, err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+func validateCoordinateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Coordinate response to not be nil.")
+		coordinateResp := resp.([]tc.Coordinate)
+		for field, expected := range expectedResp {
+			for _, coordinate := range coordinateResp {
+				switch field {
+				case "Name":
+					assert.Equal(t, expected, coordinate.Name, "Expected Name to be %v, but got %s", expected, coordinate.Name)
+				case "Latitude":
+					assert.Equal(t, expected, coordinate.Latitude, "Expected Latitude to be %v, but got %s", expected, coordinate.Latitude)
+				case "Longitude":
+					assert.Equal(t, expected, coordinate.Longitude, "Expected Longitude to be %v, but got %s", expected, coordinate.Longitude)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
 		}
 	}
 }
 
-func GetTestCoordinatesIMS(t *testing.T) {
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
+func validateCoordinateUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", name)
+		coordinates, _, err := TOSession.GetCoordinates(opts)
+		assert.RequireNoError(t, err, "Error getting Coordinate: %v - alerts: %+v", err, coordinates.Alerts)
+		assert.RequireEqual(t, 1, len(coordinates.Response), "Expected one Coordinate returned Got: %d", len(coordinates.Response))
+		validateCoordinateFields(expectedResp)(t, toclientlib.ReqInf{}, coordinates.Response, tc.Alerts{}, nil)
+	}
+}
 
-	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	for _, coord := range testData.Coordinates {
-		opts.QueryParameters.Set("name", coord.Name)
-		resp, reqInf, err := TOSession.GetCoordinates(opts)
-		if err != nil {
-			t.Errorf("Unexpected error getting Coordinate '%s': %v - alerts: %+v", coord.Name, err, resp.Alerts)
+func validateCoordinatePagination(paginationParam string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		paginationResp := resp.([]tc.Coordinate)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("orderby", "id")
+		respBase, _, err := TOSession.GetCoordinates(opts)
+		assert.RequireNoError(t, err, "Cannot get Coordinates: %v - alerts: %+v", err, respBase.Alerts)
+
+		coordinate := respBase.Response
+		assert.RequireGreaterOrEqual(t, len(coordinate), 2, "Need at least 2 Coordinates in Traffic Ops to test pagination support, found: %d", len(coordinate))
+		switch paginationParam {
+		case "limit:":
+			assert.Exactly(t, coordinate[:1], paginationResp, "expected GET Coordinates with limit = 1 to return first result")
+		case "offset":
+			assert.Exactly(t, coordinate[1:2], paginationResp, "expected GET Coordinates with limit = 1, offset = 1 to return second result")
+		case "page":
+			assert.Exactly(t, coordinate[1:2], paginationResp, "expected GET Coordinates with limit = 1, page = 2 to return second result")
 		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func validateCoordinateSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Coordinate response to not be nil.")
+		var coordinateNames []string
+		coordinateResp := resp.([]tc.Coordinate)
+		for _, coordinate := range coordinateResp {
+			coordinateNames = append(coordinateNames, coordinate.Name)
 		}
+		assert.Equal(t, true, sort.StringsAreSorted(coordinateNames), "List is not sorted by their names: %v", coordinateNames)
+	}
+}
+
+func validateCoordinateDescSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Coordinate response to not be nil.")
+		coordinateDescResp := resp.([]tc.Coordinate)
+		var descSortedList []string
+		var ascSortedList []string
+		assert.RequireGreaterOrEqual(t, len(coordinateDescResp), 2, "Need at least 2 Coordinates in Traffic Ops to test desc sort, found: %d", len(coordinateDescResp))
+		// Get Coordinates in the default ascending order for comparison.
+		coordinateAscResp, _, err := TOSession.GetCoordinates(client.RequestOptions{})
+		assert.RequireNoError(t, err, "Unexpected error getting Coordinates with default sort order: %v - alerts: %+v", err, coordinateAscResp.Alerts)
+		// Verify the response match in length, i.e. equal amount of Coordinates.
+		assert.RequireEqual(t, len(coordinateAscResp.Response), len(coordinateDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(coordinateAscResp.Response), len(coordinateDescResp))
+		// Insert Coordinate names to the front of a new list, so they are now reversed to be in ascending order.
+		for _, division := range coordinateDescResp {
+			descSortedList = append([]string{division.Name}, descSortedList...)
+		}
+		// Insert Coordinate names by appending to a new list, so they stay in ascending order.
+		for _, coordinate := range coordinateAscResp.Response {
+			ascSortedList = append(ascSortedList, coordinate.Name)
+		}
+		assert.Exactly(t, ascSortedList, descSortedList, "Coordinate responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
+	}
+}
+
+func GetCoordinateID(t *testing.T, coordinateName string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", coordinateName)
+		coordinatesResp, _, err := TOSession.GetCoordinates(opts)
+		assert.RequireNoError(t, err, "Get Coordinate Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(coordinatesResp.Response), "Expected response object length 1, but got %d", len(coordinatesResp.Response))
+		return coordinatesResp.Response[0].ID
 	}
 }
 
 func CreateTestCoordinates(t *testing.T) {
-	for _, coord := range testData.Coordinates {
-		resp, _, err := TOSession.CreateCoordinate(coord, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("could not create coordinate: %v - alerts: %+v", err, resp.Alerts)
-		}
-	}
-}
-
-func GetTestCoordinates(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, coord := range testData.Coordinates {
-		opts.QueryParameters.Set("name", coord.Name)
-		resp, _, err := TOSession.GetCoordinates(opts)
-		if err != nil {
-			t.Errorf("cannot get Coordinate '%s' from Traffic Ops: %v - alerts: %v", coord.Name, err, resp.Alerts)
-		}
-	}
-}
-
-func SortTestCoordinates(t *testing.T) {
-	var sortedList []string
-	resp, _, err := TOSession.GetCoordinates(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Unexpected error getting Coordinates from Traffic Ops: %v - alerts: %+v", err, resp.Alerts)
-	}
-	for _, coord := range resp.Response {
-		sortedList = append(sortedList, coord.Name)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func SortTestCoordinatesDesc(t *testing.T) {
-
-	resp, _, err := TOSession.GetCoordinates(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting Coordinates with default sort order: %v - alerts: %+v", err, resp.Alerts)
-	}
-	respAsc := resp.Response
-	if len(respAsc) < 1 {
-		t.Fatal("Need at least one Coordinate in Traffic Ops to test sort ordering")
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("sortOrder", "desc")
-	resp, _, err = TOSession.GetCoordinates(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Coordinates with explicit descending sort order: %v - alerts: %+v", err, resp.Alerts)
-	}
-	respDesc := resp.Response
-	if len(respDesc) < 1 {
-		t.Fatal("Need at least one Coordinate in Traffic Ops to test sort ordering")
-	}
-
-	if len(respAsc) != len(respDesc) {
-		t.Fatalf("Traffic Ops returned %d Coordinates using default sort order, but returned %d Coordinates using explicit descending sort order", len(respAsc), len(respDesc))
-	}
-
-	// reverse the descending-sorted response and compare it to the ascending-sorted one
-	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
-		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
-	}
-	if respDesc[0].Name != respAsc[0].Name {
-		t.Errorf("Coordinates responses are not equal after reversal: %s - %s", respDesc[0].Name, respAsc[0].Name)
-	}
-}
-
-func UpdateTestCoordinates(t *testing.T) {
-	if len(testData.Coordinates) < 1 {
-		t.Fatal("Need at least one Coordinate to test updating Coordinates")
-	}
-	firstCoord := testData.Coordinates[0]
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", firstCoord.Name)
-	resp, _, err := TOSession.GetCoordinates(opts)
-	if err != nil {
-		t.Errorf("cannot get Coordinate '%s' by name: %v - alerts: %+v", firstCoord.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Coordinate to exist with name '%s', found: %d", firstCoord.Name, len(resp.Response))
-	}
-	coord := resp.Response[0]
-	expectedLat := 12.34
-	coord.Latitude = expectedLat
-
-	alert, _, err := TOSession.UpdateCoordinate(coord.ID, coord, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update Coordinate: %v - alerts: %+v", err, alert.Alerts)
-	}
-
-	// Retrieve the Coordinate to check Coordinate name got updated
-	opts.QueryParameters.Del("name")
-	opts.QueryParameters.Set("id", strconv.Itoa(coord.ID))
-	resp, _, err = TOSession.GetCoordinates(opts)
-	if err != nil {
-		t.Errorf("cannot get Coordinate '%s' by id: %v - alerts: %+v", firstCoord.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) > 0 {
-		coord = resp.Response[0]
-		if coord.Latitude != expectedLat {
-			t.Errorf("results do not match actual: %s, expected: %f", coord.Name, expectedLat)
-		}
-	} else {
-		t.Errorf("Can't retrieve coordinates to check the updated value")
+	for _, coordinate := range testData.Coordinates {
+		resp, _, err := TOSession.CreateCoordinate(coordinate, client.RequestOptions{})
+		assert.RequireNoError(t, err, "Could not create coordinate: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
 func DeleteTestCoordinates(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, coord := range testData.Coordinates {
-		// Retrieve the Coordinate by name so we can get the id for the Update
-		opts.QueryParameters.Set("name", coord.Name)
-		resp, _, err := TOSession.GetCoordinates(opts)
-		if err != nil {
-			t.Errorf("cannot get Coordinate '%s' from Traffic Ops: %v - alerts: %+v", coord.Name, err, resp.Alerts)
-		}
-		if len(resp.Response) > 0 {
-			respCoord := resp.Response[0]
-			delResp, _, err := TOSession.DeleteCoordinate(respCoord.ID, client.RequestOptions{})
-			if err != nil {
-				t.Errorf("cannot delete Coordinate '%s' (#%d): %v - alerts: %+v", respCoord.Name, respCoord.ID, err, delResp.Alerts)
-			}
-			// Retrieve the Coordinate to see if it got deleted
-			coords, _, err := TOSession.GetCoordinates(opts)
-			if err != nil {
-				t.Errorf("Unexpected error fetching Coordinate '%s' (#%d) after deletion: %v - alerts: %+v", coord.Name, respCoord.ID, err, coords.Alerts)
-			}
-			if len(coords.Response) > 0 {
-				t.Errorf("expected Coordinate '%s' (#%d) to be deleted, but found it in Traffic Ops after deletion", coord.Name, respCoord.ID)
-			}
-		} else {
-			t.Errorf("No Coordinates available to delete")
-		}
-	}
-}
-
-func GetTestCoordinatesByInvalidId(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("id", "10000")
-	coordinatesResp, _, err := TOSession.GetCoordinates(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Coordinates by presumably invalid ID: %v - alerts: %+v", err, coordinatesResp.Alerts)
-	}
-	if len(coordinatesResp.Response) >= 1 {
-		t.Errorf("Didn't expect to find a Coordinate with a presumably invalid ID in Traffic Ops response: %v", coordinatesResp.Response)
-	}
-}
-
-func GetTestCoordiantesByInvalidName(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "abcd")
-	coordinatesResp, _, err := TOSession.GetCoordinates(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Coordinates filtered by presumably non-existent name: %v - alerts: %+v", err, coordinatesResp.Alerts)
-	}
-	if len(coordinatesResp.Response) >= 1 {
-		t.Errorf("Didn't expect to find Coordinate with presumably non-existent name in Traffic Ops response: %v", coordinatesResp.Response)
-	}
-}
-
-func GetTestPaginationSupportCoordinates(t *testing.T) {
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetCoordinates(opts)
-	if err != nil {
-		t.Fatalf("cannot get Coordinates: %v - alerts: %+v", err, resp.Alerts)
-	}
-	coordinates := resp.Response
-	if len(coordinates) < 2 {
-		t.Fatal("Need at least two Coordinates in Traffic Ops to test Coordinate pagination")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	coordinatesWithLimit, _, err := TOSession.GetCoordinates(opts)
-	if err == nil {
-		if !reflect.DeepEqual(coordinates[:1], coordinatesWithLimit.Response) {
-			t.Error("expected GET Coordinates with limit = 1 to return first result")
-		}
-	} else {
-		t.Error("Error in getting coordinates by limit")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "1")
-	coordinatesWithOffset, _, err := TOSession.GetCoordinates(opts)
-	if err == nil {
-		if !reflect.DeepEqual(coordinates[1:2], coordinatesWithOffset.Response) {
-			t.Error("expected GET Coordinates with limit = 1, offset = 1 to return second result")
-		}
-	} else {
-		t.Error("Error in getting coordinates by limit and offset")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "2")
-	coordinatesWithPage, _, err := TOSession.GetCoordinates(opts)
-	if err == nil {
-		if !reflect.DeepEqual(coordinates[1:2], coordinatesWithPage.Response) {
-			t.Error("expected GET Coordinates with limit = 1, page = 2 to return second result")
-		}
-	} else {
-		t.Error("Error in getting coordinates by limit and page")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "-2")
-	resp, _, err = TOSession.GetCoordinates(opts)
-	if err == nil {
-		t.Error("expected GET Coordinates to return an error when limit is not bigger than -1")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
-		t.Errorf("expected GET Coordinates to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "0")
-	resp, _, err = TOSession.GetCoordinates(opts)
-	if err == nil {
-		t.Error("expected GET Coordinates to return an error when offset is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET Coordinates to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "0")
-	resp, _, err = TOSession.GetCoordinates(opts)
-	if err == nil {
-		t.Error("expected GET Coordinates to return an error when page is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET Coordinates to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func CreateTestCoordinatesWithInvalidName(t *testing.T) {
-	if len(testData.Coordinates) < 1 {
-		t.Fatal("No Coordinates available to fetch")
-	}
-	firstCoordinates := testData.Coordinates[0]
-	firstCoordinates.Name = ""
-	_, reqInf, err := TOSession.CreateCoordinate(firstCoordinates, client.RequestOptions{})
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
-	}
-	if err == nil {
-		t.Errorf("Expected an error creating a Coordinate with an invalid name, but didn't get one")
-	}
-}
-
-func CreateTestCoordinatesWithInvalidLatitude(t *testing.T) {
-	if len(testData.Coordinates) < 1 {
-		t.Fatal("No Coordinates available to fetch")
-	}
-	firstCoordinates := testData.Coordinates[0]
-	firstCoordinates.Latitude = 20000
-	_, reqInf, err := TOSession.CreateCoordinate(firstCoordinates, client.RequestOptions{})
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
-	}
-	if err == nil {
-		t.Errorf("Expected an error creating a Coordinate with an invalid Latitude, but didn't get one")
-	}
-}
-
-func CreateTestCoordinatesWithInvalidLogitude(t *testing.T) {
-	if len(testData.Coordinates) < 1 {
-		t.Fatal("No Coordinates available to fetch")
-	}
-	firstCoordinates := testData.Coordinates[0]
-	firstCoordinates.Longitude = 20000
-	_, reqInf, err := TOSession.CreateCoordinate(firstCoordinates, client.RequestOptions{})
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
-	}
-	if err == nil {
-		t.Errorf("Expected an error creating a Coordinate with an invalid Latitude, but didn't get one")
-	}
-}
-
-func UpdateTestCoordinatesByInvalidId(t *testing.T) {
-	if len(testData.Coordinates) < 1 {
-		t.Fatal("No Coordinates available to update")
-	}
-	firstCoord := testData.Coordinates[0]
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", firstCoord.Name)
-	resp, reqInf, err := TOSession.GetCoordinates(opts)
-	if err != nil {
-		t.Errorf("cannot get Coordinate '%s' by name: %v - alerts: %+v", firstCoord.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Coordinate to exist with name '%s', found: %d", firstCoord.Name, len(resp.Response))
-	}
-	coord := resp.Response[0]
-	expectedLat := 12.34
-	coord.Latitude = expectedLat
-
-	var alert tc.Alerts
-	alert, reqInf, err = TOSession.UpdateCoordinate(10000, coord, client.RequestOptions{})
-	if err == nil {
-		t.Errorf("Expected an error updating a Coordinate with a presumably non-existent ID, but didn't get one - alerts: %+v", alert.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusNotFound {
-		t.Fatalf("Expected 404 status code, got %v", reqInf.StatusCode)
-	}
-}
-
-func DeleteTestCoordinatesByInvalidId(t *testing.T) {
-	alerts, reqInf, err := TOSession.DeleteCoordinate(12345, client.RequestOptions{})
-	if err == nil {
-		t.Errorf("Expected an error deleting a Coordinate with a presumably non-existent ID, but didn't get one - alerts: %+v", alerts.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusNotFound {
-		t.Fatalf("Expected 404 status code, got %v", reqInf.StatusCode)
+	coordinates, _, err := TOSession.GetCoordinates(client.RequestOptions{})
+	assert.NoError(t, err, "Cannot get Coordinates: %v - alerts: %+v", err, coordinates.Alerts)
+	for _, coordinate := range coordinates.Response {
+		alerts, _, err := TOSession.DeleteCoordinate(coordinate.ID, client.RequestOptions{})
+		assert.NoError(t, err, "Unexpected error deleting Coordinate '%s' (#%d): %v - alerts: %+v", coordinate.Name, coordinate.ID, err, alerts.Alerts)
+		// Retrieve the Coordinate to see if it got deleted
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("id", strconv.Itoa(coordinate.ID))
+		getCoordinate, _, err := TOSession.GetCoordinates(opts)
+		assert.NoError(t, err, "Error getting Coordinate '%s' after deletion: %v - alerts: %+v", coordinate.Name, err, getCoordinate.Alerts)
+		assert.Equal(t, 0, len(getCoordinate.Response), "Expected Coordinate '%s' to be deleted, but it was found in Traffic Ops", coordinate.Name)
 	}
 }
