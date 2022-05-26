@@ -81,6 +81,8 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
     },
     "disable_auto_cert_deletion": false,
     "use_ims": true,
+    "server_update_status_cache_refresh_interval_sec": 0,
+    "user_cache_refresh_interval_sec": 0,
     "role_based_permissions": true,
     "traffic_ops_golang" : {
           "traffic_vault_backend": "$TV_BACKEND",

@@ -99,6 +99,7 @@ const (
 		"workers" : 12
 	},
 	"user_cache_refresh_interval_sec": 30,
+	"server_update_status_cache_refresh_interval_sec": 15,
 	"disable_auto_cert_deletion": true,
 	"traffic_ops_golang" : {
 		"port" : "443",
@@ -239,7 +240,10 @@ func TestLoadConfig(t *testing.T) {
 		t.Errorf("expected traffic_vault_backend to be 'something', actual: '%s'", cfg.TrafficVaultBackend)
 	}
 	if cfg.UserCacheRefreshIntervalSec != 30 {
-		t.Errorf("expected user_refresh_interval_sec: 30, actual: %d", cfg.UserCacheRefreshIntervalSec)
+		t.Errorf("expected user_cache_refresh_interval_sec: 30, actual: %d", cfg.UserCacheRefreshIntervalSec)
+	}
+	if cfg.ServerUpdateStatusCacheRefreshIntervalSec != 15 {
+		t.Errorf("expected server_update_status_cache_refresh_interval_sec: 15, actual: %d", cfg.ServerUpdateStatusCacheRefreshIntervalSec)
 	}
 	tvConfig := make(map[string]string)
 	err = json.Unmarshal(cfg.TrafficVaultConfig, &tvConfig)

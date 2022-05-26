@@ -20,16 +20,18 @@ package server
  */
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net/http"
-
-	"github.com/lib/pq"
+	"sync"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+
+	"github.com/lib/pq"
 )
 
 func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +42,7 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	serverUpdateStatuses, err, _ := getServerUpdateStatus(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
+	serverUpdateStatuses, err, _ := getServerUpdateStatus(inf.Tx.Tx, inf.Params["host_name"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -56,7 +58,10 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatusV40, error, error) {
+func getServerUpdateStatus(tx *sql.Tx, hostName string) ([]tc.ServerUpdateStatusV40, error, error) {
+	if serverUpdateStatusCacheIsInitialized() {
+		return getServerUpdateStatusFromCache(hostName), nil, nil
+	}
 
 	updateStatuses := []tc.ServerUpdateStatusV40{}
 
@@ -174,4 +179,249 @@ ORDER BY s.id
 		updateStatuses = append(updateStatuses, us)
 	}
 	return updateStatuses, nil, nil
+}
+
+type serverUpdateStatuses struct {
+	serverMap map[string][]tc.ServerUpdateStatusV40
+	*sync.RWMutex
+	initialized bool
+	enabled     bool // note: enabled is only written to once at startup, before serving requests, so it doesn't need synchronized access
+}
+
+var serverUpdateStatusCache = serverUpdateStatuses{RWMutex: &sync.RWMutex{}}
+
+func serverUpdateStatusCacheIsInitialized() bool {
+	if serverUpdateStatusCache.enabled {
+		serverUpdateStatusCache.RLock()
+		defer serverUpdateStatusCache.RUnlock()
+		return serverUpdateStatusCache.initialized
+	}
+	return false
+}
+
+func getServerUpdateStatusFromCache(hostname string) []tc.ServerUpdateStatusV40 {
+	serverUpdateStatusCache.RLock()
+	defer serverUpdateStatusCache.RUnlock()
+	return serverUpdateStatusCache.serverMap[hostname]
+}
+
+var once = sync.Once{}
+
+func InitServerUpdateStatusCache(interval time.Duration, db *sql.DB, timeout time.Duration) {
+	once.Do(func() {
+		if interval <= 0 {
+			return
+		}
+		serverUpdateStatusCache.enabled = true
+		refreshServerUpdateStatusCache(db, timeout)
+		startServerUpdateStatusCacheRefresher(interval, db, timeout)
+	})
+}
+
+func startServerUpdateStatusCacheRefresher(interval time.Duration, db *sql.DB, timeout time.Duration) {
+	go func() {
+		for {
+			time.Sleep(interval)
+			refreshServerUpdateStatusCache(db, timeout)
+		}
+	}()
+}
+
+func refreshServerUpdateStatusCache(db *sql.DB, timeout time.Duration) {
+	newServerUpdateStatuses, err := getServerUpdateStatuses(db, timeout)
+	if err != nil {
+		log.Errorf("refreshing server update status cache: %s", err.Error())
+		return
+	}
+	serverUpdateStatusCache.Lock()
+	defer serverUpdateStatusCache.Unlock()
+	serverUpdateStatusCache.serverMap = newServerUpdateStatuses
+	serverUpdateStatusCache.initialized = true
+	log.Infof("refreshed server update status cache (len = %d)", len(serverUpdateStatusCache.serverMap))
+}
+
+type serverInfo struct {
+	id               int
+	hostName         string
+	typeName         string
+	cdnId            int
+	status           string
+	cachegroup       int
+	configUpdateTime *time.Time
+	configApplyTime  *time.Time
+	revalUpdateTime  *time.Time
+	revalApplyTime   *time.Time
+}
+
+const getUseRevalPendingQuery = `
+	SELECT value::BOOLEAN
+	FROM parameter
+	WHERE name = 'use_reval_pending' AND config_file = 'global'
+	UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY
+`
+
+const getServerInfoQuery = `
+	SELECT
+		s.id,
+		s.host_name,
+		t.name,
+		s.cdn_id,
+		st.name,
+		s.cachegroup,
+		s.config_update_time,
+		s.config_apply_time,
+		s.revalidate_update_time,
+		s.revalidate_apply_time
+	FROM server s
+	JOIN type t ON t.id = s.type
+	JOIN status st ON st.id = s.status
+`
+
+const getCacheGroupsQuery = `
+	SELECT
+		c.id,
+		c.parent_cachegroup_id,
+		c.secondary_parent_cachegroup_id
+	FROM cachegroup c
+`
+
+const getTopologyCacheGroupParentsQuery = `
+	SELECT
+		cg_child.id,
+		ARRAY_AGG(DISTINCT cg_parent.id)
+	FROM topology_cachegroup_parents tcp
+	JOIN topology_cachegroup tc_child ON tc_child.id = tcp.child
+	JOIN cachegroup cg_child ON cg_child.name = tc_child.cachegroup
+	JOIN topology_cachegroup tc_parent ON tc_parent.id = tcp.parent
+	JOIN cachegroup cg_parent ON cg_parent.name = tc_parent.cachegroup
+	GROUP BY cg_child.id
+`
+
+func getServerUpdateStatuses(db *sql.DB, timeout time.Duration) (map[string][]tc.ServerUpdateStatusV40, error) {
+	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
+	defer dbClose()
+	serversByID := make(map[int]serverInfo)
+	updatePendingByCDNCachegroup := make(map[int]map[int]bool)
+	revalPendingByCDNCachegroup := make(map[int]map[int]bool)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("beginning server update status transaction: %w", err)
+	}
+	defer func() {
+		if err := tx.Commit(); err != nil && err != sql.ErrTxDone {
+			log.Errorln("committing server update status transaction: " + err.Error())
+		}
+	}()
+
+	useRevalPending := false
+	if err := tx.QueryRowContext(dbCtx, getUseRevalPendingQuery).Scan(&useRevalPending); err != nil {
+		return nil, fmt.Errorf("querying use_reval_pending param: %w", err)
+	}
+
+	// get all servers and build map of update/revalPending by cachegroup+CDN
+	serverRows, err := tx.QueryContext(dbCtx, getServerInfoQuery)
+	if err != nil {
+		return nil, fmt.Errorf("querying servers: %w", err)
+	}
+	defer log.Close(serverRows, "closing server rows")
+	for serverRows.Next() {
+		s := serverInfo{}
+		if err := serverRows.Scan(&s.id, &s.hostName, &s.typeName, &s.cdnId, &s.status, &s.cachegroup, &s.configUpdateTime, &s.configApplyTime, &s.revalUpdateTime, &s.revalApplyTime); err != nil {
+			return nil, fmt.Errorf("scanning servers: %w", err)
+		}
+		serversByID[s.id] = s
+		if _, ok := updatePendingByCDNCachegroup[s.cdnId]; !ok {
+			updatePendingByCDNCachegroup[s.cdnId] = make(map[int]bool)
+		}
+		if _, ok := revalPendingByCDNCachegroup[s.cdnId]; !ok {
+			revalPendingByCDNCachegroup[s.cdnId] = make(map[int]bool)
+		}
+		status := tc.CacheStatusFromString(s.status)
+		if tc.IsValidCacheType(s.typeName) && (status == tc.CacheStatusOnline || status == tc.CacheStatusReported || status == tc.CacheStatusAdminDown) {
+			if s.configUpdateTime.After(*s.configApplyTime) {
+				updatePendingByCDNCachegroup[s.cdnId][s.cachegroup] = true
+			}
+			if s.revalUpdateTime.After(*s.revalApplyTime) {
+				revalPendingByCDNCachegroup[s.cdnId][s.cachegroup] = true
+			}
+		}
+	}
+	if err := serverRows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating over server rows: %w", err)
+	}
+
+	// get all legacy cachegroup parents
+	cacheGroupParents := make(map[int]map[int]struct{})
+	cacheGroupRows, err := tx.QueryContext(dbCtx, getCacheGroupsQuery)
+	if err != nil {
+		return nil, fmt.Errorf("querying cachegroups: %w", err)
+	}
+	defer log.Close(cacheGroupRows, "closing cachegroup rows")
+	for cacheGroupRows.Next() {
+		id := 0
+		parentID := new(int)
+		secondaryParentID := new(int)
+		if err := cacheGroupRows.Scan(&id, &parentID, &secondaryParentID); err != nil {
+			return nil, fmt.Errorf("scanning cachegroups: %w", err)
+		}
+		cacheGroupParents[id] = make(map[int]struct{})
+		if parentID != nil {
+			cacheGroupParents[id][*parentID] = struct{}{}
+		}
+		if secondaryParentID != nil {
+			cacheGroupParents[id][*secondaryParentID] = struct{}{}
+		}
+	}
+	if err := cacheGroupRows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating over cachegroup rows: %w", err)
+	}
+
+	// get all topology-based cachegroup parents
+	topologyCachegroupRows, err := tx.QueryContext(dbCtx, getTopologyCacheGroupParentsQuery)
+	if err != nil {
+		return nil, fmt.Errorf("querying topology cachegroups: %w", err)
+	}
+	defer log.Close(topologyCachegroupRows, "closing topology cachegroup rows")
+	for topologyCachegroupRows.Next() {
+		id := 0
+		parents := []int32{}
+		if err := topologyCachegroupRows.Scan(&id, pq.Array(&parents)); err != nil {
+			return nil, fmt.Errorf("scanning topology cachegroup rows: %w", err)
+		}
+		for _, p := range parents {
+			cacheGroupParents[id][int(p)] = struct{}{}
+		}
+	}
+	if err = topologyCachegroupRows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating over topology cachegroup rows: %w", err)
+	}
+
+	serverUpdateStatuses := make(map[string][]tc.ServerUpdateStatusV40, len(serversByID))
+	for serverID, server := range serversByID {
+		updateStatus := tc.ServerUpdateStatusV40{
+			HostName:             server.hostName,
+			UpdatePending:        server.configUpdateTime.After(*server.configApplyTime),
+			RevalPending:         server.revalUpdateTime.After(*server.revalApplyTime),
+			UseRevalPending:      useRevalPending,
+			HostId:               serverID,
+			Status:               server.status,
+			ParentPending:        getParentPending(cacheGroupParents[server.cachegroup], updatePendingByCDNCachegroup[server.cdnId]),
+			ParentRevalPending:   getParentPending(cacheGroupParents[server.cachegroup], revalPendingByCDNCachegroup[server.cdnId]),
+			ConfigUpdateTime:     server.configUpdateTime,
+			ConfigApplyTime:      server.configApplyTime,
+			RevalidateUpdateTime: server.revalUpdateTime,
+			RevalidateApplyTime:  server.revalApplyTime,
+		}
+		serverUpdateStatuses[server.hostName] = append(serverUpdateStatuses[server.hostName], updateStatus)
+	}
+	return serverUpdateStatuses, nil
+}
+
+func getParentPending(parents map[int]struct{}, pendingByCacheGroup map[int]bool) bool {
+	for parent := range parents {
+		if pendingByCacheGroup[parent] {
+			return true
+		}
+	}
+	return false
 }
