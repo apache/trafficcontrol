@@ -2124,27 +2124,18 @@ func UpdateServerProfilesForV4(id int, profile []string, tx *sql.Tx) error {
 }
 
 // UpdateServerProfileTableForV2V3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v2/v3.
-func UpdateServerProfileTableForV2V3(id *int, newProfileId *int, origProfile string, tx *sql.Tx) ([]string, error) {
-	var profileName []string
-
-	var newProfile string
-	err := tx.QueryRow("SELECT name from profile where id = $1", *newProfileId).Scan(&newProfile)
+func UpdateServerProfileTableForV2V3(id *int, newProfileId *int, origProfile string, tx *sql.Tx) error {
+	newProfile, _, err := GetProfileNameFromID(*newProfileId, tx)
 	if err != nil && err != sql.ErrNoRows {
-		return nil, fmt.Errorf("selecting profile by name: %w", err)
+		return fmt.Errorf("selecting profile by name: %w", err)
 	}
 
 	query := `UPDATE server_profile SET profile_name=$1 WHERE server=$2 AND profile_name=$3`
 	_, err = tx.Exec(query, newProfile, *id, origProfile)
 	if err != nil {
-		return nil, fmt.Errorf("updating server_profile by profile_name: %w", err)
+		return fmt.Errorf("updating server_profile by profile_name: %w", err)
 	}
-
-	err = tx.QueryRow("SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server=$1", *id).Scan(pq.Array(&profileName))
-	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("selecting server_profile by profile_name: %w", err)
-	}
-
-	return profileName, nil
+	return nil
 }
 
 // GetServerDetailFromV4 function converts server details from V4 to V3/V2
