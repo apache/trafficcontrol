@@ -379,6 +379,16 @@ This is a YAML-format configuration file used by :term:`cache servers` that use 
 
 .. tip:: The order in which these Parameters are considered is exactly the numerical ordering implied by ``N`` (starting with it being empty). However, each section is generated for all values of ``N`` before moving on to the next.
 
+:file:`LogFormat{N}` can have assigned an optional :file:`interval` attribute to define the aggregation interval for summary logs. Each Parameter on the cache server’s Profile with a Name like :file:`LogFormatN.Interval` where :file:`N` is either the empty string or a natural number on the interval [1,9], the YAML fragment in Log Format Snippet will be inserted.
+
+.. _logging.yaml-format-interval-snippet:
+
+.. code-block:: yaml
+	:caption: Log Format Interval Snippet
+	 - name: NAME
+	   format: 'FORMAT'
+	   interval: 30
+
 After this, a single line containing only ``filters:`` is inserted. Then, for each Parameter on the :term:`cache server`'s :ref:`Profile <profiles>` with a :ref:`parameter-name` like :file:`LogFilter{N}.Name` where ``N`` is either the empty string or a natural number on the interval [1,9], the YAML fragment in :ref:`logging.yaml-filter-snippet` will be inserted. In that snippet, ``NAME`` is the Value_ of the Parameter with the :ref:`parameter-name` :file:`LogFilter{N}.Name`, ``TYPE`` is the Value_ of the Parameter with the :ref:`parameter-name` :file:`LogFilter{N}.Type` for the same value of ``N``, and ``FILTER`` is the Value_ of the Parameter with the :ref:`parameter-name` :file:`LogFilter{N}.Filter` for the same value of ``N``.
 
 .. _logging.yaml-filter-snippet:
