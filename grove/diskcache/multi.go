@@ -15,7 +15,7 @@ package diskcache
 */
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/apache/trafficcontrol/grove/cacheobj"
 	"github.com/apache/trafficcontrol/grove/config"
@@ -33,7 +33,7 @@ func NewMulti(files []config.CacheFile) (*MultiDiskCache, error) {
 	for i, file := range files {
 		cache, err := New(file.Path, file.Bytes)
 		if err != nil {
-			return nil, errors.New("creating disk cache '" + file.Path + "': " + err.Error())
+			return nil, fmt.Errorf("creating disk cache '%s': %w", file.Path, err)
 		}
 		cache.ResetAfterRestart() // should this be optional?
 		caches[i] = cache

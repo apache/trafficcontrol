@@ -153,7 +153,7 @@ func (hr simpleHTTPRequestRemapper) RemappingProducer(r *http.Request, scheme st
 	}
 
 	if ip, err := web.GetIP(r); err != nil {
-		return nil, fmt.Errorf("parsing client IP: %v", err)
+		return nil, fmt.Errorf("parsing client IP: %w", err)
 	} else if !rule.Allowed(ip) {
 		return nil, ErrIPNotAllowed
 	} else {
@@ -179,7 +179,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 	p.failures++
 	newReq, err := http.NewRequest(r.Method, newURI, nil)
 	if err != nil {
-		return Remapping{}, false, fmt.Errorf("creating new request: %v\n", err)
+		return Remapping{}, false, fmt.Errorf("creating new request: %w", err)
 	}
 	web.CopyHeaderTo(r.Header, &newReq.Header)
 
@@ -360,12 +360,12 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc,
 	}
 	if remapRulesJSON.Stats.Allow != nil {
 		if remapRules.Stats.Allow, err = makeIPNets(remapRulesJSON.Stats.Allow); err != nil {
-			return nil, nil, nil, fmt.Errorf("error parsing rules allows: %v", err)
+			return nil, nil, nil, fmt.Errorf("error parsing rules allows: %w", err)
 		}
 	}
 	if remapRulesJSON.Stats.Deny != nil {
 		if remapRules.Stats.Deny, err = makeIPNets(remapRulesJSON.Stats.Deny); err != nil {
-			return nil, nil, nil, fmt.Errorf("error parsing rules denys: %v", err)
+			return nil, nil, nil, fmt.Errorf("error parsing rules denys: %w", err)
 		}
 	}
 
@@ -432,13 +432,13 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc,
 		}
 
 		if rule.Allow, err = makeIPNets(jsonRule.Allow); err != nil {
-			return nil, nil, nil, fmt.Errorf("error parsing rule %v allows: %v", rule.Name, err)
+			return nil, nil, nil, fmt.Errorf("error parsing rule %s allows: %w", rule.Name, err)
 		}
 		if rule.Deny, err = makeIPNets(jsonRule.Deny); err != nil {
-			return nil, nil, nil, fmt.Errorf("error parsing rule %v denys: %v", rule.Name, err)
+			return nil, nil, nil, fmt.Errorf("error parsing rule %s denys: %w", rule.Name, err)
 		}
 		if rule.To, err = makeTo(jsonRule.To, rule, baseTransport); err != nil {
-			return nil, nil, nil, fmt.Errorf("error parsing rule %v to: %v", rule.Name, err)
+			return nil, nil, nil, fmt.Errorf("error parsing rule %s to: %w", rule.Name, err)
 		}
 		if jsonRule.ParentSelection != nil {
 			ps := remapdata.ParentSelectionTypeFromString(*jsonRule.ParentSelection)
@@ -548,7 +548,7 @@ func makeIPNets(netStrs []string) ([]*net.IPNet, error) {
 		}
 		net, err := makeIPNet(netStr)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing CIDR %v: %v", netStr, err)
+			return nil, fmt.Errorf("error parsing CIDR %s: %w", netStr, err)
 		}
 		nets = append(nets, net)
 	}
@@ -558,7 +558,7 @@ func makeIPNets(netStrs []string) ([]*net.IPNet, error) {
 func makeIPNet(cidr string) (*net.IPNet, error) {
 	_, cidrnet, err := net.ParseCIDR(cidr)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing CIDR '%s': %v", cidr, err)
+		return nil, fmt.Errorf("error parsing CIDR '%s': %w", cidr, err)
 	}
 	return cidrnet, nil
 }
@@ -604,7 +604,7 @@ func RemapRulesToJSON(r RemapRules) (RemapRulesJSON, error) {
 	for name, plugin := range r.Plugins {
 		bts, err := json.Marshal(plugin)
 		if err != nil {
-			return RemapRulesJSON{}, errors.New("error marshalling plugin '" + name + "': " + err.Error())
+			return RemapRulesJSON{}, fmt.Errorf("error marshalling plugin '%s': %w", name, err)
 		}
 		j.Plugins[name] = bts
 	}
