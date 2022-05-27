@@ -162,10 +162,10 @@ func TestServers(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetServerId(t, "atlanta-edge-03"),
+					EndpointId:    GetServerID(t, "atlanta-edge-03"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"id":           GetServerId(t, "atlanta-edge-03")(),
+						"id":           GetServerID(t, "atlanta-edge-03")(),
 						"cdnId":        GetCDNId(t, "cdn1"),
 						"cachegroupId": GetCacheGroupId(t, "cachegroup1")(),
 						"domainName":   "updateddomainname",
@@ -190,10 +190,10 @@ func TestServers(t *testing.T) {
 							"routerHostName": "router5",
 							"routerPort":     "9004",
 						}},
-						"physLocationId": GetPhysLocationId(t, "Denver")(),
+						"physLocationId": GetPhysicalLocationID(t, "Denver")(),
 						"profileNames":   []string{"EDGE1"},
 						"rack":           "RR 119.03",
-						"statusId":       GetStatusId(t, "REPORTED")(),
+						"statusId":       GetStatusID(t, "REPORTED")(),
 						"tcpPort":        8080,
 						"typeId":         GetTypeId(t, "EDGE"),
 						"updPending":     true,
@@ -206,47 +206,47 @@ func TestServers(t *testing.T) {
 						})),
 				},
 				"BAD REQUEST when CHANGING XMPPID": {
-					EndpointId:    GetServerId(t, "atlanta-edge-16"),
+					EndpointId:    GetServerID(t, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":     GetServerId(t, "atlanta-edge-16")(),
+						"id":     GetServerID(t, "atlanta-edge-16")(),
 						"xmppId": "CHANGINGTHIS",
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"CONFLICT when UPDATING SERVER TYPE when ASSIGNED to DS": {
-					EndpointId:    GetServerId(t, "test-ds-server-assignments"),
+					EndpointId:    GetServerID(t, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":           GetServerId(t, "test-ds-server-assignments")(),
+						"id":           GetServerID(t, "test-ds-server-assignments")(),
 						"cachegroupId": GetCacheGroupId(t, "cachegroup1")(),
 						"typeId":       GetTypeId(t, "MID"),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"CONFLICT when UPDATING SERVER STATUS when its the ONLY EDGE SERVER ASSIGNED": {
-					EndpointId:    GetServerId(t, "test-ds-server-assignments"),
+					EndpointId:    GetServerID(t, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":       GetServerId(t, "test-ds-server-assignments")(),
-						"statusId": GetStatusId(t, "ADMIN_DOWN")(),
+						"id":       GetServerID(t, "test-ds-server-assignments")(),
+						"statusId": GetStatusID(t, "ADMIN_DOWN")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"CONFLICT when UPDATING SERVER STATUS when its the ONLY ORG SERVER ASSIGNED": {
-					EndpointId:    GetServerId(t, "test-mso-org-01"),
+					EndpointId:    GetServerID(t, "test-mso-org-01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":       GetServerId(t, "test-mso-org-01")(),
-						"statusId": GetStatusId(t, "ADMIN_DOWN")(),
+						"id":       GetServerID(t, "test-mso-org-01")(),
+						"statusId": GetStatusID(t, "ADMIN_DOWN")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"BAD REQUEST when UPDATING CDN when LAST SERVER IN CACHEGROUP IN TOPOLOGY": {
-					EndpointId:    GetServerId(t, "midInTopologyMidCg01"),
+					EndpointId:    GetServerID(t, "midInTopologyMidCg01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":           GetServerId(t, "midInTopologyMidCg01")(),
+						"id":           GetServerID(t, "midInTopologyMidCg01")(),
 						"cdnId":        GetCDNId(t, "cdn1"),
 						"profileNames": []string{"MID1"},
 						"cachegroupId": GetCacheGroupId(t, "topology-mid-cg-01")(),
@@ -254,10 +254,10 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when UPDATING CACHEGROUP when LAST SERVER IN CACHEGROUP IN TOPOLOGY": {
-					EndpointId:    GetServerId(t, "midInTopologyMidCg01"),
+					EndpointId:    GetServerID(t, "midInTopologyMidCg01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":           GetServerId(t, "midInTopologyMidCg01")(),
+						"id":           GetServerID(t, "midInTopologyMidCg01")(),
 						"hostName":     "midInTopologyMidCg01",
 						"cdnId":        GetCDNId(t, "cdn2"),
 						"profileNames": []string{"CDN2_MID"},
@@ -266,7 +266,7 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when IPADDRESS EXISTS with SAME PROFILE": {
-					EndpointId:    GetServerId(t, "atlanta-edge-16"),
+					EndpointId:    GetServerID(t, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"profileNames": []string{"EDGE1"},
@@ -282,31 +282,31 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when BLANK HOSTNAME": {
-					EndpointId:    GetServerId(t, "atlanta-edge-16"),
+					EndpointId:    GetServerID(t, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody:   generateServer(t, map[string]interface{}{"hostName": ""}),
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when BLANK DOMAINNAME": {
-					EndpointId:    GetServerId(t, "atlanta-edge-16"),
+					EndpointId:    GetServerID(t, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody:   generateServer(t, map[string]interface{}{"domainName": ""}),
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:    GetServerId(t, "atlanta-edge-01"),
+					EndpointId:    GetServerID(t, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id": GetServerId(t, "atlanta-edge-01")(),
+						"id": GetServerID(t, "atlanta-edge-01")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetServerId(t, "atlanta-edge-01"),
+					EndpointId:    GetServerID(t, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id": GetServerId(t, "atlanta-edge-01")(),
+						"id": GetServerID(t, "atlanta-edge-01")(),
 					}),
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -314,12 +314,12 @@ func TestServers(t *testing.T) {
 			},
 			"DELETE": {
 				"BAD REQUEST when LAST SERVER in CACHE GROUP": {
-					EndpointId:    GetServerId(t, "midInTopologyMidCg01"),
+					EndpointId:    GetServerID(t, "midInTopologyMidCg01"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"CONFLICT when DELETING SERVER when its the ONLY EDGE SERVER ASSIGNED": {
-					EndpointId:    GetServerId(t, "test-ds-server-assignments"),
+					EndpointId:    GetServerID(t, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
@@ -392,37 +392,52 @@ func validateServerFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 			for _, server := range serverResp {
 				switch field {
 				case "CachegroupID":
-					assert.Equal(t, expected, *server.CachegroupID, "Expected CachegroupID to be %v, but got %v", expected, *server.CachegroupID)
+					assert.RequireNotNil(t, server.CachegroupID, "Expected CachegroupID to not be nil")
+					assert.Equal(t, expected, *server.CachegroupID, "Expected CachegroupID to be %d, but got %d", expected, *server.CachegroupID)
 				case "Cachegroup":
-					assert.Equal(t, expected, *server.Cachegroup, "Expected Cachegroup to be %v, but got %v", expected, *server.Cachegroup)
+					assert.RequireNotNil(t, server.Cachegroup, "Expected Cachegroup to not be nil")
+					assert.Equal(t, expected, *server.Cachegroup, "Expected Cachegroup to be %s, but got %s", expected, *server.Cachegroup)
 				case "CDNName":
-					assert.Equal(t, expected, *server.CDNName, "Expected CDNName to be %v, but got %v", expected, *server.CDNName)
+					assert.RequireNotNil(t, server.CDNName, "Expected CDNName to not be nil")
+					assert.Equal(t, expected, *server.CDNName, "Expected CDNName to be %s, but got %s", expected, *server.CDNName)
 				case "CDNID":
-					assert.Equal(t, expected, *server.CDNID, "Expected CDNID to be %v, but got %v", expected, *server.CDNID)
+					assert.RequireNotNil(t, server.CDNID, "Expected CDNID to not be nil")
+					assert.Equal(t, expected, *server.CDNID, "Expected CDNID to be %d, but got %d", expected, *server.CDNID)
 				case "DomainName":
-					assert.Equal(t, expected, *server.DomainName, "Expected DomainName to be %v, but got %v", expected, *server.DomainName)
+					assert.RequireNotNil(t, server.DomainName, "Expected DomainName to not be nil")
+					assert.Equal(t, expected, *server.DomainName, "Expected DomainName to be %s, but got %s", expected, *server.DomainName)
 				case "HostName":
-					assert.Equal(t, expected, *server.HostName, "Expected HostName to be %v, but got %v", expected, *server.HostName)
+					assert.RequireNotNil(t, server.HostName, "Expected HostName to not be nil")
+					assert.Equal(t, expected, *server.HostName, "Expected HostName to be %s, but got %s", expected, *server.HostName)
 				case "HTTPSPort":
-					assert.Equal(t, expected, *server.HTTPSPort, "Expected HTTPSPort to be %v, but got %v", expected, *server.HTTPSPort)
+					assert.RequireNotNil(t, server.HTTPSPort, "Expected HTTPSPort to not be nil")
+					assert.Equal(t, expected, *server.HTTPSPort, "Expected HTTPSPort to be %d, but got %d", expected, *server.HTTPSPort)
 				case "InterfaceName":
-					assert.Equal(t, expected, server.Interfaces[0].Name, "Expected InterfaceName to be %v, but got %v", expected, server.Interfaces[0].Name)
+					assert.RequireGreaterOrEqual(t, len(server.Interfaces), 1, "Expected Interfaces to have at least 1 interface")
+					assert.Equal(t, expected, server.Interfaces[0].Name, "Expected InterfaceName to be %s, but got %s", expected, server.Interfaces[0].Name)
 				case "MTU":
-					assert.Equal(t, expected, *server.Interfaces[0].MTU, "Expected MTU to be %v, but got %v", expected, *server.Interfaces[0].MTU)
+					assert.RequireGreaterOrEqual(t, len(server.Interfaces), 1, "Expected Interfaces to have at least 1 interface")
+					assert.RequireNotNil(t, server.Interfaces[0].MTU, "Expected MTU to not be nil")
+					assert.Equal(t, expected, *server.Interfaces[0].MTU, "Expected MTU to be %d, but got %d", expected, *server.Interfaces[0].MTU)
 				case "PhysLocation":
-					assert.Equal(t, expected, *server.PhysLocation, "Expected PhysLocation to be %v, but got %v", expected, *server.PhysLocation)
+					assert.RequireNotNil(t, server.PhysLocation, "Expected PhysLocation to not be nil")
+					assert.Equal(t, expected, *server.PhysLocation, "Expected PhysLocation to be %s, but got %s", expected, *server.PhysLocation)
 				case "ProfileNames":
 					assert.Exactly(t, expected, server.ProfileNames, "Expected ProfileNames to be %v, but got %v", expected, server.ProfileNames)
 				case "Rack":
-					assert.Equal(t, expected, *server.Rack, "Expected Rack to be %v, but got %v", expected, *server.Rack)
+					assert.RequireNotNil(t, server.Rack, "Expected Rack to not be nil")
+					assert.Equal(t, expected, *server.Rack, "Expected Rack to be %s, but got %s", expected, *server.Rack)
 				case "Status":
-					assert.Equal(t, expected, *server.Status, "Expected Status to be %v, but got %v", expected, *server.Status)
+					assert.RequireNotNil(t, server.Status, "Expected Status to not be nil")
+					assert.Equal(t, expected, *server.Status, "Expected Status to be %s, but got %s", expected, *server.Status)
 				case "TCPPort":
-					assert.Equal(t, expected, *server.TCPPort, "Expected TCPPort to be %v, but got %v", expected, *server.TCPPort)
+					assert.RequireNotNil(t, server.TCPPort, "Expected TCPPort to not be nil")
+					assert.Equal(t, expected, *server.TCPPort, "Expected TCPPort to be %d, but got %d", expected, *server.TCPPort)
 				case "Type":
-					assert.Equal(t, expected, server.Type, "Expected Type to be %v, but got %v", expected, server.Type)
+					assert.Equal(t, expected, server.Type, "Expected Type to be %s, but got %s", expected, server.Type)
 				case "TypeID":
-					assert.Equal(t, expected, *server.TypeID, "Expected Type to be %v, but got %v", expected, *server.TypeID)
+					assert.RequireNotNil(t, server.TypeID, "Expected TypeID to not be nil")
+					assert.Equal(t, expected, *server.TypeID, "Expected Type to be %d, but got %d", expected, *server.TypeID)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
@@ -449,6 +464,7 @@ func validateExpectedServers(expectedHostnames []string) utils.CkReqFunc {
 		var notInResponse []string
 		serverMap := make(map[string]struct{})
 		for _, server := range serverResp {
+			assert.RequireNotNil(t, server.HostName, "Expected server host name to not be nil.")
 			serverMap[*server.HostName] = struct{}{}
 		}
 		for _, expected := range expectedHostnames {
@@ -465,15 +481,15 @@ func validateServerTypeIsNotMid() utils.CkReqFunc {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
 		serverResp := resp.([]tc.ServerV40)
 		for _, server := range serverResp {
-			if server.Type == tc.CacheTypeMid.String() {
-				t.Errorf("Expected to find no %s-typed servers but found server %s", tc.CacheTypeMid, *server.HostName)
-			}
+			assert.RequireNotNil(t, server.HostName, "Expected server host name to not be nil.")
+			assert.NotEqual(t, server.Type, tc.CacheTypeMid.String(), "Expected to find no %s-typed servers but found server %s", tc.CacheTypeMid, *server.HostName)
 		}
 	}
 }
 
 func validateServerPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
 		paginationResp := resp.([]tc.ServerV40)
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
@@ -507,9 +523,9 @@ func generateServer(t *testing.T, requestServer map[string]interface{}) map[stri
 			}},
 			"name": "eth0",
 		}},
-		"physLocationId": GetPhysLocationId(t, "Denver")(),
+		"physLocationId": GetPhysicalLocationID(t, "Denver")(),
 		"profileNames":   []string{"EDGE1"},
-		"statusId":       GetStatusId(t, "REPORTED")(),
+		"statusId":       GetStatusID(t, "REPORTED")(),
 		"typeId":         GetTypeId(t, "EDGE"),
 	}
 
@@ -519,7 +535,7 @@ func generateServer(t *testing.T, requestServer map[string]interface{}) map[stri
 	return genericServer
 }
 
-func GetServerId(t *testing.T, hostName string) func() int {
+func GetServerID(t *testing.T, hostName string) func() int {
 	return func() int {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("hostName", hostName)
@@ -531,26 +547,24 @@ func GetServerId(t *testing.T, hostName string) func() int {
 	}
 }
 
-func GetStatusId(t *testing.T, name string) func() int {
+func GetStatusID(t *testing.T, name string) func() int {
 	return func() int {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", name)
 		statusResp, _, err := TOSession.GetStatuses(opts)
 		assert.RequireNoError(t, err, "Get Statuses Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(statusResp.Response), "Expected response object length 1, but got %d", len(statusResp.Response))
-		assert.RequireNotNil(t, statusResp.Response[0].ID, "Expected id to not be nil")
 		return statusResp.Response[0].ID
 	}
 }
 
-func GetPhysLocationId(t *testing.T, name string) func() int {
+func GetPhysicalLocationID(t *testing.T, name string) func() int {
 	return func() int {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", name)
 		physLocResp, _, err := TOSession.GetPhysLocations(opts)
 		assert.RequireNoError(t, err, "Get PhysLocation Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(physLocResp.Response), "Expected response object length 1, but got %d", len(physLocResp.Response))
-		assert.RequireNotNil(t, physLocResp.Response[0].ID, "Expected id to not be nil")
 		return physLocResp.Response[0].ID
 	}
 }
@@ -579,7 +593,7 @@ func UpdateTestServerStatusLastUpdated(t *testing.T) {
 		"old value: %v, new value: %v", *originalServer.StatusLastUpdated, *respServer.StatusLastUpdated)
 
 	// Changing the status, perform an update and make sure that statusLastUpdated changed
-	newStatusID := GetStatusId(t, "ONLINE")()
+	newStatusID := GetStatusID(t, "ONLINE")()
 	originalServer.StatusID = &newStatusID
 
 	alerts, _, err = TOSession.UpdateServer(*originalServer.ID, originalServer, client.RequestOptions{})
@@ -652,6 +666,7 @@ func DeleteTestServers(t *testing.T) {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("id", strconv.Itoa(*server.ID))
 		getServer, _, err := TOSession.GetServers(opts)
+		assert.RequireNotNil(t, server.HostName, "Expected server host name to not be nil.")
 		assert.NoError(t, err, "Error deleting Server for '%s' : %v - alerts: %+v", *server.HostName, err, getServer.Alerts)
 		assert.Equal(t, 0, len(getServer.Response), "Expected Server '%s' to be deleted", *server.HostName)
 	}
