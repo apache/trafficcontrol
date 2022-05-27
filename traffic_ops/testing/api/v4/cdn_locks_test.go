@@ -106,11 +106,11 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"SERVERS QUEUE UPDATES": {
 				"OK when USER OWNS LOCK": {
-					EndpointId: GetServerId(t, "cdn2-test-edge"), ClientSession: opsUserWithLockSession,
+					EndpointId: GetServerID(t, "cdn2-test-edge"), ClientSession: opsUserWithLockSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointId: GetServerId(t, "cdn2-test-edge"), ClientSession: TOSession,
+					EndpointId: GetServerID(t, "cdn2-test-edge"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
@@ -226,10 +226,10 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"SERVER PUT": {
 				"OK when USER OWNS LOCK": {
-					EndpointId:    GetServerId(t, "edge1-cdn2"),
+					EndpointId:    GetServerID(t, "edge1-cdn2"),
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, generateServer(t, map[string]interface{}{
-						"id":           GetServerId(t, "edge1-cdn2")(),
+						"id":           GetServerID(t, "edge1-cdn2")(),
 						"cdnId":        GetCDNId(t, "cdn2"),
 						"profileNames": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
@@ -243,10 +243,10 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointId:    GetServerId(t, "dtrc-edge-07"),
+					EndpointId:    GetServerID(t, "dtrc-edge-07"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, generateServer(t, map[string]interface{}{
-						"id":           GetServerId(t, "dtrc-edge-07")(),
+						"id":           GetServerID(t, "dtrc-edge-07")(),
 						"cdnId":        GetCDNId(t, "cdn2"),
 						"cachegroupId": GetCacheGroupId(t, "dtrc2")(),
 						"profileNames": []string{"CDN2_EDGE"},
@@ -263,12 +263,12 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"SERVER DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointId:    GetServerId(t, "atlanta-mid-17"),
+					EndpointId:    GetServerID(t, "atlanta-mid-17"),
 					ClientSession: opsUserWithLockSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointId:    GetServerId(t, "denver-mso-org-02"),
+					EndpointId:    GetServerID(t, "denver-mso-org-02"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
