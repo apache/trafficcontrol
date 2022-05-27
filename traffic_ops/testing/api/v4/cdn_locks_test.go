@@ -333,7 +333,7 @@ func TestCDNLocks(t *testing.T) {
 							err = json.Unmarshal(dat, &server)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						} else if getId, ok := testCase.RequestBody["cdnId"]; ok {
-							testCase.RequestBody["cdnId"] = getId.(func() int)()
+							testCase.RequestBody["cdnId"] = getId.(int)
 							dat, err := json.Marshal(testCase.RequestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 							err = json.Unmarshal(dat, &topQueueUp)
