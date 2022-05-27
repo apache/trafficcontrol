@@ -210,7 +210,7 @@ func TestDeliveryServices(t *testing.T) {
 				"BAD REQUEST when ADDING TOPOLOGY to DS when NO CACHES in SAME CDN as DS": {
 					EndpointId: GetDeliveryServiceId(t, "top-ds-in-cdn2"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
-						"cdnId":    GetCDNID(t, "cdn2"),
+						"cdnId":    GetCDNID(t, "cdn2")(),
 						"topology": "top-with-caches-in-cdn1",
 						"xmlId":    "top-ds-in-cdn2",
 					}),
@@ -455,7 +455,7 @@ func generateDeliveryService(t *testing.T, requestDS map[string]interface{}) map
 	genericHTTPDS := map[string]interface{}{
 		"active":               true,
 		"cdnName":              "cdn1",
-		"cdnId":                GetCDNID(t, "cdn1"),
+		"cdnId":                GetCDNID(t, "cdn1")(),
 		"displayName":          "test ds",
 		"dscp":                 0,
 		"geoLimit":             0,

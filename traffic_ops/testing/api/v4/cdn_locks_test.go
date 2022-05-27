@@ -120,7 +120,7 @@ func TestCDNLocks(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
 						"action": "queue",
-						"cdnId":  GetCDNID(t, "cdn2"),
+						"cdnId":  GetCDNID(t, "cdn2")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -129,7 +129,7 @@ func TestCDNLocks(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
 						"action": "queue",
-						"cdnId":  GetCDNID(t, "cdn2"),
+						"cdnId":  GetCDNID(t, "cdn2")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -138,7 +138,7 @@ func TestCDNLocks(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
 						"action": "dequeue",
-						"cdnId":  GetCDNID(t, "cdn2"),
+						"cdnId":  GetCDNID(t, "cdn2")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -233,7 +233,7 @@ func TestCDNLocks(t *testing.T) {
 				"OK when USER OWNS LOCK": {
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"cdnId":        GetCDNID(t, "cdn2"),
+						"cdnId":        GetCDNID(t, "cdn2")(),
 						"profileNames": []string{"EDGEInCDN2"},
 					}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
@@ -241,7 +241,7 @@ func TestCDNLocks(t *testing.T) {
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"cdnId":        GetCDNID(t, "cdn2"),
+						"cdnId":        GetCDNID(t, "cdn2")(),
 						"profileNames": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
@@ -260,7 +260,7 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "edge1-cdn2")(),
-						"cdnId":        GetCDNID(t, "cdn2"),
+						"cdnId":        GetCDNID(t, "cdn2")(),
 						"profileNames": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
@@ -277,7 +277,7 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "dtrc-edge-07")(),
-						"cdnId":        GetCDNID(t, "cdn2"),
+						"cdnId":        GetCDNID(t, "cdn2")(),
 						"cachegroupId": GetCacheGroupId(t, "dtrc2")(),
 						"profileNames": []string{"CDN2_EDGE"},
 						"interfaces": []map[string]interface{}{{
