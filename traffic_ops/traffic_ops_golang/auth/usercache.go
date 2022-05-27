@@ -127,17 +127,17 @@ func startUsersCacheRefresher(interval time.Duration, db *sql.DB, timeout time.D
 }
 
 func refreshUsersCache(db *sql.DB, timeout time.Duration) {
-	usersCache.Lock()
-	defer usersCache.Unlock()
 	newUsers, err := getUsers(db, timeout)
 	if err != nil {
 		log.Errorf("refreshing users cache: %s", err.Error())
-	} else {
-		usersCache.userMap = newUsers
-		usersCache.usernamesByToken = createTokenToUsernameMap(newUsers)
-		usersCache.initialized = true
-		log.Infof("refreshed users cache (len = %d)", len(usersCache.userMap))
+		return
 	}
+	usersCache.Lock()
+	defer usersCache.Unlock()
+	usersCache.userMap = newUsers
+	usersCache.usernamesByToken = createTokenToUsernameMap(newUsers)
+	usersCache.initialized = true
+	log.Infof("refreshed users cache (len = %d)", len(usersCache.userMap))
 }
 
 func createTokenToUsernameMap(users map[string]user) map[string]string {

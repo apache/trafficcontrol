@@ -41,6 +41,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/server"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 	_ "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends" // init traffic vault backends
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
@@ -146,6 +147,7 @@ func main() {
 	db.SetConnMaxLifetime(time.Duration(cfg.DBConnMaxLifetimeSeconds) * time.Second)
 
 	auth.InitUsersCache(time.Duration(cfg.UserCacheRefreshIntervalSec)*time.Second, db.DB, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+	server.InitServerUpdateStatusCache(time.Duration(cfg.ServerUpdateStatusCacheRefreshIntervalSec)*time.Second, db.DB, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 
 	trafficVault := setupTrafficVault(*riakConfigFileName, &cfg)
 
@@ -186,7 +188,7 @@ func main() {
 
 	log.Infof("Listening on " + cfg.Port)
 
-	server := &http.Server{
+	httpServer := &http.Server{
 		Addr:              ":" + cfg.Port,
 		TLSConfig:         cfg.TLSConfig,
 		ReadTimeout:       time.Duration(cfg.ReadTimeout) * time.Second,
@@ -195,11 +197,11 @@ func main() {
 		IdleTimeout:       time.Duration(cfg.IdleTimeout) * time.Second,
 		ErrorLog:          log.Error,
 	}
-	if server.TLSConfig == nil {
-		server.TLSConfig = &tls.Config{}
+	if httpServer.TLSConfig == nil {
+		httpServer.TLSConfig = &tls.Config{}
 	}
 	// Deprecated in 5.0
-	server.TLSConfig.InsecureSkipVerify = cfg.Insecure
+	httpServer.TLSConfig.InsecureSkipVerify = cfg.Insecure
 	// end deprecated block
 
 	go func() {
@@ -226,8 +228,8 @@ func main() {
 		} else {
 			file.Close()
 		}
-		server.Handler = mux
-		if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
+		httpServer.Handler = mux
+		if err := httpServer.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
 			log.Errorf("stopping server: %v\n", err)
 			os.Exit(1)
 		}

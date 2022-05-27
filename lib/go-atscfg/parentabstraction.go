@@ -313,8 +313,12 @@ func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts
 
 	if atsMajorVersion >= 6 && svc.RetryPolicy == ParentAbstractionServiceRetryPolicyConsistentHash && len(svc.SecondaryParents) > 0 {
 		// TODO add quotes
-		txt += ` parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(svc.Parents) + `"`
-		txt += ` secondary_parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(svc.SecondaryParents) + `"`
+		if len(svc.Parents) > 0 {
+			txt += ` parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(svc.Parents) + `"`
+		}
+		if len(svc.SecondaryParents) > 0 {
+			txt += ` secondary_parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(svc.SecondaryParents) + `"`
+		}
 		txt += ` secondary_mode=` + svc.SecondaryMode.ToParentDotConfigVal()
 	} else {
 		parents := []*ParentAbstractionServiceParent{}
@@ -324,7 +328,9 @@ func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts
 		for _, pa := range svc.SecondaryParents {
 			parents = append(parents, pa)
 		}
-		txt += ` parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(parents) + `"`
+		if len(parents) > 0 {
+			txt += ` parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(parents) + `"`
+		}
 	}
 
 	txt += ` round_robin=` + svc.RetryPolicy.ToParentDotConfigFormat()

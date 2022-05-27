@@ -65,9 +65,9 @@ func TestServers(t *testing.T) {
 				},
 				"OK when VALID CDN parameter": {
 					ClientSession: TOSession,
-					RequestParams: url.Values{"cdn": {strconv.Itoa(GetCDNId(t, "cdn2"))}},
+					RequestParams: url.Values{"cdn": {strconv.Itoa(GetCDNID(t, "cdn2")())}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateServerFields(map[string]interface{}{"CDNID": GetCDNId(t, "cdn2")})),
+						validateServerFields(map[string]interface{}{"CDNID": GetCDNID(t, "cdn2")})),
 				},
 				"OK when VALID DSID parameter": {
 					ClientSession: TOSession,
@@ -130,7 +130,7 @@ func TestServers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"id":           GetServerID(t, "atlanta-edge-03")(),
-						"cdnId":        GetCDNId(t, "cdn1"),
+						"cdnId":        GetCDNID(t, "cdn1"),
 						"cachegroupId": GetCacheGroupId(t, "cachegroup1")(),
 						"domainName":   "updateddomainname",
 						"hostName":     "atl-edge-01",
@@ -202,7 +202,7 @@ func TestServers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "midInTopologyMidCg01")(),
-						"cdnId":        GetCDNId(t, "cdn1"),
+						"cdnId":        GetCDNID(t, "cdn1"),
 						"profileId":    GetProfileId(t, "MID1"),
 						"cachegroupId": GetCacheGroupId(t, "topology-mid-cg-01")(),
 					}),
@@ -214,7 +214,7 @@ func TestServers(t *testing.T) {
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "midInTopologyMidCg01")(),
 						"hostName":     "midInTopologyMidCg01",
-						"cdnId":        GetCDNId(t, "cdn2"),
+						"cdnId":        GetCDNID(t, "cdn2"),
 						"profileId":    GetProfileId(t, "CDN2_MID"),
 						"cachegroupId": GetCacheGroupId(t, "topology-mid-cg-02")(),
 					}),
@@ -446,7 +446,7 @@ func validateServerTypeIsNotMid() utils.CkReqFunc {
 func generateServer(t *testing.T, requestServer map[string]interface{}) map[string]interface{} {
 	// map for the most basic Server a user can create
 	genericServer := map[string]interface{}{
-		"cdnId":        GetCDNId(t, "cdn1"),
+		"cdnId":        GetCDNID(t, "cdn1"),
 		"cachegroupId": GetCacheGroupId(t, "cachegroup1")(),
 		"domainName":   "localhost",
 		"hostName":     "testserver",

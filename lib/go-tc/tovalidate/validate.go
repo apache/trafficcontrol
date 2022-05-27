@@ -13,7 +13,9 @@ package tovalidate
 // limitations under the License.
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 )
 
 // ToErrors converts a map of strings to errors into an array of errors.
@@ -37,9 +39,34 @@ func ToErrors(err map[string]error) []error {
 	vErrors := []error{}
 	for key, value := range err {
 		if value != nil {
-			errMsg := fmt.Errorf("'%v' %v", key, value)
+			errMsg := fmt.Errorf("'%v' %w", key, value)
 			vErrors = append(vErrors, errMsg)
 		}
 	}
 	return vErrors
+}
+
+// ToError converts a map of strings to errors into a single error.
+//
+// Because multiple errors are collapsed, errors cannot be wrapped and therefore
+// error identity cannot be preserved.
+func ToError(err map[string]error) error {
+	if len(err) == 0 {
+		return nil
+	}
+	var b strings.Builder
+	for key, value := range err {
+		if value != nil {
+			b.WriteRune('\'')
+			b.WriteString(key)
+			b.WriteString("' ")
+			b.WriteString(value.Error())
+			b.WriteString(", ")
+		}
+	}
+	msg := strings.TrimSuffix(b.String(), ", ")
+	if msg == "" {
+		return nil
+	}
+	return errors.New(msg)
 }

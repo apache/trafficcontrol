@@ -16,13 +16,14 @@ import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/t
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import { Subject } from "rxjs";
+import {ReplaySubject, Subject} from "rxjs";
 
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import type { CurrentUser } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { CurrentuserComponent } from "./currentuser.component";
 
@@ -44,6 +45,8 @@ describe("CurrentuserComponent", () => {
 		updateSpy.and.callThrough();
 
 		dialogClose = new Subject();
+
+		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 
 		TestBed.configureTestingModule({
 			declarations: [
@@ -74,7 +77,8 @@ describe("CurrentuserComponent", () => {
 							afterClosed: () => dialogClose
 						})
 					}
-				}
+				},
+				{ provide: TpHeaderService, useValue: headerSvc}
 			]
 		});
 		TestBed.compileComponents();

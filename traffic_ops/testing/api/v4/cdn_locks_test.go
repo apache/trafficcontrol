@@ -120,7 +120,7 @@ func TestCDNLocks(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
 						"action": "queue",
-						"cdnId":  getCDNID(t, "cdn2"),
+						"cdnId":  GetCDNID(t, "cdn2"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -129,7 +129,7 @@ func TestCDNLocks(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
 						"action": "queue",
-						"cdnId":  getCDNID(t, "cdn2"),
+						"cdnId":  GetCDNID(t, "cdn2"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -138,9 +138,39 @@ func TestCDNLocks(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
 						"action": "dequeue",
-						"cdnId":  getCDNID(t, "cdn2"),
+						"cdnId":  GetCDNID(t, "cdn2"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+			"CDN UPDATE": {
+				"OK when USER OWNS LOCK": {
+					EndpointId: GetCDNID(t, "cdn2"), ClientSession: opsUserWithLockSession,
+					RequestBody: map[string]interface{}{
+						"dnssecEnabled": false,
+						"domainName":    "newdomain",
+						"name":          "cdn2",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId: GetCDNID(t, "cdn2"), ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"dnssecEnabled": false,
+						"domainName":    "newdomaintest",
+						"name":          "cdn2",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"CDN DELETE": {
+				"OK when USER OWNS LOCK": {
+					EndpointId: GetCDNID(t, "cdndelete"), ClientSession: opsUserWithLockSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId: GetCDNID(t, "cdn2"), ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
 			"CACHE GROUP UPDATE": {
@@ -172,7 +202,7 @@ func TestCDNLocks(t *testing.T) {
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession, RequestBody: generateDeliveryService(t, map[string]interface{}{
-						"xmlId": "testDSLock2", "cdnId": GetCDNId(t, "cdn2")}),
+						"xmlId": "testDSLock2", "cdnId": GetCDNID(t, "cdn2")()}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
@@ -180,7 +210,7 @@ func TestCDNLocks(t *testing.T) {
 				"OK when USER OWNS LOCK": {
 					EndpointId: GetDeliveryServiceId(t, "basic-ds-in-cdn2"), ClientSession: opsUserWithLockSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
-						"xmlId": "basic-ds-in-cdn2", "cdnId": GetCDNId(t, "cdn2"), "cdnName": "cdn2", "routingName": "cdn"}),
+						"xmlId": "basic-ds-in-cdn2", "cdnId": GetCDNID(t, "cdn2")(), "cdnName": "cdn2", "routingName": "cdn"}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
@@ -203,7 +233,7 @@ func TestCDNLocks(t *testing.T) {
 				"OK when USER OWNS LOCK": {
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"cdnId":        GetCDNId(t, "cdn2"),
+						"cdnId":        GetCDNID(t, "cdn2"),
 						"profileNames": []string{"EDGEInCDN2"},
 					}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
@@ -211,7 +241,7 @@ func TestCDNLocks(t *testing.T) {
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"cdnId":        GetCDNId(t, "cdn2"),
+						"cdnId":        GetCDNID(t, "cdn2"),
 						"profileNames": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
@@ -230,7 +260,7 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "edge1-cdn2")(),
-						"cdnId":        GetCDNId(t, "cdn2"),
+						"cdnId":        GetCDNID(t, "cdn2"),
 						"profileNames": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
@@ -247,7 +277,7 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "dtrc-edge-07")(),
-						"cdnId":        GetCDNId(t, "cdn2"),
+						"cdnId":        GetCDNID(t, "cdn2"),
 						"cachegroupId": GetCacheGroupId(t, "dtrc2")(),
 						"profileNames": []string{"CDN2_EDGE"},
 						"interfaces": []map[string]interface{}{{
@@ -280,6 +310,7 @@ func TestCDNLocks(t *testing.T) {
 				for name, testCase := range testCases {
 
 					topology := ""
+					cdn := tc.CDN{}
 					cdnLock := tc.CDNLock{}
 					cacheGroup := tc.CacheGroupNullable{}
 					ds := tc.DeliveryServiceV4{}
@@ -312,6 +343,11 @@ func TestCDNLocks(t *testing.T) {
 							dat, err := json.Marshal(testCase.RequestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 							err = json.Unmarshal(dat, &cacheGroup)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						} else if _, ok := testCase.RequestBody["dnssecEnabled"]; ok {
+							dat, err := json.Marshal(testCase.RequestBody)
+							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+							err = json.Unmarshal(dat, &cdn)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						} else {
 							dat, err := json.Marshal(testCase.RequestBody)
@@ -376,6 +412,24 @@ func TestCDNLocks(t *testing.T) {
 								resp, reqInf, err := testCase.ClientSession.UpdateCacheGroup(testCase.EndpointId(), cacheGroup, testCase.RequestOpts)
 								for _, check := range testCase.Expectations {
 									check(t, reqInf, nil, resp.Alerts, err)
+								}
+							})
+						}
+					case "CDN UPDATE":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.UpdateCDN(testCase.EndpointId(), cdn, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
+					case "CDN DELETE":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.DeleteCDN(testCase.EndpointId(), testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
 								}
 							})
 						}
@@ -457,18 +511,6 @@ func validateCreateResponseFields(expectedResp map[string]interface{}) utils.CkR
 		assert.Equal(t, expectedResp["cdn"], cdnLockResp.CDN, "Expected CDN: %v Got: %v", expectedResp["cdn"], cdnLockResp.CDN)
 		assert.Equal(t, expectedResp["message"], *cdnLockResp.Message, "Expected Message %v Got: %v", expectedResp["message"], *cdnLockResp.Message)
 		assert.Equal(t, expectedResp["soft"], *cdnLockResp.Soft, "Expected 'Soft' to be: %v Got: %v", expectedResp["soft"], *cdnLockResp.Soft)
-	}
-}
-
-func getCDNID(t *testing.T, cdnName string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", cdnName)
-		cdnsResp, _, err := TOSession.GetCDNs(opts)
-		assert.NoError(t, err, "Get CDNs Request failed with error:", err)
-		assert.Equal(t, 1, len(cdnsResp.Response), "Expected response object length 1, but got %d", len(cdnsResp.Response))
-		assert.NotNil(t, cdnsResp.Response[0].ID, "Expected id to not be nil")
-		return cdnsResp.Response[0].ID
 	}
 }
 

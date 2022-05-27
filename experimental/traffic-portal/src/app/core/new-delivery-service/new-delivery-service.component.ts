@@ -29,6 +29,7 @@ import {
 	type User
 } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s
@@ -124,6 +125,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		private readonly cdnAPI: CDNService,
 		private readonly auth: CurrentUserService,
 		private readonly router: Router,
+		private readonly headerSvc: TpHeaderService,
 		@Inject(DOCUMENT) private readonly document: Document
 	) { }
 
@@ -136,6 +138,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		if (!success || this.auth.currentUser === null) {
 			return;
 		}
+		this.headerSvc.headerTitle.next("New Delivery Service");
 
 		this.deliveryService.tenant = this.auth.currentUser.tenant;
 		this.deliveryService.tenantId = this.auth.currentUser.tenantId;
@@ -223,6 +226,13 @@ export class NewDeliveryServiceComponent implements OnInit {
 		this.deliveryService.cdnId = def.id;
 		this.deliveryService.cdnName = def.name;
 		this.cdnObject.setValue(def);
+	}
+
+	/**
+	 * Updates the header text based on the status of the current delivery service
+	 */
+	public updateDisplayName(): void {
+		this.headerSvc.headerTitle.next(this.displayName.value === "" ? "New Delivery Service" : this.displayName.value);
 	}
 
 	/**

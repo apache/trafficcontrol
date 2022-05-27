@@ -423,9 +423,11 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	/**
 	 * Toggles the visibility of a column.
 	 *
+	 * @param $event The triggering dom event.
 	 * @param col The ID of a column to toggle.
 	 */
-	public toggleVisibility(col: string): void {
+	public toggleVisibility($event: Event, col: string): void {
+		$event.stopPropagation();
 		if (this.columnAPI) {
 			const column = this.columnAPI.getColumn(col);
 			if (!column) {

@@ -41,22 +41,29 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/4.0/users/2 HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	GET /api/4.0/users/3 HTTP/1.1
+	User-Agent: python-requests/2.25.1
+	Accept-Encoding: gzip, deflate
 	Accept: */*
+	Connection: keep-alive
 	Cookie: mojolicious=...
+
 
 Response Structure
 ------------------
-:addressLine1:      The user's address - including street name and number
-:addressLine2:      An additional address field for e.g. apartment number
-:city:              The name of the city wherein the user resides
-:company:           The name of the company for which the user works
-:country:           The name of the country wherein the user resides
-:email:             The user's email address
-:fullName:          The user's full name, e.g. "John Quincy Adams"
-:gid:               A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - now it is always ``null``
+:addressLine1:   The user's address - including street name and number
+:addressLine2:   An additional address field for e.g. apartment number
+:changeLogCount: The number of change log entries created by the user
+:city:           The name of the city wherein the user resides
+:company:        The name of the company for which the user works
+:country:        The name of the country wherein the user resides
+:email:          The user's email address
+:fullName:       The user's full name, e.g. "John Quincy Adams"
+:gid:            A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - now it is always ``null``
+
+	.. deprecated:: 4.0
+		This field is serves no known purpose, and shouldn't be used for anything so it can be removed in the future.
+
 :id:                An integral, unique identifier for this user
 :lastAuthenticated: The date and time at which the user was last authenticated, in :rfc:`3339`
 :lastUpdated:       The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
@@ -71,43 +78,43 @@ Response Structure
 :tenantId:          The integral, unique identifier of the tenant to which this user belongs
 :ucdn:              The name of the :abbr:`uCDN (Upstream Content Delivery Network)` to which the user belongs
 
-	.. versionadded:: 6.2
+	.. versionadded:: 4.0
 
-	.. note:: This field is optional and only used if :abbr:`CDNi (Content Delivery Network Interconnect)` is in use.
+:uid: A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - now it is always ``null``
 
-:uid:               A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - now it is always ``null``
-:username:          The user's username
+	.. deprecated:: 4.0
+		This field is serves no known purpose, and shouldn't be used for anything so it can be removed in the future.
+
+:username: The user's username
 
 .. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: 9vqUmt8fWEuDb+9LQJ4sGbbF4Z0a7uNyBNSWhyzAi3fBUZ5mGhd4Jx5IuSlEqiLZnYeViJJL8mpRortkHCgp5Q==
+	Permissions-Policy: interest-cohort=()
+	Set-Cookie: mojolicious=...; Path=/; Expires=Fri, 13 May 2022 23:48:14 GMT; Max-Age=3600; HttpOnly
+	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 13 Dec 2018 17:46:00 GMT
-	Content-Length: 454
+	Date: Fri, 13 May 2022 22:48:14 GMT
+	Content-Length: 350
 
 	{ "response": [
 		{
-			"addressLine1": null,
+			"addressLine1": "22 Mike Wazowski You've Got Your Life Back Lane",
 			"addressLine2": null,
-			"changeLogCount": null,
-			"city": null,
+			"changeLogCount": 0,
+			"city": "Monstropolis",
 			"company": null,
 			"country": null,
-			"email": null,
-			"fullName": null,
+			"email": "mwazowski@minc.biz",
+			"fullName": "Mike Wazowski",
 			"gid": null,
-			"id": 2,
-			"lastAuthenticated": "0001-01-01T00:00:00Z",
-			"lastUpdated": "2021-08-25T14:08:13.974447-06:00",
-			"newUser": false,
+			"id": 3,
+			"lastAuthenticated": null,
+			"lastUpdated": "2022-05-13T22:13:54.605052Z",
+			"newUser": true,
 			"phoneNumber": null,
 			"postalCode": null,
 			"publicSshKey": null,
@@ -116,8 +123,9 @@ Response Structure
 			"stateOrProvince": null,
 			"tenant": "root",
 			"tenantId": 1,
+			"ucdn": "",
 			"uid": null,
-			"username": "admin"
+			"username": "mike"
 		}
 	]}
 
@@ -143,39 +151,44 @@ Request Structure
 :addressLine2:       An optional field which should contain an additional address field for e.g. apartment number
 :city:               An optional field which should contain the name of the city wherein the user resides
 :company:            An optional field which should contain the name of the company for which the user works
-:confirmLocalPasswd: The 'confirm' field in a new user's password specification - must match ``localPasswd``
 :country:            An optional field which should contain the name of the country wherein the user resides
 :email:              The user's email address The given email is validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that it can't actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
 :fullName:           The user's full name, e.g. "John Quincy Adams"
-:localPasswd:        The user's password
-:newUser:            An optional meta field with no apparent purpose - don't use this
-:phoneNumber:        An optional field which should contain the user's phone number
-:postalCode:         An optional field which should contain the user's postal code
-:publicSshKey:       An optional field which should contain the user's public encryption key used for the SSH protocol
-:role:               The number that corresponds to the highest permission role which will be permitted to the user
-:stateOrProvince:    An optional field which should contain the name of the state or province in which the user resides
-:tenantId:           The integral, unique identifier of the tenant to which the new user shall belong
+:gid:            A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - now it is always ``null``
 
-	.. note:: This field is optional if and only if tenancy is not enabled in Traffic Control
+	.. deprecated:: 4.0
+		This field is serves no known purpose, and shouldn't be used for anything so it can be removed in the future.
 
-:ucdn:              The name of the :abbr:`uCDN (Upstream Content Delivery Network)` to which the user belongs
+:id:              This field *may* optionally be given, but **must** match the user's existing ID as IDs are immutable
+:localPasswd:     The user's password
+:newUser:         An optional meta field with no apparent purpose - don't use this
+:phoneNumber:     An optional field which should contain the user's phone number
+:postalCode:      An optional field which should contain the user's postal code
+:publicSshKey:    An optional field which should contain the user's public encryption key used for the SSH protocol
+:role:            The name of the Role which will be granted to the user
+:stateOrProvince: An optional field which should contain the name of the state or province in which the user resides
+:tenantId:        The integral, unique identifier of the tenant to which the new user shall belong
+:ucdn:            The name of the :abbr:`uCDN (Upstream Content Delivery Network)` to which the user belongs
 
-	.. versionadded:: 6.2
+	.. versionadded:: 4.0
 
-	.. note:: This field is optional and only used if :abbr:`CDNi (Content Delivery Network Interconnect)` is in use.
+:uid: A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - now it is always ``null``
+
+	.. deprecated:: 4.0
+		This field is serves no known purpose, and shouldn't be used for anything so it can be removed in the future.
 
 :username: The user's username
 
 .. code-block:: http
 	:caption: Request Structure
 
-	PUT /api/4.0/users/2 HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	PUT /api/4.0/users/3 HTTP/1.1
+	User-Agent: python-requests/2.25.1
+	Accept-Encoding: gzip, deflate
 	Accept: */*
+	Connection: keep-alive
 	Cookie: mojolicious=...
-	Content-Length: 458
-	Content-Type: application/json
+	Content-Length: 476
 
 	{
 		"addressLine1": "not a real address",
@@ -183,28 +196,35 @@ Request Structure
 		"city": "not a real city",
 		"company": "not a real company",
 		"country": "not a real country",
-		"email": "not@real.email",
-		"fullName": "Not a real fullName",
+		"email": "mwazowski@minc.biz",
+		"fullName": "Mike Wazowski",
 		"phoneNumber": "not a real phone number",
 		"postalCode": "not a real postal code",
 		"publicSshKey": "not a real ssh key",
 		"stateOrProvince": "not a real state or province",
 		"tenantId": 1,
 		"role": "admin",
-		"username": "admin"
+		"username": "mike"
 	}
+
 
 Response Structure
 ------------------
-:addressLine1:     The user's address - including street name and number
-:addressLine2:     An additional address field for e.g. apartment number
-:city:             The name of the city wherein the user resides
-:company:          The name of the company for which the user works
-:country:          The name of the country wherein the user resides
-:email:            The user's email address
-:fullName:         The user's full name, e.g. "John Quincy Adams"
-:gid:              A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - now it is always ``null``
+:addressLine1:   The user's address - including street name and number
+:addressLine2:   An additional address field for e.g. apartment number
+:changeLogCount: The number of change log entries created by the user
+:city:           The name of the city wherein the user resides
+:company:        The name of the company for which the user works
+:country:        The name of the country wherein the user resides
+:email:          The user's email address
+:fullName:       The user's full name, e.g. "John Quincy Adams"
+:gid:            A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - now it is always ``null``
+
+	.. deprecated:: 4.0
+		This field is serves no known purpose, and shouldn't be used for anything so it can be removed in the future.
+
 :id:               An integral, unique identifier for this user
+:lastAuthenticated: The date and time at which the user was last authenticated, in :rfc:`3339`
 :lastUpdated:      The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
 :newUser:          A meta field with no apparent purpose that is usually ``null`` unless explicitly set during creation or modification of a user via some API endpoint
 :phoneNumber:      The user's phone number
@@ -217,49 +237,47 @@ Response Structure
 :tenantId:         The integral, unique identifier of the tenant to which this user belongs
 :ucdn:              The name of the :abbr:`uCDN (Upstream Content Delivery Network)` to which the user belongs
 
-	.. versionadded:: 6.2
+	.. versionadded:: 4.0
 
-	.. note:: This field is optional and only used if :abbr:`CDNi (Content Delivery Network Interconnect)` is in use.
+:uid: A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - now it is always ``null``
 
-:uid:              A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - now it is always ``null``
-:username:         The user's username
+	.. deprecated:: 4.0
+		This field is serves no known purpose, and shouldn't be used for anything so it can be removed in the future.
+
+:username: The user's username
 
 .. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Date: Thu, 13 Dec 2018 17:24:23 GMT
-	X-Server-Name: traffic_ops_golang/
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Permissions-Policy: interest-cohort=()
+	Set-Cookie: mojolicious=...; Path=/; Expires=Fri, 13 May 2022 23:50:25 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: QKvGSIwSdreMI/OdgWv9WQfI/C1JbXSoQGGospTGfCVUJ32XNWMhmREGzojWsilW8os8b14TGYeyMLUWunf2Ug==
-	Content-Length: 478
+	X-Server-Name: traffic_ops_golang/
+	Date: Fri, 13 May 2022 22:50:25 GMT
+	Content-Length: 399
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "user was updated."
+			"text": "user was updated.",
+			"level": "success"
 		}
 	],
 	"response": {
 		"addressLine1": "not a real address",
 		"addressLine2": "not a real address either",
-		"changeLogCount": null,
+		"changeLogCount": 0,
 		"city": "not a real city",
 		"company": "not a real company",
 		"country": "not a real country",
-		"email": "not@real.email",
-		"fullName": "Not a real fullName",
+		"email": "mwazowski@minc.biz",
+		"fullName": "Mike Wazowski",
 		"gid": null,
-		"id": 2,
-		"lastAuthenticated": "2021-07-09T14:44:10.371708-06:00",
-		"lastUpdated": "2021-08-25T15:05:16.32163-06:00",
+		"id": 3,
+		"lastAuthenticated": null,
+		"lastUpdated": "2022-05-13T22:50:25.965004Z",
 		"newUser": false,
 		"phoneNumber": "not a real phone number",
 		"postalCode": "not a real postal code",
@@ -269,6 +287,7 @@ Response Structure
 		"stateOrProvince": "not a real state or province",
 		"tenant": "root",
 		"tenantId": 1,
+		"ucdn": "",
 		"uid": null,
-		"username": "admin"
+		"username": "mike"
 	}}

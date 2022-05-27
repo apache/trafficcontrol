@@ -11,50 +11,47 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import 'src/theme';
-h1 {
-	display: inline-block;
-	color: $theme_tertiary;
-	font-size: 3em;
-}
-header {
-	margin: auto;
-	max-width: 85vw;
-	text-align: center;
-}
-img {
-	height: 3em;
-}
-form {
-	margin: auto;
-	display: grid;
-	grid-template-columns: auto 1fr;
-	grid-column-gap: normal;
-	grid-row-gap: 15px;
-	width: 30em;
-	max-width: 85vw;
-	border: 3px outset $theme_secondary;
-	border-radius: 5px;
-	padding: 15px;
-	label {
-		margin: 5px 0 5px auto;
-		text-align: right;
-		&::after {
-			content: ":";
+mat-card {
+	width: fit-content;
+	margin: 45px auto auto auto;
+
+	mat-card-header {
+		display: grid;
+		grid-template-columns: 1fr auto auto 1fr;
+
+		img {
+			height: 5em;
+			margin-bottom: 15px;
+		}
+		h1 {
+			vertical-align: text-bottom;
 		}
 	}
-	input {
-		margin-left: 5px;
-		text-align: left;
-	}
 
-	div {
-		grid-column: span 2;
-		display: grid;
-		grid-template-columns: auto auto 1fr;
+	form {
+		margin: auto;
+		width: fit-content;
+		max-width: 85vw;
+		border-radius: 5px;
+		padding: 0;
 
-		button:last-child {
-			justify-self: end;
+		mat-form-field {
+			width: 100%;
+		}
+
+		div {
+			margin-top: 5px;
+			grid-column: span 2;
+			display: grid;
+			grid-template-columns: auto auto 1fr;
+			grid-column-gap: 10px;
+
+			button {
+				justify-self: end;
+			}
+			button:first-child {
+				justify-self: baseline;
+			}
 		}
 	}
 }

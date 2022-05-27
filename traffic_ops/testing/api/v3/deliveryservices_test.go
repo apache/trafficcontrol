@@ -210,7 +210,7 @@ func TestDeliveryServices(t *testing.T) {
 				"BAD REQUEST when ADDING TOPOLOGY to DS when NO CACHES in SAME CDN as DS": {
 					EndpointId: GetDeliveryServiceId(t, "top-ds-in-cdn2"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
-						"cdnId":    GetCDNId(t, "cdn2"),
+						"cdnId":    GetCDNID(t, "cdn2"),
 						"topology": "top-with-caches-in-cdn1",
 						"xmlId":    "top-ds-in-cdn2",
 					}),
@@ -294,7 +294,7 @@ func TestDeliveryServices(t *testing.T) {
 					}
 					if val, ok := testCase.RequestParams["cdn"]; ok {
 						if _, err := strconv.Atoi(val[0]); err != nil {
-							testCase.RequestParams.Set("cdn", strconv.Itoa(GetCDNId(t, val[0])))
+							testCase.RequestParams.Set("cdn", strconv.Itoa(GetCDNID(t, val[0])()))
 						}
 					}
 					if val, ok := testCase.RequestParams["profile"]; ok {
@@ -425,14 +425,6 @@ func validateUpdateDSExpectedFields(expectedResp map[string]interface{}) utils.C
 	}
 }
 
-func GetCDNId(t *testing.T, cdnName string) int {
-	resp, _, err := TOSession.GetCDNByNameWithHdr(cdnName, http.Header{})
-	assert.RequireNoError(t, err, "Get CDNs Request failed with error: %v", err)
-	assert.RequireEqual(t, 1, len(resp), "Expected response object length 1, but got %d", len(resp))
-	assert.RequireNotNil(t, &resp[0].ID, "Expected id to not be nil")
-	return resp[0].ID
-}
-
 func GetDeliveryServiceId(t *testing.T, xmlId string) func() int {
 	return func() int {
 		resp, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(xmlId, http.Header{})
@@ -463,7 +455,7 @@ func generateDeliveryService(t *testing.T, requestDS map[string]interface{}) map
 	genericHTTPDS := map[string]interface{}{
 		"active":               true,
 		"cdnName":              "cdn1",
-		"cdnId":                GetCDNId(t, "cdn1"),
+		"cdnId":                GetCDNID(t, "cdn1"),
 		"displayName":          "test ds",
 		"dscp":                 0,
 		"geoLimit":             0,

@@ -12,12 +12,3 @@
 * limitations under the License.
 */
 
-@import "src/theme";
-
-fa-icon {
-	color: darkgray;
-
-	&.cleared {
-		color: $success;
-	}
-}
