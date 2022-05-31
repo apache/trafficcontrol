@@ -95,7 +95,7 @@ found=
 while [[ -z $found ]]; do
 	echo 'waiting for enroller setup'
 	sleep 3
-	found=$(to-get api/2.0/cdns?name="$CDN_NAME" | jq -r '.response[].name')
+	found=$(to-get api/4.0/cdns?name="$CDN_NAME" | jq -r '.response[].name')
 done
 
 for f in /opt/init.d/*; do
@@ -104,7 +104,7 @@ for f in /opt/init.d/*; do
 done
 
 # Wait for SSL keys to exist
-until [[ $(to-get "api/2.0/cdns/name/$CDN_NAME/sslkeys" | jq '.response | length') -ge 2 ]]; do
+until [[ $(to-get "api/4.0/cdns/name/$CDN_NAME/sslkeys" | jq '.response | length') -ge 2 ]]; do
 	echo 'waiting for SSL keys to exist'
 	sleep 3
 done

@@ -199,7 +199,7 @@ Your handler should be in its own file, where you can create any structs and hel
 
 ### Registering the Handler
 
-Back to `routes.go`, you need to add your handler to the `Routes` function. For example, `/api/2.0/cdns` would look like `{2.0, http.MethodGet, "cdns", wrapHeaders(wrapAuth(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},`.
+Back to `routes.go`, you need to add your handler to the `Routes` function. For example, `/api/4.0/cdns` would look like `{4.0, http.MethodGet, "cdns", wrapHeaders(wrapAuth(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},`.
 
 The only thing we haven't talked about are those `wrap` functions. They each take a `RegexHandlerFunc` and return a `RegexHandlerFunc`, which lets them 'wrap' your handler. You almost certainly need both of them; if you're not sure, ask on the mailing list or Slack. You'll notice the `wrapAuth` function also takes config parameters, as well as a `PrivLevel`. You should create a constant in your handler file of the form `EndpointPrivLevel` and pass that. If your endpoint modifies data, use `PrivLevelOperations`, otherwise `PrivLevelReadOnly`.
 
