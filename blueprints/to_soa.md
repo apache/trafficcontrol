@@ -43,7 +43,8 @@ and seamless. Once TO starts supporting the SOA pattern, we would be able to sca
 ![](img/to-soa.png "Architecture of TO as SOA")
 
 ### Traffic Portal Impact
-n/a
+Any new Traffic Portal (TP) changes that the backend service requires, will be required to be added as modules to the current TP architecture.
+As for the TO refactor, no TP changes are required.
 
 ### Traffic Ops Impact
 TO will need to read a new configuration file(supplied with the `backendcfg` option) on startup. This file will list the routes that will be served by the backend services, some route 
@@ -131,7 +132,9 @@ The backend services will be responsible for writing their own test suites.
 We don't foresee any performance impact on TO as a result of this architecture change.
 
 ### Security Impact
-???
+SSL certificates will be required for HTTPS protocol to be used between TO and the services. These can be implemented however is preferred by the 
+backend service. The overhead will include certificate generation and signing, certificate deployment to services' servers, certificate management 
+and renewal. Client certificates are an option for the future but will require further development.
 
 ### Upgrade Impact
 If a change has to go in to one of the backend services, a redeploy/ restart of TO will no longer be necessary. The backend service will, however, 
