@@ -57,7 +57,7 @@ var testRoutes = []routeTest{
 	},
 	{
 		Method:      `POST`,
-		Path:        `api/1.4/users/login`,
+		Path:        `api/4.0/users/login`,
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
@@ -93,7 +93,7 @@ var testRoutes = []routeTest{
 	},
 	{
 		Method:      http.MethodGet,
-		Path:        "/api/1.1/about",
+		Path:        "/api/4.0/about",
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
