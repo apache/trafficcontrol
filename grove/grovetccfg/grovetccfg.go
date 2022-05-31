@@ -35,7 +35,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	to "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	to "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 
 	"github.com/apache/trafficcontrol/grove/config"
 	"github.com/apache/trafficcontrol/grove/remap"
@@ -157,27 +157,29 @@ func WriteAndBackup(path string, backupDirectory string, bts []byte) error {
 
 // hasUpdatePending returns whether an update is pending, the revalPending status (which will be needed later in the clear update POST), and any error.
 func hasUpdatePending(toc *to.Session, hostname string) (bool, bool, error) {
-	upd, _, err := toc.GetServerByHostName(hostname)
+	response, _, err := toc.GetServersWithHdr(&url.Values{"hostName": {hostname}}, nil)
 	if err != nil {
 		return false, false, errors.New("getting update from Traffic Ops: " + err.Error())
-	} else if len(upd) != 1 {
-		return false, false, fmt.Errorf("Want exactly one server with hostname '%s', got %d", hostname, len(upd))
+	} else if len(response.Response) != 1 {
+		return false, false, fmt.Errorf("Want exactly one server with hostname '%s', got %d", hostname, len(response.Response))
 	}
-	return upd[0].UpdPending, upd[0].RevalPending, nil
+	upd := response.Response
+	return *upd[0].UpdPending, *upd[0].RevalPending, nil
 }
 
 // clearUpdatePending clears the given host's update pending flag in Traffic Ops. It takes the host to clear, and the old revalPending flag to send.
 func clearUpdatePending(toc *to.Session, hostname string, revalPending bool) error {
-	srv, _, err := toc.GetServerByHostName(hostname)
+	response, _, err := toc.GetServersWithHdr(&url.Values{"hostName": {hostname}}, nil)
 	if err != nil {
 		return fmt.Errorf("Failed to update reval_pending: %v", err)
-	} else if len(srv) != 1 {
-		return fmt.Errorf("Want exactly one server with hostname '%s', got '%d'", hostname, len(srv))
+	} else if len(response.Response) != 1 {
+		return fmt.Errorf("Want exactly one server with hostname '%s', got '%d'", hostname, len(response.Response))
 	}
 
-	srv[0].RevalPending = revalPending
-	srv[0].UpdPending = false
-	alerts, _, err := toc.UpdateServerByID(srv[0].ID, srv[0])
+	srv := response.Response
+	srv[0].RevalPending = &revalPending
+	srv[0].UpdPending = new(bool)
+	alerts, _, err := toc.UpdateServerByIDWithHdr(*srv[0].ID, srv[0], nil)
 	if err != nil {
 		return fmt.Errorf("setting update pending on Traffic Ops: %v (Alerts: %+v)", err, alerts.Alerts)
 	}
@@ -229,18 +231,18 @@ func main() {
 
 	// TODO remove this once converted to 1.3 API
 	// using the 1.2 API
-	var hostServer tc.Server
+	var hostServer tc.ServerV30
 	var hostProfile tc.Profile
 	var ok bool
 	var profiles map[string]tc.Profile
-	var servers map[string]tc.Server
+	var servers map[string]tc.ServerV30
 
-	serversArr, _, err := toc.GetServers()
+	serversArr, _, err := toc.GetServersWithHdr(nil, nil)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Servers: " + err.Error())
 		os.Exit(ExitError)
 	}
-	servers = makeServersHostnameMap(serversArr)
+	servers = makeServersHostnameMap(serversArr.Response)
 
 	hostServer, ok = servers[*host]
 	if !ok {
@@ -248,16 +250,16 @@ func main() {
 		os.Exit(ExitError)
 	}
 
-	profilesArr, _, err := toc.GetProfiles()
+	profilesArr, _, err := toc.GetProfilesWithHdr(nil)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Profiles: " + err.Error())
 		os.Exit(ExitError)
 	}
 	profiles = makeProfileNameMap(profilesArr)
 
-	hostProfile, ok = profiles[hostServer.Profile]
+	hostProfile, ok = profiles[*hostServer.Profile]
 	if !ok {
-		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error: profile '" + hostServer.Profile + "' not in Profiles\n")
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error: profile '" + *hostServer.Profile + "' not in Profiles\n")
 		os.Exit(ExitError)
 	}
 	// end of API 1.2 stuff
@@ -285,7 +287,7 @@ func main() {
 			}
 		}
 	} else {
-		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Warning: the profile '" + hostServer.Profile + "' is not a '" + tc.GroveProfileType + "', will not build a config from it.")
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Warning: the profile '" + *hostServer.Profile + "' is not a '" + tc.GroveProfileType + "', will not build a config from it.")
 	}
 
 	rules := remap.RemapRules{}
@@ -347,7 +349,7 @@ func main() {
 	os.Exit(ExitSuccess)
 }
 
-func createGroveCfg(toc *to.Session, server tc.Server) (bool, config.Config, error) {
+func createGroveCfg(toc *to.Session, server tc.ServerV30) (bool, config.Config, error) {
 	var newCfg config.Config
 	var currCfg config.Config
 	var pluginParams = []string{}
@@ -364,9 +366,9 @@ func createGroveCfg(toc *to.Session, server tc.Server) (bool, config.Config, err
 		}
 	}
 
-	serverParameters, _, err := toc.GetParametersByProfileName(server.Profile)
+	serverParameters, _, err := toc.GetParametersByProfileNameWithHdr(*server.Profile, nil)
 	if err != nil {
-		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + server.HostName + "' profile '" + server.Profile + "': " + err.Error())
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + *server.HostName + "' profile '" + *server.Profile + "': " + err.Error())
 		return false, currCfg, err
 	} else {
 		// load config parameters from the servers profile
@@ -453,8 +455,8 @@ func setConfigParameter(cfg *config.Config, name string, value string) error {
 	return err
 }
 
-func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map[string]tc.Server) (remap.RemapRules, error) {
-	cachegroupsArr, _, err := toc.GetCacheGroupsNullable()
+func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map[string]tc.ServerV30) (remap.RemapRules, error) {
+	cachegroupsArr, _, err := toc.GetCacheGroupsNullableWithHdr(nil)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Cachegroups: " + err.Error())
 		os.Exit(1)
@@ -467,29 +469,29 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map
 		os.Exit(1)
 	}
 
-	deliveryservices, _, err := toc.GetDeliveryServicesByServer(hostServer.ID)
+	deliveryservices, _, err := toc.GetDeliveryServicesByServerWithHdr(*hostServer.ID, nil)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Deliveryservices: " + err.Error())
 		os.Exit(1)
 	}
 
-	deliveryserviceRegexArr, _, err := toc.GetDeliveryServiceRegexes()
+	deliveryserviceRegexArr, _, err := toc.GetDeliveryServiceRegexesWithHdr(nil)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Deliveryservice Regexes: " + err.Error())
 		os.Exit(1)
 	}
 	deliveryserviceRegexes := makeDeliveryserviceRegexMap(deliveryserviceRegexArr)
 
-	cdnsArr, _, err := toc.GetCDNs()
+	cdnsArr, _, err := toc.GetCDNsWithHdr(nil)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops CDNs: " + err.Error())
 		os.Exit(1)
 	}
 	cdns := makeCDNMap(cdnsArr)
 
-	serverParameters, _, err := toc.GetParametersByProfileName(hostServer.Profile)
+	serverParameters, _, err := toc.GetParametersByProfileNameWithHdr(*hostServer.Profile, nil)
 	if err != nil {
-		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + host + "' profile '" + hostServer.Profile + "': " + err.Error())
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + host + "' profile '" + *hostServer.Profile + "': " + err.Error())
 		os.Exit(1)
 	}
 
@@ -499,12 +501,12 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map
 		os.Exit(1)
 	}
 
-	sameCDN := func(s tc.Server) bool {
+	sameCDN := func(s tc.ServerV30) bool {
 		return s.CDNName == hostServer.CDNName
 	}
 
-	serverAvailable := func(s tc.Server) bool {
-		status := strings.ToLower(s.Status)
+	serverAvailable := func(s tc.ServerV30) bool {
+		status := strings.ToLower(*s.Status)
 		statuses := AvailableStatuses()
 		_, ok := statuses[status]
 		return ok
@@ -513,9 +515,9 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map
 	parents = filterParents(parents, sameCDN)
 	parents = filterParents(parents, serverAvailable)
 
-	cdnSSLKeys, _, err := toc.GetCDNSSLKeys(hostServer.CDNName)
+	cdnSSLKeys, _, err := toc.GetCDNSSLKeysWithHdr(*hostServer.CDNName, nil)
 	if err != nil {
-		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting '" + hostServer.CDNName + "' SSL keys: " + err.Error())
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting '" + *hostServer.CDNName + "' SSL keys: " + err.Error())
 		os.Exit(1)
 	}
 	dsCerts := makeDSCertMap(cdnSSLKeys)
@@ -653,10 +655,10 @@ func makeProfileNameMap(profiles []tc.Profile) map[string]tc.Profile {
 	return m
 }
 
-func makeServersHostnameMap(servers []tc.Server) map[string]tc.Server {
-	m := map[string]tc.Server{}
+func makeServersHostnameMap(servers []tc.ServerV30) map[string]tc.ServerV30 {
+	m := map[string]tc.ServerV30{}
 	for _, server := range servers {
-		m[server.HostName] = server
+		m[*server.HostName] = server
 	}
 	return m
 }
@@ -695,28 +697,28 @@ func makeDSCertMap(sslKeys []tc.CDNSSLKeys) map[string]tc.CDNSSLKeys {
 	return m
 }
 
-func getParents(hostname string, servers map[string]tc.Server, cachegroups map[string]tc.CacheGroupNullable) ([]tc.Server, error) {
+func getParents(hostname string, servers map[string]tc.ServerV30, cachegroups map[string]tc.CacheGroupNullable) ([]tc.ServerV30, error) {
 	server, ok := servers[hostname]
 	if !ok {
 		return nil, fmt.Errorf("hostname not found in Servers")
 	}
 
-	cachegroup, ok := cachegroups[server.Cachegroup]
+	cachegroup, ok := cachegroups[*server.Cachegroup]
 	if !ok {
 		return nil, fmt.Errorf("server cachegroup '%v' not found in Cachegroups", server.Cachegroup)
 	}
 
-	parents := []tc.Server{}
+	parents := []tc.ServerV30{}
 	for _, server := range servers {
-		if cachegroup.ParentName != nil && server.Cachegroup == *cachegroup.ParentName {
+		if cachegroup.ParentName != nil && *server.Cachegroup == *cachegroup.ParentName {
 			parents = append(parents, server)
 		}
 	}
 	return parents, nil
 }
 
-func filterParents(parents []tc.Server, include func(tc.Server) bool) []tc.Server {
-	newParents := []tc.Server{}
+func filterParents(parents []tc.ServerV30, include func(tc.ServerV30) bool) []tc.ServerV30 {
+	newParents := []tc.ServerV30{}
 	for _, parent := range parents {
 		if include(parent) {
 			newParents = append(newParents, parent)
@@ -770,12 +772,12 @@ func dsTypeSkipsMid(ttype string) bool {
 }
 
 // buildTo returns the to URL, and the Proxy URL (if any)
-func buildTo(parentServer tc.Server, protocol string, originURI string, dsType string) (string, string) {
+func buildTo(parentServer tc.ServerV30, protocol string, originURI string, dsType string) (string, string) {
 	// TODO add port?
 	to := originURI
 	proxy := ""
 	if !dsTypeSkipsMid(dsType) {
-		proxy = "http://" + parentServer.HostName + "." + parentServer.DomainName + ":" + strconv.Itoa(parentServer.TCPPort)
+		proxy = "http://" + *parentServer.HostName + "." + *parentServer.DomainName + ":" + strconv.Itoa(*parentServer.TCPPort)
 	}
 	return to, proxy
 }
@@ -855,7 +857,7 @@ func makeAllowIP(ips []string) ([]*net.IPNet, error) {
 func createRulesOld(
 	hostname string,
 	dses []tc.DeliveryServiceNullable,
-	parents []tc.Server,
+	parents []tc.ServerV30,
 	dsRegexes map[string][]tc.DeliveryServiceRegex,
 	cdns map[string]tc.CDN,
 	hostParams []tc.Parameter,
