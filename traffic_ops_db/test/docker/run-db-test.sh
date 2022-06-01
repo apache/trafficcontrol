@@ -84,7 +84,10 @@ for d in $(get_db_dumps); do
 done
 
 cd "$TO_DIR"
-old_db_version=0
+# This NEEDS to be updated if migrations are squashed. It should be the
+# timestamp of the oldest extant migration.
+# TODO: this can be determined automatically from an inspection of the migrations dir
+old_db_version=2022011112591400
 
 if [[ "$db_is_empty" = false ]]; then
   old_db_version=$(get_current_db_version)
