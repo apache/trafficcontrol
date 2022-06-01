@@ -47,14 +47,14 @@ Any new Traffic Portal (TP) changes that the backend service requires, will be r
 As for the TO refactor, no TP changes are required.
 
 ### Traffic Ops Impact
-TO will need to read a new configuration file(supplied with the `backendcfg` option) on startup. This file will list the routes that will be served by the backend services, some route 
+TO will need to read a new optional configuration file (supplied with the `backendcfg` option) on startup. This file will list the routes that will be served by the backend services, some route 
 specific metadata (permissions, route ID, etc.) and where the incoming requests on those paths should be reverse proxied to. Any change to
 this configuration file will require a reload of the new configuration values on TO's side. This can be achieved by sending a `SIGHUP` signal 
 to the TO process.
 
 The contents of an example backend configuration file are listed below:
 
-```json
+```jsonc
 {
   // List of routes for which TO needs to act as a reverse proxy
   "routes": [
