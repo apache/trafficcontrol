@@ -703,11 +703,14 @@ func initMigrate() (bool, bool) {
 	} else {
 		migrateInstance, err = migrate.New("file:"+dbMigrationsDir, connectionString)
 	}
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, os.ErrNotExist) {
+		return false, false
+	}
+	if err != nil {
 		die("Starting Migrate: " + err.Error())
 	}
 	migrateInstance.Log = &Log{}
-	return maybeMigrateFromGoose(), err == nil
+	return maybeMigrateFromGoose(), true
 }
 
 // Log represents the logger
