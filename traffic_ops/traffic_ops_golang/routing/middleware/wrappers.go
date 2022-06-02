@@ -212,11 +212,8 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 					imsType = IMSMISS
 				}
 			}
-			routeID := r.Context().Value(RouteID)
-			if routeID == nil {
-				routeID = 0
-			}
-			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v" %v %s`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent(), routeID, imsType)
+			routeID, _ := r.Context().Value(RouteID).(int)
+			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v" %d %s`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent(), routeID, imsType)
 		}()
 		h.ServeHTTP(iw, r)
 	}
