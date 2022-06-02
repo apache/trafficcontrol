@@ -91,7 +91,7 @@ func PermCk(path string, perm int) bool {
 func OwnershipCk(path string, uid int, gid int) bool {
 	file, err := os.Stat(path)
 	if err != nil {
-		fmt.Println("error getting file status", path) 
+		fmt.Println("error getting file status", path)
 	}
 	stat := file.Sys().(*syscall.Stat_t)
 	if uid != int(stat.Uid) || gid != int(stat.Gid) {
