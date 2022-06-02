@@ -91,6 +91,11 @@ FROM public.role
 WHERE "name" = 'admin'
 ON CONFLICT DO NOTHING;
 
+INSERT INTO public.role_capability
+SELECT id, 'DELIVERY-SERVICE-SAFE:UPDATE'
+FROM public.role
+WHERE "name" in ('operations', 'read-only', 'portal', 'federation', 'steering');
+
 -- Using role 'read-only'
 INSERT INTO public.role_capability
 SELECT id, perm
@@ -135,7 +140,7 @@ CROSS JOIN ( VALUES
 	('USER:READ'),
 	('STAT:CREATE')
 ) AS perms(perm)
-WHERE "name" IN ('operations', 'read-only')
+WHERE "name" IN ('operations', 'read-only', 'federation', 'steering')
 ON CONFLICT DO NOTHING;
 
 -- Traditionally the 'portal'/'federations'/'steering' Role(s)
@@ -159,7 +164,7 @@ CROSS JOIN ( VALUES
 	('STEERING:UPDATE'),
 	('STEERING:DELETE')
 ) AS perms(perm)
-WHERE "name" = 'operations'
+WHERE "name" IN ('operations', 'federation', 'steering')
 ON CONFLICT DO NOTHING;
 
 -- Using role 'operations'
