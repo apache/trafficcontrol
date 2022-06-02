@@ -148,6 +148,9 @@ If one file exists but the other doesn't, it will always be a diff.
 Mode is file permissions in octal format, default is 0644.
 Line comment is a character that signals the line is a comment, default is #
 
+Uid is the user id of the file's owner, default is 0.
+Gid is the id of the group the file is a member of, default is 0.
+
 Note this means there may be no diff text printed to stdout but still exit 1 indicating a diff
 if the file being created or deleted is semantically empty.`
 
