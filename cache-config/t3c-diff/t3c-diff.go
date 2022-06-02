@@ -49,6 +49,8 @@ func main() {
 	version := getopt.BoolLong("version", 'V', "Print version information and exit")
 	lineComment := getopt.StringLong("line_comment", 'l', "#", "Comment symbol")
 	mode := getopt.IntLong("file-mode", 'm', 0644, "file mode default is 644")
+	uid := getopt.IntLong("file-uid", 'u', 0, "file uid default is 0")
+	gid := getopt.IntLong("file-gid", 'g', 0, "file gid default is 0")
 	fa := getopt.StringLong("file-a", 'a', "", "first diff file")
 	fb := getopt.StringLong("file-b", 'b', "", "second diff file")
 	getopt.ParseV2()
@@ -116,9 +118,17 @@ func main() {
 			log.Infoln("File permissions are incorrect, should be ", fmt.Sprintf("%#o", *mode))
 			os.Exit(1)
 		}
+		if t3cutil.OwnershipCk(fileNameA, *uid, *gid) {
+			log.Infoln("user or group ownership are incorrect, should be ", fmt.Sprintf("Uid:%d Gid:%d", *uid, *gid))
+			os.Exit(1)
+		}
 	case fileNameB != "stdin":
 		if t3cutil.PermCk(fileNameB, *mode) {
 			log.Infoln("File permissions are incorrect, should be ", fmt.Sprintf("%#o", *mode))
+			os.Exit(1)
+		}
+		if t3cutil.OwnershipCk(fileNameB, *uid, *gid) {
+			log.Infoln("user or group ownership are incorrect, should be ", fmt.Sprintf("Uid:%d Gid:%d", *uid, *gid))
 			os.Exit(1)
 		}
 	}
@@ -127,7 +137,7 @@ func main() {
 }
 
 const usageStr = `usage: t3c-diff [--help]
-        -a <file-a> -b <file-b> -l <line comment> -m <file mode>
+        -a <file-a> -b <file-b> -l <line comment> -m <file mode> -u <file uid> -g <file gid>
 
 Either file may be 'stdin', in which case that file is read from stdin.
 Either file may not exist.
