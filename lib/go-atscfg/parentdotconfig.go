@@ -54,14 +54,37 @@ const ParentConfigCacheParamRank = "rank"
 const ParentConfigCacheParamNotAParent = "not_a_parent"
 const StrategyConfigUsePeering = "use_peering"
 
-const ParentConfigParamAlgorithm = "algorithm"
-const ParentConfigParamSecondaryMode = "try_all_primaries_before_secondary"
+// same across DS
 const ParentConfigParamQString = "qstring"
-const ParentConfigParamParentRetry = "parent_retry"
-const ParentConfigParamMaxSimpleRetries = "max_simple_retries"
-const ParentConfigParamMaxUnavailableServerRetries = "max_unavailable_server_retries"
-const ParentConfigParamSimpleServerRetryResponses = "simple_server_retry_responses"
-const ParentConfigParamUnavailableServerRetryResponses = "unavailable_server_retry_responses"
+
+type ParentConfigRetryKeys struct {
+	Algorithm                 string
+	SecondaryMode             string
+	ParentRetry               string
+	MaxSimpleRetries          string
+	SimpleRetryResponses      string
+	MaxUnavailableRetries     string
+	UnavailableRetryResponses string
+}
+
+func MakeParentConfigRetryKeysWithPrefix(prefix string) ParentConfigRetryKeys {
+	return ParentConfigRetryKeys{
+		Algorithm:                 prefix + "algorithm",
+		SecondaryMode:             prefix + "try_all_primaries_before_secondary",
+		ParentRetry:               prefix + "parent_retry",
+		MaxSimpleRetries:          prefix + "max_simple_retries",
+		SimpleRetryResponses:      prefix + "simple_server_retry_responses",
+		MaxUnavailableRetries:     prefix + "max_unavailable_server_retries",
+		UnavailableRetryResponses: prefix + "unavailable_server_retry_responses",
+	}
+}
+
+var ParentConfigRetryKeysFirst = MakeParentConfigRetryKeysWithPrefix("first.")
+var ParentConfigRetryKeysInner = MakeParentConfigRetryKeysWithPrefix("inner.")
+var ParentConfigRetryKeysLast = MakeParentConfigRetryKeysWithPrefix("last.")
+
+var ParentConfigRetryKeysMSO = MakeParentConfigRetryKeysWithPrefix("mso.")
+var ParentConfigRetryKeysDefault = MakeParentConfigRetryKeysWithPrefix("")
 
 type OriginHost string
 type OriginFQDN string
@@ -418,12 +441,12 @@ func makeParentDotConfigData(
 
 					policy := ParentAbstractionServiceRetryPolicyConsistentHash
 
-					if parentSelectAlg := serverParams[ParentConfigParamAlgorithm]; strings.TrimSpace(parentSelectAlg) != "" {
+					if parentSelectAlg := serverParams[ParentConfigRetryKeysDefault.Algorithm]; strings.TrimSpace(parentSelectAlg) != "" {
 						paramPolicy := ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy(parentSelectAlg)
 						if paramPolicy != ParentAbstractionServiceRetryPolicyInvalid {
 							policy = paramPolicy
 						} else {
-							warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamAlgorithm+" parameter '"+parentSelectAlg+"', not using!")
+							warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigRetryKeysDefault.Algorithm+" parameter '"+parentSelectAlg+"', not using!")
 						}
 					}
 					pasvc.Comment = makeParentComment(opt.AddComments, *ds.XMLID, "")
@@ -623,7 +646,8 @@ func makeParentDotConfigData(
 		defaultDestText.DestDomain = `.`
 		defaultDestText.Parents = parents
 		// defaultDestText = `dest_domain=. ` + parents
-		if serverParams[ParentConfigParamAlgorithm] == tc.AlgorithmConsistentHash {
+
+		if serverParams[ParentConfigRetryKeysDefault.Algorithm] == tc.AlgorithmConsistentHash {
 			defaultDestText.SecondaryParents = secondaryParents
 			defaultDestText.SecondaryMode = secondaryMode
 			// defaultDestText += secondaryParents
@@ -828,55 +852,61 @@ type parentDSParams struct {
 	MergeGroups []string
 }
 
-func (dsp *parentDSParams) FillParentRetries(prefix string, dsParams map[string]string, dsid string) (bool, []string) {
+func (dsp *parentDSParams) FillParentRetries(keys ParentConfigRetryKeys, dsParams map[string]string, dsid string) (bool, []string) {
 	var warnings []string
-	var key string
 	hasValues := false
 
-	key = prefix + ParentConfigParamAlgorithm
-	if v, ok := dsParams[key]; ok && strings.TrimSpace(v) != "" {
+	if v, ok := dsParams[keys.Algorithm]; ok && strings.TrimSpace(v) != "" {
 		policy := ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy(v)
 		if policy != ParentAbstractionServiceRetryPolicyInvalid {
 			dsp.Algorithm = policy
 			hasValues = true
 		} else {
-			warnings = append(warnings, "DS '"+dsid+"' had malformed "+key+" parameter '"+v+"', not using!")
+			warnings = append(warnings, "DS '"+dsid+"' had malformed "+keys.Algorithm+" parameter '"+v+"', not using!")
 		}
 	}
 
-	key = prefix + ParentConfigParamParentRetry
-	if v, ok := dsParams[key]; ok {
+	if v, ok := dsParams[keys.ParentRetry]; ok {
 		dsp.ParentRetry = v
 		hasValues = true
 	}
 
-	key = prefix + ParentConfigParamMaxSimpleRetries
-	if v, ok := dsParams[key]; ok {
+	if v, ok := dsParams[keys.MaxSimpleRetries]; ok {
 		dsp.MaxSimpleRetries = v
 		hasValues = true
 	}
-	key = prefix + ParentConfigParamMaxUnavailableServerRetries
-	if v, ok := dsParams[key]; ok {
+	if v, ok := dsParams[keys.MaxUnavailableRetries]; ok {
 		dsp.MaxUnavailableServerRetries = v
 		hasValues = true
 	}
 
-	key = prefix + ParentConfigParamSimpleServerRetryResponses
-	if v, ok := dsParams[key]; ok {
+	if v, ok := dsParams[keys.SimpleRetryResponses]; ok {
 		if unavailableServerRetryResponsesValid(v) {
 			dsp.SimpleServerRetryResponses = v
 			hasValues = true
 		} else {
-			warnings = append(warnings, "DS '"+dsid+"' had malformed "+key+" parameter '"+v+"', not using!")
+			warnings = append(warnings, "DS '"+dsid+"' had malformed "+keys.SimpleRetryResponses+" parameter '"+v+"', not using!")
 		}
 	}
-	key = prefix + ParentConfigParamUnavailableServerRetryResponses
-	if v, ok := dsParams[key]; ok {
+
+	if v, ok := dsParams[keys.UnavailableRetryResponses]; ok {
 		if unavailableServerRetryResponsesValid(v) {
 			dsp.UnavailableServerRetryResponses = v
 			hasValues = true
 		} else {
-			warnings = append(warnings, "DS '"+dsid+"' had malformed "+key+" parameter '"+v+"', not using!")
+			warnings = append(warnings, "DS '"+dsid+"' had malformed "+keys.UnavailableRetryResponses+" parameter '"+v+"', not using!")
+		}
+	}
+
+	// Unfortunately this may be s
+	if v, ok := dsParams[keys.SecondaryMode]; ok {
+		if v == "false" {
+			dsp.TryAllPrimariesBeforeSecondary = false
+		} else {
+			dsp.TryAllPrimariesBeforeSecondary = true
+			if v != "" {
+				warnings = append(warnings, "DS '"+dsid+"' had Parameter "+keys.SecondaryMode+" which is used if it exists, the value is ignored (unless false) ! Non-empty value '"+v+"' will be ignored!")
+			}
 		}
 	}
 
@@ -918,10 +948,11 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling]
 	params.MergeGroups = strings.Split(dsParams[ParentConfigParamMergeGroups], " ")
 
-	if v, ok := dsParams[ParentConfigParamSecondaryMode]; ok {
+	// Secondary Mode should really be done per tier
+	if v, ok := dsParams[ParentConfigRetryKeysDefault.SecondaryMode]; ok {
 		params.TryAllPrimariesBeforeSecondary = true
 		if v != "" {
-			warnings = append(warnings, "DS '"+*ds.XMLID+"' had Parameter "+ParentConfigParamSecondaryMode+" which is used if it exists, the value is ignored! Non-empty value '"+v+"' will be ignored!")
+			warnings = append(warnings, "DS '"+*ds.XMLID+"' had Parameter "+ParentConfigRetryKeysDefault.SecondaryMode+" which is used if it exists, the value is ignored! Non-empty value '"+v+"' will be ignored!")
 		}
 	}
 
@@ -929,49 +960,33 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	if serverPlacement.IsLastCacheTier {
 		// mso. prefix lowest priority
 		if isMSO {
-			_, warns := params.FillParentRetries("mso.", dsParams, *ds.XMLID)
+			_, warns := params.FillParentRetries(ParentConfigRetryKeysMSO, dsParams, *ds.XMLID)
 			warnings = append(warnings, warns...)
 		}
 
 		// no prefix next priority
-		_, warns := params.FillParentRetries("", dsParams, *ds.XMLID)
+		_, warns := params.FillParentRetries(ParentConfigRetryKeysDefault, dsParams, *ds.XMLID)
 		warnings = append(warnings, warns...)
 
 		// last. prefix highest priority
-		_, warns = params.FillParentRetries("last.", dsParams, *ds.XMLID)
+		_, warns = params.FillParentRetries(ParentConfigRetryKeysLast, dsParams, *ds.XMLID)
 		warnings = append(warnings, warns...)
 
 		params.HasRetryParams = true
 
 	} else if serverPlacement.IsInnerCacheTier {
 
-		hasVals, warns := params.FillParentRetries("inner.", dsParams, *ds.XMLID)
+		hasVals, warns := params.FillParentRetries(ParentConfigRetryKeysInner, dsParams, *ds.XMLID)
 		warnings = append(warnings, warns...)
 
 		// Normal inner behavior has no parent retry strings
 		params.HasRetryParams = hasVals
-
-		key := "inner." + ParentConfigParamSecondaryMode
-		if v, ok := dsParams[key]; ok {
-			params.TryAllPrimariesBeforeSecondary = true
-			if v != "" {
-				warnings = append(warnings, "DS '"+*ds.XMLID+"' had Parameter "+key+" which is used if it exists, the value is ignored! Non-empty value '"+v+"' will be ignored!")
-			}
-		}
 	} else { // if serverPlacement.IsFirstCacheTier {
-		hasVals, warns := params.FillParentRetries("first.", dsParams, *ds.XMLID)
+		hasVals, warns := params.FillParentRetries(ParentConfigRetryKeysFirst, dsParams, *ds.XMLID)
 		warnings = append(warnings, warns...)
 
 		// Normal first behavior has no parent retry strings
 		params.HasRetryParams = hasVals
-
-		key := "inner." + ParentConfigParamSecondaryMode
-		if v, ok := dsParams[key]; ok {
-			params.TryAllPrimariesBeforeSecondary = true
-			if v != "" {
-				warnings = append(warnings, "DS '"+*ds.XMLID+"' had Parameter "+key+" which is used if it exists, the value is ignored! Non-empty value '"+v+"' will be ignored!")
-			}
-		}
 	}
 
 	return params, warnings
@@ -1207,7 +1222,7 @@ func getSecondaryModeStr(tryAllPrimariesBeforeSecondary bool, atsMajorVer int, d
 		return ParentAbstractionServiceParentSecondaryModeDefault, warnings
 	}
 	if atsMajorVer < 8 {
-		warnings = append(warnings, "DS '"+string(ds)+"' had Parameter "+ParentConfigParamSecondaryMode+" but this cache is "+strconv.Itoa(atsMajorVer)+" and secondary_mode isn't supported in ATS until 8. Not using!")
+		warnings = append(warnings, "DS '"+string(ds)+"' had Parameter "+ParentConfigRetryKeysDefault.SecondaryMode+" but this cache is "+strconv.Itoa(atsMajorVer)+" and secondary_mode isn't supported in ATS until 8. Not using!")
 		return ParentAbstractionServiceParentSecondaryModeDefault, warnings
 	}
 
@@ -1232,7 +1247,7 @@ func getTopologyRoundRobin(
 	if !serverIsLastTier {
 		return ParentAbstractionServiceRetryPolicyConsistentHash
 	}
-	if parentSelectAlg := serverParams[ParentConfigParamAlgorithm]; ds.OriginShield != nil && *ds.OriginShield != "" && strings.TrimSpace(parentSelectAlg) != "" {
+	if parentSelectAlg := serverParams[ParentConfigRetryKeysDefault.Algorithm]; ds.OriginShield != nil && *ds.OriginShield != "" && strings.TrimSpace(parentSelectAlg) != "" {
 		if policy := ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy(parentSelectAlg); policy != ParentAbstractionServiceRetryPolicyInvalid {
 			return policy
 		}
@@ -1922,7 +1937,7 @@ func getServerParentConfigParams(server *Server, allParentConfigParams []paramet
 		name := pa.Name
 		val := pa.Value
 		if name == ParentConfigParamQStringHandling ||
-			name == ParentConfigParamAlgorithm ||
+			name == ParentConfigRetryKeysDefault.Algorithm ||
 			name == ParentConfigParamQString {
 			serverParams[name] = val
 		}
