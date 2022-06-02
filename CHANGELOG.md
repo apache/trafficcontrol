@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added a Traffic Ops endpoint and Traffic Portal page to view all CDNi configuration update requests and approve or deny.
 - Added layered profile feature to 4.0 for `GET` /deliveryservices/{id}/servers/ and /deliveryservices/{id}/servers/eligible.
 - Change to t3c regex_revalidate so that STALE is no longer explicitly added for default revalidate rule for ATS version backwards compatibility.
+- Change to t3c diff to flag a config file for replacement if owner/group settings are not `ats` [#6879](https://github.com/apache/trafficcontrol/issues/6879).
 
 ### Fixed
 - [#6291](https://github.com/apache/trafficcontrol/issues/6291) Prevent Traffic Ops from modifying and/or deleting reserved statuses.
