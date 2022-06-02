@@ -140,7 +140,7 @@ CROSS JOIN ( VALUES
 	('USER:READ'),
 	('STAT:CREATE')
 ) AS perms(perm)
-WHERE "name" IN ('operations', 'read-only', 'federation', 'steering')
+WHERE "name" IN ('operations', 'portal', 'read-only', 'federation', 'steering')
 ON CONFLICT DO NOTHING;
 
 -- Traditionally the 'portal'/'federations'/'steering' Role(s)
@@ -164,7 +164,7 @@ CROSS JOIN ( VALUES
 	('STEERING:UPDATE'),
 	('STEERING:DELETE')
 ) AS perms(perm)
-WHERE "name" IN ('operations', 'federation', 'steering')
+WHERE "name" IN ('operations', 'portal', 'federation', 'steering')
 ON CONFLICT DO NOTHING;
 
 -- Using role 'operations'
