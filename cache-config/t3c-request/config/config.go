@@ -162,6 +162,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 			TOURL:          toURLParsed,
 			RevalOnly:      *revalOnlyPtr,
 			TODisableProxy: *disableProxyPtr,
+			T3CVersion:     gitRevision,
 		},
 		Version:     appVersion,
 		GitRevision: gitRevision,
