@@ -131,7 +131,7 @@ Glossary
 		.. seealso:: See :ref:`delivery-service-requests` for a more in-depth explanation of :dfn:`Delivery Service Requests`, including their data model. See :ref:`ds_requests` for more information on how to use :dfn:`Delivery Service Requests` in Traffic Portal.
 
 	Delivery Service required capabilities
-		:dfn:`Delivery Services required capabilities` are capabilities, which correlate to server capabilities, that are required in order to assign a server to a delivery service.`
+		:dfn:`Delivery Services required capabilities` are capabilities, which correlate to server capabilities, that are required in order to assign a server to a delivery service.
 
 	Division
 	Divisions

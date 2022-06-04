@@ -12,7 +12,7 @@
   ],
   "type": "$MY_TYPE",
   "physLocation": "Apachecon North America 2018",
-  "profile": "$MY_PROFILE",
+  "profileNames": ["$MY_PROFILE"],
   "cdnName": "$MY_CDN",
   "updPending": false,
   "status": "$MY_STATUS",

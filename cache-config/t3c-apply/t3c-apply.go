@@ -151,9 +151,6 @@ func Main() int {
 		return ExitCodeUserCheckError
 	}
 
-	toolName := trops.GetHeaderComment()
-	log.Debugf("toolname: %s\n", toolName)
-
 	// if running in Revalidate mode, check to see if it's
 	// necessary to continue
 	if cfg.Files == t3cutil.ApplyFilesFlagReval {

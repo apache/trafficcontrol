@@ -212,7 +212,8 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 					imsType = IMSMISS
 				}
 			}
-			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v" %v %s`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent(), r.Header.Get(RouteID), imsType)
+			routeID, _ := r.Context().Value(RouteID).(int)
+			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v" %d %s`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent(), routeID, imsType)
 		}()
 		h.ServeHTTP(iw, r)
 	}
@@ -273,6 +274,14 @@ func NotImplementedHandler() http.Handler {
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		w.WriteHeader(http.StatusNotImplemented)
 		api.WriteAndLogErr(w, r, []byte(`{"alerts":[{"level":"error","text":"The requested api version is not implemented by this server. If you are using a newer client with an older server, you will need to use an older client version or upgrade your server."}]}`))
+	})
+}
+
+func BackendErrorHandler(code int, userErr error, sysErr error) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+		w.WriteHeader(code)
+		api.HandleErr(w, r, nil, code, userErr, sysErr)
 	})
 }
 

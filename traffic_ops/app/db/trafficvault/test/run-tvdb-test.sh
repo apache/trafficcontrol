@@ -105,6 +105,12 @@ fi
 
 ./db/admin --trafficvault --env=production upgrade || { echo "DB upgrade failed!"; exit 1; }
 
+if ! ./db/admin --trafficvault -env=production load_schema ||
+      ! ./db/admin --trafficvault -env=production load_schema; then
+  echo 'Could not re-run create_tables.sql!'
+    exit 1
+fi;
+
 # insert some dummy TVDB data, run db/reencrypt/reencrypt to test it
 sslkey_data=$(cat /sslkey.dat)
 dnssec_data=$(cat /dnssec.dat)

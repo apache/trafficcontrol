@@ -28,6 +28,9 @@ import (
 // ParentAbstraction contains all the data necessary to build either parent.config or strategies.yaml.
 type ParentAbstraction struct {
 	Services []*ParentAbstractionService
+	// Peers is the list of peer proxy caches to be used in a strategy peering group.
+	// a cache will only have one set of peers for potential use in all delivery services.
+	Peers []*ParentAbstractionServiceParent
 }
 
 // ParentAbstractionService represents a single delivery service's parent data.
@@ -67,6 +70,12 @@ type ParentAbstractionService struct {
 	// Becomes parent.config secondary_mode directive
 	// Becomes strategies.yaml TODO
 	SecondaryMode ParentAbstractionServiceParentSecondaryMode
+
+	// CachePeerResult is used only when the RetryPolicy is set to
+	// 'consistent_hash' and the SecondaryMode is set to 'peering'.
+	// In the case that it's used and set to 'true', query results
+	// from peer caches will not be cached locally.
+	CachePeerResult bool
 
 	// GoDirect is whether to go direct to parents via normal HTTP requests.
 	// False means to make proxy requests to the parents.
@@ -131,6 +140,7 @@ type ParentAbstractionServiceParentSecondaryMode string
 
 const ParentAbstractionServiceParentSecondaryModeExhaust = ParentAbstractionServiceParentSecondaryMode("exhaust")
 const ParentAbstractionServiceParentSecondaryModeAlternate = ParentAbstractionServiceParentSecondaryMode("alternate")
+const ParentAbstractionServiceParentSecondaryModePeering = ParentAbstractionServiceParentSecondaryMode("peering")
 const ParentAbstractionServiceParentSecondaryModeInvalid = ParentAbstractionServiceParentSecondaryMode("")
 
 const ParentAbstractionServiceParentSecondaryModeDefault = ParentAbstractionServiceParentSecondaryModeAlternate
@@ -303,8 +313,12 @@ func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts
 
 	if atsMajorVersion >= 6 && svc.RetryPolicy == ParentAbstractionServiceRetryPolicyConsistentHash && len(svc.SecondaryParents) > 0 {
 		// TODO add quotes
-		txt += ` parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(svc.Parents) + `"`
-		txt += ` secondary_parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(svc.SecondaryParents) + `"`
+		if len(svc.Parents) > 0 {
+			txt += ` parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(svc.Parents) + `"`
+		}
+		if len(svc.SecondaryParents) > 0 {
+			txt += ` secondary_parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(svc.SecondaryParents) + `"`
+		}
 		txt += ` secondary_mode=` + svc.SecondaryMode.ToParentDotConfigVal()
 	} else {
 		parents := []*ParentAbstractionServiceParent{}
@@ -314,7 +328,9 @@ func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts
 		for _, pa := range svc.SecondaryParents {
 			parents = append(parents, pa)
 		}
-		txt += ` parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(parents) + `"`
+		if len(parents) > 0 {
+			txt += ` parent="` + ParentAbstractionServiceParentsToParentDotConfigLine(parents) + `"`
+		}
 	}
 
 	txt += ` round_robin=` + svc.RetryPolicy.ToParentDotConfigFormat()

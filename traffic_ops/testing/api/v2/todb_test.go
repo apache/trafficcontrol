@@ -283,7 +283,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM cachegroup;
 	DELETE FROM coordinate;
 	DELETE FROM type;
-	DELETE FROM status;
+	DELETE FROM status s WHERE s.name NOT IN ('OFFLINE', 'ONLINE', 'PRE_PROD', 'ADMIN_DOWN', 'REPORTED');
 	DELETE FROM snapshot;
 	DELETE FROM cdn;
 	DELETE FROM service_category;

@@ -25,6 +25,7 @@ import {browser, by, element} from 'protractor';
 interface DeliveryServices {
   Type: string;
   Name: string;
+  Tenant: string;
   validationMessage: string;
 }
 interface UpdateDeliveryService {
@@ -86,9 +87,6 @@ export class DeliveryServicePage extends BasePage {
     let result = false;
     let type: string = deliveryservice.Type;
     const basePage = new BasePage();
-    if (deliveryservice.validationMessage.includes("created")) {
-      deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.Name, deliveryservice.Name + this.randomize)
-    }
     await this.btnMore.click();
     await this.btnCreateNewDeliveryServices.click();
     await this.mnuFormDropDown.sendKeys(type);
@@ -99,7 +97,8 @@ export class DeliveryServicePage extends BasePage {
         await this.txtDisplayName.sendKeys(deliveryservice.Name + this.randomize);
         await this.selectActive.sendKeys('Active')
         await this.selectType.sendKeys('ANY_MAP')
-        await this.selectTenant.sendKeys('- root')
+        await this.selectTenant.click();
+        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
         await this.selectCDN.sendKeys('dummycdn')
         await this.txtRemapText.sendKeys('test')
         break;
@@ -109,7 +108,8 @@ export class DeliveryServicePage extends BasePage {
         await this.txtDisplayName.sendKeys(deliveryservice.Name + this.randomize);
         await this.selectActive.sendKeys('Active')
         await this.selectType.sendKeys('DNS')
-        await this.selectTenant.sendKeys('- root')
+        await this.selectTenant.click();
+        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
         await this.selectCDN.sendKeys('dummycdn')
         await this.txtOrgServerURL.sendKeys('http://origin.infra.ciab.test');
         await this.txtProtocol.sendKeys('HTTP')
@@ -120,7 +120,8 @@ export class DeliveryServicePage extends BasePage {
         await this.txtDisplayName.sendKeys(deliveryservice.Name + this.randomize);
         await this.selectActive.sendKeys('Active')
         await this.selectType.sendKeys('HTTP')
-        await this.selectTenant.sendKeys('- root')
+        await this.selectTenant.click();
+        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
         await this.selectCDN.sendKeys('dummycdn')
         await this.txtOrgServerURL.sendKeys('http://origin.infra.ciab.test');
         await this.txtProtocol.sendKeys('HTTP')
@@ -131,7 +132,8 @@ export class DeliveryServicePage extends BasePage {
         await this.txtDisplayName.sendKeys(deliveryservice.Name + this.randomize);
         await this.selectActive.sendKeys('Active')
         await this.selectType.sendKeys('STEERING')
-        await this.selectTenant.sendKeys('- root')
+        await this.selectTenant.click();
+        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
         await this.selectCDN.sendKeys('dummycdn')
         await this.txtProtocol.sendKeys('HTTP')
         break;
@@ -159,9 +161,6 @@ export class DeliveryServicePage extends BasePage {
   public async UpdateDeliveryService(deliveryservice: UpdateDeliveryService): Promise<boolean | undefined> {
     let result: boolean | undefined = false;
     const basePage = new BasePage();
-    if (deliveryservice.validationMessage.includes("updated")) {
-      deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.Name, deliveryservice.Name + this.randomize)
-    }
     switch (deliveryservice.description) {
       case "update delivery service display name":
         await this.txtDisplayName.clear();

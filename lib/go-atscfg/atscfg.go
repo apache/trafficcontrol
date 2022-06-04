@@ -46,6 +46,7 @@ type DeliveryServiceID int
 type ProfileID int
 type ServerID int
 
+type ProfileName string
 type TopologyName string
 type CacheGroupType string
 type ServerCapability string
@@ -65,9 +66,14 @@ type DeliveryService tc.DeliveryServiceV40
 // but to only have to change it here, and the places where breaking symbol changes were made.
 type InvalidationJob tc.InvalidationJobV4
 
+// ServerUdpateStatus is a tc.ServerUdpateStatus for the latest lib/go-tc and traffic_ops/vx-client type.
+// This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
+// but to only have to change it here, and the places where breaking symbol changes were made.
+type ServerUpdateStatus tc.ServerUpdateStatusV4
+
 // ToDeliveryServices converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
 func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
-	ad := []DeliveryService{}
+	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
 	}
@@ -76,7 +82,7 @@ func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 
 // V40ToDeliveryServices converts a slice of the old traffic_ops/client type to the local alias.
 func V40ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
-	ad := []DeliveryService{}
+	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
 	}
@@ -85,7 +91,7 @@ func V40ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 
 // ToInvalidationJobs converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
 func ToInvalidationJobs(jobs []tc.InvalidationJobV4) []InvalidationJob {
-	aj := []InvalidationJob{}
+	aj := make([]InvalidationJob, 0, len(jobs))
 	for _, job := range jobs {
 		aj = append(aj, InvalidationJob(job))
 	}
@@ -94,11 +100,20 @@ func ToInvalidationJobs(jobs []tc.InvalidationJobV4) []InvalidationJob {
 
 // ToServers converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
 func ToServers(servers []tc.ServerV40) []Server {
-	as := []Server{}
+	as := make([]Server, 0, len(servers))
 	for _, sv := range servers {
 		as = append(as, Server(sv))
 	}
 	return as
+}
+
+// ToServerUpdateStatuses converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
+func ToServerUpdateStatuses(statuses []tc.ServerUpdateStatusV40) []ServerUpdateStatus {
+	sus := make([]ServerUpdateStatus, 0, len(statuses))
+	for _, st := range statuses {
+		sus = append(sus, ServerUpdateStatus(st))
+	}
+	return sus
 }
 
 // CfgFile is all the information necessary to create an ATS config file, including the file name, path, data, and metadata.
@@ -740,4 +755,108 @@ func FilterServers(servers []Server, filter func(sv *Server) bool) []Server {
 		}
 	}
 	return filteredServers
+}
+
+// GetDSParameters returns the parameters for the given Delivery Service.
+func GetDSParameters(
+	ds *DeliveryService,
+	params []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.Parameter, error) {
+	profileNames := []string{}
+	if ds.ProfileName != nil {
+		profileNames = append(profileNames, *ds.ProfileName)
+	}
+	return LayerProfiles(profileNames, params)
+}
+
+// GetServerParameters returns the parameters for the given Server, per the Layered Profiles feature.
+// See LayerProfiles.
+func GetServerParameters(
+	server *Server,
+	params []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.Parameter, error) {
+	return LayerProfiles(server.ProfileNames, params)
+}
+
+// LayerProfiles takes an ordered list of profile names (presumably from a Server or Delivery Service),
+// and the Parameters from Traffic Ops (which includes Profile-Parameters data),
+// and layers the parameters according to the ordered list of profiles.
+//
+// Returns the appropriate parameters for the Server, Delivery Service,
+// or other object containing an ordered list of profiles.
+func LayerProfiles(
+	profileNames []string, // from a Server, Delivery Service, or other object with "layered profiles".
+	tcParams []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.Parameter, error) {
+	params, err := tcParamsToParamsWithProfiles(tcParams)
+	if err != nil {
+		return nil, errors.New("parsing parameters profiles: " + err.Error())
+	}
+	return layerProfilesFromWith(profileNames, params), nil
+}
+
+// layerProfilesFromWith is like LayerProfiles if you already have a []parameterWithProfiles.
+func layerProfilesFromWith(profileNames []string, params []parameterWithProfiles) []tc.Parameter {
+	paramsMap := parameterWithProfilesToMap(params)
+	return layerProfilesFromMap(profileNames, paramsMap)
+}
+
+// layerProfilesFromMap is like LayerProfiles if you already have a []parameterWithProfilesMap.
+func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesMap) []tc.Parameter {
+	// ParamKey is the key for a Parameter, which
+	// if there's another Parameter with the same key in a subsequent profile
+	// in the ordered list, the last Parameter with this key will be used.
+	type ParamKey struct {
+		Name       string
+		ConfigFile string
+	}
+
+	getParamKey := func(pa tc.Parameter) ParamKey { return ParamKey{Name: pa.Name, ConfigFile: pa.ConfigFile} }
+
+	allProfileParams := map[string][]tc.Parameter{}
+
+	for _, param := range params {
+		for profile, _ := range param.ProfileNames {
+			allProfileParams[profile] = append(allProfileParams[profile], param.Parameter)
+		}
+	}
+
+	layeredParamMap := map[ParamKey]tc.Parameter{}
+
+	for _, profileName := range profileNames {
+		profileParams := allProfileParams[profileName]
+		for _, param := range profileParams {
+			paramkey := getParamKey(param)
+			// because profileNames is ordered, this will cause subsequent params
+			// on other profiles to override previous ones, "layering" like we want.
+			layeredParamMap[paramkey] = param
+		}
+	}
+
+	layeredParams := []tc.Parameter{}
+	for _, param := range layeredParamMap {
+		layeredParams = append(layeredParams, param)
+	}
+	return layeredParams
+}
+
+// ServerProfilesMatch returns whether both servers have the same Profiles in the same order,
+// and thus will have the same Parameters.
+func ServerProfilesMatch(sa *Server, sb *Server) bool {
+	return ProfilesMatch(sa.ProfileNames, sb.ProfileNames)
+}
+
+// ProfilesMatch takes two ordered lists of profile names (such as from Servers or Delivery Services)
+// and returns whether they contain the same profiles in the same order,
+// and thus whether they will contain the same Parameters.
+func ProfilesMatch(pa []string, pb []string) bool {
+	if len(pa) != len(pb) {
+		return false
+	}
+	for i, _ := range pa {
+		if pa[i] != pb[i] {
+			return false
+		}
+	}
+	return true
 }

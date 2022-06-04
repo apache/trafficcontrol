@@ -22,6 +22,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.IPPattern = serverUtils.IPPattern;
     $scope.IPWithCIDRPattern = serverUtils.IPWithCIDRPattern;
     $scope.IPv4Pattern = serverUtils.IPv4Pattern;
+    $scope.profiles = [];
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
@@ -58,6 +59,14 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
                     return profile.type != 'DS_PROFILE'; // DS profiles are not intended for servers
                 });
             });
+    };
+
+    $scope.getProfileID = function(profileName) {
+        for (const profile of $scope.profiles) {
+            if (profile.name === profileName) {
+                return "/#!/profiles/"+profile.id
+            }
+        }
     };
 
     var updateStatus = function(status) {

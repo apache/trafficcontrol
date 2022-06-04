@@ -161,10 +161,8 @@ use the command `ng test` (dependencies must first be installed). This will
 attempt to open Chrome, Firefox and Opera, so ideally you would have those
 installed prior to running the tests.
 
-End-to-end testing is sparse at the time of this writing, but to run it anyway
-use `ng e2e`. This demands that a TO instance be listening on
-`https://localhost:6443` and unlike in the development mode server, that cannot
-be changed.
+End-to-end testing uses NightwatchJS and can be run by using `ng e2e`. More
+detailed instructions can be found in the `nightwatch/` folder
 
 ## Contributing
 This project uses `eslint` and an `.editorconfig` file for maintaining code

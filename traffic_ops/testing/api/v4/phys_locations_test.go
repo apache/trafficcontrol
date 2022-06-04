@@ -16,396 +16,346 @@ package v4
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestPhysLocations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters, Divisions, Regions, PhysLocations}, func() {
-		GetTestPhysLocationsIMS(t)
-		GetDefaultSortPhysLocationsTest(t)
-		GetSortPhysLocationsTest(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		SortTestPhysLocations(t)
-		UpdateTestPhysLocations(t)
-		UpdateTestPhysLocationsWithHeaders(t, header)
-		GetTestPhysLocations(t)
-		GetTestPhysLocationsIMSAfterChange(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestPhysLocationsWithHeaders(t, header)
-		GetTestPaginationSupportPhysLocation(t)
-		CreatePhysLocationWithMismatchedRegionNameAndID(t)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePhysicalLocationSort()),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"Denver"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validatePhysicalLocationFields(map[string]interface{}{"Name": "Denver"})),
+				},
+				"SORTED by ID when ORDERBY=ID parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePhysicalLocationIDSort()),
+				},
+				"FIRST RESULT when LIMIT=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePhysicalLocationPagination("limit")),
+				},
+				"SECOND RESULT when LIMIT=1 OFFSET=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePhysicalLocationPagination("offset")),
+				},
+				"SECOND RESULT when LIMIT=1 PAGE=2": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validatePhysicalLocationPagination("page")),
+				},
+				"BAD REQUEST when INVALID LIMIT parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID OFFSET parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID PAGE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"POST": {
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":   "100 blah lane",
+						"city":      "foo",
+						"comments":  "comment",
+						"email":     "bar@foobar.com",
+						"name":      "testPhysicalLocation",
+						"phone":     "111-222-3333",
+						"region":    "region1",
+						"regionId":  GetRegionID(t, "region1")(),
+						"shortName": "testLocation1",
+						"state":     "CO",
+						"zip":       "80602",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validatePhysicalLocationUpdateCreateFields("testPhysicalLocation", map[string]interface{}{"Name": "testPhysicalLocation"})),
+				},
+				"BAD REQUEST when REGION ID does NOT MATCH REGION NAME": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":   "1234 southern way",
+						"city":      "Atlanta",
+						"name":      "HotAtlanta",
+						"phone":     "404-222-2222",
+						"region":    "region1",
+						"regionId":  GetRegionID(t, "cdn-region2")(),
+						"shortName": "atlanta",
+						"state":     "GA",
+						"zip":       "30301",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":   "1234 southern way",
+						"city":      "NewCity",
+						"name":      "HotAtlanta",
+						"phone":     "404-222-2222",
+						"regionId":  GetRegionID(t, "region1")(),
+						"shortName": "atlanta",
+						"state":     "GA",
+						"zip":       "30301",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validatePhysicalLocationUpdateCreateFields("HotAtlanta", map[string]interface{}{"City": "NewCity"})),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody: map[string]interface{}{
+						"address":   "1234 southern way",
+						"city":      "Atlanta",
+						"regionId":  GetRegionID(t, "region1")(),
+						"name":      "HotAtlanta",
+						"shortName": "atlanta",
+						"state":     "GA",
+						"zip":       "30301",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":   "1234 southern way",
+						"city":      "Atlanta",
+						"regionId":  GetRegionID(t, "region1")(),
+						"name":      "HotAtlanta",
+						"shortName": "atlanta",
+						"state":     "GA",
+						"zip":       "30301",
+					},
+					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"OK when VALID request": {
+					EndpointId:    GetPhysicalLocationID(t, "testDelete"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					pl := tc.PhysLocation{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &pl)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetPhysLocations(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreatePhysLocation(pl, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdatePhysLocation(testCase.EndpointId(), pl, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeletePhysLocation(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestPhysLocationsWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.PhysLocations) < 1 {
-		t.Fatal("Need at least one Physical Location to test updating Physical Locations, with an HTTP header")
-	}
-	firstPhysLocation := testData.PhysLocations[0]
-
-	// Retrieve the PhysLocation by name so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	opts.QueryParameters.Set("name", firstPhysLocation.Name)
-	resp, _, err := TOSession.GetPhysLocations(opts)
-	if err != nil {
-		t.Errorf("cannot get Physical Location by name '%s': %v - alerts: %+v", firstPhysLocation.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) < 1 {
-		t.Fatalf("Expected exactly one Physical Location to exist with name '%s', found: %d", firstPhysLocation.Name, len(resp.Response))
-	}
-
-	remotePhysLocation := resp.Response[0]
-	expectedPhysLocationCity := "city1"
-	remotePhysLocation.City = expectedPhysLocationCity
-	opts.QueryParameters.Del("name")
-	_, reqInf, err := TOSession.UpdatePhysLocation(remotePhysLocation.ID, remotePhysLocation, opts)
-	if err == nil {
-		t.Errorf("Expected error about precondition failed, but got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+func validatePhysicalLocationFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Physical Location response to not be nil.")
+		plResp := resp.([]tc.PhysLocation)
+		for field, expected := range expectedResp {
+			for _, pl := range plResp {
+				switch field {
+				case "Name":
+					assert.Equal(t, expected, pl.Name, "Expected Name to be %v, but got %s", expected, pl.Name)
+				case "City":
+					assert.Equal(t, expected, pl.City, "Expected City to be %v, but got %s", expected, pl.City)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
+		}
 	}
 }
 
-func GetTestPhysLocationsIMS(t *testing.T) {
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-
-	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	for _, physLoc := range testData.PhysLocations {
-		opts.QueryParameters.Set("name", physLoc.Name)
-		resp, reqInf, err := TOSession.GetPhysLocations(opts)
-		if err != nil {
-			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+func validatePhysicalLocationUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", name)
+		pl, _, err := TOSession.GetPhysLocations(opts)
+		assert.RequireNoError(t, err, "Error getting Physical Location: %v - alerts: %+v", err, pl.Alerts)
+		assert.RequireEqual(t, 1, len(pl.Response), "Expected one Physical Location returned Got: %d", len(pl.Response))
+		validatePhysicalLocationFields(expectedResp)(t, toclientlib.ReqInf{}, pl.Response, tc.Alerts{}, nil)
 	}
-
 }
 
-func GetTestPhysLocationsIMSAfterChange(t *testing.T, header http.Header) {
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	for _, physLoc := range testData.PhysLocations {
-		opts.QueryParameters.Set("name", physLoc.Name)
-		resp, reqInf, err := TOSession.GetPhysLocations(opts)
-		if err != nil {
-			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+func validatePhysicalLocationPagination(paginationParam string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		paginationResp := resp.([]tc.PhysLocation)
+
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("orderby", "id")
+		respBase, _, err := TOSession.GetPhysLocations(opts)
+		assert.RequireNoError(t, err, "Cannot get Physical Locations: %v - alerts: %+v", err, respBase.Alerts)
+
+		pl := respBase.Response
+		assert.RequireGreaterOrEqual(t, len(pl), 3, "Need at least 3 Physical Locations in Traffic Ops to test pagination support, found: %d", len(pl))
+		switch paginationParam {
+		case "limit:":
+			assert.Exactly(t, pl[:1], paginationResp, "expected GET Physical Locations with limit = 1 to return first result")
+		case "offset":
+			assert.Exactly(t, pl[1:2], paginationResp, "expected GET Physical Locations with limit = 1, offset = 1 to return second result")
+		case "page":
+			assert.Exactly(t, pl[1:2], paginationResp, "expected GET Physical Locations with limit = 1, page = 2 to return second result")
 		}
 	}
+}
 
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	opts.Header.Set(rfc.IfModifiedSince, timeStr)
+func validatePhysicalLocationSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Physical Location response to not be nil.")
+		var physLocNames []string
+		physLocResp := resp.([]tc.PhysLocation)
+		for _, pl := range physLocResp {
+			physLocNames = append(physLocNames, pl.Name)
+		}
+		assert.Equal(t, true, sort.StringsAreSorted(physLocNames), "List is not sorted by their names: %v", physLocNames)
+	}
+}
 
-	for _, physLoc := range testData.PhysLocations {
-		opts.QueryParameters.Set("name", physLoc.Name)
-		resp, reqInf, err := TOSession.GetPhysLocations(opts)
-		if err != nil {
-			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
+func validatePhysicalLocationIDSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Physical Location response to not be nil.")
+		var physLocIDs []int
+		physLocResp := resp.([]tc.PhysLocation)
+		for _, pl := range physLocResp {
+			physLocIDs = append(physLocIDs, pl.ID)
 		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+		assert.Equal(t, true, sort.IntsAreSorted(physLocIDs), "List is not sorted by their ids: %v", physLocIDs)
+	}
+}
+
+func GetRegionID(t *testing.T, name string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", name)
+		regions, _, err := TOSession.GetRegions(opts)
+		assert.RequireNoError(t, err, "Get Regions Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(regions.Response), "Expected response object length 1, but got %d", len(regions.Response))
+		return regions.Response[0].ID
+	}
+}
+
+func GetPhysicalLocationID(t *testing.T, name string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", name)
+		physicalLocations, _, err := TOSession.GetPhysLocations(opts)
+		assert.RequireNoError(t, err, "Get PhysLocation Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(physicalLocations.Response), "Expected response object length 1, but got %d", len(physicalLocations.Response))
+		return physicalLocations.Response[0].ID
 	}
 }
 
 func CreateTestPhysLocations(t *testing.T) {
 	for _, pl := range testData.PhysLocations {
 		resp, _, err := TOSession.CreatePhysLocation(pl, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("could not create Physical Location '%s': %v - alerts: %+v", pl.Name, err, resp.Alerts)
-		}
-	}
-
-}
-
-func SortTestPhysLocations(t *testing.T) {
-	var sortedList []string
-	resp, _, err := TOSession.GetPhysLocations(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-	}
-	for _, pl := range resp.Response {
-		sortedList = append(sortedList, pl.Name)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UpdateTestPhysLocations(t *testing.T) {
-	if len(testData.PhysLocations) < 1 {
-		t.Fatal("Need at least one Physical Location to test updating Physical Locations")
-	}
-	firstPhysLocation := testData.PhysLocations[0]
-
-	// Retrieve the PhysLocation by name so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", firstPhysLocation.Name)
-	resp, _, err := TOSession.GetPhysLocations(opts)
-	if err != nil {
-		t.Errorf("cannot get Physical Location by name '%s': %v - alerts: %+v", firstPhysLocation.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Physical Location to exist with name '%s', found: %d", firstPhysLocation.Name, len(resp.Response))
-	}
-
-	remotePhysLocation := resp.Response[0]
-	expectedPhysLocationCity := "city1"
-	remotePhysLocation.City = expectedPhysLocationCity
-
-	alerts, _, err := TOSession.UpdatePhysLocation(remotePhysLocation.ID, remotePhysLocation, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update Physical Location: %v - alerts: %+v", err, alerts.Alerts)
-	}
-
-	// Retrieve the PhysLocation to check PhysLocation name got updated
-	opts.QueryParameters.Del("name")
-	opts.QueryParameters.Set("id", strconv.Itoa(remotePhysLocation.ID))
-	resp, _, err = TOSession.GetPhysLocations(opts)
-	if err != nil {
-		t.Errorf("cannot Physical Location '%s' (#%d) by ID: %v - alerts: %+v", firstPhysLocation.Name, remotePhysLocation.ID, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Physical Location to exist with ID %d, found: %d", remotePhysLocation.ID, len(resp.Response))
-	}
-	respPhysLocation := resp.Response[0]
-	if respPhysLocation.City != expectedPhysLocationCity {
-		t.Errorf("results do not match actual: %s, expected: %s", respPhysLocation.City, expectedPhysLocationCity)
-	}
-
-}
-
-func GetTestPhysLocations(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, pl := range testData.PhysLocations {
-		opts.QueryParameters.Set("name", pl.Name)
-		resp, _, err := TOSession.GetPhysLocations(opts)
-		if err != nil {
-			t.Errorf("cannot get Physical Location '%s': %v - alerts: %+v", pl.Name, err, resp.Alerts)
-		}
-	}
-}
-
-func GetSortPhysLocationsTest(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetPhysLocations(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Physical Locations ordered by ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	sorted := sort.SliceIsSorted(resp.Response, func(i, j int) bool {
-		return resp.Response[i].ID < resp.Response[j].ID
-	})
-	if !sorted {
-		t.Error("expected response to be sorted by id")
-	}
-}
-
-func GetDefaultSortPhysLocationsTest(t *testing.T) {
-	resp, _, err := TOSession.GetPhysLocations(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting Physical Locations: %v - alerts: %+v", err, resp.Alerts)
-	}
-	sorted := sort.SliceIsSorted(resp.Response, func(i, j int) bool {
-		return resp.Response[i].Name < resp.Response[j].Name
-	})
-	if !sorted {
-		t.Error("expected response to be sorted by name")
+		assert.RequireNoError(t, err, "Could not create Physical Location '%s': %v - alerts: %+v", pl.Name, err, resp.Alerts)
 	}
 }
 
 func DeleteTestPhysLocations(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, pl := range testData.PhysLocations {
-		// Retrieve the PhysLocation by name so we can get the id for the Update
-		opts.QueryParameters.Set("name", pl.Name)
-		resp, _, err := TOSession.GetPhysLocations(opts)
-		if err != nil {
-			t.Errorf("cannot get Physical Location by name '%s': %v - alerts: %+v", pl.Name, err, resp.Alerts)
-		}
-		if len(resp.Response) != 1 {
-			t.Errorf("Expected exactly one Physical Location to exist with name '%s', found: %d", pl.Name, len(resp.Response))
-			continue
-		}
+	physicalLocations, _, err := TOSession.GetPhysLocations(client.RequestOptions{})
+	assert.NoError(t, err, "Cannot get Physical Locations: %v - alerts: %+v", err, physicalLocations.Alerts)
 
-		respPhysLocation := resp.Response[0]
-
-		alerts, _, err := TOSession.DeletePhysLocation(respPhysLocation.ID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("Unexpected error deleting Physical Location '%s' (#%d): %v - alerts: %+v", respPhysLocation.Name, respPhysLocation.ID, err, alerts.Alerts)
-		}
-
+	for _, pl := range physicalLocations.Response {
+		alerts, _, err := TOSession.DeletePhysLocation(pl.ID, client.RequestOptions{})
+		assert.NoError(t, err, "Unexpected error deleting Physical Location '%s' (#%d): %v - alerts: %+v", pl.Name, pl.ID, err, alerts.Alerts)
 		// Retrieve the PhysLocation to see if it got deleted
-		resp, _, err = TOSession.GetPhysLocations(opts)
-		if err != nil {
-			t.Errorf("error getting Physical Location '%s' after deletion: %v - alerts: %+v", pl.Name, err, resp.Alerts)
-		}
-		if len(resp.Response) > 0 {
-			t.Errorf("expected Physical Location '%s' to be deleted, but it was found in Traffic Ops", pl.Name)
-		}
-	}
-}
-
-func CreatePhysLocationWithMismatchedRegionNameAndID(t *testing.T) {
-	resp, _, err := TOSession.GetRegions(client.NewRequestOptions())
-	if err != nil {
-		t.Errorf("Unexpected error getting regions: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) < 2 {
-		t.Fatalf("expected at least two regions to be returned, but got none")
-	}
-	physLocation := tc.PhysLocation{
-		Address:    "100 blah lane",
-		City:       "foo",
-		Comments:   "comment",
-		Email:      "bar@foobar.com",
-		Name:       "testPhysicalLocation",
-		Phone:      "111-222-3333",
-		RegionID:   resp.Response[0].ID,
-		RegionName: resp.Response[1].Name,
-		ShortName:  "testLocation1",
-		State:      "CO",
-		Zip:        "80602",
-	}
-	_, _, err = TOSession.CreatePhysLocation(physLocation, client.NewRequestOptions())
-	if err == nil {
-		t.Fatalf("expected an error about mismatched region name and ID, but got nothing")
-	}
-
-	physLocation.RegionName = resp.Response[0].Name
-	_, _, err = TOSession.CreatePhysLocation(physLocation, client.NewRequestOptions())
-	if err != nil {
-		t.Fatalf("expected no error while creating phys location, but got %v", err)
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "testPhysicalLocation")
-	response, _, err := TOSession.GetPhysLocations(opts)
-	if err != nil {
-		t.Fatalf("cannot get Physical Location by name 'testPhysicalLocation': %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(response.Response) != 1 {
-		t.Fatalf("Expected exactly one Physical Location to exist with name 'testPhysicalLocation', found: %d", len(resp.Response))
-	}
-
-	_, _, err = TOSession.DeletePhysLocation(response.Response[0].ID, client.NewRequestOptions())
-	if err != nil {
-		t.Errorf("error deleteing physical location 'testPhysicalLocation': %v", err)
-	}
-}
-
-func GetTestPaginationSupportPhysLocation(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetPhysLocations(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Physical Locations: %v - alerts: %+v", err, resp.Alerts)
-	}
-	physlocations := resp.Response
-
-	if len(physlocations) > 0 {
-		opts.QueryParameters = url.Values{}
-		opts.QueryParameters.Set("orderby", "id")
-		opts.QueryParameters.Set("limit", "1")
-		physlocationsWithLimit, _, err := TOSession.GetPhysLocations(opts)
-		if err == nil {
-			if !reflect.DeepEqual(physlocations[:1], physlocationsWithLimit.Response) {
-				t.Error("expected GET PhysLocation with limit = 1 to return first result")
-			}
-		} else {
-			t.Errorf("Unexpected error getting Physical Locations with a limit: %v - alerts: %+v", err, physlocationsWithLimit.Alerts)
-		}
-		if len(physlocations) > 1 {
-			opts.QueryParameters = url.Values{}
-			opts.QueryParameters.Set("orderby", "id")
-			opts.QueryParameters.Set("limit", "1")
-			opts.QueryParameters.Set("offset", "1")
-			physlocationsWithOffset, _, err := TOSession.GetPhysLocations(opts)
-			if err == nil {
-				if !reflect.DeepEqual(physlocations[1:2], physlocationsWithOffset.Response) {
-					t.Error("expected GET PhysLocation with limit = 1, offset = 1 to return second result")
-				}
-			} else {
-				t.Errorf("Unexpected error getting Physical Locations with a limit and an offset: %v - alerts: %+v", err, physlocationsWithOffset.Alerts)
-			}
-
-			opts.QueryParameters = url.Values{}
-			opts.QueryParameters.Set("orderby", "id")
-			opts.QueryParameters.Set("limit", "1")
-			opts.QueryParameters.Set("page", "2")
-			physlocationsWithPage, _, err := TOSession.GetPhysLocations(opts)
-			if err == nil {
-				if !reflect.DeepEqual(physlocations[1:2], physlocationsWithPage.Response) {
-					t.Error("expected GET PhysLocation with limit = 1, page = 2 to return second result")
-				}
-			} else {
-				t.Errorf("Unexpected error getting Physical Locations with a limit and a page: %v - alerts: %+v", err, physlocationsWithPage.Alerts)
-			}
-		} else {
-			t.Errorf("only one PhysLocation found, so offset functionality can't test")
-		}
-	} else {
-		t.Errorf("No PhysLocation found to check pagination")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "-2")
-	resp, _, err = TOSession.GetPhysLocations(opts)
-	if err == nil {
-		t.Error("expected GET PhysLocation to return an error when limit is not bigger than -1")
-	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
-		t.Errorf("expected GET PhysLocation to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "0")
-	resp, _, err = TOSession.GetPhysLocations(opts)
-	if err == nil {
-		t.Error("expected GET PhysLocation to return an error when offset is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET PhysLocation to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "0")
-	resp, _, err = TOSession.GetPhysLocations(opts)
-	if err == nil {
-		t.Error("expected GET PhysLocation to return an error when page is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET PhysLocation to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("id", strconv.Itoa(pl.ID))
+		getPL, _, err := TOSession.GetPhysLocations(opts)
+		assert.NoError(t, err, "Error getting Physical Location '%s' after deletion: %v - alerts: %+v", pl.Name, err, getPL.Alerts)
+		assert.Equal(t, 0, len(getPL.Response), "Expected Physical Location '%s' to be deleted, but it was found in Traffic Ops", pl.Name)
 	}
 }

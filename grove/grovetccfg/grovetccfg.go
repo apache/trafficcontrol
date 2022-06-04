@@ -51,7 +51,6 @@ const GroveConfigFile = "grove.cfg"
 const GroveConfigPath = "/etc/grove/" + GroveConfigFile
 const ConfigHistory = "cfg_history/"
 const RemapHistory = "remap_history/"
-const GroveProfileType = "GROVE_PROFILE"
 
 // Exit codes are defined in the documentation, DO NOT change to iota, to avoid ambiguity.
 const (
@@ -263,7 +262,7 @@ func main() {
 	}
 	// end of API 1.2 stuff
 
-	if hostProfile.Type == GroveProfileType {
+	if hostProfile.Type == tc.GroveProfileType {
 		updateRequired, cfg, err := createGroveCfg(toc, hostServer)
 		if err != nil {
 			fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting config rules for '" + GroveConfigPath + "' :" + err.Error())
@@ -286,7 +285,7 @@ func main() {
 			}
 		}
 	} else {
-		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Warning: the profile '" + hostServer.Profile + "' is not a '" + GroveProfileType + "', will not build a config from it.")
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Warning: the profile '" + hostServer.Profile + "' is not a '" + tc.GroveProfileType + "', will not build a config from it.")
 	}
 
 	rules := remap.RemapRules{}

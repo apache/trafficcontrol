@@ -18,11 +18,18 @@
 
 set -o errexit
 
-cd "$TC/traffic_router"
 
-mvn -Dmaven.test.skip=true compile package -P \!rpm-build
-chmod -R a+rw "$TC/dev/traffic_router/"
+
+
+cd "$TC/traffic_router"
+user=trafficrouter
+uid="$(stat -c%u .)"
+gid="$(stat -c%g .)"
+adduser -Du"$uid" "$user"
+sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
+chown -R "${uid}:${gid}" /opt
+
+su "$user" -- /usr/bin/mvn -Dmaven.test.skip=true compile package -P \!rpm-build
 
 cd "$TC/dev/traffic_router"
-
-/opt/tomcat/bin/catalina.sh jpda run
+exec su "$user" -- /opt/tomcat/bin/catalina.sh jpda run

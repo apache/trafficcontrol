@@ -673,22 +673,6 @@ func (r *TrafficOpsReq) PrintWarnings() {
 	log.Infoln("======== End warning summary ========")
 }
 
-// GetHeaderComment looks up the tm.toolname parameter from traffic ops.
-func (r *TrafficOpsReq) GetHeaderComment() string {
-	result, err := getSystemInfo(r.Cfg)
-	if err != nil {
-		log.Errorln("getting system info: " + err.Error())
-		return "" // failing to get the toolname is an error, but not fatal
-	}
-	toolName := result["tm.toolname"]
-	if toolName, ok := toolName.(string); ok {
-		log.Infof("Found tm.toolname: %v\n", toolName)
-		return toolName
-	}
-	log.Errorln("Did not find tm.toolname!")
-	return "" // not having a tm.toolname Parameter is an error, but not fatal
-}
-
 // CheckRevalidateState retrieves and returns the revalidate status from Traffic Ops.
 func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, error) {
 	log.Infoln("Checking revalidate state.")
@@ -1151,7 +1135,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 }
 
 func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
-	var updateResult bool
+	var performUpdate bool
 
 	serverStatus, err := getUpdateStatus(r.Cfg)
 	if err != nil {
@@ -1159,7 +1143,7 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 	}
 
 	if *syncdsUpdate == UpdateTropsNotNeeded && (serverStatus.UpdatePending == true || serverStatus.RevalPending == true) {
-		updateResult = true
+		performUpdate = true
 		log.Errorln("Traffic Ops is signaling that an update is ready to be applied but, none was found! Clearing update state in Traffic Ops anyway.")
 	} else if *syncdsUpdate == UpdateTropsNotNeeded {
 		log.Errorln("Traffic Ops does not require an update at this time")
@@ -1168,11 +1152,11 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 		log.Errorln("Traffic Ops requires an update but, applying the update locally failed.  Traffic Ops is not being updated.")
 		return nil
 	} else if *syncdsUpdate == UpdateTropsSuccessful {
-		updateResult = true
+		performUpdate = true
 		log.Errorln("Traffic Ops requires an update and it was applied successfully.  Clearing update state in Traffic Ops.")
 	}
 
-	if !updateResult {
+	if !performUpdate {
 		return nil
 	}
 	if r.Cfg.ReportOnly {
@@ -1180,19 +1164,14 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 		return nil
 	}
 
+	// TODO: The boolean flags/representation can be removed after ATC (v7.0+)
 	if !r.Cfg.ReportOnly && !r.Cfg.NoUnsetUpdateFlag {
 		if r.Cfg.Files == t3cutil.ApplyFilesFlagAll {
-			if serverStatus.RevalPending {
-				err = sendUpdate(r.Cfg, false, true)
-			} else {
-				err = sendUpdate(r.Cfg, false, false)
-			}
+			b := false
+			err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil, &b, nil)
 		} else if r.Cfg.Files == t3cutil.ApplyFilesFlagReval {
-			if serverStatus.UpdatePending {
-				err = sendUpdate(r.Cfg, true, false)
-			} else {
-				err = sendUpdate(r.Cfg, false, false)
-			}
+			b := false
+			err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime, nil, &b)
 		}
 		if err != nil {
 			return errors.New("Traffic Ops Update failed: " + err.Error())

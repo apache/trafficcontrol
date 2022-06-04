@@ -281,16 +281,20 @@
     ],
     "deliveryServiceRequestComments": [
         {
-            "value": "this is comment one"
+            "value": "this is comment one",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment two"
+            "value": "this is comment two",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment three"
+            "value": "this is comment three",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment four"
+            "value": "this is comment four",
+            "xmlId": "test-ds1"
         }
     ],
     "deliveryServiceRequests": [
@@ -323,51 +327,8 @@
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",
-                "displayName": "Bad Tenant",
-                "dscp": 0,
-                "geoLimit": 0,
-                "geoProvider": 0,
-                "initialDispersion": 3,
-                "logsEnabled": false,
-                "longDesc": "long desc",
-                "regionalGeoBlocking": false,
-                "tenant": "root",
-                "type": "HTTP",
-                "xmlId": "test-ds2"
-            },
-            "status": "draft"
-        },
-        {
-            "changeType": "create",
-            "deliveryService": {
-                "ccrDnsTtl": 30,
-                "deepCachingType": "NEVER",
-                "displayName": "Bad Test Case CDN",
-                "dscp": 0,
-                "geoLimit": 0,
-                "geoProvider": 1,
-                "infoUrl": "xxx",
-                "initialDispersion": 1,
-                "logsEnabled": true,
-                "longDesc": "long desc",
-                "orgServerFqdn": "xxx",
-                "regionalGeoBlocking": true,
-                "routingName": "x routing",
-                "tenant": "tenant1",
-                "type": "HTTP",
-                "xmlId": "test-ds3"
-            },
-            "status": "draft"
-        },
-        {
-            "changeType": "create",
-            "deliveryService": {
-                "active": false,
-                "cdnName": "cdn1",
-                "ccrDnsTtl": 30,
-                "deepCachingType": "NEVER",
-                "displayName": "Testing transitions",
-                "dscp": 3,
+                "displayName": "Good Kabletown CDN",
+                "dscp": 1,
                 "geoLimit": 1,
                 "geoProvider": 1,
                 "initialDispersion": 1,
@@ -377,7 +338,7 @@
                 "routingName": "goodroute",
                 "tenant": "tenant1",
                 "type": "HTTP",
-                "xmlId": "test-transitions"
+                "xmlId": "test-deletion"
             },
             "status": "draft"
         }
@@ -1546,12 +1507,6 @@
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
             "pattern" : ".*"
-        },
-        {
-            "dsName": "ds1",
-            "typeName": "HOST_REGEXP",
-            "setNumber": 3,
-            "pattern" : ""
         }
     ],
     "deliveryservicesRequiredCapabilities": [
@@ -1566,6 +1521,28 @@
         {
             "xmlID": "msods1",
             "RequiredCapability": "bar"
+        },
+        {
+            "xmlID": "ds-top-req-cap",
+            "RequiredCapability": "ram"
+        },
+        {
+            "xmlID": "ds-top-req-cap",
+            "RequiredCapability": "disk"
+        },
+        {
+            "xmlID": "ds-top-req-cap2",
+            "RequiredCapability": "ram"
+        }
+    ],
+    "deliveryServiceServerAssignments": [
+        {
+            "xmlId": "ds-top",
+            "serverNames": ["denver-mso-org-01"]
+        },
+        {
+            "xmlId": "test-ds-server-assignments",
+            "serverNames": ["test-ds-server-assignments"]
         }
     ],
     "topologyBasedDeliveryServicesRequiredCapabilities": [
@@ -1817,6 +1794,12 @@
             "name": "tm.instance_name",
             "secure": false,
             "value": "Traffic Ops API Tests"
+        },
+        {
+            "configFile": "remap.config",
+            "name": "location",
+            "secure": false,
+            "value": "/remap/config/location/parameter/"
         }
     ],
     "physLocations": [
@@ -1861,6 +1844,19 @@
             "shortName": "atlanta",
             "state": "GA",
             "zip": "30301"
+        },
+        {
+            "address": "1234 delete way",
+            "city": "Denver",
+            "comments": null,
+            "email": null,
+            "name": "testDelete",
+            "phone": "303-222-2222",
+            "poc": null,
+            "region": "region1",
+            "shortName": "testdelete",
+            "state": "C0",
+            "zip": "80202"
         }
     ],
     "profiles": [
@@ -4618,6 +4614,55 @@
             "updPending": false,
             "xmppId": "atlanta-mid-02\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "admin-down-server",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.22/30",
+                            "gateway": "127.0.0.22",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:13:8::1/64",
+                            "gateway": "2345:1234:13:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "ADMIN_DOWN",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "atlanta-edge-01\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
         }
     ],
     "serverCapabilities": [
@@ -4754,28 +4799,8 @@
     ],
     "statuses": [
         {
-            "description": "Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches",
-            "name": "OFFLINE"
-        },
-        {
-            "description": "Edge: Puts server in CCR config file in this state, and CCR will always route traffic to it. Mid: Server will be included in parent.config files for its edges",
-            "name": "ONLINE"
-        },
-        {
-            "description": "Edge: Puts server in CCR config file in this state, and CCR will adhere to the health protocol. Mid: N/A for now",
-            "name": "REPORTED"
-        },
-        {
-            "description": "Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches",
-            "name": "ADMIN_DOWN"
-        },
-        {
             "description": "Edge: 12M will not include caches in this state in CCR config files. Mid: N/A for now",
             "name": "CCR_IGNORE"
-        },
-        {
-            "description": "Pre Production. Not active in any configuration.",
-            "name": "PRE_PROD"
         },
         {
             "name": "TEST_NULL_DESCRIPTION"
@@ -5045,6 +5070,16 @@
                 {
                     "cachegroup": "dtrc3",
                     "parents": [0]
+                }
+            ]
+        },
+        {
+            "name": "top-with-caches-in-cdn1",
+            "description": "a topology",
+            "nodes": [
+                {
+                    "cachegroup": "cdn1-only",
+                    "parents": []
                 }
             ]
         },

@@ -82,12 +82,6 @@ func main() {
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	// toData, toIPs, err := cfgfile.GetTOData(tccfg)
-	// if err != nil {
-	// 	log.Errorln("getting data from traffic ops: " + err.Error())
-	// 	os.Exit(config.ExitCodeErrGeneric)
-	// }
-
 	configs, err := cfgfile.GetAllConfigs(toData, cfg)
 	if err != nil {
 		log.Errorln("Getting config for'" + *toData.Server.HostName + "': " + err.Error())

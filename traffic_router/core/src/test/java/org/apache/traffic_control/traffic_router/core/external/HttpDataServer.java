@@ -19,6 +19,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +33,6 @@ import java.net.URI;
 public class HttpDataServer implements HttpHandler {
 	private HttpServer httpServer;
 	private int testHttpServerPort;
-	private static String apiVersion = "2.0";
 
 	public HttpDataServer(int testHttpServerPort) {
 		this.testHttpServerPort = testHttpServerPort;
@@ -120,7 +120,7 @@ public class HttpDataServer implements HttpHandler {
 					path += ".json";
 				}
 
-				if (("api/" + apiVersion + "/user/login").equals(path)) {
+				if (("api/" + TrafficOpsUtils.TO_API_VERSION + "/user/login").equals(path)) {
 					try {
 						Headers headers = httpExchange.getResponseHeaders();
 						headers.add("Content-length", Integer.toString(0));
@@ -133,12 +133,12 @@ public class HttpDataServer implements HttpHandler {
 				}
 
 				// Pretend that someone externally changed steering.json data
-				if (receivedSteeringPost && ("api/" + apiVersion + "/steering").equals(path)) {
-					path = "api/" + apiVersion + "/steering2";
+				if (receivedSteeringPost && ("api/" + TrafficOpsUtils.TO_API_VERSION + "/steering").equals(path)) {
+					path = "api/" + TrafficOpsUtils.TO_API_VERSION + "/steering2";
 				}
 
 				// pretend certificates have not been updated
-				if (!receivedCertificatesPost && ("api/" + apiVersion + "/cdns/name/thecdn/sslkeys").equals(path)) {
+				if (!receivedCertificatesPost && ("api/" + TrafficOpsUtils.TO_API_VERSION + "/cdns/name/thecdn/sslkeys").equals(path)) {
 					path = path.replace("/sslkeys", "/sslkeys-missing-1");
 				}
 

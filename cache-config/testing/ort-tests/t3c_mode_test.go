@@ -48,9 +48,9 @@ func verifyRemapConfigPlaced(t *testing.T) {
 		t.Fatalf("unable to remove %s: %v", remap, err)
 	}
 	// prepare for running syncds.
-	err = ExecTOUpdater(DefaultCacheHostName, false, true)
+	err = tcd.QueueUpdatesForServer(DefaultCacheHostName, true)
 	if err != nil {
-		t.Fatalf("queue updates failed: %v", err)
+		t.Fatalf("failed to set config update: %v", err)
 	}
 
 	// remap.config is removed and atlanta-edge-03 should have
@@ -106,7 +106,7 @@ func checkDiff(fName, atsUid, atsGid string, t *testing.T) {
 func TestT3cBadassAndSyncDs(t *testing.T) {
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
-		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
+		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {

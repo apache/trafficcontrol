@@ -210,11 +210,11 @@ func TestCopyProfile(t *testing.T) {
 	mockFindProfile(t, mock, profile.Response.Name, 0)
 	mockReadProfile(t, mock, existingProfile, 1)
 	mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("cdnName"))
-	mock.ExpectQuery("SELECT username").WillReturnRows(sqlmock.NewRows(nil))
+	mock.ExpectQuery("SELECT c.username").WillReturnRows(sqlmock.NewRows(nil))
 	mockInsertProfile(t, mock, expectedID)
 	mockFindParams(t, mock, profile.Response.ExistingName)
 	mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("cdnName"))
-	mock.ExpectQuery("SELECT username").WillReturnRows(sqlmock.NewRows(nil))
+	mock.ExpectQuery("SELECT c.username").WillReturnRows(sqlmock.NewRows(nil))
 	mockInsertParams(t, mock, profile.Response.ID)
 
 	req := mockHTTPReq(t, "profiles/name/{new_profile}/copy/{existing_profile}", db)

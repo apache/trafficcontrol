@@ -49,10 +49,6 @@ describe("AppComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it("should have as title 'Traffic Portal'", () => {
-		expect(component.title).toEqual("Traffic Portal");
-	});
-
 	it("logs out", fakeAsync(() => {
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockCurrentUserService.logout).not.toHaveBeenCalled();

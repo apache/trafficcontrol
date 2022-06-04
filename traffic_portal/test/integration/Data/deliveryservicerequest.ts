@@ -33,11 +33,11 @@ export const deliveryservicerequest = {
                     DisplayName: "testingoverload",
                     Active: "Active",
                     ContentRoutingType: "ANY_MAP",
-                    Tenant: "-tenantSame",
+                    Tenant: "tenantSame",
                     CDN: "dummycdn",
                     RawText: "test",
                     validationMessage: "Created request to create the cdntesting delivery service",
-                    FullfillMessage: "Delivery Service [ cdntesting ] created",
+                    FullfillMessage: "Delivery Service creation was successful",
                     CompleteMessage: "Delivery service request status was updated"
                 }
             ],
@@ -48,7 +48,7 @@ export const deliveryservicerequest = {
                     DisplayName: "testingoverload2",
                     Active: "Active",
                     ContentRoutingType: "ANY_MAP",
-                    Tenant: "-tenantSame",
+                    Tenant: "tenantSame",
                     CDN: "dummycdn",
                     RawText: "test",
                     validationMessage: "Created request to create the cdntesting2 delivery service",
@@ -62,12 +62,12 @@ export const deliveryservicerequest = {
                     DisplayName: "testingoverload2",
                     Active: "Active",
                     ContentRoutingType: "ANY_MAP",
-                    Tenant: "-tenantSame",
+                    Tenant: "tenantSame",
                     CDN: "dummycdn",
                     RawText: "test",
                     validationMessage: "Created request to create the cdntesting3 delivery service",
                     UpdateMessage: "Updated delivery service request for cdntesting3 and set status to submitted",
-                    FullfillMessage: "Delivery Service [ cdntesting3 ] created",
+                    FullfillMessage: "Delivery Service creation was successful",
                     CompleteMessage: "Delivery service request status was updated"
                 }
             ]

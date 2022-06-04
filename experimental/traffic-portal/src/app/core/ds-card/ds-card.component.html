@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card [ngClass]="{'inactive': !deliveryService.active, 'open': open, 'first': first, 'last': last}">
+<mat-card id="{{deliveryService.xmlId}}" [ngClass]="{'inactive': !deliveryService.active, 'open': open, 'first': first, 'last': last}">
 	<mat-card-title-group (click)="toggle()">
 		<mat-card-title>{{deliveryService.displayName}}{{deliveryService.active ? '' : ' (inactive)'}}
 			<a href="{{deliveryService.infoUrl}}" *ngIf="deliveryService.infoUrl" class="color-accent-inverted info" rel="noopener" target="_blank" title="More Information"><fa-icon [icon]="infoIcon"></fa-icon></a>

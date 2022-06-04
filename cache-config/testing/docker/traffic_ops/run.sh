@@ -44,7 +44,7 @@ do
 done
 
 start() {
-  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DATABASECONF" );
+  traffic_ops_golang_command=(/opt/traffic_ops/app/bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DATABASECONF" );
   "${traffic_ops_golang_command[@]}" &
 	exec tail -f $TO_LOG
 }
@@ -126,10 +126,23 @@ EOM
 source /etc/environment
 if [ -z "$INITIALIZED" ]; then init; fi
 
+i=0
+sleep_time=3
+while ! nc $DB_SERVER $DB_PORT </dev/null; do 
+  echo "waiting for $DB_SERVER:$DB_PORT" >> /var/log/traffic_ops/to_admin.log
+  sleep $sleep_time
+  let i=i+1  
+  if [ $i -gt 10 ]; then
+    let d=i*sleep_time
+    echo "$DB_SERVER:$DB_PORT is unavailable after $d seconds, giving up" >> /var/log/traffic_ops/to_admin.log
+    exit 1
+  fi
+done
+
 # create the 'traffic_ops' database, tables and runs migrations
-(mkdir -p /var/log/traffic_ops/)
-(cd /opt/traffic_ops/app && db/admin --env=production reset > /var/log/traffic_ops/to_admin.log 2>&1)
-(cd /opt/traffic_ops/app && db/admin --trafficvault --env=production reset > /var/log/traffic_ops/tv_admin.log 2>&1)
+mkdir -p /var/log/traffic_ops/
+cd /opt/traffic_ops/app && db/admin --env=production reset >> /var/log/traffic_ops/to_admin.log 2>&1
+cd /opt/traffic_ops/app && db/admin --trafficvault --env=production reset >> /var/log/traffic_ops/tv_admin.log 2>&1
 
 # start traffic_ops
 start

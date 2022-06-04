@@ -19,6 +19,8 @@ Environment variable names, and the meanings of the values of those variables:
 	ENV_GITHUB_REPOSITORY       - The "name" of the repository set by GHA (e.g. octocat/Hello-World)
 	ENV_GITHUB_REPOSITORY_OWNER - The repository owner's name set by GHA (e.g. octocat)
 	ENV_GITHUB_TOKEN            - The token used to access the GitHub API - set by GHA
+	PR_GITHUB_TOKEN             - The token used to access the GitHub API for creating the Pull
+	                              Request- set by GHA
 	ENV_GO_VERSION_FILE         - The repository-relative path to the file containing the Go version
 	ENV_ENV_FILE                - The repository-relative path to an environment file containing
 	                              a line setting the variable GO_VERSION to the Go version
@@ -56,6 +58,13 @@ The name of the environment variable set to token used to access the GitHub
 API - set by GHA.
 """
 
+ENV_PR_GITHUB_TOKEN: Final = 'PR_GITHUB_TOKEN'
+"""
+The name of the environment variable set to token used to access the GitHub
+API, but only for creating the Pull Request, so that Actions will run on the
+generated Pull Request - set by GHA.
+"""
+
 ENV_GO_VERSION_FILE: Final = 'GO_VERSION_FILE'
 """
 The name of the environment variable set to repository-relative path to the file
@@ -69,6 +78,11 @@ environment file containing a line setting the variable GO_VERSION to the Go
 version (e.g. GO_VERSION=3.2.1).
 """
 
+GO_VERSION_KEY: Final = 'GO_VERSION'
+"""
+The key in the env file whose value corresponds to the Go version to be used by any project
+using the env file
+"""
 
 GIT_AUTHOR_EMAIL_TEMPLATE: Final = '{git_author_name}@users.noreply.github.com'
 """Template used to construct the Git Author's email address."""
@@ -88,10 +102,12 @@ __all__ = [
 	"ENV_GITHUB_REPOSITORY",
 	"ENV_GITHUB_REPOSITORY_OWNER",
 	"ENV_GITHUB_TOKEN",
+	"ENV_PR_GITHUB_TOKEN"
 	"ENV_GO_VERSION_FILE",
 	"ENV_ENV_FILE",
 	"GIT_AUTHOR_EMAIL_TEMPLATE",
 	"GO_REPO_NAME",
 	"GO_VERSION_URL",
 	"RELEASE_PAGE_URL",
+	"GO_VERSION_KEY",
 ]

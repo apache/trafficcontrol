@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+set -o errexit
+
 gray_bg="$(printf '%s%s' $'\x1B' '[100m')";
 red_bg="$(printf '%s%s' $'\x1B' '[41m')";
 yellow_bg="$(printf '%s%s' $'\x1B' '[43m')";

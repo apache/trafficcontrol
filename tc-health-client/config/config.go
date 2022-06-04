@@ -55,6 +55,7 @@ const (
 	DefaultTrafficServerConfigDir   = "/opt/trafficserver/etc/trafficserver"
 	DefaultTrafficServerBinDir      = "/opt/trafficserver/bin"
 	DefaultUnavailablePollThreshold = 2
+	DefaultMarkupPollThreshold      = 1
 )
 
 type Cfg struct {
@@ -70,6 +71,7 @@ type Cfg struct {
 	TmPollIntervalSeconds    string          `json:"tm-poll-interval-seconds"`
 	TOLoginDispersionFactor  int             `json:"to-login-dispersion-factor"`
 	UnavailablePollThreshold int             `json:"unavailable-poll-threshold"`
+	MarkUpPollThreshold      int             `json:"markup-poll-threshold"`
 	TrafficServerConfigDir   string          `json:"trafficserver-config-dir"`
 	TrafficServerBinDir      string          `json:"trafficserver-bin-dir"`
 	PollStateJSONLog         string          `json:"poll-state-json-log"`

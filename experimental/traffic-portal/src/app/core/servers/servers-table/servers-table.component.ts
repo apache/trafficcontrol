@@ -12,16 +12,19 @@
 * limitations under the License.
 */
 
-import { Component, type OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
-import { ActivatedRoute, Router } from "@angular/router";
-import type { ITooltipParams } from "ag-grid-community";
-import { BehaviorSubject } from "rxjs";
+import {Component, type OnInit} from "@angular/core";
+import {FormControl} from "@angular/forms";
+import {MatDialog} from "@angular/material/dialog";
+import {ActivatedRoute, Router} from "@angular/router";
+import type {ITooltipParams} from "ag-grid-community";
+import {BehaviorSubject} from "rxjs";
 
-import { ServerService } from "src/app/api";
-import type { Interface, Server } from "src/app/models";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
-import { IPV4, serviceInterface } from "src/app/utils";
+import {ServerService} from "src/app/api";
+import {UpdateStatusComponent} from "src/app/core/servers/update-status/update-status.component";
+import type {Interface, Server} from "src/app/models";
+import type {ContextMenuActionEvent, ContextMenuItem} from "src/app/shared/generic-table/generic-table.component";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import {IPV4, serviceInterface} from "src/app/utils";
 
 /**
  * AugmentedServer has fields that give direct access to its service addresses without needing to recalculate them.
@@ -307,14 +310,14 @@ export class ServersTableComponent implements OnInit {
 		},
 		{
 			action: "queue",
-			disabled: (data: Array<AugmentedServer>): boolean =>!data.every(serverIsCache),
+			disabled: (data: Array<AugmentedServer>): boolean => !data.every(serverIsCache),
 			multiRow: true,
 			name: "Queue Server Updates"
 		},
 		{
 			action: "dequeue",
-			disabled: (data: Array<AugmentedServer>): boolean =>!data.every(serverIsCache),
-			multiRow:true,
+			disabled: (data: Array<AugmentedServer>): boolean => !data.every(serverIsCache),
+			multiRow: true,
 			name: "Clear Queued Updates"
 		}
 	];
@@ -325,18 +328,20 @@ export class ServersTableComponent implements OnInit {
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl = new FormControl("");
 
-	/** The list of servers to pass into the 'update status' component. Decided by selection. */
-	public changeStatusServers = new Array<Server>();
-	/** Controls whether or not the "update status" dialog box is open. */
-	public changeStatusOpen = false;
-
 	/**
 	 * Constructs the component with its required injections.
 	 *
 	 * @param api The Servers API which is used to provide row data.
 	 * @param route A reference to the route of this view which is used to set the fuzzy search box text from the 'search' query parameter.
+	 * @param router Angular router
+	 * @param headerSvc Manages the header
+	 * @param dialog Dialog manager
 	 */
-	constructor(private readonly api: ServerService, private readonly route: ActivatedRoute, private readonly router: Router) {
+	constructor(private readonly api: ServerService,
+		private readonly route: ActivatedRoute,
+		private readonly router: Router,
+		private readonly headerSvc: TpHeaderService,
+		private readonly dialog: MatDialog) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 	}
 
@@ -354,11 +359,8 @@ export class ServersTableComponent implements OnInit {
 				}
 			}
 		);
-	}
 
-	/** Reloads the servers table data. */
-	private async reloadServers(): Promise<void> {
-		this.servers = this.api.getServers().then(ss=>ss.map(augment));
+		this.headerSvc.headerTitle.next("Servers");
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
@@ -377,20 +379,26 @@ export class ServersTableComponent implements OnInit {
 				if (action.data instanceof Array) {
 					throw new Error("'viewDetails' is a single-row action, but was called with multiple rows");
 				}
-				this.router.navigate(["/core/server", action.data.id]);
+				await this.router.navigate(["/core/server", action.data.id]);
 				break;
 			case "updateStatus":
-				this.changeStatusServers = action.data instanceof Array ? action.data : [action.data];
-				this.changeStatusOpen = true;
+				const dialogRef = this.dialog.open(UpdateStatusComponent, {
+					data: action.data instanceof Array ? action.data : [action.data]
+				});
+				dialogRef.afterClosed().subscribe(result => {
+					if(result) {
+						this.reloadServers();
+					}
+				});
 				break;
 			case "queue":
 				const queueServers = action.data instanceof Array ? action.data : [action.data];
-				await Promise.all(queueServers.map(async s=>this.api.queueUpdates(s)));
+				await Promise.all(queueServers.map(async s => this.api.queueUpdates(s)));
 				await this.reloadServers();
 				break;
 			case "dequeue":
 				const dequeueServers = action.data instanceof Array ? action.data : [action.data];
-				await Promise.all(dequeueServers.map(async s=>this.api.clearUpdates(s)));
+				await Promise.all(dequeueServers.map(async s => this.api.clearUpdates(s)));
 				await this.reloadServers();
 				break;
 			default:
@@ -398,17 +406,8 @@ export class ServersTableComponent implements OnInit {
 		}
 	}
 
-	/**
-	 * Handler for when the "update status" dialog is closed.
-	 *
-	 * @param reload If one or more servers' status(es) has/have been updated,
-	 * this should be `true`, and that will trigger reloading the table data.
-	 */
-	public statusUpdated(reload: boolean): void {
-		this.changeStatusOpen = false;
-		this.changeStatusServers = [];
-		if (reload) {
-			this.reloadServers();
-		}
+	/** Reloads the servers table data. */
+	public async reloadServers(): Promise<void> {
+		this.servers = this.api.getServers().then(ss => ss.map(augment));
 	}
 }

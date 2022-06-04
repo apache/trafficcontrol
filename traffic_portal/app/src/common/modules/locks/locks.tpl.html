@@ -18,6 +18,6 @@ under the License.
 <div id="locksContainer">
     <div class="alert alert-dark" ng-repeat="l in locks">
         <button type="button" class="close" title="Unlock {{l.cdn}}" ng-click="confirmUnlock(l)"><i class="fa fa-unlock"></i></button>
-        <div ng-bind-html="l.cdn + ' is ' + ((l.soft) ? 'soft' : 'hard') + ' locked by ' + l.userName + ' (' + l.message + ')' | linky:'_blank'"></div>
+        <div ng-bind-html="l.cdn + ' is ' + ((l.soft) ? 'soft' : 'hard') + ' locked by ' + l.userName + ' (' + l.message + ')' + ' and shared by ' + ((l.sharedUserNames) ? l.sharedUserNames : 'no one else') | linky:'_blank'"></div>
     </div>
 </div>

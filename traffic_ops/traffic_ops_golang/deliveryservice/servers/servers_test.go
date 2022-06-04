@@ -20,7 +20,9 @@ package servers
  */
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -106,9 +108,7 @@ func TestReadServers(t *testing.T) {
 		"offline_reason",
 		"phys_location",
 		"phys_location_id",
-		"profile",
-		"profile_desc",
-		"profile_id",
+		"profile_name",
 		"rack",
 		"status",
 		"status_id",
@@ -142,9 +142,7 @@ func TestReadServers(t *testing.T) {
 			s.OfflineReason,
 			s.PhysLocation,
 			s.PhysLocationID,
-			s.Profile,
-			s.ProfileDesc,
-			s.ProfileID,
+			fmt.Sprintf("{%s}", strings.Join(s.ProfileNames, ",")),
 			s.Rack,
 			s.Status,
 			s.StatusID,
@@ -185,8 +183,8 @@ func TestReadServers(t *testing.T) {
 	}
 }
 
-func getMockDSServers() []tc.DSServer {
-	base := tc.DSServerBase{
+func getMockDSServers() []tc.DSServerV4 {
+	base := tc.DSServerBaseV4{
 		ID:           util.IntPtr(1),
 		Cachegroup:   util.StrPtr("cgTest"),
 		CachegroupID: util.IntPtr(1),
@@ -194,11 +192,11 @@ func getMockDSServers() []tc.DSServer {
 		CDNName:      util.StrPtr("cdnTest"),
 		DomainName:   util.StrPtr("domain"),
 	}
-	srv := tc.DSServer{
-		DSServerBase:     base,
-		ServerInterfaces: &[]tc.ServerInterfaceInfo{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
+	srv := tc.DSServerV4{
+		DSServerBaseV4:   base,
+		ServerInterfaces: &[]tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
 	}
-	srvsExpected := []tc.DSServer{srv}
+	srvsExpected := []tc.DSServerV4{srv}
 	return srvsExpected
 }
 

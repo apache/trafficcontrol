@@ -19,6 +19,7 @@ import org.apache.traffic_control.traffic_router.core.config.ConfigHandler;
 import org.apache.traffic_control.traffic_router.core.util.AbstractResourceWatcher;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
+import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -37,7 +38,7 @@ import java.util.List;
 
 public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
     private static final Logger LOGGER = LogManager.getLogger(LetsEncryptDnsChallengeWatcher.class);
-    public static final String DEFAULT_LE_DNS_CHALLENGE_URL = "https://${toHostname}/api/2.0/letsencrypt/dnsrecords/";
+    public static final String DEFAULT_LE_DNS_CHALLENGE_URL = "https://${toHostname}/api/"+TrafficOpsUtils.TO_API_VERSION+"/letsencrypt/dnsrecords/";
 
     private String configFile;
     private ConfigHandler configHandler;

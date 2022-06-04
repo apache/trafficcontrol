@@ -53,6 +53,7 @@ const (
 	DeliveryServiceRequests
 	DeliveryServiceRequestComments
 	DeliveryServicesRequiredCapabilities
+	DeliveryServiceServerAssignments
 	Divisions
 	FederationResolvers
 	FederationUsers
@@ -75,7 +76,6 @@ const (
 	Tenants
 	ServerCheckExtensions
 	Topologies
-	TopologyBasedDeliveryServiceRequiredCapabilities
 	Types
 	Users
 )
@@ -98,6 +98,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	DeliveryServiceRequests:               {CreateTestDeliveryServiceRequests, DeleteTestDeliveryServiceRequests},
 	DeliveryServiceRequestComments:        {CreateTestDeliveryServiceRequestComments, DeleteTestDeliveryServiceRequestComments},
 	DeliveryServicesRequiredCapabilities:  {CreateTestDeliveryServicesRequiredCapabilities, DeleteTestDeliveryServicesRequiredCapabilities},
+	DeliveryServiceServerAssignments:      {CreateTestDeliveryServiceServerAssignments, DeleteTestDeliveryServiceServers},
 	Divisions:                             {CreateTestDivisions, DeleteTestDivisions},
 	FederationUsers:                       {CreateTestFederationUsers, DeleteTestFederationUsers},
 	FederationResolvers:                   {CreateTestFederationResolvers, DeleteTestFederationResolvers},
@@ -120,7 +121,6 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	Tenants:                               {CreateTestTenants, DeleteTestTenants},
 	ServerCheckExtensions:                 {CreateTestServerCheckExtensions, DeleteTestServerCheckExtensions},
 	Topologies:                            {CreateTestTopologies, DeleteTestTopologies},
-	TopologyBasedDeliveryServiceRequiredCapabilities: {CreateTestTopologyBasedDeliveryServicesRequiredCapabilities, DeleteTestDeliveryServicesRequiredCapabilities},
-	Types: {CreateTestTypes, DeleteTestTypes},
-	Users: {CreateTestUsers, ForceDeleteTestUsers},
+	Types:                                 {CreateTestTypes, DeleteTestTypes},
+	Users:                                 {CreateTestUsers, ForceDeleteTestUsers},
 }

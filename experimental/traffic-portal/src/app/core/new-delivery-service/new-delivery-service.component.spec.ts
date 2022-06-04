@@ -23,11 +23,13 @@ import { MatStepperModule } from "@angular/material/stepper";
 import { MatStepperHarness } from "@angular/material/stepper/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
+import {ReplaySubject} from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
 import { Protocol } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
@@ -43,6 +45,7 @@ describe("NewDeliveryServiceComponent", () => {
 			tenantId: 1
 		}});
 		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(true)));
+		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 
 		await TestBed.configureTestingModule({
 			declarations: [
@@ -61,7 +64,8 @@ describe("NewDeliveryServiceComponent", () => {
 				MatRadioModule
 			],
 			providers: [
-				{ provide: CurrentUserService, useValue: mockCurrentUserService }
+				{ provide: CurrentUserService, useValue: mockCurrentUserService },
+				{ provide: TpHeaderService, useValue: headerSvc}
 			]
 		}).compileComponents();
 		// TestBed.overrideProvider(UserService, { useValue: mockAPIService });

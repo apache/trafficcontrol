@@ -64,31 +64,32 @@ Response Structure
 				"capability-type": "FCI.CapacityLimits",
 				"capability-value": [
 					{
-						"total-limits": [
+						"limits": [
 							{
+								"id": "host_limit_requests_requests",
+								"scope": {
+									"type": "testScope",
+									"value": [
+										"test.com"
+									]
+								},
+								"limit-type": "requests",
+								"maximum-hard": 20,
+								"maximum-soft": 15,
+								"telemetry-source": {
+									"id": "request_metrics",
+									"metric": "requests"
+								}
+							},
+							{
+								"id": "total_limit_egress_capacity",
 								"limit-type": "egress",
-								"maximum-hard": 5000,
-								"maximum-soft": 2500,
+								"maximum-hard": 202020,
+								"maximum-soft": 500,
 								"telemetry-source": {
 									"id": "capacity_metrics",
 									"metric": "capacity"
 								}
-							}
-						],
-						"host-limits": [
-							{
-								"host": "example.com",
-								"limits": [
-									{
-										"limit-type": "requests",
-										"maximum-hard": 100,
-										"maximum-soft": 50,
-										"telemetry-source": {
-											"id": "request_metrics",
-											"metric": "requests"
-										}
-									}
-								]
 							}
 						]
 					}
@@ -116,7 +117,10 @@ Response Structure
 									"data-percentile": 50,
 									"latency": 0
 								}
-							]
+							],
+							"configuration": {
+								"url": "example.com/telemetry1"
+							}
 						}
 					]
 				},

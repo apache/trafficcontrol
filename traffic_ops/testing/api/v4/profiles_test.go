@@ -65,11 +65,10 @@ func CUDProfileWithLocks(t *testing.T) {
 
 	// Create a new user with operations level privileges
 	user1 := tc.UserV4{
-		Username:             "lock_user1",
-		RegistrationSent:     new(time.Time),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		Role:                 "operations",
+		Username:         "lock_user1",
+		RegistrationSent: new(time.Time),
+		LocalPassword:    util.StrPtr("test_pa$$word"),
+		Role:             "operations",
 	}
 	user1.Email = util.StrPtr("lockuseremail@domain.com")
 	user1.TenantID = resp.Response[0].ID
@@ -235,9 +234,9 @@ func CreateBadProfiles(t *testing.T) {
 	// blank profile
 	prs := []tc.Profile{
 		{Type: "", Name: "", Description: "", CDNID: 0},
-		{Type: "ATS_PROFILE", Name: "badprofile", Description: "description", CDNID: 0},
-		{Type: "ATS_PROFILE", Name: "badprofile", Description: "", CDNID: 1},
-		{Type: "ATS_PROFILE", Name: "", Description: "description", CDNID: 1},
+		{Type: tc.CacheServerProfileType, Name: "badprofile", Description: "description", CDNID: 0},
+		{Type: tc.CacheServerProfileType, Name: "badprofile", Description: "", CDNID: 1},
+		{Type: tc.CacheServerProfileType, Name: "", Description: "description", CDNID: 1},
 		{Type: "", Name: "badprofile", Description: "description", CDNID: 1},
 	}
 
@@ -453,10 +452,9 @@ func UpdateTestProfiles(t *testing.T) {
 	expectedCDNId := cdns.Response[0].ID
 	expectedName := "testing"
 	expectedRoutingDisabled := true
-	expectedType := "TR_PROFILE"
 
 	remoteProfile.Description = expectedProfileDesc
-	remoteProfile.Type = expectedType
+	remoteProfile.Type = tc.TrafficRouterProfileType
 	remoteProfile.CDNID = expectedCDNId
 	remoteProfile.Name = expectedName
 	remoteProfile.RoutingDisabled = expectedRoutingDisabled
@@ -480,8 +478,8 @@ func UpdateTestProfiles(t *testing.T) {
 	if respProfile.Description != expectedProfileDesc {
 		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
 	}
-	if respProfile.Type != expectedType {
-		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Type, expectedType)
+	if respProfile.Type != tc.TrafficRouterProfileType {
+		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Type, tc.TrafficRouterProfileType)
 	}
 	if respProfile.CDNID != expectedCDNId {
 		t.Errorf("results do not match actual: %d, expected: %d", respProfile.CDNID, expectedCDNId)

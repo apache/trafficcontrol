@@ -148,7 +148,8 @@ func TestValidate(t *testing.T) {
 		Longitude:   &lo,
 		LastUpdated: &lu,
 	}}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
+	err, _ := c.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'latitude' Must be a floating point number within the range +-90`),
@@ -170,7 +171,7 @@ func TestValidate(t *testing.T) {
 		Longitude:   &lo,
 		LastUpdated: &lu,
 	}}
-	err := c.Validate()
+	err, _ = c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)
 	}

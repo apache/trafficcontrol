@@ -15,6 +15,7 @@ import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
+import {ReplaySubject} from "rxjs";
 
 import { DeliveryServiceService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
@@ -23,6 +24,7 @@ import { AlertService } from "src/app/shared/alert/alert.service";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { DeliveryserviceComponent } from "./deliveryservice.component";
 
@@ -33,6 +35,7 @@ describe("DeliveryserviceComponent", () => {
 	beforeEach(async () => {
 		// mock the API
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"]);
+		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 
 		await TestBed.configureTestingModule({
 			declarations: [
@@ -50,6 +53,7 @@ describe("DeliveryserviceComponent", () => {
 			providers: [
 				AlertService,
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
+				{ provide: TpHeaderService, useValue: headerSvc}
 			]
 		}).compileComponents();
 		const dsService = TestBed.inject(DeliveryServiceService);

@@ -45,6 +45,7 @@ to_disable_auto_cert_deletion: false
 to_use_ims: true
 to_use_rbp: true
 to_user_cache_refresh_interval_sec: 0
+to_server_update_status_cache_refresh_interval_sec: 0
 to_heartbeat_timeout: 20
 to_hypnotoad_number_of_workers: 12
 to_cors_access_control_allow_origin: "http://localhost:8080"

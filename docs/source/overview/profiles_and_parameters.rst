@@ -120,8 +120,6 @@ TP_PROFILE
 TR_PROFILE
 	A Traffic Router Profile.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``CCR_`` or ``TR_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 	.. seealso:: :ref:`tr-profile`
 
 TS_PROFILE

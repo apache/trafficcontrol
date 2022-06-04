@@ -117,11 +117,11 @@ func CreateBadProfiles(t *testing.T) {
 
 	// blank profile
 	prs := []tc.Profile{
-		tc.Profile{Type: "", Name: "", Description: "", CDNID: 0},
-		tc.Profile{Type: "ATS_PROFILE", Name: "badprofile", Description: "description", CDNID: 0},
-		tc.Profile{Type: "ATS_PROFILE", Name: "badprofile", Description: "", CDNID: 1},
-		tc.Profile{Type: "ATS_PROFILE", Name: "", Description: "description", CDNID: 1},
-		tc.Profile{Type: "", Name: "badprofile", Description: "description", CDNID: 1},
+		{Type: "", Name: "", Description: "", CDNID: 0},
+		{Type: tc.CacheServerProfileType, Name: "badprofile", Description: "description", CDNID: 0},
+		{Type: tc.CacheServerProfileType, Name: "badprofile", Description: "", CDNID: 1},
+		{Type: tc.CacheServerProfileType, Name: "", Description: "description", CDNID: 1},
+		{Type: "", Name: "badprofile", Description: "description", CDNID: 1},
 	}
 
 	for _, pr := range prs {

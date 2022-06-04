@@ -110,86 +110,102 @@ CREATE TABLE IF NOT EXISTS url_sig_key (
 
 ALTER TABLE url_sig_key OWNER TO traffic_vault;
 
---
--- Name: dnssec dnssec_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_vault
---
+DO $$ BEGIN
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'dnssec_pkey' AND table_name = 'dnssec') THEN
+    --
+    -- Name: dnssec dnssec_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_vault
+    --
 
-ALTER TABLE ONLY dnssec
-    ADD CONSTRAINT dnssec_pkey PRIMARY KEY (cdn);
-
-
---
--- Name: sslkey sslkey_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_vault
---
-
-ALTER TABLE ONLY sslkey
-    ADD CONSTRAINT sslkey_pkey PRIMARY KEY (deliveryservice, cdn, version);
+    ALTER TABLE ONLY dnssec
+        ADD CONSTRAINT dnssec_pkey PRIMARY KEY (cdn);
+END IF;
 
 
---
--- Name: uri_signing_key uri_signing_key_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_vault
---
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'sslkey_pkey' AND table_name = 'sslkey') THEN
+    --
+    -- Name: sslkey sslkey_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_vault
+    --
 
-ALTER TABLE ONLY uri_signing_key
-    ADD CONSTRAINT uri_signing_key_pkey PRIMARY KEY (deliveryservice);
+    ALTER TABLE ONLY sslkey
+        ADD CONSTRAINT sslkey_pkey PRIMARY KEY (deliveryservice, cdn, version);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'uri_signing_key_pkey' AND table_name = 'uri_signing_key') THEN
+    --
+    -- Name: uri_signing_key uri_signing_key_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_vault
+    --
+
+    ALTER TABLE ONLY uri_signing_key
+        ADD CONSTRAINT uri_signing_key_pkey PRIMARY KEY (deliveryservice);
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'url_sig_key_pkey' AND table_name = 'url_sig_key') THEN
+    --
+    -- Name: url_sig_key url_sig_key_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_vault
+    --
+
+    ALTER TABLE ONLY url_sig_key
+        ADD CONSTRAINT url_sig_key_pkey PRIMARY KEY (deliveryservice);
+END IF;
+
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'sslkey' AND column_name = 'cdn') THEN
+    --
+    -- Name: sslkey_cdn_idx; Type: INDEX; Schema: public; Owner: traffic_vault
+    --
+
+    CREATE INDEX IF NOT EXISTS sslkey_cdn_idx ON sslkey USING btree (cdn);
+END IF;
+
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'sslkey' AND column_name = 'deliveryservice') THEN
+    --
+    -- Name: sslkey_deliveryservice_idx; Type: INDEX; Schema: public; Owner: traffic_vault
+    --
+
+    CREATE INDEX IF NOT EXISTS sslkey_deliveryservice_idx ON sslkey USING btree (deliveryservice);
+END IF;
 
 
---
--- Name: url_sig_key url_sig_key_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_vault
---
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'sslkey' AND column_name = 'version') THEN
+    --
+    -- Name: sslkey_version_idx; Type: INDEX; Schema: public; Owner: traffic_vault
+    --
 
-ALTER TABLE ONLY url_sig_key
-    ADD CONSTRAINT url_sig_key_pkey PRIMARY KEY (deliveryservice);
-
-
---
--- Name: sslkey_cdn_idx; Type: INDEX; Schema: public; Owner: traffic_vault
---
-
-CREATE INDEX sslkey_cdn_idx ON sslkey USING btree (cdn);
-
-
---
--- Name: sslkey_deliveryservice_idx; Type: INDEX; Schema: public; Owner: traffic_vault
---
-
-CREATE INDEX sslkey_deliveryservice_idx ON sslkey USING btree (deliveryservice);
-
-
---
--- Name: sslkey_version_idx; Type: INDEX; Schema: public; Owner: traffic_vault
---
-
-CREATE INDEX sslkey_version_idx ON sslkey USING btree (version);
+    CREATE INDEX IF NOT EXISTS sslkey_version_idx ON sslkey USING btree (version);
+END IF;
+END$$;
 
 
 --
 -- Name: dnssec dnssec_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
-
-CREATE TRIGGER dnssec_last_updated BEFORE UPDATE ON dnssec FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
+DROP TRIGGER IF EXISTS dnssec_last_updated ON dnssec;
+CREATE TRIGGER dnssec_last_updated
+    BEFORE UPDATE ON dnssec
+    FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: sslkey sslkey_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
-
-CREATE TRIGGER sslkey_last_updated BEFORE UPDATE ON sslkey FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
+DROP TRIGGER IF EXISTS sslkey_last_updated on sslkey;
+CREATE TRIGGER sslkey_last_updated
+    BEFORE UPDATE ON sslkey
+    FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: uri_signing_key uri_signing_key_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
-
-CREATE TRIGGER uri_signing_key_last_updated BEFORE UPDATE ON uri_signing_key FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
+DROP TRIGGER IF EXISTS uri_signing_key_last_updated on uri_signing_key;
+CREATE TRIGGER uri_signing_key_last_updated
+    BEFORE UPDATE ON uri_signing_key
+    FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: url_sig_key url_sig_key_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
-
-CREATE TRIGGER url_sig_key_last_updated BEFORE UPDATE ON url_sig_key FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
+DROP TRIGGER IF EXISTS url_sig_key_last_updated on url_sig_key;
+CREATE TRIGGER url_sig_key_last_updated
+    BEFORE UPDATE ON url_sig_key
+    FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- PostgreSQL database dump complete

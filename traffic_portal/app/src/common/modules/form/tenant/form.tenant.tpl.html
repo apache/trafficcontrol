@@ -62,9 +62,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(tenantForm.parentId), 'has-feedback': hasError(tenantForm.parentId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Parent Tenant *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="parentId" class="form-control" ng-model="tenant.parentId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
-                        <option value="">Select...</option>
-                    </select>
+                    <tree-select on-update="tenant.parentId=value" handle="parentId" tree-data="[tenants[0]]" initial-value="tenant.parentId"></tree-select>
                     <small class="input-error" ng-show="hasPropertyError(tenantForm.parentId, 'required')">Required</small>
                     <small ng-show="tenant.parentId"><a href="/#!/tenants/{{tenant.parentId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>

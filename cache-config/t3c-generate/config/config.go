@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"github.com/pborman/getopt/v2"
 )
@@ -179,69 +178,4 @@ func ValidateURL(u *url.URL) error {
 		return errors.New("no host")
 	}
 	return nil
-}
-
-// TOData is the Traffic Ops data needed to generate configs.
-// See each field for details on the data required.
-// - If a field says 'must', the creation of TOData is guaranteed to do so, and users of the struct may rely on that.
-// - If it says 'may', the creation may or may not do so, and therefore users of the struct must filter if they
-//   require the potential fields to be omitted to generate correctly.
-type TOData struct {
-	// Servers must be all the servers from Traffic Ops. May include servers not on the current cdn.
-	Servers []atscfg.Server
-
-	// CacheGroups must be all cachegroups in Traffic Ops with Servers on the current server's cdn. May also include CacheGroups without servers on the current cdn.
-	CacheGroups []tc.CacheGroupNullable
-
-	// GlobalParams must be all Parameters in Traffic Ops on the tc.GlobalProfileName Profile. Must not include other parameters.
-	GlobalParams []tc.Parameter
-
-	// ServerParams must be all Parameters on the Profile of the current server. Must not include other Parameters.
-	ServerParams []tc.Parameter
-
-	// RemapConfigParams must be all Parameters with the ConfigFile "remap.config". Also includes cachekey.config parameters
-	RemapConfigParams []tc.Parameter
-
-	// ParentConfigParams must be all Parameters with the ConfigFile "parent.config.
-	ParentConfigParams []tc.Parameter
-
-	// DeliveryServices must include all Delivery Services on the current server's cdn, including those not assigned to the server. Must not include delivery services on other cdns.
-	DeliveryServices []atscfg.DeliveryService
-
-	// DeliveryServiceServers must include all delivery service servers in Traffic Ops for all delivery services on the current cdn, including those not assigned to the current server.
-	DeliveryServiceServers []tc.DeliveryServiceServer
-
-	// Server must be the server we're fetching configs from
-	Server *atscfg.Server
-
-	// Jobs must be all Jobs on the server's CDN. May include jobs on other CDNs.
-	Jobs []tc.Job
-
-	// CDN must be the CDN of the server.
-	CDN *tc.CDN
-
-	// DeliveryServiceRegexes must be all regexes on all delivery services on this server's cdn.
-	DeliveryServiceRegexes []tc.DeliveryServiceRegexes
-
-	// Profile must be the Profile of the server being requested.
-	Profile tc.Profile
-
-	// URISigningKeys must be a map of every delivery service which is URI Signed, to its keys.
-	URISigningKeys map[tc.DeliveryServiceName][]byte
-
-	// URLSigKeys must be a map of every delivery service which uses URL Sig, to its keys.
-	URLSigKeys map[tc.DeliveryServiceName]tc.URLSigKeys
-
-	// ServerCapabilities must be a map of all server IDs on this server's CDN, to a set of their capabilities. May also include servers from other cdns.
-	ServerCapabilities map[int]map[atscfg.ServerCapability]struct{}
-
-	// DSRequiredCapabilities must be a map of all delivery service IDs on this server's CDN, to a set of their required capabilities. Delivery Services with no required capabilities may not have an entry in the map.
-	DSRequiredCapabilities map[int]map[atscfg.ServerCapability]struct{}
-
-	// SSLKeys must be all the ssl keys for the server's cdn.
-	SSLKeys []tc.CDNSSLKeys
-
-	// Topologies must be all the topologies for the server's cdn.
-	// May incude topologies of other cdns.
-	Topologies []tc.Topology
 }

@@ -21,10 +21,18 @@
 			"files": [
 				"*.ts"
 			],
+			"rules": {
+				"@typescript-eslint/explicit-function-return-type": "error"
+			}
+		},
+		{
+			"files": [
+				"*.ts",
+				"*.js"
+			],
 			"parserOptions": {
 				"project": [
-					"tsconfig.json",
-					"e2e/tsconfig.json"
+					"tsconfig.json"
 				],
 				"createDefaultProgram": true
 			},
@@ -81,7 +89,6 @@
 				"@typescript-eslint/consistent-type-assertions": "error",
 				"@typescript-eslint/consistent-type-definitions": "error",
 				"@typescript-eslint/dot-notation": "error",
-				"@typescript-eslint/explicit-function-return-type": "error",
 				"@typescript-eslint/explicit-member-accessibility": [
 					"error",
 					{
@@ -168,6 +175,12 @@
 					"warn",
 					{
 						"ignoreParameters": true
+					}
+				],
+				"@typescript-eslint/no-invalid-this": [
+					"error",
+					{
+						"capIsConstructor": false
 					}
 				],
 				"@typescript-eslint/no-invalid-void-type": "error",
@@ -301,12 +314,7 @@
 				"no-else-return": "error",
 				"no-empty": "error",
 				"no-extra-bind": "error",
-				"no-invalid-this": [
-					"error",
-					{
-						"capIsConstructor": false
-					}
-				],
+				"no-invalid-this": "off",
 				"no-multiple-empty-lines": [
 					"error",
 					{

@@ -52,7 +52,7 @@ export const users = {
                     Username: "User1",
                     Email: "test@cdn.tc.com",
                     Role: "admin",
-                    Tenant: "- tenantSame",
+                    Tenant: "tenantSame",
                     UCDN: "",
                     Password: "qwe@123#rty",
                     ConfirmPassword: "qwe@123#rty",
@@ -65,7 +65,7 @@ export const users = {
                     description: "create a registered User",
                     Email: "test2@cdn.tc.com",
                     Role: "admin",
-                    Tenant: "- tenantSame",
+                    Tenant: "tenantSame",
                     validationMessage: `Sent user registration to {{ ${randomize}test2@cdn.tc.com}} with the following permissions [ role: admin | tenant: tenantSame${randomize} ]`
                 }
             ],

@@ -17,8 +17,16 @@
  * under the License.
  */
 
-var DialogSelectLockController = function(cdns, $scope, $uibModalInstance) {
-
+var DialogSelectLockController = function(cdns, $scope, $uibModalInstance, userService) {
+	var getUsers = function() {
+		userService.getUsers().then(
+			function(response) {
+				$scope.users = response;
+			},
+			function(err) {
+				throw err;
+			});
+	};
 	$scope.cdns = cdns.filter(
 		function (cdn) {
 			// you cannot apply a lock to the 'ALL' cdn
@@ -39,8 +47,11 @@ var DialogSelectLockController = function(cdns, $scope, $uibModalInstance) {
 	$scope.cancel = function () {
 		$uibModalInstance.dismiss('cancel');
 	};
-
+	var init = function () {
+		getUsers();
+	};
+	init();
 };
 
-DialogSelectLockController.$inject = ['cdns', '$scope', '$uibModalInstance'];
+DialogSelectLockController.$inject = ['cdns', '$scope', '$uibModalInstance', 'userService'];
 module.exports = DialogSelectLockController;

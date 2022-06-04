@@ -1,0 +1,164 @@
+{
+  "cdnName": "$CDN_NAME",
+  "description": "Traffic Router for CDN-In-A-Box",
+  "name": "TRAFFIC_ROUTER",
+  "routingDisabled": false,
+  "type": "TR_PROFILE",
+  "params": [
+    {
+      "configFile": "inputs.conf",
+      "name": "monitor:///opt/tomcat/logs/access.log",
+      "value": "index=index_odol_test;sourcetype=access_ccr"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "geolocation.polling.url",
+      "value": "https://static.infra.ciab.test/GeoLite2-City.mmdb.gz"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "geolocation.polling.interval",
+      "value": "86400000"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "coveragezone.polling.interval",
+      "value": "3600000"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "coveragezone.polling.url",
+      "value": "https://static.infra.ciab.test/czmap.json"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "domain_name",
+      "value": "mycdn.ciab.test"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.ttls.AAAA",
+      "value": "3600"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.ttls.A",
+      "value": "3600"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.soa.expire",
+      "value": "604800"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.soa.minimum",
+      "value": "30"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.soa.admin",
+      "value": "twelve_monkeys"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.soa.retry",
+      "value": "7200"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.soa.refresh",
+      "value": "28800"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.ttls.NS",
+      "value": "3600"
+    },
+    {
+      "configFile": "server.xml",
+      "name": "api.port",
+      "value": "3333"
+    },
+    {
+      "configFile": "server.xml",
+      "name": "secure.api.port",
+      "value": "3443"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "api.cache-control.max-age",
+      "value": "10"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "federationmapping.polling.url",
+      "value": "https://${toHostname}/api/2.0/federations/all"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "federationmapping.polling.interval",
+      "value": "60000"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.ttls.DNSKEY",
+      "value": "30"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.ttls.DS",
+      "value": "30"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "zonemanager.cache.maintenance.interval",
+      "value": "300"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "keystore.maintenance.interval",
+      "value": "300"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "dnssec.dynamic.response.expiration",
+      "value": "300s"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "zonemanager.threadpool.scale",
+      "value": "0.50"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "consistent.dns.routing",
+      "value": "true"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "neustar.polling.url",
+      "value": "https://static.infra.ciab.test/neustar.tar.gz"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "neustar.polling.interval",
+      "value": "86400000"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "certificates.polling.interval",
+      "value": "300000"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "steeringmapping.polling.interval",
+      "value": "60000"
+    },
+    {
+      "configFile": "CRConfig.json",
+      "name": "tld.ttls.SOA",
+      "value": "86400"
+    }
+  ]
+}
