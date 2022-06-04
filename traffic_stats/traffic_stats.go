@@ -40,7 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 
 	"github.com/Shopify/sarama"
 	"github.com/cihub/seelog"
@@ -113,6 +113,27 @@ type StartupConfig struct {
 	BpsChan                     chan influx.BatchPoints
 	InfluxDBs                   []*InfluxDBProps
 	KafkaConfig                 KafkaConfig `json:"kafkaConfig"`
+	DsChan                      chan DeliveryServiceStats
+	CacheChan                   chan CacheStats
+}
+
+type DeliveryServiceStats struct {
+	dsMap map[string]map[string]map[string]interface{}
+}
+
+type DsStatsJSON struct {
+	Pp              string `json:"pp"`
+	Date            string `json:"date"`
+	DeliveryService map[string]map[string][]struct {
+		Index uint64 `json:"index"`
+		Time  int    `json:"time"`
+		Value string `json:"value"`
+		Span  uint64 `json:"span"`
+	} `json:"deliveryService"`
+}
+
+type CacheStats struct {
+	cacheStatMap map[string]map[string]map[string]interface{}
 }
 
 type KafkaConfig struct {
@@ -129,31 +150,6 @@ type KafkaConfig struct {
 type KafkaCluster struct {
 	producer *sarama.AsyncProducer
 	client   *sarama.Client
-}
-
-type KafkaJSON struct {
-	Name   string                 `json:"name"`
-	Tags   map[string]string      `json:"tags"`
-	Fields map[string]interface{} `json:"fields"`
-	Time   time.Time              `json:"time"`
-}
-
-type DataExporter interface {
-	ExportData(config StartupConfig, bps influx.BatchPoints, retry bool)
-}
-
-func (c *KafkaCluster) ExportData(config StartupConfig, bps influx.BatchPoints, retry bool) {
-	err := publishToKafka(config, bps, c)
-	if err != nil {
-		log.Errorln("Unable to export to Kafka", err)
-	}
-}
-
-func (influx InfluxClient) ExportData(config StartupConfig, bps influx.BatchPoints, retry bool) {
-	sendMetrics(config, bps, retry)
-}
-
-type InfluxClient struct {
 }
 
 var useSeelog bool = true
@@ -259,7 +255,11 @@ func main() {
 	}
 
 	Bps = make(map[string]influx.BatchPoints)
+	dsStatsMap := make(map[string]map[string]map[string]map[string]interface{})
+	cacheStatsMap := make(map[string]map[string]map[string]map[string]interface{})
 	config.BpsChan = make(chan influx.BatchPoints)
+	config.DsChan = make(chan DeliveryServiceStats)
+	config.CacheChan = make(chan CacheStats)
 
 	defer seelog.Flush()
 
@@ -277,17 +277,6 @@ func main() {
 	hupChan := make(chan os.Signal, 1)
 	signal.Notify(hupChan, syscall.SIGHUP)
 
-	dataExporters := []DataExporter{}
-
-	if config.KafkaConfig.Enable && c != nil {
-		dataExporters = append(dataExporters, c)
-	}
-
-	if !config.DisableInflux {
-		influx := InfluxClient{}
-		dataExporters = append(dataExporters, influx)
-	}
-
 	for {
 		select {
 		case <-hupChan:
@@ -302,18 +291,32 @@ func main() {
 		case <-termChan:
 			info("Shutdown Request Received - Sending stored metrics then quitting")
 			for _, val := range Bps {
-				for _, dataExporter := range dataExporters {
-					dataExporter.ExportData(config, val, false)
+				sendMetrics(config, val, false)
+			}
+			if config.KafkaConfig.Enable {
+				for _, dsMap := range dsStatsMap {
+					publishToKafka(config, c, dsMap, "delivery-service")
+				}
+				for _, cacheMap := range cacheStatsMap {
+					publishToKafka(config, c, cacheMap, "cache")
 				}
 			}
 			startShutdown(c)
 			os.Exit(0)
 		case <-tickers.Publish:
 			for key, val := range Bps {
-				for _, dataExporter := range dataExporters {
-					go dataExporter.ExportData(config, val, true)
-				}
+				go sendMetrics(config, val, true)
 				delete(Bps, key)
+			}
+			if config.KafkaConfig.Enable {
+				for key, dsMap := range dsStatsMap {
+					publishToKafka(config, c, dsMap, "delivery-service")
+					delete(dsStatsMap, key)
+				}
+				for key, cacheMap := range cacheStatsMap {
+					publishToKafka(config, c, cacheMap, "cache")
+					delete(cacheStatsMap, key)
+				}
 			}
 		case runningConfig = <-configChan:
 		case <-tickers.Config:
@@ -340,6 +343,12 @@ func main() {
 				Bps[key] = batchPoints
 				debug("Created ", key)
 			}
+		case cacheStats := <-config.CacheChan:
+			key := fmt.Sprintf("#{time.Now()}")
+			cacheStatsMap[key] = cacheStats.cacheStatMap
+		case dsStats := <-config.DsChan:
+			key := fmt.Sprintf("#{time.Now()}")
+			dsStatsMap[key] = dsStats.dsMap
 		}
 	}
 }
@@ -441,29 +450,21 @@ func newKakfaCluster(config KafkaConfig) *KafkaCluster {
 	return c
 }
 
-func publishToKafka(config StartupConfig, bps influx.BatchPoints, c *KafkaCluster) error {
-
+func publishToKafka(config StartupConfig, c *KafkaCluster, statMap map[string]map[string]map[string]interface{}, mapType string) error {
 	input := (*c.producer).Input()
 
-	for _, point := range bps.Points() {
+	for key, _ := range statMap {
+		for cachegroup, _ := range statMap[key] {
+			message, err := json.Marshal(statMap[key][cachegroup])
+			if err != nil {
+				return err
+			}
 
-		var KafkaJSON KafkaJSON
-		KafkaJSON.Name = point.Name()
-		KafkaJSON.Tags = point.Tags()
-		KafkaJSON.Fields, _ = point.Fields()
-		KafkaJSON.Time = point.Time()
-
-		message, err := json.Marshal(KafkaJSON)
-
-		if err != nil {
-			return err
-		}
-
-		topic := config.KafkaConfig.Topic
-
-		input <- &sarama.ProducerMessage{
-			Topic: topic,
-			Value: sarama.StringEncoder(message),
+			topic := config.KafkaConfig.Topic + mapType
+			input <- &sarama.ProducerMessage{
+				Topic: topic,
+				Value: sarama.StringEncoder(message),
+			}
 		}
 	}
 	return nil
@@ -743,7 +744,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		return
 	}
 
-	servers, _, err := to.GetServers()
+	servers, _, err := to.GetServers(nil)
 	if err != nil {
 		msg := fmt.Sprintf("Error getting server list from %v: %v ", config.ToURL, err)
 		if init {
@@ -847,28 +848,153 @@ func calcMetrics(cdnName string, urls []string, cacheMap map[string]tc.Server, c
 		if err != nil {
 			errorf("error calculating cache metric values for CDN %s: %v", cdnName, err)
 		}
+		err = createCacheMaps(trafMonData, cdnName, sampleTime, cacheMap, config)
+		if err != nil {
+			errorf("error creating cache maps for CDN %s: %v", cdnName, err)
+		}
 	} else if strings.Contains(healthURL, "DsStats") {
 		err = calcDsValues(trafMonData, cdnName, sampleTime, config)
 		if err != nil {
 			errorf("error calculating delivery service metric values for CDN %s: %v", cdnName, err)
+		}
+		err = createDsMaps(trafMonData, cdnName, sampleTime, config)
+		if err != nil {
+			errorf("error creating delivery service maps for CDN %s: %v", cdnName, err)
 		}
 	} else {
 		warn("Don't know what to do with given ", cdnName, " stats URL: ", healthURL)
 	}
 }
 
-func calcDsValues(tmData []byte, cdnName string, sampleTime int64, config StartupConfig) error {
-	type DsStatsJSON struct {
-		Pp              string `json:"pp"`
-		Date            string `json:"date"`
-		DeliveryService map[string]map[string][]struct {
-			Index uint64 `json:"index"`
-			Time  int    `json:"time"`
-			Value string `json:"value"`
-			Span  uint64 `json:"span"`
-		} `json:"deliveryService"`
+func createDsMaps(tmData []byte, cdnName string, sampleTime int64, config StartupConfig) error {
+	dsMaps := make(map[string]map[string]map[string]interface{})
+
+	dsStats := DeliveryServiceStats{}
+
+	var jData DsStatsJSON
+	err := json.Unmarshal(tmData, &jData)
+	if err != nil {
+		return fmt.Errorf("could not unmarshall deliveryservice stats JSON - %v", err)
 	}
 
+	for dsName, dsData := range jData.DeliveryService {
+		for dsMetric, dsMetricData := range dsData {
+			var cachegroup, statName, dsType string
+
+			s := strings.Split(dsMetric, ".")
+			if strings.Contains(dsMetric, "type.") {
+				cachegroup = "all"
+				statName = s[2]
+				dsType = s[1]
+			} else if strings.Contains(dsMetric, "total.") {
+				cachegroup, statName = s[0], s[1]
+			} else {
+				cachegroup, statName = s[1], s[2]
+			}
+
+			statTime := strconv.Itoa(dsMetricData[0].Time)
+			msInt, err := strconv.ParseInt(statTime, 10, 64)
+			if err != nil {
+				errorf("calculating delivery service metric values: error parsing stat time: %v", err)
+			}
+
+			statValue := dsMetricData[0].Value
+			statFloatValue, err := strconv.ParseFloat(statValue, 64)
+			if err != nil {
+				statFloatValue = 0.0
+			}
+
+			if _, ok := dsMaps[dsName][cachegroup]; ok {
+			} else {
+				if dsMaps[dsName] == nil {
+					dsMaps[dsName] = map[string]map[string]interface{}{}
+				}
+				if dsMaps[dsName][cachegroup] == nil {
+					dsMaps[dsName][cachegroup] = map[string]interface{}{}
+				}
+				dsMaps[dsName][cachegroup]["deliveryservice"] = dsName
+				dsMaps[dsName][cachegroup]["cachegroup"] = cachegroup
+				dsMaps[dsName][cachegroup]["msInt"] = msInt
+				dsMaps[dsName][cachegroup]["cdn"] = cdnName
+			}
+			if len(dsType) > 0 {
+				dsMaps[dsName][cachegroup]["type"] = dsType
+			}
+			dsMaps[dsName][cachegroup][statName] = statFloatValue
+		}
+	}
+
+	dsStats.dsMap = dsMaps
+	config.DsChan <- dsStats
+
+	info("Collected ", len(dsMaps), " deliveryservice maps for ", cdnName, " @ ", sampleTime)
+	return nil
+}
+
+func createCacheMaps(trafmonData []byte, cdnName string, sampleTime int64, cacheMap map[string]tc.Server, config StartupConfig) error {
+	cacheStatMaps := make(map[string]map[string]map[string]interface{})
+
+	cacheStats := CacheStats{}
+
+	var jData tc.LegacyStats
+	err := json.Unmarshal(trafmonData, &jData)
+	if err != nil {
+		return fmt.Errorf("could not unmarshall cache stats JSON - %v", err)
+	}
+
+	for cacheName, cacheData := range jData.Caches {
+		cache := cacheMap[string(cacheName)]
+
+		for statName, statData := range cacheData {
+			if len(statData) == 0 {
+				continue
+			}
+
+			dataKey := statName
+			dataKey = strings.Replace(dataKey, ".bandwidth", ".kbps", 1)
+			dataKey = strings.Replace(dataKey, "-", "_", -1)
+
+			hostname := string(cacheName)
+
+			//Get the stat value and convert to float
+			statFloatValue := 0.0
+			if statsValue, ok := statData[0].Val.(string); !ok {
+				warnf("stat data %s with value %v couldn't be converted into string", statName, statData[0].Val)
+			} else {
+				statFloatValue, err = strconv.ParseFloat(statsValue, 64)
+				if err != nil {
+					warnf("stat %s with value %v couldn't be converted into a float", statName, statsValue)
+				}
+			}
+
+			if _, ok := cacheStatMaps[hostname][cache.Cachegroup]; ok {
+			} else {
+				// add all values besides tps_2xx, etc.
+				if cacheStatMaps[hostname] == nil {
+					cacheStatMaps[hostname] = map[string]map[string]interface{}{}
+				}
+				if cacheStatMaps[hostname][cache.Cachegroup] == nil {
+					cacheStatMaps[hostname][cache.Cachegroup] = map[string]interface{}{}
+				}
+				cacheStatMaps[hostname][cache.Cachegroup]["cachegroup"] = cache.Cachegroup
+				cacheStatMaps[hostname][cache.Cachegroup]["hostname"] = hostname
+				cacheStatMaps[hostname][cache.Cachegroup]["cdn"] = cdnName
+				cacheStatMaps[hostname][cache.Cachegroup]["type"] = cache.Type
+				cacheStatMaps[hostname][cache.Cachegroup]["time"] = statData[0].Time.Unix()
+			}
+
+			cacheStatMaps[hostname][cache.Cachegroup][dataKey] = statFloatValue
+		}
+	}
+
+	cacheStats.cacheStatMap = cacheStatMaps
+	config.CacheChan <- cacheStats
+
+	info("Collected ", len(cacheStatMaps), " cache stat maps for ", cdnName, " @ ", sampleTime)
+	return nil
+}
+
+func calcDsValues(tmData []byte, cdnName string, sampleTime int64, config StartupConfig) error {
 	var jData DsStatsJSON
 	err := json.Unmarshal(tmData, &jData)
 	if err != nil {
@@ -1000,6 +1126,7 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 			fields := map[string]interface{}{
 				"value": statFloatValue,
 			}
+
 			pt, err := influx.NewPoint(
 				dataKey,
 				tags,
