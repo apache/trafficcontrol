@@ -48,6 +48,8 @@ import (
 )
 
 const UserAgent = "traffic-stats"
+const DeliveryServiceTopic = "-delivery-service"
+const CacheStatTopic = "-cache"
 const TrafficOpsRequestTimeout = time.Second * time.Duration(10)
 
 const (
@@ -295,10 +297,10 @@ func main() {
 			}
 			if config.KafkaConfig.Enable {
 				for _, dsMap := range dsStatsMap {
-					publishToKafka(config, c, dsMap, "delivery-service")
+					publishToKafka(config, c, dsMap, DeliveryServiceTopic)
 				}
 				for _, cacheMap := range cacheStatsMap {
-					publishToKafka(config, c, cacheMap, "cache")
+					publishToKafka(config, c, cacheMap, CacheStatTopic)
 				}
 			}
 			startShutdown(c)
@@ -310,11 +312,11 @@ func main() {
 			}
 			if config.KafkaConfig.Enable {
 				for key, dsMap := range dsStatsMap {
-					publishToKafka(config, c, dsMap, "delivery-service")
+					publishToKafka(config, c, dsMap, DeliveryServiceTopic)
 					delete(dsStatsMap, key)
 				}
 				for key, cacheMap := range cacheStatsMap {
-					publishToKafka(config, c, cacheMap, "cache")
+					publishToKafka(config, c, cacheMap, CacheStatTopic)
 					delete(cacheStatsMap, key)
 				}
 			}
@@ -454,8 +456,8 @@ func publishToKafka(config StartupConfig, c *KafkaCluster, statMap map[string]ma
 	input := (*c.producer).Input()
 
 	for key, _ := range statMap {
-		for cachegroup, _ := range statMap[key] {
-			message, err := json.Marshal(statMap[key][cachegroup])
+		for cache, _ := range statMap[key] {
+			message, err := json.Marshal(statMap[key][cache])
 			if err != nil {
 				return err
 			}
@@ -973,20 +975,20 @@ func createCacheMaps(trafmonData []byte, cdnName string, sampleTime int64, cache
 
 			if _, ok := cacheStatMaps[hostname][cache.Cachegroup]; ok {
 			} else {
-				// add all values besides tps_2xx, etc.
 				if cacheStatMaps[hostname] == nil {
 					cacheStatMaps[hostname] = map[string]map[string]interface{}{}
 				}
-				if cacheStatMaps[hostname][cache.Cachegroup] == nil {
-					cacheStatMaps[hostname][cache.Cachegroup] = map[string]interface{}{}
+				if cacheStatMaps[hostname][dataKey] == nil {
+					cacheStatMaps[hostname][dataKey] = map[string]interface{}{}
 				}
-				cacheStatMaps[hostname][cache.Cachegroup]["cachegroup"] = cache.Cachegroup
-				cacheStatMaps[hostname][cache.Cachegroup]["hostname"] = hostname
-				cacheStatMaps[hostname][cache.Cachegroup]["cdn"] = cdnName
-				cacheStatMaps[hostname][cache.Cachegroup]["type"] = cache.Type
-				cacheStatMaps[hostname][cache.Cachegroup]["time"] = statData[0].Time.Unix()
+				cacheStatMaps[hostname][dataKey]["cachegroup"] = cache.Cachegroup
+				cacheStatMaps[hostname][dataKey]["hostname"] = hostname
+				cacheStatMaps[hostname][dataKey]["cdn"] = cdnName
+				cacheStatMaps[hostname][dataKey]["type"] = cache.Type
+				cacheStatMaps[hostname][dataKey]["time"] = statData[0].Time.Unix()
+				cacheStatMaps[hostname][dataKey]["datakey"] = dataKey
 			}
-			cacheStatMaps[hostname][cache.Cachegroup][dataKey] = statFloatValue
+			cacheStatMaps[hostname][dataKey]["value"] = statFloatValue
 		}
 	}
 
