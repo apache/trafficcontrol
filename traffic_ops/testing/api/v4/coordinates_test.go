@@ -250,9 +250,9 @@ func validateCoordinateFields(expectedResp map[string]interface{}) utils.CkReqFu
 				case "Name":
 					assert.Equal(t, expected, coordinate.Name, "Expected Name to be %v, but got %s", expected, coordinate.Name)
 				case "Latitude":
-					assert.Equal(t, expected, coordinate.Latitude, "Expected Latitude to be %v, but got %s", expected, coordinate.Latitude)
+					assert.Equal(t, expected, coordinate.Latitude, "Expected Latitude to be %v, but got %f", expected, coordinate.Latitude)
 				case "Longitude":
-					assert.Equal(t, expected, coordinate.Longitude, "Expected Longitude to be %v, but got %s", expected, coordinate.Longitude)
+					assert.Equal(t, expected, coordinate.Longitude, "Expected Longitude to be %v, but got %f", expected, coordinate.Longitude)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
@@ -316,7 +316,7 @@ func validateCoordinateDescSort() utils.CkReqFunc {
 		coordinateAscResp, _, err := TOSession.GetCoordinates(client.RequestOptions{})
 		assert.RequireNoError(t, err, "Unexpected error getting Coordinates with default sort order: %v - alerts: %+v", err, coordinateAscResp.Alerts)
 		// Verify the response match in length, i.e. equal amount of Coordinates.
-		assert.RequireEqual(t, len(coordinateAscResp.Response), len(coordinateDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(coordinateAscResp.Response), len(coordinateDescResp))
+		assert.RequireEqual(t, len(coordinateAscResp.Response), len(coordinateDescResp), "Expected descending order response length: %d, to match ascending order response length %d", len(coordinateAscResp.Response), len(coordinateDescResp))
 		// Insert Coordinate names to the front of a new list, so they are now reversed to be in ascending order.
 		for _, division := range coordinateDescResp {
 			descSortedList = append([]string{division.Name}, descSortedList...)

@@ -164,9 +164,9 @@ func validateCoordinateFields(expectedResp map[string]interface{}) utils.CkReqFu
 				case "Name":
 					assert.Equal(t, expected, coordinate.Name, "Expected Name to be %v, but got %s", expected, coordinate.Name)
 				case "Latitude":
-					assert.Equal(t, expected, coordinate.Latitude, "Expected Latitude to be %v, but got %s", expected, coordinate.Latitude)
+					assert.Equal(t, expected, coordinate.Latitude, "Expected Latitude to be %v, but got %f", expected, coordinate.Latitude)
 				case "Longitude":
-					assert.Equal(t, expected, coordinate.Longitude, "Expected Longitude to be %v, but got %s", expected, coordinate.Longitude)
+					assert.Equal(t, expected, coordinate.Longitude, "Expected Longitude to be %v, but got %f", expected, coordinate.Longitude)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
@@ -178,7 +178,7 @@ func validateCoordinateFields(expectedResp map[string]interface{}) utils.CkReqFu
 func validateCoordinateUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		coordinates, _, err := TOSession.GetCoordinateByNameWithHdr(name, nil)
-		assert.RequireNoError(t, err, "Error getting Coordinate: %v", err, coordinates)
+		assert.RequireNoError(t, err, "Error: %v getting Coordinate: %s", err, name)
 		assert.RequireEqual(t, 1, len(coordinates), "Expected one Coordinate returned Got: %d", len(coordinates))
 		validateCoordinateFields(expectedResp)(t, toclientlib.ReqInf{}, coordinates, tc.Alerts{}, nil)
 	}
