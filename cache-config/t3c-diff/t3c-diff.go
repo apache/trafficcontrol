@@ -78,6 +78,14 @@ func main() {
 		os.Exit(4)
 	}
 
+	if *uid == 0 {
+		*uid = os.Geteuid()
+	}
+	
+	if *gid == 0 {
+		*gid = os.Getgid()
+	}
+
 	fileA, fileAExisted, err := readFileOrStdin(fileNameA)
 	if err != nil {
 		log.Errorf("error reading first: %s\n", err.Error())
