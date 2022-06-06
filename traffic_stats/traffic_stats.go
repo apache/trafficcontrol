@@ -848,18 +848,22 @@ func calcMetrics(cdnName string, urls []string, cacheMap map[string]tc.Server, c
 		if err != nil {
 			errorf("error calculating cache metric values for CDN %s: %v", cdnName, err)
 		}
-		err = createCacheMaps(trafMonData, cdnName, sampleTime, cacheMap, config)
-		if err != nil {
-			errorf("error creating cache maps for CDN %s: %v", cdnName, err)
+		if config.KafkaConfig.Enable {
+			err = createCacheMaps(trafMonData, cdnName, sampleTime, cacheMap, config)
+			if err != nil {
+				errorf("error creating cache maps for CDN %s: %v", cdnName, err)
+			}
 		}
 	} else if strings.Contains(healthURL, "DsStats") {
 		err = calcDsValues(trafMonData, cdnName, sampleTime, config)
 		if err != nil {
 			errorf("error calculating delivery service metric values for CDN %s: %v", cdnName, err)
 		}
-		err = createDsMaps(trafMonData, cdnName, sampleTime, config)
-		if err != nil {
-			errorf("error creating delivery service maps for CDN %s: %v", cdnName, err)
+		if config.KafkaConfig.Enable {
+			err = createDsMaps(trafMonData, cdnName, sampleTime, config)
+			if err != nil {
+				errorf("error creating delivery service maps for CDN %s: %v", cdnName, err)
+			}
 		}
 	} else {
 		warn("Don't know what to do with given ", cdnName, " stats URL: ", healthURL)
@@ -982,7 +986,6 @@ func createCacheMaps(trafmonData []byte, cdnName string, sampleTime int64, cache
 				cacheStatMaps[hostname][cache.Cachegroup]["type"] = cache.Type
 				cacheStatMaps[hostname][cache.Cachegroup]["time"] = statData[0].Time.Unix()
 			}
-
 			cacheStatMaps[hostname][cache.Cachegroup][dataKey] = statFloatValue
 		}
 	}
@@ -1126,7 +1129,6 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 			fields := map[string]interface{}{
 				"value": statFloatValue,
 			}
-
 			pt, err := influx.NewPoint(
 				dataKey,
 				tags,
