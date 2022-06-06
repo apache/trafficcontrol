@@ -81,7 +81,7 @@ func main() {
 	if *uid == 0 {
 		*uid = os.Geteuid()
 	}
-	
+
 	if *gid == 0 {
 		*gid = os.Getgid()
 	}
