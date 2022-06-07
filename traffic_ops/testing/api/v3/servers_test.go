@@ -490,15 +490,6 @@ func GetStatusID(t *testing.T, name string) func() int {
 	}
 }
 
-func GetPhysicalLocationID(t *testing.T, name string) func() int {
-	return func() int {
-		physLocResp, _, err := TOSession.GetPhysLocationByNameWithHdr(name, nil)
-		assert.NoError(t, err, "Get PhysLocation Request failed with error:", err)
-		assert.Equal(t, 1, len(physLocResp), "Expected response object length 1, but got %d", len(physLocResp))
-		return physLocResp[0].ID
-	}
-}
-
 func UpdateTestServerStatusLastUpdated(t *testing.T) {
 	const hostName = "atl-edge-01"
 
