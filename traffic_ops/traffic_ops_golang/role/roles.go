@@ -133,7 +133,7 @@ func (role TORole) Validate() (error, error) {
 	errs := validation.Errors{
 		"name":        validation.Validate(role.Name, validation.Required),
 		"description": validation.Validate(role.Description, validation.Required),
-		"privLevel":   validation.Validate(role.PrivLevel, validation.Required)}
+		"privLevel":   validation.Validate(role.PrivLevel, validation.NotNil)}
 
 	errsToReturn := tovalidate.ToErrors(errs)
 	checkCaps := `SELECT cap FROM UNNEST($1::text[]) AS cap WHERE NOT cap =  ANY(ARRAY(SELECT c.name FROM capability AS c WHERE c.name = ANY($1)))`
@@ -154,10 +154,12 @@ func (role *TORole) Create() (error, error, int) {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusBadRequest
 	}
-	caps := *role.Capabilities
-	missing := role.ReqInfo.User.MissingPermissions(caps...)
-	if len(missing) != 0 {
-		return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+	if role.Capabilities != nil && *role.Capabilities != nil {
+		caps := *role.Capabilities
+		missing := role.ReqInfo.User.MissingPermissions(caps...)
+		if len(missing) != 0 {
+			return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+		}
 	}
 	userErr, sysErr, errCode := api.GenericCreate(role)
 	if userErr != nil || sysErr != nil {
@@ -233,10 +235,12 @@ func (role *TORole) Update(h http.Header) (error, error, int) {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusForbidden
 	}
-	caps := *role.Capabilities
-	missing := role.ReqInfo.User.MissingPermissions(caps...)
-	if len(missing) != 0 {
-		return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+	if role.Capabilities != nil && *role.Capabilities != nil {
+		caps := *role.Capabilities
+		missing := role.ReqInfo.User.MissingPermissions(caps...)
+		if len(missing) != 0 {
+			return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+		}
 	}
 	userErr, sysErr, errCode := api.GenericUpdate(h, role)
 	if userErr != nil || sysErr != nil {
