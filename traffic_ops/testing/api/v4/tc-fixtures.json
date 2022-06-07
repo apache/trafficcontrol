@@ -2020,6 +2020,19 @@
             "shortName": "atlanta",
             "state": "GA",
             "zip": "30301"
+        },
+        {
+            "address": "1234 delete way",
+            "city": "Denver",
+            "comments": null,
+            "email": null,
+            "name": "testDelete",
+            "phone": "303-222-2222",
+            "poc": null,
+            "region": "region1",
+            "shortName": "testdelete",
+            "state": "C0",
+            "zip": "80202"
         }
     ],
     "profiles": [

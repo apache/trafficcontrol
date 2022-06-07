@@ -298,7 +298,7 @@ func Handler(
 		}
 
 		routeCtx := context.WithValue(ctx, api.PathParamsKey, params)
-		routeCtx = context.WithValue(routeCtx, middleware.RouteID, strconv.Itoa(compiledRoute.ID))
+		routeCtx = context.WithValue(routeCtx, middleware.RouteID, compiledRoute.ID)
 		r = r.WithContext(routeCtx)
 		compiledRoute.Handler(w, r)
 		return
@@ -350,7 +350,7 @@ func Handler(
 				}
 				routeCtx := context.WithValue(ctx, api.DBContextKey, db)
 				routeCtx = context.WithValue(routeCtx, api.PathParamsKey, routeParams)
-				routeCtx = context.WithValue(routeCtx, middleware.RouteID, strconv.Itoa(backendRoute.ID))
+				routeCtx = context.WithValue(routeCtx, middleware.RouteID, backendRoute.ID)
 				r = r.WithContext(routeCtx)
 				userErr, sysErr, code := HandleBackendRoute(cfg, backendRoute, w, r)
 				if userErr != nil || sysErr != nil {

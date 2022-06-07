@@ -124,7 +124,6 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 	var ok bool
 	var topology string
 	var cacheGroupNameMap = make(map[string]bool)
-	var skip bool
 
 	if deliveryService, ok = crConfig.DeliveryServices[string(ds)]; !ok {
 		return map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0, errors.New("delivery service not found in CRConfig")
@@ -142,6 +141,7 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 		}
 	}
 	for cacheName, avail := range crStates.Caches {
+		var skip bool
 		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
 			continue // TODO warn?

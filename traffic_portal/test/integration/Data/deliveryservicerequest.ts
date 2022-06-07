@@ -37,7 +37,7 @@ export const deliveryservicerequest = {
                     CDN: "dummycdn",
                     RawText: "test",
                     validationMessage: "Created request to create the cdntesting delivery service",
-                    FullfillMessage: "Delivery Service [ cdntesting ] created",
+                    FullfillMessage: "Delivery Service creation was successful",
                     CompleteMessage: "Delivery service request status was updated"
                 }
             ],
@@ -67,7 +67,7 @@ export const deliveryservicerequest = {
                     RawText: "test",
                     validationMessage: "Created request to create the cdntesting3 delivery service",
                     UpdateMessage: "Updated delivery service request for cdntesting3 and set status to submitted",
-                    FullfillMessage: "Delivery Service [ cdntesting3 ] created",
+                    FullfillMessage: "Delivery Service creation was successful",
                     CompleteMessage: "Delivery service request status was updated"
                 }
             ]

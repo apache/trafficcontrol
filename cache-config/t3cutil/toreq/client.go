@@ -170,7 +170,7 @@ func checkLatestAndFallBack(client *toclient.Session, url *url.URL, user string,
 		return &TOClient{c: client}, nil
 	}
 
-	log.Warnf("Traffic Ops '%v' does not support the latest client API version %v, falling back to the previous\n", LatestKnownAPIVersion(), torequtil.MaybeIPStr(toAddr))
+	log.Warnf("Traffic Ops '%v' does not support the latest client API version %v, falling back to the previous\n", torequtil.MaybeIPStr(toAddr), LatestKnownAPIVersion())
 
 	oldClient, err := toreqold.New(url, user, pass, insecure, timeout, userAgent)
 	if err != nil {

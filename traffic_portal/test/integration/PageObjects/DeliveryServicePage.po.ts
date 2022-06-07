@@ -87,9 +87,6 @@ export class DeliveryServicePage extends BasePage {
     let result = false;
     let type: string = deliveryservice.Type;
     const basePage = new BasePage();
-    if (deliveryservice.validationMessage.includes("created")) {
-      deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.Name, deliveryservice.Name + this.randomize)
-    }
     await this.btnMore.click();
     await this.btnCreateNewDeliveryServices.click();
     await this.mnuFormDropDown.sendKeys(type);
@@ -164,9 +161,6 @@ export class DeliveryServicePage extends BasePage {
   public async UpdateDeliveryService(deliveryservice: UpdateDeliveryService): Promise<boolean | undefined> {
     let result: boolean | undefined = false;
     const basePage = new BasePage();
-    if (deliveryservice.validationMessage.includes("updated")) {
-      deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.Name, deliveryservice.Name + this.randomize)
-    }
     switch (deliveryservice.description) {
       case "update delivery service display name":
         await this.txtDisplayName.clear();
