@@ -16,55 +16,73 @@ package v4
 */
 
 import (
+	"net/http"
 	"testing"
 
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestSteering(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, Users, SteeringTargets}, func() {
-		GetTestSteering(t)
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateSteeringTargetFields(map[string]interface{}{"TargetsLength": 1, "TargetsOrder": int32(0),
+							"TargetsGeoOrderPtr": (*int)(nil), "TargetsLongitudePtr": (*float64)(nil), "TargetsLatitudePtr": (*float64)(nil), "TargetsWeight": int32(42)})),
+				},
+			},
+		}
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.Steering(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func GetTestSteering(t *testing.T) {
-	if len(testData.SteeringTargets) < 1 {
-		t.Fatal("get steering: no steering target test data")
-	}
-	st := testData.SteeringTargets[0]
-	if st.DeliveryService == nil {
-		t.Fatal("get steering: test data missing ds")
-	}
-
-	resp, _, err := TOSession.Steering(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("steering get: getting steering: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	if len(resp.Response) != len(testData.SteeringTargets) {
-		t.Fatalf("steering get: expected %d actual %d", len(testData.SteeringTargets), len(resp.Response))
-	}
-	steerings := resp.Response
-
-	if steerings[0].ClientSteering {
-		t.Error("steering get: ClientSteering expected: true actual: false")
-	}
-	if len(steerings[0].Targets) != 1 {
-		t.Fatalf("steering get: Targets expected %d actual %d", 1, len(steerings[0].Targets))
-	}
-	if steerings[0].Targets[0].Order != 0 {
-		t.Errorf("steering get: Targets Order expected %d actual %d", 0, steerings[0].Targets[0].Order)
-	}
-	if steerings[0].Targets[0].GeoOrder != nil {
-		t.Errorf("steering get: Targets Order expected %v actual %d", nil, *steerings[0].Targets[0].GeoOrder)
-	}
-	if steerings[0].Targets[0].Longitude != nil {
-		t.Errorf("steering get: Targets Order expected %v actual %f", nil, *steerings[0].Targets[0].Longitude)
-	}
-	if steerings[0].Targets[0].Latitude != nil {
-		t.Errorf("steering get: Targets Order expected %v actual %f", nil, *steerings[0].Targets[0].Latitude)
-	}
-	if testData.SteeringTargets[0].Value != nil && steerings[0].Targets[0].Weight != int32(*testData.SteeringTargets[0].Value) {
-		t.Errorf("steering get: Targets Order expected %v actual %v", testData.SteeringTargets[0].Value, steerings[0].Targets[0].Weight)
+func validateSteeringTargetFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Steering response to not be nil.")
+		steeringResp := resp.([]tc.Steering)
+		for field, expected := range expectedResp {
+			for _, steering := range steeringResp {
+				switch field {
+				case "TargetsLength":
+					assert.Equal(t, expected, len(steering.Targets), "Expected Targets Length to be %v, but got %d", expected, len(steering.Targets))
+				case "TargetsOrder":
+					assert.RequireEqual(t, 1, len(steering.Targets), "Expected Targets Length to be %d, but got %d", 1, len(steering.Targets))
+					assert.Equal(t, expected, steering.Targets[0].Order, "Expected Targets Order to be %v, but got %d", expected, steering.Targets[0].Order)
+				case "TargetsGeoOrderPtr":
+					assert.RequireEqual(t, 1, len(steering.Targets), "Expected Targets Length to be %d, but got %d", 1, len(steering.Targets))
+					assert.Equal(t, expected, steering.Targets[0].GeoOrder, "Expected Targets GeoOrder to be %v, but got %v", nil, steering.Targets[0].GeoOrder)
+				case "TargetsLongitudePtr":
+					assert.RequireEqual(t, 1, len(steering.Targets), "Expected Targets Length to be %d, but got %d", 1, len(steering.Targets))
+					assert.Equal(t, expected, steering.Targets[0].Longitude, "Expected Targets Longitude to be %v, but got %v", nil, steering.Targets[0].Longitude)
+				case "TargetsLatitudePtr":
+					assert.RequireEqual(t, 1, len(steering.Targets), "Expected Targets Length to be %d, but got %d", 1, len(steering.Targets))
+					assert.Equal(t, expected, steering.Targets[0].Latitude, "Expected Targets Latitude to be %v, but got %v", nil, steering.Targets[0].Latitude)
+				case "TargetsWeight":
+					assert.RequireEqual(t, 1, len(steering.Targets), "Expected Targets Length to be %d, but got %d", 1, len(steering.Targets))
+					assert.Equal(t, expected, steering.Targets[0].Weight, "Expected Targets Weight to be %v, but got %v", expected, steering.Targets[0].Weight)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
+		}
 	}
 }
