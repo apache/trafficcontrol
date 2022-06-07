@@ -91,7 +91,7 @@ func TestValidate(t *testing.T) {
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'description' cannot be blank`),
-		errors.New(`'privLevel' cannot be blank`),
+		errors.New(`'privLevel' is required`),
 	})
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
