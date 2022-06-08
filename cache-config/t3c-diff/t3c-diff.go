@@ -49,8 +49,8 @@ func main() {
 	version := getopt.BoolLong("version", 'V', "Print version information and exit")
 	lineComment := getopt.StringLong("line_comment", 'l', "#", "Comment symbol")
 	mode := getopt.IntLong("file-mode", 'm', 0644, "file mode default is 644")
-	uid := getopt.IntLong("file-uid", 'u', 0, "file uid default is 0")
-	gid := getopt.IntLong("file-gid", 'g', 0, "file gid default is 0")
+	uid := getopt.IntLong("file-uid", 'u', 0, "User id the file being checked should have, default is running process's uid")
+	gid := getopt.IntLong("file-gid", 'g', 0, "Group id the file being checked should have, default is running process's gid")
 	fa := getopt.StringLong("file-a", 'a', "", "first diff file")
 	fb := getopt.StringLong("file-b", 'b', "", "second diff file")
 	getopt.ParseV2()
@@ -156,8 +156,8 @@ If one file exists but the other doesn't, it will always be a diff.
 Mode is file permissions in octal format, default is 0644.
 Line comment is a character that signals the line is a comment, default is #
 
-Uid is the user id of the file's owner, default is 0.
-Gid is the id of the group the file is a member of, default is 0.
+Uid is the User id the file being checked should have, default is running process's uid.
+Gid is the Group id the file being checked should have, default is running process's gid.
 
 Note this means there may be no diff text printed to stdout but still exit 1 indicating a diff
 if the file being created or deleted is semantically empty.`
