@@ -25,13 +25,13 @@ import (
 	"testing"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 type AvailabilityType string

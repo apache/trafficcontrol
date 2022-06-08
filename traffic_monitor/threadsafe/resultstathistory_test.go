@@ -26,12 +26,12 @@ import (
 	"testing"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 func randResultStatHistory() ResultStatHistory {

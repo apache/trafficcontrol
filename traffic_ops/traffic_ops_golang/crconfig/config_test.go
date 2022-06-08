@@ -26,9 +26,9 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func ExpectedGetConfigParams(domain string) []CRConfigConfigParameter {
