@@ -25,11 +25,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/lestrrat-go/jwx/jwk"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
 
 func testBackend(t *testing.T, backend TVBackend) {
