@@ -54,7 +54,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
 						"dsId":    GetDeliveryServiceId(t, "ds3")(),
 						"replace": true,
-						"servers": []int{getServerID(t, "atlanta-edge-01")(), getServerID(t, "atlanta-edge-03")()},
+						"servers": []int{GetServerID(t, "atlanta-edge-01")(), GetServerID(t, "atlanta-edge-03")()},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -62,7 +62,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
 						"dsId":    GetDeliveryServiceId(t, "ds-top")(),
 						"replace": true,
-						"servers": []int{getServerID(t, "denver-mso-org-01")()},
+						"servers": []int{GetServerID(t, "denver-mso-org-01")()},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -70,14 +70,14 @@ func TestDeliveryServiceServers(t *testing.T) {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
 						"dsId":    GetDeliveryServiceId(t, "ds-top-req-cap")(),
 						"replace": true,
-						"servers": []int{getServerID(t, "denver-mso-org-01")()},
+						"servers": []int{GetServerID(t, "denver-mso-org-01")()},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ASSIGNING SERVERS to a TOPOLOGY DS": {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
 						"dsId":    GetDeliveryServiceId(t, "ds-top")(),
-						"servers": []int{getServerID(t, "atlanta-edge-01")(), getServerID(t, "atlanta-edge-03")()},
+						"servers": []int{GetServerID(t, "atlanta-edge-01")(), GetServerID(t, "atlanta-edge-03")()},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -85,7 +85,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
 						"dsId":    GetDeliveryServiceId(t, "test-ds-server-assignments")(),
 						"replace": true,
-						"servers": []int{getServerID(t, "test-mso-org-01")()},
+						"servers": []int{GetServerID(t, "test-mso-org-01")()},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
@@ -93,7 +93,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
 						"dsId":    GetDeliveryServiceId(t, "test-ds-server-assignments")(),
 						"replace": true,
-						"servers": []int{getServerID(t, "test-ds-server-assignments")()},
+						"servers": []int{GetServerID(t, "test-ds-server-assignments")()},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
@@ -101,7 +101,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
 						"dsId":    GetDeliveryServiceId(t, "test-ds-server-assignments")(),
 						"replace": true,
-						"servers": []int{getServerID(t, "admin-down-server")()},
+						"servers": []int{GetServerID(t, "admin-down-server")()},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
@@ -109,7 +109,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
 						"dsId":    GetDeliveryServiceId(t, "ds2")(),
 						"replace": true,
-						"servers": []int{getServerID(t, "atlanta-org-2")()},
+						"servers": []int{GetServerID(t, "atlanta-org-2")()},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -117,24 +117,14 @@ func TestDeliveryServiceServers(t *testing.T) {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
 						"dsId":    GetDeliveryServiceId(t, "msods1")(),
 						"replace": true,
-						"servers": []int{getServerID(t, "denver-mso-org-01")()},
+						"servers": []int{GetServerID(t, "denver-mso-org-01")()},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
-			"SERVER DELETE": {
-				"CONFLICT when DELETING SERVER when its the ONLY EDGE SERVER ASSIGNED": {
-					EndpointId: getServerID(t, "test-ds-server-assignments"), ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
-				},
-				"CONFLICT when DELETING SERVER when its the ONLY ORIGIN SERVER ASSIGNED": {
-					EndpointId: getServerID(t, "test-mso-org-01"), ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
-				},
-			},
 			"SERVER STATUS PUT": {
 				"BAD REQUEST when UPDATING SERVER STATUS when ONLY EDGE SERVER ASSIGNED": {
-					EndpointId: getServerID(t, "test-ds-server-assignments"), ClientSession: TOSession,
+					EndpointId: GetServerID(t, "test-ds-server-assignments"), ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"status":        "ADMIN_DOWN",
 						"offlineReason": "admin down",
@@ -142,7 +132,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"BAD REQUEST when UPDATING SERVER STATUS when ONLY ORIGIN SERVER ASSIGNED": {
-					EndpointId: getServerID(t, "test-mso-org-01"), ClientSession: TOSession,
+					EndpointId: GetServerID(t, "test-mso-org-01"), ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"status":        "ADMIN_DOWN",
 						"offlineReason": "admin down",
@@ -190,13 +180,6 @@ func TestDeliveryServiceServers(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.CreateDeliveryServiceServers(dsID, serverIDs, replace, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
-							}
-						})
-					case "SERVER DELETE":
-						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteServer(testCase.EndpointId(), testCase.RequestOpts)
-							for _, check := range testCase.Expectations {
-								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "SERVER STATUS PUT":
@@ -305,7 +288,7 @@ func TestServersIDDeliveryServices(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when REMOVING ONLY EDGE SERVER ASSIGNMENT": {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
-						"server":  getServerID(t, "test-mso-org-01")(),
+						"server":  GetServerID(t, "test-mso-org-01")(),
 						"dsIds":   []int{GetDeliveryServiceId(t, "test-ds-server-assignments")()},
 						"replace": true,
 					},
@@ -313,7 +296,7 @@ func TestServersIDDeliveryServices(t *testing.T) {
 				},
 				"BAD REQUEST when REMOVING ONLY ORIGIN SERVER ASSIGNMENT": {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
-						"server":  getServerID(t, "test-ds-server-assignments")(),
+						"server":  GetServerID(t, "test-ds-server-assignments")(),
 						"dsIds":   []int{GetDeliveryServiceId(t, "test-ds-server-assignments")()},
 						"replace": true,
 					},
@@ -358,21 +341,21 @@ func TestDeliveryServicesDSIDServerID(t *testing.T) {
 			"DELETE": {
 				"OK when VALID REQUEST": {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
-						"server": getServerID(t, "denver-mso-org-01")(),
+						"server": GetServerID(t, "denver-mso-org-01")(),
 						"dsId":   GetDeliveryServiceId(t, "ds-top")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when REMOVING ONLY EDGE SERVER ASSIGNMENT": {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
-						"server": getServerID(t, "test-ds-server-assignments")(),
+						"server": GetServerID(t, "test-ds-server-assignments")(),
 						"dsId":   GetDeliveryServiceId(t, "test-ds-server-assignments")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"BAD REQUEST when REMOVING ONLY ORIGIN SERVER ASSIGNMENT": {
 					ClientSession: TOSession, RequestBody: map[string]interface{}{
-						"server": getServerID(t, "test-mso-org-01")(),
+						"server": GetServerID(t, "test-mso-org-01")(),
 						"dsId":   GetDeliveryServiceId(t, "test-ds-server-assignments")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
