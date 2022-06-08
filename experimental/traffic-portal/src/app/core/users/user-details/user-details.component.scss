@@ -1,0 +1,83 @@
+mat-card {
+	width: fit-content;
+	margin: 15px auto auto;
+	min-width: 685px;
+}
+
+form {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	grid-column-gap: 15px;
+	grid-row-gap: 1em;
+	width: 85vw;
+	margin: 1em auto 50px;
+
+	small {
+		grid-column: 2;
+		justify-self: start;
+
+		&.input-warning {
+			border-radius: 4px;
+
+			&::before {
+				content: "⚠";
+			}
+		}
+	}
+
+	output {
+		border: 1px solid darkgray;
+		padding: 2px 3px;
+		background-color: white;
+		display: inline-block;
+		appearance: textfield;
+		background-color: -moz-field;
+		box-shadow: 1px 1px 1px 0 lightgray inset;
+		font: -moz-field;
+		font: -webkit-small-control;
+	}
+
+	legend {
+		font-size: 14px;
+		font-weight: bold;
+		margin-bottom: 0px;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		padding: 5px 5px 5px 10px;
+		width: 99%;
+		user-select: none;
+	}
+
+	div {
+		grid-template-columns: 1fr 1fr;
+		grid-column-gap: 5px;
+		display: grid;
+	}
+
+	.buttons {
+		grid-column-end: -1;
+		justify-self: end;
+	}
+}
+
+@media(max-width: 1230px) {
+	form {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+@media(max-width: 840px) {
+	form {
+		grid-template-columns: 1fr;
+
+		fieldset div,  {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+}
+
+input[type="checkbox"] {
+	justify-self: start;
+	align-self: center;
+	cursor: pointer;
+}

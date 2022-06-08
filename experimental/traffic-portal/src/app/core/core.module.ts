@@ -36,11 +36,13 @@ import { NewDeliveryServiceComponent } from "./new-delivery-service/new-delivery
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
+import { UserDetailsComponent } from "./users/user-details/user-details.component";
 import { UsersComponent } from "./users/users.component";
 
 const routes: Routes = [
 	{ canActivate: [AuthenticatedGuard], component: DashboardComponent, path: "" },
 	{ canActivate: [AuthenticatedGuard], component: UsersComponent, path: "users" },
+	{ canActivate: [AuthenticatedGuard], component: UserDetailsComponent, path: "users/:id"},
 	{ canActivate: [AuthenticatedGuard], component: ServersTableComponent, path: "servers" },
 	{ canActivate: [AuthenticatedGuard], component: ServerDetailsComponent, path: "server/:id" },
 	{ canActivate: [AuthenticatedGuard], component: DeliveryserviceComponent, path: "deliveryservice/:id" },
@@ -67,7 +69,8 @@ const routes: Routes = [
 		InvalidationJobsComponent,
 		CacheGroupTableComponent,
 		NewInvalidationJobDialogComponent,
-		UpdateStatusComponent
+		UpdateStatusComponent,
+		UserDetailsComponent
 	],
 	exports: [
 	],
