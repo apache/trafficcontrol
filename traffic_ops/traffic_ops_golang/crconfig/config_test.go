@@ -26,13 +26,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func ExpectedGetConfigParams(domain string) []CRConfigConfigParameter {
 	return []CRConfigConfigParameter{
-		{"tld.ttls.foo" + *randStr(), *randStr()},
-		{"tld.soa.bar" + *randStr(), *randStr()},
+		{"tld.ttls.foo" + test.RandStr(), test.RandStr()},
+		{"tld.soa.bar" + test.RandStr(), test.RandStr()},
 		{"domain_name", domain},
 	}
 }
