@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Router: Add support for `file`-protocol URLs for the `geolocation.polling.url` for the Geolocation database.
 - Replaces all Traffic Portal Tenant select boxes with a novel tree select box [#6427](https://github.com/apache/trafficcontrol/issues/6427).
 - Traffic Monitor: Add support for `access.log` to TM.
+- Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
 - [Traffic Portal] Added the ability for users to view Delivery Service Requests corresponding to individual Delivery Services in TP.
 - [Traffic Ops] Added support for backend configurations so that Traffic Ops can act as a reverse proxy for these services [#6754](https://github.com/apache/trafficcontrol/pull/6754).
 - Added functionality for CDN locks, so that they can be shared amongst a list of specified usernames.
