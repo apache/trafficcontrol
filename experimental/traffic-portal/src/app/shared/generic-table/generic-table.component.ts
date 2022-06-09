@@ -114,7 +114,7 @@ interface ContextMenuLink<T> {
 	 * href is inserted literally as the 'href' property of an anchor. Which means that if it's not relative it will be mangled for security
 	 * reasons.
 	 */
-	href: string;
+	href: string | ((selectedRow: T) => string);
 	/** A human-readable name for the link which is displayed to the user. */
 	name: string;
 	/** If given and true, sets the link to open in a new browsing context (or "tab"). */
@@ -604,5 +604,22 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			return;
 		}
 		this.gridAPI.selectAllFiltered();
+	}
+
+	/**
+	 * Builds a link for a link context menu item.
+	 *
+	 * @param item The item being constructed into a link.
+	 * @returns A URL or router path as determined by the settings of `item`.
+	 */
+	public href(item: ContextMenuLink<T>): string {
+		if (typeof(item.href) === "string") {
+			return item.href;
+		}
+		if (!this.selected) {
+			// This happens when the context menu is hidden.
+			return "";
+		}
+		return item.href(this.selected);
 	}
 }
