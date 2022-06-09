@@ -85,7 +85,7 @@ To cross compile the code in Windows to generate binary to run on Linux, please 
 env GOOS=linux GOARCH=arm64 go build
 ```
 
-Once the binary is generated, it can be copied onto a lLinux machine to be run.
+Once the binary is generated, it can be copied onto a Linux machine to be run.
 
 
 ## Updating a Minor Version
