@@ -224,7 +224,7 @@ func isTopLevelCache(s serverParentCacheGroupData) bool {
 }
 
 func makeHdrComment(hdrComment string) string {
-	return "# " + hdrComment + "\n"
+	return "# " + hdrComment + "\n\n"
 }
 
 // getATSMajorVersionFromATSVersion returns the major version of the given profile's package trafficserver parameter.
