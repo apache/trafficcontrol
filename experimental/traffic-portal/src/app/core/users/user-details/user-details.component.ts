@@ -21,8 +21,6 @@ export class UserDetailsComponent implements OnInit {
 	public tenants = new Array<Tenant>();
 
 	constructor(private readonly userService: UserService, private readonly route: ActivatedRoute) {
-		this.userService.getRoles().then(rs=>this.roles=rs);
-		this.userService.getTenants().then(ts=>this.tenants=ts);
 	}
 
 	public async ngOnInit(): Promise<void> {
@@ -35,8 +33,11 @@ export class UserDetailsComponent implements OnInit {
 		if (Number.isNaN(numID)) {
 			console.error("route parameter 'id' was non-number:", ID);
 		}
+		await Promise.all([
+			this.userService.getRoles().then(rs=>this.roles=rs),
+			this.userService.getTenants().then(ts=>this.tenants=ts)
+		]);
 		this.user = await this.userService.getUsers(numID);
-		console.log(this.user);
 	}
 
 	public async submit(e: Event): Promise<void> {
