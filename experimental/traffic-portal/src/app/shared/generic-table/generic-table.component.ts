@@ -98,7 +98,18 @@ interface ContextMenuMultiAction<T> {
 export type ContextMenuAction<T> = ContextMenuSingleAction<T> | ContextMenuMultiAction<T>;
 
 /** ContextMenuLinks represent a link within a context menu. They aren't templated, so currently have limited uses. */
-interface ContextMenuLink {
+interface ContextMenuLink<T> {
+	/**
+	 * If present, this method will be called to determine if the link should be
+	 * disabled.
+	 *
+	 * @param data The selected data which can be used to make the
+	 * determination. This will be a single item if a single item is selected,
+	 * or an array if multiple are selected.
+	 * @param api A reference to the Grid's API - which must be checked for
+	 * initialization, unfortunately.
+	 */
+	disabled?: (selection: T | Array<T>) => boolean;
 	/**
 	 * href is inserted literally as the 'href' property of an anchor. Which means that if it's not relative it will be mangled for security
 	 * reasons.
@@ -111,7 +122,7 @@ interface ContextMenuLink {
 }
 
 /** ContextMenuItems represent items in a context menu. They can be links or arbitrary actions. */
-export type ContextMenuItem<T> = ContextMenuAction<T> | ContextMenuLink;
+export type ContextMenuItem<T> = ContextMenuAction<T> | ContextMenuLink<T>;
 
 /** ContextMenuActionEvent is emitted by the GenericTableComponent when an action in its context menu was clicked. */
 export interface ContextMenuActionEvent<T> {
@@ -119,6 +130,16 @@ export interface ContextMenuActionEvent<T> {
 	action: string;
 	/** data is the selected data on which the action will act. */
 	data: T | Array<T>;
+}
+
+/**
+ * Checks if a context menu item is an action.
+ *
+ * @param i The menu item to check.
+ * @returns 'true' if 'i' is an action, 'false' if it's a link.
+ */
+function isAction<T=unknown>(i: ContextMenuItem<T>): i is ContextMenuAction<T> {
+	return Object.prototype.hasOwnProperty.call(i, "action");
 }
 
 /**
@@ -143,15 +164,8 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	@Input() public contextMenuItems: Array<ContextMenuItem<T>> = [];
 	/** Emits when context menu actions are clicked. Type safety is the host's responsibility! */
 	@Output() public contextMenuAction = new EventEmitter<ContextMenuActionEvent<T>>();
-	/**
-	 * Checks if a context menu item is an action.
-	 *
-	 * @param i The menu item to check.
-	 * @returns 'true' if 'i' is an action, 'false' if it's a link.
-	 */
-	public isAction(i: ContextMenuItem<T>): i is ContextMenuAction<T> {
-		return Object.prototype.hasOwnProperty.call(i, "action");
-	}
+
+	public isAction = isAction;
 
 	/** Holds a reference to the context menu which is used to calculate its size. */
 	@ViewChild("contextmenu") public contextmenu!: ElementRef;
@@ -516,8 +530,17 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	 * @param a The action to check.
 	 * @returns Whether or not `a` should be disabled.
 	 */
-	public isDisabled(a: ContextMenuAction<T>): boolean {
-		if (!this.selected || (!a.multiRow && this.selectionCount > 1)) {
+	public isDisabled(a: ContextMenuItem<T>): boolean {
+		if (!this.selected) {
+			return true;
+		}
+		if (!isAction(a)) {
+			if (a.disabled) {
+				return a.disabled(this.selectionCount > 1 ? this.fullSelection : this.selected);
+			}
+			return false;
+		}
+		if (!a.multiRow && this.selectionCount > 1) {
 			return true;
 		}
 		if (a.disabled) {
