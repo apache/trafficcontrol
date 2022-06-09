@@ -79,12 +79,13 @@ Go is a compiled language so any local changes will require you to CTRL-C the co
 
 `go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/development/database.conf`
 
-To cross compile the code in windows to generate binaryt to run on linux, Please replace GOARCH for architecture to build
+To cross compile the code in Windows to generate binary to run on Linux, please run the following command, replacing GOARCH with the architecture for which to build.
 
-`env GOOS=linux GOARCH=arm64 go build `
+```bash
+env GOOS=linux GOARCH=arm64 go build
+```
 
-Once binary generated, can be copied into linux machine to run
-
+Once the binary is generated, it can be copied onto a lLinux machine to be run.
 
 
 ## Updating a Minor Version
