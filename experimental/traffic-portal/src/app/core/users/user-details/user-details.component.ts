@@ -23,7 +23,12 @@ export class UserDetailsComponent implements OnInit {
 	constructor(private readonly userService: UserService, private readonly route: ActivatedRoute) {
 	}
 
+	/** Angular lifecycle hook */
 	public async ngOnInit(): Promise<void> {
+		const rolesAndTenants = Promise.all([
+			this.userService.getRoles().then(rs=>this.roles=rs),
+			this.userService.getTenants().then(ts=>this.tenants=ts)
+		]);
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
 			console.error("missing required route parameter 'id'");
@@ -32,20 +37,29 @@ export class UserDetailsComponent implements OnInit {
 		const numID = parseInt(ID, 10);
 		if (Number.isNaN(numID)) {
 			console.error("route parameter 'id' was non-number:", ID);
+			return;
 		}
-		await Promise.all([
-			this.userService.getRoles().then(rs=>this.roles=rs),
-			this.userService.getTenants().then(ts=>this.tenants=ts)
-		]);
+		await rolesAndTenants;
 		this.user = await this.userService.getUsers(numID);
 	}
 
+	/**
+	 * Handler for the user edit form submission.
+	 *
+	 * @param e The form submission event. Its default behavior of sending an
+	 * HTTP request is disabled.
+	 */
 	public async submit(e: Event): Promise<void> {
 		e.preventDefault();
 		e.stopPropagation();
 		this.user = await this.userService.updateUser(this.user);
 	}
 
+	/**
+	 * Gets the Role of the User the form is editing.
+	 *
+	 * @returns The user's current Role.
+	 */
 	public role(): Role {
 		const role = this.roles.find(r=>r.id === this.user.role);
 		if (!role) {
@@ -54,6 +68,11 @@ export class UserDetailsComponent implements OnInit {
 		return role;
 	}
 
+	/**
+	 * Gets the Tenant of the User the form is editing.
+	 *
+	 * @returns The user's current Tenant.
+	 */
 	public tenant(): Tenant {
 		const tenant = this.tenants.find(t=>t.id === this.user.tenantId);
 		if (!tenant) {
@@ -62,13 +81,25 @@ export class UserDetailsComponent implements OnInit {
 		return tenant;
 	}
 
+	/**
+	 * Handles changes to the role selection by updating the `role` and
+	 * `rolename` properties of the form's User accordingly.
+	 *
+	 * @param r The Role selected by the user.
+	 */
 	public updateRole(r: MatSelectChange & {value: Role}): void {
 		this.user.role = r.value.id;
 		this.user.rolename = r.value.name;
 	}
 
-	public updateTenant(r: MatSelectChange & {value: Tenant}): void {
-		this.user.tenantId = r.value.id;
-		this.user.tenant = r.value.name;
+	/**
+	 * Handles changes to the tenant selection by updating the `tenant` and
+	 * `tenantId` properties of the form's User accordingly.
+	 *
+	 * @param t The Tenant selected by the user.
+	 */
+	public updateTenant(t: MatSelectChange & {value: Tenant}): void {
+		this.user.tenantId = t.value.id;
+		this.user.tenant = t.value.name;
 	}
 }
