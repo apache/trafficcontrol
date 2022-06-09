@@ -62,9 +62,10 @@ describe("LoginComponent", () => {
 				RouterTestingModule.withRoutes([
 					{component: LoginComponent, path: "login"},
 					// This obviously isn't how this actually works, but we
-					// don't care about testing anything on that page, so this
+					// don't care about testing anything on these pages, so this
 					// will do fine.
-					{component: LoginComponent, path: "core/me"}
+					{component: LoginComponent, path: "core/me"},
+					{component: LoginComponent, path: "core"}
 				]),
 			],
 			providers: [
