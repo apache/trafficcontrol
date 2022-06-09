@@ -138,7 +138,7 @@ export interface ContextMenuActionEvent<T> {
  * @param i The menu item to check.
  * @returns 'true' if 'i' is an action, 'false' if it's a link.
  */
-function isAction<T=unknown>(i: ContextMenuItem<T>): i is ContextMenuAction<T> {
+export function isAction<T=unknown>(i: ContextMenuItem<T>): i is ContextMenuAction<T> {
 	return Object.prototype.hasOwnProperty.call(i, "action");
 }
 
