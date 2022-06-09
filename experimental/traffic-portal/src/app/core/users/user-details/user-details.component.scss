@@ -4,7 +4,8 @@ mat-card {
 	min-width: 685px;
 }
 
-form {
+
+mat-card-content {
 	display: grid;
 	grid-template-columns: 1fr 1fr 1fr;
 	grid-column-gap: 15px;
@@ -12,51 +13,23 @@ form {
 	width: 85vw;
 	margin: 1em auto 50px;
 
-	small {
-		grid-column: 2;
-		justify-self: start;
-
-		&.input-warning {
-			border-radius: 4px;
-
-			&::before {
-				content: "⚠";
-			}
-		}
-	}
-
-	output {
-		border: 1px solid darkgray;
-		padding: 2px 3px;
-		background-color: white;
-		display: inline-block;
-		appearance: textfield;
-		background-color: -moz-field;
-		box-shadow: 1px 1px 1px 0 lightgray inset;
-		font: -moz-field;
-		font: -webkit-small-control;
-	}
-
-	legend {
-		font-size: 14px;
+	.input-warning {
+		color: #ff9800;
 		font-weight: bold;
-		margin-bottom: 0px;
-		border: 1px solid #ddd;
-		border-radius: 4px;
-		padding: 5px 5px 5px 10px;
-		width: 99%;
-		user-select: none;
+		font-size: x-small;
 	}
+}
 
-	div {
-		grid-template-columns: 1fr 1fr;
-		grid-column-gap: 5px;
-		display: grid;
-	}
+#ssh-container {
+	width: 98%;
+	max-width: 48em;
+	grid-column: 1 / -1;
+	margin: auto;
 
-	.buttons {
-		grid-column-end: -1;
-		justify-self: end;
+	textarea {
+		font-family: 'Ubuntu Monospace', 'Courier New', Courier, monospace;
+		max-height: 400px;
+		word-wrap: break-word;
 	}
 }
 
@@ -69,10 +42,6 @@ form {
 @media(max-width: 840px) {
 	form {
 		grid-template-columns: 1fr;
-
-		fieldset div,  {
-			grid-template-columns: 1fr 1fr;
-		}
 	}
 }
 

@@ -1,6 +1,7 @@
 <mat-card>
-	<mat-card-content>
-		<form ngNativeValidate (ngSubmit)="submit($event)">
+	<tp-loading *ngIf="!user"></tp-loading>
+	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="user">
+		<mat-card-content>
 			<mat-form-field>
 				<mat-label>Username</mat-label>
 				<input matInput type="text" name="username" required [(ngModel)]="user.username"/>
@@ -71,20 +72,20 @@
 			<mat-form-field>
 				<mat-label>GID</mat-label>
 				<input matInput type="number" name="gid" [(ngModel)]="user.gid"/>
-				<mat-hint>Pls don't use this</mat-hint>
+				<mat-hint class="input-warning"><mat-icon color="warn">warning</mat-icon>This property is deprecated and shouldn't be used</mat-hint>
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>UID</mat-label>
 				<input matInput type="number" name="uid" [(ngModel)]="user.uid"/>
-				<mat-hint>Pls don't use this</mat-hint>
+				<mat-hint class="input-warning"><mat-icon color="warn">warning</mat-icon>This property is deprecated and shouldn't be used</mat-hint>
 			</mat-form-field>
-			<mat-form-field>
+			<mat-form-field id="ssh-container">
 				<mat-label>Public SSH key</mat-label>
-				<textarea [(ngModel)]="user.publicSshKey" name="publicSshKey" matInput></textarea>
+				<textarea [(ngModel)]="user.publicSshKey" name="publicSshKey" matInput cols="80" wrap="hard" cdkTextareaAutosize></textarea>
 			</mat-form-field>
-			<div class="buttons">
-				<button mat-raised-button>Save</button>
-			</div>
-		</form>
-	</mat-card-content>
+		</mat-card-content>
+		<mat-card-actions align="end">
+			<button mat-raised-button color="primary">Save</button>
+		</mat-card-actions>
+	</form>
 </mat-card>
