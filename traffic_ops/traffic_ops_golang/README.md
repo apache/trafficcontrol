@@ -79,6 +79,15 @@ Go is a compiled language so any local changes will require you to CTRL-C the co
 
 `go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/development/database.conf`
 
+To cross compile the code in Windows to generate binary to run on Linux, please run the following command, replacing GOARCH with the architecture for which to build.
+
+```bash
+env GOOS=linux GOARCH=arm64 go build
+```
+
+Once the binary is generated, it can be copied onto a Linux machine to be run.
+
+
 ## Updating a Minor Version
 
 Traffic Control implements [Semantic Versioning](https://semver.org). When adding new fields to the API, we must increase the minor version. If you're the first one adding a new field to a particular object in a particular release, you'll need to do this.
