@@ -51,24 +51,24 @@ import { AgGridModule } from "ag-grid-angular";
 		FontAwesomeModule,
 
 		MatButtonModule,
-		MatCheckboxModule,
+		MatButtonToggleModule,
 		MatCardModule,
+		MatCheckboxModule,
+		MatDatepickerModule,
+		MatDialogModule,
 		MatDividerModule,
 		MatExpansionModule,
+		MatFormFieldModule,
 		MatIconModule,
 		MatInputModule,
 		MatListModule,
-		MatFormFieldModule,
 		MatMenuModule,
+		MatNativeDateModule,
 		MatRadioModule,
 		MatSelectModule,
 		MatSnackBarModule,
 		MatStepperModule,
-		MatToolbarModule,
-		MatDialogModule,
-		MatDatepickerModule,
-		MatNativeDateModule,
-		MatButtonToggleModule
+		MatToolbarModule
 	]
 })
 export class AppUIModule {}
