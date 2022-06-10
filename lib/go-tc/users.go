@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
@@ -487,6 +488,8 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 			errs = append(errs, fmt.Errorf("username: %w", err))
 		} else if user.Username == nil || *user.Username == "" {
 			errs = append(errs, errors.New("username: cannot be null or empty string"))
+		} else if strings.Contains(*user.Username, " ") {
+			errs = append(errs, errors.New("username: cannot contain spaces"))
 		}
 	}
 
