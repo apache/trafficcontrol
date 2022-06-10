@@ -16,227 +16,204 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestFederationResolvers(t *testing.T) {
 	WithObjs(t, []TCObj{Types, FederationResolvers}, func() {
-		GetTestFederationResolversIMS(t)
-		GetTestFederationResolvers(t)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"OK when VALID ID parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"id": {strconv.Itoa(GetFederationResolverID(t, "0.0.0.0/12")())}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateFederationResolverFields(map[string]interface{}{"ID": uint(GetFederationResolverID(t, "0.0.0.0/12")())})),
+				},
+				"OK when VALID IPADDRESS parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"ipAddress": {"1.2.3.4"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateFederationResolverFields(map[string]interface{}{"IPAddress": "1.2.3.4"})),
+				},
+				"OK when VALID TYPE parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"type": {"RESOLVE4"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateFederationResolversType(map[string]interface{}{"Type": "RESOLVE4"})),
+				},
+			},
+			"POST": {
+				"BAD REQUEST when MISSING IPADDRESS and TYPE FIELDS": {
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID IP ADDRESS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"ipAddress": "not a valid IP address",
+						"typeId":    GetTypeId(t, "RESOLVE4"),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"DELETE": {
+				"NOT FOUND when INVALID ID": {
+					EndpointId:    func() int { return 0 },
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					fr := tc.FederationResolver{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &fr)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							if name == "OK when VALID ID parameter" {
+								id, err := strconv.Atoi(testCase.RequestParams["id"][0])
+								assert.RequireNoError(t, err, "Error converting string to int")
+								resp, reqInf, err := testCase.ClientSession.GetFederationResolverByIDWithHdr(uint(id), testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else if name == "OK when VALID IPADDRESS parameter" {
+								resp, reqInf, err := testCase.ClientSession.GetFederationResolverByIPAddressWithHdr(testCase.RequestParams["ipAddress"][0], testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else if name == "OK when VALID TYPE parameter" {
+								resp, reqInf, err := testCase.ClientSession.GetFederationResolversByTypeWithHdr(testCase.RequestParams["type"][0], testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetFederationResolversWithHdr(testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateFederationResolver(fr)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteFederationResolver(uint(testCase.EndpointId()))
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
-func GetTestFederationResolversIMS(t *testing.T) {
-	var tdlen = len(testData.FederationResolvers)
-	if tdlen < 1 {
-		t.Fatal("no federation resolvers test data")
-	}
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetFederationResolversWithHdr(header)
-	if err != nil {
-		t.Fatalf("could not GET Federation resolvers: %v", err)
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-	}
-}
 
-func GetTestFederationResolvers(t *testing.T) {
-	var tdlen = len(testData.FederationResolvers)
-	if tdlen < 1 {
-		t.Fatal("no federation resolvers test data")
-	}
-
-	frs, _, err := TOSession.GetFederationResolvers()
-	if err != nil {
-		t.Errorf("Unexpected error getting Federation Resolvers: %v", err)
-	}
-	if len(frs) != tdlen {
-		t.Fatalf("Wrong number of Federation Resolvers from GET, want %d got %d", tdlen, len(frs))
-	}
-
-	var testFr = frs[0]
-	if testFr.ID == nil || testFr.Type == nil || testFr.IPAddress == nil {
-		t.Fatalf("Malformed federation resolver: %+v", testFr)
-	}
-
-	_ = t.Run("Get Federation Resolvers by ID", getFRByIDTest(testFr))
-	_ = t.Run("Get Federation Resolvers by IPAddress", getFRByIPTest(testFr))
-	_ = t.Run("Get Federation Resolvers by Type", getFRByTypeTest(testFr))
-}
-
-func getFRByIDTest(testFr tc.FederationResolver) func(*testing.T) {
-	return func(t *testing.T) {
-		fr, _, err := TOSession.GetFederationResolverByID(*testFr.ID)
-		if err != nil {
-			t.Fatalf("Unexpected error getting Federation Resolver by ID %d: %v", *testFr.ID, err)
-		}
-
-		cmpr(testFr, fr, t)
-
-	}
-}
-
-func getFRByIPTest(testFr tc.FederationResolver) func(*testing.T) {
-	return func(t *testing.T) {
-		fr, _, err := TOSession.GetFederationResolverByIPAddress(*testFr.IPAddress)
-		if err != nil {
-			t.Fatalf("Unexpected error getting Federation Resolver by IP %s: %v", *testFr.IPAddress, err)
-		}
-
-		cmpr(testFr, fr, t)
-
-	}
-}
-
-func getFRByTypeTest(testFr tc.FederationResolver) func(*testing.T) {
-	return func(t *testing.T) {
-		frs, _, err := TOSession.GetFederationResolversByType(*testFr.Type)
-		if err != nil {
-			t.Fatalf("Unexpected error getting Federation Resolvers by Type %s: %v", *testFr.Type, err)
-		}
-
-		if len(frs) < 1 {
-			t.Errorf("Expected at least one Federation Resolver by Type %s to exist, but none did", *testFr.Type)
-		}
-
-		for _, fr := range frs {
-			if fr.ID == nil {
-				t.Error("Retrieved Federation Resolver has nil ID")
-			}
-			if fr.IPAddress == nil {
-				t.Error("Retrieved Federation Resolver has nil IPAddress")
-			}
-			if fr.Type == nil {
-				t.Error("Retrieved Federation Resolver has nil Type")
-			} else if *fr.Type != *testFr.Type {
-				t.Errorf("Retrieved Federation Resolver has incorrect Type; want %s, got %s", *testFr.Type, *fr.Type)
+func validateFederationResolverFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Federation Resolver response to not be nil.")
+		fr := resp.(tc.FederationResolver)
+		for field, expected := range expectedResp {
+			switch field {
+			case "ID":
+				assert.RequireNotNil(t, fr.ID, "Expected ID to not be nil")
+				assert.Equal(t, expected, *fr.ID, "Expected ID to be %v, but got %d", expected, *fr.ID)
+			case "IPAddress":
+				assert.RequireNotNil(t, fr.IPAddress, "Expected IPAddress to not be nil")
+				assert.Equal(t, expected, *fr.IPAddress, "Expected IPAddress to be %v, but got %s", expected, *fr.IPAddress)
+			default:
+				t.Errorf("Expected field: %v, does not exist in response", field)
 			}
 		}
 	}
 }
 
-func cmpr(testFr, apiFr tc.FederationResolver, t *testing.T) {
-	if apiFr.ID == nil {
-		t.Error("Retrieved Federation Resolver has nil ID")
-	} else if *apiFr.ID != *testFr.ID {
-		t.Errorf("Retrieved Federation Resolver has incorrect ID; want %d, got %d", *testFr.ID, *apiFr.ID)
+func validateFederationResolversType(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Federation Resolver response to not be nil.")
+		frResp := resp.([]tc.FederationResolver)
+		for field, expected := range expectedResp {
+			for _, fr := range frResp {
+				switch field {
+				case "Type":
+					assert.RequireNotNil(t, fr.Type, "Expected Type to not be nil")
+					assert.Equal(t, expected, *fr.Type, "Expected Type to be %v, but got %s", expected, *fr.Type)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
+		}
 	}
+}
 
-	if apiFr.IPAddress == nil {
-		t.Error("Retrieved Federation Resolver has nil IP address")
-	} else if *apiFr.IPAddress != *testFr.IPAddress {
-		t.Errorf("Retrieved Federation Resolver has incorrect IPAddress; want %s, got %s", *testFr.IPAddress, *apiFr.IPAddress)
-	}
-
-	if apiFr.Type == nil {
-		t.Error("Retrieved Federation Resolver has nil Type")
-	} else if *apiFr.Type != *testFr.Type {
-		t.Errorf("Retrieved Federation Resolver has incorrect Type; want %s, got %s", *testFr.Type, *apiFr.Type)
+func GetFederationResolverID(t *testing.T, ipAddress string) func() int {
+	return func() int {
+		federationResolver, _, err := TOSession.GetFederationResolverByIPAddressWithHdr(ipAddress, nil)
+		assert.RequireNoError(t, err, "Get FederationResolvers Request failed with error:", err)
+		assert.RequireNotNil(t, federationResolver.ID, "Expected Federation Resolver ID to not be nil")
+		return int(*federationResolver.ID)
 	}
 }
 
 func CreateTestFederationResolvers(t *testing.T) {
 	for _, fr := range testData.FederationResolvers {
-		if fr.Type == nil {
-			t.Fatal("testData Federation Resolver has nil Type")
-		}
-
-		tid, _, err := TOSession.GetTypeByName(*fr.Type)
-		if err != nil {
-			t.Fatalf("Couldn't get an ID for type %s", *fr.Type)
-		}
-		if len(tid) != 1 {
-			t.Fatalf("Expected exactly one Type by name %s, got %d", *fr.Type, len(tid))
-		}
-
-		fr.TypeID = util.UIntPtr(uint(tid[0].ID))
-
+		fr.TypeID = util.UIntPtr(uint(GetTypeId(t, *fr.Type)))
 		alerts, _, err := TOSession.CreateFederationResolver(fr)
-		if err != nil {
-			t.Fatalf("failed to create Federation resolver %+v: %v\n\talerts: %+v", fr, err, alerts)
-		}
-		for _, a := range alerts.Alerts {
-			if a.Level != tc.SuccessLevel.String() {
-				t.Errorf("Unexpected %s creating a federation resolver: %s", a.Level, a.Text)
-			} else {
-				t.Logf("Received expected success creating federation resolver: %s", a.Text)
-			}
-		}
-	}
-
-	var invalidFR tc.FederationResolver
-	alerts, _, err := TOSession.CreateFederationResolver(invalidFR)
-	if err == nil {
-		t.Error("Expected an error creating a bad Federation Resolver, but didn't get one")
-	}
-	for _, a := range alerts.Alerts {
-		if a.Level == tc.SuccessLevel.String() {
-			t.Errorf("Unexpected success creating a bad Federation Resolver: %s", a.Text)
-		} else {
-			t.Logf("Received expected %s creating federation resolver: %s", a.Level, a.Text)
-		}
-	}
-
-	invalidFR.TypeID = util.UIntPtr(1)
-	invalidFR.IPAddress = util.StrPtr("not a valid IP address")
-	alerts, _, err = TOSession.CreateFederationResolver(invalidFR)
-	if err == nil {
-		t.Error("Expected an error creating a bad Federation Resolver, but didn't get one")
-	}
-	for _, a := range alerts.Alerts {
-		if a.Level == tc.SuccessLevel.String() {
-			t.Errorf("Unexpected success creating a bad Federation Resolver: %s", a.Text)
-		} else {
-			t.Logf("Received expected %s creating a bad federation resolver: %s", a.Level, a.Text)
-		}
+		assert.RequireNoError(t, err, "Failed to create Federation Resolver %+v: %v - alerts: %+v", fr, err, alerts.Alerts)
 	}
 }
 
 func DeleteTestFederationResolvers(t *testing.T) {
-	frs, _, err := TOSession.GetFederationResolvers()
-	if err != nil {
-		t.Errorf("Unexpected error getting Federation Resolvers: %v", err)
-	}
-	if len(frs) < 1 {
-		t.Fatal("Found no Federation Resolvers to delete")
-	}
+	frs, _, err := TOSession.GetFederationResolversWithHdr(nil)
+	assert.RequireNoError(t, err, "Unexpected error getting Federation Resolvers: %v", err)
 	for _, fr := range frs {
-		if fr.ID == nil {
-			t.Fatalf("Malformed Federation Resolver: %+v", fr)
-		}
 		alerts, _, err := TOSession.DeleteFederationResolver(*fr.ID)
-		if err != nil {
-			t.Fatalf("failed to delete Federation Resolver %+v: %v\n\talerts: %+v", fr, err, alerts)
-		}
-		for _, a := range alerts.Alerts {
-			if a.Level != tc.SuccessLevel.String() {
-				t.Errorf("Unexpected %s deleting a federation resolver: %s", a.Level, a.Text)
-			} else {
-				t.Logf("Received expected success deleting federation resolver: %s", a.Text)
-			}
-		}
+		assert.NoError(t, err, "Failed to delete Federation Resolver %+v: %v - alerts: %+v", fr, err, alerts.Alerts)
+		// Retrieve the Federation Resolver to see if it got deleted
+		getFR, _, err := TOSession.GetFederationResolverByIDWithHdr(*fr.ID, nil)
+		assert.NoError(t, err, "Error getting Federation Resolver '%d' after deletion: %v", *fr.ID, err)
+		assert.Equal(t, (*uint)(nil), getFR.ID, "Expected Federation Resolver '%d' to be deleted, but it was found in Traffic Ops", *fr.ID)
 	}
-
-	alerts, _, err := TOSession.DeleteFederationResolver(0)
-	if err == nil {
-		t.Error("Expected an error deleting a non-existent Federation Resolver, but didn't get one")
-	}
-	for _, a := range alerts.Alerts {
-		if a.Level == tc.SuccessLevel.String() {
-			t.Errorf("Unexpected success deleting a non-existent Federation Resolver: %s", a.Text)
-		} else {
-			t.Logf("Received expected %s deleting a non-existent federation resolver: %s", a.Level, a.Text)
-		}
-	}
-
 }
