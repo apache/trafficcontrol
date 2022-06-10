@@ -273,8 +273,8 @@ func GetFederationResolverID(t *testing.T, ipAddress string) func() int {
 func CreateTestFederationResolvers(t *testing.T) {
 	for _, fr := range testData.FederationResolvers {
 		fr.TypeID = util.UIntPtr(uint(GetTypeId(t, *fr.Type)))
-		alerts, _, err := TOSession.CreateFederationResolver(fr, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Failed to create Federation Resolver %+v: %v - alerts: %+v", fr, err, alerts.Alerts)
+		resp, _, err := TOSession.CreateFederationResolver(fr, client.RequestOptions{})
+		assert.RequireNoError(t, err, "Failed to create Federation Resolver %+v: %v - alerts: %+v", fr, err, resp.Alerts)
 	}
 }
 
