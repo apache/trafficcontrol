@@ -462,10 +462,11 @@ func getServerConfigRemapDotConfigForEdge(
 				if err != nil {
 					return "", warnings, err
 				}
+				remapText += ` # ds '` + *ds.XMLID + `' topology '`
 				if hasTopology {
-					remapText += " # topology '" + topology.Name + "'"
+					remapText += topology.Name
 				}
-				remapText += "\n"
+				remapText += `'` + "\n"
 			}
 		}
 

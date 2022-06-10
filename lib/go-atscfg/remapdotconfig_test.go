@@ -5858,7 +5858,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain block size for the slice plugin, actual '%v'", txt)
 	}
 
-	if !strings.HasSuffix(remapLine, "@plugin=tslua.so @pparam=my-range-manipulator.lua") {
+	if !strings.HasSuffix(remapLine, "@plugin=tslua.so @pparam=my-range-manipulator.lua # ds 'mydsname' topology ''") {
 		t.Errorf("expected raw remap without range directive at end of remap line, actual '%v'", txt)
 	}
 	if strings.Count(remapLine, "slice.so") != 1 {
