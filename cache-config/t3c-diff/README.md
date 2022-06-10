@@ -38,7 +38,7 @@ t3c-diff - Traffic Control Cache Configuration contextual diff tool
 
 # SYNOPSIS
 
-t3c-diff \<file-a\> \<file-a\>
+t3c-diff \-a \<file-a\> \-b \<file-b\> \-l \<line_comment\> \-m \<file-mode\> \-u \<file-uid\> \-g \<file-gid\>
 
 [\-\-help]
 
@@ -58,11 +58,36 @@ If one file exists but the other doesn't, it will always be a diff.
 Note this means there may be no diff text printed to stdout but still exit 1 indicating a diff
 if the file being created or deleted is semantically empty.
 
+Mode is file permissions in octal format, default is 0644.
+Line comment is a character that signals the line is a comment, default is #
+
+Uid is the User id the file being checked should have, default is running process's uid.
+Gid is the Group id the file being checked should have, default is running process's gid.`
+
 # OPTIONS
 
+-a, -\-file-a
+
+    Path to first diff file, can also be stdin.
+
+-b, -\-file-b
+    Path to second diff file, can also be stdin.
+
+-g, -\-file-gid
+    Group id the file being checked should have.
+    
 -h, -\-help
 
     Print usage info and exit.
+
+-l, -\-line_comment
+    Symbol used to denote the line is a comment.    
+
+-m, -\-file-mode
+    Octal permissions mode for file being checked.
+
+-u, -\-file-uid
+    User id the file being checked should have.
 
 -V, -\-version
 
