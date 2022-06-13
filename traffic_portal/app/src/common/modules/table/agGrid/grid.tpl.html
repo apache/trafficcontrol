@@ -84,8 +84,9 @@ under the License.
     <ul>
         <li role="menuitem" ng-repeat="menu in $ctrl.contextMenuOptions" ng-if="$ctrl.isShown(menu)">
             <hr ng-if="menu.type == 0" class="divider"/>
-            <button ng-if="menu.type == 1" ng-disabled="$ctrl.contextIsDisabled(menu)" type="button" ng-click="$ctrl.contextMenuClick(menu, $event)">{{ $ctrl.getText(menu) }}</button>
-            <a ng-if="menu.type == 2" href="{{ $ctrl.getHref(menu) }}" target="{{ menu.newTab ? '_blank' : '' }}">{{ $ctrl.getText(menu) }}</a>
+            <button ng-if="menu.type == 1" type="button" ng-disabled="$ctrl.contextIsDisabled(menu)" type="button" ng-click="$ctrl.contextMenuClick(menu, $event)">{{ $ctrl.getText(menu) }}</button>
+            <a ng-if="menu.type == 2 && !$ctrl.contextIsDisabled(menu)" href="{{ $ctrl.getHref(menu) }}" target="{{ menu.newTab ? '_blank' : '' }}">{{ $ctrl.getText(menu) }}</a>
+            <button ng-if="menu.type == 2 && $ctrl.contextIsDisabled(menu)" type="button" disabled>{{ $ctrl.getText(menu) }}</a>
         </li>
     </ul>
 </menu>
