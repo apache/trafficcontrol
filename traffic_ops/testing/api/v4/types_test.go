@@ -25,21 +25,48 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
+//func TestTypes(t *testing.T) {
+//	WithObjs(t, []TCObj{Parameters, Types}, func() {
+//		GetTestTypesIMS(t)
+//		currentTime := time.Now().UTC().Add(-5 * time.Second)
+//		time := currentTime.Format(time.RFC1123)
+//		var header http.Header
+//		header = make(map[string][]string)
+//		header.Set(rfc.IfModifiedSince, time)
+//		SortTestTypes(t)
+//		UpdateTestTypes(t)
+//		GetTestTypes(t)
+//		GetTestTypesIMSAfterChange(t, header)
+//	})
+//}
+
 func TestTypes(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Types}, func() {
-		GetTestTypesIMS(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		SortTestTypes(t)
-		UpdateTestTypes(t)
-		GetTestTypes(t)
-		GetTestTypesIMSAfterChange(t, header)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET":    {},
+			"POST":   {},
+			"PUT":    {},
+			"DELETE": {},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+					}
+				}
+			})
+		}
 	})
 }
 
