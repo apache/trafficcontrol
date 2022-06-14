@@ -45,8 +45,8 @@ func TestCDNQueueUpdates(t *testing.T) {
 				},
 				"OK when VALID PROFILE parameter": {
 					EndpointId:    GetCDNID(t, "cdn1"),
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"profile": {"EDGE1"}}},
 					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"profile": {"EDGE1"}}},
 					RequestBody: map[string]interface{}{
 						"action": "queue",
 					},
