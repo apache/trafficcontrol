@@ -1,22 +1,3 @@
-/*
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-   http://www.apache.org/licenses/LICENSE-2.0
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
-
-/* ToDSCPCheck.go
-   This app scans all REPORTED or ADMIN_DOWN cache nodes for expected DSCP
-   marks on each delivery service.
-   NOTE: if a particular delivery service DOES NOT have a check path
-   configured, then it WILL BE SKIPPED by this tool.
-*/
-
 package main
 
 import (
@@ -26,8 +7,6 @@ import (
 	"flag"
 	"io"
 	"io/ioutil"
-	"log"
-	"log/syslog"
 	"net"
 	"net/http"
 	"os"
@@ -37,12 +16,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
-	"github.com/romana/rlog"
 )
 
 // Traffic Ops connection params
@@ -129,13 +108,13 @@ func capture(ctx context.Context, s Server, iface *string, ch_dscp chan uint8, c
 	}
 
 	pcap_filter := "tcp and src " + ip + " and port " + pcap_port + " and (tcp[tcpflags] & tcp-push != 0 or ip6[53] & 8 != 0)"
-	rlog.Debugf("capture() filter='%s'", pcap_filter)
+	log.Debugf("capture() filter='%s'", pcap_filter)
 	if handle, err := pcap.OpenLive(*iface, 1400, false, pcap_timeout); err != nil {
-		rlog.Error("capture() pcap.OpenLive() error:", err)
+		log.Errorf("capture() pcap.OpenLive() error:", err)
 	} else if err := handle.SetBPFFilter(pcap_filter); err != nil {
-		rlog.Error("capture() handle.SetBPFFilter() error:", err)
+		log.Errorf("capture() handle.SetBPFFilter() error:", err)
 	} else if err := handle.SetDirection(pcap.DirectionIn); err != nil {
-		rlog.Error("capture() handle.SetDirection() error:", err)
+		log.Errorf("capture() handle.SetDirection() error:", err)
 	} else {
 		defer handle.Close()
 		decodedLayers := []gopacket.LayerType{}
@@ -147,10 +126,10 @@ func capture(ctx context.Context, s Server, iface *string, ch_dscp chan uint8, c
 			select {
 			case <-ctx.Done():
 				handle.Close() // without this, serious fh leak
-				rlog.Debug("capture() context cancelled")
+				log.Debugf("capture() context cancelled")
 				return
 			case <-timer.C:
-				rlog.Debug("capture() timed out before packets received")
+				log.Debugf("capture() timed out before packets received")
 				ch_dscp <- 254
 				return
 			default:
@@ -159,18 +138,18 @@ func capture(ctx context.Context, s Server, iface *string, ch_dscp chan uint8, c
 				if err == io.EOF {
 					break
 				} else if err != nil {
-					rlog.Error("capture() Error:", err)
+					log.Errorf("capture() Error:", err)
 					continue
 				}
 				if sslflag == true && pktCount < 6 {
 					// skip the TLS handshake packets - they may not provide real DSCP value
-					rlog.Tracef(1, "Packet #%d: %s", pktCount, packet)
+					log.Debugf("Packet #%d: %s", pktCount, packet)
 					continue
 				}
-				rlog.Tracef(1, "Packet #%d: %s", pktCount, packet)
+				log.Debugf("Packet #%d: %s", pktCount, packet)
 				err = parser.DecodeLayers(packet.Data(), &decodedLayers)
 				if err != nil {
-					rlog.Warn(err)
+					log.Warnf("%s", err)
 				}
 				for _, typ := range decodedLayers {
 					switch typ {
@@ -198,7 +177,7 @@ func protocol_picker(s Server, check_ip string, host_header string, check_path s
 		// do HTTPS stuff
 		sslflag = true
 	}
-	rlog.Debugf("protocol_picker() ssl=%t", sslflag)
+	log.Debugf("protocol_picker() ssl=%t", sslflag)
 	cap_dscp = request(confInt, s, host_header, check_ip, check_path, v6flag, sslflag)
 	return
 }
@@ -217,22 +196,22 @@ func request(iface *string, s Server, host_header string, ip string, check_path 
 	} else {
 		url = "http://" + host_header + check_path
 	}
-	rlog.Infof("request() url=%s ip=%s", url, ip)
+	log.Infof("request() url=%s ip=%s", url, ip)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		rlog.Error("request() http.NewRequest() error:", err)
+		log.Errorf("request() http.NewRequest() error:", err)
 	}
 	req.Close = true
 	req.Header.Add("Cache-Control", "only-if-cached")
 	req.Header.Add("User-Agent", UserAgent)
 	ready := <-ch_ready
 	if ready == 1 {
-		rlog.Debug("request() received go signal from capture()")
+		log.Debugf("request() received go signal from capture()")
 	}
 	if v6 && ssl == false {
 		resp, err := httpClient6.Do(req)
 		if err != nil {
-			rlog.Error("request() httpClient6.Do() error:", err)
+			log.Errorf("request() httpClient6.Do() error:", err)
 		} else {
 			defer resp.Body.Close()
 			io.Copy(ioutil.Discard, resp.Body)
@@ -240,7 +219,7 @@ func request(iface *string, s Server, host_header string, ip string, check_path 
 	} else if v6 == false && ssl == false {
 		resp, err := httpClient4.Do(req)
 		if err != nil {
-			rlog.Error("request() httpClient4.Do() error:", err)
+			log.Errorf("request() httpClient4.Do() error:", err)
 		} else {
 			defer resp.Body.Close()
 			io.Copy(ioutil.Discard, resp.Body)
@@ -248,7 +227,7 @@ func request(iface *string, s Server, host_header string, ip string, check_path 
 	} else if v6 && ssl {
 		resp, err := httpsClient6.Do(req)
 		if err != nil {
-			rlog.Error("request() httpClient6.Do() error:", err)
+			log.Errorf("request() httpClient6.Do() error:", err)
 		} else {
 			defer resp.Body.Close()
 			io.Copy(ioutil.Discard, resp.Body)
@@ -256,7 +235,7 @@ func request(iface *string, s Server, host_header string, ip string, check_path 
 	} else {
 		resp, err := httpsClient4.Do(req)
 		if err != nil {
-			rlog.Error("request() httpClient4.Do() error:", err)
+			log.Errorf("request() httpClient4.Do() error:", err)
 		} else {
 			defer resp.Body.Close()
 			io.Copy(ioutil.Discard, resp.Body)
@@ -264,32 +243,32 @@ func request(iface *string, s Server, host_header string, ip string, check_path 
 	}
 	cap_tos, more := <-ch_dscp
 	if more {
-		rlog.Debugf("request() received tos=%d", cap_tos)
+		log.Debugf("request() received tos=%d", cap_tos)
 		cancel() // cancel context to prevent goroutine leak!
 	} else {
-		rlog.Debug("request() received all dscp values")
+		log.Debugf("request() received all dscp values")
 		cancel() // cancel context to prevent goroutine leak!
 	}
 	if cap_tos == 254 {
-		rlog.Error("request() no valid DSCP mark received")
+		log.Errorf("request() no valid DSCP mark received")
 		cap_dscp2 = "-1"
 	} else {
 		cap_dscp = cap_tos >> 2
 		cap_dscp2 = strconv.Itoa(int(cap_dscp))
-		rlog.Debugf("request() received ipv6=%t dscp=%s", v6, cap_dscp2)
+		log.Debugf("request() received ipv6=%t dscp=%s", v6, cap_dscp2)
 	}
 	return cap_dscp2
 }
 
 func check_result(want string, have string) bool {
 	if want == have {
-		rlog.Debugf("check_result() success want=%s got=%s", want, have)
+		log.Debugf("check_result() success want=%s got=%s", want, have)
 		return true
 	} else if have == "-1" {
-		rlog.Debugf("check_result() undetermined (ignoring) want=%s got=CAPTURE_TIMEOUT", want)
+		log.Debugf("check_result() undetermined (ignoring) want=%s got=CAPTURE_TIMEOUT", want)
 		return true
 	} else {
-		rlog.Debugf("check_result() failure want=%s got=%s", want, have)
+		log.Debugf("check_result() failure want=%s got=%s", want, have)
 		return false
 	}
 }
@@ -311,7 +290,7 @@ func main() {
 	// define default config file path
 	cpath, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		rlog.Error("Config error:", err)
+		log.Errorf("Config error:", err)
 		os.Exit(1)
 	}
 	cpath_new = strings.Replace(cpath, "/bin/checks", "/conf/check-config.json", 1)
@@ -321,35 +300,25 @@ func main() {
 	confInt = flag.String("iface", "undef", "Network interface for packet capture")
 	confName := flag.String("name", "DSCP", "Check name to pass to TO, e.g. 'DSCP'")
 	confInclude := flag.String("host", "undef", "Specific host or regex to include (optional)")
-	confSyslog := flag.Bool("syslog", false, "Log check results to syslog")
 	confCdn := flag.String("cdn", "all", "Check specific CDN by name")
 	confExclude := flag.String("exclude", "undef", "Hostname regex to exclude")
 	confReset := flag.Bool("reset", false, "Reset check values in TO to 'blank' state")
 	confQuiet := flag.Bool("q", false, "Do not send updates to TO")
 	flag.Parse()
 
-	// configure syslog logger
-	if *confSyslog == true {
-		logwriter, err := syslog.New(syslog.LOG_INFO, os.Args[0])
-		if err == nil {
-			log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-			log.SetOutput(logwriter)
-		}
-	}
-
 	if *confInt == "undef" {
-		rlog.Error("Must specify network interface for packet capture")
+		log.Errorf("Must specify network interface for packet capture")
 		os.Exit(1)
 	}
 	if *confName == "undef" {
-		rlog.Error("Must specify check name for update to send to TO")
+		log.Errorf("Must specify check name for update to send to TO")
 		os.Exit(1)
 	}
 
 	// load config json
 	config, err := LoadConfig(*confPtr)
 	if err != nil {
-		rlog.Error("Error loading config:", err)
+		log.Errorf("Error loading config:", err)
 		os.Exit(1)
 	}
 
@@ -363,7 +332,7 @@ func main() {
 		UseClientCache,
 		TrafficOpsRequestTimeout)
 	if err != nil {
-		rlog.Criticalf("An error occurred while logging in: %v\n", err)
+		log.Errorf("An error occurred while logging in: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -371,7 +340,7 @@ func main() {
 	var servers tc.ServersV3Response
 	servers, _, err = session.GetServersWithHdr(nil, nil)
 	if err != nil {
-		rlog.Criticalf("An error occurred while getting servers: %v\n", err)
+		log.Errorf("An error occurred while getting servers: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -379,7 +348,7 @@ func main() {
 	var deliveryservices []tc.DeliveryServiceNullableV30
 	deliveryservices, _, err = session.GetDeliveryServicesV30WithHdr(nil, nil)
 	if err != nil {
-		rlog.Criticalf("An error occurred while getting delivery services: %v\n", err)
+		log.Errorf("An error occurred while getting delivery services: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -387,7 +356,7 @@ func main() {
 	var cdns []tc.CDN
 	cdns, _, err = session.GetCDNs()
 	if err != nil {
-		rlog.Criticalf("An error occurred while getting cdns: %v\n", err)
+		log.Errorf("An error occurred while getting cdns: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -408,7 +377,7 @@ func main() {
 	for _, server := range servers.Response {
 		re, err := regexp.Compile("^EDGE.*")
 		if err != nil {
-			rlog.Error("supplied exclusion regex does not compile:", err)
+			log.Errorf("supplied exclusion regex does not compile:", err)
 			os.Exit(1)
 		}
 		if re.Match([]byte(server.Type)) {
@@ -416,26 +385,26 @@ func main() {
 			if *confInclude != "undef" {
 				re_inc, err := regexp.Compile(*confInclude)
 				if err != nil {
-					rlog.Error("supplied exclusion regex does not compile:", err)
+					log.Errorf("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
 				if !re_inc.MatchString(*server.HostName) {
-					rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
+					log.Debugf("%s does not match the provided include regex, skipping", server.HostName)
 					continue
 				}
 			}
 			if *confCdn != "all" && *confCdn != *server.CDNName {
-				rlog.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
+				log.Debugf("%s is not assigned to the specified CDN '%s', skipping", server.HostName, *confCdn)
 				continue
 			}
 			if *confExclude != "undef" {
 				re, err := regexp.Compile(*confExclude)
 				if err != nil {
-					rlog.Error("supplied exclusion regex does not compile:", err)
+					log.Errorf("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
 				if re.MatchString(*server.HostName) {
-					rlog.Debugf("%s matches the provided exclude regex, skipping", server.HostName)
+					log.Debugf("%s matches the provided exclude regex, skipping", server.HostName)
 					continue
 				}
 			}
@@ -449,10 +418,7 @@ func main() {
 			statusData.HostName = &s.name
 			statusData.Value = &defaulStatusValue
 			s.fqdn = s.name + "." + *server.DomainName
-			rlog.Infof("Next server=%s status=%s", s.fqdn, s.status)
-			if *confSyslog {
-				log.Printf("Next server=%s status=%s", s.fqdn, s.status)
-			}
+			log.Infof("Next server=%s status=%s", s.fqdn, s.status)
 			if (s.status == "REPORTED" || s.status == "ADMIN_DOWN") && *confReset != true {
 				s.failcount = 0
 				s.cdn = *server.CDNName
@@ -468,10 +434,10 @@ func main() {
 						}
 					}
 				}
-				rlog.Debugf("Ports for %s: http=%s https=%s", s.name, http_port, https_port)
+				log.Debugf("Ports for %s: http=%s https=%s", s.name, http_port, https_port)
 				services, _, err := session.GetDeliveryServicesByServerV30WithHdr(s.id, nil)
 				if err != nil {
-					rlog.Error("Error getting delivery services from TO:", err)
+					log.Errorf("Error getting delivery services from TO:", err)
 					os.Exit(1)
 				}
 
@@ -565,14 +531,14 @@ func main() {
 				for _, service := range services {
 					xmlID = *service.XMLID
 					if service.Active == nil || *service.Active == false {
-						rlog.Infof("Skipping ds=%s active=false", xmlID)
+						log.Infof("Skipping ds=%s active=false", xmlID)
 						continue
 					} else if service.DSCP == nil || *service.DSCP == 0 {
 						// routers may override with default mark in this case
-						rlog.Infof("Skipping ds=%s dscp=0", xmlID)
+						log.Infof("Skipping ds=%s dscp=0", xmlID)
 						continue
 					} else if service.CheckPath == nil || *service.CheckPath == "" {
-						rlog.Infof("Skipping ds=%s no check path set", xmlID)
+						log.Infof("Skipping ds=%s no check path set", xmlID)
 						continue
 					}
 					if matched, _ := regexp.Match(`^/`, []byte(*service.CheckPath)); matched == false {
@@ -583,17 +549,17 @@ func main() {
 					conf_dscp = strconv.Itoa(*service.DSCP)
 					check_path := service.CheckPath
 					routing_name := service.RoutingName
-					rlog.Infof("checking ds=%s server=%s cdn=%s dscp=%s", xmlID, s.fqdn, s.cdn, conf_dscp)
+					log.Infof("checking ds=%s server=%s cdn=%s dscp=%s", xmlID, s.fqdn, s.cdn, conf_dscp)
 					for _, match := range ds_matchlist[xmlID] {
 						if match.Type == "HOST_REGEXP" {
 							if matched, err := regexp.MatchString(`\*`, match.Pattern); err != nil {
-								rlog.Error(err)
+								log.Errorf("%s", err)
 							} else if matched == true {
 								re := regexp.MustCompile(`(\\|\.\*)`)
 								host_header = re.ReplaceAllString(match.Pattern, "")
 								matched, err = regexp.MatchString(`^DNS.*`, string(ds_types[xmlID]))
 								if err != nil {
-									rlog.Error(err)
+									log.Errorf("%s", err)
 								}
 								if matched == true {
 									host_header = *routing_name + host_header + cdn_map[s.cdn]
@@ -613,24 +579,18 @@ func main() {
 						success := check_result(conf_dscp, cap_dscp)
 						if success == false {
 							// retry to be sure - something like out-of-order packets may have been an issue
-							rlog.Info("first IPv4 check failed - retrying")
+							log.Infof("first IPv4 check failed - retrying")
 							cap_dscp = protocol_picker(s, check_ip4, host_header, *check_path, v6flag)
 							success = check_result(conf_dscp, cap_dscp)
 						}
 						if success == false {
-							rlog.Infof("result=failure type=ipv4 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip4, conf_dscp, cap_dscp)
-							if *confSyslog {
-								log.Printf("result=failure type=ipv4 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip4, conf_dscp, cap_dscp)
-							}
+							log.Infof("result=failure type=ipv4 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip4, conf_dscp, cap_dscp)
 							s.failcount++
 						} else {
 							if cap_dscp == "-1" {
 								cap_dscp = "CAPTURE_TIMEOUT (IGNORING)"
 							}
-							rlog.Infof("result=success type=ipv4 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip4, conf_dscp, cap_dscp)
-							if *confSyslog {
-								log.Printf("result=success type=ipv4 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip4, conf_dscp, cap_dscp)
-							}
+							log.Infof("result=success type=ipv4 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip4, conf_dscp, cap_dscp)
 						}
 					}
 					if doV6 {
@@ -640,24 +600,18 @@ func main() {
 						success := check_result(conf_dscp, cap_dscp)
 						if success == false {
 							// retry to be sure - something like out-of-order packets may have been an issue
-							rlog.Info("first IPv6 check failed - retrying")
+							log.Infof("first IPv6 check failed - retrying")
 							cap_dscp = protocol_picker(s, check_ip6, host_header, *check_path, v6flag)
 							success = check_result(conf_dscp, cap_dscp)
 						}
 						if success == false {
-							rlog.Infof("result=failure type=ipv6 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip6, conf_dscp, cap_dscp)
-							if *confSyslog {
-								log.Printf("result=failure type=ipv6 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip6, conf_dscp, cap_dscp)
-							}
+							log.Infof("result=failure type=ipv6 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip6, conf_dscp, cap_dscp)
 							s.failcount++
 						} else {
 							if cap_dscp == "-1" {
 								cap_dscp = "CAPTURE_TIMEOUT (IGNORING)"
 							}
-							rlog.Infof("result=success type=ipv6 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip6, conf_dscp, cap_dscp)
-							if *confSyslog {
-								log.Printf("result=success type=ipv6 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip6, conf_dscp, cap_dscp)
-							}
+							log.Infof("result=success type=ipv6 server=%s cdn=%s ds=%s ip=%s want=%s got=%s", s.fqdn, s.cdn, xmlID, check_ip6, conf_dscp, cap_dscp)
 						}
 					}
 				}
@@ -674,25 +628,19 @@ func main() {
 				*statusData.Value = 1
 			}
 			serverElapsed := time.Since(serverStart)
-			rlog.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
-			if *confSyslog {
-				log.Printf("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
-			}
+			log.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
 			if *confQuiet == false {
-				rlog.Debug("Sending update to TO")
+				log.Debugf("Sending update to TO")
 				_, _, err := session.InsertServerCheckStatus(statusData)
 				if err != nil {
-					rlog.Error("Error updating server check status with TO:", err)
+					log.Errorf("Error updating server check status with TO:", err)
 				}
 			} else {
-				rlog.Debug("Skipping update to TO")
+				log.Debugf("Skipping update to TO")
 			}
 		}
 	}
 	jobElapsed := time.Since(jobStart)
-	rlog.Info("Job complete", jobElapsed)
-	if *confSyslog {
-		log.Print("Job complete totaltime=", jobElapsed)
-	}
+	log.Infof("Job complete", jobElapsed)
 	os.Exit(0)
 }

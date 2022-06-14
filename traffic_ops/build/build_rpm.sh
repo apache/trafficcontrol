@@ -66,6 +66,8 @@ initBuildArea() {
 		ldflags="${ldflags} -s -w"; # strip binary
 	fi;
 	set -o nounset; }
+	# Ensure dependency is installed
+	dnf --enablerepo=powertools -y install libpcap-devel
 	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.version=traffic_ops-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION} -B 0x$(git rev-parse HEAD)" -tags "$tags" || \
 								{ echo "Could not build traffic_ops_golang binary"; return 1; }
 	cd -

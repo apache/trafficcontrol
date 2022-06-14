@@ -19,7 +19,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"log"
 	"log/syslog"
 	"os"
 	"os/exec"
@@ -29,9 +28,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
-	"github.com/romana/rlog"
 )
 
 // Traffic Ops connection params
@@ -91,7 +90,7 @@ func (s *Server) ping(name string) bool {
 	var addr string
 	switch name {
 	case "IPv4", "10G":
-		rlog.Info("IPv4")
+		log.Infof("IPv4")
 		if s.ip4 != "" {
 			ok, addr = ping4(size, s.ip4)
 			if ok == false {
@@ -99,7 +98,7 @@ func (s *Server) ping(name string) bool {
 			}
 		}
 	case "IPv6", "10G6":
-		rlog.Info("IPv6")
+		log.Infof("IPv6")
 		if s.ip6 != "" {
 			ok, addr = ping6(size, s.ip6)
 			if ok == false {
@@ -107,11 +106,11 @@ func (s *Server) ping(name string) bool {
 			}
 		}
 	case "ILO":
-		rlog.Info("ILO")
+		log.Infof("ILO")
 		if s.ilo != "" {
 			match, err := regexp.MatchString(":", s.ilo)
 			if err != nil {
-				rlog.Error("Match error:", err)
+				log.Errorf("Match error:", err)
 				os.Exit(1)
 			}
 			if match {
@@ -124,20 +123,26 @@ func (s *Server) ping(name string) bool {
 			}
 		}
 	case "MTU":
-		rlog.Info("MTU")
+		log.Infof("MTU")
+		ok4 := true
 		if s.ip4 != "" {
 			// subtract protocol headers from MTU to get payload size
 			size = s.mtu - 28
+			ok4, addr = ping4(size, s.ip4)
+		} else {
+			log.Warnf("no IPv4 address detected (skipping)")
 		}
-		ok4, addr := ping4(size, s.ip4)
 		if ok4 == false {
 			s.failaddr = addr
 		}
+		ok6 := true
 		if s.ip6 != "" {
 			// subtract protocol headers from MTU to get payload size
 			size = s.mtu - 48
+			ok6, addr = ping6(size, s.ip6)
+		} else {
+			log.Warnf("no IPv6 address detected (skipping)")
 		}
-		ok6, addr := ping6(size, s.ip6)
 		if ok6 == false {
 			if len(s.failaddr) > 0 {
 				s.failaddr = s.failaddr + "," + addr
@@ -153,24 +158,24 @@ func (s *Server) ping(name string) bool {
 }
 
 func ping4(size int, addr string) (bool, string) {
-	rlog.Info("size: ", strconv.Itoa(size))
+	log.Infof("size: ", strconv.Itoa(size))
 	out, err := exec.Command("/bin/ping", "-M", "do", "-s", strconv.Itoa(size), "-c", "2", addr).Output()
 	if err != nil {
-		rlog.Warnf("ping failed for %s: %s", addr, err.Error())
+		log.Warnf("ping failed for %s: %s", addr, err.Error())
 		return false, addr
 	}
-	rlog.Debugf("ping output:\n%v", out)
+	log.Debugf("ping output:\n%v", out)
 	return true, addr
 }
 
 func ping6(size int, addr string) (bool, string) {
-	rlog.Info("size: ", strconv.Itoa(size))
+	log.Infof("size: ", strconv.Itoa(size))
 	out, err := exec.Command("/bin/ping6", "-M", "do", "-s", strconv.Itoa(size), "-c", "2", addr).Output()
 	if err != nil {
-		rlog.Warnf("ping failed for %s: %s", addr, err.Error())
+		log.Warnf("ping failed for %s: %s", addr, err.Error())
 		return false, addr
 	}
-	rlog.Debugf("ping output:\n%v", out)
+	log.Debugf("ping output:\n%v", out)
 	return true, addr
 }
 
@@ -183,7 +188,7 @@ func main() {
 	// define default config file path
 	cpath, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		rlog.Error("Config error:", err)
+		log.Errorf("Config error:", err)
 		os.Exit(1)
 	}
 	cpath_new = strings.Replace(cpath, "/bin/checks", "/conf/check-config.json", 1)
@@ -211,22 +216,22 @@ func main() {
 
 	reName, err := regexp.Compile("^(10G|10G6|IPv4|IPv6|ILO|MTU)$")
 	if err != nil {
-		rlog.Error("supplied exclusion regex does not compile:", err)
+		log.Errorf("supplied exclusion regex does not compile:", err)
 		os.Exit(1)
 	}
 	if !(reName.Match([]byte(*confName))) {
-		rlog.Error("Check name must be one of the following:")
-		rlog.Error("'10G' (legacy) or 'IPv4' (new) for IPv4 interface check")
-		rlog.Error("'10G6' (legacy) or 'IPv6' (new) for IPv6 interface check")
-		rlog.Error("'ILO' out-of-band mgmt interface check")
-		rlog.Error("'MTU' uses the MTU value for the server in TO to check MTU (checks both v4 and v6, if available)")
+		log.Errorf("Check name must be one of the following:")
+		log.Errorf("'10G' (legacy) or 'IPv4' (new) for IPv4 interface check")
+		log.Errorf("'10G6' (legacy) or 'IPv6' (new) for IPv6 interface check")
+		log.Errorf("'ILO' out-of-band mgmt interface check")
+		log.Errorf("'MTU' uses the MTU value for the server in TO to check MTU (checks both v4 and v6, if available)")
 		os.Exit(1)
 	}
 
 	// load config json
 	config, err := LoadConfig(*confPtr)
 	if err != nil {
-		rlog.Error("Error loading config:", err)
+		log.Error("Error loading config:", err)
 		os.Exit(1)
 	}
 
@@ -240,7 +245,7 @@ func main() {
 		UseClientCache,
 		TrafficOpsRequestTimeout)
 	if err != nil {
-		rlog.Criticalf("An error occurred while logging in: %v\n", err)
+		log.Errorf("An error occurred while logging in: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -248,14 +253,14 @@ func main() {
 	var servers tc.ServersV3Response
 	servers, _, err = session.GetServersWithHdr(nil, nil)
 	if err != nil {
-		rlog.Criticalf("An error occurred while getting servers: %v\n", err)
+		log.Errorf("An error occurred while getting servers: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, server := range servers.Response {
 		re, err := regexp.Compile("^(MID|EDGE).*")
 		if err != nil {
-			rlog.Error("supplied exclusion regex does not compile:", err)
+			log.Errorf("supplied exclusion regex does not compile:", err)
 			os.Exit(1)
 		}
 		if re.Match([]byte(server.Type)) {
@@ -263,26 +268,26 @@ func main() {
 			if *confInclude != "undef" {
 				re_inc, err := regexp.Compile(*confInclude)
 				if err != nil {
-					rlog.Error("supplied exclusion regex does not compile:", err)
+					log.Errorf("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
 				if !re_inc.MatchString(*server.HostName) {
-					rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
+					log.Debugf("%s does not match the provided include regex, skipping", server.HostName)
 					continue
 				}
 			}
 			if *confCdn != "all" && *confCdn != *server.CDNName {
-				rlog.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
+				log.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
 				continue
 			}
 			if *confExclude != "undef" {
 				re, err := regexp.Compile(*confExclude)
 				if err != nil {
-					rlog.Error("supplied exclusion regex does not compile:", err)
+					log.Errorf("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
 				if re.MatchString(*server.HostName) {
-					rlog.Debugf("%s matches the provided exclude regex, skipping", server.HostName)
+					log.Debugf("%s matches the provided exclude regex, skipping", server.HostName)
 					continue
 				}
 			}
@@ -304,16 +309,24 @@ func main() {
 					}
 				}
 			}
-			s.ilo = strings.Split(*server.ILOIPAddress, "/")[0]
+			if server.ILOIPAddress == nil {
+				s.ilo = ""
+			} else {
+				if strings.Contains(*server.ILOIPAddress, "/") {
+					s.ilo = strings.Split(*server.ILOIPAddress, "/")[0]
+				} else {
+					s.ilo = *server.ILOIPAddress
+				}
+			}
 			s.cdn = *server.CDNName
 			s.mtu = int(*server.Interfaces[0].MTU)
-			rlog.Infof("Next server=%s status=%s", s.fqdn, s.status)
+			log.Infof("Next server=%s status=%s", s.fqdn, s.status)
 			if *confSyslog {
 				log.Printf("Next server=%s status=%s", s.fqdn, s.status)
 			}
 			if (s.status == "REPORTED" || s.status == "ADMIN_DOWN") && *confReset != true {
 				ok = s.ping(*confName)
-				rlog.Infof("ok: %v", ok)
+				log.Infof("ok: %v", ok)
 				if ok == false {
 					s.failcount = 1
 				}
@@ -325,37 +338,37 @@ func main() {
 				*statusData.Value = -1
 			} else if s.failcount > 0 {
 				// server had failures
-				rlog.Infof("result=failure server=%s status=%s check=%s addr=%s", s.fqdn, s.status, *confName, s.failaddr)
+				log.Infof("result=failure server=%s status=%s check=%s addr=%s", s.fqdn, s.status, *confName, s.failaddr)
 				if *confSyslog {
 					log.Printf("result=failure server=%s status=%s check=%s addr=%s", s.fqdn, s.status, *confName, s.failaddr)
 				}
 				*statusData.Value = 0
 			} else {
 				// server looks OK
-				rlog.Infof("result=success server=%s status=%s", s.fqdn, s.status)
+				log.Infof("result=success server=%s status=%s", s.fqdn, s.status)
 				if *confSyslog {
 					log.Printf("result=success server=%s status=%s", s.fqdn, s.status)
 				}
 				*statusData.Value = 1
 			}
 			serverElapsed := time.Since(serverStart)
-			rlog.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
+			log.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
 			if *confSyslog {
 				log.Printf("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
 			}
 			if *confQuiet == false {
-				rlog.Debug("Sending update to TO")
+				log.Debugf("Sending update to TO")
 				_, _, err := session.InsertServerCheckStatus(statusData)
 				if err != nil {
-					rlog.Error("Error updating server check status with TO:", err)
+					log.Errorf("Error updating server check status with TO:", err)
 				}
 			} else {
-				rlog.Debug("Skipping update to TO")
+				log.Debugf("Skipping update to TO")
 			}
 		}
 	}
 	jobElapsed := time.Since(jobStart)
-	rlog.Info("Job complete", jobElapsed)
+	log.Infof("Job complete", jobElapsed)
 	if *confSyslog {
 		log.Print("Job complete totaltime=", jobElapsed)
 	}

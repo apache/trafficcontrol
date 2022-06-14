@@ -23,7 +23,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"log"
 	"log/syslog"
 	"net"
 	"os"
@@ -32,9 +31,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
-	"github.com/romana/rlog"
 )
 
 // Traffic Ops connection params
@@ -46,7 +45,6 @@ const TrafficOpsRequestTimeout = time.Second * time.Duration(10)
 var (
 	confForce  *bool
 	confPtr    *bool
-	confSyslog *bool
 )
 
 type Config struct {
@@ -102,10 +100,7 @@ func (s *Server) check_dns(server tc.ServerV30) string {
 	var dnsrr []net.IP
 	var tcrr []net.IP
 	s.failcount = 0
-	rlog.Infof("checking A/AAAA records for %v", s.fqdn)
-	if *confSyslog {
-		log.Printf("checking forward records for %v", s.fqdn)
-	}
+	log.Infof("checking A/AAAA records for %v", s.fqdn)
 	s.cdn = *server.CDNName
 	for _, interf := range server.Interfaces {
 		for _, addr := range interf.IPAddresses {
@@ -123,7 +118,7 @@ func (s *Server) check_dns(server tc.ServerV30) string {
 	if s.ip6 != "" {
 		tcrr = append(tcrr, net.ParseIP(s.ip6))
 	}
-	rlog.Debugf("Addrs for %s in TO: %v", s.name, tcrr)
+	log.Debugf("Addrs for %s in TO: %v", s.name, tcrr)
 	//tcrr = append(tcrr, net.ParseIP("2001:db8:a:b::1"))
 	//dnsrr = append(dnsrr, net.ParseIP("2001:DB8:a:b:0:0:0:1"))
 	iprecords, _ := net.LookupIP(s.fqdn)
@@ -131,29 +126,26 @@ func (s *Server) check_dns(server tc.ServerV30) string {
 		dnsrr = append(dnsrr, ip)
 	}
 	if *confForce == true {
-		rlog.Info("Force failure option specified")
+		log.Infof("Force failure option specified")
 		dnsrr = nil
 	}
-	rlog.Debugf("Addrs for %s in DNS: %v", s.name, dnsrr)
+	log.Debugf("Addrs for %s in DNS: %v", s.name, dnsrr)
 	if len(tcrr) != len(dnsrr) {
 		msg := "TC and DNS have different number of records"
 		s.failcount = 1
 		return msg
 	}
 	for _, addr := range tcrr {
-		rlog.Debugf("checking if %v is in DNS... ", addr)
+		log.Debugf("checking if %v is in DNS... ", addr)
 		if !contains(dnsrr, addr) {
-			rlog.Debug("no")
+			log.Debugf("no")
 			msg := "expected A or AAAA record not found in DNS: " + addr.String()
 			s.failcount = 1
 			return msg
 		}
 	}
 	if *confPtr == true {
-		rlog.Infof("checking PTR records for %v", tcrr)
-		if *confSyslog {
-			log.Printf("checking PTR records for %v", tcrr)
-		}
+		log.Infof("checking PTR records for %v", tcrr)
 		var res *net.Resolver
 		res = &net.Resolver{
 			PreferGo: true,
@@ -167,7 +159,7 @@ func (s *Server) check_dns(server tc.ServerV30) string {
 				s.failcount = 1
 				return msg
 			}
-			rlog.Debugf("%s PTR: %v", ip_addr, ptr_records)
+			log.Debugf("%s PTR: %v", ip_addr, ptr_records)
 			if len(ptr_records) > 1 {
 				msg := "too many PTR records found for " + ip_addr.String()
 				s.failcount = 1
@@ -194,7 +186,7 @@ func main() {
 	// define default config file path
 	cpath, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		rlog.Error("Config error:", err)
+		log.Errorf("Config error:", err)
 		os.Exit(1)
 	}
 	cpath_new = strings.Replace(cpath, "/bin/checks", "/conf/check-config.json", 1)
@@ -203,7 +195,6 @@ func main() {
 	confConf := flag.String("conf", cpath_new, "Config file path")
 	confName := flag.String("name", "FQDN", "Check name to pass to TO, e.g. 'FQDN'")
 	confInclude := flag.String("host", "undef", "Specific host or regex to include (optional)")
-	confSyslog = flag.Bool("syslog", false, "Log check results to syslog")
 	confCdn := flag.String("cdn", "all", "Check specific CDN by name")
 	confExclude := flag.String("exclude", "undef", "Hostname regex to exclude")
 	confReset := flag.Bool("reset", false, "Reset check values in TO to 'blank' state")
@@ -212,24 +203,15 @@ func main() {
 	confPtr = flag.Bool("ptr", false, "Validate DNS PTR record(s)")
 	flag.Parse()
 
-	// configure syslog logger
-	if *confSyslog == true {
-		logwriter, err := syslog.New(syslog.LOG_INFO, os.Args[0])
-		if err == nil {
-			log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-			log.SetOutput(logwriter)
-		}
-	}
-
 	if *confName == "undef" {
-		rlog.Error("Must specify check name for update to send to TO")
+		log.Errorf("Must specify check name for update to send to TO")
 		os.Exit(1)
 	}
 
 	// load config json
 	config, err := LoadConfig(*confConf)
 	if err != nil {
-		rlog.Error("Error loading config:", err)
+		log.Errorf("Error loading config:", err)
 		os.Exit(1)
 	}
 
@@ -243,7 +225,7 @@ func main() {
 		UseClientCache,
 		TrafficOpsRequestTimeout)
 	if err != nil {
-		rlog.Criticalf("An error occurred while logging in: %v\n", err)
+		log.Errorf("An error occurred while logging in: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -251,14 +233,14 @@ func main() {
 	var servers tc.ServersV3Response
 	servers, _, err = session.GetServersWithHdr(nil, nil)
 	if err != nil {
-		rlog.Criticalf("An error occurred while getting servers: %v\n", err)
+		log.Errorf("An error occurred while getting servers: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, server := range servers.Response {
 		re, err := regexp.Compile("^(MID|EDGE).*")
 		if err != nil {
-			rlog.Error("supplied exclusion regex does not compile:", err)
+			log.Errorf("supplied exclusion regex does not compile:", err)
 			os.Exit(1)
 		}
 		if re.Match([]byte(server.Type)) {
@@ -266,26 +248,26 @@ func main() {
 			if *confInclude != "undef" {
 				re_inc, err := regexp.Compile(*confInclude)
 				if err != nil {
-					rlog.Error("supplied exclusion regex does not compile:", err)
+					log.Errorf("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
 				if !re_inc.MatchString(*server.HostName) {
-					rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
+					log.Debugf("%s does not match the provided include regex, skipping", server.HostName)
 					continue
 				}
 			}
 			if *confCdn != "all" && *confCdn != *server.CDNName {
-				rlog.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
+				log.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
 				continue
 			}
 			if *confExclude != "undef" {
 				re, err := regexp.Compile(*confExclude)
 				if err != nil {
-					rlog.Error("supplied exclusion regex does not compile:", err)
+					log.Errorf("supplied exclusion regex does not compile:", err)
 					os.Exit(1)
 				}
 				if re.MatchString(*server.HostName) {
-					rlog.Debugf("%s matches the provided exclude regex, skipping", server.HostName)
+					log.Debugf("%s matches the provided exclude regex, skipping", server.HostName)
 					continue
 				}
 			}
@@ -298,10 +280,7 @@ func main() {
 			statusData.HostName = &s.name
 			statusData.Value = &defaulStatusValue
 			s.fqdn = s.name + "." + *server.DomainName
-			rlog.Infof("Next server=%s status=%s", s.fqdn, s.status)
-			if *confSyslog {
-				log.Printf("Next server=%s status=%s", s.fqdn, s.status)
-			}
+			log.Infof("Next server=%s status=%s", s.fqdn, s.status)
 			if (s.status == "REPORTED" || s.status == "ADMIN_DOWN") && *confReset != true {
 				msg = s.check_dns(server)
 			}
@@ -312,39 +291,27 @@ func main() {
 				*statusData.Value = -1
 			} else if s.failcount > 0 {
 				// server had failures
-				rlog.Infof("result=failure server=%s status=%s error=%s", s.fqdn, s.status, msg)
-				if *confSyslog {
-					log.Printf("result=failure server=%s status=%s error=%s", s.fqdn, s.status, msg)
-				}
+				log.Infof("result=failure server=%s status=%s error=%s", s.fqdn, s.status, msg)
 				*statusData.Value = 0
 			} else {
 				// server looks OK
-				rlog.Infof("result=success server=%s status=%s", s.fqdn, s.status)
-				if *confSyslog {
-					log.Printf("result=success server=%s status=%s", s.fqdn, s.status)
-				}
+				log.Infof("result=success server=%s status=%s", s.fqdn, s.status)
 				*statusData.Value = 1
 			}
 			serverElapsed := time.Since(serverStart)
-			rlog.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
-			if *confSyslog {
-				log.Printf("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
-			}
+			log.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
 			if *confQuiet == false {
-				rlog.Debug("Sending update to TO")
+				log.Debugf("Sending update to TO")
 				_, _, err := session.InsertServerCheckStatus(statusData)
 				if err != nil {
-					rlog.Error("Error updating server check status with TO:", err)
+					log.Errorf("Error updating server check status with TO:", err)
 				}
 			} else {
-				rlog.Debug("Skipping update to TO")
+				log.Debugf("Skipping update to TO")
 			}
 		}
 	}
 	jobElapsed := time.Since(jobStart)
-	rlog.Info("Job complete", jobElapsed)
-	if *confSyslog {
-		log.Print("Job complete totaltime=", jobElapsed)
-	}
+	log.Infof("Job complete totaltime=%s", jobElapsed)
 	os.Exit(0)
 }

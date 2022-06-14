@@ -28,9 +28,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
-	"github.com/romana/rlog"
 )
 
 // Traffic Ops connection params
@@ -64,7 +64,7 @@ func main() {
 	// define default config file path
 	cpath, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		rlog.Error("Config error:", err)
+		log.Errorf("Config error:", err)
 		os.Exit(1)
 	}
 	cpath_new = strings.Replace(cpath, "/bin/checks", "/conf/check-config.json", 1)
@@ -77,18 +77,18 @@ func main() {
 	flag.Parse()
 
 	if *confHost == "undef" {
-		rlog.Error("Must specify host name to update")
+		log.Errorf("Must specify host name to update")
 		os.Exit(1)
 	}
 	if *confName == "undef" {
-		rlog.Error("Must specify check name for update to send to TO")
+		log.Errorf("Must specify check name for update to send to TO")
 		os.Exit(1)
 	}
 
 	// load config json
 	config, err := LoadConfig(*confPtr)
 	if err != nil {
-		rlog.Error("Error loading config:", err)
+		log.Errorf("Error loading config:", err)
 		os.Exit(1)
 	}
 
@@ -102,14 +102,14 @@ func main() {
 		UseClientCache,
 		TrafficOpsRequestTimeout)
 	if err != nil {
-		rlog.Criticalf("An error occurred while logging in: %v\n", err)
+		log.Errorf("An error occurred while logging in: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Make TO API call for server details
 	server, _, err := session.GetServerDetailsByHostNameWithHdr(*confHost, nil)
 	if err != nil {
-		rlog.Criticalf("An error occurred while getting servers: %v\n", err)
+		log.Errorf("An error occurred while getting servers: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -118,7 +118,7 @@ func main() {
 	statusData.Value = confValue
 	_, _, err = session.InsertServerCheckStatus(statusData)
 	if err != nil {
-		rlog.Error("Error updating server check status with TO:", err)
+		log.Errorf("Error updating server check status with TO:", err)
 		os.Exit(1)
 	}
 	fmt.Printf("ID:%d name:%s value:%v\n", server[0].ID, *confName, *confValue)
