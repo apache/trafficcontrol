@@ -19,7 +19,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"log/syslog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -197,22 +196,12 @@ func main() {
 	confPtr := flag.String("conf", cpath_new, "Config file path")
 	confName := flag.String("name", "undef", "'10G|IPv4', '10G6|IPv6', 'ILO', 'MTU'")
 	confInclude := flag.String("host", "undef", "Specific host or regex to include (optional)")
-	confSyslog := flag.Bool("syslog", false, "Log check results to syslog")
 	confCdn := flag.String("cdn", "all", "Check specific CDN by name")
 	confExclude := flag.String("exclude", "undef", "Hostname regex to exclude")
 	confReset := flag.Bool("reset", false, "Reset check values in TO to 'blank' state")
 	confQuiet := flag.Bool("q", false, "Do not send updates to TO")
 	confForce = flag.Bool("f", false, "Force a failure result")
 	flag.Parse()
-
-	// configure syslog logger
-	if *confSyslog == true {
-		logwriter, err := syslog.New(syslog.LOG_INFO, os.Args[0])
-		if err == nil {
-			log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-			log.SetOutput(logwriter)
-		}
-	}
 
 	reName, err := regexp.Compile("^(10G|10G6|IPv4|IPv6|ILO|MTU)$")
 	if err != nil {
@@ -231,7 +220,7 @@ func main() {
 	// load config json
 	config, err := LoadConfig(*confPtr)
 	if err != nil {
-		log.Error("Error loading config:", err)
+		log.Errorf("Error loading config:", err)
 		os.Exit(1)
 	}
 
@@ -321,9 +310,6 @@ func main() {
 			s.cdn = *server.CDNName
 			s.mtu = int(*server.Interfaces[0].MTU)
 			log.Infof("Next server=%s status=%s", s.fqdn, s.status)
-			if *confSyslog {
-				log.Printf("Next server=%s status=%s", s.fqdn, s.status)
-			}
 			if (s.status == "REPORTED" || s.status == "ADMIN_DOWN") && *confReset != true {
 				ok = s.ping(*confName)
 				log.Infof("ok: %v", ok)
@@ -339,23 +325,14 @@ func main() {
 			} else if s.failcount > 0 {
 				// server had failures
 				log.Infof("result=failure server=%s status=%s check=%s addr=%s", s.fqdn, s.status, *confName, s.failaddr)
-				if *confSyslog {
-					log.Printf("result=failure server=%s status=%s check=%s addr=%s", s.fqdn, s.status, *confName, s.failaddr)
-				}
 				*statusData.Value = 0
 			} else {
 				// server looks OK
 				log.Infof("result=success server=%s status=%s", s.fqdn, s.status)
-				if *confSyslog {
-					log.Printf("result=success server=%s status=%s", s.fqdn, s.status)
-				}
 				*statusData.Value = 1
 			}
 			serverElapsed := time.Since(serverStart)
 			log.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
-			if *confSyslog {
-				log.Printf("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
-			}
 			if *confQuiet == false {
 				log.Debugf("Sending update to TO")
 				_, _, err := session.InsertServerCheckStatus(statusData)
@@ -368,9 +345,6 @@ func main() {
 		}
 	}
 	jobElapsed := time.Since(jobStart)
-	log.Infof("Job complete", jobElapsed)
-	if *confSyslog {
-		log.Print("Job complete totaltime=", jobElapsed)
-	}
+	log.Infof("Job complete totaltime=%s", jobElapsed)
 	os.Exit(0)
 }

@@ -23,7 +23,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"log/syslog"
 	"net"
 	"os"
 	"path/filepath"
