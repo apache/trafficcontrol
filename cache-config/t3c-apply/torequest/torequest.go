@@ -725,8 +725,9 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 	return updateStatus, nil
 }
 
-// CheckSYncDSState retrieves and returns the DS Update status from Traffic Ops.
-func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
+// CheckSyncDSState retrieves and returns the DS Update status from Traffic Ops.
+// The metaData is this run's metadata. It must not be nil, and this function may add to it.
+func (r *TrafficOpsReq) CheckSyncDSState(metaData *t3cutil.ApplyMetaData) (UpdateStatus, error) {
 	updateStatus := UpdateTropsNotNeeded
 	randDispSec := time.Duration(0)
 	log.Debugln("Checking syncds state.")
@@ -763,7 +764,7 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 			}
 		} else if !r.Cfg.IgnoreUpdateFlag {
 			log.Errorln("no queued update needs to be applied.  Running revalidation before exiting.")
-			r.RevalidateWhileSleeping()
+			r.RevalidateWhileSleeping(metaData)
 			return UpdateTropsNotNeeded, nil
 		} else {
 			log.Errorln("Traffic Ops is signaling that no update is waiting to be applied.")
@@ -793,7 +794,7 @@ func (r *TrafficOpsReq) CheckReloadRestart(data []FileRestartData) RestartData {
 }
 
 // ProcessConfigFiles processes all config files retrieved from Traffic Ops.
-func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
+func (r *TrafficOpsReq) ProcessConfigFiles(metaData *t3cutil.ApplyMetaData) (UpdateStatus, error) {
 	var updateStatus UpdateStatus = UpdateTropsNotNeeded
 
 	log.Infoln(" ======== Start processing config files ========")
@@ -832,6 +833,8 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 	shouldRestartReload := ShouldReloadRestart{[]FileRestartData{}}
 
 	for _, cfg := range r.configFiles {
+		metaData.OwnedFilePaths = append(metaData.OwnedFilePaths, cfg.Path) // all config files are added to OwnedFiles, even if they aren't changed on disk.
+
 		if cfg.ChangeNeeded &&
 			!cfg.ChangeApplied &&
 			cfg.AuditComplete &&
@@ -1016,7 +1019,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 	return nil
 }
 
-func (r *TrafficOpsReq) RevalidateWhileSleeping() (UpdateStatus, error) {
+func (r *TrafficOpsReq) RevalidateWhileSleeping(metaData *t3cutil.ApplyMetaData) (UpdateStatus, error) {
 	updateStatus, err := r.CheckRevalidateState(true)
 	if err != nil {
 		return updateStatus, err
@@ -1032,7 +1035,7 @@ func (r *TrafficOpsReq) RevalidateWhileSleeping() (UpdateStatus, error) {
 			return updateStatus, err
 		}
 
-		updateStatus, err := r.ProcessConfigFiles()
+		updateStatus, err := r.ProcessConfigFiles(metaData)
 		if err != nil {
 			return updateStatus, err
 		}

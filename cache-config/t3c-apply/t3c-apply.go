@@ -20,8 +20,12 @@ package main
  */
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
@@ -84,6 +88,7 @@ func main() {
 // DO NOT call os.Exit within this function; return the code instead.
 // Returns the application exit code.
 func Main() int {
+
 	var syncdsUpdate torequest.UpdateStatus
 	var lock util.FileLock
 	cfg, err := config.GetCfg(Version, GitRevision)
@@ -105,6 +110,20 @@ func Main() int {
 		time.Sleep(LockFileRetryInterval)
 	}
 	log.Infoln("Acquired app lock")
+
+	// Note failing to load old metadata is not fatal!
+	// oldMetaData must always be checked for nil before usage!
+	oldMetaData, err := LoadMetaData(cfg)
+	if err != nil {
+		log.Errorln("Failed to load old metadata file, metadata-dependent functionality disabled: " + err.Error())
+	}
+
+	// Note we only write the metadata file after acquiring the app lock.
+	// We don't want to write a metadata file if we didn't run because another t3c-apply
+	// was already running.
+	metaData := t3cutil.NewApplyMetaData()
+
+	metaData.ServerHostName = cfg.CacheHostName
 
 	if cfg.UseGit == config.UseGitYes {
 		err := util.EnsureConfigDirIsGitRepo(cfg)
@@ -158,18 +177,19 @@ func Main() int {
 
 		if err != nil {
 			log.Errorln("Checking revalidate state: " + err.Error())
-			return GitCommitAndExit(ExitCodeRevalidationError, FailureExitMsg, cfg)
+			return GitCommitAndExit(ExitCodeRevalidationError, FailureExitMsg, cfg, metaData, oldMetaData)
 		}
 		if syncdsUpdate == torequest.UpdateTropsNotNeeded {
 			log.Infoln("Checking revalidate state: returned UpdateTropsNotNeeded")
-			return GitCommitAndExit(ExitCodeRevalidationError, SuccessExitMsg, cfg)
+			metaData.Succeeded = true
+			return GitCommitAndExit(ExitCodeRevalidationError, SuccessExitMsg, cfg, metaData, oldMetaData)
 		}
 
 	} else {
-		syncdsUpdate, err = trops.CheckSyncDSState()
+		syncdsUpdate, err = trops.CheckSyncDSState(metaData)
 		if err != nil {
 			log.Errorln("Checking syncds state: " + err.Error())
-			return GitCommitAndExit(ExitCodeSyncDSError, FailureExitMsg, cfg)
+			return GitCommitAndExit(ExitCodeSyncDSError, FailureExitMsg, cfg, metaData, oldMetaData)
 		}
 		if !cfg.IgnoreUpdateFlag && cfg.Files == t3cutil.ApplyFilesFlagAll && syncdsUpdate == torequest.UpdateTropsNotNeeded {
 			// If touching remap.config fails, we want to still try to restart services
@@ -189,14 +209,16 @@ func Main() int {
 				}
 				if err := trops.StartServices(&syncdsUpdate); err != nil {
 					log.Errorln("failed to start services: " + err.Error())
-					return GitCommitAndExit(ExitCodeServicesError, PostConfigFailureExitMsg, cfg)
+					metaData.PartialSuccess = true
+					return GitCommitAndExit(ExitCodeServicesError, PostConfigFailureExitMsg, cfg, metaData, oldMetaData)
 				}
 			}
 			finalMsg := SuccessExitMsg
 			if postConfigFail {
 				finalMsg = PostConfigFailureExitMsg
 			}
-			return GitCommitAndExit(ExitCodeSuccess, finalMsg, cfg)
+			metaData.Succeeded = true
+			return GitCommitAndExit(ExitCodeSuccess, finalMsg, cfg, metaData, oldMetaData)
 		}
 	}
 
@@ -208,14 +230,14 @@ func Main() int {
 		err = trops.ProcessPackages()
 		if err != nil {
 			log.Errorf("Error processing packages: %s\n", err)
-			return GitCommitAndExit(ExitCodePackagingError, FailureExitMsg, cfg)
+			return GitCommitAndExit(ExitCodePackagingError, FailureExitMsg, cfg, metaData, oldMetaData)
 		}
 
 		// check and make sure packages are enabled for startup
 		err = trops.CheckSystemServices()
 		if err != nil {
 			log.Errorf("Error verifying system services: %s\n", err.Error())
-			return GitCommitAndExit(ExitCodeServicesError, FailureExitMsg, cfg)
+			return GitCommitAndExit(ExitCodeServicesError, FailureExitMsg, cfg, metaData, oldMetaData)
 		}
 	}
 
@@ -223,9 +245,9 @@ func Main() int {
 	err = trops.GetConfigFileList()
 	if err != nil {
 		log.Errorf("Getting config file list: %s\n", err)
-		return GitCommitAndExit(ExitCodeConfigFilesError, FailureExitMsg, cfg)
+		return GitCommitAndExit(ExitCodeConfigFilesError, FailureExitMsg, cfg, metaData, oldMetaData)
 	}
-	syncdsUpdate, err = trops.ProcessConfigFiles()
+	syncdsUpdate, err = trops.ProcessConfigFiles(metaData)
 	if err != nil {
 		log.Errorf("Error while processing config files: %s\n", err.Error())
 	}
@@ -248,7 +270,8 @@ func Main() int {
 
 	if err := trops.StartServices(&syncdsUpdate); err != nil {
 		log.Errorln("failed to start services: " + err.Error())
-		return GitCommitAndExit(ExitCodeServicesError, PostConfigFailureExitMsg, cfg)
+		metaData.PartialSuccess = true
+		return GitCommitAndExit(ExitCodeServicesError, PostConfigFailureExitMsg, cfg, metaData, oldMetaData)
 	}
 
 	// start 'teakd' if installed.
@@ -279,7 +302,8 @@ func Main() int {
 		log.Errorf("failed to update Traffic Ops: %s\n", err.Error())
 	}
 
-	return GitCommitAndExit(ExitCodeSuccess, SuccessExitMsg, cfg)
+	metaData.Succeeded = true
+	return GitCommitAndExit(ExitCodeSuccess, SuccessExitMsg, cfg, metaData, oldMetaData)
 }
 
 func LogPanic(f func() int) (exitCode int) {
@@ -297,7 +321,16 @@ func LogPanic(f func() int) (exitCode int) {
 // GitCommitAndExit attempts to git commit all changes, and logs any error.
 // It then logs exitMsg at the Info level, and returns exitCode.
 // This is a helper function, to reduce the duplicated commit-log-return into a single line.
-func GitCommitAndExit(exitCode int, exitMsg string, cfg config.Cfg) int {
+func GitCommitAndExit(exitCode int, exitMsg string, cfg config.Cfg, metaData *t3cutil.ApplyMetaData, oldMetaData *t3cutil.ApplyMetaData) int {
+
+	// metadata isn't actually part of git, but we always want to write it before committing to git, so this is the right place
+
+	// files previously dropped never become "unmanaged",
+	// and if we delete them they're removed from oldMetaData as well as the new,
+	// so add the old files to the new metadata.
+	// This is especially important for reval runs, which don't add all files.
+	metaData.OwnedFilePaths = t3cutil.CombineOwnedFilePaths(metaData, oldMetaData)
+	WriteMetaData(cfg, metaData)
 	success := exitCode == ExitCodeSuccess
 	if cfg.UseGit == config.UseGitYes || cfg.UseGit == config.UseGitAuto {
 		if err := util.MakeGitCommitAll(cfg, util.GitChangeIsSelf, success); err != nil {
@@ -329,4 +362,50 @@ func CheckMaxmindUpdate(cfg config.Cfg) bool {
 	}
 
 	return result
+}
+
+const MetaDataFileName = `t3c-apply-metadata.json`
+const MetaDataFileMode = 0600
+
+// WriteMetaData writes the metaData file.
+//
+// The metadata file is written in the ATS config directory, so it's versioned
+// with git.
+//
+// On error, an error is written to the log, but no error is returned.
+func WriteMetaData(cfg config.Cfg, metaData *t3cutil.ApplyMetaData) {
+	metaData.SetTime(time.Now())
+	bts, err := metaData.Format()
+	if err != nil {
+		log.Errorln("formatting metadata file: " + err.Error())
+		return
+	}
+
+	metaDataFilePath := GetMetaDataFilePath(cfg)
+
+	if err := ioutil.WriteFile(metaDataFilePath, bts, MetaDataFileMode); err != nil {
+		log.Errorln("writing metadata file '" + metaDataFilePath + "': " + err.Error())
+		return
+	}
+}
+
+func LoadMetaData(cfg config.Cfg) (*t3cutil.ApplyMetaData, error) {
+	metaDataFilePath := GetMetaDataFilePath(cfg)
+
+	bts, err := ioutil.ReadFile(metaDataFilePath)
+	if err != nil {
+		return nil, errors.New("reading metadata file '" + metaDataFilePath + "': " + err.Error())
+	}
+
+	metaData := &t3cutil.ApplyMetaData{}
+
+	if err := json.Unmarshal(bts, &metaData); err != nil {
+		return nil, errors.New("unmarshalling metadata file: " + err.Error())
+	}
+
+	return metaData, nil
+}
+
+func GetMetaDataFilePath(cfg config.Cfg) string {
+	return filepath.Join(cfg.TsConfigDir, MetaDataFileName)
 }
