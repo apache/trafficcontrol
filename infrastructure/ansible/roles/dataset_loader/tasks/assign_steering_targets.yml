@@ -20,6 +20,9 @@
   register: create_steering_assignment_out
   failed_when: (create_steering_assignment_out.status == 400 and create_steering_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_steering_assignment_out.status > 400 and create_steering_assignment_out.status < 600)
   with_items: "{{ Target_steering_ds.1.assigned_steering_targets }}"
+  no_log: true
+  retries: 10
+  delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     target_ds_query: "[?cdnId == `{{ Target_cdn_id }}` && starts_with(xmlId, `{{ item.uniqueKey }}`) == `true`].id | [0]"

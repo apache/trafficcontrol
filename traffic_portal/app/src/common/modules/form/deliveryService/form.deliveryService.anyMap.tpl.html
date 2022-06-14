@@ -42,6 +42,7 @@ under the License.
             <button type="button" class="btn btn-danger" ng-if="!settings.isNew && !settings.isRequest" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
             <button class="btn btn-success" ng-if="!settings.isRequest" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
             <button type="button" class="btn btn-primary" ng-if="!settings.isRequest && !settings.isNew" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>
+            <a class="btn btn-primary" ng-if="!settings.isRequest" ng-href="/#!/delivery-service-requests?xmlId={{deliveryService.xmlId}}">View Linked Delivery Service Requests</a>
             <div class="btn-group" ng-if="!settings.isRequest && !settings.isNew" role="group" uib-dropdown is-open="more.isopen">
                 <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
@@ -144,9 +145,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="tenantId" name="tenantId" class="form-control" ng-model="deliveryService.tenantId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
-                                <option disabled hidden selected value="">Select...</option>
-                            </select>
+                            <tree-select handle="tenantId" on-update="deliveryService.tenantId=value" tree-data="[tenants[0]]" initial-value="deliveryService.tenantId"></tree-select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.tenantId, 'required')">Required</small>
                             <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.tenantId != dsCurrent.tenantId">

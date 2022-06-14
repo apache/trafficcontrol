@@ -41,7 +41,7 @@ func serversToLatest(svs tc.ServersV3Response) ([]atscfg.Server, error) {
 // serverToLatest converts a tc.Server to tc.ServerV30.
 // This is necessary, because the old Traffic Ops client doesn't return the same type as the latest client.
 func serverToLatest(oldSv *tc.ServerV30) (*atscfg.Server, error) {
-	sv, err := oldSv.UpgradeToV40()
+	sv, err := oldSv.UpgradeToV40([]string{*oldSv.Profile})
 	if err != nil {
 		return nil, err
 	}
@@ -55,4 +55,9 @@ func dsesToLatest(dses []tc.DeliveryServiceNullableV30) []atscfg.DeliveryService
 		newDSes = append(newDSes, ds.UpgradeToV4())
 	}
 	return atscfg.ToDeliveryServices(newDSes)
+}
+
+func serverUpdateStatusToLatest(status *tc.ServerUpdateStatus) atscfg.ServerUpdateStatus {
+	upgraded := status.Upgrade()
+	return atscfg.ServerUpdateStatus(upgraded)
 }

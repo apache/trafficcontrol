@@ -40,7 +40,7 @@ export class TenantsPage extends BasePage {
     private btnCreateNewTenant = element(by.xpath("//button[@title='Create New Tenant']"));
     private txtName = element(by.name('name'));
     private txtActive = element(by.name('active'));
-    private txtParentTenant = element(by.name('parentId'));
+    private selParentTenant = element(by.name('parentId'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmTenantName = element(by.name('confirmWithNameInput'));
     private randomize = randomize;
@@ -60,11 +60,8 @@ export class TenantsPage extends BasePage {
       await this.btnCreateNewTenant.click();
       await this.txtName.sendKeys(tenant.Name + this.randomize);
       await this.txtActive.sendKeys(tenant.Active);
-      if (tenant.ParentTenant == '- root') {
-        await this.txtParentTenant.sendKeys(tenant.ParentTenant);
-      } else {
-        await this.txtParentTenant.sendKeys(tenant.ParentTenant + this.randomize);
-      }
+      await this.selParentTenant.click();
+      await element(by.name(tenant.ParentTenant + this.randomize)).click();
       await basePage.ClickCreate();
       return basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
     }

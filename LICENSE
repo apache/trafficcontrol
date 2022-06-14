@@ -563,11 +563,6 @@ This product bundles lestrrat-go/jwx, which is available under an MIT license.
 ./vendor/github.com/lestrrat-go/jwx/LICENSE
 Refer to the above license for the full text.
 
-This product bundles dgrijalva/jwt-go, which is available under an MIT license.
-@vendor/github.com/dgrijalva/jwt-go/*
-./vendor/github.com/dgrijalva/jwt-go/LICENSE
-Refer to the above license for the full text.
-
 This product bundles errors, which is available under a BSD-2-Clause license.
 @vendor/github.com/pkg/errors/*
 ./vendor/github.com/pkg/errors/LICENSE
@@ -641,4 +636,79 @@ Refer to the above license for the full text.
 This product bundles go.uber.org/atomic, which is available under an MIT license.
 @vendor/go.uber.org/atomic/*
 ./vendor/go.uber.org/atomic/LICENSE.txt
+Refer to the above license for the full text.
+
+This product bundles Shopify/sarama, which is available under an MIT license.
+@vendor/github.com/Shopify/sarama/*
+./vendor/github.com/Shopify/sarama/LICENSE
+Refer to the above license for the full text.
+
+This product bundles davecgh/go-spew, which is available under an ISC license.
+@vendor/github.com/davecgh/go-spew/*
+./vendor/github.com/davecgh/go-spew/LICENSE
+Refer to the above license for the full text.
+
+This product bundles eapache/go-resiliency, which is available under an MIT license.
+@vendor/github.com/eapache/go-resiliency/*
+./vendor/github.com/eapache/go-resiliency/LICENSE
+Refer to the above license for the full text.
+
+This product bundles eapache/go-xerial-snappy, which is available under an MIT license.
+@vendor/github.com/eapache/go-xerial-snappy/*
+./vendor/github.com/eapache/go-xerial-snappy/LICENSE
+Refer to the above license for the full text.
+
+This product bundles eapache/queue, which is available under an MIT license.
+@vendor/github.com/eapache/queue/*
+./vendor/github.com/eapache/queue/LICENSE
+Refer to the above license for the full text.
+
+This product bundles golang/snappy, which is available under a BSD-3-Clause license.
+@vendor/github.com/golang/snappy/*
+./vendor/github.com/golang/snappy/LICENSE
+Refer to the above license for the full text.
+
+This product bundles hashicorp/go-uuid, which is available under an MPL-2.0 license.
+@vendor/github.com/hashicorp/go-uuid/*
+./vendor/github.com/hashicorp/go-uuid/LICENSE
+Refer to the above license for the full text.
+
+This product bundles jcmturner/gofork, which is available under a BSD-3-Clause license.
+@vendor/github.com/jcmturner/gofork/*
+./vendor/github.com/jcmturner/gofork/LICENSE
+Refer to the above license for the full text.
+
+This product bundles klauspost/compress, which is available under a BSD-3-Clause, Apache 2.0 and MIT license.
+@vendor/github.com/klauspost/compress/*
+./vendor/github.com/klauspost/compress/LICENSE
+Refer to the above license for the full text.
+
+This product bundles pierrec/lz4, which is available under a BSD-3-Clause license.
+@vendor/github.com/pierrec/lz4/*
+./vendor/github.com/pierrec/lz4/LICENSE
+Refer to the above license for the full text.
+
+This product bundles rcrowley/go-metrics, which is available under a BSD-2-Clause license.
+@vendor/github.com/rcrowley/go-metrics/*
+./vendor/github.com/rcrowley/go-metrics/LICENSE
+Refer to the above license for the full text.
+
+This product bundles jcmturner/aescts.v1, which is available under an Apache-2.0 license.
+@vendor/gopkg.in/jcmturner/aescts.v1/*
+./vendor/gopkg.in/jcmturner/aescts.v1/LICENSE
+Refer to the above license for the full text.
+
+This product bundles jcmturner/dnsutils.v1, which is available under an Apache-2.0 license.
+@vendor/gopkg.in/jcmturner/dnsutils.v1/*
+./vendor/gopkg.in/jcmturner/dnsutils.v1/LICENSE
+Refer to the above license for the full text.
+
+This product bundles jcmturner/gokrb5.v7, which is available under an Apache-2.0 license.
+@vendor/gopkg.in/jcmturner/gokrb5.v7/*
+./vendor/gopkg.in/jcmturner/gokrb5.v7/LICENSE
+Refer to the above license for the full text.
+
+This product bundles jcmturner/rpc.v1, which is available under an Apache-2.0 license.
+@vendor/gopkg.in/jcmturner/rpc.v1/*
+./vendor/gopkg.in/jcmturner/rpc.v1/LICENSE
 Refer to the above license for the full text.

@@ -12,14 +12,15 @@
 * limitations under the License.
 */
 
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 
-import { CacheGroup } from "src/app/models/cache-groups";
-import { CacheGroupService } from "src/app/shared/api";
-import { ContextMenuActionEvent, ContextMenuItem } from "../../../shared/generic-table/generic-table.component";
+import { CacheGroupService } from "src/app/api";
+import type { CacheGroup } from "src/app/models";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * CacheGroupTableComponent is the controller for the "Cache Groups" table.
@@ -133,30 +134,27 @@ export class CacheGroupTableComponent implements OnInit {
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl = new FormControl("");
 
-	/**
-	 * Constructor.
-	 */
-	constructor(private readonly api: CacheGroupService, private readonly route: ActivatedRoute) {
+	constructor(private readonly api: CacheGroupService, private readonly route: ActivatedRoute,
+		private readonly headerSvc: TpHeaderService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.cacheGroups = this.api.getCacheGroups();
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
-		this.route.queryParamMap.toPromise().then(
+		this.route.queryParamMap.subscribe(
 			m => {
 				const search = m.get("search");
 				if (search) {
 					this.fuzzControl.setValue(decodeURIComponent(search));
-					this.fuzzySubject.next(search);
-					this.fuzzySubject.next(this.fuzzControl.value);
+					this.updateURL();
 				}
-			}
-		).catch(
+			},
 			e => {
 				console.error("Failed to get query parameters:", e);
 			}
 		);
+		this.headerSvc.headerTitle.next("Cache Groups");
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */

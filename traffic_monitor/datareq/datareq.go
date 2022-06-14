@@ -31,6 +31,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/health"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
@@ -45,6 +46,7 @@ func MakeDispatchMap(
 	toSession towrap.TrafficOpsSessionThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
+	distributedPeerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
 	statInfoHistory threadsafe.ResultInfoHistory,
 	statResultHistory threadsafe.ResultStatHistory,
@@ -65,6 +67,7 @@ func MakeDispatchMap(
 	healthUnpolledCaches threadsafe.UnpolledCaches,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
 	statPollingEnabled bool,
+	distributedPollingEnabled bool,
 ) map[string]http.HandlerFunc {
 
 	// wrap composes all universal wrapper functions. Right now, it's only the UnpolledCheck, but there may be others later. For example, security headers.
@@ -81,7 +84,7 @@ func MakeDispatchMap(
 			return srvTRConfig(opsConfig, toSession)
 		}, rfc.ApplicationJSON)),
 		"/publish/CrStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			bytes, statusCode, err := srvTRState(params, localStates, combinedStates, peerStates)
+			bytes, statusCode, err := srvTRState(params, localStates, combinedStates, peerStates, distributedPollingEnabled)
 			return WrapErrStatusCode(errorCount, path, bytes, statusCode, err)
 		}, rfc.ApplicationJSON)),
 		"/publish/CacheStatsNew": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
@@ -98,6 +101,9 @@ func MakeDispatchMap(
 		}, rfc.ApplicationJSON)),
 		"/publish/PeerStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvPeerStates(params, errorCount, path, toData, peerStates)
+		}, rfc.ApplicationJSON)),
+		"/publish/DistributedPeerStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvPeerStates(params, errorCount, path, toData, distributedPeerStates)
 		}, rfc.ApplicationJSON)),
 		"/publish/Stats": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvStats(staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount, peerStates)
@@ -124,7 +130,7 @@ func MakeDispatchMap(
 			return srvAPITrafficOpsURI(opsConfig)
 		}, rfc.ContentTypeURIList)),
 		"/api/cache-statuses": wrap(WrapErr(errorCount, func() ([]byte, error) {
-			return srvAPICacheStates(toData, statInfoHistory, statResultHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatus, statMaxKbpses, monitorConfig)
+			return srvAPICacheStates(toData, statInfoHistory, statResultHistory, healthHistory, lastHealthDurations, localCacheStatus, statMaxKbpses, monitorConfig)
 		}, rfc.ApplicationJSON)),
 		"/api/bandwidth-kbps": wrap(WrapBytes(func() []byte {
 			return srvAPIBandwidthKbps(toData, lastStats)
@@ -281,19 +287,56 @@ func WrapAgeErr(errorCount threadsafe.Uint, f func() ([]byte, time.Time, error),
 	}
 }
 
+func accessLogTime(t time.Time) float64 {
+	return float64(t.UnixMilli()) / 1000.0
+}
+
+func accessLogStr(
+	timestamp time.Time, // prefix
+	remoteAddress string, // chi
+	reqMethod string, // cqhm
+	reqPath string, // url
+	reqRawQuery string,
+	statusCode int, // pssc
+	respSize int, // b
+	reqServeTimeMs int, // ttms
+	userAgent string, // uas
+) string {
+	return fmt.Sprintf("%.3f chi=%s cqhm=%s url=\"%s?%s\" pssc=%d b=%d ttms=%d uas=\"%s\"",
+		accessLogTime(timestamp),
+		remoteAddress,
+		reqMethod,
+		reqPath,
+		reqRawQuery,
+		statusCode,
+		respSize,
+		reqServeTimeMs,
+		userAgent)
+}
+
 // WrapUnpolledCheck wraps an http.HandlerFunc, returning ServiceUnavailable if all caches have't been polled; else, calling the wrapped func. Once all caches have been polled, we never return a 503 again, even if the CRConfig has been changed and new, unpolled caches exist. This is because, before those new caches existed in the CRConfig, they weren't being routed to, so it doesn't break anything to continue not routing to them until they're polled, while still serving polled caches as available. Whereas, on startup, if we were to return data with some caches unpolled, we would be telling clients that existing, potentially-available caches are unavailable, simply because we hadn't polled them yet.
 func wrapUnpolledCheck(unpolledCaches threadsafe.UnpolledCaches, errorCount threadsafe.Uint, f http.HandlerFunc) http.HandlerFunc {
 	polledAll := false
+	polledLocal := false
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !polledAll && unpolledCaches.Any() {
-			HandleErr(errorCount, r.URL.EscapedPath(), fmt.Errorf("service still starting, some caches unpolled: %v", unpolledCaches.UnpolledCaches()))
-			w.WriteHeader(http.StatusServiceUnavailable)
-			log.Write(w, []byte("Service Unavailable"), r.URL.EscapedPath())
-			return
+		start := time.Now()
+		iw := &util.Interceptor{W: w}
+		defer func() {
+			log.Accessln(accessLogStr(time.Now(), r.RemoteAddr, r.Method, r.URL.Path, r.URL.RawQuery, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent()))
+		}()
+		if !polledAll || !polledLocal {
+			polledAll = !unpolledCaches.Any()
+			polledLocal = !unpolledCaches.AnyDirectlyPolled()
+			rawOrLocal := r.URL.Query().Has("raw") || r.URL.Query().Has("local")
+			if (!rawOrLocal && !polledAll) || (rawOrLocal && !polledLocal) {
+				HandleErr(errorCount, r.URL.EscapedPath(), fmt.Errorf("service still starting, some caches unpolled: %v", unpolledCaches.UnpolledCaches()))
+				iw.WriteHeader(http.StatusServiceUnavailable)
+				log.Write(iw, []byte("Service Unavailable"), r.URL.EscapedPath())
+				return
+			}
 		}
-		polledAll = true
-		w.Header().Set(rfc.PermissionsPolicy, "interest-cohort=()")
-		f(w, r)
+		iw.Header().Set(rfc.PermissionsPolicy, "interest-cohort=()")
+		f(iw, r)
 	}
 }
 

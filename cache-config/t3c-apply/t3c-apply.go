@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	tcutil "github.com/apache/trafficcontrol/lib/go-util"
 )
 
 // Version is the application version.
@@ -39,18 +40,17 @@ var Version = "0.4"
 // This is overwritten by the build with the current project version.
 var GitRevision = "nogit"
 
-// exit codes
 const (
-	Success           = 0
-	AlreadyRunning    = 132
-	ConfigFilesError  = 133
-	ConfigError       = 134
-	GeneralFailure    = 135
-	PackagingError    = 136
-	RevalidationError = 137
-	ServicesError     = 138
-	SyncDSError       = 139
-	UserCheckError    = 140
+	ExitCodeSuccess           = 0
+	ExitCodeAlreadyRunning    = 132
+	ExitCodeConfigFilesError  = 133
+	ExitCodeConfigError       = 134
+	ExitCodeGeneralFailure    = 135
+	ExitCodePackagingError    = 136
+	ExitCodeRevalidationError = 137
+	ExitCodeServicesError     = 138
+	ExitCodeSyncDSError       = 139
+	ExitCodeUserCheckError    = 140
 )
 
 func runSysctl(cfg config.Cfg) {
@@ -71,22 +71,36 @@ const LockFilePath = "/var/run/t3c.lock"
 const LockFileRetryInterval = time.Second
 const LockFileRetryTimeout = time.Minute
 
+const FailureExitMsg = `CRITICAL FAILURE, ABORTING`
+const PostConfigFailureExitMsg = `CRITICAL FAILURE AFTER SETTING CONFIG, ABORTING`
+const SuccessExitMsg = `SUCCESS`
+
 func main() {
+	os.Exit(LogPanic(Main))
+}
+
+// Main is the main function of t3c-apply.
+// This is a separate function so defer statements behave as-expected.
+// DO NOT call os.Exit within this function; return the code instead.
+// Returns the application exit code.
+func Main() int {
 	var syncdsUpdate torequest.UpdateStatus
 	var lock util.FileLock
 	cfg, err := config.GetCfg(Version, GitRevision)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(ConfigError)
+		fmt.Println(FailureExitMsg)
+		return ExitCodeConfigError
 	} else if cfg == (config.Cfg{}) { // user used the --help option
-		os.Exit(Success)
+		return ExitCodeSuccess
 	}
 
 	log.Infoln("Trying to acquire app lock")
 	for lockStart := time.Now(); !lock.GetLock(LockFilePath); {
 		if time.Since(lockStart) > LockFileRetryTimeout {
 			log.Errorf("Failed to get app lock after %v seconds, another instance is running, exiting without running\n", int(LockFileRetryTimeout/time.Second))
-			os.Exit(AlreadyRunning)
+			log.Infoln(FailureExitMsg)
+			return ExitCodeAlreadyRunning
 		}
 		time.Sleep(LockFileRetryInterval)
 	}
@@ -121,40 +135,46 @@ func main() {
 	// create and clean the config.TmpBase (/tmp/ort)
 	if !util.MkDir(config.TmpBase, cfg) {
 		log.Errorln("mkdir TmpBase '" + config.TmpBase + "' failed, cannot continue")
-		os.Exit(GeneralFailure)
+		log.Infoln(FailureExitMsg)
+		return ExitCodeGeneralFailure
 	} else if !util.CleanTmpDir(cfg) {
 		log.Errorln("CleanTmpDir failed, cannot continue")
-		os.Exit(GeneralFailure)
+		log.Infoln(FailureExitMsg)
+		return ExitCodeGeneralFailure
 	}
 
 	log.Infoln(time.Now().Format(time.RFC3339))
 
 	if !util.CheckUser(cfg) {
-		lock.UnlockAndExit(UserCheckError)
-	}
 
-	toolName := trops.GetHeaderComment()
-	log.Debugf("toolname: %s\n", toolName)
+		lock.Unlock()
+		return ExitCodeUserCheckError
+	}
 
 	// if running in Revalidate mode, check to see if it's
 	// necessary to continue
 	if cfg.Files == t3cutil.ApplyFilesFlagReval {
 		syncdsUpdate, err = trops.CheckRevalidateState(false)
-		if err != nil || syncdsUpdate == torequest.UpdateTropsNotNeeded {
-			if err != nil {
-				log.Errorln("Checking revalidate state: " + err.Error())
-			} else {
-				log.Infoln("Checking revalidate state: returned UpdateTropsNotNeeded")
-			}
-			GitCommitAndExit(RevalidationError, cfg)
+
+		if err != nil {
+			log.Errorln("Checking revalidate state: " + err.Error())
+			return GitCommitAndExit(ExitCodeRevalidationError, FailureExitMsg, cfg)
 		}
+		if syncdsUpdate == torequest.UpdateTropsNotNeeded {
+			log.Infoln("Checking revalidate state: returned UpdateTropsNotNeeded")
+			return GitCommitAndExit(ExitCodeRevalidationError, SuccessExitMsg, cfg)
+		}
+
 	} else {
 		syncdsUpdate, err = trops.CheckSyncDSState()
 		if err != nil {
-			log.Errorln(err)
-			GitCommitAndExit(SyncDSError, cfg)
+			log.Errorln("Checking syncds state: " + err.Error())
+			return GitCommitAndExit(ExitCodeSyncDSError, FailureExitMsg, cfg)
 		}
 		if !cfg.IgnoreUpdateFlag && cfg.Files == t3cutil.ApplyFilesFlagAll && syncdsUpdate == torequest.UpdateTropsNotNeeded {
+			// If touching remap.config fails, we want to still try to restart services
+			// But log a critical-post-config-failure, which needs logged right before exit.
+			postConfigFail := false
 			// check for maxmind db updates even if we have no other updates
 			if CheckMaxmindUpdate(cfg) {
 				// We updated the db so we should touch and reload
@@ -163,15 +183,20 @@ func main() {
 				_, rc, err := util.ExecCommand("/usr/bin/touch", path)
 				if err != nil {
 					log.Errorf("failed to update the remap.config for reloading: %s\n", err.Error())
+					postConfigFail = true
 				} else if rc == 0 {
 					log.Infoln("updated the remap.config for reloading.")
 				}
 				if err := trops.StartServices(&syncdsUpdate); err != nil {
 					log.Errorln("failed to start services: " + err.Error())
-					GitCommitAndExit(ServicesError, cfg)
+					return GitCommitAndExit(ExitCodeServicesError, PostConfigFailureExitMsg, cfg)
 				}
 			}
-			GitCommitAndExit(Success, cfg)
+			finalMsg := SuccessExitMsg
+			if postConfigFail {
+				finalMsg = PostConfigFailureExitMsg
+			}
+			return GitCommitAndExit(ExitCodeSuccess, finalMsg, cfg)
 		}
 	}
 
@@ -183,22 +208,22 @@ func main() {
 		err = trops.ProcessPackages()
 		if err != nil {
 			log.Errorf("Error processing packages: %s\n", err)
-			GitCommitAndExit(PackagingError, cfg)
+			return GitCommitAndExit(ExitCodePackagingError, FailureExitMsg, cfg)
 		}
 
 		// check and make sure packages are enabled for startup
 		err = trops.CheckSystemServices()
 		if err != nil {
 			log.Errorf("Error verifying system services: %s\n", err.Error())
-			GitCommitAndExit(ServicesError, cfg)
+			return GitCommitAndExit(ExitCodeServicesError, FailureExitMsg, cfg)
 		}
 	}
 
 	log.Debugf("Preparing to fetch the config files for %s, files: %s, syncdsUpdate: %s\n", cfg.CacheHostName, cfg.Files, syncdsUpdate)
 	err = trops.GetConfigFileList()
 	if err != nil {
-		log.Errorf("Unable to continue: %s\n", err)
-		GitCommitAndExit(ConfigFilesError, cfg)
+		log.Errorf("Getting config file list: %s\n", err)
+		return GitCommitAndExit(ExitCodeConfigFilesError, FailureExitMsg, cfg)
 	}
 	syncdsUpdate, err = trops.ProcessConfigFiles()
 	if err != nil {
@@ -223,7 +248,7 @@ func main() {
 
 	if err := trops.StartServices(&syncdsUpdate); err != nil {
 		log.Errorln("failed to start services: " + err.Error())
-		GitCommitAndExit(ServicesError, cfg)
+		return GitCommitAndExit(ExitCodeServicesError, PostConfigFailureExitMsg, cfg)
 	}
 
 	// start 'teakd' if installed.
@@ -248,26 +273,39 @@ func main() {
 		runSysctl(cfg)
 	}
 
+	trops.PrintWarnings()
+
 	if err := trops.UpdateTrafficOps(&syncdsUpdate); err != nil {
 		log.Errorf("failed to update Traffic Ops: %s\n", err.Error())
 	}
 
-	GitCommitAndExit(Success, cfg)
+	return GitCommitAndExit(ExitCodeSuccess, SuccessExitMsg, cfg)
 }
 
-// TODO change code to always create git commits, if the dir is a repo
-// We only want --use-git to init the repo. If someone init'd the repo, t3c-apply should _always_ commit.
-// We don't want someone doing manual badass's and not having that log
+func LogPanic(f func() int) (exitCode int) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, tcutil.Stacktrace())
+			log.Infoln(FailureExitMsg)
+			exitCode = ExitCodeGeneralFailure
+			return
+		}
+	}()
+	return f()
+}
 
-// GitCommitAndExit attempts to git commit all changes, logs any error, and calls os.Exit with the given code.
-func GitCommitAndExit(exitCode int, cfg config.Cfg) {
-	success := exitCode == Success
+// GitCommitAndExit attempts to git commit all changes, and logs any error.
+// It then logs exitMsg at the Info level, and returns exitCode.
+// This is a helper function, to reduce the duplicated commit-log-return into a single line.
+func GitCommitAndExit(exitCode int, exitMsg string, cfg config.Cfg) int {
+	success := exitCode == ExitCodeSuccess
 	if cfg.UseGit == config.UseGitYes || cfg.UseGit == config.UseGitAuto {
 		if err := util.MakeGitCommitAll(cfg, util.GitChangeIsSelf, success); err != nil {
 			log.Errorln("git committing existing changes, dir '" + cfg.TsConfigDir + "': " + err.Error())
 		}
 	}
-	os.Exit(exitCode)
+	log.Infoln(exitMsg)
+	return exitCode
 }
 
 // CheckMaxmindUpdate will (if a url is set) check for a db on disk.

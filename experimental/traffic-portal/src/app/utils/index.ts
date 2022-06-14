@@ -13,6 +13,5 @@
 */
 
 export * from "./order-by";
-export * from "./file-utils";
 export * from "./fuzzy";
 export * from "./ip";

@@ -22,17 +22,19 @@ function die() {
   { test -n "$@" && echo "$@"; exit 1; } >&2 
 }
 
-RHEL_VERSION="${RHEL_VERSION}"
+OS_VERSION="${OS_VERSION}"
+OS_DISTRO=${OS_DISTRO}
 ATS_VERSION="${ATS_VERSION}"
 
-echo "RHEL_VERSION:${RHEL_VERSION}"
+echo "OS_DISTRO:${OS_DISTRO}"
+echo "OS_VERSION:${OS_VERSION}"
 echo "ATS_VERSION:${ATS_VERSION}"
 
 mkdir -p /opt/build
 cd /opt/build
 
-# build openssl 1.1.1 if RHEL_VERSION is not 8 or greater.
-if [[ ${RHEL_VERSION%%.*} -le 7 ]]; then
+# build openssl 1.1.1 if OS_VERSION is not 8 or greater.
+if [ ${OS_VERSION%%.*} -le 7 ]; then
   git clone $OPENSSL_URL --branch $OPENSSL_TAG || die "Failed to fetch the OpenSSL Source."
   (
     cd /opt/build/openssl && 
@@ -68,13 +70,13 @@ cd /root
 [ ! -e rpmbuild ] || { echo "Failed to clean up rpm build directory 'rpmbuild': $?" >&2; exit 1; }
 mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SPECS,SOURCES,SRPMS} || die "Failed to initialize the build environment"
 
-echo "Building a RPM for ATS version: $ATS_VERSION"
+echo "Building a RPM for ATS version: $ATS_VERSION and OS version: $OS_VERSION"
 
 # add the 'ats' user
 id ats &>/dev/null || /usr/sbin/useradd -u 176 -r ats -s /sbin/nologin -d /
 
 # setup the environment to use the devtoolset-9 tools.
-if [[ "${RHEL_VERSION%%.*}" -le 7 ]]; then 
+if [ "${OS_VERSION%%.*}" -le 7 ]; then 
   source scl_source enable devtoolset-9
 else
   source scl_source enable gcc-toolset-9

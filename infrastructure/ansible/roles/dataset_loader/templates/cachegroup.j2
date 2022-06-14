@@ -13,7 +13,7 @@
 #}
 {
 {% if item.fallbackToClosest is defined and item.fallbackToClosest is not none %}
-  "fallbackToClosest": "{{ item.fallbackToClosest }}",
+  "fallbackToClosest": {{ item.fallbackToClosest }},
 {% endif %}
 {% if item.latitude is defined and item.latitude is not none %}
   "latitude": {{ item.latitude }},

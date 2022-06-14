@@ -22,6 +22,7 @@ package main
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -40,6 +41,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/server"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 	_ "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends" // init traffic vault backends
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
@@ -64,6 +66,7 @@ func main() {
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path (DEPRECATED: use traffic_vault_backend = riak and traffic_vault_config in cdn.conf instead)")
+	backendConfigFileName := flag.String("backendcfg", "", "The backend config file path")
 	flag.Parse()
 
 	if *showVersion {
@@ -132,7 +135,7 @@ func main() {
 		sslStr = "disable"
 	}
 
-	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s&fallback_application_name=trafficops", cfg.DB.User, cfg.DB.Password, cfg.DB.Hostname, cfg.DB.DBName, sslStr))
+	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s&fallback_application_name=trafficops", cfg.DB.User, cfg.DB.Password, cfg.DB.Hostname, cfg.DB.Port, cfg.DB.DBName, sslStr))
 	if err != nil {
 		log.Errorf("opening database: %v\n", err)
 		os.Exit(1)
@@ -142,6 +145,9 @@ func main() {
 	db.SetMaxOpenConns(cfg.MaxDBConnections)
 	db.SetMaxIdleConns(cfg.DBMaxIdleConnections)
 	db.SetConnMaxLifetime(time.Duration(cfg.DBConnMaxLifetimeSeconds) * time.Second)
+
+	auth.InitUsersCache(time.Duration(cfg.UserCacheRefreshIntervalSec)*time.Second, db.DB, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+	server.InitServerUpdateStatusCache(time.Duration(cfg.ServerUpdateStatusCacheRefreshIntervalSec)*time.Second, db.DB, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 
 	trafficVault := setupTrafficVault(*riakConfigFileName, &cfg)
 
@@ -162,7 +168,18 @@ func main() {
 		log.Errorln(debugServer.ListenAndServe())
 	}()
 
-	if err := routing.RegisterRoutes(routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins, TrafficVault: trafficVault}); err != nil {
+	var backendConfig config.BackendConfig
+	if *backendConfigFileName != "" {
+		backendConfig, err = config.LoadBackendConfig(*backendConfigFileName)
+		routing.SetBackendConfig(backendConfig)
+		if err != nil {
+			log.Errorf("error loading backend config: %v", err)
+		}
+	}
+
+	mux := http.NewServeMux()
+	d := routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins, TrafficVault: trafficVault, Mux: mux}
+	if err := routing.RegisterRoutes(d); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		os.Exit(1)
 	}
@@ -171,7 +188,7 @@ func main() {
 
 	log.Infof("Listening on " + cfg.Port)
 
-	server := &http.Server{
+	httpServer := &http.Server{
 		Addr:              ":" + cfg.Port,
 		TLSConfig:         cfg.TLSConfig,
 		ReadTimeout:       time.Duration(cfg.ReadTimeout) * time.Second,
@@ -180,11 +197,11 @@ func main() {
 		IdleTimeout:       time.Duration(cfg.IdleTimeout) * time.Second,
 		ErrorLog:          log.Error,
 	}
-	if server.TLSConfig == nil {
-		server.TLSConfig = &tls.Config{}
+	if httpServer.TLSConfig == nil {
+		httpServer.TLSConfig = &tls.Config{}
 	}
 	// Deprecated in 5.0
-	server.TLSConfig.InsecureSkipVerify = cfg.Insecure
+	httpServer.TLSConfig.InsecureSkipVerify = cfg.Insecure
 	// end deprecated block
 
 	go func() {
@@ -211,8 +228,8 @@ func main() {
 		} else {
 			file.Close()
 		}
-
-		if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
+		httpServer.Handler = mux
+		if err := httpServer.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
 			log.Errorf("stopping server: %v\n", err)
 			os.Exit(1)
 		}
@@ -230,10 +247,16 @@ func main() {
 		continuousProfile(&profiling, &profilingLocation, cfg.Version)
 	}
 
-	reloadProfilingConfig := func() {
+	reloadProfilingAndBackendConfig := func() {
 		setNewProfilingInfo(*configFileName, &profiling, &profilingLocation, cfg.Version)
+		backendConfig, err = getNewBackendConfig(backendConfigFileName)
+		if err != nil {
+			log.Errorf("could not reload backend config: %v", err)
+		} else {
+			routing.SetBackendConfig(backendConfig)
+		}
 	}
-	signalReloader(unix.SIGHUP, reloadProfilingConfig)
+	signalReloader(unix.SIGHUP, reloadProfilingAndBackendConfig)
 }
 
 func setupTrafficVault(riakConfigFileName string, cfg *config.Config) trafficvault.TrafficVault {
@@ -289,6 +312,19 @@ func setupTrafficVault(riakConfigFileName string, cfg *config.Config) trafficvau
 		return trafficVault
 	}
 	return &disabled.Disabled{}
+}
+
+func getNewBackendConfig(backendConfigFileName *string) (config.BackendConfig, error) {
+	if backendConfigFileName == nil {
+		return config.BackendConfig{}, errors.New("no backend config filename")
+	}
+	log.Infof("setting new backend config to %s", *backendConfigFileName)
+	backendConfig, err := config.LoadBackendConfig(*backendConfigFileName)
+	if err != nil {
+		log.Errorf("error reloading config: %v", err)
+		return backendConfig, err
+	}
+	return backendConfig, nil
 }
 
 func setNewProfilingInfo(configFileName string, currentProfilingEnabled *bool, currentProfilingLocation *string, version string) {

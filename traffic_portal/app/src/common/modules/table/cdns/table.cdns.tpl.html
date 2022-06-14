@@ -18,34 +18,15 @@ under the License.
 -->
 
 <div class="x_panel">
-    <div class="x_title">
-        <ol class="breadcrumb pull-left">
-            <li class="active">CDNs</li>
-        </ol>
-        <div class="pull-right">
-            <button name="createCdnButton" class="btn btn-primary" title="Create CDN" ng-click="createCDN()"><i class="fa fa-plus"></i></button>
-            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-        </div>
-        <div class="clearfix"></div>
-    </div>
-    <div class="x_content">
-        <br>
-        <table id="cdnsTable" class="table responsive-utilities jambo_table">
-            <thead>
-                <tr class="headings">
-                    <th>Name</th>
-                    <th>Domain</th>
-                    <th>DNSSEC Enabled</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr ng-click="editCDN(cdn.id)" ng-repeat="cdn in ::cdns" context-menu="contextMenuItems">
-                    <td name="name" data-search="^{{::cdn.name}}$">{{::cdn.name}}</td>
-                    <td data-search="^{{::cdn.domainName}}$">{{::cdn.domainName}}</td>
-                    <td data-search="^{{::cdn.dnssecEnabled}}$">{{::cdn.dnssecEnabled}}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+	<common-grid-controller
+		title="CDNs"
+		table-name="cdns"
+		options="gridOptions"
+		data="cdns"
+		columns="columns"
+		drop-down-options="dropDownOptions"
+		context-menu-options="contextMenuOptions"
+		default-data="defaultData"
+	>
+	</common-grid-controller>
 </div>
-

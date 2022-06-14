@@ -26,6 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-request/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
@@ -68,4 +69,5 @@ func main() {
 			os.Exit(3)
 		}
 	}
+	cfg.TCCfg.TOClient.WriteFsCookie(torequtil.CookieCachePath(cfg.TOUser))
 }

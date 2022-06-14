@@ -30,6 +30,8 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology"
 
 	"github.com/lib/pq"
 )
@@ -38,7 +40,6 @@ const CacheMonitorConfigFile = "rascal.properties"
 
 const MonitorType = "RASCAL"
 const RouterType = "CCR"
-const MonitorProfilePrefix = "RASCAL"
 const MonitorConfigFile = "rascal-config.txt"
 const KilobitsPerMegabit = 1000
 const DeliveryServiceStatus = "REPORTED"
@@ -72,9 +73,10 @@ type LegacyCache struct {
 
 type Cache struct {
 	CommonServerProperties
-	Interfaces []tc.ServerInterfaceInfo `json:"interfaces"`
-	Type       string                   `json:"type"`
-	HashID     string                   `json:"hashid"`
+	Interfaces       []tc.ServerInterfaceInfo `json:"interfaces"`
+	Type             string                   `json:"type"`
+	HashID           string                   `json:"hashid"`
+	DeliveryServices []tc.TSDeliveryService   `json:"deliveryServices,omitempty"`
 }
 
 type Cachegroup struct {
@@ -104,12 +106,13 @@ type LegacyMonitoring struct {
 }
 
 type Monitoring struct {
-	TrafficServers   []Cache                `json:"trafficServers"`
-	TrafficMonitors  []Monitor              `json:"trafficMonitors"`
-	Cachegroups      []Cachegroup           `json:"cacheGroups"`
-	Profiles         []Profile              `json:"profiles"`
-	DeliveryServices []DeliveryService      `json:"deliveryServices"`
-	Config           map[string]interface{} `json:"config"`
+	TrafficServers   []Cache                        `json:"trafficServers"`
+	TrafficMonitors  []Monitor                      `json:"trafficMonitors"`
+	Cachegroups      []Cachegroup                   `json:"cacheGroups"`
+	Profiles         []Profile                      `json:"profiles"`
+	DeliveryServices []DeliveryService              `json:"deliveryServices"`
+	Config           map[string]interface{}         `json:"config"`
+	Topologies       map[string]tc.CRConfigTopology `json:"topologies"`
 }
 
 // LegacyMonitoringResponse represents MontiroingResponse for ATC versions before 5.0.
@@ -127,10 +130,13 @@ type Router struct {
 }
 
 type DeliveryService struct {
-	XMLID              string  `json:"xmlId"`
-	TotalTPSThreshold  float64 `json:"totalTpsThreshold"`
-	Status             string  `json:"status"`
-	TotalKBPSThreshold float64 `json:"totalKbpsThreshold"`
+	XMLID              string   `json:"xmlId"`
+	TotalTPSThreshold  float64  `json:"totalTpsThreshold"`
+	Status             string   `json:"status"`
+	TotalKBPSThreshold float64  `json:"totalKbpsThreshold"`
+	Type               string   `json:"type"`
+	Topology           string   `json:"topology"`
+	HostRegexes        []string `json:"hostRegexes"`
 }
 
 func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
@@ -158,6 +164,10 @@ func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting config: %v", err)
 	}
+	topologies, err := topology.MakeTopologies(tx)
+	if err != nil {
+		return nil, fmt.Errorf("getting topologies: %w", err)
+	}
 
 	return &Monitoring{
 		TrafficServers:   caches,
@@ -166,6 +176,7 @@ func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
 		Profiles:         profiles,
 		DeliveryServices: deliveryServices,
 		Config:           config,
+		Topologies:       topologies,
 	}, nil
 }
 
@@ -268,6 +279,19 @@ AND cdn.name = $3
 		interfacesByNameAndServer[serverID][interfaceName] = interf
 	}
 
+	serverDSNames, err := dbhelpers.GetServerDSNamesByCDN(tx, cdn)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	serverDSes := make(map[tc.CacheName][]tc.TSDeliveryService, len(serverDSNames))
+	for c, dsNames := range serverDSNames {
+		tsDS := make([]tc.TSDeliveryService, 0, len(dsNames))
+		for _, n := range dsNames {
+			tsDS = append(tsDS, tc.TSDeliveryService{XmlId: n})
+		}
+		serverDSes[c] = tsDS
+	}
+
 	rows, err := tx.Query(serversQuery, cdn)
 	if err != nil {
 		return nil, nil, nil, err
@@ -300,6 +324,7 @@ AND cdn.name = $3
 			if _, ok := interfacesByNameAndServer[int(serverID.Int64)]; ok {
 				for _, interf := range interfacesByNameAndServer[int(serverID.Int64)] {
 					for _, ipAddress := range interf.IPAddresses {
+						ipAddress.Address = strings.Split(ipAddress.Address, "/")[0]
 						ip := net.ParseIP(ipAddress.Address)
 						if ip == nil {
 							continue
@@ -353,9 +378,10 @@ AND cdn.name = $3
 					HostName:   hostName.String,
 					FQDN:       fqdn.String,
 				},
-				Interfaces: cacheInterfaces,
-				Type:       ttype.String,
-				HashID:     hashID.String,
+				Interfaces:       cacheInterfaces,
+				Type:             ttype.String,
+				HashID:           hashID.String,
+				DeliveryServices: serverDSes[tc.CacheName(hostName.String)],
 			}
 			caches = append(caches, cache)
 		} else if ttype.String == tc.RouterTypeName {
@@ -470,17 +496,22 @@ WHERE pr.config_file = $2;
 
 func getDeliveryServices(tx *sql.Tx, cdnName string) ([]DeliveryService, error) {
 	query := `
-	SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps
+	SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps, t.name AS ds_type, ds.topology, ARRAY_AGG(r.pattern)
 	FROM deliveryservice ds
-	JOIN cdn on cdn.id = ds.cdn_id
+	JOIN type t ON ds.type = t.id
+	JOIN cdn ON cdn.id = ds.cdn_id
+	JOIN deliveryservice_regex dsr ON dsr.deliveryservice = ds.id
+	JOIN regex r ON r.id = dsr.regex
 	WHERE ds.active = true
 	AND cdn.name=$1
+	AND r.type = (SELECT id FROM type WHERE name = 'HOST_REGEXP')
+	GROUP BY ds.xml_id, ds.global_max_tps, ds.xml_id, ds.global_max_mbps, t.name, ds.topology
 	`
 	rows, err := tx.Query(query, cdnName)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing deliveryservice rows")
 
 	dses := []DeliveryService{}
 
@@ -488,7 +519,10 @@ func getDeliveryServices(tx *sql.Tx, cdnName string) ([]DeliveryService, error) 
 		var xmlid sql.NullString
 		var tps sql.NullFloat64
 		var mbps sql.NullFloat64
-		if err := rows.Scan(&xmlid, &tps, &mbps); err != nil {
+		var dsType string
+		var topology sql.NullString
+		var hostRegexes []string
+		if err := rows.Scan(&xmlid, &tps, &mbps, &dsType, &topology, pq.Array(&hostRegexes)); err != nil {
 			return nil, err
 		}
 		dses = append(dses, DeliveryService{
@@ -496,6 +530,9 @@ func getDeliveryServices(tx *sql.Tx, cdnName string) ([]DeliveryService, error) 
 			TotalTPSThreshold:  tps.Float64,
 			Status:             DeliveryServiceStatus,
 			TotalKBPSThreshold: mbps.Float64 * KilobitsPerMegabit,
+			Type:               tc.GetDSTypeCategory(dsType),
+			Topology:           topology.String,
+			HostRegexes:        hostRegexes,
 		})
 	}
 	return dses, nil

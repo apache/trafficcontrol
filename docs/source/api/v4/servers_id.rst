@@ -81,11 +81,10 @@ Request Structure
 	.. deprecated:: 3.0
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
-:physLocationId: An integral, unique identifier for the physical location where the server resides
-:profileId:      The :ref:`profile-id` the :term:`Profile` that shall be used by this server
-:revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
-:rack:           An optional string indicating "server rack" location
-:statusId:       The integral, unique identifier of the status of this server
+:physLocationId:  An integral, unique identifier for the physical location where the server resides
+:profileNames:    List of :ref:`profile-name` of the :term:`Profiles` that shall be used by this server
+:rack:            An optional string indicating "server rack" location
+:statusId:        The integral, unique identifier of the status of this server
 
 	.. seealso:: :ref:`health-proto`
 
@@ -94,7 +93,6 @@ Request Structure
 	.. note:: This is typically thought of as synonymous with "HTTP port", as the port specified by ``httpsPort`` may also be used for incoming TCP connections.
 
 :typeId:     The integral, unique identifier of the 'type' of this server
-:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Ops ORT
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: An optional password used in XMPP communications with the server
 
@@ -154,21 +152,22 @@ Request Structure
 		"mgmtIpNetmask": "",
 		"offlineReason": "",
 		"physLocationId": 1,
-		"profileId": 10,
+		"profileNames": ["ATS_MID_TIER_CACHE"],
 		"statusId": 3,
 		"tcpPort": 80,
-		"typeId": 12,
-		"updPending": false
+		"typeId": 12
 	}
 
 Response Structure
 ------------------
-:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
-:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
-:cdnId:          The integral, unique identifier of the CDN to which the server belongs
-:cdnName:        Name of the CDN to which the server belongs
-:domainName:     The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:guid:           An identifier used to uniquely identify the server
+:cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
+:cdnId:            The integral, unique identifier of the CDN to which the server belongs
+:configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
+:configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
+:cdnName:          Name of the CDN to which the server belongs
+:domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:guid:             An identifier used to uniquely identify the server
 
 	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
@@ -180,7 +179,7 @@ Response Structure
 :iloIpNetmask:   The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
 :iloPassword:    The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :abbr:`Role(s) <Role>`
 :iloUsername:    The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:interfaces:   A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
+:interfaces:     A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
 
 	:ipAddresses:       A set of objects representing IP Addresses assigned to this network interface. In most scenarios, only one or two (usually one IPv4 address and one IPv6 address) will be present, but it is illegal for this set to be an empty collection.
 
@@ -214,15 +213,15 @@ Response Structure
 	.. deprecated:: 3.0
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
-:offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:physLocation:   The name of the :term:`Physical Location` where the server resides
-:physLocationId: An integral, unique identifier for the :term:`Physical Location` where the server resides
-:profile:        The :ref:`profile-name` of the :term:`Profile` used by this server
-:profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
-:profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
-:revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
-:rack:           A string indicating "server rack" location
-:status:         The status of the server
+:offlineReason:   A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
+:physLocation:    The name of the :term:`Physical Location` where the server resides
+:physLocationId:  An integral, unique identifier for the :term:`Physical Location` where the server resides
+:profileNames:    List of :ref:`profile-name` of the :term:`Profiles` used by this server
+:revalPending:    A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
+:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
+:revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
+:rack:            A string indicating "server rack" location
+:status:          The status of the server
 
 	.. seealso:: :ref:`health-proto`
 
@@ -236,7 +235,7 @@ Response Structure
 
 :type:       The name of the 'type' of this server
 :typeId:     The integral, unique identifier of the 'type' of this server
-:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Ops ORT
+:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (:term:`t3c`, formerly ORT)
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
 
@@ -267,6 +266,8 @@ Response Structure
 		"cachegroupId": 6,
 		"cdnId": 2,
 		"cdnName": "CDN-in-a-Box",
+		"configUpdateTime": "2022-02-28T15:44:15.895145-07:00",
+		"configApplyTime": "2022-02-18T13:52:47.129174-07:00",
 		"domainName": "infra.ciab.test",
 		"guid": null,
 		"hostName": "quest",
@@ -284,17 +285,17 @@ Response Structure
 		"offlineReason": "",
 		"physLocation": "Apachecon North America 2018",
 		"physLocationId": 1,
-		"profile": "ATS_MID_TIER_CACHE",
-		"profileDesc": "Mid Cache - Apache Traffic Server",
-		"profileId": 10,
+		"profileNames": ["ATS_MID_TIER_CACHE"],
 		"rack": null,
 		"revalPending": false,
+		"revalUpdateTime": "1969-12-31T17:00:00-07:00",
+		"revalApplyTime": "1969-12-31T17:00:00-07:00",
 		"status": "REPORTED",
 		"statusId": 3,
 		"tcpPort": 80,
 		"type": "MID",
 		"typeId": 12,
-		"updPending": false,
+		"updPending": true,
 		"xmppId": null,
 		"xmppPasswd": null,
 		"interfaces": [
@@ -354,12 +355,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:   A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belonged
-:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belonged
-:cdnId:        The integral, unique identifier of the CDN to which the server belonged
-:cdnName:      Name of the CDN to which the server belonged
-:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:guid:         An identifier used to uniquely identify the server
+:cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belonged
+:cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belonged
+:cdnId:            The integral, unique identifier of the CDN to which the server belonged
+:cdnName:          Name of the CDN to which the server belonged
+:configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
+:configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
+:domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:guid:             An identifier used to uniquely identify the server
 
 	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
@@ -405,15 +408,15 @@ Response Structure
 	.. deprecated:: 3.0
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
-:offlineReason:  A user-entered reason why the server was in ADMIN_DOWN or OFFLINE status
-:physLocation:   The name of the physical location where the server resided
-:physLocationId: An integral, unique identifier for the physical location where the server resided
-:profile:        The :ref:`profile-name` of the :term:`Profile` which was used by this server
-:profileDesc:    A :ref:`profile-description` of the :term:`Profile` which was used by this server
-:profileId:      The :ref:`profile-id` the :term:`Profile` which was used by this server
-:revalPending:   A boolean value which, if ``true`` indicates that this server had pending content invalidation/revalidation
-:rack:           A string indicating "server rack" location
-:status:         The :term:`Status` of the server
+:offlineReason:   A user-entered reason why the server was in ADMIN_DOWN or OFFLINE status
+:physLocation:    The name of the physical location where the server resided
+:physLocationId:  An integral, unique identifier for the physical location where the server resided
+:profileNames:    List of :ref:`profile-name` of the :term:`Profiles` which was used by this server
+:revalPending:    A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
+:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
+:revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
+:rack:            A string indicating "server rack" location
+:status:          The :term:`Status` of the server
 
 	.. seealso:: :ref:`health-proto`
 
@@ -427,7 +430,7 @@ Response Structure
 
 :type:       The name of the :term:`Type` of this server
 :typeId:     The integral, unique identifier of the 'type' of this server
-:updPending: A boolean value which, if ``true``, indicates that the server had updates of some kind pending, typically to be acted upon by Traffic Ops :term:`ORT`
+:updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
 
@@ -454,6 +457,8 @@ Response Structure
 		"cachegroupId": 6,
 		"cdnId": 2,
 		"cdnName": "CDN-in-a-Box",
+		"configUpdateTime": "1969-12-31T17:00:00-07:00",
+		"configApplyTime": "1969-12-31T17:00:00-07:00",
 		"domainName": "infra.ciab.test",
 		"guid": null,
 		"hostName": "quest",
@@ -471,11 +476,11 @@ Response Structure
 		"offlineReason": "",
 		"physLocation": "Apachecon North America 2018",
 		"physLocationId": 1,
-		"profile": "ATS_MID_TIER_CACHE",
-		"profileDesc": "Mid Cache - Apache Traffic Server",
-		"profileId": 10,
+		"profileNames": ["ATS_MID_TIER_CACHE"],
 		"rack": null,
 		"revalPending": false,
+		"revalUpdateTime": "1969-12-31T17:00:00-07:00",
+		"revalApplyTime": "1969-12-31T17:00:00-07:00",
 		"status": "REPORTED",
 		"statusId": 3,
 		"tcpPort": 80,

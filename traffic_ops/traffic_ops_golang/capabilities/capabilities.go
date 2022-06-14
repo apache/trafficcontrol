@@ -1,3 +1,9 @@
+// Package capabilities contains logic and handlers for the /capabilities API
+// endpoint.
+//
+// Deprecated: "Capabilities" (now called Permissions) are no longer handled
+// this way, and this package should be removed once API versions that use it
+// have been fully removed.
 package capabilities
 
 /*
@@ -21,9 +27,11 @@ package capabilities
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -37,49 +45,54 @@ SELECT description,
 FROM capability
 `
 
+// Read handles GET requests to /capabilities.
+//
+// Deprecated: "Capabilities" (now called Permissions) are no longer handled
+// this way, and this package should be removed once API versions that use it
+// have been fully removed.
 func Read(w http.ResponseWriter, r *http.Request) {
 	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, nil)
 		return
 	}
 	defer inf.Close()
 
 	cols := map[string]dbhelpers.WhereColumnInfo{
-		"name": dbhelpers.WhereColumnInfo{Column: "capability.name"},
+		"name": {Column: "capability.name"},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
 	if len(errs) > 0 {
 		errCode = http.StatusBadRequest
 		userErr = util.JoinErrs(errs)
-		api.HandleErr(w, r, tx, errCode, userErr, nil)
+		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, nil, nil)
 		return
 	}
 
 	query := readQuery + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		errCode = http.StatusInternalServerError
-		sysErr = fmt.Errorf("querying capabilities: %v", err)
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		sysErr = fmt.Errorf("querying capabilities: %w", err)
+		api.HandleDeprecatedErr(w, r, tx, errCode, nil, sysErr, nil)
 		return
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing Capabilities rows")
 
 	caps := []tc.Capability{}
 	for rows.Next() {
-		cap := tc.Capability{}
-		if err := rows.Scan(&cap.Description, &cap.LastUpdated, &cap.Name); err != nil {
+		var capability tc.Capability
+		if err := rows.Scan(&capability.Description, &capability.LastUpdated, &capability.Name); err != nil {
 			errCode = http.StatusInternalServerError
-			sysErr = fmt.Errorf("Parsing database response: %v", err)
-			api.HandleErr(w, r, tx, errCode, nil, sysErr)
+			sysErr = fmt.Errorf("parsing database response: %w", err)
+			api.HandleDeprecatedErr(w, r, tx, errCode, nil, sysErr, nil)
 			return
 		}
 
-		caps = append(caps, cap)
+		caps = append(caps, capability)
 	}
 
-	api.WriteResp(w, r, caps)
+	api.WriteRespAlertObj(w, r, tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future", caps)
 }

@@ -37,8 +37,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
-	legacyClient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
-	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	legacyClient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 
 	jsoniter "github.com/json-iterator/go"
 	"golang.org/x/net/publicsuffix"
@@ -378,14 +378,15 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 
 	var remoteAddr string
 	var err error
-	var data []byte
-	var legacyReqInf legacyClient.ReqInf
+	var crConfig *tc.CRConfig
+	var configBytes []byte
+	json := jsoniter.ConfigFastest
 
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
 	}
-	data, reqInf, err := ss.GetCRConfig(cdn)
+	response, reqInf, err := ss.GetCRConfig(cdn, client.RequestOptions{})
 	if reqInf.RemoteAddr != nil {
 		remoteAddr = reqInf.RemoteAddr.String()
 	}
@@ -395,24 +396,31 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 		if ls == nil {
 			return nil, ErrNilSession
 		}
-		data, legacyReqInf, err = ls.GetCRConfig(cdn)
-		if legacyReqInf.RemoteAddr != nil {
-			remoteAddr = legacyReqInf.RemoteAddr.String()
+		configBytes, reqInf, err = ls.GetCRConfig(cdn)
+		if reqInf.RemoteAddr != nil {
+			remoteAddr = reqInf.RemoteAddr.String()
 		}
 		if err != nil {
 			log.Errorln("getting CRConfig from Traffic Ops using legacy client: " + err.Error() + ". Checking for backup")
+		}
+	} else {
+		crConfig = &response.Response
+		configBytes, err = json.Marshal(crConfig)
+		if err != nil {
+			crConfig = nil
+			log.Warnln("failed to marshal CRConfig using up-to-date client: " + err.Error())
 		}
 	}
 
 	if err == nil {
 		log.Infoln("successfully got CRConfig from Traffic Ops. Writing to backup file")
-		if wErr := ioutil.WriteFile(s.CRConfigBackupFile, data, 0644); wErr != nil {
+		if wErr := ioutil.WriteFile(s.CRConfigBackupFile, configBytes, 0644); wErr != nil {
 			log.Errorf("failed to write CRConfig backup file: %v", wErr)
 		}
 	} else {
 		if s.BackupFileExists() {
 			log.Errorln("using backup file for CRConfig snapshot due to error fetching CRConfig snapshot from Traffic Ops: " + err.Error())
-			data, err = ioutil.ReadFile(s.CRConfigBackupFile)
+			configBytes, err = ioutil.ReadFile(s.CRConfigBackupFile)
 			if err != nil {
 				return nil, fmt.Errorf("reading CRConfig backup file: %v", err)
 			}
@@ -431,23 +439,23 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	}
 	defer s.crConfigHist.Add(hist)
 
-	crc := &tc.CRConfig{}
-	json := jsoniter.ConfigFastest
-	if err = json.Unmarshal(data, crc); err != nil {
-		err = errors.New("invalid JSON: " + err.Error())
-		hist.Err = err
-		return data, err
+	if crConfig == nil {
+		if err = json.Unmarshal(configBytes, crConfig); err != nil {
+			err = errors.New("invalid JSON: " + err.Error())
+			hist.Err = err
+			return configBytes, err
+		}
 	}
-	hist.Stats = crc.Stats
+	hist.Stats = crConfig.Stats
 
-	if err = s.CRConfigValid(crc, cdn); err != nil {
+	if err = s.CRConfigValid(crConfig, cdn); err != nil {
 		err = errors.New("invalid CRConfig: " + err.Error())
 		hist.Err = err
-		return data, err
+		return configBytes, err
 	}
 
-	s.lastCRConfig.Set(cdn, data, &crc.Stats)
-	return data, nil
+	s.lastCRConfig.Set(cdn, configBytes, &crConfig.Stats)
+	return configBytes, nil
 }
 
 // LastCRConfig returns the last CRConfig requested from CRConfigRaw, and the
@@ -457,7 +465,7 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 // to try to get the CRConfig from Traffic Ops.
 func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time, error) {
 	crConfig, crConfigTime, _ := s.lastCRConfig.Get(cdn)
-	if crConfig == nil {
+	if len(crConfig) == 0 {
 		b, err := s.CRConfigRaw(cdn)
 		return b, time.Now(), err
 	}
@@ -470,8 +478,8 @@ func (s TrafficOpsSessionThreadsafe) fetchTMConfig(cdn string) (*tc.TrafficMonit
 		return nil, ErrNilSession
 	}
 
-	m, _, e := ss.GetTrafficMonitorConfig(cdn)
-	return m, e
+	m, _, e := ss.GetTrafficMonitorConfig(cdn, client.NewRequestOptions())
+	return &m.Response, e
 }
 
 func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfig(cdn string) (*tc.TrafficMonitorConfig, error) {
@@ -484,7 +492,7 @@ func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfig(cdn string) (*tc.Traffi
 	if m == nil {
 		return nil, e
 	}
-	return m.Upgrade(), e
+	return m, e
 }
 
 // trafficMonitorConfigMapRaw returns the Traffic Monitor config map from the
@@ -552,42 +560,65 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 	if err != nil {
 		return nil, fmt.Errorf("getting monitor config map: %v", err)
 	}
-
-	crcData, err := s.CRConfigRaw(cdn)
-	if err != nil {
-		return nil, fmt.Errorf("getting CRConfig: %v", err)
-	}
-
-	crConfig := tc.CRConfig{}
-	json := jsoniter.ConfigFastest
-	if err := json.Unmarshal(crcData, &crConfig); err != nil {
-		return nil, fmt.Errorf("unmarshalling CRConfig JSON : %v", err)
-	}
-
-	mc, err = CreateMonitorConfig(crConfig, mc)
-	if err != nil {
-		return nil, fmt.Errorf("creating Traffic Monitor Config: %v", err)
-	}
-
 	return mc, nil
 }
 
-func (s TrafficOpsSessionThreadsafe) fetchServerByHostname(hostName string) (tc.ServerV30, error) {
+func (s TrafficOpsSessionThreadsafe) fetchServerByHostname(hostName string) (tc.ServerV40, error) {
 	ss := s.get()
 	if ss == nil {
-		return tc.ServerV30{}, ErrNilSession
+		return tc.ServerV40{}, ErrNilSession
+	}
+
+	params := url.Values{}
+	params.Set("hostName", hostName)
+	resp, _, err := ss.GetServers(client.RequestOptions{QueryParameters: params})
+	if err != nil {
+		return tc.ServerV40{}, fmt.Errorf("fetching server by hostname '%s': %v", hostName, err)
+	}
+
+	respLen := len(resp.Response)
+	if respLen < 1 {
+		return tc.ServerV40{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
+	}
+
+	var server tc.ServerV40
+	var num int
+	found := false
+	for i, srv := range resp.Response {
+		num = i
+		if srv.CDNName != nil && srv.HostName != nil && *srv.HostName == hostName {
+			server = srv
+			found = true
+			break
+		}
+	}
+	if !found {
+		return tc.ServerV40{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-nil CDN", hostName)
+	}
+
+	if respLen > 1 {
+		log.Warnf("Getting monitor server by hostname '%s' returned %d servers - selecting #%d", hostName, respLen, num)
+	}
+
+	return server, nil
+}
+
+func (s TrafficOpsSessionThreadsafe) fetchLegacyServerByHostname(hostName string) (tc.ServerV40, error) {
+	ss := s.getLegacy()
+	if ss == nil {
+		return tc.ServerV40{}, ErrNilSession
 	}
 
 	params := url.Values{}
 	params.Set("hostName", hostName)
 	resp, _, err := ss.GetServersWithHdr(&params, nil)
 	if err != nil {
-		return tc.ServerV30{}, fmt.Errorf("fetching server by hostname '%s': %v", hostName, err)
+		return tc.ServerV40{}, fmt.Errorf("fetching server by hostname '%s': %v", hostName, err)
 	}
 
 	respLen := len(resp.Response)
 	if respLen < 1 {
-		return tc.ServerV30{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
+		return tc.ServerV40{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
 	}
 
 	var server tc.ServerV30
@@ -602,63 +633,27 @@ func (s TrafficOpsSessionThreadsafe) fetchServerByHostname(hostName string) (tc.
 		}
 	}
 	if !found {
-		return tc.ServerV30{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-nil CDN", hostName)
+		return tc.ServerV40{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-nil CDN", hostName)
 	}
 
 	if respLen > 1 {
 		log.Warnf("Getting monitor server by hostname '%s' returned %d servers - selecting #%d", hostName, respLen, num)
 	}
 
-	return server, nil
-}
-
-func (s TrafficOpsSessionThreadsafe) fetchLegacyServerByHostname(hostName string) (tc.ServerV30, error) {
-	ss := s.getLegacy()
-	if ss == nil {
-		return tc.ServerV30{}, ErrNilSession
+	if server.Profile == nil {
+		return tc.ServerV40{}, fmt.Errorf("server with hostname '%s' has no profile", hostName)
 	}
-
-	resp, _, err := ss.GetServerByHostName(hostName)
+	newServer, err := server.UpgradeToV40([]string{*server.Profile})
 	if err != nil {
-		return tc.ServerV30{}, fmt.Errorf("fetching legacy server by hostname '%s': %v", hostName, err)
+		return newServer, fmt.Errorf("coercing legacy server to new format: %v", err)
 	}
-
-	respLen := len(resp)
-	if respLen < 1 {
-		return tc.ServerV30{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
-	}
-
-	var server tc.ServerNullableV2
-	var num int
-	found := false
-	for i, srv := range resp {
-		num = i
-		if srv.CDNName != "" && srv.HostName == hostName {
-			server = srv.ToNullable()
-			found = true
-			break
-		}
-
-	}
-	if !found {
-		return tc.ServerV30{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-empty CDN", hostName)
-	}
-	if respLen > 1 {
-		log.Warnf("Getting monitor server by hostname '%s' returned %d servers - selecting #%d", hostName, respLen, num)
-	}
-
-	ret, err := server.Upgrade()
-	if err != nil {
-		return ret, fmt.Errorf("coercing legacy server to new format: %v", err)
-	}
-
-	return ret, nil
+	return newServer, nil
 }
 
 // MonitorCDN returns the name of the CDN of a Traffic Monitor with the given
 // hostName.
 func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error) {
-	var server tc.ServerV30
+	var server tc.ServerV40
 	var err error
 
 	server, err = s.fetchServerByHostname(hostName)
@@ -674,84 +669,4 @@ func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error)
 	// nil-dereference checks done already in each 'fetch' method; they'll just
 	// return an error in that case
 	return *server.CDNName, nil
-}
-
-// CreateMonitorConfig modifies the passed TrafficMonitorConfigMap to add the
-// Traffic Monitors and Delivery Services found in a CDN Snapshot
-func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
-	// Dump the "live" monitoring.json monitors, and populate with the
-	// "snapshotted" CRConfig
-	if mc == nil {
-		return mc, errors.New("no TM configmap data")
-	}
-	for name, mon := range crConfig.Monitors {
-		if tmData, ok := mc.TrafficMonitor[name]; ok {
-			if tmData.IP != "" && tmData.IP6 != "" {
-				continue
-			} else {
-				mc.TrafficMonitor[name] = tc.TrafficMonitor{}
-			}
-		} else {
-			continue
-		}
-		m := mc.TrafficMonitor[name]
-		if mon.Port != nil {
-			m.Port = *mon.Port
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing Port field\n", name)
-		}
-		if mon.IP6 != nil {
-			m.IP6 = *mon.IP6
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing IP6 field\n", name)
-		}
-		if mon.IP != nil {
-			m.IP = *mon.IP
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing IP field\n", name)
-		}
-		m.HostName = name
-		if mon.FQDN != nil {
-			m.FQDN = *mon.FQDN
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing FQDN field\n", name)
-		}
-		if mon.Profile != nil {
-			m.Profile = *mon.Profile
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing Profile field\n", name)
-		}
-		if mon.Location != nil {
-			m.Location = *mon.Location
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing Location field\n", name)
-		}
-		if mon.ServerStatus != nil {
-			m.ServerStatus = string(*mon.ServerStatus)
-		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing ServerStatus field\n", name)
-		}
-		mc.TrafficMonitor[name] = m
-	}
-
-	// Dump the "live" monitoring.json DeliveryServices, and populate with the
-	// "snapshotted" CRConfig but keep using the monitoring.json thresholds,
-	// because they're not in the CRConfig.
-	rawDeliveryServices := mc.DeliveryService
-	mc.DeliveryService = map[string]tc.TMDeliveryService{}
-	for name, _ := range crConfig.DeliveryServices {
-		if rawDS, ok := rawDeliveryServices[name]; ok {
-			// use the raw DS if it exists, because the CRConfig doesn't have
-			// thresholds or statuses
-			mc.DeliveryService[name] = rawDS
-		} else {
-			mc.DeliveryService[name] = tc.TMDeliveryService{
-				XMLID:              name,
-				TotalTPSThreshold:  0,
-				ServerStatus:       "REPORTED",
-				TotalKbpsThreshold: 0,
-			}
-		}
-	}
-	return mc, nil
 }

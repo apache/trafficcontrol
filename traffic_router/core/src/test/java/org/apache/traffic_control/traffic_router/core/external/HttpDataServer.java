@@ -19,6 +19,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +33,6 @@ import java.net.URI;
 public class HttpDataServer implements HttpHandler {
 	private HttpServer httpServer;
 	private int testHttpServerPort;
-	private static String apiVersion = "2.0";
 
 	public HttpDataServer(int testHttpServerPort) {
 		this.testHttpServerPort = testHttpServerPort;
@@ -45,7 +45,7 @@ public class HttpDataServer implements HttpHandler {
 
 // Useful for producing an access log
 //	static {
-//		Logger logger = LogManager.getLogger("com.sun.net.httpserver");
+//		Logger logger = Logger.getLogger("com.sun.net.httpserver");
 //		logger.setLevel(java.util.logging.Level.ALL);
 //
 //		java.util.logging.Handler[] handlers = logger.getHandlers();
@@ -120,23 +120,25 @@ public class HttpDataServer implements HttpHandler {
 					path += ".json";
 				}
 
-				if (("api/" + apiVersion + "/user/login").equals(path)) {
+				if (("api/" + TrafficOpsUtils.TO_API_VERSION + "/user/login").equals(path)) {
 					try {
 						Headers headers = httpExchange.getResponseHeaders();
+						headers.add("Content-length", Integer.toString(0));
 						headers.set("Set-Cookie", new HttpCookie("mojolicious","fake-cookie").toString());
 						httpExchange.sendResponseHeaders(200,0);
+
 					} catch (Exception e) {
 						System.out.println(">>>> Failed setting cookie");
 					}
 				}
 
 				// Pretend that someone externally changed steering.json data
-				if (receivedSteeringPost && ("api/" + apiVersion + "/steering").equals(path)) {
-					path = "api/" + apiVersion + "/steering2";
+				if (receivedSteeringPost && ("api/" + TrafficOpsUtils.TO_API_VERSION + "/steering").equals(path)) {
+					path = "api/" + TrafficOpsUtils.TO_API_VERSION + "/steering2";
 				}
 
 				// pretend certificates have not been updated
-				if (!receivedCertificatesPost && ("api/" + apiVersion + "/cdns/name/thecdn/sslkeys").equals(path)) {
+				if (!receivedCertificatesPost && ("api/" + TrafficOpsUtils.TO_API_VERSION + "/cdns/name/thecdn/sslkeys").equals(path)) {
 					path = path.replace("/sslkeys", "/sslkeys-missing-1");
 				}
 
@@ -175,9 +177,11 @@ public class HttpDataServer implements HttpHandler {
 					}
 				}
 
-				if (!path.contains("CrConfig")) {
+				if (path.contains("Geo")) {
 					try (OutputStream os = httpExchange.getResponseBody()) {
-						httpExchange.sendResponseHeaders(200, 0);
+						int bodySz = inputStream.available();
+						httpExchange.getResponseHeaders().add("Content-length", Integer.toString(bodySz));
+						httpExchange.sendResponseHeaders(200, bodySz);
 
 						final byte[] buffer = new byte[0x10000];
 						int count;
@@ -189,23 +193,32 @@ public class HttpDataServer implements HttpHandler {
 						System.out.println("Failed sending data for " + path + " : " + e.getMessage());
 					}
 				} else {
-					try {
-						final byte[] buffer = new byte[0x10000];
-						StringBuilder stringBuilder = new StringBuilder();
+					final byte[] buffer = new byte[0x10000];
+					final StringBuilder stringBuilder = new StringBuilder();
 
+					try {
 						while (inputStream.read(buffer) >= 0) {
 							stringBuilder.append(new String(buffer));
 						}
+					} catch (Exception e) {
+						System.out.println("Failed to ingest input file associated with " + path);
+					}
 
-						String body = stringBuilder.toString();
-						body = body.replaceAll("localhost:8889" , "localhost:" + testHttpServerPort);
+					String body = stringBuilder.toString();
 
+					try {
 						if (path.contains("CrConfig")) {
 							body = body.replaceAll("localhost:8889" , "localhost:" + testHttpServerPort);
 						}
 
-						httpExchange.sendResponseHeaders(200, 0);
-						httpExchange.getResponseBody().write(body.getBytes());
+						if (path.contains("json")) {
+							httpExchange.getResponseHeaders().add("Content-type", "application/json");
+						}
+
+						final byte[] bodyBytes = body.getBytes();
+						httpExchange.getResponseHeaders().add("Content-length", Integer.toString(bodyBytes.length));
+						httpExchange.sendResponseHeaders(200, bodyBytes.length);
+						httpExchange.getResponseBody().write(bodyBytes);
 						httpExchange.getResponseBody().close();
 
 					} catch (Exception e) {

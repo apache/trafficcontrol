@@ -15,15 +15,25 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM centos:8
+FROM rockylinux:8
 MAINTAINER dev@trafficcontrol.apache.org
 
 RUN dnf -y install golang git
+
 ENV GOPATH=/go
 
-RUN go get -u github.com/apache/trafficcontrol/lib/go-rfc github.com/apache/trafficcontrol/lib/go-tc
-ADD . ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testto
-WORKDIR ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testto
-RUN go build && cp testto /usr/sbin
+RUN mkdir -p ${GOPATH}/src/github.com/apache/trafficcontrol
+COPY go.mod \
+     go.sum \
+     ${GOPATH}/src/github.com/apache/trafficcontrol/
+COPY lib ${GOPATH}/src/github.com/apache/trafficcontrol/lib
+COPY vendor ${GOPATH}/src/github.com/apache/trafficcontrol/vendor
 
-CMD ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testto/Dockerfile_run.sh
+COPY traffic_monitor/tools/testto ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testto
+
+WORKDIR ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testto
+RUN go mod vendor && \
+    go build && \
+    cp testto /usr/sbin
+
+CMD ./Dockerfile_run.sh

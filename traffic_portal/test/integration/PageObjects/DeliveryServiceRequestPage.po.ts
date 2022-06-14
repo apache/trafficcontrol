@@ -48,7 +48,7 @@ export class DeliveryServicesRequestPage extends BasePage {
   private txtDisplayName = element(by.id("displayName"));
   private txtActive = element(by.id("active"));
   private txtContentRoutingType = element(by.id("type"));
-  private txtTenant = element(by.id("tenantId"));
+  private selTenant = element(by.id("tenantId"));
   private txtCDN = element(by.id("cdn"));
   private txtRawRemapText = element(by.id("remapText"));
   private txtRequestStatus = element(by.name("requestStatus"))
@@ -80,7 +80,8 @@ export class DeliveryServicesRequestPage extends BasePage {
       this.txtDisplayName.sendKeys(deliveryservicerequest.DisplayName + this.randomize),
       this.txtActive.sendKeys(deliveryservicerequest.Active),
       this.txtContentRoutingType.sendKeys(deliveryservicerequest.ContentRoutingType),
-      this.txtTenant.sendKeys(deliveryservicerequest.Tenant),
+      this.selTenant.click(),
+      element(by.name(deliveryservicerequest.Tenant)).click(),
       this.txtCDN.sendKeys(deliveryservicerequest.CDN),
       this.txtRawRemapText.sendKeys(deliveryservicerequest.RawText)
     ]);

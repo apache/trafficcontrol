@@ -29,9 +29,6 @@ const (
 	// apiServers is the API version-relative path to the /servers API
 	// endpoint.
 	apiServers = "/servers"
-	// apiServersDetails is the API version-relative path to the
-	// /servers/details API endpoint.
-	apiServersDetails = "/servers/details"
 )
 
 func needAndCanFetch(id *int, name *string) bool {
@@ -83,18 +80,6 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		}
 		server.PhysLocationID = &ph.Response[0].ID
 	}
-	if needAndCanFetch(server.ProfileID, server.Profile) {
-		innerOpts := NewRequestOptions()
-		innerOpts.QueryParameters.Set("name", *server.Profile)
-		pr, reqInf, err := to.GetProfiles(innerOpts)
-		if err != nil {
-			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s: %w", *server.Profile, err)
-		}
-		if len(pr.Response) == 0 {
-			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s", *server.Profile)
-		}
-		server.ProfileID = &pr.Response[0].ID
-	}
 	if needAndCanFetch(server.StatusID, server.Status) {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", *server.Status)
@@ -139,14 +124,6 @@ func (to *Session) GetServers(opts RequestOptions) (tc.ServersV4Response, toclie
 	return data, reqInf, err
 }
 
-// GetServersDetails retrieves the Server Details of the Server with the given
-// (short) Hostname.
-func (to *Session) GetServersDetails(opts RequestOptions) (tc.ServersV4DetailResponse, toclientlib.ReqInf, error) {
-	var data tc.ServersV4DetailResponse
-	reqInf, err := to.get(apiServersDetails, opts, &data)
-	return data, reqInf, err
-}
-
 // DeleteServer deletes the Server with the given ID.
 func (to *Session) DeleteServer(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiServers, id)
@@ -176,9 +153,9 @@ func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, r
 
 // GetServerIDDeliveryServices returns all of the Delivery Services assigned to the server identified
 // by the integral, unique identifier 'server'.
-func (to *Session) GetServerIDDeliveryServices(server int, opts RequestOptions) (tc.DeliveryServicesNullableResponse, toclientlib.ReqInf, error) {
+func (to *Session) GetServerIDDeliveryServices(server int, opts RequestOptions) (tc.DeliveryServicesResponseV4, toclientlib.ReqInf, error) {
 	endpoint := fmt.Sprintf(apiServerDeliveryServices, server)
-	var data tc.DeliveryServicesNullableResponse
+	var data tc.DeliveryServicesResponseV4
 	reqInf, err := to.get(endpoint, opts, &data)
 	return data, reqInf, err
 }

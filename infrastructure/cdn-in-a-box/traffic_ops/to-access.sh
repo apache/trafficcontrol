@@ -109,29 +109,29 @@ to-post() {
 	local t
 	local data
 	if [[ -z "$2" ]]; then
-		data=""
+		data=()
 	elif [[ -f "$2" ]]; then
-		data="--data @$2"
+		data=(--data "@${2}")
 	else
 		t=$(mktemp)
-		echo $2 >$t
-		data="--data @$t"
+		echo "$2" >$t
+		data=(--data "@${t}")
 	fi
 	to-auth && \
-	    curl $CURLAUTH $CURLOPTS -H 'Content-Type: application/json;charset=UTF-8' --cookie "$COOKIEJAR" -X POST $data "$TO_URL/$1"
+	    curl $CURLAUTH $CURLOPTS -H 'Content-Type: application/json;charset=UTF-8' --cookie "$COOKIEJAR" -X POST "${data[@]}" "$TO_URL/$1"
 	[[ -n $t ]] && rm -f "$t"
 }
 
 to-put() {
 	if [[ $# -lt 2 || -z "$2" ]]; then
-		data=""
+		data=()
 	elif [[ -f "$2" ]]; then
-		data="--data @$2"
+		data=(--data "@${2}")
 	else
-		data="--data $2"
+		data=(--data "${2}")
 	fi
 	to-auth && \
-	    curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X PUT $data "$TO_URL/$1"
+	    curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X PUT "${data[@]}" "$TO_URL/$1"
 }
 
 to-delete() {
@@ -183,11 +183,14 @@ to-enroll() {
 	export MY_NET_INTERFACE='eth0'
 	export MY_DOMAINNAME="$(dnsdomainname)"
 	MY_IP="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 3)"
-	export MY_IP=${MY_IP#"addr:"}
+	export MY_IP="${MY_IP#"addr:"}/24"
 	export MY_GATEWAY="$(route -n | grep $MY_NET_INTERFACE | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
 	MY_NETMASK="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 5)"
 	export MY_NETMASK=${MY_NETMASK#"Mask:"}
 	export MY_IP6_ADDRESS="$(ifconfig $MY_NET_INTERFACE | grep inet6 | grep -i global | sed 's/addr://' | awk '{ print $2 }')"
+	if [[ "$MY_IP6_ADDRESS" != */64 ]]; then
+		MY_IP6_ADDRESS="${MY_IP6_ADDRESS}/64"
+	fi
 	export MY_IP6_GATEWAY="$(route -n6 | grep UG | awk '{print $2}')"
 
 	case "$serverType" in
@@ -233,7 +236,7 @@ to-enroll() {
 			;;
 		"tr" )
 			export MY_TYPE="CCR"
-			export MY_PROFILE="CCR_CIAB"
+			export MY_PROFILE="TRAFFIC_ROUTER"
 			export MY_STATUS="ONLINE"
 			;;
 		"tp" )

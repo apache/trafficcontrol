@@ -390,8 +390,8 @@ func GetTestUserCurrent(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot get current user: %v - alerts: %+v", err, user.Alerts)
 	}
-	if user.Response.UserName != SessionUserName {
-		t.Errorf("current user expected: '%s' actual: '%s'", SessionUserName, user.Response.UserName)
+	if user.Response.Username != SessionUserName {
+		t.Errorf("current user expected: '%s' actual: '%s'", SessionUserName, user.Response.Username)
 	}
 }
 

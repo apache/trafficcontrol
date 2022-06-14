@@ -42,7 +42,6 @@ func getTestProfiles() []tc.ProfileNullable {
 	ID := 1
 	name := "profile1"
 	description := "desc1"
-	pt := "TR_PROFILE"
 	cdnID := 1
 	cdnName := "cdn1"
 	rd := true
@@ -55,7 +54,7 @@ func getTestProfiles() []tc.ProfileNullable {
 		CDNName:         &cdnName,
 		CDNID:           &cdnID,
 		RoutingDisabled: &rd,
-		Type:            &pt,
+		Type:            util.StrPtr(tc.TrafficRouterProfileType),
 	}
 	profiles = append(profiles, testCase)
 
@@ -138,7 +137,8 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	p := TOProfile{}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(p.Validate())))
+	err, _ := p.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 	expected := util.JoinErrsStr(test.SortErrors([]error{
 		errors.New("'cdn' cannot be blank"),
 		errors.New("'description' cannot be blank"),
@@ -159,7 +159,7 @@ func TestValidate(t *testing.T) {
 	p.Type = new(string)
 	*p.Type = "type"
 
-	err := p.Validate()
+	err, _ = p.Validate()
 	if !strings.Contains(err.Error(), "cannot contain spaces") {
 		t.Error("Expected an error about the Profile name containing spaces")
 	}

@@ -19,31 +19,34 @@
 # Dockerfile to build Traffic Server RPM
 ###############################################################
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
-ARG RHEL_VERSION=8
+ARG OS_VERSION=8
+ARG OS_DISTRO=rockylinux
+FROM ${OS_DISTRO}:${OS_VERSION}
+ARG OS_VERSION
+ARG OS_DISTRO
 # Makes RHEL_VERSION available in later layers without needing to specify it again
-ENV RHEL_VERSION=$RHEL_VERSION
+ENV OS_VERSION=${OS_VERSION}
+ENV OS_DISTRO=${OS_DISTRO}
 
 MAINTAINER dev@trafficcontrol.apache.org
 
 VOLUME /atsbuild
 
-RUN echo "Image Version: ${RHEL_VERSION}"
+RUN echo "Image Version: ${OS_DISTRO}:${OS_DISTRO}"
 
 ### Common for all sub-component builds
 RUN set -o errexit; \
-    if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
-		rpm_gpg_key=RPM-GPG-KEY-centosofficial; \
+    if [[ ${OS_VERSION%%.*} -ge 8 ]]; then \
+		rpm_gpg_key=RPM-GPG-KEY-rockyofficial; \
 		yum install -y 'dnf-command(config-manager)'; \
 		yum config-manager --set-enabled powertools; \
 	else \
-		rpm_gpg_key="RPM-GPG-KEY-CentOS-${RHEL_VERSION%%.*}"; \
+		rpm_gpg_key="RPM-GPG-KEY-CentOS-${OS_VERSION%%.*}"; \
 		yum install -y deltarpm centos-release-scl-rh; \
 		yum-config-manager --enable rhel-server-rhscl-7-rpms; \
 	fi && \
-	rpm --import "/etc/pki/rpm-gpg/${rpm_gpg_key}" && \
-	rpm --import "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-${RHEL_VERSION%%.*}" && \
+#	rpm --import "/etc/pki/rpm-gpg/${rpm_gpg_key}" && \
+	rpm --import "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-${OS_VERSION%%.*}" && \
 	yum -y clean all && \
 	yum -y update ca-certificates && \
 	yum -y install \
@@ -53,7 +56,7 @@ RUN set -o errexit; \
 		epel-release && \
 	yum -y clean all
 
-RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
+RUN if [[ ${OS_VERSION%%.*} -ge 8 ]]; then \
 		os_pkgs=( \
 			brotli \
 			brotli-devel \

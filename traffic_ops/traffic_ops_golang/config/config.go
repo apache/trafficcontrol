@@ -28,6 +28,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -35,33 +36,65 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
+// Options is a structure used to hold the route configuration options that can be supplied for the backend routes.
+type Options struct {
+	Algorithm string `json:"alg"`
+}
+
+// Host is a structure that holds the host info for the backend route.
+type Host struct {
+	Protocol string `json:"protocol"`
+	Hostname string `json:"hostname"`
+	Port     int    `json:"port"`
+}
+
+// BackendRoute holds all the information about a configured route, for which Traffic Ops serves as a reverse proxy.
+type BackendRoute struct {
+	Path        string   `json:"path"`
+	Method      string   `json:"method"`
+	Hosts       []Host   `json:"hosts"`
+	Opts        Options  `json:"opts"`
+	ID          int      `json:"routeId"`
+	Insecure    bool     `json:"insecure"`
+	Permissions []string `json:"permissions"`
+	Index       int
+}
+
+// BackendConfig is a structure that holds the configuration supplied to Traffic Ops, which makes it act as a reverse proxy to the specified routes.
+type BackendConfig struct {
+	Routes []BackendRoute `json:"routes"`
+}
+
 // Config reflects the structure of the cdn.conf file
 type Config struct {
-	URL                     *url.URL `json:"-"`
-	CertPath                string   `json:"-"`
-	KeyPath                 string   `json:"-"`
-	ConfigHypnotoad         `json:"hypnotoad"`
-	ConfigTrafficOpsGolang  `json:"traffic_ops_golang"`
-	ConfigTO                *ConfigTO   `json:"to"`
-	SMTP                    *ConfigSMTP `json:"smtp"`
-	ConfigPortal            `json:"portal"`
-	ConfigLetsEncrypt       `json:"lets_encrypt"`
-	ConfigAcmeRenewal       `json:"acme_renewal"`
-	AcmeAccounts            []ConfigAcmeAccount `json:"acme_accounts"`
-	DB                      ConfigDatabase      `json:"db"`
-	Secrets                 []string            `json:"secrets"`
-	TrafficVaultEnabled     bool
-	ConfigLDAP              *ConfigLDAP
-	LDAPEnabled             bool
-	LDAPConfPath            string `json:"ldap_conf_location"`
-	ConfigInflux            *ConfigInflux
-	InfluxEnabled           bool
-	InfluxDBConfPath        string `json:"influxdb_conf_path"`
-	Version                 string
-	DisableAutoCertDeletion bool                    `json:"disable_auto_cert_deletion"`
-	UseIMS                  bool                    `json:"use_ims"`
-	RoleBasedPermissions    bool                    `json:"role_based_permissions"`
-	DefaultCertificateInfo  *DefaultCertificateInfo `json:"default_certificate_info"`
+	URL                                       *url.URL `json:"-"`
+	CertPath                                  string   `json:"-"`
+	KeyPath                                   string   `json:"-"`
+	ConfigHypnotoad                           `json:"hypnotoad"`
+	ConfigTrafficOpsGolang                    `json:"traffic_ops_golang"`
+	ConfigTO                                  *ConfigTO   `json:"to"`
+	SMTP                                      *ConfigSMTP `json:"smtp"`
+	ConfigPortal                              `json:"portal"`
+	ConfigLetsEncrypt                         `json:"lets_encrypt"`
+	ConfigAcmeRenewal                         `json:"acme_renewal"`
+	AcmeAccounts                              []ConfigAcmeAccount `json:"acme_accounts"`
+	DB                                        ConfigDatabase      `json:"db"`
+	Secrets                                   []string            `json:"secrets"`
+	TrafficVaultEnabled                       bool
+	ConfigLDAP                                *ConfigLDAP
+	UserCacheRefreshIntervalSec               int `json:"user_cache_refresh_interval_sec"`
+	ServerUpdateStatusCacheRefreshIntervalSec int `json:"server_update_status_cache_refresh_interval_sec"`
+	LDAPEnabled                               bool
+	LDAPConfPath                              string `json:"ldap_conf_location"`
+	ConfigInflux                              *ConfigInflux
+	InfluxEnabled                             bool
+	InfluxDBConfPath                          string `json:"influxdb_conf_path"`
+	Version                                   string
+	DisableAutoCertDeletion                   bool                    `json:"disable_auto_cert_deletion"`
+	UseIMS                                    bool                    `json:"use_ims"`
+	RoleBasedPermissions                      bool                    `json:"role_based_permissions"`
+	DefaultCertificateInfo                    *DefaultCertificateInfo `json:"default_certificate_info"`
+	Cdni                                      *CdniConf               `json:"cdni"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -237,6 +270,10 @@ type ConfigInflux struct {
 	Secure      *bool  `json:"secure"`
 }
 
+type CdniConf struct {
+	DCdnId string `json:"dcdn_id"`
+}
+
 // NewFakeConfig returns a fake Config struct with just enough data to view Routes.
 func NewFakeConfig() Config {
 	c := Config{}
@@ -245,8 +282,13 @@ func NewFakeConfig() Config {
 	return c
 }
 
-const DefaultLDAPTimeoutSecs = 60
-const DefaultDBQueryTimeoutSecs = 20
+const (
+	DefaultLDAPTimeoutSecs    = 60
+	DefaultDBQueryTimeoutSecs = 20
+	DefaultDBPort             = "5432"
+	MinPort                   = 1
+	MaxPort                   = 65535
+)
 
 // ErrorLog - critical messages
 func (c Config) ErrorLog() log.LogLocation {
@@ -273,6 +315,31 @@ func (c Config) EventLog() log.LogLocation {
 
 const BlockStartup = true
 const AllowStartup = false
+
+func LoadBackendConfig(backendConfigPath string) (BackendConfig, error) {
+	confBytes, err := ioutil.ReadFile(backendConfigPath)
+	if err != nil {
+		return BackendConfig{}, fmt.Errorf("reading backend conf '%s': %v", backendConfigPath, err)
+	}
+
+	cfg := BackendConfig{}
+	err = json.Unmarshal(confBytes, &cfg)
+	if err != nil {
+		return BackendConfig{}, fmt.Errorf("unmarshalling '%s': %v", backendConfigPath, err)
+	}
+	for _, r := range cfg.Routes {
+		if r.Opts.Algorithm != "" && r.Opts.Algorithm != "roundrobin" {
+			return cfg, errors.New("algorithm can only be roundrobin or blank")
+		}
+		for _, h := range r.Hosts {
+			rawURL := h.Protocol + "://" + h.Hostname + ":" + strconv.Itoa(h.Port)
+			if _, err = url.ParseRequestURI(rawURL); err != nil {
+				return cfg, fmt.Errorf("couldn't convert host info into a valid URI: %v", err)
+			}
+		}
+	}
+	return cfg, nil
+}
 
 func LoadCdnConfig(cdnConfPath string) (Config, error) {
 	// load json from cdn.conf
@@ -310,6 +377,10 @@ func LoadConfig(cdnConfPath string, dbConfPath string, appVersion string) (Confi
 	err = json.Unmarshal(dbConfBytes, &cfg.DB)
 	if err != nil {
 		return Config{}, []error{fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)}, BlockStartup
+	}
+	if portNum, err := strconv.Atoi(cfg.DB.Port); err != nil || portNum < MinPort || MaxPort < portNum {
+		_, _ = fmt.Fprintf(os.Stderr, "error parsing database port: '%s' is invalid. Using default %s\n", cfg.DB.Port, DefaultDBPort)
+		cfg.DB.Port = DefaultDBPort
 	}
 	cfg, err = ParseConfig(cfg)
 	if err != nil {
@@ -416,6 +487,12 @@ func ParseConfig(cfg Config) (Config, error) {
 	}
 	if cfg.DBQueryTimeoutSeconds == 0 {
 		cfg.DBQueryTimeoutSeconds = DefaultDBQueryTimeoutSecs
+	}
+	if cfg.UserCacheRefreshIntervalSec < 0 {
+		cfg.UserCacheRefreshIntervalSec = 0
+	}
+	if cfg.ServerUpdateStatusCacheRefreshIntervalSec < 0 {
+		cfg.ServerUpdateStatusCacheRefreshIntervalSec = 0
 	}
 
 	invalidTOURLStr := ""

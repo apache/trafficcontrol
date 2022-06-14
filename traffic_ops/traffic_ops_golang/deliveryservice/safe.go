@@ -148,11 +148,11 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, dses)
 		case 3:
 			if inf.Version.Minor >= 1 {
-				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV31{tc.DeliveryServiceV31(ds.DowngradeToV3())})
+				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV31{tc.DeliveryServiceV31(ds.DowngradeToV31())})
 			}
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV30{ds.DowngradeToV3().DeliveryServiceV30})
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV30{ds.DowngradeToV31().DeliveryServiceV30})
 		case 2:
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV15{ds.DowngradeToV3().DeliveryServiceNullableV15})
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV15{ds.DowngradeToV31().DeliveryServiceNullableV15})
 		}
 	}
 

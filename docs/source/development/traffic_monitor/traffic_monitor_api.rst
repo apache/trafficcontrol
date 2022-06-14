@@ -178,6 +178,7 @@ Response Structure
 		}
 	}
 
+
 ``publish/CacheStats/{{cache}}``
 ================================
 Statistics gathered for only a single cache.
@@ -343,22 +344,59 @@ TODO
 
 ``/publish/CrStates``
 =====================
-The current state of this CDN per the ref:`health-proto`.
+The current state of this CDN per the :ref:`health-proto`.
 
 ``GET``
 -------
-:Response Type: ?
+:Response Type: Object
+
+.. code-block:: http
+	:caption: Example Request
+
+	GET /publish/CrStates HTTP/1.1
+	Accept: */*
 
 Response Structure
 """"""""""""""""""
+:caches: An object with keys that are the names of monitored :term:`cache servers`.
 
-TODO
+	:isAvailable: Whether or not this :term:`cache server` is available for routing overall
+	:ipv4Available: Whether or not an IPv4 interface on this :term:`cache server` is available for routing.
+	:ipv6Available: Whether or not an IPv6 interface on this :term:`cache server` is available for routing.
+	:status: The status of this server, along with any additional reason for it to be marked as such
+	:lastPoll: The last time the health data for this server was polled by a traffic monitor
 
+:deliveryServices: An object with keys that are the :ref:`XMLIDs <ds-xmlid>` of monitored :term:`Delivery Services`.
 
-..????
-**raw**
+	:disabledLocations: An array of the names of disabled "locations" (i.e. :term:`Cache Groups`) for this :term:`Delivery Service`.
+	:isAvailable: Whether or not this :term:`Delivery Service` is available for routing
 
-The current state of this CDN per this Traffic Monitor only.
+.. code-block:: http
+	:caption: Example Response
+
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Thu, 14 May 2020 15:54:35 GMT
+	Transfer-Encoding: chunked
+
+	{
+		"caches": {
+			"edge": {
+				"isAvailable": true,
+				"ipv4Available": true,
+				"ipv6Available": false,
+				"status": "REPORTED - available",
+				"lastPoll": "2022-03-15T17:54:03.821178179Z"
+			}
+		},
+		"deliveryServices": {
+			"dev-ds": {
+				"disabledLocations": [],
+				"isAvailable": true
+			}
+		}
+	}
+
 
 ``/publish/CrConfig``
 =====================
@@ -376,6 +414,35 @@ TODO
 ``/publish/PeerStates``
 =======================
 The health state information from all peer Traffic Monitors.
+
+``GET``
+-------
+:Response Type: ?
+
+Request Structure
+"""""""""""""""""
+.. table:: Request Query Parameters
+
+	+--------------+---------+------------------------------------------------+
+	|  Parameter   | Type    |                  Description                   |
+	+==============+=========+================================================+
+	| ``hc``       | integer | The history count, number of items to display. |
+	+--------------+---------+------------------------------------------------+
+	| ``stats``    | string  | A comma separated list of stats to display.    |
+	+--------------+---------+------------------------------------------------+
+	| ``wildcard`` | boolean | Controls whether specified stats should be     |
+	|              |         | treated as partial strings.                    |
+	+--------------+---------+------------------------------------------------+
+
+Response Structure
+""""""""""""""""""
+
+TODO
+
+
+``/publish/DistributedPeerStates``
+==================================
+The health state information from all distributed peer Traffic Monitors.
 
 ``GET``
 -------

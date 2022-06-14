@@ -50,7 +50,7 @@ start ()
 	stop
 	echo -e "Starting Traffic Ops\n"
 	ulimit -n 200000 || echo "Setting ulimit max files failed for traffic_ops_golang"
-	cd $TO_DIR && $TO_DIR/bin/traffic_ops_golang -cfg $TO_DIR/conf/cdn.conf -dbcfg $TO_DIR/conf/production/database.conf -riakcfg $TO_DIR/conf/production/riak.conf &
+	cd $TO_DIR && $TO_DIR/bin/traffic_ops_golang -cfg $TO_DIR/conf/cdn.conf -dbcfg $TO_DIR/conf/production/database.conf -riakcfg $TO_DIR/conf/production/riak.conf -backendcfg $TO_DIR/conf/production/backends.conf &
 }
 
 stop ()

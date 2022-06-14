@@ -12,15 +12,14 @@
 * limitations under the License.
 */
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from "@angular/core";
-
-import { Observable, of, Subscription } from "rxjs";
+import type { Observable, Subscription } from "rxjs";
 
 /**
  * CustomvalidityDirective decorates inputs, adding custom validity messages to
  * them.
  */
 @Directive({
-	selector: "input[customvalidity][valid]"
+	selector: "input[customvalidity]"
 })
 export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 	/**
@@ -28,10 +27,10 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 	 * the input changes. An empty string signifies "valid", whereas any other
 	 * string should be a description of why the input is invalid.
 	 */
-	@Input() public valid: Observable<string> = of("");
+	@Input() public customvalidity!: Observable<string>;
 
 	/** A subscription for the 'validity' input. */
-	private subscription: Subscription | null = null;
+	private subscription!: Subscription;
 
 	/**
 	 * Constructor.
@@ -40,20 +39,14 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 
 	/** Initializes the validity state of the element. */
 	public ngAfterViewInit(): void {
-		if (!this.element.nativeElement) {
-			console.warn("Use of DOM directive in non-DOM context!");
-			return;
-		}
-
-		this.subscription = this.valid.subscribe(
+		this.subscription = this.customvalidity.subscribe(
 			s => {
 				if (s) {
 					this.element.nativeElement.setCustomValidity(s);
 					this.element.nativeElement.reportValidity();
+				} else {
+					this.element.nativeElement.setCustomValidity("");
 				}
-			},
-			e => {
-				console.error(e);
 			}
 		);
 		this.element.nativeElement.addEventListener("input", () => this.element.nativeElement.setCustomValidity(""));
@@ -63,9 +56,7 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 	 * Cleans up subscription after the element is destroyed.
 	 */
 	public ngOnDestroy(): void {
-		if (this.subscription) {
-			this.subscription.unsubscribe();
-		}
+		this.subscription.unsubscribe();
 	}
 
 }

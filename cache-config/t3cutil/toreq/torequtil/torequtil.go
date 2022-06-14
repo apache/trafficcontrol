@@ -22,16 +22,45 @@ package torequtil
  */
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"math"
 	"net"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
+
+const CookieCacheDir = `/var/lib/trafficcontrol-cache-config/`
+
+func CookieCacheFileName(userName string) string {
+	return userName + ".cookie"
+}
+
+func CookieCachePath(userName string) string {
+	return filepath.Join(CookieCacheDir, CookieCacheFileName(userName))
+}
+
+type Cookie struct {
+	Cookie *http.Cookie `json:"cookie"`
+}
+
+type FsCookie struct {
+	Cookies []Cookie `json:"cookies"`
+}
+
+func (fc *FsCookie) GetHTTPCookies() []*http.Cookie {
+	cookies := []*http.Cookie{}
+	for _, cookie := range fc.Cookies {
+		cookies = append(cookies, cookie.Cookie)
+	}
+	return cookies
+}
 
 // GetRetry attempts to get the given object, retrying with exponential backoff up to cfg.NumRetries.
 // The objName is not used in actual fetching or logic, but only for logging. It can be any printable string, but should be unique and reflect the object being fetched.
@@ -85,6 +114,24 @@ func MaybeHdrStr(hdr http.Header, hdrName string) string {
 		return hdr.Get(hdrName)
 	}
 	return ""
+}
+
+func GetFsCookie(cookiePath string) (FsCookie, error) {
+	cookie := FsCookie{}
+	file, err := ioutil.ReadFile(cookiePath)
+	if err != nil {
+		return FsCookie{Cookies: nil}, err
+	}
+	err = json.Unmarshal(file, &cookie)
+	if err != nil {
+		return FsCookie{Cookies: nil}, err
+	}
+	for _, c := range cookie.Cookies {
+		if len(c.Cookie.String()) == 0 {
+			return FsCookie{Cookies: nil}, errors.New("file system cookie was empty")
+		}
+	}
+	return cookie, err
 }
 
 func StringToCookies(cookiesStr string) []*http.Cookie {

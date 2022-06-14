@@ -40,7 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 )
@@ -97,7 +97,7 @@ func (user *TOUser) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	}
 }
 
-func (user *TOUser) Validate() error {
+func (user *TOUser) Validate() (error, error) {
 
 	validateErrs := validation.Errors{
 		"email":    validation.Validate(user.Email, validation.Required, is.Email),
@@ -111,11 +111,11 @@ func (user *TOUser) Validate() error {
 	if user.LocalPassword != nil {
 		_, err := auth.IsGoodLoginPair(*user.Username, *user.LocalPassword)
 		if err != nil {
-			return err
+			return err, nil
 		}
 	}
 
-	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs)), nil
 }
 
 func (user *TOUser) postValidate() error {
@@ -527,7 +527,8 @@ func UpdateQueryV40() string {
 	postal_code=:postal_code,
 	country=:country,
 	tenant_id=:tenant_id,
-	local_passwd=COALESCE(:local_passwd, local_passwd)
+	local_passwd=COALESCE(:local_passwd, local_passwd),
+	ucdn=:ucdn
 	WHERE id=:id
 	RETURNING last_updated,
 	 (SELECT t.name FROM tenant t WHERE id = u.tenant_id),
@@ -552,7 +553,8 @@ func InsertQueryV40() string {
 	postal_code,
 	country,
 	tenant_id,
-	local_passwd
+	local_passwd,
+	ucdn
 	) VALUES (
 	:username,
 	:public_ssh_key,
@@ -569,7 +571,8 @@ func InsertQueryV40() string {
 	:postal_code,
 	:country,
 	:tenant_id,
-	:local_passwd
+	:local_passwd,
+	:ucdn
 	) RETURNING id, last_updated,
 	(SELECT t.name FROM tenant t WHERE id = tm_user.tenant_id),
 	(SELECT r.name FROM role r WHERE id = tm_user.role)`
@@ -598,7 +601,8 @@ SELECT
 	u.registration_sent,
 	u.tenant_id,
 	t.name AS tenant,
-	u.last_updated,`
+	u.last_updated,
+	u.ucdn,`
 
 const readQuery = readBaseQuery + `
 u.last_authenticated,
@@ -607,7 +611,7 @@ r.name as role
 FROM tm_user u
 LEFT JOIN tenant t ON u.tenant_id = t.id
 LEFT JOIN role r ON u.role = r.id
-LEFT JOIN role_capability rc on rc.role_id = r.id
+LEFT JOIN role_capability rc ON rc.role_id = r.id
 `
 
 const legacyReadQuery = readBaseQuery + `

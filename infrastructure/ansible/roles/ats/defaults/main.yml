@@ -54,3 +54,4 @@ ort_crontab:
       {%- else -%}
         traffic_ops_ort.pl revalidate warn {{ ort_traffic_ops_url }} '{{ ort_traffic_ops_username }}:{{ ort_traffic_ops_password }}' --login_dispersion=35 &>/tmp/ort/reval.log
       {%- endif -%}
+ats_clear_data: false

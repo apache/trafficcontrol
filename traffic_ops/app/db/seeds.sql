@@ -399,7 +399,6 @@ INSERT INTO public.last_deleted (table_name) VALUES ('deliveryservice_regex') ON
 INSERT INTO public.last_deleted (table_name) VALUES ('deliveryservice_request') ON CONFLICT (table_name) DO NOTHING;
 INSERT INTO public.last_deleted (table_name) VALUES ('deliveryservice_request_comment') ON CONFLICT (table_name) DO NOTHING;
 INSERT INTO public.last_deleted (table_name) VALUES ('deliveryservice_server') ON CONFLICT (table_name) DO NOTHING;
-INSERT INTO public.last_deleted (table_name) VALUES ('deliveryservice_tmuser') ON CONFLICT (table_name) DO NOTHING;
 INSERT INTO public.last_deleted (table_name) VALUES ('division') ON CONFLICT (table_name) DO NOTHING;
 INSERT INTO public.last_deleted (table_name) VALUES ('federation') ON CONFLICT (table_name) DO NOTHING;
 INSERT INTO public.last_deleted (table_name) VALUES ('federation_deliveryservice') ON CONFLICT (table_name) DO NOTHING;

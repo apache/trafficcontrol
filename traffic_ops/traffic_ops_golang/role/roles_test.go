@@ -86,11 +86,12 @@ func TestValidate(t *testing.T) {
 		APIInfoImpl: api.APIInfoImpl{ReqInfo: &reqInfo},
 		Role:        role,
 	}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(r.Validate())))
+	userErr, _ := r.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(userErr)))
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'description' cannot be blank`),
-		errors.New(`'privLevel' cannot be blank`),
+		errors.New(`'privLevel' is required`),
 	})
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
@@ -106,9 +107,12 @@ func TestValidate(t *testing.T) {
 		APIInfoImpl: api.APIInfoImpl{ReqInfo: &reqInfo},
 		Role:        role,
 	}
-	err := r.Validate()
-	if err != nil {
-		t.Errorf("expected nil, got %s", err)
+	userErr, sysErr := r.Validate()
+	if userErr != nil {
+		t.Errorf("expected nil user error, got: %s", userErr)
+	}
+	if sysErr != nil {
+		t.Errorf("expected nil system error, got: %v", sysErr)
 	}
 
 }

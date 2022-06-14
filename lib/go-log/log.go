@@ -29,16 +29,18 @@ import (
 )
 
 var (
-	Debug       *log.Logger
-	Info        *log.Logger
-	Warning     *log.Logger
-	Error       *log.Logger
-	Event       *log.Logger
-	debugCloser io.Closer
-	infoCloser  io.Closer
-	warnCloser  io.Closer
-	errCloser   io.Closer
-	eventCloser io.Closer
+	Debug        *log.Logger
+	Info         *log.Logger
+	Warning      *log.Logger
+	Error        *log.Logger
+	Event        *log.Logger
+	Access       *log.Logger
+	debugCloser  io.Closer
+	infoCloser   io.Closer
+	warnCloser   io.Closer
+	errCloser    io.Closer
+	eventCloser  io.Closer
+	accessCloser io.Closer
 )
 
 func initLogger(logger **log.Logger, oldLogCloser *io.Closer, newLogWriter io.WriteCloser, logPrefix string, logFlags int) {
@@ -84,6 +86,10 @@ func Init(eventW, errW, warnW, infoW, debugW io.WriteCloser) {
 	initLogger(&Event, &eventCloser, eventW, EventPrefix, EventFlags)
 }
 
+func InitAccess(accessW io.WriteCloser) {
+	initLogger(&Access, &accessCloser, accessW, EventPrefix, EventFlags)
+}
+
 // Logf should generally be avoided, use the built-in Init or InitCfg and Errorf, Warnln, etc functions instead.
 // It logs to the given logger, in the same format as the standard log functions.
 // This should only be used in rare and unusual circumstances when the standard loggers and functions can't.
@@ -120,6 +126,12 @@ const eventFormat = "%.3f %s"
 
 func eventTime(t time.Time) float64 {
 	return float64(t.Unix()) + (float64(t.Nanosecond()) / 1e9)
+}
+
+func Accessln(v ...interface{}) {
+	if Access != nil {
+		Access.Println(v...)
+	}
 }
 
 // event log entries (TM event.log, TR access.log, etc)

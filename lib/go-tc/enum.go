@@ -107,6 +107,11 @@ func CacheTypeFromString(s string) CacheType {
 	return CacheTypeInvalid
 }
 
+// IsValidCacheType returns true if the given string represents a valid cache type.
+func IsValidCacheType(s string) bool {
+	return CacheTypeFromString(s) != CacheTypeInvalid
+}
+
 // InterfaceName is the name of a server interface.
 type InterfaceName string
 
@@ -315,6 +320,14 @@ func DSTypeCategoryFromString(s string) DSTypeCategory {
 	}
 }
 
+// GetDSTypeCategory returns the delivery service type category (either HTTP or DNS) of the given delivery service type.
+func GetDSTypeCategory(dsType string) string {
+	if strings.HasPrefix(dsType, "DNS") {
+		return "DNS"
+	}
+	return "HTTP"
+}
+
 // These are the allowable values for the Signing Algorithm property of a
 // Delivery Service.
 const (
@@ -366,6 +379,9 @@ const (
 	// by Traffic Monitor. The vast majority of cache servers should have this
 	// Status.
 	CacheStatusReported = CacheStatus("REPORTED")
+	// CacheStatusPreProd represents a cache server that is not deployed to "production",
+	// but is ready for it.
+	CacheStatusPreProd = CacheStatus("PRE_PROD")
 	// CacheStatusInvalid represents an unrecognized Status value. Note that
 	// this is not actually "invalid", because Statuses may have any unique
 	// name, not just those captured as CacheStatus values in this package.

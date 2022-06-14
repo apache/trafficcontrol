@@ -11,7 +11,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<tp-header></tp-header>
 <main>
 	<div><input type="search" role="search" aria-label="Fuzzy Search Delivery Service(s)" autofocus inputmode="search" name="fuzzControl" [formControl]="fuzzControl" (input)="updateURL($event)" accesskey="/" placeholder="Fuzzy Search"/></div>
 	<article id="deliveryservices" [hidden]="loading">
@@ -19,4 +18,4 @@ limitations under the License.
 	</article>
 	<div id="loading" *ngIf="loading"><tp-loading></tp-loading></div>
 </main>
-<a mat-fab id="new" *ngIf="canCreateDeliveryServices" title="Create a new Delivery Service" routerLink="/core/new.Delivery.Service">+</a>
+<a mat-fab id="new" *ngIf="canCreateDeliveryServices" title="Create a new Delivery Service" routerLink="/core/new.Delivery.Service"><mat-icon>add</mat-icon></a>

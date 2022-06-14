@@ -73,7 +73,7 @@ Type
 """"
 A Profile's :dfn:`Type` determines how its configured Parameters_ are treated by various components, and often even determine how the object using the Profile is treated (particularly when it is a server). Unlike the more general ":term:`Type`" employed by Traffic Control, the allowed Types of Profiles are set in stone, and they are as follows.
 
-.. danger:: Nearly all of these Profile Types have strict naming requirements, and it may be noted that some of said requirements are prefixes ending with ``_``, while others are either not prefixes or do not end with ``_``. This is exactly true; some requirements **need** that ``_`` and some may or may not have it. It is our suggestion, therefore, that for the time being all prefixes use the ``_`` notation to separate words, so as to avoid causing headaches remembering when that matters and when it does not.
+.. danger:: Some of these Profile Types have strict naming requirements, and it may be noted that some of said requirements are prefixes ending with ``_``, while others are either not prefixes or do not end with ``_``. This is exactly true; some requirements **need** that ``_`` and some may or may not have it. It is our suggestion, therefore, that for the time being all prefixes use the ``_`` notation to separate words, so as to avoid causing headaches remembering when that matters and when it does not.
 
 ATS_PROFILE
 	A Profile that can be used with either an Edge-tier or Mid-tier :term:`cache server` (but not both, in general). This is the only Profile type that will ultimately pass its Parameters_ on to :term:`ORT` in the form of generated configuration files. For this reason, it can make use of the :ref:`t3c-special-strings` in the values of some of its Parameters_.
@@ -86,40 +86,28 @@ DS_PROFILE
 ES_PROFILE
 	A Profile for `ElasticSearch <https://www.elastic.co/products/elasticsearch>`_ servers. This has no known special meaning to any component of Traffic Control, but if ElasticSearch is in use the use of this Profile Type is suggested regardless.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``ELASTICSEARCH``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 GROVE_PROFILE
 	A Profile for use with the experimental Grove HTTP caching proxy.
 
 INFLUXDB_PROFILE
 	A Profile used with `InfluxDB <https://www.influxdata.com/>`_, which is used by Traffic Stats.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``INFLUXDB``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 KAFKA_PROFILE
 	A Profile for `Kafka <https://kafka.apache.org/>`_ servers. This has no known special meaning to any component of Traffic Control, but if Kafka is in use the use of this Profile Type is suggested regardless.
-
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``KAFKA``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
 LOGSTASH_PROFILE
 	A Profile for `Logstash <https://www.elastic.co/products/logstash>`_ servers. This has no known special meaning to any component of Traffic Control, but if Logstash is in use the use of this Profile Type is suggested regardless.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``LOGSTASH_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 ORG_PROFILE
 	A Profile that may be used by either :term:`origin servers` or :term:`Origins` (no, they aren't the same thing).
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``MSO``, or contain either ``ORG`` or ``ORIGIN`` anywhere in the name. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 RIAK_PROFILE
-	A Profile used for each `Riak <http://basho.com/products/riak-kv/>`_ server in a Traffic Stats cluster.
+	A Profile used for a Traffic Vault server.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``RIAK``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
+	.. impl-detail:: This Profile Type gets its name from the legacy implementation of Traffic Vault: Riak KV.
 
 SPLUNK_PROFILE
 	A Profile meant to be used with `Splunk <https://www.splunk.com/>`_ servers. This has no known special meaning to any component of Traffic Control, but if Splunk is in use the use of this Profile Type is suggested regardless.
-
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``SPLUNK``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
 TM_PROFILE
 	A Traffic Monitor Profile.
@@ -132,14 +120,10 @@ TP_PROFILE
 TR_PROFILE
 	A Traffic Router Profile.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``CCR_`` or ``TR_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 	.. seealso:: :ref:`tr-profile`
 
 TS_PROFILE
 	A Traffic Stats Profile.
-
-	.. caution:: For legacy reasons, the names of Profiles of this type *must* be ``TRAFFIC_STATS``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise! Furthermore, because Profile names must be unique, this means that only one TS_PROFILE-Type Profile can exist at a time.
 
 UNK_PROFILE
 	A catch-all type that can be assigned to anything without imbuing it with any special meaning or behavior.
@@ -204,6 +188,9 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	| use_reval_pending        | global                  | When this Parameter is present and its Value_ is exactly "1", Traffic Ops will separately keep track of :term:`cache servers`'        |
 	|                          |                         | updates and pending :term:`Content Invalidation Jobs`. This behavior should be enabled by default, and disabling it, while still      |
 	|                          |                         | possible is **EXTREMELY DISCOURAGED**.                                                                                                |
+	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tm_query_status_override | global                  | When this Parameter is present, its Value_ will set which status of Traffic Monitors that Traffic Ops will query for                  |
+	|                          |                         | endpoints that require querying Traffic Monitors. If not present, Traffic Ops will default to querying ``ONLINE`` Traffic Monitors.   |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation.polling.url  | CRConfig.json           | The location of a geographic IP mapping database for Traffic Router instances to use.                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -477,7 +464,7 @@ Furthermore, for a given value of ``N``, if a Parameter exists on the :term:`cac
 
 package
 '''''''
-This is a special, reserved Config File that isn't a file at all. When a Parameter's Config File is ``package``, then its name is interpreted as the name of a package. :term:`ORT` on the server using the :ref:`Profile <profiles>` that has this Parameter will attempt to install a package by that name, interpreting the Parameter's Value_ as a version string if it is not empty. The package manager used will be :manpage:`yum(8)`, regardless of system (though the Python version of :term:`ORT` will attempt to use the host system's package manager - :manpage:`yum(8)`, :manpage:`apt(8)` and ``pacman`` are supported) but that shouldn't be a problem because only CentOS 7 and CentOS 8 are supported.
+This is a special, reserved Config File that isn't a file at all. When a Parameter's Config File is ``package``, then its name is interpreted as the name of a package. :term:`ORT` on the server using the :ref:`Profile <profiles>` that has this Parameter will attempt to install a package by that name, interpreting the Parameter's Value_ as a version string if it is not empty. The package manager used will be :manpage:`yum(8)`, regardless of system (though the Python version of :term:`ORT` will attempt to use the host system's package manager - :manpage:`yum(8)`, :manpage:`apt(8)` and ``pacman`` are supported) but that shouldn't be a problem because only Rocky Linux 8 and CentOS 7 are supported.
 
 The current implementation of :term:`ORT` will expect Parameters to exist on a :term:`cache server`'s :ref:`Profile <profiles>` with the :ref:`Names <parameter-name>` ``astats_over_http`` and ``trafficserver`` before being run the first time, as both of these are required for a :term:`cache server` to operate within a Traffic Control CDN. It is possible to install these outside of :term:`ORT` - and indeed even outside of :manpage:`yum(8)` - but such configuration is not officially supported.
 
@@ -495,6 +482,8 @@ This configuration file is generated entirely from :term:`Cache Group` relations
 - ``not_a_parent`` - unlike the other Parameters listed (which have a 1:1 correspondence with Apache Traffic Server configuration options), this Parameter affects the generation of :term:`parent` relationships between :term:`cache servers`. When a Parameter with this :ref:`parameter-name` and Config File exists on a :ref:`Profile <profiles>` used by a :term:`cache server`, it will not be added as a :term:`parent` of any other :term:`cache server`, regardless of :term:`Cache Group` hierarchy. Under ordinary circumstances, there's no real reason for this Parameter to exist.
 
 Additionally, :term:`Delivery Service` :ref:`Profiles <ds-profile>` can have special Parameters with the :ref:`parameter-name` "mso.parent_retry" to :ref:`multi-site-origin-qht`.
+
+.. seealso:: There are many Parameters with this Config File that only apply on :ref:`Delivery Service Profiles <ds-profile>`. Those are documented in :ref:`their section of the Delivery Service overview page <ds-parameters-parent.config>`.
 
 .. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
 
@@ -621,6 +610,11 @@ The following plugins have support for adding args with following parameter Conf
 	| cachekey.pparam        | cachekey.pparam     | ``-o``                       | ``@pparam=-o``                       |
 	+------------------------+---------------------+------------------------------+--------------------------------------+
 
+In order to support difficult configurations at MID/LAST, a
+:term:`Delivery Service` profile parameter is available with parameters
+``LastRawRemapPre`` and ``LastRawRemapPost``, config file ``remap.config``
+and Value the raw remap lines.  The Value in this parameter will be pre
+or post pended to the end of ``remap.config``.
 
 .. seealso:: For an explanation of the syntax of this configuration file, refer to `the Apache Traffic Server remap.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_.
 

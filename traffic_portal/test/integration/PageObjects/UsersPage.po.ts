@@ -27,6 +27,7 @@ interface User {
   Email: string;
   Role: string;
   Tenant: string;
+  UCDN: string;
   Password: string;
   ConfirmPassword: string;
   PublicSSHKey: string;
@@ -62,7 +63,8 @@ export class UsersPage extends BasePage {
     private txtUserName = element(by.name('uName'));
     private txtEmail = element(by.name('email'));
     private txtRole = element(by.name('role'));
-    private txtTenant = element(by.name('tenantId'));
+    private selTenant = element(by.name('tenantId'));
+    private txtUCDN = element(by.name('uCDN'));
     private txtPassword = element(by.name('uPass'));
     private txtConfirmPassword = element(by.name('confirmPassword'));
     private txtPublicSSHKey = element(by.name('publicSshKey'));
@@ -109,7 +111,9 @@ export class UsersPage extends BasePage {
       await this.txtUserName.sendKeys(user.Username + this.randomize);
       await this.txtEmail.sendKeys(this.randomize + user.Email);
       await this.txtRole.sendKeys(user.Role);
-      await this.txtTenant.sendKeys(user.Tenant+this.randomize);
+      await this.selTenant.click();
+      await element(by.name(user.Tenant+this.randomize)).click();
+      await this.txtUCDN.sendKeys(user.UCDN);
       await this.txtPassword.sendKeys(user.Password);
       await this.txtConfirmPassword.sendKeys(user.ConfirmPassword);
       await this.txtPublicSSHKey.sendKeys(user.PublicSSHKey);
@@ -172,7 +176,8 @@ export class UsersPage extends BasePage {
         await this.btnRegisterNewUser.click();
         await this.txtEmail.sendKeys(this.randomize + user.Email);
         await this.txtRole.sendKeys(user.Role);
-        await this.txtTenant.sendKeys(user.Tenant + this.randomize);
+        await this.selTenant.click();
+        await element(by.name(user.Tenant+this.randomize)).click();
         await basePage.ClickRegister();
         if (await basePage.GetOutputMessage() === user.existsMessage) {
             await snp.NavigateToUsersPage();

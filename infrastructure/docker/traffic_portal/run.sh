@@ -20,13 +20,11 @@ set -o errexit
 
 NAME="Traffic Portal Application"
 NODE_BIN_DIR="/usr/bin"
-NODE_PATH="/opt/traffic_portal/node_modules"
-FOREVER_BIN_DIR="/opt/traffic_portal/node_modules/forever/bin"
+PM2_BIN_DIR="/opt/traffic_portal/node_modules/pm2/bin"
 APPLICATION_PATH="/opt/traffic_portal/server.js"
 PIDFILE="/var/run/traffic_portal.pid"
 LOGFILE="/var/log/traffic_portal/traffic_portal.log"
-MIN_UPTIME="5000"
-SPIN_SLEEP_TIME="2000"
+RESTART_TIME="2000"
 
 envvars=(TO_SERVER TO_PORT DOMAIN)
 for v in "${envvars}"; do
@@ -54,13 +52,13 @@ jq --arg TO_SERVER "$TO_SERVER:$TO_PORT" '.properties.api.baseUrl = "https://"+$
 mv $tmp $props
 
 # Add node to the path for situations in which the environment is passed.
-PATH=$FOREVER_BIN_DIR:$NODE_BIN_DIR:$PATH
-forever \
-    --pidFile $PIDFILE \
-    -a \
+PATH=$PM2_BIN_DIR:$NODE_BIN_DIR:$PATH
+pm2 \
+    start "$APPLICATION_PATH" \
+    -p $PIDFILE \
     -l $LOGFILE \
-    --minUptime $MIN_UPTIME \
-    --spinSleepTime $SPIN_SLEEP_TIME \
-    start $APPLICATION_PATH
+    --restart-delay $RESTART_TIME \
+    --time \
+    --name "$NAME"
 
 tail -f /dev/null

@@ -52,7 +52,7 @@ Request Structure
 :firstHeaderRewrite:        A set of :ref:`ds-first-header-rw-rules`
 :fqPacingRate:              The :ref:`ds-fqpr`
 :geoLimit:                  An integer that defines the :ref:`ds-geo-limit`
-:geoLimitCountries:         A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
+:geoLimitCountries:         A string containing a comma-separated list, or an array of strings defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
 :geoLimitRedirectUrl:       A :ref:`ds-geo-limit-redirect-url`\ [#geolimit]_
 :geoProvider:               The :ref:`ds-geo-provider`
 :globalMaxMbps:             The :ref:`ds-global-max-mbps`
@@ -204,7 +204,7 @@ Response Structure
 :firstHeaderRewrite:        A set of :ref:`ds-first-header-rw-rules`
 :fqPacingRate:              The :ref:`ds-fqpr`
 :geoLimit:                  An integer that defines the :ref:`ds-geo-limit`
-:geoLimitCountries:         A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`
+:geoLimitCountries:         An array of strings defining the :ref:`ds-geo-limit-countries`
 :geoLimitRedirectUrl:       A :ref:`ds-geo-limit-redirect-url`
 :geoProvider:               The :ref:`ds-geo-provider`
 :globalMaxMbps:             The :ref:`ds-global-max-mbps`

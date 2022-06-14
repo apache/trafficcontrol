@@ -7,7 +7,8 @@
 | < 5.0   | :x:                |
 | 5.0.x   | :x:                |
 | 5.1.x   | :white_check_mark: |
-| 6.0.x   | :white_check_mark: |
+| 6.0.x   | :x:                |
+| 6.1.x   | :white_check_mark: |
 
 ## Reporting a Vulnerability
 Contact the [Apache Traffic Control Security Team](mailto:security@trafficcontrol.apache.org)

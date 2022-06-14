@@ -18,12 +18,13 @@ package org.apache.traffic_control.traffic_router.core.loc;
 import org.apache.traffic_control.traffic_router.core.util.AbstractResourceWatcher;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 
 public class FederationsWatcher extends AbstractResourceWatcher {
     private static final Logger LOGGER = LogManager.getLogger(FederationsWatcher.class);
     private FederationRegistry federationRegistry;
 
-    public static final String DEFAULT_FEDERATION_DATA_URL = "https://${toHostname}/api/2.0/federations/all";
+    public static final String DEFAULT_FEDERATION_DATA_URL = "https://${toHostname}/api/"+TrafficOpsUtils.TO_API_VERSION+"/federations/all";
     public FederationsWatcher() {
         setDatabaseUrl(DEFAULT_FEDERATION_DATA_URL);
         setDefaultDatabaseUrl(DEFAULT_FEDERATION_DATA_URL);

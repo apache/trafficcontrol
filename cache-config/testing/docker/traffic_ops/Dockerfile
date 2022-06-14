@@ -20,19 +20,23 @@
 # Based on CentOS 8
 ############################################################
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
-ARG RHEL_VERSION=8
-# Makes RHEL_VERSION available in later layers without needing to specify it again
-ENV RHEL_VERSION=$RHEL_VERSION
+ARG OS_VERSION=8
+ARG OS_DISTRO=rockylinux
+FROM ${OS_DISTRO}:${OS_VERSION}
+ARG OS_VERSION
+ARG OS_DISTRO
+ENV OS_VERSION=${OS_VERSION}
+ENV OS_DISTRO=${OS_DISTRO}
 
-RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+RUN echo "Image Version: ${OS_DISTRO}:${OS_VERSION}"
+
+RUN if [[ "${OS_VERSION%%.*}" -eq 7 ]]; then \
 		yum -y install dnf || exit 1; \
 	fi
 
 RUN set -o nounset -o errexit && \
 	mkdir -p /etc/cron.d; \
-	if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
+	if [[ "${OS_VERSION%%.*}" -eq 7 ]]; then \
 		use_repo=''; \
 		enable_repo=''; \
 		# needed for llvm-toolset-7-clang, which is needed for postgresql13-devel-13.2-1PGDG, required by TO rpm
@@ -41,7 +45,7 @@ RUN set -o nounset -o errexit && \
 		use_repo='--repo=pgdg13'; \
 		enable_repo='--enablerepo=powertools'; \
 	fi; \
-	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
+	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${OS_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
 	# libicu required by postgresql13
 	dnf -y install libicu; \
 	dnf -y $use_repo -- install postgresql13; \
@@ -62,6 +66,7 @@ RUN set -o nounset -o errexit && \
 		perl-Crypt-ScryptKDF \
 		perl-Digest-SHA1     \
 		perl-JSON-PP         \
+		procps		     \
 		python3              \
 		# rsync is used to copy certs in "Shared SSL certificate generation" step
 		rsync;               \
@@ -77,6 +82,8 @@ RUN yum -y install /traffic_ops.rpm && \
 
 ADD cache-config/testing/docker/traffic_ops/run.sh /
 ADD cache-config/testing/ort-tests /ort-tests
+RUN chmod +x /run.sh
 
 EXPOSE 443
-CMD /run.sh
+ENTRYPOINT /run.sh
+

@@ -26,18 +26,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lib/pq"
-
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-)
 
-const RouterTypeName = "CCR"
-const MonitorTypeName = "RASCAL"
-const EdgeTypePrefix = "EDGE"
-const MidTypePrefix = "MID"
+	"github.com/lib/pq"
+)
 
 func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 	map[string]tc.CRConfigTrafficOpsServer,
@@ -259,39 +253,6 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 	return hostToServerMap, nil
 }
 
-func getServerDSNames(cdn string, tx *sql.Tx) (map[tc.CacheName][]tc.DeliveryServiceName, error) {
-	q := `
-select s.host_name, ds.xml_id
-from deliveryservice_server as dss
-inner join server as s on dss.server = s.id
-inner join deliveryservice as ds on ds.id = dss.deliveryservice
-inner join type as dt on dt.id = ds.type
-inner join profile as p on p.id = s.profile
-inner join status as st ON st.id = s.status
-where ds.cdn_id = (select id from cdn where name = $1)
-and ds.active = true` +
-		fmt.Sprintf(" and dt.name != '%s' ", tc.DSTypeAnyMap) + `
-and p.routing_disabled = false
-and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
-`
-	rows, err := tx.Query(q, cdn)
-	if err != nil {
-		return nil, errors.New("Error querying server deliveryservice names: " + err.Error())
-	}
-	defer rows.Close()
-
-	serverDSes := map[tc.CacheName][]tc.DeliveryServiceName{}
-	for rows.Next() {
-		ds := ""
-		server := ""
-		if err := rows.Scan(&server, &ds); err != nil {
-			return nil, errors.New("Error scanning server deliveryservice names: " + err.Error())
-		}
-		serverDSes[tc.CacheName(server)] = append(serverDSes[tc.CacheName(server)], tc.DeliveryServiceName(ds))
-	}
-	return serverDSes, nil
-}
-
 type DSRouteInfo struct {
 	IsDNS bool
 	IsRaw bool
@@ -299,7 +260,7 @@ type DSRouteInfo struct {
 }
 
 func getServerDSes(cdn string, tx *sql.Tx, domain string) (map[tc.CacheName]map[string][]string, error) {
-	serverDSNames, err := getServerDSNames(cdn, tx)
+	serverDSNames, err := dbhelpers.GetServerDSNamesByCDN(tx, cdn)
 	if err != nil {
 		return nil, errors.New("Error getting server deliveryservices: " + err.Error())
 	}
@@ -361,10 +322,10 @@ order by dsr.set_number asc
 	serverDSPatterns := map[tc.CacheName]map[string][]string{}
 	for server, dses := range serverDSNames {
 		for _, dsName := range dses {
-			dsInfList, ok := dsInfs[string(dsName)]
+			dsInfList, ok := dsInfs[dsName]
 			if !ok {
-				if !dsHasTopology[string(dsName)] {
-					log.Warnln("Creating CRConfig: deliveryservice " + string(dsName) + " has no regexes, skipping")
+				if !dsHasTopology[dsName] {
+					log.Warnln("creating CRConfig: deliveryservice " + dsName + " has no regexes, skipping")
 				}
 				continue
 			}
@@ -375,7 +336,7 @@ order by dsr.set_number asc
 				if _, ok := serverDSPatterns[server]; !ok {
 					serverDSPatterns[server] = map[string][]string{}
 				}
-				serverDSPatterns[server][string(dsName)] = append(serverDSPatterns[server][string(dsName)], dsInf.Remap)
+				serverDSPatterns[server][dsName] = append(serverDSPatterns[server][dsName], dsInf.Remap)
 			}
 		}
 	}

@@ -84,6 +84,9 @@ type TrafficMonitorConfig struct {
 	// servers (those given in TrafficServers), which are stored here to
 	// avoid potentially lengthy reiteration.
 	Profiles []TMProfile `json:"profiles,omitempty"`
+	// Topologies is the set of topologies defined in Traffic Ops, consisting
+	// of just the EDGE_LOC-type cachegroup nodes.
+	Topologies map[string]CRConfigTopology `json:"topologies"`
 }
 
 const healthThresholdAvailableBandwidthInKbps = "availableBandwidthInKbps"
@@ -123,6 +126,7 @@ func (tmc *TrafficMonitorConfig) ToLegacyConfig() LegacyTrafficMonitorConfig {
 		Profiles:         tmc.Profiles,
 		DeliveryServices: tmc.DeliveryServices,
 		TrafficServers:   servers,
+		Topologies:       tmc.Topologies,
 	}
 	return legacy
 }
@@ -130,12 +134,13 @@ func (tmc *TrafficMonitorConfig) ToLegacyConfig() LegacyTrafficMonitorConfig {
 // LegacyTrafficMonitorConfig represents TrafficMonitorConfig for ATC versions
 // before 5.0.
 type LegacyTrafficMonitorConfig struct {
-	TrafficServers   []LegacyTrafficServer  `json:"trafficServers,omitempty"`
-	CacheGroups      []TMCacheGroup         `json:"cacheGroups,omitempty"`
-	Config           map[string]interface{} `json:"config,omitempty"`
-	TrafficMonitors  []TrafficMonitor       `json:"trafficMonitors,omitempty"`
-	DeliveryServices []TMDeliveryService    `json:"deliveryServices,omitempty"`
-	Profiles         []TMProfile            `json:"profiles,omitempty"`
+	TrafficServers   []LegacyTrafficServer       `json:"trafficServers,omitempty"`
+	CacheGroups      []TMCacheGroup              `json:"cacheGroups,omitempty"`
+	Config           map[string]interface{}      `json:"config,omitempty"`
+	TrafficMonitors  []TrafficMonitor            `json:"trafficMonitors,omitempty"`
+	DeliveryServices []TMDeliveryService         `json:"deliveryServices,omitempty"`
+	Profiles         []TMProfile                 `json:"profiles,omitempty"`
+	Topologies       map[string]CRConfigTopology `json:"topologies,omitempty"`
 }
 
 // Upgrade converts a legacy TM Config to the newer structure.
@@ -150,6 +155,7 @@ func (s *LegacyTrafficMonitorConfig) Upgrade() *TrafficMonitorConfig {
 		Profiles:         s.Profiles,
 		TrafficMonitors:  s.TrafficMonitors,
 		TrafficServers:   make([]TrafficServer, 0, len(s.TrafficServers)),
+		Topologies:       s.Topologies,
 	}
 	for _, ts := range s.TrafficServers {
 		upgraded.TrafficServers = append(upgraded.TrafficServers, ts.Upgrade())
@@ -190,6 +196,8 @@ type TrafficMonitorConfigMap struct {
 	DeliveryService map[string]TMDeliveryService
 	// Profile is a map of Profile Names to TMProfile objects.
 	Profile map[string]TMProfile
+	// Topology is a map of Topology names to CRConfigTopology structs.
+	Topology map[string]CRConfigTopology
 }
 
 // ToLegacy converts a Stats to a LegacyStats.
@@ -438,7 +446,7 @@ type TrafficMonitor struct {
 	Profile string `json:"profile"`
 	// Location is the Name of the Cache Group to which the Traffic Monitor
 	// belongs - called "Location" for legacy reasons.
-	Location string `json:"location"`
+	Location string `json:"cachegroup"`
 	// ServerStatus is the Name of the Status of the Traffic Monitor.
 	ServerStatus string `json:"status"`
 }
@@ -461,10 +469,13 @@ type MonitoringCoordinates struct {
 // necessary for Traffic Monitor to do its job of monitoring health and
 // statistics.
 type TMDeliveryService struct {
-	XMLID              string `json:"xmlId"`
-	TotalTPSThreshold  int64  `json:"TotalTpsThreshold"`
-	ServerStatus       string `json:"status"`
-	TotalKbpsThreshold int64  `json:"TotalKbpsThreshold"`
+	XMLID              string   `json:"xmlId"`
+	TotalTPSThreshold  int64    `json:"TotalTpsThreshold"`
+	ServerStatus       string   `json:"status"`
+	TotalKbpsThreshold int64    `json:"TotalKbpsThreshold"`
+	Topology           string   `json:"topology"`
+	Type               string   `json:"type"`
+	HostRegexes        []string `json:"hostRegexes"`
 }
 
 // TMProfile is primarily a collection of the Parameters with special meaning
@@ -634,6 +645,7 @@ func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 	tm.TrafficMonitor = make(map[string]TrafficMonitor, len(tmConfig.TrafficMonitors))
 	tm.DeliveryService = make(map[string]TMDeliveryService, len(tmConfig.DeliveryServices))
 	tm.Profile = make(map[string]TMProfile, len(tmConfig.Profiles))
+	tm.Topology = tmConfig.Topologies
 
 	for _, trafficServer := range tmConfig.TrafficServers {
 		tm.TrafficServer[trafficServer.HostName] = trafficServer

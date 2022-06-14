@@ -92,7 +92,7 @@
       "hostName": "trafficmonitor",
       "fqdn": "trafficmonitor.traffic-monitor-integration.test",
       "profile": "Monitor0",
-      "location": "cg0",
+      "cachegroup": "cg0",
       "status": "REPORTED"
     }
   ],

@@ -88,7 +88,7 @@ func ExampleTrafficServer_IPv6() {
 func ExampleLegacyTrafficServer_Upgrade() {
 	lts := LegacyTrafficServer{
 		CacheGroup:       "testCG",
-		DeliveryServices: []tsdeliveryService{},
+		DeliveryServices: []TSDeliveryService{},
 		FQDN:             "test.quest",
 		HashID:           "test",
 		HostName:         "test",

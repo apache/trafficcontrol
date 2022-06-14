@@ -11,8 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<tp-header [title]="'Cache Groups'"></tp-header>
-<main>
+<mat-card>
 	<div>
 		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
 	</div>
@@ -24,4 +23,4 @@ limitations under the License.
 		[contextMenuItems]="contextMenuItems"
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
-</main>
+</mat-card>

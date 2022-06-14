@@ -13,4 +13,4 @@
 # limitations under the License.
 #
 - import_tasks: fakeOrigin.yml
-  when: install_fakeOrigin
+  when: install_fakeorigin

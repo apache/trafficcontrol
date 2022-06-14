@@ -23,17 +23,16 @@
 # The recommended minimum size for each block devices is 1G.
 # For example, `sudo modprobe brd rd_size=1048576 rd_nr=2`
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
-ARG RHEL_VERSION=8
-# Makes RHEL_VERSION available in later layers without needing to specify it again
-ENV RHEL_VERSION=$RHEL_VERSION
+ARG OS_VERSION=8 \
+	OS_DISTRO=rockylinux
+
+FROM ${OS_DISTRO}:${OS_VERSION}
 MAINTAINER dev@trafficcontrol.apache.org
 EXPOSE 80 443
 
-RUN yum install -y epel-release && yum repolist && \
-  yum install -y initscripts git jq gcc lua && \
-  yum clean all
+RUN yum install -y epel-release && \
+	yum install -y initscripts git jq gcc lua nmap-ncat && \
+	yum clean all
 
 # Note that if more than one t3c RPM matches this wildcard, this Dockerfile will
 # break because this will create a directory instead of an RPM file, which it
@@ -42,12 +41,11 @@ ADD ort_test/trafficcontrol-cache-config*.rpm /trafficcontrol-cache-config.rpm
 RUN yum install -y /trafficcontrol-cache-config.rpm && yum clean all
 
 RUN sed -i 's/HOME\/bin/HOME\/bin:\/usr\/local\/go\/bin:/g' /root/.bash_profile &&\
-  echo "GOPATH=/root/go; export GOPATH" >> /root/.bash_profile &&\
-  echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config &&\
-  mkdir /root/go
+	echo "GOPATH=/root/go; export GOPATH" >> /root/.bash_profile &&\
+	echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config &&\
+	mkdir /root/go
 
 ADD ort_test/Ort-test.repo /etc/yum.repos.d
 ADD ort_test/run.sh ort_test/systemctl.sh /
-ADD ort_test/systemctl.sh /
 
 ENTRYPOINT /run.sh

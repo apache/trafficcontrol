@@ -50,6 +50,8 @@ import (
 
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/lib/pq"
 )
 
@@ -79,6 +81,11 @@ const (
 	APIRespWrittenKey      = "respwritten"
 	PathParamsKey          = "pathParams"
 	TrafficVaultContextKey = "tv"
+)
+
+const (
+	MojoCookie  = "mojoCookie"
+	AccessToken = "access_token"
 )
 
 const influxServersQuery = `
@@ -121,8 +128,11 @@ func WriteAndLogErr(w http.ResponseWriter, r *http.Request, bts []byte) {
 	}
 }
 
-// WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
-// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+// WriteResp takes any object, serializes it as JSON, and writes that to w.
+//
+// Any errors are logged and written to w as alerts (if applicable). This is a
+// helper for the common case; not using this in unusual cases is perfectly
+// acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
 	resp := APIResponse{v}
 	WriteRespRaw(w, r, resp)
@@ -139,7 +149,7 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 	respBts, err := json.Marshal(v)
 	if err != nil {
 		log.Errorf("marshalling JSON (raw) for %T: %v", v, err)
-		tc.GetHandleErrorsFunc(w, r)(http.StatusInternalServerError, errors.New(http.StatusText(http.StatusInternalServerError)))
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, nil)
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
@@ -171,7 +181,7 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 	respBts, err := json.Marshal(vals)
 	if err != nil {
 		log.Errorf("marshalling JSON for %T: %v", v, err)
-		tc.GetHandleErrorsFunc(w, r)(http.StatusInternalServerError, errors.New(http.StatusText(http.StatusInternalServerError)))
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, nil)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -272,7 +282,6 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.WriteHeader(statusCode)
 	WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
@@ -300,8 +309,11 @@ func RespWriterVals(w http.ResponseWriter, r *http.Request, tx *sql.Tx, vals map
 	}
 }
 
-// WriteRespAlert creates an alert, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
-// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+// WriteRespAlert creates an alert, serializes it as JSON, and writes that to w.
+//
+// Any errors are logged and written to w as alerts (if applicable). This is a
+// helper for the common case; not using this in unusual cases is perfectly
+// acceptable.
 func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel, msg string) {
 	if respWritten(r) {
 		log.Errorf("WriteRespAlert called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
@@ -1030,23 +1042,55 @@ func ParseDBError(ierr error) (error, error, int) {
 // GetUserFromReq returns the current user, any user error, any system error, and an error code to be returned if either error was not nil.
 // This also uses the given ResponseWriter to refresh the cookie, if it was valid.
 func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth.CurrentUser, error, error, int) {
-	cookie, err := r.Cookie(tocookie.Name)
-	if err != nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error getting cookie: " + err.Error()), http.StatusUnauthorized
+	var cookie *http.Cookie
+	var oldToken jwt.Token
+
+	if r.Header.Get(rfc.Authorization) != "" && strings.Contains(r.Header.Get(rfc.Authorization), "Bearer") {
+		givenToken := r.Header.Get(rfc.Authorization)
+		tokenSplit := strings.Split(givenToken, " ")
+		if len(tokenSplit) > 1 {
+			givenToken = tokenSplit[1]
+		}
+		bearerCookie, readToken, err := getCookieFromAccessToken(givenToken, secret)
+		if err != nil {
+			return auth.CurrentUser{}, errors.New("unauthorized, please log in."), err, http.StatusUnauthorized
+		}
+		cookie = bearerCookie
+		oldToken = readToken
+	} else {
+		for _, givenCookie := range r.Cookies() {
+			if cookie != nil {
+				break
+			}
+			if givenCookie == nil {
+				continue
+			}
+			switch givenCookie.Name {
+			case AccessToken:
+				bearerCookie, readToken, err := getCookieFromAccessToken(givenCookie.Value, secret)
+				if err != nil {
+					return auth.CurrentUser{}, errors.New("unauthorized, please log in."), err, http.StatusUnauthorized
+				}
+				cookie = bearerCookie
+				oldToken = readToken
+			case tocookie.Name:
+				cookie = givenCookie
+			}
+		}
 	}
 
 	if cookie == nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), nil, http.StatusUnauthorized
 	}
 
 	oldCookie, err := tocookie.Parse(secret, cookie.Value)
 	if err != nil {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
+		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
 	}
 
 	username := oldCookie.AuthData
 	if username == "" {
-		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), nil, http.StatusUnauthorized
 	}
 	db := (*sqlx.DB)(nil)
 	val := r.Context().Value(DBContextKey)
@@ -1073,7 +1117,55 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 	duration := tocookie.DefaultDuration
 	newCookie := tocookie.GetCookie(oldCookie.AuthData, duration, secret)
 	http.SetCookie(w, newCookie)
+
+	if oldToken != nil {
+		newToken := oldToken
+		err = newToken.Set(MojoCookie, cookie.Value)
+		if err != nil {
+			return auth.CurrentUser{}, errors.New("unauthorized, please log in."), fmt.Errorf("setting mojo cookie on access_token: %w", err), http.StatusUnauthorized
+		}
+		jwtSigned, err := jwt.Sign(newToken, jwa.HS256, []byte(cfg.Secrets[0]))
+		if err != nil {
+			return auth.CurrentUser{}, errors.New("unauthorized, please log in."), fmt.Errorf("signing renewed access_token: %w", err), http.StatusUnauthorized
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     AccessToken,
+			Value:    string(jwtSigned),
+			Path:     "/",
+			MaxAge:   newCookie.MaxAge,
+			Expires:  newCookie.Expires,
+			HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
+		})
+	}
+
 	return user, nil, nil, http.StatusOK
+}
+
+func getCookieFromAccessToken(bearerToken string, secret string) (*http.Cookie, jwt.Token, error) {
+	var cookie *http.Cookie
+	token, err := jwt.Parse([]byte(bearerToken), jwt.WithVerify(jwa.HS256, []byte(secret)))
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid token: %w", err)
+	}
+	if token == nil {
+		return nil, nil, errors.New("parsing claims: parsed nil token")
+	}
+
+	for key, val := range token.PrivateClaims() {
+		switch key {
+		case MojoCookie:
+			mojoVal, ok := val.(string)
+			if !ok {
+				return nil, nil, errors.New("invalid token - " + MojoCookie + " must be a string")
+			}
+			cookie = &http.Cookie{
+				Value: mojoVal,
+			}
+		}
+	}
+
+	return cookie, token, nil
 }
 
 func AddUserToReq(r *http.Request, u auth.CurrentUser) {

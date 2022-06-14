@@ -16,34 +16,61 @@ package v4
 */
 
 import (
+	"net/http"
+	"net/url"
+	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestCDNNotifications(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, CDNNotifications}, func() {
-		GetTestCDNotifications(t)
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"OK when VALID request": {
+					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"OK when VALID CDN parameter": {
+					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn2"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateCDNNotificationFields(map[string]interface{}{"Notification": "test notification: cdn2"})),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetCDNNotifications(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-// Note that this test will break if anyone adds a CDN notification to the test
-// data that isn't exactly `test notification: {{CDN Name}}` (where {{CDN Name}}
-// is the name of the associated CDN).
-func GetTestCDNotifications(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, cdn := range testData.CDNs {
-		opts.QueryParameters.Set("cdn", cdn.Name)
-		resp, _, err := TOSession.GetCDNNotifications(opts)
-		if err != nil {
-			t.Errorf("cannot get CDN Notification for CDN '%s': %v - alerts: %+v", cdn.Name, err, resp.Alerts)
-		}
-		if len(resp.Response) > 0 {
-			respNotification := resp.Response[0]
-			expectedNotification := "test notification: " + cdn.Name
-			if respNotification.Notification != expectedNotification {
-				t.Errorf("expected notification does not match actual: %s, expected: %s", respNotification.Notification, expectedNotification)
+func validateCDNNotificationFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		notifications := resp.([]tc.CDNNotification)
+		for field, expected := range expectedResp {
+			for _, notification := range notifications {
+				switch field {
+				case "Notification":
+					assert.Equal(t, expected, notification.Notification, "Expected Notification to be %v, but got %v", expected, notification.Notification)
+				}
 			}
 		}
 	}
@@ -53,26 +80,21 @@ func CreateTestCDNNotifications(t *testing.T) {
 	var opts client.RequestOptions
 	for _, cdn := range testData.CDNs {
 		resp, _, err := TOSession.CreateCDNNotification(tc.CDNNotificationRequest{CDN: cdn.Name, Notification: "test notification: " + cdn.Name}, opts)
-		if err != nil {
-			t.Errorf("cannot create CDN Notification for CDN '%s': %v - alerts: %+v", cdn.Name, err, resp.Alerts)
-		}
+		assert.NoError(t, err, "Cannot create CDN Notification for CDN '%s': %v - alerts: %+v", cdn.Name, err, resp.Alerts)
 	}
 }
 
 func DeleteTestCDNNotifications(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, cdn := range testData.CDNs {
-		// Retrieve the notifications for a cdn
-		resp, _, err := TOSession.GetCDNNotifications(opts)
-		if err != nil {
-			t.Errorf("cannot get notifications for CDN '%s': %v - alerts: %+v", cdn.Name, err, resp.Alerts)
-		}
-		if len(resp.Response) > 0 {
-			respNotification := resp.Response[0]
-			delResp, _, err := TOSession.DeleteCDNNotification(respNotification.ID, client.RequestOptions{})
-			if err != nil {
-				t.Errorf("cannot delete CDN notification #%d: %v - alerts: %+v", respNotification.ID, err, delResp.Alerts)
-			}
-		}
+	resp, _, err := TOSession.GetCDNNotifications(client.RequestOptions{})
+	assert.NoError(t, err, "Cannot get notifications for CDNs: %v - alerts: %+v", err, resp.Alerts)
+	for _, notification := range resp.Response {
+		delResp, _, err := TOSession.DeleteCDNNotification(notification.ID, client.RequestOptions{})
+		assert.NoError(t, err, "Cannot delete CDN notification #%d: %v - alerts: %+v", notification.ID, err, delResp.Alerts)
+		// Retrieve CDN Notification to see if it got deleted
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("id", strconv.Itoa(notification.ID))
+		getNotification, _, err := TOSession.GetCDNNotifications(opts)
+		assert.NoError(t, err, "Error deleting CDN Notification for '%s' : %v - alerts: %+v", notification.ID, err, getNotification.Alerts)
+		assert.Equal(t, 0, len(getNotification.Response), "Expected CDN Notification '%s' to be deleted", notification.ID)
 	}
 }

@@ -258,7 +258,7 @@ class TOSession(RestApiSession):
 	def get_api_capabilities(self, query_params=None):
 		"""
 		Get all API-capability mappings
-		:ref:`to-api-api_capabilities`
+		:ref:`to-api-v3-api_capabilities`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -434,7 +434,7 @@ class TOSession(RestApiSession):
 	def get_capabilities(self, query_params=None):
 		"""
 		Retrieves capabilities
-		:ref:`to-api-capabilities`
+		:ref:`to-api-v3-capabilities`
 		:param query_params: See API page for more information on accepted parameters
 		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -1293,7 +1293,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'profiles/{id:d}/parameters', ('3.0',))
+	@api_request('get', 'profiles/{profile_id:d}/parameters', ('3.0',))
 	def get_parameters_by_profile_id(self, profile_id=None):
 		"""
 		Get all Parameters associated with a Profile by Id.
@@ -1648,13 +1648,16 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'servers/details?hostName={name}', ('3.0','4.0',))
+	@api_request('get', 'servers/details?hostName={name}', ('3.0',))
 	def get_server_details(self, name=None):
 		"""
 		Get servers/details
-		:ref:`to-api-servers-details`
+		:ref:`to-api-v3-servers-details`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
+
+		.. deprecated:: 3.0
+			The endpoint this represents has been removed from APIv4 and clients should use get_servers instead.
 		"""
 
 	@api_request('post', 'servercheck', ('3.0',))

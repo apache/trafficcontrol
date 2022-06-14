@@ -35,7 +35,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/asaskevich/govalidator"
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 // we need a type alias to define functions on
@@ -53,9 +53,9 @@ func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
 func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(federation.last_updated) as t from federation 
-		join federation_deliveryservice fds on fds.federation = federation.id 
-		join deliveryservice ds on ds.id = fds.deliveryservice 
+		SELECT max(federation.last_updated) as t from federation
+		join federation_deliveryservice fds on fds.federation = federation.id
+		join deliveryservice ds on ds.id = fds.deliveryservice
 		join cdn c on c.id = ds.cdn_id ` + where + orderBy + pagination +
 		` UNION ALL
 		select max(last_updated) as t from last_deleted l where l.table_name='federation') as res`
@@ -112,7 +112,7 @@ func (fed *TOCDNFederation) SetKeys(keys map[string]interface{}) {
 }
 
 // Fulfills `Validate' interface
-func (fed *TOCDNFederation) Validate() error {
+func (fed *TOCDNFederation) Validate() (error, error) {
 
 	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
 	endsWithDot := validation.NewStringRule(
@@ -125,7 +125,7 @@ func (fed *TOCDNFederation) Validate() error {
 		"cname": validation.Validate(fed.CName, validation.Required, endsWithDot, isDNSName),
 		"ttl":   validation.Validate(fed.TTL, validation.Required, validation.Min(0)),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs)), nil
 }
 
 func (fed *TOCDNFederation) CheckIfCDNAndFederationMatch(cdnName string) (error, error, int) {

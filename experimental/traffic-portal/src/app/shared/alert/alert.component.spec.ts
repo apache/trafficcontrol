@@ -11,16 +11,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {TestBed, ComponentFixture} from "@angular/core/testing";
-import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
-import {MatSnackBarHarness} from "@angular/material/snack-bar/testing";
-import {HarnessLoader} from "@angular/cdk/testing";
-import {MatSnackBarModule} from "@angular/material/snack-bar";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import type { HarnessLoader } from "@angular/cdk/testing";
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
+import { TestBed, type ComponentFixture } from "@angular/core/testing";
+import { MatSnackBarModule } from "@angular/material/snack-bar";
+import { MatSnackBarHarness}  from "@angular/material/snack-bar/testing";
+import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 
-import { AlertLevel } from "../../models/alert.model";
-import { AlertService } from "./alert.service";
+import type { AlertLevel } from "src/app/models";
+
 import { AlertComponent } from "./alert.component";
+import { AlertService } from "./alert.service";
 
 describe("AlertComponent", () => {
 	let component: AlertComponent;
@@ -49,19 +50,32 @@ describe("AlertComponent", () => {
 
 	it("should load simple alerts", async () => {
 		const levels: Array<AlertLevel> = ["error", "warning", "info", "success"];
+		let snackBars;
+		let snackBar;
 		for (const errLevel of levels) {
 			const msg = `An alert at the '${errLevel}' level`;
 			service.newAlert(errLevel, msg);
 
-			let snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
+			snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
 			expect(snackBars.length).toBe(1);
 
-			const snackBar = await loader.getHarness(MatSnackBarHarness);
+			snackBar = await loader.getHarness(MatSnackBarHarness);
 			expect(await snackBar.getMessage()).toBe(msg);
 
 			fixture.componentInstance.clear();
 			snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
 			expect(snackBars.length).toBe(0);
 		}
+		service.newAlert({level: "info", text: ""});
+
+		snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
+		expect(snackBars.length).toBe(1);
+
+		snackBar = await loader.getHarness(MatSnackBarHarness);
+		expect(await snackBar.getMessage()).toBe("Unknown");
+
+		fixture.componentInstance.clear();
+		snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
+		expect(snackBars.length).toBe(0);
 	});
 });

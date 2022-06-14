@@ -58,7 +58,7 @@ type SteeringTargetNullable struct {
 // Validate implements the
 // github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
-func (st SteeringTargetNullable) Validate(tx *sql.Tx) error {
+func (st SteeringTargetNullable) Validate(tx *sql.Tx) (error, error) {
 	errs := []string{}
 	if st.TypeID == nil {
 		errs = append(errs, "missing typeId")
@@ -71,9 +71,9 @@ func (st SteeringTargetNullable) Validate(tx *sql.Tx) error {
 		errs = append(errs, "missing value")
 	}
 	if len(errs) > 0 {
-		return errors.New(strings.Join(errs, "; "))
+		return errors.New(strings.Join(errs, "; ")), nil
 	}
-	return nil
+	return nil, nil
 }
 
 // SteeringTargetsResponse is the type of a response from Traffic Ops to its

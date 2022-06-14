@@ -62,7 +62,6 @@ func (u User) Upgrade() UserV4 {
 	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
 	ret.City = copyStringIfNotNil(u.City)
 	ret.Company = copyStringIfNotNil(u.Company)
-	ret.ConfirmLocalPassword = copyStringIfNotNil(u.ConfirmLocalPassword)
 	ret.Country = copyStringIfNotNil(u.Country)
 	ret.Email = copyStringIfNotNil(u.Email)
 	ret.GID = copyIntIfNotNil(u.GID)
@@ -75,7 +74,7 @@ func (u User) Upgrade() UserV4 {
 	ret.Tenant = copyStringIfNotNil(u.Tenant)
 	ret.Token = copyStringIfNotNil(u.Token)
 	ret.UID = copyIntIfNotNil(u.UID)
-	ret.FullName = u.FullName
+	ret.FullName = copyStringIfNotNil(u.FullName)
 	if u.LastUpdated != nil {
 		ret.LastUpdated = u.LastUpdated.Time
 	}
@@ -118,7 +117,7 @@ func (u UserV4) Downgrade() User {
 	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
 	ret.City = copyStringIfNotNil(u.City)
 	ret.Company = copyStringIfNotNil(u.Company)
-	ret.ConfirmLocalPassword = copyStringIfNotNil(u.ConfirmLocalPassword)
+	ret.ConfirmLocalPassword = copyStringIfNotNil(u.LocalPassword)
 	ret.Country = copyStringIfNotNil(u.Country)
 	ret.Email = copyStringIfNotNil(u.Email)
 	ret.GID = copyIntIfNotNil(u.GID)
@@ -184,7 +183,6 @@ type User struct {
 	// NOTE: RoleName db:"-" tag is required due to clashing with the DB query here:
 	// https://github.com/apache/trafficcontrol/blob/3b5dd406bf1a0bb456c062b0f6a465ec0617d8ef/traffic_ops/traffic_ops_golang/user/user.go#L197
 	// It's done that way in order to maintain "rolename" vs "roleName" JSON field capitalization for the different users APIs.
-	// TODO: make the breaking API change to make all user APIs use "roleName" consistently.
 	RoleName *string `json:"roleName,omitempty" db:"role_name"`
 	commonUserFields
 }
@@ -197,52 +195,27 @@ type UserCurrent struct {
 	commonUserFields
 }
 
-// UserCurrentV4 is an alias for the UserCurrent struct used for the latest minor version associated with api major version 4.
-type UserCurrentV4 UserCurrentV40
-
-// UserCurrentV40 represents the structure for the "current" user, and has the "Role" field as a *string, as opposed to a *int found in the older versions.
-type UserCurrentV40 struct {
-	UserName          string    `json:"username"`
-	LocalUser         *bool     `json:"localUser"`
-	AddressLine1      *string   `json:"addressLine1"`
-	AddressLine2      *string   `json:"addressLine2"`
-	City              *string   `json:"city"`
-	Company           *string   `json:"company"`
-	Country           *string   `json:"country"`
-	Email             *string   `json:"email"`
-	FullName          *string   `json:"fullName"`
-	GID               *int      `json:"gid"`
-	ID                *int      `json:"id"`
-	NewUser           *bool     `json:"newUser"`
-	PhoneNumber       *string   `json:"phoneNumber"`
-	PostalCode        *string   `json:"postalCode"`
-	PublicSSHKey      *string   `json:"publicSshKey"`
-	Role              string    `json:"role"`
-	StateOrProvince   *string   `json:"stateOrProvince"`
-	Tenant            *string   `json:"tenant"`
-	TenantID          *int      `json:"tenantId"`
-	Token             *string   `json:"-"`
-	UID               *int      `json:"uid"`
-	LastUpdated       time.Time `json:"lastUpdated"`
-	LastAuthenticated time.Time `json:"lastAuthenticated"`
-}
-
-// Downgrade will convert a UserCurrentV4 struct into an instance of the UserCurrent struct.
-func (u UserCurrentV4) Downgrade() UserCurrent {
+// ToLegacyCurrentUser will convert an APIv4 user to an APIv3 "current user"
+// representation. A Role ID and "local user" value must be supplied, since the
+// APIv4 User doesn't have them.
+func (u UserV4) ToLegacyCurrentUser(roleID int, localUser bool) UserCurrent {
 	var ret UserCurrent
 	ret.FullName = new(string)
-	ret.FullName = u.FullName
+	*ret.FullName = *u.FullName
 	ret.LastUpdated = TimeNoModFromTime(u.LastUpdated)
 	ret.NewUser = new(bool)
-	ret.NewUser = u.NewUser
+	*ret.NewUser = u.NewUser
 	ret.RoleName = new(string)
 	*ret.RoleName = u.Role
-	ret.Role = nil
+	ret.Role = new(int)
+	*ret.Role = roleID
 	ret.TenantID = new(int)
-	ret.TenantID = u.TenantID
+	*ret.TenantID = u.TenantID
 	ret.Tenant = u.Tenant
-	ret.UserName = &u.UserName
-	ret.LocalUser = u.LocalUser
+	ret.UserName = new(string)
+	*ret.UserName = u.Username
+	ret.LocalUser = new(bool)
+	*ret.LocalUser = localUser
 	ret.Token = copyStringIfNotNil(u.Token)
 	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
 	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
@@ -270,32 +243,36 @@ type UserV4 UserV40
 // A UserV40 is a representation of a Traffic Ops user as it appears in version
 // 4.0 of Traffic Ops's API.
 type UserV40 struct {
-	AddressLine1         *string    `json:"addressLine1" db:"address_line1"`
-	AddressLine2         *string    `json:"addressLine2" db:"address_line2"`
-	ChangeLogCount       *int       `json:"changeLogCount" db:"change_log_count"`
-	City                 *string    `json:"city" db:"city"`
-	Company              *string    `json:"company" db:"company"`
-	ConfirmLocalPassword *string    `json:"confirmLocalPasswd,omitempty" db:"confirm_local_passwd"`
-	Country              *string    `json:"country" db:"country"`
-	Email                *string    `json:"email" db:"email"`
-	FullName             *string    `json:"fullName" db:"full_name"`
-	GID                  *int       `json:"gid"`
-	ID                   *int       `json:"id" db:"id"`
-	LastAuthenticated    *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
-	LastUpdated          time.Time  `json:"lastUpdated" db:"last_updated"`
-	LocalPassword        *string    `json:"localPasswd,omitempty" db:"local_passwd"`
-	NewUser              bool       `json:"newUser" db:"new_user"`
-	PhoneNumber          *string    `json:"phoneNumber" db:"phone_number"`
-	PostalCode           *string    `json:"postalCode" db:"postal_code"`
-	PublicSSHKey         *string    `json:"publicSshKey" db:"public_ssh_key"`
-	RegistrationSent     *time.Time `json:"registrationSent" db:"registration_sent"`
-	Role                 string     `json:"role" db:"role"`
-	StateOrProvince      *string    `json:"stateOrProvince" db:"state_or_province"`
-	Tenant               *string    `json:"tenant"`
-	TenantID             int        `json:"tenantId" db:"tenant_id"`
-	Token                *string    `json:"-" db:"token"`
-	UID                  *int       `json:"uid"`
-	Username             string     `json:"username" db:"username"`
+	AddressLine1   *string `json:"addressLine1" db:"address_line1"`
+	AddressLine2   *string `json:"addressLine2" db:"address_line2"`
+	ChangeLogCount int     `json:"changeLogCount" db:"change_log_count"`
+	City           *string `json:"city" db:"city"`
+	Company        *string `json:"company" db:"company"`
+	Country        *string `json:"country" db:"country"`
+	Email          *string `json:"email" db:"email"`
+	FullName       *string `json:"fullName" db:"full_name"`
+	// Deprecated: This has no known use, and will likely be removed in future
+	// API versions.
+	GID               *int       `json:"gid"`
+	ID                *int       `json:"id" db:"id"`
+	LastAuthenticated *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
+	LastUpdated       time.Time  `json:"lastUpdated" db:"last_updated"`
+	LocalPassword     *string    `json:"localPasswd,omitempty" db:"local_passwd"`
+	NewUser           bool       `json:"newUser" db:"new_user"`
+	PhoneNumber       *string    `json:"phoneNumber" db:"phone_number"`
+	PostalCode        *string    `json:"postalCode" db:"postal_code"`
+	PublicSSHKey      *string    `json:"publicSshKey" db:"public_ssh_key"`
+	RegistrationSent  *time.Time `json:"registrationSent" db:"registration_sent"`
+	Role              string     `json:"role" db:"role"`
+	StateOrProvince   *string    `json:"stateOrProvince" db:"state_or_province"`
+	Tenant            *string    `json:"tenant"`
+	TenantID          int        `json:"tenantId" db:"tenant_id"`
+	Token             *string    `json:"-" db:"token"`
+	UCDN              string     `json:"ucdn"`
+	// Deprecated: This has no known use, and will likely be removed in future
+	// API versions.
+	UID      *int   `json:"uid"`
+	Username string `json:"username" db:"username"`
 }
 
 // UsersResponseV4 is the type of a response from Traffic Ops to requests made
@@ -343,69 +320,74 @@ type CurrentUserUpdateRequestUser struct {
 	Username           json.RawMessage `json:"username"`
 }
 
-// Upgrade converts a UserCurrent struct into an instance of UserCurrentV4.
-func (u UserCurrent) Upgrade() UserCurrentV4 {
-	var ret UserCurrentV4
+// Upgrade converts an APIv3 and earlier "current user" to an APIv4 User.
+// Fields not present in earlier API versions need to be passed explicitly
+func (u UserCurrent) Upgrade(registrationSent, lastAuthenticated *time.Time, ucdn string, changeLogCount int) UserV4 {
+	var ret UserV4
 	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
 	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
+	ret.ChangeLogCount = changeLogCount
 	ret.City = copyStringIfNotNil(u.City)
 	ret.Company = copyStringIfNotNil(u.Company)
 	ret.Country = copyStringIfNotNil(u.Country)
 	ret.Email = copyStringIfNotNil(u.Email)
 	ret.GID = copyIntIfNotNil(u.GID)
 	ret.ID = copyIntIfNotNil(u.ID)
+	ret.LastAuthenticated = lastAuthenticated
 	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
 	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
 	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
+	ret.RegistrationSent = registrationSent
 	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
 	ret.Tenant = copyStringIfNotNil(u.Tenant)
 	ret.Token = copyStringIfNotNil(u.Token)
+	ret.UCDN = ucdn
 	ret.UID = copyIntIfNotNil(u.UID)
 	ret.FullName = u.FullName
 	if u.LastUpdated != nil {
 		ret.LastUpdated = u.LastUpdated.Time
 	}
 	if u.NewUser != nil {
-		ret.NewUser = u.NewUser
+		ret.NewUser = *u.NewUser
 	}
 
 	if u.RoleName != nil {
 		ret.Role = *u.RoleName
 	}
 	if u.TenantID != nil {
-		ret.TenantID = u.TenantID
+		ret.TenantID = *u.TenantID
 	}
 	if u.UserName != nil {
-		ret.UserName = *u.UserName
+		ret.Username = *u.UserName
 	}
 	return ret
 }
 
 // UnmarshalAndValidate validates the request and returns a User into which the request's information
 // has been unmarshalled.
-func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4User bool) error {
+func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 	errs := []error{}
 	if u.AddressLine1 != nil {
 		if err := json.Unmarshal(u.AddressLine1, &user.AddressLine1); err != nil {
-			errs = append(errs, fmt.Errorf("addressLine1: %v", err))
+			errs = append(errs, fmt.Errorf("addressLine1: %w", err))
 		}
 	}
 
 	if u.AddressLine2 != nil {
 		if err := json.Unmarshal(u.AddressLine2, &user.AddressLine2); err != nil {
-			errs = append(errs, fmt.Errorf("addressLine2: %v", err))
+			errs = append(errs, fmt.Errorf("addressLine2: %w", err))
 		}
 	}
 
 	if u.City != nil {
 		if err := json.Unmarshal(u.City, &user.City); err != nil {
-			errs = append(errs, fmt.Errorf("city: %v", err))
+			errs = append(errs, fmt.Errorf("city: %w", err))
 		}
 	}
 
 	if u.Company != nil {
 		if err := json.Unmarshal(u.Company, &user.Company); err != nil {
-			errs = append(errs, fmt.Errorf("company: %v", err))
+			errs = append(errs, fmt.Errorf("company: %w", err))
 		}
 	}
 
@@ -414,13 +396,13 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.Country != nil {
 		if err := json.Unmarshal(u.Country, &user.Country); err != nil {
-			errs = append(errs, fmt.Errorf("country: %v", err))
+			errs = append(errs, fmt.Errorf("country: %w", err))
 		}
 	}
 
 	if u.Email != nil {
 		if err := json.Unmarshal(u.Email, &user.Email); err != nil {
-			errs = append(errs, fmt.Errorf("email: %v", err))
+			errs = append(errs, fmt.Errorf("email: %w", err))
 		} else if user.Email == nil || *user.Email == "" {
 			errs = append(errs, errors.New("email: cannot be null or an empty string"))
 		} else if err = validation.Validate(*user.Email, is.Email); err != nil {
@@ -430,7 +412,7 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.FullName != nil {
 		if err := json.Unmarshal(u.FullName, &user.FullName); err != nil {
-			errs = append(errs, fmt.Errorf("fullName: %v", err))
+			errs = append(errs, fmt.Errorf("fullName: %w", err))
 		} else if user.FullName == nil || *user.FullName == "" {
 			// Perl enforced this
 			errs = append(errs, errors.New("fullName: cannot be set to 'null' or empty string"))
@@ -439,14 +421,14 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.GID != nil {
 		if err := json.Unmarshal(u.GID, &user.GID); err != nil {
-			errs = append(errs, fmt.Errorf("gid: %v", err))
+			errs = append(errs, fmt.Errorf("gid: %w", err))
 		}
 	}
 
 	if u.ID != nil {
 		var uid int
 		if err := json.Unmarshal(u.ID, &uid); err != nil {
-			errs = append(errs, fmt.Errorf("id: %v", err))
+			errs = append(errs, fmt.Errorf("id: %w", err))
 		} else if user.ID != nil && *user.ID != uid {
 			errs = append(errs, errors.New("id: cannot change user id"))
 		} else {
@@ -456,48 +438,39 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.PhoneNumber != nil {
 		if err := json.Unmarshal(u.PhoneNumber, &user.PhoneNumber); err != nil {
-			errs = append(errs, fmt.Errorf("phoneNumber: %v", err))
+			errs = append(errs, fmt.Errorf("phoneNumber: %w", err))
 		}
 	}
 
 	if u.PostalCode != nil {
 		if err := json.Unmarshal(u.PostalCode, &user.PostalCode); err != nil {
-			errs = append(errs, fmt.Errorf("postalCode: %v", err))
+			errs = append(errs, fmt.Errorf("postalCode: %w", err))
 		}
 	}
 
 	if u.PublicSSHKey != nil {
 		if err := json.Unmarshal(u.PublicSSHKey, &user.PublicSSHKey); err != nil {
-			errs = append(errs, fmt.Errorf("publicSshKey: %v", err))
+			errs = append(errs, fmt.Errorf("publicSshKey: %w", err))
 		}
 	}
 
 	if u.Role != nil {
-		if useV4User {
-			if err := json.Unmarshal(u.Role, &user.RoleName); err != nil {
-				errs = append(errs, fmt.Errorf("role: %v", err))
-			} else if user.RoleName == nil {
-				errs = append(errs, errors.New("role: cannot be null"))
-			}
-		} else {
-			if err := json.Unmarshal(u.Role, &user.Role); err != nil {
-				errs = append(errs, fmt.Errorf("role: %v", err))
-			} else if user.Role == nil {
-				errs = append(errs, errors.New("role: cannot be null"))
-			}
+		if err := json.Unmarshal(u.Role, &user.Role); err != nil {
+			errs = append(errs, fmt.Errorf("role: %w", err))
+		} else if user.Role == nil {
+			errs = append(errs, errors.New("role: cannot be null"))
 		}
-
 	}
 
 	if u.StateOrProvince != nil {
 		if err := json.Unmarshal(u.StateOrProvince, &user.StateOrProvince); err != nil {
-			errs = append(errs, fmt.Errorf("stateOrProvince: %v", err))
+			errs = append(errs, fmt.Errorf("stateOrProvince: %w", err))
 		}
 	}
 
 	if u.TenantID != nil {
 		if err := json.Unmarshal(u.TenantID, &user.TenantID); err != nil {
-			errs = append(errs, fmt.Errorf("tenantID: %v", err))
+			errs = append(errs, fmt.Errorf("tenantID: %w", err))
 		} else if user.TenantID == nil {
 			errs = append(errs, errors.New("tenantID: cannot be null"))
 		}
@@ -505,13 +478,13 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.UID != nil {
 		if err := json.Unmarshal(u.UID, &user.UID); err != nil {
-			errs = append(errs, fmt.Errorf("uid: %v", err))
+			errs = append(errs, fmt.Errorf("uid: %w", err))
 		}
 	}
 
 	if u.Username != nil {
 		if err := json.Unmarshal(u.Username, &user.Username); err != nil {
-			errs = append(errs, fmt.Errorf("username: %v", err))
+			errs = append(errs, fmt.Errorf("username: %w", err))
 		} else if user.Username == nil || *user.Username == "" {
 			errs = append(errs, errors.New("username: cannot be null or empty string"))
 		}
@@ -576,7 +549,7 @@ type UserCurrentResponse struct {
 
 // UserCurrentResponseV4 is the latest 4.x Traffic Ops API version variant of UserResponse.
 type UserCurrentResponseV4 struct {
-	Response UserCurrentV4 `json:"response"`
+	Response UserV4 `json:"response"`
 	Alerts
 }
 
@@ -617,11 +590,11 @@ type UserRegistrationRequestV40 struct {
 func (urr *UserRegistrationRequestV4) Validate(tx *sql.Tx) error {
 	var errs = []error{}
 	if urr.Role == "" {
-		errs = append(errs, errors.New("role: required and cannot be empty."))
+		errs = append(errs, errors.New("role: required and cannot be empty"))
 	}
 
 	if urr.TenantID == 0 {
-		errs = append(errs, errors.New("tenantId: required and cannot be zero."))
+		errs = append(errs, errors.New("tenantId: required and cannot be zero"))
 	}
 
 	// This can only happen if an email isn't present in the request; the JSON parse handles actually
@@ -639,11 +612,11 @@ func (urr *UserRegistrationRequestV4) Validate(tx *sql.Tx) error {
 func (urr *UserRegistrationRequest) Validate(tx *sql.Tx) error {
 	var errs = []error{}
 	if urr.Role == 0 {
-		errs = append(errs, errors.New("role: required and cannot be zero."))
+		errs = append(errs, errors.New("role: required and cannot be zero"))
 	}
 
 	if urr.TenantID == 0 {
-		errs = append(errs, errors.New("tenantId: required and cannot be zero."))
+		errs = append(errs, errors.New("tenantId: required and cannot be zero"))
 	}
 
 	// This can only happen if an email isn't present in the request; the JSON parse handles actually

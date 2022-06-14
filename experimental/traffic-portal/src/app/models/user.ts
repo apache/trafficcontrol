@@ -17,54 +17,54 @@
  */
 export interface User {
 	/** Line one of the user's address. */
-	addressLine1?:    string;
+	addressLine1?:    string | null;
 	/** Line two of the user's address. */
-	addressLine2?:    string;
+	addressLine2?:    string | null;
 	/** The city in which the user lives/is based. */
-	city?:            string;
+	city?:            string | null;
 	/** The company for which the user works. */
-	company?:         string;
+	company?:         string | null;
 	/** A confirmation field for the user's password - this has no known effect, but we set it anyway on password update. */
-	confirmLocalPasswd?: string;
+	confirmLocalPasswd?: string | null;
 	/** The country in which the user lives/is based. */
-	country?:         string;
+	country?:         string | null;
 	/** The user's email address. */
-	email?:           string;
+	email?:           string | null;
 	/** The user's full name. */
-	fullName?:        string;
+	fullName?:        string | null;
 	/** legacy field with no purpose. */
-	gid?:             number;
+	gid?:             number | null;
 	/** An integral, unique identifier for the user. */
 	id:               number;
 	/** The date/time at which the user was last updated. */
-	lastUpdated?:     Date;
+	lastUpdated?:     Date | null;
 	/** The user's password - this should only be populated on update, and only if updating the password. */
-	localPasswd?:     string;
+	localPasswd?:     string | null;
 	/** legacy field with no purpose. */
-	localUser?:       boolean;
+	localUser?:       boolean | null;
 	/**
 	 * Whether (false) or not (true) the user has reset their password after
 	 * registration.
 	 */
 	newUser:          boolean;
 	/** The user's phone number. */
-	phoneNumber?:     string;
+	phoneNumber?:     string | null;
 	/** The postal code where the user lives/is based. */
-	postalCode?:      string;
+	postalCode?:      string | null;
 	/** The user's public SSH key. */
-	publicSshKey?:    string;
+	publicSshKey?:    string | null;
 	/** The integral, unique identifier of the Role the user has. */
 	role?:            number;
 	/** The user's Role. */
-	rolename?:        string;
+	rolename?:        string | null;
 	/** The state or province within which the user lives/is based. */
-	stateOrProvince?: string;
+	stateOrProvince?: string | null;
 	/** The Tenant to which the user belongs. */
-	tenant?:          string;
+	tenant?:          string | null;
 	/** An integral, unique identifier for the Tenant to which the user belongs. */
 	tenantId?:        number;
 	/** legacy field with no purpose. */
-	uid?:             number;
+	uid?:             number | null;
 	/** The user's username. */
 	username:         string;
 }
@@ -134,7 +134,6 @@ export function newCurrentUser(): CurrentUser {
 	};
 }
 
-
 /**
  * Represents a role that a user may have
  */
@@ -164,3 +163,6 @@ export interface Capability {
 	/** The date/time at which the Capability was last updated. */
 	lastUpdated?: Date;
 }
+
+/** The name of a special Role that is always allowed to do whatever it wants. */
+export const ADMIN_ROLE = "admin";

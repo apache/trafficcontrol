@@ -23,7 +23,9 @@ package torequest
 
 import (
 	"bytes"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -32,9 +34,11 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -79,6 +83,7 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	args = append(args, "--via-string-release="+strconv.FormatBool(!cfg.OmitViaStringRelease))
 	args = append(args, "--no-outgoing-ip="+strconv.FormatBool(cfg.NoOutgoingIP))
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
+	args = append(args, "--use-strategies="+cfg.UseStrategies.String())
 
 	generatedFiles, stdErr, code := t3cutil.DoInput(configData, config.GenerateCmd, args...)
 	if code != 0 {
@@ -186,8 +191,8 @@ func getChkconfig(cfg config.Cfg) ([]map[string]string, error) {
 	return result, nil
 }
 
-func getUpdateStatus(cfg config.Cfg) (*tc.ServerUpdateStatus, error) {
-	status := tc.ServerUpdateStatus{}
+func getUpdateStatus(cfg config.Cfg) (*atscfg.ServerUpdateStatus, error) {
+	status := atscfg.ServerUpdateStatus{}
 	if err := requestJSON(cfg, "update-status", &status); err != nil {
 		return nil, errors.New("requesting json: " + err.Error())
 	}
@@ -212,7 +217,7 @@ func getPackages(cfg config.Cfg) ([]Package, error) {
 
 // sendUpdate updates the given cache's queue update and reval status in Traffic Ops.
 // Note the statuses are the value to be set, not whether to set the value.
-func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
+func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, configApplyBool, revalApplyBool *bool) error {
 	args := []string{
 		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
 		"--traffic-ops-user=" + cfg.TOUser,
@@ -220,9 +225,23 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 		"--traffic-ops-url=" + cfg.TOURL,
 		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
 		"--cache-host-name=" + cfg.CacheHostName,
-		"--set-update-status=" + strconv.FormatBool(updateStatus),
-		"--set-reval-status=" + strconv.FormatBool(revalStatus),
 	}
+
+	if configApplyTime != nil {
+		args = append(args, "--set-config-apply-time="+(*configApplyTime).Format(time.RFC3339Nano))
+	}
+	if revalApplyTime != nil {
+		args = append(args, "--set-reval-apply-time="+(*revalApplyTime).Format(time.RFC3339Nano))
+	}
+
+	// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
+	if configApplyBool != nil {
+		args = append(args, "--set-update-status="+strconv.FormatBool(*configApplyBool))
+	}
+	if revalApplyBool != nil {
+		args = append(args, "--set-reval-status="+strconv.FormatBool(*revalApplyBool))
+	}
+	// ***
 
 	if cfg.LogLocationErr == log.LogLocationNull {
 		args = append(args, "-s")
@@ -234,6 +253,7 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 		args = append(args, "-v")
 	}
 
+	// TODO: Do these override the values set above? These appear to be the same, dups?
 	if _, used := os.LookupEnv("TO_USER"); !used {
 		args = append(args, "--traffic-ops-user="+cfg.TOUser)
 	}
@@ -257,12 +277,14 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 // diff calls t3c-diff to diff the given new file and the file on disk. Returns whether they're different.
 // Logs the difference.
 // If the file on disk doesn't exist, returns true and logs the entire file as a diff.
-func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, perm os.FileMode) (bool, error) {
+func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, perm os.FileMode, uid int, gid int) (bool, error) {
 	diffMsg := ""
 	args := []string{
 		"--file-a=stdin",
 		"--file-b=" + fileLocation,
 		"--file-mode=" + fmt.Sprintf("%#o", perm),
+		"--file-uid=" + fmt.Sprint(uid),
+		"--file-gid=" + fmt.Sprint(gid),
 	}
 
 	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, args...)
@@ -331,6 +353,22 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 	logSubApp(`t3c-check-refs stdout`, stdOut)
 	logSubApp(`t3c-check-refs stderr`, stdErr)
 	return nil
+}
+
+//checkCert checks the validity of the ssl certificate.
+func checkCert(c []byte) error {
+	block, _ := pem.Decode(c)
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return errors.New("Error Parsing Certificate: " + err.Error())
+	}
+	if cert.NotAfter.Unix() < time.Now().Unix() {
+		err = errors.New("Certificate expired: " + cert.NotAfter.Format(config.TimeAndDateLayout))
+		log.Warnf(err.Error())
+	} else {
+		log.Infof("Certificate valid until %s ", cert.NotAfter.Format(config.TimeAndDateLayout))
+	}
+	return err
 }
 
 // checkReload is a helper for the sub-command t3c-check-reload.

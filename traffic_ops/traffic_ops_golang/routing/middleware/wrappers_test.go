@@ -234,7 +234,7 @@ func TestWrapAuth(t *testing.T) {
 
 	f(w, r)
 
-	expectedError := `{"alerts":[{"text":"Unauthorized, please log in.","level":"error"}]}` + "\n"
+	expectedError := `{"alerts":[{"text":"unauthorized, please log in.","level":"error"}]}` + "\n"
 
 	if *debugLogging {
 		fmt.Printf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedError)
@@ -272,7 +272,7 @@ func TestRequiredPermissionsMiddleware(t *testing.T) {
 
 	authWrapper := authBase.GetWrapper(0)
 
-	f := authWrapper(RequiredPermissionsMiddleware([]string{"foo"})(handler))
+	f := authWrapper(WrapHeaders(RequiredPermissionsMiddleware([]string{"foo"})(handler)))
 
 	w, r := newRWPair(t, cookie)
 
@@ -351,7 +351,7 @@ func TestConfigRoleBasedPermissionsHandling(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("successs\n"))
 	}
-	f := AuthBase{secret, nil}.GetWrapper(5)(RequiredPermissionsMiddleware([]string{"foo"})(handler))
+	f := WrapHeaders(AuthBase{secret, nil}.GetWrapper(5)(RequiredPermissionsMiddleware([]string{"foo"})(handler)))
 
 	w, r := newRWPair(t, cookie)
 	r = r.WithContext(ctx)

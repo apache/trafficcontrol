@@ -36,6 +36,7 @@ const (
 	Divisions
 	FederationResolvers
 	FederationUsers
+	InvalidationJobs
 	Origins
 	Parameters
 	PhysLocations
@@ -48,7 +49,6 @@ const (
 	ServerServerCapabilities
 	Servers
 	ServiceCategories
-	Statuses
 	StaticDNSEntries
 	SteeringTargets
 	Tenants
@@ -85,6 +85,7 @@ func (r *TCData) WithObjs(t *testing.T, objs []TCObj, f func()) {
 		Divisions:                            {r.CreateTestDivisions, r.DeleteTestDivisions},
 		FederationUsers:                      {r.CreateTestFederationUsers, r.DeleteTestFederationUsers},
 		FederationResolvers:                  {r.CreateTestFederationResolvers, r.DeleteTestFederationResolvers},
+		InvalidationJobs:                     {r.CreateTestInvalidationJobs, r.DeleteTestInvalidationJobs},
 		Origins:                              {r.CreateTestOrigins, r.DeleteTestOrigins},
 		Parameters:                           {r.CreateTestParameters, r.DeleteTestParameters},
 		PhysLocations:                        {r.CreateTestPhysLocations, r.DeleteTestPhysLocations},
@@ -97,7 +98,6 @@ func (r *TCData) WithObjs(t *testing.T, objs []TCObj, f func()) {
 		ServerServerCapabilities:             {r.CreateTestServerServerCapabilities, r.DeleteTestServerServerCapabilities},
 		Servers:                              {r.CreateTestServers, r.DeleteTestServers},
 		ServiceCategories:                    {r.CreateTestServiceCategories, r.DeleteTestServiceCategories},
-		Statuses:                             {r.CreateTestStatuses, r.DeleteTestStatuses},
 		StaticDNSEntries:                     {r.CreateTestStaticDNSEntries, r.DeleteTestStaticDNSEntries},
 		SteeringTargets:                      {r.SetupSteeringTargets, r.DeleteTestSteeringTargets},
 		Tenants:                              {r.CreateTestTenants, r.DeleteTestTenants},

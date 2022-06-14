@@ -28,19 +28,19 @@
 
 - name: Current status of {{to_api_target_host}}
   debug:
-    msg: "{{ server_details.json.response.status }}"
+    msg: "{{ server_details.json.response[0].status }}"
     verbosity: 1
   delegate_to: localhost
 
 - name: Show id of {{to_api_target_host}}
   debug:
-    msg: "{{ server_details.json.response.id }}"
+    msg: "{{ server_details.json.response[0].id }}"
     verbosity: 2
   delegate_to: localhost
 
 - name: "{{ 'Set state of '+to_api_target_host+' to ' + to_api_desired_state }}"
   uri:
-    url: "{{ to_api_base_url }}/api/{{ to_api_version }}/servers/{{ server_details.json.response.id }}/status"
+    url: "{{ to_api_base_url }}/api/{{ to_api_version }}/servers/{{ server_details.json.response[0].id }}/status"
     method: PUT
     body_format: json
     headers:

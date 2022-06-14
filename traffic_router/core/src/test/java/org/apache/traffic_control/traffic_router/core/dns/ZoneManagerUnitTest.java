@@ -15,7 +15,17 @@
 
 package org.apache.traffic_control.traffic_router.core.dns;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import org.apache.traffic_control.traffic_router.core.ds.DeliveryService;
 import org.apache.traffic_control.traffic_router.core.edge.CacheRegister;
+import org.apache.traffic_control.traffic_router.core.edge.InetRecord;
+import org.apache.traffic_control.traffic_router.core.request.DNSRequest;
+import org.apache.traffic_control.traffic_router.core.router.DNSRouteResult;
 import org.apache.traffic_control.traffic_router.core.router.StatTracker;
 import org.apache.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
@@ -24,6 +34,7 @@ import org.apache.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -38,8 +49,11 @@ import org.xbill.DNS.SOARecord;
 import org.xbill.DNS.SetResponse;
 import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
+import org.xbill.DNS.NSRecord;
+import org.xbill.DNS.CNAMERecord;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -57,18 +71,20 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 @PowerMockIgnore("javax.management.*")
 public class ZoneManagerUnitTest {
     ZoneManager zoneManager;
-
+    TrafficRouter trafficRouter;
+    SignatureManager signatureManager;
+    CacheRegister cacheRegister;
     @Before
     public void before() throws Exception {
-        TrafficRouter trafficRouter = mock(TrafficRouter.class);
-        CacheRegister cacheRegister = mock(CacheRegister.class);
+        trafficRouter = mock(TrafficRouter.class);
+        cacheRegister = mock(CacheRegister.class);
         when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
 
         PowerMockito.spy(ZoneManager.class);
         PowerMockito.stub(PowerMockito.method(ZoneManager.class, "initTopLevelDomain")).toReturn(null);
         PowerMockito.stub(PowerMockito.method(ZoneManager.class, "initZoneCache")).toReturn(null);
 
-        SignatureManager signatureManager = PowerMockito.mock(SignatureManager.class);
+        signatureManager = PowerMockito.mock(SignatureManager.class);
         whenNew(SignatureManager.class).withArguments(any(ZoneManager.class), any(CacheRegister.class), any(TrafficOpsUtils.class), any(TrafficRouterManager.class)).thenReturn(signatureManager);
 
         zoneManager = spy(new ZoneManager(trafficRouter, new StatTracker(), null, mock(TrafficRouterManager.class)));
@@ -96,6 +112,92 @@ public class ZoneManagerUnitTest {
         zoneManager.getZone(qname, Type.A, client, false, builder);
         verify(builder).resultType(any(ResultType.class));
         verify(builder).resultLocation(null);
+    }
+
+    @Test
+    public void itGetsCorrectNSECRecordFromStaticAndDynamicZones() throws Exception {
+
+        final Name qname = Name.fromString("dns1.example.com.");
+        final InetAddress client = InetAddress.getByName("192.168.56.78");
+
+        DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(1L, client);
+        builder = spy(builder);
+
+        Name m_an, m_host, m_admin;
+        m_an = Name.fromString("dns1.example.com.");
+        m_host = Name.fromString("dns1.example.com.");
+        m_admin = Name.fromString("admin.example.com.");
+        Record ar;
+        NSRecord ns;
+        NSECRecord nsec;
+        ar = new SOARecord(m_an, DClass.IN, 0x13A8,
+                m_host, m_admin, 0xABCDEF12L, 0xCDEF1234L,
+                0xEF123456L, 0x12345678L, 0x3456789AL);
+
+        ns = new NSRecord(m_an, DClass.IN, 12345L, m_an);
+        nsec = new NSECRecord(m_an, DClass.IN, 12345L, new Name("foobar.dns1.example.com."), new int[]{1});
+        Record[] records = new Record[] {ar, ns, nsec};
+        m_an = Name.fromString("dns1.example.com.");
+        Zone zone = new Zone(m_an, records);
+        // static zone
+        doReturn(zone).when(zoneManager).getZone(qname, Type.NSEC);
+
+        DNSRouteResult dnsRouteResult = new DNSRouteResult();
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        ArrayNode domainNode = node.putArray("domains");
+        domainNode.add("example.com");
+        node.put("routingName","edge");
+        node.put("coverageZoneOnly", false);
+        DeliveryService ds1 = new DeliveryService("ds1", node);
+
+
+        dnsRouteResult.setDeliveryService(ds1);
+        InetRecord address = new InetRecord("cdn-tr.dns1.example.com.", 12345L);
+        List<InetRecord> list = new ArrayList<>();
+        list.add(address);
+        dnsRouteResult.setAddresses(list);
+
+        Record cnameRecord = new CNAMERecord(new Name("dns1.example.com."), DClass.IN, 12345L, new Name("cdn-tr.dns1.example.com."));
+        Record nsecRecord = new NSECRecord(new Name("edge.dns1.example.com."), DClass.IN, 12345L, new Name("foobar.dns1.example.com."), new int[]{1});
+
+        // Add records for dynamic zones
+        Record[] recordArray = new Record[]{cnameRecord, ar, nsecRecord, ns};
+        List<Record> recordList = Arrays.asList(recordArray);
+        Zone dynamicZone = new Zone(new Name("dns1.example.com."), recordArray);
+
+        CacheLoader<ZoneKey, Zone> loader;
+        loader = new CacheLoader<>() {
+            @Override
+            public Zone load(ZoneKey zoneKey) {
+                return dynamicZone;
+            }
+
+        };
+        loader.load(new ZoneKey(Name.fromString("dns1.example.com."), Arrays.asList(records)));
+        LoadingCache<ZoneKey, Zone> dynamicZoneCache = CacheBuilder.newBuilder().build(loader);
+
+        // stub calls for signatureManager, dynamicZoneCache and generateDynamicZoneKey
+        when(ZoneManager.getDynamicZoneCache()).thenReturn(dynamicZoneCache);
+        ZoneKey zk = new ZoneKey(Name.fromString("dns1.example.com."), recordList);
+        dynamicZoneCache.put(zk, dynamicZone);
+
+        when(ZoneManager.getSignatureManager()).thenReturn(signatureManager);
+        Answer<ZoneKey> currentTimeAnswer = invocation -> zk;
+
+        when(ZoneManager.getSignatureManager().generateDynamicZoneKey(
+                eq(Name.fromString("dns1.example.com.")),
+                anyList(),
+                eq(true))).
+                then(currentTimeAnswer);
+        when(trafficRouter.isEdgeDNSRouting()).thenReturn(true);
+        when(trafficRouter.route(any(DNSRequest.class), any(StatTracker.Track.class))).thenReturn(dnsRouteResult);
+        Zone resultZone = zoneManager.getZone(qname, Type.NSEC, client, true, builder);
+        // make sure the function gets called with the correct records as expected
+        verify(ZoneManager.getSignatureManager()).generateDynamicZoneKey( eq(Name.fromString("dns1.example.com.")),
+                argThat(t -> t.containsAll(Arrays.asList(nsecRecord, ns, ar))),
+                eq(true));
+        SetResponse setResponse = resultZone.findRecords(new Name(ds1.getRoutingName() + "." + "dns1.example.com."), Type.NSEC);
+        assertThat(setResponse.isNXDOMAIN(), equalTo(false));
     }
 
     @Test

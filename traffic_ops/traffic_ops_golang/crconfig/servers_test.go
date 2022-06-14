@@ -21,10 +21,6 @@ package crconfig
 
 import (
 	"context"
-	"fmt"
-	"github.com/lib/pq"
-	"math/rand"
-	"net"
 	"reflect"
 	"strings"
 	"testing"
@@ -32,124 +28,59 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-type StringArray pq.StringArray
-
-func randBool() *bool {
-	b := rand.Int()%2 == 0
-	return &b
-}
-func randStr() *string {
-	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_"
-	num := 100
-	s := ""
-	for i := 0; i < num; i++ {
-		s += string(chars[rand.Intn(len(chars))])
-	}
-	return &s
-}
-func randStrArray() []string {
-	num := 100
-	sArray := make([]string, num)
-	for i := 0; i < num; i++ {
-		sArray[i] = *randStr()
-	}
-	return sArray
-}
-func randInt() *int {
-	i := rand.Int()
-	return &i
-}
-func randInt64() *int64 {
-	i := int64(rand.Int63())
-	return &i
-}
-func randFloat64() *float64 {
-	f := rand.Float64()
-	return &f
-}
-
-func randomIPv4() *string {
-	first := rand.Int31n(256)
-	second := rand.Int31n(256)
-	third := rand.Int31n(256)
-	fourth := rand.Int31n(256)
-	str := fmt.Sprintf("%d.%d.%d.%d", first, second, third, fourth)
-	return &str
-}
-
-func randomIPv6() *string {
-	ip := net.IP([]byte{
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-		uint8(rand.Int31n(256)),
-	}).String()
-	return &ip
-}
-
 func randServer(ipService bool, ip6Service bool) tc.CRConfigTrafficOpsServer {
-	status := tc.CRConfigServerStatus(*randStr())
-	cachegroup := randStr()
+	status := tc.CRConfigServerStatus(test.RandStr())
+	cachegroup := util.StrPtr(test.RandStr())
 	ip := new(string)
 	ip6 := new(string)
 	inf := new(string)
 
 	if ipService {
-		ip = randomIPv4()
-		inf = randStr()
+		ip = util.StrPtr(test.RandomIPv4())
+		inf = util.StrPtr(test.RandStr())
 	}
 	if ip6Service {
-		ip6 = randomIPv6()
-		inf = randStr()
+		ip6 = util.StrPtr(test.RandomIPv6())
+		inf = util.StrPtr(test.RandStr())
 	}
 
 	return tc.CRConfigTrafficOpsServer{
 		CacheGroup:      cachegroup,
-		Capabilities:    randStrArray(),
-		Fqdn:            randStr(),
-		HashCount:       randInt(),
-		HashId:          randStr(),
-		HttpsPort:       randInt(),
+		Capabilities:    test.RandStrArray(),
+		Fqdn:            util.StrPtr(test.RandStr()),
+		HashCount:       util.IntPtr(test.RandInt()),
+		HashId:          util.StrPtr(test.RandStr()),
+		HttpsPort:       util.IntPtr(test.RandInt()),
 		InterfaceName:   inf,
 		Ip:              ip,
 		Ip6:             ip6,
 		LocationId:      cachegroup,
-		Port:            randInt(),
-		Profile:         randStr(),
+		Port:            util.IntPtr(test.RandInt()),
+		Profile:         util.StrPtr(test.RandStr()),
 		ServerStatus:    &status,
-		ServerType:      randStr(),
-		RoutingDisabled: *randInt64(),
+		ServerType:      util.StrPtr(test.RandStr()),
+		RoutingDisabled: test.RandInt64(),
 	}
 }
 
 func ExpectedGetServerParams() map[string]ServerParams {
 	return map[string]ServerParams{
 		"cache0": ServerParams{
-			APIPort:          randStr(),
-			SecureAPIPort:    randStr(),
-			Weight:           randFloat64(),
-			WeightMultiplier: randFloat64(),
+			APIPort:          util.StrPtr(test.RandStr()),
+			SecureAPIPort:    util.StrPtr(test.RandStr()),
+			Weight:           util.FloatPtr(test.RandFloat64()),
+			WeightMultiplier: util.FloatPtr(test.RandFloat64()),
 		},
 		"cache1": ServerParams{
-			APIPort:          randStr(),
-			Weight:           randFloat64(),
-			WeightMultiplier: randFloat64(),
+			APIPort:          util.StrPtr(test.RandStr()),
+			Weight:           util.FloatPtr(test.RandFloat64()),
+			WeightMultiplier: util.FloatPtr(test.RandFloat64()),
 		},
 	}
 }
@@ -490,21 +421,21 @@ func TestGetAllServersNonService(t *testing.T) {
 	compare(expected, actual, t)
 }
 
-func ExpectedGetServerDSNames() map[tc.CacheName][]tc.DeliveryServiceName {
-	return map[tc.CacheName][]tc.DeliveryServiceName{
-		"cache0": []tc.DeliveryServiceName{"ds0", "ds1"},
-		"cache1": []tc.DeliveryServiceName{"ds0", "ds1"},
+func ExpectedGetServerDSNames() map[tc.CacheName][]string {
+	return map[tc.CacheName][]string{
+		"cache0": {"ds0", "ds1"},
+		"cache1": {"ds0", "ds1"},
 	}
 }
 
-func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[tc.CacheName][]tc.DeliveryServiceName, cdn string) {
+func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[tc.CacheName][]string, cdn string) {
 	rows := sqlmock.NewRows([]string{"host_name", "xml_id"})
 	for cache, dses := range expected {
 		for _, ds := range dses {
 			rows = rows.AddRow(cache, ds)
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetServerDSNames(t *testing.T) {
@@ -529,7 +460,7 @@ func TestGetServerDSNames(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getServerDSNames(cdn, tx)
+	actual, err := dbhelpers.GetServerDSNamesByCDN(tx, cdn)
 
 	if err != nil {
 		t.Fatalf("getServerDSNames expected: nil error, actual: %v", err)
@@ -544,12 +475,12 @@ func TestGetServerDSNames(t *testing.T) {
 	}
 }
 
-func ExpectedGetServerDSes(expectedGetServerDSNames map[tc.CacheName][]tc.DeliveryServiceName) map[tc.CacheName]map[string][]string {
+func ExpectedGetServerDSes(expectedGetServerDSNames map[tc.CacheName][]string) map[tc.CacheName]map[string][]string {
 	e := map[tc.CacheName]map[string][]string{}
 	for cache, dses := range expectedGetServerDSNames {
 		e[cache] = map[string][]string{}
 		for _, ds := range dses {
-			e[cache][string(ds)] = []string{string(ds) + "regex0", string(ds) + "regex1"}
+			e[cache][ds] = []string{ds + "regex0", ds + "regex1"}
 		}
 	}
 	return e
@@ -610,7 +541,7 @@ func TestGetServerDSes(t *testing.T) {
 }
 
 func ExpectedGetCDNInfo() (string, bool) {
-	return *randStr(), *randBool()
+	return test.RandStr(), test.RandBool()
 }
 
 func MockGetCDNInfo(mock sqlmock.Sqlmock, expectedDomain string, expectedDNSSECEnabled bool, cdn string) {
@@ -655,7 +586,7 @@ func TestGetCDNInfo(t *testing.T) {
 }
 
 func ExpectedGetCDNNameFromID() string {
-	return *randStr()
+	return test.RandStr()
 }
 
 func MockGetCDNNameFromID(mock sqlmock.Sqlmock, expected string, cdnID int) {

@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 
-import "zone.js/dist/zone-node";
+import "zone.js/node";
 
 
 import { existsSync, readFileSync } from "fs";
@@ -185,9 +185,10 @@ function run(): number {
 				key,
 				rejectUnauthorized: !config.insecure
 			},
-			server).listen(config.port, ()=> {
-				console.log(`Node Express server listening on port ${config.port}`);
-			});
+			server
+		).listen(config.port, ()=> {
+			console.log(`Node Express server listening on port ${config.port}`);
+		});
 		try {
 			createRedirectServer(
 				(req, res) => {

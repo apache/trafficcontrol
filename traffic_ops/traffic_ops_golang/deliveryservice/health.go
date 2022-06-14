@@ -22,10 +22,12 @@ package deliveryservice
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -55,6 +57,7 @@ func GetHealth(w http.ResponseWriter, r *http.Request) {
 	}
 	if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
 	}
 
 	health, err := getHealth(inf.Tx.Tx, ds, cdn)
@@ -67,18 +70,18 @@ func GetHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 func getHealth(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (tc.HealthData, error) {
-	monitors, err := monitorhlp.GetURLs(tx)
+	monitorURLs, err := monitorhlp.GetURLs(tx)
 	if err != nil {
 		return tc.HealthData{}, errors.New("getting monitors: " + err.Error())
 	}
-	monitor, ok := monitors[cdn]
+	monitors, ok := monitorURLs[cdn]
 	if !ok {
 		return tc.HealthData{}, nil // TODO emulates old Perl behavior; change to return error?
 	}
-	return getMonitorHealth(tx, ds, monitor)
+	return getMonitorHealth(tx, ds, monitors)
 }
 
-func getMonitorHealth(tx *sql.Tx, ds tc.DeliveryServiceName, monitorFQDN string) (tc.HealthData, error) {
+func getMonitorHealth(tx *sql.Tx, ds tc.DeliveryServiceName, monitorFQDNs []string) (tc.HealthData, error) {
 	client, err := monitorhlp.GetClient(tx)
 	if err != nil {
 		return tc.HealthData{}, errors.New("getting monitor client: " + err.Error())
@@ -88,34 +91,65 @@ func getMonitorHealth(tx *sql.Tx, ds tc.DeliveryServiceName, monitorFQDN string)
 	totalOffline := uint64(0)
 	cgData := map[tc.CacheGroupName]tc.HealthDataCacheGroup{}
 
-	crStates, err := monitorhlp.GetCRStates(monitorFQDN, client)
-	// TODO on err, try another online monitor
-	if err != nil {
-		return tc.HealthData{}, errors.New("getting CRStates for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
+	errs := []error{}
+	for _, monitorFQDN := range monitorFQDNs {
+		crStates, err := monitorhlp.GetCRStates(monitorFQDN, client)
+		if err != nil {
+			errs = append(errs, errors.New("getting CRStates for delivery service '"+string(ds)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+			continue
+		}
+		crConfig, err := monitorhlp.GetCRConfig(monitorFQDN, client)
+		if err != nil {
+			errs = append(errs, errors.New("getting CRConfig for delivery service '"+string(ds)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+			continue
+		}
+		cgData, totalOnline, totalOffline, err = addHealth(ds, cgData, totalOnline, totalOffline, crStates, crConfig)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		healthData := tc.HealthData{TotalOffline: totalOffline, TotalOnline: totalOnline, CacheGroups: []tc.HealthDataCacheGroup{}}
+		for _, health := range cgData {
+			healthData.CacheGroups = append(healthData.CacheGroups, health)
+		}
+		return healthData, nil
 	}
-	crConfig, err := monitorhlp.GetCRConfig(monitorFQDN, client)
-	// TODO on err, try another online monitor
-	if err != nil {
-		return tc.HealthData{}, errors.New("getting CRConfig for delivery service '" + string(ds) + "' monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	cgData, totalOnline, totalOffline = addHealth(ds, cgData, totalOnline, totalOffline, crStates, crConfig)
-
-	healthData := tc.HealthData{TotalOffline: totalOffline, TotalOnline: totalOnline, CacheGroups: []tc.HealthDataCacheGroup{}}
-	for _, health := range cgData {
-		healthData.CacheGroups = append(healthData.CacheGroups, health)
-	}
-	return healthData, nil
+	return tc.HealthData{}, errors.New("getting monitor health: " + util.JoinErrs(errs).Error())
 }
 
 // addHealth adds the given cache states to the given data and totals, and returns the new data and totals
-func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (map[tc.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64) {
+func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (map[tc.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64, error) {
+
+	var deliveryService tc.CRConfigDeliveryService
+	var ok bool
+	var topology string
+	var cacheGroupNameMap = make(map[string]bool)
+
+	if deliveryService, ok = crConfig.DeliveryServices[string(ds)]; !ok {
+		return map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0, errors.New("delivery service not found in CRConfig")
+	}
+	if deliveryService.Topology != nil {
+		var top tc.CRConfigTopology
+		topology = *deliveryService.Topology
+		if topology != "" {
+			if top, ok = crConfig.Topologies[topology]; !ok {
+				return map[tc.CacheGroupName]tc.HealthDataCacheGroup{}, 0, 0, fmt.Errorf("CRConfig topologies does not contain DS topology: %s", topology)
+			}
+			for _, n := range top.Nodes {
+				cacheGroupNameMap[n] = true
+			}
+		}
+	}
 	for cacheName, avail := range crStates.Caches {
+		var skip bool
 		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
 			continue // TODO warn?
 		}
-		if _, ok := cache.DeliveryServices[string(ds)]; !ok {
-			continue
+		if topology == "" {
+			if _, ok := cache.DeliveryServices[string(ds)]; !ok {
+				continue
+			}
 		}
 		if cache.ServerStatus == nil || *cache.ServerStatus != tc.CRConfigServerStatus(tc.CacheStatusReported) {
 			continue
@@ -126,7 +160,24 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 		if cache.CacheGroup == nil {
 			continue // TODO warn?
 		}
-
+		if topology != "" {
+			if _, ok := cacheGroupNameMap[*cache.CacheGroup]; !ok {
+				continue
+			}
+			cacheCapabilities := make(map[string]struct{}, len(cache.Capabilities))
+			for _, cap := range cache.Capabilities {
+				cacheCapabilities[cap] = struct{}{}
+			}
+			for _, rc := range deliveryService.RequiredCapabilities {
+				if _, ok = cacheCapabilities[rc]; !ok {
+					skip = true
+					break
+				}
+			}
+			if skip {
+				continue
+			}
+		}
 		cgHealth := data[tc.CacheGroupName(*cache.CacheGroup)]
 		cgHealth.Name = tc.CacheGroupName(*cache.CacheGroup)
 		if avail.IsAvailable {
@@ -138,5 +189,5 @@ func addHealth(ds tc.DeliveryServiceName, data map[tc.CacheGroupName]tc.HealthDa
 		}
 		data[tc.CacheGroupName(*cache.CacheGroup)] = cgHealth
 	}
-	return data, totalOnline, totalOffline
+	return data, totalOnline, totalOffline, nil
 }

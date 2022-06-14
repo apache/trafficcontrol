@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -167,6 +168,199 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 
 	if strings.Contains(txt, "origin_max_connections") {
 		t.Errorf("expected no origin_max_connections on DS that uses the mid, actual '%v'\n", txt)
+	}
+}
+
+func TestGetCachegroupsInSameTopologyTier(t *testing.T) {
+	allCachegroups := []tc.CacheGroupNullable{
+		{
+			Name: util.StrPtr("edge1"),
+			Type: util.StrPtr(tc.CacheGroupEdgeTypeName),
+		},
+		{
+			Name: util.StrPtr("edge2"),
+			Type: util.StrPtr(tc.CacheGroupEdgeTypeName),
+		},
+		{
+			Name: util.StrPtr("deep1"),
+			Type: util.StrPtr(tc.CacheGroupEdgeTypeName),
+		},
+		{
+			Name: util.StrPtr("mid1"),
+			Type: util.StrPtr(tc.CacheGroupMidTypeName),
+		},
+		{
+			Name: util.StrPtr("mid2"),
+			Type: util.StrPtr(tc.CacheGroupMidTypeName),
+		},
+		{
+			Name: util.StrPtr("org1"),
+			Type: util.StrPtr(tc.CacheGroupOriginTypeName),
+		},
+		{
+			Name: util.StrPtr("org2"),
+			Type: util.StrPtr(tc.CacheGroupOriginTypeName),
+		},
+	}
+	type testCase struct {
+		cachegroup  string
+		cachegroups []tc.CacheGroupNullable
+		topology    tc.Topology
+		expected    map[string]bool
+	}
+	testCases := []testCase{
+		{
+			cachegroup:  "edge1",
+			cachegroups: allCachegroups,
+			topology: tc.Topology{
+				Nodes: []tc.TopologyNode{
+					{
+						// 0
+						Cachegroup: "edge1",
+						Parents:    []int{3},
+					},
+					{
+						// 1
+						Cachegroup: "deep1",
+						Parents:    []int{0},
+					},
+					{
+						// 2
+						Cachegroup: "edge2",
+						Parents:    []int{4},
+					},
+					{
+						// 3
+						Cachegroup: "mid1",
+						Parents:    []int{},
+					},
+					{
+						// 4
+						Cachegroup: "mid2",
+						Parents:    []int{},
+					},
+				},
+			},
+			expected: map[string]bool{"edge1": true, "edge2": true},
+		},
+		{
+			cachegroup:  "deep1",
+			cachegroups: allCachegroups,
+			topology: tc.Topology{
+				Nodes: []tc.TopologyNode{
+					{
+						// 0
+						Cachegroup: "edge1",
+						Parents:    []int{3},
+					},
+					{
+						// 1
+						Cachegroup: "deep1",
+						Parents:    []int{0},
+					},
+					{
+						// 2
+						Cachegroup: "edge2",
+						Parents:    []int{4},
+					},
+					{
+						// 3
+						Cachegroup: "mid1",
+						Parents:    []int{},
+					},
+					{
+						// 4
+						Cachegroup: "mid2",
+						Parents:    []int{},
+					},
+				},
+			},
+			expected: map[string]bool{"deep1": true},
+		},
+		{
+			cachegroup:  "mid1",
+			cachegroups: allCachegroups,
+			topology: tc.Topology{
+				Nodes: []tc.TopologyNode{
+					{
+						// 0
+						Cachegroup: "edge1",
+						Parents:    []int{3},
+					},
+					{
+						// 1
+						Cachegroup: "deep1",
+						Parents:    []int{0},
+					},
+					{
+						// 2
+						Cachegroup: "edge2",
+						Parents:    []int{4},
+					},
+					{
+						// 3
+						Cachegroup: "mid1",
+						Parents:    []int{},
+					},
+					{
+						// 4
+						Cachegroup: "mid2",
+						Parents:    []int{},
+					},
+				},
+			},
+			expected: map[string]bool{"mid1": true, "mid2": true},
+		},
+		{
+			cachegroup:  "edge2",
+			cachegroups: allCachegroups,
+			topology: tc.Topology{
+				Nodes: []tc.TopologyNode{
+					{
+						// 0
+						Cachegroup: "edge1",
+						Parents:    []int{3},
+					},
+					{
+						// 1
+						Cachegroup: "deep1",
+						Parents:    []int{0},
+					},
+					{
+						// 2
+						Cachegroup: "edge2",
+						Parents:    []int{4},
+					},
+					{
+						// 3
+						Cachegroup: "mid1",
+						Parents:    []int{5},
+					},
+					{
+						// 4
+						Cachegroup: "mid2",
+						Parents:    []int{6},
+					},
+					{
+						// 5
+						Cachegroup: "org1",
+						Parents:    []int{},
+					},
+					{
+						// 5
+						Cachegroup: "org2",
+						Parents:    []int{},
+					},
+				},
+			},
+			expected: map[string]bool{"edge1": true, "edge2": true},
+		},
+	}
+	for _, tc := range testCases {
+		actual := getCachegroupsInSameTopologyTier(tc.cachegroup, tc.cachegroups, tc.topology)
+		if !reflect.DeepEqual(tc.expected, actual) {
+			t.Errorf("getting cachegroups in same topology tier -- expected: %v, actual: %v", tc.expected, actual)
+		}
 	}
 }
 

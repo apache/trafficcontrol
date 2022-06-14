@@ -94,11 +94,11 @@ func (staticDNSEntry *TOStaticDNSEntry) SetKeys(keys map[string]interface{}) {
 	staticDNSEntry.ID = &i
 }
 
-// Validate fulfills the api.Validator interface
-func (staticDNSEntry TOStaticDNSEntry) Validate() error {
+// Validate fulfills the api.Validator interface.
+func (staticDNSEntry TOStaticDNSEntry) Validate() (error, error) {
 	typeStr, err := tc.ValidateTypeID(staticDNSEntry.ReqInfo.Tx.Tx, &staticDNSEntry.TypeID, "staticdnsentry")
 	if err != nil {
-		return err
+		return err, nil
 	}
 
 	var addressErr, ttlErr error
@@ -135,7 +135,7 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 		"ttl":               ttlErr,
 		"typeId":            validation.Validate(staticDNSEntry.TypeID, validation.Required),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (en *TOStaticDNSEntry) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {

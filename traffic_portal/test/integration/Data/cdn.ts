@@ -26,12 +26,6 @@ export const cdns = {
 					password: "pa$$word"
 				}
 			],
-			check: [
-				{
-					description: "check CSV link from CDN page",
-					Name: "Export as CSV"
-				}
-			],
 			add: [
 				{
 					description: "create a CDN",
@@ -98,12 +92,6 @@ export const cdns = {
 					password: "pa$$word"
 				}
 			],
-			check: [
-				{
-					description: "check CSV link from CDN page",
-					Name: "Export as CSV"
-				}
-			],
 			add: [
 				{
 					description: "create a CDN",
@@ -153,12 +141,6 @@ export const cdns = {
 					description: "Operation Role",
 					username: "TPOperator",
 					password: "pa$$word"
-				}
-			],
-			check: [
-				{
-					description: "check CSV link from CDN page",
-					Name: "Export as CSV"
 				}
 			],
 			add: [

@@ -95,6 +95,12 @@ func PreprocessConfigFile(server *atscfg.Server, cfgFile string) string {
 	} else {
 		cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, *server.HostName+`.`+*server.DomainName, -1)
 	}
+	if server.Cachegroup != nil && *server.Cachegroup != "" {
+		cfgFile = strings.Replace(cfgFile, `__CACHEGROUP__`, *server.Cachegroup, -1)
+	} else {
+		log.Errorln("Preprocessing: this server missing Cachegroup, cannot replace __CACHEGROUP__ directives!")
+	}
+
 	cfgFile = returnRegex.ReplaceAllString(cfgFile, "\n")
 	return cfgFile
 }

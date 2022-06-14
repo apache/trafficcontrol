@@ -93,7 +93,7 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 {
   "response": [{
     "id": 5,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+    "profileNames": ["MID", "AMIGA_123", "CDN_FOO"]
   }]
 }
 ```
@@ -102,7 +102,7 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 ```JSON
 {
   "response": [{
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+    "profileNames": ["MID", "AMIGA_123", "CDN_FOO"]
   }]
 }
 ```
@@ -115,7 +115,7 @@ JSON **request** with the proposed change will look as follows:
 {
     "cachegroupId": 6,
     "cdnId": 2,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+    "profileNames": ["MID", "AMIGA_123", "CDN_FOO"]
 }
 ```
 
@@ -124,7 +124,7 @@ JSON **request** with the proposed change will look as follows:
 {
     "cachegroupId": 6,
     "cdnId": 2,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+    "profileNames": ["MID", "AMIGA_123", "CDN_FOO"]
 }
 ```
 
@@ -141,7 +141,7 @@ return following **response**
     "cachegroupId": 6,
     "cdnId": 2,
     "id": 5,
-    "profiles": ["MID", "AMIGA_123", "CDN_FOO"]
+    "profileNames": ["MID", "AMIGA_123", "CDN_FOO"]
   }
 }
 ```
@@ -151,7 +151,7 @@ The following table describes the top level `layered_profile` object for servers
 | field           | type                 | optionality | description                                              |
 | ----------------| ---------------------| ----------- | ---------------------------------------------------------|
 | server          | bigint               | required    | the server id associated with a given profile            |
-| profiles        | text []              | required    | the profile names associated with a server               |
+| profile_name    | text                 | required    | the profile name associated with a server                |
 | order           | bigint               | required    | the order in which a profile is applied to a server      |
 
 **API constraints**
@@ -176,10 +176,10 @@ The following table describes the top level `layered_profile` object for servers
  profile_name  | text                     |           | not null |
  order         | bigint                   |           | not null |
 Indexes:
-    "pk_server_profile" PRIMARY KEY(profile_name, server, order)
+    "pk_server_profile" PRIMARY KEY(profile_name, server)
 Foreign-key constraints:
-    "fk_server" FOREIGN KEY (server) REFERENCES server(id)
-    "fk_server" FOREIGN KEY (profile_name) REFERENCES profile(name)
+    "fk_server_id" FOREIGN KEY (server) REFERENCES public.server(id) ON DELETE CASCADE ON UPDATE CASCADE
+    "fk_server_profile_name_profile" FOREIGN KEY (profile_name) REFERENCES public.profile(name) ON DELETE RESTRICT ON UPDATE CASCADE,
 ```
 
 All profiles assigned to a given server will have the same values of:
@@ -217,7 +217,6 @@ We do not anticipate any impact on security.
 
 ### Upgrade Impact
 - A Database Migration to:
-  - drop profile column in existing server table
   - insert existing server profiles along with their order into the new table(server_profiles)
 
 ### Operations Impact

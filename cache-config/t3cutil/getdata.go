@@ -67,7 +67,7 @@ func GetDataFuncs() map[string]func(TCCfg, io.Writer) error {
 	}
 }
 
-func GetServerUpdateStatus(cfg TCCfg) (*tc.ServerUpdateStatus, error) {
+func GetServerUpdateStatus(cfg TCCfg) (*atscfg.ServerUpdateStatus, error) {
 	status, _, err := cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server '" + cfg.CacheHostName + "' update status: " + err.Error())
@@ -157,18 +157,24 @@ func GetPackages(cfg TCCfg) ([]Package, error) {
 	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
-	} else if server.Profile == nil {
+	} else if len(server.ProfileNames) == 0 {
 		return nil, errors.New("getting server: nil profile")
+	} else if server.HostName == nil {
+		return nil, errors.New("getting server: nil hostName")
 	}
-	params, _, err := cfg.TOClient.GetServerProfileParameters(*server.Profile, nil)
+	allPackageParams, reqInf, err := cfg.TOClient.GetConfigFileParameters(atscfg.PackagesParamConfigFile, nil)
+	log.Infoln(toreq.RequestInfoStr(reqInf, "GetPackages.GetConfigFileParameters("+atscfg.PackagesParamConfigFile+")"))
 	if err != nil {
-		return nil, errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
+		return nil, errors.New("getting server '" + *server.HostName + "' package parameters: " + err.Error())
 	}
+
+	serverPackageParams, err := atscfg.GetServerParameters(server, allPackageParams)
+	if err != nil {
+		return nil, errors.New("calculating server '" + *server.HostName + "' package parameters: " + err.Error())
+	}
+
 	packages := []Package{}
-	for _, param := range params {
-		if param.ConfigFile != atscfg.PackagesParamConfigFile {
-			continue
-		}
+	for _, param := range serverPackageParams {
 		packages = append(packages, Package{Name: param.Name, Version: param.Value})
 	}
 	return packages, nil
@@ -196,18 +202,25 @@ func GetChkconfig(cfg TCCfg) ([]ChkConfigEntry, error) {
 	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
-	} else if server.Profile == nil {
+	} else if len(server.ProfileNames) == 0 {
 		return nil, errors.New("getting server: nil profile")
+	} else if server.HostName == nil {
+		return nil, errors.New("getting server: nil hostName")
 	}
-	params, _, err := cfg.TOClient.GetServerProfileParameters(*server.Profile, nil)
+
+	allChkconfigParams, reqInf, err := cfg.TOClient.GetConfigFileParameters(atscfg.ChkconfigParamConfigFile, nil)
+	log.Infoln(toreq.RequestInfoStr(reqInf, "GetChkconfig.GetConfigFileParameters("+atscfg.ChkconfigParamConfigFile+")"))
 	if err != nil {
-		return nil, errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
+		return nil, errors.New("getting server '" + *server.HostName + "' chkconfig parameters: " + err.Error())
 	}
+
+	serverChkconfigParams, err := atscfg.GetServerParameters(server, allChkconfigParams)
+	if err != nil {
+		return nil, errors.New("calculating server '" + *server.HostName + "' chkconfig parameters: " + err.Error())
+	}
+
 	chkconfig := []ChkConfigEntry{}
-	for _, param := range params {
-		if param.ConfigFile != atscfg.ChkconfigParamConfigFile {
-			continue
-		}
+	for _, param := range serverChkconfigParams {
 		chkconfig = append(chkconfig, ChkConfigEntry{Name: param.Name, Val: param.Value})
 	}
 	return chkconfig, nil
@@ -219,20 +232,24 @@ type ChkConfigEntry struct {
 }
 
 // SetUpdateStatus sets the queue and reval status of serverName in Traffic Ops.
-func SetUpdateStatus(cfg TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
+func SetUpdateStatus(cfg TCCfg, serverName tc.CacheName, configApply, revalApply *time.Time) error {
 	// TODO need to move to toreq, add fallback
-	reqInf, err := cfg.TOClient.SetServerUpdateStatus(serverName, &queue, &revalPending)
+	reqInf, err := cfg.TOClient.SetServerUpdateStatus(serverName, configApply, revalApply)
 	if err != nil {
 		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
 	}
 	return nil
 }
 
-func jsonBoolStr(b bool) string {
-	if b {
-		return `true`
+// SetUpdateStatusCompat sets the queue and reval status of serverName in Traffic Ops.
+// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
+func SetUpdateStatusCompat(cfg TCCfg, serverName tc.CacheName, configApply, revalApply *time.Time, configApplyBool, revalApplyBool *bool) error {
+	// TODO need to move to toreq, add fallback
+	reqInf, err := cfg.TOClient.SetServerUpdateStatusBoolCompat(serverName, configApply, revalApply, configApplyBool, revalApplyBool)
+	if err != nil {
+		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
 	}
-	return `false`
+	return nil
 }
 
 // WriteConfig writes the Traffic Ops data necessary to generate config to output.

@@ -140,8 +140,8 @@ func TestMakeParentDotConfig(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected malformed qstring 'myQstringParam' in warnings, actual: '%v' val '%v'", cfg.Warnings, txt)
 	}
 }
 
@@ -404,6 +404,122 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 	}
 }
 
+func TestMakeParentDotConfigMSONoPrimaryParent(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+	ds0.MultiSiteOrigin = util.BoolPtr(true)
+	dses := []DeliveryService{*ds0}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	server := makeTestParentServer()
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG0")
+	mid0.CachegroupID = util.IntPtr(500)
+	mid0.HostName = util.StrPtr("my-parent-0")
+	mid0.DomainName = util.StrPtr("my-parent-0-domain")
+	mid0.Status = util.StrPtr(string(tc.CacheStatusAdminDown))
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG1")
+	mid1.CachegroupID = util.IntPtr(501)
+	mid1.HostName = util.StrPtr("my-parent-1")
+	mid1.DomainName = util.StrPtr("my-parent-1-domain")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	servers := []Server{*server, *mid0, *mid1}
+
+	topologies := []tc.Topology{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG1 := &tc.CacheGroupNullable{}
+	mCG1.Name = mid1.Cachegroup
+	mCG1.ID = mid1.CachegroupID
+	mCGType1 := tc.CacheGroupMidTypeName
+	mCG1.Type = &mCGType1
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG1}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds0.ID,
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr.HdrComment)
+
+	txtx := strings.Replace(txt, " ", "", -1)
+
+	if !strings.Contains(txtx, `parent="my-parent-1.my-parent-1-domain:80|0.999`) {
+		t.Errorf("expected primary parent 'my-parent-1.my-parent-1-domain', actual: '%v'", txt)
+	}
+}
+
 func TestMakeParentDotConfigTopologies(t *testing.T) {
 	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
@@ -536,8 +652,8 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
 	if strings.Contains(txt, "# topology") {
 		// ATS doesn't support inline comments in parent.config
@@ -968,8 +1084,8 @@ func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
 
 	if strings.Contains(txt, "should-omit") {
@@ -1112,8 +1228,8 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
 
 	if strings.Contains(txt, "should-omit") {
@@ -1132,26 +1248,15 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
 	ds1.Topology = util.StrPtr("t0")
 	ds1.MultiSiteOrigin = util.BoolPtr(true)
+	ds1.ProfileName = util.StrPtr("dsprofile")
 
 	dses := []DeliveryService{*ds1}
 
 	parentConfigParams := []tc.Parameter{
 		tc.Parameter{
-			Name:       ParentConfigParamQStringHandling,
-			ConfigFile: "parent.config",
-			Value:      "myQStringHandlingParam",
-			Profiles:   []byte(`["serverprofile"]`),
-		},
-		tc.Parameter{
 			Name:       ParentConfigParamAlgorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
-			Profiles:   []byte(`["serverprofile"]`),
-		},
-		tc.Parameter{
-			Name:       ParentConfigParamQString,
-			ConfigFile: "parent.config",
-			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
 	}
@@ -1160,7 +1265,7 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 	}
@@ -1251,6 +1356,71 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 	if strings.Contains(txt, "myorigin1") {
 		t.Errorf("expected no origin1 without DeliveryServiceServer assigned to this DS, actual: '%v'", txt)
 	}
+
+	if !strings.Contains(txt, "go_direct=true") {
+		t.Errorf("expected MSO Topologies to Origin to go_direct=true, actual: '%v'", txt)
+	}
+
+	if !strings.Contains(txt, "parent_is_proxy=false") {
+		t.Errorf("expected MSO Topologies to Origin to parent_is_proxy=false, actual: '%v'", txt)
+	}
+
+	t.Run("MSO topologoies default qstring=ignore", func(t *testing.T) {
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(cfg.Text, "qstring=ignore") {
+			t.Errorf("expected MSO Topologies to Origin to default to qstring=ignore, actual: '%v'", cfg.Text)
+		}
+	})
+
+	t.Run("MSO topologoies param qstring=ignore", func(t *testing.T) {
+		parentConfigParamsWithQstr := append(parentConfigParams, tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "ignore",
+			Profiles:   []byte(`["serverprofile"]`),
+		})
+
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParamsWithQstr, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(cfg.Text, "qstring=ignore") {
+			t.Errorf("expected MSO Topologies to Origin to default to qstring=ignore, actual: '%v'", cfg.Text)
+		}
+	})
+
+	t.Run("MSO topologoies param qstring=consider", func(t *testing.T) {
+		parentConfigParamsWithQstr := append(parentConfigParams, tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "consider",
+			Profiles:   []byte(`["` + *ds1.ProfileName + `"]`),
+		})
+
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParamsWithQstr, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(cfg.Text, "qstring=consider") {
+			t.Errorf("expected MSO Topologies to Origin with param to qstring=consider, actual: '''%v''' warnings '''%+v'''", cfg.Text, cfg.Warnings)
+		}
+	})
+
+	t.Run("MSO topologoies param ds qstring consider", func(t *testing.T) {
+		ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+		dses := []DeliveryService{*ds1}
+
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(cfg.Text, "qstring=consider") {
+			t.Errorf("expected MSO Topologies to Origin with param to qstring=consider, actual: '''%v''' warnings '''%+v'''", cfg.Text, cfg.Warnings)
+		}
+	})
 }
 
 func TestMakeParentDotConfigTopologiesMSOWithCapabilities(t *testing.T) {
@@ -1511,7 +1681,7 @@ func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
 	testComment(t, txt, hdr.HdrComment)
 
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
-		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
+		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v' warnings %+v", txt, cfg.Warnings)
 	}
 	if !strings.Contains(txt, "myorigin0") {
 		t.Errorf("expected origin0 with DeliveryServiceServer assigned to this DS, actual: '%v'", txt)
@@ -2007,8 +2177,8 @@ func TestMakeParentDotConfigTopologiesNonStandardServerTypes(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
 	if strings.Contains(txt, "# topology") {
 		// ATS doesn't support inline comments in parent.config
@@ -2170,8 +2340,8 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
 	if strings.Count(txt, "secondary_mode=2") != 2 {
 		t.Errorf("expected secondary_mode=2 for both Topology and DSS DSes with ParentConfigParamSecondaryMode parameter and secondary parents, actual: '%v'", txt)
@@ -2325,11 +2495,11 @@ func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
-	if strings.Contains(txt, "secondary_mode") {
-		t.Errorf("expected no secondary_mode for DSes without ParentConfigParamSecondaryMode parameter, actual: '%v'", txt)
+	if !strings.Contains(txt, "secondary_mode=1") {
+		t.Errorf("expected default secondary_mode=1 for DSes without ParentConfigParamSecondaryMode parameter, actual: '%v'", txt)
 	}
 
 	if strings.Contains(txt, `topology 't0'`) {
@@ -2453,8 +2623,8 @@ func TestMakeParentDotConfigComments(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQstringParam") {
+		t.Errorf("expected warning for malformed myQstringParam', actual: '%+v'", cfg.Warnings)
 	}
 	if !strings.Contains(txt, "# ds 'ds1'") {
 		t.Errorf("expected comment with delivery service name, actual: '%v'", txt)
@@ -2608,11 +2778,12 @@ func TestMakeParentDotConfigCommentTopology(t *testing.T) {
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
 		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
-	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
-		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	if !warningsContains(cfg.Warnings, "myQStringHandlingParam") {
+		t.Errorf("expected warning for malformed myQStringHandlingParam', actual: '%+v'", cfg.Warnings)
 	}
-	if strings.Contains(txt, "secondary_mode") {
-		t.Errorf("expected no secondary_mode for DSes without ParentConfigParamSecondaryMode parameter, actual: '%v'", txt)
+
+	if !strings.Contains(txt, "secondary_mode=1") {
+		t.Errorf("expected default secondary_mode=1 for DSes without ParentConfigParamSecondaryMode parameter, actual: '%v'", txt)
 	}
 	if !strings.Contains(txt, `# ds 'ds1' topology 't0'`) {
 		t.Errorf("expected comment with delivery service and topology, actual: '%v'", txt)
@@ -2877,9 +3048,681 @@ func TestMakeParentDotConfigHTTPSOriginTopology(t *testing.T) {
 	}
 }
 
+func TestMakeParentDotConfigNoParentNoTopology(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTPLive
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0-origin.example.net")
+
+	dses := []DeliveryService{*ds0}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	server := makeTestParentServer()
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	servers := []Server{*server, *mid0, *mid1}
+
+	topologies := []tc.Topology{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds0.ID,
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr.HdrComment)
+
+	if !strings.Contains(txt, "dest_domain=ds0-origin.example.net") {
+		t.Errorf("expected parent 'dest_domain=ds0-origin.example.net', actual: '%v'", txt)
+	}
+
+	lines := strings.Split(txt, "\n")
+	for _, line := range lines {
+		if !strings.Contains(line, "dest_domain=ds0-origin.example.net") {
+			continue
+		}
+		if !strings.Contains(line, `parent="ds0-origin.example.net:80`) {
+			t.Errorf("expected non-topology DS of type not using parents to have parent=origin directive, actual: '%v'", txt)
+		}
+		if !strings.Contains(line, `go_direct=true`) {
+			t.Errorf("expected non-topology DS of type not using parents to have go_direct=true directive, actual: '%v'", txt)
+		}
+		if !strings.Contains(line, `parent_is_proxy=false`) {
+			t.Errorf("expected non-topology DS of type not using parents to have parent_is_proxy=false directive, actual: '%v'", txt)
+		}
+	}
+}
+
+func TestMakeParentDotConfigHTTPSOriginTopologyNoPrimaryParent(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
+
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("https://ds0.example.net")
+	ds0.ProfileID = util.IntPtr(311)
+	ds0.ProfileName = util.StrPtr("ds0Profile")
+
+	ds1 := makeParentDS()
+	ds1.ID = util.IntPtr(43)
+	ds1Type := tc.DSTypeDNS
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+	ds1.Topology = util.StrPtr("t0")
+	ds1.ProfileID = util.IntPtr(312)
+	ds1.ProfileName = util.StrPtr("ds1Profile")
+
+	dses := []DeliveryService{*ds0, *ds1}
+
+	parentConfigParams := []tc.Parameter{
+		{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "8",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	server := makeTestParentServer()
+	server.Cachegroup = util.StrPtr("edgeCG")
+	server.CachegroupID = util.IntPtr(400)
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.CachegroupID = util.IntPtr(500)
+	mid0.HostName = util.StrPtr("mymid")
+	mid0.ID = util.IntPtr(45)
+	mid0.Status = util.StrPtr(string(tc.CacheStatusAdminDown))
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG2")
+	mid1.CachegroupID = util.IntPtr(501)
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	servers := []Server{*server, *mid0, *mid1}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1, 2},
+				},
+				{
+					Cachegroup: "midCG",
+				},
+				{
+					Cachegroup: "midCG2",
+				},
+			},
+		},
+	}
+
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG2 := &tc.CacheGroupNullable{}
+	mCG2.Name = mid1.Cachegroup
+	mCG2.ID = mid1.CachegroupID
+	mCGType2 := tc.CacheGroupMidTypeName
+	mCG2.Type = &mCGType2
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+
+	dss := []DeliveryServiceServer{
+		{
+			Server:          *server.ID,
+			DeliveryService: *ds0.ID,
+		},
+		{
+			Server:          *server.ID,
+			DeliveryService: *ds1.ID,
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr.HdrComment)
+
+	if !strings.Contains(txt, `parent="mymid1.mydomain.example.net:80|0.999"`) {
+		t.Errorf("expected topology parent.config withparent=\"mymid1.mydomain.example.net:80|0.999\", actual: '%v'", txt)
+	}
+}
+
+func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
+
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+	ds0.ProfileID = util.IntPtr(311)
+	ds0.ProfileName = util.StrPtr("ds0Profile")
+	ds0.Topology = util.StrPtr("t0")
+
+	dses := []DeliveryService{*ds0}
+
+	parentConfigParams := []tc.Parameter{
+		{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamMergeGroups,
+			ConfigFile: "parent.config",
+			Value:      "oplCG0 oplCG1",
+			Profiles:   []byte(`["ds0Profile"]`),
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "8",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	edge := makeTestParentServer()
+	edge.Cachegroup = util.StrPtr("edgeCG")
+	edge.CachegroupID = util.IntPtr(400)
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG0")
+	mid0.CachegroupID = util.IntPtr(500)
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG1")
+	mid1.CachegroupID = util.IntPtr(501)
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid0, "192.168.2.3")
+
+	opl0 := makeTestParentServer()
+	opl0.Cachegroup = util.StrPtr("oplCG0")
+	opl0.CachegroupID = util.IntPtr(600)
+	opl0.HostName = util.StrPtr("myopl0")
+	opl0.ID = util.IntPtr(47)
+	setIP(opl0, "192.168.2.4")
+
+	opl1 := makeTestParentServer()
+	opl1.Cachegroup = util.StrPtr("oplCG1")
+	opl1.CachegroupID = util.IntPtr(601)
+	opl1.HostName = util.StrPtr("myopl1")
+	opl1.ID = util.IntPtr(48)
+	setIP(opl0, "192.168.2.5")
+
+	servers := []Server{*edge, *mid0, *mid1, *opl0, *opl1}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1, 2},
+				},
+				{
+					Cachegroup: "midCG0",
+					Parents:    []int{3, 4},
+				},
+				{
+					Cachegroup: "midCG1",
+					Parents:    []int{3, 4},
+				},
+				{
+					Cachegroup: "oplCG0",
+				},
+				{
+					Cachegroup: "oplCG1",
+				},
+			},
+		},
+	}
+
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = edge.Cachegroup
+	eCG.ID = edge.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG0 := &tc.CacheGroupNullable{}
+	mCG0.Name = mid0.Cachegroup
+	mCG0.ID = mid0.CachegroupID
+	mCG0.ParentName = opl0.Cachegroup
+	mCG0.ParentCachegroupID = opl0.CachegroupID
+	mCG0.SecondaryParentName = opl1.Cachegroup
+	mCG0.SecondaryParentCachegroupID = opl1.CachegroupID
+	mCGType0 := tc.CacheGroupMidTypeName
+	mCG0.Type = &mCGType0
+
+	mCG1 := &tc.CacheGroupNullable{}
+	mCG1.Name = mid1.Cachegroup
+	mCG1.ID = mid1.CachegroupID
+	mCG1.ParentName = opl1.Cachegroup
+	mCG1.ParentCachegroupID = opl1.CachegroupID
+	mCG1.SecondaryParentName = opl0.Cachegroup
+	mCG1.SecondaryParentCachegroupID = opl0.CachegroupID
+	mCGType1 := tc.CacheGroupMidTypeName
+	mCG1.Type = &mCGType1
+
+	oCG0 := &tc.CacheGroupNullable{}
+	oCG0.Name = opl0.Cachegroup
+	oCG0.ID = opl0.CachegroupID
+	oCGType0 := tc.CacheGroupMidTypeName
+	oCG0.Type = &oCGType0
+
+	oCG1 := &tc.CacheGroupNullable{}
+	oCG1.Name = opl1.Cachegroup
+	oCG1.ID = opl1.CachegroupID
+	oCGType1 := tc.CacheGroupMidTypeName
+	oCG1.Type = &oCGType1
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG0, *mCG1, *oCG0, *oCG1}
+
+	dss := []DeliveryServiceServer{
+		{
+			Server:          *edge.ID,
+			DeliveryService: *ds0.ID,
+		},
+		{
+			Server:          *mid0.ID,
+			DeliveryService: *ds0.ID,
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	{ // test edge config
+		cfg, err := MakeParentDotConfig(dses, edge, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, hdr.HdrComment)
+
+		if !strings.Contains(txt, `dest_domain=ds0.example.net port=80 parent="mymid0.mydomain.example.net:80|0.999" secondary_parent="mymid1.mydomain.example.net:80|0.999"`) {
+			t.Errorf("expected topology parent.config of ds0 edge to have parent only: '%v'", txt)
+		}
+
+		if strings.Count(txt, "secondary_parent") != 2 {
+			t.Errorf("expected 2 secondary parents for edge (dest_domain=.): '%v'", txt)
+		}
+	}
+
+	{ // test mid config
+		cfg, err := MakeParentDotConfig(dses, mid0, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, hdr.HdrComment)
+
+		if !strings.Contains(txt, `dest_domain=ds0.example.net port=80 parent="myopl0.mydomain.example.net:80|0.999;myopl1.mydomain.example.net:80|0.999"`) {
+			t.Errorf("expected topology parent.config of ds0 mid1 to have parent only: '%v'", txt)
+		} else if strings.Count(txt, "secondary_parent") != 1 {
+			t.Errorf("expected one secondary parent for mid1 (dest_domain=.): '%v'", txt)
+		}
+	}
+}
+
+func TestMakeParentDotConfigTopologiesServerMultipleProfileParams(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+
+	ds1 := makeParentDS()
+	ds1.ID = util.IntPtr(43)
+	ds1Type := tc.DSTypeDNS
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+	ds1.Topology = util.StrPtr("t0")
+	ds1.ProfileName = util.StrPtr("ds1Profile")
+	ds1.ProfileID = util.IntPtr(994)
+	ds1.MultiSiteOrigin = util.BoolPtr(true)
+
+	dses := []DeliveryService{*ds1}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      "consistent_hash",
+			Profiles:   []byte(`["ds1Profile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamParentRetry,
+			ConfigFile: "parent.config",
+			Value:      "both",
+			Profiles:   []byte(`["ds1Profile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamUnavailableServerRetryResponses,
+			ConfigFile: "parent.config",
+			Value:      `"400,503"`,
+			Profiles:   []byte(`["ds1Profile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamMaxSimpleRetries,
+			ConfigFile: "parent.config",
+			Value:      "14",
+			Profiles:   []byte(`["ds1Profile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamMaxUnavailableServerRetries,
+			ConfigFile: "parent.config",
+			Value:      "9",
+			Profiles:   []byte(`["ds1Profile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigCacheParamWeight,
+			ConfigFile: "parent.config",
+			Value:      "100",
+			Profiles:   []byte(`["serverprofile0"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigCacheParamWeight,
+			ConfigFile: "parent.config",
+			Value:      "200",
+			Profiles:   []byte(`["serverprofile1"]`),
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "8",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigCacheParamWeight,
+			ConfigFile: "parent.config",
+			Value:      "100",
+			Profiles:   []byte(`["serverprofile0"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigCacheParamWeight,
+			ConfigFile: "parent.config",
+			Value:      "200",
+			Profiles:   []byte(`["serverprofile1"]`),
+		},
+	}
+
+	server := makeTestParentServer()
+	server.Cachegroup = util.StrPtr("edgeCG")
+	server.CachegroupID = util.IntPtr(400)
+
+	origin0 := makeTestParentServer()
+	origin0.Cachegroup = util.StrPtr("originCG")
+	origin0.CachegroupID = util.IntPtr(500)
+	origin0.HostName = util.StrPtr("myorigin0")
+	origin0.ID = util.IntPtr(45)
+	setIP(origin0, "192.168.2.2")
+	origin0.Type = tc.OriginTypeName
+	origin0.TypeID = util.IntPtr(991)
+	origin0.ProfileNames = []string{"serverprofile0", "serverprofile1"}
+
+	origin1 := makeTestParentServer()
+	origin1.Cachegroup = util.StrPtr("originCG")
+	origin1.CachegroupID = util.IntPtr(500)
+	origin1.HostName = util.StrPtr("myorigin1")
+	origin1.ID = util.IntPtr(46)
+	setIP(origin1, "192.168.2.3")
+	origin1.Type = tc.OriginTypeName
+	origin1.TypeID = util.IntPtr(991)
+	origin1.ProfileNames = []string{"serverprofile1", "serverprofile0"}
+
+	servers := []Server{*server, *origin0, *origin1}
+
+	topologies := []tc.Topology{
+		tc.Topology{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "originCG",
+				},
+			},
+		},
+	}
+
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = origin0.Cachegroup
+	eCG.ParentCachegroupID = origin0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	oCG := &tc.CacheGroupNullable{}
+	oCG.Name = origin0.Cachegroup
+	oCG.ID = origin0.CachegroupID
+	oCGType := tc.CacheGroupOriginTypeName
+	oCG.Type = &oCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *oCG}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *origin0.ID,
+			DeliveryService: *ds1.ID,
+		},
+		DeliveryServiceServer{
+			Server:          *origin1.ID,
+			DeliveryService: *ds1.ID,
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr.HdrComment)
+
+	if !strings.Contains(txt, "myorigin0.mydomain.example.net:80|200") {
+		t.Errorf("expected origin 0 with profiles [0,1] to have weight 200 from profile 1, actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "myorigin1.mydomain.example.net:80|100") {
+		t.Errorf("expected origin 0 with profiles [1,0] to have weight 100 from profile 0, actual: '%v'", txt)
+	}
+}
+
+// warningsContains returns whether the given warnings has str as a substring of any warning.
+// Note this is different than lib/go-util.ContainsStr, which only returns if the array has the exact value as one of its values.
+func warningsContains(warnings []string, str string) bool {
+	for _, warn := range warnings {
+		if strings.Contains(warn, str) {
+			return true
+		}
+	}
+	return false
+}
+
 func makeTestParentServer() *Server {
 	server := &Server{}
-	server.ProfileID = util.IntPtr(42)
 	server.CDNName = util.StrPtr("myCDN")
 	server.Cachegroup = util.StrPtr("cg0")
 	server.CachegroupID = util.IntPtr(422)
@@ -2889,8 +3732,7 @@ func makeTestParentServer() *Server {
 	server.HTTPSPort = util.IntPtr(12443)
 	server.ID = util.IntPtr(44)
 	setIP(server, "192.168.2.1")
-	server.ProfileID = util.IntPtr(46)
-	server.Profile = util.StrPtr("serverprofile")
+	server.ProfileNames = []string{"serverprofile"}
 	server.TCPPort = util.IntPtr(80)
 	server.Type = "EDGE"
 	server.TypeID = util.IntPtr(91)

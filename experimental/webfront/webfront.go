@@ -22,7 +22,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	jwt "github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -32,6 +31,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwt"
 )
 
 // TODO(amiry) - Handle refresh tokens
@@ -52,11 +54,6 @@ type Rule struct {
 	Capabilities map[string]string // map HTTP methods to capabilitues
 
 	handler http.Handler
-}
-
-type Claims struct {
-	Capabilities []string `json:"cap"`
-	jwt.StandardClaims
 }
 
 // Config holds the configuration of the server.
@@ -122,18 +119,6 @@ func main() {
 	Logger.Fatal(http.ListenAndServeTLS(":"+strconv.Itoa(int(config.ListenPort)), "server.pem", "server.key", s))
 }
 
-func validateToken(tokenString string) (*jwt.Token, error) {
-
-	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(os.Args[2]), nil
-	})
-	return token, err
-}
-
 // NewServer constructs a Server that reads rules from file with a period
 // specified by poll.
 func NewServer(file string, poll time.Duration) (*Server, error) {
@@ -160,39 +145,35 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	isAuthorized := false
 
 	if rule.Secure {
-		tokenValid := false
-		token, err := validateToken(r.Header.Get("Authorization"))
-
-		if err == nil {
-			tokenValid = true
-		} else {
+		token, err := jwt.ParseHeader(
+			r.Header,
+			`Authorization`,
+			jwt.WithVerify(jwa.HS256, []byte(os.Args[2])),
+		)
+		if err != nil {
 			Logger.Println("Token Error:", err.Error())
-		}
-
-		if !tokenValid {
 			Logger.Printf("%v %v Valid token required, but none found!", r.Method, r.URL.RequestURI())
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-
-		claims, ok := token.Claims.(*Claims)
-		if !ok {
-			Logger.Printf("%v %v Valid token found, but cannot parse claims!", r.Method, r.URL.RequestURI())
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 
 		// Authorization: Check is the list of capabilities in the token's claims contains
 		// the reqired capability that is listed in the rule
-		for _, c := range claims.Capabilities {
-			if c == rule.Capabilities[r.Method] {
-				isAuthorized = true
-				break
+		var capabilities []string
+		if raw, ok := token.Get(`cap`); ok {
+			if caps, ok := raw.([]string); ok {
+				capabilities = caps // Save this to use in the logging later
+				for _, c := range caps {
+					if c == rule.Capabilities[r.Method] {
+						isAuthorized = true
+						break
+					}
+				}
 			}
 		}
 
 		Logger.Printf("%v %v Valid token. Subject=%v, ExpiresAt=%v, Capabilities=%v, Required=%v, Authorized=%v",
-			r.Method, r.URL.RequestURI(), claims.Subject, claims.ExpiresAt, claims.Capabilities,
+			r.Method, r.URL.RequestURI(), token.Subject(), token.Expiration(), capabilities,
 			rule.Capabilities[r.Method], isAuthorized)
 
 	} else {

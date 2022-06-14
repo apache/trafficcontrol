@@ -1,0 +1,237 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    secret_varfile_src: "{{ playbook_dir }}/secret_varfile.json"
+    secret_varfile_dest: "{{ lookup('env','MOLECULE_EPHEMERAL_DIRECTORY') }}/secret_varfile.json"
+    lab_ssl_dir: "{{ playbook_dir }}/files/ssl"
+    lab_rpm_dir: "{{ lookup('env','MOLECULE_EPHEMERAL_DIRECTORY') }}//files/rpm/{{ centos_version }}"
+    lab_srpm_dir: "{{ lookup('env','MOLECULE_EPHEMERAL_DIRECTORY') }}//files/srpm/{{ centos_version }}"
+    lab_ca_root_csr: "{{ lab_ssl_dir }}/lab.rootca.key.csr"
+    lab_ca_root_key: "{{ lab_ssl_dir }}/lab.rootca.key.pem"
+    lab_ca_root_crt: "{{ lab_ssl_dir }}/lab.rootca.crt"
+    lab_ca_int_csr: "{{ lab_ssl_dir }}/lab.intermediateca.csr"
+    lab_ca_int_key: "{{ lab_ssl_dir }}/lab.intermediateca.key.pem"
+    lab_ca_int_crt: "{{ lab_ssl_dir }}/lab.intermediateca.crt"
+    rpm_dist_dir: "{{ playbook_dir }}/../../../../dist"
+    centos_version: "{{ matrix_distro_mapping[lookup('env','MOLECULE_DISTRO') | default('centos7',true)] }}"
+    extended_centos_version: "el{{ centos_version }}"
+    matrix_distro_mapping:
+      centos7: 7
+      centos8: 8
+
+  tasks:
+    - name: Load existing secret varfile
+      include_vars:
+        file: "{{ secret_varfile_src }}"
+        name: existing_secrets
+      ignore_errors: true
+      no_log: true
+
+    - name: Load scenario requirements varfile
+      include_vars:
+        file: "{{ lookup('first_found', possible_files) }}"
+        name: scenario_requirements
+      vars:
+        possible_files:
+          - "{{ lookup('env','MOLECULE_SCENARIO_DIRECTORY') }}/scenario.requirement.vars.yml"
+          - "{{ lookup('env','MOLECULE_SCENARIO_DIRECTORY') }}/../scenario.requirement.vars.yml"
+      no_log: true
+
+    - name: Populate all the secrets to be used with this lab
+      set_fact:
+        secrets:
+          postgresql_admin_user_password: "{{ existing_secrets_nullable.postgresql_admin_user_password | default(lookup('password', password_settings)) }}"
+          postgresql_replica_user_password: "{{ existing_secrets_nullable.postgresql_replica_user_password | default(lookup('password', password_settings)) }}"
+          todb_password: "{{ existing_secrets_nullable.todb_password | default(lookup('password', password_settings)) }}"
+          tvdb_password: "{{ existing_secrets_nullable.tvdb_password | default(lookup('password', password_settings)) }}"
+      no_log: true
+      vars:
+        existing_secrets_nullable: (existing_secrets | default({}))
+        password_settings: /dev/null chars=ascii_letters,digits length=16
+
+    - name: Write out the completed secret file (including backfilling new ones)
+      copy:
+        content: "{{ secrets | to_nice_json(indent=2) }}"
+        dest: "{{ item }}"
+        mode: '0600'
+      with_items:
+        - "{{ secret_varfile_src }}"
+        - "{{ secret_varfile_dest }}"
+
+    - name: Check if SSL data already exists
+      stat:
+        path: "{{ lab_ca_root_csr }}"
+      register: ssl_data
+
+    - name: Generate SSL data
+      block:
+        - name: Ensure SSL info directory exists
+          file:
+            state: directory
+            path: "{{ lab_ssl_dir }}"
+
+        - name: Regenerate Lab Root CA Private key
+          openssl_privatekey:
+            path: "{{ lab_ca_root_key }}"
+            force: yes
+
+        - name: Regenerate Lab Root CA CSR
+          openssl_csr:
+            basic_constraints:
+              - CA:TRUE
+            privatekey_path: "{{ lab_ca_root_key }}"
+            subject:
+              CN: CDNLAB.invalid
+              C: US
+              ST: Colorado
+              L: Denver
+              O: Molecule Testing
+              OU: CDN
+              emailAddress: ops@email.invalid
+            path: "{{ lab_ca_root_csr }}"
+            force: yes
+
+        - name: Regenerate Lab Root CA Certificate
+          openssl_certificate:
+            csr_path: "{{ lab_ca_root_csr }}"
+            force: yes
+            path: "{{ lab_ca_root_crt }}"
+            privatekey_path: "{{ lab_ca_root_key }}"
+            provider: selfsigned
+
+        - name: Generate Intermediate Signing CA Private keys
+          openssl_privatekey:
+            path: "{{ lab_ca_int_key }}"
+            force: yes
+
+        - name: Generate Intermediate Signing CA CSRs
+          openssl_csr:
+            privatekey_path: "{{ lab_ca_int_key }}"
+            subject:
+              CN: "Lab Intermediate CA"
+              C: US
+              ST: Colorado
+              L: Denver
+              O: Molecule Testing
+              OU: CDN
+              emailAddress: ops@email.invalid
+            key_usage:
+              - digitalSignature
+              - keyCertSign
+            basic_constraints:
+              - CA:TRUE
+              - pathlen:0
+            path: "{{ lab_ca_int_csr }}"
+            force: yes
+
+        - name: Generate Intermediate Signing CA Certificates
+          openssl_certificate:
+            csr_path: "{{ lab_ca_int_csr }}"
+            force: yes
+            path: "{{ lab_ca_int_crt }}"
+            privatekey_path: "{{ lab_ca_int_key }}"
+            provider: ownca
+            ownca_path: "{{ lab_ca_root_crt }}"
+            ownca_privatekey_path: "{{ lab_ca_root_key }}"
+      when: not ssl_data.stat.exists
+
+    - name: Make SSL data available to molecule instances
+      copy:
+        src: "{{ lab_ssl_dir }}/"
+        dest: "{{ lookup('env','MOLECULE_EPHEMERAL_DIRECTORY') }}/files/ssl/"
+
+    - name: Prepare the RPMs for the upcoming instances
+      block:
+        - name: Check if needed RPMs exist
+          shell: "ls -l {{ rpm_dist_dir }}/*.rpm | grep -vE 'debuginfo|debugsource|\\.src\\.rpm' | tr -s ' ' ' ' | cut -d' ' -f9 | grep el{{ centos_version }} | grep -E '{{ scenario_requirements.required_rpms | map(attribute='rpm_prefix') | join('|') | default('NONE', true) }}'"
+          register: pkg_rpms
+          ignore_errors: true
+          changed_when: false
+          failed_when: false
+
+        - name: Get pkg targets that require the optional flag
+          command: "./pkg -{{ centos_version }} -o -l"
+          args:
+            chdir: "{{ playbook_dir }}/../../../.."
+          register: optional_pkg_targets
+          changed_when: false
+
+        - name: Find missing non-optional rpms
+          set_fact:
+            missing_non_optional_rpms: "{{ (missing_non_optional_rpms | default([])) + [item.pkg_script_name] }}"
+          with_items: "{{ filtered_req_rpms }}"
+          when: (matched_rpms | length) == 0
+          vars:
+            build_targets: "{{ scenario_requirements.required_rpms | map(attribute='pkg_script_name') | difference(optional_pkg_targets.stdout_lines) }}"
+            filtered_req_rpms_query_dynamic: "{% for p in build_targets %}pkg_script_name == `{{ p }}`{% if not loop.last %} || {% endif %}{% endfor %}"
+            filtered_req_rpms_query: "[?{{ filtered_req_rpms_query_dynamic if filtered_req_rpms_query_dynamic != '' else false }}]"
+            filtered_req_rpms: "{{ scenario_requirements.required_rpms | json_query(filtered_req_rpms_query) }}"
+            matched_rpms_query: "[?starts_with(@,`{{ item.rpm_prefix }}`)]"
+            matched_rpms: "{{ pkg_rpms.stdout_lines | map('basename') | json_query(matched_rpms_query) }}"
+
+        - name: Find missing optional rpms
+          set_fact:
+            missing_optional_rpms: "{{ (missing_optional_rpms | default([])) + [item.pkg_script_name] }}"
+          with_items: "{{ filtered_req_rpms }}"
+          when: (matched_rpms | length) == 0
+          vars:
+            build_targets: "{{ scenario_requirements.required_rpms | map(attribute='pkg_script_name') | intersect(optional_pkg_targets.stdout_lines) }}"
+            filtered_req_rpms_query_dynamic: "{% for p in build_targets %}pkg_script_name == `{{ p }}`{% if not loop.last %} || {% endif %}{% endfor %}"
+            filtered_req_rpms_query: "[?{{ filtered_req_rpms_query_dynamic if filtered_req_rpms_query_dynamic != '' else false }}]"
+            filtered_req_rpms: "{{ scenario_requirements.required_rpms | json_query(filtered_req_rpms_query) }}"
+            matched_rpms_query: "[?starts_with(@,`{{ item.rpm_prefix }}`)]"
+            matched_rpms: "{{ pkg_rpms.stdout_lines | map('basename') | json_query(matched_rpms_query) }}"
+
+        - name: Invoke pkg to build missing rpms
+          command: "{{ item.cmdstr }}"
+          args:
+            chdir: "{{ playbook_dir }}/../../../.."
+          when: (item.target_rpms | length) > 0
+          with_items:
+            - cmdstr: "./pkg -v -{{ centos_version }} {{ missing_non_optional_rpms | default([]) | join(' ') }}"
+              target_rpms: "{{ missing_non_optional_rpms | default([]) }}"
+            - cmdstr: "./pkg -v -{{ centos_version }} -o {{ missing_optional_rpms | default([]) | join(' ') }}"
+              target_rpms: "{{ missing_optional_rpms | default([]) }}"
+
+        - name: Ensure RPM directories exists
+          file:
+            state: directory
+            path: "{{ item }}"
+          with_items:
+            - "{{ lab_rpm_dir }}"
+            - "{{ lab_srpm_dir }}"
+            - "{{ playbook_dir }}/../../../../dist/"
+
+        - name: Copy in the RPMs
+          copy:
+            src: "{{ item.0 }}"
+            dest: "{{ item.1 }}"
+          vars:
+            host_rpm_path: "{{ playbook_dir }}/../../../../dist/"
+            host_rpm_glob: "{{ host_rpm_path }}*{{ extended_centos_version }}*x86_64.rpm"
+            host_srpm_glob: "{{ host_rpm_path }}*{{ extended_centos_version }}*src.rpm"
+            rpm_dest: "{{ lab_rpm_dir }}"
+            srpm_dest: "{{ lab_srpm_dir }}"
+            rpm_name: "{{ item.0 | basename }}"
+            all_rpmname_regex: "{{ scenario_requirements.required_rpms | map(attribute='rpm_prefix') | map('regex_replace','^(.*)$','^\\1.*$') | join('|') }}"
+          when: rpm_name is search(all_rpmname_regex) and all_rpmname_regex != ""
+          with_items:
+            - "{{ (lookup('fileglob',host_rpm_glob) | default('',true)).split(',') | product([rpm_dest]) }}"
+            - "{{ (lookup('fileglob',host_srpm_glob) | default('',true)).split(',') | product([srpm_dest]) }}"

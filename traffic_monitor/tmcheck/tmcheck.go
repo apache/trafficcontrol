@@ -24,12 +24,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
-	to "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	to "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -199,8 +200,9 @@ type CRConfigOrError struct {
 
 func GetMonitors(toClient *to.Session, includeOffline bool) ([]tc.Server, error) {
 	trafficMonitorType := "RASCAL"
-	monitorTypeQuery := map[string][]string{"type": []string{trafficMonitorType}}
-	servers, _, err := toClient.GetServersByType(monitorTypeQuery)
+	query := url.Values{}
+	query.Set("type", trafficMonitorType)
+	servers, _, err := toClient.GetServers(&query)
 	if err != nil {
 		return nil, fmt.Errorf("getting monitors from Traffic Ops: %v", err)
 	}
