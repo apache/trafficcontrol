@@ -276,7 +276,8 @@ func UserSelfUpdateTest(t *testing.T) {
 
 	// Now test using an invalid username
 	currentUsername := *user.Username
-	user.Username = new("ops man")
+	newUsername := "ops man"
+	user.Username = &newUsername
 	updateResp, _, err = TOSession.UpdateCurrentUser(user)
 	if err == nil {
 		t.Fatal("error was expected updating user with username: 'ops man' - got none")
