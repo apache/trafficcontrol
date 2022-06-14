@@ -148,11 +148,6 @@ INSERT INTO public.role_capability
 SELECT id, perm
 FROM public.role
 CROSS JOIN ( VALUES
-	('FEDERATION:CREATE'),
-	('FEDERATION:UPDATE'),
-	('FEDERATION:DELETE'),
-	('FEDERATION-RESOLVER:CREATE'),
-	('FEDERATION-RESOLVER:DELETE'),
 	('DELIVERY-SERVICE:UPDATE'),
 	('JOB:CREATE'),
 	('JOB:UPDATE'),
@@ -165,6 +160,20 @@ CROSS JOIN ( VALUES
 	('STEERING:DELETE')
 ) AS perms(perm)
 WHERE "name" IN ('operations', 'portal', 'federation', 'steering')
+ON CONFLICT DO NOTHING;
+
+-- Federation and Steering Role Permissions (also given to operators).
+INSERT INTO public.role_capability
+SELECT id, perm
+FROM public.role
+CROSS JOIN ( VALUES
+	('FEDERATION:CREATE'),
+	('FEDERATION:UPDATE'),
+	('FEDERATION:DELETE'),
+	('FEDERATION-RESOLVER:CREATE'),
+	('FEDERATION-RESOLVER:DELETE')
+) AS perms(perm)
+WHERE "name" IN ('operations', 'federation', 'steering')
 ON CONFLICT DO NOTHING;
 
 -- Using role 'operations'
