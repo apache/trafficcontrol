@@ -61,11 +61,11 @@ func httpInit(cfg PollerConfig, globalCtxI interface{}) interface{} {
 			transportI := http.DefaultTransport
 			transport, ok := transportI.(*http.Transport)
 			if !ok {
-				log.Errorf("failed to set NoKeepAlive for '%v': http.DefaultTransport expected type *http.Transport actual %T\n", cfg.URL, transportI)
+				log.Errorf("failed to set NoKeepAlive for poller ID '%s': http.DefaultTransport expected type *http.Transport actual %T\n", cfg.PollerID, transportI)
 			} else {
 				transport.DisableKeepAlives = cfg.NoKeepAlive
 				gctx.Client.Transport = transport
-				log.Infof("Setting transport.DisableKeepAlives %v for %v\n", transport.DisableKeepAlives, cfg.URL)
+				log.Infof("Setting transport.DisableKeepAlives %t for %s\n", transport.DisableKeepAlives, cfg.PollerID)
 			}
 		}
 	}
@@ -74,9 +74,6 @@ func httpInit(cfg PollerConfig, globalCtxI interface{}) interface{} {
 		Client:       gctx.Client,
 		UserAgent:    gctx.UserAgent,
 		NoKeepAlive:  cfg.NoKeepAlive,
-		URL:          cfg.URL,
-		URLv6:        cfg.URLv6,
-		Host:         cfg.Host,
 		PollerID:     cfg.PollerID,
 		FormatAccept: gctx.FormatAccept,
 	}
@@ -92,9 +89,6 @@ type HTTPPollCtx struct {
 	Client       *http.Client
 	UserAgent    string
 	NoKeepAlive  bool
-	URL          string
-	URLv6        string
-	Host         string
 	PollerID     string
 	HTTPHeader   http.Header
 	FormatAccept string

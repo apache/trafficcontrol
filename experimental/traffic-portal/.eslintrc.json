@@ -21,10 +21,18 @@
 			"files": [
 				"*.ts"
 			],
+			"rules": {
+				"@typescript-eslint/explicit-function-return-type": "error"
+			}
+		},
+		{
+			"files": [
+				"*.ts",
+				"*.js"
+			],
 			"parserOptions": {
 				"project": [
-					"tsconfig.json",
-					"e2e/tsconfig.json"
+					"tsconfig.json"
 				],
 				"createDefaultProgram": true
 			},
@@ -81,7 +89,6 @@
 				"@typescript-eslint/consistent-type-assertions": "error",
 				"@typescript-eslint/consistent-type-definitions": "error",
 				"@typescript-eslint/dot-notation": "error",
-				"@typescript-eslint/explicit-function-return-type": "error",
 				"@typescript-eslint/explicit-member-accessibility": [
 					"error",
 					{
@@ -161,12 +168,19 @@
 						"allowWithDecorator": true
 					}
 				],
+				"@typescript-eslint/no-duplicate-imports": ["error"],
 				"@typescript-eslint/no-dynamic-delete": "error",
 				"@typescript-eslint/no-floating-promises": "off",
 				"@typescript-eslint/no-inferrable-types": [
 					"warn",
 					{
 						"ignoreParameters": true
+					}
+				],
+				"@typescript-eslint/no-invalid-this": [
+					"error",
+					{
+						"capIsConstructor": false
 					}
 				],
 				"@typescript-eslint/no-invalid-void-type": "error",
@@ -200,6 +214,8 @@
 					"error"
 				],
 				"@typescript-eslint/typedef": "off",
+				"jsdoc/no-types": "error",
+				"jsdoc/require-description": "error",
 				"jsdoc/require-jsdoc": [
 					"error",
 					{
@@ -217,7 +233,8 @@
 						},
 						"checkConstructors": false,
 						"checkGetters": true,
-						"checkSetters": true
+						"checkSetters": true,
+						"enableFixer": false
 					}
 				],
 				"@typescript-eslint/unbound-method": "error",
@@ -232,25 +249,93 @@
 					"1tbs"
 				],
 				"class-methods-use-this": "off",
-				"import/order": "error",
+				"import/export": "error",
+				"import/first": "error",
+				"import/newline-after-import": "error",
+				"import/no-cycle": [
+					"error",
+					{
+						"ignoreExternal": true
+					}
+				],
+				"import/no-self-import": "error",
+				"import/no-useless-path-segments": [
+					"error",
+					{
+						"commonjs": true,
+						"noUselessIndex": true
+					}
+				],
+				"import/order": [
+					"error",
+					{
+						"alphabetize": {"order": "asc"},
+						"groups": [
+							"builtin",
+							"external",
+							"internal",
+							"parent",
+							"sibling"
+						],
+						"pathGroups": [
+							{
+								"group": "builtin",
+								"pattern": "zone.js/**/*",
+								"position": "before"
+							},
+							{
+								"group": "external",
+								"pattern": "(@(angular|fortawesome)|chart.js|rxjs)*/**/*",
+								"position": "before"
+							},
+							{
+								"group": "internal",
+								"pattern": "src/**/*"
+							}
+						],
+						"pathGroupsExcludedImportTypes": [
+							"zone.js/**/*",
+							"@angular*/**/*",
+							"@fortawesome*/**/*",
+							"chart.js",
+							"rxjs"
+						],
+						"newlines-between": "always",
+						"warnOnUnassignedImports": true
+					}
+				],
 				"linebreak-style": [
 					"error",
 					"unix"
 				],
 				"no-bitwise": "off",
 				"no-duplicate-case": "error",
-				"no-duplicate-imports": "error",
+				"no-duplicate-imports": "off",
 				"no-else-return": "error",
 				"no-empty": "error",
 				"no-extra-bind": "error",
-				"no-invalid-this": [
+				"no-invalid-this": "off",
+				"no-multiple-empty-lines": [
 					"error",
 					{
-						"capIsConstructor": false
+						"max": 1,
+						"maxBOF": 0,
+						"maxEOF": 0
 					}
 				],
 				"no-new-func": "error",
 				"no-redeclare": "off",
+				"no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"message": "Going up more than one directory for an import is overly complex; use an import path that starts with 'src/' instead",
+								"group": ["../../*"]
+							}
+						]
+					}
+				],
 				"no-return-await": "error",
 				"no-sparse-arrays": "error",
 				"no-template-curly-in-string": "error",

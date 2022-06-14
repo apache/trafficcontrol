@@ -17,11 +17,13 @@
 
 ############################################################
 # Dockerfile to build Traffic Ops container images
-# Based on CentOS 8
+# Based on Rocky Linux 8
 ############################################################
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as trafficops-dependencies
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION} as trafficops-dependencies
 ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available in later layers without needing to specify it again
 ENV RHEL_VERSION="$RHEL_VERSION"
@@ -37,24 +39,17 @@ RUN set -o nounset -o errexit && \
 	if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 		use_repo=''; \
 		enable_repo=''; \
-		llvm_version=5.0; \
-		# needed for llvm-toolset-7-clang, which is needed for postgresql13-devel-13.2-1PGDG, required by TO rpm
-		dnf -y install gcc centos-release-scl-rh; \
 	else \
 		use_repo='--repo=pgdg13'; \
 		enable_repo='--enablerepo=powertools'; \
-		llvm_version=''; \
 	fi; \
 	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
-	dnf -y install epel-release; \
-	dnf -y install \
-		# libicu is required by postgresql13
-		libicu \
-		# libicu-devel, clang-devel, and llvm-devel are required by postgresql13-devel
-		libicu-devel clang-devel llvm${llvm_version}-devel; \
-	dnf -y $use_repo -- install postgresql13 postgresql13-devel; \
+	dnf -y install epel-release libicu; \
+	dnf -y $use_repo -- install postgresql13; \
 	dnf -y $enable_repo install \
 		bind-utils           \
+		# find is required by to-access.sh
+		findutils            \
 		gettext              \
 		# ip commands is used in set-to-ips-from-dns.sh
 		iproute              \
@@ -123,8 +118,8 @@ HEALTHCHECK --interval=10s --timeout=1s \
 
 FROM trafficops-dependencies as get-delve
 
-RUN dnf -y install git golang && \
-    go get -u github.com/go-delve/delve/cmd/dlv
+RUN dnf -y install golang && \
+    go install github.com/go-delve/delve/cmd/dlv@latest
 
 FROM trafficops AS trafficops-debug
 COPY --from=get-delve /root/go/bin /usr/bin

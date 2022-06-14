@@ -52,6 +52,7 @@ func StartOpsConfigManager(
 	toChangeSubscribers []chan<- towrap.TrafficOpsSessionThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
+	distributedPeerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
 	statInfoHistory threadsafe.ResultInfoHistory,
 	statResultHistory threadsafe.ResultStatHistory,
@@ -109,6 +110,7 @@ func StartOpsConfigManager(
 			toSession,
 			localStates,
 			peerStates,
+			distributedPeerStates,
 			combinedStates,
 			statInfoHistory,
 			statResultHistory,
@@ -129,6 +131,7 @@ func StartOpsConfigManager(
 			healthUnpolledCaches,
 			monitorConfig,
 			cfg.StatPolling,
+			cfg.DistributedPolling,
 		)
 
 		// If the HTTPS Listener is defined in the traffic_ops.cfg file then it creates the HTTPS endpoint and the corresponding HTTP endpoint as a redirect
@@ -196,20 +199,6 @@ func StartOpsConfigManager(
 				log.Warnf("%s Traffic Ops CDN '%s' doesn't match config CDN '%s' - using Traffic Ops CDN\n", staticAppData.Hostname, cdn, newOpsConfig.CdnName)
 			}
 			newOpsConfig.CdnName = cdn
-		}
-
-		// fixed an issue when traffic_monitor receives corrupt data, CRConfig, from traffic_ops.
-		// Will loop and retry until a good CRConfig is received from traffic_ops
-		backoff.Reset()
-		for {
-			if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
-				handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))
-				duration := backoff.BackoffDuration()
-				log.Errorf("retrying in %v\n", duration)
-				time.Sleep(duration)
-				continue
-			}
-			break
 		}
 
 		// These must be in a goroutine, because the monitorConfigPoller tick sends to a channel this select listens for. Thus, if we block on sends to the monitorConfigPoller, we have a livelock race condition.

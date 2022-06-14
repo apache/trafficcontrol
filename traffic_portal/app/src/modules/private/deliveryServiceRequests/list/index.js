@@ -21,7 +21,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.l
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.deliveryServiceRequests.list', {
-				url: '',
+				url: '?xmlId',
 				views: {
 					deliveryServiceRequestsContent: {
 						templateUrl: 'common/modules/table/deliveryServiceRequests/table.deliveryServiceRequests.tpl.html',
@@ -30,8 +30,8 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.l
 							tableName: function() {
 								return 'ds-requests';
 							},
-							dsRequests: function(deliveryServiceRequestService) {
-								return deliveryServiceRequestService.getDeliveryServiceRequests({ orderby: 'createdAt', sortOrder: 'desc' });
+							dsRequests: function($stateParams, deliveryServiceRequestService) {
+								return deliveryServiceRequestService.getDeliveryServiceRequests({ xmlId: $stateParams.xmlId, orderby: 'createdAt', sortOrder: 'desc' });
 							}
 						}
 					}

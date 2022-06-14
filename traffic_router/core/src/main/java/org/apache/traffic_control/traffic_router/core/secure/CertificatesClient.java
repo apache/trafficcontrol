@@ -77,7 +77,7 @@ public class CertificatesClient {
 			}
 		}
 
-		final String certificatesUrl = trafficOpsUtils.getUrl("certificate.api.url", "https://${toHostname}/api/2.0/cdns/name/${cdnName}/sslkeys");
+		final String certificatesUrl = trafficOpsUtils.getUrl("certificate.api.url", "https://${toHostname}/api/"+TrafficOpsUtils.TO_API_VERSION+"/cdns/name/${cdnName}/sslkeys");
 
 		try {
 			final ProtectedFetcher fetcher = new ProtectedFetcher(trafficOpsUtils.getAuthUrl(), trafficOpsUtils.getAuthJSON().toString(), 15000);

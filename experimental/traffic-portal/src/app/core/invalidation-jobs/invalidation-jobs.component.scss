@@ -21,6 +21,31 @@
 h2 {
 	text-align: center;
 }
+mat-card {
+	width: fit-content;
+	min-width: 50%;
+	margin: 1em auto;
+	min-height: 50px;
+
+	mat-list-item {
+		div.invalidation-job {
+			width: 100%;
+			justify-content: space-between;
+			display: flex;
+		}
+
+		div.invalidation-info span {
+			display: flex;
+			align-items: center;
+			height: 100%;
+		}
+
+		span {
+			text-align: center;
+			display: block;
+		}
+	}
+}
 
 form {
 	display: grid;

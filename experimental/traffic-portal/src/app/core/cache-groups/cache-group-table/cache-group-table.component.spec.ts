@@ -12,30 +12,34 @@
 * limitations under the License.
 */
 import { HttpClientModule } from "@angular/common/http";
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, TestBed, fakeAsync } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
+import {ReplaySubject} from "rxjs";
 
-import {CacheGroupService} from "../../../shared/api";
+import { APITestingModule } from "src/app/api/testing";
+import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+
 import { CacheGroupTableComponent } from "./cache-group-table.component";
 
 describe("CacheGroupTableComponent", () => {
 	let component: CacheGroupTableComponent;
 	let fixture: ComponentFixture<CacheGroupTableComponent>;
 
+	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
-		const mockAPIService = jasmine.createSpyObj(["getCacheGroups"]);
 		await TestBed.configureTestingModule({
 			declarations: [ CacheGroupTableComponent ],
-			imports: [ReactiveFormsModule, HttpClientModule, RouterTestingModule],
+			imports: [
+				APITestingModule,
+				HttpClientModule,
+				ReactiveFormsModule,
+				RouterTestingModule
+			],
 			providers: [
-				{ provide: CacheGroupService, useValue: mockAPIService }
+				{ provide: TpHeaderService, useValue: headerSvc}
 			]
-		})
-			.compileComponents();
-	});
-
-	beforeEach(() => {
+		}).compileComponents();
 		fixture = TestBed.createComponent(CacheGroupTableComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
@@ -43,5 +47,15 @@ describe("CacheGroupTableComponent", () => {
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("emits the search box value", fakeAsync(() => {
+		component.fuzzControl.setValue("query");
+		component.updateURL();
+		expectAsync(component.fuzzySubject.toPromise()).toBeResolvedTo("query");
+	}));
+
+	it("doesn't throw errors when handling context menu events", () => {
+		expect(()=>component.handleContextMenu({action: "something", data: []})).not.toThrow();
 	});
 });

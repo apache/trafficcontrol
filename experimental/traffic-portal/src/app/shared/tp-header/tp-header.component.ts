@@ -11,9 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input, OnInit } from "@angular/core";
-import { UserService } from "src/app/shared/api";
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
+import {Component, OnInit} from "@angular/core";
+
+import { UserService } from "src/app/api";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -26,43 +29,50 @@ import {CurrentUserService} from "src/app/shared/currentUser/current-user.servic
 export class TpHeaderComponent implements OnInit {
 
 	/**
-	 * The set of permissions available to the authenticated user.
-	 */
-	public permissions = new Set<string>();
-
-	/**
-	 * Holds a continuous subscription for the current user's permissions, in case they change.
-	 */
-	// private permissionSubscription: Subscription | undefined;
-
-	/**
 	 * The title to be used in the header.
 	 *
 	 * If not given, defaults to "Traffic Portal".
 	 */
-	@Input() public title?: string;
+	public title = "";
 
-	/** Constructor */
-	constructor(private readonly auth: CurrentUserService, private readonly api: UserService) {
+	public hidden = false;
+
+	/**
+	 * Angular lifecycle hook
+	 */
+	public ngOnInit(): void {
+		this.headerSvc.headerTitle.subscribe(title => {
+			this.title = title;
+		});
+
+		this.headerSvc.headerHidden.subscribe(hidden => {
+			this.hidden = hidden;
+		});
 	}
 
-	/** Sets up data dependencies. */
-	public ngOnInit(): void {
-		this.permissions = this.auth.capabilities;
+	constructor(private readonly auth: CurrentUserService, private readonly api: UserService,
+		public readonly themeSvc: ThemeManagerService, private readonly headerSvc: TpHeaderService) {
+	}
+
+	/**
+	 * Checks for a Permission afforded to the currently authenticated user.
+	 *
+	 * @param perm The Permission for which to check.
+	 * @returns Whether the currently authenticated user has the Permission
+	 * `perm`.
+	 */
+	public hasPermission(perm: string): boolean {
+		return this.auth.hasPermission(perm);
 	}
 
 	/**
 	 * Handles when the user clicks the "Logout" button by using the API to
 	 * invalidate their session before redirecting them to the login page.
 	 */
-	public logout(): void {
-		this.api.logout().then(
-			r => {
-				if (!r) {
-					console.warn("Failed to log out - clearing user data anyway!");
-				}
-				this.auth.logout();
-			}
-		);
+	public async logout(): Promise<void> {
+		if (!(await this.api.logout())) {
+			console.warn("Failed to log out - clearing user data anyway!");
+		}
+		this.auth.logout();
 	}
 }

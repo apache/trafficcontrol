@@ -122,7 +122,7 @@ func TestMakeRegexRevalidateDotConfig(t *testing.T) {
 	if strings.Contains(txt, "##REFETCH##") || !strings.Contains(txt, "MISS") {
 		t.Errorf("##REFETCH## directive not properly handled '%v'", txt)
 	}
-	if strings.Contains(txt, "##REFRESH##") || !strings.Contains(txt, "STALE") {
+	if strings.Contains(txt, "##REFRESH##") {
 		t.Errorf("##REFRESH## directive not properly handled '%v'", txt)
 	}
 }

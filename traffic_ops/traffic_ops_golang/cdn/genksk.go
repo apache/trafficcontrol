@@ -135,7 +135,7 @@ WITH cdn_profile_id AS (
     JOIN cdn c ON c.id = p.cdn
   WHERE
     c.name = $1
-    AND (p.name like 'CCR%' OR p.name like 'TR%')
+    AND (p.type = '` + tc.TrafficRouterProfileType + `')
   FETCH FIRST 1 ROWS ONLY
 )
 SELECT

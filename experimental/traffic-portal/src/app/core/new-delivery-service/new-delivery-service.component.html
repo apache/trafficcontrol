@@ -11,7 +11,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<tp-header [title]="deliveryService && deliveryService.displayName ? deliveryService.displayName : 'New Delivery Service'"></tp-header>
 <mat-horizontal-stepper [linear]="true" aria-label="New Delivery Service Form" #stepper>
 	<mat-step [stepControl]="form1.control" label="Origin Server" aria-label="Origin Server">
 		<form #form1="ngForm" ngNativeValidate ngDefaultControl (ngSubmit)="setOriginURL()">
@@ -33,7 +32,7 @@ limitations under the License.
 			<h2>Step 2 - Meta Information</h2>
 			<div class="form-content">
 				<label for="displayName">This Delivery Service's name will be:</label>
-				<input type="text" autofocus title="This will be the name of the Delivery Service as it appears on the 'Home' screen" name="displayName" id="displayName" [formControl]="displayName" placeholder="{{deliveryService.displayName}}" required>
+				<input type="text" autofocus title="This will be the name of the Delivery Service as it appears on the 'Home' screen" name="displayName" id="displayName" (change)="updateDisplayName()" [formControl]="displayName" placeholder="{{deliveryService.displayName}}" required>
 				<label for="longDesc">Please briefly describe this Delivery Service's purpose and function here:</label>
 				<textarea id="longDesc" name="longDesc" title="No character limit - be as verbose as you like." required placeholder="e.g. This Delivery Service is for my website's image assets." [formControl]="description" rows="3"></textarea>
 			</div>

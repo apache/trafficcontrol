@@ -14,8 +14,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as common-dependencies
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION} as common-dependencies
 ARG RHEL_VERSION=8
 
 MAINTAINER dev@trafficcontrol.apache.org
@@ -25,12 +27,7 @@ MAINTAINER dev@trafficcontrol.apache.org
 VOLUME /trafficcontrol
 
 ### Common for all sub-component builds
-RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
-		rpm_gpg_key=RPM-GPG-KEY-centosofficial; \
-	else \
-		rpm_gpg_key="RPM-GPG-KEY-CentOS-${RHEL_VERSION%%.*}"; \
-	fi && \
-	rpm --import "/etc/pki/rpm-gpg/${rpm_gpg_key}" && \
+RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-* && \
 	rpm --import "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-${RHEL_VERSION%%.*}" && \
 	yum -y update ca-certificates && \
 	yum -y install \

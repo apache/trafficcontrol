@@ -314,10 +314,6 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         { value: 4, label: "4 - Latch on Failover" }
     ];
 
-    $scope.tenantLabel = function(tenant) {
-        return '-'.repeat(tenant.level) + ' ' + tenant.name;
-    };
-
     $scope.clone = function(ds) {
         locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?type=' + ds.type);
     };

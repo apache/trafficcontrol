@@ -1,0 +1,75 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+driver:
+  name: docker
+lint: |
+  set -e
+  yamllint -c ../molecule_shared/.yamllint .
+  ansible-lint -c ../molecule_shared/.ansible-lint .
+dependency:
+  name: shell
+  command: ansible-playbook -vvv -i localhost ${MOLECULE_VERBOSITY} ../molecule_shared/dependency.yml
+platforms:
+  - name: todb.testlab.invalid
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-centos7}-ansible:latest
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    privileged: true
+    pre_build_image: true
+    tmpfs:
+      - /run
+      - /tmp
+    groups:
+      - docker_hosts
+      - traffic_opsdb
+      - traffic_opsdb-primary
+    capabilities:
+      - SYS_ADMIN
+    port_bindings:
+      5432: 5432
+    networks:
+      - name: molecule_todb_default
+    volumes:
+      - ${MOLECULE_EPHEMERAL_DIRECTORY}:/molecule
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    docker_networks:
+      - name: molecule_todb_default
+        enable_ipv6: true
+        force: true
+        driver: bridge
+        ipam_driver: default
+        ipam_config:
+          - subnet: 172.16.240.0/24
+          - subnet: "fc01:9400:1000:9::/64"
+
+provisioner:
+  name: ansible
+  playbooks:
+    prepare: "../../../molecule_shared/prepare.yml"
+  log: True
+  config_options:
+    defaults:
+      verbosity: 3
+  inventory:
+    group_vars:
+      docker-hosts:
+        docker_storage_driver: vfs
+    host_vars:
+      todb.testlab.invalid:
+        cdn: ALL
+        component: traffic_opsdb
+        ansible_host: todb.testlab.invalid
+
+verifier:
+  name: ansible

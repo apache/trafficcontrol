@@ -38,8 +38,8 @@ version: '3.8'
 services:
   testto:
     build:
-      context: ../../tools/testto
-      dockerfile: ./Dockerfile
+      context: ../../..
+      dockerfile: traffic_monitor/tools/testto/Dockerfile
     domainname: traffic-monitor-integration.test
     env_file:
       - variables.env
@@ -50,8 +50,8 @@ services:
 
   testcaches:
     build:
-      context: ../../tools/testcaches
-      dockerfile: ./Dockerfile
+      context: ../../..
+      dockerfile: traffic_monitor/tools/testcaches/Dockerfile
     domainname: traffic-monitor-integration.test
     env_file:
       - variables.env
@@ -80,8 +80,8 @@ services:
 
   tmintegrationtest:
     build:
-      context: ../../
-      dockerfile: ./tests/_integration/Dockerfile
+      context: ../../..
+      dockerfile: traffic_monitor/tests/_integration/Dockerfile
     depends_on:
       - testto
       - testcaches

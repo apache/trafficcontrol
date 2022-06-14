@@ -909,12 +909,10 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 	listen = hypnotoad["listen"][0]
 
 	if "cert={certpath}".format(certpath=certpath) not in listen or "key={keypath}".format(keypath=keypath) not in listen:
-		log_msg = """	The "listen" portion of %s is:
-	%s
-	and does not reference the same "cert=" and "key=" values as are created here.
+		log_msg = """	The "listen" portion of %s does not reference the same "cert=" and "key=" values as are created here.
 	Please modify %s to add the following as parameters:
-	?cert=%s&key=%s"""
-		logging.error(log_msg, cdn_conf_path, listen, cdn_conf_path, certpath, keypath)
+	?cert=/path/to/SSL/certificate&key=/path/to/SSL/key"""
+		logging.error(log_msg, cdn_conf_path, cdn_conf_path)
 		return 1
 
 	return 0

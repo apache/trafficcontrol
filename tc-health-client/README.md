@@ -1,3 +1,6 @@
+% tc-health-client(1) tc-health-client 6.2.0 | ATC tc-health-client Manual
+%
+% 2022-03-09
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -68,24 +71,24 @@ Requires Apache TrafficServer 8.1.0 or later.
 
 -f, -\-config-file=config-file 
   
-  Specify the config file to use.  
-  Defaults to /etc/trafficcontro-health-client/tc-health-client.json
+Specify the config file to use.  
+Defaults to /etc/trafficcontro-health-client/tc-health-client.json
 
 -h, -\-help 
 
-  Prints command line usage and exits
+Prints command line usage and exits
 
 -l, -\-logging-dir=logging-directory
 
-  Specify the directory where log files are kept.  The default location
-  is **/var/log/trafficcontrol/**
+Specify the directory where log files are kept.  The default location
+is **/var/log/trafficcontrol/**
 
 -v, -\-verbose
 
-  Logging verbosity.  Errors are logged to the default log file 
-  **/var/log/trafficcontrol/tc-health-client.log**
-  To add Warnings, use -v.  To add Warnings and Informational 
-  logging, use -vv.  Finally you may add Debug logging using -vvv.
+Logging verbosity.  Errors are logged to the default log file 
+**/var/log/trafficcontrol/tc-health-client.log**
+To add Warnings, use -v.  To add Warnings and Informational 
+logging, use -vv.  Finally you may add Debug logging using -vvv.
 
 # CONFIGURATION
 
@@ -104,73 +107,103 @@ Sample configuarion file:
     "to-request-timeout-seconds": "5s",
     "tm-poll-interval-seconds": "60s",
     "tm-proxy-url", "http://sample-http-proxy.cdn.net:80",
-    "tm-update-cycles": 5,
+    "to-login-dispersion-factor": 90,
+    "unavailable-poll-threshold": 2,
+    "markup-poll-threshold": 1,
     "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",
     "trafficserver-bin-dir": "/opt/trafficserver/bin",
+    "poll-state-json-log": "/var/log/trafficcontrol/poll-state.json",
+    "enable-poll-state-log": false
   }
 ```
 
 ### cdn-name 
 
-  The name of the CDN that the Traffic Server host is a member of.
+The name of the CDN that the Traffic Server host is a member of.
 
 ### enable-active-markdowns
 
-  When enabled, the client will actively mark down Traffic Server parents.
-  When disabled, the client will only log that it would have marked down
-  Traffic Server parents.  Down Parents are always marked UP if Traffic Monitor
-  reports them available irregardless of this setting.
+When enabled, the client will actively mark down Traffic Server parents.
+When disabled, the client will only log that it would have marked down
+Traffic Server parents.  Down Parents are always marked UP if Traffic Monitor
+reports them available irregardless of this setting.
 
 ### reason-code
 
-  Use the reason code **active** or **local** when marking down Traffic Server
-  hosts in the Traffic Server **HostStatus** subsystem.
+Use the reason code **active** or **local** when marking down Traffic Server
+hosts in the Traffic Server **HostStatus** subsystem.
 
 ### to-credential-file
 
-  The file where **Traffic Ops** credentials are read.  The file should define the 
-  following variables:
+The file where **Traffic Ops** credentials are read.  The file should define the 
+following variables:
 
-  * TO_URL="https://trafficops.cdn.com"
-  * TO_USER="touser"
-  * TO_PASS="touser_password"
+* TO_URL="https://trafficops.cdn.com"
+* TO_USER="touser"
+* TO_PASS="touser_password"
 
 ### to-url
 
-  The **Traffic Ops** URL
+The **Traffic Ops** URL
 
 ### to-request-timeout-seconds
 
-  The time in seconds to wait for a query response from both **Traffic Ops** and
-  the **Traffic Monitors**
+The time in seconds to wait for a query response from both **Traffic Ops** and
+the **Traffic Monitors**
 
 ### tm-poll-interval-seconds
 
-  The polling interval in seconds used to update **Traffic Server** parent
-  status.
+The polling interval in seconds used to update **Traffic Server** parent
+status.
 
 ### tm-proxy-url
 
-  If not nil, all Traffic Monitor requests will be proxied through this 
-  proxy endpoint.  This is useful when there are large numbers of caches
-  polling a Traffic Monitor and you wish to funnel queries through a caching
-  proxy server to limit direct direct connections to Traffic Monitor.
+If not nil, all Traffic Monitor requests will be proxied through this 
+proxy endpoint.  This is useful when there are large numbers of caches
+polling a Traffic Monitor and you wish to funnel queries through a caching
+proxy server to limit direct direct connections to Traffic Monitor.
 
-### tm-update-cycles
+### to-login-dispersion-factor
 
-  Each time a polling cycle completes a count is incremented. When the count
-  reaches **tm-update-cycles**, TrafficOps is polled for a new list of available
-  TrafficMonitors for the CDN and the poll count is reset to 0.
+This is used to calculate TrafficOps login dispersion.  It is related to the
+**tm-poll-interval-seconds**.  The login dispersion is computed by multiplying
+**tm-poll-interval-seconds** by the **to-login-dispersion-factor**.  For example
+if to-login-dispersion-factor is 90 and the **tm-poll-interval-seconds** is 10s
+the the dispersion modulo window is 900s.
+
+### unavailable-poll-threshold
+
+This controls when an unhealthy parent is marked down.  An unhealthy parent
+will be marked down when the number of consecutive polls reaches this threshold
+with the parent reported as unhealthy.  The default threshold is 2.
+
+### markup-poll-threshold
+
+This controls when a healthy parent is marked up.  An healthy parent
+will be marked up when the number of consecutive polls reaches this threshold
+with the parent reported as healthy.  The default threshold is 1.
 
 ### trafficserver-config-dir
 
-  The location on the host where **Traffic Server** configuration files are 
-  located.
+The location on the host where **Traffic Server** configuration files are 
+located.
 
 ### trafficserver-bin-dir
 
-  The location on the host where **Traffic Server** **traffic_ctl** tool may
-  be found.
+The location on the host where **Traffic Server** **traffic_ctl** tool may
+be found.
+
+### poll-state-json-log ###
+
+The full path to the polling state file which contains information 
+about the current status of parents and the health client configuration.
+Polling state data is written to this file after each polling cycle when
+enabled, see **enable-poll-state-log**
+
+### enable-poll-state-log ###
+
+Enable writing the Polling state to the **poll-state-json-log** after
+eache polling cycle.  Default **false**, disabled
 
 # Files
 
@@ -183,4 +216,3 @@ Sample configuarion file:
 * Traffic Server **strategies.yaml**
 * Traffic Server **traffic_ctl** command
   
-   

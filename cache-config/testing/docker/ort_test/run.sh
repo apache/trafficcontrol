@@ -18,9 +18,6 @@
 # under the License.
 #
 
-# wait period to insure all containers are up and running.
-WAIT="60"
-
 #
 # this seems to wake up the to container.
 #
@@ -48,7 +45,7 @@ TERM=xterm; export TERM
 if [ -f /trafficcontrol/GO_VERSION ]; then
   go_version=$(cat /trafficcontrol/GO_VERSION) && \
       curl -Lo go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
-        tar -C /usr/local -xvzf go.tar.gz && \
+        tar -C /usr/local -xzf go.tar.gz && \
         ln -s /usr/local/go/bin/go /usr/bin/go && \
         rm go.tar.gz
 else
@@ -65,7 +62,7 @@ fi
 cd "$(realpath /ort-tests)"
 
 # fetch dependent packages for tests
-go mod vendor -v
+go mod vendor
 
 cp /ort-tests/tc-fixtures.json /tc-fixtures.json
 ATS_RPM=`basename /yumserver/test-rpms/trafficserver-[0-9]*.rpm |
@@ -95,8 +92,19 @@ fi
 # wake up the to_server
 ping_to
 
-echo "waiting $WAIT seconds for all containers to initialize."
-sleep $WAIT
+echo "waiting for all the to_server container to initialize."
+i=0
+sleep_time=3
+while ! nc $TO_HOSTNAME $TO_PORT </dev/null; do
+  echo "$waiting for $TO_HOSTNAME:$TO_PORT"
+  sleep $sleep_time
+  let i=i+1
+  if [ $i -gt 10 ]; then
+    let d=i*sleep_time
+    echo "$TO_HOSTNAME:$TO_PORT is unavailable after $d seconds, giving up"
+    exit 1
+  fi
+done
 
 cp /ort-tests/tc-fixtures.json /tc-fixtures.json
 (touch test.log && chmod a+rw test.log && tail -f test.log)&

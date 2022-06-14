@@ -1,0 +1,19 @@
+{
+	"monitor_config_polling_interval_ms": 15000,
+	"http_timeout_ms": 86400000,
+	"peer_optimistic": true,
+	"peer_optimistic_quorum_min": 0,
+	"max_events": 100,
+	"health_flush_interval_ms": 20,
+	"stat_flush_interval_ms": 20,
+	"log_location_event": "stdout",
+	"log_location_error": "stderr",
+	"log_location_warning": "stderr",
+	"log_location_info": "stdout",
+	"log_location_debug": "stdout",
+	"serve_read_timeout_ms": 86400000,
+	"serve_write_timeout_ms": 86400000,
+	"static_file_dir": "/root/go/src/github.com/apache/trafficcontrol/traffic_monitor/static/",
+	"crconfig_backup_file": "/root/go/src/github.com/apache/trafficcontrol/dev/traffic_monitor/snapshot.backup.json",
+	"tmconfig_backup_file": "/root/go/src/github.com/apache/trafficcontrol/dev/traffic_monitor/monitoring.snapshot.backup.json"
+}

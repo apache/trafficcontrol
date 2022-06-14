@@ -26,6 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 )
 
 // AcmeAccount is the information needed to access an account with an ACME provider.
@@ -39,10 +40,10 @@ type AcmeAccount struct {
 // Validate validates the AcmeAccount request is valid for creation or update.
 func (aa *AcmeAccount) Validate(tx *sql.Tx) error {
 	errs := validation.Errors{
-		"email":       validation.Validate(aa.Email, validation.Required),
-		"private_key": validation.Validate(aa.PrivateKey, validation.Required),
-		"uri":         validation.Validate(aa.Uri, validation.Required),
-		"provider":    validation.Validate(aa.Provider, validation.Required),
+		"email":      validation.Validate(aa.Email, validation.Required, is.Email),
+		"privateKey": validation.Validate(aa.PrivateKey, validation.Required),
+		"uri":        validation.Validate(aa.Uri, validation.Required, is.URL),
+		"provider":   validation.Validate(aa.Provider, validation.Required),
 	}
 
 	return util.JoinErrs(tovalidate.ToErrors(errs))

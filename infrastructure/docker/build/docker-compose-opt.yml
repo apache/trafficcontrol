@@ -23,6 +23,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-tsb
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../../traffic_server/_tsb:/opt/tsb-ats:z
@@ -32,6 +34,8 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-fakeOrigin
       context: ../../..
       args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z

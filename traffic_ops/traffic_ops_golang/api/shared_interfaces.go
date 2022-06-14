@@ -20,11 +20,12 @@ package api
  */
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"net/http"
-	"time"
 )
 
 type CRUDer interface {
@@ -103,8 +104,10 @@ type OptionsDeleter interface {
 	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 }
 
+// Validator objects return user and system errors based on validation rules
+// defined by that object.
 type Validator interface {
-	Validate() error
+	Validate() (error, error)
 }
 
 type Tenantable interface {

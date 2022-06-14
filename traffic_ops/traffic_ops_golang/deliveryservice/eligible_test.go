@@ -16,7 +16,9 @@ package deliveryservice
 */
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -73,9 +75,7 @@ func TestGetEligibleServers(t *testing.T) {
 		"offline_reason",
 		"phys_location",
 		"phys_location_id",
-		"profile",
-		"profile_desc",
-		"profile_id",
+		"profile_name",
 		"rack",
 		"status",
 		"status_id",
@@ -110,9 +110,7 @@ func TestGetEligibleServers(t *testing.T) {
 			s.OfflineReason,
 			s.PhysLocation,
 			s.PhysLocationID,
-			s.Profile,
-			s.ProfileDesc,
-			s.ProfileID,
+			fmt.Sprintf("{%s}", strings.Join(s.ProfileNames, ",")),
 			s.Rack,
 			s.Status,
 			s.StatusID,

@@ -42,31 +42,55 @@ dl_ats_version: "7.1.4-2.el7"
 dl_mojo_token:
 # Information regarding how large the ATS ram cache ought to be on an edge tier cache
 dl_atsec_ram_cache_size_percentage: 18
-dl_atsec_ram_system_total_mb: 20000 # should be replaced by the `ansible_memtotal_mb` fact of a cache, assumed 20G
-dl_atsec_ram_cache_size_mb: "{{ dl_atsec_ram_cache_size_percentage / 100 * ( dl_atsec_ram_system_total_mb | float ) }}"
 # Largest object size to be held in the ram cache before going straght to block devices on an edge tier cache
 dl_atsec_ram_cache_max_obj_size_mb: 1073.741824 # 1 GiB
 # Information regarding how large the ATS ram cache ought to be on an mid tier cache
 dl_atsmid_ram_cache_size_percentage: "{{ dl_atsec_ram_cache_size_percentage }}"
-dl_atsmid_ram_system_total_mb: "{{ dl_atsec_ram_system_total_mb }}" # should be replaced by the `ansible_memtotal_mb` fact of a cache
-dl_atsmid_ram_cache_size_mb: "{{ dl_atsmid_ram_cache_size_percentage / 100 * ( dl_atsmid_ram_system_total_mb | float ) }}"
 # Largest object size to be held in the ram cache before going straght to block devices on a mid tier cache
 dl_atsmid_ram_cache_max_obj_size_mb: "{{ dl_atsec_ram_cache_max_obj_size_mb }}"
-# Information regarding how ramdisks on an edge tier cache are identified
-dl_atsec_ram_drive_prefix: "/dev/ram"
-dl_atsec_ram_drive_letters: "0,1,2"
-# Information regarding how ramdisks on a mid tier cache are identified
-dl_atsmid_ram_drive_prefix: "/dev/ram"
-dl_atsmid_ram_drive_letters: "0,1,2"
 # Information regarding how large the Grove ram cache ought to be
 dl_grove_ram_cache_size_percentage: 50
-dl_grove_ram_system_total_mb: 20000
-dl_grove_ram_cache_size_mb: "{{ dl_grove_ram_cache_size_percentage / 100 * ( dl_grove_ram_system_total_mb | float ) }}"
+# What block device prefixes should be examined for partitions and maybe used as cache disks as reported by ansible_facts.devices
+dl_ds_merged_cache_block_device_prefix_whitelist: "{{ dl_ds_default_cache_block_device_prefix_whitelist }}"
+dl_ds_default_cache_block_device_prefix_whitelist:
+  - vd
+  - hd
+  - sd
+  - nvme
+# What block device prefixes should be examinded for ram disks to use with caches
+dl_ds_merged_cache_ram_device_prefix_whitelist: "{{ dl_ds_default_cache_ram_device_prefix_whitelist }}"
+dl_ds_default_cache_ram_device_prefix_whitelist:
+  - ram
+# What percentage of available interface speed should be available to caches before becoming unhealthy
+dl_ds_reserved_bandwidth_percentage: 90
+
+# Handle to provide your own custom hardware information
+# Defining this variable disables automatic detection
+#dl_ds_cache_hardware_info:
+#  cdn-atsec-01.kabletown.invalid:
+#    cache_disks:
+#      - vdb
+#    ram_cache_size: 5762160000
+#    ram_disks:
+#      - ram0
+#      - ram1
+#      - ram2
+
+# Hardcoded names of groups in the tasks are a bad idea, but this allows people to change them as needed to match their inventory
+dl_hosts_fakeorigin: "{{ groups['fakeorigin'] | default([],true) }}"
+dl_hosts_tm: "{{ groups['traffic_monitor'] | default([],true) }}"
+dl_hosts_tr: "{{ groups['traffic_router'] | default([],true) }}"
+dl_hosts_to: "{{ groups['traffic_ops'] | default([],true) }}"
+dl_hosts_mso_alias: "{{ groups['mso_parent_alias'] | default([],true) }}"
+dl_hosts_atsmid: "{{ groups['atsmid'] | default([],true) }}"
+dl_hosts_atsec: "{{ groups['atsec'] | default([],true) }}"
+dl_hosts_grove: "{{ groups['grove'] | default([],true) }}"
+dl_hosts_all: "{{ groups['all'] | default([],true) }}"
 
 # TO CDN
 dl_ds_merged_cdns: "{{ dl_ds_default_cdns }}"
 dl_ds_default_cdns:
-  MKGA:
+  mkga:
     name: Kabletown2.0
     dnssecEnabled: false
 
@@ -272,43 +296,22 @@ dl_ds_default_divisions:
               - tr-west
               - multi-site-org-west
 
-# Mapping of eligible TO Profile prefixes to inventory hostvar component name
+# Mapping of eligible TO Profile regex to inventory hostvar component name
 dl_ds_merged_profile_prefix_ansible_component_map: "{{ dl_ds_default_profile_prefix_ansible_component_map }}"
 dl_ds_default_profile_prefix_ansible_component_map:
-  grove: EDGE_GROVE_
-  atsec: EDGE_ATS_
-  atsmid: MID_ATS_
-  fakeorigin: MSO_
-  mso_parent_alias: MSO_
-  influxdb: INFLUXDB
-  riak: RIAK
-  traffic_monitor: RASCAL_
-  traffic_ops: TRAFFIC_OPS
-  traffic_opsdb: TRAFFIC_OPS_DB
-  traffic_portal: TRAFFIC_PORTAL
-  traffic_router: CCR_
-  traffic_stats: TRAFFIC_STATS
-
-# Exclusion papping of eligible TO Profile suffixes to inventory hostvar component name
-dl_ds_merged_profile_blacklist_ansible_component_map: "{{ dl_ds_default_profile_blacklist_ansible_component_map }}"
-dl_ds_default_profile_blacklist_ansible_component_map:
-  grove:
-  atsec:
-  atsmid:
-  fakeorigin:
-  mso_parent_alias:
-  influxdb:
-  riak:
-  traffic_monitor:
-  traffic_ops:
-    - _DB
-  traffic_opsdb:
-    - active
-    - standby
-    - replica
-  traffic_portal:
-  traffic_router:
-  traffic_stats:
+  grove: '(?i)^EDGE_GROVE_.*'
+  atsec: "(?i)^EDGE_ATS_{{ dl_ds_ats_major_version }}_.*"
+  atsmid: "(?i)^MID_ATS_{{ dl_ds_ats_major_version }}_.*"
+  fakeorigin: '(?i)^MSO_.*'
+  mso_parent_alias: '(?i)^MSO_.*'
+  influxdb: '(?i)^INFLUXDB$'
+  riak: '(?i)^RIAK.*'
+  traffic_monitor: '(?i)^RASCAL_.*'
+  traffic_ops: '(?i)^TRAFFIC_OPS$'
+  traffic_opsdb: '(?i)^TRAFFIC_OPS_DB$'
+  traffic_portal: '(?i)^TRAFFIC_PORTAL$'
+  traffic_router: '(?i)^CCR_.*'
+  traffic_stats: '(?i)^TRAFFIC_STATS$'
 
 # TO Servers
 dl_ds_merged_servers: "{{ dl_ds_default_servers }}"
@@ -316,21 +319,83 @@ dl_ds_default_servers:
   server.kabletown.invalid:
     tcpPort: 80
     httpsPort: 443
-    xmppId:
-    xmppPasswd:
-    ip6Address:
-    ip6Gateway:
-    rack: M2
-    mgmtIpAddress:
-    mgmtIpNetmask:
-    mgmtIpGateway:
-    iloIpAddress:
-    iloIpNetmask:
-    iloIpGateway:
-    iloUsername:
-    iloPassword:
+    rack: M1
     routerHostName: 1hop.router.kabletown.invalid
     routerPortName: 1/1/1/1
+  riak.kabletown.invalid:
+    tcpPort: 8087 # Note: this is actually wired in via TO cdn.conf if it ever needs to be different, it's adjusted here for human clarity.  It's also the Riak protobuf port, not http rest port which is defaulted to 8098 and probably disabled.
+    httpsPort: 8088 # Note: this isn't actually used anywhere, it's just for human clarity.  This is the default for the rest https interface for things like SOLR or curl.
+    rack: M2
+    routerHostName: 2hop.router.kabletown.invalid
+    routerPortName: 2/1/1/1
+  influxdb.kabletown.invalid:
+    tcpPort: 8086 # Note: This is used by TO as a fallback on https or http
+    httpsPort: 8086 # Note: This is used by TO for https connections
+    rack: M3
+    routerHostName: 3hop.router.kabletown.invalid
+    routerPortName: 3/1/1/1
+  traffic_monitor.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by traffic_stats and traffic router
+    httpsPort: 443 # Note: This may be used by traffic_stats and traffic router
+    rack: M4
+    routerHostName: 4hop.router.kabletown.invalid
+    routerPortName: 4/1/1/1
+  atsec.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by traffic_monitor for astats
+    httpsPort: 443 # Note: This may be used by traffic_monitor for astats
+    rack: M4
+    routerHostName: 4hop.router.kabletown.invalid
+    routerPortName: 4/1/1/1
+  atsmid.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by traffic_monitor for astats
+    httpsPort: 443 # Note: This may be used by traffic_monitor for astats
+    rack: M5
+    routerHostName: 5hop.router.kabletown.invalid
+    routerPortName: 5/1/1/1
+  grove.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by traffic_monitor for astats
+    httpsPort: 443 # Note: This may be used by traffic_monitor for astats
+    rack: M6
+    routerHostName: 6hop.router.kabletown.invalid
+    routerPortName: 6/1/1/1
+  fakeorigin.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by TO ATS Config generation for Multi-site origins
+    rack: M6
+    routerHostName: 6hop.router.kabletown.invalid
+    routerPortName: 6/1/1/1
+  mso_parent_alias.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by TO ATS Config generation for Multi-site origins
+    rack: M7
+    routerHostName: 7hop.router.kabletown.invalid
+    routerPortName: 7/1/1/1
+  traffic_opsdb.kabletown.invalid:
+    tcpPort: 5432 # Note: This is actually wired in via TO config files, but is here for human clarity
+    rack: M8
+    routerHostName: 8hop.router.kabletown.invalid
+    routerPortName: 8/1/1/1
+  traffic_ops.kabletown.invalid:
+    tcpPort: 80 # Note: This is actually wired in via TO config files, but is here for human clarity
+    httpsPort: 443 # Note: This is actually wired in via TO config files, but is here for human clarity
+    rack: M9
+    routerHostName: 9hop.router.kabletown.invalid
+    routerPortName: 9/1/1/1
+  traffic_portal.kabletown.invalid:
+    httpsPort: 443 # Note: This is actually wired in via TP config files, but is here for human clarity
+    rack: M10
+    routerHostName: 10hop.router.kabletown.invalid
+    routerPortName: 10/1/1/1
+  traffic_router.kabletown.invalid:
+    tcpPort: 80 # Note: This is actually wired in via TR server.xml config file, but is here for human clarity.  Note that default port 53 is also used for DNS.
+    httpsPort: 443 # Note: This is actually wired in via TR server.xml config file, but is here for human clarity.  Note that default port 53 is also used for DNS.
+    rack: M11
+    routerHostName: 11hop.router.kabletown.invalid
+    routerPortName: 11/1/1/1
+  influxrelay.kabletown.invalid:
+    tcpPort: 9086 # Note: This is actually wired in via influx-relay config files, but is here for human clarity
+    httpsPort: 9087 # Note: This is actually wired in via influx-relay config files, but is here for human clarity
+    rack: M12
+    routerHostName: 12hop.router.kabletown.invalid
+    routerPortName: 12/1/1/1
 
 # TO Profiles (non-template) and associated parameters
 dl_ds_merged_profiles: "{{ dl_ds_default_profiles }}"
@@ -606,6 +671,633 @@ dl_ds_default_profiles:
         value: tps_total
         secure: 0
 
+dl_ds_ats_major_version: "{{ 8 if dl_ats_version is version('8','>=') else 7 }}"
+
+# ATS Profiles are huge, we should normalize them a big to make them more understandable
+dl_ds_default_profile_layers:
+  ats:
+    edge:
+      common:
+        - name: location
+          configFile: bg_fetch.config
+          value: "/opt/trafficserver/etc/trafficserver"
+        - name: location
+          configFile: drop_qstring.config
+          value: "/opt/trafficserver/etc/trafficserver"
+        - name: algorithm
+          configFile: parent.config
+          value: consistent_hash
+        - name: qstring
+          configFile: parent.config
+          value: ignore
+        - name: CONFIG proxy.config.accept_threads
+          configFile: records.config
+          value: INT 5
+        - name: CONFIG proxy.config.cache.hostdb.sync_frequency
+          configFile: records.config
+          value: INT 0
+        - name: CONFIG proxy.config.cache.http.compatibility.4-2-0-fixup
+          configFile: records.config
+          value: INT 0
+        - name: CONFIG proxy.config.cache.ram_cache_cutoff
+          configFile: records.config
+          value: "INT {{ (dl_atsec_ram_cache_max_obj_size_mb | float * 1000000) | int }}"
+        - name: CONFIG proxy.config.cache.read_while_writer.max_retries
+          configFile: records.config
+          value: INT 3
+        - name: CONFIG proxy.config.env_prep
+          configFile: records.config
+          value: STRING example_prep.sh
+        - name: CONFIG proxy.config.hostdb.serve_stale_for
+          configFile: records.config
+          value: INT 20
+        - name: CONFIG proxy.config.http.origin_max_connections
+          configFile: records.config
+          value: INT 500
+        - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
+          configFile: records.config
+          value: INT 2
+        - name: CONFIG proxy.config.http.parent_proxy.per_parent_connect_attempts
+          configFile: records.config
+          value: INT 1
+        - name: CONFIG proxy.config.http.parent_proxy.total_connect_attempts
+          configFile: records.config
+          value: INT 3
+        - name: CONFIG proxy.config.http.server_ports
+          configFile: records.config
+          value: STRING 80 80:ipv6 443:proto=http:ssl 443:ipv6:proto=http:ssl
+        - name: location
+          configFile: set_dscp_0.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_10.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_12.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_14.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_16.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_18.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_20.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_22.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_24.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_26.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_28.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_30.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_32.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_34.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_36.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_37.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_38.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_40.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_48.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_56.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: set_dscp_8.config
+          value: "/opt/trafficserver/etc/trafficserver/dscp"
+        - name: location
+          configFile: ssl_multicert.config
+          value: "/opt/trafficserver/etc/trafficserver"
+        - name: location
+          configFile: anymap_hdr_rw.config
+          value: "/opt/trafficserver/etc/trafficserver/"
+        - name: data
+          configFile: anymap_hdr_rw.config
+          value: cond %{SEND_REQUEST_HDR_HOOK} __RETURN__ add-header FAKEORIGIN-ATS-ANYMAP-GLOBAL '%<cque>' __RETURN__ add-header FAKEORIGIN-ATS-ANYMAP-ORIGINAL-REQUESTOR '%<chi>' __RETURN__ cond %{SEND_RESPONSE_HDR_HOOK} __RETURN__ add-header ATS_ANYMAP_GLOBAL 'Anymap_Global_Match' [L]
+      v7:
+        - name: LogFormat.Format
+          configFile: logging.config
+          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas=\"%<{User-Agent}cqh>\" xmt=\"%<{X-MoneyTrace}cqh>\" svc=%<{X-CDN-SVC}cqh>'
+        - name: remap_stats.so
+          configFile: plugin.config
+          value: ''
+      v8:
+        - name: remap_stats.so -p
+          configFile: plugin.config
+          value: ''
+        # Default changed between ATS 7 & 8
+        - name: CONFIG proxy.config.ssl.server.multicert.exit_on_load_fail
+          configFile: records.config
+          value: INT 0
+    mid:
+      common:
+        - name: location
+          configFile: 40-ats.rules
+          value: "/etc/udev/rules.d/"
+        - name: udev_syncds
+          configFile: 40-ats.rules
+          value: 'KERNEL==\"sd*\", DRIVERS==\"mpt3sas\", PROGRAM=\"/bin/supermicro_udev_mapper.pl %k\", SYMLINK+=\"ats/%c\", OWNER=\"ats\"'
+        - name: weight
+          configFile: parent.config
+          value: '1.0'
+        - name: CONFIG proxy.config.accept_threads
+          configFile: records.config
+          value: INT 3
+        - name: CONFIG proxy.config.cache.ram_cache_cutoff
+          configFile: records.config
+          value: "INT {{ (dl_atsmid_ram_cache_max_obj_size_mb | float * 1000000) | int }}"
+        - name: CONFIG proxy.config.hostdb.serve_stale_for
+          configFile: records.config
+          value: INT 12
+        - name: CONFIG proxy.config.hostdb.ttl_mode
+          configFile: records.config
+          value: INT 2
+        - name: CONFIG proxy.config.http.origin_max_connections
+          configFile: records.config
+          value: INT 1500
+        - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
+          configFile: records.config
+          value: INT 1
+        - name: CONFIG proxy.config.http.server_ports
+          configFile: records.config
+          value: STRING 80 80:ipv6
+        - name: CONFIG proxy.config.url_remap.remap_required
+          configFile: records.config
+          value: INT 0
+      v7:
+        - name: ramdisk_size
+          configFile: grub.conf
+          value: ramdisk_size=16777216
+        - name: LogFormat.Format
+          configFile: logging.config
+          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<shn> uas=\"%<{User-Agent}cqh>\" xmt=\"%<{X-MoneyTrace}cqh>\" svc=%<{X-CDN-SVC}cqh>'
+        - name: CONFIG proxy.config.cop.active_health_checks
+          configFile: records.config
+          value: INT 0
+      v8: []
+    common:
+      common:
+        - name: location
+          configFile: 12M_facts
+          value: "/opt/ort"
+        - name: location
+          configFile: 50-ats.rules
+          value: "/etc/udev/rules.d/"
+        - name: domain_name
+          configFile: CRConfig.json
+          value: "{{ Target_cdn_delegation_fqdn | lower }}"
+        - name: weight
+          configFile: CRConfig.json
+          value: '1.0'
+        - name: allow_ip
+          configFile: astats.config
+          value: "{{ dl_allow_ip4 }}"
+        - name: allow_ip6
+          configFile: astats.config
+          value: "{{ dl_allow_ip6 }}"
+        - name: location
+          configFile: astats.config
+          value: "/opt/trafficserver/etc/trafficserver"
+        - name: path
+          configFile: astats.config
+          value: _astats
+        - name: record_types
+          configFile: astats.config
+          value: '122'
+        - name: location
+          configFile: cache.config
+          value: "/opt/trafficserver/etc/trafficserver/"
+        - name: location
+          configFile: cacheurl_qstring.config
+          value: "/opt/trafficserver/etc/trafficserver"
+        - name: trafficserver
+          configFile: chkconfig
+          value: '0:off\t1:off\t2:on\t3:on\t4:on\t5:on\t6:off'
+        - name: location
+          configFile: hosting.config
+          value: "/opt/trafficserver/etc/trafficserver/"
+        - name: coalesce_masklen_v4
+          configFile: ip_allow.config
+          value: '16'
+        - name: coalesce_masklen_v6
+          configFile: ip_allow.config
+          value: '40'
+        - name: coalesce_number_v4
+          configFile: ip_allow.config
+          value: '5'
+        - name: coalesce_number_v6
+          configFile: ip_allow.config
+          value: '5'
+        - name: location
+          configFile: ip_allow.config
+          value: "/opt/trafficserver/etc/trafficserver"
+        - name: purge_allow_ip
+          configFile: ip_allow.config
+          value: 127.0.0.1
+        - name: trafficserver
+          configFile: package
+          value: "{{ dl_ats_version }}"
+        - name: trafficserver-debuginfo
+          configFile: package
+          value: "{{ dl_ats_version }}"
+        - name: location
+          configFile: parent.config
+          value: "/opt/trafficserver/etc/trafficserver/"
+        - name: astats_over_http.so
+          configFile: plugin.config
+          value: ''
+        - name: location
+          configFile: plugin.config
+          value: "/opt/trafficserver/etc/trafficserver/"
+        - name: regex_revalidate.so
+          configFile: plugin.config
+          value: "--disable-timed-updates --config regex_revalidate.config"
+        - name: health.connection.timeout
+          configFile: rascal.properties
+          value: '2000'
+        - name: health.polling.url
+          configFile: rascal.properties
+          value: http://${hostname}/_astats?application=&inf.name=${interface_name}
+        - name: health.threshold.kbps
+          configFile: rascal.properties
+          value: "<{{ ((Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float - (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float * ((100 - dl_ds_reserved_bandwidth_percentage | float) / 100))) | int) * 1000 }}"
+        - name: health.threshold.loadavg
+          configFile: rascal.properties
+          value: "{{ Target_hardware_profile.value.load_avg_limit | default('10') }}.0"
+        - name: health.threshold.queryTime
+          configFile: rascal.properties
+          value: '1500'
+        - name: history.count
+          configFile: rascal.properties
+          value: '30'
+        - name: CONFIG proxy.config.allocator.dontdump_iobuffers
+          configFile: records.config
+          value: INT 0
+        - name: CONFIG proxy.config.allocator.thread_freelist_size
+          configFile: records.config
+          value: INT 1024
+        - name: CONFIG proxy.config.cache.enable_checksum
+          configFile: records.config
+          value: INT 1
+        - name: CONFIG proxy.config.cache.min_average_object_size
+          configFile: records.config
+          value: INT 131072
+        - name: CONFIG proxy.config.cache.ram_cache.size
+          configFile: records.config
+          value: "INT {{ cache_hardware_profile_index[Target_hardware_profile.value.ram_cache_size | default(0)] | default(20000) }}"
+        - name: CONFIG proxy.config.crash_log_helper
+          configFile: records.config
+          value: STRING /usr/local/bin/backtrace-invoker.sh
+        - name: CONFIG proxy.config.diags.logfile.rolling_enabled
+          configFile: records.config
+          value: INT 2
+        - name: CONFIG proxy.config.diags.logfile.rolling_size_mb
+          configFile: records.config
+          value: INT 1024
+        - name: CONFIG proxy.config.diags.output.emergency
+          configFile: records.config
+          value: STRING SL
+        - name: CONFIG proxy.config.diags.show_location
+          configFile: records.config
+          value: INT 2
+        - name: CONFIG proxy.config.dns.lookup_timeout
+          configFile: records.config
+          value: INT 2
+        - name: CONFIG proxy.config.dns.round_robin_nameservers
+          configFile: records.config
+          value: INT 0
+        - name: CONFIG proxy.config.exec_thread.autoconfig
+          configFile: records.config
+          value: INT 0
+        - name: CONFIG proxy.config.exec_thread.autoconfig.scale
+          configFile: records.config
+          value: FLOAT 1.5
+        - name: CONFIG proxy.config.exec_thread.limit
+          configFile: records.config
+          value: INT 32
+        - name: CONFIG proxy.config.hostdb.lookup_timeout
+          configFile: records.config
+          value: INT 2
+        - name: CONFIG proxy.config.hostdb.max_size
+          configFile: records.config
+          value: INT -1
+        - name: CONFIG proxy.config.hostdb.timeout
+          configFile: records.config
+          value: INT 1440
+        - name: CONFIG proxy.config.http.background_fill_completed_threshold
+          configFile: records.config
+          value: FLOAT 0.0
+        - name: CONFIG proxy.config.http.cache.guaranteed_max_lifetime
+          configFile: records.config
+          value: INT 2592000
+        - name: CONFIG proxy.config.http.cache.heuristic_lm_factor
+          configFile: records.config
+          value: FLOAT 0.10
+        - name: CONFIG proxy.config.http.cache.ignore_client_cc_max_age
+          configFile: records.config
+          value: INT 0
+        - name: CONFIG proxy.config.http.cache.max_open_read_retries
+          configFile: records.config
+          value: INT 150
+        - name: CONFIG proxy.config.http.cache.max_open_write_retries
+          configFile: records.config
+          value: INT 150
+        - name: CONFIG proxy.config.http.cache.required_headers
+          configFile: records.config
+          value: INT 0
+        - name: CONFIG proxy.config.http.connect_attempts_max_retries
+          configFile: records.config
+          value: INT 6
+        - name: CONFIG proxy.config.http.connect_attempts_rr_retries
+          configFile: records.config
+          value: INT 0
+        - name: CONFIG proxy.config.http.connect_attempts_timeout
+          configFile: records.config
+          value: INT 3
+        - name: CONFIG proxy.config.http.down_server.cache_time
+          configFile: records.config
+          value: INT 5
+        - name: CONFIG proxy.config.http.insert_response_via_str
+          configFile: records.config
+          value: INT 3
+        - name: CONFIG proxy.config.http.keep_alive_no_activity_timeout_in
+          configFile: records.config
+          value: INT 115
+        - name: CONFIG proxy.config.http.negative_caching_enabled
+          configFile: records.config
+          value: INT 1
+        - name: CONFIG proxy.config.http.negative_caching_lifetime
+          configFile: records.config
+          value: INT 2
+        - name: CONFIG proxy.config.http.negative_caching_list
+          configFile: records.config
+          value: STRING 204 305 403 404 405 414 500 501 502 503 504
+        - name: CONFIG proxy.config.http.origin_max_connections_queue
+          configFile: records.config
+          value: INT 0
+        - name: CONFIG proxy.config.http.parent_proxy.retry_time
+          configFile: records.config
+          value: INT 10
+        - name: CONFIG proxy.config.http.parent_proxy_routing_enable
+          configFile: records.config
+          value: INT 1
+        - name: CONFIG proxy.config.http.referer_default_redirect
+          configFile: records.config
+          value: STRING http://www.kabletown.invalid/
+        - name: CONFIG proxy.config.http.request_header_max_size
+          configFile: records.config
+          value: INT 32000
+        - name: CONFIG proxy.config.http.transaction_no_activity_timeout_in
+          configFile: records.config
+          value: INT 5
+        - name: CONFIG proxy.config.http.transaction_no_activity_timeout_out
+          configFile: records.config
+          value: INT 5
+        - name: CONFIG proxy.config.log.rolling_enabled
+          configFile: records.config
+          value: INT 3
+        - name: CONFIG proxy.config.log.rolling_size_mb
+          configFile: records.config
+          value: INT 1024
+        - name: CONFIG proxy.config.mlock_enabled
+          configFile: records.config
+          value: INT 2
+        - name: CONFIG proxy.config.net.connections_throttle
+          configFile: records.config
+          value: INT 350000
+        - name: CONFIG proxy.config.net.default_inactivity_timeout
+          configFile: records.config
+          value: INT 180
+        - name: CONFIG proxy.config.net.max_connections_active_in
+          configFile: records.config
+          value: INT 100000
+        - name: CONFIG proxy.config.net.max_connections_in
+          configFile: records.config
+          value: INT 100000
+        - name: CONFIG proxy.config.net.sock_option_flag_in
+          configFile: records.config
+          value: INT 13
+        - name: CONFIG proxy.config.net.sock_option_flag_out
+          configFile: records.config
+          value: INT 9
+        - name: CONFIG proxy.config.net.sock_send_buffer_size_in
+          configFile: records.config
+          value: INT 262144
+        - name: CONFIG proxy.config.product_company
+          configFile: records.config
+          value: STRING Apache
+        - name: CONFIG proxy.config.product_name
+          configFile: records.config
+          value: STRING Traffic
+        - name: CONFIG proxy.config.proxy_name
+          configFile: records.config
+          value: STRING __HOSTNAME__
+        - name: CONFIG proxy.config.ssl.CA.cert.path
+          configFile: records.config
+          value: STRING etc/trafficserver/ssl
+        - name: CONFIG proxy.config.ssl.client.CA.cert.path
+          configFile: records.config
+          value: STRING etc/trafficserver/ssl
+        - name: CONFIG proxy.config.ssl.client.cert.path
+          configFile: records.config
+          value: STRING etc/trafficserver/ssl
+        - name: CONFIG proxy.config.ssl.client.private_key.path
+          configFile: records.config
+          value: STRING etc/trafficserver/ssl
+        - name: CONFIG proxy.config.ssl.ocsp.enabled
+          configFile: records.config
+          value: INT 1
+        - name: CONFIG proxy.config.ssl.server.cert.path
+          configFile: records.config
+          value: STRING etc/trafficserver/ssl
+        - name: CONFIG proxy.config.ssl.server.cipher_suite
+          configFile: records.config
+          value: STRING ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!RC4:!SRP:!DSS:!PSK:!aNULL:!eNULL:!SSLv2:@STRENGTH
+        - name: CONFIG proxy.config.ssl.server.private_key.path
+          configFile: records.config
+          value: STRING etc/trafficserver/ssl
+        - name: CONFIG proxy.config.system.file_max_pct
+          configFile: records.config
+          value: FLOAT 0.9
+        - name: location
+          configFile: records.config
+          value: "/opt/trafficserver/etc/trafficserver/"
+        - name: location
+          configFile: regex_revalidate.config
+          value: "/opt/trafficserver/etc/trafficserver"
+        - name: location
+          configFile: remap.config
+          value: "/opt/trafficserver/etc/trafficserver/"
+        - name: Disk_Volume
+          configFile: storage.config
+          value: '1'
+        - name: Drive_Letters
+          configFile: storage.config
+          value: "{{ Target_hardware_profile_cache_disk_letters | default('') }}"
+        - name: Drive_Prefix
+          configFile: storage.config
+          value: "/dev/{{ Target_hardware_profile_cache_disk_prefix | default('sd') }}"
+        - name: RAM_Drive_Letters
+          configFile: storage.config
+          value: "{{ Target_hardware_profile_ram_disk_letters | default('') }}"
+        - name: RAM_Drive_Prefix
+          configFile: storage.config
+          value: "/dev/{{ Target_hardware_profile_ram_disk_prefix | default('ram') }}"
+        - name: RAM_Volume
+          configFile: storage.config
+          value: '2'
+        - name: location
+          configFile: storage.config
+          value: "/opt/trafficserver/etc/trafficserver/"
+        - name: location
+          configFile: volume.config
+          value: "/opt/trafficserver/etc/trafficserver/"
+      v7:
+        - name: LogFormat.Name
+          configFile: logging.config
+          value: custom_ats_2
+        - name: LogObject.Filename
+          configFile: logging.config
+          value: custom_ats_2
+        - name: LogObject.Format
+          configFile: logging.config
+          value: custom_ats_2
+        - name: LogObject.RollingEnabled
+          configFile: logging.config
+          value: '3'
+        - name: LogObject.RollingIntervalSec
+          configFile: logging.config
+          value: '86400'
+        - name: LogObject.RollingOffsetHr
+          configFile: logging.config
+          value: '11'
+        - name: LogObject.RollingSizeMb
+          configFile: logging.config
+          value: '1024'
+        - name: location
+          configFile: logging.config
+          value: "/opt/trafficserver/etc/trafficserver"
+        - name: 'CONFIG proxy.config.cluster.cluster_configuration '
+          configFile: records.config
+          value: STRING cluster.config
+        - name: CONFIG proxy.config.http.connect_attempts_max_retries_dead_server
+          configFile: records.config
+          value: INT 3
+        - name: CONFIG proxy.config.http.cache.fuzz.probability
+          configFile: records.config
+          value: FLOAT 0.005
+        - name: CONFIG proxy.config.http.cache.fuzz.time
+          configFile: records.config
+          value: INT 240
+        - name: CONFIG proxy.config.http.normalize_ae_gzip
+          configFile: records.config
+          value: INT 0
+      v8:
+        - name: LogFormat.Format
+          configFile: logging.yaml
+          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<shn> uas=\"%<{User-Agent}cqh>\" xmt=\"%<{X-MoneyTrace}cqh>\" svc=%<{X-CDN-SVC}cqh>'
+        - name: LogFormat.Name
+          configFile: logging.yaml
+          value: custom_ats_2
+        - name: LogFormat1.Format
+          configFile: logging.yaml
+          value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<shn> uas=\"%<{User-Agent}cqh>\" xmt=\"%<{X-MoneyTrace}cqh>\" svc=%<{X-CDN-SVC}cqh> rr=\"\"\"%<{Range}cqh>\"\"\" cl=\"\"\"%<{Content-Length}psh>\"\"\" cqhl=%<cqhl> csscl=%<csscl> cqssc=%<cqssc> cqssv=%<cqssv> ccc=\"\"\"%<{Cache-Control}cqh>\"\"\" occ=\"\"\"%<{Cache-Control}ssh>\"\"\" cocc=\"\"\"%<{Cache-Control}cssh>\"\"\" odate=\"\"\"%<{Date}ssh>\"\"\" cdate=\"\"\"%<{Date}cssh>\"\"\" olm=\"\"\"%<{Last-Modified}ssh>\"\"\" clm=\"\"\"%<{Last-Modified}cssh>\"\"\" oet=\"\"\"%<{Etag}ssh>\"\"\" cet=\"\"\"%<{Etag}cssh>\"\"\" opm=\"\"\"%<{Pragma}ssh>\"\"\" cpm=\"\"\"%<{Pragma}cssh>\"\"\" oex=\"\"\"%<{Expires}ssh>\"\"\" cex=\"\"\"%<{Expires}cssh>\"\"\" oce=\"\"\"%<{Content-Encoding}ssh>\"\"\" cce=\"\"\"%<{Content-Encoding}cssh>\"\"\" oct=\"\"\"%<{Content-Type}ssh>\"\"\" cct=\"\"\"%<{Content-Type}cssh>\"\"\" acc=\"\"\"%<{Accept}cqh>\"\"\" ace=\"\"\"%<{Accept-Encoding}cqh>\"\"\" auth=\"\"\"%<{Authorization}cqh>\"\"\" ovar=\"\"\"%<{Vary}ssh>\"\"\" cvar=\"\"\"%<{Vary}cssh>\"\"\" ccvar=\"\"\"%<{Vary}cqh>\"\"\"  nhi=%<nhi> nhp=%<nhp> pcr=\"\"\"%<{Content-Range}psh>\"\"\" xrsn=\"\"\"%<{X-Reason}psh>\"\"\" stms=%<stms>'
+        - name: LogFormat1.Name
+          configFile: logging.yaml
+          value: custom_ats_3
+        - name: LogObject.Filename
+          configFile: logging.yaml
+          value: custom_ats_2
+        - name: LogObject.Format
+          configFile: logging.yaml
+          value: custom_ats_2
+        - name: LogObject.RollingEnabled
+          configFile: logging.yaml
+          value: "'both'"
+        - name: LogObject.RollingIntervalSec
+          configFile: logging.yaml
+          value: '86400'
+        - name: LogObject.RollingOffsetHr
+          configFile: logging.yaml
+          value: '11'
+        - name: LogObject.RollingSizeMb
+          configFile: logging.yaml
+          value: '1024'
+        - name: LogObject1.Filename
+          configFile: logging.yaml
+          value: custom_ats_3
+        - name: LogObject1.Format
+          configFile: logging.yaml
+          value: custom_ats_3
+        - name: LogObject1.RollingEnabled
+          configFile: logging.yaml
+          value: '3'
+        - name: LogObject1.RollingIntervalSec
+          configFile: logging.yaml
+          value: '86400'
+        - name: LogObject1.RollingOffsetHr
+          configFile: logging.yaml
+          value: '11'
+        - name: LogObject1.RollingSizeMb
+          configFile: logging.yaml
+          value: '1024'
+        - name: location
+          configFile: logging.yaml
+          value: "/opt/trafficserver/etc/trafficserver"
+        # Default changed between ATS 7 & 8
+        - name: CONFIG proxy.config.diags.debug.tags
+          configFile: records.config
+          value: STRING http.*|dns.*
+        # Default changed between ATS 7 & 8
+        - name: CONFIG proxy.config.http.negative_revalidating_enabled
+          configFile: records.config
+          value: INT 0
+        - name: CONFIG proxy.config.http.normalize_ae
+          configFile: records.config
+          value: INT 0
+        # Default changed between ATS 7 & 8
+        - name: CONFIG proxy.config.http2.max_header_list_size
+          configFile: records.config
+          value: INT 4294967295
+        # Default changed between ATS 7 & 8
+        - name: CONFIG proxy.config.http2.initial_window_size_in
+          configFile: records.config
+          value: INT 1048576
+        - name: CONFIG proxy.config.plugin.lua.max_states
+          configFile: records.config
+          value: INT 64
+        - name: CONFIG proxy.config.restart.stop_listening
+          configFile: records.config
+          value: INT 1
+        # Default changed between ATS 7 & 8
+        - name: LOCAL proxy.local.cluster.type
+          configFile: records.config
+          value: INT 3
+
 # TO Profiles (templates) and associated parameters
 # These should be the profiles which vary by CDN association
 dl_ds_merged_profile_cdntemplates: "{{ dl_ds_default_profile_cdntemplates }}"
@@ -850,7 +1542,7 @@ dl_ds_default_profile_cdntemplates:
         configFile: parent.config
         value: '1'
         secure: 0
-  - name: "{{ dl_ds_merged_profile_prefix_ansible_component_map.grove }}{{ Target_cdn_delegation }}"
+  - name: "EDGE_GROVE_{{ Target_cdn_delegation }}"
     description: "Edge cache({{ Target_cdn_delegation }}) - Grove"
     cdn: "{{ Target_cdn_delegation }}"
     type: GROVE_PROFILE
@@ -864,7 +1556,7 @@ dl_ds_default_profile_cdntemplates:
         value: "{{ dl_allow_ip6 }}"
       - name: cache_size_bytes
         configFile: grove.cfg
-        value: "{{ (dl_grove_ram_cache_size_mb | float * 1000000) | int }}"
+        value: "{{ cache_hardware_profile_index[Target_hardware_profile.value.ram_cache_size | default(0)] | default(20000) }}"
       - name: cert_file
         configFile: grove.cfg
         value: "/etc/pki/tls/certs/server.crt"
@@ -879,7 +1571,7 @@ dl_ds_default_profile_cdntemplates:
         value: '443'
       - name: interface_name
         configFile: grove.cfg
-        value: ens3
+        value: "{{ Target_hardware_profile.value.primary_network_interface | default('eth0') }}"
       - name: key_file
         configFile: grove.cfg
         value: "/etc/pki/tls/private/server.key.pem"
@@ -970,2682 +1662,30 @@ dl_ds_default_profile_cdntemplates:
       - name: health.polling.url
         configFile: rascal.properties
         value: http://${hostname}/_astats?application=&inf.name=${interface_name}
-  - name: "{{ dl_ds_merged_profile_prefix_ansible_component_map.atsec }}{{ Target_cdn_delegation }}"
-    description: "Edge cache({{ Target_cdn_delegation }}) - ATS"
+  - name: "EDGE_ATS_7_{{ Target_cdn_delegation }}"
+    description: "Edge cache({{ Target_cdn_delegation }}) - ATS 7"
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE
     routingDisabled: false
-    parameters:
-      - name: location
-        configFile: 12M_facts
-        value: "/opt/ort"
-      - name: location
-        configFile: 50-ats.rules
-        value: "/etc/udev/rules.d/"
-      - name: domain_name
-        configFile: CRConfig.json
-        value: "{{ Target_cdn_delegation_fqdn | lower }}"
-      - name: weight
-        configFile: CRConfig.json
-        value: '1.0'
-      - name: allow_ip
-        configFile: astats.config
-        value: "{{ dl_allow_ip4 }}"
-      - name: allow_ip6
-        configFile: astats.config
-        value: "{{ dl_allow_ip6 }}"
-      - name: location
-        configFile: astats.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: path
-        configFile: astats.config
-        value: _astats
-      - name: record_types
-        configFile: astats.config
-        value: '122'
-      - name: location
-        configFile: bg_fetch.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: location
-        configFile: cache.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: location
-        configFile: cacheurl_qstring.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: trafficserver
-        configFile: chkconfig
-        value: '0:off\t1:off\t2:on\t3:on\t4:on\t5:on\t6:off'
-      - name: location
-        configFile: drop_qstring.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: location
-        configFile: hosting.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: coalesce_masklen_v4
-        configFile: ip_allow.config
-        value: '16'
-      - name: coalesce_masklen_v6
-        configFile: ip_allow.config
-        value: '40'
-      - name: coalesce_number_v4
-        configFile: ip_allow.config
-        value: '5'
-      - name: coalesce_number_v6
-        configFile: ip_allow.config
-        value: '5'
-      - name: location
-        configFile: ip_allow.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: purge_allow_ip
-        configFile: ip_allow.config
-        value: 127.0.0.1
-      - name: LogFormat.Format
-        configFile: logging.config
-        value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas=\"%<{User-Agent}cqh>\"'
-      - name: LogFormat.Name
-        configFile: logging.config
-        value: custom_ats_2
-      - name: LogObject.Filename
-        configFile: logging.config
-        value: custom_ats_2
-      - name: LogObject.Format
-        configFile: logging.config
-        value: custom_ats_2
-      - name: LogObject.RollingEnabled
-        configFile: logging.config
-        value: '3'
-      - name: LogObject.RollingIntervalSec
-        configFile: logging.config
-        value: '86400'
-      - name: LogObject.RollingOffsetHr
-        configFile: logging.config
-        value: '11'
-      - name: LogObject.RollingSizeMb
-        configFile: logging.config
-        value: '1024'
-      - name: location
-        configFile: logging.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: trafficserver
-        configFile: package
-        value: "{{ dl_ats_version }}"
-      - name: trafficserver-debuginfo
-        configFile: package
-        value: "{{ dl_ats_version }}"
-      - name: algorithm
-        configFile: parent.config
-        value: consistent_hash
-      - name: location
-        configFile: parent.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: qstring
-        configFile: parent.config
-        value: ignore
-      - name: astats_over_http.so
-        configFile: plugin.config
-        value: ''
-      - name: location
-        configFile: plugin.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: regex_revalidate.so
-        configFile: plugin.config
-        value: "--disable-timed-updates --config regex_revalidate.config"
-      - name: remap_stats.so
-        configFile: plugin.config
-        value: ''
-      - name: health.connection.timeout
-        configFile: rascal.properties
-        value: '2000'
-      - name: health.polling.url
-        configFile: rascal.properties
-        value: http://${hostname}/_astats?application=&inf.name=${interface_name}
-      - name: health.threshold.availableBandwidthInKbps
-        configFile: rascal.properties
-        value: ">100000"
-      - name: health.threshold.loadavg
-        configFile: rascal.properties
-        value: '30.0'
-      - name: health.threshold.queryTime
-        configFile: rascal.properties
-        value: '1000'
-      - name: history.count
-        configFile: rascal.properties
-        value: '30'
-      - name: CONFIG proxy.config.accept_threads
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.admin.admin_user
-        configFile: records.config
-        value: STRING admin
-      - name: CONFIG proxy.config.admin.api.restricted
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.admin.number_config_bak
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.admin.synthetic_port
-        configFile: records.config
-        value: INT 8083
-      - name: CONFIG proxy.config.admin.user_id
-        configFile: records.config
-        value: STRING ats
-      - name: CONFIG proxy.config.alarm.abs_path
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.alarm.bin
-        configFile: records.config
-        value: STRING example_alarm_bin.sh
-      - name: CONFIG proxy.config.alarm.script_runtime
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.alarm_email
-        configFile: records.config
-        value: STRING ats
-      - name: CONFIG proxy.config.allocator.dontdump_iobuffers
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.allocator.hugepages
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.allocator.thread_freelist_low_watermark
-        configFile: records.config
-        value: INT 32
-      - name: CONFIG proxy.config.allocator.thread_freelist_size
-        configFile: records.config
-        value: INT 1024
-      - name: CONFIG proxy.config.bin_path
-        configFile: records.config
-        value: STRING bin
-      - name: CONFIG proxy.config.body_factory.enable_customizations
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.body_factory.enable_logging
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.body_factory.response_suppression_mode
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.body_factory.template_sets_dir
-        configFile: records.config
-        value: STRING etc/trafficserver/body_factory
-      - name: CONFIG proxy.config.cache.alt_rewrite_max_size
-        configFile: records.config
-        value: INT 4096
-      - name: CONFIG proxy.config.cache.control.filename
-        configFile: records.config
-        value: STRING cache.config
-      - name: CONFIG proxy.config.cache.enable_checksum
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cache.enable_read_while_writer
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cache.force_sector_size
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.hit_evacuate_percent
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.hit_evacuate_size_limit
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.hostdb.sync_frequency
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.hosting_filename
-        configFile: records.config
-        value: STRING hosting.config
-      - name: CONFIG proxy.config.cache.http.compatibility.4-2-0-fixup
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.limits.http.max_alts
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.cache.max_doc_size
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.min_average_object_size
-        configFile: records.config
-        value: INT 131072
-      - name: CONFIG proxy.config.cache.mutex_retry_delay
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.cache.permit.pinning
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.ram_cache.algorithm
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cache.ram_cache.compress
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.ram_cache.size
-        configFile: records.config
-        value: "INT {{ (dl_atsec_ram_cache_size_mb | float * 1000000) | int }}"
-      - name: CONFIG proxy.config.cache.ram_cache.use_seen_filter
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cache.ram_cache_cutoff
-        configFile: records.config
-        value: "INT {{ (dl_atsec_ram_cache_max_obj_size_mb | float * 1000000) | int }}"
-      - name: CONFIG proxy.config.cache.read_while_writer.max_retries
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.cache.read_while_writer_retry.delay
-        configFile: records.config
-        value: INT 50
-      - name: CONFIG proxy.config.cache.target_fragment_size
-        configFile: records.config
-        value: INT 1048576
-      - name: CONFIG proxy.config.cache.threads_per_disk
-        configFile: records.config
-        value: INT 8
-      - name: 'CONFIG proxy.config.cluster.cluster_configuration '
-        configFile: records.config
-        value: STRING cluster.config
-      - name: CONFIG proxy.config.cluster.cluster_port
-        configFile: records.config
-        value: INT 8086
-      - name: CONFIG proxy.config.cluster.ethernet_interface
-        configFile: records.config
-        value: STRING lo
-      - name: CONFIG proxy.config.cluster.log_bogus_mc_msgs
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cluster.mc_group_addr
-        configFile: records.config
-        value: STRING 224.0.1.37
-      - name: CONFIG proxy.config.cluster.mc_ttl
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cluster.mcport
-        configFile: records.config
-        value: INT 8089
-      - name: CONFIG proxy.config.cluster.rsport
-        configFile: records.config
-        value: INT 8088
-      - name: CONFIG proxy.config.cluster.startup_timeout
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.cluster.threads
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.config_dir
-        configFile: records.config
-        value: STRING etc/trafficserver
-      - name: CONFIG proxy.config.cop.active_health_checks
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.cop.core_signal
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cop.init_sleep_time
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cop.linux_min_memfree_kb
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cop.linux_min_swapfree_kb
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.core_limit
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.crash_log_helper
-        configFile: records.config
-        value: STRING /tmp/backtrace/invoker.sh
-      - name: CONFIG proxy.config.diags.debug.enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.diags.debug.tags
-        configFile: records.config
-        value: STRING http.*|dns.*
-      - name: CONFIG proxy.config.diags.logfile.rolling_enabled
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.diags.logfile.rolling_interval_sec
-        configFile: records.config
-        value: INT 3600
-      - name: CONFIG proxy.config.diags.logfile.rolling_size_mb
-        configFile: records.config
-        value: INT 1024
-      - name: CONFIG proxy.config.diags.output.alert
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.output.debug
-        configFile: records.config
-        value: STRING E
-      - name: CONFIG proxy.config.diags.output.diag
-        configFile: records.config
-        value: STRING E
-      - name: CONFIG proxy.config.diags.output.emergency
-        configFile: records.config
-        value: STRING SL
-      - name: CONFIG proxy.config.diags.output.error
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.output.fatal
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.output.note
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.output.status
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.output.warning
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.show_location
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.disable_configuration_modification
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dns.dedicated_thread
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dns.lookup_timeout
-        configFile: records.config
-        value: INT 20
-      - name: CONFIG proxy.config.dns.max_dns_in_flight
-        configFile: records.config
-        value: INT 2048
-      - name: CONFIG proxy.config.dns.nameservers
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.dns.resolv_conf
-        configFile: records.config
-        value: STRING /etc/resolv.conf
-      - name: CONFIG proxy.config.dns.round_robin_nameservers
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dns.search_default_domains
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dns.splitDNS.enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dns.validate_query_name
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dump_mem_info_frequency
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.env_prep
-        configFile: records.config
-        value: STRING example_prep.sh
-      - name: CONFIG proxy.config.exec_thread.affinity
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.exec_thread.autoconfig
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.exec_thread.autoconfig.scale
-        configFile: records.config
-        value: FLOAT 1.5
-      - name: CONFIG proxy.config.exec_thread.limit
-        configFile: records.config
-        value: INT 32
-      - name: CONFIG proxy.config.header.parse.no_host_url_redirect
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.hostdb.fail.timeout
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.hostdb.filename
-        configFile: records.config
-        value: STRING host.db
-      - name: CONFIG proxy.config.hostdb.host_file.interval
-        configFile: records.config
-        value: INT 86400
-      - name: CONFIG proxy.config.hostdb.host_file.path
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.hostdb.ip_resolve
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.hostdb.lookup_timeout
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.hostdb.max_count
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.hostdb.max_size
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.hostdb.partitions
-        configFile: records.config
-        value: INT 64
-      - name: CONFIG proxy.config.hostdb.serve_stale_for
-        configFile: records.config
-        value: INT 20
-      - name: CONFIG proxy.config.hostdb.strict_round_robin
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.hostdb.timed_round_robin
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.hostdb.timeout
-        configFile: records.config
-        value: INT 1440
-      - name: CONFIG proxy.config.hostdb.ttl_mode
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.hostdb.verify_after
-        configFile: records.config
-        value: INT 720
-      - name: CONFIG proxy.config.http.accept_no_activity_timeout
-        configFile: records.config
-        value: INT 120
-      - name: CONFIG proxy.config.http.anonymize_other_header_list
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.http.anonymize_remove_client_ip
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.anonymize_remove_cookie
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.anonymize_remove_from
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.anonymize_remove_referer
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.anonymize_remove_user_agent
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.attach_server_session_to_client
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.auth_server_session_private
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.background_fill_active_timeout
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.background_fill_completed_threshold
-        configFile: records.config
-        value: FLOAT 0.0
-      - name: CONFIG proxy.config.http.cache.allow_empty_doc
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.cache_responses_to_cookies
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.cache_urls_that_look_dynamic
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.cluster_cache_local
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.enable_default_vary_headers
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.fuzz.min_time
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.fuzz.probability
-        configFile: records.config
-        value: FLOAT 0.005
-      - name: CONFIG proxy.config.http.cache.fuzz.time
-        configFile: records.config
-        value: INT 240
-      - name: CONFIG proxy.config.http.cache.generation
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.http.cache.guaranteed_max_lifetime
-        configFile: records.config
-        value: INT 2592000
-      - name: CONFIG proxy.config.http.cache.guaranteed_min_lifetime
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.heuristic_lm_factor
-        configFile: records.config
-        value: FLOAT 0.10
-      - name: CONFIG proxy.config.http.cache.heuristic_max_lifetime
-        configFile: records.config
-        value: INT 86400
-      - name: CONFIG proxy.config.http.cache.heuristic_min_lifetime
-        configFile: records.config
-        value: INT 3600
-      - name: CONFIG proxy.config.http.cache.http
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.ignore_accept_charset_mismatch
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.http.cache.ignore_accept_encoding_mismatch
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.ignore_accept_language_mismatch
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.http.cache.ignore_accept_mismatch
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.http.cache.ignore_authentication
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.ignore_client_cc_max_age
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.ignore_client_no_cache
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.ignore_server_no_cache
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.ims_on_client_no_cache
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.max_open_read_retries
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.http.cache.max_open_write_retries
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.max_stale_age
-        configFile: records.config
-        value: INT 604800
-      - name: CONFIG proxy.config.http.cache.open_read_retry_time
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http.cache.open_write_fail_action
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.range.lookup
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.range.write
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.required_headers
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.vary_default_images
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.http.cache.vary_default_other
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.http.cache.vary_default_text
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.http.cache.when_to_revalidate
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.chunking.size
-        configFile: records.config
-        value: INT 4096
-      - name: CONFIG proxy.config.http.chunking_enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.congestion_control.enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.connect_attempts_max_retries
-        configFile: records.config
-        value: INT 6
-      - name: CONFIG proxy.config.http.connect_attempts_max_retries_dead_server
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.http.connect_attempts_rr_retries
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.connect_attempts_timeout
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http.connect_ports
-        configFile: records.config
-        value: STRING 443 563
-      - name: CONFIG proxy.config.http.default_buffer_size
-        configFile: records.config
-        value: INT 8
-      - name: CONFIG proxy.config.http.default_buffer_water_mark
-        configFile: records.config
-        value: INT 32768
-      - name: CONFIG proxy.config.http.disallow_post_100_continue
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.doc_in_cache_skip_dns
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.down_server.abort_threshold
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http.down_server.cache_time
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.http.enable_http_info
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.enable_http_stats
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.errors.log_error_pages
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.flow_control.enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.flow_control.high_water
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.flow_control.low_water
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.forward.proxy_auth_to_parent
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.forward_connect_method
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.insert_age_in_response
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.insert_client_ip
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.insert_request_via_str
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.insert_response_via_str
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.http.insert_squid_x_forwarded_for
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.keep_alive_enabled_in
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.keep_alive_enabled_out
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.keep_alive_no_activity_timeout_in
-        configFile: records.config
-        value: INT 115
-      - name: CONFIG proxy.config.http.keep_alive_no_activity_timeout_out
-        configFile: records.config
-        value: INT 120
-      - name: CONFIG proxy.config.http.keep_alive_post_out
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.negative_caching_enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.negative_caching_lifetime
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.negative_revalidating_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.negative_revalidating_lifetime
-        configFile: records.config
-        value: INT 1800
-      - name: CONFIG proxy.config.http.no_dns_just_forward_to_parent
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.normalize_ae_gzip
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.number_of_redirections
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.origin_max_connections
-        configFile: records.config
-        value: INT 10000
-      - name: CONFIG proxy.config.http.origin_max_connections_queue
-        configFile: records.config
-        value: INT 10000
-      - name: CONFIG proxy.config.http.origin_min_keep_alive_connections
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.http.parent_proxy.fail_threshold
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http.parent_proxy.file
-        configFile: records.config
-        value: STRING parent.config
-      - name: CONFIG proxy.config.http.parent_proxy.mark_down_hostdb
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.parent_proxy.per_parent_connect_attempts
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.parent_proxy.retry_time
-        configFile: records.config
-        value: INT 60
-      - name: CONFIG proxy.config.http.parent_proxy.total_connect_attempts
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http.parent_proxy_routing_enable
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.post.check.content_length.enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.post_connect_attempts_timeout
-        configFile: records.config
-        value: INT 1800
-      - name: CONFIG proxy.config.http.push_method_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.record_heartbeat
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.redirect_host_no_port
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.redirect_use_orig_cache_key
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.redirection_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.referer_default_redirect
-        configFile: records.config
-        value: STRING http://www.kabletown.invalid/
-      - name: CONFIG proxy.config.http.referer_filter
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.referer_format_redirect
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.request_header_max_size
-        configFile: records.config
-        value: INT 131072
-      - name: CONFIG proxy.config.http.response_header_max_size
-        configFile: records.config
-        value: INT 131072
-      - name: CONFIG proxy.config.http.response_server_enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.safe_requests_retryable
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.send_100_continue_response
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.send_http11_requests
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.server_max_connections
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.server_ports
-        configFile: records.config
-        value: STRING 80 80:ipv6 443:proto=http:ssl 443:ipv6:proto=http:ssl
-      - name: CONFIG proxy.config.http.server_session_sharing.match
-        configFile: records.config
-        value: STRING both
-      - name: CONFIG proxy.config.http.server_session_sharing.pool
-        configFile: records.config
-        value: STRING thread
-      - name: CONFIG proxy.config.http.server_tcp_init_cwnd
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.slow.log.threshold
-        configFile: records.config
-        value: INT 450
-      - name: CONFIG proxy.config.http.strict_uri_parsing
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.transaction_active_timeout_in
-        configFile: records.config
-        value: INT 900
-      - name: CONFIG proxy.config.http.transaction_active_timeout_out
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.transaction_no_activity_timeout_in
-        configFile: records.config
-        value: INT 30
-      - name: CONFIG proxy.config.http.transaction_no_activity_timeout_out
-        configFile: records.config
-        value: INT 30
-      - name: CONFIG proxy.config.http.uncacheable_requests_bypass_parent
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.use_client_target_addr
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.wait_for_cache
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.websocket.max_number_of_connections
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.http2.header_table_size
-        configFile: records.config
-        value: INT 4096
-      - name: CONFIG proxy.config.http2.initial_window_size_in
-        configFile: records.config
-        value: INT 1048576
-      - name: CONFIG proxy.config.http2.max_active_streams_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http2.max_concurrent_streams_in
-        configFile: records.config
-        value: INT 100
-      - name: CONFIG proxy.config.http2.max_frame_size
-        configFile: records.config
-        value: INT 16384
-      - name: CONFIG proxy.config.http2.max_header_list_size
-        configFile: records.config
-        value: INT 4294967295
-      - name: CONFIG proxy.config.http2.min_concurrent_streams_in
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http2.push_diary_size
-        configFile: records.config
-        value: INT 256
-      - name: CONFIG proxy.config.http2.stream_priority_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http_ui_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.log.auto_delete_rolled_files
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.log.collation_client_timeout
-        configFile: records.config
-        value: INT 86400
-      - name: CONFIG proxy.config.log.collation_host
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.log.collation_host_tagged
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.log.collation_host_timeout
-        configFile: records.config
-        value: INT 86390
-      - name: CONFIG proxy.config.log.collation_port
-        configFile: records.config
-        value: INT 8085
-      - name: CONFIG proxy.config.log.collation_retry_sec
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.log.collation_secret
-        configFile: records.config
-        value: STRING foobar
-      - name: CONFIG proxy.config.log.config.filename
-        configFile: records.config
-        value: STRING logging.config
-      - name: CONFIG proxy.config.log.hostname
-        configFile: records.config
-        value: STRING localhost
-      - name: CONFIG proxy.config.log.logfile_dir
-        configFile: records.config
-        value: STRING var/log/trafficserver
-      - name: CONFIG proxy.config.log.logfile_perm
-        configFile: records.config
-        value: STRING rw-r--r--
-      - name: CONFIG proxy.config.log.logging_enabled
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.log.max_secs_per_buffer
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.log.max_space_mb_for_logs
-        configFile: records.config
-        value: INT 25000
-      - name: CONFIG proxy.config.log.max_space_mb_for_orphan_logs
-        configFile: records.config
-        value: INT 25
-      - name: CONFIG proxy.config.log.max_space_mb_headroom
-        configFile: records.config
-        value: INT 1000
-      - name: CONFIG proxy.config.log.periodic_tasks_interval
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.log.rolling_enabled
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.log.rolling_interval_sec
-        configFile: records.config
-        value: INT 86400
-      - name: CONFIG proxy.config.log.rolling_offset_hr
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.log.rolling_size_mb
-        configFile: records.config
-        value: INT 1024
-      - name: CONFIG proxy.config.log.sampling_frequency
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.manager_binary
-        configFile: records.config
-        value: STRING traffic_manager
-      - name: CONFIG proxy.config.mlock_enabled
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.net.accept_period
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.net.connections_throttle
-        configFile: records.config
-        value: INT 500000
-      - name: CONFIG proxy.config.net.default_inactivity_timeout
-        configFile: records.config
-        value: INT 180
-      - name: CONFIG proxy.config.net.defer_accept
-        configFile: records.config
-        value: INT 45
-      - name: CONFIG proxy.config.net.event_period
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.net.inactivity_check_frequency
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.net.listen_backlog
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.net.max_connections_active_in
-        configFile: records.config
-        value: INT 500000
-      - name: CONFIG proxy.config.net.max_connections_in
-        configFile: records.config
-        value: INT 500000
-      - name: CONFIG proxy.config.net.poll_timeout
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.net.retry_delay
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.net.sock_mss_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_option_flag_in
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.net.sock_option_flag_out
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.net.sock_packet_mark_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_packet_mark_out
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_packet_tos_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_packet_tos_out
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_recv_buffer_size_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_recv_buffer_size_out
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_send_buffer_size_in
-        configFile: records.config
-        value: INT 262144
-      - name: CONFIG proxy.config.net.sock_send_buffer_size_out
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.throttle_delay
-        configFile: records.config
-        value: INT 50
-      - name: CONFIG proxy.config.output.logfile
-        configFile: records.config
-        value: STRING traffic.out
-      - name: CONFIG proxy.config.output.logfile.rolling_enabled
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.output.logfile.rolling_interval_sec
-        configFile: records.config
-        value: INT 3600
-      - name: CONFIG proxy.config.output.logfile.rolling_size_mb
-        configFile: records.config
-        value: INT 1024
-      - name: CONFIG proxy.config.process_manager.mgmt_port
-        configFile: records.config
-        value: INT 8084
-      - name: CONFIG proxy.config.product_company
-        configFile: records.config
-        value: STRING Apache
-      - name: CONFIG proxy.config.product_name
-        configFile: records.config
-        value: STRING Traffic
-      - name: CONFIG proxy.config.product_vendor
-        configFile: records.config
-        value: STRING Apache
-      - name: CONFIG proxy.config.proxy_binary
-        configFile: records.config
-        value: STRING traffic_server
-      - name: CONFIG proxy.config.proxy_binary_opts
-        configFile: records.config
-        value: STRING -M
-      - name: CONFIG proxy.config.proxy_name
-        configFile: records.config
-        value: STRING __HOSTNAME__
-      - name: CONFIG proxy.config.remap.num_remap_threads
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.restart.active_client_threshold
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.reverse_proxy.enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.snapshot_dir
-        configFile: records.config
-        value: STRING snapshots
-      - name: CONFIG proxy.config.socks.accept_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.socks.accept_port
-        configFile: records.config
-        value: INT 1080
-      - name: CONFIG proxy.config.socks.connection_attempts
-        configFile: records.config
-        value: INT 4
-      - name: CONFIG proxy.config.socks.http_port
-        configFile: records.config
-        value: INT 80
-      - name: CONFIG proxy.config.socks.per_server_connection_attempts
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.socks.server_connect_timeout
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.socks.server_fail_threshold
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.socks.server_retry_time
-        configFile: records.config
-        value: INT 300
-      - name: CONFIG proxy.config.socks.server_retry_timeout
-        configFile: records.config
-        value: INT 300
-      - name: CONFIG proxy.config.socks.socks_config_file
-        configFile: records.config
-        value: STRING socks.config
-      - name: CONFIG proxy.config.socks.socks_needed
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.socks.socks_timeout
-        configFile: records.config
-        value: INT 100
-      - name: CONFIG proxy.config.socks.socks_version
-        configFile: records.config
-        value: INT 4
-      - name: CONFIG proxy.config.srv_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.CA.cert.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.CA.cert.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.TLSv1
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.TLSv1_1
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.TLSv1_2
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.allow_client_renegotiation
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.cert.load_elevated
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.client.CA.cert.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.client.CA.cert.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.client.cert.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.client.cert.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.client.certification_level
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.client.private_key.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.client.private_key.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.client.verify.server
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.handshake_timeout_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.hsts_include_subdomains
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.hsts_max_age
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.ssl.max_record_size
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.ocsp.cache_timeout
-        configFile: records.config
-        value: INT 3600
-      - name: CONFIG proxy.config.ssl.ocsp.enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.ocsp.request_timeout
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.ssl.ocsp.update_period
-        configFile: records.config
-        value: INT 60
-      - name: CONFIG proxy.config.ssl.server.cert.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.server.cert_chain.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.server.cipher_suite
-        configFile: records.config
-        value: STRING ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!RC4:!SRP:!DSS:!PSK:!aNULL:!eNULL:!SSLv2:@STRENGTH
-      - name: CONFIG proxy.config.ssl.server.dhparams_file
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.server.honor_cipher_order
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.server.multicert.filename
-        configFile: records.config
-        value: STRING ssl_multicert.config
-      - name: CONFIG proxy.config.ssl.server.private_key.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.server.session_ticket.enable
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.server.ticket_key.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.session_cache
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.ssl.session_cache.auto_clear
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.session_cache.num_buckets
-        configFile: records.config
-        value: INT 256
-      - name: CONFIG proxy.config.ssl.session_cache.size
-        configFile: records.config
-        value: INT 102400
-      - name: CONFIG proxy.config.ssl.session_cache.skip_cache_on_bucket_contention
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.session_cache.timeout
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.wire_trace_addr
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.wire_trace_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.wire_trace_percentage
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.wire_trace_server_name
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.syslog_facility
-        configFile: records.config
-        value: STRING LOG_DAEMON
-      - name: CONFIG proxy.config.system.file_max_pct
-        configFile: records.config
-        value: FLOAT 0.9
-      - name: CONFIG proxy.config.task_threads
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.thread.default.stacksize
-        configFile: records.config
-        value: INT 1048576
-      - name: CONFIG proxy.config.url_remap.filename
-        configFile: records.config
-        value: STRING remap.config
-      - name: CONFIG proxy.config.url_remap.pristine_host_hdr
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.url_remap.remap_required
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.websocket.active_timeout
-        configFile: records.config
-        value: INT 3600
-      - name: CONFIG proxy.config.websocket.no_activity_timeout
-        configFile: records.config
-        value: INT 600
-      - name: LOCAL proxy.config.cache.interim.storage
-        configFile: records.config
-        value: STRING NULL
-      - name: LOCAL proxy.local.cluster.type
-        configFile: records.config
-        value: INT 3
-      - name: LOCAL proxy.local.http.parent_proxy.disable_connect_tunneling
-        configFile: records.config
-        value: INT 0
-      - name: LOCAL proxy.local.log.collation_mode
-        configFile: records.config
-        value: INT 0
-      - name: location
-        configFile: records.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: location
-        configFile: regex_revalidate.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: location
-        configFile: remap.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: location
-        configFile: set_dscp_0.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_10.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_12.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_14.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_16.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_18.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_20.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_22.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_24.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_26.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_28.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_30.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_32.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_34.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_36.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_37.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_38.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_40.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_48.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_56.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: set_dscp_8.config
-        value: "/opt/trafficserver/etc/trafficserver/dscp"
-      - name: location
-        configFile: ssl_multicert.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: Disk_Volume
-        configFile: storage.config
-        value: '1'
-      - name: Drive_Letters
-        configFile: storage.config
-        value: b
-      - name: Drive_Prefix
-        configFile: storage.config
-        value: "/dev/vd"
-      - name: RAM_Drive_Letters
-        configFile: storage.config
-        value: "{{ dl_atsec_ram_drive_letters }}"
-      - name: RAM_Drive_Prefix
-        configFile: storage.config
-        value: "{{ dl_atsec_ram_drive_prefix }}"
-      - name: RAM_Volume
-        configFile: storage.config
-        value: '2'
-      - name: location
-        configFile: storage.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: location
-        configFile: volume.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: location
-        configFile: anymap_hdr_rw.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: data
-        configFile: anymap_hdr_rw.config
-        value: cond %{SEND_REQUEST_HDR_HOOK} __RETURN__ add-header FAKEORIGIN-ATS-ANYMAP-GLOBAL '%<cque>' __RETURN__ add-header FAKEORIGIN-ATS-ANYMAP-ORIGINAL-REQUESTOR '%<chi>' __RETURN__ cond %{SEND_RESPONSE_HDR_HOOK} __RETURN__ add-header ATS_ANYMAP_GLOBAL 'Anymap_Global_Match' [L]
-  - name: "{{ dl_ds_merged_profile_prefix_ansible_component_map.atsmid }}{{ Target_cdn_delegation }}"
-    description: "Mid cache({{ Target_cdn_delegation }}) - ATS"
+    parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.edge.common + dl_ds_default_profile_layers.ats.edge['v'+dl_ds_ats_major_version] }}"
+  - name: "EDGE_ATS_8_{{ Target_cdn_delegation }}"
+    description: "Edge cache({{ Target_cdn_delegation }}) - ATS 8"
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE
     routingDisabled: false
-    parameters:
-      - name: location
-        configFile: 12M_facts
-        value: "/opt/ort"
-      - name: location
-        configFile: 50-ats.rules
-        value: "/etc/udev/rules.d/"
-      - name: domain_name
-        configFile: CRConfig.json
-        value: "{{ Target_cdn_delegation_fqdn | lower }}"
-      - name: weight
-        configFile: CRConfig.json
-        value: '1.0'
-      - name: allow_ip
-        configFile: astats.config
-        value: "{{ dl_allow_ip4 }}"
-      - name: allow_ip6
-        configFile: astats.config
-        value: "{{ dl_allow_ip6 }}"
-      - name: location
-        configFile: astats.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: path
-        configFile: astats.config
-        value: _astats
-      - name: record_types
-        configFile: astats.config
-        value: '122'
-      - name: location
-        configFile: cache.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: location
-        configFile: cacheurl_qstring.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: trafficserver
-        configFile: chkconfig
-        value: '0:off\t1:off\t2:on\t3:on\t4:on\t5:on\t6:off'
-      - name: ramdisk_size
-        configFile: grub.conf
-        value: ramdisk_size=16777216
-      - name: location
-        configFile: hosting.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: coalesce_masklen_v4
-        configFile: ip_allow.config
-        value: '16'
-      - name: coalesce_masklen_v6
-        configFile: ip_allow.config
-        value: '40'
-      - name: coalesce_number_v4
-        configFile: ip_allow.config
-        value: '5'
-      - name: coalesce_number_v6
-        configFile: ip_allow.config
-        value: '5'
-      - name: location
-        configFile: ip_allow.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: purge_allow_ip
-        configFile: ip_allow.config
-        value: 127.0.0.1
-      - name: LogFormat.Format
-        configFile: logging.config
-        value: '%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqpv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas=\"%<{User-Agent}cqh>\"'
-      - name: LogFormat.Name
-        configFile: logging.config
-        value: custom_ats_2
-      - name: LogObject.Filename
-        configFile: logging.config
-        value: custom_ats_2
-      - name: LogObject.Format
-        configFile: logging.config
-        value: custom_ats_2
-      - name: LogObject.RollingEnabled
-        configFile: logging.config
-        value: '3'
-      - name: LogObject.RollingIntervalSec
-        configFile: logging.config
-        value: '86400'
-      - name: LogObject.RollingOffsetHr
-        configFile: logging.config
-        value: '11'
-      - name: LogObject.RollingSizeMb
-        configFile: logging.config
-        value: '1024'
-      - name: location
-        configFile: logging.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: trafficserver
-        configFile: package
-        value: "{{ dl_ats_version }}"
-      - name: trafficserver-debuginfo
-        configFile: package
-        value: "{{ dl_ats_version }}"
-      - name: location
-        configFile: parent.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: weight
-        configFile: parent.config
-        value: '1.2'
-      - name: astats_over_http.so
-        configFile: plugin.config
-        value: ''
-      - name: location
-        configFile: plugin.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: regex_revalidate.so
-        configFile: plugin.config
-        value: "--disable-timed-updates --config regex_revalidate.config"
-      - name: health.connection.timeout
-        configFile: rascal.properties
-        value: '2000'
-      - name: health.polling.url
-        configFile: rascal.properties
-        value: http://${hostname}/_astats?application=&inf.name=${interface_name}
-      - name: health.threshold.availableBandwidthInKbps
-        configFile: rascal.properties
-        value: ">100000"
-      - name: health.threshold.loadavg
-        configFile: rascal.properties
-        value: '25.0'
-      - name: health.threshold.queryTime
-        configFile: rascal.properties
-        value: '1000'
-      - name: history.count
-        configFile: rascal.properties
-        value: '30'
-      - name: CONFIG proxy.config.accept_threads
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.admin.admin_user
-        configFile: records.config
-        value: STRING admin
-      - name: CONFIG proxy.config.admin.api.restricted
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.admin.number_config_bak
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.admin.synthetic_port
-        configFile: records.config
-        value: INT 8083
-      - name: CONFIG proxy.config.admin.user_id
-        configFile: records.config
-        value: STRING ats
-      - name: CONFIG proxy.config.alarm.abs_path
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.alarm.bin
-        configFile: records.config
-        value: STRING example_alarm_bin.sh
-      - name: CONFIG proxy.config.alarm.script_runtime
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.alarm_email
-        configFile: records.config
-        value: STRING ats
-      - name: CONFIG proxy.config.allocator.dontdump_iobuffers
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.allocator.hugepages
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.allocator.thread_freelist_low_watermark
-        configFile: records.config
-        value: INT 32
-      - name: CONFIG proxy.config.allocator.thread_freelist_size
-        configFile: records.config
-        value: INT 1024
-      - name: CONFIG proxy.config.bin_path
-        configFile: records.config
-        value: STRING bin
-      - name: CONFIG proxy.config.body_factory.enable_customizations
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.body_factory.enable_logging
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.body_factory.response_suppression_mode
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.body_factory.template_sets_dir
-        configFile: records.config
-        value: STRING etc/trafficserver/body_factory
-      - name: CONFIG proxy.config.cache.alt_rewrite_max_size
-        configFile: records.config
-        value: INT 4096
-      - name: CONFIG proxy.config.cache.control.filename
-        configFile: records.config
-        value: STRING cache.config
-      - name: CONFIG proxy.config.cache.enable_checksum
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cache.enable_read_while_writer
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cache.force_sector_size
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.hit_evacuate_percent
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.hit_evacuate_size_limit
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.hostdb.sync_frequency
-        configFile: records.config
-        value: INT 120
-      - name: CONFIG proxy.config.cache.hosting_filename
-        configFile: records.config
-        value: STRING hosting.config
-      - name: CONFIG proxy.config.cache.limits.http.max_alts
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.cache.max_doc_size
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.min_average_object_size
-        configFile: records.config
-        value: INT 131072
-      - name: CONFIG proxy.config.cache.mutex_retry_delay
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.cache.permit.pinning
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.ram_cache.algorithm
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cache.ram_cache.compress
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cache.ram_cache.size
-        configFile: records.config
-        value: "INT {{ (dl_atsmid_ram_cache_size_mb | float * 1000000) | int }}"
-      - name: CONFIG proxy.config.cache.ram_cache.use_seen_filter
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cache.ram_cache_cutoff
-        configFile: records.config
-        value: "INT {{ (dl_atsmid_ram_cache_max_obj_size_mb | float * 1000000) | int }}"
-      - name: CONFIG proxy.config.cache.read_while_writer.max_retries
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.cache.read_while_writer_retry.delay
-        configFile: records.config
-        value: INT 50
-      - name: CONFIG proxy.config.cache.target_fragment_size
-        configFile: records.config
-        value: INT 1048576
-      - name: CONFIG proxy.config.cache.threads_per_disk
-        configFile: records.config
-        value: INT 8
-      - name: 'CONFIG proxy.config.cluster.cluster_configuration '
-        configFile: records.config
-        value: STRING cluster.config
-      - name: CONFIG proxy.config.cluster.cluster_port
-        configFile: records.config
-        value: INT 8086
-      - name: CONFIG proxy.config.cluster.ethernet_interface
-        configFile: records.config
-        value: STRING lo
-      - name: CONFIG proxy.config.cluster.log_bogus_mc_msgs
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cluster.mc_group_addr
-        configFile: records.config
-        value: STRING 224.0.1.37
-      - name: CONFIG proxy.config.cluster.mc_ttl
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.cluster.mcport
-        configFile: records.config
-        value: INT 8089
-      - name: CONFIG proxy.config.cluster.rsport
-        configFile: records.config
-        value: INT 8088
-      - name: CONFIG proxy.config.cluster.startup_timeout
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.cluster.threads
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.config_dir
-        configFile: records.config
-        value: STRING etc/trafficserver
-      - name: CONFIG proxy.config.cop.active_health_checks
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cop.core_signal
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cop.init_sleep_time
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cop.linux_min_memfree_kb
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.cop.linux_min_swapfree_kb
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.core_limit
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.crash_log_helper
-        configFile: records.config
-        value: STRING /tmp/backtrace/invoker.sh
-      - name: CONFIG proxy.config.diags.debug.enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.diags.debug.tags
-        configFile: records.config
-        value: STRING http.*|dns.*
-      - name: CONFIG proxy.config.diags.logfile.rolling_enabled
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.diags.logfile.rolling_interval_sec
-        configFile: records.config
-        value: INT 3600
-      - name: CONFIG proxy.config.diags.logfile.rolling_size_mb
-        configFile: records.config
-        value: INT 1024
-      - name: CONFIG proxy.config.diags.output.alert
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.output.debug
-        configFile: records.config
-        value: STRING E
-      - name: CONFIG proxy.config.diags.output.diag
-        configFile: records.config
-        value: STRING E
-      - name: CONFIG proxy.config.diags.output.emergency
-        configFile: records.config
-        value: STRING SL
-      - name: CONFIG proxy.config.diags.output.error
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.output.fatal
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.output.note
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.output.status
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.output.warning
-        configFile: records.config
-        value: STRING L
-      - name: CONFIG proxy.config.diags.show_location
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.disable_configuration_modification
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dns.dedicated_thread
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dns.lookup_timeout
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.dns.max_dns_in_flight
-        configFile: records.config
-        value: INT 2048
-      - name: CONFIG proxy.config.dns.nameservers
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.dns.resolv_conf
-        configFile: records.config
-        value: STRING /etc/resolv.conf
-      - name: CONFIG proxy.config.dns.round_robin_nameservers
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dns.search_default_domains
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dns.splitDNS.enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dns.validate_query_name
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.dump_mem_info_frequency
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.exec_thread.affinity
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.exec_thread.autoconfig
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.exec_thread.autoconfig.scale
-        configFile: records.config
-        value: FLOAT 1.5
-      - name: CONFIG proxy.config.exec_thread.limit
-        configFile: records.config
-        value: INT 32
-      - name: CONFIG proxy.config.header.parse.no_host_url_redirect
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.hostdb.fail.timeout
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.hostdb.filename
-        configFile: records.config
-        value: STRING host.db
-      - name: CONFIG proxy.config.hostdb.host_file.interval
-        configFile: records.config
-        value: INT 86400
-      - name: CONFIG proxy.config.hostdb.host_file.path
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.hostdb.ip_resolve
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.hostdb.lookup_timeout
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.hostdb.max_count
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.hostdb.max_size
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.hostdb.partitions
-        configFile: records.config
-        value: INT 64
-      - name: CONFIG proxy.config.hostdb.serve_stale_for
-        configFile: records.config
-        value: INT 12
-      - name: CONFIG proxy.config.hostdb.strict_round_robin
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.hostdb.timed_round_robin
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.hostdb.timeout
-        configFile: records.config
-        value: INT 1440
-      - name: CONFIG proxy.config.hostdb.ttl_mode
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.hostdb.verify_after
-        configFile: records.config
-        value: INT 720
-      - name: CONFIG proxy.config.http.accept_no_activity_timeout
-        configFile: records.config
-        value: INT 120
-      - name: CONFIG proxy.config.http.anonymize_other_header_list
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.http.anonymize_remove_client_ip
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.anonymize_remove_cookie
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.anonymize_remove_from
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.anonymize_remove_referer
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.anonymize_remove_user_agent
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.attach_server_session_to_client
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.auth_server_session_private
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.background_fill_active_timeout
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.background_fill_completed_threshold
-        configFile: records.config
-        value: FLOAT 0.0
-      - name: CONFIG proxy.config.http.cache.allow_empty_doc
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.cache_responses_to_cookies
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.cache_urls_that_look_dynamic
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.cluster_cache_local
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.enable_default_vary_headers
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.fuzz.min_time
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.fuzz.probability
-        configFile: records.config
-        value: FLOAT 0.005
-      - name: CONFIG proxy.config.http.cache.fuzz.time
-        configFile: records.config
-        value: INT 240
-      - name: CONFIG proxy.config.http.cache.generation
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.http.cache.guaranteed_max_lifetime
-        configFile: records.config
-        value: INT 2592000
-      - name: CONFIG proxy.config.http.cache.guaranteed_min_lifetime
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.heuristic_lm_factor
-        configFile: records.config
-        value: FLOAT 0.10
-      - name: CONFIG proxy.config.http.cache.heuristic_max_lifetime
-        configFile: records.config
-        value: INT 86400
-      - name: CONFIG proxy.config.http.cache.heuristic_min_lifetime
-        configFile: records.config
-        value: INT 3600
-      - name: CONFIG proxy.config.http.cache.http
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.ignore_accept_charset_mismatch
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.http.cache.ignore_accept_encoding_mismatch
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.ignore_accept_language_mismatch
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.http.cache.ignore_accept_mismatch
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.http.cache.ignore_authentication
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.ignore_client_cc_max_age
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.ignore_client_no_cache
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.ignore_server_no_cache
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.ims_on_client_no_cache
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.max_open_read_retries
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.http.cache.max_open_write_retries
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.max_stale_age
-        configFile: records.config
-        value: INT 604800
-      - name: CONFIG proxy.config.http.cache.open_read_retry_time
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http.cache.open_write_fail_action
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.range.lookup
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.cache.range.write
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.required_headers
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.cache.vary_default_images
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.http.cache.vary_default_other
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.http.cache.vary_default_text
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.http.cache.when_to_revalidate
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.chunking.size
-        configFile: records.config
-        value: INT 4096
-      - name: CONFIG proxy.config.http.chunking_enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.congestion_control.enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.connect_attempts_max_retries
-        configFile: records.config
-        value: INT 6
-      - name: CONFIG proxy.config.http.connect_attempts_max_retries_dead_server
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.http.connect_attempts_rr_retries
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.connect_attempts_timeout
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http.connect_ports
-        configFile: records.config
-        value: STRING 443 563
-      - name: CONFIG proxy.config.http.default_buffer_size
-        configFile: records.config
-        value: INT 8
-      - name: CONFIG proxy.config.http.default_buffer_water_mark
-        configFile: records.config
-        value: INT 32768
-      - name: CONFIG proxy.config.http.disallow_post_100_continue
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.doc_in_cache_skip_dns
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.down_server.abort_threshold
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http.down_server.cache_time
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.http.enable_http_info
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.enable_http_stats
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.errors.log_error_pages
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.flow_control.enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.flow_control.high_water
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.flow_control.low_water
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.forward.proxy_auth_to_parent
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.forward_connect_method
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.insert_age_in_response
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.insert_client_ip
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.insert_request_via_str
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.insert_response_via_str
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.http.insert_squid_x_forwarded_for
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.keep_alive_enabled_in
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.keep_alive_enabled_out
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.keep_alive_no_activity_timeout_in
-        configFile: records.config
-        value: INT 115
-      - name: CONFIG proxy.config.http.keep_alive_no_activity_timeout_out
-        configFile: records.config
-        value: INT 120
-      - name: CONFIG proxy.config.http.keep_alive_post_out
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.negative_caching_enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.negative_caching_lifetime
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.negative_revalidating_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.negative_revalidating_lifetime
-        configFile: records.config
-        value: INT 1800
-      - name: CONFIG proxy.config.http.no_dns_just_forward_to_parent
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.normalize_ae_gzip
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.number_of_redirections
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.origin_max_connections
-        configFile: records.config
-        value: INT 10000
-      - name: CONFIG proxy.config.http.origin_max_connections_queue
-        configFile: records.config
-        value: INT 10000
-      - name: CONFIG proxy.config.http.origin_min_keep_alive_connections
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.http.parent_proxy.fail_threshold
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http.parent_proxy.file
-        configFile: records.config
-        value: STRING parent.config
-      - name: CONFIG proxy.config.http.parent_proxy.mark_down_hostdb
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.parent_proxy.per_parent_connect_attempts
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.http.parent_proxy.retry_time
-        configFile: records.config
-        value: INT 60
-      - name: CONFIG proxy.config.http.parent_proxy.total_connect_attempts
-        configFile: records.config
-        value: INT 4
-      - name: CONFIG proxy.config.http.parent_proxy_routing_enable
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.post.check.content_length.enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.post_connect_attempts_timeout
-        configFile: records.config
-        value: INT 1800
-      - name: CONFIG proxy.config.http.push_method_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.record_heartbeat
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.redirect_host_no_port
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.redirect_use_orig_cache_key
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.redirection_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.referer_default_redirect
-        configFile: records.config
-        value: STRING http://www.kabletown.invalid/
-      - name: CONFIG proxy.config.http.referer_filter
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.referer_format_redirect
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.request_header_max_size
-        configFile: records.config
-        value: INT 131072
-      - name: CONFIG proxy.config.http.response_header_max_size
-        configFile: records.config
-        value: INT 131072
-      - name: CONFIG proxy.config.http.response_server_enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.safe_requests_retryable
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.send_100_continue_response
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.send_http11_requests
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.server_max_connections
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.server_ports
-        configFile: records.config
-        value: STRING 80 80:ipv6 443:proto=http:ssl 443:ipv6:proto=http:ssl
-      - name: CONFIG proxy.config.http.server_session_sharing.match
-        configFile: records.config
-        value: STRING both
-      - name: CONFIG proxy.config.http.server_session_sharing.pool
-        configFile: records.config
-        value: STRING thread
-      - name: CONFIG proxy.config.http.server_tcp_init_cwnd
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.slow.log.threshold
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.strict_uri_parsing
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.transaction_active_timeout_in
-        configFile: records.config
-        value: INT 900
-      - name: CONFIG proxy.config.http.transaction_active_timeout_out
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.transaction_no_activity_timeout_in
-        configFile: records.config
-        value: INT 30
-      - name: CONFIG proxy.config.http.transaction_no_activity_timeout_out
-        configFile: records.config
-        value: INT 30
-      - name: CONFIG proxy.config.http.uncacheable_requests_bypass_parent
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.http.use_client_target_addr
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http.wait_for_cache
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.http.websocket.max_number_of_connections
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.http2.header_table_size
-        configFile: records.config
-        value: INT 4096
-      - name: CONFIG proxy.config.http2.initial_window_size_in
-        configFile: records.config
-        value: INT 1048576
-      - name: CONFIG proxy.config.http2.max_active_streams_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http2.max_concurrent_streams_in
-        configFile: records.config
-        value: INT 100
-      - name: CONFIG proxy.config.http2.max_frame_size
-        configFile: records.config
-        value: INT 16384
-      - name: CONFIG proxy.config.http2.max_header_list_size
-        configFile: records.config
-        value: INT 4294967295
-      - name: CONFIG proxy.config.http2.min_concurrent_streams_in
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.http2.push_diary_size
-        configFile: records.config
-        value: INT 256
-      - name: CONFIG proxy.config.http2.stream_priority_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.http_ui_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.log.auto_delete_rolled_files
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.log.collation_client_timeout
-        configFile: records.config
-        value: INT 86400
-      - name: CONFIG proxy.config.log.collation_host
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.log.collation_host_tagged
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.log.collation_host_timeout
-        configFile: records.config
-        value: INT 86390
-      - name: CONFIG proxy.config.log.collation_port
-        configFile: records.config
-        value: INT 8085
-      - name: CONFIG proxy.config.log.collation_retry_sec
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.log.collation_secret
-        configFile: records.config
-        value: STRING foobar
-      - name: CONFIG proxy.config.log.config.filename
-        configFile: records.config
-        value: STRING logging.config
-      - name: CONFIG proxy.config.log.hostname
-        configFile: records.config
-        value: STRING localhost
-      - name: CONFIG proxy.config.log.logfile_dir
-        configFile: records.config
-        value: STRING var/log/trafficserver
-      - name: CONFIG proxy.config.log.logfile_perm
-        configFile: records.config
-        value: STRING rw-r--r--
-      - name: CONFIG proxy.config.log.logging_enabled
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.log.max_secs_per_buffer
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.log.max_space_mb_for_logs
-        configFile: records.config
-        value: INT 25000
-      - name: CONFIG proxy.config.log.max_space_mb_for_orphan_logs
-        configFile: records.config
-        value: INT 25
-      - name: CONFIG proxy.config.log.max_space_mb_headroom
-        configFile: records.config
-        value: INT 1000
-      - name: CONFIG proxy.config.log.periodic_tasks_interval
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.log.rolling_enabled
-        configFile: records.config
-        value: INT 3
-      - name: CONFIG proxy.config.log.rolling_interval_sec
-        configFile: records.config
-        value: INT 86400
-      - name: CONFIG proxy.config.log.rolling_offset_hr
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.log.rolling_size_mb
-        configFile: records.config
-        value: INT 1024
-      - name: CONFIG proxy.config.log.sampling_frequency
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.manager_binary
-        configFile: records.config
-        value: STRING traffic_manager
-      - name: CONFIG proxy.config.mlock_enabled
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.net.accept_period
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.net.connections_throttle
-        configFile: records.config
-        value: INT 500000
-      - name: CONFIG proxy.config.net.default_inactivity_timeout
-        configFile: records.config
-        value: INT 180
-      - name: CONFIG proxy.config.net.defer_accept
-        configFile: records.config
-        value: INT 45
-      - name: CONFIG proxy.config.net.event_period
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.net.inactivity_check_frequency
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.net.listen_backlog
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.net.max_connections_active_in
-        configFile: records.config
-        value: INT 500000
-      - name: CONFIG proxy.config.net.max_connections_in
-        configFile: records.config
-        value: INT 500000
-      - name: CONFIG proxy.config.net.poll_timeout
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.net.retry_delay
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.net.sock_mss_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_option_flag_in
-        configFile: records.config
-        value: INT 5
-      - name: CONFIG proxy.config.net.sock_option_flag_out
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.net.sock_packet_mark_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_packet_mark_out
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_packet_tos_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_packet_tos_out
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_recv_buffer_size_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_recv_buffer_size_out
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.sock_send_buffer_size_in
-        configFile: records.config
-        value: INT 262144
-      - name: CONFIG proxy.config.net.sock_send_buffer_size_out
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.net.throttle_delay
-        configFile: records.config
-        value: INT 50
-      - name: CONFIG proxy.config.output.logfile
-        configFile: records.config
-        value: STRING traffic.out
-      - name: CONFIG proxy.config.output.logfile.rolling_enabled
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.output.logfile.rolling_interval_sec
-        configFile: records.config
-        value: INT 3600
-      - name: CONFIG proxy.config.output.logfile.rolling_size_mb
-        configFile: records.config
-        value: INT 1024
-      - name: CONFIG proxy.config.process_manager.mgmt_port
-        configFile: records.config
-        value: INT 8084
-      - name: CONFIG proxy.config.product_company
-        configFile: records.config
-        value: STRING Apache
-      - name: CONFIG proxy.config.product_name
-        configFile: records.config
-        value: STRING Traffic
-      - name: CONFIG proxy.config.product_vendor
-        configFile: records.config
-        value: STRING Apache
-      - name: CONFIG proxy.config.proxy_binary
-        configFile: records.config
-        value: STRING traffic_server
-      - name: CONFIG proxy.config.proxy_binary_opts
-        configFile: records.config
-        value: STRING -M
-      - name: CONFIG proxy.config.proxy_name
-        configFile: records.config
-        value: STRING __HOSTNAME__
-      - name: CONFIG proxy.config.remap.num_remap_threads
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.restart.active_client_threshold
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.reverse_proxy.enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.snapshot_dir
-        configFile: records.config
-        value: STRING snapshots
-      - name: CONFIG proxy.config.socks.accept_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.socks.accept_port
-        configFile: records.config
-        value: INT 1080
-      - name: CONFIG proxy.config.socks.connection_attempts
-        configFile: records.config
-        value: INT 4
-      - name: CONFIG proxy.config.socks.http_port
-        configFile: records.config
-        value: INT 80
-      - name: CONFIG proxy.config.socks.per_server_connection_attempts
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.socks.server_connect_timeout
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.socks.server_fail_threshold
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.socks.server_retry_time
-        configFile: records.config
-        value: INT 300
-      - name: CONFIG proxy.config.socks.server_retry_timeout
-        configFile: records.config
-        value: INT 300
-      - name: CONFIG proxy.config.socks.socks_config_file
-        configFile: records.config
-        value: STRING socks.config
-      - name: CONFIG proxy.config.socks.socks_needed
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.socks.socks_timeout
-        configFile: records.config
-        value: INT 100
-      - name: CONFIG proxy.config.socks.socks_version
-        configFile: records.config
-        value: INT 4
-      - name: CONFIG proxy.config.srv_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.CA.cert.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.CA.cert.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.TLSv1
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.TLSv1_1
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.TLSv1_2
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.allow_client_renegotiation
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.cert.load_elevated
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.client.CA.cert.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.client.CA.cert.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.client.cert.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.client.cert.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.client.certification_level
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.client.private_key.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.client.private_key.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.client.verify.server
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.handshake_timeout_in
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.hsts_include_subdomains
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.hsts_max_age
-        configFile: records.config
-        value: INT -1
-      - name: CONFIG proxy.config.ssl.max_record_size
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.ocsp.cache_timeout
-        configFile: records.config
-        value: INT 3600
-      - name: CONFIG proxy.config.ssl.ocsp.enabled
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.ocsp.request_timeout
-        configFile: records.config
-        value: INT 10
-      - name: CONFIG proxy.config.ssl.ocsp.update_period
-        configFile: records.config
-        value: INT 60
-      - name: CONFIG proxy.config.ssl.server.cert.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.server.cert_chain.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.server.cipher_suite
-        configFile: records.config
-        value: STRING ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!RC4:!SRP:!DSS:!PSK:!aNULL:!eNULL:!SSLv2:@STRENGTH
-      - name: CONFIG proxy.config.ssl.server.dhparams_file
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.server.honor_cipher_order
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.server.private_key.path
-        configFile: records.config
-        value: STRING etc/trafficserver/ssl
-      - name: CONFIG proxy.config.ssl.server.session_ticket.enable
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.server.ticket_key.filename
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.session_cache
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.ssl.session_cache.auto_clear
-        configFile: records.config
-        value: INT 1
-      - name: CONFIG proxy.config.ssl.session_cache.num_buckets
-        configFile: records.config
-        value: INT 256
-      - name: CONFIG proxy.config.ssl.session_cache.size
-        configFile: records.config
-        value: INT 102400
-      - name: CONFIG proxy.config.ssl.session_cache.skip_cache_on_bucket_contention
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.session_cache.timeout
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.wire_trace_addr
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.ssl.wire_trace_enabled
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.wire_trace_percentage
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.ssl.wire_trace_server_name
-        configFile: records.config
-        value: STRING NULL
-      - name: CONFIG proxy.config.syslog_facility
-        configFile: records.config
-        value: STRING LOG_DAEMON
-      - name: CONFIG proxy.config.system.file_max_pct
-        configFile: records.config
-        value: FLOAT 0.9
-      - name: CONFIG proxy.config.task_threads
-        configFile: records.config
-        value: INT 2
-      - name: CONFIG proxy.config.thread.default.stacksize
-        configFile: records.config
-        value: INT 1048576
-      - name: CONFIG proxy.config.url_remap.filename
-        configFile: records.config
-        value: STRING remap.config
-      - name: CONFIG proxy.config.url_remap.pristine_host_hdr
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.url_remap.remap_required
-        configFile: records.config
-        value: INT 0
-      - name: CONFIG proxy.config.websocket.active_timeout
-        configFile: records.config
-        value: INT 3600
-      - name: CONFIG proxy.config.websocket.no_activity_timeout
-        configFile: records.config
-        value: INT 600
-      - name: LOCAL proxy.local.cluster.type
-        configFile: records.config
-        value: INT 3
-      - name: LOCAL proxy.local.http.parent_proxy.disable_connect_tunneling
-        configFile: records.config
-        value: INT 0
-      - name: LOCAL proxy.local.log.collation_mode
-        configFile: records.config
-        value: INT 0
-      - name: location
-        configFile: records.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: location
-        configFile: regex_revalidate.config
-        value: "/opt/trafficserver/etc/trafficserver"
-      - name: location
-        configFile: remap.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: Disk_Volume
-        configFile: storage.config
-        value: '1'
-      - name: Drive_Letters
-        configFile: storage.config
-        value: b
-      - name: Drive_Prefix
-        configFile: storage.config
-        value: "/dev/vd"
-      - name: RAM_Drive_Letters
-        configFile: storage.config
-        value: "{{ dl_atsmid_ram_drive_letters }}"
-      - name: RAM_Drive_Prefix
-        configFile: storage.config
-        value: "{{ dl_atsmid_ram_drive_prefix }}"
-      - name: RAM_Volume
-        configFile: storage.config
-        value: '2'
-      - name: location
-        configFile: storage.config
-        value: "/opt/trafficserver/etc/trafficserver/"
-      - name: location
-        configFile: volume.config
-        value: "/opt/trafficserver/etc/trafficserver/"
+    parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.edge.common + dl_ds_default_profile_layers.ats.edge['v'+dl_ds_ats_major_version] }}"
+  - name: "MID_ATS_7_{{ Target_cdn_delegation }}"
+    description: "Mid cache({{ Target_cdn_delegation }}) - ATS 7"
+    cdn: "{{ Target_cdn_delegation }}"
+    type: ATS_PROFILE
+    routingDisabled: false
+    parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.mid.common + dl_ds_default_profile_layers.ats.mid['v'+dl_ds_ats_major_version] }}"
+  - name: "MID_ATS_8_{{ Target_cdn_delegation }}"
+    description: "Mid cache({{ Target_cdn_delegation }}) - ATS 8"
+    cdn: "{{ Target_cdn_delegation }}"
+    type: ATS_PROFILE
+    routingDisabled: false
+    parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.mid.common + dl_ds_default_profile_layers.ats.mid['v'+dl_ds_ats_major_version] }}"
   - name: "DS_{{ target_xmlId }}_consistenthash"
     description: "MSO {{ target_xmlId }} - consistent hash"
     cdn: "{{ Target_cdn_delegation }}"
@@ -3853,7 +1893,7 @@ dl_ds_default_ds_template:
     uniqueKey: simple-dns-live-nat
   - displayName: Global ANY_MAP DS
     longDesc: A basic ANY_MAP routed Delivery Service to catch all unmapped ATS requests and add some extra headers
-    remapText: "map / http://{{ groups['fakeorigin'] | first }}/ @plugin=header_rewrite.so @pparam=anymap_hdr_rw.config"
+    remapText: "map / http://{{ dl_hosts_fakeorigin | first }}/ @plugin=header_rewrite.so @pparam=anymap_hdr_rw.config"
     typeName: ANY_MAP
     uniqueKey: global-any-map
   - displayName: Steering with ordered targets DS

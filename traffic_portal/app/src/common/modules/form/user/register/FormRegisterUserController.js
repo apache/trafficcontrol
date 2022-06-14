@@ -43,10 +43,6 @@ var FormRegisterUserController = function($scope, $location, formUtils, tenantUt
 		userService.registerUser(registration);
 	};
 
-	$scope.tenantLabel = function(tenant) {
-		return '-'.repeat(tenant.level) + ' ' + tenant.name;
-	};
-
 	$scope.roleLabel = function(role) {
 		return role.name;
 	};

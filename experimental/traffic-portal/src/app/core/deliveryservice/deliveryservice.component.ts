@@ -11,16 +11,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { faBroom } from "@fortawesome/free-solid-svg-icons";
-
 import { Subject } from "rxjs";
 
-import { DataPoint, DataSet, DeliveryService } from "../../models";
-import { DeliveryServiceService } from "../../shared/api";
-import {AlertService} from "../../shared/alert/alert.service";
+import { DeliveryServiceService } from "src/app/api";
+import type { DataPoint, DataSet, DeliveryService } from "src/app/models";
+import { AlertService } from "src/app/shared/alert/alert.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * DeliveryserviceComponent is the controller for a single Delivery Service's
@@ -36,19 +36,11 @@ export class DeliveryserviceComponent implements OnInit {
 	/** The Delivery Service described by this component. */
 	public deliveryservice = {} as DeliveryService;
 
-	/** A map of the names of charts to whether or not they've been loaded. */
-	public loaded = new Map([["main", false], ["bandwidth", false]]);
-
 	/** Data for the bandwidth chart. */
-	public bandwidthData: Subject<Array<DataSet>>;
+	public bandwidthData = new Subject<[DataSet]>();
 
 	/** Data for the transactions per second chart. */
 	public tpsChartData: Subject<Array<DataSet>>;
-
-	/** Bandwidth data at the Edge-tier level. */
-	private readonly edgeBandwidth: DataSet;
-	/** Bandwidth data at the Mid-tier level. */
-	private readonly midBandwidth: DataSet;
 
 	/** Icon for the content invalidation FAB. */
 	public readonly invalidateIcon=faBroom;
@@ -91,25 +83,16 @@ export class DeliveryserviceComponent implements OnInit {
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly api: DeliveryServiceService,
-		private readonly alerts: AlertService
+		private readonly alerts: AlertService,
+		private readonly headerSvc: TpHeaderService
 	) {
-		this.midBandwidth = {
-			backgroundColor: "#3CBA9F",
-			borderColor: "#3CBA9F",
-			data: new Array<DataPoint>(),
-			fill: false,
-			label: "Mid-Tier"
-		};
-
-		this.edgeBandwidth = {
+		this.bandwidthData.next([{
 			backgroundColor: "#BA3C57",
 			borderColor: "#BA3C57",
 			data: new Array<DataPoint>(),
 			fill: false,
 			label: "Edge-Tier"
-		};
-
-		this.bandwidthData = new Subject<Array<DataSet>>();
+		}]);
 		this.tpsChartData = new Subject<Array<DataSet>>();
 	}
 
@@ -118,12 +101,6 @@ export class DeliveryserviceComponent implements OnInit {
 	 * fetching data.
 	 */
 	public ngOnInit(): void {
-		const DSID = this.route.snapshot.paramMap.get("id");
-		if (!DSID) {
-			console.error("Missing route 'id' parameter");
-			return;
-		}
-
 		this.to.setUTCMilliseconds(0);
 		this.from = new Date(this.to.getFullYear(), this.to.getMonth(), this.to.getDate());
 
@@ -137,12 +114,18 @@ export class DeliveryserviceComponent implements OnInit {
 		const timeStr = String(this.to.getHours()).padStart(2, "0").concat(":", String(this.to.getMinutes()).padStart(2, "0"));
 		this.toTime = new FormControl(timeStr);
 
+		const DSID = this.route.snapshot.paramMap.get("id");
+		if (!DSID) {
+			console.error("Missing route 'id' parameter");
+			return;
+		}
+
 		this.api.getDeliveryServices(parseInt(DSID, 10)).then(
 			d => {
 				this.deliveryservice = d;
-				this.loaded.set("main", true);
 				this.loadBandwidth();
 				this.loadTPS();
+				this.headerSvc.headerTitle.next(d.displayName);
 			}
 		);
 	}
@@ -168,7 +151,7 @@ export class DeliveryserviceComponent implements OnInit {
 	/**
 	 * Loads new data for the bandwidth chart.
 	 */
-	private loadBandwidth(): void {
+	private async loadBandwidth(): Promise<void> {
 		let interval: string;
 		if (this.bucketSize < 1) {
 			interval = "1m";
@@ -178,43 +161,29 @@ export class DeliveryserviceComponent implements OnInit {
 
 		const xmlID = this.deliveryservice.xmlId;
 
-		// Edge-tier data
-		this.api.getDSKBPS(xmlID, this.from, this.to, interval, false).then(
-			data => {
-				const va = new Array<DataPoint>();
-				for (const v of data.series.values) {
-					if (v[1] === null) {
-						continue;
-					}
-					va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
-				}
-				this.edgeBandwidth.data = va;
-				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
-			},
-			e => {
-				this.alerts.newAlert("warning", "Edge-Tier bandwidth data not found!");
-				console.error(`Failed to get edge KBPS data for '${xmlID}':`, e);
-			}
-		);
+		let data;
+		try {
+			data = await this.api.getDSKBPS(xmlID, this.from, this.to, interval, false);
+		} catch (e) {
+			this.alerts.newAlert("warning", "Edge-Tier bandwidth data not found!");
+			console.error(`Failed to get edge KBPS data for '${xmlID}':`, e);
+			return;
+		}
 
-		// Mid-tier data
-		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, interval, true).then(
-			data => {
-				const va = new Array<DataPoint>();
-				for (const v of data.series.values) {
-					if (v[1] === null) {
-						continue;
-					}
-					va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
-				}
-				this.midBandwidth.data = va;
-				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
-			},
-			e => {
-				this.alerts.newAlert("warning", "Mid-Tier bandwidth data not found!");
-				console.error(`Failed to get mid KBPS data for '${xmlID}':`, e);
+		const chartData = {
+			backgroundColor: "#BA3C57",
+			borderColor: "#BA3C57",
+			data: new Array<DataPoint>(),
+			fill: false,
+			label: "Edge-Tier"
+		};
+		for (const v of data.series.values) {
+			if (v[1] === null) {
+				continue;
 			}
-		);
+			chartData.data.push({t: new Date(v[0]), y: v[1]});
+		}
+		this.bandwidthData.next([chartData]);
 	}
 
 	/**

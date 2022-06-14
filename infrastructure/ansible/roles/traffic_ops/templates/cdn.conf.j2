@@ -49,6 +49,8 @@
       "password" : "{{ to_smtp_password }}",
       "address" : "{{ to_smtp_address }}"
    },
+   "user_cache_refresh_interval_sec": {{ to_user_cache_refresh_interval_sec }},
+   "server_update_status_cache_refresh_interval_sec": {{ to_server_update_status_cache_refresh_interval_sec }},
    "disable_auto_cert_deletion": {{ to_disable_auto_cert_deletion | bool | lower }},
    "use_ims": {{ to_use_ims | bool | lower }},
    "role_based_permissions": {{ to_use_rbp | bool | lower }},
@@ -89,5 +91,12 @@
          "MaxTLSVersion": "{{ to_riak_tls_max_version }}"
 {% endif %}
       }
+   },
+   "lets_encrypt": {
+      "user_email": "{{ to_le_user_email }}",
+      "send_expiration_email": {{ to_le_send_expiration_email | bool | lower }},
+      "convert_self_signed": {{ to_le_convert_self_signed | bool | lower }},
+      "renew_days_before_expiration": {{ to_le_renew_days_before_expiration | int }},
+      "environment": "{{ to_le_environment }}"
    }
 }

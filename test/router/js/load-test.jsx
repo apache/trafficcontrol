@@ -12,29 +12,41 @@
 	limitations under the License.
 */}
 
-if ( ! Array.prototype.groupBy) {
-    Array.prototype.groupBy = function (f)
-    {
-        var groups = {};
-        this.forEach(function(o) {
-            var group = JSON.stringify(f(o));
-            groups[group] = groups[group] || [];
-            groups[group].push(o);
-        });
-
-        return Object.keys(groups).map(function (group) {
-            return groups[group];
-        });
-    };
+/**
+ * Creates an array of arrays of elements that return the same value from the
+ * given function.
+ *
+ * @template T
+ * @param {Array<T>} a The array to group.
+ * @param {(e: T) => string} f The grouping function; values in `a` that return
+ * the same value from this function will be grouped together.
+ * @returns {Array<Array<T>>} All of the elements of `a`, grouped by `f`.
+ */
+function groupBy(a, f) {
+    /** @type Record<string, Array<T>> */
+    const groups = {};
+    for (const element of a) {
+        const group = f(element);
+        if (group in groups) {
+            groups[group].push(element);
+        } else {
+            groups[group] = [element];
+        }
+    }
+    return Object.keys(groups).map(g=>groups[g]);
 }
 
-if (!Array.prototype.unique) {
-    Array.prototype.unique = function(a){
-        return function() {
-            return this.filter(a);
-        }
-    }(function (a,b,c) { return c.indexOf(a, b + 1) < 0; }
-    );
+/**
+ * Gets the unique elements of an Array as a new Array. Does not modify Arrays
+ * in-place.
+ *
+ * @template T
+ * @param {Array<T>} a The array to be unique'd.
+ * @returns {Array<T>} A new array with all of the values in `a`, but without
+ * any duplicate values. Duplicates are determined with `===`.
+ */
+function unique(a) {
+    return Array.from(new Set(a));
 }
 
 var CdnTestForm = React.createClass({
@@ -315,8 +327,7 @@ var LabBox = React.createClass({
 
 
         if (this.deliveryServices != null) {
-            var cdnNames = this.deliveryServices.map(function (item) { return item.cdnName})
-                .unique()
+            var cdnNames = unique(this.deliveryServices.map(function (item) { return item.cdnName}))
                 .filter(function(item) { return item.toLowerCase() != 'all'});
 
             cdnNames.forEach(function (cdnName) {
@@ -514,9 +525,7 @@ var ResultsList = React.createClass({
         }
 
         histogram(this.props.data.map(function (r, i) { return (r.latency / 1000.0).toFixed(3)}));
-        var groupedResults = this.props.data.groupBy(function (result) {
-           return [result.host];
-        });
+        var groupedResults = groupBy(this.props.data, result => JSON.stringify([result.host]));
 
         for (var i = 0; i < groupedResults.length; i++) {
             groupedResults[i].host = groupedResults[i][0].host;

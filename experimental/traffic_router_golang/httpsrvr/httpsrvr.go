@@ -34,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/nextcache"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -146,7 +147,7 @@ func getHandler(
 			newURL += "?" + r.URL.RawQuery
 		}
 
-		w.Header().Add("Location", newURL)
+		w.Header().Add(rfc.Location, newURL)
 		w.WriteHeader(http.StatusFound)
 	}
 }

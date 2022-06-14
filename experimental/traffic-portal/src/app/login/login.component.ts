@@ -15,9 +15,11 @@ import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { Router, ActivatedRoute } from "@angular/router";
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
-import { ResetPasswordDialogComponent } from "./reset-password-dialog/reset-password-dialog.component";
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+
+import { ResetPasswordDialogComponent } from "./reset-password-dialog/reset-password-dialog.component";
 
 /**
  * LoginComponent is the controller for the user login form.
@@ -31,6 +33,9 @@ export class LoginComponent implements OnInit {
 	/** The URL to which to redirect users after successful login. */
 	private returnURL = "";
 
+	/** Controls if the password is shown in plain text */
+	public hide = true;
+
 	/** The user-entered username. */
 	public u = new FormControl("");
 	/** The user-entered password. */
@@ -40,7 +45,8 @@ export class LoginComponent implements OnInit {
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
 		private readonly auth: CurrentUserService,
-		private readonly dialog: MatDialog
+		private readonly dialog: MatDialog,
+		private readonly headerSvc: TpHeaderService
 	) { }
 
 	/**
@@ -48,6 +54,7 @@ export class LoginComponent implements OnInit {
 	 * string parameters.
 	 */
 	public ngOnInit(): void {
+		this.headerSvc.headerHidden.next(true);
 		const params = this.route.snapshot.queryParamMap;
 		this.returnURL = params.get("returnUrl") ?? "core";
 		const token = params.get("token");
@@ -55,6 +62,7 @@ export class LoginComponent implements OnInit {
 			this.auth.login(token).then(
 				response => {
 					if (response) {
+						this.headerSvc.headerHidden.next(false);
 						this.router.navigate(["/core/me"], {queryParams: {edit: true, updatePassword: true}});
 					}
 				},
@@ -74,6 +82,7 @@ export class LoginComponent implements OnInit {
 		this.auth.login(this.u.value, this.p.value).then(
 			response => {
 				if (response) {
+					this.headerSvc.headerHidden.next(false);
 					this.router.navigate([this.returnURL]);
 				}
 			},

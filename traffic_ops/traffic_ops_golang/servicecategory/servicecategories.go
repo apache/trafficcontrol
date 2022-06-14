@@ -31,7 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 type TOServiceCategory struct {
@@ -91,12 +91,12 @@ func (serviceCategory *TOServiceCategory) SelectMaxLastUpdatedQuery(where, order
 	select max(last_updated) as t from last_deleted l where l.table_name='service_category') as res`
 }
 
-func (serviceCategory TOServiceCategory) Validate() error {
+func (serviceCategory TOServiceCategory) Validate() (error, error) {
 	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericDash, "must consist of only alphanumeric or dash characters.")
 	errs := validation.Errors{
 		"name": validation.Validate(serviceCategory.Name, validation.Required, nameRule),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (serviceCategory *TOServiceCategory) Create() (error, error, int) {
@@ -129,8 +129,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := newSC.Validate(); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+	if userErr, sysErr := newSC.Validate(); userErr != nil || sysErr != nil {
+		code := http.StatusBadRequest
+		if sysErr != nil {
+			code = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
 		return
 	}
 

@@ -36,7 +36,7 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 <!-- Do not submit security vulnerabilities or support requests here - see above -->
 ## This Improvement request (usability, performance, tech debt, etc.) affects these Traffic Control components:
 <!-- delete all those that don't apply -->
-- Traffic Control Cache Config (T3C, formerly ORT)
+- Traffic Control Cache Config (`t3c`, formerly ORT)
 - Traffic Control Health Client (tc-health-client)
 - Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
 - Traffic Monitor

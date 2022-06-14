@@ -22,6 +22,7 @@ package atscfg
 import (
 	"errors"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -38,10 +39,21 @@ const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
 
 // RemapDotConfigOpts contains settings to configure generation options.
 type RemapDotConfigOpts struct {
+	// VerboseComments is whether to add informative comments to the generated file, about what was generated and why.
+	// Note this does not include the header comment, which is configured separately with HdrComment.
+	// These comments are human-readable and not guarnateed to be consistent between versions. Automating anything based on them is strongly discouraged.
+	VerboseComments bool
+
 	// HdrComment is the header comment to include at the beginning of the file.
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
 	// To omit the header comment, pass the empty string.
 	HdrComment string
+
+	// UseStrategies is whether to use strategies.yaml rather than parent.config.
+	UseStrategies bool
+	// UseCoreStrategies is whether to use the ATS core strategies, rather than the parent_select plugin.
+	// This has no effect if UseStrategies is false.
+	UseStrategiesCore bool
 }
 
 func MakeRemapDotConfig(
@@ -56,12 +68,18 @@ func MakeRemapDotConfig(
 	cacheGroupArr []tc.CacheGroupNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
+	configDir string,
 	opt *RemapDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
 		opt = &RemapDotConfigOpts{}
 	}
 	warnings := []string{}
+
+	if !opt.UseStrategies && opt.UseStrategiesCore {
+		warnings = append(warnings, "opt.UseStrategies was false, but opt.UseStrategiesCore was set, which has no effect! Not using strategies, per opt.UseStrategies.")
+	}
+
 	if server.HostName == nil {
 		return Cfg{}, makeErr(warnings, "server HostName missing")
 	} else if server.ID == nil {
@@ -99,9 +117,9 @@ func MakeRemapDotConfig(
 	txt := ""
 	typeWarns := []string{}
 	if tc.CacheTypeFromString(server.Type) == tc.CacheTypeMid {
-		txt, typeWarns, err = getServerConfigRemapDotConfigForMid(atsMajorVersion, dsProfilesConfigParams, dses, dsRegexes, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities)
+		txt, typeWarns, err = getServerConfigRemapDotConfigForMid(atsMajorVersion, dsProfilesConfigParams, dses, dsRegexes, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, configDir, opt)
 	} else {
-		txt, typeWarns, err = getServerConfigRemapDotConfigForEdge(dsProfilesConfigParams, serverPackageParamData, dses, dsRegexes, atsMajorVersion, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, cdnDomain)
+		txt, typeWarns, err = getServerConfigRemapDotConfigForEdge(dsProfilesConfigParams, serverPackageParamData, dses, dsRegexes, atsMajorVersion, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, cdnDomain, configDir, opt)
 	}
 	warnings = append(warnings, typeWarns...)
 	if err != nil {
@@ -120,7 +138,7 @@ func MakeRemapDotConfig(
 // remap.config parameters use "<plugin>.pparam" key
 // cachekey.config parameters retain the 'cachekey.config' key
 func classifyConfigParams(configParams []tc.Parameter) map[string][]tc.Parameter {
-	var configParamMap = map[string][]tc.Parameter{}
+	configParamMap := map[string][]tc.Parameter{}
 	for _, param := range configParams {
 		key := param.ConfigFile
 		if "remap.config" == key {
@@ -140,7 +158,7 @@ func paramsStringFor(parameters []tc.Parameter, warnings *[]string) (paramsStrin
 
 		// Try to extract argument
 		index := strings.IndexAny(param.Value, "= ")
-		var arg string
+		arg := ""
 		if 0 < index {
 			arg = param.Value[:index]
 		} else {
@@ -202,6 +220,28 @@ func cachekeyArgsFor(configParamsMap map[string][]tc.Parameter, warnings *[]stri
 	return
 }
 
+// lastPrePostRemapLinesFor Returns any pre or post raw remap lines.
+func lastPrePostRemapLinesFor(dsConfigParamsMap map[string][]tc.Parameter, dsid string) ([]string, []string) {
+	preRemapLines := []string{}
+	postRemapLines := []string{}
+
+	// Any raw pre pend
+	if params, ok := dsConfigParamsMap["LastRawRemapPre"]; ok {
+		for _, param := range params {
+			preRemapLines = append(preRemapLines, param.Value+" # Raw: "+dsid+"\n")
+		}
+	}
+
+	// Any raw post pend
+	if params, ok := dsConfigParamsMap["LastRawRemapPost"]; ok {
+		for _, param := range params {
+			postRemapLines = append(postRemapLines, param.Value+" # Raw: "+dsid+"\n")
+		}
+	}
+
+	return preRemapLines, postRemapLines
+}
+
 // getServerConfigRemapDotConfigForMid returns the remap lines, any warnings, and any error.
 func getServerConfigRemapDotConfigForMid(
 	atsMajorVersion int,
@@ -214,9 +254,13 @@ func getServerConfigRemapDotConfigForMid(
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
+	configDir string,
+	opts *RemapDotConfigOpts,
 ) (string, []string, error) {
 	warnings := []string{}
 	midRemaps := map[string]string{}
+	preRemapLines := []string{}
+	postRemapLines := []string{}
 	for _, ds := range dses {
 		if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
@@ -250,6 +294,8 @@ func getServerConfigRemapDotConfigForMid(
 
 		midRemap := ""
 
+		midRemap += strategyDirective(getStrategyName(*ds.XMLID), configDir, opts)
+
 		if *ds.Topology != "" {
 			topoTxt, err := makeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups)
 			if err != nil {
@@ -261,19 +307,19 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		// Logic for handling cachekey params
-		var cachekeyArgs string
+		cachekeyArgs := ""
 
 		// qstring ignore
 		if ds.QStringIgnore != nil && *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
 			cachekeyArgs = getQStringIgnoreRemap(atsMajorVersion)
 		}
 
-		var dsConfigParamsMap map[string][]tc.Parameter
+		dsConfigParamsMap := map[string][]tc.Parameter{}
 		if nil != ds.ProfileID {
 			dsConfigParamsMap = classifyConfigParams(profilesConfigParams[*ds.ProfileID])
 		}
 
-		if 0 < len(dsConfigParamsMap) {
+		if len(dsConfigParamsMap) > 0 {
 			cachekeyArgs += cachekeyArgsFor(dsConfigParamsMap, &warnings)
 		}
 
@@ -286,19 +332,52 @@ func getServerConfigRemapDotConfigForMid(
 				paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
 		}
 
+		isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
+		if err != nil {
+			return "", warnings, errors.New("determining if cache is the last tier: " + err.Error())
+		}
+
+		mapTo := *ds.OrgServerFQDN
+
+		// if this remap is going to a parent, use http not https.
+		// cache-to-cache communication inside the CDN is always http (though that's likely to change in the future)
+		if !isLastCache {
+			mapTo = strings.Replace(mapTo, `https://`, `http://`, -1)
+		}
+
 		if midRemap != "" {
-			midRemaps[remapFrom] = *ds.OrgServerFQDN + midRemap
+			midRemaps[remapFrom] = mapTo + midRemap
+		}
+
+		// Any raw pre or post pend
+		dsPreRemaps, dsPostRemaps := lastPrePostRemapLinesFor(dsConfigParamsMap, *ds.XMLID)
+
+		// Add to pre/post remap lines if this is last tier
+		if len(dsPreRemaps) > 0 || len(dsPostRemaps) > 0 {
+			if isLastCache {
+				preRemapLines = append(preRemapLines, dsPreRemaps...)
+				postRemapLines = append(postRemapLines, dsPostRemaps...)
+			}
 		}
 	}
 
 	textLines := []string{}
+
 	for originFQDN, midRemap := range midRemaps {
 		textLines = append(textLines, "map "+originFQDN+" "+midRemap+"\n")
 	}
-	sort.Strings(textLines)
 
-	text := header
-	text += strings.Join(textLines, "")
+	sort.Strings(preRemapLines)
+	sort.Strings(textLines)
+	sort.Strings(postRemapLines)
+
+	// Prepend any pre remap lines
+	remapLinesAll := append(preRemapLines, textLines...)
+
+	// Append on any post raw remap lines
+	remapLinesAll = append(remapLinesAll, postRemapLines...)
+
+	text := header + strings.Join(remapLinesAll, "")
 	return text, warnings, nil
 }
 
@@ -316,9 +395,13 @@ func getServerConfigRemapDotConfigForEdge(
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	cdnDomain string,
+	configDir string,
+	opts *RemapDotConfigOpts,
 ) (string, []string, error) {
 	warnings := []string{}
 	textLines := []string{}
+	preRemapLines := []string{}
+	postRemapLines := []string{}
 
 	for _, ds := range dses {
 		if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
@@ -365,26 +448,47 @@ func getServerConfigRemapDotConfigForEdge(
 					profileremapConfigParams = profilesRemapConfigParams[*ds.ProfileID]
 				}
 				remapWarns := []string{}
-				remapText, remapWarns, err = buildEdgeRemapLine(atsMajorVersion, server, serverPackageParamData, remapText, ds, line.From, line.To, profileremapConfigParams, cacheGroups, nameTopologies)
+				dsLines := RemapLines{}
+				dsLines, remapWarns, err = buildEdgeRemapLine(atsMajorVersion, server, serverPackageParamData, remapText, ds, line.From, line.To, profileremapConfigParams, cacheGroups, nameTopologies, configDir, opts)
 				warnings = append(warnings, remapWarns...)
+				remapText = dsLines.Text
+
+				// Add to pre/post remap lines if this is last tier
+				if len(dsLines.Pre) > 0 || len(dsLines.Post) > 0 {
+					preRemapLines = append(preRemapLines, dsLines.Pre...)
+					postRemapLines = append(postRemapLines, dsLines.Post...)
+				}
 
 				if err != nil {
 					return "", warnings, err
 				}
+				remapText += ` # ds '` + *ds.XMLID + `' topology '`
 				if hasTopology {
-					remapText += " # topology '" + topology.Name + "'"
+					remapText += topology.Name
 				}
-				remapText += "\n"
+				remapText += `'` + "\n"
 			}
 		}
 
 		textLines = append(textLines, remapText)
 	}
 
-	text := header
+	sort.Strings(preRemapLines)
 	sort.Strings(textLines)
-	text += strings.Join(textLines, "")
+	sort.Strings(postRemapLines)
+
+	remapLinesAll := append(preRemapLines, textLines...)
+	remapLinesAll = append(remapLinesAll, postRemapLines...)
+
+	text := header
+	text += strings.Join(remapLinesAll, "")
 	return text, warnings, nil
+}
+
+type RemapLines struct {
+	Pre  []string
+	Text string
+	Post []string
 }
 
 // buildEdgeRemapLine builds the remap line for the given server and delivery service.
@@ -401,14 +505,18 @@ func buildEdgeRemapLine(
 	remapConfigParams []tc.Parameter,
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
 	nameTopologies map[TopologyName]tc.Topology,
-) (string, []string, error) {
+	configDir string,
+	opts *RemapDotConfigOpts,
+) (RemapLines, []string, error) {
 	warnings := []string{}
+	remapLines := RemapLines{}
+
 	// ds = 'remap' in perl
 	mapFrom = strings.Replace(mapFrom, `__http__`, *server.HostName, -1)
 
 	isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
 	if err != nil {
-		return "", warnings, errors.New("determining if cache is the last tier: " + err.Error())
+		return remapLines, warnings, errors.New("determining if cache is the last tier: " + err.Error())
 	}
 
 	// if this remap is going to a parent, use http not https.
@@ -417,16 +525,20 @@ func buildEdgeRemapLine(
 		mapTo = strings.Replace(mapTo, `https://`, `http://`, -1)
 	}
 
+	text += "map	" + mapFrom + "     " + mapTo
+
+	text += strategyDirective(getStrategyName(*ds.XMLID), configDir, opts)
+
 	if _, hasDSCPRemap := pData["dscp_remap"]; hasDSCPRemap {
-		text += "map	" + mapFrom + "     " + mapTo + ` @plugin=dscp_remap.so @pparam=` + strconv.Itoa(*ds.DSCP)
+		text += ` @plugin=dscp_remap.so @pparam=` + strconv.Itoa(*ds.DSCP)
 	} else {
-		text += "map	" + mapFrom + "     " + mapTo + ` @plugin=header_rewrite.so @pparam=dscp/set_dscp_` + strconv.Itoa(*ds.DSCP) + ".config"
+		text += ` @plugin=header_rewrite.so @pparam=dscp/set_dscp_` + strconv.Itoa(*ds.DSCP) + ".config"
 	}
 
 	if *ds.Topology != "" {
 		topoTxt, err := makeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(*server.Cachegroup), nameTopologies[TopologyName(*ds.Topology)], cacheGroups)
 		if err != nil {
-			return "", warnings, err
+			return remapLines, warnings, err
 		}
 		text += topoTxt
 	} else if (ds.EdgeHeaderRewrite != nil && *ds.EdgeHeaderRewrite != "") || (ds.ServiceCategory != nil && *ds.ServiceCategory != "") || (ds.MaxOriginConnections != nil && *ds.MaxOriginConnections != 0) {
@@ -447,7 +559,7 @@ func buildEdgeRemapLine(
 
 	// Form the cachekey args string, qstring ignore, then
 	// remap.config then cachekey.config
-	var cachekeyArgs string
+	cachekeyArgs := ""
 
 	if ds.QStringIgnore != nil {
 		if *ds.QStringIgnore == tc.QueryStringIgnoreDropAtEdge {
@@ -458,7 +570,7 @@ func buildEdgeRemapLine(
 		}
 	}
 
-	if 0 < len(dsConfigParamsMap) {
+	if len(dsConfigParamsMap) > 0 {
 		cachekeyArgs += cachekeyArgsFor(dsConfigParamsMap, &warnings)
 	}
 
@@ -513,7 +625,24 @@ func buildEdgeRemapLine(
 		text += ` @plugin=fq_pacing.so @pparam=--rate=` + strconv.Itoa(*ds.FQPacingRate)
 	}
 
-	return text, warnings, nil
+	remapLines.Text = text
+
+	// Any raw pre or post pend lines?
+	if isLastCache {
+		remapLines.Pre, remapLines.Post = lastPrePostRemapLinesFor(dsConfigParamsMap, *ds.XMLID)
+	}
+
+	return remapLines, warnings, nil
+}
+
+func strategyDirective(strategyName string, configDir string, opt *RemapDotConfigOpts) string {
+	if !opt.UseStrategies {
+		return ""
+	}
+	if !opt.UseStrategiesCore {
+		return ` @plugin=parent_select.so @pparam=` + filepath.Join(configDir, "strategies.yaml") + ` @pparam=` + strategyName
+	}
+	return ` @strategy=` + strategyName
 }
 
 // makeDSTopologyHeaderRewriteTxt returns the appropriate header rewrite remap line text for the given DS on the given server, and any error.

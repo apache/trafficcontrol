@@ -44,12 +44,12 @@ These can all be supplied manually via the steps in :ref:`dev-building` (for Tra
 
 .. tip:: When updating CDN-in-a-Box, there is no need to remove old images before building new ones. Docker detects which files are updated and only reuses cached layers that have not changed.
 
-By default, CDN in a Box will be based on CentOS 8. To base CDN in a Box on CentOS 7, set the ``RHEL_VERSION`` environment variable to ``7`` (for CDN in a Box, it defaults to ``8``):
+By default, CDN in a Box will be based on Rocky Linux 8. To base CDN in a Box on CentOS 7, set the ``BASE_IMAGE`` environment variable to ``centos`` and set the ``RHEL_VERSION`` environment variable to ``7`` (for CDN in a Box, ``BASE_IMAGE`` defaults to ``rockylinux`` and ``RHEL_VERSION`` defaults to ``8``):
 
 .. code-block:: shell
-	:caption: Building CDN in a Box to run CentOS 7 instead of CentOS 8
+	:caption: Building CDN in a Box to run CentOS 7 instead of Rocky Linux 8
 
-	export RHEL_VERSION=7
+	export BASE_IMAGE=centos RHEL_VERSION=7
 	make # Builds RPMs for CentOS 7
 	docker-compose build --parallel # Builds CentOS 7 CDN in a Box images
 
@@ -200,7 +200,7 @@ Importing the :abbr:`CA (Certificate Authority)` Certificate on OSX
 #. The CIAB root :abbr:`CA (Certificate Authority)` certificate appears in login.
 #. Copy the CIAB root :abbr:`CA (Certificate Authority)` certificate to System.
 #. Open the CIAB root :abbr:`CA (Certificate Authority)` certificate, expand :guilabel:`Trust`, select :guilabel:`Use System Defaults`, and save your changes.
-#. Reopen the CIAB root :abbr:`CA (Certificate Authority)` certificate, expand :guilabel:`Trust, select :guilabel:`Always Trust`, and save your changes.
+#. Reopen the CIAB root :abbr:`CA (Certificate Authority)` certificate, expand :guilabel:`Trust`, select :guilabel:`Always Trust`, and save your changes.
 #. Delete the CIAB root :abbr:`CA (Certificate Authority)` certificate from login.
 #. Repeat the previous steps with the Intermediate :abbr:`CA (Certificate Authority)` certificate to import it as well
 #. Restart all HTTPS clients (browsers, etc).
@@ -214,8 +214,8 @@ Importing the :abbr:`CA (Certificate Authority)` certificate on Windows
 #. Import the CIAB intermediate :abbr:`CA (Certificate Authority)` certificate into :menuselection:`Trusted Root Certification Authorities --> Certificates`.
 #. Restart all HTTPS clients (browsers, etc).
 
-Importing the :abbr:`CA (Certificate Authority)` certificate on CentOS 8 (Linux)
---------------------------------------------------------------------------------
+Importing the :abbr:`CA (Certificate Authority)` certificate on Rocky Linux 8 (Linux)
+-------------------------------------------------------------------------------------
 #. Copy the CIAB full chain :abbr:`CA (Certificate Authority)` certificate bundle from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt` to path :file:`/etc/pki/ca-trust/source/anchors/`.
 #. Run ``update-ca-trust-extract`` as the root user or with :manpage:`sudo(8)`.
 #. Restart all HTTPS clients (browsers, etc).
@@ -308,7 +308,7 @@ The TightVNC optional container provides a basic lightweight window manager (flu
 			`"-f $PWD/docker-compose.yml "` \
 			`"-f $PWD/docker-compose.expose-ports.yml "` \
 			`"-f $PWD/optional/docker-compose.vnc.yml "` \
-			`"-f $PWD/optional/docker-compose.vnc.expose-ports.yml"
+			`"-f $PWD/optional/docker-compose.vnc.expose-ports.yml "`
 		docker volume prune -f
 		mydc build
 		mydc kill
@@ -485,13 +485,13 @@ Apart from start Grafana, the above commands also expose port 3000 for it.
 
 Check the charts
 """"""""""""""""
-There are some *scripted dashboards* can show beautiful charts. You can display different charts by passing in different *query string*
+There are some "scripted dashboards" that can show easily comprehended charts. The data displayed on different charts is controlled using query string parameters.
 
-* ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``. The query parameter `which` in this particular URL should be the **cachegroup**. Take CIAB as an example, it can be filled in with **CDN_in_a_Box_Edge** or **CDN_in_a_Box_Edge**.
-* ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``. The query parameter `which` in this particular URL should be the **xml_id** of the desired Delivery Service.
-* ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``. The query parameter `which` in this particular URL should be the **hostname** (not **FQDN**). It can be filled in with **edge** or **mid** in CIAB.
+* :samp:`https://{Grafana Host}/dashboard/script/traffic_ops_cachegroup.js?which={Cache Group name}`. The query string parameter ``which`` in this particular URL should be the :term:`Cache Group`. With default :abbr:`CiaB (CDN-in-a-Box)` data, it can be filled in with **CDN_in_a_Box_Edge** or **CDN_in_a_Box_Edge**.
+* :samp:`https://{Grafana Host}/dashboard/script/traffic_ops_deliveryservice.js?which={XML ID}`. The query string parameter ``which`` in this particular URL should be the :ref:`ds-xmlid` of the desired :term:`Delivery Service`.
+* :samp:`https://{Grafana Host}/dashboard/script/traffic_ops_server.js?which={hostname}`. The query string parameter ``which`` in this particular URL should be the **hostname** (not **FQDN**). With default :abbr:`CiaB (CDN-in-a-Box)` data, it can be filled in with **edge** or **mid**.
 
 Debugging
----------
+=========
 
 See :ref:`dev-debugging-ciab`.

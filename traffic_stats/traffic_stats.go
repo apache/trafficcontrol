@@ -20,6 +20,8 @@ under the License.
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -38,8 +40,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 
+	"github.com/Shopify/sarama"
 	"github.com/cihub/seelog"
 	influx "github.com/influxdata/influxdb/client/v2"
 )
@@ -92,6 +95,7 @@ type StartupConfig struct {
 	ToUser                      string   `json:"toUser"`
 	ToPasswd                    string   `json:"toPasswd"`
 	ToURL                       string   `json:"toUrl"`
+	DisableInflux               bool     `json:"disableInflux"`
 	InfluxUser                  string   `json:"influxUser"`
 	InfluxPassword              string   `json:"influxPassword"`
 	InfluxURLs                  []string `json:"influxUrls"`
@@ -108,6 +112,48 @@ type StartupConfig struct {
 	DailySummaryRetentionPolicy string   `json:"dailySummaryRetentionPolicy"`
 	BpsChan                     chan influx.BatchPoints
 	InfluxDBs                   []*InfluxDBProps
+	KafkaConfig                 KafkaConfig `json:"kafkaConfig"`
+}
+
+type KafkaConfig struct {
+	Enable        bool   `json:"enable"`
+	Brokers       string `json:"brokers"`
+	Topic         string `json:"topic"`
+	RequiredAcks  int    `json:"requiredAcks"`
+	EnableTls     bool   `json:"enableTls"`
+	RootCA        string `json:"rootCA"`
+	ClientCert    string `json:"clientCert"`
+	ClientCertKey string `json:"clientCertKey"`
+}
+
+type KafkaCluster struct {
+	producer *sarama.AsyncProducer
+	client   *sarama.Client
+}
+
+type KafkaJSON struct {
+	Name   string                 `json:"name"`
+	Tags   map[string]string      `json:"tags"`
+	Fields map[string]interface{} `json:"fields"`
+	Time   time.Time              `json:"time"`
+}
+
+type DataExporter interface {
+	ExportData(config StartupConfig, bps influx.BatchPoints, retry bool)
+}
+
+func (c *KafkaCluster) ExportData(config StartupConfig, bps influx.BatchPoints, retry bool) {
+	err := publishToKafka(config, bps, c)
+	if err != nil {
+		log.Errorln("Unable to export to Kafka", err)
+	}
+}
+
+func (influx InfluxClient) ExportData(config StartupConfig, bps influx.BatchPoints, retry bool) {
+	sendMetrics(config, bps, retry)
+}
+
+type InfluxClient struct {
 }
 
 var useSeelog bool = true
@@ -221,6 +267,8 @@ func main() {
 	go getToData(config, true, configChan)
 	runningConfig := <-configChan
 
+	c := newKakfaCluster(config.KafkaConfig)
+
 	tickers = setTimers(config)
 
 	termChan := make(chan os.Signal, 1)
@@ -228,6 +276,17 @@ func main() {
 
 	hupChan := make(chan os.Signal, 1)
 	signal.Notify(hupChan, syscall.SIGHUP)
+
+	dataExporters := []DataExporter{}
+
+	if config.KafkaConfig.Enable && c != nil {
+		dataExporters = append(dataExporters, c)
+	}
+
+	if !config.DisableInflux {
+		influx := InfluxClient{}
+		dataExporters = append(dataExporters, influx)
+	}
 
 	for {
 		select {
@@ -243,12 +302,17 @@ func main() {
 		case <-termChan:
 			info("Shutdown Request Received - Sending stored metrics then quitting")
 			for _, val := range Bps {
-				sendMetrics(config, val, false)
+				for _, dataExporter := range dataExporters {
+					dataExporter.ExportData(config, val, false)
+				}
 			}
+			startShutdown(c)
 			os.Exit(0)
 		case <-tickers.Publish:
 			for key, val := range Bps {
-				go sendMetrics(config, val, true)
+				for _, dataExporter := range dataExporters {
+					go dataExporter.ExportData(config, val, true)
+				}
 				delete(Bps, key)
 			}
 		case runningConfig = <-configChan:
@@ -278,6 +342,131 @@ func main() {
 			}
 		}
 	}
+}
+
+func startShutdown(c *KafkaCluster) {
+	if c == nil {
+		return
+	}
+
+	infof("Starting cluster shutdown, closing producer and client")
+	if err := (*c.producer).Close(); err != nil {
+		warnf("Error closing producer for cluster:  %v", err)
+	}
+	if err := (*c.client).Close(); err != nil {
+		warnf("Error closing client for cluster:  %v", err)
+	}
+	c.producer = nil
+	infof("Finished cluster shutdown")
+}
+
+func TlsConfig(config KafkaConfig) (*tls.Config, error) {
+	if !config.EnableTls {
+		return nil, nil
+	}
+	c := &tls.Config{}
+	if config.RootCA != "" {
+		infof("Loading TLS root CA certificate from %s", config.RootCA)
+		caCert, err := ioutil.ReadFile(config.RootCA)
+		if err != nil {
+			return nil, err
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		c.RootCAs = caCertPool
+	} else {
+		warnf("No TLS root CA defined")
+	}
+	if config.ClientCert != "" {
+		infof("Loading TLS client certificate")
+		if config.ClientCertKey == "" {
+			return nil, fmt.Errorf("client cert path defined without key path")
+		}
+		certPEM, err := ioutil.ReadFile(config.ClientCert)
+		if err != nil {
+			return nil, err
+		}
+		keyPEM, err := ioutil.ReadFile(config.ClientCertKey)
+		if err != nil {
+			return nil, err
+		}
+		cert, err := tls.X509KeyPair(certPEM, keyPEM)
+		if err != nil {
+			return nil, err
+		}
+		c.Certificates = []tls.Certificate{cert}
+	}
+	return c, nil
+}
+
+func newKakfaCluster(config KafkaConfig) *KafkaCluster {
+
+	if !config.Enable {
+		return nil
+	}
+
+	brokers := strings.Split(config.Brokers, ",")
+	sc := sarama.NewConfig()
+
+	tlsConfig, err := TlsConfig(config)
+	if err != nil {
+		errorln("Unable to create TLS config", err)
+		return nil
+	}
+
+	sc.Producer.RequiredAcks = sarama.RequiredAcks(config.RequiredAcks)
+	if config.EnableTls && tlsConfig != nil {
+		sc.Net.TLS.Enable = true
+		sc.Net.TLS.Config = tlsConfig
+	}
+
+	cl, err := sarama.NewClient(brokers, sc)
+
+	if err != nil {
+		errorln("Unable to create client", err)
+		return nil
+	}
+
+	p, err := sarama.NewAsyncProducerFromClient(cl)
+
+	if err != nil {
+		errorln("Unable to create producer", err)
+		return nil
+	}
+	c := &KafkaCluster{
+		producer: &p,
+		client:   &cl,
+	}
+
+	return c
+}
+
+func publishToKafka(config StartupConfig, bps influx.BatchPoints, c *KafkaCluster) error {
+
+	input := (*c.producer).Input()
+
+	for _, point := range bps.Points() {
+
+		var KafkaJSON KafkaJSON
+		KafkaJSON.Name = point.Name()
+		KafkaJSON.Tags = point.Tags()
+		KafkaJSON.Fields, _ = point.Fields()
+		KafkaJSON.Time = point.Time()
+
+		message, err := json.Marshal(KafkaJSON)
+
+		if err != nil {
+			return err
+		}
+
+		topic := config.KafkaConfig.Topic
+
+		input <- &sarama.ProducerMessage{
+			Topic: topic,
+			Value: sarama.StringEncoder(message),
+		}
+	}
+	return nil
 }
 
 func setTimers(config StartupConfig) Timers {
@@ -349,6 +538,10 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 		warn("No logging configuration found in configuration file - default logging to stderr will be used")
 	}
 
+	if config.DisableInflux {
+		return config, nil
+	}
+
 	if len(config.InfluxURLs) == 0 {
 		return config, fmt.Errorf("No InfluxDB urls provided in influxUrls, please provide at least one valid URL.  e.g. \"influxUrls\": [\"http://localhost:8086\"]")
 	}
@@ -370,6 +563,10 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 }
 
 func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
+	if config.DisableInflux {
+		info("Skipping daily stats since InfluxDB is not enabled")
+		return
+	}
 	infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
 	if runningConfig.LastSummaryTime.Day() != now.Day() {
 		startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
@@ -546,7 +743,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		return
 	}
 
-	servers, _, err := to.GetServers()
+	servers, _, err := to.GetServers(nil)
 	if err != nil {
 		msg := fmt.Sprintf("Error getting server list from %v: %v ", config.ToURL, err)
 		if init {

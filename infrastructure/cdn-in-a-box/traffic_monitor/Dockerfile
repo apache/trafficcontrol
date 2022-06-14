@@ -19,8 +19,10 @@
 # Based on CentOS
 ############################################################
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as trafficmonitor-dependencies
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION} as trafficmonitor-dependencies
 ARG RHEL_VERSION=8
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
@@ -33,6 +35,8 @@ RUN dnf install -y epel-release && \
         nmap-ncat \
         iproute \
         net-tools \
+        # find is required by to-access.sh
+        findutils \
         gettext \
         bind-utils \
         openssl \
@@ -66,8 +70,8 @@ HEALTHCHECK --interval=10s --timeout=1s \
 
 FROM trafficmonitor-dependencies as get-delve
 
-RUN dnf -y install golang git && \
-    go get -u github.com/go-delve/delve/cmd/dlv
+RUN dnf -y install golang && \
+    go install github.com/go-delve/delve/cmd/dlv@latest
 
 FROM trafficmonitor as trafficmonitor-debug
 COPY --from=get-delve /root/go/bin /usr/bin

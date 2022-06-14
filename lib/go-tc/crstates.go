@@ -21,6 +21,7 @@ package tc
 
 import (
 	"encoding/json"
+	"time"
 )
 
 // CRStates includes availability data for caches and delivery services, as gathered and aggregated by this Traffic Monitor. It is designed to be served at an API endpoint primarily for Traffic Routers (Content Router) to consume.
@@ -37,22 +38,25 @@ type CRStatesDeliveryService struct {
 
 // IsAvailable contains whether the given cache or delivery service is available. It is designed for JSON serialization, namely in the Traffic Monitor 1.0 API.
 type IsAvailable struct {
-	IsAvailable   bool `json:"isAvailable"`
-	Ipv4Available bool `json:"ipv4Available"`
-	Ipv6Available bool `json:"ipv6Available"`
+	IsAvailable    bool      `json:"isAvailable"`
+	Ipv4Available  bool      `json:"ipv4Available"`
+	Ipv6Available  bool      `json:"ipv6Available"`
+	DirectlyPolled bool      `json:"-"`
+	Status         string    `json:"status"`
+	LastPoll       time.Time `json:"lastPoll"`
 }
 
 // NewCRStates creates a new CR states object, initializing pointer members.
-func NewCRStates() CRStates {
+func NewCRStates(cacheCap, dsCap int) CRStates {
 	return CRStates{
-		Caches:          map[CacheName]IsAvailable{},
-		DeliveryService: map[DeliveryServiceName]CRStatesDeliveryService{},
+		Caches:          make(map[CacheName]IsAvailable, cacheCap),
+		DeliveryService: make(map[DeliveryServiceName]CRStatesDeliveryService, dsCap),
 	}
 }
 
 // Copy creates a deep copy of this object. It does not mutate, and is thus safe for multiple goroutines.
 func (a CRStates) Copy() CRStates {
-	b := NewCRStates()
+	b := NewCRStates(len(a.Caches), len(a.DeliveryService))
 	for k, v := range a.Caches {
 		b.Caches[k] = v
 	}
@@ -62,18 +66,18 @@ func (a CRStates) Copy() CRStates {
 	return b
 }
 
-// CopyDeliveryServices creates a deep copy of the delivery service availability data.. It does not mutate, and is thus safe for multiple goroutines.
+// CopyDeliveryServices creates a deep copy of the delivery service availability data. It does not mutate, and is thus safe for multiple goroutines.
 func (a CRStates) CopyDeliveryServices() map[DeliveryServiceName]CRStatesDeliveryService {
-	b := map[DeliveryServiceName]CRStatesDeliveryService{}
+	b := make(map[DeliveryServiceName]CRStatesDeliveryService, len(a.DeliveryService))
 	for k, v := range a.DeliveryService {
 		b[k] = v
 	}
 	return b
 }
 
-// CopyCaches creates a deep copy of the cache availability data.. It does not mutate, and is thus safe for multiple goroutines.
+// CopyCaches creates a deep copy of the cache availability data. It does not mutate, and is thus safe for multiple goroutines.
 func (a CRStates) CopyCaches() map[CacheName]IsAvailable {
-	b := map[CacheName]IsAvailable{}
+	b := make(map[CacheName]IsAvailable, len(a.Caches))
 	for k, v := range a.Caches {
 		b[k] = v
 	}

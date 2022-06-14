@@ -34,6 +34,36 @@ const exampleTMConfig = `
 	"stat_flush_interval_ms": 1000,
 	"stat_polling": false,
 	"distributed_polling": true,
+	"log_location_access": "access.log",
+	"log_location_event": "event.log",
+	"log_location_error": "error.log",
+	"log_location_warning": "warning.log",
+	"log_location_info": "info.log",
+	"log_location_debug": "debug.log",
+	"serve_read_timeout_ms": 10000,
+	"serve_write_timeout_ms": 10000,
+	"stat_buffer_interval_ms": 20000,
+	"short_hostname_override": "foobar",
+	"traffic_ops_disk_retry_max": 35,
+	"crconfig_backup_file": "crconfig.asdf",
+	"tmconfig_backup_file": "tmconfig.asdf",
+	"http_polling_format": "thisformatdoesnotexist",
+	"static_file_dir": "static/"
+}
+`
+
+const exampleBadTMConfig = `
+{
+	"monitor_config_polling_interval_ms": 5000,
+	"http_timeout_ms": 30000,
+	"peer_optimistic": false,
+	"peer_optimistic_quorum_min": 3,
+	"max_events": 200,
+	"health_flush_interval_ms": 1000,
+	"stat_flush_interval_ms": 1000,
+	"stat_polling": true,
+	"distributed_polling": true,
+	"log_location_access": "access.log",
 	"log_location_event": "event.log",
 	"log_location_error": "error.log",
 	"log_location_warning": "warning.log",
@@ -80,9 +110,6 @@ func TestConfigLoad(t *testing.T) {
 	if c.ShortHostnameOverride != "foobar" {
 		t.Errorf("ShortHostnameOverride - expected: foobar, actual: %s", c.ShortHostnameOverride)
 	}
-	if c.PeerOptimistic != false {
-		t.Errorf("PeerOmptimistic - expected: false, actual: %t", c.PeerOptimistic)
-	}
 	if c.PeerOptimisticQuorumMin != 3 {
 		t.Errorf("PeerOmptimisticQuorumMin - expected: 3, actual: %d", c.PeerOptimisticQuorumMin)
 	}
@@ -100,13 +127,17 @@ func TestConfigLoad(t *testing.T) {
 	}
 }
 
+func TestBadConfigLoad(t *testing.T) {
+	_, err := LoadBytes([]byte(exampleBadTMConfig))
+	if err == nil {
+		t.Errorf("loading bad config file (stat_polling and distributed_polling both enabled) -- expected: error, actual: nil")
+	}
+}
+
 func TestConfigLoadDefaults(t *testing.T) {
 	c, err := LoadBytes([]byte(`{}`))
 	if err != nil {
 		t.Fatalf("loading empty config bytes - expected: no error, actual: %v", err)
-	}
-	if c.PeerOptimistic != true {
-		t.Errorf("PeerOptimistic default - expected: true, actual: %t", c.PeerOptimistic)
 	}
 	if c.StatPolling != true {
 		t.Errorf("StatPolling default - expected: true, actual: %t", c.StatPolling)

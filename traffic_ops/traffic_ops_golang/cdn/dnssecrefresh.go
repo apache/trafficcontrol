@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -63,7 +64,7 @@ func RefreshDNSSECKeysV4(w http.ResponseWriter, r *http.Request) {
 	if started {
 		message = "Starting DNSSEC key refresh in the background. This may take a few minutes. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusID)
 	}
-	w.Header().Add("Location", api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusID))
+	w.Header().Add(rfc.Location, api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusID))
 	api.WriteAlerts(w, r, http.StatusAccepted, tc.CreateAlerts(tc.SuccessLevel, message))
 }
 
@@ -374,7 +375,7 @@ WITH cdn_profile_ids AS (
     MAX(p.id) as profile_id -- We only want 1 profile, so get the probably-newest if there's more than one.
   FROM
     cdn c
-    LEFT JOIN profile p ON c.id = p.cdn AND (p.name like 'CCR%' OR p.name like 'TR%')
+    LEFT JOIN profile p ON c.id = p.cdn AND (p.type = '` + tc.TrafficRouterProfileType + `')
     GROUP BY c.name, c.dnssec_enabled, c.domain_name
 )
 SELECT

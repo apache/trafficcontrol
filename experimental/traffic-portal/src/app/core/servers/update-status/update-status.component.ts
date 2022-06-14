@@ -11,10 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from "@angular/core";
-import { FormControl } from "@angular/forms";
-import { Server, Status } from "src/app/models";
-import { ServerService } from "src/app/shared/api";
+import {Component, Inject, type OnInit} from "@angular/core";
+import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+
+import { ServerService } from "src/app/api/server.service";
+import type { Server, Status } from "src/app/models";
 
 /**
  * UpdateStatusComponent is the controller for the "Update Server Status" dialog box.
@@ -26,36 +27,20 @@ import { ServerService } from "src/app/shared/api";
 })
 export class UpdateStatusComponent implements OnInit {
 
-	/** The servers being updated. */
-	@Input() public servers = new Array<Server>();
-	/** Emits 'false' when the status update is cancelled (or fails), 'true' when it completes successfully. */
-	@Output() public done = new EventEmitter<boolean>();
-
-	/**
-	 * Captures keypresses and emits 'false' from the 'done' output if the user presses the escape key.
-	 *
-	 * @param e The captured 'keydown' event.
-	 */
-	@HostListener("document:keydown", ["$event"]) public closeOnEscape(e: KeyboardEvent): void {
-		if (e.code === "Escape" || e.code === "Esc") {
-			this.done.emit(false);
-		}
-	}
-
 	/** The possible statuses of a server. */
 	public statuses = new Array<Status>();
 	/** The ID of the current status of the server, or null if the servers have disparate statuses. */
 	public currentStatus: null | number = null;
 
-	/** Form control for the new status selection. */
-	public statusControl = new FormControl();
-	/** Form control for the offline reason input. */
-	public offlineReasonControl = new FormControl();
+	public status: Status | null = null;
+
+	public servers: Array<Server>;
+
+	public offlineReason = "";
 
 	/** Tells whether the user's selected status is considered "OFFLINE". */
 	public get isOffline(): boolean {
-		const val = this.statusControl.value;
-		return val !== null && val !== undefined && val.name !== "ONLINE" && val.name !== "REPORTED";
+		return this.status !== null && this.status !== undefined && this.status.name !== "ONLINE" && this.status.name !== "REPORTED";
 	}
 
 	/** An appropriate title for the server or collection of servers being updated. */
@@ -68,7 +53,11 @@ export class UpdateStatusComponent implements OnInit {
 	}
 
 	/** Constructor. */
-	constructor(private readonly api: ServerService) { }
+	constructor(private readonly dialogRef: MatDialogRef<UpdateStatusComponent>,
+		@Inject(MAT_DIALOG_DATA) private readonly dialogServers: Array<Server>,
+		private readonly api: ServerService) {
+		this.servers = this.dialogServers;
+	}
 
 	/**
 	 * Sets up the necessary data to complete the form.
@@ -105,31 +94,31 @@ export class UpdateStatusComponent implements OnInit {
 	 *
 	 * @param e The submission event.
 	 */
-	public submit(e: Event): void {
+	public async submit(e: Event): Promise<void> {
 		e.preventDefault();
 		e.stopPropagation();
 		let observables;
 		if (this.isOffline) {
-			observables = this.servers.map(async x=>this.api.updateStatus(x, this.statusControl.value.id, this.offlineReasonControl.value));
+			observables = this.servers.map(
+				async x=>this.api.updateStatus(x, this.status?.name ?? "", this.offlineReason)
+			);
 		} else {
-			observables = this.servers.map(async x=>this.api.updateStatus(x, this.statusControl.value.id));
+			observables = this.servers.map(async x=>this.api.updateStatus(x, this.status?.name ?? ""));
 		}
-		Promise.all(observables).then(
-			() => {
-				this.done.emit(true);
-			},
-			err => {
-				console.error("something went wrong trying to update", this.serverName, "servers:", err);
-				this.done.emit(false);
-			}
-		);
+		try {
+			await Promise.all(observables);
+			this.dialogRef.close(true);
+		} catch (err) {
+			console.error("something went wrong trying to update", this.serverName, "servers:", err);
+			this.dialogRef.close(false);
+		}
 	}
 
 	/**
 	 * Emits from the `done` Output indicating the action was cancelled.
 	 */
 	public cancel(): void {
-		this.done.emit(false);
+		this.dialogRef.close(false);
 	}
 
 }

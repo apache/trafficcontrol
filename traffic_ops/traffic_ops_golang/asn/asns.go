@@ -95,12 +95,12 @@ func (asn TOASNV11) GetType() string {
 	return "asn"
 }
 
-func (asn TOASNV11) Validate() error {
+func (asn TOASNV11) Validate() (error, error) {
 	errs := validation.Errors{
 		"asn":          validation.Validate(asn.ASN, validation.NotNil, validation.Min(0)),
 		"cachegroupId": validation.Validate(asn.CachegroupID, validation.NotNil, validation.Min(0)),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 func (as *TOASNV11) Create() (error, error, int) {

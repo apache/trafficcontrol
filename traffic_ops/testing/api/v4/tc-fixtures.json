@@ -254,6 +254,11 @@
             "name": "nullLatLongCG",
             "shortName": "null-ll",
             "typeName": "EDGE_LOC"
+        },
+        {
+            "name": "noServers",
+            "shortName": "noServers",
+            "typeName": "EDGE_LOC"
         }
     ],
     "cdns": [
@@ -281,20 +286,55 @@
             "dnssecEnabled": false,
             "domainName": "test.bar.net",
             "name": "bar"
+        },
+        {
+            "dnssecEnabled": false,
+            "domainName": "test.delete.net",
+            "name": "cdndelete"
+        }
+    ],
+    "cdnlocks": [
+        {
+            "userName": "opslockuser",
+            "cdn": "cdn1",
+            "message": "test lock",
+            "soft": true
+        },
+        {
+            "userName": "opslockuser",
+            "cdn": "cdn2",
+            "message": "test lock for updates",
+            "soft": false
+        },
+        {
+            "userName": "opslockuser",
+            "cdn": "cdn4",
+            "message": "test lock",
+            "soft": true
+        },
+        {
+            "userName": "opslockuser",
+            "cdn": "cdndelete",
+            "message": "test lock for deleting cdn action",
+            "soft": false
         }
     ],
     "deliveryServiceRequestComments": [
         {
-            "value": "this is comment one"
+            "value": "this is comment one",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment two"
+            "value": "this is comment two",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment three"
+            "value": "this is comment three",
+            "xmlId": "test-ds1"
         },
         {
-            "value": "this is comment four"
+            "value": "this is comment four",
+            "xmlId": "test-ds1"
         }
     ],
     "deliveryServiceRequests": [
@@ -335,66 +375,8 @@
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",
-                "displayName": "Bad Tenant",
-                "dscp": 0,
-                "geoLimit": 0,
-                "geoProvider": 0,
-                "initialDispersion": 3,
-                "ipv6RoutingEnabled": true,
-                "logsEnabled": false,
-                "longDesc": "long desc",
-                "missLat": 0.0,
-                "missLong": 0.0,
-                "multiSiteOrigin": false,
-                "orgServerFqdn": "http://example.test",
-                "protocol": 0,
-                "qstringIgnore": 0,
-                "rangeRequestHandling": 0,
-                "regionalGeoBlocking": false,
-                "tenant": "root",
-                "type": "HTTP",
-                "xmlId": "test-ds2"
-            },
-            "status": "draft"
-        },
-        {
-            "changeType": "create",
-            "requested": {
-                "ccrDnsTtl": 30,
-                "deepCachingType": "NEVER",
-                "displayName": "Bad Test Case CDN",
-                "dscp": 0,
-                "geoLimit": 0,
-                "geoProvider": 1,
-                "infoUrl": "xxx",
-                "initialDispersion": 1,
-                "ipv6RoutingEnabled": true,
-                "logsEnabled": true,
-                "longDesc": "long desc",
-                "missLat": 0.0,
-                "missLong": 0.0,
-                "multiSiteOrigin": false,
-                "orgServerFqdn": "http://example.test",
-                "protocol": 0,
-                "qstringIgnore": 0,
-                "rangeRequestHandling": 0,
-                "regionalGeoBlocking": true,
-                "routingName": "x routing",
-                "tenant": "tenant1",
-                "type": "HTTP",
-                "xmlId": "test-ds3"
-            },
-            "status": "draft"
-        },
-        {
-            "changeType": "create",
-            "requested": {
-                "active": false,
-                "cdnName": "cdn1",
-                "ccrDnsTtl": 30,
-                "deepCachingType": "NEVER",
-                "displayName": "Testing transitions",
-                "dscp": 3,
+                "displayName": "Good Kabletown CDN",
+                "dscp": 1,
                 "geoLimit": 1,
                 "geoProvider": 1,
                 "initialDispersion": 1,
@@ -412,7 +394,7 @@
                 "routingName": "goodroute",
                 "tenant": "tenant1",
                 "type": "HTTP",
-                "xmlId": "test-transitions"
+                "xmlId": "test-deletion"
             },
             "status": "draft"
         }
@@ -1746,12 +1728,6 @@
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
             "pattern": ".*"
-        },
-        {
-            "dsName": "ds1",
-            "typeName": "HOST_REGEXP",
-            "setNumber": 3,
-            "pattern": ""
         }
     ],
     "deliveryservicesRequiredCapabilities": [
@@ -1766,9 +1742,7 @@
         {
             "xmlID": "msods1",
             "RequiredCapability": "bar"
-        }
-    ],
-    "topologyBasedDeliveryServicesRequiredCapabilities": [
+        },
         {
             "xmlID": "ds-top-req-cap",
             "RequiredCapability": "ram"
@@ -1780,6 +1754,20 @@
         {
             "xmlID": "ds-top-req-cap2",
             "RequiredCapability": "ram"
+        }
+    ],
+    "deliveryServiceServerAssignments": [
+        {
+            "xmlId": "ds-top",
+            "serverNames": ["denver-mso-org-01"]
+        },
+        {
+            "xmlId": "test-ds-server-assignments",
+            "serverNames": ["test-ds-server-assignments", "test-mso-org-01"]
+        },
+        {
+            "xmlId": "ds3",
+            "serverNames": ["atlanta-edge-14"]
         }
     ],
     "divisions": [
@@ -1985,6 +1973,12 @@
             "name": "tm.instance_name",
             "secure": false,
             "value": "Traffic Ops API Tests"
+        },
+        {
+            "configFile": "remap.config",
+            "name": "location",
+            "secure": false,
+            "value": "/remap/config/location/parameter/"
         }
     ],
     "physLocations": [
@@ -2026,6 +2020,19 @@
             "shortName": "atlanta",
             "state": "GA",
             "zip": "30301"
+        },
+        {
+            "address": "1234 delete way",
+            "city": "Denver",
+            "comments": null,
+            "email": null,
+            "name": "testDelete",
+            "phone": "303-222-2222",
+            "poc": null,
+            "region": "region1",
+            "shortName": "testdelete",
+            "state": "C0",
+            "zip": "80202"
         }
     ],
     "profiles": [
@@ -2607,7 +2614,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -2651,7 +2658,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGEInCDN2",
+            "profileNames": ["EDGEInCDN2"],
             "rack": "",
             "revalPending": false,
             "status": "REPORTED",
@@ -2700,7 +2707,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -2749,7 +2756,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -2798,7 +2805,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -2847,7 +2854,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -2897,7 +2904,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -2946,7 +2953,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "MID1",
+            "profileNames": ["MID1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -2995,7 +3002,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "MID2",
+            "profileNames": ["MID2"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3044,7 +3051,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3093,7 +3100,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3142,7 +3149,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "MID1",
+            "profileNames": ["MID1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3191,7 +3198,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "RASCAL1",
+            "profileNames": ["RASCAL1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3240,7 +3247,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "CDN2_EDGE",
+            "profileNames": ["CDN2_EDGE"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3289,7 +3296,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "ONLINE",
@@ -3338,7 +3345,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "MSO",
+            "profileNames": ["MSO"],
             "rack": "RR 119.02",
             "revalPending": true,
             "status": "REPORTED",
@@ -3387,7 +3394,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "MSO",
+            "profileNames": ["MSO"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "ONLINE",
@@ -3436,7 +3443,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "MSO-CDN2",
+            "profileNames": ["MSO-CDN2"],
             "rack": "RR 119.02",
             "revalPending": true,
             "status": "REPORTED",
@@ -3485,7 +3492,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3534,7 +3541,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3572,7 +3579,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3608,7 +3615,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3644,7 +3651,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "MID1",
+            "profileNames": ["MID1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3680,7 +3687,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "MID1",
+            "profileNames": ["MID1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3716,7 +3723,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "MID1",
+            "profileNames": ["MID1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3752,7 +3759,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "MID1",
+            "profileNames": ["MID1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3788,7 +3795,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3824,7 +3831,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3860,7 +3867,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3896,7 +3903,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3932,7 +3939,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -3968,7 +3975,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4004,7 +4011,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_EDGE",
+            "profileNames": ["CDN2_EDGE"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4040,7 +4047,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_EDGE",
+            "profileNames": ["CDN2_EDGE"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4076,7 +4083,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4112,7 +4119,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4148,7 +4155,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4184,7 +4191,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4220,7 +4227,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "MID1",
+            "profileNames": ["MID1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4267,7 +4274,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4305,7 +4312,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_EDGE",
+            "profileNames": ["CDN2_EDGE"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4341,7 +4348,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_EDGE",
+            "profileNames": ["CDN2_EDGE"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4377,7 +4384,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4413,7 +4420,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_EDGE",
+            "profileNames": ["CDN2_EDGE"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4449,7 +4456,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_EDGE",
+            "profileNames": ["CDN2_EDGE"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4485,7 +4492,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4521,7 +4528,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "MID1",
+            "profileNames": ["MID1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4557,7 +4564,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4593,7 +4600,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4629,7 +4636,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4665,7 +4672,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": true,
             "status": "OFFLINE",
@@ -4701,7 +4708,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4737,7 +4744,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "CDN2_MID",
+            "profileNames": ["CDN2_MID"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4766,7 +4773,7 @@
                 }
             ],
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1"],
             "revalPending": false,
             "status": "ONLINE",
             "tcpPort": 80,
@@ -4812,7 +4819,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE1",
+            "profileNames": ["EDGE1", "ATS_EDGE_TIER_CACHE"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4861,7 +4868,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "MID1",
+            "profileNames": ["MID1"],
             "rack": "RR 119.02",
             "revalPending": false,
             "status": "REPORTED",
@@ -4869,6 +4876,459 @@
             "type": "MID",
             "updPending": false,
             "xmppId": "atlanta-mid-02\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "revalpnd-legacy-true",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.43.1/30",
+                            "gateway": "127.0.43.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:43:8::1/64",
+                            "gateway": "2345:1234:43:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profileNames": ["EDGE1"],
+            "rack": "RR 119.02",
+            "revalPending": true,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "revalpnd-legacy-true\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "updatepnd-legacy-true",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.44.1/30",
+                            "gateway": "127.0.44.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:44:8::1/64",
+                            "gateway": "2345:1234:44:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profileNames": ["EDGE1"],
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": true,
+            "xmppId": "revalpnd-legaacy-true\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "configUpdateTime": "2022-01-01T17:00:00-07:00",
+            "configApplyTime": "1969-12-31T17:00:00-07:00",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "config-update-time",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.45.1/30",
+                            "gateway": "127.0.45.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:45:8::1/64",
+                            "gateway": "2345:1234:45:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profileNames": ["EDGE1"],
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "config-update-time\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "configUpdateTime": "2022-01-01T17:00:00-07:00",
+            "configApplyTime": "1969-12-31T17:00:00-07:00",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "config-update-time-no-updpend",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.45.2/30",
+                            "gateway": "127.0.45.2",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:45:8::2/64",
+                            "gateway": "2345:1234:45:8::2",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profileNames": ["EDGE1"],
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "xmppId": "config-update-time-no-updpend\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "reval-update-time",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.46.1/30",
+                            "gateway": "127.0.46.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:46:8::1/64",
+                            "gateway": "2345:1234:46:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profileNames": ["EDGE1"],
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "revalUpdateTime": "2022-01-01T17:00:00-07:00",
+            "revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "config-update-time\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "reval-update-time-no-revalpend",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.46.2/30",
+                            "gateway": "127.0.46.2",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:46:8::2/64",
+                            "gateway": "2345:1234:46:8::2",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profileNames": ["EDGE1"],
+            "rack": "RR 119.02",
+            "revalUpdateTime": "2022-01-01T17:00:00-07:00",
+            "revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "config-update-time\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "configUpdateTime": "2022-01-01T17:00:00-07:00",
+            "configApplyTime": "1969-12-31T17:00:00-07:00",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "config-reval-update-time",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.47.1/30",
+                            "gateway": "127.0.47.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:47:8::1/64",
+                            "gateway": "2345:1234:47:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profileNames": ["EDGE1"],
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "revalUpdateTime": "2022-01-01T17:00:00-07:00",
+            "revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "config-update-time\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "configUpdateTime": "2022-01-01T17:00:00-07:00",
+            "configApplyTime": "1969-12-31T17:00:00-07:00",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "config-reval-update-time-only",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.47.2/30",
+                            "gateway": "127.0.47.2",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:47:8::2/64",
+                            "gateway": "2345:1234:47:8::2",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profileNames": ["EDGE1"],
+            "rack": "RR 119.02",
+            "revalUpdateTime": "2022-01-01T17:00:00-07:00",
+            "revalApplyTime": "1969-12-31T17:00:00-07:00",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "xmppId": "config-update-time\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "admin-down-server",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.22/30",
+                            "gateway": "127.0.0.22",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:13:8::1/64",
+                            "gateway": "2345:1234:13:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router1",
+                    "routerPort": "9000"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profileNames": ["EDGE1"],
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "ADMIN_DOWN",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "atlanta-edge-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         }
     ],
@@ -5006,28 +5466,8 @@
     ],
     "statuses": [
         {
-            "description": "Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches",
-            "name": "OFFLINE"
-        },
-        {
-            "description": "Edge: Puts server in CCR config file in this state, and CCR will always route traffic to it. Mid: Server will be included in parent.config files for its edges",
-            "name": "ONLINE"
-        },
-        {
-            "description": "Edge: Puts server in CCR config file in this state, and CCR will adhere to the health protocol. Mid: N/A for now",
-            "name": "REPORTED"
-        },
-        {
-            "description": "Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches",
-            "name": "ADMIN_DOWN"
-        },
-        {
             "description": "Edge: 12M will not include caches in this state in CCR config files. Mid: N/A for now",
             "name": "CCR_IGNORE"
-        },
-        {
-            "description": "Pre Production. Not active in any configuration.",
-            "name": "PRE_PROD"
         },
         {
             "name": "TEST_NULL_DESCRIPTION"
@@ -5316,6 +5756,16 @@
                     "parents": [
                         0
                     ]
+                }
+            ]
+        },
+        {
+            "name": "top-with-caches-in-cdn1",
+            "description": "a topology",
+            "nodes": [
+                {
+                    "cachegroup": "cdn1-only",
+                    "parents": []
                 }
             ]
         },
@@ -5641,6 +6091,27 @@
             "tenant": "root",
             "uid": 0,
             "username": "steering"
+        },
+        {
+            "addressLine1": "address of ops user with lock",
+            "addressLine2": "place",
+            "city": "somewhere",
+            "company": "else",
+            "country": "US",
+            "email": "opswithlock@example.com",
+            "fullName": "Ops with Lock User",
+            "gid": 0,
+            "localPasswd": "pa$$word",
+            "confirmLocalPasswd": "pa$$word",
+            "newUser": false,
+            "phoneNumber": "",
+            "postalCode": "",
+            "publicSshKey": "",
+            "role": "operations",
+            "stateOrProvince": "",
+            "tenant": "root",
+            "uid": 0,
+            "username": "opslockuser"
         }
     ],
     "steeringTargets": [

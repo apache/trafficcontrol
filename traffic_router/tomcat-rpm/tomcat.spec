@@ -20,7 +20,7 @@ Summary:    Apache Tomcat Servlet/JSP Engine 9.0+, RI for Servlet 3.1/JSP 2.3 AP
 License:    Apache Software License
 URL:        https://github.com/apache/trafficcontrol/
 Source:     %{_sourcedir}/apache-tomcat-%{version}.tar.gz
-Requires:   java-11
+Requires:   java-11-openjdk-headless
 
 %define tomcat_home /opt/tomcat
 

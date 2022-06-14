@@ -22,8 +22,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
@@ -35,6 +37,15 @@ var GitRevision = "No Git Revision Specified. Please build with '-X main.GitRevi
 
 // BuildTimestamp is the time the app was built. The app SHOULD always be built with this set via the `-X` flag.
 var BuildTimestamp = "No Build Timestamp Specified. Please build with '-X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
+
+func InitAccessCfg(cfg config.Config) error {
+	accessW, err := config.GetAccessLogWriter(cfg)
+	if err != nil {
+		return err
+	}
+	log.InitAccess(accessW)
+	return nil
+}
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -66,10 +77,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := InitAccessCfg(cfg); err != nil {
+		fmt.Printf("Error starting service: failed to create access log writer: %v\n", err)
+		os.Exit(1)
+	}
+
 	if cfg.ShortHostnameOverride != "" {
 		staticData.Hostname = cfg.ShortHostnameOverride
 	}
 
+	rand.Seed(time.Now().UnixNano())
 	log.Infof("Starting with config %+v\n", cfg)
 
 	err = manager.Start(*opsConfigFile, cfg, staticData, *configFileName)

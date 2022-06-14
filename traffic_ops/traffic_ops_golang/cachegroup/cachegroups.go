@@ -189,13 +189,29 @@ func (cg *TOCacheGroup) ValidateTypeInTopology() error {
 	}
 
 	// language=SQL
+	const previousNameQuery = `
+	SELECT name
+	FROM cachegroup c
+	WHERE c.id = $1
+	`
+	var previousName string
+	err = cg.ReqInfo.Tx.QueryRow(previousNameQuery, *cg.ID).Scan(&previousName)
+	if err == sql.ErrNoRows {
+		return nil
+	}
+	if err != nil {
+		log.Errorf("%s: getting the previous name of cachegroup %s: %s", userErr.Error(), *cg.Name, err.Error())
+		return userErr
+	}
+
+	// language=SQL
 	const usedInTopologyQuery = `
 	SELECT EXISTS (SELECT
 	FROM topology_cachegroup tc
 	WHERE tc.cachegroup = $1)
 	`
 	var usedInTopology bool
-	err = cg.ReqInfo.Tx.QueryRow(usedInTopologyQuery, *cg.Name).Scan(&usedInTopology)
+	err = cg.ReqInfo.Tx.QueryRow(usedInTopologyQuery, previousName).Scan(&usedInTopology)
 	if err != nil {
 		log.Errorf("%s: querying topology_cachegroup by cachegroup name: %s", userErr.Error(), err.Error())
 		return userErr
@@ -231,28 +247,31 @@ func (cg *TOCacheGroup) ValidateTypeInTopology() error {
 	return fmt.Errorf("cannot change type of cachegroup %s from %s to %s because it is in use by a topology", *cg.Name, typeNameByID[previousTypeID], typeNameByID[*cg.TypeID])
 }
 
-// Validate fulfills the api.Validator interface
-func (cg TOCacheGroup) Validate() error {
+// Validate fulfills the api.Validator interface.
+//
+// TODO: A lot of database operations here either swallow their errors or return
+// them to the client.
+func (cg TOCacheGroup) Validate() (error, error) {
 	if _, err := tc.ValidateTypeID(cg.ReqInfo.Tx.Tx, cg.TypeID, "cachegroup"); err != nil {
-		return err
+		return err, nil
 	}
 
 	if cg.Fallbacks != nil && len(*cg.Fallbacks) > 0 {
 		isValid, err := cg.isAllowedToFallback(*cg.TypeID)
 		if err != nil {
-			return err
+			return err, nil
 		}
 		if !isValid {
-			return errors.New("the cache group " + *cg.Name + " is not allowed to have fallbacks.  It must be of type EDGE_LOC.")
+			return errors.New("the cache group " + *cg.Name + " is not allowed to have fallbacks. It must be of type EDGE_LOC."), nil
 		}
 
 		for _, fallback := range *cg.Fallbacks {
 			isValid, err = cg.isValidCacheGroupFallback(fallback)
 			if err != nil {
-				return err
+				return err, nil
 			}
 			if !isValid {
-				return errors.New("the cache group " + fallback + " is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
+				return errors.New("the cache group " + fallback + " is not valid as a fallback. It must exist as a cache group and be of type EDGE_LOC."), nil
 			}
 		}
 	}
@@ -271,7 +290,7 @@ func (cg TOCacheGroup) Validate() error {
 		"localizationMethods":         validation.Validate(cg.LocalizationMethods, validation.By(tovalidate.IsPtrToSliceOfUniqueStringersICase("CZ", "DEEP_CZ", "GEO"))),
 		"type":                        cg.ValidateTypeInTopology(),
 	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
 //The TOCacheGroup implementation of the Creator interface
@@ -377,10 +396,10 @@ func (cg *TOCacheGroup) createCacheGroupFallbacks() error {
 func (cg *TOCacheGroup) isValidCacheGroupFallback(fallbackName string) (bool, error) {
 	var isValid bool
 	query := `SELECT(
-SELECT cachegroup.id 
-FROM cachegroup 
-JOIN type on type.id = cachegroup.type 
-WHERE cachegroup.name = $1 
+SELECT cachegroup.id
+FROM cachegroup
+JOIN type on type.id = cachegroup.type
+WHERE cachegroup.name = $1
 AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
@@ -395,9 +414,9 @@ AND (type.name = 'EDGE_LOC')
 func (cg *TOCacheGroup) isAllowedToFallback(cacheGroupType int) (bool, error) {
 	var isValid bool
 	query := `SELECT(
-SELECT type.name 
-FROM type 
-WHERE type.id = $1 
+SELECT type.name
+FROM type
+WHERE type.id = $1
 AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
@@ -658,6 +677,11 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
+	}
+
+	userErr = cg.ValidateTypeInTopology()
+	if userErr != nil {
+		return userErr, nil, http.StatusBadRequest
 	}
 
 	err := cg.ReqInfo.Tx.Tx.QueryRow(

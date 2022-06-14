@@ -103,11 +103,11 @@ func GetCombinedParams(r *http.Request) (map[string]string, error) {
 }
 
 // decodeAndValidateRequestBody decodes and validates a pointer to a struct implementing the Validator interface
-func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
+func decodeAndValidateRequestBody(r *http.Request, v Validator) (error, error) {
 	defer r.Body.Close()
 
 	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
-		return err
+		return err, nil
 	}
 	return v.Validate()
 }
@@ -242,8 +242,12 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Updater)
 		obj.SetInfo(inf)
 
-		if err := decodeAndValidateRequestBody(r, obj); err != nil {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		if userErr, sysErr := decodeAndValidateRequestBody(r, obj); userErr != nil || sysErr != nil {
+			code := http.StatusBadRequest
+			if sysErr != nil {
+				code = http.StatusInternalServerError
+			}
+			HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
 			return
 		}
 
@@ -298,7 +302,7 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 		}
 
 		if err := CreateChangeLog(ApiChange, Updated, obj, inf.User, inf.Tx.Tx); err != nil {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting changelog: %w", err))
 			return
 		}
 		alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was updated.")
@@ -320,7 +324,13 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 		deleter,
 		HandleErr,
 		func(w http.ResponseWriter, r *http.Request, message string) {
-			WriteRespAlert(w, r, tc.SuccessLevel, message)
+			if deleter.GetType() == "ds" {
+				alerts := tc.CreateAlerts(tc.SuccessLevel, message)
+				alerts.AddNewAlert(tc.InfoLevel, "Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take effect.")
+				WriteAlerts(w, r, http.StatusOK, alerts)
+			} else {
+				WriteRespAlert(w, r, tc.SuccessLevel, message)
+			}
 		},
 	)
 }
@@ -489,9 +499,13 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 			for _, objElemInt := range objSlice {
 				objElem := reflect.ValueOf(objElemInt).Interface().(Creator)
 
-				err = objElem.Validate()
-				if err != nil {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+				userErr, sysErr = objElem.Validate()
+				if userErr != nil || sysErr != nil {
+					code := http.StatusBadRequest
+					if sysErr != nil {
+						code = http.StatusInternalServerError
+					}
+					HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
 					return
 				}
 
@@ -514,7 +528,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 				}
 
 				if err = CreateChangeLog(ApiChange, Created, objElem, inf.User, inf.Tx.Tx); err != nil {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting changelog: %w", err))
 					return
 				}
 			}
@@ -541,9 +555,13 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 			WriteAlertsObj(w, r, http.StatusOK, alerts, responseObj)
 
 		} else {
-			err := decodeAndValidateRequestBody(r, obj)
-			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			userErr, sysErr := decodeAndValidateRequestBody(r, obj)
+			if userErr != nil || sysErr != nil {
+				code := http.StatusBadRequest
+				if sysErr != nil {
+					code = http.StatusInternalServerError
+				}
+				HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
 				return
 			}
 
@@ -565,8 +583,8 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 				return
 			}
 
-			if err = CreateChangeLog(ApiChange, Created, obj, inf.User, inf.Tx.Tx); err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+			if err := CreateChangeLog(ApiChange, Created, obj, inf.User, inf.Tx.Tx); err != nil {
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting changelog: %w", err))
 				return
 			}
 			alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was created.")

@@ -35,9 +35,10 @@ import (
 )
 
 const (
-	MonitorProxyParameter = "tm.traffic_mon_fwd_proxy"
-	MonitorRequestTimeout = time.Second * 10
-	MonitorOnlineStatus   = "ONLINE"
+	MonitorProxyParameter               = "tm.traffic_mon_fwd_proxy"
+	MonitorRequestTimeout               = time.Second * 10
+	MonitorOnlineStatus                 = "ONLINE"
+	MonitorQueryStatusOverrideParameter = "tm_query_status_override"
 
 	TrafficMonitorCacheStatsPath       = "/publish/CacheStatsNew"
 	TrafficMonitorLegacyCacheStatsPath = "/publish/CacheStats"
@@ -65,27 +66,40 @@ func GetClient(tx *sql.Tx) (*http.Client, error) {
 	return client, nil
 }
 
-// GetURLs returns an FQDN, including port, of an online monitor for each CDN. If a CDN has no online monitors, that CDN will not have an entry in the map. If a CDN has multiple online monitors, an arbitrary one will be returned.
-func GetURLs(tx *sql.Tx) (map[tc.CDNName]string, error) {
-	rows, err := tx.Query(`
-SELECT s.host_name, s.domain_name, s.tcp_port, c.name as cdn
-FROM server as s
-JOIN type as t ON s.type = t.id
-JOIN status as st ON st.id = s.status
-JOIN cdn as c ON c.id = s.cdn_id
-WHERE t.name = '` + tc.MonitorTypeName + `'
-AND st.name = '` + MonitorOnlineStatus + `'
-`)
+// GetURLs returns a slice of Traffic Monitor FQDNs (including port numbers) of
+// ONLINE monitors for each CDN. If a CDN has no online monitors, that CDN will
+// not have an entry in the map.
+func GetURLs(tx *sql.Tx) (map[tc.CDNName][]string, error) {
+	qry := `
+SELECT
+  s.host_name,
+  s.domain_name,
+  s.tcp_port,
+  c.name as cdn
+FROM
+  server s
+  JOIN type t ON s.type = t.id
+  JOIN status st ON st.id = s.status
+  JOIN cdn c ON c.id = s.cdn_id
+WHERE
+  t.name = '` + tc.MonitorTypeName + `'
+  AND st.name = (SELECT COALESCE(
+    (SELECT p.value
+     FROM parameter p
+     WHERE p.name = '` + MonitorQueryStatusOverrideParameter + `' AND p.config_file = 'global' LIMIT 1),
+    '` + MonitorOnlineStatus + `'))
+`
+	rows, err := tx.Query(qry)
 	if err != nil {
 		return nil, errors.New("querying monitors: " + err.Error())
 	}
 	defer rows.Close()
-	monitors := map[tc.CDNName]string{}
+	monitors := map[tc.CDNName][]string{}
 	for rows.Next() {
 		host := ""
 		domain := ""
 		port := sql.NullInt64{}
-		cdn := ""
+		cdn := tc.CDNName("")
 		if err := rows.Scan(&host, &domain, &port, &cdn); err != nil {
 			return nil, errors.New("scanning monitors: " + err.Error())
 		}
@@ -93,7 +107,7 @@ AND st.name = '` + MonitorOnlineStatus + `'
 		if port.Valid {
 			fqdn += ":" + strconv.FormatInt(port.Int64, 10)
 		}
-		monitors[tc.CDNName(cdn)] = fqdn
+		monitors[cdn] = append(monitors[cdn], fqdn)
 	}
 	return monitors, nil
 }

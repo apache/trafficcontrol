@@ -20,16 +20,16 @@ package main
  */
 
 import (
-	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/lestrrat-go/jwx/jwk"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+
+	"github.com/lestrrat-go/jwx/jwk"
 )
 
 func testBackend(t *testing.T, backend TVBackend) {
@@ -187,7 +187,7 @@ func TestRiakBackend(t *testing.T) {
 func TestPGBackend(t *testing.T) {
 	data := make([]byte, 32)
 	for i, _ := range data {
-		data[i] = byte('a' + rune(rand.Intn(26)))
+		data[i] = byte('a' + rune(test.RandIntn(26)))
 	}
 	pg := PGBackend{
 		cfg: PGConfig{

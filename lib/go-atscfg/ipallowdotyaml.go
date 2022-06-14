@@ -21,7 +21,6 @@ package atscfg
 
 import (
 	"net"
-	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,7 +30,7 @@ import (
 )
 
 const IPAllowYamlFileName = `ip_allow.yaml`
-const ContentTypeIPAllowDotYAML = "application/yaml; charset=us-ascii" // Note YAML has no IANA standard mime type. This is one of several common usages, and is likely to be the standardized value. If you're reading this, please check IANA to see if YAML has been added, and change this to the IANA definition if so. Also note we include 'charset=us-ascii' because YAML is commonly UTF-8, but ATS is likely to be unable to handle UTF.
+const ContentTypeIPAllowDotYAML = ContentTypeYAML
 const LineCommentIPAllowDotYAML = LineCommentHash
 
 // const ParamPurgeAllowIP = "purge_allow_ip"
@@ -44,9 +43,6 @@ const LineCommentIPAllowDotYAML = LineCommentHash
 // const DefaultCoalesceNumberV4 = 5
 // const DefaultCoalesceMaskLenV6 = 48
 // const DefaultCoalesceNumberV6 = 5
-
-const MethodPush = `PUSH`
-const MethodPurge = `PURGE`
 
 // AStatsDotConfigOpts contains settings to configure generation options.
 type IPAllowDotYAMLOpts struct {
@@ -80,21 +76,10 @@ func MakeIPAllowDotYAML(
 	params := paramsToMultiMap(filterParams(serverParams, IPAllowConfigFileName, "", "", ""))
 
 	ipAllowDat := []ipAllowYAMLData{}
-	const ActionAllow = "allow"
-	const ActionDeny = "deny"
-	const MethodAll = "ALL"
 
 	// localhost is trusted.
-	ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-		Src:     `127.0.0.1`,
-		Action:  ActionAllow,
-		Methods: []string{MethodAll},
-	})
-	ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-		Src:     `::1`,
-		Action:  ActionAllow,
-		Methods: []string{MethodAll},
-	})
+	ipAllowDat = append([]ipAllowYAMLData{yamlAllowAll(`127.0.0.1`)}, ipAllowDat...)
+	ipAllowDat = append([]ipAllowYAMLData{yamlAllowAll(`::1`)}, ipAllowDat...)
 
 	// default for coalesce_ipv4 = 24, 5 and for ipv6 48, 5; override with the parameters in the server profile.
 	coalesceMaskLenV4 := DefaultCoalesceMaskLenV4
@@ -105,12 +90,8 @@ func MakeIPAllowDotYAML(
 	for name, vals := range params {
 		for _, val := range vals {
 			switch name {
-			case "purge_allow_ip":
-				ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-					Src:     val,
-					Action:  ActionAllow,
-					Methods: []string{MethodAll},
-				})
+			case ParamPurgeAllowIP:
+				ipAllowDat = append(ipAllowDat, yamlAllowAll(val))
 			case ParamCoalesceMaskLenV4:
 				if vi, err := strconv.Atoi(val); err != nil {
 					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
@@ -150,16 +131,8 @@ func MakeIPAllowDotYAML(
 	// for edges deny "PUSH|PURGE|DELETE", allow everything else to everyone.
 	isMid := strings.HasPrefix(server.Type, tc.MidTypePrefix)
 	if !isMid {
-		ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-			Src:     `0.0.0.0/0`,
-			Action:  ActionDeny,
-			Methods: []string{MethodPush, MethodPurge, http.MethodDelete},
-		})
-		ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-			Src:     `::/0`,
-			Action:  ActionDeny,
-			Methods: []string{MethodPush, MethodPurge, http.MethodDelete},
-		})
+		ipAllowDat = append(ipAllowDat, yamlAllowAllButPushPurgeDelete(`0.0.0.0/0`))
+		ipAllowDat = append(ipAllowDat, yamlAllowAllButPushPurgeDelete(`::/0`))
 	} else {
 
 		ips := []*net.IPNet{}
@@ -211,7 +184,7 @@ func MakeIPAllowDotYAML(
 			// - all monitors, if this server is a Mid
 			//
 			_, isChild := childCGs[*childServer.Cachegroup]
-			if !isChild && (!strings.HasPrefix(server.Type, tc.MidTypePrefix) || (string(childServer.Type) != tc.MonitorTypeName)) {
+			if !isChild && !strings.HasPrefix(server.Type, tc.MidTypePrefix) && string(childServer.Type) != tc.MonitorTypeName {
 				continue
 			}
 
@@ -249,78 +222,31 @@ func MakeIPAllowDotYAML(
 		cidr6s := util.CoalesceCIDRs(ip6s, coalesceNumberV6, coalesceMaskLenV6)
 
 		for _, cidr := range cidrs {
-			ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-				Src:     cidr.String(),
-				Action:  ActionAllow,
-				Methods: []string{MethodAll},
-			})
+			ipAllowDat = append(ipAllowDat, yamlAllowAllButPushPurge(cidr.String()))
 		}
 		for _, cidr := range cidr6s {
-			ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-				Src:     cidr.String(),
-				Action:  ActionAllow,
-				Methods: []string{MethodAll},
-			})
+			ipAllowDat = append(ipAllowDat, yamlAllowAllButPushPurge(cidr.String()))
 		}
 
 		// allow RFC 1918 server space - TODO JvD: parameterize
-		ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-			Src:     `10.0.0.0/8`,
-			Action:  ActionAllow,
-			Methods: []string{MethodAll},
-		})
-		ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-			Src:     `172.16.0.0/12`,
-			Action:  ActionAllow,
-			Methods: []string{MethodAll},
-		})
-		ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-			Src:     `192.168.0.0/16`,
-			Action:  ActionAllow,
-			Methods: []string{MethodAll},
-		})
+		ipAllowDat = append(ipAllowDat, yamlAllowAllButPushPurge(`10.0.0.0/8`))
+		ipAllowDat = append(ipAllowDat, yamlAllowAllButPushPurge(`172.16.0.0/12`))
+		ipAllowDat = append(ipAllowDat, yamlAllowAllButPushPurge(`192.168.0.0/16`))
 
 		// order matters, so sort before adding the denys
 		sort.Sort(ipAllowYAMLDatas(ipAllowDat))
 
 		// start with a deny for PUSH and PURGE - TODO CDL: parameterize
 		// but leave purge open through localhost
-		if isMid { // Edges already deny PUSH and PURGE
-			ipAllowDat = append([]ipAllowYAMLData{
-				{
-					Src:     `127.0.0.1`,
-					Action:  ActionAllow,
-					Methods: []string{MethodPurge},
-				},
-				{
-					Src:     `::1`,
-					Action:  ActionAllow,
-					Methods: []string{MethodPurge},
-				},
-				{
-					Src:     `0.0.0.0/0`,
-					Action:  ActionDeny,
-					Methods: []string{MethodPush, MethodPurge},
-				},
-				{
-					Src:     `::/0`,
-					Action:  ActionDeny,
-					Methods: []string{MethodPush, MethodPurge},
-				},
-			}, ipAllowDat...)
-		}
+		// Edges already deny PUSH and PURGE
+
+		// start by allowing everything to localhost, including PURGE and PUSH
+		ipAllowDat = append([]ipAllowYAMLData{yamlAllowAll(`127.0.0.1`)}, ipAllowDat...)
+		ipAllowDat = append([]ipAllowYAMLData{yamlAllowAll(`::1`)}, ipAllowDat...)
 
 		// end with a deny
-		ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-			Src:     `0.0.0.0/0`,
-			Action:  ActionDeny,
-			Methods: []string{MethodAll},
-		})
-		ipAllowDat = append(ipAllowDat, ipAllowYAMLData{
-			Src:     `::/0`,
-			Action:  ActionDeny,
-			Methods: []string{MethodAll},
-		})
+		ipAllowDat = append(ipAllowDat, yamlDenyAll(`0.0.0.0/0`))
+		ipAllowDat = append(ipAllowDat, yamlDenyAll(`::/0`))
 	}
 
 	text := makeHdrComment(opt.HdrComment)
@@ -373,4 +299,52 @@ func (is ipAllowYAMLDatas) Less(i, j int) bool {
 		}
 	}
 	return false
+}
+
+const YAMLActionAllow = "allow"
+const YAMLActionDeny = "deny"
+const YAMLMethodAll = "ALL"
+
+// yamlAllowAllButPushPurge is a helper func to build a ipAllowYAMLData for the given range string immediately allowing all Methods except Push and Purge.
+func yamlAllowAllButPushPurge(rangeStr string) ipAllowYAMLData {
+	// Note denying methods implicitly and immediately allows all other methods!
+	// So Deny PUSH|PURGE will make all other methods
+	// immediately allowed, regardless of any later deny rules!
+	methodPushPurge := []string{MethodPush, MethodPurge}
+	return ipAllowYAMLData{
+		Src:     rangeStr,
+		Action:  YAMLActionDeny,
+		Methods: methodPushPurge,
+	}
+}
+
+// yamlAllowAllButPushPurgeDelete is a helper func to build a ipAllowYAMLData for the given range string immediately allowing all Methods except PUSH, PURGE, and DELETE.
+func yamlAllowAllButPushPurgeDelete(rangeStr string) ipAllowYAMLData {
+	// Note denying methods implicitly and immediately allows all other methods!
+	// So Deny PUSH|PURGE will make all other methods
+	// immediately allowed, regardless of any later deny rules!
+	methodPushPurgeDelete := []string{MethodPush, MethodPurge, MethodDelete}
+	return ipAllowYAMLData{
+		Src:     rangeStr,
+		Action:  YAMLActionDeny,
+		Methods: methodPushPurgeDelete,
+	}
+}
+
+// yamlAllowAll is a helper func to build a ipAllowYAMLData for the given range string immediately allowing all Methods, including Push and Purge.
+func yamlAllowAll(rangeStr string) ipAllowYAMLData {
+	return ipAllowYAMLData{
+		Src:     rangeStr,
+		Action:  YAMLActionAllow,
+		Methods: []string{YAMLMethodAll},
+	}
+}
+
+// yamlDenyAll is a helper func to build a ipAllowYAMLData for the given range string immediately denying all Methods.
+func yamlDenyAll(rangeStr string) ipAllowYAMLData {
+	return ipAllowYAMLData{
+		Src:     rangeStr,
+		Action:  YAMLActionDeny,
+		Methods: []string{YAMLMethodAll},
+	}
 }

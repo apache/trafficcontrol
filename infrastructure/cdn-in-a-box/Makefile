@@ -18,7 +18,7 @@
 ############################################################
 # Dockerfile to build Edge-Tier Cache container images for
 # Apache Traffic Control
-# Based on CentOS 8
+# Based on Rocky Linux 8
 ############################################################
 
 ifeq ($(RHEL_VERSION),)

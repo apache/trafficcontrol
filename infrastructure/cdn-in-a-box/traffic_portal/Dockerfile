@@ -17,11 +17,13 @@
 
 ############################################################
 # Dockerfile to build Traffic Portal container images
-# Based on CentOS 8
+# Based on Rocky Linux 8
 ############################################################
 
-ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
+    # Change BASE_IMAGE to centos when RHEL_VERSION=7
+ARG BASE_IMAGE=rockylinux \
+    RHEL_VERSION=8
+FROM ${BASE_IMAGE}:${RHEL_VERSION}
 ARG RHEL_VERSION=8
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
@@ -36,16 +38,13 @@ ARG TRAFFIC_PORTAL_RPM=traffic_portal/traffic_portal.rpm
 ARG TO_HOST=$TO_HOST
 
 # Install and delete the TRAFFIC_PORTAL_RPM when finished
-RUN dnf install -y \
-    epel-release yum-utils && \
-    ### Remove these lines once nodesource/distributions#1290 is fixed
-    set -o pipefail && \
-    yumdownloader -q --url nodejs | xargs dnf -y install && \
-    ###
+RUN dnf install -y epel-release && \
     dnf install -y \
       jq \
-      #nodejs
+      nodejs \
       openssl \
+      # find is required by to-access.sh
+      findutils \
       gettext \
       bind-utils \
       net-tools && \

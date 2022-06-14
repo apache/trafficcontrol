@@ -14,10 +14,18 @@
 #
 install_traffic_opsdb: false
 initialize_traffic_opsdb: false
+enable_traffic_opsdb_standby: false
+enable_traffic_opsdb_replica: false
 
-postgresql_server_pkg_name: "{% if pg_major_version | int < 10 %}postgresql{{pg_major_version}}{{pg_minor_version}}-server-{{pg_major_version}}.{{pg_minor_version}}.{{pg_build_num}}{% elif pg_major_version | int >= 10 %}postgresql{{pg_major_version}}-server-{{pg_major_version}}.{{pg_minor_version}}{% endif %}"
-postgresql_client_pkg_name: "{% if pg_major_version | int < 10 %}postgresql{{pg_major_version}}{{pg_minor_version}}-{{pg_major_version}}.{{pg_minor_version}}.{{pg_build_num}}{% else %}postgresql{{pg_major_version}}-{{pg_major_version}}.{{pg_minor_version}}{% endif %}"
-postgresql_devel_pkg_name: "{% if pg_major_version | int < 10 %}postgresql{{pg_major_version}}{{pg_minor_version}}-devel-{{pg_major_version}}.{{pg_minor_version}}.{{pg_build_num}}{% else %}postgresql{{pg_major_version}}-devel-{{pg_major_version}}.{{pg_minor_version}}{% endif %}"
+postgresql_server_pkg_name: >-
+  {%- if pg_major_version | int < 10 -%}postgresql{{pg_major_version}}{{pg_minor_version}}-server-{{pg_major_version}}.{{pg_minor_version}}.{{pg_build_num}}
+  {%- elif pg_major_version | int >= 10 -%}postgresql{{pg_major_version}}-server-{{pg_major_version}}.{{pg_minor_version}}{%- endif -%}
+postgresql_client_pkg_name: >-
+  {%- if pg_major_version | int < 10 -%}postgresql{{pg_major_version}}{{pg_minor_version}}-{{pg_major_version}}.{{pg_minor_version}}.{{pg_build_num}}
+  {%- else %}postgresql{{pg_major_version}}-{{pg_major_version}}.{{pg_minor_version}}{%- endif -%}
+postgresql_devel_pkg_name: >-
+  {%- if pg_major_version | int < 10 -%}postgresql{{pg_major_version}}{{pg_minor_version}}-devel-{{pg_major_version}}.{{pg_minor_version}}.{{pg_build_num}}
+  {%- else %}postgresql{{pg_major_version}}-devel-{{pg_major_version}}.{{pg_minor_version}}{%- endif -%}
 
 # Local OS User to use for Postgres Processes
 postgresql_user: postgres
@@ -27,7 +35,8 @@ postgresql_group: postgres
 postgresql_port: 5432
 
 # Postgres PGDATA directory
-postgresql_datadir: "{% if pg_major_version | int < 10 %}/var/lib/pgsql/{{pg_major_version}}.{{pg_minor_version}}/data{%else%}/var/lib/pgsql/{{pg_major_version}}/data{%endif%}"
+postgresql_datadir: >-
+  {%- if pg_major_version | int < 10 %}/var/lib/pgsql/{{pg_major_version}}.{{pg_minor_version}}/data{%else%}/var/lib/pgsql/{{pg_major_version}}/data{%-endif-%}
 
 # SSL CA root cert to use with SSL Connections
 postgresql_certs_ca: "{{ postgresql_datadir }}/lab.rootca.crt"
@@ -38,6 +47,10 @@ postgresql_max_connections: 700
 # Postgres database admin credentials
 postgresql_admin_user:
 postgresql_admin_user_password:
+
+# Postgres database replication credentials
+postgresql_replica_user:
+postgresql_replica_user_password:
 
 # TODB database credentials
 todb_username:

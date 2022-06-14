@@ -1255,10 +1255,12 @@
     }
   },
   "config": {
-    "federationmapping.polling.url": "http://${toHostname}/api/2.0/federations/all",
-    "certificate.api.url": "http://${toHostname}/api/2.0/cdns/name/${cdnName}/sslkeys",
+    "certificate.api.url": "http://${toHostname}/api/3.1/cdns/name/${cdnName}/sslkeys",
+    "dnschallengemapping.polling.url": "http://${toHostname}/api/3.1/dnsrecords/",
+    "dnschallengemapping.polling.interval": "600000",
+    "federationmapping.polling.url": "http://${toHostname}/api/3.1/federations/all",
     "federationmapping.polling.interval": "600000",
-    "steeringmapping.polling.url": "http://${toHostname}/api/2.0/steering",
+    "steeringmapping.polling.url": "http://${toHostname}/api/3.1/steering",
     "steeringmapping.polling.interval": "15000",
     "weight": "1.0",
     "requestHeaders": [
@@ -1277,7 +1279,7 @@
     },
     "coveragezone.polling.interval": "86400000",
     "regional_geoblock.polling.url.renamed": "http://testing-tm-01.cdn.example.com/some/path",
-    "keystore.auth.url": "http://localhost:3000/api/2.0/user/login",
+    "keystore.auth.url": "http://localhost:3000/api/3.1/user/login",
     "neustar.polling.interval": "12800000",
     "geolocation6.polling.interval": "86400000",
     "domain_name": "thecdn.example.com",
@@ -1290,7 +1292,7 @@
       "refresh": "28800"
     },
     "coveragezone.polling.url": "http://localhost:8889/czf.json",
-    "api.auth.url": "http://${toHostname}/api/2.0/user/login",
+    "api.auth.url": "http://${toHostname}/api/3.1/user/login",
     "certificates.polling.interval": "10000",
     "dnssec.enabled": "false"
   }

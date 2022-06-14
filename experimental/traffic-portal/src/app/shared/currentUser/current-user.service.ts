@@ -11,10 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {EventEmitter, Injectable} from "@angular/core";
+import { EventEmitter, Injectable } from "@angular/core";
 import { Router } from "@angular/router";
-import {UserService} from "src/app/shared/api";
-import { Capability, CurrentUser } from "../../models";
+import { BehaviorSubject } from "rxjs";
+
+import { UserService } from "src/app/api";
+import { type Capability, type CurrentUser, ADMIN_ROLE } from "src/app/models";
 
 /**
  * This service keeps track of the currently authenticated user.
@@ -29,20 +31,17 @@ export class CurrentUserService {
 	/** Makes updateCurrentUser able to be called from multiple places without regard to order */
 	private updatingUserPromise: Promise<boolean> | null = null;
 	/** To allow downstream code to stay up to date with the current user */
-	public userChanged: EventEmitter<CurrentUser> = new EventEmitter<CurrentUser>();
+	public userChanged = new EventEmitter<CurrentUser>();
 	/** The currently authenticated user - or `null` if not authenticated. */
 	private user: CurrentUser | null = null;
-	/** The Permissions afforded to the currently authenticated user. */
-	private caps = new Set<string>();
 
 	/** The currently authenticated user - or `null` if not authenticated. */
 	public get currentUser(): CurrentUser | null {
 		return this.user;
 	}
+
 	/** The Permissions afforded to the currently authenticated user. */
-	public get capabilities(): Set<string> {
-		return this.caps;
-	}
+	public capabilities: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set());
 
 	/** Whether or not the user is authenticated. */
 	public get loggedIn(): boolean {
@@ -59,8 +58,8 @@ export class CurrentUserService {
 	 * @returns A promise containing the value indicating the success of the update
 	 */
 	public async fetchCurrentUser(): Promise<boolean> {
-		if(this.currentUser !== null){
-			return new Promise<boolean>(resolve => resolve(true));
+		if (this.currentUser !== null){
+			return true;
 		}
 		return this.updateCurrentUser();
 	}
@@ -110,14 +109,11 @@ export class CurrentUserService {
 	 * @returns An observable that emits whether or not login succeeded.
 	 */
 	public async login(uOrT: string, p?: string): Promise<boolean> {
-		return this.api.login(uOrT, p).then(
-			async resp => {
-				if (resp && resp.status === 200) {
-					return this.updateCurrentUser();
-				}
-				return false;
-			}
-		);
+		const resp = await this.api.login(uOrT, p);
+		if (resp && resp.status === 200) {
+			return this.updateCurrentUser();
+		}
+		return false;
 	}
 
 	/**
@@ -128,8 +124,9 @@ export class CurrentUserService {
 	 */
 	public setUser(u: CurrentUser, caps: Set<string> | Array<Capability>): void {
 		this.user = u;
-		this.caps = caps instanceof Array ? new Set(caps.map(c=>c.name)) : caps;
+		const capabilities = caps instanceof Array ? new Set(caps.map(c=>c.name)) : caps;
 		this.userChanged.emit(this.user);
+		this.capabilities.next(capabilities);
 	}
 
 	/**
@@ -139,7 +136,10 @@ export class CurrentUserService {
 	 * @returns `true` if the user has the Permission `perm`, `false` otherwise.
 	 */
 	public hasPermission(perm: string): boolean {
-		return this.user ? this.caps.has(perm) : false;
+		if (!this.user) {
+			return false;
+		}
+		return this.user.roleName === ADMIN_ROLE || this.capabilities.getValue().has(perm);
 	}
 
 	/**
@@ -151,7 +151,7 @@ export class CurrentUserService {
 	 */
 	public logout(withRedirect?: boolean): void {
 		this.user = null;
-		this.caps.clear();
+		this.capabilities.next(new Set());
 
 		const queryParams: Record<string | symbol, string> = {};
 		if (withRedirect) {
@@ -160,16 +160,6 @@ export class CurrentUserService {
 				queryParams.returnUrl = "/core";
 			}
 		}
-		console.log("query params:", queryParams);
 		this.router.navigate(["/login"], {queryParams});
-	}
-
-	/**
-	 * Requests a password reset for a user.
-	 *
-	 * @param email The email of the user for whom to reset a password.
-	 */
-	 public async resetPassword(email: string): Promise<void> {
-		await this.api.resetPassword(email);
 	}
 }

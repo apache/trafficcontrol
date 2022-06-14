@@ -19,6 +19,121 @@
 
 /** @typedef { import('./CommonGridController').CGC } CGC */
 
+/**
+ * Given some query parameters, the columns of a table, and a hook into the
+ * AG-Grid API of said table, sets up filtering based on matches between the
+ * names of query parameters and the raw data fields of the columns.
+ *
+ * @param {URLSearchParams} params
+ * @param {{field?: string; filter?: string}[]} columns
+ * @param {GridApi} api
+ */
+function setUpQueryParamFilter(params, columns, api) {
+    for (const col of columns) {
+        if (!Object.prototype.hasOwnProperty.call(col, "field")) {
+            continue;
+        }
+        const filter = api.getFilterInstance(col.field);
+        if (!filter) {
+            continue;
+        }
+        const values = params.getAll(col.field);
+        if (values.length < 1) {
+            continue;
+        }
+
+        /** @type {"string" | "number" | "date"} */
+        let colType;
+        if (!Object.prototype.hasOwnProperty.call(col, "filter")) {
+            colType = "string";
+        } else if (typeof(col.filter) !== "string") {
+            continue;
+        } else {
+            let bail = false;
+            switch(col.filter) {
+                case "agTextColumnFilter":
+                    colType = "string";
+                    break;
+                case "agNumberColumnFilter":
+                    colType = "number";
+                    break;
+                case "agDateColumnFilter":
+                    colType = "date";
+                    break;
+                default:
+                    bail = true;
+                    break;
+            }
+            if (bail) {
+                continue;
+            }
+        }
+
+        let filterModel;
+        switch(colType) {
+            case "string":
+                if (values.length === 1) {
+                    filterModel = {
+                        filter: values[0],
+                        type: "equals"
+                    }
+                } else {
+                    filterModel = {
+                        operator: "OR",
+                        condition1: {
+                            filter: values[0],
+                            type: "equals"
+                        },
+                        condition2: {
+                            filter: values[1],
+                            type: "equals"
+                        }
+                    }
+                }
+                break;
+            case "number":
+                if (values.length === 1) {
+                    filterModel = {
+                        filter: parseInt(values[0], 10),
+                        type: "equals"
+                    }
+                    if (isNaN(filterModel.filter)) {
+                        continue;
+                    }
+                } else {
+                    filterModel = {
+                        operator: "OR",
+                        condition1: {
+                            filter: parseInt(values[0], 10),
+                            type: "equals"
+                        },
+                        condition2: {
+                            filter: parseInt(values[1], 10),
+                            type: "equals"
+                        }
+                    }
+                    if (isNaN(filterModel.condition1.filter) || isNaN(filterModel.condition2.filter)) {
+                        continue;
+                    }
+                }
+                break;
+            case "date":
+                const date = new Date(values[0]);
+                if (isNaN(date)) {
+                    continue;
+                }
+                const pad = num => String(num).padStart(2,"0");
+                filterModel = {
+                    dateFrom: `${date.getUTCFullYear()}-${pad(date.getUTCMonth()+1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`,
+                    type: "equals"
+                }
+                break;
+        }
+        filter.setModel(filterModel);
+        filter.applyModel();
+    }
+}
+
 let CommonGridController = function ($scope, $document, $state, userModel, dateUtils) {
     this.entry = null;
     this.quickSearch = "";
@@ -56,7 +171,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 
     function HTTPSCellRenderer() {}
     HTTPSCellRenderer.prototype.init = function(params) {
-        this.eGui = document.createElement("A");
+        this.eGui = document.createElement("a");
         this.eGui.href = "https://" + params.value;
         this.eGui.setAttribute("class", "link");
         this.eGui.setAttribute("target", "_blank");
@@ -67,7 +182,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
     // browserify can't handle classes...
     function SSHCellRenderer() {}
     SSHCellRenderer.prototype.init = function(params) {
-        this.eGui = document.createElement("A");
+        this.eGui = document.createElement("a");
         this.eGui.href = "ssh://" + userModel.user.username + "@" + params.value;
         this.eGui.setAttribute("class", "link");
         this.eGui.textContent = params.value;
@@ -76,7 +191,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 
     function CheckCellRenderer() {}
     CheckCellRenderer.prototype.init = function(params) {
-        this.eGui = document.createElement("I");
+        this.eGui = document.createElement("i");
         if (params.value === null || params.value === undefined) {
             return;
         }
@@ -94,7 +209,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 
     function UpdateCellRenderer() {}
     UpdateCellRenderer.prototype.init = function(params) {
-        this.eGui = document.createElement("I");
+        this.eGui = document.createElement("i");
 
         this.eGui.setAttribute("aria-hidden", "true");
         this.eGui.setAttribute("title", String(params.value));
@@ -256,6 +371,10 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
                 } catch (e) {
                     console.error("Failure to load stored filter state:", e);
                 }
+                // Set up filters from query string paramters.
+                const params = new URLSearchParams(globalThis.location.hash.split("?").slice(1).join("?"));
+                setUpQueryParamFilter(params, self.columns, self.gridOptions.api);
+                self.gridOptions.api.onFilterChanged();
 
                 self.gridOptions.api.addEventListener("filterChanged", function() {
                     localStorage.setItem(tableName + "_table_filters", JSON.stringify(self.gridOptions.api.getFilterModel()));

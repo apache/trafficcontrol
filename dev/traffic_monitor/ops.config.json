@@ -1,0 +1,8 @@
+{
+	"username": "admin",
+	"password": "twelve12",
+	"url": "https://trafficops:443/",
+	"insecure": true,
+	"cdnName": "dev",
+	"httpListener": ":80"
+}

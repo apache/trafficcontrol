@@ -42,15 +42,15 @@ func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
 	return history
 }
 
-func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[tc.CacheName]struct{} {
+func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[tc.CacheName]bool {
 	monitorConfig := monitorConfigTS.Get()
-	caches := map[tc.CacheName]struct{}{}
-	for cacheName := range localStates.GetCaches() {
+	caches := map[tc.CacheName]bool{}
+	for cacheName, a := range localStates.GetCaches() {
 		// ONLINE and OFFLINE caches are not polled.
 		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.ServerStatus == string(tc.CacheStatusOnline) || ts.ServerStatus == string(tc.CacheStatusOffline) {
 			continue
 		}
-		caches[cacheName] = struct{}{}
+		caches[cacheName] = a.DirectlyPolled
 	}
 	return caches
 }

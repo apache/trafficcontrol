@@ -22,7 +22,7 @@ The Traffic Ops API provides programmatic access to read and write Traffic Contr
 
 How to Read this Documentation
 ==============================
-Each endpoint for each version is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 1.1, 1.2, 1.3, 1.4, 1.5, 2.0. All endpoints are documented as though they were being used in version 1.5 in the version 1 documentation and version 2.0 in the version 2 documentation. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.
+Each endpoint for each version is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 3.0, 3.1, and 4.0. All endpoints are documented as though they were being used in version 3.1 in the version 3 documentation and version 4.0 in the version 4 documentation. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.
 
 Every endpoint is documented with a section for each method, containing the subsections "Request Structure" and "Response Structure" which identify all properties and structure of the Request to and Response from the endpoint. Before these subsections, three key pieces of information will be provided:
 
@@ -111,11 +111,11 @@ Using API Endpoints
 
 Example Session
 ---------------
-A user makes a request to the ``/api/2.0/asns`` endpoint.
+A user makes a request to the ``/api/4.0/asns`` endpoint.
 
 .. code-block:: http
 
-	GET /api/2.0/asns HTTP/1.1
+	GET /api/4.0/asns HTTP/1.1
 	Accept: application/json
 	Host: trafficops.infra.ciab.test
 	User-Agent: example
@@ -136,11 +136,11 @@ The response JSON indicates an authentication error.
 		}
 	]}
 
-To authenticate, the user sends a POST request containing their login information to the ``/api/2.0/user/login`` endpoint.
+To authenticate, the user sends a POST request containing their login information to the ``/api/4.0/user/login`` endpoint.
 
 .. code-block:: http
 
-	POST /api/2.0/user/login HTTP/1.1
+	POST /api/4.0/user/login HTTP/1.1
 	User-Agent: example
 	Host: trafficops.infra.ciab.test
 	Accept: application/json
@@ -169,11 +169,11 @@ Traffic Ops responds with a Mojolicious cookie to be used for future requests, a
 		}
 	]}
 
-Using this cookie, the user can now access their original target - the ``/api/2.0/asns`` endpoint...
+Using this cookie, the user can now access their original target - the ``/api/4.0/asns`` endpoint...
 
 .. code-block:: http
 
-	GET /api/2.0/asns HTTP/1.1
+	GET /api/4.0/asns HTTP/1.1
 	Accept: application/json
 	Cookie: mojolicious=...;
 	Host: trafficops.infra.ciab.test
@@ -281,7 +281,7 @@ The most common errors returned by Traffic Ops are:
 	When a server-side error occurs, the API will return a ``500 INTERNAL SERVER ERROR`` response.
 
 	.. code-block:: http
-		:caption: Example Response to ``GET /api/2.0/servers``. (when a server error such as a postgres failure occured)
+		:caption: Example Response to ``GET /api/4.0/servers``. (when a server error such as a postgres failure occured)
 
 		HTTP/1.1 500 Internal Server Error
 		Access-Control-Allow-Credentials: true
@@ -309,22 +309,12 @@ TrafficOps Native Client Libraries
 ==================================
 TrafficOps client libraries are available in Java, Go and Python. You can read (very little) more about them in the client README at :atc-file:`traffic_control/clients`.
 
-API V2 Routes
-=============
-API routes available in version 2.
-
-.. deprecated:: ATCv6
-	Traffic Ops API version 2 is deprecated in favor of version 3.
-
-.. toctree::
-	:maxdepth: 4
-	:glob:
-
-	v2/*
-
 API V3 Routes
 =============
 API routes available in version 3.
+
+.. deprecated:: ATCv7
+	Traffic Ops API version 3 is deprecated in favor of version 4.
 
 .. toctree::
 	:maxdepth: 4
@@ -335,8 +325,6 @@ API routes available in version 3.
 API V4 Routes
 =============
 API routes available in version 4.
-
-.. danger:: API version 4 is *unstable*, meaning that breaking changes can occur at any time. Use at your own peril!
 
 .. toctree::
 	:maxdepth: 4

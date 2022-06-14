@@ -29,6 +29,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -42,7 +44,7 @@ func randDS() tc.CRConfigDeliveryService {
 	ttlMinimum := "30"
 	ttlRefresh := "28800"
 	ttlRetry := "7200"
-	ttl := randInt()
+	ttl := util.IntPtr(test.RandInt())
 	ttlStr := strconv.Itoa(*ttl)
 	ttlNS := "3600"
 	ttlSOA := "86400"
@@ -60,8 +62,8 @@ func randDS() tc.CRConfigDeliveryService {
 		GeoLocationProvider: &geoProviderStr,
 		// MatchSets:            randMatchsetArr(),
 		MissLocation: &tc.CRConfigLatitudeLongitudeShort{
-			Lat: *randFloat64(),
-			Lon: *randFloat64(),
+			Lat: test.RandFloat64(),
+			Lon: test.RandFloat64(),
 		},
 		Protocol: &tc.CRConfigDeliveryServiceProtocol{
 			// AcceptHTTP: &truePtr,
@@ -71,7 +73,7 @@ func randDS() tc.CRConfigDeliveryService {
 		RegionalGeoBlocking:  &falseStrPtr,
 		ResponseHeaders:      nil,
 		RequestHeaders:       nil,
-		RequiredCapabilities: randStrArray(),
+		RequiredCapabilities: test.RandStrArray(),
 		Soa: &tc.SOA{
 			Admin:          &ttlAdmin,
 			ExpireSeconds:  &ttlExpire,
@@ -81,7 +83,7 @@ func randDS() tc.CRConfigDeliveryService {
 		},
 		SSLEnabled: false,
 		EcsEnabled: &ecsEnabled,
-		Topology:   randStr(),
+		Topology:   util.StrPtr(test.RandStr()),
 		TTL:        ttl,
 		TTLs: &tc.CRConfigTTL{
 			ASeconds:    &ttlStr,
@@ -89,28 +91,28 @@ func randDS() tc.CRConfigDeliveryService {
 			NSSeconds:   &ttlNS,
 			SOASeconds:  &ttlSOA,
 		},
-		// MaxDNSIPsForLocation: randInt(),
-		IP6RoutingEnabled: randBool(),
-		RoutingName:       randStr(),
+		// MaxDNSIPsForLocation: util.IntPtr(test.RandInt()),
+		IP6RoutingEnabled: util.BoolPtr(test.RandBool()),
+		RoutingName:       util.StrPtr(test.RandStr()),
 		BypassDestination: map[string]*tc.CRConfigBypassDestination{
 			"HTTP": &tc.CRConfigBypassDestination{
-				// IP: randStr(),
-				// IP6: randStr(),
-				// CName: randStr(),
-				// TTL: randInt(),
-				FQDN: randStr(),
-				// Port: randStr(),
+				// IP: util.StrPtr(test.RandStr()),
+				// IP6: util.StrPtr(test.RandStr()),
+				// CName: util.StrPtr(test.RandStr()),
+				// TTL: util.IntPtr(test.RandInt()),
+				FQDN: util.StrPtr(test.RandStr()),
+				// Port: util.StrPtr(test.RandStr()),
 			},
 		},
 		DeepCachingType: nil,
 		GeoEnabled:      nil,
-		// GeoLimitRedirectURL: randStr(),
+		// GeoLimitRedirectURL: util.StrPtr(test.RandStr()),
 		StaticDNSEntries: []tc.CRConfigStaticDNSEntry{
 			tc.CRConfigStaticDNSEntry{
-				Name:  *randStr(),
-				TTL:   *randInt(),
-				Type:  *randStr(),
-				Value: *randStr(),
+				Name:  test.RandStr(),
+				TTL:   test.RandInt(),
+				Type:  test.RandStr(),
+				Value: test.RandStr(),
 			},
 		},
 	}
@@ -123,7 +125,11 @@ func ExpectedMakeDSes() map[string]tc.CRConfigDeliveryService {
 	}
 }
 
-func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryService, cdn string) {
+func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryService, cdn string, geoEnabled string) {
+	geoLimit := 0
+	if len(geoEnabled) != 0 {
+		geoLimit = 2
+	}
 	rows := sqlmock.NewRows([]string{
 		"anonymous_blocking_enabled",
 		"consistent_hash_regex",
@@ -173,8 +179,8 @@ func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryS
 			*ds.TTL,
 			*ds.EcsEnabled,
 			false,
-			0,
-			"",
+			geoLimit,
+			geoEnabled,
 			"",
 			0,
 			*ds.BypassDestination["HTTP"].FQDN,
@@ -193,6 +199,76 @@ func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryS
 			dsName)
 	}
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+}
+
+func TestMakeDSesGeoLimit(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	cdn := "mycdn"
+	domain := "mycdn.invalid"
+
+	expected := ExpectedMakeDSes()
+	delete(expected, "ds2")
+	expectedDS := expected["ds1"]
+	geoEnabled := make([]tc.CRConfigGeoEnabled, 0)
+	geoEnabledCountry := tc.CRConfigGeoEnabled{CountryCode: "US"}
+	geoEnabled = append(geoEnabled, geoEnabledCountry)
+	geoEnabledCountry = tc.CRConfigGeoEnabled{CountryCode: "CA"}
+	geoEnabled = append(geoEnabled, geoEnabledCountry)
+	expectedDS.GeoEnabled = geoEnabled
+	expected["ds1"] = expectedDS
+
+	expectedParams := ExpectedGetServerProfileParams(expected)
+	expectedDSParams, err := getDSParams(expectedParams)
+	if err != nil {
+		t.Fatalf("getDSParams error expected: nil, actual: %v", err)
+	}
+	expectedMatchsets, expectedDomains := ExpectedGetDSRegexesDomains(expectedDSParams)
+	expectedStaticDNSEntries := ExpectedGetStaticDNSEntries(expected)
+
+	mock.ExpectBegin()
+	MockGetServerProfileParams(mock, expectedParams, cdn)
+	MockGetDSRegexesDomains(mock, expectedMatchsets, expectedDomains, cdn)
+	MockGetStaticDNSEntries(mock, expectedStaticDNSEntries, cdn)
+	MockMakeDSes(mock, expected, cdn, "US,CA")
+	mock.ExpectCommit()
+
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := makeDSes(cdn, domain, tx)
+	if err != nil {
+		t.Fatalf("makeDSes expected: nil error, actual: %v", err)
+	}
+
+	if len(actual) != len(expected) {
+		t.Fatalf("makeDses len expected: %v, actual: %v", len(expected), len(actual))
+	}
+
+	for dsName, ds := range expected {
+		actualDS, ok := actual[dsName]
+		if !ok {
+			t.Errorf("makeDSes expected: %v, actual: missing", dsName)
+			continue
+		}
+		if len(ds.GeoEnabled) != len(actualDS.GeoEnabled) {
+			t.Fatalf("expected DS Geoenabled length %d != actual DS Geoenabled length %d", len(ds.GeoEnabled), len(actualDS.GeoEnabled))
+		}
+		for i, countryCode := range ds.GeoEnabled {
+			if countryCode != actualDS.GeoEnabled[i] {
+				t.Errorf("mismatch in geo enabled countries of expected DS and actual DS, expected: %s, actual: %s", countryCode, actualDS.GeoEnabled[i])
+			}
+		}
+	}
 }
 
 func TestMakeDSes(t *testing.T) {
@@ -218,7 +294,7 @@ func TestMakeDSes(t *testing.T) {
 	MockGetServerProfileParams(mock, expectedParams, cdn)
 	MockGetDSRegexesDomains(mock, expectedMatchsets, expectedDomains, cdn)
 	MockGetStaticDNSEntries(mock, expectedStaticDNSEntries, cdn)
-	MockMakeDSes(mock, expected, cdn)
+	MockMakeDSes(mock, expected, cdn, "")
 	mock.ExpectCommit()
 
 	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)

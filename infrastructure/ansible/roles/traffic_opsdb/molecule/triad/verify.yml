@@ -1,0 +1,102 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Verify TODB setup
+  hosts: all
+  gather_facts: yes
+
+  vars_files:
+    - "{{ molecule_ephemeral_directory }}/secret_varfile.json"
+
+  vars:
+    postgresql_replica_user: to_replication
+    postgresql_admin_user: postgres
+    # postgresql_admin_user_password: from secret file
+    todb_username: trafficops
+    # todb_password: from secret file
+    tvdb_username: trafficvault
+    # tvdb_password: from secret file
+    todb_db_name: traffic_ops
+    tvdb_db_name: traffic_vault
+
+  tasks:
+    - name: Ensure you can connect to the databases
+      postgresql_query:
+        login_host: "127.0.0.1"
+        db: "{{ item }}"
+        login_user: "{{ postgresql_admin_user }}"
+        login_password: "{{ postgresql_admin_user_password }}"
+        query: select 1
+      no_log: true
+      with_items:
+        - "{{ todb_db_name }}"
+        - "{{ tvdb_db_name }}"
+
+    - name: Grab a copy of replication receivers
+      postgresql_query:
+        login_host: "127.0.0.1"
+        db: "postgres"
+        login_user: "{{ postgresql_admin_user }}"
+        login_password: "{{ postgresql_admin_user_password }}"
+        query: select conninfo, status from pg_stat_wal_receiver;
+      register: replication_raw
+      no_log: true
+
+    - name: Check if the postgres binaries are on the system path
+      command: bash -c 'source /etc/profile && which pg_ctl'
+      changed_when: false
+
+- name: Check replication
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    postgresql_replica_user: to_replication
+
+  tasks:
+    - name: Parse query results
+      set_fact:
+        repl_parents: "{{ (repl_parents| default({})) | combine({item: payload}) }}"
+      with_items: "{{ groups['traffic_opsdb-standby'] + groups['traffic_opsdb-replicas'] }}"
+      vars:
+        payload:
+          status: "{{ hostvars[item].replication_raw.query_result[0].status }}"
+          conninfo: "{{ dict(_keys|zip(_vals)) }}"
+        _arr: "{{ hostvars[item].replication_raw.query_result[0].conninfo.split(' ') | map('trim') | select() | list }}"
+        _keys: "{{ _arr|map('regex_replace', '^(.*?)=(.*)$','\\1')|map('trim')|list }}"
+        _vals: "{{ _arr|map('regex_replace', '^(.*?)=(.*)$','\\2')|map('trim')|list }}"
+
+    - name: Assert standby replication info
+      assert:
+        that:
+          - groups['traffic_opsdb-primary'] | length == 1
+          - groups['traffic_opsdb-standby'] | length == 1
+          - repl_parents[stdby_host].status == 'streaming'
+          - repl_parents[stdby_host].conninfo.host == primary_host
+          - repl_parents[stdby_host].conninfo.user == postgresql_replica_user
+      vars:
+        stdby_host: "{{ groups['traffic_opsdb-standby'] | first }}"
+        primary_host: "{{ groups['traffic_opsdb-primary'] | first }}"
+
+    - name: Assert replica replication info
+      assert:
+        that:
+          - groups['traffic_opsdb-standby'] | length == 1
+          - repl_parents[item].status == 'streaming'
+          - repl_parents[item].conninfo.host == stdby_host
+          - repl_parents[item].conninfo.user == postgresql_replica_user
+      with_items: "{{ groups['traffic_opsdb-replicas'] }}"
+      vars:
+        stdby_host: "{{ groups['traffic_opsdb-standby'] | first }}"

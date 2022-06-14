@@ -72,11 +72,11 @@ func (i *tester) GetAuditName() string {
 }
 
 //Validator interface function
-func (v *tester) Validate() error {
+func (v *tester) Validate() (error, error) {
 	if v.ID < 1 {
-		return errors.New("ID is too low")
+		return errors.New("ID is too low"), nil
 	}
-	return nil
+	return nil, nil
 }
 
 //Creator interface functions

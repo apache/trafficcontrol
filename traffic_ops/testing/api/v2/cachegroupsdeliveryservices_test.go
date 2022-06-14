@@ -100,7 +100,9 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		serverID := server.ID
 
 		serverDSes, _, err := TOSession.GetDeliveryServicesByServer(serverID)
-
+		if err != nil {
+			t.Fatalf("getting delivery services by server: %v", err)
+		}
 		for _, dsID := range dsIDs {
 			found := false
 			for _, serverDS := range serverDSes {

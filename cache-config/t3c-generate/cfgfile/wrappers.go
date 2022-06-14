@@ -23,6 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 //
@@ -217,7 +218,9 @@ func MakeRegexRevalidateDotConfig(toData *t3cutil.ConfigData, fileName string, h
 }
 
 func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
-	opts := &atscfg.RemapDotConfigOpts{HdrComment: hdrCommentTxt}
+	remapAndCacheKeyParams := []tc.Parameter{}
+	remapAndCacheKeyParams = append(remapAndCacheKeyParams, toData.RemapConfigParams...)
+	remapAndCacheKeyParams = append(remapAndCacheKeyParams, toData.CacheKeyConfigParams...)
 	return atscfg.MakeRemapDotConfig(
 		toData.Server,
 		toData.DeliveryServices,
@@ -225,12 +228,18 @@ func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentT
 		toData.DeliveryServiceRegexes,
 		toData.ServerParams,
 		toData.CDN,
-		append(toData.RemapConfigParams, toData.CacheKeyConfigParams...),
+		remapAndCacheKeyParams,
 		toData.Topologies,
 		toData.CacheGroups,
 		toData.ServerCapabilities,
 		toData.DSRequiredCapabilities,
-		opts,
+		cfg.Dir,
+		&atscfg.RemapDotConfigOpts{
+			HdrComment:        hdrCommentTxt,
+			VerboseComments:   true,
+			UseStrategies:     cfg.UseStrategies == t3cutil.UseStrategiesFlagTrue || cfg.UseStrategies == t3cutil.UseStrategiesFlagCore,
+			UseStrategiesCore: cfg.UseStrategies == t3cutil.UseStrategiesFlagCore,
+		},
 	)
 }
 
@@ -288,6 +297,26 @@ func MakeURLSigConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt
 
 func MakeURISigningConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeURISigningConfig(fileName, toData.URISigningKeys, nil)
+}
+
+func MakeStrategiesDotYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
+	return atscfg.MakeStrategiesDotYAML(
+		toData.DeliveryServices,
+		toData.Server,
+		toData.Servers,
+		toData.Topologies,
+		toData.ServerParams,
+		toData.ParentConfigParams,
+		toData.ServerCapabilities,
+		toData.DSRequiredCapabilities,
+		toData.CacheGroups,
+		toData.DeliveryServiceServers,
+		toData.CDN,
+		&atscfg.StrategiesYAMLOpts{
+			HdrComment:      hdrCommentTxt,
+			VerboseComments: cfg.ParentComments, // TODO add a CLI flag?
+		},
+	)
 }
 
 func MakeUnknownConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {

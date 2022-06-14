@@ -69,7 +69,8 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	c := TODeliveryServiceRequestComment{}
-	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
+	err, _ := c.Validate()
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'deliveryServiceRequestId' is required`),
@@ -84,7 +85,7 @@ func TestValidate(t *testing.T) {
 	d := 1
 	c = TODeliveryServiceRequestComment{DeliveryServiceRequestCommentNullable: tc.DeliveryServiceRequestCommentNullable{DeliveryServiceRequestID: &d, Value: &v}}
 
-	err := c.Validate()
+	err, _ = c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)
 	}

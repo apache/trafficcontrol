@@ -11,7 +11,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import 'src/theme';
 
 #deliveryservices {
 	width: 80%;
@@ -77,14 +76,4 @@ a#new {
 	position: fixed;
 	bottom: 5px;
 	right: 5px;
-	width: 2em;
-	height: 2em;
-	background-color: $theme_tertiary;
-	color: white;
-	text-decoration: none;
-	padding: 1em;
-	border-radius: 2em;
-	text-align: center;
-	vertical-align: middle;
-	line-height: 2em;
 }

@@ -11,13 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faTrash, faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 
-import { defaultDeliveryService, DeliveryService, InvalidationJob } from "../../models";
-import { DeliveryServiceService, InvalidationJobService } from "../../shared/api";
+import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
+import { defaultDeliveryService, type DeliveryService, type InvalidationJob } from "src/app/models";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+
 import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 
 /**
@@ -41,19 +43,23 @@ export class InvalidationJobsComponent implements OnInit {
 	public now: Date = new Date();
 
 	/** The ID of the Delivery Service to which the displayed Jobs belong. */
-	private dsId = -1;
+	private dsID = -1;
 
 	/** The icon for the "Create a new Job" FAB. */
 	public readonly addIcon = faPlus;
 
-	/**
-	 * Constructor.
-	 */
+	/** The icon for the Job deletion button. */
+	public readonly deleteIcon = faTrash;
+
+	/** The icon for the Job edit button. */
+	public readonly editIcon = faPencilAlt;
+
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly jobAPI: InvalidationJobService,
 		private readonly dsAPI: DeliveryServiceService,
-		private readonly dialog: MatDialog
+		private readonly dialog: MatDialog,
+		private readonly headerSvc: TpHeaderService
 	) {
 		this.deliveryservice = {...defaultDeliveryService};
 		this.jobs = new Array<InvalidationJob>();
@@ -64,30 +70,45 @@ export class InvalidationJobsComponent implements OnInit {
 	 * Traffic Ops and setting the pageload date/time.
 	 */
 	public ngOnInit(): void {
+		this.headerSvc.headerTitle.next("Loading - Content Invalidation Jobs");
 		this.now = new Date();
 		const idParam = this.route.snapshot.paramMap.get("id");
 		if (!idParam) {
 			console.error("Missing route 'id' parameter");
 			return;
 		}
-		this.dsId = parseInt(idParam, 10);
-		this.jobAPI.getInvalidationJobs({dsID: this.dsId}).then(
+		this.dsID = parseInt(idParam, 10);
+		this.jobAPI.getInvalidationJobs({dsID: this.dsID}).then(
 			r => {
-				// The values returned by the API are not RFC-compliant at the time of this writing,
-				// so we need to do some pre-processing on them.
-				for (const j of r) {
-					const tmp = Array.from(String(j.startTime).split(" ").join("T"));
-					tmp.splice(-3, 3);
-					j.startTime = new Date(tmp.join(""));
-					this.jobs.push(j);
-				}
+				this.jobs = r;
 			}
 		);
-		this.dsAPI.getDeliveryServices(this.dsId).then(
+		this.dsAPI.getDeliveryServices(this.dsID).then(
 			r => {
 				this.deliveryservice = r;
+				this.headerSvc.headerTitle.next(`${this.deliveryservice.displayName} - Content Invalidation Jobs`);
 			}
 		);
+	}
+
+	/**
+	 * Gets whether or not a Job is in-progress.
+	 *
+	 * @param j The Job to check.
+	 * @returns Whether or not `j` is currently in-progress.
+	 */
+	public isInProgress(j: InvalidationJob): boolean {
+		return j.startTime <= this.now && this.endDate(j) >= this.now;
+	}
+
+	/**
+	 * Handles a click on a
+	 *
+	 * @param j The ID of the Job to delete.
+	 */
+	public async deleteJob(j: number): Promise<void> {
+		await this.jobAPI.deleteInvalidationJob(j);
+		this.jobs = await this.jobAPI.getInvalidationJobs();
 	}
 
 	/**
@@ -100,7 +121,7 @@ export class InvalidationJobsComponent implements OnInit {
 		if (!j.parameters) {
 			throw new Error("cannot get end date for job with no parameters");
 		}
-		const tmp = j.parameters.split(":");
+		const tmp = j.parameters.replace(/h$/, "").split(":");
 		if (tmp.length !== 2) {
 			throw new Error(`Malformed job parameters: "${j.parameters}" (id: ${j.id})`);
 		}
@@ -121,20 +142,33 @@ export class InvalidationJobsComponent implements OnInit {
 	 * @param e The DOM event that triggered the creation.
 	 */
 	public newJob(): void {
-		const dialogRef = this.dialog.open(NewInvalidationJobDialogComponent, {data: this.dsId});
+		const dialogRef = this.dialog.open(NewInvalidationJobDialogComponent, {data: {dsID: this.dsID}});
 		dialogRef.afterClosed().subscribe(
 			(created) => {
 				if (created) {
-					this.jobAPI.getInvalidationJobs({dsID: this.dsId}).then(
+					this.jobAPI.getInvalidationJobs({dsID: this.dsID}).then(
 						resp => {
-							this.jobs = new Array<InvalidationJob>();
-							for (const j of resp) {
-								const tmp = Array.from(String(j.startTime).replace(" ", "T"));
-								tmp.splice(-3, 3);
-								j.startTime = new Date(tmp.join(""));
-								this.jobs.push(j);
-							}
+							this.jobs = resp;
 						}
+					);
+				}
+			}
+		);
+	}
+
+	/**
+	 * Handles a user clicking on a Job's "edit" button by opening the edit
+	 * dialog.
+	 *
+	 * @param job The Job to be edited.
+	 */
+	public editJob(job: InvalidationJob): void {
+		const dialogRef = this.dialog.open(NewInvalidationJobDialogComponent, {data: {dsID: this.dsID, job}});
+		dialogRef.afterClosed().subscribe(
+			created => {
+				if (created) {
+					this.jobAPI.getInvalidationJobs({dsID: this.dsID}).then(
+						resp => this.jobs = resp
 					);
 				}
 			}

@@ -32,7 +32,7 @@ import (
 // # DO NOT EDIT - Generated for odol-atsec-sea-22 by Traffic Ops (https://trafficops.comcast.net/) on Mon Oct 26 16:22:19 UTC 2020
 
 // GetConfigFile returns the text of the generated config file, the MIME Content Type of the config file, and any error.
-func GetConfigFile(toData *t3cutil.ConfigData, fileInfo atscfg.CfgMeta, hdrCommentTxt string, thiscfg config.Cfg) (string, string, bool, string, error) {
+func GetConfigFile(toData *t3cutil.ConfigData, fileInfo atscfg.CfgMeta, hdrCommentTxt string, thiscfg config.Cfg) (string, string, bool, string, []string, error) {
 	start := time.Now()
 	defer func() {
 		log.Infof("GetConfigFile %v took %v\n", fileInfo.Name, time.Since(start).Round(time.Millisecond))
@@ -44,9 +44,9 @@ func GetConfigFile(toData *t3cutil.ConfigData, fileInfo atscfg.CfgMeta, hdrComme
 	logWarnings("getting config file '"+fileInfo.Name+"': ", cfg.Warnings)
 
 	if err != nil {
-		return "", "", false, "", err
+		return "", "", false, "", []string{}, err
 	}
-	return cfg.Text, cfg.ContentType, cfg.Secure, cfg.LineComment, nil
+	return cfg.Text, cfg.ContentType, cfg.Secure, cfg.LineComment, cfg.Warnings, nil
 }
 
 type ConfigFileFunc func(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error)
@@ -99,6 +99,7 @@ var configFileLiteralFuncs = []ConfigFileLiteralFunc{
 	{"ssl_multicert.config", MakeSSLMultiCertDotConfig},
 	{"ssl_server_name.yaml", MakeSSLServerNameYAML},
 	{"sni.yaml", MakeSNIDotYAML},
+	{"strategies.yaml", MakeStrategiesDotYAML},
 	{"storage.config", MakeStorageDotConfig},
 	{"sysctl.conf", MakeSysCtlDotConf},
 	{"volume.config", MakeVolumeDotConfig},

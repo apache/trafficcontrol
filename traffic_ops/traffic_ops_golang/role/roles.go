@@ -129,11 +129,11 @@ func (role *TORole) SetKeys(keys map[string]interface{}) {
 }
 
 // Validate fulfills the api.Validator interface
-func (role TORole) Validate() error {
+func (role TORole) Validate() (error, error) {
 	errs := validation.Errors{
 		"name":        validation.Validate(role.Name, validation.Required),
 		"description": validation.Validate(role.Description, validation.Required),
-		"privLevel":   validation.Validate(role.PrivLevel, validation.Required)}
+		"privLevel":   validation.Validate(role.PrivLevel, validation.NotNil)}
 
 	errsToReturn := tovalidate.ToErrors(errs)
 	checkCaps := `SELECT cap FROM UNNEST($1::text[]) AS cap WHERE NOT cap =  ANY(ARRAY(SELECT c.name FROM capability AS c WHERE c.name = ANY($1)))`
@@ -141,24 +141,25 @@ func (role TORole) Validate() error {
 	if role.ReqInfo.Tx != nil {
 		err := role.ReqInfo.Tx.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
 		if err != nil {
-			log.Errorf("got error from selecting bad capabilities: %v", err)
-			return tc.DBError
+			return nil, fmt.Errorf("got error from selecting bad capabilities: %w", err)
 		}
 		if len(badCaps) > 0 {
 			errsToReturn = append(errsToReturn, fmt.Errorf("can not add non-existent capabilities: %v", badCaps))
 		}
 	}
-	return util.JoinErrs(errsToReturn)
+	return util.JoinErrs(errsToReturn), nil
 }
 
 func (role *TORole) Create() (error, error, int) {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusBadRequest
 	}
-	caps := *role.Capabilities
-	missing := role.ReqInfo.User.MissingPermissions(caps...)
-	if len(missing) != 0 {
-		return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+	if role.Capabilities != nil && *role.Capabilities != nil {
+		caps := *role.Capabilities
+		missing := role.ReqInfo.User.MissingPermissions(caps...)
+		if len(missing) != 0 {
+			return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+		}
 	}
 	userErr, sysErr, errCode := api.GenericCreate(role)
 	if userErr != nil || sysErr != nil {
@@ -234,10 +235,12 @@ func (role *TORole) Update(h http.Header) (error, error, int) {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusForbidden
 	}
-	caps := *role.Capabilities
-	missing := role.ReqInfo.User.MissingPermissions(caps...)
-	if len(missing) != 0 {
-		return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+	if role.Capabilities != nil && *role.Capabilities != nil {
+		caps := *role.Capabilities
+		missing := role.ReqInfo.User.MissingPermissions(caps...)
+		if len(missing) != 0 {
+			return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+		}
 	}
 	userErr, sysErr, errCode := api.GenericUpdate(h, role)
 	if userErr != nil || sysErr != nil {

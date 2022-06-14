@@ -135,28 +135,29 @@ RETURNING
 	start_time as startTime
 `
 
-const revalQuery = `
-UPDATE server SET %s=TRUE
-WHERE server.status NOT IN (
-                             SELECT status.id
-                             FROM status
-                             WHERE name IN ('OFFLINE', 'PRE_PROD')
-                           )
+const queueUpdateOrRevalQuery = `
+UPDATE public.server
+SET %s = now()
+WHERE server.status IN (
+		SELECT status.id
+		FROM status
+		WHERE name IN ('ONLINE', 'REPORTED', 'ADMIN_DOWN')
+		)
      AND server.profile IN (
-                             SELECT profile_parameter.profile
-                             FROM profile_parameter
-                             WHERE profile_parameter.parameter IN (
-                                                                    SELECT parameter.id
-                                                                    FROM parameter
-                                                                    WHERE parameter.name='location'
-                                                                     AND parameter.config_file='regex_revalidate.config'
-                                                                  )
-                           )
+		SELECT profile_parameter.profile
+		FROM profile_parameter
+		WHERE profile_parameter.parameter IN (
+			SELECT parameter.id
+			FROM parameter
+			WHERE parameter.name='location'
+			AND parameter.config_file='regex_revalidate.config'
+			)
+		)
      AND server.cdn_id  =  (
-                             SELECT deliveryservice.cdn_id
-                             FROM deliveryservice
-                             WHERE deliveryservice.%s=$1
-                           )
+		SELECT deliveryservice.cdn_id
+		FROM deliveryservice
+		WHERE deliveryservice.%s=$1
+		);
 `
 
 const updateQuery = `
@@ -585,11 +586,13 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		sysErr = fmt.Errorf("failed to match XML ID to int ID for Delivery Service %s: %v", job.DeliveryService, err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
 	}
 	if !exists {
 		userErr = fmt.Errorf("delivery service \"%v\" does not exist", job.DeliveryService)
 		errCode = http.StatusNotFound
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
 	}
 
 	row := inf.Tx.Tx.QueryRow(insertQueryV4,
@@ -1526,19 +1529,19 @@ func setRevalFlags(d interface{}, tx *sql.Tx) error {
 		useReval = "0"
 	}
 
-	col := "reval_pending"
+	column := "revalidate_update_time"
 	if useReval == "0" {
-		col = "upd_pending"
+		column = "config_update_time"
 	}
 
 	var q string
 	switch t := d.(type) {
 	case uint:
-		q = fmt.Sprintf(revalQuery, col, "id")
+		q = fmt.Sprintf(queueUpdateOrRevalQuery, column, "id")
 	case string:
-		q = fmt.Sprintf(revalQuery, col, "xml_id")
+		q = fmt.Sprintf(queueUpdateOrRevalQuery, column, "xml_id")
 	default:
-		return fmt.Errorf("Invalid type passed to 'setRevalFlags': %v", t)
+		return fmt.Errorf("invalid type passed to 'setRevalFlags': %v", t)
 	}
 
 	row = tx.QueryRow(q, d)

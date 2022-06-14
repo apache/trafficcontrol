@@ -22,10 +22,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-update/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -63,7 +65,9 @@ func main() {
 		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
 	}
 
-	err = t3cutil.SetUpdateStatus(cfg.TCCfg, tc.CacheName(cfg.TCCfg.CacheHostName), cfg.UpdatePending, cfg.RevalPending)
+	// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
+	// Use SetUpdateStatus is preferred
+	err = t3cutil.SetUpdateStatusCompat(cfg.TCCfg, tc.CacheName(cfg.TCCfg.CacheHostName), cfg.ConfigApplyTime, cfg.RevalApplyTime, cfg.ConfigApplyBool, cfg.RevalApplyBool)
 	if err != nil {
 		log.Errorf("%s, %s\n", err, cfg.TCCfg.CacheHostName)
 		os.Exit(3)
@@ -75,10 +79,16 @@ func main() {
 		os.Exit(4)
 	}
 
-	if cur_status.UpdatePending != cfg.UpdatePending && cfg.RevalPending != cfg.RevalPending {
-		log.Errorf("ERROR: update failed, update status and/or reval status was not set.\n")
-	} else {
-		log.Infoln("Update successfully completed")
+	// When comparing equality, it must be done with microsecond precision (Round not Truncate).
+	// This is because Postgres stores Microsecond precision. Round also drops the monotonic
+	// clock reading.
+	// t3c (Nano) -> client (Nano) -> TO (Nano) -> Postgres (Micro)
+	// Postgres (Micro) -> TO (Micro) -> client (Micro) -> here / t3c (Micro)
+	if cfg.ConfigApplyTime != nil && !(*cfg.ConfigApplyTime).Round(time.Microsecond).Equal((*cur_status.ConfigApplyTime).Round(time.Microsecond)) {
+		log.Errorf("Failed to set config_apply_time.\nSent: %v\nRecv: %v", *cfg.ConfigApplyTime, *cur_status.ConfigApplyTime)
 	}
-
+	if cfg.RevalApplyTime != nil && !(*cfg.RevalApplyTime).Round(time.Microsecond).Equal((*cur_status.RevalidateApplyTime).Round(time.Microsecond)) {
+		log.Errorf("Failed to set reval_apply_time.\nSent: %v\nRecv: %v", *cfg.RevalApplyTime, *cur_status.RevalidateApplyTime)
+	}
+	cfg.TCCfg.TOClient.WriteFsCookie(torequtil.CookieCachePath(cfg.TOUser))
 }

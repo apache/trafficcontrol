@@ -25,11 +25,12 @@ import (
 
 // CDNLock is a struct to store the details of a lock that a user wishes to acquire on a CDN.
 type CDNLock struct {
-	UserName    string    `json:"userName" db:"username"`
-	CDN         string    `json:"cdn" db:"cdn"`
-	Message     *string   `json:"message" db:"message"`
-	Soft        *bool     `json:"soft" db:"soft"`
-	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
+	UserName        string    `json:"userName" db:"username"`
+	CDN             string    `json:"cdn" db:"cdn"`
+	Message         *string   `json:"message" db:"message"`
+	Soft            *bool     `json:"soft" db:"soft"`
+	SharedUserNames []string  `json:"sharedUserNames" db:"shared_usernames"`
+	LastUpdated     time.Time `json:"lastUpdated" db:"last_updated"`
 }
 
 // CDNLockCreateResponse is a struct to store the response of a CREATE operation on a lock.

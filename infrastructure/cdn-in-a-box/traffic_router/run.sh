@@ -66,7 +66,7 @@ LOGFILE="$CATALINA_BASE/var/log/traffic_router.log"
 ACCESSLOG="$CATALINA_BASE/var/log/access.log"
 
 export JAVA_HOME JAVA_OPTS
-export TO_PROPERTIES TM_PROPERTIES 
+export TO_PROPERTIES TM_PROPERTIES
 export CATALINA_HOME CATALINA_BASE CATALINA_OPTS CATALINA_OUT CATALINA_PID
 
 # Wait on SSL certificate generation
@@ -90,19 +90,19 @@ cp $X509_CA_INTR_CERT_FILE $CATALINA_BASE/conf
 cp $X509_CA_CERT_FULL_CHAIN_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
 
-# Add traffic 
-for crtfile in $(find $CATALINA_BASE/conf -name \*.crt -type f) 
-do 
-  alias=$(echo $crtfile |sed -e 's/.crt//g' |tr [:upper:] [:lower:]); 
-  cacerts=$(find $JAVA_HOME -follow -name cacerts); echo $cacerts; 
-  keytool=$JAVA_HOME/bin/keytool;  
-   
-  $keytool -list -alias $alias -keystore $cacerts -storepass changeit -noprompt > /dev/null;    
+# Add traffic
+for crtfile in $(find $CATALINA_BASE/conf -name \*.crt -type f)
+do
+  alias=$(echo $crtfile |sed -e 's/.crt//g' |tr [:upper:] [:lower:]);
+  cacerts=$(find $JAVA_HOME -follow -name cacerts); echo $cacerts;
+  keytool=$JAVA_HOME/bin/keytool;
 
-  if [ $? -ne 0 ]; then     
-     echo "Installing certificate ${crtfile}..";     
-     $keytool -import -trustcacerts -file $crtfile -alias $alias -keystore $cacerts -storepass changeit -noprompt;   
-  fi; 
+  $keytool -list -alias $alias -keystore $cacerts -storepass changeit -noprompt > /dev/null;
+
+  if [ $? -ne 0 ]; then
+     echo "Installing certificate ${crtfile}..";
+     $keytool -import -trustcacerts -file $crtfile -alias $alias -keystore $cacerts -storepass changeit -noprompt;
+  fi;
 done
 
 /opt/traffic_router/conf/generatingCerts.sh
@@ -134,4 +134,4 @@ else
     exec /opt/tomcat/bin/catalina.sh run &
 fi;
 
-tail -F $CATALINA_OUT $CATALINA_LOG $LOGFILE $ACCESSLOG 
+tail -F $CATALINA_OUT $CATALINA_LOG $LOGFILE $ACCESSLOG

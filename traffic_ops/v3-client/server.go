@@ -204,6 +204,10 @@ func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.Se
 	return firstServer, reqInf, err
 }
 
+// GetServerDetailsByHostNameWithHdr retrieves the "details" of all servers with
+// the given hostname.
+// Deprecated: Server "details" as a concept have been removed from the latest
+// version of the API, and clients should use GetServersWithHdr instead.
 func (to *Session) GetServerDetailsByHostNameWithHdr(hostName string, header http.Header) ([]tc.ServerDetailV30, toclientlib.ReqInf, error) {
 	v := url.Values{}
 	v.Add("hostName", hostName)

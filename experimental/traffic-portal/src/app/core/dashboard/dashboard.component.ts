@@ -11,14 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 
-import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
-import { DeliveryService } from "../../models";
-import { DeliveryServiceService } from "../../shared/api";
-import { orderBy, fuzzyScore } from "../../utils";
+import { DeliveryServiceService } from "src/app/api";
+import type { DeliveryService } from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { orderBy, fuzzyScore } from "src/app/utils/index";
 
 /**
  * DashboardComponent is the controller for the dashboard, where a user sees all
@@ -39,10 +40,12 @@ export class DashboardComponent implements OnInit {
 	 * The set of Delivery Services filtered according to the search box text.
 	 */
 	public get filteredDSes(): DeliveryService[] {
-		if (!this.deliveryServices) {
-			return [];
-		}
-		return this.deliveryServices.map(x => [x, fuzzyScore(x.displayName, this.fuzzControl.value)]).filter(x => x[1] !== Infinity).sort(
+		return this.deliveryServices.map(
+			x => [
+				x,
+				fuzzyScore(x.displayName.toLocaleLowerCase(), this.fuzzControl.value.toLocaleLowerCase())
+			]
+		).filter(x => x[1] !== Infinity).sort(
 			(a, b) => {
 				if (a[1] > b[1]) {
 					return 1;
@@ -62,7 +65,9 @@ export class DashboardComponent implements OnInit {
 	 * Whether or not the currently logged-in user has permission to create
 	 * Delivery Services.
 	 */
-	public canCreateDeliveryServices = false;
+	public get canCreateDeliveryServices(): boolean {
+		return this.auth.hasPermission("DELIVERY-SERVICE:CREATE");
+	}
 
 	/**
 	 * The date and time at which the page loaded.
@@ -75,14 +80,12 @@ export class DashboardComponent implements OnInit {
 	/** Fuzzy search control */
 	public fuzzControl = new FormControl("", {updateOn: "change"});
 
-	/**
-	 * Constructor.
-	 */
 	constructor(
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
-		private readonly auth: CurrentUserService
+		private readonly auth: CurrentUserService,
+		private readonly headerSvc: TpHeaderService
 	) {
 		this.now = new Date();
 		this.now.setUTCMilliseconds(0);
@@ -113,7 +116,7 @@ export class DashboardComponent implements OnInit {
 			}
 		);
 
-		this.canCreateDeliveryServices = this.auth.capabilities.has("ds-create");
+		this.headerSvc.headerTitle.next("");
 	}
 
 	/**

@@ -13,12 +13,19 @@
 */
 
 import { HttpClientModule } from "@angular/common/http";
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { type ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatInputModule} from "@angular/material/input";
+import {MatSelectModule} from "@angular/material/select";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
+import { faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
 
-import {CacheGroupService, CDNService, ProfileService, ServerService, TypeService} from "../../../shared/api";
-import {PhysicalLocationService} from "../../../shared/api/PhysicalLocationService";
+import { ServerService } from "src/app/api";
+import { APITestingModule } from "src/app/api/testing";
+import { defaultServer } from "src/app/models";
+
 import { ServerDetailsComponent } from "./server-details.component";
 
 describe("ServerDetailsComponent", () => {
@@ -26,37 +33,111 @@ describe("ServerDetailsComponent", () => {
 	let fixture: ComponentFixture<ServerDetailsComponent>;
 
 	beforeEach(async () => {
-		const mockAPIService = jasmine.createSpyObj(["getServers", "getCacheGroups", "getCDNs",
-			"getProfiles", "getTypes", "getPhysicalLocations", "getStatuses", "getServerTypes"]);
-		mockAPIService.getCacheGroups.and.returnValue(new Promise(r => r([])));
-		mockAPIService.getCDNs.and.returnValue(new Promise(r => r([])));
-		mockAPIService.getStatuses.and.returnValue(new Promise(r => r([])));
-		mockAPIService.getProfiles.and.returnValue(new Promise(r => r([])));
-		mockAPIService.getPhysicalLocations.and.returnValues(new Promise(r => r([])));
-		mockAPIService.getServers.and.returnValues(new Promise(r => r([])));
-		mockAPIService.getServerTypes.and.returnValues(new Promise(r => r([])));
-
 		await TestBed.configureTestingModule({
 			declarations: [ ServerDetailsComponent ],
-			imports: [ HttpClientModule, RouterTestingModule, FormsModule, ReactiveFormsModule ],
-			 providers: [
-				 { provide: ServerService, useValue: mockAPIService },
-				 { provide: CacheGroupService, useValue: mockAPIService },
-				 { provide: CDNService, useValue: mockAPIService },
-				 { provide: TypeService, useValue: mockAPIService },
-				 { provide: PhysicalLocationService, useValue: mockAPIService },
-				 { provide: ProfileService, useValue: mockAPIService }
-			 ]
+			imports: [
+				HttpClientModule,
+				RouterTestingModule.withRoutes([
+					{component: ServerDetailsComponent, path: "server/:id"},
+					{component: ServerDetailsComponent, path: "server/new"}
+				]),
+				FormsModule,
+				ReactiveFormsModule,
+				MatSelectModule,
+				MatFormFieldModule,
+				MatInputModule,
+				BrowserAnimationsModule,
+				APITestingModule
+			],
 		}).compileComponents();
-	});
-
-	beforeEach(() => {
 		fixture = TestBed.createComponent(ServerDetailsComponent);
+		const service = TestBed.inject(ServerService);
 		component = fixture.componentInstance;
+		component.server = await service.createServer({...defaultServer, interfaces: []});
 		fixture.detectChanges();
 	});
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("gets the right status icon", () => {
+		component.server.status = "ONLINE";
+		expect(component.statusChangeIcon).toBe(faToggleOn);
+		component.server.status = "OFFLINE";
+		expect(component.statusChangeIcon).toBe(faToggleOff);
+		component.server.status = "REPORTED";
+		expect(component.statusChangeIcon).toBe(faToggleOn);
+		component.server.status = "Anything else";
+		expect(component.statusChangeIcon).toBe(faToggleOff);
+	});
+
+	it("adds and removes interfaces", () => {
+		expect(component.server.interfaces.length).toBe(0);
+		component.addInterface(new MouseEvent("click"));
+		expect(component.server.interfaces.length).toBe(1);
+		component.addInterface(new MouseEvent("click"));
+		expect(component.server.interfaces.length).toBe(2);
+		component.deleteInterface(1);
+		expect(component.server.interfaces.length).toBe(1);
+		component.deleteInterface(0);
+		expect(component.server.interfaces.length).toBe(0);
+	});
+
+	it("adds and removes IP addresses to/from an interface", () => {
+		component.addInterface(new MouseEvent("click"));
+		expect(component.server.interfaces[0].ipAddresses.length).toBe(0);
+		component.addIP(component.server.interfaces[0]);
+		expect(component.server.interfaces[0].ipAddresses.length).toBe(1);
+		component.addIP(component.server.interfaces[0]);
+		expect(component.server.interfaces[0].ipAddresses.length).toBe(2);
+		component.deleteIP(component.server.interfaces[0], 1);
+		expect(component.server.interfaces[0].ipAddresses.length).toBe(1);
+		component.deleteIP(component.server.interfaces[0], 0);
+		expect(component.server.interfaces[0].ipAddresses.length).toBe(0);
+	});
+
+	it("knows if it's a cache", () => {
+		const s = component.server;
+		expect(component.isCache()).toBeFalse();
+		s.type = "EDGE";
+		expect(component.isCache()).toBeTrue();
+		s.type = "EDGE_anything";
+		expect(component.isCache()).toBeTrue();
+		s.type = "MID";
+		expect(component.isCache()).toBeTrue();
+		s.type = "MID_anything";
+		expect(component.isCache()).toBeTrue();
+		s.type = "a string that merely CONTAINS 'EDGE' instead of starting with it";
+		expect(component.isCache()).toBeFalse();
+		s.type = "RASCAL";
+		expect(component.isCache()).toBeFalse();
+	});
+
+	it("submits a server creation request", fakeAsync(() => {
+		const service = TestBed.inject(ServerService);
+		const spy = spyOn(service, "createServer");
+		spy.and.callThrough();
+		expect(spy).not.toHaveBeenCalled();
+		component.isNew = true;
+
+		component.submit(new Event("submit"));
+		tick();
+		expect(component.isNew).toBeFalse();
+		expect(component.server.id).toBeDefined();
+	}));
+
+	it("opens the 'change status' dialog", () => {
+		expect(component.changeStatusDialogOpen).toBeFalse();
+		component.changeStatus(new MouseEvent("click"));
+		expect(component.changeStatusDialogOpen).toBeTrue();
+		component.isNew = true;
+		expect(()=>component.changeStatus(new MouseEvent("click"))).toThrow();
+	});
+
+	it("closes the 'change status' dialog when done", () => {
+		component.changeStatusDialogOpen = true;
+		component.doneUpdatingStatus(true);
+		expect(component.changeStatusDialogOpen).toBeFalse();
 	});
 });
