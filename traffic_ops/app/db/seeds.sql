@@ -79,6 +79,9 @@ INSERT INTO public.role ("name", "description", priv_level) VALUES ('admin', 'Ha
 INSERT INTO public.role ("name", "description", priv_level) VALUES ('operations', 'Has all reads and most write capabilities', 20) ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.role ("name", "description", priv_level) VALUES ('read-only', 'Has access to all read capabilities', 10) ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.role ("name", "description", priv_level) VALUES ('disallowed', 'Block all access', 0) ON CONFLICT ("name") DO NOTHING;
+INSERT INTO public.role ("name", "description", priv_level) VALUES ('portal','Portal User', 2) ON CONFLICT DO NOTHING;
+INSERT INTO public.role ("name", "description", priv_level) VALUES ('steering','Steering User', 15) ON CONFLICT DO NOTHING;
+INSERT INTO public.role ("name", "description", priv_level) VALUES ('federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
 
 -- roles_capabilities
 -- out of the box, the admin role has ALL capabilities
@@ -87,6 +90,11 @@ SELECT id, 'ALL'
 FROM public.role
 WHERE "name" = 'admin'
 ON CONFLICT DO NOTHING;
+
+INSERT INTO public.role_capability
+SELECT id, 'DELIVERY-SERVICE-SAFE:UPDATE'
+FROM public.role
+WHERE "name" in ('operations', 'read-only', 'portal', 'federation', 'steering');
 
 -- Using role 'read-only'
 INSERT INTO public.role_capability
@@ -132,7 +140,7 @@ CROSS JOIN ( VALUES
 	('USER:READ'),
 	('STAT:CREATE')
 ) AS perms(perm)
-WHERE "name" IN ('operations', 'read-only')
+WHERE "name" IN ('operations', 'portal', 'read-only', 'federation', 'steering')
 ON CONFLICT DO NOTHING;
 
 -- Traditionally the 'portal'/'federations'/'steering' Role(s)
@@ -140,11 +148,6 @@ INSERT INTO public.role_capability
 SELECT id, perm
 FROM public.role
 CROSS JOIN ( VALUES
-	('FEDERATION:CREATE'),
-	('FEDERATION:UPDATE'),
-	('FEDERATION:DELETE'),
-	('FEDERATION-RESOLVER:CREATE'),
-	('FEDERATION-RESOLVER:DELETE'),
 	('DELIVERY-SERVICE:UPDATE'),
 	('JOB:CREATE'),
 	('JOB:UPDATE'),
@@ -156,7 +159,21 @@ CROSS JOIN ( VALUES
 	('STEERING:UPDATE'),
 	('STEERING:DELETE')
 ) AS perms(perm)
-WHERE "name" = 'operations'
+WHERE "name" IN ('operations', 'portal', 'federation', 'steering')
+ON CONFLICT DO NOTHING;
+
+-- Federation and Steering Role Permissions (also given to operators).
+INSERT INTO public.role_capability
+SELECT id, perm
+FROM public.role
+CROSS JOIN ( VALUES
+	('FEDERATION:CREATE'),
+	('FEDERATION:UPDATE'),
+	('FEDERATION:DELETE'),
+	('FEDERATION-RESOLVER:CREATE'),
+	('FEDERATION-RESOLVER:DELETE')
+) AS perms(perm)
+WHERE "name" IN ('operations', 'federation', 'steering')
 ON CONFLICT DO NOTHING;
 
 -- Using role 'operations'

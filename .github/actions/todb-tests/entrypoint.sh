@@ -32,6 +32,10 @@ CODE=0;
 migration_dirs=(traffic_ops/app/db/migrations traffic_ops/app/db/trafficvault/migrations);
 
 for migration_dir in ${migration_dirs[@]}; do
+	if ! [[ -d "$migration_dir" ]]; then
+		echo "No migrations exist at $migration_dir - skipping!" >&2;
+		continue;
+	fi
 	pushd $migration_dir;
 
 	# Ensure proper order
