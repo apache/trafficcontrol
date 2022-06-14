@@ -151,7 +151,7 @@ func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceV4, 
 	if len(fedIDs) == 0 {
 		return -1, ds, ds1, errors.New("no federations, must have at least 1 federation to test federations deliveryservices")
 	}
-	fedID := fedIDs[0]
+	fedID := fedIDs["the.cname.com."]
 
 	alerts, _, err := TOSession.CreateFederationDeliveryServices(fedID, []int{*ds.ID, *ds1.ID}, true, client.RequestOptions{})
 	if err != nil {
@@ -183,7 +183,7 @@ func createFederationToMultipleDeliveryServiceAssociation() (int, tc.DeliverySer
 	if len(fedIDs) == 0 {
 		return -1, ds, ds1, ds2, errors.New("no federations, must have at least 1 federation to test federations deliveryservices")
 	}
-	fedID := fedIDs[1]
+	fedID := fedIDs["the.cname.com."]
 
 	alerts, _, err := TOSession.CreateFederationDeliveryServices(fedID, []int{*ds.ID, *ds1.ID, *ds2.ID}, true, client.RequestOptions{})
 	if err != nil {
@@ -513,7 +513,7 @@ func SortTestFederationDs(t *testing.T) {
 	if len(fedIDs) == 0 {
 		t.Fatalf("no federations, must have at least 1 federation to test federations deliveryservices")
 	}
-	fedID := fedIDs[1]
+	fedID := fedIDs["the.cname.com."]
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("orderby", "dsID")
 	resp, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
@@ -539,7 +539,7 @@ func SortTestFederationsDsDesc(t *testing.T) {
 	if len(fedIDs) == 0 {
 		t.Fatalf("no federations, must have at least 1 federation to test federations deliveryservices")
 	}
-	fedID := fedIDs[1]
+	fedID := fedIDs["the.cname.com."]
 
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("orderby", "dsID")
