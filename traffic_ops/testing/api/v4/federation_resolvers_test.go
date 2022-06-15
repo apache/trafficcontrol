@@ -16,9 +16,9 @@ package v4
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 	"sort"
 	"strconv"
 	"testing"
@@ -27,370 +27,268 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestFederationResolvers(t *testing.T) {
 	WithObjs(t, []TCObj{Types, FederationResolvers}, func() {
-		GetTestFederationResolversIMS(t)
-		GetTestFederationResolvers(t)
-		GetTestPaginationSupportFedResolver(t)
-		SortTestFederationResolver(t)
-		SortTestFederationsResolverDesc(t)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"OK when VALID ID parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(GetFederationResolverID(t, "0.0.0.0/12")())}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateFederationResolverFields(map[string]interface{}{"ID": uint(GetFederationResolverID(t, "0.0.0.0/12")())})),
+				},
+				"OK when VALID IPADDRESS parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"ipAddress": {"1.2.3.4"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateFederationResolverFields(map[string]interface{}{"IPAddress": "1.2.3.4"})),
+				},
+				"OK when VALID TYPE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"type": {"RESOLVE4"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateFederationResolverFields(map[string]interface{}{"Type": "RESOLVE4"})),
+				},
+				"SORTED by ID when ORDERBY=ID parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationResolverIDSort()),
+				},
+				"VALID when SORTORDER param is DESC": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "sortOrder": {"desc"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationResolverDescSort()),
+				},
+				"FIRST RESULT when LIMIT=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationResolverPagination("limit")),
+				},
+				"SECOND RESULT when LIMIT=1 OFFSET=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationResolverPagination("offset")),
+				},
+				"SECOND RESULT when LIMIT=1 PAGE=2": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationResolverPagination("page")),
+				},
+				"BAD REQUEST when INVALID LIMIT parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID OFFSET parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID PAGE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"POST": {
+				"BAD REQUEST when MISSING IPADDRESS and TYPE FIELDS": {
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID IP ADDRESS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"ipAddress": "not a valid IP address",
+						"typeId":    GetTypeId(t, "RESOLVE4"),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"DELETE": {
+				"NOT FOUND when INVALID ID": {
+					EndpointId:    func() int { return 0 },
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					fr := tc.FederationResolver{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &fr)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetFederationResolvers(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.CreateFederationResolver(fr, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.DeleteFederationResolver(uint(testCase.EndpointId()), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
-func GetTestFederationResolversIMS(t *testing.T) {
-	var tdlen = len(testData.FederationResolvers)
-	if tdlen < 1 {
-		t.Fatal("no federation resolvers test data")
-	}
 
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-
-	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	resp, reqInf, err := TOSession.GetFederationResolvers(opts)
-	if err != nil {
-		t.Fatalf("could not get Federation resolvers: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-	}
-}
-
-func GetTestFederationResolvers(t *testing.T) {
-	var tdlen = len(testData.FederationResolvers)
-	if tdlen < 1 {
-		t.Fatal("no federation resolvers test data")
-	}
-
-	frs, _, err := TOSession.GetFederationResolvers(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting Federation Resolvers: %v - alerts: %+v", err, frs.Alerts)
-	}
-	if len(frs.Response) != tdlen {
-		t.Fatalf("Wrong number of Federation Resolvers from GET, want %d got %d", tdlen, len(frs.Response))
-	}
-
-	var testFr = frs.Response[0]
-	if testFr.ID == nil || testFr.Type == nil || testFr.IPAddress == nil {
-		t.Fatalf("Malformed federation resolver: %+v", testFr)
-	}
-
-	_ = t.Run("Get Federation Resolvers by ID", getFRByIDTest(testFr))
-	_ = t.Run("Get Federation Resolvers by IPAddress", getFRByIPTest(testFr))
-	_ = t.Run("Get Federation Resolvers by Type", getFRByTypeTest(testFr))
-}
-
-func getFRByIDTest(testFr tc.FederationResolver) func(*testing.T) {
-	return func(t *testing.T) {
-		if testFr.ID == nil {
-			t.Fatal("Federation Resolver has nil ID")
-		}
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.FormatUint(uint64(*testFr.ID), 10))
-		fr, _, err := TOSession.GetFederationResolvers(opts)
-		if err != nil {
-			t.Fatalf("Unexpected error getting Federation Resolver by ID %d: %v - alerts: %+v", *testFr.ID, err, fr.Alerts)
-		}
-		if len(fr.Response) != 1 {
-			t.Fatalf("Expected exactly one Federation Resolver to exist with ID %d, found: %d", *testFr.ID, len(fr.Response))
-		}
-
-		cmpr(testFr, fr.Response[0], t)
-
-	}
-}
-
-func getFRByIPTest(testFr tc.FederationResolver) func(*testing.T) {
-	return func(t *testing.T) {
-		if testFr.IPAddress == nil {
-			t.Fatal("Federation Resolver has nil IP Address")
-		}
-		ip := *testFr.IPAddress
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("ipAddress", ip)
-		frs, _, err := TOSession.GetFederationResolvers(opts)
-		if err != nil {
-			t.Fatalf("Unexpected error getting Federation Resolver by IP %s: %v - alerts: %+v", ip, err, frs.Alerts)
-		}
-
-		if len(frs.Response) != 1 {
-			t.Fatalf("Expected exactly one Federation Resolver with IP address '%s', got: %d", ip, len(frs.Response))
-		}
-
-		cmpr(testFr, frs.Response[0], t)
-
-	}
-}
-
-func getFRByTypeTest(testFr tc.FederationResolver) func(*testing.T) {
-	return func(t *testing.T) {
-		if testFr.Type == nil {
-			t.Fatal("Federation Resolver has nil Type")
-		}
-		typ := *testFr.Type
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("type", typ)
-		frs, _, err := TOSession.GetFederationResolvers(opts)
-		if err != nil {
-			t.Fatalf("Unexpected error getting Federation Resolvers by Type %s: %v - alerts: %+v", typ, err, frs.Alerts)
-		}
-
-		if len(frs.Response) < 1 {
-			t.Errorf("Expected at least one Federation Resolver by Type '%s' to exist, but none did", typ)
-		}
-
-		for _, fr := range frs.Response {
-			if fr.ID == nil {
-				t.Error("Retrieved Federation Resolver has nil ID")
-			}
-			if fr.IPAddress == nil {
-				t.Error("Retrieved Federation Resolver has nil IPAddress")
-			}
-			if fr.Type == nil {
-				t.Error("Retrieved Federation Resolver has nil Type")
-			} else if *fr.Type != typ {
-				t.Errorf("Retrieved Federation Resolver has incorrect Type; want '%s', got '%s'", typ, *fr.Type)
+func validateFederationResolverFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Federation Resolver response to not be nil.")
+		frResp := resp.([]tc.FederationResolver)
+		for field, expected := range expectedResp {
+			for _, fr := range frResp {
+				switch field {
+				case "ID":
+					assert.RequireNotNil(t, fr.ID, "Expected ID to not be nil")
+					assert.Equal(t, expected, *fr.ID, "Expected ID to be %v, but got %d", expected, *fr.ID)
+				case "IPAddress":
+					assert.RequireNotNil(t, fr.IPAddress, "Expected IPAddress to not be nil")
+					assert.Equal(t, expected, *fr.IPAddress, "Expected IPAddress to be %v, but got %s", expected, *fr.IPAddress)
+				case "Type":
+					assert.RequireNotNil(t, fr.Type, "Expected Type to not be nil")
+					assert.Equal(t, expected, *fr.Type, "Expected Type to be %v, but got %s", expected, *fr.Type)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
 			}
 		}
 	}
 }
 
-func cmpr(testFr, apiFr tc.FederationResolver, t *testing.T) {
-	if apiFr.ID == nil {
-		t.Error("Retrieved Federation Resolver has nil ID")
-	} else if *apiFr.ID != *testFr.ID {
-		t.Errorf("Retrieved Federation Resolver has incorrect ID; want %d, got %d", *testFr.ID, *apiFr.ID)
-	}
+func validateFederationResolverPagination(paginationParam string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		paginationResp := resp.([]tc.FederationResolver)
 
-	if apiFr.IPAddress == nil {
-		t.Error("Retrieved Federation Resolver has nil IP address")
-	} else if *apiFr.IPAddress != *testFr.IPAddress {
-		t.Errorf("Retrieved Federation Resolver has incorrect IPAddress; want %s, got %s", *testFr.IPAddress, *apiFr.IPAddress)
-	}
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("orderby", "id")
+		respBase, _, err := TOSession.GetFederationResolvers(opts)
+		assert.RequireNoError(t, err, "Cannot get Federation Resolvers: %v - alerts: %+v", err, respBase.Alerts)
 
-	if apiFr.Type == nil {
-		t.Error("Retrieved Federation Resolver has nil Type")
-	} else if *apiFr.Type != *testFr.Type {
-		t.Errorf("Retrieved Federation Resolver has incorrect Type; want %s, got %s", *testFr.Type, *apiFr.Type)
+		fr := respBase.Response
+		assert.RequireGreaterOrEqual(t, len(fr), 3, "Need at least 3 Federation Resolvers in Traffic Ops to test pagination support, found: %d", len(fr))
+		switch paginationParam {
+		case "limit:":
+			assert.Exactly(t, fr[:1], paginationResp, "expected GET Federation Resolvers with limit = 1 to return first result")
+		case "offset":
+			assert.Exactly(t, fr[1:2], paginationResp, "expected GET Federation Resolvers with limit = 1, offset = 1 to return second result")
+		case "page":
+			assert.Exactly(t, fr[1:2], paginationResp, "expected GET Federation Resolvers with limit = 1, page = 2 to return second result")
+		}
+	}
+}
+
+func validateFederationResolverIDSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Federation Resolver response to not be nil.")
+		var frIDs []int
+		frResp := resp.([]tc.FederationResolver)
+		for _, fr := range frResp {
+			frIDs = append(frIDs, int(*fr.ID))
+		}
+		assert.Equal(t, true, sort.IntsAreSorted(frIDs), "List is not sorted by their ids: %v", frIDs)
+	}
+}
+
+func validateFederationResolverDescSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected FederationResolver response to not be nil.")
+		frDescResp := resp.([]tc.FederationResolver)
+		var descSortedList []uint
+		var ascSortedList []uint
+		assert.RequireGreaterOrEqual(t, len(frDescResp), 2, "Need at least 2 Federation Resolvers in Traffic Ops to test desc sort, found: %d", len(frDescResp))
+		// Get Federation Resolvers in the default ascending order for comparison.
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("orderby", "id")
+		frAscResp, _, err := TOSession.GetFederationResolvers(opts)
+		assert.RequireNoError(t, err, "Unexpected error getting Federation Resolvers with default sort order: %v - alerts: %+v", err, frAscResp.Alerts)
+		// Verify the response match in length, i.e. equal amount of Federation Resolvers.
+		assert.RequireEqual(t, len(frAscResp.Response), len(frDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(frAscResp.Response), len(frDescResp))
+		// Insert Federation Resolvers names to the front of a new list, so they are now reversed to be in ascending order.
+		for _, fr := range frDescResp {
+			descSortedList = append([]uint{*fr.ID}, descSortedList...)
+		}
+		// Insert Federation Resolvers IDs by appending to a new list, so they stay in ascending order.
+		for _, fr := range frAscResp.Response {
+			ascSortedList = append(ascSortedList, *fr.ID)
+		}
+		assert.Exactly(t, ascSortedList, descSortedList, "Federation Resolver responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
+	}
+}
+
+func GetFederationResolverID(t *testing.T, ipAddress string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("ipAddress", ipAddress)
+		federationResolvers, _, err := TOSession.GetFederationResolvers(opts)
+		assert.RequireNoError(t, err, "Get FederationResolvers Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(federationResolvers.Response), "Expected response object length 1, but got %d", len(federationResolvers.Response))
+		assert.RequireNotNil(t, federationResolvers.Response[0].ID, "Expected Federation Resolver ID to not be nil")
+		return int(*federationResolvers.Response[0].ID)
 	}
 }
 
 func CreateTestFederationResolvers(t *testing.T) {
-	opts := client.NewRequestOptions()
 	for _, fr := range testData.FederationResolvers {
-		if fr.Type == nil {
-			t.Fatal("testData Federation Resolver has nil Type")
-		}
-
-		opts.QueryParameters.Set("name", *fr.Type)
-		tid, _, err := TOSession.GetTypes(opts)
-		if err != nil {
-			t.Fatalf("Couldn't get an ID for Type '%s': %v - alerts: %+v", *fr.Type, err, tid.Alerts)
-		}
-		if len(tid.Response) != 1 {
-			t.Fatalf("Expected exactly one Type by name %s, got %d", *fr.Type, len(tid.Response))
-		}
-
-		fr.TypeID = util.UIntPtr(uint(tid.Response[0].ID))
-
-		alerts, _, err := TOSession.CreateFederationResolver(fr, client.RequestOptions{})
-		if err != nil {
-			t.Fatalf("failed to create Federation Resolver %+v: %v - alerts: %+v", fr, err, alerts.Alerts)
-		}
-		for _, a := range alerts.Alerts.Alerts {
-			if a.Level == tc.ErrorLevel.String() {
-				t.Errorf("Unexpected error-level alert creating a federation resolver: %s", a.Text)
-			}
-		}
-	}
-
-	var invalidFR tc.FederationResolver
-	response, _, err := TOSession.CreateFederationResolver(invalidFR, client.RequestOptions{})
-	if err == nil {
-		t.Error("Expected an error creating a bad Federation Resolver, but didn't get one")
-	}
-	for _, a := range response.Alerts.Alerts {
-		if a.Level == tc.SuccessLevel.String() {
-			t.Errorf("Unexpected success creating a bad Federation Resolver: %s", a.Text)
-		}
-	}
-
-	invalidFR.TypeID = util.UIntPtr(1)
-	invalidFR.IPAddress = util.StrPtr("not a valid IP address")
-	response, _, err = TOSession.CreateFederationResolver(invalidFR, client.RequestOptions{})
-	if err == nil {
-		t.Error("Expected an error creating a bad Federation Resolver, but didn't get one")
-	}
-	for _, a := range response.Alerts.Alerts {
-		if a.Level == tc.SuccessLevel.String() {
-			t.Errorf("Unexpected success creating a bad Federation Resolver: %s", a.Text)
-		}
+		fr.TypeID = util.UIntPtr(uint(GetTypeId(t, *fr.Type)))
+		resp, _, err := TOSession.CreateFederationResolver(fr, client.RequestOptions{})
+		assert.RequireNoError(t, err, "Failed to create Federation Resolver %+v: %v - alerts: %+v", fr, err, resp.Alerts)
 	}
 }
 
 func DeleteTestFederationResolvers(t *testing.T) {
 	frs, _, err := TOSession.GetFederationResolvers(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting Federation Resolvers: %v - alerts: %+v", err, frs.Alerts)
-	}
-	if len(frs.Response) < 1 {
-		t.Fatal("Found no Federation Resolvers to delete")
-	}
+	assert.RequireNoError(t, err, "Unexpected error getting Federation Resolvers: %v - alerts: %+v", err, frs.Alerts)
 	for _, fr := range frs.Response {
-		if fr.ID == nil {
-			t.Fatalf("Malformed Federation Resolver: %+v", fr)
-		}
 		alerts, _, err := TOSession.DeleteFederationResolver(*fr.ID, client.RequestOptions{})
-		if err != nil {
-			t.Fatalf("failed to delete Federation Resolver %+v: %v - alerts: %+v", fr, err, alerts.Alerts)
-		}
-		for _, a := range alerts.Alerts.Alerts {
-			if a.Level == tc.ErrorLevel.String() {
-				t.Errorf("Unexpected error-level alert deleting a federation resolver: %s", a.Text)
-			}
-		}
-	}
-
-	alerts, _, err := TOSession.DeleteFederationResolver(0, client.RequestOptions{})
-	if err == nil {
-		t.Error("Expected an error deleting a non-existent Federation Resolver, but didn't get one")
-	}
-	for _, a := range alerts.Alerts.Alerts {
-		if a.Level == tc.SuccessLevel.String() {
-			t.Errorf("Unexpected success deleting a non-existent Federation Resolver: %s", a.Text)
-		}
-	}
-
-}
-
-func GetTestPaginationSupportFedResolver(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetFederationResolvers(opts)
-	if err != nil {
-		t.Fatalf("cannot Get FederationResolver: %v - alerts: %+v", err, resp.Alerts)
-	}
-	fedResolver := resp.Response
-	if len(fedResolver) < 3 {
-		t.Fatalf("Need at least 3 FederationResolver in Traffic Ops to test pagination support, found: %d", len(fedResolver))
-	}
-
-	opts.QueryParameters.Set("limit", "1")
-	fedResolverWithLimit, _, err := TOSession.GetFederationResolvers(opts)
-	if err != nil {
-		t.Fatalf("cannot Get FederationResolver with Limit: %v - alerts: %+v", err, fedResolverWithLimit.Alerts)
-	}
-	if !reflect.DeepEqual(fedResolver[:1], fedResolverWithLimit.Response) {
-		t.Error("expected GET FederationResolver with limit = 1 to return first result")
-	}
-
-	opts.QueryParameters.Set("offset", "1")
-	fedResolverWithOffset, _, err := TOSession.GetFederationResolvers(opts)
-	if err != nil {
-		t.Fatalf("cannot Get FederationResolver with Limit and Offset: %v - alerts: %+v", err, fedResolverWithOffset.Alerts)
-	}
-	if !reflect.DeepEqual(fedResolver[1:2], fedResolverWithOffset.Response) {
-		t.Error("expected GET FederationResolver with limit = 1, offset = 1 to return second result")
-	}
-
-	opts.QueryParameters.Del("offset")
-	opts.QueryParameters.Set("page", "2")
-	fedResolverWithPage, _, err := TOSession.GetFederationResolvers(opts)
-	if err != nil {
-		t.Fatalf("cannot Get FederationResolver with Limit and Page: %v - alerts: %+v", err, fedResolverWithPage.Alerts)
-	}
-	if !reflect.DeepEqual(fedResolver[1:2], fedResolverWithPage.Response) {
-		t.Error("expected GET FederationResolver with limit = 1, page = 2 to return second result")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "-2")
-	resp, reqInf, err := TOSession.GetFederationResolvers(opts)
-	if err == nil {
-		t.Error("expected GET FederationResolver to return an error when limit is not bigger than -1")
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
-	}
-
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "0")
-	resp, reqInf, err = TOSession.GetFederationResolvers(opts)
-	if err == nil {
-		t.Error("expected GET FederationResolver to return an error when offset is not a positive integer")
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "0")
-	resp, reqInf, err = TOSession.GetFederationResolvers(opts)
-	if err == nil {
-		t.Error("expected GET FederationResolver to return an error when page is not a positive integer")
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
-	}
-}
-
-func SortTestFederationResolver(t *testing.T) {
-	var sortedList []uint
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetFederationResolvers(opts)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
-	}
-	for _, fedRes := range resp.Response {
-		if fedRes.ID == nil {
-			t.Fatalf("Federation resolver ID is nil, so sorting can't be tested")
-		}
-		sortedList = append(sortedList, *fedRes.ID)
-	}
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their Federation Resolver ID: %v", sortedList)
-	}
-}
-
-func SortTestFederationsResolverDesc(t *testing.T) {
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetFederationResolvers(opts)
-	if err != nil {
-		t.Fatalf("Expected no error, but got error in Federation Resolver default ordering %v - alerts: %+v", err, resp.Alerts)
-	}
-	respAsc := resp.Response
-	if len(respAsc) < 1 {
-		t.Fatal("Need at least one Federation Resolver in Traffic Ops to test Federation Resolver sort ordering")
-	}
-	opts.QueryParameters.Set("sortOrder", "desc")
-	resp, _, err = TOSession.GetFederationResolvers(opts)
-	if err != nil {
-		t.Errorf("Expected no error, but got error in Federation Resolver with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
-	}
-	respDesc := resp.Response
-	if len(respDesc) < 1 {
-		t.Fatal("Need at least one Federation Resolver in Traffic Ops to test Federation resolver sort ordering")
-	}
-	if len(respAsc) != len(respDesc) {
-		t.Fatalf("Traffic Ops returned %d Federation Resolver using default sort order, but %d Federation Resolver when sort order was explicitly set to descending", len(respAsc), len(respDesc))
-	}
-	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
-		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
-	}
-	if respDesc[0].ID == nil || respAsc[0].ID == nil {
-		t.Fatalf("Response ID is nil in Test federation Resolver")
-	}
-	if *respDesc[0].ID != *respAsc[0].ID {
-		t.Errorf("Federation Resolver responses are not equal after reversal: Asc: %d - Desc: %d", *respDesc[0].ID, *respAsc[0].ID)
+		assert.NoError(t, err, "Failed to delete Federation Resolver %+v: %v - alerts: %+v", fr, err, alerts.Alerts)
+		// Retrieve the Federation Resolver to see if it got deleted
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("id", strconv.Itoa(int(*fr.ID)))
+		getFR, _, err := TOSession.GetFederationResolvers(opts)
+		assert.NoError(t, err, "Error getting Federation Resolver '%d' after deletion: %v - alerts: %+v", *fr.ID, err, getFR.Alerts)
+		assert.Equal(t, 0, len(getFR.Response), "Expected Federation Resolver '%d' to be deleted, but it was found in Traffic Ops", *fr.ID)
 	}
 }
