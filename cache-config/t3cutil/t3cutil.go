@@ -43,6 +43,12 @@ type ATSConfigFile struct {
 	Warnings    []string `json:"warnings"`
 }
 
+type TailCfg struct {
+	File         *string    `json:"file"`
+	Match        *string   `json:"match"`
+	TimeOut      *int      `json:"timeOut"`
+}
+
 // ATSConfigFiles implements sort.Interface and sorts by the Location and then FileNameOnDisk, i.e. the full file path.
 type ATSConfigFiles []ATSConfigFile
 
