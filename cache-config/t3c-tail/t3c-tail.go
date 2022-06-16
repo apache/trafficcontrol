@@ -59,7 +59,7 @@ var timeOutSeconds = 15
 		os.Exit(0)
 	}
 
-	tailCfg := &TailCfg{}
+	tailCfg := &t3cutil.TailCfg{}
 	if err := json.NewDecoder(os.Stdin).Decode(tailCfg); err != nil {
 		fmt.Println("Error reading json input", err)
 	}
@@ -72,7 +72,7 @@ var timeOutSeconds = 15
 
 	logMatch := regexp.MustCompile(*tailCfg.Match)
 	timeOut := timeOutSeconds
-	if tailCfg.TimeOut != nil {
+	if tailCfg.TimeOut == nil {
 		timeOut = *tailCfg.TimeOut
 	}
 	
@@ -108,18 +108,12 @@ var timeOutSeconds = 15
 	
 }
 
-type TailCfg struct {
-	File         *string    `json:"file"`
-	Match        *string   `json:"match"`
-	TimeOut      *int      `json:"timeOut"`
-}
-
 func usageStr() string {
 	return `usage: t3c-tail [--help]
 	accepts json input from stdin in the following format:
 	file is file you want to tail
 	match is regex string you wish to match on, if you want everything use '.*'
 	timeOut is given in seconds the default is 15
-	{"file":"diags.log", "serviceNeeds":"restart", "timeOut": 4}
+	{"file":"diags.log", "match":"<regex to match>", "timeOut": 4}
 	`
 }
