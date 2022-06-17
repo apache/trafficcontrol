@@ -794,10 +794,12 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 		return true
 	})
 
-	err := error(nil)
-	toData.ServerParams, err = atscfg.GetServerParameters(toData.Server, combineParams(toData.ServerProfilesParams))
-	if err != nil {
-		errs = append(errs, err)
+	if len(errs) == 0 && toData.Server != nil {
+		err := error(nil)
+		toData.ServerParams, err = atscfg.GetServerParameters(toData.Server, combineParams(toData.ServerProfilesParams))
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
 
 	return toData, util.JoinErrs(errs)
@@ -835,7 +837,10 @@ func runParallel(fs []func() error) []error {
 		go func() { doneChan <- f() }()
 	}
 	for i := 0; i < len(fs); i++ {
-		errs = append(errs, <-doneChan)
+		err := <-doneChan
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
 	return errs
 }
