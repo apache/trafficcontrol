@@ -59,7 +59,7 @@ func TestTypes(t *testing.T) {
 				},
 			},
 			"POST": {
-				"BAD REQUEST when NOT in server table": {
+				"BAD REQUEST when useInTable NOT server": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"description": "Host header regular expression-Test",
@@ -231,7 +231,6 @@ func CreateTestTypes(t *testing.T) {
 	}()
 	dbQueryTemplate := "INSERT INTO type (name, description, use_in_table) VALUES ('%s', '%s', '%s');"
 
-	//opts := client.NewRequestOptions()
 	for _, typ := range testData.Types {
 		if typ.UseInTable != "server" {
 			err = execSQL(db, fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable))
@@ -269,7 +268,7 @@ func DeleteTestTypes(t *testing.T) {
 			assert.RequireNoError(t, err, "cannot delete Type using the API: %v - alerts: %+v", err, delResp.Alerts)
 		}
 
-		// Retrieve the Type by name so we can get the id for the Update
+		// Retrieve the Type by name to see if it was deleted.
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", typ.Name)
 		types, _, err := TOSession.GetTypes(opts)
