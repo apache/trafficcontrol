@@ -228,7 +228,7 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 	};
 
 	$scope.navigateToCharts = function () {
-		locationUtils.navigateToPath('/delivery-services/' + $scope.selectedDeliveryService.id + '/charts?type=' + $scope.selectedDeliveryService.type);
+		locationUtils.navigateToPath('/delivery-services/' + $scope.selectedDeliveryService.id + '/charts?dsType=' + $scope.selectedDeliveryService.type);
 	};
 
 	// pagination

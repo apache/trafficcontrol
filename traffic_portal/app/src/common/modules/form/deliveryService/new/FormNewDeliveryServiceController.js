@@ -113,7 +113,7 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, topolog
 							function(result) {
 								createDeliveryServiceCreateRequest(dsRequest, options.comment, true);
 								messageModel.setMessages(result.data.alerts, true);
-								locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
+								locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?dsType=' + result.data.response[0].type);
 							},
 							function(fault) {
 								$anchorScroll(); // scrolls window to top
@@ -133,7 +133,7 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, topolog
 				then(
 					function(result) {
 						messageModel.setMessages(result.data.alerts, true);
-						locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
+						locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?dsType=' + result.data.response[0].type);
 					},
 					function(fault) {
 						$anchorScroll(); // scrolls window to top

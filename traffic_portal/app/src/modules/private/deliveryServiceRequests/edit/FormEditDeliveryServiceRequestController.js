@@ -127,7 +127,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 						function(result) {
 							updateDeliveryServiceRequest('pending'); // after a successful create, update the ds request, assignee and status
 							messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] created' } ], true);
-							locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
+							locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?dsType=' + result.data.response[0].type);
 						},
 						function(fault) {
 							$anchorScroll(); // scrolls window to top
@@ -145,7 +145,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 										level: 'success',
 										text: 'Delivery Service [ ' + ds.xmlId + ' ] updated'
 									}], true);
-									locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
+									locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?dsType=' + result.data.response[0].type);
 								},
 								function (fault) {
 									$anchorScroll(); // scrolls window to top

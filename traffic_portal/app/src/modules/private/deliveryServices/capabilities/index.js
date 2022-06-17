@@ -21,7 +21,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.capabili
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.deliveryServices.capabilities', {
-				url: '/{deliveryServiceId}/required-server-capabilities?type',
+				url: '/{deliveryServiceId}/required-server-capabilities?dsType',
 				views: {
 					deliveryServicesContent: {
 						templateUrl: 'common/modules/table/deliveryServiceCapabilities/table.deliveryServiceCapabilities.tpl.html',

@@ -21,7 +21,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.c
 	.config(function ($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.deliveryServiceRequests.comments', {
-				url: '/{deliveryServiceRequestId:[0-9]{1,8}}/comments?type',
+				url: '/{deliveryServiceRequestId:[0-9]{1,8}}/comments?dsType',
 				views: {
 					deliveryServiceRequestsContent: {
 						templateUrl: 'common/modules/table/deliveryServiceRequestComments/table.deliveryServiceRequestComments.tpl.html',
