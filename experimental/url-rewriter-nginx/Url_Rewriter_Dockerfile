@@ -39,11 +39,11 @@ server {\n\
 		add_header Content-Type text/plain;\n\
 	}\n\
 \n\
-	location ~* ^/api/2.0/profile/(.*)$ {\n\
+	location ~* ^/api/4.0/profile/(.*)$ {\n\
 		add_before_body /successful-return-prefix;\n\
 		add_after_body /successful-return-postfix;\n\
 		addition_types *;\n\
-		rewrite ^/api/2.0/profile/(.*)$ "/profile_parameter?profile=eq.$1&select=parameter{*}" break;\n\
+		rewrite ^/api/4.0/profile/(.*)$ "/profile_parameter?profile=eq.$1&select=parameter{*}" break;\n\
 		proxy_pass http://localhost:42421;\n\
 		proxy_set_header Accept-Encoding "";\n\
 		proxy_intercept_errors on;\n\

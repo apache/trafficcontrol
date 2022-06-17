@@ -33,7 +33,7 @@ To create a new integration test, create an executable file -- it can be a shell
 
 Your executable should:
 * Query Traffic Ops at localhost
-* Query any other components at their IPs, which can be queried from Traffic Ops at `https://localhost/api/2.0/servers`
+* Query any other components at their IPs, which can be queried from Traffic Ops at `https://localhost/api/4.0/servers`
   * If you're not using a Traffic Ops client, you'll need to send a login cookie; for an example of how to get the cookie, see https://github.com/apache/trafficcontrol/tree/master/infrastructure/docker/traffic_ops/run.sh
 * Return 0 and print nothing for success; return a nonzero code and print the error on failure
 

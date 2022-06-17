@@ -23,7 +23,7 @@ var myport = 80;
 var config_url = "https://traffic-ops.com/api/4.0/cdns/cdn-name/snapshot";
 var to_user = "";
 var to_password = "";
-var to_login_api = "/api/2.0/user/login";
+var to_login_api = "/api/4.0/user/login";
 var simulator_ua = "ATS Simulator/node.js " + process.version;
 
 // first argument to follow node ats_sim.js
