@@ -143,6 +143,10 @@ menu[type="contextmenu"] {
 				border: none;
 				width: 100%;
 				text-align: left;
+				text-transform: none;
+				line-height: 1.428571429;
+				font-family: Roboto, "Helvetica Neue", sans-serif;
+				font-size: medium;
 
 				&[disabled] {
 					color: gray;

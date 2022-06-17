@@ -105,7 +105,7 @@ export class ThemeManagerService {
 	 */
 	private loadStoredTheme(): Theme | null {
 		try {
-			return JSON.parse(window.localStorage.getItem(this.storageKey) ?? "");
+			return JSON.parse(window.localStorage.getItem(this.storageKey) ?? "null");
 		} catch (e) {
 			console.error(`Unable to load theme from local storage: ${e}`);
 		}

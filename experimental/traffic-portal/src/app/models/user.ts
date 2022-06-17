@@ -13,7 +13,7 @@
 */
 
 /**
- * Reprents a Traffic Ops user (`tm_user` in the database)
+ * Represents a Traffic Ops user (`tm_user` in the database)
  */
 export interface User {
 	/** Line one of the user's address. */
@@ -40,8 +40,6 @@ export interface User {
 	lastUpdated?:     Date | null;
 	/** The user's password - this should only be populated on update, and only if updating the password. */
 	localPasswd?:     string | null;
-	/** legacy field with no purpose. */
-	localUser?:       boolean | null;
 	/**
 	 * Whether (false) or not (true) the user has reset their password after
 	 * registration.
@@ -150,6 +148,17 @@ export interface Role {
 	name:         string;
 	/** The Role's "privilege level". */
 	privLevel:    number;
+}
+
+/**
+ * Represents a group of Users that can own certain resources.
+ */
+export interface Tenant {
+	active: boolean;
+	readonly id: number;
+	readonly lastUpdated: Date;
+	name: string;
+	parentId: number | null;
 }
 
 /**

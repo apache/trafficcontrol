@@ -15,7 +15,14 @@
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Role, User, Capability, CurrentUser, newCurrentUser } from "src/app/models";
+import {
+	type Role,
+	type Tenant,
+	type User,
+	type Capability,
+	type CurrentUser,
+	newCurrentUser
+} from "src/app/models";
 
 import { APIService } from "./base-api.service";
 
@@ -60,7 +67,7 @@ export class UserService extends APIService {
 	 * Ends the current user's session - but does *not* affect the
 	 * CurrentUserService's user data, which must be separately cleared.
 	 *
-	 * @returns The entire HTTP response on succes, or `null` on failure.
+	 * @returns The entire HTTP response on success, or `null` on failure.
 	 */
 	public async logout(): Promise<HttpResponse<object> | null> {
 		const path = `/api/${this.apiVersion}/user/logout`;
@@ -154,6 +161,17 @@ export class UserService extends APIService {
 		);
 	}
 
+	/**
+	 * Replaces the current definition of a user with the one given.
+	 *
+	 * @param user The new definition of the User.
+	 * @returns The user as updated.
+	 */
+	public async updateUser(user: User): Promise<User> {
+		const path = `users/${user.id}`;
+		return this.put<User>(path, user).toPromise();
+	}
+
 	/** Fetches the Role with the given ID. */
 	public async getRoles (nameOrID: number | string): Promise<Role>;
 	/** Fetches all Roles. */
@@ -195,6 +213,43 @@ export class UserService extends APIService {
 				return [];
 			}
 		);
+	}
+
+	/**
+	 * Retrieves Tenants from Traffic Ops.
+	 *
+	 * @returns All Tenants visible to the requesting user's Tenant.
+	 */
+	public async getTenants(): Promise<Array<Tenant>>;
+	/**
+	 * Retrieves a Tenant from Traffic Ops.
+	 *
+	 * @param nameOrID Either the name or ID of the desired Tenant.
+	 * @returns The Tenant identified by `nameOrID`.
+	 */
+	public async getTenants(nameOrID: string | number): Promise<Tenant>;
+	/**
+	 * Retrieves one or all Tenants from Traffic Ops.
+	 *
+	 * @param nameOrID Either the name or ID of a single desired Tenant.
+	 * @returns The Tenant identified by `nameOrID` if given, otherwise all
+	 * Tenants visible to the requesting user's Tenant.
+	 */
+	public async getTenants(nameOrID?: string | number): Promise<Array<Tenant> | Tenant> {
+		const path = "tenants";
+		if (nameOrID !== undefined) {
+			let params;
+			switch (typeof nameOrID) {
+				case "string":
+					params = {name: nameOrID};
+					break;
+				case "number":
+					params = {id: String(nameOrID)};
+			}
+			const resp = await this.get<[Tenant]>(path, undefined, params).toPromise();
+			return resp[0];
+		}
+		return this.get<Array<Tenant>>(path).toPromise();
 	}
 
 	/** Fetches the User Capability (Permission) with the given name. */
