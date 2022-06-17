@@ -68,7 +68,7 @@ func TestTypes(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"OK when VALID request in SERVER table": {
+				"OK when VALID request when useInTable=server": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"description": "Host header regular expression-Test",
@@ -80,7 +80,7 @@ func TestTypes(t *testing.T) {
 				},
 			},
 			"PUT": {
-				"BAD REQUEST when NOT in server table": {
+				"BAD REQUEST when useInTable NOT server": {
 					EndpointId:    GetTypeID(t, "ACTIVE_DIRECTORY"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
@@ -90,7 +90,7 @@ func TestTypes(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"OK when VALID request in SERVER table": {
+				"OK when VALID request when useInTable=server": {
 					EndpointId:    GetTypeID(t, "RIAK"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
