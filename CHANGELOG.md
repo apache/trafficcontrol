@@ -59,6 +59,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6834](https://github.com/apache/trafficcontrol/issues/6834) - In API 4.0, fixed `GET` for `/servers` to display all profiles irrespective of the index position. Also, replaced query param `profileId` with `profileName`.
 - [#6299](https://github.com/apache/trafficcontrol/issues/6299) User representations don't match
 - [#6776](https://github.com/apache/trafficcontrol/issues/6776) User properties only required sometimes
+- Fixed TO API `GET /deliveryservicesserver` causing error when an IMS request is made with the `cdn` and `maxRevalDurationDays` parameters set.
 
 ### Removed
 - Remove traffic\_portal dependencies to mitigate `npm audit` issues, specifically `grunt-concurrent`, `grunt-contrib-concat`, `grunt-contrib-cssmin`, `grunt-contrib-jsmin`, `grunt-contrib-uglify`, `grunt-contrib-htmlmin`, `grunt-newer`, and `grunt-wiredep`
