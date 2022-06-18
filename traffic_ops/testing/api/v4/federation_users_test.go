@@ -234,7 +234,7 @@ func CreateTestFederationUsers(t *testing.T) {
 	// Prerequisite Federation Users
 	federationUsers := map[string]tc.FederationUserPost{
 		"the.cname.com.": {
-			IDs:     []int{GetUserID(t, "adminuser")(), GetUserID(t, "disalloweduser")(), GetUserID(t, "readonlyuser")()},
+			IDs:     []int{GetUserID(t, "admin")(), GetUserID(t, "adminuser")(), GetUserID(t, "disalloweduser")(), GetUserID(t, "readonlyuser")()},
 			Replace: util.BoolPtr(false),
 		},
 		"booya.com.": {

@@ -33,6 +33,8 @@ import (
 )
 
 var fedIDs = make(map[string]int)
+
+// All prerequisite Federations are associated to this cdn and this xmlID
 var cdnName = "cdn1"
 var xmlId = "ds1"
 
@@ -105,7 +107,7 @@ func TestCDNFederations(t *testing.T) {
 						"ttl":         34,
 						"description": "updated",
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNFederationUpdateFields(map[string]interface{}{"CName": "new.cname."})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					EndpointId:    GetFederationID(t, "booya.com."),
@@ -185,6 +187,22 @@ func TestCDNFederations(t *testing.T) {
 			})
 		}
 	})
+}
+
+func validateCDNFederationUpdateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected CDN Federation response to not be nil.")
+		CDNFederationResp := resp.(tc.CDNFederation)
+		for field, expected := range expectedResp {
+			switch field {
+			case "CName":
+				assert.RequireNotNil(t, CDNFederationResp.CName, "Expected CName to not be nil.")
+				assert.Equal(t, expected, *CDNFederationResp.CName, "Expected CName to be %v, but got %s", expected, *CDNFederationResp.CName)
+			default:
+				t.Errorf("Expected field: %v, does not exist in response", field)
+			}
+		}
+	}
 }
 
 func validateCDNFederationPagination(paginationParam string) utils.CkReqFunc {
