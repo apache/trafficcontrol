@@ -120,18 +120,6 @@ func TestFederationFederationResolvers(t *testing.T) {
 	})
 }
 
-func GetFederationResolverID(t *testing.T, ipAddress string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("ipAddress", ipAddress)
-		federationResolvers, _, err := TOSession.GetFederationResolvers(opts)
-		assert.RequireNoError(t, err, "Get FederationResolvers Request failed with error:", err)
-		assert.RequireEqual(t, 1, len(federationResolvers.Response), "Expected response object length 1, but got %d", len(federationResolvers.Response))
-		assert.RequireNotNil(t, federationResolvers.Response[0].ID, "Expected Federation Resolver ID to not be nil")
-		return int(*federationResolvers.Response[0].ID)
-	}
-}
-
 func CreateTestFederationFederationResolvers(t *testing.T) {
 	// Prerequisite Federation Federation Resolvers
 	federationFederationResolvers := map[string]tc.AssignFederationResolversRequest{

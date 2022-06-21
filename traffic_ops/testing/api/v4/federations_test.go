@@ -45,7 +45,26 @@ func TestFederations(t *testing.T) {
 				},
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateAllFederationsFields([]map[string]interface{}{
+							{
+								"DeliveryService": "ds1",
+								"Mappings": []map[string]interface{}{
+									{
+										"CName": "the.cname.com.",
+										"TTL":   48,
+									},
+									{
+										"CName": "booya.com.",
+										"TTL":   34,
+									},
+									{
+										"CName": "google.com.",
+										"TTL":   30,
+									},
+								},
+							},
+						})),
 				},
 			},
 			"POST": {
@@ -109,22 +128,16 @@ func TestFederations(t *testing.T) {
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateFederationsUpdateFields(map[string]interface{}{
-							"federations": []map[string]interface{}{
-								{
-									"DeliveryService": "ds1",
-									"Mappings": map[string]interface{}{
-										"resolve4": []string{"192.0.2.0/25", "192.0.2.128/25"},
-										"resolve6": []string{"2001:db8::/33", "2001:db8:8000::/33"},
-									},
-								},
-								{
-									"DeliveryService": "ds2",
-									"Mappings": map[string]interface{}{
-										"resolve4": []string{"192.0.2.0/25", "192.0.2.128/25"},
-										"resolve6": []string{"2001:db8::/33", "2001:db8:8000::/33"},
-									},
-								},
+						validateFederationsUpdateFields([]map[string]interface{}{
+							{
+								"DeliveryService": "ds1",
+								"Resolve4":        []string{"192.0.2.0/25", "192.0.2.128/25"},
+								"Resolve6":        []string{"2001:db8::/33", "2001:db8:8000::/33"},
+							},
+							{
+								"DeliveryService": "ds2",
+								"Resolve4":        []string{"192.0.2.0/25", "192.0.2.128/25"},
+								"Resolve6":        []string{"2001:db8::/33", "2001:db8:8000::/33"},
 							},
 						})),
 				},
@@ -144,7 +157,6 @@ func TestFederations(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 			},
-			"DELETE": {},
 			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
 					ClientSession: TOSession,
@@ -190,125 +202,71 @@ func TestFederations(t *testing.T) {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
-					case "DELETE":
-						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteFederationResolverMappingsForCurrentUser(testCase.RequestOpts)
-							for _, check := range testCase.Expectations {
-								check(t, reqInf, nil, alerts, err)
-							}
-						})
 					}
 				}
 			})
 		}
+
+		t.Run("DELETE/OK when VALID request", func(t *testing.T) {
+			alerts, reqInf, err := TOSession.DeleteFederationResolverMappingsForCurrentUser(client.RequestOptions{})
+			for _, check := range utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)) {
+				check(t, reqInf, nil, alerts, err)
+			}
+		})
+
+		t.Run("DELETE/CONFLICT when NO FEDERATION RESOLVERS", func(t *testing.T) {
+			alerts, reqInf, err := TOSession.DeleteFederationResolverMappingsForCurrentUser(client.RequestOptions{})
+			for _, check := range utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)) {
+				check(t, reqInf, nil, alerts, err)
+			}
+		})
 	})
 }
 
-func validateFederationFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+func validateFederationFields(expectedResp []map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Federation response to not be nil.")
 		federationResp := resp.([]tc.AllDeliveryServiceFederationsMapping)
-		for _, federation := range federationResp {
-			if federation.DeliveryService.String() == expectedResp["DeliveryService"] {
-				assert.RequireEqual(t, 1, len(federation.Mappings), "expected 1 mapping, got %d", len(federation.Mappings))
-				//sort.Strings(federation.Mappings[0].Resolve4)
-				//sort.Strings(federation.Mappings[0].Resolve6)
-				assert.Exactly(t, expectedResp["Resolve4"], federation.Mappings[0].Resolve4, "checking federation resolver mappings, expected: %+v, actual: %+v", expectedResp["Resolve4"], federation.Mappings[0].Resolve4)
-				assert.Exactly(t, expectedResp["Resolve6"], federation.Mappings[0].Resolve6, "checking federation resolver mappings, expected: %+v, actual: %+v", expectedResp["Resolve6"], federation.Mappings[0].Resolve6)
+		for _, expectedFed := range expectedResp {
+			for _, federation := range federationResp {
+				if federation.DeliveryService.String() == expectedFed["DeliveryService"] {
+					assert.RequireEqual(t, 1, len(federation.Mappings), "expected 1 mapping, got %d", len(federation.Mappings))
+					assert.Exactly(t, expectedFed["Resolve4"], federation.Mappings[0].Resolve4, "checking federation resolver mappings, expected: %+v, actual: %+v", expectedFed["Resolve4"], federation.Mappings[0].Resolve4)
+					assert.Exactly(t, expectedFed["Resolve6"], federation.Mappings[0].Resolve6, "checking federation resolver mappings, expected: %+v, actual: %+v", expectedFed["Resolve6"], federation.Mappings[0].Resolve6)
+				}
 			}
 		}
 	}
 }
 
-func validateFederationsUpdateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+func validateFederationsUpdateFields(expectedResp []map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		opts := client.NewRequestOptions()
 		federation, _, err := TOSession.Federations(opts)
 		assert.RequireNoError(t, err, "Error getting Federations: %v - alerts: %+v", err, federation.Alerts)
-		assert.RequireEqual(t, 1, len(federation.Response), "Expected one Federation returned Got: %d", len(federation.Response))
-		for _, federationRequest := range expectedResp {
-			dat, err := json.Marshal(federationRequest)
-			assert.RequireNoError(t, err, "Error occurred when marshalling request body: %v", err)
-			err = json.Unmarshal(dat, &federation)
-			assert.RequireNoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-		}
+		assert.RequireGreaterOrEqual(t, len(federation.Response), 1, "Expected one Federation returned Got: %d", len(federation.Response))
 		validateFederationFields(expectedResp)(t, toclientlib.ReqInf{}, federation.Response, tc.Alerts{}, nil)
 	}
 }
 
-//
-//func GetTestFederations(t *testing.T) {
-//	if len(testData.Federations) == 0 {
-//		t.Error("no federations test data")
-//	}
-//
-//	feds, _, err := TOSession.AllFederations(client.RequestOptions{})
-//	if err != nil {
-//		t.Errorf("getting federations: %v - alerts: %+v", err, feds.Alerts)
-//	}
-//
-//	if len(feds.Response) < 1 {
-//		t.Errorf("expected atleast 1 federation, but got none")
-//	}
-//	fed := feds.Response[0]
-//
-//	if len(fed.Mappings) < 1 {
-//		t.Fatal("federation mappings expected > 1, actual: 0")
-//	}
-//
-//	mapping := fed.Mappings[0]
-//	if mapping.CName == nil {
-//		t.Fatal("federation mapping expected cname, actual: nil")
-//	}
-//	if mapping.TTL == nil {
-//		t.Fatal("federation mapping expected ttl, actual: nil")
-//	}
-//
-//	matched := false
-//	for _, testFed := range testData.Federations {
-//		if testFed.CName == nil {
-//			t.Error("test federation missing cname!")
-//			continue
-//		}
-//		if testFed.TTL == nil {
-//			t.Error("test federation missing ttl!")
-//			continue
-//		}
-//
-//		if *mapping.CName != *testFed.CName {
-//			continue
-//		}
-//		matched = true
-//
-//		if *mapping.TTL != *testFed.TTL {
-//			t.Errorf("federation mapping ttl expected: %v, actual: %v", *testFed.TTL, *mapping.TTL)
-//		}
-//	}
-//	if !matched {
-//		t.Errorf("federation mapping expected to match test data, actual: cname %v not in test data", *mapping.CName)
-//	}
-//}
-//
-//func RemoveFederationResolversForCurrentUserTest(t *testing.T) {
-//	if len(testData.Federations) < 1 {
-//		t.Fatal("No test Federations, deleting resolvers cannot be tested!")
-//	}
-//
-//	alerts, _, err := TOSession.DeleteFederationResolverMappingsForCurrentUser(client.RequestOptions{})
-//	if err != nil {
-//		t.Fatalf("Unexpected error deleting Federation Resolvers for current user: %v - alerts: %+v", err, alerts)
-//	}
-//	for _, a := range alerts.Alerts {
-//		if a.Level == tc.ErrorLevel.String() {
-//			t.Errorf("Unexpected error-level alert from deleting Federation Resolvers for current user: %s", a.Text)
-//		}
-//	}
-//
-//	// Now try deleting Federation Resolvers when there are none.
-//	_, _, err = TOSession.DeleteFederationResolverMappingsForCurrentUser(client.RequestOptions{})
-//	if err != nil {
-//		t.Logf("Received expected error deleting Federation Resolvers for current user: %v", err)
-//	} else {
-//		t.Error("Expected an error deleting zero Federation Resolvers, but didn't get one.")
-//	}
-//}
+func validateAllFederationsFields(expectedResp []map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected All Federations response to not be nil.")
+		allFederationResp := resp.([]tc.AllDeliveryServiceFederationsMapping)
+		for _, expected := range expectedResp {
+			for _, allFed := range allFederationResp {
+				if allFed.DeliveryService.String() == expected["DeliveryService"] {
+					for _, mapping := range allFed.Mappings {
+						for _, expectedMapping := range expected["Mappings"].([]map[string]interface{}) {
+							assert.RequireNotNil(t, mapping.CName, "Expected CName to not be nil.")
+							if expectedMapping["CName"] == *mapping.CName {
+								assert.RequireNotNil(t, mapping.TTL, "Expected TTL to not be nil.")
+								assert.Equal(t, expectedMapping["TTL"], *mapping.TTL, "Expected TTL to be %v, but got %s", expected, allFed.Mappings[0].TTL)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

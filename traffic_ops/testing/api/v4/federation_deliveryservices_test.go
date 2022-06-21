@@ -213,20 +213,3 @@ func CreateTestFederationDeliveryServices(t *testing.T) {
 		assert.RequireNoError(t, err, "Creating federations delivery services: %v - alerts: %+v", err, alerts.Alerts)
 	}
 }
-
-func DeleteTestFederationDeliveryServices(t *testing.T) {
-	// Prerequisite Federation Delivery Services
-	federation := []string{"the.cname.com.", "google.com."}
-	for _, cname := range federation {
-		resp, _, err := TOSession.GetFederationDeliveryServices(GetFederationID(t, cname)(), client.RequestOptions{})
-		assert.RequireNoError(t, err, "Error when getting Federation Delivery Services.")
-		for _, fedDS := range resp.Response {
-			assert.RequireNotNil(t, fedDS.ID, "Expected Federation Delivery Service ID to not be nil.")
-			alerts, _, err := TOSession.DeleteFederationDeliveryService(GetFederationID(t, cname)(), *fedDS.ID, client.RequestOptions{})
-			assert.NoError(t, err, "Unexpected error deleting Federation Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
-		}
-		resp, _, err = TOSession.GetFederationDeliveryServices(GetFederationID(t, cname)(), client.RequestOptions{})
-		assert.RequireNoError(t, err, "Error when getting Federation Delivery Services.")
-		assert.Equal(t, 0, len(resp.Response), "Expected Federation Delivery Services length to be 0. Got: %d", len(resp.Response))
-	}
-}

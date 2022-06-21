@@ -266,5 +266,4 @@ func DeleteTestFederationUsers(t *testing.T) {
 		assert.NoError(t, err, "Error getting users for federation %d: %v - alerts: %+v", fedID, err, fedUsers.Alerts)
 		assert.Equal(t, 0, len(fedUsers.Response), "Federation users expected 0, actual: %+v", len(fedUsers.Response))
 	}
-
 }
