@@ -297,5 +297,5 @@ func DeleteTestCDNFederations(t *testing.T) {
 		data, _, err := TOSession.GetCDNFederationsByName(cdnName, opts)
 		assert.Equal(t, 0, len(data.Response), "expected federation to be deleted")
 	}
-	fedIDs = nil // reset the global variable for the next test
+	fedIDs = make(map[string]int) // reset the global variable for the next test
 }
