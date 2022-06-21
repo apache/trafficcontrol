@@ -14,7 +14,6 @@
 
 import "zone.js/node";
 
-
 import { existsSync, readFileSync } from "fs";
 import { createServer as createRedirectServer } from "http";
 import { createServer, request } from "https";

@@ -17,7 +17,7 @@ import { BehaviorSubject } from "rxjs";
 
 import { UserService } from "src/app/api";
 import type { User } from "src/app/models";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { orderBy } from "src/app/utils";
 
@@ -161,8 +161,20 @@ export class UsersComponent implements OnInit {
 	/** Definitions for the context menu items (which act on user data). */
 	public contextMenuItems: Array<ContextMenuItem<User>> = [
 		{
-			action: "viewDetails",
+			disabled: (us: User | Array<User>): boolean => Array.isArray(us),
+			href: (u: User): string => `/core/users/${u.id}`,
 			name: "View User Details"
+		},
+		{
+			disabled: (us: User | Array<User>): boolean => Array.isArray(us),
+			href: (u: User): string => `/core/users/${u.id}`,
+			name: "Open in New Tab",
+			newTab: true
+		},
+		{
+			action: "viewChangelogs",
+			disabled: (): true =>true,
+			name: "View User Changelogs"
 		}
 	];
 
@@ -199,20 +211,5 @@ export class UsersComponent implements OnInit {
 	 */
 	public updateURL(): void {
 		this.fuzzySubject.next(this.searchText);
-	}
-
-	/**
-	 * Handles the selection of a context menu item on the table.
-	 *
-	 * @param e The clicked action.
-	 */
-	public handleContextMenu(e: ContextMenuActionEvent<User>): void {
-		switch (e.action) {
-			case "viewDetails":
-				console.log("viewing user details not implemented");
-				break;
-			default:
-				throw new Error(`unknown context menu item clicked: ${e.action}`);
-		}
 	}
 }

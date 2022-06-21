@@ -1,0 +1,66 @@
+/*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+mat-card {
+	width: fit-content;
+	margin: 15px auto auto;
+	min-width: 685px;
+}
+
+
+mat-card-content {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	grid-column-gap: 15px;
+	grid-row-gap: 1em;
+	width: 85vw;
+	margin: 1em auto 50px;
+
+	.input-warning {
+		color: #ff9800;
+		font-weight: bold;
+		font-size: x-small;
+	}
+}
+
+#ssh-container {
+	width: 98%;
+	max-width: 48em;
+	grid-column: 1 / -1;
+	margin: auto;
+
+	textarea {
+		font-family: 'Ubuntu Monospace', 'Courier New', Courier, monospace;
+		max-height: 400px;
+		word-wrap: break-word;
+	}
+}
+
+@media(max-width: 1230px) {
+	form {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+@media(max-width: 840px) {
+	form {
+		grid-template-columns: 1fr;
+	}
+}
+
+input[type="checkbox"] {
+	justify-self: start;
+	align-self: center;
+	cursor: pointer;
+}

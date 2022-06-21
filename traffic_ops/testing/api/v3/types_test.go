@@ -16,8 +16,14 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	"net/http"
+	"net/url"
 	"sort"
 	"testing"
 	"time"
@@ -28,224 +34,254 @@ import (
 
 func TestTypes(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Types}, func() {
-		GetTestTypesIMS(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		SortTestTypes(t)
-		UpdateTestTypes(t)
-		GetTestTypes(t)
-		GetTestTypesIMSAfterChange(t, header)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateTypeSort()),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"ORG"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateTypeFields(map[string]interface{}{"Name": "ORG"})),
+				},
+			},
+			"POST": {
+				"BAD REQUEST when useInTable NOT server": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "Host header regular expression-Test",
+						"name":        "TEST_1",
+						"useInTable":  "regex",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"OK when VALID request when useInTable=server": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "Host header regular expression-Test",
+						"lastUpdated": "2022-06-17T19:13:46.802044+00:00",
+						"name":        "TEST_4",
+						"useInTable":  "server",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateTypeUpdateCreateFields("TEST_4", map[string]interface{}{"Name": "TEST_4"})),
+				},
+			},
+			"PUT": {
+				"BAD REQUEST when useInTable NOT server": {
+					EndpointId:    GetTypeID(t, "ACTIVE_DIRECTORY"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "Active Directory User",
+						"name":        "TEST_3",
+						"useInTable":  "cachegroup",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"OK when VALID request when useInTable=server": {
+					EndpointId:    GetTypeID(t, "RIAK"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "riak type",
+						"name":        "TEST_5",
+						"useInTable":  "server",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateTypeUpdateCreateFields("TEST_5", map[string]interface{}{"Name": "TEST_5"})),
+				},
+			},
+			"DELETE": {
+				"OK when VALID request": {
+					EndpointId:    GetTypeID(t, "INFLUXDB"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					typ := tc.Type{}
+					params := make(map[string]string)
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &typ)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					if testCase.RequestParams != nil {
+						for k, v := range testCase.RequestParams {
+							params[k] = v[0]
+						}
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							var resp []tc.Type
+							var reqInf toclientlib.ReqInf
+							var err error
+							if len(params) != 0 {
+								resp, reqInf, err = testCase.ClientSession.GetTypeByNameWithHdr(params["name"], testCase.RequestHeaders)
+							} else {
+								resp, reqInf, err = testCase.ClientSession.GetTypesWithHdr(testCase.RequestHeaders)
+							}
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, tc.Alerts{}, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateType(typ)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateTypeByIDWithHdr(testCase.EndpointId(), typ, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteTypeByID(testCase.EndpointId())
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func GetTestTypesIMSAfterChange(t *testing.T, header http.Header) {
-	for _, typ := range testData.Types {
-		_, reqInf, err := TOSession.GetTypeByNameWithHdr(typ.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+func validateTypeSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Type response to not be nil.")
+		var typeNames []string
+		typeResp := resp.([]tc.Type)
+		for _, typ := range typeResp {
+			typeNames = append(typeNames, typ.Name)
 		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
+		assert.Equal(t, true, sort.StringsAreSorted(typeNames), "List is not sorted by their names: %v", typeNames)
 	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	for _, typ := range testData.Types {
-		_, reqInf, err := TOSession.GetTypeByNameWithHdr(typ.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+}
+
+func validateTypeFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Type response to not be nil.")
+		typeResp := resp.([]tc.Type)
+		for field, expected := range expectedResp {
+			for _, typ := range typeResp {
+				switch field {
+				case "Name":
+					assert.Equal(t, expected, typ.Name, "Expected Name to be %v, but got %s", expected, typ.Name)
+				case "UseInTable":
+					assert.Equal(t, expected, typ.UseInTable, "Expected UseInTable to be %v, but got %s", expected, typ.UseInTable)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
 		}
 	}
 }
 
-func GetTestTypesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	t.Log("---- GetTestTypes ----")
+func validateTypeUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		typ, _, err := TOSession.GetTypeByNameWithHdr(name, nil)
+		assert.RequireNoError(t, err, "Error getting Types: %v", err)
+		assert.RequireEqual(t, 1, len(typ), "Expected one Type returned, Got: %d", len(typ))
+		validateTypeFields(expectedResp)(t, toclientlib.ReqInf{}, typ, tc.Alerts{}, nil)
+	}
+}
 
-	for _, typ := range testData.Types {
-		_, reqInf, err := TOSession.GetTypeByNameWithHdr(typ.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+func GetTypeID(t *testing.T, typeName string) func() int {
+	return func() int {
+		resp, _, err := TOSession.GetTypeByNameWithHdr(typeName, nil)
+		assert.RequireNoError(t, err, "Get Types Request failed with error: %v", err)
+		assert.RequireEqual(t, 1, len(resp), "Expected response object length 1, but got %d", len(resp))
+
+		return resp[0].ID
 	}
 }
 
 func CreateTestTypes(t *testing.T) {
-	t.Log("---- CreateTestTypes ----")
-
 	db, err := OpenConnection()
-	if err != nil {
-		t.Fatal("cannot open db")
-	}
+	assert.RequireNoError(t, err, "cannot open db")
+
 	defer func() {
 		err := db.Close()
-		if err != nil {
-			t.Errorf("unable to close connection to db, error: %v", err)
-		}
+		assert.NoError(t, err, "unable to close connection to db, error: %v", err)
 	}()
-	dbQueryTemplate := "INSERT INTO type (name, description, use_in_table) VALUES ('%v', '%v', '%v');"
+	dbQueryTemplate := "INSERT INTO type (name, description, use_in_table) VALUES ('%s', '%s', '%s');"
 
 	for _, typ := range testData.Types {
-		foundTypes, _, err := TOSession.GetTypeByName(typ.Name)
-		if err == nil && len(foundTypes) > 0 {
-			t.Logf("Type %v already exists (%v match(es))", typ.Name, len(foundTypes))
-			continue
-		}
-
 		if typ.UseInTable != "server" {
 			err = execSQL(db, fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable))
+			assert.RequireNoError(t, err, "could not create Type using database operations: %v", err)
 		} else {
-			_, _, err = TOSession.CreateType(typ)
+			alerts, _, err := TOSession.CreateType(typ)
+			assert.RequireNoError(t, err, "could not create Type: %v - alerts: %+v", err, alerts.Alerts)
 		}
-
-		if err != nil {
-			t.Fatalf("could not CREATE types: %v", err)
-		}
-	}
-}
-
-func SortTestTypes(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetTypesWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, resp[i].Name)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UpdateTestTypes(t *testing.T) {
-	t.Log("---- UpdateTestTypes ----")
-
-	for i, typ := range testData.Types {
-		expectedTypeName := fmt.Sprintf("testType%v", i)
-		originalType := typ
-		resp, _, err := TOSession.GetTypeByName(originalType.Name)
-		if err != nil {
-			t.Fatalf("cannot GET Type by name: %v - %v", originalType.Name, err)
-		}
-		if len(resp) < 1 {
-			t.Fatalf("no types by name: %v", originalType.Name)
-		}
-
-		remoteType := resp[0]
-		remoteType.Name = expectedTypeName
-		// Ensure TO checks DB for UseInTable value
-		remoteType.UseInTable = "server"
-
-		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType)
-		if originalType.UseInTable != "server" {
-			if err == nil {
-				t.Fatalf("expected UPDATE on type %v to fail", remoteType.ID)
-			}
-			continue
-		} else if err != nil {
-			t.Fatalf("cannot UPDATE Type by id: %v - %v", err, alert)
-		}
-
-		// Retrieve the Type to check Type name got updated
-		resp, _, err = TOSession.GetTypeByID(remoteType.ID)
-		if err != nil {
-			t.Fatalf("cannot GET Type by ID: %v - %v", originalType.ID, err)
-		}
-		respType := resp[0]
-		if respType.Name != expectedTypeName {
-			t.Fatalf("results do not match actual: %s, expected: %s", respType.Name, expectedTypeName)
-		}
-		if respType.UseInTable != originalType.UseInTable {
-			t.Fatalf("use in table should never be updated, got: %v, expected %v", respType.UseInTable, originalType.UseInTable)
-		}
-
-		// Revert name change
-		respType.Name = originalType.Name
-		alert, _, err = TOSession.UpdateTypeByID(respType.ID, respType)
-		if err != nil {
-			t.Fatalf("cannot restore UPDATE Type by id: %v - %v", err, alert)
-		}
-	}
-}
-
-func GetTestTypes(t *testing.T) {
-	t.Log("---- GetTestTypes ----")
-
-	for _, typ := range testData.Types {
-		resp, _, err := TOSession.GetTypeByName(typ.Name)
-		if err != nil {
-			t.Errorf("cannot GET Type by name: %v - %v", err, resp)
-
-		}
-
-		t.Log("Response: ", resp)
 	}
 }
 
 func DeleteTestTypes(t *testing.T) {
-	t.Log("---- DeleteTestTypes ----")
-
 	db, err := OpenConnection()
-	if err != nil {
-		t.Fatal("cannot open db")
-	}
+	assert.RequireNoError(t, err, "cannot open db")
+
 	defer func() {
 		err := db.Close()
-		if err != nil {
-			t.Errorf("unable to close connection to db, error: %v", err)
-		}
+		assert.NoError(t, err, "unable to close connection to db, error: %v", err)
 	}()
-	dbDeleteTemplate := "DELETE FROM type WHERE name='%v';"
+	dbDeleteTemplate := "DELETE FROM type WHERE name='%s';"
 
-	for _, typ := range testData.Types {
-		// Retrieve the Type by name so we can get the id for the Update
-		resp, _, err := TOSession.GetTypeByName(typ.Name)
-		if err != nil || len(resp) == 0 {
-			t.Fatalf("cannot GET Type by name: %v - %v", typ.Name, err)
+	types, _, err := TOSession.GetTypesWithHdr(nil)
+	assert.NoError(t, err, "Cannot get Types: %v: %+v", err)
+
+	for _, typ := range types {
+		if typ.Name == "CHECK_EXTENSION_BOOL" || typ.Name == "CHECK_EXTENSION_NUM" || typ.Name == "CHECK_EXTENSION_OPEN_SLOT" {
+			continue
 		}
-		respType := resp[0]
 
-		if respType.UseInTable != "server" {
-			err := execSQL(db, fmt.Sprintf(dbDeleteTemplate, respType.Name))
-			if err != nil {
-				t.Fatalf("cannot DELETE Type by name: %v", err)
-			}
+		if typ.UseInTable != "server" {
+			err := execSQL(db, fmt.Sprintf(dbDeleteTemplate, typ.Name))
+			assert.RequireNoError(t, err, "cannot delete Type using database operations: %v", err)
 		} else {
-			delResp, _, err := TOSession.DeleteTypeByID(respType.ID)
-			if err != nil {
-				t.Fatalf("cannot DELETE Type by name: %v - %v", err, delResp)
-			}
+			delResp, _, err := TOSession.DeleteTypeByID(typ.ID)
+			assert.RequireNoError(t, err, "cannot delete Type using the API: %v - alerts: %+v", err, delResp.Alerts)
 		}
 
-		// Retrieve the Type to see if it got deleted
-		types, _, err := TOSession.GetTypeByName(typ.Name)
-		if err != nil {
-			t.Errorf("error deleting Type name: %v", err)
-		}
-		if len(types) > 0 {
-			t.Errorf("expected Type name: %s to be deleted", typ.Name)
-		}
+		// Retrieve the Type by name to see if it was deleted.
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", typ.Name)
+		types, _, err := TOSession.GetTypesWithHdr(nil, typ.Name)
+		assert.NoError(t, err, "error fetching Types filtered by presumably deleted name: %v", err)
+		assert.Equal(t, 0, len(types), "expected Type '%s' to be deleted", typ.Name)
 	}
 }

@@ -17,13 +17,11 @@
  * under the License.
  */
 
-var FormProfileController = function(profile, $scope, $location, $uibModal, fileUtils, formUtils, locationUtils, cdnService, profileService) {
+var FormProfileController = function(profile, $scope, $uibModal, fileUtils, formUtils, cdnService, profileService) {
 
-    var getCDNs = function() {
-        cdnService.getCDNs(true)
-            .then(function(result) {
-                $scope.cdns = result;
-            });
+    async function getCDNs() {
+        const result = await cdnService.getCDNs(true);
+        $scope.cdns = result;
     };
 
     $scope.profile = profile;
@@ -51,18 +49,6 @@ var FormProfileController = function(profile, $scope, $location, $uibModal, file
         { value: false, label: 'false' }
     ];
 
-    $scope.viewParams = function() {
-        $location.path($location.path() + '/parameters');
-    };
-
-    $scope.viewServers = function() {
-        $location.path($location.path() + '/servers');
-    };
-
-    $scope.viewDeliveryServices = function() {
-        $location.path($location.path() + '/delivery-services');
-    };
-
     $scope.cloneProfile = function() {
         var params = {
             title: 'Clone Profile',
@@ -80,8 +66,6 @@ var FormProfileController = function(profile, $scope, $location, $uibModal, file
         });
         modalInstance.result.then(function(clonedProfileName) {
             profileService.cloneProfile(profile.name, clonedProfileName);
-        }, function () {
-            // do nothing
         });
     };
 
@@ -103,18 +87,11 @@ var FormProfileController = function(profile, $scope, $location, $uibModal, file
         profileService.clearServerUpdatesByProfile($scope.profile.cdn, $scope.profile.name).then($scope.refresh);
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
-
     $scope.hasError = formUtils.hasError;
-
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
-    var init = function () {
-        getCDNs();
-    };
-    init();
-
+    getCDNs();
 };
 
-FormProfileController.$inject = ['profile', '$scope', '$location', '$uibModal', 'fileUtils', 'formUtils', 'locationUtils', 'cdnService', 'profileService'];
+FormProfileController.$inject = ['profile', '$scope', '$uibModal', 'fileUtils', 'formUtils', 'cdnService', 'profileService'];
 module.exports = FormProfileController;

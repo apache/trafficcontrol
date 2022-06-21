@@ -56,127 +56,72 @@ var TableProfileParametersController = function(profile, parameters, $controller
 			);
 	};
 
-	$scope.confirmRemoveParam = function(parameter, $event) {
+	$scope.confirmRemoveParam = async function(parameter, $event) {
 		if ($event) {
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		}
+
+		const params = {
+			message: `The ${profile.name} profile is used by `,
+			title: "Remove Parameter from Profile?"
+		};
 		if (profile.type == 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
-			deliveryServiceService.getDeliveryServices({ profile: profile.id }).
-				then(function(result) {
-					var params = {
-						title: 'Remove Parameter from Profile?',
-						message: 'The ' + profile.name + ' profile is used by ' + result.length + ' delivery service(s). Are you sure you want to remove the ' + parameter.name + ' parameter from this profile?'
-					};
-					var modalInstance = $uibModal.open({
-						templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-						controller: 'DialogConfirmController',
-						size: 'md',
-						resolve: {
-							params: function () {
-								return params;
-							}
-						}
-					});
-					modalInstance.result.then(function() {
-						removeParameter(parameter.id);
-					}, function () {
-						// do nothing
-					});
-				});
+			const result = await deliveryServiceService.getDeliveryServices({ profile: profile.id });
+			params.message += `${result.length} delivery service(s). Are you sure you want to remove the ${parameter.name} parameter from this profile?`
 		} else { // otherwise the profile is used by servers so we'll fetch the server count...
-			serverService.getServers({ profileId: profile.id }).
-				then(function(result) {
-					var params = {
-						title: 'Remove Parameter from Profile?',
-						message: 'The ' + profile.name + ' profile is used by ' + result.length + ' server(s). Are you sure you want to remove the ' + parameter.name + ' parameter from this profile?'
-					};
-					var modalInstance = $uibModal.open({
-						templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-						controller: 'DialogConfirmController',
-						size: 'md',
-						resolve: {
-							params: function () {
-								return params;
-							}
-						}
-					});
-					modalInstance.result.then(function() {
-						removeParameter(parameter.id);
-					}, function () {
-						// do nothing
-					});
-				});
+			const result = await serverService.getServers({ profileName: profile.name });
+			params.message += `${result.length} server(s). Are you sure you want to remove the ${parameter.name} parameter from this profile?`
+		}
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: () => params
+			}
+		});
+		try {
+			await modalInstance.result;
+			await removeParameter(parameter.id);
+		} catch {
+			// modalInstances will throw if the user cancels the action.
+			// it's not an actual error, so we don't need to actually handle it.
 		}
 	};
 
-	$scope.selectParams = function() {
-		var modalInstance = $uibModal.open({
+	$scope.selectParams = async function() {
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/table/profileParameters/table.profileParamsUnassigned.tpl.html',
 			controller: 'TableProfileParamsUnassignedController',
 			size: 'lg',
 			resolve: {
-				profile: function() {
-					return profile;
-				},
-				allParams: function(parameterService) {
-					return parameterService.getParameters();
-				},
-				assignedParams: function() {
-					return parameters;
-				}
+				allParams: parameterService => parameterService.getParameters(),
+				assignedParams: () => parameters,
+				profile: () => profile
+			},
+		});
+		const selectedParamIds = await modalInstance.result;
+		const params = {
+			message: `The ${profile.name} profile is used by `,
+			title: `Modify ${profile.name} parameters`
+		}
+		if (profile.type == 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
+			const result = await deliveryServiceService.getDeliveryServices({ profile: profile.id });
+			params.message += `${result.length} delivery service(s). Are you sure you want to modify the parameters?`;
+		} else { // otherwise the profile is used by servers so we'll fetch the server count...
+			const result = await serverService.getServers({ profileName: profile.name });
+			params.message += `${result.length} server(s). Are you sure you want to modify the parameters?`
+		}
+		const confirmModal = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: () => params
 			}
 		});
-		modalInstance.result.then(function(selectedParamIds) {
-			if (profile.type == 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
-				deliveryServiceService.getDeliveryServices({ profile: profile.id }).
-					then(function(result) {
-						var params = {
-							title: 'Modify ' + profile.name + ' parameters',
-							message: 'The ' + profile.name + ' profile is used by ' + result.length + ' delivery service(s). Are you sure you want to modify the parameters?'
-						};
-						var modalInstance = $uibModal.open({
-							templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-							controller: 'DialogConfirmController',
-							size: 'md',
-							resolve: {
-								params: function () {
-									return params;
-								}
-							}
-						});
-						modalInstance.result.then(function() {
-							linkProfileParameters(selectedParamIds);
-						}, function () {
-							// do nothing
-						});
-					});
-			} else { // otherwise the profile is used by servers so we'll fetch the server count...
-				serverService.getServers({ profileId: profile.id }).
-					then(function(result) {
-						var params = {
-							title: 'Modify ' + profile.name + ' parameters',
-							message: 'The ' + profile.name + ' profile is used by ' + result.length + ' server(s). Are you sure you want to modify the parameters?'
-						};
-						var modalInstance = $uibModal.open({
-							templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-							controller: 'DialogConfirmController',
-							size: 'md',
-							resolve: {
-								params: function () {
-									return params;
-								}
-							}
-						});
-						modalInstance.result.then(function() {
-							linkProfileParameters(selectedParamIds);
-						}, function () {
-							// do nothing
-						});
-					});
-			}
-		}, function () {
-			// do nothing
-		});
+		await confirmModal.result;
+		await linkProfileParameters(selectedParamIds);
 	};
 
 	$scope.toggleVisibility = function(colName) {

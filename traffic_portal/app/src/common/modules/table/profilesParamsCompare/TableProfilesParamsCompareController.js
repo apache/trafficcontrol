@@ -22,17 +22,13 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 	let updateProfile1 = false,
 		updateProfile2 = false;
 
-	let getProfileUsage = function(profile, profNum) {
+	async function getProfileUsage(profile, profNum) {
 		if (profile.type === 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
-			deliveryServiceService.getDeliveryServices({ profile: profile.id }).
-				then(function(result) {
-					$scope['profile' + profNum + 'Usage'] = result.length + ' delivery services';
-				});
+			const result = await deliveryServiceService.getDeliveryServices({ profile: profile.id });
+			$scope[`profile${profNum}Usage`] = `${result.length} delivery services`;
 		} else { // otherwise the profile is used by servers so we'll fetch the server count...
-			serverService.getServers({ profileId: profile.id }).
-				then(function(result) {
-					$scope['profile' + profNum + 'Usage'] = result.length + ' servers';
-			});
+			const result = await serverService.getServers({ profileName: profile.name });
+			$scope[`profile${profNum}Usage`] = `${result.length} servers`;
 		}
 	};
 

@@ -2407,13 +2407,12 @@
             ]
         },
         {
-            "name": "bad_admin",
+            "name": "another_role",
             "description": "super-user 3",
             "privLevel": 30,
             "capabilities": [
                 "all-read",
-                "all-write",
-                "invalid-capability"
+                "all-write"
             ]
         }
     ],

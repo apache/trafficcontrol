@@ -296,8 +296,15 @@ var TableProfilesController = function(profiles, $scope, $location, $uibModal, l
 			type: 2
 		},
 		{
-			getHref: profile => `#!/profiles/${profile.id}/servers`,
-			text: "Manage Servers",
+			getHref: profile => `#!/servers?profileName=${profile.name}`,
+			isDisabled: profile => profile.type === "DS_PROFILE",
+			text: "View Servers",
+			type: 2
+		},
+		{
+			getHref: profile => `#!/delivery-services?profileName=${profile.name}`,
+			isDisabled: profile => profile.type !== "DS_PROFILE",
+			text: "View Delivery Services",
 			type: 2
 		}
 	];

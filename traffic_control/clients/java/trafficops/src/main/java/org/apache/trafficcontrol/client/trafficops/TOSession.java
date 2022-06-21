@@ -45,7 +45,7 @@ public abstract class TOSession implements Closeable {
 	private static final String URL_FORMAT_STR = "/%s/%s/%s";
 
 	public static final String DEFAULT_API_PATH = "api";
-	public static final String DEFAULT_API_VERSION = "2.0";
+	public static final String DEFAULT_API_VERSION = "4.0";
 
 	public abstract RestApiSession restClient();
 	public abstract String host();

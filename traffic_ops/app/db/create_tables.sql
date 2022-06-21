@@ -37,6 +37,7 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 SET search_path = public, pg_catalog;
 
+
 --
 -- Name: on_update_current_timestamp_last_updated(); Type: FUNCTION; Schema: public; Owner: traffic_ops
 --
@@ -142,6 +143,42 @@ $$
 LANGUAGE plpgsql;
 
 ALTER FUNCTION public.on_delete_current_timestamp_last_updated() OWNER TO traffic_ops;
+
+--
+-- Name: update_ds_timestamp_on_insert(); Type: FUNCTION; Schema: public; Owner: traffic_ops
+--
+
+CREATE OR REPLACE FUNCTION update_ds_timestamp_on_insert()
+    RETURNS trigger
+    AS $$
+BEGIN
+    UPDATE deliveryservice
+    SET last_updated=now()
+    WHERE id IN (
+        SELECT deliveryservice
+        FROM CAST(NEW AS deliveryservice_tls_version)
+    );
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+--
+-- Name: update_ds_timestamp_on_delete(); Type: FUNCTION; Schema: public; Owner: traffic_ops
+--
+
+CREATE OR REPLACE FUNCTION update_ds_timestamp_on_delete()
+    RETURNS trigger
+    AS $$
+BEGIN
+    UPDATE deliveryservice
+    SET last_updated=now()
+    WHERE id IN (
+        SELECT deliveryservice
+        FROM CAST(OLD AS deliveryservice_tls_version)
+    );
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
 SET default_tablespace = '';
 
@@ -335,6 +372,42 @@ ALTER TABLE asn_id_seq OWNER TO traffic_ops;
 ALTER SEQUENCE asn_id_seq OWNED BY asn.id;
 
 --
+-- Name: async_status; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS async_status (
+    id bigint NOT NULL,
+    status TEXT NOT NULL,
+    message TEXT,
+    start_time timestamp with time zone DEFAULT now() NOT NULL,
+    end_time timestamp with time zone,
+
+    CONSTRAINT async_status_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE async_status OWNER TO traffic_ops;
+
+--
+-- Name: async_status_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
+--
+
+CREATE SEQUENCE IF NOT EXISTS async_status_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE async_status_id_seq OWNER TO traffic_ops;
+
+--
+-- Name: async_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
+--
+
+ALTER SEQUENCE async_status_id_seq OWNED BY async_status.id;
+
+--
 -- Name: cachegroup; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -463,6 +536,56 @@ ALTER TABLE cdn_id_seq OWNER TO traffic_ops;
 ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 
 --
+-- Name: cdn_lock; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS public.cdn_lock (
+    username text NOT NULL,
+    cdn text NOT NULL,
+    message text,
+    soft boolean NOT NULL DEFAULT TRUE,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT pk_cdn_lock PRIMARY KEY ("cdn")
+);
+
+
+ALTER TABLE cdn_lock OWNER TO traffic_ops;
+
+--
+-- Name: cdn_notification; Type: TABLE; Schema: public; Owner: traffic_ops
+
+CREATE TABLE cdn_notification (
+    id bigint NOT NULL,
+    cdn text NOT NULL,
+    "user" text NOT NULL,
+    notification text NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT cdn_notification_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE cdn_notification OWNER TO traffic_ops;
+
+--
+-- Name: cdn_notification_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
+--
+
+CREATE SEQUENCE IF NOT EXISTS cdn_notification_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE cdn_notification_id_seq OWNER TO traffic_ops;
+
+--
+-- Name: cdn_notification_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
+--
+
+ALTER SEQUENCE cdn_notification_id_seq OWNED BY cdn_notification.id;
+
+--
 -- Name: coordinate; Type: TABLE; Schema: public: Owner: traffic_ops
 --
 
@@ -526,7 +649,6 @@ CREATE TABLE IF NOT EXISTS deliveryservice (
     geo_provider smallint DEFAULT '0'::smallint,
     geo_limit_countries text,
     logs_enabled boolean DEFAULT false,
-    multi_site_origin_algorithm smallint,
     geolimit_redirect_url text,
     tenant_id bigint NOT NULL,
     routing_name text NOT NULL DEFAULT 'cdn',
@@ -622,9 +744,32 @@ CREATE TABLE IF NOT EXISTS deliveryservice_request (
     id bigserial,
     last_edited_by_id bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    deliveryservice jsonb NOT NULL,
+    deliveryservice jsonb DEFAULT NULL,
     status workflow_states NOT NULL,
-    CONSTRAINT deliveryservice_request_pkey PRIMARY KEY (id)
+    original jsonb DEFAULT NULL,
+    CONSTRAINT deliveryservice_request_pkey PRIMARY KEY (id),
+    CONSTRAINT appropriate_requested_and_original_for_change_type CHECK (
+        (change_type = 'delete' AND original IS NOT NULL AND deliveryservice IS NULL)
+        OR
+        (change_type = 'create' AND original IS NULL AND deliveryservice IS NOT NULL)
+        OR (
+            change_type = 'update' AND
+            deliveryservice IS NOT NULL AND
+            (
+                (
+                    (status = 'complete' OR status = 'rejected' OR status = 'pending')
+                    AND
+                    original IS NOT NULL
+                )
+                OR
+                (
+                    (status = 'draft' OR status = 'submitted')
+                    AND
+                    original IS NULL
+                )
+            )
+        )
+    )
 );
 
 ALTER TABLE deliveryservice_request OWNER TO traffic_ops;
@@ -655,6 +800,35 @@ CREATE TABLE IF NOT EXISTS deliveryservice_server (
 
 
 ALTER TABLE deliveryservice_server OWNER TO traffic_ops;
+
+--
+-- Name: deliveryservice_tls_version; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS deliveryservice_tls_version (
+    deliveryservice bigint NOT NULL,
+    tls_version text NOT NULL,
+    CONSTRAINT deliveryservice_tls_version_pkey PRIMARY KEY (deliveryservice, tls_version),
+    CONSTRAINT deliveryservice_tls_version_tls_version_check CHECK (tls_version <> '')
+);
+
+ALTER TABLE deliveryservice_tls_version OWNER TO traffic_ops;
+
+--
+-- Name: update_ds_timestamp_on_tls_version_insertion; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+DROP TRIGGER IF EXISTS update_ds_timestamp_on_tls_version_insertion on deliveryservice_tls_version;
+CREATE TRIGGER update_ds_timestamp_on_tls_version_insertion
+    AFTER INSERT ON deliveryservice_tls_version
+    FOR EACH ROW EXECUTE PROCEDURE update_ds_timestamp_on_insert();
+
+--
+-- Name: update_ds_timestamp_on_tls_version_delete; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+DROP TRIGGER IF EXISTS update_ds_timestamp_on_tls_version_delete on deliveryservice_tls_version;
+CREATE TRIGGER update_ds_timestamp_on_tls_version_delete
+    AFTER DELETE ON deliveryservice_tls_version
+    FOR EACH ROW EXECUTE PROCEDURE update_ds_timestamp_on_delete();
 
 --
 -- Name: deliveryservice_tmuser; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -710,7 +884,8 @@ ALTER SEQUENCE division_id_seq OWNED BY division.id;
 
 CREATE TABLE IF NOT EXISTS dnschallenges (
     fqdn text NOT NULL,
-    record text NOT NULL
+    record text NOT NULL,
+    xml_id text NOT NULL
 );
 
 --
@@ -872,11 +1047,17 @@ ALTER SEQUENCE hwinfo_id_seq OWNED BY hwinfo.id;
 CREATE TABLE IF NOT EXISTS interface (
     max_bandwidth bigint DEFAULT NULL CHECK (max_bandwidth IS NULL OR max_bandwidth >= 0),
     monitor boolean NOT NULL,
-    mtu bigint DEFAULT 1500 CHECK (mtu IS NULL OR mtu > 1280),
+    mtu bigint DEFAULT 1500,
     name text NOT NULL CHECK (name != ''),
     server bigint NOT NULL,
+    router_host_name text NOT NULL DEFAULT '',
+    router_port_name text NOT NULL DEFAULT '',
     PRIMARY KEY (name, server)
 );
+
+ALTER TABLE interface
+ADD CONSTRAINT interface_mtu_check
+CHECK (((mtu IS NULL) OR (mtu >= 1280)));
 
 --
 -- Name: ip_address; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -922,62 +1103,19 @@ CREATE TRIGGER before_update_ip_address_trigger
 
 CREATE TABLE IF NOT EXISTS job (
     id bigint NOT NULL,
-    agent bigint,
-    object_type text,
-    object_name text,
-    keyword text NOT NULL,
-    parameters text,
+    ttl_hr integer,
     asset_url text NOT NULL,
-    asset_type text NOT NULL,
-    status bigint NOT NULL,
     start_time timestamp with time zone NOT NULL,
     entered_time timestamp with time zone NOT NULL,
     job_user bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     job_deliveryservice bigint,
+    invalidation_type text NOT NULL DEFAULT 'REFRESH',
     CONSTRAINT idx_89593_primary PRIMARY KEY (id)
 );
 
 
 ALTER TABLE job OWNER TO traffic_ops;
-
---
--- Name: job_agent; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE IF NOT EXISTS job_agent (
-    id bigint NOT NULL,
-    name text,
-    description text,
-    active integer DEFAULT 0 NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT job_agent_name_unique UNIQUE (name),
-    CONSTRAINT idx_89603_primary PRIMARY KEY (id)
-);
-
-
-ALTER TABLE job_agent OWNER TO traffic_ops;
-
---
--- Name: job_agent_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
---
-
-CREATE SEQUENCE IF NOT EXISTS job_agent_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE job_agent_id_seq OWNER TO traffic_ops;
-
---
--- Name: job_agent_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
---
-
-ALTER SEQUENCE job_agent_id_seq OWNED BY job_agent.id;
-
 
 --
 -- Name: job_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
@@ -998,42 +1136,6 @@ ALTER TABLE job_id_seq OWNER TO traffic_ops;
 --
 
 ALTER SEQUENCE job_id_seq OWNED BY job.id;
-
---
--- Name: job_status; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE IF NOT EXISTS job_status (
-    id bigint NOT NULL,
-    name text,
-    description text,
-    last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT job_status_name_unique UNIQUE (name),
-    CONSTRAINT idx_89624_primary PRIMARY KEY (id)
-);
-
-
-ALTER TABLE job_status OWNER TO traffic_ops;
-
---
--- Name: job_status_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
---
-
-CREATE SEQUENCE IF NOT EXISTS job_status_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE job_status_id_seq OWNER TO traffic_ops;
-
---
--- Name: job_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
---
-
-ALTER SEQUENCE job_status_id_seq OWNED BY job_status.id;
 
 CREATE TABLE IF NOT EXISTS last_deleted (
     table_name text NOT NULL PRIMARY KEY,
@@ -1316,7 +1418,7 @@ ALTER SEQUENCE region_id_seq OWNED BY region.id;
 CREATE TABLE IF NOT EXISTS role (
     id bigint,
     name text NOT NULL,
-    description text,
+    description text NOT NULL,
     priv_level bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT role_name_unique UNIQUE (name),
@@ -1387,8 +1489,6 @@ CREATE TABLE IF NOT EXISTS server (
     ilo_ip_gateway text,
     ilo_username text,
     ilo_password text,
-    router_host_name text,
-    router_port_name text,
     guid text,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     https_port bigint,
@@ -1698,7 +1798,7 @@ CREATE TABLE IF NOT EXISTS tenant (
 
 CREATE TABLE IF NOT EXISTS tm_user (
     id bigint NOT NULL,
-    username text,
+    username text NOT NULL,
     public_ssh_key text,
     role bigint,
     uid bigint,
@@ -1720,6 +1820,7 @@ CREATE TABLE IF NOT EXISTS tm_user (
     token text,
     registration_sent timestamp with time zone,
     tenant_id bigint NOT NULL,
+    last_authenticated timestamp with time zone,
     CONSTRAINT idx_89765_primary PRIMARY KEY (id)
 );
 
@@ -1863,18 +1964,6 @@ ALTER TABLE type_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE type_id_seq OWNED BY type.id;
 
---
--- Name: user_role; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE IF NOT EXISTS user_role (
-    user_id bigint NOT NULL,
-    role_id bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
-);
-
-ALTER TABLE user_role OWNER TO traffic_ops;
-
 DO $$ BEGIN
 IF NOT EXISTS (SELECT FROM information_schema.tables
     WHERE table_name = 'profile_type_values'
@@ -1897,6 +1986,12 @@ END$$;
 
 ALTER TABLE ONLY asn ALTER COLUMN id SET DEFAULT nextval('asn_id_seq'::regclass);
 
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY async_status ALTER COLUMN id SET DEFAULT nextval('async_status_id_seq'::regclass);
+
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
@@ -1910,6 +2005,12 @@ ALTER TABLE ONLY cachegroup ALTER COLUMN id SET DEFAULT nextval('cachegroup_id_s
 --
 
 ALTER TABLE ONLY cdn ALTER COLUMN id SET DEFAULT nextval('cdn_id_seq'::regclass);
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdn_notification ALTER COLUMN id SET DEFAULT nextval('cdn_notification_id_seq'::regclass);
 
 
 --
@@ -1952,20 +2053,6 @@ ALTER TABLE ONLY hwinfo ALTER COLUMN id SET DEFAULT nextval('hwinfo_id_seq'::reg
 --
 
 ALTER TABLE ONLY job ALTER COLUMN id SET DEFAULT nextval('job_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job_agent ALTER COLUMN id SET DEFAULT nextval('job_agent_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job_status ALTER COLUMN id SET DEFAULT nextval('job_status_id_seq'::regclass);
 
 
 --
@@ -2314,14 +2401,6 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'hwinfo' AN
     CREATE UNIQUE INDEX IF NOT EXISTS idx_89583_serverid ON hwinfo USING btree (serverid, description);
 END IF;
 
-IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND column_name = 'agent') THEN
-    --
-    -- Name: idx_89593_fk_job_agent_id1; Type: INDEX; Schema: public; Owner: traffic_ops
-    --
-
-    CREATE INDEX IF NOT EXISTS idx_89593_fk_job_agent_id1 ON job USING btree (agent);
-END IF;
-
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND column_name = 'job_deliveryservice') THEN
     --
     -- Name: idx_89593_fk_job_deliveryservice1; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -2330,20 +2409,20 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND c
     CREATE INDEX IF NOT EXISTS idx_89593_fk_job_deliveryservice1 ON job USING btree (job_deliveryservice);
 END IF;
 
-IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND column_name = 'status') THEN
-    --
-    -- Name: idx_89593_fk_job_status_id1; Type: INDEX; Schema: public; Owner: traffic_ops
-    --
-
-    CREATE INDEX IF NOT EXISTS idx_89593_fk_job_status_id1 ON job USING btree (status);
-END IF;
-
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND column_name = 'job_user') THEN
     --
     -- Name: idx_89593_fk_job_user_id1; Type: INDEX; Schema: public; Owner: traffic_ops
     --
 
     CREATE INDEX IF NOT EXISTS idx_89593_fk_job_user_id1 ON job USING btree (job_user);
+END IF;
+
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'job' AND column_name = 'start_time') THEN
+    --
+    -- Name: job_start_time_idx; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX IF NOT EXISTS job_start_time_idx ON job (start_time DESC NULLS LAST);
 END IF;
 
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'log' AND column_name = 'tm_user') THEN
@@ -2763,8 +2842,6 @@ DO $$
         'federation_tmuser',
         'hwinfo',
         'job',
-        'job_agent',
-        'job_status',
         'log',
         'origin',
         'parameter',
@@ -2791,8 +2868,7 @@ DO $$
         'topology',
         'topology_cachegroup',
         'topology_cachegroup_parents',
-        'type',
-        'user_role'
+        'type'
     ] AS VARCHAR[]);
     table_name TEXT;
     trigger_name TEXT := 'on_delete_current_timestamp';
@@ -2826,14 +2902,14 @@ BEGIN
             IF table_name = 'topology' THEN
                 EXECUTE FORMAT('
                         CREATE INDEX IF NOT EXISTS %s_last_updated_idx
-                               ON %s_cachegroup (last_updated DESC NULLS LAST);
+                               ON %s (last_updated DESC NULLS LAST);
                         ',
                         QUOTE_IDENT(table_name),
                         QUOTE_IDENT(table_name)
                     );
             ELSIF table_name = 'phys_location' THEN
             EXECUTE FORMAT('
-                        CREATE INDEX IF NOT EXISTS pys_location_last_updated_idx
+                        CREATE INDEX IF NOT EXISTS phys_location_last_updated_idx
                                ON %s (last_updated DESC NULLS LAST);
                         ',
                         QUOTE_IDENT(table_name)
@@ -2864,6 +2940,8 @@ DECLARE
         'cachegroup_parameter',
         'capability',
         'cdn',
+        'cdn_lock',
+        'cdn_notification',
         'coordinate',
         'deliveryservice',
         'deliveryservice_regex',
@@ -2879,8 +2957,6 @@ DECLARE
         'federation_tmuser',
         'hwinfo',
         'job',
-        'job_agent',
-        'job_status',
         'log',
         'origin',
         'parameter',
@@ -2902,8 +2978,7 @@ DECLARE
         'topology',
         'topology_cachegroup',
         'topology_cachegroup_parents',
-        'type',
-        'user_role'
+        'type'
     ] AS VARCHAR[]);
     table_name TEXT;
     trigger_name TEXT := 'on_update_current_timestamp';
@@ -2937,6 +3012,26 @@ END$$;
 
 -- New code block to deallocate table_name variable to avoid identifier collision
 DO $$ BEGIN
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_notification_cdn' AND table_name = 'cdn_notification') THEN
+    --
+    -- Name: fk_notification_cdn; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cdn_notification
+        ADD CONSTRAINT fk_notification_cdn FOREIGN KEY (cdn) REFERENCES cdn(name) ON DELETE CASCADE ON UPDATE CASCADE;
+
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_notification_user' AND table_name = 'cdn_notification') THEN
+    --
+    -- Name: fk_notification_user; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cdn_notification
+        ADD CONSTRAINT fk_notification_user FOREIGN KEY ("user") REFERENCES tm_user(username) ON DELETE CASCADE ON UPDATE CASCADE;
+
+END IF;
+
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_atsprofile_atsparameters_atsparameters1' AND table_name = 'profile_parameter') THEN
     --
     -- Name: fk_atsprofile_atsparameters_atsparameters1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -2954,6 +3049,17 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
     ALTER TABLE ONLY deliveryservice
         ADD CONSTRAINT deliveryservice_service_category_fkey FOREIGN KEY (service_category) REFERENCES service_category(name) ON UPDATE CASCADE;
 END IF;
+
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'deliveryservice_tls_version_deliveryservice_fkey' AND table_name = 'deliveryservice_tls_version') THEN
+    --
+    -- Name: deliveryservice_tls_version_deliveryservice_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice_tls_version
+        ADD CONSTRAINT deliveryservice_tls_version_deliveryservice_fkey FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE;
+END IF;
+
 
 IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'ip_address_server_fkey' AND table_name = 'ip_address') THEN
     --
@@ -3024,7 +3130,7 @@ IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constrain
     --
 
     ALTER TABLE ONLY deliveryservices_required_capability
-        ADD CONSTRAINT fk_required_capability FOREIGN KEY (required_capability) REFERENCES server_capability(name) ON DELETE RESTRICT;
+        ADD CONSTRAINT fk_required_capability FOREIGN KEY (required_capability) REFERENCES server_capability(name) ON UPDATE CASCADE ON DELETE RESTRICT;
 END IF;
 
 IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'deliveryservice_topology_fkey' AND table_name = 'deliveryservice') THEN
@@ -3051,7 +3157,7 @@ IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constrain
     --
 
     ALTER TABLE ONLY server_server_capability
-        ADD CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON DELETE RESTRICT;
+        ADD CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON UPDATE CASCADE ON DELETE RESTRICT;
 END IF;
 
 IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'fk_deliveryservice' AND table_name = 'deliveryservice_consistent_hash_query_param') THEN
@@ -3324,15 +3430,6 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
         ADD CONSTRAINT interface_server_fkey FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE ON UPDATE CASCADE;
 END IF;
 
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_agent_id1' AND table_name = 'job') THEN
-    --
-    -- Name: fk_job_agent_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY job
-        ADD CONSTRAINT fk_job_agent_id1 FOREIGN KEY (agent) REFERENCES job_agent(id) ON DELETE CASCADE;
-END IF;
-
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_deliveryservice1' AND table_name = 'job') THEN
     --
     -- Name: fk_job_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3340,15 +3437,6 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
 
     ALTER TABLE ONLY job
         ADD CONSTRAINT fk_job_deliveryservice1 FOREIGN KEY (job_deliveryservice) REFERENCES deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE;
-END IF;
-
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_status_id1' AND table_name = 'job') THEN
-    --
-    -- Name: fk_job_status_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY job
-        ADD CONSTRAINT fk_job_status_id1 FOREIGN KEY (status) REFERENCES job_status(id);
 END IF;
 
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_user_id1' AND table_name = 'job') THEN
@@ -3603,6 +3691,25 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
         ADD CONSTRAINT origin_tenant_fkey FOREIGN KEY (tenant) REFERENCES tenant (id) ON DELETE RESTRICT;
 END IF;
 
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fkey_lock_cdn' AND table_name = 'cdn_lock') THEN
+    --
+    -- Name: fk_lock_cdn; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cdn_lock
+        ADD CONSTRAINT fk_lock_cdn FOREIGN KEY ("cdn") REFERENCES cdn(name) ON DELETE CASCADE ON UPDATE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fkey_lock_username' AND table_name = 'cdn_lock') THEN
+    --
+    -- Name: fk_lock_username; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY cdn_lock
+        ADD CONSTRAINT fk_lock_username FOREIGN KEY ("username") REFERENCES tm_user(username) ON DELETE CASCADE ON UPDATE CASCADE;
+END IF;
+
+
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'cachegroup_coordinate_fkey' AND table_name = 'cachegroup') THEN
     --
     -- Name: cachegroup_coordinate_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3666,15 +3773,6 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
         ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE CASCADE;
 END IF;
 
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_cap_name' AND table_name = 'role_capability') THEN
-    --
-    -- Name: fk_cap_name; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY role_capability
-        ADD CONSTRAINT fk_cap_name FOREIGN KEY (cap_name) REFERENCES capability (name) ON DELETE RESTRICT;
-END IF;
-
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'snapshot_cdn_fkey' AND table_name = 'snapshot') THEN
     --
     -- Name: snapshot_cdn_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3701,24 +3799,6 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
     ALTER TABLE ONLY tm_user
         ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL;
 END IF;
-
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_user_id' AND table_name = 'user_role') THEN
-    --
-    -- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY user_role
-        ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES tm_user (id) ON DELETE CASCADE;
-END IF;
-
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_role_id' AND table_name = 'user_role') THEN
-    --
-    -- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY user_role
-        ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE RESTRICT;
-END IF;
 END$$;
 
 
@@ -3735,4 +3815,3 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 -- PostgreSQL database dump complete
 --
-

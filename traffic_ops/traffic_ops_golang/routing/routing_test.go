@@ -51,13 +51,13 @@ type routeTest struct {
 var testRoutes = []routeTest{
 	{
 		Method:      `GET`,
-		Path:        `api/2.0/cdns`,
+		Path:        `api/4.0/cdns`,
 		ExpectMatch: true,
 		Params:      map[string]string{},
 	},
 	{
 		Method:      `POST`,
-		Path:        `api/1.4/users/login`,
+		Path:        `api/4.0/users/login`,
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
@@ -93,7 +93,7 @@ var testRoutes = []routeTest{
 	},
 	{
 		Method:      http.MethodGet,
-		Path:        "/api/1.1/about",
+		Path:        "/api/4.0/about",
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
@@ -117,7 +117,7 @@ var testRoutes = []routeTest{
 	},
 	{
 		Method:      `GET`,
-		Path:        `internal/api/2.0/federations.json`,
+		Path:        `internal/api/4.0/federations.json`,
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
@@ -129,7 +129,7 @@ var testRoutes = []routeTest{
 	},
 	{
 		Method:      `GET`,
-		Path:        `api/2.0/servers`,
+		Path:        `api/4.0/servers`,
 		ExpectMatch: true,
 		Params:      map[string]string{},
 	},

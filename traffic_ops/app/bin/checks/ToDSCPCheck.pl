@@ -131,7 +131,7 @@ foreach my $ds ( @{$jdeliveryservices} ) {
 	$ds_info{ $ds->{id} } = $ds;
 
 	# Get the DS details and add the matchList
-	my $ds_details = $ext->get( '/api/2.0/deliveryservices/' . $ds->{id} );
+	my $ds_details = $ext->get( '/api/4.0/deliveryservices/' . $ds->{id} );
 
 	#DEBUG "Debug matchList before push: " . Dumper($ds_details->[0]{matchList});
 	# The matchList was removed at one point and now it's back.
@@ -146,7 +146,7 @@ if ( defined( $args{s} ) ) {
 
 	# TODO check for a successful return
 	# This returns a reference to a hash
-	$jdataserver = $ext->get( '/api/2.0/servers/hostname/' . $args{s} . '/details' );
+	$jdataserver = $ext->get( '/api/4.0/servers/hostname/' . $args{s} . '/details' );
 
 	# create an array
 	my @tmp = ();
@@ -167,7 +167,7 @@ else {
 }
 
 my %cdns  = ();
-my $jcdns = $ext->get('/api/2.0/cdns');
+my $jcdns = $ext->get('/api/4.0/cdns');
 
 # convert the cdns to a hash
 foreach my $cdn ( @{$jcdns} ) {
@@ -191,7 +191,7 @@ foreach my $server ( @{$jdataserver} ) {
 	my $protocol    = "http";
 	my $ip_protocol = "ipv4";
 	my $domain_name = undef;
-	my $details     = $ext->get( '/api/2.0/servers/hostname/' . $host_name . '/details' );
+	my $details     = $ext->get( '/api/4.0/servers/hostname/' . $host_name . '/details' );
 	my $successful  = 1;                                                                     # assume all is good
 
 	if ( ( defined( $ip_addrs[1] ) ) && ( $ip_addrs[1] =~ m/:/ ) ) {

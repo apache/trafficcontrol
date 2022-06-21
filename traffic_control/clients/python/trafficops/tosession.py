@@ -196,7 +196,7 @@ class TOSession(RestApiSession):
 		"""
 		Returns the base url. (read-only)
 
-		:return: The base url should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?' e.g https://to.somedomain.net/api/2.0/
+		:return: The base url should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?' e.g https://to.somedomain.net/api/4.0/
 		:rtype: str
 		"""
 

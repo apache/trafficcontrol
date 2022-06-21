@@ -17,7 +17,7 @@
  * under the License.
  */
 
-const TableParameterProfilesController = function (parameter, profiles, $controller, $scope, $state, $uibModal, $window, locationUtils, deliveryServiceService, profileParameterService, serverService, profileService, messageModel, fileUtils) {
+const TableParameterProfilesController = function (parameter, profiles, $scope, $state, $uibModal, $window, locationUtils, deliveryServiceService, profileParameterService, serverService, profileService, messageModel, fileUtils) {
 	const deleteProfile = function (profile) {
 		profileService.deleteProfile(profile.id)
 			.then(function (result) {
@@ -215,54 +215,35 @@ const TableParameterProfilesController = function (parameter, profiles, $control
 		},
 	];
 
-	$scope.confirmRemoveProfile = function (profile, $event) {
+	$scope.confirmRemoveProfile = async function (profile, $event) {
 		if ($event) {
 			$event.stopPropagation();
 		}
+		const params = {
+			message: `The ${profile.name} profile is used by `,
+			title: "Remove Parameter from Profile?",
+		};
 		if (profile.type === 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
-			deliveryServiceService.getDeliveryServices({profile: profile.id}).then(function (result) {
-				const params = {
-					title: 'Remove Parameter from Profile?',
-					message: 'The ' + profile.name + ' profile is used by ' + result.length + ' delivery service(s). Are you sure you want to remove the ' + parameter.name + ' parameter from this profile?'
-				};
-				const modalInstance = $uibModal.open({
-					templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-					controller: 'DialogConfirmController',
-					size: 'md',
-					resolve: {
-						params: function () {
-							return params;
-						}
-					}
-				});
-				modalInstance.result.then(function () {
-					removeProfile(profile.id);
-				}, function () {
-					// do nothing
-				});
-			});
+			const result = await deliveryServiceService.getDeliveryServices({profile: profile.id});
+			params.message += `${result.length} delivery service(s).`;
 		} else { // otherwise the profile is used by servers so we'll fetch the server count...
-			serverService.getServers({profileId: profile.id}).then(function (result) {
-				const params = {
-					title: 'Remove Parameter from Profile?',
-					message: 'The ' + profile.name + ' profile is used by ' + result.length + ' server(s). Are you sure you want to remove the ' + parameter.name + ' parameter from this profile?'
-				};
-				const modalInstance = $uibModal.open({
-					templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-					controller: 'DialogConfirmController',
-					size: 'md',
-					resolve: {
-						params: function () {
-							return params;
-						}
-					}
-				});
-				modalInstance.result.then(function () {
-					removeProfile(profile.id);
-				}, function () {
-					// do nothing
-				});
-			});
+			const result = await serverService.getServers({profileName: profile.name});
+			params.message += `${result.length} server(s).`;
+		}
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: () => params
+			}
+		});
+		try {
+			await modalInstance.result
+			await removeProfile(profile.id);
+		} catch {
+			// modalInstances will throw if the user cancels the action.
+			// it's not an actual error, so we don't need to actually handle it.
 		}
 	};
 
@@ -353,5 +334,5 @@ const TableParameterProfilesController = function (parameter, profiles, $control
 
 };
 
-TableParameterProfilesController.$inject = ['parameter', 'profiles', '$controller', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService', 'profileService', 'messageModel', 'fileUtils'];
+TableParameterProfilesController.$inject = ['parameter', 'profiles', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService', 'profileService', 'messageModel', 'fileUtils'];
 module.exports = TableParameterProfilesController;
