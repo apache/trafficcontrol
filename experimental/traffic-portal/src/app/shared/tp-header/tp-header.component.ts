@@ -16,7 +16,7 @@ import {Component, OnInit} from "@angular/core";
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import {HeaderNavigation, TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -37,16 +37,54 @@ export class TpHeaderComponent implements OnInit {
 
 	public hidden = false;
 
+	// Will try to display each of these navs on the header, space allowing.
+	public horizNavs: Array<HeaderNavigation> = new Array<HeaderNavigation>();
+	// Navs that are not directly displayed on the header.
+	public vertNavs: Array<HeaderNavigation> = new Array<HeaderNavigation>();
+
 	/**
 	 * Angular lifecycle hook
 	 */
 	public ngOnInit(): void {
+		this.headerSvc.addHorizontalNav({
+			routerLink: "/core",
+			text: "Home",
+			type: "anchor",
+		}, "home");
+		this.headerSvc.addHorizontalNav({
+			routerLink: "/core/users",
+			text: "Users",
+			type: "anchor",
+			visible: () => this.hasPermission("USER:READ"),
+		}, "Users");
+		this.headerSvc.addHorizontalNav({
+			routerLink: "/core/servers",
+			text: "Servers",
+			type: "anchor",
+			visible: () => this.hasPermission("SERVER:READ"),
+		}, "Servers");
+		this.headerSvc.addVerticalNav({
+			routerLink: "/core/me",
+			text: "Profile",
+			type: "anchor"
+		}, "Profile");
+		this.headerSvc.addVerticalNav({
+			click: async () => this.logout(),
+			text: "Logout",
+			type: "anchor"
+		}, "Logout");
+
 		this.headerSvc.headerTitle.subscribe(title => {
 			this.title = title;
 		});
-
 		this.headerSvc.headerHidden.subscribe(hidden => {
 			this.hidden = hidden;
+		});
+		this.headerSvc.horizontalNavsUpdated.subscribe(navs => {
+			this.horizNavs = navs;
+		});
+		this.headerSvc.verticalNavsUpdated.subscribe(navs => {
+			this.vertNavs = navs;
 		});
 	}
 

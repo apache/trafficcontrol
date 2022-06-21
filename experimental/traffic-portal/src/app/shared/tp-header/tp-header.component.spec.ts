@@ -20,7 +20,7 @@ import {of, ReplaySubject} from "rxjs";
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import {HeaderNavigation, TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { TpHeaderComponent } from "./tp-header.component";
 
@@ -33,7 +33,10 @@ describe("TpHeaderComponent", () => {
 		const mockCurrentUserService = jasmine.createSpyObj(
 			["updateCurrentUser", "hasPermission", "login", "logout"], {userChanged: of(null)});
 		logOutSpy = mockCurrentUserService.logout;
-		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+		const headerSvc = jasmine.createSpyObj(["addHorizontalNav", "addVerticalNav"],
+			{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>(),
+				horizontalNavsUpdated: new ReplaySubject<Array<HeaderNavigation>>(),
+				verticalNavsUpdated: new ReplaySubject<Array<HeaderNavigation>>()});
 		TestBed.configureTestingModule({
 			declarations: [ TpHeaderComponent ],
 			imports: [ APITestingModule, HttpClientModule, RouterTestingModule, MatMenuModule ],

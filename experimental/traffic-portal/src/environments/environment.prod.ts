@@ -18,5 +18,6 @@
  */
 export const environment = {
 	apiVersion: "3.0",
+	customModule: false,
 	production: true
 };

@@ -19,19 +19,20 @@ limitations under the License.
 	<div></div>
 	<nav id="expanded">
 		<ul>
-			<li><a mat-button routerLink="/core/">Home</a></li>
-			<li *ngIf="hasPermission('USER:READ') || hasPermission('TENANT:READ')">
-				<button mat-button type="button" [matMenuTriggerFor]="usersMenu">Users</button>
+			<li *ngFor="let nav of horizNavs">
+				<a *ngIf="nav.type === 'ancor' && (nav.visible === undefined || nav.visible())" mat-button [routerLink]="nav.routerLink">{{nav.text}}</a>
+				<button *ngIf="nav.type === 'button' && (nav.visible === undefined || nav.visible())" mat-button (click)="nav?.click()">{{nav.text}}</button>
 			</li>
-			<li *ngIf="hasPermission('SERVER:READ')"><a mat-button routerLink="/core/servers">Servers</a></li>
 			<li>
 				<button mat-icon-button [matMenuTriggerFor]="expandedMenu">
 					<mat-icon>manage_accounts</mat-icon>
 				</button>
 				<mat-menu #expandedMenu="matMenu">
-					<a mat-menu-item routerLink="/core/me">Profile</a>
-					<button mat-menu-item (click)="logout()">Logout</button>
 					<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
+					<div *ngFor="let nav of vertNavs">
+						<a *ngIf="nav.type === 'ancor' && (nav.visible === undefined || nav.visible())" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
+						<button *ngIf="nav.type === 'button' && (nav.visible === undefined || nav.visible())" mat-menu-item (click)="nav?.click()">{{nav.text}}</button>
+					</div>
 				</mat-menu>
 			</li>
 		</ul>
@@ -39,21 +40,18 @@ limitations under the License.
 	<nav id="collapsed">
 		<button mat-icon-button [matMenuTriggerFor]="collapsedMenu"><mat-icon>menu</mat-icon></button>
 		<mat-menu #collapsedMenu="matMenu">
-			<a mat-menu-item routerLink="/core/">Home</a>
-			<button type="button" *ngIf="hasPermission('USER:READ')||hasPermission('TENANT:READ')" mat-menu-item [matMenuTriggerFor]="usersMenu">Users</button>
-			<a *ngIf="hasPermission('SERVER:READ')" mat-menu-item routerLink="/core/servers">Servers</a>
-			<a mat-menu-item routerLink="/core/me">Profile</a>
-			<button mat-menu-item (click)="logout()">Logout</button>
+			<li *ngFor="let nav of horizNavs">
+				<a *ngIf="nav.type === 'ancor' && (nav.visible === undefined || nav.visible())" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
+				<button *ngIf="nav.type === 'button' && (nav.visible === undefined || nav.visible())" mat-menu-item (click)="nav?.click()">{{nav.text}}</button>
+			</li>
 			<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
+			<li *ngFor="let nav of vertNavs">
+				<a *ngIf="nav.type === 'ancor' && (nav.visible === undefined || nav.visible())" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
+				<button *ngIf="nav.type === 'button' && (nav.visible === undefined || nav.visible())" mat-menu-item (click)="nav?.click()">{{nav.text}}</button>
+			</li>
 		</mat-menu>
 	</nav>
 	<mat-menu #themeMenu="matMenu">
 		<button mat-menu-item *ngFor="let theme of themeSvc.themes" (click)="themeSvc.loadTheme(theme)">{{theme.name}}</button>
-	</mat-menu>
-	<mat-menu #usersMenu="matMenu">
-		<a mat-menu-item routerLink="/core/users" *ngIf="hasPermission('USER:READ')">View Users</a>
-		<button disabled mat-button type="button" *ngIf="!hasPermission('USER:READ')">View Users</button>
-		<a mat-menu-item routerLink="/core/tenants" *ngIf="hasPermission('TENANT:READ')">View Tenants</a>
-		<button disabled mat-button type="button" *ngIf="!hasPermission('TENANT:READ')">View Tenants</button>
 	</mat-menu>
 </mat-toolbar>

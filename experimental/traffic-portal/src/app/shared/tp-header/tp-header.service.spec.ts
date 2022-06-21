@@ -15,7 +15,7 @@ import { TestBed } from "@angular/core/testing";
 
 import {TpHeaderComponent} from "src/app/shared/tp-header/tp-header.component";
 
-import { TpHeaderService } from "./tp-header.service";
+import {HeaderNavigation, TpHeaderService} from "./tp-header.service";
 
 describe("TpHeaderService", () => {
 	let service: TpHeaderService;
@@ -42,5 +42,7 @@ describe("TpHeaderService", () => {
 
 		service.headerHidden.next(true);
 		service.headerTitle.next("something else");
+		service.horizontalNavsUpdated.next(new Array<HeaderNavigation>());
+		service.verticalNavsUpdated.next(new Array<HeaderNavigation>());
 	});
 });
