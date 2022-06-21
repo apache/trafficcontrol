@@ -1589,6 +1589,14 @@
             {
                 "xmlId": "ds1"
             }
+        },
+        {
+            "cname": "google.com.",
+            "ttl": 30,
+            "description": "google",
+            "deliveryService": {
+                "xmlId": "ds1"
+            }
         }
     ],
     "federation_resolvers": [

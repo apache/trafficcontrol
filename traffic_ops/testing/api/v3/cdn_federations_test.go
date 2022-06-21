@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 var fedIDs = make(map[string]int)
@@ -55,7 +54,7 @@ func TestCDNFederations(t *testing.T) {
 				"OK when VALID ID parameter": {
 					ClientSession: TOSession,
 					RequestParams: url.Values{"id": {strconv.Itoa(GetFederationID(t, "the.cname.com.")())}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"SORTED by CNAME when ORDERBY=CNAME parameter": {
 					ClientSession: TOSession,
@@ -109,6 +108,7 @@ func TestCDNFederations(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
+					var fedID int
 					cdnFederation := tc.CDNFederation{}
 
 					if testCase.RequestBody != nil {
@@ -121,9 +121,21 @@ func TestCDNFederations(t *testing.T) {
 					switch method {
 					case "GET", "GET AFTER CHANGES":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetCDNFederationsByNameWithHdr(cdnName, testCase.RequestHeaders)
-							for _, check := range testCase.Expectations {
-								check(t, reqInf, resp.Response, resp.Alerts, err)
+							if name == "OK when VALID ID parameter" {
+								if val, ok := testCase.RequestParams["id"]; ok {
+									id, err := strconv.Atoi(val[0])
+									assert.RequireNoError(t, err, "Failed to convert ID to an integer.")
+									fedID = id
+								}
+								resp, reqInf, err := testCase.ClientSession.GetCDNFederationsByIDWithHdr(cdnName, fedID, testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetCDNFederationsByNameWithHdr(cdnName, testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp.Response, resp.Alerts, err)
+								}
 							}
 						})
 					case "POST":
@@ -211,20 +223,17 @@ func CreateTestCDNFederations(t *testing.T) {
 		setFederationID(t, resp.Response)
 		assert.RequireNotNil(t, resp.Response.ID, "Federation ID was nil after posting.")
 		assert.RequireNotNil(t, dsResp[0].ID, "Delivery Service ID was nil.")
-		_, _, err = TOSession.CreateFederationDeliveryServices(*resp.Response.ID, []int{*dsResp[0].ID}, false)
+		_, err = TOSession.CreateFederationDeliveryServices(*resp.Response.ID, []int{*dsResp[0].ID}, false)
 		assert.NoError(t, err, "Could not create Federation Delivery Service: %v", err)
 	}
 }
 
 func DeleteTestCDNFederations(t *testing.T) {
-	opts := client.NewRequestOptions()
 	for _, id := range fedIDs {
-		resp, _, err := TOSession.DeleteCDNFederation(cdnName, id, opts)
+		resp, _, err := TOSession.DeleteCDNFederationByID(cdnName, id)
 		assert.NoError(t, err, "Cannot delete federation #%d: %v - alerts: %+v", id, err, resp.Alerts)
-
-		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		data, _, err := TOSession.GetCDNFederationsByName(cdnName, opts)
-		assert.Equal(t, 0, len(data.Response), "expected federation to be deleted")
 	}
+	data, _, _ := TOSession.GetCDNFederationsByNameWithHdr(cdnName, nil)
+	assert.Equal(t, 0, len(data.Response), "expected federation to be deleted")
 	fedIDs = nil // reset the global variable for the next test
 }

@@ -55,7 +55,9 @@ const (
 	DeliveryServicesRequiredCapabilities
 	DeliveryServiceServerAssignments
 	Divisions
+	FederationDeliveryServices
 	FederationResolvers
+	FederationFederationResolvers
 	FederationUsers
 	Origins
 	Parameters
@@ -100,8 +102,10 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	DeliveryServicesRequiredCapabilities:  {CreateTestDeliveryServicesRequiredCapabilities, DeleteTestDeliveryServicesRequiredCapabilities},
 	DeliveryServiceServerAssignments:      {CreateTestDeliveryServiceServerAssignments, DeleteTestDeliveryServiceServers},
 	Divisions:                             {CreateTestDivisions, DeleteTestDivisions},
+	FederationDeliveryServices:            {CreateTestFederationDeliveryServices, DeleteTestCDNFederations},
 	FederationUsers:                       {CreateTestFederationUsers, DeleteTestFederationUsers},
 	FederationResolvers:                   {CreateTestFederationResolvers, DeleteTestFederationResolvers},
+	FederationFederationResolvers:         {CreateTestFederationFederationResolvers, DeleteTestFederationFederationResolvers},
 	Origins:                               {CreateTestOrigins, DeleteTestOrigins},
 	Parameters:                            {CreateTestParameters, DeleteTestParameters},
 	PhysLocations:                         {CreateTestPhysLocations, DeleteTestPhysLocations},
