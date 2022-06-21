@@ -16,7 +16,7 @@ import {Component, OnInit} from "@angular/core";
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
-import {HeaderNavigation, TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import {HeaderNavigation, HeaderNavType, TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -101,6 +101,17 @@ export class TpHeaderComponent implements OnInit {
 	 */
 	public hasPermission(perm: string): boolean {
 		return this.auth.hasPermission(perm);
+	}
+
+	/**
+	 * Checks if a nav is shown
+	 *
+	 * @param nav nav to check
+	 * @param type which type of nav to check for
+	 * @returns If the nav should be rendered
+	 */
+	public navShown(nav: HeaderNavigation, type: HeaderNavType): boolean {
+		return nav.type === type && (nav.visible === undefined || nav.visible());
 	}
 
 	/**
