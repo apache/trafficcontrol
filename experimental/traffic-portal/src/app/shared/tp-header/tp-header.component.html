@@ -20,7 +20,7 @@ limitations under the License.
 	<nav id="expanded">
 		<ul>
 			<li *ngFor="let nav of horizNavs">
-				<a *ngIf="nav.type === 'ancor' && (nav.visible === undefined || nav.visible())" mat-button [routerLink]="nav.routerLink">{{nav.text}}</a>
+				<a *ngIf="nav.type === 'anchor' && (nav.visible === undefined || nav.visible())" mat-button [routerLink]="nav.routerLink">{{nav.text}}</a>
 				<button *ngIf="nav.type === 'button' && (nav.visible === undefined || nav.visible())" mat-button (click)="nav?.click()">{{nav.text}}</button>
 			</li>
 			<li>
@@ -30,7 +30,7 @@ limitations under the License.
 				<mat-menu #expandedMenu="matMenu">
 					<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
 					<div *ngFor="let nav of vertNavs">
-						<a *ngIf="nav.type === 'ancor' && (nav.visible === undefined || nav.visible())" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
+						<a *ngIf="nav.type === 'anchor' && (nav.visible === undefined || nav.visible())" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
 						<button *ngIf="nav.type === 'button' && (nav.visible === undefined || nav.visible())" mat-menu-item (click)="nav?.click()">{{nav.text}}</button>
 					</div>
 				</mat-menu>
@@ -41,12 +41,12 @@ limitations under the License.
 		<button mat-icon-button [matMenuTriggerFor]="collapsedMenu"><mat-icon>menu</mat-icon></button>
 		<mat-menu #collapsedMenu="matMenu">
 			<li *ngFor="let nav of horizNavs">
-				<a *ngIf="nav.type === 'ancor' && (nav.visible === undefined || nav.visible())" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
+				<a *ngIf="nav.type === 'anchor' && (nav.visible === undefined || nav.visible())" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
 				<button *ngIf="nav.type === 'button' && (nav.visible === undefined || nav.visible())" mat-menu-item (click)="nav?.click()">{{nav.text}}</button>
 			</li>
 			<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
 			<li *ngFor="let nav of vertNavs">
-				<a *ngIf="nav.type === 'ancor' && (nav.visible === undefined || nav.visible())" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
+				<a *ngIf="nav.type === 'anchor' && (nav.visible === undefined || nav.visible())" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
 				<button *ngIf="nav.type === 'button' && (nav.visible === undefined || nav.visible())" mat-menu-item (click)="nav?.click()">{{nav.text}}</button>
 			</li>
 		</mat-menu>
