@@ -40,7 +40,7 @@ import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
 import { UsersComponent } from "./users/users.component";
 
-const routes: Routes = [
+export const ROUTES: Routes = [
 	{ canActivate: [AuthenticatedGuard], component: DashboardComponent, path: "" },
 	{ canActivate: [AuthenticatedGuard], component: UsersComponent, path: "users" },
 	{ canActivate: [AuthenticatedGuard], component: UserDetailsComponent, path: "users/:id"},
@@ -81,7 +81,7 @@ const routes: Routes = [
 		SharedModule,
 		AppUIModule,
 		CommonModule,
-		RouterModule.forChild(routes)
+		RouterModule.forChild(ROUTES)
 	]
 })
 export class CoreModule { }

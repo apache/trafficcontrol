@@ -16,7 +16,7 @@
 		"noUnusedParameters": true,
 		"outDir": "./dist/out-tsc",
 		"strict": true,
-		"target": "es2017",
+		"target": "es2020",
 		"lib": [
 			"es2020",
 			"dom"
