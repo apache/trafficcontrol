@@ -308,8 +308,8 @@ public abstract class AbstractServiceUpdater {
 			deleteDatabase(existingDB);
 		}
 
-		newDB.setReadable(true, true);
-		newDB.setWritable(true, false);
+		newDB.setReadable(true);
+		newDB.setWritable(true);
 		final boolean renamed = newDB.renameTo(existingDB);
 
 		if (!renamed) {
@@ -325,8 +325,8 @@ public abstract class AbstractServiceUpdater {
 		LOGGER.info("[" + getClass().getSimpleName() + "] Moving Location database from: " + newDB + ", to: " + existingDB);
 
 		for (final File file : existingDB.listFiles()) {
-			file.setReadable(true, true);
-			file.setWritable(true, false);
+			file.setReadable(true);
+			file.setWritable(true);
 			file.delete();
 		}
 
@@ -367,6 +367,8 @@ public abstract class AbstractServiceUpdater {
 		}
 
 		final File outputFile = File.createTempFile(tmpPrefix, tmpSuffix);
+		outputFile.setReadable(true);
+		outputFile.setWritable(true);
 		try (InputStream in = conn.getInputStream();
 			 OutputStream out = new FileOutputStream(outputFile)
 		) {
