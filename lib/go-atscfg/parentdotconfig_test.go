@@ -258,8 +258,8 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 
 	lines := strings.Split(txt, "\n")
 
-	if len(lines) != 4 {
-		t.Fatalf("expected 4 lines (comment, ds, dot remap, and empty newline), actual: '%+v' text %v", len(lines), txt)
+	if expectedLines := 5; len(lines) != expectedLines {
+		t.Fatalf("expected %v lines (comment, blank, ds, dot remap, and empty newline), actual: '%+v' text %v", expectedLines, len(lines), txt)
 	}
 
 	for _, line := range lines {
