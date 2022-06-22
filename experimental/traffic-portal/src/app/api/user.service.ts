@@ -177,6 +177,22 @@ export class UserService extends APIService {
 			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
 		};
 	}
+
+	/**
+	 * Creates a new user through the API.
+	 *
+	 * @param user The user to create.
+	 * @returns The created user.
+	 */
+	public async createUser(user: PostRequestUser): Promise<PutOrPostResponseUser> {
+		const response = await  this.post<PutOrPostResponseUser>("users", user).toPromise();
+		if (response.registrationSent) {
+			response.registrationSent = new Date((response.registrationSent as unknown as string));
+		}
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
 	}
 
 	/** Fetches the Role with the given ID. */
