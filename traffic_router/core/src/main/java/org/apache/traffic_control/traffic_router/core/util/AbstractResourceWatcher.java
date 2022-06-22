@@ -154,6 +154,8 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 		File databaseFile = null;
 		try {
 			databaseFile = File.createTempFile(tmpPrefix, tmpSuffix);
+			databaseFile.setReadable(true);
+			databaseFile.setWritable(true);
 			try (FileWriter fw = new FileWriter(databaseFile)) {
 				fw.write(jsonData);
 				fw.flush();
