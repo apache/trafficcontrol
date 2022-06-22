@@ -14,11 +14,11 @@
 
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import type { GetResponseUser, PostRequestUser, PutOrPostResponseUser } from "trafficops-types";
 
 import {
 	type Role,
 	type Tenant,
-	type User,
 	type Capability,
 	type CurrentUser,
 	newCurrentUser
@@ -113,15 +113,34 @@ export class UserService extends APIService {
 		);
 	}
 
-	public async getUsers(nameOrID: string | number): Promise<User>;
-	public async getUsers(): Promise<Array<User>>;
 	/**
-	 * Gets an array of all users in Traffic Ops.
+	 * Gets a specific user from Traffic Ops.
 	 *
-	 * @param nameOrID If given, returns only the User with the given username (string) or ID (number).
-	 * @returns An Array of User objects - or a single User object if 'nameOrID' was given.
+	 * @param nameOrID The username (string) or ID (number) of the user to
+	 * fetch.
+	 * @returns An Array of User objects - or a single User object if 'nameOrID'
+	 * was given.
 	 */
-	public async getUsers(nameOrID?: string | number): Promise<Array<User> | User> {
+	public async getUsers(nameOrID: string | number): Promise<GetResponseUser>;
+	/**
+	 * Gets an array of all users in Traffic Ops visible to the current user's
+	 * Tenant.
+	 *
+	 * @param nameOrID If given, returns only the User with the given username
+	 * (string) or ID (number).
+	 * @returns An Array of User objects - or a single User object if 'nameOrID'
+	 * was given.
+	 */
+	public async getUsers(): Promise<Array<GetResponseUser>>;
+	/**
+	 * Gets an array of users from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the User with the given username
+	 * (string) or ID (number).
+	 * @returns An Array of User objects - or a single User object if 'nameOrID'
+	 * was given.
+	 */
+	public async getUsers(nameOrID?: string | number): Promise<Array<GetResponseUser> | GetResponseUser> {
 		const path = "users";
 		if (nameOrID) {
 			let params;
@@ -132,32 +151,12 @@ export class UserService extends APIService {
 				case "number":
 					params = {id: String(nameOrID)};
 			}
-			return this.get<[User]>(path, undefined, params).toPromise().then(
-				r => {
-					r[0].lastUpdated = new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"));
-					return r[0];
-				}
-			).catch(
-				e => {
-					console.error("Failed to get user:", e);
-					return {
-						id: -1,
-						newUser: false,
-						username: ""
-					};
-				}
-			);
+			const r = await this.get<[GetResponseUser]>(path, undefined, params).toPromise();
+			return {...r[0], lastUpdated: new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"))};
 		}
-		return this.get<Array<User>>(path).toPromise().then(r => r.map(
-			u => {
-				u.lastUpdated = new Date((u.lastUpdated as unknown as string).replace("+00", "Z"));
-				return u;
-			}
-		)).catch(
-			e => {
-				console.error("Failed to get users:", e);
-				return [];
-			}
+		const users = await this.get<Array<GetResponseUser>>(path).toPromise();
+		return users.map(
+			u => ({...u, lastUpdated: new Date((u.lastUpdated as unknown as string).replace("+00", "Z"))})
 		);
 	}
 
@@ -167,9 +166,17 @@ export class UserService extends APIService {
 	 * @param user The new definition of the User.
 	 * @returns The user as updated.
 	 */
-	public async updateUser(user: User): Promise<User> {
+	public async updateUser(user: PutOrPostResponseUser | GetResponseUser): Promise<PutOrPostResponseUser> {
 		const path = `users/${user.id}`;
-		return this.put<User>(path, user).toPromise();
+		const response = await this.put<PutOrPostResponseUser>(path, user).toPromise();
+		if (response.registrationSent) {
+			response.registrationSent = new Date((response.registrationSent as unknown as string));
+		}
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
 	}
 
 	/** Fetches the Role with the given ID. */

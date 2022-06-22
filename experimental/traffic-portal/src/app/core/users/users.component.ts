@@ -14,9 +14,9 @@
 import { Component, type OnInit } from "@angular/core";
 import type { ValueGetterParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
+import { GetResponseUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import type { User } from "src/app/models";
 import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { orderBy } from "src/app/utils";
@@ -32,7 +32,7 @@ import { orderBy } from "src/app/utils";
 export class UsersComponent implements OnInit {
 
 	/** All (visible) users. */
-	public users = new Array<User>();
+	public users = new Array<GetResponseUser>();
 
 	/** Emits changes to the fuzzy search text. */
 	public fuzzySubject = new BehaviorSubject("");
@@ -159,15 +159,15 @@ export class UsersComponent implements OnInit {
 	];
 
 	/** Definitions for the context menu items (which act on user data). */
-	public contextMenuItems: Array<ContextMenuItem<User>> = [
+	public contextMenuItems: Array<ContextMenuItem<GetResponseUser>> = [
 		{
-			disabled: (us: User | Array<User>): boolean => Array.isArray(us),
-			href: (u: User): string => `/core/users/${u.id}`,
+			disabled: (us: GetResponseUser | Array<GetResponseUser>): boolean => Array.isArray(us),
+			href: (u: GetResponseUser): string => `/core/users/${u.id}`,
 			name: "View User Details"
 		},
 		{
-			disabled: (us: User | Array<User>): boolean => Array.isArray(us),
-			href: (u: User): string => `/core/users/${u.id}`,
+			disabled: (us: GetResponseUser | Array<GetResponseUser>): boolean => Array.isArray(us),
+			href: (u: GetResponseUser): string => `/core/users/${u.id}`,
 			name: "Open in New Tab",
 			newTab: true
 		},
