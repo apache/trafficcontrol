@@ -84,6 +84,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Adds updates to the trafficcontrol-health-client to, use new ATS Host status formats, detect and use proper
   traffic_ctl commands, and adds new markup-poll-threshold config.
 - Traffic Monitor now defaults to 100 historical "CRConfig" Snapshots stored internally if not specified in configuration (previous default was 20,000)
+- Updated Traffic Router dependencies:
+  - commons-io: 2.0.1 -> 2.11.0
+  - commons-codec: 1.6 -> 1.15
+  - guava: 18.0 -> 31.1-jre
+  - async-http-client: 2.12.1 -> 2.12.3
+  - spring: 5.2.20.RELEASE -> 5.3.20
 - `TRAFFIC_ROUTER`-type Profiles no longer need to have names that match any kind of pattern (e.g. `CCR_.*`)
 - [#4351](https://github.com/apache/trafficcontrol/issues/4351) Updated message to an informative one when deleting a delivery service.
 - Updated Grove to use the TO API v3 client library
