@@ -21,9 +21,9 @@ import { of } from "rxjs";
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import {TpHeaderComponent} from "src/app/shared/tp-header/tp-header.component";
+import { type TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
 
-import {HeaderNavigation, TpHeaderService} from "./tp-header.service";
+import { HeaderNavigation, TpHeaderService } from "./tp-header.service";
 
 describe("TpHeaderService", () => {
 	let service: TpHeaderService;
@@ -36,10 +36,10 @@ describe("TpHeaderService", () => {
 		logOutSpy = mockCurrentUserService.logout;
 		mockHeaderComp = jasmine.createSpyObj<TpHeaderComponent>([], {hidden: false, title: ""});
 		TestBed.configureTestingModule({
-			imports: [ APITestingModule, HttpClientModule, RouterTestingModule, MatMenuModule, MatButtonModule ],
+			imports: [APITestingModule, HttpClientModule, RouterTestingModule, MatMenuModule, MatButtonModule],
 			providers: [
 				TpHeaderService,
-				{ provide: CurrentUserService, useValue: mockCurrentUserService },
+				{provide: CurrentUserService, useValue: mockCurrentUserService},
 			],
 		});
 		service = TestBed.inject(TpHeaderService);
@@ -52,7 +52,7 @@ describe("TpHeaderService", () => {
 	it("clears front-end user data even if server-side logout fails", async () => {
 		const userService = TestBed.inject(UserService);
 		const userSpy = spyOn(userService, "logout");
-		userSpy.and.returnValue(new Promise(r=>r(null)));
+		userSpy.and.returnValue(new Promise(r => r(null)));
 		expect(userSpy).not.toHaveBeenCalled();
 		await service.logout();
 		expect(userSpy).toHaveBeenCalled();
