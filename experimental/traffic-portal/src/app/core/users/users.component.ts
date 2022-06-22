@@ -84,7 +84,7 @@ export class UsersComponent implements OnInit {
 		},
 		{
 			field: "fullName",
-			headerName: "Full Name",
+			headerName: "Name",
 			hide: false
 		},
 		{
