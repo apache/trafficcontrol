@@ -20,8 +20,8 @@ limitations under the License.
 	<nav id="expanded">
 		<ul>
 			<li *ngFor="let nav of horizNavs">
-				<a *ngIf="navShown(nav, 'anchor')" mat-button [routerLink]="nav.routerLink">{{nav.text}}</a>
-				<button *ngIf="navShown(nav, 'button')" mat-button (click)="nav?.click()">{{nav.text}}</button>
+				<a *ngIf="navShown(nav, 'anchor')" mat-button [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
+				<button *ngIf="navShown(nav, 'button')" mat-button (click)="navClick(nav)">{{nav.text}}</button>
 			</li>
 			<li>
 				<button mat-icon-button [matMenuTriggerFor]="expandedMenu">
@@ -30,8 +30,8 @@ limitations under the License.
 				<mat-menu #expandedMenu="matMenu">
 					<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
 					<div *ngFor="let nav of vertNavs">
-						<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
-						<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="nav?.click()">{{nav.text}}</button>
+						<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
+						<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
 					</div>
 				</mat-menu>
 			</li>
@@ -41,13 +41,13 @@ limitations under the License.
 		<button mat-icon-button [matMenuTriggerFor]="collapsedMenu"><mat-icon>menu</mat-icon></button>
 		<mat-menu #collapsedMenu="matMenu">
 			<li *ngFor="let nav of horizNavs">
-				<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
-				<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="nav?.click()">{{nav.text}}</button>
+				<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
+				<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
 			</li>
 			<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
 			<li *ngFor="let nav of vertNavs">
-				<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="nav.routerLink">{{nav.text}}</a>
-				<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="nav?.click()">{{nav.text}}</button>
+				<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
+				<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
 			</li>
 		</mat-menu>
 	</nav>

@@ -17,7 +17,6 @@ import {MatMenuModule} from "@angular/material/menu";
 import { RouterTestingModule } from "@angular/router/testing";
 import {of, ReplaySubject} from "rxjs";
 
-import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import {HeaderNavigation, TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
@@ -27,12 +26,10 @@ import { TpHeaderComponent } from "./tp-header.component";
 describe("TpHeaderComponent", () => {
 	let component: TpHeaderComponent;
 	let fixture: ComponentFixture<TpHeaderComponent>;
-	let logOutSpy: jasmine.Spy;
 
 	beforeEach(waitForAsync(() => {
 		const mockCurrentUserService = jasmine.createSpyObj(
 			["updateCurrentUser", "hasPermission", "login", "logout"], {userChanged: of(null)});
-		logOutSpy = mockCurrentUserService.logout;
 		const headerSvc = jasmine.createSpyObj(["addHorizontalNav", "addVerticalNav"],
 			{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>(),
 				horizontalNavsUpdated: new ReplaySubject<Array<HeaderNavigation>>(),
@@ -55,22 +52,6 @@ describe("TpHeaderComponent", () => {
 
 	it("should exist", () => {
 		expect(component).toBeTruthy();
-	});
-
-	it("logs the user out", async () => {
-		expect(logOutSpy).not.toHaveBeenCalled();
-		await component.logout();
-		expect(logOutSpy).toHaveBeenCalled();
-	});
-
-	it("clears front-end user data even if server-side logout fails", async () => {
-		const userService = TestBed.inject(UserService);
-		const userSpy = spyOn(userService, "logout");
-		userSpy.and.returnValue(new Promise(r=>r(null)));
-		expect(userSpy).not.toHaveBeenCalled();
-		await component.logout();
-		expect(userSpy).toHaveBeenCalled();
-		expect(logOutSpy).toHaveBeenCalled();
 	});
 
 	afterAll(() => {

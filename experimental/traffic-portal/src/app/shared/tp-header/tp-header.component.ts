@@ -13,8 +13,6 @@
 */
 import {Component, OnInit} from "@angular/core";
 
-import { UserService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
 import {HeaderNavigation, HeaderNavType, TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
@@ -46,34 +44,6 @@ export class TpHeaderComponent implements OnInit {
 	 * Angular lifecycle hook
 	 */
 	public ngOnInit(): void {
-		this.headerSvc.addHorizontalNav({
-			routerLink: "/core",
-			text: "Home",
-			type: "anchor",
-		}, "home");
-		this.headerSvc.addHorizontalNav({
-			routerLink: "/core/users",
-			text: "Users",
-			type: "anchor",
-			visible: () => this.hasPermission("USER:READ"),
-		}, "Users");
-		this.headerSvc.addHorizontalNav({
-			routerLink: "/core/servers",
-			text: "Servers",
-			type: "anchor",
-			visible: () => this.hasPermission("SERVER:READ"),
-		}, "Servers");
-		this.headerSvc.addVerticalNav({
-			routerLink: "/core/me",
-			text: "Profile",
-			type: "anchor"
-		}, "Profile");
-		this.headerSvc.addVerticalNav({
-			click: async () => this.logout(),
-			text: "Logout",
-			type: "anchor"
-		}, "Logout");
-
 		this.headerSvc.headerTitle.subscribe(title => {
 			this.title = title;
 		});
@@ -88,19 +58,35 @@ export class TpHeaderComponent implements OnInit {
 		});
 	}
 
-	constructor(private readonly auth: CurrentUserService, private readonly api: UserService,
-		public readonly themeSvc: ThemeManagerService, private readonly headerSvc: TpHeaderService) {
+	constructor(public readonly themeSvc: ThemeManagerService, private readonly headerSvc: TpHeaderService) {
 	}
 
 	/**
-	 * Checks for a Permission afforded to the currently authenticated user.
+	 * Calls a navs click function, throws an error if null
 	 *
-	 * @param perm The Permission for which to check.
-	 * @returns Whether the currently authenticated user has the Permission
-	 * `perm`.
+	 * @param nav nav to process
 	 */
-	public hasPermission(perm: string): boolean {
-		return this.auth.hasPermission(perm);
+	public navClick(nav: HeaderNavigation): void {
+		if(nav.click === undefined) {
+			throw new Error(`nav ${nav.text} does not have a click function`);
+		} else {
+			nav?.click();
+		}
+	}
+
+	/**
+	 * Gets a navs routerLink, logs an error if null
+	 *
+	 * @param nav nav to process
+	 * @returns routerLink
+	 */
+	public navRouterLink(nav: HeaderNavigation): string {
+		if(nav.routerLink === undefined) {
+			console.error(`nav ${nav.text} does not have a routerLink`);
+			return "";
+		}
+		return nav.routerLink;
+
 	}
 
 	/**
@@ -112,16 +98,5 @@ export class TpHeaderComponent implements OnInit {
 	 */
 	public navShown(nav: HeaderNavigation, type: HeaderNavType): boolean {
 		return nav.type === type && (nav.visible === undefined || nav.visible());
-	}
-
-	/**
-	 * Handles when the user clicks the "Logout" button by using the API to
-	 * invalidate their session before redirecting them to the login page.
-	 */
-	public async logout(): Promise<void> {
-		if (!(await this.api.logout())) {
-			console.warn("Failed to log out - clearing user data anyway!");
-		}
-		this.auth.logout();
 	}
 }

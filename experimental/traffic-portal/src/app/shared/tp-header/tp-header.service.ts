@@ -12,7 +12,11 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import {ReplaySubject} from "rxjs";
+import { ReplaySubject } from "rxjs";
+
+import { UserService } from "src/app/api";
+
+import { CurrentUserService } from "../currentUser/current-user.service";
 
 /**
  * Defines the type of the header nav
@@ -29,6 +33,7 @@ export interface HeaderNavigation {
 	click?: () => Promise<void>;
 	text: string;
 }
+
 /**
  *
  */
@@ -44,14 +49,47 @@ export class TpHeaderService {
 	private readonly horizontalNavs: Map<string, HeaderNavigation>;
 	private readonly verticalNavs: Map<string, HeaderNavigation>;
 
-	constructor() {
-		this.horizontalNavs = new Map<string, HeaderNavigation>();
-		this.verticalNavs = new Map<string, HeaderNavigation>();
-		this.horizontalNavsUpdated = new ReplaySubject();
-		this.verticalNavsUpdated = new ReplaySubject();
+	constructor(private readonly auth: CurrentUserService, private readonly api: UserService) {
+		this.horizontalNavs = new Map<string, HeaderNavigation>([
+			["Home", {
+				routerLink: "/core",
+				text: "Home",
+				type: "anchor",
+			}],
+			["Users", {
+				routerLink: "/core/users",
+				text: "Users",
+				type: "anchor",
+				visible: (): boolean => this.hasPermission("USER:READ"),
+			}],
+			["Servers", {
+				routerLink: "/core/servers",
+				text: "Servers",
+				type: "anchor",
+				visible: (): boolean => this.hasPermission("SERVER:READ"),
+			}],
+		]);
+		this.verticalNavs = new Map<string, HeaderNavigation>([
+			["Profile",
+				{
+					routerLink: "/core/me",
+					text: "Profile",
+					type: "anchor"
+				}],
+			["Logout",
+				{
+					click: async (): Promise<void> => this.logout(),
+					text: "Logout",
+					type: "button"
+				}],
+		]);
+		this.horizontalNavsUpdated = new ReplaySubject(1);
+		this.verticalNavsUpdated = new ReplaySubject(1);
 		this.headerTitle = new ReplaySubject(1);
 		this.headerHidden = new ReplaySubject(1);
 		this.headerHidden.next(false);
+		this.horizontalNavsUpdated.next(this.buildHorizontalNavs());
+		this.verticalNavsUpdated.next(this.buildVerticalNavs());
 	}
 
 	/**
@@ -90,6 +128,28 @@ export class TpHeaderService {
 	 */
 	public removeVerticalNav(key: string): boolean {
 		return this.verticalNavs.delete(key);
+	}
+
+	/**
+	 * Handles when the user clicks the "Logout" button by using the API to
+	 * invalidate their session before redirecting them to the login page.
+	 */
+	public async logout(): Promise<void> {
+		if (!(await this.api.logout())) {
+			console.warn("Failed to log out - clearing user data anyway!");
+		}
+		this.auth.logout();
+	}
+
+	/**
+	 * Checks for a Permission afforded to the currently authenticated user.
+	 *
+	 * @param perm The Permission for which to check.
+	 * @returns Whether the currently authenticated user has the Permission
+	 * `perm`.
+	 */
+	public hasPermission(perm: string): boolean {
+		return this.auth.hasPermission(perm);
 	}
 
 	/**

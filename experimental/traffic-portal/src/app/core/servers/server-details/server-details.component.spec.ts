@@ -21,10 +21,12 @@ import { MatSelectModule } from "@angular/material/select";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 import { faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
+import { of } from "rxjs";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { defaultServer } from "src/app/models";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 import { ServerDetailsComponent } from "./server-details.component";
 
@@ -33,8 +35,10 @@ describe("ServerDetailsComponent", () => {
 	let fixture: ComponentFixture<ServerDetailsComponent>;
 
 	beforeEach(async () => {
+		const mockCurrentUserService = jasmine.createSpyObj(
+			["updateCurrentUser", "hasPermission", "login", "logout"], {userChanged: of(null)});
 		await TestBed.configureTestingModule({
-			declarations: [ ServerDetailsComponent ],
+			declarations: [ServerDetailsComponent],
 			imports: [
 				HttpClientModule,
 				RouterTestingModule.withRoutes([
@@ -49,6 +53,9 @@ describe("ServerDetailsComponent", () => {
 				BrowserAnimationsModule,
 				APITestingModule
 			],
+			providers: [
+				{provide: CurrentUserService, useValue: mockCurrentUserService},
+			]
 		}).compileComponents();
 		fixture = TestBed.createComponent(ServerDetailsComponent);
 		const service = TestBed.inject(ServerService);
@@ -132,7 +139,7 @@ describe("ServerDetailsComponent", () => {
 		component.changeStatus(new MouseEvent("click"));
 		expect(component.changeStatusDialogOpen).toBeTrue();
 		component.isNew = true;
-		expect(()=>component.changeStatus(new MouseEvent("click"))).toThrow();
+		expect(() => component.changeStatus(new MouseEvent("click"))).toThrow();
 	});
 
 	it("closes the 'change status' dialog when done", () => {
