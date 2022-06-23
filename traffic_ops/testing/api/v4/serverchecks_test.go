@@ -128,7 +128,7 @@ func TestServerChecks(t *testing.T) {
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.InsertServerCheckStatus(serverCheck, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
-								check(t, reqInf, nil, tc.Alerts{resp.Alerts}, err)
+								check(t, reqInf, nil, tc.Alerts{Alerts: resp.Alerts}, err)
 							}
 						})
 					}
