@@ -21,6 +21,7 @@ import { UserService } from "src/app/api";
 import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { orderBy } from "src/app/utils";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 const ANIMATION_DURATION = "150ms";
 
@@ -236,7 +237,11 @@ export class UsersComponent implements OnInit {
 
 	public menuIsOpen = false;
 
-	constructor(private readonly api: UserService, private readonly headerSvc: TpHeaderService) {
+	constructor(
+		private readonly api: UserService,
+		private readonly headerSvc: TpHeaderService,
+		private readonly currentUserService: CurrentUserService
+	) {
 	}
 
 	/**
@@ -284,5 +289,15 @@ export class UsersComponent implements OnInit {
 		} else {
 			this.menuIsOpen = true;
 		}
+	}
+
+	/**
+	 * Checks if the user has permissions to create users.
+	 *
+	 * @returns Whether the currently authenticated user has the "USER:CREATE"
+	 * Permission.
+	 */
+	public canCreateUsers(): boolean {
+		return this.currentUserService.hasPermission("USER:CREATE");
 	}
 }

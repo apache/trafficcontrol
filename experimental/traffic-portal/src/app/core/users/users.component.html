@@ -31,7 +31,7 @@ limitations under the License.
 </button>
 <ng-template #menu>
 	<menu @fadeInOut @slideInOut cdkMenu>
-	  <a cdkMenuItem routerLink="new" color="accent" mat-mini-fab aria-label="Create user from scratch" title="Create user from scratch">
+	  <a *ngIf="canCreateUsers()" cdkMenuItem routerLink="new" color="accent" mat-mini-fab aria-label="Create user from scratch" title="Create user from scratch">
 		<mat-icon>person_add</mat-icon>
 	  </a>
 	  <button cdkMenuItem color="accent" mat-mini-fab disabled>
