@@ -18,6 +18,8 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserTestingService } from "src/app/shared/currentUser/current-user.testing-service.spec";
 
 import { UserDetailsComponent } from "./user-details.component";
 
@@ -29,7 +31,8 @@ describe("UserDetailsComponent", () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ UserDetailsComponent ],
-			imports: [ APITestingModule, RouterTestingModule ]
+			imports: [ APITestingModule, RouterTestingModule ],
+			providers: [{provide: CurrentUserService, useClass: CurrentUserTestingService}]
 		}).compileComponents();
 		fixture = TestBed.createComponent(UserDetailsComponent);
 		component = fixture.componentInstance;
@@ -48,6 +51,9 @@ describe("UserDetailsComponent", () => {
 		const spy = spyOn(service, "updateUser");
 		spy.and.callThrough();
 		expect(spy).not.toHaveBeenCalled();
+		if (component.isNew(component.user)) {
+			return fail("user should not be new");
+		}
 		const before = component.user.lastUpdated;
 		if (!before) {
 			return fail("'lastUpdated' property was null or undefined or missing");
@@ -73,7 +79,6 @@ describe("UserDetailsComponent", () => {
 		};
 		component.updateRole({source: {} as MatSelect, value: selectedRole});
 		expect(component.user.role).toBe(selectedRole.id);
-		expect(component.user.rolename).toBe(selectedRole.name);
 	});
 
 	it("updates the user's Tenant-related properties", () => {
@@ -86,6 +91,28 @@ describe("UserDetailsComponent", () => {
 		};
 		component.updateTenant({source: {} as MatSelect, value: selectedTenant});
 		expect(component.user.tenantId).toBe(selectedTenant.id);
-		expect(component.user.tenant).toBe(selectedTenant.name);
 	});
+
+	it("has 'null' Role and Tenant for new users", () => {
+		const oldValue = component.new;
+		component.new = true;
+		expect(component.role()).toBeNull();
+		expect(component.tenant()).toBeNull();
+		component.new = oldValue;
+	});
+
+	it("submits a user creation request", fakeAsync(() => {
+		const spy = spyOn(service, "createUser");
+		spy.and.callThrough();
+		expect(spy).not.toHaveBeenCalled();
+		const oldValue = component.new;
+		const oldUser = component.user;
+		component.new = true;
+		component.user.tenantID = 1;
+		component.submit(new Event("submit"));
+		tick();
+		expect(spy).toHaveBeenCalled();
+		component.new = oldValue;
+		component.user = oldUser;
+	}));
 });
