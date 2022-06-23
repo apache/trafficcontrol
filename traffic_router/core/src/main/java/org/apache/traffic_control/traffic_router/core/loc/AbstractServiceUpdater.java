@@ -335,8 +335,8 @@ public abstract class AbstractServiceUpdater {
 	}
 
 	private void deleteDatabase(final File db) {
-		db.setReadable(true, true);
-		db.setWritable(true, false);
+		db.setReadable(true);
+		db.setWritable(true);
 
 		if (db.isDirectory()) {
 			for (final File file : db.listFiles()) {
