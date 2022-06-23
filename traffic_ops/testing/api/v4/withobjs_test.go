@@ -119,7 +119,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	ServiceCategories:                     {CreateTestServiceCategories, DeleteTestServiceCategories},
 	Statuses:                              {CreateTestStatuses, DeleteTestStatuses},
 	StaticDNSEntries:                      {CreateTestStaticDNSEntries, DeleteTestStaticDNSEntries},
-	SteeringTargets:                       {SetupSteeringTargets, DeleteTestSteeringTargets},
+	SteeringTargets:                       {CreateTestSteeringTargets, DeleteTestSteeringTargets},
 	Tenants:                               {CreateTestTenants, DeleteTestTenants},
 	ServerCheckExtensions:                 {CreateTestServerCheckExtensions, DeleteTestServerCheckExtensions},
 	Topologies:                            {CreateTestTopologies, DeleteTestTopologies},
