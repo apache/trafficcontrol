@@ -11,6 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { animate, style, transition, trigger } from "@angular/animations";
 import { Component, type OnInit } from "@angular/core";
 import type { ValueGetterParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
@@ -21,10 +22,65 @@ import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table
 import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { orderBy } from "src/app/utils";
 
+const ANIMATION_DURATION = "150ms";
+
 /**
  * UsersComponent is the controller for the "users" page.
  */
 @Component({
+	animations: [
+		trigger("fadeInOut", [
+			transition(
+				":enter",
+				[
+					style({
+						opacity: 0,
+					}),
+					animate(`${ANIMATION_DURATION} ease`, style({
+						opacity: 1,
+					}))
+				]
+			),
+			transition(
+				":leave",
+				[
+					style({
+						opacity: 1,
+					}),
+					animate(`${ANIMATION_DURATION} ease`, style({
+						opacity: 0,
+					}))
+				]
+			)
+		]),
+		trigger("slideInOut", [
+			transition(
+				":enter",
+				[
+					style({
+						transform: "translateY(60px)"
+					}),
+					animate(`${ANIMATION_DURATION} ease`, style({
+						transform: "translateY(0)"
+					}))
+				]
+			),
+			transition(
+				":leave",
+				[
+					style({
+						transform: "translateY(0)"
+					}),
+					animate(
+						`${ANIMATION_DURATION} ease`,
+						style({
+							transform: "translateY(60px)"
+						}),
+					)
+				]
+			)
+		])
+	],
 	selector: "tp-users",
 	styleUrls: ["./users.component.scss"],
 	templateUrl: "./users.component.html"
@@ -178,6 +234,8 @@ export class UsersComponent implements OnInit {
 		}
 	];
 
+	public menuIsOpen = false;
+
 	constructor(private readonly api: UserService, private readonly headerSvc: TpHeaderService) {
 	}
 
@@ -211,5 +269,20 @@ export class UsersComponent implements OnInit {
 	 */
 	public updateURL(): void {
 		this.fuzzySubject.next(this.searchText);
+	}
+
+	/**
+	 * Toggles the state of the menu (this doesn't control the menu itself, just
+	 * styling).
+	 *
+	 * @param closed If `"closed"`, the menu is closed, if `"opened"` it's
+	 * opened.
+	 */
+	public toggleMenu(closed: "opened" |"closed"): void {
+		if (closed === "closed") {
+			this.menuIsOpen = false;
+		} else {
+			this.menuIsOpen = true;
+		}
 	}
 }

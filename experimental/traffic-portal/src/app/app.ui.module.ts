@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 
+import { CdkMenuModule } from "@angular/cdk/menu";
 import { NgModule } from "@angular/core";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
@@ -50,6 +51,7 @@ import { AgGridModule } from "ag-grid-angular";
 
 		FontAwesomeModule,
 
+		CdkMenuModule,
 		MatButtonModule,
 		MatButtonToggleModule,
 		MatCardModule,
