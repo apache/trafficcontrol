@@ -328,19 +328,19 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		}
 
 		try {
-			const storedSort = localStorage.getItem(`${this.context}_table_sort`);
-			if (storedSort) {
-				this.gridAPI.setSortModel(JSON.parse(storedSort));
+			const filterState = localStorage.getItem(`${this.context}_table_filter`);
+			if (filterState) {
+				this.gridAPI.setFilterModel(JSON.parse(filterState));
 			}
 		} catch (e) {
-			console.error("Failure to load stored sort state:", e);
+			console.error(`Failure to retrieve stored column sort info from localStorage (key=${this.context}_table_filter:`, e);
 		}
 	}
 
-	/** When sorting changes, stores the sorting state if a context was provided. */
-	public storeSort(): void {
+	/** When filter changes, stores the filter state if a context was provided. */
+	public storeFilter(): void {
 		if (this.context && this.gridAPI) {
-			localStorage.setItem(`${this.context}_table_sort`, JSON.stringify(this.gridAPI.getSortModel()));
+			localStorage.setItem(`${this.context}_table_filter`, JSON.stringify(this.gridAPI.getFilterModel()));
 		}
 	}
 
