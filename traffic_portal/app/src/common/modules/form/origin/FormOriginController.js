@@ -78,7 +78,7 @@ var FormOriginController = function(origin, $scope, $window, $location, formUtil
 
     $scope.editDeliveryService = function(deliveryServiceId) {
         ds = _.findWhere($scope.deliveryServices, { id: deliveryServiceId });
-        $window.open('/#!/delivery-services/' + ds.id + '?type=' + ds.type, '_blank');
+        $window.open('/#!/delivery-services/' + ds.id + '?dsType=' + ds.type, '_blank');
     };
 
     $scope.hasError = formUtils.hasError;

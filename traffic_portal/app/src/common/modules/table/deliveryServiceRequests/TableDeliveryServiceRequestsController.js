@@ -144,7 +144,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			if(selection === "" || selection === $scope.mouseDownSelectionText) {
 				const typeId = (params.data.requested) ? params.data.requested.typeId : params.data.original.typeId;
 
-				let path = '/delivery-service-requests/' + params.data.id + '?type=';
+				let path = '/delivery-service-requests/' + params.data.id + '?dsType=';
 				typeService.getType(typeId)
 					.then(function (result) {
 						path += result.name;
@@ -542,7 +542,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 
 		const typeId = (request.requested) ? request.requested.typeId : request.original.typeId;
 
-		let path = '/delivery-service-requests/' + request.id + '?type=';
+		let path = '/delivery-service-requests/' + request.id + '?dsType=';
 		typeService.getType(typeId)
 			.then(function (result) {
 				path += result.name;

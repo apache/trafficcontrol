@@ -315,7 +315,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     ];
 
     $scope.clone = function(ds) {
-        locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?type=' + ds.type);
+        locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?dsType=' + ds.type);
     };
 
     $scope.changeSigningAlgorithm = function(signingAlgorithm) {

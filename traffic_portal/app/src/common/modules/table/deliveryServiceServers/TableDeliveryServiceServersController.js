@@ -157,7 +157,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 		},
 		{
 			getHref: function() {
-				return "#!/delivery-services/" + $scope.deliveryService.id + "?type=" + encodeURIComponent($scope.deliveryService.type);
+				return "#!/delivery-services/" + $scope.deliveryService.id + "?dsType=" + encodeURIComponent($scope.deliveryService.type);
 			},
 			getText: function() {
 				return $scope.deliveryService.xmlId;

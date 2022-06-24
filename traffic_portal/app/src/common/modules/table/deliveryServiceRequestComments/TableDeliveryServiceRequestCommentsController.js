@@ -20,7 +20,7 @@
 var TableDeliveryServicesRequestsController = function (request, $scope, $state, $stateParams, $uibModal, $anchorScroll, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
 
 	$scope.request = request[0];
-	$scope.type = $stateParams.type;
+	$scope.type = $stateParams.dsType;
 	$scope.defaultParams = {
 		placeholder: '',
 		text: null,
