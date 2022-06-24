@@ -85,13 +85,13 @@ Response:
   "response": [
     {
       "cdn": "foo-cdn",
-      "latestConfigUpdateTime": "1970-01-01T00:00:01.234",
-      "latestRevalUpdateTime": "1970-01-01T00:00:05.678"
+      "latestConfigUpdateTime": "1970-01-01T00:00:01.234Z",
+      "latestRevalUpdateTime": "1970-01-01T00:00:05.678Z"
     },
     {
       "cdn": "bar-cdn",
-      "latestConfigUpdateTime": "1970-01-01T00:00:01.234",
-      "latestRevalUpdateTime": "1970-01-01T00:00:05.678"
+      "latestConfigUpdateTime": "1970-01-01T00:00:01.234Z",
+      "latestRevalUpdateTime": "1970-01-01T00:00:05.678Z"
     }
   ]
 }
@@ -104,8 +104,9 @@ top-level fields, and each object will only contain fields that `t3c` requires):
 
 Query params:
 `cdn`: the name of the CDN
-`t`: the timestamp (in Unix epoch) of the snapshot (which will correspond to at
-least one server's `config_update_time` or `revalidate_update_time`
+`t`: the timestamp (in Unix epoch or RFC-3339 format) of the snapshot (which
+will correspond to at least one server's `config_update_time` or
+`revalidate_update_time`
 
 Response:
 ```json
@@ -149,8 +150,9 @@ they may just store the latest generated snapshots in memory.
 `t3c` will be updated to optionally request data from the new Cache Config
 Services (via the Traffic Ops reverse proxy functionality). This will likely be
 a new CLI flag so that the new data request path can be enabled at-will.
-Eventually, the option will be required so that `t3c` doesn't have to maintain
-two different data request paths.
+Eventually, this option will be removed when `t3c` makes this the default
+behavior so that `t3c` doesn't have to maintain two different data request
+paths indefinitely.
 
 ### Traffic Monitor Impact
 n/a
@@ -168,7 +170,9 @@ n/a
 The new `cdn_update_times` Traffic Ops API will be documented in the usual
 manner. Cache Config Service sections may be added to the existing
 documentation, including the documentation of its `cache_config_snapshots` API.
-The new `t3c` CLI flag will be added to its documentation.
+Or, the Cache Config Service could provide a `README.rst` in its own directory
+which is linked to from the main docs somehow.  The new `t3c` CLI flag will be
+added to its documentation.
 
 ### Testing Impact
 The new `cdn_update_times` Traffic Ops API will be tested via the Traffic Ops API tests.
@@ -191,8 +195,8 @@ load for effectively.
 
 In order to minimize any Traffic Ops database load from requests to Traffic Ops
 from the Cache Config Services, they will poll/query Traffic Ops in a
-consistent-hash-like manner so that they are not all making requests to Traffic
-Ops at the same time.
+consistent, evenly-dispersed manner so that they are not all making requests to
+Traffic Ops at the same time.
 
 ### Security Impact
 Traffic Vault data (TLS keys, url_sig keys, URI signing keys) will be requested
