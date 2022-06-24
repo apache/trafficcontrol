@@ -86,10 +86,12 @@ describe("BooleanFilterComponent", () => {
 		expect(component.isFilterActive()).toBeTrue();
 		expect(component.doesFilterPass({data, node})).toBeTrue();
 		node.data = true;
+		data.test = true;
 		expect(component.doesFilterPass({data, node})).toBeFalse();
 		component.onChange(true, "value");
 		expect(component.doesFilterPass({data, node})).toBeTrue();
 		node.data = false;
+		data.test = false;
 		expect(component.doesFilterPass({data, node})).toBeFalse();
 	});
 });
