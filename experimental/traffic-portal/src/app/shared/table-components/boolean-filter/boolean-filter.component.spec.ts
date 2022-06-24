@@ -81,11 +81,9 @@ describe("BooleanFilterComponent", () => {
 
 	it("knows if a filter passes", () => {
 		const node = {data: false} as RowNode;
-		const data = {};
+		const data = {test: false};
 		component.onChange(true, "should");
 		expect(component.isFilterActive()).toBeTrue();
-		expect(component.doesFilterPass({data, node})).toBeFalse();
-		data.field = false;
 		expect(component.doesFilterPass({data, node})).toBeTrue();
 		node.data = true;
 		expect(component.doesFilterPass({data, node})).toBeFalse();
