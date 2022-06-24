@@ -350,6 +350,7 @@ func makeParentDotConfigData(
 	warnings = append(warnings, dsOriginWarns...)
 
 	for _, ds := range dses {
+
 		if ds.XMLID == nil || *ds.XMLID == "" {
 			warnings = append(warnings, "got ds with missing XMLID, skipping!")
 			continue
@@ -410,7 +411,7 @@ func makeParentDotConfigData(
 			isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds)
 			serverPlacement := TopologyPlacement{
 				IsLastCacheTier:  isLastCacheTier,
-				IsFirstCacheTier: !isLastCacheTier,
+				IsFirstCacheTier: !isLastCacheTier || !ds.Type.UsesMidCache(),
 			}
 
 			dsParams, dswarns := getParentDSParams(ds, profileParentConfigParams, serverPlacement, isMSO)
@@ -852,6 +853,8 @@ type parentDSParams struct {
 	MergeGroups []string
 }
 
+// FillParentRetries populates the parentDSParams retries values from the ds parameters map for given ds parameter keys.
+// Returns if any params found and any warnings.
 func (dsp *parentDSParams) FillParentRetries(keys ParentConfigRetryKeys, dsParams map[string]string, dsid string) (bool, []string) {
 	var warnings []string
 	hasValues := false
