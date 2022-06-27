@@ -18,10 +18,10 @@ import { BehaviorSubject } from "rxjs";
 import { GetResponseUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { orderBy } from "src/app/utils";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 const ANIMATION_DURATION = "150ms";
 
