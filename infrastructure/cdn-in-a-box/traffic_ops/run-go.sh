@@ -141,14 +141,15 @@ cd /opt/traffic_ops/app;
 CDNCONF=/opt/traffic_ops/app/conf/cdn.conf
 DBCONF=/opt/traffic_ops/app/conf/production/database.conf
 RIAKCONF=/opt/traffic_ops/app/conf/production/riak.conf
+BACKENDSCONF=/opt/traffic_ops/app/conf/production/backends.conf
 mkdir -p /var/log/traffic_ops
 touch "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT"
 tail -qf "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT" &
 
 if [[ -z $TV_BACKEND ]]; then
-  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -riakcfg "$RIAKCONF");
+  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -riakcfg "$RIAKCONF" -backendcfg "$BACKENDSCONF");
 else
-  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF");
+  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -backendcfg "$BACKENDSCONF");
 fi;
 
 if [[ "$TO_DEBUG_ENABLE" == true ]]; then
