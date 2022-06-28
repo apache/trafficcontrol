@@ -43,7 +43,6 @@ COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 # integration source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./traffic_ops/toclientlib/ /go/src/github.com/apache/trafficcontrol/traffic_ops/toclientlib/
-COPY ./traffic_ops/v2-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v2-client/
 COPY ./traffic_ops/v3-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v3-client/
 COPY ./traffic_ops/v4-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v4-client/
 COPY ./traffic_ops/testing/api /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
@@ -56,7 +55,7 @@ RUN go mod vendor -v
 
 ENV CGO_ENABLED=0
 RUN set -o errexit -o xtrace;\
-    for api_version in v2 v3 v4; do\
+    for api_version in v3 v4; do\
         go test -c ./$api_version -ldflags="-w -s" -o traffic_ops_${api_version}_integration_test;\
     done
 
