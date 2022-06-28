@@ -1921,7 +1921,7 @@ UPDATE public.server
 SET config_update_time = config_apply_time
 WHERE server.cachegroup = $1
 AND server.cdn_id = $2
-RETURNING (SELECT s.host_name FROM "server" s WHERE s.id = server_id);`
+RETURNING server.host_name;`
 	rows, err := tx.Query(q, cgID, cdnID)
 	if err != nil {
 		return nil, fmt.Errorf("querying queue updates: %w", err)
