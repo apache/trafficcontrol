@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -64,15 +65,21 @@ var timeOutSeconds = 15
 		fmt.Println("Error reading json input", err)
 	}
 
-	if tailCfg.Match == nil {
+	if tailCfg.LogMatch == nil {
 		fmt.Println("must provide a regex to match")
 		fmt.Println(usageStr())
 		os.Exit(1)
 	}
-
-	logMatch := regexp.MustCompile(*tailCfg.Match)
+	var endMatch string
+	if tailCfg.EndMatch != nil {
+		endMatch = *tailCfg.EndMatch
+	} else {
+		endMatch = "use timeout"
+	}
+	
+	logMatch := regexp.MustCompile(*tailCfg.LogMatch)
 	timeOut := timeOutSeconds
-	if tailCfg.TimeOut == nil {
+	if tailCfg.TimeOut != nil {
 		timeOut = *tailCfg.TimeOut
 	}
 	
@@ -95,11 +102,15 @@ var timeOutSeconds = 15
 			if logMatch.MatchString(line.Text) {
 				fmt.Println(line.Text)
 			}
+			if strings.Contains(line.Text, endMatch)  {
+				fmt.Println("Stopping on stop match")
+				break
+			}
 		}
 	}()
 	
 	time.Sleep(time.Second * time.Duration(timeOut))
-	fmt.Println("stopping")
+	fmt.Println("stopping with timeout")
 	err = t.Stop()
 	if err != nil {
 		fmt.Printf("ERROR: %s\n", err)
@@ -113,7 +124,8 @@ func usageStr() string {
 	accepts json input from stdin in the following format:
 	file is file you want to tail
 	match is regex string you wish to match on, if you want everything use '.*'
+	stopMatch is a string used to exit tail when it is found in the logs
 	timeOut is given in seconds the default is 15
-	{"file":"diags.log", "match":"<regex to match>", "timeOut": 4}
+	{"file":"diags.log", "match":"<regex to match>", "endMatch": "<string>", "timeOut": 4}
 	`
 }
