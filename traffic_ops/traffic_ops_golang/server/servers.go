@@ -2583,7 +2583,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if inf.Version.Major >= 3 {
+	if inf.Version.Major >= 4 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
 	} else {
 		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
@@ -2592,13 +2592,23 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
-		serverV2, err := server.ToServerV2FromV4(csp)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-			return
+		if inf.Version.Major >= 3 {
+			serverv3, err := server.ToServerV3FromV4(csp)
+			if err != nil {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+				return
+			}
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverv3)
+		} else {
+			serverV2, err := server.ToServerV2FromV4(csp)
+			if err != nil {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+				return
+			}
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2)
 		}
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2)
 	}
+
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
