@@ -26,7 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-func TestServersDeliveryServices(t *testing.T) {
+func TestServersIDDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Tenants, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments}, func() {
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
