@@ -16,196 +16,161 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestFederationUsers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, CDNFederations, FederationUsers}, func() {
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		CreateTestInvalidFederationUsers(t)
-		GetTestInvalidFederationIDUsers(t)
-		CreateTestValidFederationUsers(t)
-		GetTestValidFederationIDUsersIMSAfterChange(t, header)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, CDNFederations, FederationUsers}, func() {
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					EndpointId:     GetFederationID(t, "the.cname.com."),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"BAD REQUEST when INVALID FEDERATION ID": {
+					EndpointId:    func() int { return -1 },
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+			"POST": {
+				"OK when VALID request": {
+					EndpointId:    GetFederationID(t, "google.com."),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{"userIds": []int{GetUserID(t, "readonlyuser")(), GetUserID(t, "disalloweduser")()}, "replace": false},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when REPLACING USERS": {
+					EndpointId:    GetFederationID(t, "the.cname.com."),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{"userIds": []int{GetUserID(t, "readonlyuser")()}, "replace": true},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when ADDING USER": {
+					EndpointId:    GetFederationID(t, "booya.com."),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{"userIds": []int{GetUserID(t, "disalloweduser")()}, "replace": false},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"BAD REQUEST when INVALID FEDERATION ID": {
+					EndpointId:    func() int { return -1 },
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{"userIds": []int{}, "replace": false},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"BAD REQUEST when INVALID USER ID": {
+					EndpointId:    GetFederationID(t, "the.cname.com."),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{"userIds": []int{-1}, "replace": false},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					EndpointId:     GetFederationID(t, "the.cname.com."),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					federationUser := tc.FederationUserPost{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &federationUser)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetFederationUsersWithHdr(testCase.EndpointId(), testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, tc.Alerts{}, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateFederationUsers(testCase.EndpointId(), federationUser.IDs, *federationUser.Replace)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func GetTestValidFederationIDUsersIMSAfterChange(t *testing.T, header http.Header) {
-	_, reqInf, err := TOSession.GetFederationUsersWithHdr(fedIDs[0], header)
-	if err != nil {
-		t.Fatalf("No error expected, but got: %v", err)
-	}
-	if reqInf.StatusCode != http.StatusOK {
-		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	_, reqInf, err = TOSession.GetFederationUsersWithHdr(fedIDs[0], header)
-	if err != nil {
-		t.Fatalf("No error expected, but got: %v", err)
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+func GetUserID(t *testing.T, username string) func() int {
+	return func() int {
+		users, _, err := TOSession.GetUserByUsernameWithHdr(username, nil)
+		assert.RequireNoError(t, err, "Get Users Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(users), "Expected response object length 1, but got %d", len(users))
+		assert.RequireNotNil(t, users[0].ID, "Expected ID to not be nil.")
+		return *users[0].ID
 	}
 }
 
 func CreateTestFederationUsers(t *testing.T) {
-	if len(testData.Federations) == 0 {
-		t.Error("no federations test data")
+	// Prerequisite Federation Users
+	federationUsers := map[string]tc.FederationUserPost{
+		"the.cname.com.": {
+			IDs:     []int{GetUserID(t, "admin")(), GetUserID(t, "adminuser")(), GetUserID(t, "disalloweduser")(), GetUserID(t, "readonlyuser")()},
+			Replace: util.BoolPtr(false),
+		},
+		"booya.com.": {
+			IDs:     []int{GetUserID(t, "adminuser")()},
+			Replace: util.BoolPtr(false),
+		},
 	}
 
-	fedID := fedIDs[0]
-
-	// Get Users
-	users, _, err := TOSession.GetUsers()
-	if err != nil {
-		t.Fatalf("getting users: " + err.Error())
-	}
-	if len(users) < 3 {
-		t.Fatal("need > 3 users to create federation users")
-	}
-
-	u1 := users[0].ID
-	u2 := users[1].ID
-	u3 := users[2].ID
-
-	// Associate one user to federation
-	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*u1}, false)
-	if err != nil {
-		t.Fatalf("assigning users %v to federation %v: %v", []int{*u1}, fedID, err.Error())
-	}
-
-	fedUsers, _, err := TOSession.GetFederationUsers(fedID)
-	if err != nil {
-		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
-	}
-	if len(fedUsers) != 1 {
-		t.Errorf("federation users expected 1, actual: %+v", len(fedUsers))
-	}
-
-	// Associate two users to federation and replace first one
-	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*u2, *u3}, true)
-	if err != nil {
-		t.Fatalf("assigning users %v to federation %v: %v", []int{*u2, *u3}, fedID, err.Error())
-	}
-
-	fedUsers, _, err = TOSession.GetFederationUsers(fedID)
-	if err != nil {
-		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
-	}
-	if len(fedUsers) != 2 {
-		t.Errorf("federation users expected 2, actual: %+v", len(fedUsers))
-	}
-
-	// Associate one more user to federation
-	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*u1}, false)
-	if err != nil {
-		t.Fatalf("assigning users %v to federation %v: %v", []int{*u1}, fedID, err.Error())
-	}
-
-	fedUsers, _, err = TOSession.GetFederationUsers(fedID)
-	if err != nil {
-		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
-	}
-	if len(fedUsers) != 3 {
-		t.Errorf("federation users expected 2, actual: %+v", len(fedUsers))
-	}
-}
-
-func GetTestInvalidFederationIDUsers(t *testing.T) {
-	_, _, err := TOSession.GetFederationUsers(-1)
-	if err == nil {
-		t.Fatalf("expected to get an error when requesting federation users for a non-existent federation")
-	}
-}
-
-func CreateTestValidFederationUsers(t *testing.T) {
-	if len(testData.Federations) == 0 {
-		t.Error("no federations test data")
-	}
-
-	fedID := fedIDs[0]
-
-	// Get Users
-	users, _, err := TOSession.GetUsers()
-	if err != nil {
-		t.Fatalf("getting users: " + err.Error())
-	}
-	if len(users) == 0 {
-		t.Fatal("need at least 1 user to test invalid federation user create")
-	}
-
-	// Associate with invalid federdation id
-	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*users[0].ID}, false)
-	if err == nil {
-		t.Error("expected to get error back from associating non existent federation id")
-	}
-}
-func CreateTestInvalidFederationUsers(t *testing.T) {
-	if len(testData.Federations) == 0 {
-		t.Error("no federations test data")
-	}
-
-	fedID := fedIDs[0]
-
-	// Get Users
-	users, _, err := TOSession.GetUsers()
-	if err != nil {
-		t.Fatalf("getting users: " + err.Error())
-	}
-	if len(users) == 0 {
-		t.Fatal("need at least 1 user to test invalid federation user create")
-	}
-
-	// Associate with invalid federdation id
-	_, _, err = TOSession.CreateFederationUsers(-1, []int{*users[0].ID}, false)
-	if err == nil {
-		t.Error("expected to get error back from associating non existent federation id")
-	}
-
-	// Associate with invalid user id
-	_, _, err = TOSession.CreateFederationUsers(fedID, []int{-1}, false)
-	if err == nil {
-		t.Error("expected to get error back from associating non existent user id")
+	for cname, federationUser := range federationUsers {
+		fedID := GetFederationID(t, cname)()
+		resp, _, err := TOSession.CreateFederationUsers(fedID, federationUser.IDs, *federationUser.Replace)
+		assert.RequireNoError(t, err, "Assigning users %v to federation %d: %v - alerts: %+v", federationUser.IDs, fedID, err, resp.Alerts)
 	}
 }
 
 func DeleteTestFederationUsers(t *testing.T) {
-	if len(testData.Federations) == 0 {
-		t.Error("no federations test data")
-	}
-
-	fedID := fedIDs[0]
-
-	fedUsers, _, err := TOSession.GetFederationUsers(fedID)
-	if err != nil {
-		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
-	}
-	if len(fedUsers) != 3 {
-		t.Errorf("federation users expected 3, actual: %+v", len(fedUsers))
-	}
-
-	for _, fedUser := range fedUsers {
-		_, _, err = TOSession.DeleteFederationUser(fedID, *fedUser.ID)
-		if err != nil {
-			t.Fatalf("deleting user %v from federation %v: %v", *fedUser.ID, fedID, err.Error())
+	for _, fedID := range fedIDs {
+		fedUsers, _, err := TOSession.GetFederationUsersWithHdr(fedID, nil)
+		assert.RequireNoError(t, err, "Error getting users for federation %d: %v", fedID, err)
+		for _, fedUser := range fedUsers {
+			if fedUser.ID == nil {
+				t.Error("Traffic Ops returned a representation of a relationship between a user and a Federation that had null or undefined ID")
+				continue
+			}
+			alerts, _, err := TOSession.DeleteFederationUser(fedID, *fedUser.ID)
+			assert.NoError(t, err, "Error deleting user #%d from federation #%d: %v - alerts: %+v", *fedUser.ID, fedID, err, alerts.Alerts)
 		}
 	}
-
-	fedUsers, _, err = TOSession.GetFederationUsers(fedID)
-	if err != nil {
-		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
-	}
-	if len(fedUsers) != 0 {
-		t.Errorf("federation users expected 0, actual: %+v", len(fedUsers))
+	for _, fedID := range fedIDs {
+		fedUsers, _, err := TOSession.GetFederationUsersWithHdr(fedID, nil)
+		assert.NoError(t, err, "Error getting users for federation %d: %v", fedID, err)
+		assert.Equal(t, 0, len(fedUsers), "Federation users expected 0, actual: %+v", len(fedUsers))
 	}
 }
