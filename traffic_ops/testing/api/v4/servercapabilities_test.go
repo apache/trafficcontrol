@@ -16,241 +16,198 @@ package v4
 */
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/url"
 	"sort"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestServerCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{ServerCapabilities}, func() {
-		GetTestServerCapabilities(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		rfcTime := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, rfcTime)
-		header.Set(rfc.IfUnmodifiedSince, rfcTime)
-		SortTestServerCapabilities(t)
-		CreateTestServerCapabilityAlreadyExist(t)
-		GetTestServerCapabilitiesByInvalidName(t)
-		UpdateTestServerCapabilities(t)
-		UpdateTestServerCapabilitiesWithHeaders(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestServerCapabilitiesWithHeaders(t, header)
-		ValidationTestServerCapabilities(t)
-		UpdateTestServerCapabilitiesInvalidData(t)
-		DeleteTestServerCapabilitiesInvalidName(t)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateServerCapabilitiesSort()),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"ram"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"EMPTY RESPONSE when INVALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"abcd"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+			},
+			"POST": {
+				"BAD REQUEST when ALREADY EXISTS": {
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{"name": "foo"},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID NAME": {
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{"name": "b@dname"},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"blah"}}},
+					RequestBody:   map[string]interface{}{"name": "newname"},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateServerCapabilitiesUpdateFields(map[string]interface{}{"Name": "newname"})),
+				},
+				"BAD REQUEST when NAME DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"invalid"}}},
+					RequestBody:   map[string]interface{}{"name": "newname"},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					ClientSession: TOSession,
+					RequestOpts: client.RequestOptions{
+						QueryParameters: url.Values{"name": {"disk"}},
+						Header:          http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					},
+					RequestBody:  map[string]interface{}{"name": "newname"},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					ClientSession: TOSession,
+					RequestOpts: client.RequestOptions{
+						QueryParameters: url.Values{"name": {"disk"}},
+						Header:          http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					},
+					RequestBody:  map[string]interface{}{"name": "newname"},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"NOT FOUND when NAME DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"invalid"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"BAD REQUEST when EMPTY NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {""}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					serverCapability := tc.ServerCapability{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &serverCapability)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetServerCapabilities(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.CreateServerCapability(serverCapability, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.UpdateServerCapability(testCase.RequestOpts.QueryParameters["name"][0], serverCapability, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteServerCapability(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func CreateTestServerCapabilities(t *testing.T) {
+func validateServerCapabilitiesUpdateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Server Capabilities response to not be nil.")
+		serverCapabilitiesResp := resp.(tc.ServerCapability)
+		for field, expected := range expectedResp {
+			switch field {
+			case "Name":
+				assert.Equal(t, expected, serverCapabilitiesResp.Name, "Expected Name to be %v, but got %s", expected, serverCapabilitiesResp.Name)
+			default:
+				t.Errorf("Expected field: %v, does not exist in response", field)
+			}
+		}
+	}
+}
 
+func validateServerCapabilitiesSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Server Capabilities response to not be nil.")
+		var serverCapabilityNames []string
+		serverCapabilitiesResp := resp.([]tc.ServerCapability)
+		for _, serverCapability := range serverCapabilitiesResp {
+			serverCapabilityNames = append(serverCapabilityNames, serverCapability.Name)
+		}
+		assert.Equal(t, true, sort.StringsAreSorted(serverCapabilityNames), "List is not sorted by their names: %v", serverCapabilityNames)
+	}
+}
+
+func CreateTestServerCapabilities(t *testing.T) {
 	for _, sc := range testData.ServerCapabilities {
 		resp, _, err := TOSession.CreateServerCapability(sc, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("Unexpected error creating Server Capability '%s': %v - alerts: %+v", sc.Name, err, resp.Alerts)
-		}
-	}
-}
-
-func CreateTestServerCapabilityAlreadyExist(t *testing.T) {
-	if len(testData.ServerCapabilities) < 1 {
-		t.Fatal("Need at least one Server Capabilities to test duplicate")
-	}
-	firstServerCapability := testData.ServerCapabilities[0]
-	resp, reqInf, err := TOSession.CreateServerCapability(firstServerCapability, client.RequestOptions{})
-	if err == nil {
-		t.Errorf("Expected server_capability name '%s' already exists. - Alerts %v", firstServerCapability.Name, resp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected 400 Status code, but found %d", reqInf.StatusCode)
-	}
-}
-
-func SortTestServerCapabilities(t *testing.T) {
-	resp, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	sortedList := make([]string, 0, len(resp.Response))
-	for _, sc := range resp.Response {
-		sortedList = append(sortedList, sc.Name)
-	}
-
-	if !sort.StringsAreSorted(sortedList) {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func GetTestServerCapabilities(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, sc := range testData.ServerCapabilities {
-		opts.QueryParameters.Set("name", sc.Name)
-		resp, _, err := TOSession.GetServerCapabilities(opts)
-		if err != nil {
-			t.Errorf("cannot get Server Capability: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if len(resp.Response) != 1 {
-			t.Errorf("Expected exactly one Server Capability to exist with name '%s', found: %d", sc.Name, len(resp.Response))
-		}
-	}
-
-	resp, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot get Server Capabilities: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != len(testData.ServerCapabilities) {
-		t.Errorf("expected to get %d Server Capabilities, actual: %d", len(testData.ServerCapabilities), len(resp.Response))
-	}
-}
-
-func GetTestServerCapabilitiesByInvalidName(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "abcd")
-	resp, _, err := TOSession.GetServerCapabilities(opts)
-	if err != nil {
-		t.Errorf("Expected no error: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) > 0 {
-		t.Errorf("Expected no response for Get Server Capability by Invalid name, but found some response '%d'", len(resp.Response))
-	}
-}
-
-func UpdateTestServerCapabilitiesWithHeaders(t *testing.T, header http.Header) {
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	resp, _, err := TOSession.GetServerCapabilities(opts)
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatal("no server capability in response, quitting")
-	}
-	originalName := resp.Response[0].Name
-	newSCName := "sc-test"
-	resp.Response[0].Name = newSCName
-
-	_, reqInf, err := TOSession.UpdateServerCapability(originalName, resp.Response[0], opts)
-	if err == nil {
-		t.Errorf("Expected error about Precondition Failed, got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-	}
-}
-
-func ValidationTestServerCapabilities(t *testing.T) {
-	_, _, err := TOSession.CreateServerCapability(tc.ServerCapability{Name: "b@dname"}, client.RequestOptions{})
-	if err == nil {
-		t.Error("expected POST with invalid name to return an error, actual: nil")
-	}
-}
-
-func UpdateTestServerCapabilities(t *testing.T) {
-	// Get server capability name and edit it to a new name
-	resp, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("no server capability in response, quitting")
-	}
-	origName := resp.Response[0].Name
-	newSCName := "sc-test"
-	resp.Response[0].Name = newSCName
-
-	// Update server capability with new name
-	updateResponse, _, err := TOSession.UpdateServerCapability(origName, resp.Response[0], client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update Server Capability: %v - alerts: %+v", err, updateResponse.Alerts)
-	}
-
-	// Get updated name
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", newSCName)
-	getResp, _, err := TOSession.GetServerCapabilities(opts)
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, getResp.Alerts)
-	}
-	if len(getResp.Response) == 0 {
-		t.Fatalf("no server capability in response, quitting")
-	}
-	if getResp.Response[0].Name != newSCName {
-		t.Errorf("failed to update server capability name, expected: %v but got: %v", newSCName, updateResponse.Response.Name)
-	}
-
-	// Set everything back as it was for further testing.
-	resp.Response[0].Name = origName
-	r, _, err := TOSession.UpdateServerCapability(newSCName, resp.Response[0], client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update server Capability: %v - alerts: %+v", err, r.Alerts)
-	}
-}
-
-func UpdateTestServerCapabilitiesInvalidData(t *testing.T) {
-	resp, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) == 0 {
-		t.Fatalf("no server capability in response, quitting")
-	}
-	newSCName := "sc-test"
-	resp.Response[0].Name = newSCName
-
-	// Update server capability with new name
-	updateResponse, reqInf, err := TOSession.UpdateServerCapability("invalid", resp.Response[0], client.RequestOptions{})
-	if err == nil {
-		t.Errorf("Expected cannot find exactly one server capability with the query string provided: %v - alerts: %+v", err, updateResponse.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected 400 Status code, but found %d", reqInf.StatusCode)
+		assert.RequireNoError(t, err, "Unexpected error creating Server Capability '%s': %v - alerts: %+v", sc.Name, err, resp.Alerts)
 	}
 }
 
 func DeleteTestServerCapabilities(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, sc := range testData.ServerCapabilities {
-		delResp, _, err := TOSession.DeleteServerCapability(sc.Name, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot delete Server Capability: %v - alerts: %+v", err, delResp.Alerts)
-		}
-		opts.QueryParameters.Set("name", sc.Name)
-		serverCapability, _, err := TOSession.GetServerCapabilities(opts)
-		if err != nil {
-			t.Errorf("Unexpected error getting Server Capabilities filtered by name '%s' after deletion: %v - alerts: %+v", sc.Name, err, serverCapability.Alerts)
-		}
-		if len(serverCapability.Response) != 0 {
-			t.Errorf("Expected an empty response when filtering for the name of a Server Capability that's been deleted, but found %d matching Server Capabilities", len(serverCapability.Response))
-		}
-	}
-}
+	serverCapabilities, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
+	assert.NoError(t, err, "Cannot get Server Capabilities: %v - alerts: %+v", err, serverCapabilities.Alerts)
 
-func DeleteTestServerCapabilitiesInvalidName(t *testing.T) {
-
-	//invalid name
-	delResp, reqInf, err := TOSession.DeleteServerCapability("invalid", client.RequestOptions{})
-	if err == nil {
-		t.Errorf("Expected no server capability with that key found %v", delResp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusNotFound {
-		t.Errorf("Expected 404 error status code, but found %d", reqInf.StatusCode)
-	}
-
-	//no parameters
-	delResp, reqInf, err = TOSession.DeleteServerCapability("", client.RequestOptions{})
-	if err == nil {
-		t.Errorf("Expected missing key: name %v", delResp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected 400 error status code, but found %d", reqInf.StatusCode)
+	for _, serverCapability := range serverCapabilities.Response {
+		alerts, _, err := TOSession.DeleteServerCapability(serverCapability.Name, client.RequestOptions{})
+		assert.NoError(t, err, "Unexpected error deleting Server Capability '%s': %v - alerts: %+v", serverCapability.Name, err, alerts.Alerts)
+		// Retrieve the Server Capability to see if it got deleted
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", serverCapability.Name)
+		getServerCapability, _, err := TOSession.GetServerCapabilities(opts)
+		assert.NoError(t, err, "Error getting Server Capability '%s' after deletion: %v - alerts: %+v", serverCapability.Name, err, getServerCapability.Alerts)
+		assert.Equal(t, 0, len(getServerCapability.Response), "Expected Server Capability '%s' to be deleted, but it was found in Traffic Ops", serverCapability.Name)
 	}
 }
