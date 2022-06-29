@@ -20,6 +20,7 @@ package config
  */
 
 import (
+	"os"
 	"testing"
 
 	"github.com/apache/trafficcontrol/tc-health-client/util"
@@ -112,4 +113,47 @@ func TestLoadConfig(t *testing.T) {
 	if bindir != expect {
 		t.Fatalf("expected '%s', got %s\n", expect, bindir)
 	}
+}
+
+func TestGetCredentialsFromFile(t *testing.T) {
+
+	fi, err := os.CreateTemp("", "creds")
+	if err != nil {
+		t.Fatalf("creating temp credentials file: %v", err)
+	}
+	defer os.Remove(fi.Name())
+
+	credsFileContents := `
+# credentials
+export TO_URL="https://trafficops.example.net"
+export TO_USER="myuser"
+export TO_PASS="mypass"
+`
+	expectedURL := `https://trafficops.example.net`
+	expectedUser := `myuser`
+	expectedPass := `mypass`
+
+	if _, err := fi.Write([]byte(credsFileContents)); err != nil {
+		t.Fatalf("writing temp credentials file: %v", err)
+	}
+
+	if err := fi.Close(); err != nil {
+		t.Fatalf("closing temp credentials file: %v", err)
+	}
+
+	credsFilePath := fi.Name()
+	toURL, toUser, toPass, err := getCredentialsFromFile(credsFilePath)
+	if err != nil {
+		t.Fatalf("getting temp credentials file: %v", err)
+	}
+	if toURL != expectedURL {
+		t.Errorf("credentials file TO URL expected '%v' actual '%v'", expectedURL, toURL)
+	}
+	if toUser != expectedUser {
+		t.Errorf("credentials file TO User expected '%v' actual '%v'", expectedUser, toUser)
+	}
+	if toPass != expectedPass {
+		t.Errorf("credentials file TO Pass expected '%v' actual '%v'", expectedPass, toPass)
+	}
+
 }
