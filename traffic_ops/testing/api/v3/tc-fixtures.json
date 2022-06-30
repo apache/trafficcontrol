@@ -5460,6 +5460,12 @@
             "target": "ds2",
             "value": 42,
             "type": "STEERING_WEIGHT"
+        },
+        {
+            "deliveryService": "ds3",
+            "target": "ds4",
+            "value": 42,
+            "type": "STEERING_WEIGHT"
         }
     ],
     "servercheck_extensions": [
