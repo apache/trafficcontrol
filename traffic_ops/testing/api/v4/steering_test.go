@@ -31,8 +31,8 @@ func TestSteering(t *testing.T) {
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
-						validateSteeringTargetFields(map[string]interface{}{"TargetsLength": 1, "TargetsOrder": int32(0),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(2),
+						validateSteeringFields(map[string]interface{}{"TargetsLength": 1, "TargetsOrder": int32(0),
 							"TargetsGeoOrderPtr": (*int)(nil), "TargetsLongitudePtr": (*float64)(nil), "TargetsLatitudePtr": (*float64)(nil), "TargetsWeight": int32(42)})),
 				},
 			},
@@ -55,7 +55,7 @@ func TestSteering(t *testing.T) {
 	})
 }
 
-func validateSteeringTargetFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+func validateSteeringFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Steering response to not be nil.")
 		steeringResp := resp.([]tc.Steering)
