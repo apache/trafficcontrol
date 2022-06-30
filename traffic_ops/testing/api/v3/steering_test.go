@@ -31,7 +31,7 @@ func TestSteering(t *testing.T) {
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(2),
 						validateSteeringFields(map[string]interface{}{"TargetsLength": 1, "TargetsOrder": int32(0),
 							"TargetsGeoOrderPtr": (*int)(nil), "TargetsLongitudePtr": (*float64)(nil), "TargetsLatitudePtr": (*float64)(nil), "TargetsWeight": int32(42)})),
 				},
