@@ -16,224 +16,205 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/url"
 	"sort"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestStatuses(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Statuses}, func() {
-		GetTestStatusesIMS(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		SortTestStatuses(t)
-		UpdateTestStatuses(t)
-		UpdateTestStatusesWithHeaders(t, header)
-		GetTestStatuses(t)
-		GetTestStatusesIMSAfterChange(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestStatusesWithHeaders(t, header)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateStatusesSort()),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"CCR_IGNORE"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateStatusesFields(map[string]interface{}{"Name": "CCR_IGNORE"})),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "new description",
+						"name":        "TEST_NULL_DESCRIPTION",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateStatusesUpdateCreateFields("TEST_NULL_DESCRIPTION", map[string]interface{}{"Description": "new description"})),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:     GetStatusID(t, "TEST_NULL_DESCRIPTION"),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestBody: map[string]interface{}{
+						"description": "new description",
+						"name":        "TEST_NULL_DESCRIPTION",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "new description",
+						"name":        "TEST_NULL_DESCRIPTION",
+					},
+					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					status := tc.Status{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &status)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							if name == "OK when VALID NAME parameter" {
+								resp, reqInf, err := testCase.ClientSession.GetStatusByNameWithHdr(testCase.RequestParams["name"][0], testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetStatusesWithHdr(testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateStatusByIDWithHdr(testCase.EndpointId(), status, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteStatusByID(testCase.EndpointId())
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestStatusesWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Statuses) < 1 {
-		t.Fatal("Need at least one Status to test updating a status with an HTTP header")
-	}
-
-	for _, status := range testData.Statuses {
-		if status.Name == nil {
-			t.Fatal("cannot update test statuses: test data status must have a name")
-		}
-		if !tc.IsReservedStatus(*status.Name) {
-			// Retrieve the Status by name so we can get the id for the Update
-			resp, _, err := TOSession.GetStatusByNameWithHdr(*status.Name, header)
-			if err != nil {
-				t.Errorf("cannot GET Status by name: %s - %v", *status.Name, err)
-			}
-			if len(resp) > 0 {
-				remoteStatus := resp[0]
-				expectedStatusDesc := "new description"
-				remoteStatus.Description = expectedStatusDesc
-				_, reqInf, err := TOSession.UpdateStatusByIDWithHdr(remoteStatus.ID, remoteStatus, header)
-				if err == nil {
-					t.Errorf("Expected error about precondition failed, but got none")
-				}
-				if reqInf.StatusCode != http.StatusPreconditionFailed {
-					t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+func validateStatusesFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Status response to not be nil.")
+		statusResp := resp.([]tc.Status)
+		for field, expected := range expectedResp {
+			for _, status := range statusResp {
+				switch field {
+				case "Description":
+					assert.Equal(t, expected, status.Description, "Expected Description to be %v, but got %s", expected, status.Description)
+				case "Name":
+					assert.Equal(t, expected, status.Name, "Expected Name to be %v, but got %s", expected, status.Name)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
 			}
 		}
 	}
 }
 
-func GetTestStatusesIMSAfterChange(t *testing.T, header http.Header) {
-	for _, status := range testData.Statuses {
-		if status.Name == nil {
-			t.Fatal("cannot get ftest statuses: test data statuses must have names")
-		}
-		_, reqInf, err := TOSession.GetStatusByNameWithHdr(*status.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
-	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	for _, status := range testData.Statuses {
-		if status.Name == nil {
-			t.Fatal("cannot get ftest statuses: test data statuses must have names")
-		}
-		_, reqInf, err := TOSession.GetStatusByNameWithHdr(*status.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+func validateStatusesUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		statuses, _, err := TOSession.GetStatusByNameWithHdr(name, nil)
+		assert.RequireNoError(t, err, "Error getting Statuses: %v", err)
+		assert.RequireEqual(t, 1, len(statuses), "Expected one Status returned Got: %d", len(statuses))
+		validateStatusesFields(expectedResp)(t, toclientlib.ReqInf{}, statuses, tc.Alerts{}, nil)
 	}
 }
 
-func GetTestStatusesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	for _, status := range testData.Statuses {
-		if status.Name == nil {
-			t.Fatal("cannot get ftest statuses: test data statuses must have names")
+func validateStatusesSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Status response to not be nil.")
+		var statusNames []string
+		statusResp := resp.([]tc.Status)
+		for _, status := range statusResp {
+			statusNames = append(statusNames, status.Name)
 		}
-		_, reqInf, err := TOSession.GetStatusByNameWithHdr(*status.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+		assert.Equal(t, true, sort.StringsAreSorted(statusNames), "List is not sorted by their names: %v", statusNames)
+	}
+}
+
+func GetStatusID(t *testing.T, name string) func() int {
+	return func() int {
+		statusResp, _, err := TOSession.GetStatusByNameWithHdr(name, nil)
+		assert.NoError(t, err, "Get Statuses Request failed with error:", err)
+		assert.Equal(t, 1, len(statusResp), "Expected response object length 1, but got %d", len(statusResp))
+		return statusResp[0].ID
 	}
 }
 
 func CreateTestStatuses(t *testing.T) {
 	for _, status := range testData.Statuses {
 		resp, _, err := TOSession.CreateStatusNullable(status)
-		t.Log("Response: ", resp)
-		if err != nil {
-			t.Errorf("could not CREATE status: %v", err)
-		}
-	}
-}
-
-func SortTestStatuses(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetStatusesWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, resp[i].Name)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UpdateTestStatuses(t *testing.T) {
-	for _, status := range testData.Statuses {
-		if status.Name == nil {
-			t.Fatal("cannot update test statuses: test data status must have a name")
-		}
-		// Retrieve the Status by name so we can get the id for the Update
-		resp, _, err := TOSession.GetStatusByName(*status.Name)
-		if err != nil {
-			t.Errorf("cannot GET Status by name: %s - %v", *status.Name, err)
-		}
-		remoteStatus := resp[0]
-		expectedStatusDesc := "new description"
-		remoteStatus.Description = expectedStatusDesc
-		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateStatusByID(remoteStatus.ID, remoteStatus)
-
-		if tc.IsReservedStatus(*status.Name) {
-			if err == nil {
-				t.Errorf("expected an error about while updating a reserved status, but got nothing")
-			}
-		} else {
-			if err != nil {
-				t.Errorf("cannot UPDATE Status by id: %d, err: %v - %v", remoteStatus.ID, err, alert)
-			}
-
-			// Retrieve the Status to check Status name got updated
-			resp, _, err = TOSession.GetStatusByID(remoteStatus.ID)
-			if err != nil {
-				t.Errorf("cannot GET Status by ID: %d - %v", remoteStatus.ID, err)
-			}
-			respStatus := resp[0]
-			if respStatus.Description != expectedStatusDesc {
-				t.Errorf("results do not match actual: %s, expected: %s", respStatus.Name, expectedStatusDesc)
-			}
-		}
-	}
-}
-
-func GetTestStatuses(t *testing.T) {
-
-	for _, status := range testData.Statuses {
-		if status.Name == nil {
-			t.Fatal("cannot get ftest statuses: test data statuses must have names")
-		}
-		resp, _, err := TOSession.GetStatusByName(*status.Name)
-		if err != nil {
-			t.Errorf("cannot GET Status by name: %v - %v", err, resp)
-		}
+		assert.RequireNoError(t, err, "Could not create Status: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
 func DeleteTestStatuses(t *testing.T) {
-
 	for _, status := range testData.Statuses {
-		if status.Name == nil {
-			t.Fatal("cannot get test statuses: test data statuses must have names")
-		}
-
-		// Retrieve the Status by name so we can get the id for the Update
-		resp, _, err := TOSession.GetStatusByName(*status.Name)
-		if err != nil {
-			t.Errorf("cannot GET Status by name: %s - %v", *status.Name, err)
-		}
+		assert.RequireNotNil(t, status.Name, "Cannot get test statuses: test data statuses must have names")
+		// Retrieve the Status by name, so we can get the id for the Update
+		resp, _, err := TOSession.GetStatusByNameWithHdr(*status.Name, nil)
+		assert.RequireNoError(t, err, "Cannot get Statuses filtered by name '%s': %v", *status.Name, err)
+		assert.RequireEqual(t, 1, len(resp), "Expected 1 status returned. Got: %d", len(resp))
 		respStatus := resp[0]
 
 		delResp, _, err := TOSession.DeleteStatusByID(respStatus.ID)
-		if err != nil {
-			t.Errorf("cannot DELETE Status by ID: %v - %v", err, delResp)
-		}
+		assert.NoError(t, err, "Cannot delete Status: %v - alerts: %+v", err, delResp.Alerts)
 
 		// Retrieve the Status to see if it got deleted
-		statuses, _, err := TOSession.GetStatusByName(*status.Name)
-		if err != nil {
-			t.Errorf("error getting status by name: %s, err: %v", *status.Name, err)
-		}
-		if len(statuses) > 0 {
-			t.Errorf("expected Status name: %s to be deleted", *status.Name)
-		}
+		resp, _, err = TOSession.GetStatusByNameWithHdr(*status.Name, nil)
+		assert.NoError(t, err, "Unexpected error getting Statuses filtered by name after deletion: %v", err)
+		assert.Equal(t, 0, len(resp), "Expected Status '%s' to be deleted, but it was found in Traffic Ops", *status.Name)
 	}
 }
