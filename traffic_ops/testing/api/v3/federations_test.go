@@ -18,6 +18,7 @@ package v3
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 	"testing"
 	"time"
 
@@ -230,6 +231,10 @@ func validateFederationFields(expectedResp []map[string]interface{}) utils.CkReq
 			for _, federation := range federationResp {
 				if federation.DeliveryService.String() == expectedFed["DeliveryService"] {
 					assert.RequireEqual(t, 1, len(federation.Mappings), "expected 1 mapping, got %d", len(federation.Mappings))
+					sort.Strings(federation.Mappings[0].Resolve4)
+					sort.Strings(federation.Mappings[0].Resolve6)
+					sort.Strings(expectedFed["Resolve4"].([]string))
+					sort.Strings(expectedFed["Resolve6"].([]string))
 					assert.Exactly(t, expectedFed["Resolve4"], federation.Mappings[0].Resolve4, "checking federation resolver mappings, expected: %+v, actual: %+v", expectedFed["Resolve4"], federation.Mappings[0].Resolve4)
 					assert.Exactly(t, expectedFed["Resolve6"], federation.Mappings[0].Resolve6, "checking federation resolver mappings, expected: %+v, actual: %+v", expectedFed["Resolve6"], federation.Mappings[0].Resolve6)
 				}
