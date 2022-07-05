@@ -208,16 +208,20 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 	}
 	dss.ServerIDs = serverIDs
 	dss.DeliveryServiceIDs = dsIDs
-	cdn := params["cdn"]
+
+	queryValues := map[string]interface{}{}
+	cdn := ""
+	if cdnName, ok := params["cdn"]; ok {
+		cdn = cdnName
+		queryValues["cdn"] = cdnName
+	}
 	dss.CDN = cdn
 	query1, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs, true, cdn)
 	if err != nil {
 		log.Warnf("Error getting the max last updated query %v", err)
 	}
 	if useIMS {
-		queryValues := map[string]interface{}{
-			"accessibleTenants": pq.Array(tenantIDs),
-		}
+		queryValues["accessibleTenants"] = pq.Array(tenantIDs)
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, query1)
 		if !runSecond {
 			log.Debugln("IMS HIT")
