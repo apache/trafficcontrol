@@ -67,21 +67,21 @@ func TestFederationUsers(t *testing.T) {
 				"FIRST RESULT when LIMIT=1": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "limit": {"1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateFederationUsersPagination(GetFederationID(t, "the.cname.com.")(), "limit")),
 				},
 				"SECOND RESULT when LIMIT=1 OFFSET=1": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "limit": {"1"}, "offset": {"1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateFederationUsersPagination(GetFederationID(t, "the.cname.com.")(), "offset")),
 				},
 				"SECOND RESULT when LIMIT=1 PAGE=2": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "limit": {"1"}, "page": {"2"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateFederationUsersPagination(GetFederationID(t, "the.cname.com.")(), "page")),
 				},
@@ -112,7 +112,7 @@ func TestFederationUsers(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when REPLACING USERS": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					RequestBody:   map[string]interface{}{"userIds": []int{GetUserID(t, "readonlyuser")()}, "replace": true},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -185,7 +185,7 @@ func validateFederationUsersPagination(federationID int, paginationParam string)
 		paginationResp := resp.([]tc.FederationUser)
 
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("orderby", "id")
+		opts.QueryParameters.Set("orderby", "userID")
 		respBase, _, err := TOSession.GetFederationUsers(federationID, opts)
 		assert.RequireNoError(t, err, "Cannot get Federation Users: %v - alerts: %+v", err, respBase.Alerts)
 
