@@ -41,7 +41,6 @@ init() {
 		{
 				"monitor_config_polling_interval_ms": 15000,
 				"http_timeout_ms": 2000,
-				"peer_optimistic": true,
 				"max_events": 200,
 				"health_flush_interval_ms": 20,
 				"stat_flush_interval_ms": 20,
