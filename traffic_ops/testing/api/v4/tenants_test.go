@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 	"sort"
 	"strconv"
 	"testing"
@@ -27,67 +26,173 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestTenants(t *testing.T) {
 	WithObjs(t, []TCObj{Tenants}, func() {
-		SortTestTenants(t)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantSort()),
+				},
+				"VALID when SORTORDER param is DESC": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantDescSort()),
+				},
+				"FIRST RESULT when LIMIT=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("limit")),
+				},
+				"SECOND RESULT when LIMIT=1 OFFSET=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("offset")),
+				},
+				"SECOND RESULT when LIMIT=1 PAGE=2": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("page")),
+				},
+				"BAD REQUEST when INVALID LIMIT parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID OFFSET parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID PAGE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetTenantID(t, "tenant2"),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validatePhysicalLocationUpdateCreateFields("HotAtlanta", map[string]interface{}{"City": "NewCity"})),
+				},
+				"BAD REQUEST when ROOT TENANT": {
+					EndpointId:    GetTenantID(t, "root"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"active":     false,
+						"name":       "tenant1",
+						"parentName": "root",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:    GetTenantID(t, "tenant2"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody:   map[string]interface{}{},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetTenantID(t, "tenant2"),
+					ClientSession: TOSession,
+					RequestBody:   map[string]interface{}{},
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+		}
+
 		GetTestTenants(t)
 		UpdateTestTenants(t)
-		UpdateTestRootTenant(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		UpdateTestTenantsWithHeaders(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestTenantsWithHeaders(t, header)
 		GetTestTenantsByActive(t)
-		GetTestPaginationSupportTenant(t)
-		SortTestTenantDesc(t)
 	})
 }
 
-// This test will break if the testing Tenancy tree is modified in specific ways
-func UpdateTestTenantsWithHeaders(t *testing.T, header http.Header) {
-	opts := client.NewRequestOptions()
-	opts.Header = header
+func validateTenantSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Tenant response to not be nil.")
+		var tenants []string
+		tenantResp := resp.([]tc.Tenant)
+		for _, tenant := range tenantResp {
+			tenants = append(tenants, tenant.Name)
+		}
+		assert.Equal(t, true, sort.StringsAreSorted(tenants), "List is not sorted by their names: %v", tenants)
+	}
+}
 
-	// Retrieve the Tenant by name so we can get the id for the Update
-	name := "tenant2"
-	opts.QueryParameters.Set("name", name)
-	resp, _, err := TOSession.GetTenants(opts)
-	if err != nil {
-		t.Errorf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", name, err, resp.Alerts)
+func validateTenantDescSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Tenant response to not be nil.")
+		tenantDescResp := resp.([]tc.Tenant)
+		var descSortedList []string
+		var ascSortedList []string
+		assert.RequireGreaterOrEqual(t, len(tenantDescResp), 2, "Need at least 2 Tenants in Traffic Ops to test desc sort, found: %d", len(tenantDescResp))
+		// Get Tenants in the default ascending order for comparison.
+		tenantsAscResp, _, err := TOSession.GetTenants(client.RequestOptions{})
+		assert.RequireNoError(t, err, "Unexpected error getting Tenants with default sort order: %v - alerts: %+v", err, tenantsAscResp.Alerts)
+		// Verify the response match in length, i.e. equal amount of Tenants.
+		assert.RequireEqual(t, len(tenantsAscResp.Response), len(tenantDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(tenantsAscResp.Response), len(tenantDescResp))
+		// Insert Tenant names to the front of a new list, so they are now reversed to be in ascending order.
+		for _, cdn := range tenantDescResp {
+			descSortedList = append([]string{cdn.Name}, descSortedList...)
+		}
+		// Insert Tenant names by appending to a new list, so they stay in ascending order.
+		for _, cdn := range tenantsAscResp.Response {
+			ascSortedList = append(ascSortedList, cdn.Name)
+		}
+		assert.Exactly(t, ascSortedList, descSortedList, "Tenant responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
 	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Tenant to exist with the name 'tenant2', found: %d", len(resp.Response))
-	}
-	modTenant := resp.Response[0]
+}
 
-	parentName := "tenant1"
-	opts.QueryParameters.Set("name", parentName)
-	resp, _, err = TOSession.GetTenants(opts)
-	if err != nil {
-		t.Errorf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", parentName, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Tenant to exist with the name 'tenant1', found: %d", len(resp.Response))
-	}
-	newParent := resp.Response[0]
+func validateTenantPagination(paginationParam string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		paginationResp := resp.([]tc.Tenant)
 
-	modTenant.ParentID = newParent.ID
-	opts.QueryParameters.Del("name")
-	_, reqInf, err := TOSession.UpdateTenant(modTenant.ID, modTenant, opts)
-	if err == nil {
-		t.Fatalf("expected a precondition failed error, got none")
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("orderby", "id")
+		respBase, _, err := TOSession.GetTenants(opts)
+		assert.RequireNoError(t, err, "Cannot get Tenants: %v - alerts: %+v", err, respBase.Alerts)
+
+		tenants := respBase.Response
+		assert.RequireGreaterOrEqual(t, len(tenants), 3, "Need at least 3 Tenants in Traffic Ops to test pagination support, found: %d", len(tenants))
+		switch paginationParam {
+		case "limit:":
+			assert.Exactly(t, tenants[:1], paginationResp, "expected GET Tenants with limit = 1 to return first result")
+		case "offset":
+			assert.Exactly(t, tenants[1:2], paginationResp, "expected GET Tenants with limit = 1, offset = 1 to return second result")
+		case "page":
+			assert.Exactly(t, tenants[1:2], paginationResp, "expected GET Tenants with limit = 1, page = 2 to return second result")
+		}
 	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("expected a status 412 Precondition Failed, but got %d", reqInf.StatusCode)
+}
+
+func GetTenantID(t *testing.T, name string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", name)
+		tenants, _, err := TOSession.GetTenants(opts)
+		assert.RequireNoError(t, err, "Get Tenants Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(tenants.Response), "Expected response object length 1, but got %d", len(tenants.Response))
+		return tenants.Response[0].ID
 	}
 }
 
@@ -152,21 +257,6 @@ func GetTestTenants(t *testing.T) {
 	}
 }
 
-func SortTestTenants(t *testing.T) {
-	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-	}
-	sortedList := make([]string, 0, len(resp.Response))
-	for _, tenant := range resp.Response {
-		sortedList = append(sortedList, tenant.Name)
-	}
-
-	if !sort.StringsAreSorted(sortedList) {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
 func UpdateTestTenants(t *testing.T) {
 
 	// Retrieve the Tenant by name so we can get the id for the Update
@@ -214,31 +304,6 @@ func UpdateTestTenants(t *testing.T) {
 		t.Errorf("results do not match actual: %s, expected: %s", respTenant.ParentName, parentName)
 	}
 
-}
-
-func UpdateTestRootTenant(t *testing.T) {
-	// Retrieve the Tenant by name so we can get the id for the Update
-	name := "root"
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", name)
-	resp, _, err := TOSession.GetTenants(opts)
-	if err != nil {
-		t.Errorf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", name, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Tenant to exist with the name 'root', found: %d", len(resp.Response))
-	}
-	modTenant := resp.Response[0]
-
-	modTenant.Active = false
-	modTenant.ParentID = modTenant.ID
-	_, reqInf, err := TOSession.UpdateTenant(modTenant.ID, modTenant, client.RequestOptions{})
-	if err == nil {
-		t.Fatalf("expected an error when trying to update the 'root' tenant, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("expected a status 400 Bad Request, but got %d", reqInf.StatusCode)
-	}
 }
 
 func DeleteTestTenants(t *testing.T) {
@@ -452,110 +517,5 @@ func setTenantActive(t *testing.T, name string, active bool) {
 	response, _, err := TOSession.UpdateTenant(tn.ID, tn, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot update Tenant: %v - alerts: %+v", err, response.Alerts)
-	}
-}
-
-func GetTestPaginationSupportTenant(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetTenants(opts)
-	if err != nil {
-		t.Fatalf("cannot Get Tenant: %v - alerts: %+v", err, resp.Alerts)
-	}
-	tenant := resp.Response
-	if len(tenant) < 3 {
-		t.Fatalf("Need at least 3 Tenants in Traffic Ops to test pagination support, found: %d", len(tenant))
-	}
-
-	opts.QueryParameters.Set("limit", "1")
-	tenantsWithLimit, _, err := TOSession.GetTenants(opts)
-	if err != nil {
-		t.Fatalf("cannot Get Tenant with Limit: %v - alerts: %+v", err, tenantsWithLimit.Alerts)
-	}
-	if !reflect.DeepEqual(tenant[:1], tenantsWithLimit.Response) {
-		t.Error("expected GET tenants with limit = 1 to return first result")
-	}
-
-	opts.QueryParameters.Set("offset", "1")
-	tenantsWithOffset, _, err := TOSession.GetTenants(opts)
-	if err != nil {
-		t.Fatalf("cannot Get Tenant with Limit and Offset: %v - alerts: %+v", err, tenantsWithOffset.Alerts)
-	}
-	if !reflect.DeepEqual(tenant[1:2], tenantsWithOffset.Response) {
-		t.Error("expected GET tenant with limit = 1, offset = 1 to return second result")
-	}
-
-	opts.QueryParameters.Del("offset")
-	opts.QueryParameters.Set("page", "2")
-	tenantsWithPage, _, err := TOSession.GetTenants(opts)
-	if err != nil {
-		t.Fatalf("cannot Get Tenant with Limit and Page: %v - alerts: %+v", err, tenantsWithPage.Alerts)
-	}
-	if !reflect.DeepEqual(tenant[1:2], tenantsWithPage.Response) {
-		t.Error("expected GET tenant with limit = 1, page = 2 to return second result")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "-2")
-	resp, _, err = TOSession.GetTenants(opts)
-	if err == nil {
-		t.Error("expected GET tenant to return an error when limit is not bigger than -1")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
-		t.Errorf("expected GET tenant to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "0")
-	resp, _, err = TOSession.GetTenants(opts)
-	if err == nil {
-		t.Error("expected GET tenant to return an error when offset is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET tenant to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "0")
-	resp, _, err = TOSession.GetTenants(opts)
-	if err == nil {
-		t.Error("expected GET tenant to return an error when page is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET tenant to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func SortTestTenantDesc(t *testing.T) {
-	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Expected no error, but got error in Tenant with default ordering: %v - alerts: %+v", err, resp.Alerts)
-	}
-	respAsc := resp.Response
-	if len(respAsc) < 1 {
-		t.Fatal("Need at least one Tenant in Traffic Ops to test Tenant sort ordering")
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("sortOrder", "desc")
-	resp, _, err = TOSession.GetTenants(opts)
-	if err != nil {
-		t.Errorf("Expected no error, but got error in Tenant with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
-	}
-	respDesc := resp.Response
-	if len(respDesc) < 1 {
-		t.Fatal("Need at least one Tenant in Traffic Ops to test Tenant sort ordering")
-	}
-
-	if len(respAsc) != len(respDesc) {
-		t.Fatalf("Traffic Ops returned %d Tenant using default sort order, but %d Tenant when sort order was explicitly set to descending", len(respAsc), len(respDesc))
-	}
-
-	// reverse the descending-sorted response and compare it to the ascending-sorted one
-	// TODO ensure at least two in each slice? A list of length one is
-	// trivially sorted both ascending and descending.
-	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
-		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
-	}
-	if respDesc[0].Name != respAsc[0].Name {
-		t.Errorf("Tenant responses are not equal after reversal: Asc: %s - Desc: %s", respDesc[0].Name, respAsc[0].Name)
 	}
 }
