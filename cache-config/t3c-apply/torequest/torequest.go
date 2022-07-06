@@ -51,8 +51,8 @@ const (
 	TailDiagsLog = "/opt/trafficserver/var/log/trafficserver/diags.log"
 	TailRestartTimeOut = 60
 	TailReloadTimeOut = 15
-	tailRestartEnd = "(load)|(cache enabled)"
-	tailReloadEnd = "(load)|(cache enabled)"
+	tailRestartEnd = "Traffic Server is fully initialized"
+	tailReloadEnd = "remap.config finished loading"
 )
 
 type Package struct {
@@ -1111,7 +1111,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 			return errors.New("failed to restart trafficserver")
 		}
 		log.Infoln("trafficserver has been " + startStr + "ed")
-		if output, err := doTail(TailDiagsLog, ".*", "Traffic Server is fully initialized", TailRestartTimeOut); err != nil {
+		if output, err := doTail(TailDiagsLog, ".*", tailRestartEnd, TailRestartTimeOut); err != nil {
 			log.Errorln("error running tail")
 		} else {
 			for _, line := range strings.Split(output, "\n") {
@@ -1141,7 +1141,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 				*syncdsUpdate = UpdateTropsSuccessful
 			}
 			log.Infoln("ATS 'traffic_ctl config reload' was successful")
-			if output, err := doTail(TailDiagsLog, ".*", "remap.config finished loading", TailReloadTimeOut); err != nil {
+			if output, err := doTail(TailDiagsLog, ".*", tailReloadEnd, TailReloadTimeOut); err != nil {
 				log.Errorln("error running tail: ", err)
 			} else {
 				for _, line := range strings.Split(output, "\n") {
