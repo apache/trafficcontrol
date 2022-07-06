@@ -19,8 +19,10 @@
 
 # Apache Traffic Control
 
-![Traffic Control Logo](https://traffic-control-cdn.readthedocs.io/en/latest/_static/ATC-SVG-FULL-WHITE.svg#gh-dark-mode-only)
-![Traffic Control Logo](https://trafficcontrol.apache.org/resources/Traffic-Control-Logo-FINAL-Black-Text.png#gh-light-mode-only)
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://traffic-control-cdn.readthedocs.io/en/latest/_static/ATC-SVG-FULL-WHITE.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://trafficcontrol.apache.org/resources/Traffic-Control-Logo-FINAL-Black-Text.png">
+</picture>
 
 Apache Traffic Control allows you to build a large scale content delivery network using open source. Built around Apache Traffic Server as the caching software, Traffic Control implements all the core functions of a modern CDN.
 
@@ -56,7 +58,7 @@ __Test Status__
 [![Traffic Control Cache Config integration tests](https://github.com/apache/trafficcontrol/workflows/Traffic%20Control%20Cache%20Config%20integration%20tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/cache-config-tests.yml)
 [![Traffic Control Health Client integration tests](https://github.com/apache/trafficcontrol/workflows/Traffic%20Control%20Health%20Client%20integration%20tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/health-client-tests.yml)
 
-## Documentation[^1]
+## Documentation [^1]
 * [Intro](http://traffic-control-cdn.readthedocs.io/en/latest/index.html)
 * [CDN Basics](http://traffic-control-cdn.readthedocs.io/en/latest/basics/index.html)
 * [Traffic Control Overview](http://traffic-control-cdn.readthedocs.io/en/latest/overview/index.html)
@@ -64,7 +66,7 @@ __Test Status__
 * [Developer's Guide](http://traffic-control-cdn.readthedocs.io/en/latest/development/index.html)
 * [Traffic Ops API](https://traffic-control-cdn.readthedocs.io/en/latest/api/index.html)
 
-## Components[^1]
+## Components [^1]
 * [Traffic Ops](https://traffic-control-cdn.readthedocs.io/en/latest/overview/traffic_ops.html) is the RESTful API service for management and monitoring of all servers in the CDN.
 * [Traffic Portal](https://traffic-control-cdn.readthedocs.io/en/latest/overview/traffic_portal.html) is the web GUI for managing and monitoring the CDN via the Traffic Ops API.
 * [Traffic Router](https://traffic-control-cdn.readthedocs.io/en/latest/overview/traffic_router.html) uses DNS and HTTP302 to redirect clients to the closest available cache on the CDN.
