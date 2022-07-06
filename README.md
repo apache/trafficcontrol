@@ -21,6 +21,7 @@
 
 <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://traffic-control-cdn.readthedocs.io/en/latest/_static/ATC-SVG-FULL-WHITE.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://trafficcontrol.apache.org/resources/Traffic-Control-Logo-FINAL-Black-Text.png">
     <img alt="Traffic Control Logo" src="https://trafficcontrol.apache.org/resources/Traffic-Control-Logo-FINAL-Black-Text.png">
 </picture>
 
