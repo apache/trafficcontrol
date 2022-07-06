@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -70,11 +69,11 @@ var timeOutSeconds = 15
 		fmt.Println(usageStr())
 		os.Exit(1)
 	}
-	var endMatch string
+	
+	endMatch := regexp.MustCompile("^timeout")
+
 	if tailCfg.EndMatch != nil {
-		endMatch = *tailCfg.EndMatch
-	} else {
-		endMatch = "use timeout"
+		endMatch = regexp.MustCompile(*tailCfg.EndMatch)
 	}
 	
 	logMatch := regexp.MustCompile(*tailCfg.LogMatch)
@@ -102,7 +101,7 @@ var timeOutSeconds = 15
 			if logMatch.MatchString(line.Text) {
 				fmt.Println(line.Text)
 			}
-			if strings.Contains(line.Text, endMatch)  {
+			if endMatch.MatchString(line.Text)  {
 				fmt.Println("Stopping on stop match")
 				break
 			}
@@ -110,7 +109,6 @@ var timeOutSeconds = 15
 	}()
 	
 	time.Sleep(time.Second * time.Duration(timeOut))
-	fmt.Println("stopping with timeout")
 	err = t.Stop()
 	if err != nil {
 		fmt.Printf("ERROR: %s\n", err)
@@ -126,6 +124,6 @@ func usageStr() string {
 	match is regex string you wish to match on, if you want everything use '.*'
 	stopMatch is a string used to exit tail when it is found in the logs
 	timeOut is given in seconds the default is 15
-	{"file":"diags.log", "match":"<regex to match>", "endMatch": "<string>", "timeOut": 4}
+	{"file":"diags.log", "match":"<regex string to match>", "endMatch": "<regex string to match>", "timeOut": 4}
 	`
 }
