@@ -47,6 +47,14 @@ t3c-tail
 # DESCRIPTION
 
 The t3c-tail application will tail a file, usually a log file.
+Reads json input from stdin.
+Provide a file name to watch, a regex to filter or .* for all,
+a regex match to exit tail (if omitted will exit on timeout),
+timeout in seconds for how long you want it to run, default is 15 seconds.
+ 
+
+# JSON Format
+    {"file":"<file to tail>", "logMatch":"<regex to match>", "endMatch":"<regex match to exit before timeout>", "timeOut": <timeout in seconds>}
 
 # OPTIONS
 
