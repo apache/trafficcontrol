@@ -50,7 +50,7 @@ const (
 const (
 	TailDiagsLog = "/opt/trafficserver/var/log/trafficserver/diags.log"
 	TailRestartTimeOut = 60
-	TailReloadTimeOut = 30
+	TailReloadTimeOut = 15
 	tailRestartEnd = "(load)|(cache enabled)"
 	tailReloadEnd = "(load)|(cache enabled)"
 )
