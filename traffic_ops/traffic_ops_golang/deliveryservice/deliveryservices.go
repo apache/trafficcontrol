@@ -128,34 +128,6 @@ func GetDSTLSVersions(dsID int, tx *sql.Tx) ([]string, error) {
 	return vers, err
 }
 
-// CreateV15 is the POST handler for APIv2's deliveryservices endpoint, named
-// with "V15" for legacy reasons.
-// TODO allow users to post names (type, cdn, etc) and get the IDs from the
-// names. This isn't trivial to do in a single query, without dynamically
-// building the entire insert query, and ideally inserting would be one query.
-// But it'd be much more convenient for users. Alternatively, remove IDs from
-// the database entirely and use real candidate keys.
-func CreateV15(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	ds := tc.DeliveryServiceNullableV15{}
-	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-		return
-	}
-
-	res, status, userErr, sysErr := createV15(w, r, inf, ds)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
-		return
-	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service creation was successful", []tc.DeliveryServiceNullableV15{*res})
-}
 func CreateV30(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -621,30 +593,6 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 	return returnable, nil, nil, errCode, maxTime
 }
 
-func UpdateV15(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	id := inf.IntParams["id"]
-
-	ds := tc.DeliveryServiceNullableV15{}
-	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-		return
-	}
-	ds.ID = &id
-
-	res, status, userErr, sysErr := updateV15(w, r, inf, &ds)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
-		return
-	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service update was successful", []tc.DeliveryServiceNullableV15{*res})
-}
 func UpdateV30(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
 	if userErr != nil || sysErr != nil {
