@@ -2123,8 +2123,8 @@ func UpdateServerProfilesForV4(id int, profile []string, tx *sql.Tx) error {
 	return nil
 }
 
-// UpdateServerProfileTableForV2V3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v2/v3.
-func UpdateServerProfileTableForV2V3(id *int, newProfileId *int, origProfile string, tx *sql.Tx) error {
+// UpdateServerProfileTableForV3 updates CommonServerPropertiesV40 struct and server_profile table via Update (server) function for API v3.
+func UpdateServerProfileTableForV3(id *int, newProfileId *int, origProfile string, tx *sql.Tx) error {
 	newProfile, _, err := GetProfileNameFromID(*newProfileId, tx)
 	if err != nil && err != sql.ErrNoRows {
 		return fmt.Errorf("selecting profile by name: %w", err)

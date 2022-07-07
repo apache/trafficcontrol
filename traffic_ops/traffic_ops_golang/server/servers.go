@@ -716,40 +716,22 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		api.WriteRespWithSummary(w, r, servers, serverCount)
 		return
 	}
-	if version.Major >= 3 {
-		v3Servers := make([]tc.ServerV30, 0)
-		for _, server := range servers {
-			csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
-			if err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to get common server properties from V4 server struct: %w", err))
-				return
-			}
-			v3Server, err := server.ToServerV3FromV4(csp)
-			if err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to V3 format: %w", err))
-				return
-			}
-			v3Servers = append(v3Servers, v3Server)
-		}
-		api.WriteRespWithSummary(w, r, v3Servers, serverCount)
-		return
-	}
-
-	legacyServers := make([]tc.ServerNullableV2, 0, len(servers))
+	v3Servers := make([]tc.ServerV30, 0)
 	for _, server := range servers {
 		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to get common server properties from V4 server struct: %w", err))
 			return
 		}
-		legacyServer, err := server.ToServerV2FromV4(csp)
+		v3Server, err := server.ToServerV3FromV4(csp)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to V3 format: %w", err))
 			return
 		}
-		legacyServers = append(legacyServers, legacyServer)
+		v3Servers = append(v3Servers, v3Server)
 	}
-	api.WriteResp(w, r, legacyServers)
+	api.WriteRespWithSummary(w, r, v3Servers, serverCount)
+	return
 }
 
 func selectMaxLastUpdatedQuery(queryAddition string, where string) string {
@@ -796,14 +778,12 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"dsId":             {Column: "dss.deliveryservice", Checker: nil},
 	}
 
-	if version.Major >= 3 {
-		queryParamsToSQLCols["cachegroupName"] = dbhelpers.WhereColumnInfo{
-			Column:  "cg.name",
-			Checker: nil,
-		}
+	queryParamsToSQLCols["cachegroupName"] = dbhelpers.WhereColumnInfo{
+		Column:  "cg.name",
+		Checker: nil,
 	}
 
-	if version.Major <= 3 {
+	if version.Major == 3 {
 		queryParamsToSQLCols["profileId"] = dbhelpers.WhereColumnInfo{
 			Column:  "s.profile",
 			Checker: api.IsInt,
@@ -842,15 +822,11 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 
 		var joinSubQuery string
-		if version.Major >= 3 {
-			if err = tx.QueryRow(deliveryservice.HasRequiredCapabilitiesQuery, dsID).Scan(&dsHasRequiredCapabilities); err != nil {
-				err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %s", dsID, err)
-				return nil, 0, nil, err, http.StatusInternalServerError, nil
-			}
-			joinSubQuery = dssTopologiesJoinSubquery
-		} else {
-			joinSubQuery = ""
+		if err = tx.QueryRow(deliveryservice.HasRequiredCapabilitiesQuery, dsID).Scan(&dsHasRequiredCapabilities); err != nil {
+			err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %s", dsID, err)
+			return nil, 0, nil, err, http.StatusInternalServerError, nil
 		}
+		joinSubQuery = dssTopologiesJoinSubquery
 		// only if dsId is part of params: add join on deliveryservice_server table
 		queryAddition = fmt.Sprintf(deliveryServiceServersJoin, joinSubQuery)
 
@@ -1413,7 +1389,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
-	} else if inf.Version.Major >= 3 {
+	} else {
 		serverV3.ID = new(int)
 		*serverV3.ID = inf.IntParams["id"]
 		if err := json.NewDecoder(r.Body).Decode(&serverV3); err != nil {
@@ -1543,8 +1519,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
-	} else if inf.Version.Major >= 3 {
-		if err = dbhelpers.UpdateServerProfileTableForV2V3(serverV3.ID, serverV3.ProfileID, (original.ProfileNames)[0], tx); err != nil {
+	} else {
+		if err = dbhelpers.UpdateServerProfileTableForV3(serverV3.ID, serverV3.ProfileID, (original.ProfileNames)[0], tx); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to update server_profile: %w", err))
 			return
 		}
@@ -1627,13 +1603,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if inf.Version.Major >= 3 {
-		if userErr, sysErr, errCode = updateStatusLastUpdatedTime(id, &statusLastUpdatedTime, tx); userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-			return
-		}
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr)
+	if userErr, sysErr, errCode = updateStatusLastUpdatedTime(id, &statusLastUpdatedTime, tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr)
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: updated", *srvr.HostName, *srvr.DomainName, *srvr.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
@@ -2251,14 +2225,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
-		if inf.Version.Major >= 3 {
-			serverv3, err := server.ToServerV3FromV4(csp)
-			if err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverv3)
+		serverv3, err := server.ToServerV3FromV4(csp)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+			return
 		}
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverv3)
 	}
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
