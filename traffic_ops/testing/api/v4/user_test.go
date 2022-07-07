@@ -297,6 +297,30 @@ func UserSelfUpdateTest(t *testing.T) {
 	} else if *resp2.Response[0].Email != currentEmail {
 		t.Errorf("Expected Email to still be '%s', but it was '%s'", currentEmail, *resp2.Response[0].Email)
 	}
+
+	// Now test using an invalid username
+	currentUsername := *&user.Username
+	user.Username = "ops man"
+	updateResp, _, err = TOSession.UpdateCurrentUser(user, client.RequestOptions{})
+	if err == nil {
+		t.Fatal("error was expected updating user with username: 'ops man' - got none")
+	}
+
+	// Ensure it wasn't actually updated
+	resp2, _, err = TOSession.GetUsers(opts)
+	if err != nil {
+		t.Fatalf("error getting user #%d: %v", *user.ID, err)
+	}
+
+	if len(resp2.Response) < 1 {
+		t.Fatalf("no user returned when requesting user #%d", *user.ID)
+	}
+
+	if resp2.Response[0].Username == "" {
+		t.Errorf("Username missing or null after update")
+	} else if resp2.Response[0].Username != currentUsername {
+		t.Errorf("Expected Username to still be '%s', but it was '%s'", currentUsername, resp2.Response[0].Username)
+	}
 }
 
 func UserUpdateOwnRoleTest(t *testing.T) {

@@ -17,13 +17,13 @@ package v2
 import (
 	"bytes"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/mail"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
@@ -272,6 +272,31 @@ func UserSelfUpdateTest(t *testing.T) {
 		t.Errorf("Email missing or null after update")
 	} else if *resp2[0].Email != currentEmail {
 		t.Errorf("Expected Email to still be '%s', but it was '%s'", currentEmail, *resp2[0].Email)
+	}
+
+	// Now test using an invalid username
+	currentUsername := *user.Username
+	newUsername := "ops man"
+	user.Username = &newUsername
+	updateResp, _, err = TOSession.UpdateCurrentUser(user)
+	if err == nil {
+		t.Fatal("error was expected updating user with username: 'ops man' - got none")
+	}
+
+	// Ensure it wasn't actually updated
+	resp2, _, err = TOSession.GetUserByID(*user.ID)
+	if err != nil {
+		t.Fatalf("error getting user #%d: %v", *user.ID, err)
+	}
+
+	if len(resp2) < 1 {
+		t.Fatalf("no user returned when requesting user #%d", *user.ID)
+	}
+
+	if resp2[0].Username == nil {
+		t.Errorf("Username missing or null after update")
+	} else if *resp2[0].Username != currentUsername {
+		t.Errorf("Expected Username to still be '%s', but it was '%s'", currentUsername, *resp2[0].Username)
 	}
 }
 
