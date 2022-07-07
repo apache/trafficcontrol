@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6369](https://github.com/apache/trafficcontrol/pull/6369) Fixed `/acme_accounts` endpoint to validate email and URL fields
 - Fixed searching of the ds parameter merge_parent_groups slice.
 - [#6806](https://github.com/apache/trafficcontrol/issues/6806) t3c calculates max_origin_connections incorrectly for topology-based delivery services
+- [#6944](https://github.com/apache/trafficcontrol/issues/6944) Fixed cache config generation for ATS 9 sni.yaml from disable_h2 to http2 directive. ATS 9 documents disable_h2, but it doesn't seem to work.
 - Fixed TO API `PUT /servers/:id/status` to only queue updates on the same CDN as the updated server
 - t3c-generate fix for combining remapconfig and cachekeyconfig parameters for MakeRemapDotConfig call.
 - [#6780](https://github.com/apache/trafficcontrol/issues/6780) Fixed t3c to use secondary parents when there are no primary parents available.
