@@ -697,33 +697,7 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if inf.Version.Major <= 2 {
-		v11ServerList := []tc.DSServerV11{}
-		for _, srv := range servers {
-			routerHostName := ""
-			routerPort := ""
-			interfaces := *srv.ServerInterfaces
-			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
-			if len(interfaces) != 0 {
-				routerHostName = interfaces[0].RouterHostName
-				routerPort = interfaces[0].RouterPortName
-			}
-			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
-			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
-				return
-			}
-			v11server := tc.DSServerV11{}
-			pid, pdesc := dbhelpers.GetProfileIDDesc(inf.Tx.Tx, srv.ProfileNames[0])
-			v11server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort, &pdesc, &pid)
-
-			v11server.LegacyInterfaceDetails = legacyInterface
-
-			v11ServerList = append(v11ServerList, v11server)
-		}
-		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v11ServerList)
-		return
-	} else if inf.Version.Major <= 3 {
+	if inf.Version.Major == 3 {
 		v3ServerList := []tc.DSServer{}
 		for _, srv := range servers {
 			routerHostName := ""
