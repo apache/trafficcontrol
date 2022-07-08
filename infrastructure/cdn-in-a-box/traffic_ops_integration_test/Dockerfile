@@ -78,11 +78,9 @@ RUN apk add --no-cache --update \
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/run.sh    /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/config.sh /opt/integration/app/
-COPY ./traffic_ops/testing/api/v2/tc-fixtures.json /opt/integration/app/tc-fixtures-v2.json
 COPY ./traffic_ops/testing/api/v3/tc-fixtures.json /opt/integration/app/tc-fixtures-v3.json
 COPY ./traffic_ops/testing/api/v4/tc-fixtures.json /opt/integration/app/tc-fixtures-v4.json
 COPY --from=integration-builder \
-    /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v2_integration_test \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v3_integration_test \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v4_integration_test \
     /opt/integration/app/
