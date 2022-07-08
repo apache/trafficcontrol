@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [Traffic Portal] Added Layered Profile feature to /servers/
 - [#6448](https://github.com/apache/trafficcontrol/issues/6448) Added `status` and `lastPoll` fields to the `publish/CrStates` endpoint of Traffic Monitor (TM).
 - Added back to the health-client the `status` field logging with the addition of the filed to `publish/CrStates`
 - Added a new Traffic Ops endpoint to `GET` capacity and telemetry data for CDNi integration.
