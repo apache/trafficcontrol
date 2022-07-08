@@ -77,6 +77,7 @@ export class ServersPage extends BasePage {
   private btnManageCapabilities = element(by.linkText('Manage Capabilities'));
   private btnAddCapabilities = element(by.name('addCapabilityBtn'));
   private selectCapabilities = element(by.name('selectFormDropdown'));
+  private btnAddProfile = element((by.name('addProfileBtn')))
   private searchFilter = element(by.id('serverCapabilitiesTable_filter')).element(by.css('label input'));
   private btnManageDeliveryService = element(by.linkText('Manage Delivery Services'));
   private btnLinkDStoServer = element(by.xpath("//button[@title='Link Delivery Services to Server']"));
@@ -121,6 +122,7 @@ export class ServersPage extends BasePage {
     await this.txtCDN.sendKeys(server.CDN + this.randomize);
     await this.txtCacheGroup.sendKeys(server.CacheGroup + this.randomize);
     await this.txtType.sendKeys(server.Type);
+    await this.btnAddProfile.click();
     await this.txtProfile.sendKeys(server.Profile + this.randomize);
     await this.txtPhysLocation.sendKeys(server.PhysLocation);
     await this.txtInterfaceName.sendKeys(server.InterfaceName);
