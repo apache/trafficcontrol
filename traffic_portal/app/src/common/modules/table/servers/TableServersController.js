@@ -163,7 +163,16 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		{
 			headerName: "Profile",
 			field: "profileName",
-			hide: false
+			hide: false,
+			valueGetter:  function(params) {
+				if (params.data.profileNames.length > 1) {
+					return params.data.profileName + ' *';
+				}
+				return params.data.profileName;
+			},
+			tooltipValueGetter: function(params) {
+				return params.data.profileNames.toString()
+			}
 		},
 		{
 			headerName: "Rack",

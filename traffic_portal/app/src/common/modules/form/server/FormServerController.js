@@ -69,6 +69,24 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         }
     };
 
+    $scope.addProfile = function(cdnId) {
+        $scope.serverForm.$setDirty();
+        const newProfile = {
+            profileNames: getProfiles(cdnId)
+        };
+
+        if (!$scope.server.profileNames) {
+            $scope.server.profileNames = [newProfile];
+        } else {
+            $scope.server.profileNames.push(newProfile);
+        }
+    }
+
+    $scope.deleteProfile = function(profile) {
+        $scope.serverForm.$setDirty();
+        $scope.server.profileNames.splice($scope.server.profileNames.indexOf(profile), 1);
+    }
+
     var updateStatus = function(status) {
         serverService.updateStatus(server.id, { status: status.id, offlineReason: status.offlineReason })
             .then(

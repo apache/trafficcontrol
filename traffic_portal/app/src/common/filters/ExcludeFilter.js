@@ -17,10 +17,27 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.filters', [])
-	.filter('encodeURIComponent', require('./EncodeURIComponentFilter'))
-	.filter('offsetFilter', require('./OffsetFilter'))
-	.filter('percentFilter', require('./PercentFilter'))
-	.filter('unitsFilter', require('./UnitsFilter'))
-	.filter('excludeFilter', require('./ExcludeFilter'))
-;
+var ExcludeFilter = function() {
+        return function(list,currentModel,selected){
+            var selectedLength = selected.length;
+            var out = [];
+            angular.forEach(list,function(listItem){
+                var add = true;
+                for (var index = 0; index < selectedLength; index++) {
+                    if(selected[index] !== currentModel && selected[index] === listItem.name){
+                        add = false;
+                        break;
+                    }
+                }
+
+                if(add){
+                    out.push(listItem);
+                }
+
+            });
+
+            return out;
+        };
+};
+
+module.exports = ExcludeFilter;
