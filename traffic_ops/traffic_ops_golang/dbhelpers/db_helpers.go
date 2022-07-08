@@ -2138,7 +2138,7 @@ func UpdateServerProfileTableForV3(id *int, newProfileId *int, origProfile strin
 	return nil
 }
 
-// GetServerDetailFromV4 function converts server details from V4 to V3/V2
+// GetServerDetailFromV4 function converts server details from V4 to V3
 func GetServerDetailFromV4(sd tc.ServerDetailV40, tx *sql.Tx) (tc.ServerDetail, error) {
 	var profileDesc *string
 	if err := tx.QueryRow(`SELECT p.description FROM profile p WHERE p.name=$1`, sd.ProfileNames[0]).Scan(&profileDesc); err != nil {
