@@ -102,7 +102,7 @@
       command: /opt/trafficserver/bin/traffic_server -Cclear
 
     - name: Get list of targeted ATS cache disks
-      shell: cat /opt/trafficserver/etc/trafficserver/storage.config | grep -v '#' | cut -d' ' -f1
+      shell: cat /opt/trafficserver/etc/trafficserver/storage.config | grep -ve '#' -ve '^$' | cut -d' ' -f1
       register: cachedisk_results
       changed_when: false
 
