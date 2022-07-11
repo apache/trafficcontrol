@@ -128,34 +128,6 @@ func GetDSTLSVersions(dsID int, tx *sql.Tx) ([]string, error) {
 	return vers, err
 }
 
-// CreateV15 is the POST handler for APIv2's deliveryservices endpoint, named
-// with "V15" for legacy reasons.
-// TODO allow users to post names (type, cdn, etc) and get the IDs from the
-// names. This isn't trivial to do in a single query, without dynamically
-// building the entire insert query, and ideally inserting would be one query.
-// But it'd be much more convenient for users. Alternatively, remove IDs from
-// the database entirely and use real candidate keys.
-func CreateV15(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	ds := tc.DeliveryServiceNullableV15{}
-	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-		return
-	}
-
-	res, status, userErr, sysErr := createV15(w, r, inf, ds)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
-		return
-	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service creation was successful", []tc.DeliveryServiceNullableV15{*res})
-}
 func CreateV30(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -223,14 +195,6 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, []tc.DeliveryServiceV40{*res})
 }
 
-func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
-	dsV30 := tc.DeliveryServiceV30{DeliveryServiceNullableV15: reqDS}
-	res, status, userErr, sysErr := createV30(w, r, inf, dsV30)
-	if res != nil {
-		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
-	}
-	return nil, status, userErr, sysErr
-}
 func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
 	ds := tc.DeliveryServiceV31{DeliveryServiceV30: dsV30}
 	res, status, userErr, sysErr := createV31(w, r, inf, ds)
@@ -608,12 +572,10 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 		// NOTE: it's required to handle minor version cases in a descending >= manner
 		case version.Major > 3:
 			returnable = append(returnable, ds.RemoveLD1AndLD2())
-		case version.Major > 2 && version.Minor >= 1:
+		case version.Major >= 3 && version.Minor >= 1:
 			returnable = append(returnable, ds.DowngradeToV31())
-		case version.Major > 2:
+		case version.Major >= 3:
 			returnable = append(returnable, ds.DowngradeToV31().DeliveryServiceV30)
-		case version.Major > 1:
-			returnable = append(returnable, ds.DowngradeToV31().DeliveryServiceNullableV15)
 		default:
 			return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
 		}
@@ -621,30 +583,6 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 	return returnable, nil, nil, errCode, maxTime
 }
 
-func UpdateV15(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	id := inf.IntParams["id"]
-
-	ds := tc.DeliveryServiceNullableV15{}
-	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-		return
-	}
-	ds.ID = &id
-
-	res, status, userErr, sysErr := updateV15(w, r, inf, &ds)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
-		return
-	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service update was successful", []tc.DeliveryServiceNullableV15{*res})
-}
 func UpdateV30(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
 	if userErr != nil || sysErr != nil {
@@ -728,38 +666,6 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, []tc.DeliveryServiceV40{*res})
 }
 
-func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
-	dsV30 := tc.DeliveryServiceV30{DeliveryServiceNullableV15: *reqDS}
-	// query the DB for existing 3.0 fields in order to "upgrade" this 1.5 request into a 3.0 request
-	query := `
-SELECT
-  ds.topology,
-  ds.first_header_rewrite,
-  ds.inner_header_rewrite,
-  ds.last_header_rewrite,
-  ds.service_category
-FROM
-  deliveryservice ds
-WHERE
-  ds.id = $1`
-	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
-		&dsV30.Topology,
-		&dsV30.FirstHeaderRewrite,
-		&dsV30.InnerHeaderRewrite,
-		&dsV30.LastHeaderRewrite,
-		&dsV30.ServiceCategory,
-	); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV30.ID), nil
-		}
-		return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service ID %d: %s", *dsV30.ID, err.Error())
-	}
-	res, status, userErr, sysErr := updateV30(w, r, inf, &dsV30)
-	if res != nil {
-		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
-	}
-	return nil, status, userErr, sysErr
-}
 func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 *tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
 	dsV31 := tc.DeliveryServiceV31{DeliveryServiceV30: *dsV30}
 	// query the DB for existing 3.1 fields in order to "upgrade" this 3.0 request into a 3.1 request
