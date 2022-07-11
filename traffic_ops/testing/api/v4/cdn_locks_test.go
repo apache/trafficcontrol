@@ -29,7 +29,7 @@ import (
 )
 
 func TestCDNLocks(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServiceCategories, Topologies, Tenants, Roles, Users, DeliveryServices, CDNLocks}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServiceCategories, Topologies, Tenants, Roles, Users, DeliveryServices, StaticDNSEntries, CDNLocks}, func() {
 
 		opsUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opsuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 		opsUserWithLockSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opslockuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
@@ -303,6 +303,68 @@ func TestCDNLocks(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
+			"STATIC DNS ENTRIES POST": {
+				"OK when USER OWNS LOCK": {
+					ClientSession: opsUserWithLockSession,
+					RequestBody: map[string]interface{}{
+						"address":         "192.168.0.1",
+						"cachegroup":      "cachegroup1",
+						"deliveryservice": "basic-ds-in-cdn2",
+						"host":            "cdn_locks_test_host",
+						"type":            "A_RECORD",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":         "192.168.0.1",
+						"cachegroup":      "cachegroup1",
+						"deliveryservice": "basic-ds-in-cdn2",
+						"host":            "cdn_locks_test_host",
+						"type":            "A_RECORD",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"STATIC DNS ENTRIES PUT": {
+				"OK when USER OWNS LOCK": {
+					EndpointId:    GetStaticDNSEntryID(t, "host2"),
+					ClientSession: opsUserWithLockSession,
+					RequestBody: map[string]interface{}{
+						"address":         "192.168.0.2",
+						"cachegroup":      "cachegroup2",
+						"deliveryservice": "basic-ds-in-cdn2",
+						"host":            "host2",
+						"type":            "A_RECORD",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId:    GetStaticDNSEntryID(t, "cdnlock-test-delete-host"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":         "192.168.0.2",
+						"cachegroup":      "cachegroup2",
+						"deliveryservice": "basic-ds-in-cdn2",
+						"host":            "host2",
+						"type":            "A_RECORD",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"STATIC DNS ENTRIES DELETE": {
+				"OK when USER OWNS LOCK": {
+					EndpointId:    GetStaticDNSEntryID(t, "host3"),
+					ClientSession: opsUserWithLockSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId:    GetStaticDNSEntryID(t, "cdnlock-negtest-delete-host"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
 		}
 
 		for method, testCases := range methodTests {
@@ -316,6 +378,7 @@ func TestCDNLocks(t *testing.T) {
 					ds := tc.DeliveryServiceV4{}
 					server := tc.ServerV4{}
 					topQueueUp := tc.TopologiesQueueUpdateRequest{}
+					staticDNSEntry := tc.StaticDNSEntry{}
 
 					if testCase.RequestOpts.QueryParameters.Has("topology") {
 						topology = testCase.RequestOpts.QueryParameters.Get("topology")
@@ -348,6 +411,11 @@ func TestCDNLocks(t *testing.T) {
 							dat, err := json.Marshal(testCase.RequestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 							err = json.Unmarshal(dat, &cdn)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						} else if _, ok := testCase.RequestBody["host"]; ok {
+							dat, err := json.Marshal(testCase.RequestBody)
+							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+							err = json.Unmarshal(dat, &staticDNSEntry)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						} else {
 							dat, err := json.Marshal(testCase.RequestBody)
@@ -482,6 +550,33 @@ func TestCDNLocks(t *testing.T) {
 						{
 							t.Run(name, func(t *testing.T) {
 								alerts, reqInf, err := testCase.ClientSession.DeleteServer(testCase.EndpointId(), testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
+					case "STATIC DNS ENTRIES POST":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.CreateStaticDNSEntry(staticDNSEntry, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
+					case "STATIC DNS ENTRIES PUT":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.UpdateStaticDNSEntry(testCase.EndpointId(), staticDNSEntry, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
+					case "STATIC DNS ENTRIES DELETE":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.DeleteStaticDNSEntry(testCase.EndpointId(), testCase.RequestOpts)
 								for _, check := range testCase.Expectations {
 									check(t, reqInf, nil, alerts, err)
 								}
