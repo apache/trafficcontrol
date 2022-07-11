@@ -16,275 +16,251 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestStaticDNSEntries(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, StaticDNSEntries}, func() {
-		GetTestStaticDNSEntriesIMS(t)
-		GetTestStaticDNSEntries(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		SortTestStaticDNSEntries(t)
-		UpdateTestStaticDNSEntries(t)
-		UpdateTestStaticDNSEntriesWithHeaders(t, header)
-		GetTestStaticDNSEntriesIMSAfterChange(t, header)
-		UpdateTestStaticDNSEntriesInvalidAddress(t)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestStaticDNSEntriesWithHeaders(t, header)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, StaticDNSEntries}, func() {
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateStaticDNSEntriesSort()),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetStaticDNSEntryID(t, "host2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":         "192.168.0.2",
+						"cachegroup":      "cachegroup2",
+						"deliveryservice": "ds2",
+						"host":            "host2",
+						"type":            "A_RECORD",
+						"ttl":             10,
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateStaticDNSEntriesUpdateCreateFields("host2", map[string]interface{}{"Address": "192.168.0.2"})),
+				},
+				"BAD REQUEST when INVALID IPV4 ADDRESS for A_RECORD": {
+					EndpointId:    GetStaticDNSEntryID(t, "host2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":         "test.testdomain.net.",
+						"cachegroup":      "cachegroup2",
+						"deliveryservice": "ds2",
+						"host":            "host2",
+						"type":            "A_RECORD",
+						"ttl":             10,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID DNS for CNAME_RECORD": {
+					EndpointId:    GetStaticDNSEntryID(t, "host1"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+						"cachegroup":      "cachegroup1",
+						"deliveryservice": "ds1",
+						"host":            "host1",
+						"type":            "CNAME_RECORD",
+						"ttl":             0,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING TRAILING PERIOD for CNAME_RECORD": {
+					EndpointId:    GetStaticDNSEntryID(t, "host1"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":         "cdn.test.com",
+						"cachegroup":      "cachegroup1",
+						"deliveryservice": "ds1",
+						"host":            "host1",
+						"type":            "CNAME_RECORD",
+						"ttl":             0,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID IPV6 ADDRESS for AAAA_RECORD": {
+					EndpointId:    GetStaticDNSEntryID(t, "host3"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":         "192.168.0.1",
+						"cachegroup":      "cachegroup2",
+						"deliveryservice": "ds1",
+						"host":            "host3",
+						"ttl":             10,
+						"type":            "AAAA_RECORD",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:     GetStaticDNSEntryID(t, "host3"),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestBody: map[string]interface{}{
+						"address":         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+						"cachegroup":      "cachegroup2",
+						"deliveryservice": "ds1",
+						"host":            "host3",
+						"ttl":             10,
+						"type":            "AAAA_RECORD",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetStaticDNSEntryID(t, "host3"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"address":         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+						"cachegroup":      "cachegroup2",
+						"deliveryservice": "ds1",
+						"host":            "host3",
+						"ttl":             10,
+						"type":            "AAAA_RECORD",
+					},
+					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					staticDNSEntry := tc.StaticDNSEntry{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &staticDNSEntry)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetStaticDNSEntriesWithHdr(testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, tc.Alerts{}, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateStaticDNSEntry(staticDNSEntry)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, _, err := testCase.ClientSession.UpdateStaticDNSEntryByIDWithHdr(testCase.EndpointId(), staticDNSEntry, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteStaticDNSEntryByID(testCase.EndpointId())
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestStaticDNSEntriesWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.StaticDNSEntries) > 0 {
-		firstStaticDNSEntry := testData.StaticDNSEntries[0]
-		// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-		resp, _, err := TOSession.GetStaticDNSEntriesByHostWithHdr(firstStaticDNSEntry.Host, header)
-		if err != nil {
-			t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", firstStaticDNSEntry.Host, err)
-		}
-		if len(resp) > 0 {
-			remoteStaticDNSEntry := resp[0]
-			expectedAddress := "192.168.0.2"
-			remoteStaticDNSEntry.Address = expectedAddress
-
-			_, _, status, _ := TOSession.UpdateStaticDNSEntryByIDWithHdr(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, header)
-			if status != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", status)
+func validateStaticDNSEntriesFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Static DNS Entries response to not be nil.")
+		staticDNSEntriesResp := resp.([]tc.StaticDNSEntry)
+		for field, expected := range expectedResp {
+			for _, staticDNSEntry := range staticDNSEntriesResp {
+				switch field {
+				case "Address":
+					assert.Equal(t, expected, staticDNSEntry.Address, "Expected Address to be %v, but got %s", expected, staticDNSEntry.Address)
+				case "Host":
+					assert.Equal(t, expected, staticDNSEntry.Host, "Expected Host to be %v, but got %s", expected, staticDNSEntry.Host)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
 			}
 		}
 	}
 }
 
-func GetTestStaticDNSEntriesIMSAfterChange(t *testing.T, header http.Header) {
-	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		_, reqInf, err := TOSession.GetStaticDNSEntriesByHostWithHdr(staticDNSEntry.Host, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
-	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		_, reqInf, err := TOSession.GetStaticDNSEntriesByHostWithHdr(staticDNSEntry.Host, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+func validateStaticDNSEntriesUpdateCreateFields(host string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		staticDNSEntries, _, err := TOSession.GetStaticDNSEntriesByHostWithHdr(host, nil)
+		assert.RequireNoError(t, err, "Error getting Static DNS Entries: %v", err)
+		assert.RequireEqual(t, 1, len(staticDNSEntries), "Expected one Static DNS Entry returned Got: %d", len(staticDNSEntries))
+		validateStaticDNSEntriesFields(expectedResp)(t, toclientlib.ReqInf{}, staticDNSEntries, tc.Alerts{}, nil)
 	}
 }
 
-func GetTestStaticDNSEntriesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
+func validateStaticDNSEntriesSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Static DNS Entries response to not be nil.")
+		var staticDNSEntryHosts []string
+		staticDNSEntryResp := resp.([]tc.StaticDNSEntry)
+		for _, staticDNSEntry := range staticDNSEntryResp {
+			staticDNSEntryHosts = append(staticDNSEntryHosts, staticDNSEntry.Host)
+		}
+		assert.Equal(t, true, sort.StringsAreSorted(staticDNSEntryHosts), "List is not sorted by their hosts: %v", staticDNSEntryHosts)
+	}
+}
 
-	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		_, reqInf, err := TOSession.GetStaticDNSEntriesByHostWithHdr(staticDNSEntry.Host, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+func GetStaticDNSEntryID(t *testing.T, host string) func() int {
+	return func() int {
+		staticDNSEntries, _, err := TOSession.GetStaticDNSEntriesByHostWithHdr(host, nil)
+		assert.RequireNoError(t, err, "Get Static DNS Entries Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(staticDNSEntries), "Expected response object length 1, but got %d", len(staticDNSEntries))
+		return staticDNSEntries[0].ID
 	}
 }
 
 func CreateTestStaticDNSEntries(t *testing.T) {
 	for _, staticDNSEntry := range testData.StaticDNSEntries {
 		resp, _, err := TOSession.CreateStaticDNSEntry(staticDNSEntry)
-		t.Log("Response: ", resp)
-		if err != nil {
-			t.Errorf("could not CREATE staticDNSEntry: %v", err)
-		}
-	}
-
-}
-
-func SortTestStaticDNSEntries(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetStaticDNSEntriesWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, resp[i].Host)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UpdateTestStaticDNSEntries(t *testing.T) {
-
-	firstStaticDNSEntry := testData.StaticDNSEntries[0]
-	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-	resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntry.Host)
-	if err != nil {
-		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", firstStaticDNSEntry.Host, err)
-	}
-	remoteStaticDNSEntry := resp[0]
-	expectedAddress := "192.168.0.2"
-	remoteStaticDNSEntry.Address = expectedAddress
-	var alert tc.Alerts
-	var status int
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
-	t.Log("Status Code: ", status)
-	if err != nil {
-		t.Errorf("cannot UPDATE StaticDNSEntries using url: %v - %v", err, alert)
-	}
-
-	// Retrieve the StaticDNSEntries to check StaticDNSEntries name got updated
-	resp, _, err = TOSession.GetStaticDNSEntryByID(remoteStaticDNSEntry.ID)
-	if err != nil {
-		t.Errorf("cannot GET StaticDNSEntries by name: '$%s', %v", firstStaticDNSEntry.Host, err)
-	}
-	respStaticDNSEntry := resp[0]
-	if respStaticDNSEntry.Address != expectedAddress {
-		t.Errorf("results do not match actual: %s, expected: %s", respStaticDNSEntry.Address, expectedAddress)
-	}
-
-}
-
-func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
-
-	expectedAlerts := []string{
-		"'address' must be a valid IPv4 address",
-		"'address' must be a valid DNS name",
-		"'address' for type: CNAME_RECORD must have a trailing period",
-		"'address' must be a valid IPv6 address",
-	}
-
-	// A_RECORD
-	firstStaticDNSEntry := testData.StaticDNSEntries[0]
-	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-	resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntry.Host)
-	if err != nil {
-		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", firstStaticDNSEntry.Host, err)
-	}
-	remoteStaticDNSEntry := resp[0]
-	expectedAddress := "test.testdomain.net."
-	remoteStaticDNSEntry.Address = expectedAddress
-	var status int
-	_, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
-	t.Log("Status Code [expect 400]: ", status)
-	if err == nil {
-		t.Errorf("making invalid update to static DNS entry - expected: error, actual: nil")
-	} else {
-		if !strings.Contains(err.Error(), expectedAlerts[0]) {
-			t.Errorf("got err: %v, but expected err containing: %v", err, expectedAlerts[0])
-		}
-	}
-
-	// CNAME_RECORD
-	secondStaticDNSEntry := testData.StaticDNSEntries[1]
-	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-	resp, _, err = TOSession.GetStaticDNSEntriesByHost(secondStaticDNSEntry.Host)
-	if err != nil {
-		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", secondStaticDNSEntry.Host, err)
-	}
-	remoteStaticDNSEntry = resp[0]
-	expectedAddress = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-	remoteStaticDNSEntry.Address = expectedAddress
-	_, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
-	t.Log("Status Code [expect 400]: ", status)
-	if err == nil {
-		t.Errorf("making invalid update to static DNS entry - expected: error, actual: nil")
-	} else if !strings.Contains(err.Error(), expectedAlerts[1]) {
-		t.Errorf("got err: %v, but expected err containing: %v", err, expectedAlerts[1])
-	}
-
-	//CNAME_RECORD: missing a trailing period
-	expectedAddressMissingPeriod := "cdn.test.com"
-	remoteStaticDNSEntry.Address = expectedAddressMissingPeriod
-	_, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
-	t.Log("Status Code [expect 400]: ", status)
-	if err == nil {
-		t.Errorf("making invalid update to static DNS entry - expected: error, actual: nil")
-	} else if !strings.Contains(err.Error(), expectedAlerts[2]) {
-		t.Errorf("got err: %v, but expected err containing: %v", err, expectedAlerts[2])
-	}
-
-	// AAAA_RECORD
-	thirdStaticDNSEntry := testData.StaticDNSEntries[2]
-	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-	resp, _, err = TOSession.GetStaticDNSEntriesByHost(thirdStaticDNSEntry.Host)
-	if err != nil {
-		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", thirdStaticDNSEntry.Host, err)
-	}
-	remoteStaticDNSEntry = resp[0]
-	expectedAddress = "192.168.0.1"
-	remoteStaticDNSEntry.Address = expectedAddress
-	_, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
-	t.Log("Status Code [expect 400]: ", status)
-	if err == nil {
-		t.Errorf("making invalid update to static DNS entry - expected: error, actual: nil")
-	} else if !strings.Contains(err.Error(), expectedAlerts[3]) {
-		t.Errorf("got err: %v, but expected err containging: %v", err, expectedAlerts[3])
-	}
-}
-
-func GetTestStaticDNSEntries(t *testing.T) {
-
-	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		resp, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host)
-		if err != nil {
-			t.Errorf("cannot GET StaticDNSEntries by name: %v - %v", err, resp)
-		}
+		assert.RequireNoError(t, err, "Could not create Static DNS Entry: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
 func DeleteTestStaticDNSEntries(t *testing.T) {
+	staticDNSEntries, _, err := TOSession.GetStaticDNSEntriesWithHdr(nil)
+	assert.NoError(t, err, "Cannot get Static DNS Entries: %v", err)
 
-	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-		resp, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host)
-		if err != nil {
-			t.Errorf("cannot GET StaticDNSEntries by name: %v - %v", staticDNSEntry.Host, err)
-		}
-		if len(resp) > 0 {
-			respStaticDNSEntry := resp[0]
-
-			_, _, err := TOSession.DeleteStaticDNSEntryByID(respStaticDNSEntry.ID)
-			if err != nil {
-				t.Errorf("cannot DELETE StaticDNSEntry by name: '%s' %v", respStaticDNSEntry.Host, err)
-			}
-
-			// Retrieve the StaticDNSEntry to see if it got deleted
-			staticDNSEntries, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host)
-			if err != nil {
-				t.Errorf("error deleting StaticDNSEntrie name: %s", err.Error())
-			}
-			if len(staticDNSEntries) > 0 {
-				t.Errorf("expected StaticDNSEntry name: %s to be deleted", staticDNSEntry.Host)
-			}
-		}
+	for _, staticDNSEntry := range staticDNSEntries {
+		alerts, _, err := TOSession.DeleteStaticDNSEntryByID(staticDNSEntry.ID)
+		assert.NoError(t, err, "Unexpected error deleting Static DNS Entry '%s' (#%d): %v - alerts: %+v", staticDNSEntry.Host, staticDNSEntry.ID, err, alerts.Alerts)
+		// Retrieve the Static DNS Entry to see if it got deleted
+		getStaticDNSEntry, _, err := TOSession.GetStaticDNSEntriesByHostWithHdr(staticDNSEntry.Host, nil)
+		assert.NoError(t, err, "Error getting Static DNS Entry '%s' after deletion: %v", staticDNSEntry.Host, err)
+		assert.Equal(t, 0, len(getStaticDNSEntry), "Expected Static DNS Entry '%s' to be deleted, but it was found in Traffic Ops", staticDNSEntry.Host)
 	}
 }
