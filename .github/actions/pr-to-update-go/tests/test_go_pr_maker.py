@@ -50,3 +50,14 @@ class TestGoPRMaker(TestCase):
         text <p>after</p> 4.15.7"""
 		actual_release_notes = parse_release_notes(go_version, content)
 		self.assertEqual(expected_release_notes, actual_release_notes)
+
+		go_version = '7.18.9'
+		expected_release_notes = '<p id="7.18.9"> go7.18.9 The expected release notes </p>'
+		release_notes_with_whitespace = f"""<p id="7.18.9">
+                go{go_version} The expected release notes
+            </p>"""
+		content = f"""go7.18.9 text before
+        {release_notes_with_whitespace}
+        text <p>after</p> 7.18.9"""
+		actual_release_notes = parse_release_notes(go_version, content)
+		self.assertEqual(expected_release_notes, actual_release_notes)
