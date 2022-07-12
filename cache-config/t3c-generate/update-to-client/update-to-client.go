@@ -86,7 +86,7 @@ The arguments are the t3c-generate directory, and the name of the branch to vend
 
 This script should always be called from trafficcontrol/cache-config/t3c-generate.
 
-It copies the traffic_ops/client from that branch into toreq/vendor,
+It copies the traffic_ops/v4-client from that branch into toreq/vendor,
 and then updates all references to cfg.TOClientNew to cfg.TOClient.
 
 This must be done as soon as a release is made, before any new features are added to t3c-generate.
