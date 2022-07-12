@@ -80,7 +80,7 @@ func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 	return ad
 }
 
-// V40ToDeliveryServices converts a slice of the old traffic_ops/client type to the local alias.
+// V40ToDeliveryServices converts a slice of the old traffic_ops/v4-client type to the local alias.
 func V40ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
