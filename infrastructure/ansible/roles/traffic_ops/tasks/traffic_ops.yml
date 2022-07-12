@@ -53,7 +53,7 @@
   block:
     - name: Render Traffic Ops Postinstall Answers
       template:
-        src: "postinstall.input.j2"
+        src: postinstall.input.j2
         owner: "{{ to_user }}"
         group: "{{ to_group }}"
         mode: 0600
