@@ -171,7 +171,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 				return params.data.profileName;
 			},
 			tooltipValueGetter: function(params) {
-				return params.data.profileNames.toString()
+				return params.data.profileNames.join(", ");
 			}
 		},
 		{

@@ -69,10 +69,13 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         }
     };
 
-    $scope.addProfile = function(cdnId) {
+    $scope.addProfile = function() {
         $scope.serverForm.$setDirty();
+        $scope.serverForm.$$controls[
+            $scope.serverForm.$$controls.length-1
+        ].$invalid=true
         const newProfile = {
-            profileNames: getProfiles(cdnId)
+            profileNames: []
         };
 
         if (!$scope.server.profileNames) {
@@ -80,11 +83,12 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         } else {
             $scope.server.profileNames.push(newProfile);
         }
+        console.log($scope.serverForm);
     }
 
-    $scope.deleteProfile = function(profile) {
+    $scope.deleteProfile = function(index) {
         $scope.serverForm.$setDirty();
-        $scope.server.profileNames.splice($scope.server.profileNames.indexOf(profile), 1);
+        $scope.server.profileNames.splice(index, 1);
     }
 
     var updateStatus = function(status) {
