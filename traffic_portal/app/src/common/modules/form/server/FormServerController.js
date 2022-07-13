@@ -71,19 +71,12 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
     $scope.addProfile = function() {
         $scope.serverForm.$setDirty();
-        $scope.serverForm.$$controls[
-            $scope.serverForm.$$controls.length-1
-        ].$invalid=true
-        const newProfile = {
-            profileNames: []
-        };
 
         if (!$scope.server.profileNames) {
-            $scope.server.profileNames = [newProfile];
+            $scope.server.profileNames = [null];
         } else {
-            $scope.server.profileNames.push(newProfile);
+            $scope.server.profileNames.push(null);
         }
-        console.log($scope.serverForm);
     }
 
     $scope.deleteProfile = function(index) {

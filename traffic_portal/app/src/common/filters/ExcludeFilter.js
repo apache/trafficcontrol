@@ -17,25 +17,22 @@
  * under the License.
  */
 
-var ExcludeFilter = function() {
+ExcludeFilter = function() {
         return function(list,currentModel,selected){
-            var selectedLength = selected.length;
-            var out = [];
-            angular.forEach(list,function(listItem){
-                var add = true;
-                for (var index = 0; index < selectedLength; index++) {
+            const selectedLength = selected.length;
+            const out = [];
+            for (const listItem of list) {
+                let add = true;
+                for (let index = 0; index < selectedLength; index++) {
                     if(selected[index] !== currentModel && selected[index] === listItem.name){
                         add = false;
                         break;
                     }
                 }
-
                 if(add){
                     out.push(listItem);
                 }
-
-            });
-
+            };
             return out;
         };
 };
