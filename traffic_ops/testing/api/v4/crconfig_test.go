@@ -17,73 +17,76 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestCRConfig(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
 		UpdateTestCRConfigSnapshot(t)
 		MonitoringConfig(t)
-		SnapshotTestCDNbyName(t)
-		SnapshotTestCDNbyInvalidName(t)
-		SnapshotTestCDNbyID(t)
-		SnapshotTestCDNbyInvalidID(t)
-		SnapshotWithReadOnlyUser(t)
+		readOnlyUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "readonlyuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
+
+		methodTests := utils.V4TestCase{
+			"PUT": {
+				"OK when VALID CDN parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when VALID CDNID parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdnID": {strconv.Itoa(GetCDNID(t, "cdn1")())}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"NOT FOUND when NON-EXISTENT CDN": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn-invalid"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"NOT FOUND when NON-EXISTENT CDNID": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdnID": {"999999"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"FORBIDDEN when READ-ONLY user": {
+					ClientSession: readOnlyUserSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn1"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					var cdn string
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetCRConfig(cdn, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.SnapshotCRConfig(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
-}
-
-func SnapshotWithReadOnlyUser(t *testing.T) {
-	if len(testData.CDNs) == 0 {
-		t.Fatalf("expected one or more valid CDNs, but got none")
-	}
-
-	tenantOpts := client.NewRequestOptions()
-	tenantOpts.QueryParameters.Set("name", "root")
-	resp, _, err := TOSession.GetTenants(tenantOpts)
-	if err != nil {
-		t.Fatalf("couldn't get the root tenant ID: %v - alerts: %+v", err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Tenant to have the name 'root', found: %d", len(resp.Response))
-	}
-
-	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	user := tc.UserV4{
-		Username:         "test_user_tm",
-		RegistrationSent: new(time.Time),
-		LocalPassword:    util.StrPtr("test_pa$$word"),
-		Role:             "read-only",
-	}
-	user.Email = util.StrPtr("email_tm@domain.com")
-	user.TenantID = resp.Response[0].ID
-	user.FullName = util.StrPtr("firstName LastName")
-
-	u, _, err := TOSession.CreateUser(user, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not create read-only user: %v - alerts: %+v", err, u.Alerts)
-	}
-	client, _, err := toclient.LoginWithAgent(TOSession.URL, "test_user_tm", "test_pa$$word", true, "to-api-v4-client-tests/tenant4user", true, toReqTimeout)
-	if err != nil {
-		t.Fatalf("failed to log in with test_user: %v", err.Error())
-	}
-	opts := toclient.NewRequestOptions()
-	opts.QueryParameters.Set("cdn", testData.CDNs[0].Name)
-	_, reqInf, err := client.SnapshotCRConfig(opts)
-	if err == nil {
-		t.Errorf("expected to get an error about a read-only client trying to snap a CDN, but got none")
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Errorf("expected a 403 forbidden status code, but got %d", reqInf.StatusCode)
-	}
-	ForceDeleteTestUsersByUsernames(t, []string{"test_user_tm"})
 }
 
 func UpdateTestCRConfigSnapshot(t *testing.T) {
@@ -289,68 +292,5 @@ func MonitoringConfig(t *testing.T) {
 	}
 	if len(missingParameters) != 0 {
 		t.Fatalf("Threshold parameters defined for Profile '%s' but missing for Profile '%s' in Traffic Monitor Config: %s", profileName, profileName, strings.Join(missingParameters, ", "))
-	}
-}
-
-func SnapshotTestCDNbyName(t *testing.T) {
-	if len(testData.CDNs) < 1 {
-		t.Fatal("Need at least one CDN to test taking CDN Snapshot using CDN name")
-	}
-	firstCDN := testData.CDNs[0].Name
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("cdn", firstCDN)
-	resp, _, err := TOSession.SnapshotCRConfig(opts)
-	if err != nil {
-		t.Errorf("failed to snapshot CDN '%s' by name: %v - alerts: %+v", firstCDN, err, resp.Alerts)
-	}
-}
-
-// Note that this test will break if anyone adds a CDN to the fixture data with
-// the name "cdn-invalid".
-func SnapshotTestCDNbyInvalidName(t *testing.T) {
-	invalidCDNName := "cdn-invalid"
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("cdn", invalidCDNName)
-	_, _, err := TOSession.SnapshotCRConfig(opts)
-	if err == nil {
-		t.Errorf("snapshot occurred without error on (presumed) invalid CDN '%s'", invalidCDNName)
-	}
-}
-
-func SnapshotTestCDNbyID(t *testing.T) {
-	if len(testData.CDNs) < 1 {
-		t.Fatal("Need at least one CDN to test Snapshotting CDNs")
-	}
-	firstCDNName := testData.CDNs[0].Name
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", firstCDNName)
-	// Retrieve the CDN by name so we can get the id for the snapshot
-	resp, _, err := TOSession.GetCDNs(opts)
-	if err != nil {
-		t.Errorf("cannot get CDN '%s': %v - alerts: %+v", firstCDNName, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one CDN to exist with name '%s', found: %d", firstCDNName, len(resp.Response))
-	}
-	remoteCDNID := resp.Response[0].ID
-	opts.QueryParameters.Del("name")
-	opts.QueryParameters.Set("cdnID", strconv.Itoa(remoteCDNID))
-	alert, _, err := TOSession.SnapshotCRConfig(opts)
-	if err != nil {
-		t.Errorf("failed to snapshot CDN '%s' (#%d) by id: %v - alerts: %+v", firstCDNName, remoteCDNID, err, alert.Alerts)
-	}
-}
-
-// Note that this test will break in the event that 1,000,000 CDNs are created
-// in the TO instance at any time (they don't need to exist concurrently, just
-// that many successful CDN creations have to happen, even if they are
-// all immediately deleted except the 999999th one).
-func SnapshotTestCDNbyInvalidID(t *testing.T) {
-	opts := client.NewRequestOptions()
-	invalidCDNID := 999999
-	opts.QueryParameters.Set("cdnID", strconv.Itoa(invalidCDNID))
-	alert, _, err := TOSession.SnapshotCRConfig(opts)
-	if err == nil {
-		t.Errorf("snapshot occurred on (presumed) invalid CDN #%d: %v - alerts: %+v", invalidCDNID, err, alert.Alerts)
 	}
 }
