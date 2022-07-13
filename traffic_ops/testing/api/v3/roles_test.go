@@ -140,7 +140,7 @@ func TestRoles(t *testing.T) {
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateRoleUpdateCreateFields("another_role", map[string]interface{}{"Name": "newName", "Description": "new updated description", "PrivLevel": 15})),
+						validateRoleUpdateCreateFields("newName", map[string]interface{}{"Name": "newName", "Description": "new updated description", "PrivLevel": 15})),
 				},
 				"BAD REQUEST when NAME has SPACES": {
 					EndpointId:    GetRoleID(t, "another_role"),
@@ -391,6 +391,7 @@ func GetRoleID(t *testing.T, name string) func() int {
 		role, _, _, err := TOSession.GetRoleByNameWithHdr(name, nil)
 		assert.RequireNoError(t, err, "Get Roles Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(role), "Expected response object length 1, but got %d", len(role))
+		assert.RequireNotNil(t, role, "Expected role to not be nil.")
 		return *role[0].ID
 	}
 }
