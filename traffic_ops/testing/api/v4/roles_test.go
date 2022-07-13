@@ -122,7 +122,7 @@ func TestRoles(t *testing.T) {
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateRoleUpdateCreateFields("update_role", map[string]interface{}{"Name": "newName", "Description": "new updated description"})),
+						validateRoleUpdateCreateFields("newName", map[string]interface{}{"Name": "newName", "Description": "new updated description"})),
 				},
 				"BAD REQUEST when NAME has SPACES": {
 					ClientSession: TOSession,
@@ -174,7 +174,7 @@ func TestRoles(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"BAD REQUEST when ROLE DOESNT EXIST": {
+				"NOT FOUND when ROLE DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"doesntexist"}}},
 					RequestBody: map[string]interface{}{
@@ -185,7 +185,7 @@ func TestRoles(t *testing.T) {
 							"all-write",
 						},
 					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
 					ClientSession: TOSession,
