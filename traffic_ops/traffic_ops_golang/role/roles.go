@@ -123,8 +123,9 @@ func (role *TORole) SetKeys(keys map[string]interface{}) {
 
 // Validate fulfills the api.Validator interface
 func (role TORole) Validate() (error, error) {
+	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 	errs := validation.Errors{
-		"name":        validation.Validate(role.Name, validation.Required),
+		"name":        validation.Validate(role.Name, validation.Required, noSpaces),
 		"description": validation.Validate(role.Description, validation.Required),
 		"privLevel":   validation.Validate(role.PrivLevel, validation.NotNil)}
 
