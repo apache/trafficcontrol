@@ -61,12 +61,60 @@ func TestRoles(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateRoleDescSort()),
 				},
 			},
+			"POST": {
+				"BAD REQUEST when NAME has SPACES": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "role with spaces",
+						"description": "description",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING NAME": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "missing name",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING DESCRIPTION": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name": "noDescription",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "new_admin",
+						"description": "description",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
 			"PUT": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"update_role"}}},
 					RequestBody: map[string]interface{}{
-						"name":        "another_role",
+						"name":        "newName",
 						"description": "new updated description",
 						"permissions": []string{
 							"all-read",
@@ -74,7 +122,83 @@ func TestRoles(t *testing.T) {
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateRoleUpdateCreateFields("another_role", map[string]interface{}{"Description": "new updated description"})),
+						validateRoleUpdateCreateFields("update_role", map[string]interface{}{"Name": "newName", "Description": "new updated description"})),
+				},
+				"BAD REQUEST when NAME has SPACES": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
+					RequestBody: map[string]interface{}{
+						"name":        "another role",
+						"description": "description",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING NAME": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
+					RequestBody: map[string]interface{}{
+						"description": "missing name",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING DESCRIPTION": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
+					RequestBody: map[string]interface{}{
+						"name": "noDescription",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ADMIN ROLE": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"admin"}}},
+					RequestBody: map[string]interface{}{
+						"name":        "adminUpdated",
+						"description": "description",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ROLE DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"doesntexist"}}},
+					RequestBody: map[string]interface{}{
+						"name":        "doesntexist",
+						"description": "description",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
+					RequestBody: map[string]interface{}{
+						"name":        "new_admin",
+						"description": "description",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					ClientSession: TOSession,

@@ -75,22 +75,154 @@ func TestRoles(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-			},
-			"PUT": {
-				"OK when VALID request": {
-					EndpointId:    GetRoleID(t, "another_role"),
+				"BAD REQUEST when NAME has SPACES": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"name":        "another_role",
-						"description": "new updated description",
+						"name":        "role with spaces",
+						"description": "description",
 						"privLevel":   30,
 						"capabilities": []string{
 							"all-read",
 							"all-write",
 						},
 					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING NAME": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "missing name",
+						"privLevel":   30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING DESCRIPTION": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":      "nodescription",
+						"privLevel": 30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "new_admin",
+						"description": "description",
+						"privLevel":   30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetRoleID(t, "update_role"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "newName",
+						"description": "new updated description",
+						"privLevel":   15,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateRoleUpdateCreateFields("another_role", map[string]interface{}{"Description": "new updated description"})),
+						validateRoleUpdateCreateFields("another_role", map[string]interface{}{"Name": "newName", "Description": "new updated description", "PrivLevel": 15})),
+				},
+				"BAD REQUEST when NAME has SPACES": {
+					EndpointId:    GetRoleID(t, "another_role"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "another role",
+						"description": "description",
+						"privLevel":   30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING NAME": {
+					EndpointId:    GetRoleID(t, "another_role"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "missing name",
+						"privLevel":   30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING DESCRIPTION": {
+					EndpointId:    GetRoleID(t, "another_role"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":      "noDescription",
+						"privLevel": 30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ADMIN ROLE": {
+					EndpointId:    GetRoleID(t, "admin"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "adminUpdated",
+						"privLevel":   30,
+						"description": "description",
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ROLE DOESNT EXIST": {
+					EndpointId:    func() int { return 9999999 },
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "doesntexist",
+						"privLevel":   30,
+						"description": "description",
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
+					EndpointId:    GetRoleID(t, "another_role"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "new_admin",
+						"privLevel":   30,
+						"description": "description",
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					EndpointId:     GetRoleID(t, "another_role"),
@@ -193,9 +325,14 @@ func validateRoleFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 			for _, role := range roleResp {
 				switch field {
 				case "Name":
+					assert.RequireNotNil(t, role.Name, "Expected Name to not be nil.")
 					assert.Equal(t, expected, *role.Name, "Expected Name to be %v, but got %s", expected, *role.Name)
 				case "Description":
+					assert.RequireNotNil(t, role.Description, "Expected Description to not be nil.")
 					assert.Equal(t, expected, *role.Description, "Expected Description to be %v, but got %s", expected, *role.Description)
+				case "PrivLevel":
+					assert.RequireNotNil(t, role.PrivLevel, "Expected PrivLevel to not be nil.")
+					assert.Equal(t, expected, *role.PrivLevel, "Expected PrivLevel to be %v, but got %d", expected, *role.PrivLevel)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
