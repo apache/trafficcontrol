@@ -48,12 +48,12 @@ const (
 )
 
 const (
-	TailDiagsLog = "/opt/trafficserver/var/log/trafficserver/diags.log"
+	TailDiagsLog       = "/opt/trafficserver/var/log/trafficserver/diags.log"
 	TailRestartTimeOut = 60
-	TailReloadTimeOut = 15
-	tailMatch = `ET_(TASK|NET)\s\d{1,}`
-	tailRestartEnd = "Traffic Server is fully initialized"
-	tailReloadEnd = "remap.config finished loading"
+	TailReloadTimeOut  = 15
+	tailMatch          = `ET_(TASK|NET)\s\d{1,}`
+	tailRestartEnd     = "Traffic Server is fully initialized"
+	tailReloadEnd      = "remap.config finished loading"
 )
 
 type Package struct {

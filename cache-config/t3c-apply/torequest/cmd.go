@@ -277,13 +277,13 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 
 //doTail calls t3c-tail and will run a tail on the log file provided with string for a regex to
 //maatch on default is .* endMatch will make t3c-tail exit when a pattern is matched otherwise
-//a timeout in a given number of seconds will occur.  
+//a timeout in a given number of seconds will occur.
 func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeoutSeconds int) error {
 	tailData := t3cutil.TailCfg{
-		File: &file,
+		File:     &file,
 		LogMatch: &logMatch,
 		EndMatch: &endMatch,
-		TimeOut: &timeoutSeconds,
+		TimeOut:  &timeoutSeconds,
 	}
 	tailInput, err := json.Marshal(&tailData)
 	if err != nil {
@@ -291,7 +291,7 @@ func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeo
 	}
 	stdOut, stdErr, code := t3cutil.DoInput(tailInput, `t3c-tail`, "")
 	if code > 1 {
-		return  fmt.Errorf("t3c-tail returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+		return fmt.Errorf("t3c-tail returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
 	logSubApp(`t3c-tail`, stdErr)
 
@@ -302,7 +302,7 @@ func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeo
 		line = stripDate.ReplaceAllString(line, "")
 		log.Infoln(line)
 	}
-	return nil 
+	return nil
 }
 
 // diff calls t3c-diff to diff the given new file and the file on disk. Returns whether they're different.

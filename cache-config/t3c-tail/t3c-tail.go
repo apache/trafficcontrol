@@ -26,16 +26,16 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-log"
 
 	"github.com/nxadm/tail"
 	"github.com/pborman/getopt/v2"
 )
 
- const AppName = "t3c-tail"
+const AppName = "t3c-tail"
 
- // Version is the application version.
+// Version is the application version.
 // This is overwritten by the build with the current project version.
 var Version = "0.4"
 
@@ -46,9 +46,7 @@ var GitRevision = "nogit"
 //default time out is 15 seconds, if not included in json input.
 var timeOutSeconds = 15
 
-
-
- func main() {
+func main() {
 	version := getopt.BoolLong("version", 'V', "Print version information and exit.")
 	help := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
@@ -74,29 +72,29 @@ var timeOutSeconds = 15
 		fmt.Println(usageStr())
 		os.Exit(1)
 	}
-	
+
 	endMatch := regexp.MustCompile("^timeout")
 
 	if tailCfg.EndMatch != nil {
 		endMatch = regexp.MustCompile(*tailCfg.EndMatch)
 	}
-	
+
 	logMatch := regexp.MustCompile(*tailCfg.LogMatch)
 	timeOut := timeOutSeconds
 	if tailCfg.TimeOut != nil {
 		timeOut = *tailCfg.TimeOut
 	}
-	
+
 	file := tailCfg.File
 	t, err := tail.TailFile(*file,
-		tail.Config {
+		tail.Config{
 			MustExist: true,
-			Follow: true ,
-			Location: &tail.SeekInfo {
+			Follow:    true,
+			Location: &tail.SeekInfo{
 				Offset: 0,
 				Whence: 2,
-				},
-			})
+			},
+		})
 	if err != nil {
 		log.Errorln("error running tail on ", file)
 		os.Exit(1)
@@ -107,7 +105,7 @@ var timeOutSeconds = 15
 			if logMatch.MatchString(line.Text) {
 				fmt.Println(line.Text)
 			}
-			if endMatch.MatchString(line.Text)  {
+			if endMatch.MatchString(line.Text) {
 				if !timer.Stop() {
 					<-timer.C
 				}
@@ -116,7 +114,7 @@ var timeOutSeconds = 15
 			}
 		}
 	}()
-	
+
 	<-timer.C
 	t.Cleanup()
 }
