@@ -100,7 +100,7 @@ func TestValidate(t *testing.T) {
 
 	//  name,  domainname both valid
 	role = tc.Role{}
-	role.Name = stringAddr("this_is_a_valid name")
+	role.Name = stringAddr("this_is_a_valid_name")
 	role.Description = stringAddr("this is a description")
 	role.PrivLevel = intAddr(30)
 	r = TORole{
