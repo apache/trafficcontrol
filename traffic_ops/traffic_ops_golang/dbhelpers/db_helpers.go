@@ -1805,18 +1805,6 @@ func GetRoleIDFromName(tx *sql.Tx, roleName string) (int, bool, error) {
 	return id, true, nil
 }
 
-// GetRoleNameFromID returns the name of the role associated with the supplied ID.
-func GetRoleNameFromID(tx *sql.Tx, roleID int) (string, bool, error) {
-	var name string
-	if err := tx.QueryRow(`SELECT name FROM role WHERE id = $1`, roleID).Scan(&name); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return name, false, nil
-		}
-		return name, false, fmt.Errorf("querying role name from ID: %w", err)
-	}
-	return name, true, nil
-}
-
 // GetCDNNameDomain returns the name and domain for a given CDN ID.
 func GetCDNNameDomain(cdnID int, tx *sql.Tx) (string, string, error) {
 	q := `SELECT cdn.name, cdn.domain_name from cdn where cdn.id = $1`
