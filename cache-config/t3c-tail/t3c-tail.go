@@ -26,7 +26,9 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+
 	"github.com/nxadm/tail"
 	"github.com/pborman/getopt/v2"
 )
@@ -51,6 +53,8 @@ var timeOutSeconds = 15
 	help := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
 
+	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
+
 	if *help {
 		fmt.Println(usageStr())
 		os.Exit(0)
@@ -61,11 +65,12 @@ var timeOutSeconds = 15
 
 	tailCfg := &t3cutil.TailCfg{}
 	if err := json.NewDecoder(os.Stdin).Decode(tailCfg); err != nil {
-		fmt.Println("Error reading json input", err)
+		log.Errorln("Error reading json input", err)
+		os.Exit(1)
 	}
 
 	if tailCfg.LogMatch == nil {
-		fmt.Println("must provide a regex to match")
+		log.Errorln("must provide a regex to match")
 		fmt.Println(usageStr())
 		os.Exit(1)
 	}
@@ -93,37 +98,36 @@ var timeOutSeconds = 15
 				},
 			})
 	if err != nil {
-		fmt.Println("error running tail on ", file)
+		log.Errorln("error running tail on ", file)
 		os.Exit(1)
 	}
+	timer := time.NewTimer(time.Second * time.Duration(timeOut))
 	go func() {
 		for line := range t.Lines {
 			if logMatch.MatchString(line.Text) {
 				fmt.Println(line.Text)
 			}
 			if endMatch.MatchString(line.Text)  {
-				fmt.Println("Stopping on stop match")
+				if !timer.Stop() {
+					<-timer.C
+				}
+				timer.Reset(0)
 				break
 			}
 		}
 	}()
 	
-	time.Sleep(time.Second * time.Duration(timeOut))
-	err = t.Stop()
-	if err != nil {
-		fmt.Printf("ERROR: %s\n", err)
-	}
+	<-timer.C
 	t.Cleanup()
-	
 }
 
 func usageStr() string {
 	return `usage: t3c-tail [--help]
 	accepts json input from stdin in the following format:
-	file is file you want to tail
-	match is regex string you wish to match on, if you want everything use '.*'
-	stopMatch is a string used to exit tail when it is found in the logs
-	timeOut is given in seconds the default is 15
+	file: path to the file you want to tail
+	match: is regex string you wish to match on, if you want everything use '.*'
+	stopMatch: is a regex used to exit tail when it is found in the logs
+	timeOut: given in seconds the default is 15
 	{"file":"diags.log", "match":"<regex string to match>", "endMatch": "<regex string to match>", "timeOut": 4}
 	`
 }
