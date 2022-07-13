@@ -32,6 +32,7 @@ import (
 	golog "log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -277,7 +278,7 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 //doTail calls t3c-tail and will run a tail on the log file provided with string for a regex to
 //maatch on default is .* endMatch will make t3c-tail exit when a pattern is matched otherwise
 //a timeout in a given number of seconds will occur.  
-func doTail(file string, logMatch string, endMatch string, timeoutSeconds int) (string,error) {
+func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeoutSeconds int) error {
 	tailData := t3cutil.TailCfg{
 		File: &file,
 		LogMatch: &logMatch,
@@ -286,13 +287,22 @@ func doTail(file string, logMatch string, endMatch string, timeoutSeconds int) (
 	}
 	tailInput, err := json.Marshal(&tailData)
 	if err != nil {
-		return "", fmt.Errorf("error loading json input")
+		return fmt.Errorf("error loading json input")
 	}
 	stdOut, stdErr, code := t3cutil.DoInput(tailInput, `t3c-tail`, "")
 	if code > 1 {
-		return "", fmt.Errorf("t3c-tail returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+		return  fmt.Errorf("t3c-tail returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
-	return string(stdOut), nil 
+	logSubApp(`t3c-tail`, stdErr)
+
+	stripDate := regexp.MustCompile(`\[\w{3}\s{1,2}\d{1,2}\s\d{2}:\d{2}:\d{2}\.\d{3}\]\s`)
+	stdOut = bytes.TrimSpace(stdOut)
+	lines := strings.Split(string(stdOut), "\n")
+	for _, line := range lines {
+		line = stripDate.ReplaceAllString(line, "")
+		log.Infoln(line)
+	}
+	return nil 
 }
 
 // diff calls t3c-diff to diff the given new file and the file on disk. Returns whether they're different.
