@@ -363,14 +363,20 @@ func CreateTestRoles(t *testing.T) {
 }
 
 func DeleteTestRoles(t *testing.T) {
-	for _, r := range testData.Roles {
-		_, _, err := TOSession.DeleteRole(r.Name, client.NewRequestOptions())
-		assert.NoError(t, err, "Expected no error while deleting role %s, but got %v", r.Name, err)
+	roles, _, err := TOSession.GetRoles(client.RequestOptions{})
+	assert.NoError(t, err, "Cannot get Roles: %v - alerts: %+v", err, roles.Alerts)
+	for _, role := range roles.Response {
+		// Don't delete active roles created by test setup
+		if role.Name == "admin" || role.Name == "disallowed" || role.Name == "operations" || role.Name == "portal" || role.Name == "read-only" || role.Name == "steering" || role.Name == "federation" {
+			continue
+		}
+		_, _, err := TOSession.DeleteRole(role.Name, client.NewRequestOptions())
+		assert.NoError(t, err, "Expected no error while deleting role %s, but got %v", role.Name, err)
 		// Retrieve the Role to see if it got deleted
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", r.Name)
+		opts.QueryParameters.Set("name", role.Name)
 		getRole, _, err := TOSession.GetRoles(opts)
-		assert.NoError(t, err, "Error getting Role '%s' after deletion: %v - alerts: %+v", r.Name, err, getRole.Alerts)
-		assert.Equal(t, 0, len(getRole.Response), "Expected Role '%s' to be deleted, but it was found in Traffic Ops", r.Name)
+		assert.NoError(t, err, "Error getting Role '%s' after deletion: %v - alerts: %+v", role.Name, err, getRole.Alerts)
+		assert.Equal(t, 0, len(getRole.Response), "Expected Role '%s' to be deleted, but it was found in Traffic Ops", role.Name)
 	}
 }

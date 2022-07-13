@@ -133,14 +133,14 @@ func TestRoles(t *testing.T) {
 					RequestBody: map[string]interface{}{
 						"name":        "newName",
 						"description": "new updated description",
-						"privLevel":   15,
+						"privLevel":   30,
 						"capabilities": []string{
 							"all-read",
 							"all-write",
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateRoleUpdateCreateFields("newName", map[string]interface{}{"Name": "newName", "Description": "new updated description", "PrivLevel": 15})),
+						validateRoleUpdateCreateFields("newName", map[string]interface{}{"Name": "newName", "Description": "new updated description"})),
 				},
 				"BAD REQUEST when NAME has SPACES": {
 					EndpointId:    GetRoleID(t, "another_role"),
@@ -196,7 +196,7 @@ func TestRoles(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"BAD REQUEST when ROLE DOESNT EXIST": {
+				"NOT FOUND when ROLE DOESNT EXIST": {
 					EndpointId:    func() int { return 9999999 },
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
@@ -208,7 +208,7 @@ func TestRoles(t *testing.T) {
 							"all-write",
 						},
 					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
 					EndpointId:    GetRoleID(t, "another_role"),
@@ -404,13 +404,18 @@ func CreateTestRoles(t *testing.T) {
 }
 
 func DeleteTestRoles(t *testing.T) {
-	for _, r := range testData.Roles {
-		roleID := GetRoleID(t, *r.Name)()
-		_, _, _, err := TOSession.DeleteRoleByID(roleID)
-		assert.NoError(t, err, "Expected no error while deleting role %s, but got %v", *r.Name, err)
+	roles, _, _, err := TOSession.GetRolesWithHdr(nil)
+	assert.NoError(t, err, "Cannot get Roles: %v", err)
+	for _, role := range roles {
+		// Don't delete active roles created by test setup
+		if *role.Name == "admin" || *role.Name == "disallowed" || *role.Name == "operations" || *role.Name == "portal" || *role.Name == "read-only" || *role.Name == "steering" || *role.Name == "federation" {
+			continue
+		}
+		_, _, _, err := TOSession.DeleteRoleByID(*role.ID)
+		assert.NoError(t, err, "Expected no error while deleting role %s, but got %v", role.Name, err)
 		// Retrieve the Role to see if it got deleted
-		getRole, _, _, err := TOSession.GetRoleByIDWithHdr(roleID, nil)
-		assert.NoError(t, err, "Error getting Role '%s' after deletion: %v", *r.Name, err)
-		assert.Equal(t, 0, len(getRole), "Expected Role '%s' to be deleted, but it was found in Traffic Ops", *r.Name)
+		getRole, _, _, err := TOSession.GetRoleByIDWithHdr(*role.ID, nil)
+		assert.NoError(t, err, "Error getting Role '%s' after deletion: %v", role.Name, err)
+		assert.Equal(t, 0, len(getRole), "Expected Role '%s' to be deleted, but it was found in Traffic Ops", role.Name)
 	}
 }
