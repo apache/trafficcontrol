@@ -29,11 +29,14 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 type ATSConfigFile struct {
@@ -44,6 +47,31 @@ type ATSConfigFile struct {
 	Secure      bool     `json:"secure"`
 	Text        string   `json:"text"`
 	Warnings    []string `json:"warnings"`
+}
+
+var installdir string
+
+// initializes InstallDir to executable dir
+// If error, returns "/usr/bin" as default.
+func InstallDir() string {
+	log.Infof("t3cutil.InstallDir")
+	{
+		execpath, err := os.Executable()
+		log.Infof("InstallDir '%s' %v", execpath, err)
+	}
+	if installdir == "" {
+		execpath, err := os.Executable()
+		if err != nil {
+			installdir = `/usr/bin`
+			log.Infof("InstallDir setting to fallback: '%s', %v\n", installdir, err)
+		} else {
+			log.Infof("Executable path is %s", execpath)
+			installdir = filepath.Dir(execpath)
+			log.Infof("Using executable installdir: '%s'\n", InstallDir)
+		}
+	}
+	log.Infof("return installdir '%s'", installdir)
+	return installdir
 }
 
 // ATSConfigFiles implements sort.Interface and sorts by the Location and then FileNameOnDisk, i.e. the full file path.

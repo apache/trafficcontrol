@@ -32,6 +32,7 @@ import (
 	golog "log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -47,6 +48,16 @@ type ServerAndConfigs struct {
 	ConfigData  json.RawMessage
 	ConfigFiles json.RawMessage
 }
+
+const (
+	t3cgen       = `t3c-generate`
+	t3cupd       = `t3c-update`
+	t3cdiff      = `t3c-diff`
+	t3cchkrefs   = `t3c-check-refs`
+	t3cchkreload = `t3c-check-relaod`
+	t3creq       = `t3c-request`
+	t3cpreproc   = `t3c-preprocess`
+)
 
 // generate runs t3c-generate and returns the result.
 func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
@@ -85,13 +96,15 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
 	args = append(args, "--use-strategies="+cfg.UseStrategies.String())
 
-	generatedFiles, stdErr, code := t3cutil.DoInput(configData, config.GenerateCmd, args...)
+	genpath := filepath.Join(t3cutil.InstallDir(), t3cgen)
+	log.Infof(genpath)
+	generatedFiles, stdErr, code := t3cutil.DoInput(configData, genpath, args...)
 	if code != 0 {
-		logSubAppErr(`t3c-generate stdout`, generatedFiles)
-		logSubAppErr(`t3c-generate stderr`, stdErr)
-		return nil, fmt.Errorf("t3c-generate returned non-zero exit code %v, see log for output", code)
+		logSubAppErr(t3cgen+` stdout`, generatedFiles)
+		logSubAppErr(t3cgen+` stderr`, stdErr)
+		return nil, fmt.Errorf("%s returned non-zero exit code %v, see log for output", t3cgen, code)
 	}
-	logSubApp(`t3c-generate`, stdErr)
+	logSubApp(t3cgen, stdErr)
 
 	preprocessedBytes, err := preprocess(cfg, configData, generatedFiles)
 	if err != nil {
@@ -120,7 +133,8 @@ func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byt
 		args = append(args, "-v")
 	}
 
-	cmd := exec.Command(`t3c-preprocess`, args...)
+	appPath := filepath.Join(t3cutil.InstallDir(), t3cpreproc)
+	cmd := exec.Command(appPath, args...)
 	outbuf := bytes.Buffer{}
 	errbuf := bytes.Buffer{}
 	cmd.Stdout = &outbuf
@@ -161,11 +175,11 @@ func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byt
 	stdOut := outbuf.Bytes()
 	stdErr := errbuf.Bytes()
 	if code != 0 {
-		logSubAppErr(`t3c-preprocess stdout`, stdOut)
-		logSubAppErr(`t3c-preprocess stderr`, stdErr)
-		return nil, fmt.Errorf("t3c-preprocess returned non-zero exit code %v, see log for output", code)
+		logSubAppErr(t3cpreproc+` stdout`, stdOut)
+		logSubAppErr(t3cpreproc+` stderr`, stdErr)
+		return nil, fmt.Errorf("%s returned non-zero exit code %v, see log for output", t3cpreproc, code)
 	}
-	logSubApp(`t3c-preprocess`, stdErr)
+	logSubApp(t3cpreproc, stdErr)
 	return stdOut, nil
 }
 
@@ -263,14 +277,15 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 	if _, used := os.LookupEnv("TO_URL"); !used {
 		args = append(args, "--traffic-ops-url="+cfg.TOURL)
 	}
-	stdOut, stdErr, code := t3cutil.Do(`t3c-update`, args...)
+	updpath := filepath.Join(t3cutil.InstallDir(), t3cupd)
+	stdOut, stdErr, code := t3cutil.Do(updpath, args...)
 	if code != 0 {
-		logSubAppErr(`t3c-update stdout`, stdOut)
-		logSubAppErr(`t3c-update stderr`, stdErr)
-		return fmt.Errorf("t3c-update returned non-zero exit code %v, see log for output", code)
+		logSubAppErr(t3cupd+` stdout`, stdOut)
+		logSubAppErr(t3cupd+` stderr`, stdErr)
+		return fmt.Errorf("%s returned non-zero exit code %v, see log for output", t3cupd, code)
 	}
-	logSubApp(`t3c-update`, stdErr)
-	log.Infoln("t3c-update succeeded")
+	logSubApp(t3cupd, stdErr)
+	log.Infoln(t3cupd + " succeeded")
 	return nil
 }
 
@@ -287,11 +302,12 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, 
 		"--file-gid=" + fmt.Sprint(gid),
 	}
 
-	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, args...)
+	diffpath := filepath.Join(t3cutil.InstallDir(), t3cdiff)
+	stdOut, stdErr, code := t3cutil.DoInput(newFile, diffpath, args...)
 	if code > 1 {
-		return false, fmt.Errorf("t3c-diff returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+		return false, fmt.Errorf("%s returned error code %v stdout '%v' stderr '%v'", t3cdiff, code, string(stdOut), string(stdErr))
 	}
-	logSubApp(`t3c-diff`, stdErr)
+	logSubApp(t3cdiff, stdErr)
 
 	if code == 0 {
 		diffMsg += fmt.Sprintf("All lines and file permissions match TrOps for config file: %s\n", fileLocation)
@@ -330,9 +346,7 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, 
 // The cfgFile should be the full text of either a plugin.config or remap.config.
 // Returns nil if t3c-check-refs returned no errors found, or the error found if any.
 func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
-	args := []string{`check`, `refs`,
-		"--files-adding=" + strings.Join(filesAdding, ","),
-	}
+	args := []string{"--files-adding=" + strings.Join(filesAdding, ",")}
 	if cfg.LogLocationErr == log.LogLocationNull {
 		args = append(args, "-s")
 	}
@@ -343,15 +357,16 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 		args = append(args, "-v")
 	}
 
-	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, `t3c`, args...)
+	t3cpath := filepath.Join(t3cutil.InstallDir(), t3cchkrefs)
+	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, t3cpath, args...)
 
 	if code != 0 {
-		logSubAppErr(`t3c-check-refs stdout`, stdOut)
-		logSubAppErr(`t3c-check-refs stderr`, stdErr)
+		logSubAppErr(t3cchkrefs+` stdout`, stdOut)
+		logSubAppErr(t3cchkrefs+` stderr`, stdErr)
 		return fmt.Errorf("%d plugins failed to verify. See log for details.", code)
 	}
-	logSubApp(`t3c-check-refs stdout`, stdOut)
-	logSubApp(`t3c-check-refs stderr`, stdErr)
+	logSubApp(t3cchkrefs+` stdout`, stdOut)
+	logSubApp(t3cchkrefs+` stderr`, stdErr)
 	return nil
 }
 
@@ -373,11 +388,12 @@ func checkCert(c []byte) error {
 
 // checkReload is a helper for the sub-command t3c-check-reload.
 func checkReload(changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
-	log.Infof("t3c-check-reload calling with changedConfigFiles '%v'\n", changedConfigFiles)
+	log.Infof("%s calling with changedConfigFiles '%v'\n", t3cchkreload, changedConfigFiles)
 
 	changedFiles := []byte(strings.Join(changedConfigFiles, ","))
 
-	cmd := exec.Command(`t3c-check-reload`)
+	appCmd := filepath.Join(t3cutil.InstallDir(), t3cchkreload)
+	cmd := exec.Command(appCmd)
 	outBuf := bytes.Buffer{}
 	errBuf := bytes.Buffer{}
 	cmd.Stdout = &outBuf
@@ -415,16 +431,16 @@ func checkReload(changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
 	stdErr := errBuf.Bytes()
 
 	if code != 0 {
-		logSubAppErr(`t3c-check-reload stdout`, stdOut)
-		logSubAppErr(`t3c-check-reload stderr`, stdErr)
-		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("t3c-check-reload returned error code %d - see log for details.", code)
+		logSubAppErr(t3cchkreload+` stdout`, stdOut)
+		logSubAppErr(t3cchkreload+` stderr`, stdErr)
+		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("%s returned error code %d - see log for details.", t3cchkreload, code)
 	}
 
-	logSubApp(`t3c-check-reload`, stdErr)
+	logSubApp(t3cchkreload, stdErr)
 
 	needs := t3cutil.StrToServiceNeeds(strings.TrimSpace(string(stdOut)))
 	if needs == t3cutil.ServiceNeedsInvalid {
-		return t3cutil.ServiceNeedsInvalid, errors.New("t3c-check-reload returned unknown string '" + string(stdOut) + "'")
+		return t3cutil.ServiceNeedsInvalid, errors.New(t3cchkreload + " returned unknown string '" + string(stdOut) + "'")
 	}
 	return needs, nil
 }
@@ -469,14 +485,15 @@ func request(cfg config.Cfg, command string) ([]byte, error) {
 	if _, used := os.LookupEnv("TO_URL"); !used {
 		args = append(args, "--traffic-ops-url="+cfg.TOURL)
 	}
-	stdOut, stdErr, code := t3cutil.Do(`t3c-request`, args...)
+	reqpath := filepath.Join(t3cutil.InstallDir(), t3creq)
+	stdOut, stdErr, code := t3cutil.Do(reqpath, args...)
 	if code != 0 {
-		logSubAppErr(`t3c-request stdout`, stdOut)
-		logSubAppErr(`t3c-request stderr`, stdErr)
-		return nil, fmt.Errorf("t3c-request returned non-zero exit code %v, see log for output", code)
+		logSubAppErr(t3creq+` stdout`, stdOut)
+		logSubAppErr(t3creq+` stderr`, stdErr)
+		return nil, fmt.Errorf("%s returned non-zero exit code %v, see log for output", t3creq, code)
 	}
 
-	logSubApp(`t3c-request`, stdErr)
+	logSubApp(t3creq, stdErr)
 
 	return stdOut, nil
 }
@@ -531,17 +548,18 @@ func requestConfig(cfg config.Cfg) ([]byte, error) {
 	stdOut := ([]byte)(nil)
 	stdErr := ([]byte)(nil)
 	code := 0
+	reqpath := filepath.Join(t3cutil.InstallDir(), t3creq)
 	if len(cacheBts) > 0 {
-		stdOut, stdErr, code = t3cutil.DoInput(cacheBts, `t3c`, args...)
+		stdOut, stdErr, code = t3cutil.DoInput(cacheBts, reqpath, args...)
 	} else {
-		stdOut, stdErr, code = t3cutil.Do(`t3c`, args...)
+		stdOut, stdErr, code = t3cutil.Do(reqpath, args...)
 	}
 	if code != 0 {
-		logSubAppErr(`t3c-request stdout`, stdOut)
-		logSubAppErr(`t3c-request stderr`, stdErr)
-		return nil, fmt.Errorf("t3c-request returned non-zero exit code %v, see log for details", code)
+		logSubAppErr(t3creq+` stdout`, stdOut)
+		logSubAppErr(t3creq+` stderr`, stdErr)
+		return nil, fmt.Errorf("%s returned non-zero exit code %v, see log for details", t3creq, code)
 	}
-	logSubApp(`t3c-request`, stdErr)
+	logSubApp(t3creq, stdErr)
 
 	if err := ioutil.WriteFile(t3cutil.ApplyCachePath, stdOut, 0600); err != nil {
 		log.Errorln("writing config data to cache failed: " + err.Error())

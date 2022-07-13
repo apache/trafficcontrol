@@ -43,7 +43,6 @@ const DefaultTSConfigDir = "/opt/trafficserver/etc/trafficserver"
 
 const (
 	StatusDir          = "/var/lib/trafficcontrol-cache-config/status"
-	GenerateCmd        = "/usr/bin/t3c-generate" // TODO don't make absolute?
 	Chkconfig          = "/sbin/chkconfig"
 	Service            = "/sbin/service"
 	SystemCtl          = "/bin/systemctl"
