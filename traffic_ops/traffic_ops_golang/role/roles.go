@@ -218,6 +218,13 @@ func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 }
 
 func (role *TORole) Update(h http.Header) (error, error, int) {
+
+	if ok, err := dbhelpers.RoleExists(role.ReqInfo.Tx.Tx, *role.ID); err != nil {
+		return nil, errors.New("verifying Role exists: " + err.Error()), http.StatusInternalServerError
+	} else if !ok {
+		return errors.New("role not found"), nil, http.StatusNotFound
+	}
+
 	var isAdmin bool
 	if err := role.ReqInfo.Tx.Get(&isAdmin, isAdminQuery, role.ID); err != nil {
 		return nil, fmt.Errorf("checking if Role to be modified is '%s': %w", tc.AdminRoleName, err), http.StatusInternalServerError
@@ -253,6 +260,13 @@ func (role *TORole) Update(h http.Header) (error, error, int) {
 }
 
 func (role *TORole) Delete() (error, error, int) {
+
+	if ok, err := dbhelpers.RoleExists(role.ReqInfo.Tx.Tx, *role.ID); err != nil {
+		return nil, errors.New("verifying Role exists: " + err.Error()), http.StatusInternalServerError
+	} else if !ok {
+		return errors.New("role not found"), nil, http.StatusNotFound
+	}
+
 	assignedUsers := 0
 	if err := role.ReqInfo.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM public.tm_user WHERE role=$1", role.ID); err != nil {
 		return nil, errors.New("role delete counting assigned users: " + err.Error()), http.StatusInternalServerError
