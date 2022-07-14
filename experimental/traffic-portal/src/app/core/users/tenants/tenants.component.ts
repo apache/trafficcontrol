@@ -73,12 +73,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 			field: "parentId",
 			headerName: "Parent",
 			hide: false,
-			valueGetter: (params: ValueGetterParams): string => {
-				if (params.data.tenantId === null) {
-					return "";
-				}
-				return `${this.tenantMap[params.data.parentId].name} (#${params.data.parentId})`;
-			}
+			valueGetter: (params: ValueGetterParams): string => this.getParentString(params.data)
 		}
 	];
 
@@ -124,6 +119,20 @@ export class TenantsComponent implements OnInit, OnDestroy {
 			}
 		);
 		this.loading = false;
+	}
+
+	/**
+	 * Gets a string representation for the Parent of the given Tenant.
+	 *
+	 * @param t The Tenant for which the Parent will be rendered.
+	 * @returns An empty string for the root Tenant, otherwise the parent
+	 * Tenant's name and ID as a string.
+	 */
+	public getParentString(t: Tenant): string {
+		if (t.parentId === null) {
+			return "";
+		}
+		return `${this.tenantMap[t.parentId].name} (#${t.parentId})`;
 	}
 
 	/**

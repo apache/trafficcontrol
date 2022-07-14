@@ -11,7 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
+import { BehaviorSubject } from "rxjs";
+
+import { APITestingModule } from "src/app/api/testing";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 import { TenantsComponent } from "./tenants.component";
 
@@ -21,7 +25,20 @@ describe("TenantsComponent", () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ TenantsComponent ]
+			declarations: [ TenantsComponent ],
+			imports: [ APITestingModule ],
+			providers: [
+				{
+					provide: CurrentUserService,
+					useValue: {
+						currentUser: {
+							tenantId: 1
+						},
+						hasPermission: (): true => true,
+						userChanged: new BehaviorSubject({})
+					}
+				}
+			]
 		})
 			.compileComponents();
 
@@ -32,5 +49,42 @@ describe("TenantsComponent", () => {
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("updates the fuzzy search output", fakeAsync(() => {
+		let called = false;
+		const text = "testquest";
+		const spy = jasmine.createSpy("subscriber", (txt: string): void =>{
+			if (!called) {
+				expect(txt).toBe("");
+				called = true;
+			} else {
+				expect(txt).toBe(text);
+			}
+		});
+		component.searchSubject.subscribe(spy);
+		tick();
+		expect(spy).toHaveBeenCalled();
+		component.searchText = text;
+		component.updateURL();
+		tick();
+		expect(spy).toHaveBeenCalledTimes(2);
+	}));
+
+	it("renders parent Tenants", () => {
+		expect(component.getParentString({active: true, id: 1, lastUpdated: new Date(), name: "root", parentId: null})).toBe("");
+	});
+
+	it("handles contextmenu events", () => {
+		expect(()=>component.handleContextMenu({
+			action: component.contextMenuItems[0].name,
+			data: {
+				active: true,
+				id: 1,
+				lastUpdated: new Date(),
+				name: "root",
+				parentId: null
+			}
+		})).not.toThrow();
 	});
 });
