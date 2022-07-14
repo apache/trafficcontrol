@@ -161,7 +161,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	/** Optionally a context to load from localstorage. Providing a unique value for this allows for persistent filter, sort, etc. */
 	@Input() public context: string | undefined;
 	/** Optionally a set of context menu items. If not given, the context menu is disabled. */
-	@Input() public contextMenuItems: Array<ContextMenuItem<T>> = [];
+	@Input() public contextMenuItems: readonly ContextMenuItem<Readonly<T>>[] = [];
 	/** Emits when context menu actions are clicked. Type safety is the host's responsibility! */
 	@Output() public contextMenuAction = new EventEmitter<ContextMenuActionEvent<T>>();
 
