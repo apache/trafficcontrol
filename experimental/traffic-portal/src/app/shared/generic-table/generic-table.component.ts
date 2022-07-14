@@ -546,7 +546,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		}
 		if (a.disabled) {
 			if (a.multiRow) {
-				return a.disabled(this.fullSelection, this.gridAPI);
+				return a.disabled(this.selectionCount > 1 ? this.fullSelection : [this.selected], this.gridAPI);
 			}
 			return a.disabled(this.selected, this.gridAPI);
 		}
