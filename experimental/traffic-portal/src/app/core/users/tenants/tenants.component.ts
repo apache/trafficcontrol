@@ -20,6 +20,7 @@ import { UserService } from "src/app/api";
 import type { Tenant } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * TenantsComponent is the controller for the table that lists Tenants.
@@ -91,7 +92,13 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	public loading = true;
 	private subscription!: Subscription;
 
-	constructor(private readonly userService: UserService, private readonly auth: CurrentUserService) {}
+	constructor(
+		private readonly userService: UserService,
+		private readonly auth: CurrentUserService,
+		private readonly headerSvc: TpHeaderService
+	) {
+		this.headerSvc.headerTitle.next("Tenant");
+	}
 
 	/**
 	 * Angular lifecycle hook; fetches API data.
