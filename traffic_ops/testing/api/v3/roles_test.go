@@ -118,7 +118,7 @@ func TestRoles(t *testing.T) {
 					EndpointId:    GetRoleID(t, "update_role"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"name":        "new Name",
+						"name":        "new_name",
 						"description": "new updated description",
 						"privLevel":   30,
 						"capabilities": []string{
@@ -127,7 +127,7 @@ func TestRoles(t *testing.T) {
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateRoleUpdateCreateFields("new Name", map[string]interface{}{"Name": "new Name", "Description": "new updated description"})),
+						validateRoleUpdateCreateFields("new_name", map[string]interface{}{"Name": "new_name", "Description": "new updated description"})),
 				},
 				"BAD REQUEST when MISSING NAME": {
 					EndpointId:    GetRoleID(t, "another_role"),
