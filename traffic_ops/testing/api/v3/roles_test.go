@@ -75,19 +75,6 @@ func TestRoles(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"BAD REQUEST when NAME has SPACES": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":        "role with spaces",
-						"description": "description",
-						"privLevel":   30,
-						"capabilities": []string{
-							"all-read",
-							"all-write",
-						},
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-				},
 				"BAD REQUEST when MISSING NAME": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
@@ -131,7 +118,7 @@ func TestRoles(t *testing.T) {
 					EndpointId:    GetRoleID(t, "update_role"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"name":        "newName",
+						"name":        "new Name",
 						"description": "new updated description",
 						"privLevel":   30,
 						"capabilities": []string{
@@ -140,21 +127,7 @@ func TestRoles(t *testing.T) {
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateRoleUpdateCreateFields("newName", map[string]interface{}{"Name": "newName", "Description": "new updated description"})),
-				},
-				"BAD REQUEST when NAME has SPACES": {
-					EndpointId:    GetRoleID(t, "another_role"),
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":        "another role",
-						"description": "description",
-						"privLevel":   30,
-						"capabilities": []string{
-							"all-read",
-							"all-write",
-						},
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+						validateRoleUpdateCreateFields("new Name", map[string]interface{}{"Name": "new Name", "Description": "new updated description"})),
 				},
 				"BAD REQUEST when MISSING NAME": {
 					EndpointId:    GetRoleID(t, "another_role"),

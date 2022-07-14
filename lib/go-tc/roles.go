@@ -59,9 +59,8 @@ type RoleV40 struct {
 
 // Validate will validate and make sure all that the fields in the supplied RoleV4 struct are semantically correct.
 func (role RoleV4) Validate() error {
-	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 	errs := validation.Errors{
-		"name":        validation.Validate(role.Name, validation.Required, noSpaces),
+		"name":        validation.Validate(role.Name, validation.Required),
 		"description": validation.Validate(role.Description, validation.Required),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
