@@ -22,17 +22,10 @@ ExcludeFilter = function() {
             const selectedLength = selected.length;
             const out = [];
             for (const listItem of list) {
-                let add = true;
-                for (let index = 0; index < selectedLength; index++) {
-                    if(selected[index] !== currentModel && selected[index] === listItem.name){
-                        add = false;
-                        break;
-                    }
-                }
-                if(add){
+                if (listItem.name === currentModel || !selected.includes(listItem.name)) {
                     out.push(listItem);
                 }
-            };
+            }
             return out;
         };
 };
