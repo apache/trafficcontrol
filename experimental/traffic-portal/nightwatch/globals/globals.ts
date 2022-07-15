@@ -16,6 +16,7 @@ import * as https from "https";
 
 import axios, {AxiosError} from "axios";
 import {NightwatchBrowser} from "nightwatch";
+import { ChangeLogsPageObject } from "nightwatch/page_objects/changeLogs";
 import type {CommonPageObject} from "nightwatch/page_objects/common";
 import type {DeliveryServiceCardPageObject} from "nightwatch/page_objects/deliveryServiceCard";
 import type {DeliveryServiceDetailPageObject} from "nightwatch/page_objects/deliveryServiceDetail";
@@ -31,7 +32,6 @@ import {
 	ResponseCDN,
 	ResponseDeliveryService
 } from "trafficops-types";
-import { ChangeLogsPageObject } from "nightwatch/page_objects/changeLogs";
 
 declare module "nightwatch" {
 	/**
