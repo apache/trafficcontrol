@@ -59,6 +59,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Correction where using the placeholder `__HOSTNAME__` in "unknown" files (others than the defaults ones), was being replaced by the full FQDN instead of the shot hostname.
 - [#6800](https://github.com/apache/trafficcontrol/issues/6800) Fixed incorrect error message for `/server/details` associated with query parameters.
 - [#6712](https://github.com/apache/trafficcontrol/issues/6712) - Fixed error when loading the Traffic Vault schema from `create_tables.sql` more than once.
+- [#6883](https://github.com/apache/trafficcontrol/issues/6883) Fix t3c cache to invalidate on version change
 - [#6834](https://github.com/apache/trafficcontrol/issues/6834) - In API 4.0, fixed `GET` for `/servers` to display all profiles irrespective of the index position. Also, replaced query param `profileId` with `profileName`.
 - [#6299](https://github.com/apache/trafficcontrol/issues/6299) User representations don't match
 - [#6896](https://github.com/apache/trafficcontrol/issues/6896) Fixed the `POST api/cachegroups/id/queue_updates` endpoint so that it doesn't give an internal server error anymore.
@@ -66,6 +67,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6776](https://github.com/apache/trafficcontrol/issues/6776) User properties only required sometimes
 - Fixed TO API `GET /deliveryservicesserver` causing error when an IMS request is made with the `cdn` and `maxRevalDurationDays` parameters set.
 - [#6792](https://github.com/apache/trafficcontrol/issues/6792) Remove extraneous field from Topologies and Server Capability POST/PUT.
+- [#6795](https://github.com/apache/trafficcontrol/issues/6795) Removed an unnecessary response wrapper object from being returned in a POST to the federation resolvers endpoint.
+
 
 ### Removed
 - Remove `client.steering.forced.diversity` feature flag(profile parameter) from Traffic Router (TR). Client steering responses now have cache diversity by default.

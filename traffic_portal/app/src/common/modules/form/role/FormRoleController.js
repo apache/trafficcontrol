@@ -46,7 +46,7 @@ var FormRoleController = function(roles, $scope, $location, formUtils, locationU
 			if ($scope.role.name === "admin") {
 				_pattern = /^admin$/;
 			} else {
-				_pattern = /^(?!admin$)\S+$/;
+				_pattern = /^(?!admin$).+$/;
 			}
 		}
 		return _pattern;

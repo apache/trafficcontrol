@@ -85,3 +85,49 @@ mat-card {
 	grid-template-columns: 1fr 1fr;
 	column-gap: 15px;
 }
+
+$fab-rotate-start: 0;
+$fab-rotate-end: 45deg;
+$fab-rotate-duration: 150ms;
+$fab-rotate-timing-function: ease-in-out;
+
+@keyframes fab-spin {
+	from {
+		transform: rotate($fab-rotate-start);
+	}
+	to {
+		transform: rotate($fab-rotate-end);
+	}
+}
+@keyframes fab-reverse-spin {
+	from {
+		transform: rotate($fab-rotate-end);
+	}
+	to {
+		transform: rotate($fab-rotate-start);
+	}
+}
+
+.expandable-fab{
+	position: fixed;
+	bottom: 16px;
+	right: 16px;
+
+	mat-icon {
+		transform: rotate($fab-rotate-start);
+		animation: fab-reverse-spin $fab-rotate-duration $fab-rotate-timing-function;
+
+		&.open {
+			animation: fab-spin $fab-rotate-duration $fab-rotate-timing-function;
+			transform: rotate($fab-rotate-end);
+		}
+	}
+}
+
+.cdk-menu {
+	display: grid;
+	row-gap: 16px;
+	width: 56px;
+	justify-items: center;
+	position: relative;
+}

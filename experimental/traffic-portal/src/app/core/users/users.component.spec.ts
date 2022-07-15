@@ -28,7 +28,29 @@ import { UsersComponent } from "./users.component";
 describe("UsersComponent", () => {
 	let component: UsersComponent;
 	let fixture: ComponentFixture<UsersComponent>;
-	const testUser = {id: 1, newUser: false, role: 1, tenant: "root", tenantId: 1, username: "admin"};
+	const testUser = {
+		addressLine1: null,
+		addressLine2: null,
+		city: null,
+		company: null,
+		country: null,
+		email: "a@b.c" as const,
+		fullName: "admin",
+		gid: null,
+		id: 1,
+		lastUpdated: new Date(0),
+		newUser: false,
+		phoneNumber: null,
+		postalCode: null,
+		publicSshKey: null,
+		role: 1,
+		rolename: "admin",
+		stateOrProvince: null,
+		tenant: "root",
+		tenantId: 1,
+		uid: null,
+		username: "admin"
+	};
 
 	beforeEach(waitForAsync(() => {
 		// mock the API

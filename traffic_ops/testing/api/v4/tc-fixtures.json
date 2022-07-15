@@ -2572,6 +2572,14 @@
                 "all-read",
                 "all-write"
             ]
+        },
+        {
+            "name": "update_role",
+            "description": "role for testing update",
+            "permissions": [
+                "all-read",
+                "all-write"
+            ]
         }
     ],
     "servers": [
@@ -5462,6 +5470,22 @@
             "host": "host3",
             "ttl": 10,
             "type": "AAAA_RECORD"
+        },
+        {
+            "address": "192.168.0.3",
+            "cachegroup": "cachegroup2",
+            "deliveryservice": "basic-ds-in-cdn2",
+            "host": "cdnlock-test-delete-host",
+            "type": "A_RECORD",
+            "ttl": 10
+        },
+        {
+            "address": "192.168.0.3",
+            "cachegroup": "cachegroup2",
+            "deliveryservice": "basic-ds-in-cdn2",
+            "host": "cdnlock-negtest-delete-host",
+            "type": "A_RECORD",
+            "ttl": 10
         }
     ],
     "statuses": [
@@ -6007,6 +6031,48 @@
             "tenant": "tenant1",
             "uid": 0,
             "username": "readonlyuser"
+        },
+        {
+            "addressLine1": "address of tenant1user",
+            "addressLine2": "",
+            "city": "Anywhere",
+            "company": "Comcast",
+            "country": "USA",
+            "email": "tenant1user@example.com",
+            "fullName": "Fred the admin",
+            "gid": 0,
+            "localPasswd": "pa$$word",
+            "confirmLocalPasswd": "pa$$word",
+            "newUser": false,
+            "phoneNumber": "810-555-9876",
+            "postalCode": "55443",
+            "publicSshKey": "",
+            "role": "admin",
+            "stateOrProvince": "LA",
+            "tenant": "tenant1",
+            "uid": 0,
+            "username": "tenant1user"
+        },
+        {
+            "addressLine1": "address of tenant2user",
+            "addressLine2": "",
+            "city": "Anywhere",
+            "company": "Comcast",
+            "country": "USA",
+            "email": "tenant2user@example.com",
+            "fullName": "Fred the admin",
+            "gid": 0,
+            "localPasswd": "pa$$word",
+            "confirmLocalPasswd": "pa$$word",
+            "newUser": false,
+            "phoneNumber": "810-555-9876",
+            "postalCode": "55443",
+            "publicSshKey": "",
+            "role": "admin",
+            "stateOrProvince": "LA",
+            "tenant": "tenant2",
+            "uid": 0,
+            "username": "tenant2user"
         },
         {
             "addressLine1": "address of admin",

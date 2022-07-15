@@ -161,7 +161,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	/** Optionally a context to load from localstorage. Providing a unique value for this allows for persistent filter, sort, etc. */
 	@Input() public context: string | undefined;
 	/** Optionally a set of context menu items. If not given, the context menu is disabled. */
-	@Input() public contextMenuItems: Array<ContextMenuItem<T>> = [];
+	@Input() public contextMenuItems: readonly ContextMenuItem<Readonly<T>>[] = [];
 	/** Emits when context menu actions are clicked. Type safety is the host's responsibility! */
 	@Output() public contextMenuAction = new EventEmitter<ContextMenuActionEvent<T>>();
 
@@ -292,6 +292,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 				}
 			);
 		}
+		this.cols.sort((a, b) => a.headerName === b.headerName ? 0 : ((a.headerName ?? "") > (b.headerName ?? "" ) ? -1 : 1));
 	}
 
 	/**
@@ -545,7 +546,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		}
 		if (a.disabled) {
 			if (a.multiRow) {
-				return a.disabled(this.fullSelection, this.gridAPI);
+				return a.disabled(this.selectionCount > 1 ? this.fullSelection : [this.selected], this.gridAPI);
 			}
 			return a.disabled(this.selected, this.gridAPI);
 		}

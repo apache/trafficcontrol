@@ -21,7 +21,7 @@ limitations under the License.
 			<fa-icon [icon]="caretIcon" class="caret" [ngClass]="{'rotate': showMenu}"></fa-icon>
 		</button>
 		<mat-menu #menu="matMenu">
-			<button mat-menu-item *ngFor="let c of columns; orderBy:'colDef.headerName'" (click)="toggleVisibility($event, c.getColId())">
+			<button mat-menu-item *ngFor="let c of columns" (click)="toggleVisibility($event, c.getColId())">
 				<mat-checkbox [checked]="c.isVisible()" (click)="$event.preventDefault()" [name]="c.getColDef().headerName">
 					{{c.getColDef().headerName}}
 				</mat-checkbox>
