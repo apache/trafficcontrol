@@ -292,6 +292,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 				}
 			);
 		}
+		this.cols.sort((a, b) => a.headerName === b.headerName ? 0 : ((a.headerName ?? "") > (b.headerName ?? "" ) ? -1 : 1));
 	}
 
 	/**

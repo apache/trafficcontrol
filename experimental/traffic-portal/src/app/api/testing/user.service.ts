@@ -14,8 +14,9 @@
 
 import { HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import type { GetResponseUser, PostRequestUser, PutOrPostResponseUser } from "trafficops-types";
 
-import type { Role, User, Capability, CurrentUser, Tenant } from "src/app/models";
+import type { Role, Capability, CurrentUser, Tenant } from "src/app/models";
 
 /**
  * UserService exposes API functionality related to Users, Roles and Capabilities.
@@ -23,9 +24,11 @@ import type { Role, User, Capability, CurrentUser, Tenant } from "src/app/models
 @Injectable()
 export class UserService {
 
+	private lastID = 0;
+
 	private testAdminUsername = "test-admin";
 	private readonly testAdminPassword = "twelve12!";
-	private readonly users: Array<User> = [
+	private readonly users: Array<GetResponseUser> = [
 		{
 			addressLine1: null,
 			addressLine2: null,
@@ -35,7 +38,7 @@ export class UserService {
 			email: "test@adm.in",
 			fullName: "Test Admin",
 			gid: null,
-			id: 1,
+			id: ++this.lastID,
 			lastUpdated: new Date(),
 			newUser: false,
 			phoneNumber: null,
@@ -146,25 +149,9 @@ export class UserService {
 		if (user) {
 			return {
 				...user,
-				addressLine1: user.addressLine1 ?? null,
-				addressLine2: user.addressLine2 ?? null,
-				city: user.city ?? null,
-				company: user.company ?? null,
-				country: user.country ?? null,
-				email: user.email ?? "",
-				fullName: user.fullName ?? "",
-				gid: user.gid ?? null,
-				lastUpdated: user.lastUpdated ?? new Date(),
 				localUser: true,
-				phoneNumber: user.phoneNumber ?? null,
-				postalCode: user.postalCode ?? null,
-				publicSshKey: user.publicSshKey ?? null,
-				role: user.role ?? -1,
+				newUser: user.newUser ?? false,
 				roleName: user.rolename ?? "",
-				stateOrProvince: user.stateOrProvince ?? null,
-				tenant: user.tenant ?? "",
-				tenantId: user.tenantId ?? -1,
-				uid: user.uid ?? -1
 			};
 		}
 		console.warn("stored admin username not found in stored users: from now on the current user will be (more or less) random");
@@ -174,25 +161,9 @@ export class UserService {
 		}
 		return {
 			...user,
-			addressLine1: user.addressLine1 ?? null,
-			addressLine2: user.addressLine2 ?? null,
-			city: user.city ?? null,
-			company: user.company ?? null,
-			country: user.country ?? null,
-			email: user.email ?? "",
-			fullName: user.fullName ?? "",
-			gid: user.gid ?? null,
-			lastUpdated: user.lastUpdated ?? new Date(),
 			localUser: true,
-			phoneNumber: user.phoneNumber ?? null,
-			postalCode: user.postalCode ?? null,
-			publicSshKey: user.publicSshKey ?? null,
-			role: user.role ?? -1,
+			newUser: user.newUser ?? false,
 			roleName: user.rolename ?? "",
-			stateOrProvince: user.stateOrProvince ?? null,
-			tenant: user.tenant ?? "",
-			tenantId: user.tenantId ?? -1,
-			uid: user.uid ?? -1
 		};
 	}
 
@@ -209,20 +180,28 @@ export class UserService {
 			return false;
 		}
 		this.testAdminUsername = user.username;
-		this.users[storedUser] = user;
-		this.users[storedUser].lastUpdated = new Date();
+		this.users[storedUser] = {
+			...user,
+			confirmLocalPasswd: undefined,
+			email: user.email as `${string}@${string}.${string}`,
+			fullName: user.fullName ?? "",
+			lastUpdated: new Date(),
+			roleName: undefined,
+			rolename: user.roleName,
+			stateOrProvince: user.stateOrProvince ?? "",
+		};
 		return true;
 	}
 
-	public async getUsers(nameOrID: string | number): Promise<User>;
-	public async getUsers(): Promise<Array<User>>;
+	public async getUsers(nameOrID: string | number): Promise<GetResponseUser>;
+	public async getUsers(): Promise<Array<GetResponseUser>>;
 	/**
 	 * Gets an array of all users in Traffic Ops.
 	 *
 	 * @param nameOrID If given, returns only the User with the given username (string) or ID (number).
 	 * @returns An Array of User objects - or a single User object if 'nameOrID' was given.
 	 */
-	public async getUsers(nameOrID?: string | number): Promise<Array<User> | User> {
+	public async getUsers(nameOrID?: string | number): Promise<Array<GetResponseUser> | GetResponseUser> {
 		if (nameOrID) {
 			let user;
 			switch (typeof nameOrID) {
@@ -246,14 +225,69 @@ export class UserService {
 	 * @param user The new definition of the User.
 	 * @returns The user as updated.
 	 */
-	 public async updateUser(user: User): Promise<User> {
+	 public async updateUser(user: PutOrPostResponseUser | GetResponseUser): Promise<PutOrPostResponseUser> {
 		const idx = this.users.findIndex(u=>u.id === user.id);
 		if (idx < 0) {
 			throw new Error(`no such User: ${user.id}`);
 		}
-		user.lastUpdated = new Date();
-		this.users[idx] = user;
-		return user;
+		const response = {
+			...user,
+			confirmLocalPasswd: undefined,
+			lastUpdated: new Date(),
+			roleName: undefined,
+			rolename: user.roleName ?? ""
+		};
+		this.users[idx] = response;
+		return {
+			...response,
+			roleName: response.rolename,
+			rolename: undefined
+		};
+	}
+
+	/**
+	 * Creates a new user.
+	 *
+	 * @param user The user to create.
+	 * @returns The created user.
+	 */
+	public async createUser(user: PostRequestUser): Promise<PutOrPostResponseUser> {
+		const role = this.roles.find(r=>r.id === user.role);
+		if (!role) {
+			throw new Error(`no such Role: #${user.role}`);
+		}
+		const tenant = this.tenants.find(t=>t.id === user.tenantID);
+		if (!tenant) {
+			throw new Error(`no such Tenant: #${user.tenantID}`);
+		}
+		const response = {
+			...user,
+			addressLine1: user.addressLine1 ?? null,
+			addressLine2: user.addressLine2 ?? null,
+			city: user.city ?? null,
+			company: user.company ?? null,
+			confirmLocalPasswd: undefined,
+			country: user.country ?? null,
+			gid: user.gid ?? null,
+			id: ++this.lastID,
+			lastUpdated: new Date(),
+			newUser: user.newUser ?? null,
+			phoneNumber: user.phoneNumber ?? null,
+			postalCode: user.postalCode ?? null,
+			publicSshKey: user.publicSshKey ?? null,
+			rolename: role.name,
+			stateOrProvince: user.stateOrProvince ?? null,
+			tenant: tenant.name,
+			tenantID: undefined,
+			tenantId: user.tenantID,
+			uid: user.uid ?? null
+		};
+		this.users.push(response);
+		return {
+			...response,
+			roleName: response.rolename,
+			rolename: undefined
+		};
 	}
 
 	/** Fetches the Role with the given ID. */

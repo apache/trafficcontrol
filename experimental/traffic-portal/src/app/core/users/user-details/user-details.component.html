@@ -76,11 +76,11 @@ limitations under the License.
 			</mat-checkbox>
 			<mat-form-field>
 				<mat-label>Last Updated</mat-label>
-				<input matInput type="text" [value]="user.lastUpdated!.toLocaleString()" readonly/>
+				<input matInput type="text" [value]="isNew(user) ? '' : user.lastUpdated!.toLocaleString()" readonly/>
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>ID</mat-label>
-				<input matInput type="text" name="id" [value]="user.id" readonly/>
+				<input matInput type="text" name="id" [value]="isNew(user) ? '' : user.id" readonly/>
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>GID</mat-label>
@@ -95,6 +95,14 @@ limitations under the License.
 			<mat-form-field id="ssh-container">
 				<mat-label>Public SSH key</mat-label>
 				<textarea [(ngModel)]="user.publicSshKey" name="publicSshKey" matInput cols="80" wrap="hard" cdkTextareaAutosize></textarea>
+			</mat-form-field>
+			<mat-form-field *ngIf="isNew(user)">
+				<mat-label>Password</mat-label>
+				<input required matInput [(ngModel)]="user.localPasswd" name="localPasswd" type="password"/>
+			</mat-form-field>
+			<mat-form-field *ngIf="isNew(user)">
+				<mat-label>Confirm Password</mat-label>
+				<input required matInput [(ngModel)]="user.confirmLocalPasswd" name="confirmLocalPasswd" type="password"/>
 			</mat-form-field>
 		</mat-card-content>
 		<mat-card-actions align="end">
