@@ -31,6 +31,7 @@ import {
 	ResponseCDN,
 	ResponseDeliveryService
 } from "trafficops-types";
+import { ChangeLogsPageObject } from "nightwatch/page_objects/changeLogs";
 
 declare module "nightwatch" {
 	/**
@@ -38,6 +39,7 @@ declare module "nightwatch" {
 	 */
 	export interface NightwatchCustomPageObjects {
 		common: () => CommonPageObject;
+		changeLogs: () => ChangeLogsPageObject;
 		deliveryServiceCard: () => DeliveryServiceCardPageObject;
 		deliveryServiceDetail: () => DeliveryServiceDetailPageObject;
 		deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;

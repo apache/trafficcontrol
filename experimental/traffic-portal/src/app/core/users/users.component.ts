@@ -229,8 +229,8 @@ export class UsersComponent implements OnInit {
 			newTab: true
 		},
 		{
-			action: "viewChangelogs",
-			disabled: (): true =>true,
+			disabled: (us: User | Array<User>): boolean => Array.isArray(us),
+			href: (u: User): string => `/core/change-logs?search=${u.username}`,
 			name: "View User Changelogs"
 		}
 	];

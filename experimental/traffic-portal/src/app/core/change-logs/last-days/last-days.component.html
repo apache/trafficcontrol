@@ -1,0 +1,13 @@
+<form (ngSubmit)="submit()" ngNativeValidate>
+	<h2 mat-dialog-title>View Change-logs</h2>
+	<mat-dialog-content>
+		<mat-form-field appearance="fill">
+			<mat-label>Number of Days</mat-label>
+			<input matInput name="days" type="number" min="1" max="365" required [(ngModel)]="days" />
+		</mat-form-field>
+	</mat-dialog-content>
+	<div mat-dialog-actions>
+		<button mat-raised-button type="submit">Submit</button>
+		<button mat-raised-button color="warn" type="button" (click)="cancel()">Cancel</button>
+	</div>
+</form>
