@@ -845,7 +845,7 @@ func enrollFederation(toSession *session, r io.Reader) error {
 			}
 			cdnFederation = resp.Response
 			if cdnFederation.ID == nil {
-				err = fmt.Errorf("Federation returned from creation through Traffic Ops with null or undefined ID")
+				err = fmt.Errorf("federation returned from creation through Traffic Ops with null or undefined ID")
 				log.Infoln(err)
 				return err
 			}
@@ -869,8 +869,7 @@ func enrollFederation(toSession *session, r io.Reader) error {
 			}
 			resp, _, err := toSession.CreateFederationUsers(*cdnFederation.ID, []int{*user.Response.ID}, true, client.RequestOptions{})
 			if err != nil {
-				var username string
-				username = user.Response.UserName
+				username := user.Response.Username
 				err = fmt.Errorf("assigning User '%s' to Federation with ID %d: %v - alerts: %+v", username, *cdnFederation.ID, err, resp.Alerts)
 				log.Infoln(err)
 				return err
@@ -1137,7 +1136,7 @@ func startWatching(watchDir string, toSession *session, dispatcher map[string]fu
 }
 
 func startServer(httpPort string, toSession *session, dispatcher map[string]func(*session, io.Reader) error) error {
-	baseEP := "/api/2.0/"
+	baseEP := "/api/4.0/"
 	for d, f := range dispatcher {
 		http.HandleFunc(baseEP+d, func(w http.ResponseWriter, r *http.Request) {
 			defer log.Close(r.Body, "could not close reader")

@@ -72,7 +72,7 @@ Also be aware! This is very specific to the current code. If symbols or patterns
 
 Expecations:
 - t3c-generate is at github.com/apache/trafficcontrol/cache-config/t3c-generate
-- The master TO client is at github.com/apache/trafficcontrol/traffic_ops/client
+- The master TO client is at github.com/apache/trafficcontrol/traffic_ops/v4-client
 - The previous major version client is vendored at t3c-generate/toreq/vendor
 - The master client wrapper for t3c-generate is at t3c-generate/toreqnew
 - The clients are stored in config.TCCfg.TOClient and config.TCCfg.TOClientNew
@@ -86,7 +86,7 @@ The arguments are the t3c-generate directory, and the name of the branch to vend
 
 This script should always be called from trafficcontrol/cache-config/t3c-generate.
 
-It copies the traffic_ops/client from that branch into toreq/vendor,
+It copies the traffic_ops/v4-client from that branch into toreq/vendor,
 and then updates all references to cfg.TOClientNew to cfg.TOClient.
 
 This must be done as soon as a release is made, before any new features are added to t3c-generate.

@@ -236,7 +236,7 @@ to-enroll() {
 			;;
 		"tr" )
 			export MY_TYPE="CCR"
-			export MY_PROFILE="CCR_CIAB"
+			export MY_PROFILE="TRAFFIC_ROUTER"
 			export MY_STATUS="ONLINE"
 			;;
 		"tp" )

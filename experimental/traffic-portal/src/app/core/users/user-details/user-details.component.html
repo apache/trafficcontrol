@@ -1,0 +1,112 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<mat-card>
+	<tp-loading *ngIf="!user"></tp-loading>
+	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="user">
+		<mat-card-content>
+			<mat-form-field>
+				<mat-label>Username</mat-label>
+				<input matInput type="text" name="username" required [(ngModel)]="user.username"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Name</mat-label>
+				<input matInput type="text" name="fullName" required [(ngModel)]="user.fullName"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Role</mat-label>
+				<mat-select name="role" [value]="role()" (selectionChange)="updateRole($event)">
+					<mat-option *ngFor="let role of roles" [value]="role">{{role.name}} (#{{role.id}})</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Tenant</mat-label>
+				<mat-select name="tenant" [value]="tenant()" (selectionChange)="updateTenant($event)">
+					<mat-option *ngFor="let tenant of tenants" [value]="tenant">{{tenant.name}} (#{{tenant.id}})</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Email</mat-label>
+				<input matInput type="email" name="email" required [(ngModel)]="user.email">
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Phone Number</mat-label>
+				<input matInput type="tel" name="phoneNumber" [(ngModel)]="user.phoneNumber"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Address Line 1</mat-label>
+				<input matInput type="text" name="addressLine1" [(ngModel)]="user.addressLine1"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Address Line 2</mat-label>
+				<input matInput type="text" name="addressLine2" [(ngModel)]="user.addressLine2"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>City</mat-label>
+				<input matInput type="text" name="city" [(ngModel)]="user.city"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Postal Code</mat-label>
+				<input matInput type="text" name="postalCode" [(ngModel)]="user.postalCode"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Company</mat-label>
+				<input matInput type="text" name="company" [(ngModel)]="user.company"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>State/Province</mat-label>
+				<input matInput type="text" name="stateOrProvince" [(ngModel)]="user.stateOrProvince">
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Country</mat-label>
+				<input matInput type="text" name="country" [(ngModel)]="user.country"/>
+			</mat-form-field>
+			<mat-checkbox name="newUser" [checked]="user.newUser" [disabled]="true" readonly>
+				User Is New
+			</mat-checkbox>
+			<mat-form-field>
+				<mat-label>Last Updated</mat-label>
+				<input matInput type="text" [value]="isNew(user) ? '' : user.lastUpdated!.toLocaleString()" readonly/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>ID</mat-label>
+				<input matInput type="text" name="id" [value]="isNew(user) ? '' : user.id" readonly/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>GID</mat-label>
+				<input matInput type="number" name="gid" [(ngModel)]="user.gid"/>
+				<mat-hint class="input-warning"><mat-icon color="warn">warning</mat-icon>This property is deprecated and shouldn't be used</mat-hint>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>UID</mat-label>
+				<input matInput type="number" name="uid" [(ngModel)]="user.uid"/>
+				<mat-hint class="input-warning"><mat-icon color="warn">warning</mat-icon>This property is deprecated and shouldn't be used</mat-hint>
+			</mat-form-field>
+			<mat-form-field id="ssh-container">
+				<mat-label>Public SSH key</mat-label>
+				<textarea [(ngModel)]="user.publicSshKey" name="publicSshKey" matInput cols="80" wrap="hard" cdkTextareaAutosize></textarea>
+			</mat-form-field>
+			<mat-form-field *ngIf="isNew(user)">
+				<mat-label>Password</mat-label>
+				<input required matInput [(ngModel)]="user.localPasswd" name="localPasswd" type="password"/>
+			</mat-form-field>
+			<mat-form-field *ngIf="isNew(user)">
+				<mat-label>Confirm Password</mat-label>
+				<input required matInput [(ngModel)]="user.confirmLocalPasswd" name="confirmLocalPasswd" type="password"/>
+			</mat-form-field>
+		</mat-card-content>
+		<mat-card-actions align="end">
+			<button mat-raised-button color="primary">Save</button>
+		</mat-card-actions>
+	</form>
+</mat-card>

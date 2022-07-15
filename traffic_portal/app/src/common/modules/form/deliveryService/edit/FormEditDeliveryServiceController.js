@@ -242,9 +242,9 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 						function() {
 							deliveryServiceService.updateDeliveryService(deliveryService).
 								then(
-									function() {
+									function(response) {
 										$state.reload(); // reloads all the resolves for the view
-										messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
+										messageModel.setMessages(response.data.alerts, false);
 									}
 								).catch(function(fault) {
 									// if the ds update fails, send to dsr view w/ error message
@@ -265,9 +265,9 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 		} else {
 			deliveryServiceService.updateDeliveryService(deliveryService).
 				then(
-					function() {
+					function(response) {
 						$state.reload(); // reloads all the resolves for the view
-						messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
+						messageModel.setMessages(response.data.alerts, false);
 					},
 					function(fault) {
 						$anchorScroll(); // scrolls window to top
@@ -298,8 +298,8 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 			} else {
 				deliveryServiceService.deleteDeliveryService(deliveryService)
 					.then(
-						function() {
-							messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted' } ], true);
+						function(response) {
+							messageModel.setMessages(response.data.alerts, true);
 							locationUtils.navigateToPath('/delivery-services');
 						},
 						function(fault) {

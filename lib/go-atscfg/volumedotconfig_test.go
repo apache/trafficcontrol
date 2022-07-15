@@ -49,7 +49,7 @@ func TestMakeVolumeDotConfig(t *testing.T) {
 
 	testComment(t, txt, hdr)
 
-	if count := strings.Count(txt, "\n"); count != 5 { // one line for each volume, plus 2 comments
+	if count := strings.Count(txt, "\n"); count != 6 { // one line for each volume, plus 2 comments plus blank
 		t.Errorf("expected one line for each drive letter plus a comment, actual: '%v' count %v", txt, count)
 	}
 
@@ -67,7 +67,7 @@ func TestMakeVolumeDotConfig(t *testing.T) {
 	}
 	txt = cfg.Text
 
-	if count := strings.Count(txt, "\n"); count != 4 { // one line for each volume, plus 2 comments
+	if count := strings.Count(txt, "\n"); count != 5 { // one line for each volume, plus 2 comments plus blank
 		t.Errorf("expected one line for each drive letter plus a comment, actual: '%v' count %v", txt, count)
 	}
 
@@ -85,7 +85,7 @@ func TestMakeVolumeDotConfig(t *testing.T) {
 	}
 	txt = cfg.Text
 
-	if count := strings.Count(txt, "\n"); count != 3 { // one line for each volume, plus 2 comments
+	if count := strings.Count(txt, "\n"); count != 4 { // one line for each volume, plus 2 comments plus blank
 		t.Errorf("expected one line for each drive letter plus a comment, actual: '%v' count %v", txt, count)
 	}
 
@@ -112,15 +112,15 @@ func TestMakeVolumeDotConfigNoParams(t *testing.T) {
 
 	testComment(t, txt, hdr)
 
-	if count := strings.Count(txt, "\n"); count != 3 { // two comments, plus a blank line to prevent clients from thinking the file doesn't exist.
+	if count := strings.Count(txt, "\n"); count != 4 { // two comments, plus header blank plus a blank line to prevent clients from thinking the file doesn't exist.
 		t.Errorf("expected 2 comments and blank line, actual: '%v' count %v", txt, count)
 	}
 
 	lines := strings.Split(txt, "\n")
-	if len(lines) < 3 {
-		t.Fatalf("expected 3 lines, 2 comments and blank line, actual: '%v' count %v", txt, len(lines))
+	if len(lines) < 4 {
+		t.Fatalf("expected 4 lines, 2 comments plus header blank and blank line, actual: '%v' count %v", txt, len(lines))
 	}
-	line := strings.TrimSpace(lines[2])
+	line := strings.TrimSpace(lines[3])
 	if line != "" {
 		t.Fatalf("expected non-comment line to be blank, actual: '%v'", txt)
 	}
@@ -149,7 +149,7 @@ func TestMakeVolumeDotConfigNoLetters(t *testing.T) {
 
 	testComment(t, txt, hdr)
 
-	if count := strings.Count(txt, "\n"); count != 5 { // one line for each volume, plus 2 comments
+	if count := strings.Count(txt, "\n"); count != 6 { // one line for each volume, plus 2 comments plus header blank
 		// it's important we create volumes and sizes if the prefixes exist, even without letters,
 		// because storage.config will still increment its volumes, even without letters.
 		// If we didn't, the volume numbers wouldn't match.
@@ -183,7 +183,7 @@ func TestMakeVolumeDotConfigSomePrefixes(t *testing.T) {
 
 	testComment(t, txt, hdr)
 
-	if count := strings.Count(txt, "\n"); count != 4 { // one line for each volume, plus 2 comments
+	if count := strings.Count(txt, "\n"); count != 5 { // one line for each volume, plus 2 comments plus header blank
 		t.Errorf("expected one line for each drive parameter plus 2 comment, actual: '%v' count %v", txt, count)
 	}
 

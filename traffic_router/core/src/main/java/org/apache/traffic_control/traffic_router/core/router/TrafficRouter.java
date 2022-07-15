@@ -104,7 +104,6 @@ public class TrafficRouter {
 	 * servers will be provided in responses to steering requests (known as "Client Steering Forced
 	 * Diversity").
 	 */
-	public static final String CLIENT_STEERING_DIVERSITY = "client.steering.forced.diversity";
 	public static final String DNSSEC_ENABLED = "dnssec.enabled";
 	public static final String DNSSEC_ZONE_DIFFING = "dnssec.zone.diffing.enabled";
 	public static final String DNSSEC_RRSIG_CACHE_ENABLED = "dnssec.rrsig.cache.enabled";
@@ -119,7 +118,6 @@ public class TrafficRouter {
 	private final AnonymousIpDatabaseService anonymousIpService;
 	private final FederationRegistry federationRegistry;
 	private final boolean consistentDNSRouting;
-	private final boolean clientSteeringDiversityEnabled;
 	private final boolean dnssecZoneDiffingEnabled;
 	private final boolean stripSpecialQueryParamsEnabled;
 	private final boolean edgeDNSRouting;
@@ -156,7 +154,6 @@ public class TrafficRouter {
 		this.geolocationService6 = geolocationService6;
 		this.anonymousIpService = anonymousIpService;
 		this.federationRegistry = federationRegistry;
-		this.clientSteeringDiversityEnabled = JsonUtils.optBoolean(cr.getConfig(), CLIENT_STEERING_DIVERSITY);
 		this.stripSpecialQueryParamsEnabled = JsonUtils.optBoolean(cr.getConfig(), STRIP_SPECIAL_QUERY_PARAMS);
 		this.dnssecZoneDiffingEnabled = JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ENABLED) && JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ZONE_DIFFING);
 		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing"); // previous/default behavior
@@ -1057,19 +1054,17 @@ public class TrafficRouter {
 			final String pathToHash = steeringHash + ds.extractSignificantQueryParams(request);
 
 			if (caches != null && !caches.isEmpty()) {
-				if (isClientSteeringDiversityEnabled()) {
-					List<Cache> tryCaches = new ArrayList<>(caches);
+				List<Cache> tryCaches = new ArrayList<>(caches);
+				tryCaches.removeAll(selectedCaches);
+				if (!tryCaches.isEmpty()) {
+					caches = tryCaches;
+				} else if (track.result == ResultType.DEEP_CZ) {
+					// deep caches have been selected already, try non-deep selection
+					tryCaches = selectCaches(request, ds, track, false);
+					track.setResult(ResultType.DEEP_CZ); // request should still be tracked as a DEEP_CZ hit
 					tryCaches.removeAll(selectedCaches);
 					if (!tryCaches.isEmpty()) {
 						caches = tryCaches;
-					} else if (track.result == ResultType.DEEP_CZ) {
-						// deep caches have been selected already, try non-deep selection
-						tryCaches = selectCaches(request, ds, track, false);
-						track.setResult(ResultType.DEEP_CZ); // request should still be tracked as a DEEP_CZ hit
-						tryCaches.removeAll(selectedCaches);
-						if (!tryCaches.isEmpty()) {
-							caches = tryCaches;
-						}
 					}
 				}
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
@@ -1927,10 +1922,6 @@ public class TrafficRouter {
 
 	public boolean isConsistentDNSRouting() {
 		return consistentDNSRouting;
-	}
-
-	public boolean isClientSteeringDiversityEnabled() {
-		return clientSteeringDiversityEnabled;
 	}
 
 	public boolean isDnssecZoneDiffingEnabled() {

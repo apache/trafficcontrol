@@ -511,6 +511,12 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	.. versionadded:: 7.0
 
+:server_update_status_cache_refresh_interval_sec: This optional integer value specifies the interval (in seconds) between refreshing the in-memory server update status cache. Default: 0 (disabled).
+
+	.. warning:: Enabling the server update status cache improves performance by reducing the number of queries made to the Traffic Ops database, but it means that it may take up to this many seconds before any server updates or revalidations are reflected in the :ref:`to-api-servers-hostname-update_status` API.
+
+	.. versionadded:: 7.0
+
 
 Example cdn.conf
 ''''''''''''''''

@@ -142,3 +142,23 @@ func RequireNotNil(t *testing.T, a interface{}, msgAndArgs ...interface{}) {
 		t.FailNow()
 	}
 }
+
+// NotEqual asserts that two objects are NOT equal.
+func NotEqual(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) bool {
+	t.Helper()
+	if a == b {
+		msg := failureOutput(fmt.Sprintf("Should not be: %v", b), msgAndArgs...)
+		t.Error(msg)
+		return false
+	}
+	return true
+}
+
+// RequireNotEqual asserts that two objects are NOT equal.
+// It marks the test as failed and stops execution.
+func RequireNotEqual(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) {
+	t.Helper()
+	if !NotEqual(t, a, b, msgAndArgs...) {
+		t.FailNow()
+	}
+}

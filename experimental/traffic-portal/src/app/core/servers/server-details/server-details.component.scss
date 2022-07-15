@@ -11,7 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import 'src/theme';
+
+.mat-card {
+	width: fit-content;
+	margin: 15px auto auto;
+	min-width: 685px;
+}
 
 .actions-container {
 	width: 85vw;
@@ -29,7 +34,7 @@
 
 form {
 	display: grid;
-	grid-template-columns: auto 1fr;
+	grid-template-columns: 1fr 1fr 1fr;
 	grid-column-gap: 15px;
 	grid-row-gap: 1em;
 	width: 85vw;
@@ -40,8 +45,6 @@ form {
 		justify-self: start;
 
 		&.input-warning {
-			color: black;
-			background-color: $warning;
 			border-radius: 4px;
 
 			&::before {
@@ -63,32 +66,26 @@ form {
 	}
 
 	legend {
-		color: #777777;
 		font-size: 14px;
 		font-weight: bold;
 		margin-bottom: 0px;
 		border: 1px solid #ddd;
 		border-radius: 4px;
 		padding: 5px 5px 5px 10px;
-		background-color: white;
 		width: 99%;
-
+		user-select: none;
 	}
 
-	label{
-		line-height: 1.49;
-		padding-top: 0.3em;
-
-		&::after {
-			content: ":";
-		}
+	div {
+		grid-template-columns: 1fr 1fr;
+		grid-column-gap: 5px;
+		display: grid;
 	}
 
 	fieldset {
-		grid-column: 1 / span 2;
-		background-color: #f5f5f5;
 		border: 1px solid #ddd;
 		border-radius: 4px;
+		grid-column: 1 / -1;
 
 		button {
 			float: right;
@@ -98,30 +95,22 @@ form {
 			line-height: 1.5;
 			border-radius: 3px;
 			text-align: center;
-
-			&.add-button {
-				background-color: $theme_secondary;
-				border-color: $theme_tertiary;
-
-				&:hover {
-					background-color: #286090;
-					border-color: #204d74;
-				}
-			}
-
-			&.remove-button {
-				background-color: $error;
-				border-color: #d43f3a;
-
-				&:hover {
-					background-color: #c9302c;
-					border-color: #ac2925;
-				}
-			}
 		}
 
 		fieldset {
 			margin-top: 10px;
+
+			div {
+				grid-template-columns: auto 1fr 1fr auto;
+			}
+
+			input {
+				margin-left: 5px;
+			}
+
+			mat-checkbox {
+				margin: auto;
+			}
 		}
 
 		legend {
@@ -144,7 +133,7 @@ form {
 		div {
 			width: 100%;
 			display: grid;
-			grid-template-columns: auto 1fr;
+			grid-template-columns: 1fr 1fr 1fr;
 			grid-column-gap: 15px;
 			grid-row-gap: 1em;
 
@@ -156,13 +145,23 @@ form {
 	}
 
 	.buttons {
-		grid-column: 2;
+		grid-column-end: -1;
 		justify-self: end;
 	}
 }
 
-input[type="checkbox"] {
-	justify-self: start;
-	align-self: center;
-	cursor: pointer;
+@media(max-width: 1230px) {
+	form {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+@media(max-width: 840px) {
+	form {
+		grid-template-columns: 1fr;
+
+		fieldset div,  {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
 }

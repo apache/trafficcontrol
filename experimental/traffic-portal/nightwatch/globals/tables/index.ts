@@ -28,7 +28,7 @@ export interface TableSectionCommands extends EnhancedSectionInstance, EnhancedE
  * A CSS selector for an AG-Grid generic table's column visibility dropdown
  * menu.
  */
-export const columnMenuSelector = "button.dropdown-toggle";
+export const columnMenuSelector = "div.toggle-columns > button.mat-menu-trigger";
 
 /**
  * A CSS selector for an AG-Grid generic table's "Fuzzy Search" input text box.
@@ -48,15 +48,27 @@ export const searchboxSelector = "input[name='fuzzControl']";
  */
 export async function getColumnState(this: TableSectionCommands, column: string): Promise<boolean> {
 	return new Promise((resolve, reject) => {
-		this.click(columnMenuSelector).getElementProperty(`input[name='column-${column}']`, "checked",
+		this.click(columnMenuSelector).parent.getElementProperty(`mat-checkbox[ng-reflect-name='${column}']`, "classList",
 			result => {
-				if (typeof result.value !== "boolean") {
-					console.error("incorrect type for 'checked' DOM property:", result.value);
-					reject(new Error(`incorrect type for 'checked' DOM property: ${typeof result.value}`));
+				let checked = false;
+				if (typeof result.value === "string") {
+					checked = result.value.indexOf("mat-checkbox-checked") > -1;
+				} else if (Array.isArray(result.value)) {
+					for(const cls of result.value) {
+						if (cls.indexOf("mat-checkbox-checked") > -1) {
+							checked = true;
+							break;
+						}
+					}
+					checked = result.value.indexOf("mat-checkbox-checked") > -1;
+				} else {
+					console.error("incorrect type for 'classList' DOM property:", result.value);
+					reject(new Error(`incorrect type for 'classList' DOM property: ${typeof result.value}`));
 					return;
 				}
-				this.click(columnMenuSelector);
-				resolve(result.value);
+				this.parent.click("body", () => {
+					resolve(checked);
+				});
 			}
 		);
 	});
@@ -85,7 +97,7 @@ export function searchText<T extends TableSectionCommands>(this: T, text: string
  * likes to do.
  */
 export function toggleColumn<T extends TableSectionCommands>(this: T, column: string): T {
-	return this.click(columnMenuSelector).click(`input[name='${column}']`).click(columnMenuSelector);
+	return this.click(columnMenuSelector).click(`mat-input[name='${column}']`).click(columnMenuSelector);
 }
 
 /**

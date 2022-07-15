@@ -17,7 +17,7 @@ describe("Users Spec", () => {
 	it("Filter by username", async () => {
 		const username = browser.globals.adminUser;
 
-		const page: UsersPageObject = browser.waitForElementPresent("main").page.users();
+		const page: UsersPageObject = browser.page.users();
 		page.navigate()
 			.waitForElementPresent(".ag-row");
 		let tbl = page.section.usersTable;

@@ -1543,6 +1543,10 @@
         {
             "xmlId": "test-ds-server-assignments",
             "serverNames": ["test-ds-server-assignments"]
+        },
+        {
+            "xmlId": "ds3",
+            "serverNames": ["atlanta-edge-14"]
         }
     ],
     "topologyBasedDeliveryServicesRequiredCapabilities": [
@@ -1583,6 +1587,14 @@
             "description": "fooya",
             "deliveryService":
             {
+                "xmlId": "ds1"
+            }
+        },
+        {
+            "cname": "google.com.",
+            "ttl": 30,
+            "description": "google",
+            "deliveryService": {
                 "xmlId": "ds1"
             }
         }
@@ -1844,6 +1856,19 @@
             "shortName": "atlanta",
             "state": "GA",
             "zip": "30301"
+        },
+        {
+            "address": "1234 delete way",
+            "city": "Denver",
+            "comments": null,
+            "email": null,
+            "name": "testDelete",
+            "phone": "303-222-2222",
+            "poc": null,
+            "region": "region1",
+            "shortName": "testdelete",
+            "state": "C0",
+            "zip": "80202"
         }
     ],
     "profiles": [
@@ -2390,13 +2415,12 @@
             ]
         },
         {
-            "name": "bad_admin",
+            "name": "another_role",
             "description": "super-user 3",
             "privLevel": 30,
             "capabilities": [
                 "all-read",
-                "all-write",
-                "invalid-capability"
+                "all-write"
             ]
         }
     ],
@@ -5434,6 +5458,12 @@
         {
             "deliveryService": "ds1",
             "target": "ds2",
+            "value": 42,
+            "type": "STEERING_WEIGHT"
+        },
+        {
+            "deliveryService": "ds3",
+            "target": "ds4",
             "value": 42,
             "type": "STEERING_WEIGHT"
         }

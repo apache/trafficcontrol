@@ -49,6 +49,8 @@ func main() {
 	version := getopt.BoolLong("version", 'V', "Print version information and exit")
 	lineComment := getopt.StringLong("line_comment", 'l', "#", "Comment symbol")
 	mode := getopt.IntLong("file-mode", 'm', 0644, "file mode default is 644")
+	uid := getopt.IntLong("file-uid", 'u', 0, "User id the file being checked should have, default is running process's uid")
+	gid := getopt.IntLong("file-gid", 'g', 0, "Group id the file being checked should have, default is running process's gid")
 	fa := getopt.StringLong("file-a", 'a', "", "first diff file")
 	fb := getopt.StringLong("file-b", 'b', "", "second diff file")
 	getopt.ParseV2()
@@ -74,6 +76,14 @@ func main() {
 	if len(fileNameA) == 0 || len(fileNameB) == 0 {
 		log.Errorln(usageStr)
 		os.Exit(4)
+	}
+
+	if *uid == 0 {
+		*uid = os.Geteuid()
+	}
+
+	if *gid == 0 {
+		*gid = os.Getgid()
 	}
 
 	fileA, fileAExisted, err := readFileOrStdin(fileNameA)
@@ -116,9 +126,17 @@ func main() {
 			log.Infoln("File permissions are incorrect, should be ", fmt.Sprintf("%#o", *mode))
 			os.Exit(1)
 		}
+		if t3cutil.OwnershipCk(fileNameA, *uid, *gid) {
+			log.Infoln("user or group ownership are incorrect, should be ", fmt.Sprintf("Uid:%d Gid:%d", *uid, *gid))
+			os.Exit(1)
+		}
 	case fileNameB != "stdin":
 		if t3cutil.PermCk(fileNameB, *mode) {
 			log.Infoln("File permissions are incorrect, should be ", fmt.Sprintf("%#o", *mode))
+			os.Exit(1)
+		}
+		if t3cutil.OwnershipCk(fileNameB, *uid, *gid) {
+			log.Infoln("user or group ownership are incorrect, should be ", fmt.Sprintf("Uid:%d Gid:%d", *uid, *gid))
 			os.Exit(1)
 		}
 	}
@@ -127,7 +145,7 @@ func main() {
 }
 
 const usageStr = `usage: t3c-diff [--help]
-        -a <file-a> -b <file-b> -l <line comment> -m <file mode>
+        -a <file-a> -b <file-b> -l <line comment> -m <file mode> -u <file uid> -g <file gid>
 
 Either file may be 'stdin', in which case that file is read from stdin.
 Either file may not exist.
@@ -137,6 +155,9 @@ If one file exists but the other doesn't, it will always be a diff.
 
 Mode is file permissions in octal format, default is 0644.
 Line comment is a character that signals the line is a comment, default is #
+
+Uid is the User id the file being checked should have, default is running process's uid.
+Gid is the Group id the file being checked should have, default is running process's gid.
 
 Note this means there may be no diff text printed to stdout but still exit 1 indicating a diff
 if the file being created or deleted is semantically empty.`

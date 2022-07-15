@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li><a name="dsLink" ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{::deliveryService.xmlId}}</a></li>
+            <li><a name="dsLink" ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?dsType=' + deliveryService.type)">{{::deliveryService.xmlId}}</a></li>
             <li class="active">Static DNS Entries</li>
         </ol>
         <div class="pull-right">

@@ -13,7 +13,7 @@
 */
 import { DOCUMENT } from "@angular/common";
 import { Component, type OnInit, ViewChild, Inject } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { UntypedFormControl } from "@angular/forms";
 import type { MatStepper } from "@angular/material/stepper";
 import { Router } from "@angular/router";
 
@@ -29,6 +29,7 @@ import {
 	type User
 } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s
@@ -71,25 +72,25 @@ export class NewDeliveryServiceComponent implements OnInit {
 	public deliveryService: DeliveryService = {...defaultDeliveryService};
 
 	/** Allows the user to set 'active' */
-	public activeImmediately = new FormControl();
+	public activeImmediately = new UntypedFormControl();
 	/** Allows the user to set 'bypass*' fields */
-	public bypassLoc = new FormControl("");
+	public bypassLoc = new UntypedFormControl("");
 	/** Allows the user to set 'cdn'/'cdnName' */
-	public cdnObject = new FormControl("");
+	public cdnObject = new UntypedFormControl("");
 	/** Allows the user to set the 'longDesc' */
-	public description = new FormControl("");
+	public description = new UntypedFormControl("");
 	/** Allows the user to set 'ipv6Enabled' */
-	public disableIPv6 = new FormControl();
+	public disableIPv6 = new UntypedFormControl();
 	/** Allows the user to set the 'displayName'/'xml_id' */
-	public displayName = new FormControl("");
+	public displayName = new UntypedFormControl("");
 	/** Allows the user to set 'type'/'typeId' */
-	public dsType = new FormControl();
+	public dsType = new UntypedFormControl();
 	/** Allows the user to set 'infoUrl' */
-	public infoURL = new FormControl("");
+	public infoURL = new UntypedFormControl("");
 	/** Allows the user to set 'originFqdn' */
-	public originURL = new FormControl("");
+	public originURL = new UntypedFormControl("");
 	/** Allows the user to set 'protocol' */
-	public protocol = new FormControl();
+	public protocol = new UntypedFormControl();
 
 	/** Need This to be a property for template access. */
 	public readonly protocolToString = protocolToString;
@@ -124,6 +125,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		private readonly cdnAPI: CDNService,
 		private readonly auth: CurrentUserService,
 		private readonly router: Router,
+		private readonly headerSvc: TpHeaderService,
 		@Inject(DOCUMENT) private readonly document: Document
 	) { }
 
@@ -136,6 +138,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		if (!success || this.auth.currentUser === null) {
 			return;
 		}
+		this.headerSvc.headerTitle.next("New Delivery Service");
 
 		this.deliveryService.tenant = this.auth.currentUser.tenant;
 		this.deliveryService.tenantId = this.auth.currentUser.tenantId;
@@ -223,6 +226,13 @@ export class NewDeliveryServiceComponent implements OnInit {
 		this.deliveryService.cdnId = def.id;
 		this.deliveryService.cdnName = def.name;
 		this.cdnObject.setValue(def);
+	}
+
+	/**
+	 * Updates the header text based on the status of the current delivery service
+	 */
+	public updateDisplayName(): void {
+		this.headerSvc.headerTitle.next(this.displayName.value === "" ? "New Delivery Service" : this.displayName.value);
 	}
 
 	/**

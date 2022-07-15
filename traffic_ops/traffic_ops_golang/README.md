@@ -79,6 +79,15 @@ Go is a compiled language so any local changes will require you to CTRL-C the co
 
 `go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/development/database.conf`
 
+To cross compile the code in Windows to generate binary to run on Linux, please run the following command, replacing GOARCH with the architecture for which to build.
+
+```bash
+env GOOS=linux GOARCH=arm64 go build
+```
+
+Once the binary is generated, it can be copied onto a Linux machine to be run.
+
+
 ## Updating a Minor Version
 
 Traffic Control implements [Semantic Versioning](https://semver.org). When adding new fields to the API, we must increase the minor version. If you're the first one adding a new field to a particular object in a particular release, you'll need to do this.
@@ -199,7 +208,7 @@ Your handler should be in its own file, where you can create any structs and hel
 
 ### Registering the Handler
 
-Back to `routes.go`, you need to add your handler to the `Routes` function. For example, `/api/2.0/cdns` would look like `{2.0, http.MethodGet, "cdns", wrapHeaders(wrapAuth(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},`.
+Back to `routes.go`, you need to add your handler to the `Routes` function. For example, `/api/4.0/cdns` would look like `{4.0, http.MethodGet, "cdns", wrapHeaders(wrapAuth(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},`.
 
 The only thing we haven't talked about are those `wrap` functions. They each take a `RegexHandlerFunc` and return a `RegexHandlerFunc`, which lets them 'wrap' your handler. You almost certainly need both of them; if you're not sure, ask on the mailing list or Slack. You'll notice the `wrapAuth` function also takes config parameters, as well as a `PrivLevel`. You should create a constant in your handler file of the form `EndpointPrivLevel` and pass that. If your endpoint modifies data, use `PrivLevelOperations`, otherwise `PrivLevelReadOnly`.
 

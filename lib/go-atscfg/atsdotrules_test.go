@@ -68,7 +68,7 @@ func TestMakeATSDotRules(t *testing.T) {
 
 	testComment(t, txt, hdr)
 
-	if count := strings.Count(txt, "\n"); count != 9 { // one line for each drive letter, plus 1 comment
+	if count := strings.Count(txt, "\n"); count != 10 { // one line for each drive letter, plus 2 comment
 		t.Errorf("expected one line for each drive letter plus a comment, actual: '%v' count %v", txt, count)
 	}
 

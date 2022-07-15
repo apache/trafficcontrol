@@ -394,7 +394,7 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
     let showCustomCharts = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
     var createDeliveryService = function(typeName) {
-        var path = '/delivery-services/new?type=' + typeName;
+        var path = '/delivery-services/new?dsType=' + typeName;
         locationUtils.navigateToPath(path);
     };
 
@@ -425,7 +425,7 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
             }
         });
         modalInstance.result.then(function(type) {
-            locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?type=' + type.name);
+            locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?dsType=' + type.name);
         });
     };
 
@@ -592,7 +592,7 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
         if (showCustomCharts) {
             deliveryServiceUtils.openCharts(ds);
         } else {
-            locationUtils.navigateToPath('/delivery-services/' + ds.id + '/charts?type=' + ds.type);
+            locationUtils.navigateToPath('/delivery-services/' + ds.id + '/charts?dsType=' + ds.type);
         }
     };
 
@@ -725,7 +725,7 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
         onRowClicked: function(params) {
             const selection = window.getSelection().toString();
             if(selection === "" || selection === $scope.mouseDownSelectionText) {
-                locationUtils.navigateToPath('/delivery-services/' + params.data.id + '?type=' + params.data.type);
+                locationUtils.navigateToPath('/delivery-services/' + params.data.id + '?dsType=' + params.data.type);
                 // Event is outside the digest cycle, so we need to trigger one.
                 $scope.$apply();
             }

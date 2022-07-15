@@ -53,6 +53,15 @@ func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 	return to.UpdateSteeringTargetWithHdr(st, nil)
 }
 
+func (to *Session) GetSteeringTargetsWithHdr(dsID int, header http.Header) ([]tc.SteeringTargetNullable, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("/steering/%d/targets", dsID)
+	data := struct {
+		Response []tc.SteeringTargetNullable `json:"response"`
+	}{}
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
+}
+
 func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("/steering/%d/targets", dsID)
 	data := struct {

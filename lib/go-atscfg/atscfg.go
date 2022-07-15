@@ -46,6 +46,7 @@ type DeliveryServiceID int
 type ProfileID int
 type ServerID int
 
+type ProfileName string
 type TopologyName string
 type CacheGroupType string
 type ServerCapability string
@@ -79,7 +80,7 @@ func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 	return ad
 }
 
-// V40ToDeliveryServices converts a slice of the old traffic_ops/client type to the local alias.
+// V40ToDeliveryServices converts a slice of the old traffic_ops/v4-client type to the local alias.
 func V40ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
@@ -223,7 +224,7 @@ func isTopLevelCache(s serverParentCacheGroupData) bool {
 }
 
 func makeHdrComment(hdrComment string) string {
-	return "# " + hdrComment + "\n"
+	return "# " + hdrComment + "\n\n"
 }
 
 // getATSMajorVersionFromATSVersion returns the major version of the given profile's package trafficserver parameter.

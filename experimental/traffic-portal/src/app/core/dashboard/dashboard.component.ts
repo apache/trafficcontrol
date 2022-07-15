@@ -12,12 +12,13 @@
 * limitations under the License.
 */
 import { Component, type OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { UntypedFormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 
 import { DeliveryServiceService } from "src/app/api";
 import type { DeliveryService } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { orderBy, fuzzyScore } from "src/app/utils/index";
 
 /**
@@ -77,13 +78,14 @@ export class DashboardComponent implements OnInit {
 	public today: Date;
 
 	/** Fuzzy search control */
-	public fuzzControl = new FormControl("", {updateOn: "change"});
+	public fuzzControl = new UntypedFormControl("", {updateOn: "change"});
 
 	constructor(
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
-		private readonly auth: CurrentUserService
+		private readonly auth: CurrentUserService,
+		private readonly headerSvc: TpHeaderService
 	) {
 		this.now = new Date();
 		this.now.setUTCMilliseconds(0);
@@ -113,6 +115,8 @@ export class DashboardComponent implements OnInit {
 				}
 			}
 		);
+
+		this.headerSvc.headerTitle.next("");
 	}
 
 	/**

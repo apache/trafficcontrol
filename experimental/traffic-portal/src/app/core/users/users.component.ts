@@ -11,19 +11,77 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { animate, style, transition, trigger } from "@angular/animations";
 import { Component, type OnInit } from "@angular/core";
 import type { ValueGetterParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
+import { GetResponseUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import type { User } from "src/app/models";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { orderBy } from "src/app/utils";
+
+const ANIMATION_DURATION = "150ms";
 
 /**
  * UsersComponent is the controller for the "users" page.
  */
 @Component({
+	animations: [
+		trigger("fadeInOut", [
+			transition(
+				":enter",
+				[
+					style({
+						opacity: 0,
+					}),
+					animate(`${ANIMATION_DURATION} ease`, style({
+						opacity: 1,
+					}))
+				]
+			),
+			transition(
+				":leave",
+				[
+					style({
+						opacity: 1,
+					}),
+					animate(`${ANIMATION_DURATION} ease`, style({
+						opacity: 0,
+					}))
+				]
+			)
+		]),
+		trigger("slideInOut", [
+			transition(
+				":enter",
+				[
+					style({
+						transform: "translateY(60px)"
+					}),
+					animate(`${ANIMATION_DURATION} ease`, style({
+						transform: "translateY(0)"
+					}))
+				]
+			),
+			transition(
+				":leave",
+				[
+					style({
+						transform: "translateY(0)"
+					}),
+					animate(
+						`${ANIMATION_DURATION} ease`,
+						style({
+							transform: "translateY(60px)"
+						}),
+					)
+				]
+			)
+		])
+	],
 	selector: "tp-users",
 	styleUrls: ["./users.component.scss"],
 	templateUrl: "./users.component.html"
@@ -31,7 +89,7 @@ import { orderBy } from "src/app/utils";
 export class UsersComponent implements OnInit {
 
 	/** All (visible) users. */
-	public users = new Array<User>();
+	public users = new Array<GetResponseUser>();
 
 	/** Emits changes to the fuzzy search text. */
 	public fuzzySubject = new BehaviorSubject("");
@@ -83,7 +141,7 @@ export class UsersComponent implements OnInit {
 		},
 		{
 			field: "fullName",
-			headerName: "Full Name",
+			headerName: "Name",
 			hide: false
 		},
 		{
@@ -158,14 +216,32 @@ export class UsersComponent implements OnInit {
 	];
 
 	/** Definitions for the context menu items (which act on user data). */
-	public contextMenuItems: Array<ContextMenuItem<User>> = [
+	public contextMenuItems: Array<ContextMenuItem<GetResponseUser>> = [
 		{
-			action: "viewDetails",
+			disabled: (us: GetResponseUser | Array<GetResponseUser>): boolean => Array.isArray(us),
+			href: (u: GetResponseUser): string => `/core/users/${u.id}`,
 			name: "View User Details"
+		},
+		{
+			disabled: (us: GetResponseUser | Array<GetResponseUser>): boolean => Array.isArray(us),
+			href: (u: GetResponseUser): string => `/core/users/${u.id}`,
+			name: "Open in New Tab",
+			newTab: true
+		},
+		{
+			action: "viewChangelogs",
+			disabled: (): true =>true,
+			name: "View User Changelogs"
 		}
 	];
 
-	constructor(private readonly api: UserService) {
+	public menuIsOpen = false;
+
+	constructor(
+		private readonly api: UserService,
+		private readonly headerSvc: TpHeaderService,
+		private readonly currentUserService: CurrentUserService
+	) {
 	}
 
 	/**
@@ -175,6 +251,7 @@ export class UsersComponent implements OnInit {
 		this.roles = new Map((await this.api.getRoles()).map(r => [r.id, r.name]));
 		this.users = orderBy(await this.api.getUsers(), "fullName");
 		this.loading = false;
+		this.headerSvc.headerTitle.next("Users");
 	}
 
 	/**
@@ -200,17 +277,27 @@ export class UsersComponent implements OnInit {
 	}
 
 	/**
-	 * Handles the selection of a context menu item on the table.
+	 * Toggles the state of the menu (this doesn't control the menu itself, just
+	 * styling).
 	 *
-	 * @param e The clicked action.
+	 * @param closed If `"closed"`, the menu is closed, if `"opened"` it's
+	 * opened.
 	 */
-	public handleContextMenu(e: ContextMenuActionEvent<User>): void {
-		switch (e.action) {
-			case "viewDetails":
-				console.log("viewing user details not implemented");
-				break;
-			default:
-				throw new Error(`unknown context menu item clicked: ${e.action}`);
+	public toggleMenu(closed: "opened" |"closed"): void {
+		if (closed === "closed") {
+			this.menuIsOpen = false;
+		} else {
+			this.menuIsOpen = true;
 		}
+	}
+
+	/**
+	 * Checks if the user has permissions to create users.
+	 *
+	 * @returns Whether the currently authenticated user has the "USER:CREATE"
+	 * Permission.
+	 */
+	public canCreateUsers(): boolean {
+		return this.currentUserService.hasPermission("USER:CREATE");
 	}
 }

@@ -42,12 +42,6 @@ ag-grid-angular {
 			border-right-width: 0;
 		}
 	}
-
-	button {
-		border-style: solid solid none solid;
-		border-radius: 0;
-		padding: 0 1em;
-	}
 }
 
 .toggle-columns {
@@ -73,6 +67,7 @@ ag-grid-angular {
 		li {
 			list-style: none;
 			padding: 2px 8px;
+
 			label, input {
 				cursor: pointer;
 			}
@@ -93,8 +88,6 @@ ag-grid-angular {
 	}
 
 	button {
-		border-style: solid solid none solid;
-		border-radius: inherit;
 		fa-icon.caret {
 			line-height: 30px;
 			transition: 0.5s;
@@ -119,47 +112,51 @@ menu[type="contextmenu"] {
 		visibility: hidden;
 	}
 
-    ul {
-        display: block;
-        clear: both;
-        font-weight: normal;
-        line-height: 1.428571429;
-        white-space: nowrap;
-        padding: 0;
-        margin: 0;
+	ul {
+		display: block;
+		clear: both;
+		font-weight: normal;
+		line-height: 1.428571429;
+		white-space: nowrap;
+		padding: 0;
+		margin: 0;
 
-        li {
-            display: block;
-            clear: both;
+		li {
+			display: block;
+			clear: both;
 
-            &:hover {
-                color: #262626;
-                background-color: #f5f5f5;
-            }
+			&:hover {
+				color: #262626;
+				background-color: #f5f5f5;
+			}
 
-            a, button {
-                color: #333333;
-                text-decoration: none;
-                padding: 7px 20px;
-                display: block;
-                clear: both;
-            }
+			a, button {
+				color: #333333;
+				text-decoration: none;
+				padding: 7px 20px;
+				display: block;
+				clear: both;
+			}
 
-            button {
-                background: transparent;
-                border: none;
-                width: 100%;
-                text-align: left;
+			button {
+				background: transparent;
+				border: none;
+				width: 100%;
+				text-align: left;
+				text-transform: none;
+				line-height: 1.428571429;
+				font-family: Roboto, "Helvetica Neue", sans-serif;
+				font-size: medium;
 
-                &[disabled] {
-                    color: gray;
-                    background-color: #f5f5f5;
-                }
-            }
-        }
+				&[disabled] {
+					color: gray;
+					background-color: #f5f5f5;
+				}
+			}
+		}
 
-        hr.divider {
-            margin: 0;
-        }
-    }
+		hr.divider {
+			margin: 0;
+		}
+	}
 }

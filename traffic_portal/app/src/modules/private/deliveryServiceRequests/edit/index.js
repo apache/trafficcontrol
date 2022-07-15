@@ -22,11 +22,11 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 	.config(function ($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.deliveryServiceRequests.edit', {
-				url: '/{deliveryServiceRequestId:[0-9]{1,8}}?type&fulfill',
+				url: '/{deliveryServiceRequestId:[0-9]{1,8}}?dsType&fulfill',
 				views: {
 					deliveryServiceRequestsContent: {
 						templateUrl: function ($stateParams) {
-							var type = $stateParams.type,
+							var type = $stateParams.dsType,
 								template;
 
 							if (type.indexOf('ANY_MAP') != -1) {
@@ -68,7 +68,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 								return topologyService.getTopologies();
 							},
 							type: function ($stateParams) {
-								return $stateParams.type;
+								return $stateParams.dsType;
 							},
 							types: function (typeService) {
 								return typeService.getTypes({useInTable: 'deliveryservice'});

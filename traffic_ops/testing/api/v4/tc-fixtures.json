@@ -286,6 +286,11 @@
             "dnssecEnabled": false,
             "domainName": "test.bar.net",
             "name": "bar"
+        },
+        {
+            "dnssecEnabled": false,
+            "domainName": "test.delete.net",
+            "name": "cdndelete"
         }
     ],
     "cdnlocks": [
@@ -306,6 +311,12 @@
             "cdn": "cdn4",
             "message": "test lock",
             "soft": true
+        },
+        {
+            "userName": "opslockuser",
+            "cdn": "cdndelete",
+            "message": "test lock for deleting cdn action",
+            "soft": false
         }
     ],
     "deliveryServiceRequestComments": [
@@ -1753,6 +1764,10 @@
         {
             "xmlId": "test-ds-server-assignments",
             "serverNames": ["test-ds-server-assignments", "test-mso-org-01"]
+        },
+        {
+            "xmlId": "ds3",
+            "serverNames": ["atlanta-edge-14"]
         }
     ],
     "divisions": [
@@ -2005,6 +2020,19 @@
             "shortName": "atlanta",
             "state": "GA",
             "zip": "30301"
+        },
+        {
+            "address": "1234 delete way",
+            "city": "Denver",
+            "comments": null,
+            "email": null,
+            "name": "testDelete",
+            "phone": "303-222-2222",
+            "poc": null,
+            "region": "region1",
+            "shortName": "testdelete",
+            "state": "C0",
+            "zip": "80202"
         }
     ],
     "profiles": [
@@ -6090,6 +6118,12 @@
         {
             "deliveryService": "ds1",
             "target": "ds2",
+            "value": 42,
+            "type": "STEERING_WEIGHT"
+        },
+        {
+            "deliveryService": "ds3",
+            "target": "ds4",
             "value": 42,
             "type": "STEERING_WEIGHT"
         }

@@ -20,26 +20,26 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/profiles')">Profiles</a></li>
+            <li><a href="#!/profiles">Profiles</a></li>
             <li class="active">{{profileName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="View Parameters" ng-click="viewParams()">View Parameters</button>
+            <a class="btn btn-primary" title="View Parameters" ng-href="#!/profiles/{{profile.id}}/parameters">View Parameters</a>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="viewDeliveryServices()" ng-if="profile.type == 'DS_PROFILE'">View Delivery Services</a></li>
-                    <li role="menuitem"><a ng-click="viewParams()">View Parameters</a></li>
-                    <li role="menuitem"><a ng-click="viewServers()" ng-if="profile.type != 'DS_PROFILE'">View Servers</a></li>
+                    <li ng-if="profile.type === 'DS_PROFILE'" role="menuitem"><a ng-href="#!/delivery-services?profileName={{profile.name}}">View Delivery Services</a></li>
+                    <li role="menuitem"><a ng-href="#!/profiles/{{profile.id}}/parameters">View Parameters</a></li>
+                    <li ng-if="profile.type !== 'DS_PROFILE'" role="menuitem"><a ng-href="#!/servers?profileName={{profile.name}}">View Servers</a></li>
                     <li class="divider"></li>
-                    <li role="menuitem"><a ng-click="cloneProfile()">Clone Profile</a></li>
-                    <li role="menuitem"><a ng-click="exportProfile(profile)">Export Profile</a></li>
-                    <li class="divider"></li>
-                    <li role="menuitem"><a ng-click="queueUpdatesByProfile()">Queue Updates By Profile</a></li>
-                    <li role="menuitem"><a ng-click="clearUpdatesByProfile()">Clear Updates By Profile</a></li>
+                    <li role="menuitem"><button type="button" ng-click="cloneProfile()">Clone Profile</button></li>
+                    <li role="menuitem"><button type="button" ng-click="exportProfile(profile)">Export Profile</button></li>
+                    <li ng-if="profile.type !== 'DS_PROFILE'" class="divider"></li>
+                    <li ng-if="profile.type !== 'DS_PROFILE'" role="menuitem"><button type="button" ng-click="queueUpdatesByProfile()">Queue Updates By Profile</button></li>
+                    <li ng-if="profile.type !== 'DS_PROFILE'" role="menuitem"><button type="button" ng-click="clearUpdatesByProfile()">Clear Updates By Profile</button></li>
                 </ul>
             </div>
         </div>
@@ -65,7 +65,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(profileForm.cdn, 'required')">Required</small>
-                    <small ng-show="profile.cdn"><a href="/#!/cdns/{{profile.cdn}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="profile.cdn"><a ng-href="/#!/cdns/{{profile.cdn}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(profileForm.type), 'has-feedback': hasError(profileForm.type)}">

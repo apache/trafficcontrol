@@ -30,6 +30,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"syscall"
 )
 
 type ATSConfigFile struct {
@@ -81,6 +82,19 @@ func PermCk(path string, perm int) bool {
 		fmt.Println("Error getting file status", path)
 	}
 	if file.Mode() != mode.Perm() {
+		return true
+	}
+	return false
+}
+
+// OwnershipCk will compare owner and group settings against existing file and owner/group settings provided.
+func OwnershipCk(path string, uid int, gid int) bool {
+	file, err := os.Stat(path)
+	if err != nil {
+		fmt.Println("error getting file status", path)
+	}
+	stat := file.Sys().(*syscall.Stat_t)
+	if uid != int(stat.Uid) || gid != int(stat.Gid) {
 		return true
 	}
 	return false

@@ -312,21 +312,21 @@ export const deliveryservices = {
 					Name: "tpdservice1",
 					Tenant: "tenantSame",
 					Type: "ANY_MAP",
-					validationMessage: "Delivery Service [ tpdservice1 ] created"
+					validationMessage: "Delivery Service creation was successful"
 				},
 				{
 					description: "create DNS delivery service",
 					Name: "tpdservice2",
 					Tenant: "tenantSame",
 					Type: "DNS",
-					validationMessage: "Delivery Service [ tpdservice2 ] created"
+					validationMessage: "Delivery Service creation was successful"
 				},
 				{
 					description: "create STEERING delivery service",
 					Name: "tpdservice3",
 					Tenant: "tenantSame",
 					Type: "STEERING",
-					validationMessage: "Delivery Service [ tpdservice3 ] created"
+					validationMessage: "Delivery Service creation was successful"
 				}
 			],
 			update: [
@@ -334,7 +334,7 @@ export const deliveryservices = {
 					description: "update delivery service display name",
 					Name: "tpdservice1",
 					NewName: "TPServiceNew1",
-					validationMessage: "Delivery Service [ tpdservice1 ] updated"
+					validationMessage: "Delivery Service update was successful"
 				}
 			],
 			assignserver: [
@@ -357,17 +357,17 @@ export const deliveryservices = {
 				{
 					description: "delete a delivery service",
 					Name: "tpdservice1",
-					validationMessage: "Delivery service [ tpdservice1 ] deleted"
+					validationMessage: "ds was deleted."
 				},
 				{
 					description: "delete a delivery service",
 					Name: "tpdservice2",
-					validationMessage: "Delivery service [ tpdservice2 ] deleted"
+					validationMessage: "ds was deleted."
 				},
 				{
 					description: "delete a delivery service",
 					Name: "tpdservice3",
-					validationMessage: "Delivery service [ tpdservice3 ] deleted"
+					validationMessage: "ds was deleted."
 				}
 			]
 		},
@@ -434,21 +434,21 @@ export const deliveryservices = {
 					Name: "optpdservice1",
 					Tenant: "tenantSame",
 					Type: "ANY_MAP",
-					validationMessage: "Delivery Service [ optpdservice1 ] created"
+					validationMessage: "Delivery Service creation was successful"
 				},
 				{
 					description: "create DNS delivery service",
 					Name: "optpdservice2",
 					Tenant: "tenantSame",
 					Type: "DNS",
-					validationMessage: "Delivery Service [ optpdservice2 ] created"
+					validationMessage: "Delivery Service creation was successful"
 				},
 				{
 					description: "create STEERING delivery service",
 					Name: "optpdservice3",
 					Tenant: "tenantSame",
 					Type: "STEERING",
-					validationMessage: "Delivery Service [ optpdservice3 ] created"
+					validationMessage: "Delivery Service creation was successful"
 				}
 			],
 			update: [
@@ -456,7 +456,7 @@ export const deliveryservices = {
 					description: "update delivery service display name",
 					Name: "optpdservice1",
 					NewName: "opTPServiceNew1",
-					validationMessage: "Delivery Service [ optpdservice1 ] updated"
+					validationMessage: "Delivery Service update was successful"
 				}
 			],
 			assignserver: [
@@ -479,17 +479,17 @@ export const deliveryservices = {
 				{
 					description: "delete a delivery service",
 					Name: "optpdservice1",
-					validationMessage: "Delivery service [ optpdservice1 ] deleted"
+					validationMessage: "ds was deleted."
 				},
 				{
 					description: "delete a delivery service",
 					Name: "optpdservice2",
-					validationMessage: "Delivery service [ optpdservice2 ] deleted"
+					validationMessage: "ds was deleted."
 				},
 				{
 					description: "delete a delivery service",
 					Name: "optpdservice3",
-					validationMessage: "Delivery service [ optpdservice3 ] deleted"
+					validationMessage: "ds was deleted."
 				}
 			]
 		}

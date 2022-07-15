@@ -84,7 +84,7 @@ var TableServerCapabilityDeliveryServicesController = function(serverCapability,
 	$scope.editDeliveryService = function(ds) {
 		deliveryServiceService.getDeliveryService(ds.deliveryServiceID)
 			.then(function(result) {
-				let path = '/delivery-services/' + result.id + '?type=' + result.type;
+				let path = '/delivery-services/' + result.id + '?dsType=' + result.type;
 				locationUtils.navigateToPath(path);
 			});
 	};

@@ -80,7 +80,7 @@ $ua->timeout(30);
 $ua->ssl_opts(verify_hostname => 0);
 $ua->cookie_jar( {} );
 
-my $login_url = "$b_url/api/2.0/user/login";
+my $login_url = "$b_url/api/4.0/user/login";
 TRACE "posting $login_url";
 my $req = HTTP::Request->new( 'POST', $login_url );
 $req->header( 'Content-Type' => 'application/json' );
@@ -92,7 +92,7 @@ if ( ! $login_response->is_success ) {
 	exit(1);
 }
 
-my $url       = "$b_url/api/2.0/letsencrypt/autorenew/";
+my $url       = "$b_url/api/4.0/letsencrypt/autorenew/";
 TRACE "getting $url";
 my $response = $ua->post($url);
 if ( $response->is_success ) {

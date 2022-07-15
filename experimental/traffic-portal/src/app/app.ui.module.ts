@@ -12,20 +12,25 @@
 * limitations under the License.
 */
 
+import { CdkMenuModule } from "@angular/cdk/menu";
 import { NgModule } from "@angular/core";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
 import { MatButtonToggleModule } from "@angular/material/button-toggle";
 import { MatCardModule } from "@angular/material/card";
+import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatNativeDateModule } from "@angular/material/core";
 import { MatDatepickerModule } from "@angular/material/datepicker";
 import { MatDialogModule } from "@angular/material/dialog";
 import { MatDividerModule } from "@angular/material/divider";
 import { MatExpansionModule } from "@angular/material/expansion";
+import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { MatListModule } from "@angular/material/list";
+import { MatMenuModule } from "@angular/material/menu";
 import { MatRadioModule } from "@angular/material/radio";
+import { MatSelectModule } from "@angular/material/select";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatToolbarModule } from "@angular/material/toolbar";
@@ -46,21 +51,26 @@ import { AgGridModule } from "ag-grid-angular";
 
 		FontAwesomeModule,
 
+		CdkMenuModule,
 		MatButtonModule,
+		MatButtonToggleModule,
 		MatCardModule,
+		MatCheckboxModule,
+		MatDatepickerModule,
+		MatDialogModule,
 		MatDividerModule,
 		MatExpansionModule,
+		MatFormFieldModule,
 		MatIconModule,
 		MatInputModule,
 		MatListModule,
+		MatMenuModule,
+		MatNativeDateModule,
 		MatRadioModule,
+		MatSelectModule,
 		MatSnackBarModule,
 		MatStepperModule,
-		MatToolbarModule,
-		MatDialogModule,
-		MatDatepickerModule,
-		MatNativeDateModule,
-		MatButtonToggleModule
+		MatToolbarModule
 	]
 })
 export class AppUIModule {}

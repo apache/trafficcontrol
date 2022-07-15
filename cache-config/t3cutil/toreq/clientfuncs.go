@@ -774,18 +774,18 @@ func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, configAppl
 
 // SetServerUpdateStatusBoolCompat sets the server's update and reval statuses in Traffic Ops.
 // *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
-func (cl *TOClient) SetServerUpdateStatusBoolCompat(cacheHostName tc.CacheName, configApply, revalApply *time.Time, configApplyBool, revalApplyBool *bool) (toclientlib.ReqInf, error) {
+func (cl *TOClient) SetServerUpdateStatusBoolCompat(cacheHostName tc.CacheName, configApply *time.Time, revalApply *time.Time, configApplyBool *bool, revalApplyBool *bool) (toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		var updateStatus, revalStatus *bool
-		if configApply != nil || configApplyBool != nil {
-			*updateStatus = true
-			revalStatus = nil
+		if configApply != nil && configApplyBool == nil {
+			return toclientlib.ReqInf{}, errors.New("Traffic Ops older version doesn't support timestamps, but update boolean was nil and timestamp wasn't! Booleans must be passed to work with older Traffic Ops!")
 		}
-		if revalApply != nil || revalApplyBool != nil {
-			*revalStatus = true
-			updateStatus = nil
+		if revalApply != nil && revalApplyBool == nil {
+			return toclientlib.ReqInf{}, errors.New("Traffic Ops older version doesn't support timestamps, but reval boolean was nil and timestamp wasn't! Booleans must be passed to work with older Traffic Ops!")
 		}
-		return cl.old.SetServerUpdateStatus(cacheHostName, updateStatus, revalStatus)
+		if configApplyBool == nil && revalApplyBool == nil {
+			return toclientlib.ReqInf{}, errors.New("Traffic Ops older version doesn't support timestamps, but both booleans were nil! Booleans must be passed to work with older Traffic Ops!")
+		}
+		return cl.old.SetServerUpdateStatus(cacheHostName, configApplyBool, revalApplyBool)
 	}
 
 	reqInf := toclientlib.ReqInf{}

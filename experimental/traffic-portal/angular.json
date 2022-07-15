@@ -40,7 +40,12 @@
 							"src/assets"
 						],
 						"styles": [
-							"src/styles.scss"
+							"src/styles.scss",
+							{
+								"inject": false,
+								"input": "src/styles/themes/dark-default.scss",
+								"bundleName": "dark-default-theme"
+							}
 						],
 						"scripts": []
 					},
@@ -198,6 +203,5 @@
 				}
 			}
 		}
-	},
-	"defaultProject": "traffic-portal"
+  }
 }

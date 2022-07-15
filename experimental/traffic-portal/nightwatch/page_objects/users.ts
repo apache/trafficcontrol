@@ -33,7 +33,7 @@ const usersPageObject = {
 			} as UsersTableSectionCommands,
 			elements: {
 			},
-			selector: "main > main"
+			selector: "mat-card"
 		}
 	},
 	url(): string {

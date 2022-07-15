@@ -74,11 +74,6 @@ func MakeConfigFilesList(
 	atsMajorVer, verWarns := getATSMajorVersion(serverParams)
 	warnings = append(warnings, verWarns...)
 
-	tmURL, tmReverseProxyURL := getTOURLAndReverseProxy(globalParams)
-	if tmURL == "" {
-		warnings = append(warnings, "global tm.url parameter missing or empty! Setting empty in meta config!")
-	}
-
 	dses, dsWarns := filterConfigFileDSes(server, deliveryServices, deliveryServiceServers)
 	warnings = append(warnings, dsWarns...)
 
@@ -134,7 +129,7 @@ locationParamsFor:
 		configFiles = append(configFiles, atsCfg)
 	}
 
-	configFiles, configDirWarns, err := addMetaObjConfigDir(configFiles, configDir, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, dses, cacheGroupArr, topologies, atsMajorVer)
+	configFiles, configDirWarns, err := addMetaObjConfigDir(configFiles, configDir, server, locationParams, uriSignedDSes, dses, cacheGroupArr, topologies, atsMajorVer)
 	warnings = append(warnings, configDirWarns...)
 	return configFiles, warnings, err
 }
@@ -148,8 +143,6 @@ func addMetaObjConfigDir(
 	configFiles []CfgMeta,
 	configDir string,
 	server *Server,
-	tmURL string, // global tm.url Parameter
-	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
 	locationParams map[string]configProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
 	uriSignedDSes []tc.DeliveryServiceName,
 	dses map[tc.DeliveryServiceName]DeliveryService,

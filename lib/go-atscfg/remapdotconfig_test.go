@@ -142,12 +142,12 @@ func TestMakeRemapDotConfig0(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
+	if len(txtLines) != 3 {
 		t.Log(cfg.Warnings)
-		t.Fatalf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+		t.Fatalf("expected one line for each remap plus a comment and blank, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -359,11 +359,11 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 {
+		t.Fatalf("expected one line for each remap plus a comment and blank, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -714,8 +714,8 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remap lines for multiple DSes with the same Origin (ATS can't handle multiple remaps with the same origin FQDN), actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 {
+		t.Fatalf("expected a comment header, a blank line, and 1 remap lines for multiple DSes with the same Origin (ATS can't handle multiple remaps with the same origin FQDN), actual: '%v' count %v", txt, len(txtLines))
 	}
 }
 
@@ -1031,11 +1031,11 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Errorf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 {
+		t.Errorf("expected one line for each remap plus a comment and blank, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -1182,11 +1182,11 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Errorf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 {
+		t.Errorf("expected one line for each remap plus a comment and blank, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -1299,11 +1299,11 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Errorf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 {
+		t.Errorf("expected one line for each remap plus a comment and blank, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -1440,8 +1440,8 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected one remap line for DS with origin, but not DS with empty Origin FQDN, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 {
+		t.Fatalf("expected a comment header, a blank line, and one remap line for DS with origin, but not DS with empty Origin FQDN, actual: '%v' count %v", txt, len(txtLines))
 	}
 }
 
@@ -1583,11 +1583,11 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected one remap line for ANY_MAP DS with remap text, but not ANY_MAP DS with nil remap text, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 {
+		t.Fatalf("expected a comment header, a blank line, and one remap line for ANY_MAP DS with remap text, but not ANY_MAP DS with nil remap text, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to any_map to not start with 'map' (should be raw ds.RemapText), actual '%v'", txt)
@@ -2085,15 +2085,15 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 3 {
-		t.Fatalf("expected 3 remaps from HTTP_AND_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 4 {
+		t.Fatalf("expected a comment header, a blank line, and 2 remaps from HTTP_AND_HTTPS DS, actual: '%v' line count %v", txt, len(txtLines))
 	}
 
 	if strings.Count(txt, "mypattern") != 2 {
 		t.Errorf("expected 2 pattern occurences from HTTP_AND_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -2207,15 +2207,15 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remap from HTTP DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 {
+		t.Fatalf("expected a comment header, a blank line, and 1 remap from HTTP DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
 	if strings.Count(txt, "mypattern") != 1 {
 		t.Errorf("expected 1 pattern occurences from HTTP DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -2329,15 +2329,15 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
 	if strings.Count(txt, "mypattern") != 1 {
 		t.Errorf("expected 1 pattern occurences from HTTP DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -2451,15 +2451,15 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
 	if strings.Count(txt, "mypattern") != 1 {
 		t.Errorf("expected 1 pattern occurences from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -2573,11 +2573,11 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -2697,11 +2697,11 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -2821,11 +2821,11 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -2945,11 +2945,11 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -3073,11 +3073,11 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -3201,11 +3201,11 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -3335,11 +3335,11 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -3463,11 +3463,11 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -3586,11 +3586,11 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -3709,11 +3709,11 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -3832,11 +3832,11 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -3955,11 +3955,11 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -4076,11 +4076,11 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -4212,11 +4212,11 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -4340,11 +4340,11 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -4476,11 +4476,11 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -4603,11 +4603,11 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -4727,11 +4727,11 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -4847,11 +4847,11 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -4987,11 +4987,11 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -5132,11 +5132,11 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -5265,11 +5265,11 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -5400,11 +5400,11 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -5545,11 +5545,11 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -5686,11 +5686,11 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 3 { // 2 remaps plus header comment
-		t.Fatalf("expected 2 remaps from HTTP_AND_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 4 { // 2 remaps plus header comment plus blank
+		t.Fatalf("expected a comment header, a blank line, and 2 remaps from HTTP_AND_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -5832,11 +5832,11 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -5858,7 +5858,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain block size for the slice plugin, actual '%v'", txt)
 	}
 
-	if !strings.HasSuffix(remapLine, "@plugin=tslua.so @pparam=my-range-manipulator.lua") {
+	if !strings.HasSuffix(remapLine, "@plugin=tslua.so @pparam=my-range-manipulator.lua # ds 'mydsname' topology ''") {
 		t.Errorf("expected raw remap without range directive at end of remap line, actual '%v'", txt)
 	}
 	if strings.Count(remapLine, "slice.so") != 1 {
@@ -5971,11 +5971,11 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -6099,11 +6099,11 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -6219,11 +6219,11 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -6339,11 +6339,11 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -6459,11 +6459,11 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -6583,11 +6583,11 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -6928,11 +6928,11 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if strings.Contains(remapLine, "hdr_rw") {
 		t.Errorf("expected remap with default header rewrites to not have header rewrite directive for a file that won't exist, actual '%v'", txt)
@@ -7048,11 +7048,11 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if strings.Contains(remapLine, "hdr_rw") {
 		t.Errorf("expected remap with default header rewrites to not have header rewrite directive for a file that won't exist, actual '%v'", txt)
@@ -7284,11 +7284,11 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -7416,11 +7416,11 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -7589,11 +7589,11 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -7774,11 +7774,11 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-	remapLine := txtLines[1]
+	remapLine := txtLines[2]
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -7972,7 +7972,7 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	linesexp := 5
+	linesexp := 6
 
 	if len(txtLines) != linesexp {
 		t.Fatalf("expected %d lines in comment, actual: '%v' count %v", linesexp, txt, len(txtLines))
@@ -7981,12 +7981,17 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 
 		commentstr = txtLines[0]
 		if len(commentstr) == 0 || '#' != commentstr[0] {
-			t.Fatalf("expected [1] as comment, actual: \n'%v' got %v", txt, commentstr)
+			t.Fatalf("expected [0] as comment, actual: \n'%v' got %v", txt, commentstr)
 		}
 
-		firststr := txtLines[1]
+		blankStr := txtLines[1]
+		if strings.TrimSpace(blankStr) != "" {
+			t.Fatalf("expected [1] as blank line after comment, actual: \n'%v' got %v", txt, commentstr)
+		}
+
+		firststr := txtLines[2]
 		if !strings.Contains(firststr, "firstraw") {
-			t.Fatalf("expected [1] with 'firstraw', actual: '%v' got %v", txt, firststr)
+			t.Fatalf("expected [2] with 'firstraw', actual: '%v' got %v", txt, firststr)
 		}
 		laststr := txtLines[len(txtLines)-2]
 		if !strings.Contains(laststr, "last") {

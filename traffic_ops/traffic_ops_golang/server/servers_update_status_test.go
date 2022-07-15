@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -58,7 +58,7 @@ func TestGetServerUpdateStatus(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	result, err, _ := getServerUpdateStatus(tx, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}, "host_name_1")
+	result, err, _ := getServerUpdateStatus(tx, "host_name_1")
 	if err != nil {
 		t.Errorf("getServerUpdateStatus: %v", err)
 	}
@@ -74,4 +74,131 @@ func TestGetServerUpdateStatus(t *testing.T) {
 	}}
 
 	reflect.DeepEqual(expected, result)
+}
+
+func TestGetServerUpdateStatuses(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	mock.ExpectBegin()
+	revalPendingRows := sqlmock.NewRows([]string{"value"})
+	revalPendingRows.AddRow(true)
+	mock.ExpectQuery("SELECT").WillReturnRows(revalPendingRows)
+
+	serverInfoRows := sqlmock.NewRows([]string{"id", "host_name", "type", "cdn_id", "status",
+		"cachegroup", "config_update_time", "config_apply_time", "revalidate_update_time",
+		"revalidate_apply_time"})
+	tenSecAfter := time.UnixMilli(10000)
+	epoch := time.UnixMilli(0)
+	serverInfoRows.AddRow(1, "edge1", tc.CacheTypeEdge.String(), 1, tc.CacheStatusReported.String(), 1, tenSecAfter, tenSecAfter, tenSecAfter, tenSecAfter)
+	serverInfoRows.AddRow(2, "mid1", tc.CacheTypeMid.String(), 1, tc.CacheStatusReported.String(), 2, tenSecAfter, epoch, tenSecAfter, tenSecAfter)
+	serverInfoRows.AddRow(3, "edge2", tc.CacheTypeEdge.String(), 2, tc.CacheStatusReported.String(), 1, tenSecAfter, tenSecAfter, tenSecAfter, tenSecAfter)
+	serverInfoRows.AddRow(4, "mid2", tc.CacheTypeMid.String(), 2, tc.CacheStatusReported.String(), 2, tenSecAfter, tenSecAfter, tenSecAfter, tenSecAfter)
+	serverInfoRows.AddRow(5, "mid3", tc.CacheTypeMid.String(), 2, tc.CacheStatusReported.String(), 3, tenSecAfter, tenSecAfter, tenSecAfter, epoch)
+	mock.ExpectQuery("SELECT").WillReturnRows(serverInfoRows)
+
+	cachegroupRows := sqlmock.NewRows([]string{"id", "parent_cachegroup_id", "secondary_parent_cachegroup_id"})
+	cachegroupRows.AddRow(1, 2, nil)
+	cachegroupRows.AddRow(2, nil, nil)
+	cachegroupRows.AddRow(3, nil, nil)
+	mock.ExpectQuery("SELECT").WillReturnRows(cachegroupRows)
+
+	topologyCachegroupRows := sqlmock.NewRows([]string{"id", "array_agg"})
+	topologyCachegroupRows.AddRow(1, "{3}")
+	mock.ExpectQuery("SELECT").WillReturnRows(topologyCachegroupRows)
+
+	mock.ExpectCommit()
+
+	expected := map[string][]tc.ServerUpdateStatusV40{
+		"edge1": {
+			{
+				HostName:             "edge1",
+				UpdatePending:        false,
+				RevalPending:         false,
+				UseRevalPending:      true,
+				HostId:               1,
+				Status:               tc.CacheStatusReported.String(),
+				ParentPending:        true,
+				ParentRevalPending:   false,
+				ConfigUpdateTime:     &tenSecAfter,
+				ConfigApplyTime:      &tenSecAfter,
+				RevalidateUpdateTime: &tenSecAfter,
+				RevalidateApplyTime:  &tenSecAfter,
+			},
+		},
+		"mid1": {
+			{
+				HostName:             "mid1",
+				UpdatePending:        true,
+				RevalPending:         false,
+				UseRevalPending:      true,
+				HostId:               2,
+				Status:               tc.CacheStatusReported.String(),
+				ParentPending:        false,
+				ParentRevalPending:   false,
+				ConfigUpdateTime:     &tenSecAfter,
+				ConfigApplyTime:      &epoch,
+				RevalidateUpdateTime: &tenSecAfter,
+				RevalidateApplyTime:  &tenSecAfter,
+			},
+		},
+		"edge2": {
+			{
+				HostName:             "edge2",
+				UpdatePending:        false,
+				RevalPending:         false,
+				UseRevalPending:      true,
+				HostId:               3,
+				Status:               tc.CacheStatusReported.String(),
+				ParentPending:        false,
+				ParentRevalPending:   true,
+				ConfigUpdateTime:     &tenSecAfter,
+				ConfigApplyTime:      &tenSecAfter,
+				RevalidateUpdateTime: &tenSecAfter,
+				RevalidateApplyTime:  &tenSecAfter,
+			},
+		},
+		"mid2": {
+			{
+				HostName:             "mid2",
+				UpdatePending:        false,
+				RevalPending:         false,
+				UseRevalPending:      true,
+				HostId:               4,
+				Status:               tc.CacheStatusReported.String(),
+				ParentPending:        false,
+				ParentRevalPending:   false,
+				ConfigUpdateTime:     &tenSecAfter,
+				ConfigApplyTime:      &tenSecAfter,
+				RevalidateUpdateTime: &tenSecAfter,
+				RevalidateApplyTime:  &tenSecAfter,
+			},
+		},
+		"mid3": {
+			{
+				HostName:             "mid3",
+				UpdatePending:        false,
+				RevalPending:         true,
+				UseRevalPending:      true,
+				HostId:               5,
+				Status:               tc.CacheStatusReported.String(),
+				ParentPending:        false,
+				ParentRevalPending:   false,
+				ConfigUpdateTime:     &tenSecAfter,
+				ConfigApplyTime:      &tenSecAfter,
+				RevalidateUpdateTime: &tenSecAfter,
+				RevalidateApplyTime:  &epoch,
+			},
+		},
+	}
+	actual, err := getServerUpdateStatuses(mockDB, 20*time.Second)
+	if err != nil {
+		t.Fatalf("unexpected error getting server update statuses: %s", err)
+	}
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("getting server update statuses - expected: %+v, actual: %+v", expected, actual)
+	}
 }

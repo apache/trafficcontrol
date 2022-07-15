@@ -49,7 +49,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		LinechartDirective,
 		SSHCellRendererComponent,
 		EmailCellRendererComponent,
-		TelephoneCellRendererComponent,
+		TelephoneCellRendererComponent
 	],
 	exports: [
 		AlertComponent,
@@ -59,7 +59,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
 		CustomvalidityDirective,
-		LinechartDirective,
+		LinechartDirective
 	],
 	imports: [
 		AppUIModule,
@@ -70,7 +70,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
 		AlertService,
-		CurrentUserService,
+		CurrentUserService
 	]
 })
 export class SharedModule { }

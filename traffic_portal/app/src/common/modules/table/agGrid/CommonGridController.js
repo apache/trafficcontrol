@@ -171,7 +171,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 
     function HTTPSCellRenderer() {}
     HTTPSCellRenderer.prototype.init = function(params) {
-        this.eGui = document.createElement("A");
+        this.eGui = document.createElement("a");
         this.eGui.href = "https://" + params.value;
         this.eGui.setAttribute("class", "link");
         this.eGui.setAttribute("target", "_blank");
@@ -182,7 +182,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
     // browserify can't handle classes...
     function SSHCellRenderer() {}
     SSHCellRenderer.prototype.init = function(params) {
-        this.eGui = document.createElement("A");
+        this.eGui = document.createElement("a");
         this.eGui.href = "ssh://" + userModel.user.username + "@" + params.value;
         this.eGui.setAttribute("class", "link");
         this.eGui.textContent = params.value;
@@ -191,7 +191,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 
     function CheckCellRenderer() {}
     CheckCellRenderer.prototype.init = function(params) {
-        this.eGui = document.createElement("I");
+        this.eGui = document.createElement("i");
         if (params.value === null || params.value === undefined) {
             return;
         }
@@ -209,7 +209,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 
     function UpdateCellRenderer() {}
     UpdateCellRenderer.prototype.init = function(params) {
-        this.eGui = document.createElement("I");
+        this.eGui = document.createElement("i");
 
         this.eGui.setAttribute("aria-hidden", "true");
         this.eGui.setAttribute("title", String(params.value));

@@ -13,21 +13,28 @@
 */
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed } from "@angular/core/testing";
+import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {of} from "rxjs";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { defaultServer } from "src/app/models";
+import {defaultServer, Server} from "src/app/models";
 
 import { UpdateStatusComponent } from "./update-status.component";
 
 describe("UpdateStatusComponent", () => {
 	let component: UpdateStatusComponent;
 	let fixture: ComponentFixture<UpdateStatusComponent>;
+	let result: boolean;
+	let mockMatDialog: jasmine.SpyObj<MatDialogRef<boolean>>;
 
 	beforeEach(() => {
+		mockMatDialog = jasmine.createSpyObj("MatDialogRef", ["close", "afterClosed"]);
 		TestBed.configureTestingModule({
 			declarations: [ UpdateStatusComponent ],
 			imports: [ HttpClientModule, APITestingModule ],
+			providers: [ {provide: MatDialogRef, useValue: mockMatDialog },
+				{provide: MAT_DIALOG_DATA, useValue: (): Array<Server> => []}]
 		}).compileComponents();
 		fixture = TestBed.createComponent(UpdateStatusComponent);
 		component = fixture.componentInstance;
@@ -72,63 +79,60 @@ describe("UpdateStatusComponent", () => {
 	});
 
 	it("cancels", () => {
-		let isDone = false;
-		const spy = jasmine.createSpy("doneSubscription", (v: boolean): void => {
-			expect(v).toBe(isDone);
+		result = false;
+		mockMatDialog.afterClosed.and.returnValue(of(result));
+		mockMatDialog.afterClosed().subscribe(value => {
+			expect(value).toBe(result);
 		});
-		component.done.subscribe(spy);
-		isDone = true;
 		component.cancel();
-		expect(spy).toHaveBeenCalled();
-		component.closeOnEscape(new KeyboardEvent("keydown", {code: "Escape"}));
-		expect(spy).toHaveBeenCalledTimes(2);
-		component.closeOnEscape(new KeyboardEvent("keydown", {code: "Esc"}));
-		expect(spy).toHaveBeenCalledTimes(3);
+		expect(mockMatDialog.close.calls.count()).toBe(1);
 	});
 
 	it("knows if the user-selected status is an 'offline' status", () => {
-		expect(component.statusControl.value).toBeNull();
+		expect(component.status).toBeNull();
 		expect(component.isOffline).toBeFalse();
 
-		component.statusControl.setValue(undefined);
+		component.status = null;
 		expect(component.isOffline).toBeFalse();
 
-		component.statusControl.setValue({name: "OFFLINE"});
+		component.status = {description: "", name: "OFFLINE"};
 		expect(component.isOffline).toBeTrue();
 
-		component.statusControl.setValue({name: "some weird custom status"});
+		component.status = {description: "", name: "some weird custom status"};
 		expect(component.isOffline).toBeTrue();
 
-		component.statusControl.setValue({name: "ONLINE"});
+		component.status = {description: "", name: "ONLINE"};
 		expect(component.isOffline).toBeFalse();
 
-		component.statusControl.setValue({name: "REPORTED"});
+		component.status = {description: "", name: "REPORTED"};
 		expect(component.isOffline).toBeFalse();
 	});
 
 	it("submits a request to update each server", async () => {
-		let isDone = true;
-		const spy = jasmine.createSpy("doneSubscription", (v: boolean): void => {
-			expect(v).toBe(isDone);
+		result = true;
+		mockMatDialog.afterClosed.and.returnValue(of(result));
+		mockMatDialog.afterClosed().subscribe(value => {
+			expect(value).toBe(result);
 		});
-		component.done.subscribe(spy);
 
 		const service = TestBed.inject(ServerService);
-		component.statusControl.setValue((await service.getStatuses()).find(s=>s.name==="ONLINE"));
+		component.status = (await service.getStatuses()).find(s=>s.name==="ONLINE") ?? null;
 
 		const srv = await service.createServer({...defaultServer});
 		component.servers = [srv];
-		await component.submit(new SubmitEvent("submit"));
-		expect(spy).toHaveBeenCalled();
+		await component.submit(new Event("click"));
+		expect(mockMatDialog.close.calls.count()).toBe(1);
 
-		isDone = true;
-		component.statusControl.setValue((await service.getStatuses()).find(s=>s.name==="OFFLINE"));
-		await component.submit(new SubmitEvent("submit"));
-		expect(spy).toHaveBeenCalledTimes(2);
+		result = true;
+		mockMatDialog.afterClosed.and.returnValue(of(result));
+		component.status = (await service.getStatuses()).find(s=>s.name==="OFFLINE") ?? null;
+		await component.submit(new Event("click"));
+		expect(mockMatDialog.close.calls.count()).toBe(2);
 
-		isDone = false;
-		component.statusControl.setValue({name: "no such status"});
-		await component.submit(new SubmitEvent("submit"));
-		expect(spy).toHaveBeenCalledTimes(3);
+		result = false;
+		mockMatDialog.afterClosed.and.returnValue(of(result));
+		component.status = {description: "", name: "no such status"};
+		await component.submit(new Event("click"));
+		expect(mockMatDialog.close.calls.count()).toBe(3);
 	});
 });

@@ -16,130 +16,153 @@ package v3
 */
 
 import (
+	"encoding/json"
+	"net/http"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestServerChecks(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCheckExtensions, ServerChecks}, func() {
-		CreateTestInvalidServerChecks(t)
-		UpdateTestServerChecks(t)
-		GetTestServerChecks(t)
+
+		extensionSession := utils.CreateV3Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"OK when VALID request": {
+					ClientSession: extensionSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateServerCheckFields("atlanta-edge-01", map[string]int{"ORT": 13})),
+				},
+			},
+			"POST": {
+				"OK when UPDATING EXISTING SERVER CHECK": {
+					ClientSession: extensionSession,
+					RequestBody: map[string]interface{}{
+						"servercheck_short_name": "ILO",
+						"host_name":              "atlanta-edge-01",
+						"value":                  0,
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateServerCheckCreateFields("atlanta-edge-01", map[string]int{"ORT": 13, "ILO": 0})),
+				},
+				"BAD REQUEST when NO SERVER ID": {
+					ClientSession: extensionSession,
+					RequestBody: map[string]interface{}{
+						"id":                     nil,
+						"servercheck_short_name": "ILO",
+						"value":                  1,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID SERVER ID": {
+					ClientSession: extensionSession,
+					RequestBody: map[string]interface{}{
+						"host_name":              "atlanta-edge-01",
+						"id":                     -1,
+						"servercheck_short_name": "ILO",
+						"value":                  1,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID SERVERCHECK SHORT NAME": {
+					ClientSession: extensionSession,
+					RequestBody: map[string]interface{}{
+						"host_name":              "atlanta-edge-01",
+						"servercheck_short_name": "BOGUS",
+						"value":                  1,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"FORBIDDEN when NON EXTENSION USER": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"host_name":              "atlanta-edge-01",
+						"id":                     GetServerID(t, "atlanta-edge-01")(),
+						"servercheck_short_name": "TEST",
+						"value":                  1,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					serverCheck := tc.ServercheckRequestNullable{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &serverCheck)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, alerts, reqInf, err := testCase.ClientSession.GetServersChecks()
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							_, reqInf, err := testCase.ClientSession.InsertServerCheckStatus(serverCheck)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, tc.Alerts{}, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
+func validateServerCheckFields(hostName string, expectedChecks map[string]int) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Server Check response to not be nil.")
+		serverCheckResp := resp.([]tc.GenericServerCheck)
+		found := false
+		for _, serverCheck := range serverCheckResp {
+			if hostName == serverCheck.HostName {
+				found = true
+				for name, value := range expectedChecks {
+					assert.RequireNotNil(t, serverCheck.Checks[name], "Expected Checks[%s] value to not be nil.", name)
+					assert.Equal(t, value, *serverCheck.Checks[name], "Expected Checks ILO Value to be %d, but got %s", value, *serverCheck.Checks[name])
+				}
+			}
+		}
+		assert.Equal(t, true, found, "Expected to find hostname %s in response.", hostName)
+	}
+}
+
+func validateServerCheckCreateFields(hostName string, expectedChecks map[string]int) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		serverChecks, alerts, _, err := TOSession.GetServersChecks()
+		assert.RequireNoError(t, err, "Error getting Server Checks: %v - alerts: %+v", err, alerts)
+		assert.RequireGreaterOrEqual(t, len(serverChecks), 1, "Expected one Server Check returned Got: %d", len(serverChecks))
+		validateServerCheckFields(hostName, expectedChecks)(t, toclientlib.ReqInf{}, serverChecks, tc.Alerts{}, nil)
+	}
+}
+
 func CreateTestServerChecks(t *testing.T) {
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
+	extensionSession := utils.CreateV3Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
 
 	for _, servercheck := range testData.Serverchecks {
-		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
-		t.Logf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
-		if err != nil {
-			t.Errorf("could not CREATE servercheck: %v", err)
-		}
-	}
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
-}
-
-func CreateTestInvalidServerChecks(t *testing.T) {
-	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-
-	_, _, err := TOSession.InsertServerCheckStatus(testData.Serverchecks[0])
-	if err == nil {
-		t.Error("expected to receive error with non extension user")
-	}
-
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
-
-	invalidServerCheck := tc.ServercheckRequestNullable{
-		Name:     util.StrPtr("BOGUS"),
-		Value:    util.IntPtr(1),
-		ID:       util.IntPtr(-1),
-		HostName: util.StrPtr("bogus_hostname"),
-	}
-
-	// Attempt to create a ServerCheck with invalid server ID
-	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
-	if err == nil {
-		t.Error("expected to receive error with invalid id")
-	}
-
-	invalidServerCheck.ID = nil
-	// Attempt to create a ServerCheck with invalid host name
-	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
-	if err == nil {
-		t.Error("expected to receive error with invalid host name")
-	}
-
-	// get valid name to get past host check
-	invalidServerCheck.Name = testData.Serverchecks[0].Name
-
-	// Attempt to create a ServerCheck with invalid servercheck name
-	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
-	if err == nil {
-		t.Error("expected to receive error with invalid servercheck name")
-	}
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
-}
-
-func UpdateTestServerChecks(t *testing.T) {
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
-	for _, servercheck := range testData.Serverchecks {
-		*servercheck.Value--
-		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
-		t.Logf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
-		if err != nil {
-			t.Errorf("could not update servercheck: %v", err)
-		}
-	}
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
-}
-
-func GetTestServerChecks(t *testing.T) {
-	hostname := testData.Serverchecks[0].HostName
-	// Get server checks
-	serverChecksResp, alerts, _, err := TOSession.GetServersChecks()
-	if err != nil {
-		t.Fatalf("could not GET serverchecks: %v (alerts: %+v)", err, alerts)
-	}
-	found := false
-	for _, sc := range serverChecksResp {
-		if sc.HostName == *hostname {
-			found = true
-
-			if sc.Checks == nil {
-				t.Errorf("server %s had no checks - expected it to have at least two", *hostname)
-				break
-			}
-
-			if ort, ok := sc.Checks["ORT"]; !ok {
-				t.Error("no 'ORT' servercheck exists - expected it to exist")
-			} else if ort == nil {
-				t.Error("'null' returned for ORT value servercheck - expected pointer to 12")
-			} else if *ort != 12 {
-				t.Errorf("%v returned for ORT value servercheck - expected 12", *ort)
-			}
-
-			if ilo, ok := sc.Checks["ILO"]; !ok {
-				t.Error("no 'ILO' servercheck exists - expected it to exist")
-			} else if ilo == nil {
-				t.Error("'null' returned for ILO value servercheck - expected pointer to 0")
-			} else if *ilo != 0 {
-				t.Errorf("%v returned for ILO value servercheck - expected 0", *ilo)
-			}
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected to find servercheck for host %v", hostname)
+		resp, _, err := extensionSession.InsertServerCheckStatus(servercheck)
+		assert.RequireNoError(t, err, "Could not insert Servercheck: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
 // Need to define no-op function as TCObj interface expects a delete function
 // There is no delete path for serverchecks
-func DeleteTestServerChecks(t *testing.T) {
+func DeleteTestServerChecks(*testing.T) {
 	return
 }

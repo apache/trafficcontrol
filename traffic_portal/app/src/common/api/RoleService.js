@@ -42,8 +42,8 @@ var RoleService = function($http, messageModel, ENV) {
         );
     };
 
-    this.updateRole = function(role) {
-        return $http.put(ENV.api.unstable + "roles", role, {params: {name: role.name}}).then(
+    this.updateRole = function(role, oldRole) {
+        return $http.put(ENV.api.unstable + "roles", role, {params: {name: oldRole}}).then(
             function(result) {
                 return result.data;
             },

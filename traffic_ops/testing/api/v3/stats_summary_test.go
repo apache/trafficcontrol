@@ -16,163 +16,166 @@ package v3
 */
 
 import (
-	"fmt"
+	"encoding/json"
+	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-var (
-	testStatsSummaries []tc.StatsSummary
-	latestTime         time.Time
-)
+var latestTime time.Time
 
 func TestStatsSummary(t *testing.T) {
-	testStatsSummaries = []tc.StatsSummary{}
-	latestTime = time.Now().Truncate(time.Second).UTC()
+
 	CreateTestStatsSummaries(t)
-	GetTestStatsSummaries(t)
-	GetTestStatsSummariesLastUpdated(t)
+
+	methodTests := utils.V3TestCase{
+		"GET": {
+			"OK when VALID request": {
+				ClientSession: TOSession,
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+			},
+			"OK when VALID STATNAME parameter": {
+				ClientSession: TOSession,
+				RequestParams: url.Values{"statName": {"daily_bytesserved"}},
+				Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+					validateStatsSummaryFields(map[string]interface{}{"StatName": "daily_bytesserved"})),
+			},
+			"OK when VALID CDNNAME parameter": {
+				ClientSession: TOSession,
+				RequestParams: url.Values{"cdnName": {"cdn1"}},
+				Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(2),
+					validateStatsSummaryFields(map[string]interface{}{"CDNName": "cdn1"})),
+			},
+			"OK when VALID DELIVERYSERVICENAME parameter": {
+				ClientSession: TOSession,
+				RequestParams: url.Values{"deliveryServiceName": {"all"}},
+				Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(2),
+					validateStatsSummaryFields(map[string]interface{}{"DeliveryService": "all"})),
+			},
+			"OK when VALID LASTSUMMARYDATE parameter": {
+				ClientSession: TOSession,
+				RequestParams: url.Values{"statName": {"daily_bytesserved"}},
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateStatsSummaryLastUpdatedField(latestTime)),
+			},
+			"EMPTY RESPONSE when NON-EXISTENT STATNAME": {
+				ClientSession: TOSession,
+				RequestParams: url.Values{"statName": {"bogus"}},
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+			},
+			"EMPTY RESPONSE when NON-EXISTENT DELIVERYSERVICENAME": {
+				ClientSession: TOSession,
+				RequestParams: url.Values{"deliveryServiceName": {"bogus"}},
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+			},
+			"EMPTY RESPONSE when NON-EXISTENT CDNNAME": {
+				ClientSession: TOSession,
+				RequestParams: url.Values{"cdnName": {"bogus"}},
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+			},
+		},
+	}
+
+	for method, testCases := range methodTests {
+		t.Run(method, func(t *testing.T) {
+			for name, testCase := range testCases {
+				statsSummary := tc.StatsSummary{}
+				var cdn *string
+				var statName *string
+				var deliveryService *string
+
+				if val, ok := testCase.RequestParams["statName"]; ok {
+					statName = &val[0]
+				}
+				if val, ok := testCase.RequestParams["cdnName"]; ok {
+					cdn = &val[0]
+				}
+				if val, ok := testCase.RequestParams["deliveryServiceName"]; ok {
+					deliveryService = &val[0]
+				}
+
+				if testCase.RequestBody != nil {
+					dat, err := json.Marshal(testCase.RequestBody)
+					assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+					err = json.Unmarshal(dat, &statsSummary)
+					assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+				}
+
+				switch method {
+				case "GET":
+					t.Run(name, func(t *testing.T) {
+						if name == "OK when VALID LASTSUMMARYDATE parameter" {
+							resp, reqInf, err := testCase.ClientSession.GetSummaryStatsLastUpdated(statName)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, tc.Alerts{}, err)
+							}
+						} else {
+							resp, reqInf, err := testCase.ClientSession.GetSummaryStats(cdn, deliveryService, statName)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						}
+					})
+				case "POST":
+					t.Run(name, func(t *testing.T) {
+						alerts, reqInf, err := testCase.ClientSession.CreateSummaryStats(statsSummary)
+						for _, check := range testCase.Expectations {
+							check(t, reqInf, nil, alerts, err)
+						}
+					})
+				}
+			}
+		})
+	}
 }
 
-func CreateTestStatsSummaries(t *testing.T) {
-	tmpTime := latestTime
-	for _, ss := range testData.StatsSummaries {
-		ss.SummaryTime = tmpTime
-		_, _, err := TOSession.CreateSummaryStats(ss)
-		if err != nil {
-			t.Errorf("creating stats_summary %v: %v", ss.StatName, err)
+func validateStatsSummaryFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Stats Summary response to not be nil.")
+		statsSummaryResp := resp.([]tc.StatsSummary)
+		for field, expected := range expectedResp {
+			for _, statsSummary := range statsSummaryResp {
+				switch field {
+				case "CDNName":
+					assert.RequireNotNil(t, statsSummary.CDNName, "Expected CDNName to not be nil.")
+					assert.Equal(t, expected, *statsSummary.CDNName, "Expected CDNName to be %v, but got %s", expected, *statsSummary.CDNName)
+				case "DeliveryService":
+					assert.RequireNotNil(t, statsSummary.DeliveryService, "Expected DeliveryService to not be nil.")
+					assert.Equal(t, expected, *statsSummary.DeliveryService, "Expected DeliveryService to be %v, but got %s", expected, *statsSummary.DeliveryService)
+				case "StatName":
+					assert.RequireNotNil(t, statsSummary.StatName, "Expected StatName to not be nil.")
+					assert.Equal(t, expected, *statsSummary.StatName, "Expected StatName to be %v, but got %s", expected, *statsSummary.StatName)
+				case "SummaryTime":
+					assert.Equal(t, expected, statsSummary.SummaryTime, "Expected SummaryTime to be %v, but got %v", expected, statsSummary.SummaryTime)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
 		}
-
-		tmpTime = tmpTime.AddDate(0, 0, -1)
-
-		testStatsSummaries = append(testStatsSummaries, ss)
 	}
 }
 
-func GetTestStatsSummaries(t *testing.T) {
-	var testCases = []struct {
-		description            string
-		stat                   *string
-		cdn                    *string
-		ds                     *string
-		expectedStatsSummaries []tc.StatsSummary
-	}{
-		{
-			description:            "get all summary stats",
-			expectedStatsSummaries: testStatsSummaries,
-		},
-		{
-			description: "non-existant stat name",
-			stat:        util.StrPtr("bogus"),
-		},
-		{
-			description: "non-existant ds name",
-			ds:          util.StrPtr("bogus"),
-		},
-		{
-			description: "non-existant cdn name",
-			cdn:         util.StrPtr("bogus"),
-		},
-		{
-			description: "get stats summary by stat name",
-			stat:        util.StrPtr("daily_bytesserved"),
-			expectedStatsSummaries: func() []tc.StatsSummary {
-				statsSummaries := []tc.StatsSummary{}
-				for _, ss := range testStatsSummaries {
-					if *ss.StatName == "daily_bytesserved" {
-						statsSummaries = append(statsSummaries, ss)
-					}
-				}
-				return statsSummaries
-			}(),
-		},
-		{
-			description:            "get stats summary by cdn name",
-			cdn:                    util.StrPtr("cdn1"),
-			expectedStatsSummaries: testStatsSummaries,
-		},
-		{
-			description:            "get stats summary by ds name",
-			ds:                     util.StrPtr("all"),
-			expectedStatsSummaries: testStatsSummaries,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			tsr, _, err := TOSession.GetSummaryStats(tc.cdn, tc.ds, tc.stat)
-			if err != nil {
-				t.Fatalf("received unexpected error %v on GET to stats_summary", err)
-			}
-			if len(tc.expectedStatsSummaries) == 0 && len(tsr.Response) != 0 {
-				t.Fatalf("expected to recieve no stats summaries but received %v", len(tsr.Response))
-			}
-			for _, ess := range tc.expectedStatsSummaries {
-				found := false
-				for _, ss := range tsr.Response {
-					if *ess.StatName == *ss.StatName && ess.SummaryTime.Equal(ss.SummaryTime) {
-						found = true
-						break
-					}
-				}
-				if !found {
-					t.Errorf("expected to find stat %v in stats summary response", *ess.StatName)
-				}
-			}
-		})
+func validateStatsSummaryLastUpdatedField(expectedTime time.Time) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected StatsSummaryLastUpdated response to not be nil.")
+		statsSummaryLastUpdated := resp.(tc.StatsSummaryLastUpdated)
+		assert.RequireNotNil(t, statsSummaryLastUpdated.SummaryTime, "Expected SummaryTime to not be nil.")
+		assert.Equal(t, expectedTime, *statsSummaryLastUpdated.SummaryTime, "Expected SummaryTime to be %v, but got %v", expectedTime, *statsSummaryLastUpdated.SummaryTime)
 	}
 }
 
-func GetTestStatsSummariesLastUpdated(t *testing.T) {
-	type testCase struct {
-		description       string
-		stat              *string
-		errExpected       bool
-		expectedTimestamp time.Time
-		nullTimeStamp     bool
-	}
-	testCases := []testCase{
-		testCase{
-			description:       "latest updated timestamp",
-			stat:              nil,
-			errExpected:       false,
-			expectedTimestamp: latestTime,
-		},
-		testCase{
-			description:   "non-existant stat name",
-			stat:          util.StrPtr("bogus"),
-			errExpected:   false,
-			nullTimeStamp: true,
-		},
-	}
-	for _, ss := range testStatsSummaries {
-		testCases = append(testCases, testCase{
-			description:       fmt.Sprintf("latest updated timestamp for - %v", *ss.StatName),
-			stat:              ss.StatName,
-			errExpected:       false,
-			expectedTimestamp: ss.SummaryTime,
-		})
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			tsr, _, err := TOSession.GetSummaryStatsLastUpdated(tc.stat)
-			if tc.errExpected && err == nil {
-				t.Fatalf("expected to get error on getting stats_summary latest updated timestamp but received nil")
-			}
-
-			if !tc.errExpected && err != nil {
-				t.Fatalf("received unexpected error getting stats_summary latest updated timestamp: %v", err)
-			}
-			if !tc.errExpected && tc.nullTimeStamp && tsr.Response.SummaryTime != nil {
-				t.Fatalf("expected to get null on latest timestamp but instead got %v", tsr.Response.SummaryTime)
-			}
-			if !tc.errExpected && !tc.nullTimeStamp && !tsr.Response.SummaryTime.Equal(tc.expectedTimestamp) {
-				t.Fatalf("received latest timestamp %v does not match up to expected timestamp %v", tsr.Response.SummaryTime, tc.expectedTimestamp)
-			}
-		})
+// Note that these stats summaries are never cleaned up, and will be left in
+// the TODB after the tests complete
+func CreateTestStatsSummaries(t *testing.T) {
+	for _, ss := range testData.StatsSummaries {
+		latestTime = time.Now().Truncate(time.Second)
+		ss.SummaryTime = latestTime
+		alerts, _, err := TOSession.CreateSummaryStats(ss)
+		assert.RequireNoError(t, err, "Creating Stats Summary for stat '%s': %v - alerts: %+v", *ss.StatName, err, alerts.Alerts)
 	}
 }

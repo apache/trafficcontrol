@@ -84,7 +84,12 @@ for d in $(get_db_dumps); do
 done
 
 cd "$TO_DIR"
-old_db_version=0
+# This NEEDS to be updated if migrations are squashed. It should be the
+# timestamp of the oldest extant migration.
+# TODO: this can be determined automatically from an inspection of the migrations dir
+FIRST_MIGRATION=2022011112591400
+
+old_db_version=$FIRST_MIGRATION
 
 if [[ "$db_is_empty" = false ]]; then
   old_db_version=$(get_current_db_version)
@@ -92,7 +97,7 @@ if [[ "$db_is_empty" = false ]]; then
 fi
 
 # reset the DB if it is empty (i.e. no db.dump was provided)
-if [[ "$old_db_version" -eq 0 ]]; then
+if [[ "$old_db_version" -eq $FIRST_MIGRATION ]]; then
 	db_is_empty=true
 	./db/admin --env=production reset || { echo "DB reset failed!"; exit 1; }
 fi

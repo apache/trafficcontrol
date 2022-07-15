@@ -277,12 +277,14 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 // diff calls t3c-diff to diff the given new file and the file on disk. Returns whether they're different.
 // Logs the difference.
 // If the file on disk doesn't exist, returns true and logs the entire file as a diff.
-func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, perm os.FileMode) (bool, error) {
+func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, perm os.FileMode, uid int, gid int) (bool, error) {
 	diffMsg := ""
 	args := []string{
 		"--file-a=stdin",
 		"--file-b=" + fileLocation,
 		"--file-mode=" + fmt.Sprintf("%#o", perm),
+		"--file-uid=" + fmt.Sprint(uid),
+		"--file-gid=" + fmt.Sprint(gid),
 	}
 
 	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, args...)
