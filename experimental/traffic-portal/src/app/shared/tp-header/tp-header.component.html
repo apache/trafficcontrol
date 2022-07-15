@@ -52,8 +52,8 @@ limitations under the License.
 	</mat-menu>
 	<mat-menu #usersMenu="matMenu">
 		<a mat-menu-item routerLink="/core/users" *ngIf="hasPermission('USER:READ')">View Users</a>
-		<button mat-button type="button" *ngIf="!hasPermission('USER:READ')">View Users</button>
+		<button disabled mat-button type="button" *ngIf="!hasPermission('USER:READ')">View Users</button>
 		<a mat-menu-item routerLink="/core/tenants" *ngIf="hasPermission('TENANT:READ')">View Tenants</a>
-		<button mat-button type="button" *ngIf="!hasPermission('TENANT:READ')">View Users</button>
+		<button disabled mat-button type="button" *ngIf="!hasPermission('TENANT:READ')">View Tenants</button>
 	</mat-menu>
 </mat-toolbar>
