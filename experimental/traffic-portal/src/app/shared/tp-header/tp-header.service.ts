@@ -76,6 +76,13 @@ export class TpHeaderService {
 					text: "Profile",
 					type: "anchor"
 				}],
+			["Tenants",
+				{
+					routerLink: "/core/tenants",
+					text: "Tenants",
+					type: "anchor",
+					visible: (): boolean => this.hasPermission("TENANT:READ"),
+				}],
 			["Logout",
 				{
 					click: async (): Promise<void> => this.logout(),
