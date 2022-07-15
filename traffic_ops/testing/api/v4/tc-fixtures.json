@@ -5462,6 +5462,22 @@
             "host": "host3",
             "ttl": 10,
             "type": "AAAA_RECORD"
+        },
+        {
+            "address": "192.168.0.3",
+            "cachegroup": "cachegroup2",
+            "deliveryservice": "basic-ds-in-cdn2",
+            "host": "cdnlock-test-delete-host",
+            "type": "A_RECORD",
+            "ttl": 10
+        },
+        {
+            "address": "192.168.0.3",
+            "cachegroup": "cachegroup2",
+            "deliveryservice": "basic-ds-in-cdn2",
+            "host": "cdnlock-negtest-delete-host",
+            "type": "A_RECORD",
+            "ttl": 10
         }
     ],
     "statuses": [
