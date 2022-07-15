@@ -28,7 +28,6 @@ const routes: Routes = [
 		children: [{
 			loadChildren: async (): Promise<Type<CoreModule>> => import("./core/core.module")
 				.then(mod => mod.CoreModule),
-			},
 			path: ""
 		}],
 		path: "core",
