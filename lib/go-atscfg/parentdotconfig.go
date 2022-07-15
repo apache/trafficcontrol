@@ -901,7 +901,6 @@ func (dsp *parentDSParams) FillParentRetries(keys ParentConfigRetryKeys, dsParam
 		}
 	}
 
-	// Unfortunately this may be s
 	if v, ok := dsParams[keys.SecondaryMode]; ok {
 		if v == "false" {
 			dsp.TryAllPrimariesBeforeSecondary = false
@@ -924,7 +923,7 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	warnings := []string{}
 	params := parentDSParams{}
 
-	// Default values
+	// Default values for origin facing MSO tier
 	if serverPlacement.IsLastCacheTier && isMSO {
 		params.Algorithm = ParentConfigDSParamDefaultMSOAlgorithm
 		params.ParentRetry = ParentConfigDSParamDefaultMSOParentRetry
@@ -951,34 +950,26 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling]
 	params.MergeGroups = strings.Split(dsParams[ParentConfigParamMergeGroups], " ")
 
-	// Secondary Mode should really be done per tier
-	if v, ok := dsParams[ParentConfigRetryKeysDefault.SecondaryMode]; ok {
-		params.TryAllPrimariesBeforeSecondary = true
-		if v != "" {
-			warnings = append(warnings, "DS '"+*ds.XMLID+"' had Parameter "+ParentConfigRetryKeysDefault.SecondaryMode+" which is used if it exists, the value is ignored! Non-empty value '"+v+"' will be ignored!")
-		}
-	}
-
 	// progressively fill in the params
 	if serverPlacement.IsLastCacheTier {
 		// mso. prefix lowest priority
 		if isMSO {
-			_, warns := params.FillParentRetries(ParentConfigRetryKeysMSO, dsParams, *ds.XMLID)
+			hasVals, warns := params.FillParentRetries(ParentConfigRetryKeysMSO, dsParams, *ds.XMLID)
+			params.HasRetryParams = params.HasRetryParams || hasVals
 			warnings = append(warnings, warns...)
 		}
 
 		// no prefix next priority
-		_, warns := params.FillParentRetries(ParentConfigRetryKeysDefault, dsParams, *ds.XMLID)
+		hasVals, warns := params.FillParentRetries(ParentConfigRetryKeysDefault, dsParams, *ds.XMLID)
 		warnings = append(warnings, warns...)
+		params.HasRetryParams = params.HasRetryParams || hasVals
 
 		// last. prefix highest priority
-		_, warns = params.FillParentRetries(ParentConfigRetryKeysLast, dsParams, *ds.XMLID)
+		hasVals, warns = params.FillParentRetries(ParentConfigRetryKeysLast, dsParams, *ds.XMLID)
 		warnings = append(warnings, warns...)
-
-		params.HasRetryParams = true
+		params.HasRetryParams = params.HasRetryParams || hasVals
 
 	} else if serverPlacement.IsInnerCacheTier {
-
 		hasVals, warns := params.FillParentRetries(ParentConfigRetryKeysInner, dsParams, *ds.XMLID)
 		warnings = append(warnings, warns...)
 

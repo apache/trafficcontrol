@@ -2239,6 +2239,12 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 			Value:      "",
 			Profiles:   []byte(`["ds0Profile","ds1Profile"]`),
 		},
+		tc.Parameter{
+			Name:       ParentConfigRetryKeysFirst.SecondaryMode,
+			ConfigFile: "parent.config",
+			Value:      "",
+			Profiles:   []byte(`["ds0Profile","ds1Profile"]`),
+		},
 	}
 
 	serverParams := []tc.Parameter{
