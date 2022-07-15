@@ -13,16 +13,16 @@
 */
 import { formatDate } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { ColDef } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 
 import { ChangeLogsService } from "src/app/api/change-logs.service";
+import { LastDaysComponent } from "src/app/core/change-logs/last-days/last-days.component";
 import { ChangeLog } from "src/app/models/change-logs";
 import { TableTitleButton } from "src/app/shared/generic-table/generic-table.component";
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
-import { LastDaysComponent } from "src/app/core/change-logs/last-days/last-days.component";
-import { MatDialog } from "@angular/material/dialog";
 
 /**
  * AugmentedChangeLog has fields for access to processed times.
@@ -158,8 +158,9 @@ export class ChangeLogsComponent implements OnInit {
 	}
 
 	/**
+	 * handles when a title button is event is emitted
 	 *
-	 * @param action
+	 * @param action which button was pressed
 	 */
 	public async handleTitleButton(action: string): Promise<void> {
 		switch(action){
