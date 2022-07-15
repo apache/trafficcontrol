@@ -219,7 +219,7 @@ func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 func (role *TORole) Update(h http.Header) (error, error, int) {
 
 	if ok, err := dbhelpers.RoleExists(role.ReqInfo.Tx.Tx, *role.ID); err != nil {
-		return nil, errors.New("verifying Role exists: " + err.Error()), http.StatusInternalServerError
+		return nil, fmt.Errorf("verifying Role exists: %w", err), http.StatusInternalServerError
 	} else if !ok {
 		return errors.New("role not found"), nil, http.StatusNotFound
 	}
@@ -261,7 +261,7 @@ func (role *TORole) Update(h http.Header) (error, error, int) {
 func (role *TORole) Delete() (error, error, int) {
 
 	if ok, err := dbhelpers.RoleExists(role.ReqInfo.Tx.Tx, *role.ID); err != nil {
-		return nil, errors.New("verifying Role exists: " + err.Error()), http.StatusInternalServerError
+		return nil, fmt.Errorf("verifying Role exists: %w", err), http.StatusInternalServerError
 	} else if !ok {
 		return errors.New("role not found"), nil, http.StatusNotFound
 	}

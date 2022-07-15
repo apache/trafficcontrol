@@ -329,6 +329,7 @@ func validateRoleSort() utils.CkReqFunc {
 		var roleNames []string
 		roleResp := resp.([]tc.Role)
 		for _, role := range roleResp {
+			assert.RequireNotNil(t, role.Name, "Expected Name to not be nil.")
 			roleNames = append(roleNames, *role.Name)
 		}
 		assert.Equal(t, true, sort.StringsAreSorted(roleNames), "List is not sorted by their names: %v", roleNames)
@@ -349,10 +350,12 @@ func validateRoleDescSort() utils.CkReqFunc {
 		assert.RequireEqual(t, len(roleAscResp), len(roleDescResp), "Expected descending order response length: %d, to match ascending order response length %d", len(roleAscResp), len(roleDescResp))
 		// Insert Role names to the front of a new list, so they are now reversed to be in ascending order.
 		for _, role := range roleDescResp {
+			assert.RequireNotNil(t, role.Name, "Expected Name to not be nil.")
 			descSortedList = append([]string{*role.Name}, descSortedList...)
 		}
 		// Insert Role names by appending to a new list, so they stay in ascending order.
 		for _, role := range roleAscResp {
+			assert.RequireNotNil(t, role.Name, "Expected Name to not be nil.")
 			ascSortedList = append(ascSortedList, *role.Name)
 		}
 		assert.Exactly(t, ascSortedList, descSortedList, "Role responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
@@ -365,6 +368,7 @@ func GetRoleID(t *testing.T, name string) func() int {
 		assert.RequireNoError(t, err, "Get Roles Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(role), "Expected response object length 1, but got %d", len(role))
 		assert.RequireNotNil(t, role, "Expected role to not be nil.")
+		assert.RequireNotNil(t, role[0].ID, "Expected ID to not be nil.")
 		return *role[0].ID
 	}
 }
@@ -381,14 +385,16 @@ func DeleteTestRoles(t *testing.T) {
 	assert.NoError(t, err, "Cannot get Roles: %v", err)
 	for _, role := range roles {
 		// Don't delete active roles created by test setup
+		assert.RequireNotNil(t, role.Name, "Expected Name to not be nil.")
+		assert.RequireNotNil(t, role.ID, "Expected ID to not be nil.")
 		if *role.Name == "admin" || *role.Name == "disallowed" || *role.Name == "operations" || *role.Name == "portal" || *role.Name == "read-only" || *role.Name == "steering" || *role.Name == "federation" {
 			continue
 		}
 		_, _, _, err := TOSession.DeleteRoleByID(*role.ID)
-		assert.NoError(t, err, "Expected no error while deleting role %s, but got %v", role.Name, err)
+		assert.NoError(t, err, "Expected no error while deleting role %s, but got %v", *role.Name, err)
 		// Retrieve the Role to see if it got deleted
 		getRole, _, _, err := TOSession.GetRoleByIDWithHdr(*role.ID, nil)
-		assert.NoError(t, err, "Error getting Role '%s' after deletion: %v", role.Name, err)
-		assert.Equal(t, 0, len(getRole), "Expected Role '%s' to be deleted, but it was found in Traffic Ops", role.Name)
+		assert.NoError(t, err, "Error getting Role '%s' after deletion: %v", *role.Name, err)
+		assert.Equal(t, 0, len(getRole), "Expected Role '%s' to be deleted, but it was found in Traffic Ops", *role.Name)
 	}
 }
