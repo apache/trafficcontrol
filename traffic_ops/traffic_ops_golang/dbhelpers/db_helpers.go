@@ -542,6 +542,13 @@ func GetCapabilitiesFromRoleName(tx *sql.Tx, role string) ([]string, error) {
 	return caps, nil
 }
 
+// RoleExists returns whether or not the role with the given roleName exists, and any error that occurred.
+func RoleExists(tx *sql.Tx, roleID int) (bool, error) {
+	exists := false
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * FROM role WHERE role.id = $1)`, roleID).Scan(&exists)
+	return exists, err
+}
+
 // GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
 func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	name := tc.DeliveryServiceName("")
@@ -1803,18 +1810,6 @@ func GetRoleIDFromName(tx *sql.Tx, roleName string) (int, bool, error) {
 		return id, false, fmt.Errorf("querying role ID from name: %w", err)
 	}
 	return id, true, nil
-}
-
-// GetRoleNameFromID returns the name of the role associated with the supplied ID.
-func GetRoleNameFromID(tx *sql.Tx, roleID int) (string, bool, error) {
-	var name string
-	if err := tx.QueryRow(`SELECT name FROM role WHERE id = $1`, roleID).Scan(&name); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return name, false, nil
-		}
-		return name, false, fmt.Errorf("querying role name from ID: %w", err)
-	}
-	return name, true, nil
 }
 
 // GetCDNNameDomain returns the name and domain for a given CDN ID.

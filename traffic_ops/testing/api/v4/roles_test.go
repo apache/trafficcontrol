@@ -61,12 +61,48 @@ func TestRoles(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateRoleDescSort()),
 				},
 			},
+			"POST": {
+				"BAD REQUEST when MISSING NAME": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "missing name",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING DESCRIPTION": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name": "noDescription",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "new_admin",
+						"description": "description",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
 			"PUT": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"update_role"}}},
 					RequestBody: map[string]interface{}{
-						"name":        "another_role",
+						"name":        "new_name",
 						"description": "new updated description",
 						"permissions": []string{
 							"all-read",
@@ -74,7 +110,70 @@ func TestRoles(t *testing.T) {
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateRoleUpdateCreateFields("another_role", map[string]interface{}{"Description": "new updated description"})),
+						validateRoleUpdateCreateFields("new_name", map[string]interface{}{"Name": "new_name", "Description": "new updated description"})),
+				},
+				"BAD REQUEST when MISSING NAME": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
+					RequestBody: map[string]interface{}{
+						"description": "missing name",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING DESCRIPTION": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
+					RequestBody: map[string]interface{}{
+						"name": "noDescription",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ADMIN ROLE": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"admin"}}},
+					RequestBody: map[string]interface{}{
+						"name":        "adminUpdated",
+						"description": "description",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"NOT FOUND when ROLE DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"doesntexist"}}},
+					RequestBody: map[string]interface{}{
+						"name":        "doesntexist",
+						"description": "description",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
+					RequestBody: map[string]interface{}{
+						"name":        "new_admin",
+						"description": "description",
+						"permissions": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					ClientSession: TOSession,
@@ -239,14 +338,20 @@ func CreateTestRoles(t *testing.T) {
 }
 
 func DeleteTestRoles(t *testing.T) {
-	for _, r := range testData.Roles {
-		_, _, err := TOSession.DeleteRole(r.Name, client.NewRequestOptions())
-		assert.NoError(t, err, "Expected no error while deleting role %s, but got %v", r.Name, err)
+	roles, _, err := TOSession.GetRoles(client.RequestOptions{})
+	assert.NoError(t, err, "Cannot get Roles: %v - alerts: %+v", err, roles.Alerts)
+	for _, role := range roles.Response {
+		// Don't delete active roles created by test setup
+		if role.Name == "admin" || role.Name == "disallowed" || role.Name == "operations" || role.Name == "portal" || role.Name == "read-only" || role.Name == "steering" || role.Name == "federation" {
+			continue
+		}
+		_, _, err := TOSession.DeleteRole(role.Name, client.NewRequestOptions())
+		assert.NoError(t, err, "Expected no error while deleting role %s, but got %v", role.Name, err)
 		// Retrieve the Role to see if it got deleted
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", r.Name)
+		opts.QueryParameters.Set("name", role.Name)
 		getRole, _, err := TOSession.GetRoles(opts)
-		assert.NoError(t, err, "Error getting Role '%s' after deletion: %v - alerts: %+v", r.Name, err, getRole.Alerts)
-		assert.Equal(t, 0, len(getRole.Response), "Expected Role '%s' to be deleted, but it was found in Traffic Ops", r.Name)
+		assert.NoError(t, err, "Error getting Role '%s' after deletion: %v - alerts: %+v", role.Name, err, getRole.Alerts)
+		assert.Equal(t, 0, len(getRole.Response), "Expected Role '%s' to be deleted, but it was found in Traffic Ops", role.Name)
 	}
 }

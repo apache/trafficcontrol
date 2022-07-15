@@ -58,19 +58,12 @@ type TORole struct {
 	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
 }
 
-func updateLegacyRoleQuery() string {
+func updateRoleQuery() string {
 	return `UPDATE
 role SET
 name=$1,
 description=$2
-WHERE id=$3 RETURNING last_updated`
-}
-
-func updateRoleQuery() string {
-	return `UPDATE
-role SET
-description=$1
-WHERE name=$2 RETURNING last_updated`
+WHERE name=$3 RETURNING last_updated`
 }
 
 func (v *TORole) GetLastUpdated() (*time.Time, bool, error) {
@@ -224,6 +217,13 @@ func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 }
 
 func (role *TORole) Update(h http.Header) (error, error, int) {
+
+	if ok, err := dbhelpers.RoleExists(role.ReqInfo.Tx.Tx, *role.ID); err != nil {
+		return nil, fmt.Errorf("verifying Role exists: %w", err), http.StatusInternalServerError
+	} else if !ok {
+		return errors.New("role not found"), nil, http.StatusNotFound
+	}
+
 	var isAdmin bool
 	if err := role.ReqInfo.Tx.Get(&isAdmin, isAdminQuery, role.ID); err != nil {
 		return nil, fmt.Errorf("checking if Role to be modified is '%s': %w", tc.AdminRoleName, err), http.StatusInternalServerError
@@ -259,6 +259,13 @@ func (role *TORole) Update(h http.Header) (error, error, int) {
 }
 
 func (role *TORole) Delete() (error, error, int) {
+
+	if ok, err := dbhelpers.RoleExists(role.ReqInfo.Tx.Tx, *role.ID); err != nil {
+		return nil, fmt.Errorf("verifying Role exists: %w", err), http.StatusInternalServerError
+	} else if !ok {
+		return errors.New("role not found"), nil, http.StatusNotFound
+	}
+
 	assignedUsers := 0
 	if err := role.ReqInfo.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM public.tm_user WHERE role=$1", role.ID); err != nil {
 		return nil, errors.New("role delete counting assigned users: " + err.Error()), http.StatusInternalServerError
@@ -332,12 +339,7 @@ func deleteQuery() string {
 
 // Update will modify the role identified by the role name.
 func Update(w http.ResponseWriter, r *http.Request) {
-	var roleID int
-	var roleDesc string
-	var roleCapabilities []string
 	var roleV4 tc.RoleV4
-	var ok bool
-	var err error
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -352,24 +354,24 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	roleName := inf.Params["name"]
-	if roleName == tc.AdminRoleName {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, cannotModifyAdminError, nil)
-		return
-	}
-
 	if err := roleV4.Validate(); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
+
+	currentRoleName := inf.Params["name"]
+	if currentRoleName == tc.AdminRoleName {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, cannotModifyAdminError, nil)
+		return
+	}
+
 	missing := inf.User.MissingPermissions(roleV4.Permissions...)
 	if len(missing) != 0 {
 		api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil)
 		return
 	}
-	roleDesc = roleV4.Description
-	roleCapabilities = roleV4.Permissions
-	roleID, ok, err = dbhelpers.GetRoleIDFromName(tx, roleName)
+
+	roleID, ok, err := dbhelpers.GetRoleIDFromName(tx, currentRoleName)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
@@ -378,7 +380,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingLastUpdated, found, err := api.GetLastUpdatedByName(inf.Tx, roleName, "role")
+	existingLastUpdated, found, err := api.GetLastUpdatedByName(inf.Tx, currentRoleName, "role")
 	if err == nil && found == false {
 		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
 		return
@@ -392,9 +394,10 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, api.ResourceModifiedError, nil)
 		return
 	}
-	rows, err := tx.Query(updateRoleQuery(), roleDesc, roleName)
+	rows, err := tx.Query(updateRoleQuery(), roleV4.Name, roleV4.Description, currentRoleName)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("updating role: %w", err))
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, fmt.Errorf("updating role: %w", sysErr))
 		return
 	}
 	defer rows.Close()
@@ -411,26 +414,25 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		roleV4.LastUpdated = &lastUpdated
 	}
 
-	userErr, sysErr, errCode = deleteRoleCapabilityAssociations(inf.Tx, roleName)
+	userErr, sysErr, errCode = deleteRoleCapabilityAssociations(inf.Tx, roleV4.Name)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	userErr, sysErr, errCode = createRoleCapabilityAssociations(inf.Tx, roleID, &roleCapabilities)
+	userErr, sysErr, errCode = createRoleCapabilityAssociations(inf.Tx, roleID, &roleV4.Permissions)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was updated.")
 	var roleResponse interface{}
-	capabilities := roleCapabilities
 	roleResponse = tc.RoleV4{
-		Name:        roleName,
-		Permissions: capabilities,
-		Description: roleDesc,
+		Name:        roleV4.Name,
+		Permissions: roleV4.Permissions,
+		Description: roleV4.Description,
 	}
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, roleResponse)
-	changeLogMsg := fmt.Sprintf("ROLE: %s, ID: %d, ACTION: Updated Role", roleName, roleID)
+	changeLogMsg := fmt.Sprintf("ROLE: %s, ID: %d, ACTION: Updated Role", roleV4.Name, roleID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
@@ -559,7 +561,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := tx.Query(createQuery(), roleName, roleDesc, privLevel)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("creating role: %w", err))
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, fmt.Errorf("creating role: %w", sysErr))
 		return
 	}
 	defer rows.Close()

@@ -2572,6 +2572,14 @@
                 "all-read",
                 "all-write"
             ]
+        },
+        {
+            "name": "update_role",
+            "description": "role for testing update",
+            "permissions": [
+                "all-read",
+                "all-write"
+            ]
         }
     ],
     "servers": [

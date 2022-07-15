@@ -37,7 +37,7 @@ under the License.
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input name="name" id="name" type="text" class="form-control" ng-model="role.name" ng-readonly="!hasPropertyError(roleForm.name, 'pattern') && role.name === 'admin'" ng-pattern="namePattern()" required autofocus/>
                     <small class="input-error" ng-show="hasPropertyError(roleForm.name, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(roleForm.name, 'pattern')">No spaces, and cannot be named "admin"</small>
+                    <small class="input-error" ng-show="hasPropertyError(roleForm.name, 'pattern')">Cannot be named "admin"</small>
                     <span ng-show="hasError(roleForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
