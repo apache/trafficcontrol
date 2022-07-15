@@ -353,7 +353,7 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
-			"STATIC DNS ENTRIES BOOGALO": {
+			"STATIC DNS ENTRIES DELETE": {
 				"OK when USER OWNS LOCK": {
 					EndpointId:    GetStaticDNSEntryID(t, "host3"),
 					ClientSession: opsUserWithLockSession,
