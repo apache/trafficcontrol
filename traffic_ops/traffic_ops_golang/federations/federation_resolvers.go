@@ -115,6 +115,6 @@ func AssignFederationResolversToFederationHandler(w http.ResponseWriter, r *http
 	api.WriteRespAlertObj(
 		w, r, tc.SuccessLevel,
 		fmt.Sprintf("%d resolver(s) were assigned to the %s federation", len(reqObj.FedResolverIDs), name),
-		tc.AssignFederationFederationResolversResponse{Response: reqObj},
+		reqObj,
 	)
 }
