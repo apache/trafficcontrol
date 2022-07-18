@@ -14,7 +14,9 @@
 {
         "monitor_config_polling_interval_ms": {{ tm_monitor_config_polling_interval_ms }},
         "http_timeout_ms": {{ tm_http_timeout_ms }},
-        "peer_optimistic": {{ tm_peer_optimistic | lower }},
+        "peer_optimistic_quorum_min": {{ tm_peer_optimistic_quorum_min }},
+        "stat_polling": {{ tm_stat_polling | lower }},
+        "distributed_polling": {{ tm_distributed_polling | lower }},
         "max_events": {{ tm_max_events }},
         "health_flush_interval_ms": {{ tm_health_flush_interval_ms }},
         "stat_flush_interval_ms": {{ tm_stat_flush_interval_ms }},
