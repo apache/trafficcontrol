@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Traffic Control Cache Config integration tests
+name: T3C Integration Tests
 
 env:
   ATS_VERSION: 8.1.x
