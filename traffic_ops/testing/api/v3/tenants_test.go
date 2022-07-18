@@ -16,352 +16,232 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestTenants(t *testing.T) {
 	WithObjs(t, []TCObj{Tenants}, func() {
-		SortTestTenants(t)
-		GetTestTenants(t)
-		UpdateTestTenants(t)
-		UpdateTestRootTenant(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		UpdateTestTenantsWithHeaders(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestTenantsWithHeaders(t, header)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						utils.ResponseLengthGreaterOrEqual(1), validateTenantSort()),
+				},
+			},
+			"POST": {
+				"NO ERROR when VALID request": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"active":     true,
+						"name":       "tenant5",
+						"parentName": "root",
+						"parentId":   GetTenantID(t, "root")(),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), validateTenantCreateUpdateFields(map[string]interface{}{"Name": "tenant5"})),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetTenantID(t, "tenant4"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"active":     false,
+						"name":       "newname",
+						"parentName": "root",
+						"parentId":   GetTenantID(t, "root")(),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateTenantCreateUpdateFields(map[string]interface{}{"Name": "newname", "Active": false})),
+				},
+				"BAD REQUEST when ROOT TENANT": {
+					EndpointId:    GetTenantID(t, "root"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"active":     false,
+						"name":       "tenant1",
+						"parentName": "root",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:     GetTenantID(t, "tenant2"),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestBody: map[string]interface{}{
+						"active":     false,
+						"name":       "tenant2",
+						"parentName": "root",
+						"parentId":   GetTenantID(t, "root")(),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetTenantID(t, "tenant2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"active":     false,
+						"name":       "tenant2",
+						"parentName": "root",
+						"parentId":   GetTenantID(t, "root")(),
+					},
+					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"ERROR when TENANT HAS CHILDREN": {
+					EndpointId:    GetTenantID(t, "tenant1"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError()),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					tenant := tc.Tenant{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &tenant)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.TenantsWithHdr(testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, tc.Alerts{}, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							resp, err := testCase.ClientSession.CreateTenant(&tenant)
+							for _, check := range testCase.Expectations {
+								if resp != nil {
+									check(t, toclientlib.ReqInf{}, resp.Response, resp.Alerts, err)
+								}
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.UpdateTenantWithHdr(strconv.Itoa(testCase.EndpointId()), &tenant, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								if resp != nil {
+									check(t, reqInf, resp.Response, resp.Alerts, err)
+								}
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							_, err := testCase.ClientSession.DeleteTenant(strconv.Itoa(testCase.EndpointId()))
+							for _, check := range testCase.Expectations {
+								check(t, toclientlib.ReqInf{}, nil, tc.Alerts{}, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestTenantsWithHeaders(t *testing.T, header http.Header) {
-	// Retrieve the Tenant by name so we can get the id for the Update
-	name := "tenant2"
-	parentName := "tenant1"
-	modTenant, _, err := TOSession.TenantByNameWithHdr(name, header)
-	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
-	}
-
-	newParent, _, err := TOSession.TenantByNameWithHdr(parentName, header)
-	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
-	}
-	if newParent != nil {
-		modTenant.ParentID = newParent.ID
-
-		_, reqInf, err := TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, header)
-		if err == nil {
-			t.Fatalf("expected a precondition failed error, got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("expected a status 412 Precondition Failed, but got %d", reqInf.StatusCode)
+func validateTenantFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Tenant response to not be nil.")
+		tenantResp := resp.([]tc.Tenant)
+		for field, expected := range expectedResp {
+			for _, tenant := range tenantResp {
+				switch field {
+				case "Active":
+					assert.Equal(t, expected, tenant.Active, "Expected Active to be %v, but got %b", expected, tenant.Active)
+				case "Name":
+					assert.Equal(t, expected, tenant.Name, "Expected Name to be %v, but got %s", expected, tenant.Name)
+				case "ParentName":
+					assert.Equal(t, expected, tenant.ParentName, "Expected ParentName to be %v, but got %s", expected, tenant.ParentName)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
 		}
 	}
 }
 
-func TestTenantsActive(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, CacheGroups, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, DeliveryServices, Users}, func() {
-		UpdateTestTenantsActive(t)
-	})
+func validateTenantCreateUpdateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Tenant response to not be nil.")
+		tenantResp := resp.(tc.Tenant)
+		tenants := []tc.Tenant{tenantResp}
+		validateTenantFields(expectedResp)(t, toclientlib.ReqInf{}, tenants, tc.Alerts{}, nil)
+	}
+}
+
+func validateTenantSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Tenant response to not be nil.")
+		var tenants []string
+		tenantResp := resp.([]tc.Tenant)
+		for _, tenant := range tenantResp {
+			tenants = append(tenants, tenant.Name)
+		}
+		assert.Equal(t, true, sort.StringsAreSorted(tenants), "List is not sorted by their names: %v", tenants)
+	}
+}
+
+func GetTenantID(t *testing.T, name string) func() int {
+	return func() int {
+		tenant, _, err := TOSession.TenantByNameWithHdr(name, nil)
+		assert.RequireNoError(t, err, "Get Tenants Request failed with error:", err)
+		assert.RequireNotNil(t, tenant, "Expected tenant to not be nil")
+		return tenant.ID
+	}
 }
 
 func CreateTestTenants(t *testing.T) {
-	for _, ten := range testData.Tenants {
-		resp, err := TOSession.CreateTenant(&ten)
-
-		if err != nil {
-			t.Errorf("could not CREATE tenant %s: %v", ten.Name, err)
-		} else if resp == nil {
-			t.Errorf("nil response")
-		} else if resp.Response.Name != ten.Name {
-			t.Errorf("expected tenant '%s'; got '%s'", ten.Name, resp.Response.Name)
-		}
-	}
-}
-
-func GetTestTenants(t *testing.T) {
-	resp, _, err := TOSession.Tenants()
-	if err != nil {
-		t.Errorf("cannot GET all tenants: %v - %v", err, resp)
-		return
-	}
-	foundTenants := make(map[string]tc.Tenant, len(resp))
-	for _, ten := range resp {
-		foundTenants[ten.Name] = ten
-	}
-
-	// expect root and badTenant (defined in todb.go) + all defined in testData.Tenants
-	if len(resp) != 2+len(testData.Tenants) {
-		t.Errorf("expected %d tenants,  got %d", 2+len(testData.Tenants), len(resp))
-	}
-
-	for _, ten := range testData.Tenants {
-		if ft, ok := foundTenants[ten.Name]; ok {
-			if ft.ParentName != ten.ParentName {
-				t.Errorf("tenant %s: expected parent %s,  got %s", ten.Name, ten.ParentName, ft.ParentName)
-			}
-		} else {
-			t.Errorf("expected tenant %s: not found", ten.Name)
-		}
-	}
-}
-
-func SortTestTenants(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.TenantsWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, resp[i].Name)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UpdateTestTenants(t *testing.T) {
-
-	// Retrieve the Tenant by name so we can get the id for the Update
-	name := "tenant2"
-	parentName := "tenant1"
-	modTenant, _, err := TOSession.TenantByName(name)
-	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
-	}
-
-	newParent, _, err := TOSession.TenantByName(parentName)
-	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
-	}
-	modTenant.ParentID = newParent.ID
-
-	_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant)
-	if err != nil {
-		t.Errorf("cannot UPDATE Tenant by id: %v", err)
-	}
-
-	// Retrieve the Tenant to check Tenant parent name got updated
-	respTenant, _, err := TOSession.Tenant(strconv.Itoa(modTenant.ID))
-	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %v - %v", name, err)
-	}
-	if respTenant.ParentName != parentName {
-		t.Errorf("results do not match actual: %s, expected: %s", respTenant.ParentName, parentName)
-	}
-
-}
-
-func UpdateTestRootTenant(t *testing.T) {
-	// Retrieve the Tenant by name so we can get the id for the Update
-	name := "root"
-	modTenant, _, err := TOSession.TenantByNameWithHdr(name, nil)
-	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
-	}
-
-	modTenant.Active = false
-	modTenant.ParentID = modTenant.ID
-	_, reqInf, err := TOSession.UpdateTenantWithHdr(strconv.Itoa(modTenant.ID), modTenant, nil)
-	if err == nil {
-		t.Fatalf("expected an error when trying to update the 'root' tenant, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("expected a status 400 Bad Request, but got %d", reqInf.StatusCode)
+	for _, tenant := range testData.Tenants {
+		resp, err := TOSession.CreateTenant(&tenant)
+		assert.RequireNoError(t, err, "Could not create Tenant '%s': %v - alerts: %+v", tenant.Name, err, resp.Alerts)
 	}
 }
 
 func DeleteTestTenants(t *testing.T) {
+	tenants, _, err := TOSession.TenantsWithHdr(nil)
+	assert.NoError(t, err, "Cannot get Tenants: %v", err)
 
-	t1 := "tenant1"
-	tenant1, _, err := TOSession.TenantByName(t1)
-
-	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %v - %v", t1, err)
-	}
-	expectedChildDeleteErrMsg := `Tenant '` + strconv.Itoa(tenant1.ID) + `' has child tenants. Please update these child tenants and retry.`
-	if _, err := TOSession.DeleteTenant(strconv.Itoa(tenant1.ID)); err == nil {
-		t.Fatalf("%s has child tenants -- should not be able to delete", t1)
-	} else if !strings.Contains(err.Error(), expectedChildDeleteErrMsg) {
-		t.Errorf("expected error: %s;  got %s", expectedChildDeleteErrMsg, err.Error())
-	}
-
-	deletedTenants := map[string]struct{}{}
-	for {
-		initLenDeleted := len(deletedTenants)
-		for _, tn := range testData.Tenants {
-			if _, ok := deletedTenants[tn.Name]; ok {
-				continue
-			}
-
-			hasParent := false
-			for _, otherTenant := range testData.Tenants {
-				if _, ok := deletedTenants[otherTenant.Name]; ok {
-					continue
-				}
-				if otherTenant.ParentName == tn.Name {
-					hasParent = true
-					break
-				}
-			}
-			if hasParent {
-				continue
-			}
-
-			toTenant, _, err := TOSession.TenantByName(tn.Name)
-			if err != nil {
-				t.Fatalf("getting tenant %s: %v", tn.Name, err)
-			}
-			if _, err = TOSession.DeleteTenant(strconv.Itoa(toTenant.ID)); err != nil {
-				t.Fatalf("deleting tenant %s: %v", toTenant.Name, err)
-			}
-			deletedTenants[tn.Name] = struct{}{}
-
-		}
-		if len(deletedTenants) == len(testData.Tenants) {
-			break
-		}
-		if len(deletedTenants) == initLenDeleted {
-			t.Fatal("could not delete tenants: not tenant without an existing child found (cycle?)")
-		}
-	}
-}
-
-func ExtractXMLID(ds *tc.DeliveryServiceNullable) string {
-	if ds.XMLID != nil {
-		return *ds.XMLID
-	}
-	return "nil"
-}
-
-func UpdateTestTenantsActive(t *testing.T) {
-	originalTenants, _, err := TOSession.Tenants()
-	if err != nil {
-		t.Fatalf("getting tenants error expected: nil, actual: %+v", err)
-	}
-
-	setTenantActive(t, "tenant1", true)
-	setTenantActive(t, "tenant2", true)
-	setTenantActive(t, "tenant3", false)
-
-	// ds3 has tenant3. Even though tenant3 is inactive, we should still be able to get it, because our user is tenant1, which is active.
-	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds3")
-	if err != nil {
-		t.Fatal("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active)")
-	} else if len(dses) != 1 {
-		t.Error("admin user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
-	}
-
-	setTenantActive(t, "tenant1", true)
-	setTenantActive(t, "tenant2", false)
-	setTenantActive(t, "tenant3", true)
-
-	// ds3 has tenant3. Even though tenant3's parent, tenant2, is inactive, we should still be able to get it, because our user is tenant1, which is active.
-	_, _, err = TOSession.GetDeliveryServiceByXMLIDNullable("ds3")
-	if err != nil {
-		t.Fatal("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active)")
-	}
-
-	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	tenant3Session, _, err := client.LoginWithAgent(TOSession.URL, "tenant3user", "pa$$word", true, "to-api-v1-client-tests/tenant3user", true, toReqTimeout)
-	if err != nil {
-		t.Fatalf("failed to get log in with tenant3user: " + err.Error())
-	}
-
-	tenant4Session, _, err := client.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v1-client-tests/tenant4user", true, toReqTimeout)
-	if err != nil {
-		t.Fatalf("failed to get log in with tenant4user: " + err.Error())
-	}
-
-	// tenant3user with tenant3 has no access to ds3 with tenant3 when parent tenant2 is inactive
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
-	for _, ds := range dses {
-		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 parent tenant2 is inactive, expected: no ds", ExtractXMLID(&ds))
-	}
-
-	setTenantActive(t, "tenant1", true)
-	setTenantActive(t, "tenant2", true)
-	setTenantActive(t, "tenant3", false)
-
-	// tenant3user with tenant3 has no access to ds3 with tenant3 when tenant3 is inactive
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
-	for _, ds := range dses {
-		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 is inactive, expected: no ds", ExtractXMLID(&ds))
-	}
-
-	setTenantActive(t, "tenant1", true)
-	setTenantActive(t, "tenant2", true)
-	setTenantActive(t, "tenant3", true)
-
-	// tenant3user with tenant3 has access to ds3 with tenant3
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
-	if err != nil {
-		t.Errorf("tenant3user getting delivery service ds3 error expected: nil, actual: %+v", err)
-	} else if len(dses) == 0 {
-		t.Error("tenant3user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
-	}
-
-	// 1. ds2 has tenant2.
-	// 2. tenant3user has tenant3.
-	// 3. tenant2 is not a child of tenant3 (tenant3 is a child of tenant2)
-	// 4. Therefore, tenant3user should not have access to ds2
-	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds2")
-	for _, ds := range dses {
-		t.Errorf("tenant3user got delivery service %+v with tenant2, expected: no ds", ExtractXMLID(&ds))
-	}
-
-	// 1. ds1 has tenant1.
-	// 2. tenant4user has tenant4.
-	// 3. tenant1 is not a child of tenant4 (tenant4 is unrelated to tenant1)
-	// 4. Therefore, tenant4user should not have access to ds1
-	dses, _, _ = tenant4Session.GetDeliveryServiceByXMLIDNullable("ds1")
-	for _, ds := range dses {
-		t.Errorf("tenant4user got delivery service %+v with tenant1, expected: no ds", ExtractXMLID(&ds))
-	}
-
-	setTenantActive(t, "tenant3", false)
-	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
-	for _, ds := range dses {
-		t.Errorf("tenant3user was inactive, but got delivery service %+v with tenant3, expected: no ds", ExtractXMLID(&ds))
-	}
-
-	for _, tn := range originalTenants {
-		if tn.Name == "root" {
+	for i := len(tenants) - 1; i >= 0; i-- {
+		if tenants[i].Name == "root" {
 			continue
 		}
-		if _, err := TOSession.UpdateTenant(strconv.Itoa(tn.ID), &tn); err != nil {
-			t.Fatalf("restoring original tenants: " + err.Error())
-		}
+		alerts, err := TOSession.DeleteTenant(strconv.Itoa(tenants[i].ID))
+		assert.NoError(t, err, "Unexpected error deleting Tenant '%s' (#%d): %v - alerts: %+v", tenants[i].Name, tenants[i].ID, err, alerts.Alerts)
 	}
-}
-
-func setTenantActive(t *testing.T, name string, active bool) {
-	tn, _, err := TOSession.TenantByName(name)
-	if err != nil {
-		t.Fatalf("cannot GET Tenant by name: %s - %v", name, err)
-	}
-	tn.Active = active
-	_, err = TOSession.UpdateTenant(strconv.Itoa(tn.ID), tn)
-	if err != nil {
-		t.Fatalf("cannot UPDATE Tenant by id: %v", err)
-	}
+	// Retrieve Tenants to see if they got deleted, only root should exist
+	tenants, _, err = TOSession.TenantsWithHdr(nil)
+	assert.NoError(t, err, "Error getting Tenants after deletion: %v", err)
+	assert.Equal(t, len(tenants), 1, "Expected only 1 Tenant, but found %d.", len(tenants))
 }

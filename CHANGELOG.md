@@ -5,9 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [Traffic Portal] Added Layered Profile feature to /servers/
 - [#6448](https://github.com/apache/trafficcontrol/issues/6448) Added `status` and `lastPoll` fields to the `publish/CrStates` endpoint of Traffic Monitor (TM).
 - Added back to the health-client the `status` field logging with the addition of the filed to `publish/CrStates`
 - Added a new Traffic Ops endpoint to `GET` capacity and telemetry data for CDNi integration.
+- Added SOA (Service Oriented Architecture) capability to CDN-In-A-Box.
 - Added a Traffic Ops endpoints to `PUT` a requested configuration change for a full configuration or per host and an endpoint to approve or deny the request.
 - Traffic Monitor config option `distributed_polling` which enables the ability for Traffic Monitor to poll a subset of the CDN and divide into "local peer groups" and "distributed peer groups". Traffic Monitors in the same group are local peers, while Traffic Monitors in other groups are distibuted peers. Each TM group polls the same set of cachegroups and gets availability data for the other cachegroups from other TM groups. This allows each TM to be responsible for polling a subset of the CDN while still having a full view of CDN availability. In order to use this, `stat_polling` must be disabled.
 - Added support for a new Traffic Ops GLOBAL profile parameter -- `tm_query_status_override` -- to override which status of Traffic Monitors to query (default: ONLINE).
@@ -44,6 +46,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6368](https://github.com/apache/trafficcontrol/pull/6368) Fixed validation response message from `/acme_accounts`
 - [#6603](https://github.com/apache/trafficcontrol/issues/6603) Fixed users with "admin" "Priv Level" not having Permission to view or delete DNSSEC keys.
 - Fixed Traffic Router to handle aggressive NSEC correctly.
+- [#6907](https://github.com/apache/trafficcontrol/issues/6907) Fixed Traffic Ops to return the correct server structure (based on the API version) upon a server deletion.
 - [#6626](https://github.com/apache/trafficcontrol/pull/6626) Fixed t3c Capabilities request failure issue which could result in malformed config.
 - [#6370](https://github.com/apache/trafficcontrol/pull/6370) Fixed docs for `POST` and response code for `PUT` to `/acme_accounts` endpoint
 - Only `operations` and `admin` roles should have the `DELIVERY-SERVICE:UPDATE` permission.
@@ -56,9 +59,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Correction where using the placeholder `__HOSTNAME__` in "unknown" files (others than the defaults ones), was being replaced by the full FQDN instead of the shot hostname.
 - [#6800](https://github.com/apache/trafficcontrol/issues/6800) Fixed incorrect error message for `/server/details` associated with query parameters.
 - [#6712](https://github.com/apache/trafficcontrol/issues/6712) - Fixed error when loading the Traffic Vault schema from `create_tables.sql` more than once.
+- [#6883](https://github.com/apache/trafficcontrol/issues/6883) Fix t3c cache to invalidate on version change
 - [#6834](https://github.com/apache/trafficcontrol/issues/6834) - In API 4.0, fixed `GET` for `/servers` to display all profiles irrespective of the index position. Also, replaced query param `profileId` with `profileName`.
 - [#6299](https://github.com/apache/trafficcontrol/issues/6299) User representations don't match
+- [#6896](https://github.com/apache/trafficcontrol/issues/6896) Fixed the `POST api/cachegroups/id/queue_updates` endpoint so that it doesn't give an internal server error anymore.
+- [#6933](https://github.com/apache/trafficcontrol/issues/6933) Fixed tc-health-client to handle credentials files with special characters in variables
 - [#6776](https://github.com/apache/trafficcontrol/issues/6776) User properties only required sometimes
+- Fixed TO API `GET /deliveryservicesserver` causing error when an IMS request is made with the `cdn` and `maxRevalDurationDays` parameters set.
+- [#6792](https://github.com/apache/trafficcontrol/issues/6792) Remove extraneous field from Topologies and Server Capability POST/PUT.
+- [#6795](https://github.com/apache/trafficcontrol/issues/6795) Removed an unnecessary response wrapper object from being returned in a POST to the federation resolvers endpoint.
+
 
 ### Removed
 - Remove `client.steering.forced.diversity` feature flag(profile parameter) from Traffic Router (TR). Client steering responses now have cache diversity by default.
@@ -67,6 +77,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Removed the Traffic Monitor `peer_polling_protocol` option. Traffic Monitor now just uses hostnames to request peer states, which can be handled via IPv4 or IPv6 depending on the underlying IP version in use.
 - Dropped CentOS 8 support
 - The `/servers/details` endpoint of the Traffic Ops API has been dropped in version 4.0, and marked deprecated in earlier versions.
+- Remove Traffic Ops API version 2
 
 ### Changed
 - [#6694](https://github.com/apache/trafficcontrol/issues/6694) Traffic Stats now uses the TO API 3.0
@@ -94,6 +105,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - `TRAFFIC_ROUTER`-type Profiles no longer need to have names that match any kind of pattern (e.g. `CCR_.*`)
 - [#4351](https://github.com/apache/trafficcontrol/issues/4351) Updated message to an informative one when deleting a delivery service.
 - Updated Grove to use the TO API v3 client library
+- Updated Ansible Roles to use Traffic Ops API v3
 
 ## [6.1.0] - 2022-01-18
 ### Added

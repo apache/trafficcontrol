@@ -208,16 +208,20 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 	}
 	dss.ServerIDs = serverIDs
 	dss.DeliveryServiceIDs = dsIDs
-	cdn := params["cdn"]
+
+	queryValues := map[string]interface{}{}
+	cdn := ""
+	if cdnName, ok := params["cdn"]; ok {
+		cdn = cdnName
+		queryValues["cdn"] = cdnName
+	}
 	dss.CDN = cdn
 	query1, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs, true, cdn)
 	if err != nil {
 		log.Warnf("Error getting the max last updated query %v", err)
 	}
 	if useIMS {
-		queryValues := map[string]interface{}{
-			"accessibleTenants": pq.Array(tenantIDs),
-		}
+		queryValues["accessibleTenants"] = pq.Array(tenantIDs)
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, query1)
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -693,33 +697,7 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if inf.Version.Major <= 2 {
-		v11ServerList := []tc.DSServerV11{}
-		for _, srv := range servers {
-			routerHostName := ""
-			routerPort := ""
-			interfaces := *srv.ServerInterfaces
-			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
-			if len(interfaces) != 0 {
-				routerHostName = interfaces[0].RouterHostName
-				routerPort = interfaces[0].RouterPortName
-			}
-			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
-			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
-				return
-			}
-			v11server := tc.DSServerV11{}
-			pid, pdesc := dbhelpers.GetProfileIDDesc(inf.Tx.Tx, srv.ProfileNames[0])
-			v11server.DSServerBase = srv.DSServerBaseV4.ToDSServerBase(&routerHostName, &routerPort, &pdesc, &pid)
-
-			v11server.LegacyInterfaceDetails = legacyInterface
-
-			v11ServerList = append(v11ServerList, v11server)
-		}
-		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v11ServerList)
-		return
-	} else if inf.Version.Major <= 3 {
+	if inf.Version.Major == 3 {
 		v3ServerList := []tc.DSServer{}
 		for _, srv := range servers {
 			routerHostName := ""
@@ -955,7 +933,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 		if version.Major > 3 && version.Minor >= 0 {
 			ds = ds.RemoveLD1AndLD2()
 			returnable = append(returnable, ds)
-		} else if version.Major > 2 {
+		} else {
 			if version.Minor > 0 {
 				dsV31 := ds.DowngradeToV31()
 				returnable = append(returnable, dsV31)
@@ -963,9 +941,6 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 				dsV30 := ds.DowngradeToV31().DeliveryServiceV30
 				returnable = append(returnable, dsV30)
 			}
-		} else {
-			dsV2 := ds.DowngradeToV31().DeliveryServiceNullableV15
-			returnable = append(returnable, dsV2)
 		}
 	}
 	return returnable, nil, nil, http.StatusOK, &maxTime

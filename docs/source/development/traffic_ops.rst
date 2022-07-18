@@ -147,7 +147,7 @@ Traffic Ops Project Tree Overview
 	- ort/ - Contains :term:`ORT` and :abbr:`ATS (Apache Traffic Server)` configuration file-generation logic and tooling
 	- testing/ - Holds utilities for testing the :ref:`to-api`
 
-		- api/ - Integration testing for the `Traffic Ops Go client <https://pkg.go.dev/github.com/apache/trafficcontrol/traffic_ops/client>`_ and Traffic Ops
+		- api/ - Integration testing for the `Traffic Ops Go client <https://pkg.go.dev/github.com/apache/trafficcontrol/traffic_ops/v4-client>`_ and Traffic Ops
 
 	- traffic_ops_golang/ - The root of the Go implementation's code-base
 

@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import { Component, Inject } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { UntypedFormControl } from "@angular/forms";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { Subject } from "rxjs";
 
@@ -80,11 +80,11 @@ export class NewInvalidationJobDialogComponent {
 	/** The date - but not time! - at which the new job will come into effect. */
 	public startDate = new Date();
 	/** Control for users to enter new content invalidation jobs. */
-	public regexp = new FormControl("/");
+	public regexp = new UntypedFormControl("/");
 	/** Control for users to enter a new job's TTL. */
-	public ttl = new FormControl(178);
+	public ttl = new UntypedFormControl(178);
 	/** Control for users to enter the starting time for a new job. */
-	public startTime = new FormControl("");
+	public startTime = new UntypedFormControl("");
 
 	/** A subscribable that tracks whether the new job's regexp is valid. */
 	public readonly regexpIsValid = new Subject<string>();

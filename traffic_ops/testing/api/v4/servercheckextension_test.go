@@ -16,11 +16,15 @@ package v4
 */
 
 import (
+	"encoding/json"
+	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -30,119 +34,100 @@ var (
 
 func TestServerCheckExtensions(t *testing.T) {
 	WithObjs(t, []TCObj{ServerCheckExtensions}, func() {
-		CreateTestInvalidServerCheckExtensions(t)
+
+		extensionUser := utils.CreateV4Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
+
+		methodTests := utils.V4TestCase{
+			"POST": {
+				"FORBIDDEN when NOT EXTENSION USER": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":                   "MEM_CHECKER",
+						"version":                "3.0.3",
+						"info_url":               "-",
+						"script_file":            "mem.py",
+						"isactive":               1,
+						"servercheck_short_name": "MC",
+						"type":                   "CHECK_EXTENSION_MEM",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+				"BAD REQUEST when NO OPEN SLOTS": {
+					ClientSession: extensionUser,
+					RequestBody: map[string]interface{}{
+						"name":                   "MEM_CHECKER",
+						"version":                "3.0.3",
+						"info_url":               "-",
+						"script_file":            "mem.py",
+						"isactive":               1,
+						"servercheck_short_name": "MC",
+						"type":                   "CHECK_EXTENSION_NUM",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID TYPE": {
+					ClientSession: extensionUser,
+					RequestBody: map[string]interface{}{
+						"name":                   "MEM_CHECKER",
+						"version":                "3.0.3",
+						"info_url":               "-",
+						"script_file":            "mem.py",
+						"isactive":               1,
+						"servercheck_short_name": "MC",
+						"type":                   "INVALID_TYPE",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+		}
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					serverCheckExtension := tc.ServerCheckExtensionNullable{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &serverCheckExtension)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateServerCheckExtension(serverCheckExtension, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
 func CreateTestServerCheckExtensions(t *testing.T) {
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
-
+	extensionUser := utils.CreateV4Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
 	for _, ext := range testData.ServerCheckExtensions {
-		resp, _, err := TOSession.CreateServerCheckExtension(ext, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("could not create Servercheck Extension: %v - alerts: %+v", err, resp.Alerts)
-		}
+		resp, _, err := extensionUser.CreateServerCheckExtension(ext, client.RequestOptions{})
+		assert.NoError(t, err, "Could not create Servercheck Extension: %v - alerts: %+v", err, resp.Alerts)
 	}
-
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
-}
-
-func CreateTestInvalidServerCheckExtensions(t *testing.T) {
-	if len(testData.ServerCheckExtensions) < 1 {
-		t.Fatal("Need at least one Servercheck Extension to test invalid Servercheck Extension creation")
-	}
-	// Fail Attempt to Create ServerCheckExtension as non extension user
-	_, _, err := TOSession.CreateServerCheckExtension(testData.ServerCheckExtensions[0], client.RequestOptions{})
-	if err == nil {
-		t.Error("expected to receive error with non extension user")
-	}
-
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
-
-	// Attempt to create another valid ServerCheckExtension and it should fail as there is no open slots
-	toExt := tc.ServerCheckExtensionNullable{
-		Name:                 util.StrPtr("MEM_CHECKER"),
-		Version:              util.StrPtr("3.0.3"),
-		InfoURL:              util.StrPtr("-"),
-		ScriptFile:           util.StrPtr("mem.py"),
-		ServercheckShortName: util.StrPtr("MC"),
-		Type:                 util.StrPtr("CHECK_EXTENSION_MEM"),
-	}
-	_, _, err = TOSession.CreateServerCheckExtension(toExt, client.RequestOptions{})
-	if err == nil {
-		t.Error("expected to receive error with no open slots left")
-	}
-
-	// Attempt to create a TO Extension with an invalid type
-	toExt.Type = util.StrPtr("INVALID_TYPE")
-	_, _, err = TOSession.CreateServerCheckExtension(toExt, client.RequestOptions{})
-	if err == nil {
-		t.Error("expected to receive error with invalid TO extension type")
-	}
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
-
 }
 
 func DeleteTestServerCheckExtensions(t *testing.T) {
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
-
+	extensionUser := utils.CreateV4Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
 	extensions, _, err := TOSession.GetServerCheckExtensions(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not get Servercheck Extensions: %v - alerts: %+v", err, extensions.Alerts)
-	}
+	assert.RequireNoError(t, err, "Could not get Servercheck Extensions: %v - alerts: %+v", err, extensions.Alerts)
 
-	ids := []int{}
-	for _, ext := range testData.ServerCheckExtensions {
-		if ext.Name == nil {
-			t.Errorf("Found Servercheck Extension in the testing data with null or undefined Name")
-		}
-		found := false
-		for _, respTOExt := range extensions.Response {
-			if respTOExt.Name == nil || respTOExt.ID == nil {
-				t.Error("Traffic Ops returned a representation for a Servercheck Extension with null or undefined ID and/or name")
-				continue
-			}
-			if *ext.Name == *respTOExt.Name {
-				ids = append(ids, *respTOExt.ID)
-				found = true
-				continue
-			}
-		}
-		if !found {
-			t.Errorf("expected to find to_extension %v", *ext.Name)
-		}
+	for _, extension := range extensions.Response {
+		alerts, _, err := extensionUser.DeleteServerCheckExtension(*extension.ID, client.RequestOptions{})
+		assert.NoError(t, err, "Unexpected error deleting Servercheck Extension '%s' (#%d): %v - alerts: %+v", *extension.Name, *extension.ID, err, alerts.Alerts)
+		// Retrieve the Server Extension to see if it got deleted
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("id", strconv.Itoa(*extension.ID))
+		getExtension, _, err := TOSession.GetServerCheckExtensions(opts)
+		assert.NoError(t, err, "Error getting Servercheck Extension '%s' after deletion: %v - alerts: %+v", *extension.Name, err, getExtension.Alerts)
+		assert.Equal(t, 0, len(getExtension.Response), "Expected Servercheck Extension '%s' to be deleted, but it was found in Traffic Ops", *extension.Name)
 	}
-
-	for _, id := range ids {
-		resp, _, err := TOSession.DeleteServerCheckExtension(id, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot delete Servercheck Extension #%d: %v - alerts: %+v", id, err, resp.Alerts)
-		}
-	}
-	extensions, _, err = TOSession.GetServerCheckExtensions(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not get to_extensions: %v", err)
-	}
-
-	for _, ext := range testData.ServerCheckExtensions {
-		if ext.Name == nil {
-			t.Errorf("Found Servercheck Extension in the testing data with null or undefined Name")
-		}
-		found := false
-		for _, respTOExt := range extensions.Response {
-			if respTOExt.Name == nil {
-				t.Error("Traffic Ops returned a representation for a Servercheck Extension with null or undefined name")
-				continue
-			}
-			if *ext.Name == *respTOExt.Name {
-				found = true
-				continue
-			}
-		}
-		if found {
-			t.Errorf("to_extension %v should have been deleted", *ext.Name)
-		}
-	}
-
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }

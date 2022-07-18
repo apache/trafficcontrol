@@ -11,9 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { NgModule } from "@angular/core";
+import { NgModule, type Type } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
 
+import type { CoreModule } from "./core/core.module";
 import { AuthenticatedGuard } from "./guards/authenticated-guard.service";
 import { LoginComponent } from "./login/login.component";
 
@@ -22,7 +23,7 @@ const routes: Routes = [
 	{
 		canLoad: [AuthenticatedGuard],
 		children: [{
-			loadChildren: async (): Promise<object> => import("./core/core.module")
+			loadChildren: async (): Promise<Type<CoreModule>> => import("./core/core.module")
 				.then(mod => mod.CoreModule),
 			path: ""
 		}],
@@ -37,7 +38,7 @@ const routes: Routes = [
 @NgModule({
 	exports: [RouterModule],
 	imports: [RouterModule.forRoot(routes, {
-		initialNavigation: "enabled",
+		initialNavigation: "enabledNonBlocking",
 		relativeLinkResolution: "legacy"
 	})],
 })

@@ -16,226 +16,208 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/url"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestDivisions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
-		GetTestDivisionsIMS(t)
-		TryToDeleteDivision(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		SortTestDivisions(t)
-		UpdateTestDivisions(t)
-		UpdateTestDivisionsWithHeaders(t, header)
-		GetTestDivisionsIMSAfterChange(t, header)
-		GetTestDivisions(t)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestDivisionsWithHeaders(t, header)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDivisionSort()),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"division1"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateDivisionFields(map[string]interface{}{"Name": "division1"})),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetDivisionID(t, "cdn-div2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name": "testdivision",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateDivisionUpdateCreateFields("testdivision", map[string]interface{}{"Name": "testdivision"})),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:     GetDivisionID(t, "division1"),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestBody: map[string]interface{}{
+						"name": "division1",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetDivisionID(t, "division1"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name": "division1",
+					},
+					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"BAD REQUEST when DIVISION in use by REGION": {
+					EndpointId:    GetDivisionID(t, "division1"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"GET AFTER CHANGES": {
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					division := tc.Division{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &division)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							if name == "OK when VALID NAME parameter" {
+								resp, reqInf, err := testCase.ClientSession.GetDivisionByNameWithHdr(testCase.RequestParams["name"][0], testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetDivisionsWithHdr(testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateDivision(division)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateDivisionByIDWithHdr(testCase.EndpointId(), division, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteDivisionByID(testCase.EndpointId())
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestDivisionsWithHeaders(t *testing.T, header http.Header) {
-	firstDivision := testData.Divisions[0]
-	// Retrieve the Division by division so we can get the id for the Update
-	resp, _, err := TOSession.GetDivisionByNameWithHdr(firstDivision.Name, header)
-	if err != nil {
-		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
-	}
-	if len(resp) > 0 {
-		remoteDivision := resp[0]
-		expectedDivision := "division-test"
-		remoteDivision.Name = expectedDivision
-
-		_, reqInf, err := TOSession.UpdateDivisionByIDWithHdr(remoteDivision.ID, remoteDivision, header)
-		if err == nil {
-			t.Errorf("Expected error about precondition failed, but got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+func validateDivisionFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Division response to not be nil.")
+		divisionResp := resp.([]tc.Division)
+		for field, expected := range expectedResp {
+			for _, division := range divisionResp {
+				switch field {
+				case "Name":
+					assert.Equal(t, expected, division.Name, "Expected Name to be %v, but got %s", expected, division.Name)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
 		}
 	}
 }
 
-func GetTestDivisionsIMSAfterChange(t *testing.T, header http.Header) {
-	for _, division := range testData.Divisions {
-		_, reqInf, err := TOSession.GetDivisionByNameWithHdr(division.Name, header)
-		if err != nil {
-			t.Fatalf("could not GET divisions: %v", err)
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
-	}
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	for _, division := range testData.Divisions {
-		_, reqInf, err := TOSession.GetDivisionByNameWithHdr(division.Name, header)
-		if err != nil {
-			t.Fatalf("could not GET divisions: %v", err)
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+func validateDivisionUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		divisions, _, err := TOSession.GetDivisionByNameWithHdr(name, nil)
+		assert.RequireNoError(t, err, "Error getting Division: %v - alerts: %+v", err, divisions)
+		assert.RequireEqual(t, 1, len(divisions), "Expected one Division returned Got: %d", len(divisions))
+		validateDivisionFields(expectedResp)(t, toclientlib.ReqInf{}, divisions, tc.Alerts{}, nil)
 	}
 }
 
-func GetTestDivisionsIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	for _, division := range testData.Divisions {
-		_, reqInf, err := TOSession.GetDivisionByNameWithHdr(division.Name, header)
-		if err != nil {
-			t.Fatalf("could not GET divisions: %v", err)
+func validateDivisionSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Division response to not be nil.")
+		var divisionNames []string
+		divisionResp := resp.([]tc.Division)
+		for _, division := range divisionResp {
+			divisionNames = append(divisionNames, division.Name)
 		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+		assert.Equal(t, true, sort.StringsAreSorted(divisionNames), "List is not sorted by their names: %v", divisionNames)
 	}
 }
 
-func TryToDeleteDivision(t *testing.T) {
-	division := testData.Divisions[0]
-
-	resp, _, err := TOSession.GetDivisionByName(division.Name)
-	if err != nil {
-		t.Errorf("cannot GET Division by name: %v - %v", division.Name, err)
+func GetDivisionID(t *testing.T, divisionName string) func() int {
+	return func() int {
+		divisionsResp, _, err := TOSession.GetDivisionByNameWithHdr(divisionName, nil)
+		assert.RequireNoError(t, err, "Get Divisions Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(divisionsResp), "Expected response object length 1, but got %d", len(divisionsResp))
+		return divisionsResp[0].ID
 	}
-	division = resp[0]
-	_, _, err = TOSession.DeleteDivisionByID(division.ID)
-
-	if err == nil {
-		t.Error("should not be able to delete a division prematurely")
-		return
-	}
-
-	if strings.Contains(err.Error(), "Resource not found.") {
-		t.Errorf("division with name %v does not exist", division.Name)
-		return
-	}
-
-	if strings.Contains(err.Error(), "cannot delete division because it is being used by a region") {
-		return
-	}
-
-	t.Errorf("unexpected error occured: %v", err)
 }
 
 func CreateTestDivisions(t *testing.T) {
 	for _, division := range testData.Divisions {
-		resp, _, err := TOSession.CreateDivision(division)
-		t.Log("Response: ", resp)
-		if err != nil {
-			t.Errorf("could not CREATE division: %v", err)
-		}
-	}
-}
-
-func SortTestDivisions(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetDivisionsWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, resp[i].Name)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UpdateTestDivisions(t *testing.T) {
-
-	firstDivision := testData.Divisions[0]
-	// Retrieve the Division by division so we can get the id for the Update
-	resp, _, err := TOSession.GetDivisionByName(firstDivision.Name)
-	if err != nil {
-		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
-	}
-	remoteDivision := resp[0]
-	expectedDivision := "division-test"
-	remoteDivision.Name = expectedDivision
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
-	if err != nil {
-		t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
-	}
-
-	// Retrieve the Division to check division got updated
-	resp, _, err = TOSession.GetDivisionByID(remoteDivision.ID)
-	if err != nil {
-		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
-	}
-	if len(resp) > 0 {
-		respDivision := resp[0]
-		if respDivision.Name != expectedDivision {
-			t.Errorf("results do not match actual: %s, expected: %s", respDivision.Name, expectedDivision)
-		}
-
-		// Set the name back to the fixture value so we can delete it after
-		remoteDivision.Name = firstDivision.Name
-		alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
-		if err != nil {
-			t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
-		}
-	}
-}
-
-func GetTestDivisions(t *testing.T) {
-	for _, division := range testData.Divisions {
-		resp, _, err := TOSession.GetDivisionByName(division.Name)
-		if err != nil {
-			t.Errorf("cannot GET Division by division: %v - %v", err, resp)
-		}
+		alerts, _, err := TOSession.CreateDivision(division)
+		assert.RequireNoError(t, err, "Could not create Division '%s': %v - alerts: %+v", division.Name, err, alerts)
 	}
 }
 
 func DeleteTestDivisions(t *testing.T) {
-
-	for _, division := range testData.Divisions {
-		// Retrieve the Division by name so we can get the id
-		resp, _, err := TOSession.GetDivisionByName(division.Name)
-		if err != nil {
-			t.Errorf("cannot GET Division by name: %v - %v", division.Name, err)
-		}
-		respDivision := resp[0]
-
-		delResp, _, err := TOSession.DeleteDivisionByID(respDivision.ID)
-		if err != nil {
-			t.Errorf("cannot DELETE Division by division: %v - %v", err, delResp)
-		}
-
+	divisions, _, err := TOSession.GetDivisionsWithHdr(nil)
+	assert.NoError(t, err, "Cannot get Divisions: %v", err)
+	for _, division := range divisions {
+		alerts, _, err := TOSession.DeleteDivisionByID(division.ID)
+		assert.NoError(t, err, "Unexpected error deleting Division '%s' (#%d): %v - alerts: %+v", division.Name, division.ID, err, alerts.Alerts)
 		// Retrieve the Division to see if it got deleted
-		divisionResp, _, err := TOSession.GetDivisionByName(division.Name)
-		if err != nil {
-			t.Errorf("error deleting Division division: %s", err.Error())
-		}
-		if len(divisionResp) > 0 {
-			t.Errorf("expected Division : %s to be deleted", division.Name)
-		}
+		getDivision, _, err := TOSession.GetDivisionByIDWithHdr(division.ID, nil)
+		assert.NoError(t, err, "Error getting Division '%s' after deletion: %v", division.Name, err)
+		assert.Equal(t, 0, len(getDivision), "Expected Division '%s' to be deleted, but it was found in Traffic Ops", division.Name)
 	}
 }

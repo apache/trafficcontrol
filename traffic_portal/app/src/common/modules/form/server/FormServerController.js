@@ -69,6 +69,21 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         }
     };
 
+    $scope.addProfile = function() {
+        $scope.serverForm.$setDirty();
+
+        if (!$scope.server.profileNames) {
+            $scope.server.profileNames = [null];
+        } else {
+            $scope.server.profileNames.push(null);
+        }
+    }
+
+    $scope.deleteProfile = function(index) {
+        $scope.serverForm.$setDirty();
+        $scope.server.profileNames.splice(index, 1);
+    }
+
     var updateStatus = function(status) {
         serverService.updateStatus(server.id, { status: status.id, offlineReason: status.offlineReason })
             .then(

@@ -31,7 +31,9 @@ import (
 )
 
 func TestCDNs(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Parameters}, func() {
+	WithObjs(t, []TCObj{CDNs, Parameters, Tenants, Users}, func() {
+
+		readOnlyUserSession := utils.CreateV3Session(t, Config.TrafficOps.URL, "readonlyuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
@@ -53,6 +55,17 @@ func TestCDNs(t *testing.T) {
 					RequestParams: url.Values{"name": {"cdn1"}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						validateCDNFields(map[string]interface{}{"Name": "cdn1"})),
+				},
+			},
+			"POST": {
+				"FORBIDDEN when READ ONLY USER": {
+					ClientSession: readOnlyUserSession,
+					RequestBody: map[string]interface{}{
+						"name":          "readOnlyTest",
+						"dnssecEnabled": false,
+						"domainName":    "test.ro",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
 			"PUT": {
@@ -123,6 +136,13 @@ func TestCDNs(t *testing.T) {
 								for _, check := range testCase.Expectations {
 									check(t, reqInf, resp, tc.Alerts{}, err)
 								}
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateCDN(cdn)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":

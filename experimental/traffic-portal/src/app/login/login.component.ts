@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import { Component, OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { UntypedFormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { Router, ActivatedRoute } from "@angular/router";
 
@@ -37,9 +37,9 @@ export class LoginComponent implements OnInit {
 	public hide = true;
 
 	/** The user-entered username. */
-	public u = new FormControl("");
+	public u = new UntypedFormControl("");
 	/** The user-entered password. */
-	public p = new FormControl("");
+	public p = new UntypedFormControl("");
 
 	constructor(
 		private readonly route: ActivatedRoute,
