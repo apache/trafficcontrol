@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Traffic Ops Go client/API integration tests
+name: TO Integration Tests
 
 env:
   # alpine:3.13

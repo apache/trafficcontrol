@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Traffic Control Health Client integration tests
+name: Health Client Integration Tests
 
 env:
   ATS_VERSION: 8.1.x
