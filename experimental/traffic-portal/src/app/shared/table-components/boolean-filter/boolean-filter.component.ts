@@ -39,6 +39,9 @@ export class BooleanFilterComponent implements AgFilterComponent {
 	/** Describes which boolean value to match (if filtering is performed). */
 	public value = false;
 
+	/** Stores the column name */
+	private field = "";
+
 	/** Initialization parameters. */
 	private params!: IFilterParams;
 
@@ -58,7 +61,15 @@ export class BooleanFilterComponent implements AgFilterComponent {
 	 * @returns 'true' if the row matches the filter state, 'false' if it should be filtered out.
 	 */
 	public doesFilterPass(params: IDoesFilterPassParams): boolean {
-		return this.params.valueGetter(params.node) === this.value;
+		if (!params.node) {
+			return false;
+		}
+
+		let colValue = params.data[this.field];
+		if (colValue === undefined) {
+			colValue = false;
+		}
+		return colValue === this.value;
 	}
 
 	/**
@@ -112,6 +123,11 @@ export class BooleanFilterComponent implements AgFilterComponent {
 	 */
 	public agInit(params: IFilterParams): void {
 		this.params = params;
+		if (!params.colDef.field) {
+			console.error("No column name found on boolean-filter parameters");
+			return;
+		}
+		this.field = params.colDef.field;
 	}
 
 }

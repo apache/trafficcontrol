@@ -14,7 +14,10 @@
 import { NgModule, type Type } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
 
-import type { CoreModule } from "./core/core.module";
+import { type CoreModule } from "src/app/core/core.module";
+import { type CustomModule } from "src/app/custom/custom.module";
+import { environment } from "src/environments/environment";
+
 import { AuthenticatedGuard } from "./guards/authenticated-guard.service";
 import { LoginComponent } from "./login/login.component";
 
@@ -31,6 +34,17 @@ const routes: Routes = [
 	},
 	{path: "", pathMatch: "full", redirectTo: "login"}
 ];
+
+if (environment.customModule) {
+	routes.push({
+		children: [{
+			loadChildren: async (): Promise<Type<CustomModule>> =>
+				import("./custom/custom.module").then(mod => mod.CustomModule),
+			path: ""
+		}],
+		path: "custom"
+	});
+}
 
 /**
  * AppRoutingModule provides routing configuration for the app.

@@ -34,8 +34,11 @@ describe("BooleanFilterComponent", () => {
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		component.agInit({
+			colDef: {
+				field: "test"
+			},
 			filterChangedCallback,
-			valueGetter: (n: RowNode): boolean => n.data,
+			valueGetter: (n: RowNode): boolean => n.data
 		} as unknown as IFilterParams);
 	});
 
@@ -78,14 +81,17 @@ describe("BooleanFilterComponent", () => {
 
 	it("knows if a filter passes", () => {
 		const node = {data: false} as RowNode;
+		const data = {test: false};
 		component.onChange(true, "should");
 		expect(component.isFilterActive()).toBeTrue();
-		expect(component.doesFilterPass({data: null, node})).toBeTrue();
+		expect(component.doesFilterPass({data, node})).toBeTrue();
 		node.data = true;
-		expect(component.doesFilterPass({data: null, node})).toBeFalse();
+		data.test = true;
+		expect(component.doesFilterPass({data, node})).toBeFalse();
 		component.onChange(true, "value");
-		expect(component.doesFilterPass({data: null, node})).toBeTrue();
+		expect(component.doesFilterPass({data, node})).toBeTrue();
 		node.data = false;
-		expect(component.doesFilterPass({data: null, node})).toBeFalse();
+		data.test = false;
+		expect(component.doesFilterPass({data, node})).toBeFalse();
 	});
 });
