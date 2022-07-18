@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-  Traffic Ops Go client/API integration tests
+
 name: TO Go Client Integration Tests
 
 env:
