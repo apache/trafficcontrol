@@ -34,12 +34,16 @@ var FileUtils = function() {
 	/**
 	 * @todo I don't think this is necessary, since both AG-Grid and datatables
 	 * have the ability to do this themselves
+	 * @param {any[]|string} JSONData
+	 * @param {string} reportTitle
 	 * @param {string[]|null|undefined} includedKeys
 	 */
 	this.convertToCSV = function(JSONData, reportTitle, includedKeys) {
-		var arrData = typeof JSONData != 'object' ? JSON.parse(JSONData) : JSONData;
-		var CSV = '';
-		CSV += reportTitle + '\r\n\r\n';
+		const arrData = typeof JSONData != 'object' ? JSON.parse(JSONData) : JSONData;
+		if (!Array.isArray(arrData)) {
+			throw new TypeError("data for CSV must be an array or a JSON-encoded array")
+		}
+		let CSV = reportTitle + '\r\n\r\n';
 
 		const keysToInclude = new Set(includedKeys);
 
@@ -51,37 +55,26 @@ var FileUtils = function() {
 		}
 		keys.sort(); // alphabetically
 
-		let row = "";
-		for (const key of keys.length) {
-			row += `${key},`;
-		}
-		row = row.slice(0, -1);
+		CSV += keys.join(",") + '\r\n';
 
-		CSV += row + '\r\n';
-
-		for (var j = 0; j < arrData.length; j++) {
-			var row = "";
-			for (var k = 0; k < keys.length; k++) {
-				row += '"' + arrData[j][keys[k]] + '",';
-			}
-			row.slice(0, row.length - 1);
-			CSV += row + '\r\n';
+		for (const data of arrData) {
+			CSV += keys.map(key=>`"${data[key]}"`).join(",");
+			CSV += '\r\n';
 		}
 
-		if (CSV == '') {
+		if (!CSV) {
 			alert("Invalid data");
 			return;
 		}
 
-		var fileName = "";
-		fileName += reportTitle.replace(/ /g,"_");
-
-		var uri = 'data:text/csv;charset=utf-8,' + escape(CSV);
-		var link = document.createElement("a");
+		const fileName = reportTitle.replace(/ /g,"_");
+		const uri = `data:text/csv;charset=utf-8,${(CSV)}`;
+		const link = document.createElement("a");
 		link.href = uri;
 
-		link.style = "visibility:hidden";
-		link.download = fileName + ".csv";
+		link.style.display = "none";
+		link.style.visibility = "hidden";
+		link.download = `${fileName}.csv`;
 
 		document.body.appendChild(link);
 		link.click();
