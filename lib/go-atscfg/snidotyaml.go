@@ -20,7 +20,6 @@ package atscfg
  */
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -116,7 +115,7 @@ func MakeSNIDotYAML(
 				dsTxt += LineCommentYAML + ` ds '` + sslData.DSName + `'` + "\n"
 			}
 			dsTxt += `- fqdn: '` + requestFQDN + `'`
-			dsTxt += "\n" + `  disable_h2: ` + strconv.FormatBool(!sslData.EnableH2)
+			dsTxt += "\n" + `  http2: ` + BoolOnOff(sslData.EnableH2)
 			dsTxt += "\n" + `  valid_tls_versions_in: [` + strings.Join(tlsVersionsATS, `,`) + `]`
 
 			txt += dsTxt + "\n"

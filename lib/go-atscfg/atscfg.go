@@ -757,6 +757,15 @@ func FilterServers(servers []Server, filter func(sv *Server) bool) []Server {
 	return filteredServers
 }
 
+// BoolOnOff returns 'on' if b, else 'off'.
+// This is a helper func for some ATS config files that use "on" and "off" for boolean values.
+func BoolOnOff(b bool) string {
+	if b {
+		return "on"
+	}
+	return "off"
+}
+
 // GetDSParameters returns the parameters for the given Delivery Service.
 func GetDSParameters(
 	ds *DeliveryService,
