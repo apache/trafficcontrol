@@ -603,9 +603,9 @@ This product bundles gopkg.in/square/go-jose.v2, which is available under an Apa
 ./vendor/gopkg.in/square/go-jose.v2/LICENSE
 Refer to the above license for the full text.
 
-This product bundles cenkalti/backoff, which is available under an MIT license.
-@vendor/github.com/cenkalti/backoff/*
-./vendor/github.com/cenkalti/backoff/LICENSE
+This product bundles cenkalti/backoff/v4, which is available under an MIT license.
+@vendor/github.com/cenkalti/backoff/v4/*
+./vendor/github.com/cenkalti/backoff/v4/LICENSE
 Refer to the above license for the full text.
 
 This product bundles kylelemons/godebug, which is available under an Apache-2.0 license.
