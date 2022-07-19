@@ -27,7 +27,7 @@ require (
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
 	github.com/dchest/siphash v1.2.2
 	github.com/fsnotify/fsnotify v1.5.1
-	github.com/go-acme/lego v2.7.2+incompatible
+	github.com/go-acme/lego/v3 v2.7.2+incompatible
 	github.com/go-ldap/ldap/v3 v3.4.1
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/gofrs/flock v0.8.1

@@ -34,7 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
-	"github.com/go-acme/lego/certificate"
+	"github.com/go-acme/lego/v3/certificate"
 	"github.com/jmoiron/sqlx"
 )
 

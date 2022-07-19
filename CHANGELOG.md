@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 - Traffic Router now uses Traffic Ops API 4.0 by default
+- Updated github.com/go-acme/lego Go dependency to github.com/go-acme/lego/v3
 
 ## [7.0.0] - 2022-07-19
 ### Added
