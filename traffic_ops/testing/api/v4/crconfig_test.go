@@ -23,14 +23,18 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
-func TestCRConfig(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
-		UpdateTestCRConfigSnapshot(t)
-		MonitoringConfig(t)
+// All prerequisite Snapshots are associated to this cdn
+var cdn = "cdn1"
+
+func TestSnapshot(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments}, func() {
+
 		readOnlyUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "readonlyuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
 		methodTests := utils.V4TestCase{
@@ -66,15 +70,7 @@ func TestCRConfig(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					var cdn string
 					switch method {
-					case "GET":
-						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetCRConfig(cdn, testCase.RequestOpts)
-							for _, check := range testCase.Expectations {
-								check(t, reqInf, resp.Response, resp.Alerts, err)
-							}
-						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.SnapshotCRConfig(testCase.RequestOpts)
@@ -89,130 +85,150 @@ func TestCRConfig(t *testing.T) {
 	})
 }
 
-func UpdateTestCRConfigSnapshot(t *testing.T) {
-	if len(testData.CDNs) < 1 {
-		t.Error("no cdn test data")
-	}
-	cdn := testData.CDNs[0].Name
+func TestCDNNameSnapshot(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, Snapshot}, func() {
 
-	tmURLParamName := "tm.url"
-	tmURLExpected := "crconfig.tm.url.test.invalid"
-	paramAlerts, _, err := TOSession.CreateParameter(tc.Parameter{
-		ConfigFile: "global",
-		Name:       tmURLParamName,
-		Value:      "https://crconfig.tm.url.test.invalid",
-	}, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("GetCRConfig CreateParameter error expected: nil, actual: %v - alerts: %+v", err, paramAlerts.Alerts)
-	}
-
-	// create an ANY_MAP DS assignment to verify that it doesn't show up in the CRConfig
-	resp, _, err := TOSession.GetServers(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("GetServers err expected nil, actual: %v - alerts: %+v", err, resp.Alerts)
-	}
-	servers := resp.Response
-	serverID := 0
-	for _, server := range servers {
-		if server.CDNName == nil || server.ID == nil {
-			t.Error("Traffic Ops returned a representation for a servver with null or undefined ID and/or CDN name")
-			continue
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"ANY-MAP DELIVERY SERVICE NOT IN CRCONFIG": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdnID": {strconv.Itoa(GetCDNID(t, cdnName)())}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDeliveryServiceNotInResponse("anymap-ds")),
+				},
+				"TMPATH is NIL and TMHOST is CORRECT": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdnID": {strconv.Itoa(GetCDNID(t, cdnName)())}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCRConfigFields(map[string]interface{}{"TMHost": "crconfig.tm.url.test.invalid"})),
+				},
+			},
 		}
-		if server.Type == "EDGE" && *server.CDNName == "cdn1" {
-			serverID = *server.ID
-			break
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					var cdn string
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetCRConfig(cdn, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
 		}
-	}
-	if serverID == 0 {
-		t.Errorf("GetServers expected EDGE server in cdn1, actual: %+v", servers)
-	}
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", "anymap-ds")
-	res, _, err := TOSession.GetDeliveryServices(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services filtered by XMLID 'anymap-ds': %v - alerts: %+v", err, res.Alerts)
-	}
-	if len(res.Response) != 1 {
-		t.Fatalf("Expected exactly 1 Delivery Service to exist with XMLID 'anymap-ds', actual %d", len(res.Response))
-	}
-	if res.Response[0].ID == nil {
-		t.Fatal("Traffic Ops returned a representation of Delivery Service 'anymap-ds' that had a null or undefined ID")
-	}
-	anymapDSID := *res.Response[0].ID
-	alerts, _, err := TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Unexpected error assigning server #%d to Delivery Service #%d: %v - alerts: %+v", serverID, anymapDSID, err, alerts.Alerts)
-	}
+	})
+}
 
-	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("cdn", cdn)
-	snapshotResp, _, err := TOSession.SnapshotCRConfig(opts)
-	if err != nil {
-		t.Errorf("Unexpected error taking Snapshot of CDN '%s': %v - alerts: %+v", cdn, err, snapshotResp.Alerts)
-	}
-	crcResp, _, err := TOSession.GetCRConfig(cdn, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error retrieving Snapshot of CDN '%s': %v - alerts: %+v", cdn, err, crcResp.Alerts)
-	}
-	crc := crcResp.Response
+func TestCDNNameSnapshotNew(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, Snapshot}, func() {
 
-	if len(crc.DeliveryServices) == 0 {
-		t.Error("GetCRConfig len(crc.DeliveryServices) expected: >0, actual: 0")
-	}
+		// Prerequiste: Delete Parameter and update snapshot
 
-	// verify no ANY_MAP delivery services are in the CRConfig
-	for ds := range crc.DeliveryServices {
-		if ds == "anymap-ds" {
-			t.Error("found ANY_MAP delivery service in CRConfig deliveryServices")
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"SNAPSHOT UPDATE CAPTURED CORRECTLY": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {cdn}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCRConfigFields(map[string]interface{}{"TMHost": ""})),
+				},
+			},
 		}
-	}
-	for server := range crc.ContentServers {
-		for ds := range crc.ContentServers[server].DeliveryServices {
-			if ds == "anymap-ds" {
-				t.Error("found ANY_MAP delivery service in contentServers deliveryServices mapping")
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					var cdn string
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetCRConfigNew(cdn, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
+	})
+}
+
+func validateCRConfigFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Snapshot response to not be nil.")
+		crconfig := resp.(tc.CRConfig)
+		assert.Equal(t, nil, crconfig.Stats.TMPath, "Expected no TMPath in APIv4, but it was: %s", *crconfig.Stats.TMPath)
+		for field, expected := range expectedResp {
+			switch field {
+			case "TMHost":
+				assert.RequireNotNil(t, crconfig.Stats.TMHost, "Expected Stats TM Host to not be nil.")
+				assert.Equal(t, expected, *crconfig.Stats.TMHost, "Expected Stats TM Host to be %v, but got %s", expected, *crconfig.Stats.TMHost)
+			default:
+				t.Errorf("Expected field: %v, does not exist in response", field)
 			}
 		}
 	}
+}
 
-	if crc.Stats.TMPath != nil {
-		t.Errorf("Expected no TMPath in APIv4, but it was: %v", *crc.Stats.TMPath)
+func validateDeliveryServiceNotInResponse(deliveryService string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
+		crconfig := resp.(tc.CRConfig)
+		for ds := range crconfig.DeliveryServices {
+			assert.NotEqual(t, ds, deliveryService, "Found unexpected delivery service: %s in CRConfig Delivery Services.", deliveryService)
+		}
+		for server := range crconfig.ContentServers {
+			for ds := range crconfig.ContentServers[server].DeliveryServices {
+				assert.NotEqual(t, ds, deliveryService, "Found unexpected delivery service: %s in CRConfig Content Servers Delivery Services.", deliveryService)
+			}
+		}
 	}
+}
 
-	if crc.Stats.TMHost == nil {
-		t.Errorf("GetCRConfig crc.Stats.Path expected: '"+tmURLExpected+"', actual: %+v", crc.Stats.TMHost)
-	} else if *crc.Stats.TMHost != tmURLExpected {
-		t.Errorf("GetCRConfig crc.Stats.Path expected: '"+tmURLExpected+"', actual: %+v", *crc.Stats.TMHost)
-	}
+func CreateSnapshot(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("cdnID", strconv.Itoa(GetCDNID(t, cdn)()))
+	resp, _, err := TOSession.SnapshotCRConfig(opts)
+	assert.RequireNoError(t, err, "Could not create Snapshot: %v - alerts: %+v", err, resp.Alerts)
+}
 
-	opts.QueryParameters.Del("cdn")
-	opts.QueryParameters.Set("name", tmURLParamName)
-	paramResp, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Fatalf("cannot get Parameter by name '%s': %v - alerts: %+v", tmURLParamName, err, paramResp.Alerts)
-	}
-	if len(paramResp.Response) == 0 {
-		t.Fatal("CRConfig create tm.url parameter was successful, but GET returned no parameters")
-	}
-	tmURLParam := paramResp.Response[0]
+func DeleteSnapshot(t *testing.T) {
+	return
+}
 
-	delResp, _, err := TOSession.DeleteParameter(tmURLParam.ID, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("cannot DELETE Parameter by name: %v - %v", err, delResp)
-	}
+func TestCDNNameConfigsMonitoring(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
 
-	crcResp, _, err = TOSession.GetCRConfigNew(cdn, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting new Snapshot for CDN '%s': %v - alerts: %+v", cdn, err, crcResp.Alerts)
-	}
-	crcNew := crcResp.Response
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"OK when VALID CDN parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
+		}
 
-	if len(crcNew.DeliveryServices) != len(crc.DeliveryServices) {
-		t.Errorf("/new endpoint returned a different snapshot. DeliveryServices length expected %v, was %v", len(crc.DeliveryServices), len(crcNew.DeliveryServices))
-	}
-
-	if *crcNew.Stats.TMHost != "" {
-		t.Errorf("update to snapshot not captured in /new endpoint")
-	}
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					var cdn string
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetCRConfigNew(cdn, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
+	})
 }
 
 func MonitoringConfig(t *testing.T) {

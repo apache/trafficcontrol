@@ -73,6 +73,7 @@ const (
 	ServerServerCapabilitiesForTopologies
 	Servers
 	ServiceCategories
+	Snapshot
 	Statuses
 	StaticDNSEntries
 	SteeringTargets
@@ -121,6 +122,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	ServerServerCapabilitiesForTopologies: {CreateTestServerServerCapabilities, DeleteTestServerServerCapabilitiesForTopologies},
 	Servers:                               {CreateTestServers, DeleteTestServers},
 	ServiceCategories:                     {CreateTestServiceCategories, DeleteTestServiceCategories},
+	Snapshot:                              {CreateSnapshot, DeleteSnapshot},
 	Statuses:                              {CreateTestStatuses, DeleteTestStatuses},
 	StaticDNSEntries:                      {CreateTestStaticDNSEntries, DeleteTestStaticDNSEntries},
 	SteeringTargets:                       {CreateTestSteeringTargets, DeleteTestSteeringTargets},
