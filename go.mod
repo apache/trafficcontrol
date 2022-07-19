@@ -27,7 +27,7 @@ require (
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
 	github.com/dchest/siphash v1.2.2
 	github.com/fsnotify/fsnotify v1.5.1
-	github.com/go-acme/lego/v3 v2.7.2+incompatible
+	github.com/go-acme/lego/v3 v3.9.0
 	github.com/go-ldap/ldap/v3 v3.4.1
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/gofrs/flock v0.8.1
@@ -57,7 +57,6 @@ require (
 require (
 	github.com/Azure/go-ntlmssp v0.0.0-20200615164410-66371956d46c // indirect
 	github.com/basho/backoff v0.0.0-20150307023525-2ff7c4694083 // indirect
-	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210816181553-5444fa50b93d // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.1 // indirect
 	github.com/goccy/go-json v0.8.1 // indirect
@@ -71,7 +70,7 @@ require (
 	github.com/lestrrat-go/option v1.0.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/nxadm/tail v1.4.8
 	go.uber.org/atomic v1.6.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
@@ -84,6 +83,7 @@ require (
 )
 
 require (
+	github.com/cenkalti/backoff/v4 v4.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect

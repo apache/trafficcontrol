@@ -28,9 +28,9 @@ github.com/basho/riak-go-client/rpb/riak_kv
 github.com/basho/riak-go-client/rpb/riak_search
 github.com/basho/riak-go-client/rpb/riak_ts
 github.com/basho/riak-go-client/rpb/riak_yokozuna
-# github.com/cenkalti/backoff v2.2.1+incompatible
-## explicit
-github.com/cenkalti/backoff
+# github.com/cenkalti/backoff/v4 v4.0.2
+## explicit; go 1.12
+github.com/cenkalti/backoff/v4
 # github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
 ## explicit
 github.com/cihub/seelog
@@ -59,24 +59,24 @@ github.com/eapache/queue
 # github.com/fsnotify/fsnotify v1.5.1
 ## explicit; go 1.13
 github.com/fsnotify/fsnotify
-# github.com/go-acme/lego v2.7.2+incompatible
-## explicit
-github.com/go-acme/lego/acme
-github.com/go-acme/lego/acme/api
-github.com/go-acme/lego/acme/api/internal/nonces
-github.com/go-acme/lego/acme/api/internal/secure
-github.com/go-acme/lego/acme/api/internal/sender
-github.com/go-acme/lego/certcrypto
-github.com/go-acme/lego/certificate
-github.com/go-acme/lego/challenge
-github.com/go-acme/lego/challenge/dns01
-github.com/go-acme/lego/challenge/http01
-github.com/go-acme/lego/challenge/resolver
-github.com/go-acme/lego/challenge/tlsalpn01
-github.com/go-acme/lego/lego
-github.com/go-acme/lego/log
-github.com/go-acme/lego/platform/wait
-github.com/go-acme/lego/registration
+# github.com/go-acme/lego/v3 v3.9.0
+## explicit; go 1.14
+github.com/go-acme/lego/v3/acme
+github.com/go-acme/lego/v3/acme/api
+github.com/go-acme/lego/v3/acme/api/internal/nonces
+github.com/go-acme/lego/v3/acme/api/internal/secure
+github.com/go-acme/lego/v3/acme/api/internal/sender
+github.com/go-acme/lego/v3/certcrypto
+github.com/go-acme/lego/v3/certificate
+github.com/go-acme/lego/v3/challenge
+github.com/go-acme/lego/v3/challenge/dns01
+github.com/go-acme/lego/v3/challenge/http01
+github.com/go-acme/lego/v3/challenge/resolver
+github.com/go-acme/lego/v3/challenge/tlsalpn01
+github.com/go-acme/lego/v3/lego
+github.com/go-acme/lego/v3/log
+github.com/go-acme/lego/v3/platform/wait
+github.com/go-acme/lego/v3/registration
 # github.com/go-asn1-ber/asn1-ber v1.5.1
 ## explicit; go 1.13
 github.com/go-asn1-ber/asn1-ber
