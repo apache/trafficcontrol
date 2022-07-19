@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
+
+## [7.0.0] - 2022-07-19
 ### Added
 - [Traffic Portal] Added Layered Profile feature to /servers/
 - [#6448](https://github.com/apache/trafficcontrol/issues/6448) Added `status` and `lastPoll` fields to the `publish/CrStates` endpoint of Traffic Monitor (TM).
@@ -927,7 +929,8 @@ will be returned indicating that overlap exists.
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
-[unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-6.0.0...HEAD
+[unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-7.0.0...HEAD
+[7.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-7.0.0...RELEASE-6.0.0
 [6.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-6.0.0...RELEASE-5.0.0
 [5.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.1.0...RELEASE-5.0.0
 [4.1.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...RELEASE-4.1.0
