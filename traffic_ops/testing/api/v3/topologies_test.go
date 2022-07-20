@@ -36,7 +36,7 @@ type topologyTestCase struct {
 }
 
 func TestTopologies(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, Topologies, Tenants, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
 		GetTestTopologies(t)
 		UpdateTestTopologies(t)
 		ValidationTestTopologies(t)
