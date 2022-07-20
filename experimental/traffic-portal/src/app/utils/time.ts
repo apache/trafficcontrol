@@ -12,6 +12,13 @@
  * limitations under the License.
  */
 
+const SEC_MS = 1000;
+const MIN_MS = SEC_MS * 60;
+const HOUR_MS = MIN_MS * 60;
+const DAY_MS = HOUR_MS * 24;
+const YEAR_MS = 365 * DAY_MS;
+const MONTH_MS = YEAR_MS / 12;
+const WEEK_MS = MONTH_MS / 4;
 /**
  * Takes the difference between two times (in milliseconds) and returns a formatted string with relative time
  *
@@ -19,26 +26,19 @@
  * @returns Formatted string in the form of 'N X Ago' where X is anything between Seconds and Years
  */
 export function relativeTimeString(delta: number): string {
-	const SEC = 1000;
-	const MIN = SEC * 60;
-	const HOUR = MIN * 60;
-	const DAY = HOUR * 24;
-	const YEAR = 365 * DAY;
-	const MONTH = YEAR / 12;
-	const WEEK = MONTH / 4;
-	if (delta > YEAR) {
-		return `${(delta / YEAR).toFixed(2)} years ago`;
-	} else if (delta > MONTH) {
-		return  `${(delta / MONTH).toFixed(2)} months ago`;
-	} else if (delta > WEEK) {
-		return `${(delta/ WEEK).toFixed(2)} weeks ago`;
-	} else if (delta > DAY) {
-		return `${(delta / DAY).toFixed(2)} days ago`;
-	} else if (delta > HOUR) {
-		return `${(delta / HOUR).toFixed(2)} hours ago`;
-	} else if (delta > MIN) {
-		return `${(delta / MIN).toFixed(2)} minutes ago`;
+	if (delta > YEAR_MS) {
+		return `${(delta / YEAR_MS).toFixed(2)} years ago`;
+	} else if (delta > MONTH_MS) {
+		return  `${(delta / MONTH_MS).toFixed(2)} months ago`;
+	} else if (delta > WEEK_MS) {
+		return `${(delta/ WEEK_MS).toFixed(2)} weeks ago`;
+	} else if (delta > DAY_MS) {
+		return `${(delta / DAY_MS).toFixed(2)} days ago`;
+	} else if (delta > HOUR_MS) {
+		return `${(delta / HOUR_MS).toFixed(2)} hours ago`;
+	} else if (delta > MIN_MS) {
+		return `${(delta / MIN_MS).toFixed(2)} minutes ago`;
 	}
-	return `${(delta / SEC).toFixed(0)} seconds ago`;
+	return `${(delta / SEC_MS).toFixed(0)} seconds ago`;
 
 }

@@ -218,18 +218,15 @@ export class UsersComponent implements OnInit {
 	/** Definitions for the context menu items (which act on user data). */
 	public contextMenuItems: Array<ContextMenuItem<GetResponseUser>> = [
 		{
-			disabled: (us: GetResponseUser | Array<GetResponseUser>): boolean => Array.isArray(us),
 			href: (u: GetResponseUser): string => `/core/users/${u.id}`,
 			name: "View User Details"
 		},
 		{
-			disabled: (us: GetResponseUser | Array<GetResponseUser>): boolean => Array.isArray(us),
 			href: (u: GetResponseUser): string => `/core/users/${u.id}`,
 			name: "Open in New Tab",
 			newTab: true
 		},
 		{
-			disabled: (us: GetResponseUser | Array<GetResponseUser>): boolean => Array.isArray(us),
 			href: (u: GetResponseUser): string => `/core/change-logs?search=${u.username}`,
 			name: "View User Changelogs"
 		}

@@ -17,7 +17,8 @@ import { NgModule } from "@angular/core";
 
 import {
 	CacheGroupService,
-	CDNService, ChangeLogsService,
+	CDNService,
+	ChangeLogsService,
 	DeliveryServiceService,
 	InvalidationJobService,
 	PhysicalLocationService,
