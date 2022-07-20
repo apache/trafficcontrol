@@ -229,8 +229,8 @@ export class UsersComponent implements OnInit {
 			newTab: true
 		},
 		{
-			disabled: (us: User | Array<User>): boolean => Array.isArray(us),
-			href: (u: User): string => `/core/change-logs?search=${u.username}`,
+			disabled: (us: GetResponseUser | Array<GetResponseUser>): boolean => Array.isArray(us),
+			href: (u: GetResponseUser): string => `/core/change-logs?search=${u.username}`,
 			name: "View User Changelogs"
 		}
 	];
