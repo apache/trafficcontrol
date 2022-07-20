@@ -32,7 +32,7 @@ import (
 )
 
 func TestServerCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{ServerCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilities}, func() {
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
@@ -73,7 +73,8 @@ func TestServerCapabilities(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"blah"}}},
 					RequestBody:   map[string]interface{}{"name": "newname"},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServerCapabilitiesUpdateFields(map[string]interface{}{"Name": "newname"})),
+						validateServerCapabilitiesUpdateFields(map[string]interface{}{"Name": "newname"}),
+						validateSSCFieldsOnServerCapabilityUpdate("newname", map[string]interface{}{"ServerCapability": "newname"})),
 				},
 				"BAD REQUEST when NAME DOESNT EXIST": {
 					ClientSession: TOSession,
