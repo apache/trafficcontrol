@@ -16,6 +16,7 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -25,451 +26,234 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestServerServerCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, ServerCapabilities, ServerServerCapabilities, DeliveryServicesRequiredCapabilities}, func() {
-		SortTestServerServerCapabilities(t)
-		GetTestServerServerCapabilitiesIMS(t)
-		GetTestServerServerCapabilities(t)
-		GetDeliveryServiceServersWithCapabilities(t)
-		DeleteTestServerServerCapabilitiesForTopologiesValidation(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments, ServerCapabilities, ServerServerCapabilities, DeliveryServicesRequiredCapabilities}, func() {
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateServerServerCapabilitiesSort()),
+				},
+				"OK when VALID SERVERID parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "dtrc-edge-01")())}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateServerServerCapabilitiesFields(map[string]interface{}{"ServerID": GetServerID(t, "dtrc-edge-01")()})),
+				},
+				"OK when VALID SERVERHOSTNAME parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"serverHostName": {"atlanta-edge-16"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateServerServerCapabilitiesFields(map[string]interface{}{"Server": "atlanta-edge-16"})),
+				},
+				"OK when VALID SERVERCAPABILITY parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"serverCapability": {"asdf"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateServerServerCapabilitiesFields(map[string]interface{}{"ServerCapability": "asdf"})),
+				},
+			},
+			"POST": {
+				"BAD REQUEST when ALREADY EXISTS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverId":         GetServerID(t, "dtrc-mid-01")(),
+						"serverCapability": "disk",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING SERVER ID": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverCapability": "disk",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING SERVER CAPABILITY": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverId": GetServerID(t, "dtrc-mid-01")(),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"NOT FOUND when SERVER CAPABILITY DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverId":         GetServerID(t, "dtrc-mid-01")(),
+						"serverCapability": "bogus",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"NOT FOUND when SERVER DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverId":         99999999,
+						"serverCapability": "bogus",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"BAD REQUEST when SERVER TYPE NOT EDGE or MID": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverId":         GetServerID(t, "trafficvault")(),
+						"serverCapability": "bogus",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"DELETE": {
+				"OK when NOT the LAST SERVER of CACHE GROUP of TOPOLOGY DS which has REQUIRED CAPABILITIES": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "dtrc-edge-01")())}, "serverCapability": {"ram"}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"BAD REQUEST when LAST SERVER of CACHE GROUP of TOPOLOGY DS which has REQUIRED CAPABILITIES": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "edge-in-cdn1-only")())}, "serverCapability": {"ram"}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when SERVER ASSIGNED TO DS with REQUIRED CAPABILITIES": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "atlanta-org-2")())}, "serverCapability": {"bar"}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"NOT FOUND when SERVER SERVER CAPABILITY DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "atlanta-org-1")())}, "serverCapability": {"doesntexist"}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"BAD REQUEST when MISSING SERVER CAPABILITY": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "atlanta-org-1")())}, "serverCapability": {""}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					ssc := tc.ServerServerCapability{}
+					var serverId *int
+					var serverHostName *string
+					var serverCapability *string
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &ssc)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+					if val, ok := testCase.RequestParams["serverId"]; ok {
+						id, _ := strconv.Atoi(val[0])
+						serverId = &id
+					}
+					if val, ok := testCase.RequestParams["serverCapability"]; ok {
+						serverCapability = &val[0]
+					}
+					if val, ok := testCase.RequestParams["serverHostName"]; ok {
+						serverHostName = &val[0]
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetServerServerCapabilitiesWithHdr(serverId, serverHostName, serverCapability, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, tc.Alerts{}, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(ssc)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteServerServerCapability(*serverId, *serverCapability)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func GetTestServerServerCapabilitiesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, nil, header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+func validateServerServerCapabilitiesFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Server Server Capabilities response to not be nil.")
+		serverServerCapabilityResponse := resp.([]tc.ServerServerCapability)
+		for field, expected := range expectedResp {
+			for _, serverServerCapability := range serverServerCapabilityResponse {
+				switch field {
+				case "Server":
+					assert.RequireNotNil(t, serverServerCapability.Server, "Expected Server to not be nil.")
+					assert.Equal(t, expected, *serverServerCapability.Server, "Expected Server to be %v, but got %s", expected, *serverServerCapability.Server)
+				case "ServerCapability":
+					assert.RequireNotNil(t, serverServerCapability.ServerCapability, "Expected Server Capability to not be nil.")
+					assert.Equal(t, expected, *serverServerCapability.ServerCapability, "Expected ServerCapability to be %v, but got %s", expected, *serverServerCapability.ServerCapability)
+				case "ServerID":
+					assert.RequireNotNil(t, serverServerCapability.ServerID, "Expected Server ID to not be nil.")
+					assert.Equal(t, expected, *serverServerCapability.ServerID, "Expected ServerID to be %v, but got %d", expected, *serverServerCapability.ServerID)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
+		}
 	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+}
+
+func validateServerServerCapabilitiesSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Server Server Capabilities response to not be nil.")
+		var serverNames []string
+		serverServerCapabilityResponse := resp.([]tc.ServerServerCapability)
+		for _, serverServerCapability := range serverServerCapabilityResponse {
+			assert.RequireNotNil(t, serverServerCapability.Server, "Expected Server to not be nil.")
+			serverNames = append(serverNames, *serverServerCapability.Server)
+		}
+		assert.Equal(t, true, sort.StringsAreSorted(serverNames), "List is not sorted by server names: %v", serverNames)
 	}
 }
 
 func CreateTestServerServerCapabilities(t *testing.T) {
-	// Valid POSTs
-
-	// loop through server ServerCapabilities, assign FKs and create
-	params := url.Values{}
 	for _, ssc := range testData.ServerServerCapabilities {
-		if ssc.Server == nil {
-			t.Fatalf("server-server-capability structure had nil server")
-		}
-		params.Set("hostName", *ssc.Server)
-		resp, _, err := TOSession.GetServersWithHdr(&params, nil)
-		if err != nil {
-			t.Fatalf("cannot GET Server by hostname '%s': %v - %v", *ssc.Server, err, resp.Alerts)
-		}
-		servResp := resp.Response
-		if len(servResp) != 1 {
-			t.Fatalf("cannot GET Server by hostname: %v. Response did not include record.", *ssc.Server)
-		}
-		server := servResp[0]
-		ssc.ServerID = server.ID
-		createResp, _, err := TOSession.CreateServerServerCapability(ssc)
-		if err != nil {
-			t.Errorf("could not POST the server capability %v to server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
-		}
-		t.Log("Response: ", *ssc.Server, " ", createResp)
-	}
-
-	// Invalid POSTs
-
-	ssc := testData.ServerServerCapabilities[0]
-
-	// Attempt to assign already assigned server capability
-	_, _, err := TOSession.CreateServerServerCapability(ssc)
-	if err == nil {
-		t.Error("expected to receive error when assigning a already assigned server capability\n")
-	}
-
-	// Attempt to assign a server capability with no ID
-	sscNilID := tc.ServerServerCapability{
-		ServerCapability: ssc.ServerCapability,
-	}
-	_, _, err = TOSession.CreateServerServerCapability(sscNilID)
-	if err == nil {
-		t.Error("expected to receive error when assigning a server capability without a server ID\n")
-	}
-
-	// Attempt to assign a server capability with no server capability
-	sscNilCapability := tc.ServerServerCapability{
-		ServerID: ssc.ServerID,
-	}
-	_, _, err = TOSession.CreateServerServerCapability(sscNilCapability)
-	if err == nil {
-		t.Error("expected to receive error when assigning a server capability to a server without a server capability\n")
-	}
-
-	// Attempt to assign a server capability with invalid server capability
-	sscInvalidCapability := tc.ServerServerCapability{
-		ServerID:         ssc.ServerID,
-		ServerCapability: util.StrPtr("bogus"),
-	}
-	_, _, err = TOSession.CreateServerServerCapability(sscInvalidCapability)
-	if err == nil {
-		t.Error("expected to receive error when assigning a non existent server capability to a server\n")
-	}
-
-	// Attempt to assign a server capability with invalid server capability
-	sscInvalidID := tc.ServerServerCapability{
-		ServerID:         util.IntPtr(-1),
-		ServerCapability: ssc.ServerCapability,
-	}
-	_, _, err = TOSession.CreateServerServerCapability(sscInvalidID)
-	if err == nil {
-		t.Error("expected to receive error when assigning a server capability to a non existent server ID\n")
-	}
-
-	// Attempt to assign a server capability to a non MID/EDGE server
-	// TODO: DON'T hard-code server hostnames!
-	params.Set("hostName", "trafficvault")
-	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
-	if err != nil {
-		t.Fatalf("cannot GET Server by hostname 'trafficvault': %v - %v", err, resp.Alerts)
-	}
-	servers := resp.Response
-	if len(servers) < 1 {
-		t.Fatal("need at least one server to test invalid server type assignment")
-	}
-
-	sscInvalidType := tc.ServerServerCapability{
-		ServerID:         servers[0].ID,
-		ServerCapability: ssc.ServerCapability,
-	}
-	_, _, err = TOSession.CreateServerServerCapability(sscInvalidType)
-	if err == nil {
-		t.Error("expected to receive error when assigning a server capability to a server with incorrect type\n")
-	}
-}
-
-func SortTestServerServerCapabilities(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, nil, header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, *resp[i].Server)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func GetTestServerServerCapabilities(t *testing.T) {
-	// Get All Server Capabilities
-	sscs, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, nil, nil)
-	if err != nil {
-		t.Fatalf("cannot GET server capabilities assigned to servers: %v", err)
-	}
-	if sscs == nil {
-		t.Fatal("returned server capabilities assigned to servers was nil\n")
-	}
-	if len(sscs) != len(testData.ServerServerCapabilities) {
-		t.Errorf("expect %v server capabilities assigned to servers received %v ", len(testData.ServerServerCapabilities), len(sscs))
-	}
-
-	for _, ssc := range sscs {
-		// Get assigned Server Capabilities by server id
-		sscs, _, err := TOSession.GetServerServerCapabilitiesWithHdr(ssc.ServerID, nil, nil, nil)
-		if err != nil {
-			t.Fatalf("cannot GET server capabilities assigned to servers by server ID %v: %v", *ssc.ServerID, err)
-		}
-		for _, s := range sscs {
-			if *s.ServerID != *ssc.ServerID {
-				t.Errorf("GET server server capabilities by serverID returned non-matching server ID: %d", *s.ServerID)
-			}
-		}
-		// Get assigned Server Capabilities by host name
-		sscs, _, err = TOSession.GetServerServerCapabilitiesWithHdr(nil, ssc.Server, nil, nil)
-		if err != nil {
-			t.Fatalf("cannot GET server capabilities assigned to servers by server host name %v: %v", *ssc.Server, err)
-		}
-		for _, s := range sscs {
-			if *s.Server != *ssc.Server {
-				t.Errorf("GET server server capabilities by serverHostName returned non-matching server hostname: %s", *s.Server)
-			}
-		}
-
-		// Get assigned Server Capabilities by server capability
-		sscs, _, err = TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, ssc.ServerCapability, nil)
-		if err != nil {
-			t.Fatalf("cannot GET server capabilities assigned to servers by server capability %v: %v", *ssc.ServerCapability, err)
-		}
-		for _, s := range sscs {
-			if *s.ServerCapability != *ssc.ServerCapability {
-				t.Errorf("GET server server capabilities by server capability returned non-matching server capability: %s", *s.ServerCapability)
-			}
-		}
+		assert.RequireNotNil(t, ssc.Server, "Expected Server to not be nil.")
+		assert.RequireNotNil(t, ssc.ServerCapability, "Expected Server Capability to not be nil.")
+		serverID := GetServerID(t, *ssc.Server)()
+		ssc.ServerID = &serverID
+		resp, _, err := TOSession.CreateServerServerCapability(ssc)
+		assert.RequireNoError(t, err, "Could not associate Capability '%s' with server '%s': %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, err, resp.Alerts)
 	}
 }
 
 func DeleteTestServerServerCapabilities(t *testing.T) {
-	// Get Server Capabilities to delete them
 	sscs, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, nil, nil)
-	if err != nil {
-		t.Fatalf("cannot GET server capabilities assigned to servers: %v", err)
-	}
-	if sscs == nil {
-		t.Fatal("returned server capabilities assigned to servers was nil\n")
-	}
-
-	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
-	if err != nil {
-		t.Fatalf("cannot GET delivery services: %v", err)
-	}
-	dsIDtoDS := make(map[int]tc.DeliveryServiceNullableV30, len(dses))
-	for _, ds := range dses {
-		dsIDtoDS[*ds.ID] = ds
-	}
-
-	// Assign servers to DSes that have the capability required
-	// Used to make sure we block server server_capability DELETE in that case
-	dsServers := []tc.DeliveryServiceServer{}
-	assignedServers := make(map[int]bool)
+	assert.RequireNoError(t, err, "Cannot get server server capabilities: %v", err)
 	for _, ssc := range sscs {
-
-		dsReqCapResp, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, nil, ssc.ServerCapability, nil)
-		if err != nil {
-			t.Fatalf("cannot GET delivery service required capabilities: %v", err)
-		}
-		if len(dsReqCapResp) == 0 {
-			// capability is not required by any delivery service
-			continue
-		}
-		var dsReqCap tc.DeliveryServicesRequiredCapability
-		for _, dsrc := range dsReqCapResp {
-			if dsIDtoDS[*dsrc.DeliveryServiceID].Topology == nil {
-				dsReqCap = dsrc
-				break
-			}
-		}
-		if dsReqCap.DeliveryServiceID == nil {
-			// didn't find a non-topology-based dsReqCap for this ssc
-			continue
-		}
-
-		// Assign server to ds
-		_, _, err = TOSession.CreateDeliveryServiceServers(*dsReqCap.DeliveryServiceID, []int{*ssc.ServerID}, false)
-		if err != nil {
-			t.Fatalf("cannot CREATE server delivery service assignment: %v", err)
-		}
-		dsServers = append(dsServers, tc.DeliveryServiceServer{
-			Server:          ssc.ServerID,
-			DeliveryService: dsReqCap.DeliveryServiceID,
-		})
-		assignedServers[*ssc.ServerID] = true
-	}
-
-	// Delete should fail as their delivery services now require the capabilities
-	for _, ssc := range sscs {
-		if assignedServers[*ssc.ServerID] {
-			_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
-			if err == nil {
-				t.Fatalf("should have gotten error when using DELETE on the server capability %v from server %v as it is required by associated dses", *ssc.ServerCapability, *ssc.Server)
-			}
-		}
-	}
-
-	for _, dsServer := range dsServers {
-		setInactive(t, *dsServer.DeliveryService)
-		_, _, err := TOSession.DeleteDeliveryServiceServer(*dsServer.DeliveryService, *dsServer.Server)
-		if err != nil {
-			t.Fatalf("could not DELETE the server %v from ds %v: %v", *dsServer.Server, *dsServer.DeliveryService, err)
-		}
-	}
-
-	// Remove the requirement so we can actually delete them
-
-	for _, ssc := range sscs {
-		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
-		if err != nil {
-			t.Errorf("could not DELETE the server capability %v from server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
-		}
-	}
-
-}
-
-func DeleteTestServerServerCapabilitiesForTopologiesValidation(t *testing.T) {
-	// dtrc-edge-01 and dtrc-edge-02 (capabilities = ram, disk) are assigned to
-	// ds-top-req-cap (topology = top-for-ds-req; required capabilities = ram, disk) and
-	// ds-top-req-cap2 (topology = top-for-ds-req2; required capabilities = ram)
-	var edge1 tc.ServerV30
-	var edge2 tc.ServerV30
-
-	servers, _, err := TOSession.GetServersWithHdr(nil, nil)
-	if err != nil {
-		t.Fatalf("cannot GET servers: %v", err)
-	}
-	for _, s := range servers.Response {
-		if *s.HostName == "dtrc-edge-01" {
-			edge1 = s
-		}
-		if *s.HostName == "dtrc-edge-02" {
-			edge2 = s
-		}
-	}
-	if edge1.HostName == nil || edge2.HostName == nil {
-		t.Fatalf("expected servers with hostName dtrc-edge-01 and dtrc-edge-02")
-	}
-
-	// delete should succeed because dtrc-edge-02 still has the required capabilities
-	// for ds-top-req-cap and ds-top-req-cap2 within the cachegroup
-	_, _, err = TOSession.DeleteServerServerCapability(*edge1.ID, "ram")
-	if err != nil {
-		t.Fatalf("when deleting server server capability, expected: nil error, actual: %v", err)
-	}
-
-	// delete should fail because dtrc-edge-02 is the last server in the cachegroup that
-	// has ds-top-req-cap's required capabilities
-	_, reqInf, err := TOSession.DeleteServerServerCapability(*edge2.ID, "ram")
-	if err == nil {
-		t.Fatalf("when deleting server server capability, expected: error, actual: nil")
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("when deleting server server capability, expected status code: %d, actual: %d", http.StatusBadRequest, reqInf.StatusCode)
-	}
-
-	// delete should fail because dtrc-edge-02 is the last server in the cachegroup that
-	// has ds-top-req-cap's required capabilities
-	_, r, err := TOSession.DeleteServerServerCapability(*edge2.ID, "disk")
-	if err == nil {
-		t.Fatalf("when deleting required server server capability, expected: error, actual: nil")
-	}
-	if r.StatusCode != http.StatusBadRequest {
-		t.Errorf("when deleting required server server capability, expected status code: %d, actual: %d", http.StatusBadRequest, reqInf.StatusCode)
-	}
-
-	// delete should succeed because dtrc-edge-02 still has the required capabilities
-	// for ds-top-req-cap and ds-top-req-cap2 within the cachegroup
-	_, _, err = TOSession.DeleteServerServerCapability(*edge1.ID, "disk")
-	if err != nil {
-		t.Fatalf("when deleting server server capability, expected: nil error, actual: %v", err)
-	}
-}
-
-func DeleteTestServerServerCapabilitiesForTopologies(t *testing.T) {
-	// Get Server Capabilities to delete them
-	sscs, _, err := TOSession.GetServerServerCapabilitiesWithHdr(nil, nil, nil, nil)
-	if err != nil {
-		t.Fatalf("cannot GET server capabilities assigned to servers: %v", err)
-	}
-	if sscs == nil {
-		t.Fatal("returned server capabilities assigned to servers was nil\n")
-	}
-
-	for _, ssc := range sscs {
-		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
-		if err != nil {
-			t.Errorf("could not DELETE the server capability %v from server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
-		}
-	}
-
-}
-
-func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, url.Values{"xmlId": []string{"ds4"}})
-	if err != nil {
-		t.Fatalf("Failed to get Delivery Services: %v", err)
-	}
-	if len(dses) < 1 {
-		t.Fatal("Failed to get at least one Delivery Service")
-	}
-
-	ds := dses[0]
-	if ds.ID == nil {
-		t.Fatal("Got Delivery Service with nil ID")
-	}
-
-	// Get an edge
-	params := url.Values{}
-	params.Add("hostName", "atlanta-edge-16")
-	rs, _, err := TOSession.GetServersWithHdr(&params, nil)
-	if err != nil {
-		t.Fatalf("Failed to fetch server information: %v", err)
-	} else if len(rs.Response) == 0 {
-		t.Fatalf("Failed to fetch server information: No results returned!")
-	}
-	edgeID := *rs.Response[0].ID
-
-	// Get a MID
-	params = url.Values{}
-	params.Add("hostName", "atlanta-mid-02")
-	rs, _, err = TOSession.GetServersWithHdr(&params, nil)
-	if err != nil {
-		t.Fatalf("Failed to fetch server information: %v", err)
-	} else if len(rs.Response) == 0 {
-		t.Fatalf("Failed to fetch server information: No results returned!")
-	}
-	midID := *rs.Response[0].ID
-	// assign edge and mid
-	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{edgeID, midID}, true)
-	if err != nil {
-		t.Fatalf("expected no error while assigning servers to DS, but got %s", err.Error())
-	}
-	params = url.Values{}
-	params.Add("dsId", strconv.Itoa(*ds.ID))
-	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
-	if err != nil {
-		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
-	}
-	if len(servers.Response) != 2 {
-		t.Fatalf("expected to get 2 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
-	}
-
-	// now assign a capability
-	reqCap := tc.DeliveryServicesRequiredCapability{
-		DeliveryServiceID:  ds.ID,
-		RequiredCapability: util.StrPtr("blah"),
-	}
-	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap)
-	// this should fail because the mid doesn't have the reqd capability
-	if err == nil {
-		t.Fatalf("expected error creating DS reqd capability, but got nothing")
-	}
-	ssc := tc.ServerServerCapability{
-		ServerID:         &midID,
-		ServerCapability: util.StrPtr("blah"),
-	}
-	// assign the capability to the mid
-	_, _, err = TOSession.CreateServerServerCapability(ssc)
-	if err != nil {
-		t.Fatalf("couldn't assign server capability to server with ID %d, err: %s", midID, err.Error())
-	}
-	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap)
-	// this should pass now because the mid has the reqd capability
-	if err != nil {
-		t.Fatalf("expected no error creating DS reqd capability, but got %s", err.Error())
-	}
-
-	params = url.Values{}
-	params.Add("dsId", strconv.Itoa(*ds.ID))
-	servers, _, err = TOSession.GetServersWithHdr(&params, nil)
-	if err != nil {
-		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
-	}
-	if len(servers.Response) != 2 {
-		t.Fatalf("expected to get 2 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
-	}
-	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, edgeID)
-	if err != nil {
-		t.Errorf("error trying to delete delivery service server: %s", err.Error())
-	}
-	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, midID)
-	if err != nil {
-		t.Errorf("error trying to delete delivery service server: %s", err.Error())
+		assert.RequireNotNil(t, ssc.Server, "Expected Server to not be nil.")
+		assert.RequireNotNil(t, ssc.ServerCapability, "Expected Server Capability to not be nil.")
+		alerts, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
+		assert.NoError(t, err, "Could not remove Capability '%s' from server '%s' (#%d): %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, *ssc.ServerID, err, alerts.Alerts)
 	}
 }
