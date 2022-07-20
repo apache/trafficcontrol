@@ -15,6 +15,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 
 import { LastDaysComponent } from "./last-days.component";
+import { of } from "rxjs";
 
 describe("LastDaysComponent", () => {
 	let component: LastDaysComponent;
@@ -39,5 +40,17 @@ describe("LastDaysComponent", () => {
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("should submit/cancel", () => {
+		const days = 10;
+		mockMatDialog.afterClosed.and.returnValue(of(days));
+		mockMatDialog.afterClosed().subscribe(val => {
+			expect(val).toBe(days);
+		});
+		component.submit();
+		expect(mockMatDialog.close.calls.count()).toBe(1);
+		component.cancel();
+		expect(mockMatDialog.close.calls.count()).toBe(2);
 	});
 });

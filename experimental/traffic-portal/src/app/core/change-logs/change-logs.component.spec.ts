@@ -17,7 +17,6 @@ import { MatDialog } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 import { Observable, of, ReplaySubject } from "rxjs";
 
-import { ChangeLogsService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
@@ -44,9 +43,6 @@ describe("ChangeLogsComponent", () => {
 	let fixture: ComponentFixture<ChangeLogsComponent>;
 
 	beforeEach(async () => {
-		const clService = jasmine.createSpyObj(["getChangeLogs"]);
-
-		clService.getChangeLogs.and.returnValue(new Promise(r => r(3)));
 		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 		await TestBed.configureTestingModule({
 			declarations: [ChangeLogsComponent],
@@ -56,7 +52,6 @@ describe("ChangeLogsComponent", () => {
 				RouterTestingModule
 			],
 			providers: [
-				{ provide: ChangeLogsService, useValue: clService },
 				{ provide: MatDialog, useClass: MockDialog },
 				{ provide: TpHeaderService, useValue: headerSvc },
 			]

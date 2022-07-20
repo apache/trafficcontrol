@@ -17,17 +17,18 @@ import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { ColDef } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
+import { Log } from "trafficops-types";
 
 import { ChangeLogsService } from "src/app/api/change-logs.service";
 import { LastDaysComponent } from "src/app/core/change-logs/last-days/last-days.component";
-import { ChangeLog } from "src/app/models/change-logs";
 import { TableTitleButton } from "src/app/shared/generic-table/generic-table.component";
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { relativeTimeString } from "src/app/utils";
 
 /**
  * AugmentedChangeLog has fields for access to processed times.
  */
-interface AugmentedChangeLog extends ChangeLog {
+interface AugmentedChangeLog extends Log {
 	longTime: string;
 	relativeTime: string;
 }
@@ -38,34 +39,10 @@ interface AugmentedChangeLog extends ChangeLog {
  * @param cl Changelog to convert.
  * @returns Converted changelog
  */
-export function augment(cl: ChangeLog): AugmentedChangeLog {
+export function augment(cl: Log): AugmentedChangeLog {
 	const aug = {longTime: "", relativeTime: "", ...cl};
 
-	const d = new Date(aug.lastUpdated);
-	const delta = new Date().getTime() - d.getTime();
-	const SEC = 1000;
-	const MIN = SEC * 60;
-	const HOUR = MIN * 60;
-	const DAY = HOUR * 24;
-	const WEEK = DAY * 7;
-	const MONTH = WEEK * 4;
-	const YEAR = MONTH * 12;
-	if (delta > YEAR) {
-		aug.relativeTime = `${(delta / YEAR).toFixed(2)} years ago`;
-	} else if (delta > MONTH) {
-		aug.relativeTime =  `${(delta / MONTH).toFixed(2)} months ago`;
-	} else if (delta > WEEK) {
-		aug.relativeTime = `${(delta/ WEEK).toFixed(2)} weeks ago`;
-	} else if (delta > DAY) {
-		aug.relativeTime = `${(delta / DAY).toFixed(2)} days ago`;
-	} else if (delta > HOUR) {
-		aug.relativeTime = `${(delta / HOUR).toFixed(2)} hours ago`;
-	} else if (delta > MIN) {
-		aug.relativeTime = `${(delta / MIN).toFixed(2)} minutes ago`;
-	} else {
-		aug.relativeTime = `${(delta / SEC).toFixed(0)} seconds ago`;
-	}
-
+	aug.relativeTime = relativeTimeString(new Date().getTime() - new Date(aug.lastUpdated).getTime());
 	aug.longTime = formatDate(aug.lastUpdated, "long", "en-US");
 	return aug;
 }
@@ -133,10 +110,9 @@ export class ChangeLogsComponent implements OnInit {
 	 */
 	public async loadData(): Promise<void> {
 		this.loading = true;
-		this.changeLogs = this.api.getChangeLogs({days: this.lastDays.toString()}).then(data => {
-			this.loading = false;
-			return data.map(augment);
-		});
+		const data = await this.api.getChangeLogs({days: this.lastDays.toString()});
+		this.changeLogs = Promise.resolve(data.map(augment));
+		this.loading = false;
 	}
 
 	/**
