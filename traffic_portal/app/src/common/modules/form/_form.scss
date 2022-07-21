@@ -360,3 +360,13 @@ input:checked + .slider::before {
 		border: none;
 	}
 }
+
+.private-text {
+	color: transparent;
+	text-shadow: 0 0 8px rgba(0,0,0,0.5);
+
+	&:active, &:hover {
+		color: inherit;
+		text-shadow: none;
+	}
+}
