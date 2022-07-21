@@ -598,6 +598,7 @@ will be returned indicating that overlap exists.
 - Changed Traffic Portal to use the more performant and powerful ag-grid for the delivery service request (DSR) table.
 - Traffic Ops: removed change log entry created during server update/revalidation unqueue
 - Updated CDN in a Box to CentOS 8 and added `RHEL_VERSION` Docker build arg so CDN in a Box can be built for CentOS 7, if desired
+- Added Delivery Service Raw Remap `__CACHEKEY_DIRECTIVE__` directive to allow inserting the cachekey directive into the Raw Remap text. This allows Raw Remaps which manipulate the cachekey.
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.

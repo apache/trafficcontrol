@@ -679,6 +679,8 @@ The Raw Remap text is ordinarily added at the end of the line, after everything 
 
 For example, if you have an Apache Traffic Server lua plugin which manipulates the range, and are using Slice Range Request Handling which needs to run after your plugin, you can set a Raw Remap, ``@plugin=tslua.so @pparam=range.lua __RANGE_DIRECTIVE__``, and the ``@plugin=slice.so`` range directive will be inserted after your plugin.
 
+Similarly the text ``__CACHEKEY_DIRECTIVE__`` can be moved into the Raw Remap text to allow the Raw Remap text to manipulate the uri contents before the cachekey is generated.
+
 .. _ds-regex-remap:
 
 Regex Remap Expression
