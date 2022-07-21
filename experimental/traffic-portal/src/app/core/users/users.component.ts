@@ -13,6 +13,7 @@
 */
 import { animate, style, transition, trigger } from "@angular/animations";
 import { Component, type OnInit } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
 import type { ValueGetterParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 import { GetResponseUser } from "trafficops-types";
@@ -22,6 +23,8 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 import { orderBy } from "src/app/utils";
+
+import { UserRegistrationDialogComponent } from "./user-registration-dialog/user-registration-dialog.component";
 
 const ANIMATION_DURATION = "150ms";
 
@@ -237,7 +240,8 @@ export class UsersComponent implements OnInit {
 	constructor(
 		private readonly api: UserService,
 		private readonly headerSvc: TpHeaderService,
-		private readonly currentUserService: CurrentUserService
+		private readonly currentUserService: CurrentUserService,
+		private readonly dialog: MatDialog
 	) {
 	}
 
@@ -296,5 +300,12 @@ export class UsersComponent implements OnInit {
 	 */
 	public canCreateUsers(): boolean {
 		return this.currentUserService.hasPermission("USER:CREATE");
+	}
+
+	/**
+	 * Opens a dialog for registering a new user.
+	 */
+	public register(): void {
+		this.dialog.open(UserRegistrationDialogComponent);
 	}
 }

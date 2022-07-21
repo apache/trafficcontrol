@@ -27,6 +27,16 @@ import {
 import { APIService } from "./base-api.service";
 
 /**
+ * Represents a request to register a user via email using the `/users/register`
+ * API endpoint.
+ */
+interface UserRegistrationRequest {
+	email: string;
+	role: number;
+	tenantId: number;
+}
+
+/**
  * UserService exposes API functionality related to Users, Roles and Capabilities.
  */
 @Injectable()
@@ -193,6 +203,52 @@ export class UserService extends APIService {
 			...response,
 			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
 		};
+	}
+
+	/**
+	 * Registers a new user via email.
+	 *
+	 * @param request The full registration request.
+	 */
+	public async registerUser(request: UserRegistrationRequest): Promise<void>;
+	/**
+	 * Registers a new user via email.
+	 *
+	 * @param email The email address to use for registration.
+	 * @param role The new user's Role (or just its ID).
+	 * @param tenant The new user's Tenant (or just its ID).
+	 */
+	public async registerUser(email: string, role: number | Role, tenant: number | Tenant): Promise<void>;
+	/**
+	 * Registers a new user via email.
+	 *
+	 * @param userOrEmail Either the full registration request, or just the
+	 * email address to use for registration.
+	 * @param role The new user's Role (or just its ID). This is required if
+	 * `userOrEmail` is given as an email address, and is ignored otherwise.
+	 * @param tenant The new user's Tenant (or just its ID). This is required if
+	 * `userOrEmail` is given as an email address, and is ignored otherwise.
+	 */
+	public async registerUser(
+		userOrEmail: UserRegistrationRequest | string,
+		role?: number | Role,
+		tenant?: number | Tenant
+	): Promise<void> {
+		let request;
+		if (typeof(userOrEmail) === "string") {
+			if (role === undefined || tenant === undefined) {
+				throw new Error("arguments 'role' and 'tenant' must be supplied when 'userOrEmail' is an email address");
+			}
+			request = {
+				email: userOrEmail,
+				role: typeof(role) === "number" ? role : role.id,
+				tenantId: typeof(tenant) === "number" ? tenant : tenant.id
+			};
+		} else {
+			request = userOrEmail;
+		}
+
+		await this.post("users/register", request).toPromise();
 	}
 
 	/** Fetches the Role with the given ID. */

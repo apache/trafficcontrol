@@ -1043,3 +1043,18 @@
   delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+
+- name: Queue Caches in all CDNs
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/{{ item.id }}/queue_update"
+    method: POST
+    body:
+      action: "queue"
+  with_items: "{{ get_all_cdns.json.response[1:] }}"
+  register: queue_out
+  failed_when: (queue_out.status == 400 and queue_out.json | to_json | from_json | json_query(error_query) | length != 0) or (queue_out.status > 400 and queue_out.status < 600)
+  no_log: true
+  retries: 10
+  delay: 10
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'action must be')]"

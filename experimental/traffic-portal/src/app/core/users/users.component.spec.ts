@@ -14,6 +14,7 @@
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 import type { ValueGetterParams } from "ag-grid-community";
 
@@ -69,7 +70,8 @@ describe("UsersComponent", () => {
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
-				RouterTestingModule
+				RouterTestingModule,
+				MatDialogModule
 			],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
