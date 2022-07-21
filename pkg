@@ -155,9 +155,10 @@ while getopts h78abdf:lopqvsSL opt; do
 	esac
 done
 
+CMD=$("${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services)
 # Weasel must be built first otherwise it will fail from build artifacts/cache in an environment that doesn't have git
 # e.g. the environment produced by `./pkg source`.
-PROJECTS="weasel"$'\n'"$("${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services | sed '/^weasel$/d')"
+PROJECTS=$(grep -E "^weasel$" <<<"$CMD"; grep -E -v "^weasel$"<<<"$CMD")
 HELP_TEXT="$(cat <<HELP_TEXT
 Usage: $SELF [options] [projects]
   -7           Build RPMs targeting CentOS 7
