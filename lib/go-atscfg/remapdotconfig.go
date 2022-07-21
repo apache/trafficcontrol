@@ -36,6 +36,7 @@ const ContentTypeRemapDotConfig = ContentTypeTextASCII
 const LineCommentRemapDotConfig = LineCommentHash
 
 const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
+const RemapConfigCachekeyDirective = `__CACHEKEY_DIRECTIVE__`
 
 // RemapDotConfigOpts contains settings to configure generation options.
 type RemapDotConfigOpts struct {
@@ -557,8 +558,15 @@ func buildEdgeRemapLine(
 		}
 	}
 
+	// This allows the Range and Cachekey directive hacks
+	remapText := ""
+	if ds.RemapText != nil {
+		remapText = *ds.RemapText
+	}
+
 	// Form the cachekey args string, qstring ignore, then
 	// remap.config then cachekey.config
+	cachekeyTxt := ""
 	cachekeyArgs := ""
 
 	if ds.QStringIgnore != nil {
@@ -575,7 +583,14 @@ func buildEdgeRemapLine(
 	}
 
 	if cachekeyArgs != "" {
-		text += " @plugin=cachekey.so" + cachekeyArgs
+		cachekeyTxt = " @plugin=cachekey.so" + cachekeyArgs
+	}
+
+	// Temporary hack for moving the cachekey directive into the raw remap text
+	if strings.Contains(remapText, RemapConfigCachekeyDirective) {
+		remapText = strings.Replace(remapText, RemapConfigCachekeyDirective, cachekeyTxt, 1)
+	} else {
+		text += cachekeyTxt
 	}
 
 	// Note: should use full path here?
@@ -603,11 +618,6 @@ func buildEdgeRemapLine(
 			rangeReqTxt += " @plugin=cache_range_requests.so " +
 				paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
 		}
-	}
-
-	remapText := ""
-	if ds.RemapText != nil {
-		remapText = *ds.RemapText
 	}
 
 	// Temporary hack for moving the range directive into the raw remap text
