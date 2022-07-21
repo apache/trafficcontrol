@@ -19,6 +19,16 @@ import type { GetResponseUser, PostRequestUser, PutOrPostResponseUser } from "tr
 import type { Role, Capability, CurrentUser, Tenant } from "src/app/models";
 
 /**
+ * Represents a request to register a user via email using the `/users/register`
+ * API endpoint.
+ */
+interface UserRegistrationRequest {
+	email: string;
+	role: number;
+	tenantId: number;
+}
+
+/**
  * UserService exposes API functionality related to Users, Roles and Capabilities.
  */
 @Injectable()
@@ -288,6 +298,48 @@ export class UserService {
 			roleName: response.rolename,
 			rolename: undefined
 		};
+	}
+
+	/**
+	 * Registers a new user via email.
+	 *
+	 * Note that in testing this has no real effect.
+	 *
+	 * @param request The full registration request.
+	 */
+	public async registerUser(request: UserRegistrationRequest): Promise<void>;
+	/**
+	 * Registers a new user via email.
+	 *
+	 * Note that in testing this has no real effect.
+	 *
+	 * @param email The email address to use for registration.
+	 * @param role The new user's Role (or just its ID).
+	 * @param tenant The new user's Tenant (or just its ID).
+	 */
+	public async registerUser(email: string, role: number | Role, tenant: number | Tenant): Promise<void>;
+	/**
+	 * Registers a new user via email.
+	 *
+	 * Note that in testing this has no real effect.
+	 *
+	 * @param userOrEmail Either the full registration request, or just the
+	 * email address to use for registration.
+	 * @param role The new user's Role (or just its ID). This is required if
+	 * `userOrEmail` is given as an email address, and is ignored otherwise.
+	 * @param tenant The new user's Tenant (or just its ID). This is required if
+	 * `userOrEmail` is given as an email address, and is ignored otherwise.
+	 */
+	public async registerUser(
+		userOrEmail: UserRegistrationRequest | string,
+		role?: number | Role,
+		tenant?: number | Tenant
+	): Promise<void> {
+		if (typeof(userOrEmail) === "string") {
+			if (role === undefined || tenant === undefined) {
+				throw new Error("arguments 'role' and 'tenant' must be supplied when 'userOrEmail' is an email address");
+			}
+		}
 	}
 
 	/** Fetches the Role with the given ID. */

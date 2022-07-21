@@ -38,6 +38,7 @@ import { ServersTableComponent } from "./servers/servers-table/servers-table.com
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
+import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
 
 export const ROUTES: Routes = [
@@ -73,7 +74,8 @@ export const ROUTES: Routes = [
 		NewInvalidationJobDialogComponent,
 		UpdateStatusComponent,
 		UserDetailsComponent,
-		TenantsComponent
+		TenantsComponent,
+		UserRegistrationDialogComponent
 	],
 	exports: [
 	],
