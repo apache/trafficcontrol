@@ -76,6 +76,15 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         }
     }
 
+	$scope.iloInputType = "password";
+	$scope.toggleILO = () => {
+		if ($scope.iloInputType === "password") {
+			$scope.iloInputType = "text";
+		} else {
+			$scope.iloInputType = "password";
+		}
+	};
+
     $scope.deleteProfile = function(index) {
         $scope.serverForm.$setDirty();
         $scope.server.profileNames.splice(index, 1);
