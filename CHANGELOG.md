@@ -7,108 +7,108 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [7.0.0] - 2022-07-19
 ### Added
-- [Traffic Portal] Added Layered Profile feature to /servers/
-- [#6448](https://github.com/apache/trafficcontrol/issues/6448) Added `status` and `lastPoll` fields to the `publish/CrStates` endpoint of Traffic Monitor (TM).
-- Added back to the health-client the `status` field logging with the addition of the filed to `publish/CrStates`
-- Added a new Traffic Ops endpoint to `GET` capacity and telemetry data for CDNi integration.
 - Added SOA (Service Oriented Architecture) capability to CDN-In-A-Box.
-- Added a Traffic Ops endpoints to `PUT` a requested configuration change for a full configuration or per host and an endpoint to approve or deny the request.
-- Traffic Monitor config option `distributed_polling` which enables the ability for Traffic Monitor to poll a subset of the CDN and divide into "local peer groups" and "distributed peer groups". Traffic Monitors in the same group are local peers, while Traffic Monitors in other groups are distibuted peers. Each TM group polls the same set of cachegroups and gets availability data for the other cachegroups from other TM groups. This allows each TM to be responsible for polling a subset of the CDN while still having a full view of CDN availability. In order to use this, `stat_polling` must be disabled.
-- Added support for a new Traffic Ops GLOBAL profile parameter -- `tm_query_status_override` -- to override which status of Traffic Monitors to query (default: ONLINE).
-- Traffic Ops: added new `cdn.conf` option -- `user_cache_refresh_interval_sec` -- which enables an in-memory users cache to improve performance. Default: 0 (disabled).
-- Traffic Ops: added new `cdn.conf` option -- `server_update_status_cache_refresh_interval_sec` -- which enables an in-memory server update status cache to improve performance. Default: 0 (disabled).
-- Traffic Router: Add support for `file`-protocol URLs for the `geolocation.polling.url` for the Geolocation database.
-- Replaces all Traffic Portal Tenant select boxes with a novel tree select box [#6427](https://github.com/apache/trafficcontrol/issues/6427).
-- Traffic Monitor: Add support for `access.log` to TM.
-- Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
-- [Traffic Portal] Added the ability for users to view Delivery Service Requests corresponding to individual Delivery Services in TP.
-- [Traffic Ops] Added support for backend configurations so that Traffic Ops can act as a reverse proxy for these services [#6754](https://github.com/apache/trafficcontrol/pull/6754).
-- Added functionality for CDN locks, so that they can be shared amongst a list of specified usernames.
-- [Traffic Ops | Traffic Go Clients | T3C] Add additional timestamp fields to server for queuing and dequeueing config and revalidate updates.
-- Added layered profile feature to 4.0 for `GET` /servers/, `POST` /servers/, `PUT` /servers/{id} and `DELETE` /servers/{id}.
 - Added a Traffic Ops endpoint and Traffic Portal page to view all CDNi configuration update requests and approve or deny.
+- Added a Traffic Ops endpoints to `PUT` a requested configuration change for a full configuration or per host and an endpoint to approve or deny the request.
+- Added a new Traffic Ops endpoint to `GET` capacity and telemetry data for CDNi integration.
+- Added back to the health-client the `status` field logging with the addition of the filed to `publish/CrStates`
+- Added functionality for CDN locks, so that they can be shared amongst a list of specified usernames.
+- Added functionality for login to provide a Bearer token and for that token to be later used for authorization.
 - Added layered profile feature to 4.0 for `GET` /deliveryservices/{id}/servers/ and /deliveryservices/{id}/servers/eligible.
-- Change to t3c regex_revalidate so that STALE is no longer explicitly added for default revalidate rule for ATS version backwards compatibility.
+- Added layered profile feature to 4.0 for `GET` /servers/, `POST` /servers/, `PUT` /servers/{id} and `DELETE` /servers/{id}.
+- Added support for a new Traffic Ops GLOBAL profile parameter -- `tm_query_status_override` -- to override which status of Traffic Monitors to query (default: ONLINE).
 - Change to t3c diff to flag a config file for replacement if owner/group settings are not `ats` [#6879](https://github.com/apache/trafficcontrol/issues/6879).
+- Change to t3c regex_revalidate so that STALE is no longer explicitly added for default revalidate rule for ATS version backwards compatibility.
+- Replaces all Traffic Portal Tenant select boxes with a novel tree select box [#6427](https://github.com/apache/trafficcontrol/issues/6427).
+- Traffic Monitor config option `distributed_polling` which enables the ability for Traffic Monitor to poll a subset of the CDN and divide into "local peer groups" and "distributed peer groups". Traffic Monitors in the same group are local peers, while Traffic Monitors in other groups are distibuted peers. Each TM group polls the same set of cachegroups and gets availability data for the other cachegroups from other TM groups. This allows each TM to be responsible for polling a subset of the CDN while still having a full view of CDN availability. In order to use this, `stat_polling` must be disabled.
+- Traffic Monitor: Add support for `access.log` to TM.
+- Traffic Ops: added new `cdn.conf` option -- `server_update_status_cache_refresh_interval_sec` -- which enables an in-memory server update status cache to improve performance. Default: 0 (disabled).
+- Traffic Ops: added new `cdn.conf` option -- `user_cache_refresh_interval_sec` -- which enables an in-memory users cache to improve performance. Default: 0 (disabled).
+- Traffic Router: Add support for `file`-protocol URLs for the `geolocation.polling.url` for the Geolocation database.
+- Added `status` and `lastPoll` fields to the `publish/CrStates` endpoint of Traffic Monitor (TM) [#6448](https://github.com/apache/trafficcontrol/issues/6448).
+- [Traffic Ops | Traffic Go Clients | T3C] Add additional timestamp fields to server for queuing and dequeueing config and revalidate updates.
+- [Traffic Ops] Added support for backend configurations so that Traffic Ops can act as a reverse proxy for these services [#6754](https://github.com/apache/trafficcontrol/pull/6754).
+- [Traffic Portal] Added Layered Profile feature to /servers/
+- [Traffic Portal] Added the ability for users to view Delivery Service Requests corresponding to individual Delivery Services in TP.
 
 ### Fixed
-- Fixed TO to default route ID to 0, if it is not present in the request context.
-- [#6291](https://github.com/apache/trafficcontrol/issues/6291) Prevent Traffic Ops from modifying and/or deleting reserved statuses.
-- Update traffic\_portal dependencies to mitigate `npm audit` issues.
-- Fixed a cdn-in-a-box build issue when using `RHEL_VERSION=7`
-- `dequeueing` server updates should not require checking for cdn locks.
-- Fixed Traffic Ops ignoring the configured database port value, which was prohibiting the use of anything other than port 5432 (the PostgreSQL default)
-- [#6580](https://github.com/apache/trafficcontrol/issues/6580) Fixed cache config generation remap.config targets for MID-type servers in a Topology with other caches as parents and HTTPS origins.
-- Traffic Router: fixed a null pointer exception that caused snapshots to be rejected if a topology cachegroup did not have any online/reported/admin\_down caches
-- [#6271](https://github.com/apache/trafficcontrol/issues/6271) `api/{{version}/deliveryservices/{id}/health` returns no info if the delivery service uses a topology.
-- [#6549](https://github.com/apache/trafficcontrol/issues/6549) Fixed internal server error while deleting a delivery service created from a DSR (Traafic Ops).
-- [#6538](https://github.com/apache/trafficcontrol/pull/6538) Fixed the incorrect use of secure.port on TrafficRouter and corrected to the httpsPort value from the TR server configuration.
-- [#6562](https://github.com/apache/trafficcontrol/pull/6562) Fixed incorrect template in Ansible dataset loader role when fallbackToClosest is defined.
-- [#6590](https://github.com/apache/trafficcontrol/pull/6590) Python client: Corrected parameter name in decorator for get\_parameters\_by\_profile\_id
-- [#6368](https://github.com/apache/trafficcontrol/pull/6368) Fixed validation response message from `/acme_accounts`
-- [#6603](https://github.com/apache/trafficcontrol/issues/6603) Fixed users with "admin" "Priv Level" not having Permission to view or delete DNSSEC keys.
-- Fixed Traffic Router to handle aggressive NSEC correctly.
-- [#6907](https://github.com/apache/trafficcontrol/issues/6907) Fixed Traffic Ops to return the correct server structure (based on the API version) upon a server deletion.
-- [#6626](https://github.com/apache/trafficcontrol/pull/6626) Fixed t3c Capabilities request failure issue which could result in malformed config.
-- [#6370](https://github.com/apache/trafficcontrol/pull/6370) Fixed docs for `POST` and response code for `PUT` to `/acme_accounts` endpoint
-- Only `operations` and `admin` roles should have the `DELIVERY-SERVICE:UPDATE` permission.
-- [#6369](https://github.com/apache/trafficcontrol/pull/6369) Fixed `/acme_accounts` endpoint to validate email and URL fields
-- Fixed searching of the ds parameter merge_parent_groups slice.
-- [#6806](https://github.com/apache/trafficcontrol/issues/6806) t3c calculates max_origin_connections incorrectly for topology-based delivery services
-- [#6944](https://github.com/apache/trafficcontrol/issues/6944) Fixed cache config generation for ATS 9 sni.yaml from disable_h2 to http2 directive. ATS 9 documents disable_h2, but it doesn't seem to work.
-- Fixed TO API `PUT /servers/:id/status` to only queue updates on the same CDN as the updated server
-- t3c-generate fix for combining remapconfig and cachekeyconfig parameters for MakeRemapDotConfig call.
-- [#6780](https://github.com/apache/trafficcontrol/issues/6780) Fixed t3c to use secondary parents when there are no primary parents available.
 - Correction where using the placeholder `__HOSTNAME__` in "unknown" files (others than the defaults ones), was being replaced by the full FQDN instead of the shot hostname.
-- [#6800](https://github.com/apache/trafficcontrol/issues/6800) Fixed incorrect error message for `/server/details` associated with query parameters.
-- [#6712](https://github.com/apache/trafficcontrol/issues/6712) - Fixed error when loading the Traffic Vault schema from `create_tables.sql` more than once.
-- [#6883](https://github.com/apache/trafficcontrol/issues/6883) Fix t3c cache to invalidate on version change
-- [#6834](https://github.com/apache/trafficcontrol/issues/6834) - In API 4.0, fixed `GET` for `/servers` to display all profiles irrespective of the index position. Also, replaced query param `profileId` with `profileName`.
-- [#6299](https://github.com/apache/trafficcontrol/issues/6299) User representations don't match
-- [#6896](https://github.com/apache/trafficcontrol/issues/6896) Fixed the `POST api/cachegroups/id/queue_updates` endpoint so that it doesn't give an internal server error anymore.
-- [#6933](https://github.com/apache/trafficcontrol/issues/6933) Fixed tc-health-client to handle credentials files with special characters in variables
-- [#6776](https://github.com/apache/trafficcontrol/issues/6776) User properties only required sometimes
 - Fixed TO API `GET /deliveryservicesserver` causing error when an IMS request is made with the `cdn` and `maxRevalDurationDays` parameters set.
+- Fixed TO API `PUT /servers/:id/status` to only queue updates on the same CDN as the updated server
+- Fixed TO to default route ID to 0, if it is not present in the request context.
+- Fixed Traffic Ops ignoring the configured database port value, which was prohibiting the use of anything other than port 5432 (the PostgreSQL default)
+- Fixed Traffic Router to handle aggressive NSEC correctly.
+- Fixed a cdn-in-a-box build issue when using `RHEL_VERSION=7`
+- Fixed searching of the ds parameter merge_parent_groups slice.
+- Only `operations` and `admin` roles should have the `DELIVERY-SERVICE:UPDATE` permission.
+- Traffic Router: fixed a null pointer exception that caused snapshots to be rejected if a topology cachegroup did not have any online/reported/admin\_down caches
+- Update traffic\_portal dependencies to mitigate `npm audit` issues.
+- [#6271](https://github.com/apache/trafficcontrol/issues/6271) `api/{{version}/deliveryservices/{id}/health` returns no info if the delivery service uses a topology.
+- [#6291](https://github.com/apache/trafficcontrol/issues/6291) Prevent Traffic Ops from modifying and/or deleting reserved statuses.
+- [#6299](https://github.com/apache/trafficcontrol/issues/6299) User representations don't match
+- [#6368](https://github.com/apache/trafficcontrol/pull/6368) Fixed validation response message from `/acme_accounts`
+- [#6369](https://github.com/apache/trafficcontrol/pull/6369) Fixed `/acme_accounts` endpoint to validate email and URL fields
+- [#6370](https://github.com/apache/trafficcontrol/pull/6370) Fixed docs for `POST` and response code for `PUT` to `/acme_accounts` endpoint
+- [#6538](https://github.com/apache/trafficcontrol/pull/6538) Fixed the incorrect use of secure.port on TrafficRouter and corrected to the httpsPort value from the TR server configuration.
+- [#6549](https://github.com/apache/trafficcontrol/issues/6549) Fixed internal server error while deleting a delivery service created from a DSR (Traafic Ops).
+- [#6562](https://github.com/apache/trafficcontrol/pull/6562) Fixed incorrect template in Ansible dataset loader role when fallbackToClosest is defined.
+- [#6580](https://github.com/apache/trafficcontrol/issues/6580) Fixed cache config generation remap.config targets for MID-type servers in a Topology with other caches as parents and HTTPS origins.
+- [#6590](https://github.com/apache/trafficcontrol/pull/6590) Python client: Corrected parameter name in decorator for get\_parameters\_by\_profile\_id
+- [#6603](https://github.com/apache/trafficcontrol/issues/6603) Fixed users with "admin" "Priv Level" not having Permission to view or delete DNSSEC keys.
+- [#6626](https://github.com/apache/trafficcontrol/pull/6626) Fixed t3c Capabilities request failure issue which could result in malformed config.
+- [#6712](https://github.com/apache/trafficcontrol/issues/6712) - Fixed error when loading the Traffic Vault schema from `create_tables.sql` more than once.
+- [#6776](https://github.com/apache/trafficcontrol/issues/6776) User properties only required sometimes
+- [#6780](https://github.com/apache/trafficcontrol/issues/6780) Fixed t3c to use secondary parents when there are no primary parents available.
 - [#6792](https://github.com/apache/trafficcontrol/issues/6792) Remove extraneous field from Topologies and Server Capability POST/PUT.
 - [#6795](https://github.com/apache/trafficcontrol/issues/6795) Removed an unnecessary response wrapper object from being returned in a POST to the federation resolvers endpoint.
+- [#6800](https://github.com/apache/trafficcontrol/issues/6800) Fixed incorrect error message for `/server/details` associated with query parameters.
+- [#6806](https://github.com/apache/trafficcontrol/issues/6806) t3c calculates max_origin_connections incorrectly for topology-based delivery services
+- [#6834](https://github.com/apache/trafficcontrol/issues/6834) - In API 4.0, fixed `GET` for `/servers` to display all profiles irrespective of the index position. Also, replaced query param `profileId` with `profileName`.
+- [#6883](https://github.com/apache/trafficcontrol/issues/6883) Fix t3c cache to invalidate on version change
+- [#6896](https://github.com/apache/trafficcontrol/issues/6896) Fixed the `POST api/cachegroups/id/queue_updates` endpoint so that it doesn't give an internal server error anymore.
+- [#6907](https://github.com/apache/trafficcontrol/issues/6907) Fixed Traffic Ops to return the correct server structure (based on the API version) upon a server deletion.
+- [#6933](https://github.com/apache/trafficcontrol/issues/6933) Fixed tc-health-client to handle credentials files with special characters in variables
+- [#6944](https://github.com/apache/trafficcontrol/issues/6944) Fixed cache config generation for ATS 9 sni.yaml from disable_h2 to http2 directive. ATS 9 documents disable_h2, but it doesn't seem to work.
+- `dequeueing` server updates should not require checking for cdn locks.
+- t3c-generate fix for combining remapconfig and cachekeyconfig parameters for MakeRemapDotConfig call.
 
 
 ### Removed
+- Dropped CentOS 8 support
+- Remove Traffic Ops API version 2
 - Remove `client.steering.forced.diversity` feature flag(profile parameter) from Traffic Router (TR). Client steering responses now have cache diversity by default.
 - Remove traffic\_portal dependencies to mitigate `npm audit` issues, specifically `grunt-concurrent`, `grunt-contrib-concat`, `grunt-contrib-cssmin`, `grunt-contrib-jsmin`, `grunt-contrib-uglify`, `grunt-contrib-htmlmin`, `grunt-newer`, and `grunt-wiredep`
-- Replace `forever` with `pm2` for process management of the traffic portal node server to remediate security issues.
 - Removed the Traffic Monitor `peer_polling_protocol` option. Traffic Monitor now just uses hostnames to request peer states, which can be handled via IPv4 or IPv6 depending on the underlying IP version in use.
-- Dropped CentOS 8 support
+- Replace `forever` with `pm2` for process management of the traffic portal node server to remediate security issues.
 - The `/servers/details` endpoint of the Traffic Ops API has been dropped in version 4.0, and marked deprecated in earlier versions.
-- Remove Traffic Ops API version 2
 
 ### Changed
-- [#6694](https://github.com/apache/trafficcontrol/issues/6694) Traffic Stats now uses the TO API 3.0
-- [#6654](https://github.com/apache/trafficcontrol/issues/6654) Traffic Monitor now uses the TO API 4.0 by default and falls back to 3.1
-- Added Rocky Linux 8 support
-- Traffic Monitors now peer with other Traffic Monitors of the same status (e.g. ONLINE with ONLINE, OFFLINE with OFFLINE), instead of all peering with ONLINE.
-- Changed the Traffic Ops user last_authenticated update query to only update once per minute to avoid row-locking when the same user logs in frequently.
-- Added new fields to the monitoring.json snapshot and made Traffic Monitor prefer data in monitoring.json to the CRConfig snapshot
-- Changed the default Traffic Ops API version requsted by Traffic Router from 2.0 to 3.1
-- Added permissions to the role form in traffic portal
-- Updated the Cache Stats Traffic Portal page to use a more performant AG-Grid-based table.
-- Updated the CDNs Traffic Portal page to use a more performant AG-Grid-based table.
-- Updated the Profiles Traffic Portal page to use a more performant AG-Grid-based table.
-- Updated Go version to 1.18
-- Removed the unused `deliveryservice_tmuser` table from Traffic Ops database
-- Adds updates to the trafficcontrol-health-client to, use new ATS Host status formats, detect and use proper
-  traffic_ctl commands, and adds new markup-poll-threshold config.
-- Traffic Monitor now defaults to 100 historical "CRConfig" Snapshots stored internally if not specified in configuration (previous default was 20,000)
-- Updated Traffic Router dependencies:
-  - commons-io: 2.0.1 -> 2.11.0
-  - commons-codec: 1.6 -> 1.15
-  - guava: 18.0 -> 31.1-jre
   - async-http-client: 2.12.1 -> 2.12.3
+  - commons-codec: 1.6 -> 1.15
+  - commons-io: 2.0.1 -> 2.11.0
+  - guava: 18.0 -> 31.1-jre
   - spring: 5.2.20.RELEASE -> 5.3.20
-- `TRAFFIC_ROUTER`-type Profiles no longer need to have names that match any kind of pattern (e.g. `CCR_.*`)
-- [#4351](https://github.com/apache/trafficcontrol/issues/4351) Updated message to an informative one when deleting a delivery service.
-- Updated Grove to use the TO API v3 client library
+  traffic_ctl commands, and adds new markup-poll-threshold config.
+- Added Rocky Linux 8 support
+- Added new fields to the monitoring.json snapshot and made Traffic Monitor prefer data in monitoring.json to the CRConfig snapshot
+- Added permissions to the role form in traffic portal
+- Adds updates to the trafficcontrol-health-client to, use new ATS Host status formats, detect and use proper
+- Changed the Traffic Ops user last_authenticated update query to only update once per minute to avoid row-locking when the same user logs in frequently.
+- Changed the default Traffic Ops API version requsted by Traffic Router from 2.0 to 3.1
+- Removed the unused `deliveryservice_tmuser` table from Traffic Ops database
+- Traffic Monitor now defaults to 100 historical "CRConfig" Snapshots stored internally if not specified in configuration (previous default was 20,000)
+- Traffic Monitors now peer with other Traffic Monitors of the same status (e.g. ONLINE with ONLINE, OFFLINE with OFFLINE), instead of all peering with ONLINE.
 - Updated Ansible Roles to use Traffic Ops API v3
+- Updated Go version to 1.18
+- Updated Grove to use the TO API v3 client library
+- Updated Traffic Router dependencies:
+- Updated the CDNs Traffic Portal page to use a more performant AG-Grid-based table.
+- Updated the Cache Stats Traffic Portal page to use a more performant AG-Grid-based table.
+- Updated the Profiles Traffic Portal page to use a more performant AG-Grid-based table.
+- [#4351](https://github.com/apache/trafficcontrol/issues/4351) Updated message to an informative one when deleting a delivery service.
+- [#6654](https://github.com/apache/trafficcontrol/issues/6654) Traffic Monitor now uses the TO API 4.0 by default and falls back to 3.1
+- [#6694](https://github.com/apache/trafficcontrol/issues/6694) Traffic Stats now uses the TO API 3.0
+- `TRAFFIC_ROUTER`-type Profiles no longer need to have names that match any kind of pattern (e.g. `CCR_.*`)
 
 ## [6.1.0] - 2022-01-18
 ### Added
