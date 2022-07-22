@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
@@ -43,10 +42,14 @@ var Version = "0.4"
 // This is overwritten by the build with the current project version.
 var GitRevision = "nogit"
 
-//default time out is 15 seconds, if not included in json input.
-var timeOutSeconds = 15
+// defaultTimeOutMs is 15000 milliseconds, if not included in input.
+var defaultTimeOutMs = 15000
 
 func main() {
+	file := getopt.StringLong("file", 'f', "", "Path to file to watch")
+	match := getopt.StringLong("match", 'm', ".*", "Regex pattern you want to match while running tail default is .*")
+	endMatch := getopt.StringLong("end-match", 'e', "^timeout", "Regex pattern that will cause tail to exit before timeout")
+	timeOutMs := getopt.Int64Long("timeout-ms", 't', int64(defaultTimeOutMs), "Timeout in milliseconds that will cause tail to exit default is 15000 MS")
 	version := getopt.BoolLong("version", 'V', "Print version information and exit.")
 	help := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
@@ -61,31 +64,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	tailCfg := &t3cutil.TailCfg{}
-	if err := json.NewDecoder(os.Stdin).Decode(tailCfg); err != nil {
-		log.Errorln("Error reading json input", err)
-		os.Exit(1)
-	}
-
-	if tailCfg.LogMatch == nil {
-		log.Errorln("must provide a regex to match")
+	if *file == "" || file == nil {
+		fmt.Println("Please provide file path for t3c-tail")
 		fmt.Println(usageStr())
 		os.Exit(1)
 	}
 
-	endMatch := regexp.MustCompile("^timeout")
+	logMatch := regexp.MustCompile(*match)
+	tailStop := regexp.MustCompile(*endMatch)
+	timeOut := *timeOutMs
 
-	if tailCfg.EndMatch != nil {
-		endMatch = regexp.MustCompile(*tailCfg.EndMatch)
-	}
-
-	logMatch := regexp.MustCompile(*tailCfg.LogMatch)
-	timeOut := timeOutSeconds
-	if tailCfg.TimeOut != nil {
-		timeOut = *tailCfg.TimeOut
-	}
-
-	file := tailCfg.File
 	t, err := tail.TailFile(*file,
 		tail.Config{
 			MustExist: true,
@@ -96,16 +84,16 @@ func main() {
 			},
 		})
 	if err != nil {
-		log.Errorln("error running tail on ", file)
+		log.Errorln("error running tail on ", file, err)
 		os.Exit(1)
 	}
-	timer := time.NewTimer(time.Second * time.Duration(timeOut))
+	timer := time.NewTimer(time.Millisecond * time.Duration(timeOut))
 	go func() {
 		for line := range t.Lines {
 			if logMatch.MatchString(line.Text) {
 				fmt.Println(line.Text)
 			}
-			if endMatch.MatchString(line.Text) {
+			if tailStop.MatchString(line.Text) {
 				if !timer.Stop() {
 					<-timer.C
 				}
@@ -121,11 +109,14 @@ func main() {
 
 func usageStr() string {
 	return `usage: t3c-tail [--help]
-	accepts json input from stdin in the following format:
-	file: path to the file you want to tail
-	match: is regex string you wish to match on, if you want everything use '.*'
-	stopMatch: is a regex used to exit tail when it is found in the logs
-	timeOut: given in seconds the default is 15
-	{"file":"diags.log", "match":"<regex string to match>", "endMatch": "<regex string to match>", "timeOut": 4}
+	-f <path to file> -m <regex to match> -e <regex match to exit> -t <timeout in ms>
+
+	file is  path to the file you want to tail
+
+	match is regex string you wish to match on, default is '.*'
+
+	endMatch is a regex used to exit tail when it is found in the logs with out waiting for timeout
+
+	timeOutMs is when tail will stop if endMatch isn't found default is 15000
 	`
 }
