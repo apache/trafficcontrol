@@ -2402,6 +2402,10 @@
         {
             "divisionName": "cdn-div2",
             "name": "cdn-region2"
+        },
+        {
+            "divisionName": "division1",
+            "name": "test-deletion"
         }
     ],
     "roles": [
