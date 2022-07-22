@@ -27,6 +27,7 @@ import { GenericTableComponent } from "./generic-table/generic-table.component";
 import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
 import { LoadingComponent } from "./loading/loading.component";
+import { ObscuredTextInputComponent } from "./obscured-text-input/obscured-text-input.component";
 import { BooleanFilterComponent } from "./table-components/boolean-filter/boolean-filter.component";
 import { EmailCellRendererComponent } from "./table-components/email-cell-renderer/email-cell-renderer.component";
 import { SSHCellRendererComponent } from "./table-components/ssh-cell-renderer/ssh-cell-renderer.component";
@@ -50,7 +51,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		LinechartDirective,
 		SSHCellRendererComponent,
 		EmailCellRendererComponent,
-		TelephoneCellRendererComponent
+		TelephoneCellRendererComponent,
+		ObscuredTextInputComponent
 	],
 	exports: [
 		AlertComponent,
@@ -60,7 +62,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
 		CustomvalidityDirective,
-		LinechartDirective
+		LinechartDirective,
+		ObscuredTextInputComponent,
 	],
 	imports: [
 		AppUIModule,
