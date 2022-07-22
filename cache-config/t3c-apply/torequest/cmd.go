@@ -32,6 +32,7 @@ import (
 	golog "log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -48,6 +49,8 @@ type ServerAndConfigs struct {
 	ConfigData  json.RawMessage
 	ConfigFiles json.RawMessage
 }
+
+var stripDate = regexp.MustCompile(`\[\w{3}\s{1,2}\d{1,2}\s\d{2}:\d{2}:\d{2}\.\d{3}\]\s`)
 
 // generate runs t3c-generate and returns the result.
 func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
@@ -278,24 +281,19 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 //doTail calls t3c-tail and will run a tail on the log file provided with string for a regex to
 //maatch on default is .* endMatch will make t3c-tail exit when a pattern is matched otherwise
 //a timeout in a given number of seconds will occur.
-func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeoutSeconds int) error {
-	tailData := t3cutil.TailCfg{
-		File:     &file,
-		LogMatch: &logMatch,
-		EndMatch: &endMatch,
-		TimeOut:  &timeoutSeconds,
+func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeoutInMS int) error {
+	args := []string{
+		"--file=" + filepath.Join(cfg.TsHome, file),
+		"--match=" + logMatch,
+		"--end-match=" + endMatch,
+		"--timeout-ms=" + strconv.Itoa(timeoutInMS),
 	}
-	tailInput, err := json.Marshal(&tailData)
-	if err != nil {
-		return fmt.Errorf("error loading json input")
-	}
-	stdOut, stdErr, code := t3cutil.DoInput(tailInput, `t3c-tail`, "")
+	stdOut, stdErr, code := t3cutil.Do(`t3c-tail`, args...)
 	if code > 1 {
 		return fmt.Errorf("t3c-tail returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
 	logSubApp(`t3c-tail`, stdErr)
 
-	stripDate := regexp.MustCompile(`\[\w{3}\s{1,2}\d{1,2}\s\d{2}:\d{2}:\d{2}\.\d{3}\]\s`)
 	stdOut = bytes.TrimSpace(stdOut)
 	lines := strings.Split(string(stdOut), "\n")
 	for _, line := range lines {
