@@ -38,7 +38,7 @@ t3c-tail - Traffic Control Cache Configuration tail tool
 
 # SYNOPSIS
 
-t3c-tail
+t3c-tail \-f \<path to file\> \-m \<regex to match\> \-e \<regex match to exit\> \-t \<timeout in ms\>
 
 [\-\-help]
 
@@ -47,20 +47,28 @@ t3c-tail
 # DESCRIPTION
 
 The t3c-tail application will tail a file, usually a log file.
-Reads json input from stdin.
-Provide a file name to watch, a regex to filter or .* for all,
+Provide a file name to watch, a regex to filter or .* is the default,
 a regex match to exit tail (if omitted will exit on timeout),
-timeout in seconds for how long you want it to run, default is 15 seconds.
- 
-
-# JSON Format
-    {"file":"<file to tail>", "logMatch":"<regex to match>", "endMatch":"<regex match to exit before timeout>", "timeOut": <timeout in seconds>}
+timeout in milliseconds for how long you want it to run, default is 15000 milliseconds.
 
 # OPTIONS
+
+-e, -\-end-match
+
+    Regex pattern that will cause tail to exit before timeout.
+
+-f, -\-file
+    Path to file to watch.
 
 -h, -\-help
 
     Print usage info and exit.
+
+-m, -\-match
+    Regex pattern you want to match while running tail default is .*.
+
+-t -\-timeout-ms
+    Timeout in milliseconds that will cause tail to exit default is 15000 MS.
 
 -V, -\-version
 
