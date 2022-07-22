@@ -48,12 +48,12 @@ const (
 )
 
 const (
-	TailDiagsLog       = "/opt/trafficserver/var/log/trafficserver/diags.log"
-	TailRestartTimeOut = 60
-	TailReloadTimeOut  = 15
-	tailMatch          = `ET_(TASK|NET)\s\d{1,}`
-	tailRestartEnd     = "Traffic Server is fully initialized"
-	tailReloadEnd      = "remap.config finished loading"
+	TailDiagsLogRelative = "/var/log/trafficserver/diags.log"
+	TailRestartTimeOutMS   = 60000
+	TailReloadTimeOutMS    = 15000
+	tailMatch            = `ET_(TASK|NET)\s\d{1,}`
+	tailRestartEnd       = "Traffic Server is fully initialized"
+	tailReloadEnd        = "remap.config finished loading"
 )
 
 type Package struct {
@@ -1112,7 +1112,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 			return errors.New("failed to restart trafficserver")
 		}
 		log.Infoln("trafficserver has been " + startStr + "ed")
-		if err := doTail(r.Cfg, TailDiagsLog, ".*", tailRestartEnd, TailRestartTimeOut); err != nil {
+		if err := doTail(r.Cfg, TailDiagsLogRelative, ".*", tailRestartEnd, TailRestartTimeOutMS); err != nil {
 			log.Errorln("error running tail")
 		}
 		if *syncdsUpdate == UpdateTropsNeeded {
@@ -1137,7 +1137,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 				*syncdsUpdate = UpdateTropsSuccessful
 			}
 			log.Infoln("ATS 'traffic_ctl config reload' was successful")
-			if err := doTail(r.Cfg, TailDiagsLog, tailMatch, tailReloadEnd, TailReloadTimeOut); err != nil {
+			if err := doTail(r.Cfg, TailDiagsLogRelative, tailMatch, tailReloadEnd, TailReloadTimeOutMS); err != nil {
 				log.Errorln("error running tail: ", err)
 			}
 		}
