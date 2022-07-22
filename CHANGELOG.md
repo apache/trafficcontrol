@@ -26,7 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added layered profile feature to 4.0 for `GET` /deliveryservices/{id}/servers/ and /deliveryservices/{id}/servers/eligible.
 - Change to t3c regex_revalidate so that STALE is no longer explicitly added for default revalidate rule for ATS version backwards compatibility.
 - Change to t3c diff to flag a config file for replacement if owner/group settings are not `ats` [#6879](https://github.com/apache/trafficcontrol/issues/6879).
-- Added a sub-app t3c-tail to tail diags.log and caputre output when t3c reloads and restarts trafficserver  
+- Added a sub-app t3c-tail to tail diags.log and capture output when t3c reloads and restarts trafficserver  
 
 ### Fixed
 - Fixed TO to default route ID to 0, if it is not present in the request context.
