@@ -64,13 +64,13 @@ const loginPageObject = {
 					selector: "button[name='login']"
 				},
 				passwordTxt: {
-					selector: "input#p"
+					selector: "input[name='p']"
 				},
 				resetBtn: {
 					selector: "button[name='reset']"
 				},
 				usernameTxt: {
-					selector: "input#u"
+					selector: "input[name='u']"
 				}
 			},
 			selector: "form[name='login']"
