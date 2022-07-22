@@ -49,8 +49,8 @@ const (
 
 const (
 	TailDiagsLogRelative = "/var/log/trafficserver/diags.log"
-	TailRestartTimeOutMS   = 60000
-	TailReloadTimeOutMS    = 15000
+	TailRestartTimeOutMS = 60000
+	TailReloadTimeOutMS  = 15000
 	tailMatch            = `ET_(TASK|NET)\s\d{1,}`
 	tailRestartEnd       = "Traffic Server is fully initialized"
 	tailReloadEnd        = "remap.config finished loading"
