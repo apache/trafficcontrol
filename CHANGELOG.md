@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Changed
-- Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, and ILO interface passwords by default.
+- Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 
 ## [7.0.0] - 2022-07-19
 ### Added
