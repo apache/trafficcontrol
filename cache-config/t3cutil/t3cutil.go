@@ -54,11 +54,6 @@ var installdir string
 // initializes InstallDir to executable dir
 // If error, returns "/usr/bin" as default.
 func InstallDir() string {
-	log.Infof("t3cutil.InstallDir")
-	{
-		execpath, err := os.Executable()
-		log.Infof("InstallDir '%s' %v", execpath, err)
-	}
 	if installdir == "" {
 		execpath, err := os.Executable()
 		if err != nil {
@@ -67,10 +62,9 @@ func InstallDir() string {
 		} else {
 			log.Infof("Executable path is %s", execpath)
 			installdir = filepath.Dir(execpath)
-			log.Infof("Using executable installdir: '%s'\n", InstallDir)
 		}
 	}
-	log.Infof("return installdir '%s'", installdir)
+	log.Infof("Return Installdir '%s'", installdir)
 	return installdir
 }
 
