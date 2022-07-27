@@ -420,7 +420,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/topologyServers').name,
         require('./common/modules/table/types').name,
         require('./common/modules/table/typeCacheGroups').name,
-        require('./common/modules/table/typeDeliveryServices').name,
         require('./common/modules/table/typeStaticDnsEntries').name,
         require('./common/modules/table/users').name,
 
