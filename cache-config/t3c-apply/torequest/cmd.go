@@ -558,11 +558,11 @@ func requestConfig(cfg config.Cfg) ([]byte, error) {
 		stdOut, stdErr, code = t3cutil.Do(t3cpath, args...)
 	}
 	if code != 0 {
-		logSubAppErr(`t3c stdout`, stdOut)
-		logSubAppErr(`t3c stderr`, stdErr)
+		logSubAppErr(t3creq+` stdout`, stdOut)
+		logSubAppErr(t3creq+` stderr`, stdErr)
 		return nil, fmt.Errorf("t3c returned non-zero exit code %v, see log for details", code)
 	}
-	logSubApp(`t3c`, stdErr)
+	logSubApp(t3creq, stdErr)
 
 	if err := ioutil.WriteFile(t3cutil.ApplyCachePath, stdOut, 0600); err != nil {
 		log.Errorln("writing config data to cache failed: " + err.Error())
