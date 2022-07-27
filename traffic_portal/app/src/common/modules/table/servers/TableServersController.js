@@ -21,6 +21,8 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 
 	/**** Constants, scope data, etc. ****/
 
+	$scope.sensitiveColumns = [ "iloPassword" ];
+
 	/** The columns of the ag-grid table */
 	$scope.columns = [
 		{
@@ -80,6 +82,11 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		{
 			headerName: "ILO Username",
 			field: "iloUsername",
+			hide: true
+		},
+		{
+			headerName: "ILO Password",
+			field: "iloPassword",
 			hide: true
 		},
 		{
