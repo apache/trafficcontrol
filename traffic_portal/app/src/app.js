@@ -357,7 +357,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/asns').name,
         require('./common/modules/table/cacheGroups').name,
         require('./common/modules/table/cacheGroupAsns').name,
-        require('./common/modules/table/cacheGroupServers').name,
         require('./common/modules/table/capabilities').name,
         require('./common/modules/table/capabilityEndpoints').name,
         require('./common/modules/table/capabilityUsers').name,

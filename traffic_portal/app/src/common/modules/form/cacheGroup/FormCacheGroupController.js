@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, $location, formUtils, locationUtils, cacheGroupService) {
+var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, formUtils, cacheGroupService) {
 
     $scope.types = types;
 
@@ -26,14 +26,6 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
     $scope.cacheGroup = cacheGroup;
 
     $scope.cacheGroupFallbackUpdated = false;
-
-    $scope.viewAsns = function() {
-        $location.path($location.path() + '/asns');
-    };
-
-    $scope.viewServers = function() {
-        $location.path($location.path() + '/servers');
-    };
 
     $scope.hasLocalizationMethod = function(method) {
         return $scope.cacheGroup.localizationMethods.includes(method);
@@ -48,8 +40,6 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
             $scope.cacheGroup.localizationMethods.push(method);
         }
     };
-
-    $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
 
@@ -195,5 +185,5 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
     init();
 };
 
-FormCacheGroupController.$inject = ['cacheGroup', 'types', 'cacheGroups', '$scope', '$location', 'formUtils', 'locationUtils', 'cacheGroupService', 'typeService'];
+FormCacheGroupController.$inject = ['cacheGroup', 'types', 'cacheGroups', '$scope', 'formUtils', 'cacheGroupService', 'typeService'];
 module.exports = FormCacheGroupController;
