@@ -358,9 +358,17 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 		}
 	];
 
-	let dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+	$scope.sensitiveColumns = [
+		"remapText",
+		"edgeHeaderRewrite",
+		"firstHeaderRewrite",
+		"innerHeaderRewrite",
+		"lastHeaderRewrite",
+		"midHeaderRewrite"
+	];
 
-	let showCustomCharts = propertiesModel.properties.deliveryServices.charts.customLink.show;
+	const dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+	const showCustomCharts = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
 	/**
 	 * @param {string} typeName
