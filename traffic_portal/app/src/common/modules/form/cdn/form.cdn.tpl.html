@@ -46,7 +46,7 @@ under the License.
                     <li ng-if="cdn.name !== 'ALL'" class="divider"></li>
                     <li ng-if="cdn.name !== 'ALL'" role="menuitem"><a ng-href="#!/delivery-services?cdnName={{cdnName}}">View Delivery Services</a></li>
                     <li role="menuitem"><a ng-href="#!/profiles?cdnName={{cdnName}}">View Profiles</a></li>
-                    <li role="menuitem"><a ng-href="#!/cdns/{{cdn.id}}/servers">View Servers</a></li>
+                    <li role="menuitem"><a ng-href="#!/servers?cdnName={{cdnName}}">View Servers</a></li>
                     <li class="divider"></li>
                     <li role="menuitem"><a ng-href="#!/cdns/{{cdn.id}}/notifications">View Notifications</a></li>
                 </ul>
