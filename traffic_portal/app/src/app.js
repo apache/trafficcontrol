@@ -386,7 +386,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/notifications').name,
         require('./common/modules/table/origins').name,
         require('./common/modules/table/physLocations').name,
-        require('./common/modules/table/physLocationServers').name,
         require('./common/modules/table/parameters').name,
         require('./common/modules/table/parameterProfiles').name,
         require('./common/modules/table/profileParameters').name,

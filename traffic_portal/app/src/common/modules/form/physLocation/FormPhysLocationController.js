@@ -17,13 +17,11 @@
  * under the License.
  */
 
-var FormPhysLocationController = function(physLocation, $scope, $location, formUtils, stringUtils, locationUtils, regionService) {
+function FormPhysLocationController(physLocation, $scope, formUtils, stringUtils, regionService) {
 
-    var getRegions = function() {
-        regionService.getRegions()
-            .then(function(result) {
-                $scope.regions = result;
-            });
+    async function getRegions() {
+        const result = await regionService.getRegions()
+		$scope.regions = result;
     };
 
     $scope.physLocation = physLocation;
@@ -42,22 +40,12 @@ var FormPhysLocationController = function(physLocation, $scope, $location, formU
 
     $scope.labelize = stringUtils.labelize;
 
-    $scope.viewServers = function() {
-        $location.path($location.path() + '/servers');
-    };
-
-    $scope.navigateToPath = locationUtils.navigateToPath;
-
     $scope.hasError = formUtils.hasError;
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
-    var init = function () {
-        getRegions();
-    };
-    init();
-
+	getRegions();
 };
 
-FormPhysLocationController.$inject = ['physLocation', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'regionService'];
+FormPhysLocationController.$inject = ['physLocation', '$scope', 'formUtils', 'stringUtils', 'regionService'];
 module.exports = FormPhysLocationController;
