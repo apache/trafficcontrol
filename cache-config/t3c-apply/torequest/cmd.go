@@ -551,7 +551,6 @@ func requestConfig(cfg config.Cfg) ([]byte, error) {
 	stdOut := ([]byte)(nil)
 	stdErr := ([]byte)(nil)
 	code := 0
-	t3cpath := filepath.Join(t3cutil.InstallDir(), `t3c`)
 	if len(cacheBts) > 0 {
 		stdOut, stdErr, code = t3cutil.DoInput(cacheBts, t3cpath, args...)
 	} else {
