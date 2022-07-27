@@ -68,7 +68,7 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 		return nil, errors.New("requesting: " + err.Error())
 	}
 	args := []string{
-		"generate",
+		/* "generate", */
 		"--dir=" + cfg.TsConfigDir,
 	}
 
@@ -99,7 +99,8 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
 	args = append(args, "--use-strategies="+cfg.UseStrategies.String())
 
-	generatedFiles, stdErr, code := t3cutil.DoInput(configData, t3cpath, args...)
+	procpath := t3cpath + `-generate`
+	generatedFiles, stdErr, code := t3cutil.DoInput(configData, procpath, args...)
 	if code != 0 {
 		logSubAppErr(t3cgen+` stdout`, generatedFiles)
 		logSubAppErr(t3cgen+` stderr`, stdErr)
@@ -349,9 +350,7 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, 
 // The cfgFile should be the full text of either a plugin.config or remap.config.
 // Returns nil if t3c-check-refs returned no errors found, or the error found if any.
 func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
-	args := []string{
-		`check`,
-		`refs`,
+	args := []string{`check`, `refs`,
 		"--files-adding=" + strings.Join(filesAdding, ","),
 	}
 	if cfg.LogLocationErr == log.LogLocationNull {
@@ -526,7 +525,7 @@ func requestConfig(cfg config.Cfg) ([]byte, error) {
 	log.Infof("config cache bytes: %v\n", len(cacheBts))
 
 	args := []string{
-		/*"request", */
+		"request",
 		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
 		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
 		"--cache-host-name=" + cfg.CacheHostName,
@@ -556,11 +555,10 @@ func requestConfig(cfg config.Cfg) ([]byte, error) {
 	stdOut := ([]byte)(nil)
 	stdErr := ([]byte)(nil)
 	code := 0
-	procpath := t3cpath + `-request`
 	if len(cacheBts) > 0 {
-		stdOut, stdErr, code = t3cutil.DoInput(cacheBts, procpath, args...)
+		stdOut, stdErr, code = t3cutil.DoInput(cacheBts, t3cpath, args...)
 	} else {
-		stdOut, stdErr, code = t3cutil.Do(procpath, args...)
+		stdOut, stdErr, code = t3cutil.Do(t3cpath, args...)
 	}
 	if code != 0 {
 		logSubAppErr(t3creq+` stdout`, stdOut)
