@@ -17,50 +17,17 @@
  * under the License.
  */
 
-var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, stringUtils, locationUtils, cdnService, messageModel) {
+function FormCDNController(cdn, $scope, $uibModal, formUtils, cdnService) {
 
-    var queueServerUpdates = function(cdn) {
+    function queueServerUpdates(cdn) {
         cdnService.queueServerUpdates(cdn.id);
-    };
+    }
 
-    var clearServerUpdates = function(cdn) {
+    function clearServerUpdates(cdn) {
         cdnService.clearServerUpdates(cdn.id);
-    };
+    }
 
     $scope.cdn = cdn;
-
-    $scope.falseTrue = [
-        { value: true, label: 'true' },
-        { value: false, label: 'false' }
-    ];
-
-    $scope.manageDNSSEC = function() {
-        $location.path($location.path() + '/dnssec-keys');
-    };
-
-    $scope.manageFederations = function() {
-        $location.path($location.path() + '/federations');
-    };
-
-    $scope.viewConfig = function() {
-        $location.path($location.path() + '/config/changes');
-    };
-
-    $scope.viewProfiles = function() {
-        $location.url(`/profiles?cdnName=${encodeURIComponent(cdn.name)}`);
-    };
-
-    $scope.viewServers = function() {
-        $location.path($location.path() + '/servers');
-    };
-
-    $scope.viewDeliveryServices = function() {
-        $location.path($location.path() + '/delivery-services');
-    };
-
-    $scope.viewNotifications = function() {
-        $location.path($location.path() + '/notifications');
-    };
 
     $scope.queueServerUpdates = function(cdn) {
         var params = {
@@ -106,13 +73,11 @@ var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, s
         });
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
-
     $scope.hasError = formUtils.hasError;
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
-};
+}
 
-FormCDNController.$inject = ['cdn', '$scope', '$location', '$uibModal', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService', 'messageModel'];
+FormCDNController.$inject = ['cdn', '$scope', '$uibModal', 'formUtils', 'cdnService'];
 module.exports = FormCDNController;

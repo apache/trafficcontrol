@@ -362,7 +362,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/capabilityUsers').name,
         require('./common/modules/table/changeLogs').name,
         require('./common/modules/table/cdns').name,
-        require('./common/modules/table/cdnDeliveryServices').name,
         require('./common/modules/table/cdnFederations').name,
         require('./common/modules/table/cdnFederationDeliveryServices').name,
         require('./common/modules/table/cdnFederationUsers').name,
