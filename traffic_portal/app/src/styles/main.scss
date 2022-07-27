@@ -219,45 +219,6 @@ input[type="checkbox"].dirty {
   box-shadow:         0 0 10px 5px blue;
 }
 
-#tree-root {
-
-  .tree-node-content {
-    height: 45px;
-    text-align: center;
-    font-size: 14px;
-    margin-bottom: 10px;
-    small {
-      font-size: 65%;
-    }
-    .error-msg {
-      display: inline;
-      font-style: italic;
-    }
-  }
-
-  .tree-node.origin {
-    color: #004085;
-    background-color: #cce5ff;
-    border-color: #b8daff;
-  }
-  .tree-node.mid {
-    color: #383d41;
-    background-color: #e2e3e5;
-    border-color: #d6d8db;
-  }
-  .tree-node.error {
-    color: #721c24;
-    background-color: #f2dede;
-    border-color: #f5c6cb;
-  }
-  .tree-node.warning {
-    color: #856404;
-    background-color: #fff3cd;
-    border-color: #ffeeba;
-  }
-
-}
-
 #tenant-tree-root {
   .angular-ui-tree-handle {
     cursor: default !important;

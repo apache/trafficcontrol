@@ -414,7 +414,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/tenantDeliveryServices').name,
         require('./common/modules/table/tenantUsers').name,
         require('./common/modules/table/topologies').name,
-        require('./common/modules/table/topologyDeliveryServices').name,
         require('./common/modules/table/topologyCacheGroups').name,
         require('./common/modules/table/topologyCacheGroupServers').name,
         require('./common/modules/table/topologyServers').name,

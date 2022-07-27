@@ -370,3 +370,50 @@ input:checked + .slider::before {
 		text-shadow: none;
 	}
 }
+
+/********* Topology Node Builders *********/
+
+.tree-node-content {
+	width: 100%;
+	display: inline-flex;
+	justify-content: space-between;
+	align-items: center;
+	height: 45px;
+	text-align: center;
+	font-size: 14px;
+	margin-bottom: 10px;
+	small {
+		font-size: 65%;
+	}
+	.error-msg {
+		display: inline;
+		font-style: italic;
+	}
+
+	button.btn {
+		margin: 0;
+	}
+}
+
+.tree-node {
+	&.origin {
+		color: #004085;
+		background-color: #cce5ff;
+		border-color: #b8daff;
+	}
+	&.mid {
+		color: #383d41;
+		background-color: #e2e3e5;
+		border-color: #d6d8db;
+	}
+	&.error {
+		color: #721c24;
+		background-color: #f2dede;
+		border-color: #f5c6cb;
+	}
+	&.warning {
+		color: #856404;
+		background-color: #fff3cd;
+		border-color: #ffeeba;
+	}
+}

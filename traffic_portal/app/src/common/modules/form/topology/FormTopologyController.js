@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $scope, $location, $uibModal, formUtils, locationUtils, topologyUtils, messageModel) {
+var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $scope, $uibModal, formUtils, topologyUtils, messageModel) {
 
 	let cacheGroupNamesInTopology = [];
 
@@ -100,27 +100,9 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		}
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
 	$scope.hasError = formUtils.hasError;
 
 	$scope.hasPropertyError = formUtils.hasPropertyError;
-
-	$scope.clone = function(topology) {
-		locationUtils.navigateToPath('/topologies/clone?name=' + topology.name);
-	};
-
-	$scope.viewCacheGroups = function() {
-		$location.path('/topologies/cache-groups');
-	};
-
-	$scope.viewDeliveryServices = function() {
-		$location.path('/topologies/delivery-services');
-	};
-
-	$scope.viewServers = function() {
-		$location.path('/topologies/servers');
-	};
 
 	$scope.nodeLabel = function(node) {
 		return node.cachegroup || 'TOPOLOGY';
@@ -314,5 +296,5 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 	init();
 };
 
-FormTopologyController.$inject = ['topology', 'cacheGroups', '$anchorScroll', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'topologyUtils', 'messageModel'];
+FormTopologyController.$inject = ['topology', 'cacheGroups', '$anchorScroll', '$scope', '$uibModal', 'formUtils', 'topologyUtils', 'messageModel'];
 module.exports = FormTopologyController;

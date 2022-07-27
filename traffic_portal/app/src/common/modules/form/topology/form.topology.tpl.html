@@ -20,7 +20,7 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/topologies')">Topologies</a></li>
+            <li><a href="#!/topologies">Topologies</a></li>
             <li class="active">{{::topologyName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
@@ -31,18 +31,18 @@ under the License.
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem">
-                        <button type="button" name="cloneToplogyMenuItem" title="Clone Topology" ng-click="clone(topology)">Clone Topology</button>
+                        <a title="Clone Topology" ng-href="#!/topologies/clone?name={{topologyName}}">Clone Topology</a>
                     </li>
                     <hr class="divider"/>
                     <li role="menuitem">
-                        <button type="button" name="viewDeliveryServicesMenuItem" title="View Delivery Services" ng-click="viewDeliveryServices()">View Delivery Services</button>
+                        <a title="View Delivery Services" ng-href="#!/delivery-services?topology={{topologyName}}">View Delivery Services</a>
                     </li>
                     <li class="divider"></li>
                     <li role="menuitem">
-                        <button type="button" name="viewCacheGroupsMenuItem" title="View Cache Groups" ng-click="viewCacheGroups()">View Cache Groups</button>
+                        <a title="View Cache Groups" ng-href="#!/topologies/cache-groups?name={{topologyName}}">View Cache Groups</a>
                     </li>
                     <li role="menuitem">
-                        <button type="button" name="viewServersMenuItem" title="View Servers" ng-click="viewServers()">View Servers</button>
+                        <a title="View Servers" ng-href="#!/topologies/servers?name={{topologyName}}">View Servers</a>
                     </li>
                     <li class="divider"></li>
                     <li role="menuitem">
@@ -78,7 +78,7 @@ under the License.
             <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache Groups *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <div id="tree-root" ui-tree="topologyTreeOptions" >
+                    <div ui-tree="topologyTreeOptions" >
                         <ol ui-tree-nodes ng-model="topologyTree">
                             <li ng-repeat="node in topologyTree" ui-tree-node ng-include="'nodes_renderer.html'"></li>
                         </ol>
@@ -99,25 +99,25 @@ under the License.
     <input name="dirty" ng-model="dirty" type="hidden">
     <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content"
          ng-class="{ 'warning': nodeWarning(node), 'origin': isOrigin(node), 'mid': isMid(node) }">
-        <div class="tree-node-label pull-left">
-            <a class="tree-toggle btn btn-primary btn-xs" ng-if="node.type !== 'ROOT' && hasChildren(node)" data-nodrag ng-click="toggle(this)">
+        <div class="tree-node-label">
+            <button type="button" class="tree-toggle btn btn-primary btn-xs" ng-if="node.type !== 'ROOT' && hasChildren(node)" data-nodrag ng-click="toggle(this)">
                 <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
-            </a> {{::nodeLabel(node)}} <small>{{::node.type}}</small>
+			</button> {{::nodeLabel(node)}} <small>{{::node.type}}</small>
         </div>
         <div ng-if="nodeWarning(node)" class="error-msg">{{nodeWarning(node)}}</div>
-        <div class="pull-right">
-            <a ng-show="node.cachegroup && node.parent.name" title="Set Secondary Parent Cache Group for {{::node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="editSecParent(node)" style="margin-right: 8px;">
+        <div>
+            <button type="button" ng-show="node.cachegroup && node.parent.name" title="Set Secondary Parent Cache Group for {{::node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="editSecParent(node)" style="margin-right: 8px;">
                 2nd Parent: {{(node.secParent.name) ? node.secParent.name : ''}} [{{node.secParent.type}}]
-            </a>
-            <a ng-if="node.cachegroup" title="View Servers Assigned to {{::node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="viewCacheGroupServers(node)" style="margin-right: 8px;">
+			</button>
+            <button type="button" ng-if="node.cachegroup" title="View Servers Assigned to {{::node.cachegroup}}" class="btn btn-primary btn-xs tree-button" data-nodrag ng-click="viewCacheGroupServers(node)" style="margin-right: 8px;">
                 <i class="fa fa-server"></i>
-            </a>
-            <a title="Add child cache groups to {{nodeLabel(node)}}" class="btn btn-primary btn-xs add-child-cg-btn" data-nodrag ng-click="addCacheGroups(node, this)" style="margin-right: 8px;">
+			</button>
+            <button type="button" title="Add child cache groups to {{nodeLabel(node)}}" class="btn btn-primary btn-xs add-child-cg-btn" data-nodrag ng-click="addCacheGroups(node, this)" style="margin-right: 8px;">
                 <i class="fa fa-plus"></i>
-            </a>
-            <a ng-if="node.cachegroup" title="Remove {{::node.cachegroup}} Cache Group" class="btn btn-danger btn-xs" data-nodrag ng-click="deleteCacheGroup(node, this)">
+			</button>
+            <button type="button" ng-if="node.cachegroup" title="Remove {{::node.cachegroup}} Cache Group" class="btn btn-danger btn-xs" data-nodrag ng-click="deleteCacheGroup(node, this)">
                 <i class="fa fa-times"></i>
-            </a>
+			</button>
         </div>
     </div>
     <ol ui-tree-nodes="" ng-model="node.children" ng-class="{hidden: collapsed}">
