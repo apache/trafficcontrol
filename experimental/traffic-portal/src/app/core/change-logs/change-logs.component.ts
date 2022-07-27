@@ -120,7 +120,6 @@ export class ChangeLogsComponent implements OnInit {
 	 */
 	public async ngOnInit(): Promise<void> {
 		this.headerSvc.headerTitle.next("Change Logs");
-		await this.loadData();
 
 		this.route.queryParamMap.subscribe(
 			m => {
@@ -131,6 +130,8 @@ export class ChangeLogsComponent implements OnInit {
 				this.searchText = search ?? "";
 			}
 		);
+
+		await this.loadData();
 	}
 
 	/**
