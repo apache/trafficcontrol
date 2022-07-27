@@ -26,8 +26,8 @@ under the License.
             </li>
         </ol>
         <ol class="breadcrumb pull-left" ng-if="$ctrl.breadCrumbs === undefined || $ctrl.breadCrumbs.length < 1">
-            <li class="active" ng-if="$ctrl.title">
-                {{ $ctrl.title }}
+            <li class="active" ng-if="$ctrl.tableTitle">
+                {{ $ctrl.tableTitle }}
             </li>
         </ol>
         <button ng-if="$ctrl.titleButton !== undefined" type="button" class="btn btn-link"
