@@ -20,11 +20,14 @@ import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { RouterModule, type Routes } from "@angular/router";
 
+import { LastDaysComponent } from "src/app/core/change-logs/last-days/last-days.component";
+
 import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
 import { SharedModule } from "../shared/shared.module";
 
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
+import { ChangeLogsComponent } from "./change-logs/change-logs.component";
 import { CurrentuserComponent } from "./currentuser/currentuser.component";
 import { UpdatePasswordDialogComponent } from "./currentuser/update-password-dialog/update-password-dialog.component";
 import { DashboardComponent } from "./dashboard/dashboard.component";
@@ -52,7 +55,8 @@ export const ROUTES: Routes = [
 	{ canActivate: [AuthenticatedGuard], component: CurrentuserComponent, path: "me" },
 	{ canActivate: [AuthenticatedGuard], component: NewDeliveryServiceComponent, path: "new.Delivery.Service" },
 	{ canActivate: [AuthenticatedGuard], component: CacheGroupTableComponent, path: "cache-groups" },
-	{ canActivate: [AuthenticatedGuard], component: TenantsComponent, path: "tenants"}
+	{ canActivate: [AuthenticatedGuard], component: TenantsComponent, path: "tenants"},
+	{ canActivate: [AuthenticatedGuard], component: ChangeLogsComponent, path: "change-logs" }
 ];
 
 /**
@@ -75,6 +79,8 @@ export const ROUTES: Routes = [
 		UpdateStatusComponent,
 		UserDetailsComponent,
 		TenantsComponent,
+		ChangeLogsComponent,
+		LastDaysComponent,
 		UserRegistrationDialogComponent
 	],
 	exports: [

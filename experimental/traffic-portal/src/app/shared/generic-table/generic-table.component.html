@@ -14,6 +14,7 @@ limitations under the License.
 <div class="extra-actions">
 	<button mat-flat-button color="accent" type="button" title="select all rows" (click)="selectAll()">Select All</button>
 	<button mat-flat-button color="accent" type="button" title="de-select all rows" (click)="selectAll(true)">De-Select All</button>
+	<button mat-flat-button color="accent" type="button"*ngFor="let btn of tableTitleButtons" (click)="emitTitleButtonAction(btn.action)">{{btn.text}}</button>
 	<button mat-flat-button color="accent" type="button" (click)="download()" title="save as CSV"><fa-icon [icon]="downloadIcon"></fa-icon></button>
 	<div class="toggle-columns" role="group" title="Select Table Columns">
 		<button mat-flat-button color="accent" [matMenuTriggerFor]="menu">
