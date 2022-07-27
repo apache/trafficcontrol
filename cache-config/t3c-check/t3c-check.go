@@ -85,7 +85,7 @@ func main() {
 		os.Exit(ExitCodeCommandLookupErr)
 	}
 
-	args := os.Args[2:]
+	args := append([]string{app}, os.Args[2:]...)
 
 	env := os.Environ()
 
