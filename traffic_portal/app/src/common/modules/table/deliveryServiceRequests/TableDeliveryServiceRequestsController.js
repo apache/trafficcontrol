@@ -33,7 +33,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		return params.value ? dateUtils.getRelativeTime(params.value) : params.value;
 	}
 
-	columns = [
+	const columns = [
 		{
 			headerName: "Delivery Service",
 			valueGetter: function(params) {
@@ -277,7 +277,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			} catch (e) {
 				console.error("Failure to load stored page size:", e);
 			}
-			
+
 			try {
 				const page = parseInt(localStorage.getItem(tableName + "_table_page"));
 				const totalPages = $scope.gridOptions.api.paginationGetTotalPages();
@@ -287,7 +287,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			} catch (e) {
 				console.error("Failed to load stored page number:", e);
 			}
-			
+
 			$scope.gridOptions.api.addEventListener("paginationChanged", function() {
 				localStorage.setItem(tableName + "_table_page", $scope.gridOptions.api.paginationGetCurrentPage());
 			});
