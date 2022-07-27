@@ -49,7 +49,7 @@ const (
 	t3cupd       = `t3c update`
 	t3cdiff      = `t3c diff`
 	t3cchkrefs   = `t3c check refs`
-	t3cchkreload = `t3c check relaod`
+	t3cchkreload = `t3c check reload`
 	t3creq       = `t3c request`
 	t3cpreproc   = `t3c preprocess`
 )
