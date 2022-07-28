@@ -16,230 +16,242 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/url"
 	"sort"
-	"strings"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestRegions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
-		GetTestRegionsIMS(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		SortTestRegions(t)
-		UpdateTestRegions(t)
-		UpdateTestRegionsWithHeaders(t, header)
-		GetTestRegions(t)
-		GetTestRegionsIMSAfterChange(t, header)
-		DeleteTestRegionsByName(t)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestRegionsWithHeaders(t, header)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateRegionsSort()),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"region1"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateRegionsFields(map[string]interface{}{"Name": "region1"})),
+				},
+			},
+			"POST": {
+				"NOT FOUND when DIVISION DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":         "invalidDivision",
+						"division":     99999999,
+						"divisionName": "doesntexist",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetRegionID(t, "cdn-region2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":         "newName",
+						"division":     GetDivisionID(t, "cdn-div2")(),
+						"divisionName": "cdn-div2",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateRegionsUpdateCreateFields("newName", map[string]interface{}{"Name": "newName"})),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:     GetRegionID(t, "region1"),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestBody: map[string]interface{}{
+						"name":         "newName",
+						"division":     GetDivisionID(t, "division1")(),
+						"divisionName": "division1",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetRegionID(t, "region1"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":         "newName",
+						"division":     GetDivisionID(t, "division1")(),
+						"divisionName": "division1",
+					},
+					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"test-deletion"}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"NOT FOUND when INVALID ID": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"id": {"99999999"}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"NOT FOUND when INVALID NAME": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"doesntexist"}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					region := tc.Region{}
+					var regionName *string
+					var regionID *int
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &region)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							if name == "OK when VALID NAME parameter" {
+								resp, reqInf, err := testCase.ClientSession.GetRegionByNameWithHdr(testCase.RequestParams["name"][0], testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetRegionsWithHdr(testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateRegion(region)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateRegionByIDWithHdr(testCase.EndpointId(), region, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							if val, ok := testCase.RequestParams["name"]; ok {
+								regionName = &val[0]
+							}
+							if val, ok := testCase.RequestParams["id"]; ok {
+								id, _ := strconv.Atoi(val[0])
+								regionID = &id
+							}
+							alerts, reqInf, err := testCase.ClientSession.DeleteRegion(regionID, regionName)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestRegionsWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Regions) > 0 {
-		firstRegion := testData.Regions[0]
-		// Retrieve the Region by region so we can get the id for the Update
-		resp, _, err := TOSession.GetRegionByNameWithHdr(firstRegion.Name, header)
-		if err != nil {
-			t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
-		}
-		if len(resp) > 0 {
-			remoteRegion := resp[0]
-			remoteRegion.Name = "OFFLINE-TEST"
-			_, reqInf, err := TOSession.UpdateRegionByIDWithHdr(remoteRegion.ID, remoteRegion, header)
-			if err == nil {
-				t.Errorf("Expected error about precondition failed, but got none")
-			}
-			if reqInf.StatusCode != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+func validateRegionsFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Regions response to not be nil.")
+		regionResp := resp.([]tc.Region)
+		for field, expected := range expectedResp {
+			for _, region := range regionResp {
+				switch field {
+				case "Division":
+					assert.Equal(t, expected, region.Division, "Expected Division to be %v, but got %d", expected, region.Division)
+				case "DivisionName":
+					assert.Equal(t, expected, region.DivisionName, "Expected DivisionName to be %v, but got %s", expected, region.DivisionName)
+				case "ID":
+					assert.Equal(t, expected, region.ID, "Expected ID to be %v, but got %d", expected, region.ID)
+				case "Name":
+					assert.Equal(t, expected, region.Name, "Expected Name to be %v, but got %s", expected, region.Name)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
 			}
 		}
 	}
 }
 
-func GetTestRegionsIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	for _, region := range testData.Regions {
-		_, reqInf, err := TOSession.GetRegionByNameWithHdr(region.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+func validateRegionsUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		region, _, err := TOSession.GetRegionByNameWithHdr(name, nil)
+		assert.RequireNoError(t, err, "Error getting Region: %v", err)
+		assert.RequireEqual(t, 1, len(region), "Expected one Region returned Got: %d", len(region))
+		validateRegionsFields(expectedResp)(t, toclientlib.ReqInf{}, region, tc.Alerts{}, nil)
 	}
 }
 
-func GetTestRegionsIMSAfterChange(t *testing.T, header http.Header) {
-	for _, region := range testData.Regions {
-		_, reqInf, err := TOSession.GetRegionByNameWithHdr(region.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+func validateRegionsSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Regions response to not be nil.")
+		var regionNames []string
+		regionResp := resp.([]tc.Region)
+		for _, region := range regionResp {
+			regionNames = append(regionNames, region.Name)
 		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
-	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	for _, region := range testData.Regions {
-		_, reqInf, err := TOSession.GetRegionByNameWithHdr(region.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+		assert.Equal(t, true, sort.StringsAreSorted(regionNames), "List is not sorted by their names: %v", regionNames)
 	}
 }
 
 func CreateTestRegions(t *testing.T) {
-
 	for _, region := range testData.Regions {
 		resp, _, err := TOSession.CreateRegion(region)
-		t.Log("Response: ", resp)
-		if err != nil {
-			t.Errorf("could not CREATE region: %v", err)
-		}
+		assert.RequireNoError(t, err, "Could not create Region '%s': %v - alerts: %+v", region.Name, err, resp.Alerts)
 	}
-}
-
-func SortTestRegions(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetRegionsWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, resp[i].Name)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UpdateTestRegions(t *testing.T) {
-
-	firstRegion := testData.Regions[0]
-	// Retrieve the Region by region so we can get the id for the Update
-	resp, _, err := TOSession.GetRegionByName(firstRegion.Name)
-	if err != nil {
-		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
-	}
-	remoteRegion := resp[0]
-	expectedRegion := "OFFLINE-TEST"
-	remoteRegion.Name = expectedRegion
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
-	if err != nil {
-		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
-	}
-
-	// Retrieve the Region to check region got updated
-	resp, _, err = TOSession.GetRegionByID(remoteRegion.ID)
-	if err != nil {
-		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
-	}
-	respRegion := resp[0]
-	if respRegion.Name != expectedRegion {
-		t.Errorf("results do not match actual: %s, expected: %s", respRegion.Name, expectedRegion)
-	}
-
-	// Set the name back to the fixture value so we can delete it after
-	remoteRegion.Name = firstRegion.Name
-	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
-	if err != nil {
-		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
-	}
-
-}
-
-func GetTestRegions(t *testing.T) {
-	for _, region := range testData.Regions {
-		resp, _, err := TOSession.GetRegionByName(region.Name)
-		if err != nil {
-			t.Errorf("cannot GET Region by region: %v - %v", err, resp)
-		}
-	}
-}
-
-func DeleteTestRegionsByName(t *testing.T) {
-	for _, region := range testData.Regions {
-		delResp, _, err := TOSession.DeleteRegion(nil, &region.Name)
-		if err != nil {
-			t.Errorf("cannot DELETE Region by name: %v - %v", err, delResp)
-		}
-
-		deleteLog, _, err := TOSession.GetLogsByLimit(1)
-		if err != nil {
-			t.Fatalf("unable to get latest audit log entry")
-		}
-		if len(deleteLog) != 1 {
-			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog))
-		}
-		if !strings.Contains(*deleteLog[0].Message, region.Name) {
-			t.Errorf("region deletion audit log entry - expected: message containing region name '%s', actual: %s", region.Name, *deleteLog[0].Message)
-		}
-
-		// Retrieve the Region to see if it got deleted
-		regionResp, _, err := TOSession.GetRegionByName(region.Name)
-		if err != nil {
-			t.Errorf("error deleting Region region: %s", err.Error())
-		}
-		if len(regionResp) > 0 {
-			t.Errorf("expected Region : %s to be deleted", region.Name)
-		}
-	}
-
-	CreateTestRegions(t)
 }
 
 func DeleteTestRegions(t *testing.T) {
+	regions, _, err := TOSession.GetRegionsWithHdr(nil)
+	assert.NoError(t, err, "Cannot get Regions: %v", err)
 
-	for _, region := range testData.Regions {
-		// Retrieve the Region by name so we can get the id
-		resp, _, err := TOSession.GetRegionByName(region.Name)
-		if err != nil {
-			t.Errorf("cannot GET Region by name: %v - %v", region.Name, err)
-		}
-		respRegion := resp[0]
-
-		delResp, _, err := TOSession.DeleteRegionByID(respRegion.ID)
-		if err != nil {
-			t.Errorf("cannot DELETE Region by region: %v - %v", err, delResp)
-		}
-
+	for _, region := range regions {
+		alerts, _, err := TOSession.DeleteRegion(nil, &region.Name)
+		assert.NoError(t, err, "Unexpected error deleting Region '%s' (#%d): %v - alerts: %+v", region.Name, region.ID, err, alerts.Alerts)
 		// Retrieve the Region to see if it got deleted
-		regionResp, _, err := TOSession.GetRegionByName(region.Name)
-		if err != nil {
-			t.Errorf("error deleting Region region: %s", err.Error())
-		}
-		if len(regionResp) > 0 {
-			t.Errorf("expected Region : %s to be deleted", region.Name)
-		}
+		getRegion, _, err := TOSession.GetRegionByIDWithHdr(region.ID, nil)
+		assert.NoError(t, err, "Error getting Region '%s' after deletion: %v", region.Name, err)
+		assert.Equal(t, 0, len(getRegion), "Expected Region '%s' to be deleted, but it was found in Traffic Ops", region.Name)
 	}
 }
