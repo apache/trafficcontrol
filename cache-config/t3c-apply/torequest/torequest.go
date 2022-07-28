@@ -1137,6 +1137,12 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 	return nil
 }
 
+func (r *TrafficOpsReq) ShowUpdateStatus(flagType []string, start time.Time, curSetting, newSetting bool) {
+	for _, flag := range flagType {
+		log.Infof("%s flag currently set to %v, setting to %v took %v", flag, curSetting, newSetting, time.Since(start).Round(time.Millisecond))
+	}
+}
+
 func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 	var performUpdate bool
 
@@ -1169,17 +1175,25 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 
 	// TODO: The boolean flags/representation can be removed after ATC (v7.0+)
 	if !r.Cfg.ReportOnly && !r.Cfg.NoUnsetUpdateFlag {
+		start := time.Now()
+		apply := []string{}
+		var b bool
 		if r.Cfg.Files == t3cutil.ApplyFilesFlagAll {
-			b := false
+			b = false
+			apply = append(apply, "update")
+			log.Infof("Update flag currently set to %v, setting to %v", serverStatus.UpdatePending, b)
 			err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil, &b, nil)
 		} else if r.Cfg.Files == t3cutil.ApplyFilesFlagReval {
-			b := false
+			b = false
+			apply = append(apply, t3cutil.ApplyFilesFlagReval.String())
+			log.Infof("Reval flag currently set to %v, setting to %v", serverStatus.RevalPending, b)
 			err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime, nil, &b)
 		}
 		if err != nil {
 			return errors.New("Traffic Ops Update failed: " + err.Error())
 		}
 		log.Infoln("Traffic Ops has been updated.")
+		r.ShowUpdateStatus(apply, start, serverStatus.UpdatePending, b)
 	}
 	return nil
 }
