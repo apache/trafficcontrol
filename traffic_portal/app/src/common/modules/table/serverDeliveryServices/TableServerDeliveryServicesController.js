@@ -24,16 +24,6 @@ function TableServerDeliveryServicesController(server, deliveryServices, filter,
 
 	server = Array.isArray(server) ? server[0] : server;
 
-	/**
-	 * Removes the assignment of a Delivery Service to the table's server.
-	 *
-	 * @param {number} dsId The ID of the Delivery Service being removed.
-	 */
-	async function removeDeliveryService(dsId) {
-		await deliveryServiceService.deleteDeliveryServiceServer(dsId, $scope.server.id);
-		$scope.refresh();
-	};
-
 	$scope.breadCrumbs = [
 		{
 			href: "#!/servers",
@@ -48,9 +38,19 @@ function TableServerDeliveryServicesController(server, deliveryServices, filter,
 		}
 	];
 
+	/**
+	 * Removes the assignment of a Delivery Service to the table's server.
+	 *
+	 * @param {number} dsId The ID of the Delivery Service being removed.
+	 */
+	async function removeDeliveryService(dsId) {
+		await deliveryServiceService.deleteDeliveryServiceServer(dsId, $scope.server.id);
+		$scope.refresh();
+	};
+
 	$scope.dropDownOptions = [
 		{
-			onClick: cloneAssignments,
+			onClick: cloneDsAssignments,
 			text: "Clone Delivery Service Assignments",
 			type: 1
 		}
@@ -95,16 +95,47 @@ function TableServerDeliveryServicesController(server, deliveryServices, filter,
 		type: 1
 	});
 
-	async function cloneAssignments() {
+
+	/**
+	 * Removes a Delivery Service from this server after obtaining user
+	 * confirmation.
+	 *
+	 * @param {{readonly id: number; readonly xmlId: string}} ds
+	 */
+	async function confirmRemoveDS(ds) {
+		const params = {
+			title: "Remove Delivery Service from Server?",
+			message: `Are you sure you want to remove ${ds.xmlId} from this server?`
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/confirm/dialog.confirm.tpl.html",
+			controller: "DialogConfirmController",
+			size: "md",
+			resolve: { params }
+		});
+		try {
+			await modalInstance.result;
+			await deliveryServiceService.deleteDeliveryServiceServer(ds.id, server.id)
+			$scope.refresh();
+		} catch {
+			// do nothing
+		}
+	}
+
+	/**
+	 * Opens a dialog that allows the user to select another cache server to
+	 * which to assign the same Delivery Services assigned to this server (
+	 * overriding any existing assignments for the selected cache server).
+	 */
+	async function cloneDsAssignments() {
 		const params = {
 			title: "Clone Delivery Service Assignments",
-			message: `Please select another ${server.type} cache to which to assign these ${deliveryServices.length} Delivery Services.` +
-				"<br>" +
-				"<br>" +
-				`<strong class="uppercase">Warning this cannot be undone</strong> - Any Delivery Services currently assigned to the selected cache will be lost and replaced with these ${deliveryServices.length} Delivery Service assignments.`,
+			message: `Please select another ${server.type} cache server to assign these ${deliveryServices.length} Delivery Services to.` +
+				"<br/>" +
+				"<br/>" +
+				`<strong style='text-transform: uppercase'>Warning: this cannot be undone</strong> - Any Delivery Services currently assigned to the selected cache server will be lost and replaced with these ${deliveryServices.length} Delivery Service assignments.`,
 			labelFunction: item => `${item.hostName}.${item.domainName}`
 		};
-
 		const modalInstance = $uibModal.open({
 			templateUrl: "common/modules/dialog/select/dialog.select.tpl.html",
 			controller: "DialogSelectController",
@@ -134,6 +165,10 @@ function TableServerDeliveryServicesController(server, deliveryServices, filter,
 		locationUtils.navigateToPath(`/servers/${selectedServer.id}/delivery-services`);
 	};
 
+	/**
+	 * Opens a dialog that allows the user to modify the server's Delivery
+	 * Service assignments.
+	 */
 	async function selectDeliveryServices() {
 		const modalInstance = $uibModal.open({
 			templateUrl: "common/modules/table/serverDeliveryServices/table.assignDeliveryServices.tpl.html",
@@ -156,6 +191,24 @@ function TableServerDeliveryServicesController(server, deliveryServices, filter,
 		$scope.refresh();
 	};
 
+	$scope.contextMenuOptions.splice(1, 0, {
+		getText: ds => `Remove ${ds.xmlId}`,
+		onClick: confirmRemoveDS,
+		type: 1
+	});
+
+	$scope.dropDownOptions = [
+		{
+			onClick: selectDeliveryServices,
+			text: "Assign Delivery Services",
+			type: 1
+		},
+		{
+			onClick: cloneDsAssignments,
+			text: "Clone Delivery Service Assignments",
+			type: 1
+		}
+	];
 };
 
 TableServerDeliveryServicesController.$inject = ["server", "deliveryServices", "filter", "$controller", "$scope", "$uibModal", "locationUtils", "serverUtils", "deliveryServiceService", "serverService"];
