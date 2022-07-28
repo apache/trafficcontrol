@@ -54,7 +54,7 @@ func TestMakeSSLServerNameYAML(t *testing.T) {
 			Profiles:   []byte(`["serverprofile"]`),
 		},
 		tc.Parameter{
-			Name:       ParentConfigParamAlgorithm,
+			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
@@ -174,7 +174,7 @@ func TestMakeSSLServerNameYAMLParams(t *testing.T) {
 			Profiles:   []byte(`["serverprofile"]`),
 		},
 		tc.Parameter{
-			Name:       ParentConfigParamAlgorithm,
+			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
@@ -306,7 +306,7 @@ func TestMakeSSLServerNameYAMLParamInvalid(t *testing.T) {
 			Profiles:   []byte(`["serverprofile"]`),
 		},
 		tc.Parameter{
-			Name:       ParentConfigParamAlgorithm,
+			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
@@ -442,7 +442,7 @@ func TestMakeSSLServerNameYAMLDSTLSVersions(t *testing.T) {
 			Profiles:   []byte(`["serverprofile"]`),
 		},
 		tc.Parameter{
-			Name:       ParentConfigParamAlgorithm,
+			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),

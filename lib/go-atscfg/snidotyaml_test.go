@@ -59,7 +59,7 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 			Profiles:   []byte(`["serverprofile"]`),
 		},
 		tc.Parameter{
-			Name:       ParentConfigParamAlgorithm,
+			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
@@ -170,7 +170,7 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 				Profiles:   []byte(`["serverprofile"]`),
 			},
 			tc.Parameter{
-				Name:       ParentConfigParamAlgorithm,
+				Name:       ParentConfigRetryKeysDefault.Algorithm,
 				ConfigFile: "parent.config",
 				Value:      tc.AlgorithmConsistentHash,
 				Profiles:   []byte(`["serverprofile"]`),
@@ -223,7 +223,7 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 				Profiles:   []byte(`["serverprofile"]`),
 			},
 			tc.Parameter{
-				Name:       ParentConfigParamAlgorithm,
+				Name:       ParentConfigRetryKeysDefault.Algorithm,
 				ConfigFile: "parent.config",
 				Value:      tc.AlgorithmConsistentHash,
 				Profiles:   []byte(`["serverprofile"]`),
@@ -270,7 +270,7 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 				Profiles:   []byte(`["serverprofile"]`),
 			},
 			tc.Parameter{
-				Name:       ParentConfigParamAlgorithm,
+				Name:       ParentConfigRetryKeysDefault.Algorithm,
 				ConfigFile: "parent.config",
 				Value:      tc.AlgorithmConsistentHash,
 				Profiles:   []byte(`["serverprofile"]`),
