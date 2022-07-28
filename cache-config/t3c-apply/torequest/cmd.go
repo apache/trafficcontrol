@@ -68,7 +68,7 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 		return nil, errors.New("requesting: " + err.Error())
 	}
 	args := []string{
-		/* "generate", */
+		`generate`,
 		"--dir=" + cfg.TsConfigDir,
 	}
 
@@ -99,8 +99,7 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
 	args = append(args, "--use-strategies="+cfg.UseStrategies.String())
 
-	procpath := t3cpath + `-generate`
-	generatedFiles, stdErr, code := t3cutil.DoInput(configData, procpath, args...)
+	generatedFiles, stdErr, code := t3cutil.DoInput(configData, t3cpath, args...)
 	if code != 0 {
 		logSubAppErr(t3cgen+` stdout`, generatedFiles)
 		logSubAppErr(t3cgen+` stderr`, stdErr)
@@ -123,7 +122,7 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 
 // preprocess takes the to Data from 't3c-request --get-data=config' and the generated files from 't3c-generate', passes them to `t3c-preprocess`, and returns the result.
 func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byte, error) {
-	args := []string{ /*`preprocess`*/ }
+	args := []string{`preprocess`}
 
 	if cfg.LogLocationErr == log.LogLocationNull {
 		args = append(args, "-s")
@@ -135,8 +134,7 @@ func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byt
 		args = append(args, "-v")
 	}
 
-	procpath := t3cpath + `-preprocess`
-	cmd := exec.Command(procpath, args...)
+	cmd := exec.Command(t3cpath, args...)
 	outbuf := bytes.Buffer{}
 	errbuf := bytes.Buffer{}
 	cmd.Stdout = &outbuf
@@ -235,7 +233,7 @@ func getPackages(cfg config.Cfg) ([]Package, error) {
 // Note the statuses are the value to be set, not whether to set the value.
 func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, configApplyBool, revalApplyBool *bool) error {
 	args := []string{
-		/* "update", */
+		`update`,
 		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
 		"--traffic-ops-user=" + cfg.TOUser,
 		"--traffic-ops-password=" + cfg.TOPass,
@@ -280,8 +278,7 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 	if _, used := os.LookupEnv("TO_URL"); !used {
 		args = append(args, "--traffic-ops-url="+cfg.TOURL)
 	}
-	procpath := t3cpath + `-update`
-	stdOut, stdErr, code := t3cutil.Do(procpath, args...)
+	stdOut, stdErr, code := t3cutil.Do(t3cpath, args...)
 	if code != 0 {
 		logSubAppErr(t3cupd+` stdout`, stdOut)
 		logSubAppErr(t3cupd+` stderr`, stdErr)
@@ -298,7 +295,7 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, perm os.FileMode, uid int, gid int) (bool, error) {
 	diffMsg := ""
 	args := []string{
-		/* "diff", */
+		`diff`,
 		"--file-a=stdin",
 		"--file-b=" + fileLocation,
 		"--file-mode=" + fmt.Sprintf("%#o", perm),
@@ -306,8 +303,7 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, 
 		"--file-gid=" + fmt.Sprint(gid),
 	}
 
-	procpath := t3cpath + `-diff`
-	stdOut, stdErr, code := t3cutil.DoInput(newFile, procpath, args...)
+	stdOut, stdErr, code := t3cutil.DoInput(newFile, t3cpath, args...)
 	if code > 1 {
 		return false, fmt.Errorf("%s returned error code %v stdout '%v' stderr '%v'", t3cdiff, code, string(stdOut), string(stdErr))
 	}
@@ -397,9 +393,8 @@ func checkReload(changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
 
 	changedFiles := []byte(strings.Join(changedConfigFiles, ","))
 
-	args := []string{ /* "check", "reload"*/ }
-	procpath := t3cpath + `-check-reload`
-	cmd := exec.Command(procpath, args...)
+	args := []string{`check`, `reload`}
+	cmd := exec.Command(t3cpath, args...)
 	outBuf := bytes.Buffer{}
 	errBuf := bytes.Buffer{}
 	cmd.Stdout = &outBuf
@@ -466,7 +461,7 @@ func requestJSON(cfg config.Cfg, command string, obj interface{}) error {
 // request calls t3c-request with the given command, and returns the stdout bytes.
 func request(cfg config.Cfg, command string) ([]byte, error) {
 	args := []string{
-		/*"request", */
+		`request`,
 		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
 		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
 		"--cache-host-name=" + cfg.CacheHostName,
@@ -492,8 +487,7 @@ func request(cfg config.Cfg, command string) ([]byte, error) {
 	if _, used := os.LookupEnv("TO_URL"); !used {
 		args = append(args, "--traffic-ops-url="+cfg.TOURL)
 	}
-	procpath := t3cpath + `-request`
-	stdOut, stdErr, code := t3cutil.Do(procpath, args...)
+	stdOut, stdErr, code := t3cutil.Do(t3cpath, args...)
 	if code != 0 {
 		logSubAppErr(t3creq+` stdout`, stdOut)
 		logSubAppErr(t3creq+` stderr`, stdErr)
