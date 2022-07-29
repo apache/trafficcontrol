@@ -65,10 +65,10 @@ type Cfg struct {
 	TOCredentialFile         string          `json:"to-credential-file"`
 	TORequestTimeOutSeconds  string          `json:"to-request-timeout-seconds"`
 	TOPass                   string          `json:"to-pass"`
-	TOUrl                    string          `json:"to-url"`
+	TOURL                    string          `json:"to-url"`
 	TOUser                   string          `json:"to-user"`
-	TmProxyURL               string          `json:"tm-proxy-url"`
-	TmPollIntervalSeconds    string          `json:"tm-poll-interval-seconds"`
+	TMProxyURL               string          `json:"tm-proxy-url"`
+	TMPollIntervalSeconds    string          `json:"tm-poll-interval-seconds"`
 	TOLoginDispersionFactor  int             `json:"to-login-dispersion-factor"`
 	UnavailablePollThreshold int             `json:"unavailable-poll-threshold"`
 	MarkUpPollThreshold      int             `json:"markup-poll-threshold"`
@@ -110,7 +110,7 @@ func ReadCredentials(cfg *Cfg, updating bool) error {
 
 	// verify that we have credentials or can read them from the credential file
 	if fn.Filename == "" {
-		if cfg.TOPass == "" || cfg.TOUser == "" || cfg.TOUrl == "" {
+		if cfg.TOPass == "" || cfg.TOUser == "" || cfg.TOURL == "" {
 			return fmt.Errorf("cannot continue, no TO credentials or TO URL have been specified, check configs")
 		} else {
 			return nil
@@ -120,19 +120,19 @@ func ReadCredentials(cfg *Cfg, updating bool) error {
 	// You should not configure a credential file and the credentials simultaneously in the health client
 	// config file.  Either use an external credential file or put the credentials in the health client
 	// config.  Precedence is given to credentials in the health client config file.
-	if !updating && (cfg.TOPass != "" && cfg.TOUser != "" && cfg.TOUrl != "") {
+	if !updating && (cfg.TOPass != "" && cfg.TOUser != "" && cfg.TOURL != "") {
 		log.Warnf("credentials are defined in the %s file, will not override them with those in the %s file", cfg.HealthClientConfigFile.Filename, cfg.CredentialFile.Filename)
 		cfg.CredentialFile.LastModifyTime = math.MaxInt64
 		return nil
 	}
 
 	err := error(nil)
-	cfg.TOUrl, cfg.TOUser, cfg.TOPass, err = getCredentialsFromFile(cfg.CredentialFile.Filename)
+	cfg.TOURL, cfg.TOUser, cfg.TOPass, err = getCredentialsFromFile(cfg.CredentialFile.Filename)
 	if err != nil {
 		return errors.New("reading credentials from file '" + fn.Filename + "' :" + err.Error())
 	}
 
-	if cfg.TOUrl == "" || cfg.TOUser == "" || cfg.TOPass == "" {
+	if cfg.TOURL == "" || cfg.TOUser == "" || cfg.TOPass == "" {
 		return errors.New("failed to retrieve one or more TrafficOps credentails")
 	}
 
@@ -235,7 +235,7 @@ func GetTrafficMonitors(cfg *Cfg) error {
 
 	// login to traffic ops.
 	if toSession == nil {
-		session, _, err := toclient.LoginWithAgent(cfg.TOUrl, cfg.TOUser, cfg.TOPass, true, userAgent, false, GetRequestTimeout())
+		session, _, err := toclient.LoginWithAgent(cfg.TOURL, cfg.TOUser, cfg.TOPass, true, userAgent, false, GetRequestTimeout())
 		if err != nil {
 			return fmt.Errorf("could not establish a TrafficOps session: %w", err)
 		} else {
@@ -302,7 +302,7 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 		if err != nil {
 			return updated, fmt.Errorf("config parsing failed: %w", err)
 		}
-		tmPollingInterval, err = time.ParseDuration(cfg.TmPollIntervalSeconds)
+		tmPollingInterval, err = time.ParseDuration(cfg.TMPollIntervalSeconds)
 		if err != nil {
 			return updated, errors.New("parsing TMPollingIntervalSeconds: " + err.Error())
 		}
@@ -337,16 +337,16 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 
 		// if tm-proxy-url is set in the config, verify the proxy
 		// url
-		if cfg.TmProxyURL != "" {
-			if cfg.ParsedProxyURL, err = url.Parse(cfg.TmProxyURL); err != nil {
+		if cfg.TMProxyURL != "" {
+			if cfg.ParsedProxyURL, err = url.Parse(cfg.TMProxyURL); err != nil {
 				cfg.ParsedProxyURL = nil
-				return false, errors.New("parsing TmProxyUrl: " + err.Error())
+				return false, errors.New("parsing TMProxyUrl: " + err.Error())
 			}
 			if cfg.ParsedProxyURL.Port() == "" {
 				cfg.ParsedProxyURL = nil
-				return false, errors.New("TmProxyUrl invalid port specified")
+				return false, errors.New("TMProxyUrl invalid port specified")
 			}
-			log.Infof("TM queries will use the proxy: %s", cfg.TmProxyURL)
+			log.Infof("TM queries will use the proxy: %s", cfg.TMProxyURL)
 		} else {
 			cfg.ParsedProxyURL = nil
 		}
@@ -362,9 +362,9 @@ func UpdateConfig(cfg *Cfg, newCfg *Cfg) {
 	cfg.TOCredentialFile = newCfg.TOCredentialFile
 	cfg.TORequestTimeOutSeconds = newCfg.TORequestTimeOutSeconds
 	cfg.TOPass = newCfg.TOPass
-	cfg.TOUrl = newCfg.TOUrl
+	cfg.TOURL = newCfg.TOURL
 	cfg.TOUser = newCfg.TOUser
-	cfg.TmPollIntervalSeconds = newCfg.TmPollIntervalSeconds
+	cfg.TMPollIntervalSeconds = newCfg.TMPollIntervalSeconds
 	cfg.TOLoginDispersionFactor = newCfg.TOLoginDispersionFactor
 	if cfg.TOLoginDispersionFactor == 0 {
 		cfg.TOLoginDispersionFactor = DefaultTOLoginDispersionFactor

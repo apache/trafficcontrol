@@ -40,6 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/tc-health-client/config"
 	"github.com/apache/trafficcontrol/tc-health-client/util"
 	"github.com/apache/trafficcontrol/traffic_monitor/tmclient"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -49,19 +50,19 @@ const (
 	StrategiesFile = "strategies.yaml"
 )
 
-// this global is used to auto select the
+// TrafficCtlIndex is a global used to auto select the
 // proper ATS traffic_ctl command to use
 // when querying host status. for ATS
 // version 10 and greater this will remain
 // at 0.  For ATS version 9, this will be
 // auto updated to 1
-var traffic_ctl_index = 0
+var TrafficCtlIndex = 0
 
 type ParentAvailable interface {
 	available(reasonCode string) bool
 }
 
-// the necessary data required to keep track of trafficserver config
+// ParentInfo contains the necessary data required to keep track of trafficserver config
 // files, lists of parents a trafficserver instance uses, and directory
 // locations used for configuration and trafficserver executables.
 type ParentInfo struct {
@@ -73,8 +74,7 @@ type ParentInfo struct {
 	Cfg                    config.Cfg
 }
 
-// when reading the 'strategies.yaml', these fields are used to help
-// parse out fail_over objects.
+// FailOver contains strategies.yaml failover data.
 type FailOver struct {
 	MaxSimpleRetries      int      `yaml:"max_simple_retries,omitempty"`
 	MaxUnavailableRetries int      `yaml:"max_unavailable_retries,omitempty"`
@@ -84,7 +84,7 @@ type FailOver struct {
 	HealthCheck           []string `yaml:"health_check,omitempty"`
 }
 
-// the trafficserver 'HostStatus' fields that are necessary to interface
+// ParentStatus contains the trafficserver 'HostStatus' fields that are necessary to interface
 // with the trafficserver 'traffic_ctl' command.
 type ParentStatus struct {
 	Fqdn                 string
@@ -96,8 +96,8 @@ type ParentStatus struct {
 	MarkUpPollCount      int
 }
 
-// used to get the overall parent availablity from the
-// HostStatus markdown reasons.  all markdown reasons
+// available is used to get the overall parent availablity from the
+// HostStatus markdown reasons. All markdown reasons
 // must be true for a parent to be considered available.
 func (p ParentStatus) available(reasonCode string) bool {
 	rc := false
@@ -113,9 +113,9 @@ func (p ParentStatus) available(reasonCode string) bool {
 	return rc
 }
 
-// used to log that a parent's status is either UP or
-// DOWN based upon the HostStatus reason codes.  to
-// be considered UP, all reason codes must be 'true'.
+// Status is used to log that a parent's status is either UP or
+// DOWN based upon the HostStatus reason codes. To
+// be considered UP, all reason codes must be true.
 func (p ParentStatus) Status() string {
 	if !p.ActiveReason {
 		return "DOWN"
@@ -127,47 +127,43 @@ func (p ParentStatus) Status() string {
 	return "UP"
 }
 
+// StatusReason are the HostStatus reason codes used within trafficserver.
 type StatusReason int
 
-// these are the HostStatus reason codes used withing
-// trafficserver.
 const (
-	ACTIVE StatusReason = iota
-	LOCAL
-	MANUAL
+	StatusReasonActive StatusReason = iota
+	StatusReasonLocal
+	StatusReasonManual
 )
 
-// used for logging a parent's HostStatus reason code
-// setting.
+// String is used for logging a parent's HostStatus reason code setting.
 func (s StatusReason) String() string {
 	switch s {
-	case ACTIVE:
+	case StatusReasonActive:
 		return "ACTIVE"
-	case LOCAL:
+	case StatusReasonLocal:
 		return "LOCAL"
-	case MANUAL:
+	case StatusReasonManual:
 		return "MANUAL"
 	}
 	return "UNDEFINED"
 }
 
-// the fields used from 'strategies.yaml' that describe
-// a parent.
+// Host contains the fields used from strategies.yaml that describe a parent.
 type Host struct {
 	HostName  string     `yaml:"host"`
 	Protocols []Protocol `yaml:"protocol"`
 }
 
-// the protocol object in 'strategies.yaml' that help to
-// describe a parent.
+// Protocol is a protocol object in strategies.yaml that help to describe a parent.
 type Protocol struct {
-	Scheme           string  `yaml:"scheme"`
-	Port             int     `yaml:"port"`
-	Health_check_url string  `yaml:"health_check_url,omitempty"`
-	Weight           float64 `yaml:"weight,omitempty"`
+	Scheme         string  `yaml:"scheme"`
+	Port           int     `yaml:"port"`
+	HealthCheckURL string  `yaml:"health_check_url,omitempty"`
+	Weight         float64 `yaml:"weight,omitempty"`
 }
 
-// a trafficserver strategy object from 'strategies.yaml'.
+// Strategy is a trafficserver strategy object from strategies.yaml.
 type Strategy struct {
 	Strategy        string   `yaml:"strategy"`
 	Policy          string   `yaml:"policy"`
@@ -179,16 +175,15 @@ type Strategy struct {
 	FailOvers       FailOver `yaml:"failover,omitempty"`
 }
 
-// the top level array defintions in a trafficserver 'strategies.yaml'
-// configuration file.
+// Strategies is the top level array defintions in strategies.yaml.
 type Strategies struct {
 	Strategy []Strategy    `yaml:"strategies"`
 	Hosts    []Host        `yaml:"hosts"`
 	Groups   []interface{} `yaml:"groups"`
 }
 
-// used at startup to load a trafficservers list of parents from
-// it's 'parent.config', 'strategies.yaml' and current parent
+// NewParentInfo is used at startup to load a trafficservers list of parents from
+// its parent.config, strategies.yaml and current parent
 // status from trafficservers HostStatus subsystem.
 func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
 
@@ -246,8 +241,9 @@ func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
 	return &parentInfo, nil
 }
 
-// Queries a traffic monitor that is monitoring the trafficserver instance running on a host to
-// obtain the availability, health, of a parent used by trafficserver.
+// GetCacheStatuses queries a traffic monitor that is monitoring the trafficserver
+// instance running on a host to obtain the availability, health, of a parent
+// used by trafficserver.
 func (c *ParentInfo) GetCacheStatuses() (tc.CRStates, error) {
 
 	tmHostName, err := c.findATrafficMonitor()
@@ -264,14 +260,18 @@ func (c *ParentInfo) GetCacheStatuses() (tc.CRStates, error) {
 	return tmc.CRStates(false)
 }
 
-// The main polling function that keeps the parents list current if
+// PollAndUpdateCacheStatus is the main polling function that keeps the parents list current
 // with any changes to the trafficserver 'parent.config' or 'strategies.yaml'.
+//
 // Also, it keeps parent status current with the the trafficserver HostStatus
-// subsystem.  Finally, on each poll cycle a trafficmonitor is queried to check
+// subsystem.
+//
+// Finally, on each poll cycle a trafficmonitor is queried to check
 // that all parents used by this trafficserver are available for use based upon
-// the trafficmonitors idea from it's health protocol.  Parents are marked up or
-// down in the trafficserver subsystem based upon that hosts current status and
-// the status that trafficmonitor health protocol has determined for a parent.
+// the trafficmonitors idea from it's health protocol.
+//
+// Parents are marked up or down in the trafficserver subsystem based upon that hosts current
+// status and the status that trafficmonitor health protocol has determined for a parent.
 func (c *ParentInfo) PollAndUpdateCacheStatus() {
 	toLoginDispersion := config.GetTOLoginDispersion(c.Cfg.TOLoginDispersionFactor)
 	log.Infoln("polling started")
@@ -403,10 +403,9 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 	}
 }
 
-// Used by the polling function to update the parents list from
-// changes to 'parent.config' and 'strategies.yaml'.  The parents
-// availability is also updated to reflect the current state from
-// the trafficserver HostStatus subsystem.
+// UpdateParentInfo is used by the polling function to update the parents list from
+// changes to parent.config and strategies.yaml.  The parents' availability is also
+// updated to reflect the current state from the trafficserver HostStatus subsystem.
 func (c *ParentInfo) UpdateParentInfo() error {
 	ptime, err := util.GetFileModificationTime(c.ParentDotConfig.Filename)
 	if err != nil {
@@ -455,7 +454,7 @@ func (c *ParentInfo) WritePollState() error {
 	return nil
 }
 
-// choose an available trafficmonitor, returns an error if
+// findATrafficMonitor choose an available trafficmonitor, or returns an error if
 // there are none.
 func (c *ParentInfo) findATrafficMonitor() (string, error) {
 	var tmHostname string
@@ -488,9 +487,9 @@ func (c *ParentInfo) findATrafficMonitor() (string, error) {
 	return tmHostname, nil
 }
 
-// parse out the hostname of a parent listed in parents.config
-// or 'strategies.yaml'. the hostname can be an IP address.
-func parseFqdn(fqdn string) string {
+// parseFQDN parses out the fqdn of a parent listed in parent.config
+// or strategies.yaml. The fqdn can be a hostname or an IP address.
+func parseFQDN(fqdn string) string {
 	var hostName string
 	if ip := net.ParseIP(fqdn); ip == nil {
 		// not an IP, get the hostname
@@ -526,12 +525,11 @@ func (c *ParentInfo) execTrafficCtl(fqdn string, available bool) error {
 	return nil
 }
 
-// used to mark a parent as up or down in the trafficserver HostStatus
-// subsystem.
+// markParent is used to mark a parent as up or down in the trafficserver HostStatus subsystem.
 func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool) error {
 	var hostAvailable bool
 	var err error
-	hostName := parseFqdn(fqdn)
+	hostName := parseFQDN(fqdn)
 
 	log.Debugf("fqdn: %s, available: %v", fqdn, available)
 
@@ -603,15 +601,14 @@ func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool)
 	return err
 }
 
-// reads the current parent statuses from the trafficserver HostStatus
-// subsystem.
+// readHostStatus reads the current parent statuses from the trafficserver HostStatus subsystem.
 func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error {
 	tc := filepath.Join(c.TrafficServerBinDir, TrafficCtl)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
 	// auto select traffic_ctl command for ATS version 9 or 10 and later
-	for i := traffic_ctl_index; i <= 1; i++ {
+	for i := TrafficCtlIndex; i <= 1; i++ {
 		var err error
 		switch i {
 		case 0: // ATS version 10 and later
@@ -630,7 +627,7 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 		}
 		if err != nil && i == 0 {
 			log.Infof("%s command used is not for ATS version 10 or later, downgrading to ATS version 9\n", TrafficCtl)
-			traffic_ctl_index = 1
+			TrafficCtlIndex = 1
 			continue
 		}
 		if err != nil {
@@ -691,7 +688,7 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 					MarkUpPollCount:      0,
 				}
 				log.Debugf("processed host status record: %v\n", pstat)
-				hostName = parseFqdn(fqdn)
+				hostName = parseFQDN(fqdn)
 				pv, ok := parentStatus[hostName]
 				// create the ParentStatus struct and add it to the
 				// Parents map only if an entry in the map does not
@@ -716,7 +713,7 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 	return nil
 }
 
-// load parents list from the Trafficserver 'parent.config' file.
+// readParentConfig loads the parents list from the Trafficserver parent.config file.
 func (c *ParentInfo) readParentConfig(parentStatus map[string]ParentStatus) error {
 	fn := c.ParentDotConfig.Filename
 
@@ -767,7 +764,7 @@ func (c *ParentInfo) readParentConfig(parentStatus map[string]ParentStatus) erro
 					parent := strings.Split(v, ":")
 					if len(parent) == 2 {
 						fqdn := parent[0]
-						hostName := parseFqdn(fqdn)
+						hostName := parseFQDN(fqdn)
 						_, ok := parentStatus[hostName]
 						// create the ParentStatus struct and add it to the
 						// Parents map only if an entry in the map does not
@@ -792,7 +789,7 @@ func (c *ParentInfo) readParentConfig(parentStatus map[string]ParentStatus) erro
 	return nil
 }
 
-// load the parent hosts from 'strategies.yaml'.
+// readStrategies loads the parent hosts from strategies.yaml.
 func (c *ParentInfo) readStrategies(parentStatus map[string]ParentStatus) error {
 	var includes []string
 	fn := c.StrategiesDotYaml.Filename
@@ -857,7 +854,7 @@ func (c *ParentInfo) readStrategies(parentStatus map[string]ParentStatus) error 
 
 	for _, host := range strategies.Hosts {
 		fqdn := host.HostName
-		hostName := parseFqdn(fqdn)
+		hostName := parseFQDN(fqdn)
 		// create the ParentStatus struct and add it to the
 		// Parents map only if an entry in the map does not
 		// already exist.

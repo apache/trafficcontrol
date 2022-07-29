@@ -35,11 +35,11 @@ const (
 	PidFile      = "/run/tc-health-client.pid"
 )
 
-// the BuildTimestamp and Version are set via ld flags
-// when the RPM is built, see build/build_rpm.sh
 var (
+	// BuildTimestamp is set via ld flags when the RPM is built. See build/build_rpm.sh.
 	BuildTimestamp = ""
-	Version        = ""
+	// Version is set via ld flags when the RPM is built. See build/build_rpm.sh.
+	Version = ""
 )
 
 func main() {
