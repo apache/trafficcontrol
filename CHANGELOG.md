@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Change to t3c diff to flag a config file for replacement if owner/group settings are not `ats` [#6879](https://github.com/apache/trafficcontrol/issues/6879).
 - t3c now looks in the executable dir path for t3c- utilities
 - Added support for parent.config markdown/retry DS parameters using first./inner./last. prefixes.  mso. and <null> prefixes should be deprecated.
+- Add new __REGEX_REMAP_DIRECTIVE__ support to raw remap text to allow moving the regex_remap placement.
 
 ### Fixed
 - Fixed TO to default route ID to 0, if it is not present in the request context.

@@ -35,8 +35,9 @@ const CacheKeyParameterConfigFile = "cachekey.config"
 const ContentTypeRemapDotConfig = ContentTypeTextASCII
 const LineCommentRemapDotConfig = LineCommentHash
 
-const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
 const RemapConfigCachekeyDirective = `__CACHEKEY_DIRECTIVE__`
+const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
+const RemapConfigRegexRemapDirective = `__REGEX_REMAP_DIRECTIVE__`
 
 // RemapDotConfigOpts contains settings to configure generation options.
 type RemapDotConfigOpts struct {
@@ -558,7 +559,7 @@ func buildEdgeRemapLine(
 		}
 	}
 
-	// This allows the Range and Cachekey directive hacks
+	// Raw remap text, this allows the directive hacks
 	remapText := ""
 	if ds.RemapText != nil {
 		remapText = *ds.RemapText
@@ -586,16 +587,25 @@ func buildEdgeRemapLine(
 		cachekeyTxt = " @plugin=cachekey.so" + cachekeyArgs
 	}
 
-	// Temporary hack for moving the cachekey directive into the raw remap text
+	// Hack for moving the cachekey directive into the raw remap text
 	if strings.Contains(remapText, RemapConfigCachekeyDirective) {
 		remapText = strings.Replace(remapText, RemapConfigCachekeyDirective, cachekeyTxt, 1)
 	} else {
 		text += cachekeyTxt
 	}
 
+	regexRemapTxt := ""
+
 	// Note: should use full path here?
 	if ds.RegexRemap != nil && *ds.RegexRemap != "" {
-		text += ` @plugin=regex_remap.so @pparam=regex_remap_` + *ds.XMLID + ".config"
+		regexRemapTxt = ` @plugin=regex_remap.so @pparam=regex_remap_` + *ds.XMLID + ".config"
+	}
+
+	// Hack for moving the regex_remap directive into the raw remap text
+	if strings.Contains(remapText, RemapConfigRegexRemapDirective) {
+		remapText = strings.Replace(remapText, RemapConfigRegexRemapDirective, regexRemapTxt, 1)
+	} else {
+		text += regexRemapTxt
 	}
 
 	rangeReqTxt := ""
@@ -620,7 +630,7 @@ func buildEdgeRemapLine(
 		}
 	}
 
-	// Temporary hack for moving the range directive into the raw remap text
+	// Hack for moving the range directive into the raw remap text
 	if strings.Contains(remapText, RemapConfigRangeDirective) {
 		remapText = strings.Replace(remapText, RemapConfigRangeDirective, rangeReqTxt, 1)
 	} else {
