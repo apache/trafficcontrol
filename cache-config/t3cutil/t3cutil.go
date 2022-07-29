@@ -258,8 +258,9 @@ func UserAgentStr(appName string, versionNum string, gitRevision string) string 
 func NewApplyMetaData() *ApplyMetaData {
 	return &ApplyMetaData{
 		Version:           MetaDataVersion,
-		InstalledPackages: []string{}, // construct a slice, so JSON serializes '[]' not 'null'.
-		OwnedFilePaths:    []string{}, // construct a slice, so JSON serializes '[]' not 'null'.
+		InstalledPackages: []string{},              // construct a slice, so JSON serializes '[]' not 'null'.
+		OwnedFilePaths:    []string{},              // construct a slice, so JSON serializes '[]' not 'null'.
+		Actions:           []ApplyMetaDataAction{}, // construct a map, so JSON serializes '{}' not 'null'.
 	}
 }
 
@@ -351,6 +352,12 @@ type ApplyMetaData struct {
 	// are strongly encouraged to set alarms and read logs in the event it occurs,
 	// to determine what was changed, what failed, and what actions need taken.
 	PartialSuccess bool `json:"partial-success"`
+
+	Actions []ApplyMetaDataAction `json:"actions"`
+}
+type ApplyMetaDataAction struct {
+	Action string `json:"action"`
+	Status string `json:"status"`
 }
 
 // Format prints the ApplyMetaData in a format designed to be written to a file,
