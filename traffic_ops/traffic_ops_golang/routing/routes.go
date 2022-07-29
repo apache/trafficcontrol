@@ -334,6 +334,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `server_server_capabilities/?$`, Handler: api.CreateHandler(&server.TOServerServerCapability{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 42931668343},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodDelete, Path: `server_server_capabilities/?$`, Handler: api.DeleteHandler(&server.TOServerServerCapability{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 40587140583},
 
+		// Assign Multiple Server Capabilities
+		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodPut, Path: `multiple_server_capabilities/{id}$`, Handler: server.AssignMultipleServerCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:CREATE", "SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 40792419258},
+
 		//Status: CRUD
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `statuses/?$`, Handler: api.ReadHandler(&status.TOStatus{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"STATUS:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 42449056563},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `statuses/{id}$`, Handler: api.UpdateHandler(&status.TOStatus{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"STATUS:UPDATE", "STATUS:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 42079665043},

@@ -27,6 +27,11 @@ type ServerServerCapability struct {
 	ServerCapability *string    `json:"serverCapability" db:"server_capability"`
 }
 
+type MultipleServerCapabilities struct {
+	ServerID         *int     `json:"serverId" db:"server"`
+	ServerCapability []string `json:"serverCapability" db:"server_capability"`
+}
+
 // ServerServerCapabilitiesResponse is the type of a response from Traffic
 // Ops to a request made to its /server_server_capabilities.
 type ServerServerCapabilitiesResponse struct {
