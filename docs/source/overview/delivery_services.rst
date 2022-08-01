@@ -691,7 +691,7 @@ Another example might be a Delivery Service which modifies the uri in a way that
 | __CACHEKEY_DIRECTIVE__    | Inserts cachekey plugin and args (if any) |
 | __RANGE_DIRECTIVE__       | Inserts range directive args (if any)     |
 | __REGEX_REMAP_DIRECTIVE__ | Inserts regex_remap directive (if any)    |
-+---------------------------+===========================================+
++---------------------------+-------------------------------------------+
 
 .. _ds-regex-remap:
 
