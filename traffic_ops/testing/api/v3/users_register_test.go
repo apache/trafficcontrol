@@ -29,12 +29,10 @@ func TestUsersRegister(t *testing.T) {
 	if includeSystemTests {
 		WithObjs(t, []TCObj{Tenants, Parameters}, func() {
 
-			opsUserSession := utils.CreateV3Session(t, Config.TrafficOps.URL, "opsuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
-
 			methodTests := utils.V3TestCase{
 				"POST": {
 					"OK when VALID request": {
-						ClientSession: opsUserSession,
+						ClientSession: TOSession,
 						RequestBody: map[string]interface{}{
 							"addressLine1":       "address of ops",
 							"addressLine2":       "place",
