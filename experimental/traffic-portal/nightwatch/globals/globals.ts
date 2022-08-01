@@ -23,6 +23,8 @@ import type {DeliveryServiceDetailPageObject} from "nightwatch/page_objects/deli
 import type {DeliveryServiceInvalidPageObject} from "nightwatch/page_objects/deliveryServiceInvalidationJobs";
 import type {LoginPageObject} from "nightwatch/page_objects/login";
 import type {ServersPageObject} from "nightwatch/page_objects/servers";
+import { TenantDetailPageObject } from "nightwatch/page_objects/tenantDetail";
+import { TenantsPageObject } from "nightwatch/page_objects/tenants";
 import type {UsersPageObject} from "nightwatch/page_objects/users";
 import {
 	CDN,
@@ -30,7 +32,9 @@ import {
 	Protocol,
 	RequestDeliveryService,
 	ResponseCDN,
-	ResponseDeliveryService
+	ResponseDeliveryService,
+	RequestTenant,
+	ResponseTenant
 } from "trafficops-types";
 
 declare module "nightwatch" {
@@ -45,6 +49,8 @@ declare module "nightwatch" {
 		deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;
 		login: () => LoginPageObject;
 		servers: () => ServersPageObject;
+		tenants: () => TenantsPageObject;
+		tenantDetail: () => TenantDetailPageObject;
 		users: () => UsersPageObject;
 	}
 
@@ -147,6 +153,15 @@ const globals = {
 			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
 			const respDS: ResponseDeliveryService = resp.data.response[0];
 			console.log(`Successfully created DS '${respDS.displayName}'`);
+
+			const tenant: RequestTenant = {
+				active: true,
+				name: `testT${globals.uniqueString}`,
+				parentId: 1
+			};
+			resp = await client.post(`${apiUrl}/tenants`, JSON.stringify(tenant));
+			const respTenant: ResponseTenant = resp.data.response;
+			console.log(`Successfully created Tenant ${respTenant.name}`);
 		} catch(e) {
 			console.error((e as AxiosError).message);
 			throw e;

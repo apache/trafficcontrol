@@ -34,6 +34,7 @@ import { SSHCellRendererComponent } from "./table-components/ssh-cell-renderer/s
 import { TelephoneCellRendererComponent } from "./table-components/telephone-cell-renderer/telephone-cell-renderer.component";
 import { UpdateCellRendererComponent } from "./table-components/update-cell-renderer/update-cell-renderer.component";
 import { TpHeaderComponent } from "./tp-header/tp-header.component";
+import { TreeSelectComponent } from "./tree-select/tree-select.component";
 import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 
 /**
@@ -52,7 +53,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		SSHCellRendererComponent,
 		EmailCellRendererComponent,
 		TelephoneCellRendererComponent,
-		ObscuredTextInputComponent
+		ObscuredTextInputComponent,
+		TreeSelectComponent
 	],
 	exports: [
 		AlertComponent,
@@ -64,6 +66,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		CustomvalidityDirective,
 		LinechartDirective,
 		ObscuredTextInputComponent,
+		TreeSelectComponent
 	],
 	imports: [
 		AppUIModule,

@@ -80,12 +80,13 @@ export class TenantsComponent implements OnInit, OnDestroy {
 
 	public readonly contextMenuItems: ContextMenuItem<Readonly<Tenant>>[] = [
 		{
-			action: "viewDetails",
+			href: (t: Tenant): string => `core/tenants/${t.id}`,
 			name: "View Details"
 		},
 		{
-			action: "openInNewTab",
-			name: "Open in New Tab"
+			href: (t: Tenant): string => `core/tenants/${t.id}`,
+			name: "Open in New Tab",
+			newTab: true
 		}
 	];
 

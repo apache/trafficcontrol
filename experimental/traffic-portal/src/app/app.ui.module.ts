@@ -34,6 +34,7 @@ import { MatSelectModule } from "@angular/material/select";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatTreeModule } from "@angular/material/tree";
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { AgGridModule } from "ag-grid-angular";
 
@@ -70,7 +71,8 @@ import { AgGridModule } from "ag-grid-angular";
 		MatSelectModule,
 		MatSnackBarModule,
 		MatStepperModule,
-		MatToolbarModule
+		MatToolbarModule,
+		MatTreeModule
 	]
 })
 export class AppUIModule {}
