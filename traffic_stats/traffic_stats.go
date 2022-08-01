@@ -555,7 +555,9 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 	//Close old connections explicitly
 	for _, host := range oldConfig.InfluxDBs {
 		if host.InfluxClient != nil {
-			host.InfluxClient.Close()
+			if err := host.InfluxClient.Close(); err != nil {
+				errorf("closing influx client: %s", err)
+			}
 		}
 	}
 
@@ -1063,7 +1065,9 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 		}
 		//Close old connections explicitly
 		if host.InfluxClient != nil {
-			host.InfluxClient.Close()
+			if err := host.InfluxClient.Close(); err != nil {
+				errorf("closing influx client: %s", err)
+			}
 		}
 		host.InfluxClient = con
 		_, _, err = con.Ping(10)

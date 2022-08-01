@@ -18,6 +18,7 @@ import { NgModule } from "@angular/core";
 import {
 	CacheGroupService,
 	CDNService,
+	ChangeLogsService,
 	DeliveryServiceService,
 	InvalidationJobService,
 	PhysicalLocationService,
@@ -29,6 +30,7 @@ import {
 
 import { CacheGroupService as TestingCacheGroupService } from "./cache-group.service";
 import { CDNService as TestingCDNService } from "./cdn.service";
+import { ChangeLogsService as TestingChangeLogsService} from "./change-logs.service";
 import { DeliveryServiceService as TestingDeliveryServiceService } from "./delivery-service.service";
 import { InvalidationJobService as TestingInvalidationJobService } from "./invalidation-job.service";
 import { PhysicalLocationService as TestingPhysicalLocationService } from "./physical-location.service";
@@ -48,6 +50,7 @@ import { UserService as TestingUserService } from "./user.service";
 	],
 	providers: [
 		{provide: CacheGroupService, useClass: TestingCacheGroupService},
+		{provide: ChangeLogsService, useClass: TestingChangeLogsService},
 		{provide: CDNService, useClass: TestingCDNService},
 		{provide: DeliveryServiceService, useClass: TestingDeliveryServiceService},
 		{provide: InvalidationJobService, useClass: TestingInvalidationJobService},

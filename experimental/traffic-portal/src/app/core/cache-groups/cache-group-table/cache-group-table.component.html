@@ -11,8 +11,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card>
-	<div>
+<mat-card class="table-page-content">
+	<div class="search-container">
 		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
 	</div>
 	<tp-generic-table

@@ -35,7 +35,7 @@ var TableDeliveryServiceJobsController = function(deliveryService, jobs, $contro
 			return $scope.deliveryService.xmlId;
 		},
 		getHref: function () {
-			return "#!/delivery-services/" + $scope.deliveryService.id + "?type=" + encodeURIComponent($scope.deliveryService.type);
+			return "#!/delivery-services/" + $scope.deliveryService.id + "?dsType=" + encodeURIComponent($scope.deliveryService.type);
 		}
 	},
 	{

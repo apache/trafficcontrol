@@ -38,6 +38,9 @@ func TestDeliveryServices(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
+		tenant1UserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "tenant1user", "pa$$word", Config.Default.Session.TimeoutInSecs)
+		tenant2UserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "tenant2user", "pa$$word", Config.Default.Session.TimeoutInSecs)
+		tenant3UserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "tenant3user", "pa$$word", Config.Default.Session.TimeoutInSecs)
 		tenant4UserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
 		methodTests := utils.V4TestCase{
@@ -156,9 +159,29 @@ func TestDeliveryServices(t *testing.T) {
 					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDescSort()),
 				},
-				"EMPTY RESPONSE when TENANT attempts reading DS OUTSIDE TENANCY": {
+				"OK when PARENT TENANT reads DS of INACTIVE CHILD TENANT": {
+					ClientSession: tenant1UserSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
+				},
+				"EMPTY RESPONSE when DS BELONGS to TENANT but PARENT TENANT is INACTIVE": {
+					ClientSession: tenant3UserSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds3"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when INACTIVE TENANT reads DS of SAME TENANCY": {
+					ClientSession: tenant2UserSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when TENANT reads DS OUTSIDE TENANCY": {
 					ClientSession: tenant4UserSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds3"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when CHILD TENANT reads DS of PARENT TENANT": {
+					ClientSession: tenant3UserSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"xmlId": {"ds2"}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 			},
@@ -223,7 +246,7 @@ func TestDeliveryServices(t *testing.T) {
 				"BAD REQUEST when creating DS with TENANCY NOT THE SAME AS CURRENT TENANT": {
 					ClientSession: tenant4UserSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
-						"tenantId": GetTenantId(t, "tenant3"),
+						"tenantId": GetTenantID(t, "tenant3")(),
 						"xmlId":    "test-tenancy",
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden), utils.ResponseHasLength(0)),
@@ -403,7 +426,7 @@ func TestDeliveryServices(t *testing.T) {
 						"maxOriginConnections":      500,
 						"routingName":               "cdn",
 						"signingAlgorithm":          "uri_signing",
-						"tenantId":                  GetTenantId(t, "tenant1"),
+						"tenantId":                  GetTenantID(t, "tenant1")(),
 						"trRequestHeaders":          "X-ooF\nX-raB",
 						"trResponseHeaders":         "Access-Control-Max-Age: 600\nContent-Type: text/html; charset=utf-8",
 						"xmlId":                     "ds-test-minor-versions",
@@ -478,7 +501,7 @@ func TestDeliveryServices(t *testing.T) {
 
 					if val, ok := testCase.RequestOpts.QueryParameters["accessibleTo"]; ok {
 						if _, err := strconv.Atoi(val[0]); err != nil {
-							testCase.RequestOpts.QueryParameters.Set("accessibleTo", strconv.Itoa(GetTenantId(t, val[0])))
+							testCase.RequestOpts.QueryParameters.Set("accessibleTo", strconv.Itoa(GetTenantID(t, val[0])()))
 						}
 					}
 					if val, ok := testCase.RequestOpts.QueryParameters["cdn"]; ok {
@@ -498,7 +521,7 @@ func TestDeliveryServices(t *testing.T) {
 					}
 					if val, ok := testCase.RequestOpts.QueryParameters["tenant"]; ok {
 						if _, err := strconv.Atoi(val[0]); err != nil {
-							testCase.RequestOpts.QueryParameters.Set("tenant", strconv.Itoa(GetTenantId(t, val[0])))
+							testCase.RequestOpts.QueryParameters.Set("tenant", strconv.Itoa(GetTenantID(t, val[0])()))
 						}
 					}
 
@@ -698,18 +721,6 @@ func GetProfileId(t *testing.T, profileName string) int {
 	resp, _, err := TOSession.GetProfiles(opts)
 
 	assert.RequireNoError(t, err, "Get Profiles Request failed with error: %v", err)
-	assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
-	assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
-
-	return resp.Response[0].ID
-}
-
-func GetTenantId(t *testing.T, tenantName string) int {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", tenantName)
-	resp, _, err := TOSession.GetTenants(opts)
-
-	assert.RequireNoError(t, err, "Get Tenants Request failed with error: %v", err)
 	assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
 	assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
 

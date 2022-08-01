@@ -20,11 +20,14 @@ import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { RouterModule, type Routes } from "@angular/router";
 
+import { LastDaysComponent } from "src/app/core/change-logs/last-days/last-days.component";
+
 import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
 import { SharedModule } from "../shared/shared.module";
 
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
+import { ChangeLogsComponent } from "./change-logs/change-logs.component";
 import { CurrentuserComponent } from "./currentuser/currentuser.component";
 import { UpdatePasswordDialogComponent } from "./currentuser/update-password-dialog/update-password-dialog.component";
 import { DashboardComponent } from "./dashboard/dashboard.component";
@@ -36,18 +39,24 @@ import { NewDeliveryServiceComponent } from "./new-delivery-service/new-delivery
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
+import { TenantsComponent } from "./users/tenants/tenants.component";
+import { UserDetailsComponent } from "./users/user-details/user-details.component";
+import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
 
-const routes: Routes = [
+export const ROUTES: Routes = [
 	{ canActivate: [AuthenticatedGuard], component: DashboardComponent, path: "" },
 	{ canActivate: [AuthenticatedGuard], component: UsersComponent, path: "users" },
+	{ canActivate: [AuthenticatedGuard], component: UserDetailsComponent, path: "users/:id"},
 	{ canActivate: [AuthenticatedGuard], component: ServersTableComponent, path: "servers" },
 	{ canActivate: [AuthenticatedGuard], component: ServerDetailsComponent, path: "server/:id" },
 	{ canActivate: [AuthenticatedGuard], component: DeliveryserviceComponent, path: "deliveryservice/:id" },
 	{ canActivate: [AuthenticatedGuard], component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs" },
 	{ canActivate: [AuthenticatedGuard], component: CurrentuserComponent, path: "me" },
 	{ canActivate: [AuthenticatedGuard], component: NewDeliveryServiceComponent, path: "new.Delivery.Service" },
-	{ canActivate: [AuthenticatedGuard], component: CacheGroupTableComponent, path: "cache-groups" }
+	{ canActivate: [AuthenticatedGuard], component: CacheGroupTableComponent, path: "cache-groups" },
+	{ canActivate: [AuthenticatedGuard], component: TenantsComponent, path: "tenants"},
+	{ canActivate: [AuthenticatedGuard], component: ChangeLogsComponent, path: "change-logs" }
 ];
 
 /**
@@ -67,7 +76,12 @@ const routes: Routes = [
 		InvalidationJobsComponent,
 		CacheGroupTableComponent,
 		NewInvalidationJobDialogComponent,
-		UpdateStatusComponent
+		UpdateStatusComponent,
+		UserDetailsComponent,
+		TenantsComponent,
+		ChangeLogsComponent,
+		LastDaysComponent,
+		UserRegistrationDialogComponent
 	],
 	exports: [
 	],
@@ -75,7 +89,7 @@ const routes: Routes = [
 		SharedModule,
 		AppUIModule,
 		CommonModule,
-		RouterModule.forChild(routes)
+		RouterModule.forChild(ROUTES)
 	]
 })
 export class CoreModule { }

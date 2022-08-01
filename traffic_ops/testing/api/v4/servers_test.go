@@ -547,17 +547,6 @@ func GetServerID(t *testing.T, hostName string) func() int {
 	}
 }
 
-func GetStatusID(t *testing.T, name string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", name)
-		statusResp, _, err := TOSession.GetStatuses(opts)
-		assert.RequireNoError(t, err, "Get Statuses Request failed with error:", err)
-		assert.RequireEqual(t, 1, len(statusResp.Response), "Expected response object length 1, but got %d", len(statusResp.Response))
-		return statusResp.Response[0].ID
-	}
-}
-
 func UpdateTestServerStatusLastUpdated(t *testing.T) {
 	const hostName = "atl-edge-01"
 

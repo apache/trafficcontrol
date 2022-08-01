@@ -46,7 +46,7 @@ import (
 type TOTopology struct {
 	api.APIInfoImpl `json:"-"`
 	Alerts          tc.Alerts `json:"-"`
-	RequestedName   string
+	RequestedName   string    `json:"-"`
 	tc.Topology
 }
 

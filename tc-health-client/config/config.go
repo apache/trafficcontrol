@@ -20,7 +20,6 @@ package config
  */
 
 import (
-	"bufio"
 	"crypto/md5"
 	"encoding/binary"
 	"encoding/json"
@@ -34,6 +33,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/tc-health-client/util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
@@ -126,47 +126,13 @@ func ReadCredentials(cfg *Cfg, updating bool) error {
 		return nil
 	}
 
-	f, err := os.Open(fn.Filename)
+	err := error(nil)
+	cfg.TOUrl, cfg.TOUser, cfg.TOPass, err = getCredentialsFromFile(cfg.CredentialFile.Filename)
 	if err != nil {
-		return errors.New("failed to open + " + fn.Filename + " :" + err.Error())
+		return errors.New("reading credentials from file '" + fn.Filename + "' :" + err.Error())
 	}
-	defer f.Close()
 
-	var to_pass_found = false
-	var to_url_found = false
-	var to_user_found = false
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "#") {
-			continue
-		}
-		fields := strings.Split(line, " ")
-		for _, v := range fields {
-			if strings.HasPrefix(v, "TO_") {
-				sf := strings.Split(v, "=")
-				if len(sf) == 2 {
-					if sf[0] == "TO_URL" {
-						// parse the url after trimming off any surrounding double quotes
-						cfg.TOUrl = strings.Trim(sf[1], "\"")
-						to_url_found = true
-					}
-					if sf[0] == "TO_USER" {
-						// set the TOUser after trimming off any surrounding quotes.
-						cfg.TOUser = strings.Trim(sf[1], "\"")
-						to_user_found = true
-					}
-					// set the TOPass after trimming off any surrounding quotes.
-					if sf[0] == "TO_PASS" {
-						cfg.TOPass = strings.Trim(sf[1], "\"")
-						to_pass_found = true
-					}
-				}
-			}
-		}
-	}
-	if !to_url_found && !to_user_found && !to_pass_found {
+	if cfg.TOUrl == "" || cfg.TOUser == "" || cfg.TOPass == "" {
 		return errors.New("failed to retrieve one or more TrafficOps credentails")
 	}
 
@@ -414,4 +380,44 @@ func UpdateConfig(cfg *Cfg, newCfg *Cfg) {
 
 func Usage() {
 	getopt.PrintUsage(os.Stdout)
+}
+
+// getCredentialsFromFile gets the TO URL, user, and password from an environment variable file.
+// from environment variables declared in a credentials file bash script, if they exist.
+//
+// Returns the TO URL, user, password, and any error.
+//
+// Note this returns empty strings with no error if the file doesn't exist,
+// or if any variables aren't declared.
+//
+func getCredentialsFromFile(filePath string) (string, string, string, error) {
+
+	if inf, err := os.Stat(filePath); os.IsNotExist(err) {
+		return "", "", "", nil
+	} else if inf.IsDir() {
+		return "", "", "", errors.New("credentials path is a directory, must be a file")
+	}
+
+	// we execute sh and source the file to get the environment variables,
+	// because it's easier and more accurate than writing our own sh env var parser.
+
+	stdOut, stdErr, code := t3cutil.Do("sh", "-c", `(source "`+filePath+`" && printf "${TO_URL}\n")`)
+	if code != 0 {
+		return "", "", "", fmt.Errorf("getting credentials from file returned error code %v stderr '%v' stdout '%v'", code, string(stdErr), string(stdOut))
+	}
+	toURL := strings.TrimSpace(string(stdOut))
+
+	stdOut, stdErr, code = t3cutil.Do("sh", "-c", `(source "`+filePath+`" && printf "${TO_USER}\n")`)
+	if code != 0 {
+		return "", "", "", fmt.Errorf("getting credentials from file returned error code %v stderr '%v' stdout '%v'", code, string(stdErr), string(stdOut))
+	}
+	toUser := strings.TrimSpace(string(stdOut))
+
+	stdOut, stdErr, code = t3cutil.Do("sh", "-c", `(source "`+filePath+`" && printf "${TO_PASS}\n")`)
+	if code != 0 {
+		return "", "", "", fmt.Errorf("getting credentials from file returned error code %v stderr '%v' stdout '%v'", code, string(stdErr), string(stdOut))
+	}
+	toPass := strings.TrimSpace(string(stdOut))
+
+	return toURL, toUser, toPass, nil
 }

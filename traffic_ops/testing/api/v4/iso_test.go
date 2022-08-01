@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -37,28 +38,20 @@ func TestGetOSVersions(t *testing.T) {
 	}
 
 	// Ensure request with an authenticated client returns expected data.
-	t.Run("authenticated", func(t *testing.T) {
+	t.Run("OK when AUTHENTICATED", func(t *testing.T) {
 		got, _, err := TOSession.GetOSVersions(client.RequestOptions{})
-		if err != nil {
-			t.Fatalf("unexpected error from authenticated GetOSVersions(): %v - alerts: %+v", err, got.Alerts)
-		}
+		assert.NoError(t, err, "Unexpected error from authenticated GetOSVersions(): %v - alerts: %+v", err, got.Alerts)
+		assert.RequireEqual(t, len(expected), len(got.Response), "Incorrect map length: got %d map entries, expected %d", len(expected), len(got.Response))
 
-		if lenGot, lenExp := len(got.Response), len(expected); lenGot != lenExp {
-			t.Fatalf("incorrect map length: got %d map entries, expected %d", lenGot, lenExp)
-		}
 		for k, expectedVal := range expected {
-			if gotVal := got.Response[k]; gotVal != expectedVal {
-				t.Fatalf("incorrect map entry for key %q: got %q, expected %q", k, gotVal, expectedVal)
-			}
+			assert.RequireEqual(t, expectedVal, got.Response[k], "Incorrect map entry for key %q: got %q, expected %q", k, got.Response[k], expectedVal)
 		}
 	})
 
 	// Ensure request with an un-authenticated client returns an error.
-	t.Run("un-authenticated", func(t *testing.T) {
+	t.Run("ERROR when UNAUTHENTICATED", func(t *testing.T) {
 		_, _, err := NoAuthTOSession.GetOSVersions(client.RequestOptions{})
-		if err == nil {
-			t.Fatal("expected error from unauthenticated GetOSVersions(), got: <nil>")
-		}
+		assert.Error(t, err, "Expected error from unauthenticated GetOSVersions(), got: <nil>")
 	})
 
 	// Update database with a Parameter entry. This should cause the endpoint
@@ -68,15 +61,15 @@ func TestGetOSVersions(t *testing.T) {
 	// NOTE: This does not assume this test and TO are using the same filesystem, but
 	// does make the reasonable assumption that `/DOES/NOT/EXIST/osversions.json` will not exist
 	// on the TO host.
-	t.Run("parameter-invalid", func(t *testing.T) {
+	t.Run("ERROR when INVALID PARAMETER", func(t *testing.T) {
 		p := tc.Parameter{
 			ConfigFile: "mkisofs",
 			Name:       "kickstart.files.location",
 			Value:      "/DOES/NOT/EXIST",
 		}
-		if alerts, _, err := TOSession.CreateParameter(p, client.RequestOptions{}); err != nil {
-			t.Fatalf("could not create Parameter: %v - alerts: %+v", err, alerts.Alerts)
-		}
+		alerts, _, err := TOSession.CreateParameter(p, client.RequestOptions{})
+		assert.RequireNoError(t, err, "Could not create Parameter: %v - alerts: %+v", err, alerts.Alerts)
+
 		// Cleanup DB entry
 		defer func() {
 			opts := client.NewRequestOptions()
@@ -84,21 +77,15 @@ func TestGetOSVersions(t *testing.T) {
 			opts.QueryParameters.Set("configFile", p.ConfigFile)
 			opts.QueryParameters.Set("value", p.Value)
 			resp, _, err := TOSession.GetParameters(opts)
-			if err != nil {
-				t.Fatalf("cannot GET Parameter by name '%s', configFile '%s' and value '%s': %v - alerts: %+v", p.Name, p.ConfigFile, p.Value, err, resp.Alerts)
-			}
-			if len(resp.Response) != 1 {
-				t.Fatalf("unexpected response length %d", len(resp.Response))
-			}
+			assert.RequireNoError(t, err, "Cannot GET Parameter by name '%s', configFile '%s' and value '%s': %v - alerts: %+v", p.Name, p.ConfigFile, p.Value, err, resp.Alerts)
+			assert.RequireEqual(t, 1, len(resp.Response), "Unexpected response length %d", len(resp.Response))
 
-			if delResp, _, err := TOSession.DeleteParameter(resp.Response[0].ID, client.RequestOptions{}); err != nil {
-				t.Fatalf("cannot delete Parameter #%d: %v - alerts: %+v", resp.Response[0].ID, err, delResp.Alerts)
-			}
+			delResp, _, err := TOSession.DeleteParameter(resp.Response[0].ID, client.RequestOptions{})
+			assert.RequireNoError(t, err, "Cannot delete Parameter #%d: %v - alerts: %+v", resp.Response[0].ID, err, delResp.Alerts)
+
 		}()
 
-		_, _, err := TOSession.GetOSVersions(client.RequestOptions{})
-		if err == nil {
-			t.Fatal("expected error from GetOSVersions() after adding invalid Parameter DB entry, got: <nil>")
-		}
+		_, _, err = TOSession.GetOSVersions(client.RequestOptions{})
+		assert.Error(t, err, "Expected error from GetOSVersions() after adding invalid Parameter DB entry, got: <nil>")
 	})
 }

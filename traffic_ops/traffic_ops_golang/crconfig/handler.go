@@ -89,32 +89,6 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, decoded)
 }
 
-func SnapshotGetMonitoringLegacyHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	snapshot, cdnExists, err := GetSnapshotMonitoring(inf.Tx.Tx, inf.Params["cdn"])
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
-		return
-	}
-	if !cdnExists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
-		return
-	}
-
-	var data tc.TrafficMonitorConfig
-	if err := json.Unmarshal([]byte(snapshot), &data); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
-		return
-	}
-	api.WriteResp(w, r, data.ToLegacyConfig())
-}
-
 // SnapshotGetMonitoringHandler gets and serves the CRConfig from the snapshot table.
 func SnapshotGetMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)

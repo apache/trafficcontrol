@@ -24,13 +24,6 @@
 {% if xmppPasswd is defined and xmppPasswd is not none and xmppPasswd != omit and xmppPasswd %}
   "xmppPasswd": "{{ xmppPasswd }}",
 {% endif %}
-{% if ip6Address is defined and ip6Address is not none and ip6Address != omit and ip6Address %}
-  "ip6Address": "{{ ip6Address }}",
-  "ip6IsService": {{ ip6IsService }},
-{% endif %}
-{% if ip6Gateway is defined and ip6Gateway is not none and ip6Gateway != omit and ip6Gateway %}
-  "ip6Gateway": "{{ ip6Gateway }}",
-{% endif %}
 {% if rack is defined and rack is not none and rack != omit and rack %}
   "rack": "{{ rack }}",
 {% endif %}
@@ -67,12 +60,31 @@
   "hostName": "{{ hostName }}",
   "domainName": "{{ domainName }}",
   "cachegroupId": {{ cachegroupId }},
-  "interfaceName": "{{ interfaceName }}",
-  "ipAddress": "{{ ipAddress }}",
-  "ipIsService": {{ ipIsService }},
-  "ipNetmask": "{{ ipNetmask }}",
-  "ipGateway": "{{ ipGateway }}",
-  "interfaceMtu": {{ interfaceMtu }},
+  "interfaces": [
+    {
+      "ipAddresses": [
+      {% if ipAddress is defined and ipAddress is not none and ipAddress != omit and ipAddress %}
+        {
+          "address": "{{ (ipAddress + '/' + ipNetmask) | ipaddr }}",
+          "gateway": "{{ ipGateway }}",
+          "serviceAddress": {{ ipIsService }}
+        }{% if ip6Address is defined and ip6Address is not none and ip6Address != omit and ip6Address %},{% endif %}
+      {% endif %}
+      {% if ip6Address is defined and ip6Address is not none and ip6Address != omit and ip6Address %}
+        {
+          "address": "{{ ip6Address }}",
+        {% if ip6Gateway is defined and ip6Gateway is not none and ip6Gateway != omit and ip6Gateway %}
+          "gateway": "{{ ip6Gateway }}",
+        {% endif %}
+          "serviceAddress": {{ ip6IsService }}
+        }
+      {% endif %}
+      ],
+      "monitor": {{ monitorInterface }},
+      "mtu": {{ interfaceMtu }},
+      "name": "{{ interfaceName }}"
+    }
+  ],
   "physLocationId": {{ physLocationId }},
   "typeId": {{ typeId }},
   "profileId": {{ profileId }},

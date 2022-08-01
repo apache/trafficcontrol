@@ -237,7 +237,7 @@ This section will be amended as functionality is added to the CDN in a Box proje
 
 The Enroller
 ------------
-The "enroller" began as an efficient way for Traffic Ops to be populated with data as CDN in a Box starts up. It connects to Traffic Ops as the "admin" user and processes files places in the docker volume shared between the containers. The enroller watches each directory within the ``/shared/enroller`` directory for new :file:`{filename}.json` files to be created there. These files must follow the format outlined in the API guide for the ``POST`` method for each data type,  (e.g. for a ``region``, follow the guidelines for ``POST api/2.0/regions``). Of note, the ``enroller`` does not require fields that reference database ids for other objects within the database.
+The "enroller" began as an efficient way for Traffic Ops to be populated with data as CDN in a Box starts up. It connects to Traffic Ops as the "admin" user and processes files places in the docker volume shared between the containers. The enroller watches each directory within the ``/shared/enroller`` directory for new :file:`{filename}.json` files to be created there. These files must follow the format outlined in the API guide for the ``POST`` method for each data type,  (e.g. for a ``region``, follow the guidelines for :ref:`POST /regions <to-api-regions-post>`). Of note, the ``enroller`` does not require fields that reference database ids for other objects within the database.
 
 .. program::enroller
 
@@ -254,7 +254,7 @@ The "enroller" began as an efficient way for Traffic Ops to be populated with da
 	The name of a file which will be created in the :option:`--dir` directory when given, indicating service was started (default: "enroller-started").
 
 
-The enroller runs within CDN in a Box using :option:`--dir` which provides the above behavior. It can also be run using :option:`--http` to instead have it listen on the indicated port. In this case, it accepts only ``POST`` requests with the JSON provided in the request payload, e.g. ``curl -X POST https://enroller/api/2.0/regions -d @newregion.json``. CDN in a Box does not currently use this method, but may be modified in the future to avoid using the shared volume approach.
+The enroller runs within CDN in a Box using :option:`--dir` which provides the above behavior. It can also be run using :option:`--http` to instead have it listen on the indicated port. In this case, it accepts only ``POST`` requests with the JSON provided in the request payload, e.g. ``curl -X POST https://enroller/api/4.0/regions -d @newregion.json``. CDN in a Box does not currently use this method, but may be modified in the future to avoid using the shared volume approach.
 
 Auto Snapshot/Queue-Updates
 ---------------------------

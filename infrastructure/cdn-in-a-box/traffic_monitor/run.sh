@@ -89,7 +89,7 @@ export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
 # There's a race condition with setting the TM credentials and TO actually creating
 # the TM user
-until to-get "api/2.0/users?username=$TM_USER" 2>/dev/null | jq -c -e '.response[].username|length'; do
+until to-get "api/4.0/users?username=$TM_USER" 2>/dev/null | jq -c -e '.response[].username|length'; do
 	echo "waiting for TM_USER creation..."
 	sleep 3
 done
@@ -102,7 +102,7 @@ export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
 # Do not start until there a valid Snapshot has been taken
-until [ $(to-get "/api/2.0/cdns/$CDN_NAME/snapshot" 2>/dev/null | jq -c -e '.response.config|length') -gt 0 ] ; do
+until [ $(to-get "/api/4.0/cdns/$CDN_NAME/snapshot" 2>/dev/null | jq -c -e '.response.config|length') -gt 0 ] ; do
 	echo "Waiting on valid Snapshot...";
   	sleep 3;
 done

@@ -43,7 +43,6 @@ const DefaultTSConfigDir = "/opt/trafficserver/etc/trafficserver"
 
 const (
 	StatusDir          = "/var/lib/trafficcontrol-cache-config/status"
-	GenerateCmd        = "/usr/bin/t3c-generate" // TODO don't make absolute?
 	Chkconfig          = "/sbin/chkconfig"
 	Service            = "/sbin/service"
 	SystemCtl          = "/bin/systemctl"
@@ -314,6 +313,7 @@ If any of the related flags are also set, they override the mode's default behav
 		if runMode == t3cutil.ModeInvalid {
 			return Cfg{}, errors.New(*runModePtr + " is an invalid mode.")
 		}
+		modeLogStrs = append(modeLogStrs, "t3c-apply is running in "+runMode.String()+" mode")
 		switch runMode {
 		case t3cutil.ModeSyncDS:
 			// syncds flags are all the defaults, no need to change anything

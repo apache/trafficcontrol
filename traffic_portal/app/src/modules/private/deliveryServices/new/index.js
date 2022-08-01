@@ -21,11 +21,11 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.deliveryServices.new', {
-                url: '/new?type',
+                url: '/new?dsType',
                 views: {
                     deliveryServicesContent: {
                         templateUrl: function ($stateParams) {
-                            var type = $stateParams.type,
+                            var type = $stateParams.dsType,
                                 template;
 
                             if (type.indexOf('ANY_MAP') != -1) {
@@ -43,7 +43,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                         controller: 'FormNewDeliveryServiceController',
                         resolve: {
                             deliveryService: function($stateParams, propertiesModel) {
-                                var type = $stateParams.type,
+                                var type = $stateParams.dsType,
                                     anyMapDefaults = angular.copy(propertiesModel.properties.deliveryServices.defaults.ANY_MAP),
                                     dnsDefaults = angular.copy(propertiesModel.properties.deliveryServices.defaults.DNS),
                                     httpDefaults = angular.copy(propertiesModel.properties.deliveryServices.defaults.HTTP),
@@ -68,7 +68,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                                 return topologyService.getTopologies();
                             },
                             type: function($stateParams) {
-                                return $stateParams.type;
+                                return $stateParams.dsType;
                             },
                             types: function(typeService) {
                                 return typeService.getTypes({ useInTable: 'deliveryservice' });

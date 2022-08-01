@@ -8,9 +8,6 @@ There are two client libraries supported:
 * [Documentation](https://github.com/apache/trafficcontrol/tree/master/traffic_control/clients/python/trafficops)
 
 ## Golang
-### TO API v2 _(Deprecated)_
-* [Documentation](https://github.com/apache/trafficcontrol/tree/master/traffic_ops/v2-client)
-
 ### TO API v3 _(Deprecated)_
 * [Documentation](https://github.com/apache/trafficcontrol/tree/master/traffic_ops/v3-client)
 

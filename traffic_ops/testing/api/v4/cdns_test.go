@@ -33,7 +33,9 @@ import (
 )
 
 func TestCDNs(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Parameters}, func() {
+	WithObjs(t, []TCObj{CDNs, Parameters, Tenants, Users}, func() {
+
+		readOnlyUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "readonlyuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
@@ -131,6 +133,15 @@ func TestCDNs(t *testing.T) {
 						"domainName":    "",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"FORBIDDEN when READ ONLY USER": {
+					ClientSession: readOnlyUserSession,
+					RequestBody: map[string]interface{}{
+						"name":          "readOnlyTest",
+						"dnssecEnabled": false,
+						"domainName":    "test.ro",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
 			"PUT": {

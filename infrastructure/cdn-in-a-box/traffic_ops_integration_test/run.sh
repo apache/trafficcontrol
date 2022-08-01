@@ -41,7 +41,7 @@ done
 source config.sh
 
 exit_code=0
-for api_version in v{2..4}; do
+for api_version in v{3..4}; do
 	./traffic_ops_${api_version}_integration_test -test.v -cfg=traffic-ops-test.conf -fixtures=tc-fixtures-${api_version}.json 2>&1 | ./go-junit-report --package-name=golang.test.toapi.${api_version} --set-exit-code > /junit/golang.test.toapi.${api_version}.xml && find /junit -type 'f' | xargs chmod 664
 	declare ${api_version}_exit_code=$?
 done
@@ -49,7 +49,7 @@ done
 cat /junit/golang.test.toapi.v{2..4}.xml
 
 
-if [[ $v2_exit_code -eq 0 && $v3_exit_code -eq 0 && $v4_exit_code -eq 0 ]]; then
+if [[ $v3_exit_code -eq 0 && $v4_exit_code -eq 0 ]]; then
 	echo "TO API tests success"
 else
 	echo "TO API tests failed"

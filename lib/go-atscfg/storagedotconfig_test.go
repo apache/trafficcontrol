@@ -71,7 +71,7 @@ func TestMakeStorageDotConfig(t *testing.T) {
 
 	testComment(t, txt, hdr)
 
-	if count := strings.Count(txt, "\n"); count != 12 { // one line for each drive letter, plus the comment
+	if count := strings.Count(txt, "\n"); count != 13 { // one line for each drive letter, plus the comment plus blank
 		t.Errorf("expected one line for each drive letter plus a comment, actual: '"+txt+"' count %v", count)
 	}
 
@@ -112,8 +112,8 @@ func TestMakeStorageDotConfigNoParams(t *testing.T) {
 
 	testComment(t, txt, hdr)
 
-	if count := strings.Count(txt, "\n"); count != 2 { // comment plus a blank line
-		t.Errorf("expected one line for comment, plus one blank line (it's important to send a blank line, to prevent many callers from returning a 404), actual: '"+txt+"' count %v", count)
+	if count := strings.Count(txt, "\n"); count != 3 { // comment header plus its blank plus a blank line
+		t.Errorf("expected one line for comment, plus blank line after comment, plus one separate blank line (it's important to send a blank line, to prevent many callers from returning a 404), actual: '"+txt+"' count %v", count)
 	}
 
 	lines := strings.Split(txt, "\n")
@@ -154,8 +154,8 @@ func TestMakeStorageDotConfigNoDriveLetters(t *testing.T) {
 
 	testComment(t, txt, hdr)
 
-	if count := strings.Count(txt, "\n"); count != 2 { // comment plus a blank line
-		t.Errorf("expected one line for comment, plus one blank line (it's important to send a blank line, to prevent many callers from returning a 404), actual: '"+txt+"' count %v", count)
+	if count := strings.Count(txt, "\n"); count != 3 { // comment plus its blank plus a blank line
+		t.Errorf("expected one line for comment, plus blank line after comment, plus one separate blank line (it's important to send a blank line, to prevent many callers from returning a 404), actual: '"+txt+"' count %v", count)
 	}
 
 	lines := strings.Split(txt, "\n")
@@ -197,7 +197,7 @@ func TestMakeStorageDotConfigSomeDriveLetters(t *testing.T) {
 
 	testComment(t, txt, hdr)
 
-	if count := strings.Count(txt, "\n"); count != 6 { // comment plus each letter
-		t.Errorf("expected one line for comment, plus one line for each drive letter, actual: '"+txt+"' count %v", count)
+	if count := strings.Count(txt, "\n"); count != 7 { // comment plus blank plus each letter
+		t.Errorf("expected one line for comment, plus blank line after comment, plus one line for each drive letter, actual: '"+txt+"' count %v", count)
 	}
 }

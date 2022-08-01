@@ -75,13 +75,50 @@ func TestRoles(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
+				"BAD REQUEST when MISSING NAME": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "missing name",
+						"privLevel":   30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING DESCRIPTION": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":      "nodescription",
+						"privLevel": 30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "new_admin",
+						"description": "description",
+						"privLevel":   30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetRoleID(t, "another_role"),
+					EndpointId:    GetRoleID(t, "update_role"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"name":        "another_role",
+						"name":        "new_name",
 						"description": "new updated description",
 						"privLevel":   30,
 						"capabilities": []string{
@@ -90,7 +127,75 @@ func TestRoles(t *testing.T) {
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateRoleUpdateCreateFields("another_role", map[string]interface{}{"Description": "new updated description"})),
+						validateRoleUpdateCreateFields("new_name", map[string]interface{}{"Name": "new_name", "Description": "new updated description"})),
+				},
+				"BAD REQUEST when MISSING NAME": {
+					EndpointId:    GetRoleID(t, "another_role"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"description": "missing name",
+						"privLevel":   30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING DESCRIPTION": {
+					EndpointId:    GetRoleID(t, "another_role"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":      "noDescription",
+						"privLevel": 30,
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when ADMIN ROLE": {
+					EndpointId:    GetRoleID(t, "admin"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "adminUpdated",
+						"privLevel":   30,
+						"description": "description",
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"NOT FOUND when ROLE DOESNT EXIST": {
+					EndpointId:    func() int { return 9999999 },
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "doesntexist",
+						"privLevel":   30,
+						"description": "description",
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
+					EndpointId:    GetRoleID(t, "another_role"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":        "new_admin",
+						"privLevel":   30,
+						"description": "description",
+						"capabilities": []string{
+							"all-read",
+							"all-write",
+						},
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					EndpointId:     GetRoleID(t, "another_role"),
@@ -193,9 +298,14 @@ func validateRoleFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 			for _, role := range roleResp {
 				switch field {
 				case "Name":
+					assert.RequireNotNil(t, role.Name, "Expected Name to not be nil.")
 					assert.Equal(t, expected, *role.Name, "Expected Name to be %v, but got %s", expected, *role.Name)
 				case "Description":
+					assert.RequireNotNil(t, role.Description, "Expected Description to not be nil.")
 					assert.Equal(t, expected, *role.Description, "Expected Description to be %v, but got %s", expected, *role.Description)
+				case "PrivLevel":
+					assert.RequireNotNil(t, role.PrivLevel, "Expected PrivLevel to not be nil.")
+					assert.Equal(t, expected, *role.PrivLevel, "Expected PrivLevel to be %v, but got %d", expected, *role.PrivLevel)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
@@ -219,6 +329,7 @@ func validateRoleSort() utils.CkReqFunc {
 		var roleNames []string
 		roleResp := resp.([]tc.Role)
 		for _, role := range roleResp {
+			assert.RequireNotNil(t, role.Name, "Expected Name to not be nil.")
 			roleNames = append(roleNames, *role.Name)
 		}
 		assert.Equal(t, true, sort.StringsAreSorted(roleNames), "List is not sorted by their names: %v", roleNames)
@@ -239,10 +350,12 @@ func validateRoleDescSort() utils.CkReqFunc {
 		assert.RequireEqual(t, len(roleAscResp), len(roleDescResp), "Expected descending order response length: %d, to match ascending order response length %d", len(roleAscResp), len(roleDescResp))
 		// Insert Role names to the front of a new list, so they are now reversed to be in ascending order.
 		for _, role := range roleDescResp {
+			assert.RequireNotNil(t, role.Name, "Expected Name to not be nil.")
 			descSortedList = append([]string{*role.Name}, descSortedList...)
 		}
 		// Insert Role names by appending to a new list, so they stay in ascending order.
 		for _, role := range roleAscResp {
+			assert.RequireNotNil(t, role.Name, "Expected Name to not be nil.")
 			ascSortedList = append(ascSortedList, *role.Name)
 		}
 		assert.Exactly(t, ascSortedList, descSortedList, "Role responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
@@ -254,6 +367,8 @@ func GetRoleID(t *testing.T, name string) func() int {
 		role, _, _, err := TOSession.GetRoleByNameWithHdr(name, nil)
 		assert.RequireNoError(t, err, "Get Roles Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(role), "Expected response object length 1, but got %d", len(role))
+		assert.RequireNotNil(t, role, "Expected role to not be nil.")
+		assert.RequireNotNil(t, role[0].ID, "Expected ID to not be nil.")
 		return *role[0].ID
 	}
 }
@@ -266,13 +381,20 @@ func CreateTestRoles(t *testing.T) {
 }
 
 func DeleteTestRoles(t *testing.T) {
-	for _, r := range testData.Roles {
-		roleID := GetRoleID(t, *r.Name)()
-		_, _, _, err := TOSession.DeleteRoleByID(roleID)
-		assert.NoError(t, err, "Expected no error while deleting role %s, but got %v", *r.Name, err)
+	roles, _, _, err := TOSession.GetRolesWithHdr(nil)
+	assert.NoError(t, err, "Cannot get Roles: %v", err)
+	for _, role := range roles {
+		// Don't delete active roles created by test setup
+		assert.RequireNotNil(t, role.Name, "Expected Name to not be nil.")
+		assert.RequireNotNil(t, role.ID, "Expected ID to not be nil.")
+		if *role.Name == "admin" || *role.Name == "disallowed" || *role.Name == "operations" || *role.Name == "portal" || *role.Name == "read-only" || *role.Name == "steering" || *role.Name == "federation" {
+			continue
+		}
+		_, _, _, err := TOSession.DeleteRoleByID(*role.ID)
+		assert.NoError(t, err, "Expected no error while deleting role %s, but got %v", *role.Name, err)
 		// Retrieve the Role to see if it got deleted
-		getRole, _, _, err := TOSession.GetRoleByIDWithHdr(roleID, nil)
-		assert.NoError(t, err, "Error getting Role '%s' after deletion: %v", *r.Name, err)
-		assert.Equal(t, 0, len(getRole), "Expected Role '%s' to be deleted, but it was found in Traffic Ops", *r.Name)
+		getRole, _, _, err := TOSession.GetRoleByIDWithHdr(*role.ID, nil)
+		assert.NoError(t, err, "Error getting Role '%s' after deletion: %v", *role.Name, err)
+		assert.Equal(t, 0, len(getRole), "Expected Role '%s' to be deleted, but it was found in Traffic Ops", *role.Name)
 	}
 }

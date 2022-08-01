@@ -80,7 +80,7 @@ func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 	return ad
 }
 
-// V40ToDeliveryServices converts a slice of the old traffic_ops/client type to the local alias.
+// V40ToDeliveryServices converts a slice of the old traffic_ops/v4-client type to the local alias.
 func V40ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
@@ -224,7 +224,7 @@ func isTopLevelCache(s serverParentCacheGroupData) bool {
 }
 
 func makeHdrComment(hdrComment string) string {
-	return "# " + hdrComment + "\n"
+	return "# " + hdrComment + "\n\n"
 }
 
 // getATSMajorVersionFromATSVersion returns the major version of the given profile's package trafficserver parameter.
@@ -755,6 +755,15 @@ func FilterServers(servers []Server, filter func(sv *Server) bool) []Server {
 		}
 	}
 	return filteredServers
+}
+
+// BoolOnOff returns 'on' if b, else 'off'.
+// This is a helper func for some ATS config files that use "on" and "off" for boolean values.
+func BoolOnOff(b bool) string {
+	if b {
+		return "on"
+	}
+	return "off"
 }
 
 // GetDSParameters returns the parameters for the given Delivery Service.

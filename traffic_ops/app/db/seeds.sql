@@ -94,7 +94,8 @@ ON CONFLICT DO NOTHING;
 INSERT INTO public.role_capability
 SELECT id, 'DELIVERY-SERVICE-SAFE:UPDATE'
 FROM public.role
-WHERE "name" in ('operations', 'read-only', 'portal', 'federation', 'steering');
+WHERE "name" in ('operations', 'read-only', 'portal', 'federation', 'steering')
+ON CONFLICT DO NOTHING;
 
 -- Using role 'read-only'
 INSERT INTO public.role_capability

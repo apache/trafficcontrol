@@ -13,7 +13,7 @@
 */
 
 import { Component, type OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { UntypedFormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 
@@ -132,7 +132,7 @@ export class CacheGroupTableComponent implements OnInit {
 	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
-	public fuzzControl: FormControl = new FormControl("");
+	public fuzzControl: UntypedFormControl = new UntypedFormControl("");
 
 	constructor(private readonly api: CacheGroupService, private readonly route: ActivatedRoute,
 		private readonly headerSvc: TpHeaderService) {

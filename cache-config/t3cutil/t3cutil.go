@@ -21,6 +21,7 @@ package t3cutil
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html"
@@ -28,9 +29,14 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"syscall"
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 type ATSConfigFile struct {
@@ -41,6 +47,25 @@ type ATSConfigFile struct {
 	Secure      bool     `json:"secure"`
 	Text        string   `json:"text"`
 	Warnings    []string `json:"warnings"`
+}
+
+var installdir string
+
+// initializes InstallDir to executable dir
+// If error, returns "/usr/bin" as default.
+func InstallDir() string {
+	if installdir == "" {
+		execpath, err := os.Executable()
+		if err != nil {
+			installdir = `/usr/bin`
+			log.Infof("InstallDir setting to fallback: '%s', %v\n", installdir, err)
+		} else {
+			log.Infof("Executable path is %s", execpath)
+			installdir = filepath.Dir(execpath)
+		}
+	}
+	log.Infof("Return Installdir '%s'", installdir)
+	return installdir
 }
 
 // ATSConfigFiles implements sort.Interface and sorts by the Location and then FileNameOnDisk, i.e. the full file path.
@@ -227,4 +252,190 @@ func UserAgentStr(appName string, versionNum string, gitRevision string) string 
 		gitRevision = gitRevision[:8]
 	}
 	return appName + "/" + versionNum + ".." + gitRevision
+}
+
+// NewApplyMetaData creates a new, empty ApplyMetaData object.
+func NewApplyMetaData() *ApplyMetaData {
+	return &ApplyMetaData{
+		Version:           MetaDataVersion,
+		InstalledPackages: []string{},              // construct a slice, so JSON serializes '[]' not 'null'.
+		OwnedFilePaths:    []string{},              // construct a slice, so JSON serializes '[]' not 'null'.
+		Actions:           []ApplyMetaDataAction{}, // construct a map, so JSON serializes '{}' not 'null'.
+	}
+}
+
+// MetaDataVersion is the version of the metadata file.
+// This should update the major version with breaking changes,
+// and t3c versions should strive to maintain compatibility
+// at least one major version back, so features like tracking
+// t3c-owned files continue to work through upgrades.
+const MetaDataVersion = "1.0"
+
+// ApplyMetaData is metadata about a t3c-apply run.
+// Always use NewApplyMetaData, don't use a literal to construct a new object.
+type ApplyMetaData struct {
+	// Version is the metadata version of this metadata object or file. See MetaDataVersion.
+	Version string `json:"version"`
+
+	// ServerFQDN is the FQDN of this server.
+	// The primary purpose of this field is to allow distinguishing
+	// metadata files from different servers.
+	ServerHostName string `json:"server-hostname"`
+
+	// Time is an RFC3339Nano timestamp of the time t3c-apply ran for this metadata.
+	// This should be treated as approximate, as it could be the start time, end time, or
+	// any inexact time in-between.
+	// However, times of different metadata files should always be monotonically increasing.
+	Time string `json:"time"`
+
+	// ReloadedATS is whether this run restarted ATS.
+	// Note this is whether ATS was actually restarted, not whether it would have been,
+	// e.g. because of --report-only or --service-action.
+	ReloadedATS bool `json:"reloaded-ats"`
+
+	// RestartedATS is whether this run restarted ATS.
+	// Note this is whether ATS was actually restarted, not whether it would have been,
+	// e.g. because of --report-only or --service-action.
+	RestartedATS bool `json:"restarted-ats"`
+
+	// UnsetUpdateFlag is whether this t3c-apply run unset the update flag for this server.
+	// Note this is whether the flag was actually unset, not whether it would have been e.g.
+	// because of --no-unset-update-flag or --report-only.
+	UnsetUpdateFlag bool `json:"unset-update-flag"`
+
+	// UnsetRevalFlag is whether this t3c-apply run unset the revalidate flag for this server.
+	// Note this is whether the flag was actually unset, not whether it would have been e.g.
+	// because of --no-unset-reval-flag or --report-only.
+	UnsetRevalFlag bool `json:"unset-reval-flag"`
+
+	// InstalledPackages is which yum packages were installed.
+	// Note this packages actually installed, not what would have been e.g.
+	// because of --install-packages=false or --report-only.
+	InstalledPackages []string `json:"installed-packages"`
+
+	// OwnedFilePaths is the list of files t3c-apply produced in this run.
+	//
+	// This can be used to know which files in the ATS config directory were produced by t3c,
+	// and which were produced by some other means.
+	//
+	// Note this is all files produced, not necessarily all files written to disk. This
+	// will include files generated, but not changed on disk because they had no
+	// semantic diff from the existing file.
+	//
+	// This may be used in the future for t3c-apply to delete files produced by a previous
+	// run which no longer exist (for example, Header Rewrites from a Delivery Service
+	// no longer assigned to this server).
+	//
+	// Files are the full path and file name.
+	OwnedFilePaths []string `json:"owned-files"`
+
+	// Succeeded is whether this t3c-apply run generally succeeded.
+	//
+	// Note not all scenarios are black or white success-or-fail.
+	// For example, files may be successfully created, but reloading ATS may fail.
+	// In these scenarios, t3c-apply will attempt to set Succeeded to false,
+	// but also attempt to set other metadata about what was actually performed.
+	//
+	// But when partial failure occurrs, nothing is guaranteed in the metadata.
+	// Operators should consider the logs authoritative over the metadata.
+	Succeeded bool `json:"succeeded"`
+
+	// PartialSuccess indicates that some actions were successful, but
+	// later actions failed.
+	//
+	// This is a bad place to be, because it means some things were changed,
+	// but not everything that needed to be. This is often not fatal, because,
+	// for example, if config files were changed by ATS failed to reload,
+	// those config files typically needed placed anyway.
+	//
+	// But nevertheless, partial success is potentially catastrophic, and operators
+	// are strongly encouraged to set alarms and read logs in the event it occurs,
+	// to determine what was changed, what failed, and what actions need taken.
+	PartialSuccess bool `json:"partial-success"`
+
+	Actions []ApplyMetaDataAction `json:"actions"`
+}
+type ApplyMetaDataAction struct {
+	Action string `json:"action"`
+	Status string `json:"status"`
+}
+
+// Format prints the ApplyMetaData in a format designed to be written to a file,
+// and structured but pretty-printed to work well with line-based diffs (e.g. in git).
+func (md *ApplyMetaData) Format() ([]byte, error) {
+	bts, err := json.MarshalIndent(md, "", "  ")
+	if err != nil {
+		return nil, errors.New("marshalling metadata file: " + err.Error())
+	}
+	bts = append(bts, '\n') // newline at the end of the file, so it's a valid POSIX text file
+
+	return bts, nil
+}
+
+// SetTime sets the Time field in the prescribed format, based on the given time.
+// To set to the current time, call SetTime(time.Now()).
+// The format is UTC RFC3339Nano. See ApplyMetaData.
+func (md *ApplyMetaData) SetTime(tm time.Time) {
+	md.Time = tm.UTC().Format(time.RFC3339Nano)
+}
+
+// CombineOwnedFilePaths combines the owned file paths of two metadata objects.
+//
+// This is primarily useful when a config run, such as revalidate, adds owned files, but not
+// all owned files, but we don't want to write metadata incidating we don't own existing files,
+// so this can be used to combine the new files with the previous metadata.
+//
+// Both am and bm are may be nil, in which case the files from the non-nil object is returned,
+// or an empty array if both are nil.
+func CombineOwnedFilePaths(am *ApplyMetaData, bm *ApplyMetaData) []string {
+	if am == nil && bm == nil {
+		return []string{}
+	} else if am == nil {
+		sort.Strings(bm.OwnedFilePaths) // the func guarantees the returned array will always be sorted
+		return bm.OwnedFilePaths
+	} else if bm == nil {
+		sort.Strings(am.OwnedFilePaths) // the func guarantees the returned array will always be sorted
+		return am.OwnedFilePaths
+	}
+	return sortAndCombineStrs(am.OwnedFilePaths, bm.OwnedFilePaths)
+}
+
+// sortAndCombineStrs sorts as and bs, and then returns an array containing
+// the unique strings in each, without duplicates.
+func sortAndCombineStrs(as []string, bs []string) []string {
+	sort.Strings(as)
+	sort.Strings(bs)
+	combined := []string{}
+	ai := 0
+	bi := 0
+	for ai < len(as) && bi < len(bs) {
+		if as[ai] == bs[bi] {
+			combined = append(combined, as[ai])
+			ai++
+			bi++
+			continue
+		}
+		// at this point we know they don't match
+		// so add the lesser, increment it, and loop (but don't add or increment the greater)
+		if as[ai] < bs[bi] {
+			combined = append(combined, as[ai])
+			ai++
+			continue
+		}
+		combined = append(combined, bs[bi])
+		bi++
+	}
+
+	// at this point, we added everything up to the end of one of the arrays,
+	// but potentially not the other. So add the remaining strings in the other
+
+	for ai < len(as) {
+		combined = append(combined, as[ai])
+		ai++
+	}
+	for bi < len(bs) {
+		combined = append(combined, bs[bi])
+		bi++
+	}
+	return combined
 }

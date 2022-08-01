@@ -13,7 +13,7 @@
 */
 
 import {Component, type OnInit} from "@angular/core";
-import {FormControl} from "@angular/forms";
+import {UntypedFormControl} from "@angular/forms";
 import {MatDialog} from "@angular/material/dialog";
 import {ActivatedRoute, Router} from "@angular/router";
 import type {ITooltipParams} from "ag-grid-community";
@@ -326,7 +326,7 @@ export class ServersTableComponent implements OnInit {
 	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
-	public fuzzControl: FormControl = new FormControl("");
+	public fuzzControl: UntypedFormControl = new UntypedFormControl("");
 
 	/**
 	 * Constructs the component with its required injections.

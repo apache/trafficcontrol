@@ -82,7 +82,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						"changeType": "create",
 						"requested": generateDeliveryService(t, map[string]interface{}{
 							"displayName": "NEW DISPLAY NAME",
-							"tenantId":    GetTenantId(t, "tenant1"),
+							"tenantId":    GetTenantID(t, "tenant1")(),
 							"xmlId":       "test-ds1",
 						}),
 						"status": "draft",
@@ -95,7 +95,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": generateDeliveryService(t, map[string]interface{}{
-							"tenantId": GetTenantId(t, "tenant1"),
+							"tenantId": GetTenantID(t, "tenant1")(),
 							"xmlId":    "test-ds1",
 						}),
 						"status": "submitted",
@@ -111,7 +111,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						"requested": generateDeliveryService(t, map[string]interface{}{
 							"longDesc1": "long desc 1",
 							"longDesc2": "long desc 2",
-							"tenantId":  GetTenantId(t, "tenant1"),
+							"tenantId":  GetTenantID(t, "tenant1")(),
 							"xmlId":     "test-ds1",
 						}),
 						"status": "draft",

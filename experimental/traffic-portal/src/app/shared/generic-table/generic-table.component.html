@@ -14,6 +14,7 @@ limitations under the License.
 <div class="extra-actions">
 	<button mat-flat-button color="accent" type="button" title="select all rows" (click)="selectAll()">Select All</button>
 	<button mat-flat-button color="accent" type="button" title="de-select all rows" (click)="selectAll(true)">De-Select All</button>
+	<button mat-flat-button color="accent" type="button"*ngFor="let btn of tableTitleButtons" (click)="emitTitleButtonAction(btn.action)">{{btn.text}}</button>
 	<button mat-flat-button color="accent" type="button" (click)="download()" title="save as CSV"><fa-icon [icon]="downloadIcon"></fa-icon></button>
 	<div class="toggle-columns" role="group" title="Select Table Columns">
 		<button mat-flat-button color="accent" [matMenuTriggerFor]="menu">
@@ -21,7 +22,7 @@ limitations under the License.
 			<fa-icon [icon]="caretIcon" class="caret" [ngClass]="{'rotate': showMenu}"></fa-icon>
 		</button>
 		<mat-menu #menu="matMenu">
-			<button mat-menu-item *ngFor="let c of columns; orderBy:'colDef.headerName'" (click)="toggleVisibility($event, c.getColId())">
+			<button mat-menu-item *ngFor="let c of columns" (click)="toggleVisibility($event, c.getColId())">
 				<mat-checkbox [checked]="c.isVisible()" (click)="$event.preventDefault()" [name]="c.getColDef().headerName">
 					{{c.getColDef().headerName}}
 				</mat-checkbox>
@@ -36,7 +37,8 @@ limitations under the License.
 	[frameworkComponents]="components"
 	[gridOptions]="gridOptions"
 	(gridReady)="setAPI($event)"
-	(sortChanged)="storeSort()"
+	(filterChanged)="storeFilter()"
+	(sortChanged)="storeColumns()"
 	(columnMoved)="storeColumns()"
 	(columnVisible)="storeColumns(true)"
 	(cellContextMenu)="onCellContextMenu($event)"
@@ -46,7 +48,10 @@ limitations under the License.
 <menu #contextmenu type="contextmenu" [hidden]="!showContextMenu" [ngStyle]="menuStyle" *ngIf="contextMenuItems && contextMenuItems.length > 0">
 	<ul>
 		<li *ngFor="let item of contextMenuItems" role="menuitem">
-			<a *ngIf="!isAction(item)" [href]="item.href" [target]="item.newTab ? '_blank' : '_self'">{{item.name}}</a>
+			<ng-container *ngIf="!isAction(item)">
+				<a *ngIf="!isDisabled(item)" [href]="href(item)" [target]="item.newTab ? '_blank' : '_self'">{{item.name}}</a>
+				<button type="button" *ngIf="isDisabled(item)" disabled>{{item.name}}</button>
+			</ng-container>
 			<button name="{{itemName(item)}}" *ngIf="isAction(item)" type="button" (click)="emitContextMenuAction(item.action, item.multiRow, $event)" [disabled]="isDisabled(item)">{{item.name}}</button>
 		</li>
 	</ul>

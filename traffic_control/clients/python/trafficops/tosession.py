@@ -196,7 +196,7 @@ class TOSession(RestApiSession):
 		"""
 		Returns the base url. (read-only)
 
-		:return: The base url should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?' e.g https://to.somedomain.net/api/2.0/
+		:return: The base url should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?' e.g https://to.somedomain.net/api/4.0/
 		:rtype: str
 		"""
 
@@ -604,7 +604,7 @@ class TOSession(RestApiSession):
 	def create_cdn_dns_sec_keys(self, data=None):
 		"""
 		Generates ZSK and KSK keypairs for a CDN and all associated Delivery Services
-		:ref:`to-api-v2-cdns-dnsseckeys-generate`
+		:ref:`to-api-cdns-dnsseckeys-generate`
 		:param data: The parameter data to use for cachegroup creation.
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]

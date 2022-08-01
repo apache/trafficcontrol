@@ -70,7 +70,6 @@ init() {
 		{
 				"monitor_config_polling_interval_ms": 15000,
 				"http_timeout_ms": 2000,
-				"peer_optimistic": true,
 				"max_events": 200,
 				"health_flush_interval_ms": 20,
 				"stat_flush_interval_ms": 20,
@@ -97,42 +96,42 @@ ENDOFMESSAGE
 				}
 	ENDOFMESSAGE
 
-	TO_COOKIE="$(curl -v -s -k -X POST --data '{ "u":"'"$TRAFFIC_OPS_USER"'", "p":"'"$TRAFFIC_OPS_PASS"'" }' $TRAFFIC_OPS_URI/api/1.2/user/login 2>&1 | grep 'Set-Cookie' | sed -e 's/.*mojolicious=\(.*\); expires.*/\1/')"
+	TO_COOKIE="$(curl -v -s -k -X POST --data '{ "u":"'"$TRAFFIC_OPS_USER"'", "p":"'"$TRAFFIC_OPS_PASS"'" }' $TRAFFIC_OPS_URI/api/4.0/user/login 2>&1 | grep 'Set-Cookie' | sed -e 's/.*mojolicious=\(.*\); expires.*/\1/')"
 	echo "Got Cookie: $TO_COOKIE"
 
 	if [ ! -z "$CREATE_TO_SERVER" ] ; then
 		echo "Creating Server in Traffic Ops!"
 		# curl -v -k -X POST -H "Cookie: mojolicious=$TO_COOKIE" -F "filename=Traffic_Monitor_Dockerfile_profile.traffic_ops" -F "profile_to_import=@/Traffic_Monitor_Dockerfile_profile.traffic_ops" $TRAFFIC_OPS_URI/profile/doImport
 
-		CACHEGROUP_ID="$( curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | jq '.response | .[] | select(.name=='"\"$CACHEGROUP\""') | .id')"
+		CACHEGROUP_ID="$( curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/4.0/cachegroups.json | jq '.response | .[] | select(.name=='"\"$CACHEGROUP\""') | .id')"
 		echo "Got cachegroup ID: $CACHEGROUP_ID"
 
-		SERVER_TYPE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/types.json | jq '.response | .[] | select(.name=='"\"$TYPE\""') | .id')"
+		SERVER_TYPE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/4.0/types.json | jq '.response | .[] | select(.name=='"\"$TYPE\""') | .id')"
 		echo "Got server type ID: $SERVER_TYPE_ID"
 
-		SERVER_PROFILE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/profiles.json | jq '.response | .[] | select(.name=='"\"$PROFILE\""') | .id')"
+		SERVER_PROFILE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/4.0/profiles.json | jq '.response | .[] | select(.name=='"\"$PROFILE\""') | .id')"
 		echo "Got server profile ID: $SERVER_PROFILE_ID"
 
-		PHYS_LOCATION_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/phys_locations.json | jq '.response | .[] | select(.shortName=='"\"$PHYS_LOCATION\""') | .id')"
+		PHYS_LOCATION_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/4.0/phys_locations.json | jq '.response | .[] | select(.shortName=='"\"$PHYS_LOCATION\""') | .id')"
 		echo "Got phys location ID: $PHYS_LOCATION_ID"
 
-		CDN_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cdns.json | jq '.response | .[] | select(.name=='"\"$CDN\""') | .id')"
+		CDN_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/4.0/cdns.json | jq '.response | .[] | select(.name=='"\"$CDN\""') | .id')"
 		echo "Got cdn ID: $CDN_ID"
 
 		# Create Server in Traffic Ops
 		curl -v -k -X POST -H "Cookie: mojolicious=$TO_COOKIE" --data-urlencode "host_name=$HOSTNAME" --data-urlencode "domain_name=$DOMAIN" --data-urlencode "interface_name=$INTERFACE" --data-urlencode "ip_address=$IP" --data-urlencode "ip_netmask=$NETMASK" --data-urlencode "ip_gateway=$GATEWAY" --data-urlencode "interface_mtu=$MTU" --data-urlencode "cdn=$CDN_ID" --data-urlencode "cachegroup=$CACHEGROUP_ID" --data-urlencode "phys_location=$PHYS_LOCATION_ID" --data-urlencode "type=$SERVER_TYPE_ID" --data-urlencode "profile=$SERVER_PROFILE_ID" --data-urlencode "tcp_port=$PORT" --data-urlencode "offline_reason=creation" $TRAFFIC_OPS_URI/server/create
 
 		# Add Monitor IP to `allow_ip` Parameters
-		IP_ALLOW_PARAMS=$(curl -Lsk --cookie "mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/parameters?name=allow_ip | jq '.response | .[] | .id, .value')
+		IP_ALLOW_PARAMS=$(curl -Lsk --cookie "mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/4.0/parameters?name=allow_ip | jq '.response | .[] | .id, .value')
 		while IFS= read -r id; do
 			IFS= read -r ipallow
 			ipallow=$(echo ${ipallow} | sed -e 's/^"//' -e 's/"$//')
 			IPALLOW_UPDATE_JSON="{\"id\": ${id}, \"value\": \"${ipallow},${IP}\"}"
-			curl -Lsk --cookie "mojolicious=$TO_COOKIE" -H 'Content-Type: application/json' -X PUT -d "$IPALLOW_UPDATE_JSON" $TRAFFIC_OPS_URI/api/1.2/parameters/${id}
+			curl -Lsk --cookie "mojolicious=$TO_COOKIE" -H 'Content-Type: application/json' -X PUT -d "$IPALLOW_UPDATE_JSON" $TRAFFIC_OPS_URI/api/4.0/parameters/${id}
 		done <<< "$IP_ALLOW_PARAMS"
 	fi
 
-	SERVER_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/servers.json | jq '.response | .[] | select(.hostName=='"\"$HOSTNAME\""') | .id')"
+	SERVER_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TO_COOKIE" $TRAFFIC_OPS_URI/api/4.0/servers.json | jq '.response | .[] | select(.hostName=='"\"$HOSTNAME\""') | .id')"
 	echo "Got server ID: $SERVER_ID"
 
 	# Set Server to Online in Traffic Ops

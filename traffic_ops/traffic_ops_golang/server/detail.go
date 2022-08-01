@@ -85,36 +85,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 	var resp interface{}
 	size := len(servers)
 
-	if inf.Version.Major <= 2 {
-		v11ServerList := make([]tc.ServerDetailV11, 0, size)
-		for _, server := range servers {
-			interfaces := server.ServerInterfaces
-			routerHostName := ""
-			routerPortName := ""
-			// All interfaces should have the same router name/port when they were upgraded from v1/2/3 to v4, so we can just choose any of them
-			if len(interfaces) != 0 {
-				routerHostName = interfaces[0].RouterHostName
-				routerPortName = interfaces[0].RouterPortName
-			}
-			v11server := tc.ServerDetailV11{}
-			v11server.ServerDetail, err = dbhelpers.GetServerDetailFromV4(server, inf.Tx.Tx)
-			if err != nil {
-				api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to GetServerDetailFromV4: %w", err), &alt)
-				return
-			}
-			v11server.RouterHostName = &routerHostName
-			v11server.RouterPortName = &routerPortName
-			legacyInterface, err := tc.V4InterfaceInfoToLegacyInterfaces(interfaces)
-			if err != nil {
-				api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("converting to server detail v11: %w", err), &alt)
-				return
-			}
-			v11server.LegacyInterfaceDetails = legacyInterface
-
-			v11ServerList = append(v11ServerList, v11server)
-		}
-		resp = v11ServerList
-	} else if inf.Version.Major <= 3 {
+	if inf.Version.Major == 3 {
 		v3ServerList := make([]tc.ServerDetailV30, 0, size)
 		for _, server := range servers {
 			v3Server := tc.ServerDetailV30{}

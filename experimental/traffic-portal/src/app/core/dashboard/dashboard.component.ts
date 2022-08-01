@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import { Component, type OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { UntypedFormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 
 import { DeliveryServiceService } from "src/app/api";
@@ -78,7 +78,7 @@ export class DashboardComponent implements OnInit {
 	public today: Date;
 
 	/** Fuzzy search control */
-	public fuzzControl = new FormControl("", {updateOn: "change"});
+	public fuzzControl = new UntypedFormControl("", {updateOn: "change"});
 
 	constructor(
 		private readonly dsAPI: DeliveryServiceService,

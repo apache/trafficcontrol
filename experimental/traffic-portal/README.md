@@ -164,6 +164,13 @@ installed prior to running the tests.
 End-to-end testing uses NightwatchJS and can be run by using `ng e2e`. More
 detailed instructions can be found in the `nightwatch/` folder
 
+## Extending Traffic Portal
+Traffic Portal supports extending functionality through the use of Angular modules. 
+The `Custom` module (located at `src/app/custom/`) contains the code to do so and any additional
+functionality should be added here as you would to any other Angular module. By default,
+this module is not built or included in the main bundle, to enable this modify the environment 
+(`src/environments`) variable `customModule` to true. 
+
 ## Contributing
 This project uses `eslint` and an `.editorconfig` file for maintaining code
 style. If your editor doesn't support `.editorconfig` (VS Code does

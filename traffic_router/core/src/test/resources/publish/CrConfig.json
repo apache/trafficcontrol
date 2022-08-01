@@ -1917,7 +1917,6 @@
   },
   "config": {
     "certificate.api.url": "http://${toHostname}/api/3.1/cdns/name/${cdnName}/sslkeys",
-    "client.steering.forced.diversity": "true",
     "dnschallengemapping.polling.url": "http://${toHostname}/api/3.1/dnsrecords/",
     "dnschallengemapping.polling.interval": "600000",
     "federationmapping.polling.url": "http://${toHostname}/api/3.1/federations/all",

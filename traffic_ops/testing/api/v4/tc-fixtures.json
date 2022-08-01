@@ -1708,6 +1708,31 @@
             "xmlId": "steering-ds",
             "anonymousBlockingEnabled": true,
             "maxRequestHeaderBytes": 131072
+        },
+        {
+            "active": true,
+            "anonymousBlockingEnabled": false,
+            "cdnName": "cdn1",
+            "displayName": "test-rm-ssc",
+            "dscp": 0,
+            "geoLimit": 0,
+            "geoProvider": 0,
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": false,
+            "logsEnabled": false,
+            "missLat": 0,
+            "missLong": 0,
+            "multiSiteOrigin": true,
+            "orgServerFqdn": "https://example.com",
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regionalGeoBlocking": false,
+            "tenant": "tenant1",
+            "topology": "top-with-caches-in-cdn1",
+            "type": "HTTP",
+            "xmlId": "test-rm-ssc",
+            "maxRequestHeaderBytes": 131072
         }
     ],
     "deliveryServicesRegexes": [
@@ -1754,6 +1779,10 @@
         {
             "xmlID": "ds-top-req-cap2",
             "RequiredCapability": "ram"
+        },
+        {
+            "xmlID": "test-rm-ssc",
+            "RequiredCapability": "ram"
         }
     ],
     "deliveryServiceServerAssignments": [
@@ -1768,6 +1797,10 @@
         {
             "xmlId": "ds3",
             "serverNames": ["atlanta-edge-14"]
+        },
+        {
+            "xmlId": "ds2",
+            "serverNames": ["atlanta-org-2"]
         }
     ],
     "divisions": [
@@ -2554,6 +2587,10 @@
         {
             "divisionName": "cdn-div2",
             "name": "cdn-region2"
+        },
+        {
+            "divisionName": "division1",
+            "name": "test-deletion"
         }
     ],
     "roles": [
@@ -2568,6 +2605,14 @@
         {
             "name": "another_role",
             "description": "super-user 3",
+            "permissions": [
+                "all-read",
+                "all-write"
+            ]
+        },
+        {
+            "name": "update_role",
+            "description": "role for testing update",
             "permissions": [
                 "all-read",
                 "all-write"
@@ -5428,6 +5473,10 @@
         {
             "serverHostName": "atlanta-edge-16",
             "serverCapability": "blah"
+        },
+        {
+            "serverHostName": "edge-in-cdn1-only",
+            "serverCapability": "ram"
         }
     ],
     "serviceCategories": [
@@ -5462,6 +5511,22 @@
             "host": "host3",
             "ttl": 10,
             "type": "AAAA_RECORD"
+        },
+        {
+            "address": "192.168.0.3",
+            "cachegroup": "cachegroup2",
+            "deliveryservice": "basic-ds-in-cdn2",
+            "host": "cdnlock-test-delete-host",
+            "type": "A_RECORD",
+            "ttl": 10
+        },
+        {
+            "address": "192.168.0.3",
+            "cachegroup": "cachegroup2",
+            "deliveryservice": "basic-ds-in-cdn2",
+            "host": "cdnlock-negtest-delete-host",
+            "type": "A_RECORD",
+            "ttl": 10
         }
     ],
     "statuses": [
@@ -6009,6 +6074,48 @@
             "username": "readonlyuser"
         },
         {
+            "addressLine1": "address of tenant1user",
+            "addressLine2": "",
+            "city": "Anywhere",
+            "company": "Comcast",
+            "country": "USA",
+            "email": "tenant1user@example.com",
+            "fullName": "Fred the admin",
+            "gid": 0,
+            "localPasswd": "pa$$word",
+            "confirmLocalPasswd": "pa$$word",
+            "newUser": false,
+            "phoneNumber": "810-555-9876",
+            "postalCode": "55443",
+            "publicSshKey": "",
+            "role": "admin",
+            "stateOrProvince": "LA",
+            "tenant": "tenant1",
+            "uid": 0,
+            "username": "tenant1user"
+        },
+        {
+            "addressLine1": "address of tenant2user",
+            "addressLine2": "",
+            "city": "Anywhere",
+            "company": "Comcast",
+            "country": "USA",
+            "email": "tenant2user@example.com",
+            "fullName": "Fred the admin",
+            "gid": 0,
+            "localPasswd": "pa$$word",
+            "confirmLocalPasswd": "pa$$word",
+            "newUser": false,
+            "phoneNumber": "810-555-9876",
+            "postalCode": "55443",
+            "publicSshKey": "",
+            "role": "admin",
+            "stateOrProvince": "LA",
+            "tenant": "tenant2",
+            "uid": 0,
+            "username": "tenant2user"
+        },
+        {
             "addressLine1": "address of admin",
             "addressLine2": "",
             "city": "Anywhere",
@@ -6118,6 +6225,12 @@
         {
             "deliveryService": "ds1",
             "target": "ds2",
+            "value": 42,
+            "type": "STEERING_WEIGHT"
+        },
+        {
+            "deliveryService": "ds3",
+            "target": "ds4",
             "value": 42,
             "type": "STEERING_WEIGHT"
         }

@@ -17,16 +17,20 @@
 	margin: auto;
 }
 
-main > div {
-	width: 50%;
-	margin: auto;
-	padding-right: 10px;
-	position: sticky;
-	top: 0;
-	z-index: 2;
-	input {
-		width: 100%;
-		margin: 15px 0;
+main {
+	width: initial;
+
+	& > div {
+		width: 50%;
+		margin: auto;
+		padding-right: 10px;
+		position: sticky;
+		top: 0;
+		z-index: 2;
+		input {
+			width: 100%;
+			margin: 15px 0;
+		}
 	}
 }
 
@@ -70,10 +74,4 @@ main > div {
 	margin: auto;
 	top: auto;
 	position: static;
-}
-
-a#new {
-	position: fixed;
-	bottom: 5px;
-	right: 5px;
 }

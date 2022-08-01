@@ -21,7 +21,21 @@ limitations under the License.
 		[fuzzySearch]="fuzzySubject"
 		context="users"
 		[contextMenuItems]="contextMenuItems"
-		(contextMenuAction)="handleContextMenu($event)">
+	>
 	</tp-generic-table>
 	<div id="loading" *ngIf="loading"><tp-loading></tp-loading></div>
 </mat-card>
+
+<button *ngIf="canCreateUsers()" class="expandable-fab" type="button" (cdkMenuClosed)="toggleMenu('closed')" (cdkMenuOpened)="toggleMenu('opened')" mat-fab [cdkMenuTriggerFor]="menu" aria-label="Add a user" title="Add a user">
+	<mat-icon [ngClass]="{'open': menuIsOpen}">add</mat-icon>
+</button>
+<ng-template #menu>
+	<menu @fadeInOut @slideInOut cdkMenu>
+	  <a cdkMenuItem routerLink="new" color="accent" mat-mini-fab aria-label="Create user from scratch" title="Create user from scratch">
+		<mat-icon>person_add</mat-icon>
+	  </a>
+	  <button cdkMenuItem color="accent" mat-mini-fab color="accent" aria-label="Register a new user by email" title="Register a new user by email" (click)="register()">
+		<mat-icon>contact_mail</mat-icon>
+	  </button>
+	</menu>
+</ng-template>

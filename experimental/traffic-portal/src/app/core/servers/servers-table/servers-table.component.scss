@@ -18,24 +18,6 @@ ag-grid-angular {
 	height: 85vh;
 }
 
-mat-card {
-	width: fit-content;
-	margin: 1em auto;
-
-	div {
-		width: 50%;
-		margin: auto;
-		padding-right: 10px;
-		position: sticky;
-		top: 0;
-		z-index: 2;
-		input {
-			width: 100%;
-			margin: 0 0 15px;
-		}
-	}
-}
-
 @media(max-width: 1230px) {
 	mat-card > div {
 		width: 75%

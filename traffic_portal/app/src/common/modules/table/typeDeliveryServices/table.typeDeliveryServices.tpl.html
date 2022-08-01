@@ -68,11 +68,11 @@ under the License.
 <menu id="context-menu" class="dropdown-menu" ng-style="menuStyle" type="contextmenu" ng-show="showMenu">
     <ul>
         <li role="menuitem">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}?type={{deliveryService.type}}" target="_blank">Open {{ deliveryService.xmlId }} in New Tab</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}?dsType={{deliveryService.type}}" target="_blank">Open {{ deliveryService.xmlId }} in New Tab</a>
         </li>
         <hr class="divider"/>
         <li role="menuitem">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}?type={{deliveryService.type}}">Edit</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}?dsType={{deliveryService.type}}">Edit</a>
         </li>
         <li role="menuitem">
             <button type="button" ng-click="clone(deliveryService, $event)">Clone</button>
@@ -86,35 +86,35 @@ under the License.
         </li>
         <hr class="divider"/>
         <li role="menuitem">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}/ssl-keys?type={{deliveryService.type}}">Manage SSL Keys</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}/ssl-keys?dsType={{deliveryService.type}}">Manage SSL Keys</a>
         </li>
         <li role="menuitem">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}/url-sig-keys?type={{deliveryService.type}}">Manage URL Sig Keys</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}/url-sig-keys?dsType={{deliveryService.type}}">Manage URL Sig Keys</a>
         </li>
         <li role="menuitem">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}/uri-signing-keys?type={{deliveryService.type}}">Manage URI Signing Keys</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}/uri-signing-keys?dsType={{deliveryService.type}}">Manage URI Signing Keys</a>
         </li>
         <hr class="divider"/>
         <li role="menuitem">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}/jobs?type={{deliveryService.type}}">Manage Invalidation Requests</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}/jobs?dsType={{deliveryService.type}}">Manage Invalidation Requests</a>
         </li>
         <li role="menuitem" ng-if="deliveryService.type.indexOf('STEERING') == -1">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}/origins?type={{deliveryService.type}}">Manage Origins</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}/origins?dsType={{deliveryService.type}}">Manage Origins</a>
         </li>
         <li role="menuitem">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}/regexes?type={{deliveryService.type}}">Manage Regexes</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}/regexes?dsType={{deliveryService.type}}">Manage Regexes</a>
         </li>
         <li role="menuitem" ng-if="deliveryService.type.indexOf('DNS') != -1 || deliveryService.type.indexOf('HTTP') != -1">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}/required-server-capabilities?type={{deliveryService.type}}">Manage Required Server Capabilities</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}/required-server-capabilities?dsType={{deliveryService.type}}">Manage Required Server Capabilities</a>
         </li>
         <li role="menuitem">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}/servers?type={{deliveryService.type}}">Manage Servers</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}/servers?dsType={{deliveryService.type}}">Manage Servers</a>
         </li>
         <li role="menuitem" ng-if="deliveryService.type.indexOf('STEERING') != -1">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}/targets?type={{deliveryService.type}}">Manage Targets</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}/targets?dsType={{deliveryService.type}}">Manage Targets</a>
         </li>
         <li role="menuitem">
-            <a ng-href="#!/delivery-services/{{deliveryService.id}}/static-dns-entries?type={{deliveryService.type}}">Manage Static DNS Entries</a>
+            <a ng-href="#!/delivery-services/{{deliveryService.id}}/static-dns-entries?dsType={{deliveryService.type}}">Manage Static DNS Entries</a>
         </li>
     </ul>
 </menu>

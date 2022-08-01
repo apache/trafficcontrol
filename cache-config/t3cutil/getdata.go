@@ -54,6 +54,10 @@ type TCCfg struct {
 
 	// OldCfg is the previously fetched ConfigData, for 'config' requests. May be nil.
 	OldCfg *ConfigData
+
+	// T3CVersion is the version of the t3c app ecosystem
+	// This value will be the same for any t3c app.
+	T3CVersion string
 }
 
 func GetDataFuncs() map[string]func(TCCfg, io.Writer) error {
@@ -254,7 +258,7 @@ func SetUpdateStatusCompat(cfg TCCfg, serverName tc.CacheName, configApply, reva
 
 // WriteConfig writes the Traffic Ops data necessary to generate config to output.
 func WriteConfig(cfg TCCfg, output io.Writer) error {
-	cfgData, err := GetConfigData(cfg.TOClient, cfg.TODisableProxy, cfg.CacheHostName, cfg.RevalOnly, cfg.OldCfg)
+	cfgData, err := GetConfigData(cfg.TOClient, cfg.TODisableProxy, cfg.CacheHostName, cfg.RevalOnly, cfg.OldCfg, cfg.T3CVersion)
 	if err != nil {
 		return errors.New("getting config data: " + err.Error())
 	}

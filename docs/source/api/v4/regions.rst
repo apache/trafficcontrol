@@ -97,6 +97,8 @@ Response Structure
 		}
 	]}
 
+.. _to-api-regions-post:
+
 ``POST``
 ========
 Creates a new region

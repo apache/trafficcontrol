@@ -93,7 +93,7 @@ GO_REPO_NAME: Final = 'golang/go'
 GO_VERSION_URL: Final = 'https://golang.org/dl/?mode=json'
 """A URL from which information about Go releases is fetched."""
 
-RELEASE_PAGE_URL: Final = 'https://golang.org/doc/devel/release.html'
+RELEASE_PAGE_URL: Final = 'https://go.dev/doc/devel/release'
 """The URL of a webpage containing changelog notes about Go releases."""
 
 

@@ -39,6 +39,10 @@ import (
 const TrafficOpsProxyParameterName = `tm.rev_proxy.url`
 
 type ConfigData struct {
+	// Version is the version of the application which created the config data,
+	// primarily used for cache invalidation.
+	Version string `json:"version"`
+
 	// Servers must be all the servers from Traffic Ops. May include servers not on the current cdn.
 	Servers []atscfg.Server `json:"servers,omitempty"`
 
@@ -173,14 +177,26 @@ func MakeReqMetaData(respHdr http.Header) ReqMetaData {
 //
 // The cacheHostName is the hostname of the cache to get config generation data for.
 //
+// The oldCfg is previous config data which was cached. May be nil, if the caller has no previous data.
+// If it exists and is usable, If-Modified-Since requests will be made and the cache re-used where possible.
+//
+// The version is a unique version of the application, which should change with any compatibility changes.
+// Old config with a different version than the current won't be used (though in the future, smarter compatibility could be added).
+//
 // The revalOnly arg is whether to only get data necessary to revalidate, versus all data necessary to generate cache config.
-func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName string, revalOnly bool, oldCfg *ConfigData) (*ConfigData, error) {
+func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName string, revalOnly bool, oldCfg *ConfigData, version string) (*ConfigData, error) {
 	start := time.Now()
 	defer func() { log.Infof("GetTOData took %v\n", time.Since(start)) }()
 
 	toIPs := &sync.Map{} // each Traffic Ops request could get a different IP, so track them all
 	toData := &ConfigData{}
+	toData.Version = version
 	toData.MetaData.CacheHostName = cacheHostName
+
+	if oldCfg != nil && oldCfg.Version != toData.Version {
+		log.Infof("old config version '%s' doesn't match current version '%s', old config will not be used!\n", oldCfg.Version, toData.Version)
+		oldCfg = nil
+	}
 
 	serverProfilesParams := &sync.Map{}         // map[atscfg.ProfileName][]tc.Parameter
 	serverProfilesParamsMetaData := &sync.Map{} // map[atscfg.ProfileName]ReqMetaData
@@ -794,10 +810,12 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 		return true
 	})
 
-	err := error(nil)
-	toData.ServerParams, err = atscfg.GetServerParameters(toData.Server, combineParams(toData.ServerProfilesParams))
-	if err != nil {
-		errs = append(errs, err)
+	if len(errs) == 0 && toData.Server != nil {
+		err := error(nil)
+		toData.ServerParams, err = atscfg.GetServerParameters(toData.Server, combineParams(toData.ServerProfilesParams))
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
 
 	return toData, util.JoinErrs(errs)
@@ -835,7 +853,10 @@ func runParallel(fs []func() error) []error {
 		go func() { doneChan <- f() }()
 	}
 	for i := 0; i < len(fs); i++ {
-		errs = append(errs, <-doneChan)
+		err := <-doneChan
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
 	return errs
 }
