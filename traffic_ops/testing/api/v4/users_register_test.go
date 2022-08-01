@@ -88,6 +88,6 @@ func validateDeletion(email string) utils.CkReqFunc {
 		defer db.Close()
 		q := `DELETE FROM tm_user WHERE email = '` + email + `'`
 		err = execSQL(db, q)
-		assert.NoError(t, err, "Cannot execute SQL to delete registered users: %s; SQL is %s", err.Error(), q)
+		assert.NoError(t, err, "Cannot execute SQL to delete registered users: %s; SQL is %s", err, q)
 	}
 }
