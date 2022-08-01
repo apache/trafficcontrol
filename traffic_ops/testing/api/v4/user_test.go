@@ -367,9 +367,9 @@ func ForceDeleteTestUsersByUsernames(t *testing.T, usernames []string) {
 	// there is a constraint that prevents users from being deleted when they have a log
 	q := `DELETE FROM log WHERE NOT tm_user = (SELECT id FROM tm_user WHERE username = 'admin')`
 	err = execSQL(db, q)
-	assert.RequireNoError(t, err, "Cannot execute SQL: %s; SQL is %s", err.Error(), q)
+	assert.RequireNoError(t, err, "Cannot execute SQL: %s; SQL is %s", err, q)
 
 	q = `DELETE FROM tm_user WHERE username IN (` + strings.Join(usernames, ",") + `)`
 	err = execSQL(db, q)
-	assert.NoError(t, err, "Cannot execute SQL: %s; SQL is %s", err.Error(), q)
+	assert.NoError(t, err, "Cannot execute SQL: %s; SQL is %s", err, q)
 }
