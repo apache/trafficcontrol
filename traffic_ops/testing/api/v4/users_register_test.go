@@ -48,7 +48,7 @@ func TestUsersRegister(t *testing.T) {
 							"tenantId":           GetTenantID(t, "root")(),
 							"username":           "opsuser",
 						},
-						Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDeletion("ops-updated@example.com")),
+						Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDeletion("opsupdated@example.com")),
 					},
 				},
 			}
