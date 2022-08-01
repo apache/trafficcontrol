@@ -86,7 +86,7 @@ func validateDeletion(email string) utils.CkReqFunc {
 		db, err := OpenConnection()
 		assert.RequireNoError(t, err, "Cannot open db")
 		defer db.Close()
-		q := `DELETE FROM tm_user WHERE email = ` + email + ``
+		q := `DELETE FROM tm_user WHERE email = '` + email + `'`
 		err = execSQL(db, q)
 		assert.NoError(t, err, "Cannot execute SQL to delete registered users: %s; SQL is %s", err.Error(), q)
 	}
