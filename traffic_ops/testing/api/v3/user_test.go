@@ -290,9 +290,9 @@ func validateUsersFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 func validateUsersUpdateCreateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Users response to not be nil.")
-		assert.RequireNotEqual(t, resp.(tc.UserV4), tc.UserV4{}, "Expected a non empty response.")
-		userResp := resp.(tc.UserV4)
-		users := []tc.UserV4{userResp}
+		assert.RequireNotEqual(t, resp.(tc.User), tc.User{}, "Expected a non empty response.")
+		userResp := resp.(tc.User)
+		users := []tc.User{userResp}
 		validateUsersFields(expectedResp)(t, toclientlib.ReqInf{}, users, tc.Alerts{}, nil)
 	}
 }
