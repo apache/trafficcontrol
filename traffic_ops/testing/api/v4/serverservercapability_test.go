@@ -38,6 +38,7 @@ func TestServerServerCapabilities(t *testing.T) {
 		GetDeliveryServiceServersWithCapabilities(t)
 		UpdateTestServerServerCapabilities(t)
 		GetTestPaginationSupportSsc(t)
+		AssignMultipleTestServerCapabilities(t)
 		DeleteTestServerServerCapabilityWithInvalidData(t)
 		DeleteTestServerServerCapabilitiesForTopologiesValidation(t)
 	})
@@ -307,6 +308,45 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	r, _, err := TOSession.UpdateServerCapability(newSCName, resp.Response[0], client.RequestOptions{})
 	if err != nil {
 		t.Errorf("cannot update Server Capability: %v - alerts: %+v", err, r.Alerts)
+	}
+}
+
+func AssignMultipleTestServerCapabilities(t *testing.T) {
+	//Get list of server capabilities
+	resp, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) == 0 {
+		t.Fatal("no server capability in response, quitting")
+	}
+
+	originalName := resp.Response[0].Name
+	var multipleSCs []string
+	multipleSCs = append(multipleSCs, resp.Response[1].Name, resp.Response[2].Name)
+
+	// Get all servers related to original sever capability name
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("serverCapability", originalName)
+	servOrigResp, _, err := TOSession.GetServerServerCapabilities(opts)
+	if err != nil {
+		t.Fatalf("cannot get Capability/server associations for Capability '%s': %v alerts: %+v", originalName, err, servOrigResp.Alerts)
+	}
+	if len(servOrigResp.Response) == 0 {
+		t.Fatalf("no servers associated with server capability name: %v", originalName)
+	}
+	origServerID := *servOrigResp.Response[3].ServerID
+
+	msc := tc.MultipleServerCapabilities{
+		ServerCapability: multipleSCs,
+		ServerID:         &origServerID,
+	}
+	_, reqInf, err := TOSession.AssignMultipleServerCapability(msc, client.NewRequestOptions(), origServerID)
+	if err != nil {
+		t.Fatalf("unable to assign update multiple server capabilities to server: %d, error: %v", origServerID, err.Error())
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Fatalf("Expected:%v, got:%v", http.StatusOK, reqInf.StatusCode)
 	}
 }
 

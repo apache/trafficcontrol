@@ -16,6 +16,7 @@ package client
 */
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 
@@ -23,9 +24,11 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-// apiServerServerCapabilities is the API version-relative path to the
-// /server_server_capabilities API endpoint.
+// apiServerServerCapabilities is the API version-relative path to the /server_server_capabilities API endpoint.
 const apiServerServerCapabilities = "/server_server_capabilities"
+
+// apiMultipleServerCapabilities is the API version-relative path to the /multiple_server_capabilities API endpoint.
+const apiMultipleServerCapabilities = "/multiple_server_capabilities"
 
 // CreateServerServerCapability assigns a Server Capability to a Server.
 func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
@@ -52,4 +55,12 @@ func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerSe
 	var resp tc.ServerServerCapabilitiesResponse
 	reqInf, err := to.get(apiServerServerCapabilities, opts, &resp)
 	return resp, reqInf, err
+}
+
+// AssignMultipleServerCapability assign multiple server capabilities to a server
+func (to *Session) AssignMultipleServerCapability(msc tc.MultipleServerCapabilities, opts RequestOptions, id int) (tc.Alerts, toclientlib.ReqInf, error) {
+	path := fmt.Sprintf("%s/%d", apiMultipleServerCapabilities, id)
+	var alerts tc.Alerts
+	reqInf, err := to.put(path, opts, msc, &alerts)
+	return alerts, reqInf, err
 }
