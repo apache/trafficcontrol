@@ -15,10 +15,9 @@ package v3
 */
 
 import (
-	"bytes"
-	"fmt"
+	"encoding/json"
 	"net/http"
-	"net/mail"
+	"net/url"
 	"sort"
 	"strings"
 	"testing"
@@ -26,466 +25,315 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestUsers(t *testing.T) {
 	WithObjs(t, []TCObj{Tenants, Parameters, Users}, func() {
-		GetTestUsersIMS(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		SortTestUsers(t)
-		UpdateTestUsers(t)
-		GetTestUsersIMSAfterChange(t, header)
-		RolenameCapitalizationTest(t)
-		OpsUpdateAdminTest(t)
-		UserSelfUpdateTest(t)
-		UserUpdateOwnRoleTest(t)
-		GetTestUsers(t)
-		GetTestUserCurrent(t)
-		UserTenancyTest(t)
-		if includeSystemTests {
-			// UserRegistrationTest deletes test users before registering new users, so it must come after the other user tests.
-			UserRegistrationTest(t)
+
+		opsUserSession := utils.CreateV3Session(t, Config.TrafficOps.URL, "opsuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
+		tenant4UserSession := utils.CreateV3Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateUsersSort()),
+				},
+				"ADMIN can view CHILD TENANT": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"tenant": {"tenant4"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateUsersFields(map[string]interface{}{"Tenant": "tenant4"})),
+				},
+				"EMPTY RESPONSE when CHILD TENANT reads PARENT TENANT": {
+					ClientSession: tenant4UserSession,
+					RequestParams: url.Values{"tenant": {"tenant3"}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+			},
+			"POST": {
+				"FORBIDDEN when CHILD TENANT creates USER with PARENT TENANCY": {
+					ClientSession: tenant4UserSession,
+					RequestBody: map[string]interface{}{
+						"email":              "outsidetenancy@example.com",
+						"fullName":           "Outside Tenancy",
+						"localPasswd":        "pa$$word",
+						"confirmLocalPasswd": "pa$$word",
+						"role":               "operations",
+						"tenantId":           GetTenantID(t, "tenant3")(),
+						"username":           "outsideTenantUser",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetUserID(t, "steering"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"addressLine1":       "updated line 1",
+						"addressLine2":       "updated line 2",
+						"city":               "updated city name",
+						"company":            "new company",
+						"country":            "US",
+						"email":              "steeringupdated@example.com",
+						"fullName":           "Steering User Updated",
+						"localPasswd":        "pa$$word",
+						"confirmLocalPasswd": "pa$$word",
+						"newUser":            false,
+						"role":               "steering",
+						"tenant":             "root",
+						"tenantId":           GetTenantID(t, "root")(),
+						"username":           "steering",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateUsersUpdateCreateFields(map[string]interface{}{"AddressLine1": "updated line 1",
+							"AddressLine2": "updated line 2", "City": "updated city name", "Company": "new company",
+							"Country": "US", "Email": "steeringupdated@example.com", "FullName": "Steering User Updated"})),
+				},
+				"OK when UPDATING SELF": {
+					EndpointId:    GetUserID(t, "opsuser"),
+					ClientSession: opsUserSession,
+					RequestBody: map[string]interface{}{
+						"addressLine1":       "address of ops",
+						"addressLine2":       "place",
+						"city":               "somewhere",
+						"company":            "else",
+						"country":            "UK",
+						"email":              "ops-updated@example.com",
+						"fullName":           "Operations User Updated",
+						"localPasswd":        "pa$$word",
+						"confirmLocalPasswd": "pa$$word",
+						"role":               "operations",
+						"tenant":             "root",
+						"tenantId":           GetTenantID(t, "root")(),
+						"username":           "opsuser",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateUsersUpdateCreateFields(map[string]interface{}{"Email": "ops-updated@example.com", "FullName": "Operations User Updated"})),
+				},
+				"NOT FOUND when UPDATING SELF with ROLE that DOESNT EXIST": {
+					EndpointId:    GetUserID(t, "opsuser"),
+					ClientSession: opsUserSession,
+					RequestBody: map[string]interface{}{
+						"addressLine1":       "address of ops",
+						"addressLine2":       "place",
+						"city":               "somewhere",
+						"company":            "else",
+						"country":            "UK",
+						"email":              "ops-updated@example.com",
+						"fullName":           "Operations User Updated",
+						"localPasswd":        "pa$$word",
+						"confirmLocalPasswd": "pa$$word",
+						"role":               "operations_updated",
+						"tenant":             "root",
+						"tenantId":           GetTenantID(t, "root")(),
+						"username":           "opsuser",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"FORBIDDEN when OPERATIONS USER updates ADMIN USER": {
+					EndpointId:    GetUserID(t, "admin"),
+					ClientSession: opsUserSession,
+					RequestBody: map[string]interface{}{
+						"email":              "oops@ops.net",
+						"fullName":           "oops",
+						"localPasswd":        "pa$$word",
+						"confirmLocalPasswd": "pa$$word",
+						"role":               "admin",
+						"tenant":             "root",
+						"tenantId":           GetTenantID(t, "root")(),
+						"username":           "admin",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+				"FORBIDDEN when CHILD TENANT USER updates PARENT TENANT USER": {
+					EndpointId:    GetUserID(t, "tenant3user"),
+					ClientSession: tenant4UserSession,
+					RequestBody: map[string]interface{}{
+						"email":              "tenant3user@example.com",
+						"fullName":           "Parent tenant test",
+						"localPasswd":        "pa$$word",
+						"confirmLocalPasswd": "pa$$word",
+						"role":               "admin",
+						"tenant":             "tenant2",
+						"tenantId":           GetTenantID(t, "tenant2")(),
+						"username":           "tenant3user",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					user := tc.User{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &user)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetUsersWithHdr(testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, tc.Alerts{}, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.CreateUser(&user)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.UpdateUserByID(testCase.EndpointId(), &user)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					}
+				}
+			})
 		}
 	})
 }
 
-func GetTestUsersIMSAfterChange(t *testing.T, header http.Header) {
-	_, reqInf, err := TOSession.GetUsersWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	if reqInf.StatusCode != http.StatusOK {
-		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	_, reqInf, err = TOSession.GetUsersWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+func validateUsersFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Users response to not be nil.")
+		userResp := resp.([]tc.User)
+		for field, expected := range expectedResp {
+			for _, user := range userResp {
+				switch field {
+				case "AddressLine1":
+					assert.RequireNotNil(t, user.AddressLine1, "Expected AddressLine1 to not be nil.")
+					assert.Equal(t, expected, *user.AddressLine1, "Expected AddressLine1 to be %v, but got %s", expected, *user.AddressLine1)
+				case "AddressLine2":
+					assert.RequireNotNil(t, user.AddressLine2, "Expected AddressLine2 to not be nil.")
+					assert.Equal(t, expected, *user.AddressLine2, "Expected AddressLine2 to be %v, but got %s", expected, *user.AddressLine2)
+				case "City":
+					assert.RequireNotNil(t, user.City, "Expected City to not be nil.")
+					assert.Equal(t, expected, *user.City, "Expected City to be %v, but got %s", expected, *user.City)
+				case "Company":
+					assert.RequireNotNil(t, user.Company, "Expected Company to not be nil.")
+					assert.Equal(t, expected, *user.Company, "Expected Company to be %v, but got %s", expected, *user.Company)
+				case "Country":
+					assert.RequireNotNil(t, user.Country, "Expected Country to not be nil.")
+					assert.Equal(t, expected, *user.Country, "Expected Country to be %v, but got %s", expected, *user.Country)
+				case "Email":
+					assert.RequireNotNil(t, user.Email, "Expected Email to not be nil.")
+					assert.Equal(t, expected, *user.Email, "Expected Email to be %v, but got %s", expected, *user.Email)
+				case "FullName":
+					assert.RequireNotNil(t, user.FullName, "Expected FullName to not be nil.")
+					assert.Equal(t, expected, *user.FullName, "Expected FullName to be %v, but got %s", expected, *user.FullName)
+				case "ID":
+					assert.RequireNotNil(t, user.ID, "Expected ID to not be nil.")
+					assert.Equal(t, expected, *user.ID, "Expected ID to be %v, but got %d", expected, user.ID)
+				case "PhoneNumber":
+					assert.RequireNotNil(t, user.PhoneNumber, "Expected PhoneNumber to not be nil.")
+					assert.Equal(t, expected, *user.PhoneNumber, "Expected PhoneNumber to be %v, but got %s", expected, *user.PhoneNumber)
+				case "PostalCode":
+					assert.RequireNotNil(t, user.PostalCode, "Expected PostalCode to not be nil.")
+					assert.Equal(t, expected, *user.PostalCode, "Expected PostalCode to be %v, but got %s", expected, *user.PostalCode)
+				case "RegistrationSent":
+					assert.RequireNotNil(t, user.RegistrationSent, "Expected RegistrationSent to not be nil.")
+					assert.Equal(t, expected, *user.RegistrationSent, "Expected RegistrationSent to be %v, but got %v", expected, *user.RegistrationSent)
+				case "Role":
+					assert.RequireNotNil(t, user.Role, "Expected Role to not be nil.")
+					assert.Equal(t, expected, *user.Role, "Expected Role to be %v, but got %s", expected, *user.Role)
+				case "StateOrProvince":
+					assert.RequireNotNil(t, user.StateOrProvince, "Expected StateOrProvince to not be nil.")
+					assert.Equal(t, expected, *user.StateOrProvince, "Expected StateOrProvince to be %v, but got %s", expected, *user.StateOrProvince)
+				case "Tenant":
+					assert.RequireNotNil(t, user.Tenant, "Expected Tenant to not be nil.")
+					assert.Equal(t, expected, *user.Tenant, "Expected Tenant to be %v, but got %s", expected, *user.Tenant)
+				case "TenantID":
+					assert.RequireNotNil(t, user.TenantID, "Expected Tenant to not be nil.")
+					assert.Equal(t, expected, user.TenantID, "Expected TenantID to be %v, but got %d", expected, user.TenantID)
+				case "Username":
+					assert.RequireNotNil(t, user.Username, "Expected Username to not be nil.")
+					assert.Equal(t, expected, *user.Username, "Expected Username to be %v, but got %s", expected, *user.Username)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
+		}
 	}
 }
 
-const SessionUserName = "admin" // TODO make dynamic?
-
-func GetTestUsersIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetUsersWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+func validateUsersUpdateCreateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Users response to not be nil.")
+		assert.RequireNotEqual(t, resp.(tc.UserV4), tc.UserV4{}, "Expected a non empty response.")
+		userResp := resp.(tc.UserV4)
+		users := []tc.UserV4{userResp}
+		validateUsersFields(expectedResp)(t, toclientlib.ReqInf{}, users, tc.Alerts{}, nil)
 	}
-	if reqInf.StatusCode != http.StatusNotModified {
-		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+}
+
+func validateUsersSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Users response to not be nil.")
+		var usernames []string
+		usersResp := resp.([]tc.UserV4)
+		for _, user := range usersResp {
+			usernames = append(usernames, user.Username)
+		}
+		assert.Equal(t, true, sort.StringsAreSorted(usernames), "List is not sorted by their usernames: %v", usernames)
+	}
+}
+
+func GetUserID(t *testing.T, username string) func() int {
+	return func() int {
+		users, _, err := TOSession.GetUserByUsernameWithHdr(username, nil)
+		assert.RequireNoError(t, err, "Get Users Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(users), "Expected response object length 1, but got %d", len(users))
+		assert.RequireNotNil(t, users[0].ID, "Expected ID to not be nil.")
+		return *users[0].ID
 	}
 }
 
 func CreateTestUsers(t *testing.T) {
 	for _, user := range testData.Users {
-
 		resp, _, err := TOSession.CreateUser(&user)
-		if err != nil {
-			t.Errorf("could not CREATE user: %v", err)
-		}
-		t.Log("Response: ", resp.Alerts)
-	}
-}
-
-func RolenameCapitalizationTest(t *testing.T) {
-
-	roles, _, _, err := TOSession.GetRoles()
-	if err != nil {
-		t.Errorf("could not get roles: %v", err)
-	}
-	if len(roles) == 0 {
-		t.Fatal("there should be at least one role to test the user")
-	}
-
-	tenants, _, err := TOSession.Tenants()
-	if err != nil {
-		t.Errorf("could not get tenants: %v", err)
-	}
-	if len(tenants) == 0 {
-		t.Fatal("there should be at least one tenant to test the user")
-	}
-
-	// this user never does anything, so the role and tenant aren't important
-	blob := fmt.Sprintf(`
-	{
-		"username": "test_user",
-		"email": "cooldude6@example.com",
-		"fullName": "full name is required",
-		"localPasswd": "better_twelve",
-		"confirmLocalPasswd": "better_twelve",
-		"role": %d,
-		"tenantId": %d
-	}`, *roles[0].ID, tenants[0].ID)
-
-	reader := strings.NewReader(blob)
-	request, err := http.NewRequest("POST", fmt.Sprintf("%v%s/users", TOSession.URL, TestAPIBase), reader)
-	if err != nil {
-		t.Errorf("could not make new request: %v", err)
-	}
-	resp, err := TOSession.Client.Do(request)
-	if err != nil {
-		t.Errorf("could not do request: %v", err)
-	}
-
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	strResp := buf.String()
-	if !strings.Contains(strResp, "roleName") {
-		t.Error("incorrect json was returned for POST")
-	}
-
-	request, err = http.NewRequest("GET", fmt.Sprintf("%v%s/users?username=test_user", TOSession.URL, TestAPIBase), nil)
-	resp, err = TOSession.Client.Do(request)
-
-	buf = new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	strResp = buf.String()
-	if !strings.Contains(strResp, "rolename") {
-		t.Error("incorrect json was returned for GET")
-	}
-
-}
-
-func OpsUpdateAdminTest(t *testing.T) {
-	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v3-client-tests/opsuser", true, toReqTimeout)
-	if err != nil {
-		t.Fatalf("failed to get log in with opsuser: %v", err.Error())
-	}
-
-	resp, _, err := TOSession.GetUserByUsername("admin")
-	if err != nil {
-		t.Errorf("cannot GET user by name: 'admin', %v", err)
-	}
-	user := resp[0]
-
-	fullName := "oops"
-	email := "oops@ops.net"
-	user.FullName = &fullName
-	user.Email = &email
-
-	_, _, err = opsTOClient.UpdateUserByID(*user.ID, &user)
-	if err == nil {
-		t.Error("ops user incorrectly updated an admin")
-	}
-}
-
-func SortTestUsers(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetUsersWithHdr(header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, *resp[i].Username)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func UserRegistrationTest(t *testing.T) {
-	ForceDeleteTestUsers(t)
-	var emails []string
-	for _, user := range testData.Users {
-		tenant, _, err := TOSession.TenantByName(*user.Tenant)
-		if err != nil {
-			t.Fatalf("could not get tenant %v: %v", *user.Tenant, err)
-		}
-		resp, _, err := TOSession.RegisterNewUser(uint(tenant.ID), uint(*user.Role), rfc.EmailAddress{Address: mail.Address{Address: *user.Email}})
-		if err != nil {
-			t.Fatalf("could not register user: %v", err)
-		}
-		t.Log("Response: ", resp.Alerts)
-		emails = append(emails, fmt.Sprintf(`'%v'`, *user.Email))
-	}
-
-	db, err := OpenConnection()
-	if err != nil {
-		t.Error("cannot open db")
-	}
-	defer db.Close()
-	q := `DELETE FROM tm_user WHERE email IN (` + strings.Join(emails, ",") + `)`
-	if err := execSQL(db, q); err != nil {
-		t.Errorf("cannot execute SQL to delete registered users: %s; SQL is %s", err.Error(), q)
-	}
-}
-
-func UserSelfUpdateTest(t *testing.T) {
-	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v3-client-tests/opsuser", true, toReqTimeout)
-	if err != nil {
-		t.Fatalf("failed to get log in with opsuser: %v", err.Error())
-	}
-
-	resp, _, err := TOSession.GetUserByUsername("opsuser")
-	if err != nil {
-		t.Fatalf("cannot GET user by name: 'opsuser', %v\n", err)
-	}
-	if len(resp) < 1 {
-		t.Fatalf("no users returned when requesting user 'opsuser'")
-	}
-	user := resp[0]
-
-	if user.ID == nil {
-		t.Fatalf("user 'opsuser' has a null or missing ID - cannot proceed")
-	}
-
-	user.FullName = util.StrPtr("Oops-man")
-	user.Email = util.StrPtr("operator@not.example.com")
-
-	var updateResp *tc.UpdateUserResponse
-	updateResp, _, err = opsTOClient.UpdateUserByID(*user.ID, &user)
-	if err != nil {
-		t.Fatalf("cannot UPDATE user by id: %v - %v\n", err, updateResp)
-	}
-
-	// Make sure it got updated
-	resp2, _, err := TOSession.GetUserByID(*user.ID)
-	if err != nil {
-		t.Fatalf("cannot GET user by id: '%d', %v\n", *user.ID, err)
-	}
-	if len(resp2) < 1 {
-		t.Fatalf("no results returned when requesting user #%d", *user.ID)
-	}
-	updatedUser := resp2[0]
-
-	if updatedUser.FullName == nil {
-		t.Errorf("user was not correctly updated, FullName is null or missing")
-	} else if *updatedUser.FullName != "Oops-man" {
-		t.Errorf("results do not match actual: '%s', expected: 'Oops-man'\n", *updatedUser.FullName)
-	}
-
-	if updatedUser.Email == nil {
-		t.Errorf("user was not correctly updated, Email is null or missing")
-	} else if *updatedUser.Email != "operator@not.example.com" {
-		t.Errorf("results do not match actual: '%s', expected: 'operator@not.example.com'\n", *updatedUser.Email)
-	}
-
-	// Same thing using /user/current
-	user.FullName = util.StrPtr("ops-man")
-	user.Email = util.StrPtr("operator@example.com")
-	updateResp, _, err = opsTOClient.UpdateCurrentUser(user)
-	if err != nil {
-		t.Fatalf("error updating current user: %v - %v", err, updateResp)
-	}
-
-	// Make sure it got updated
-	resp2, _, err = TOSession.GetUserByID(*user.ID)
-	if err != nil {
-		t.Fatalf("error getting user #%d: %v", *user.ID, err)
-	}
-
-	if len(resp2) < 1 {
-		t.Fatalf("no user returned when requesting user #%d", *user.ID)
-	}
-
-	if resp2[0].FullName == nil {
-		t.Errorf("FullName missing or null after update")
-	} else if *resp2[0].FullName != "ops-man" {
-		t.Errorf("Expected FullName to be 'ops-man', but it was '%s'", *resp2[0].FullName)
-	}
-
-	if resp2[0].Email == nil {
-		t.Errorf("Email missing or null after update")
-	} else if *resp2[0].Email != "operator@example.com" {
-		t.Errorf("Expected Email to be restored to 'operator@example.com', but it was '%s'", *resp2[0].Email)
-	}
-
-	// now test using an invalid email address
-	currentEmail := *user.Email
-	user.Email = new(string)
-	updateResp, _, err = TOSession.UpdateCurrentUser(user)
-	if err == nil {
-		t.Fatal("error was expected updating user with email: '' - got none")
-	}
-
-	// Ensure it wasn't actually updated
-	resp2, _, err = TOSession.GetUserByID(*user.ID)
-	if err != nil {
-		t.Fatalf("error getting user #%d: %v", *user.ID, err)
-	}
-
-	if len(resp2) < 1 {
-		t.Fatalf("no user returned when requesting user #%d", *user.ID)
-	}
-
-	if resp2[0].Email == nil {
-		t.Errorf("Email missing or null after update")
-	} else if *resp2[0].Email != currentEmail {
-		t.Errorf("Expected Email to still be '%s', but it was '%s'", currentEmail, *resp2[0].Email)
-	}
-}
-
-func UserUpdateOwnRoleTest(t *testing.T) {
-	resp, _, err := TOSession.GetUserByUsername(SessionUserName)
-	if err != nil {
-		t.Errorf("cannot GET user by name: '%s', %v", SessionUserName, err)
-	}
-	user := resp[0]
-
-	*user.Role = *user.Role + 1
-	_, _, err = TOSession.UpdateUserByID(*user.ID, &user)
-	if err == nil {
-		t.Error("user incorrectly updated their role")
-	}
-}
-
-func UpdateTestUsers(t *testing.T) {
-	firstUsername := *testData.Users[0].Username
-	resp, _, err := TOSession.GetUserByUsername(firstUsername)
-	if err != nil {
-		t.Errorf("cannot GET user by name: '%s', %v", firstUsername, err)
-	}
-	user := resp[0]
-	newCity := "kidz kable kown"
-	*user.City = newCity
-
-	var updateResp *tc.UpdateUserResponse
-	updateResp, _, err = TOSession.UpdateUserByID(*user.ID, &user)
-	if err != nil {
-		t.Errorf("cannot UPDATE user by id: %v - %v", err, updateResp.Alerts)
-	}
-
-	// Make sure it got updated
-	resp2, _, err := TOSession.GetUserByID(*user.ID)
-	if err != nil {
-		t.Errorf("cannot GET user by id: '%d', %v", *user.ID, err)
-	}
-	updatedUser := resp2[0]
-	if *updatedUser.City != newCity {
-		t.Errorf("results do not match actual: %s, expected: %s", *updatedUser.City, newCity)
-	}
-	if resp[0].RegistrationSent != resp2[0].RegistrationSent {
-		t.Errorf("registration_sent value shouldn't have been updated, expectd: %s, got: %s", resp[0].RegistrationSent, resp2[0].RegistrationSent)
-	}
-
-}
-
-func GetTestUsers(t *testing.T) {
-	_, _, err := TOSession.GetUsers()
-	if err != nil {
-		t.Errorf("cannot GET users: %v", err)
-	}
-}
-
-func GetTestUserCurrent(t *testing.T) {
-	user, _, err := TOSession.GetUserCurrent()
-	if err != nil {
-		t.Errorf("cannot GET current user: %v", err)
-	}
-	if user.UserName == nil {
-		t.Errorf("current user expected: %v actual: %v", SessionUserName, nil)
-	}
-	if *user.UserName != SessionUserName {
-		t.Errorf("current user expected: %v actual: %v", SessionUserName, *user.UserName)
-	}
-}
-
-func UserTenancyTest(t *testing.T) {
-	users, _, err := TOSession.GetUsers()
-	if err != nil {
-		t.Errorf("cannot GET users: %v", err)
-	}
-	tenant3Found := false
-	tenant4Found := false
-	tenant3Username := "tenant3user"
-	tenant4Username := "tenant4user"
-	tenant3User := tc.User{}
-
-	// assert admin user can view tenant3user and tenant4user
-	for _, user := range users {
-		if *user.Username == tenant3Username {
-			tenant3Found = true
-			tenant3User = user
-		} else if *user.Username == tenant4Username {
-			tenant4Found = true
-		}
-		if tenant3Found && tenant4Found {
-			break
-		}
-	}
-	if !tenant3Found || !tenant4Found {
-		t.Error("expected admin to be able to view tenants: tenant3 and tenant4")
-	}
-
-	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v3-client-tests/tenant4user", true, toReqTimeout)
-	if err != nil {
-		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
-	}
-
-	usersReadableByTenant4, _, err := tenant4TOClient.GetUsers()
-	if err != nil {
-		t.Error("tenant4user cannot GET users")
-	}
-
-	tenant4canReadItself := false
-	for _, user := range usersReadableByTenant4 {
-		// assert that tenant4user cannot read tenant3user
-		if *user.Username == tenant3Username {
-			t.Error("expected tenant4user to be unable to read tenant3user")
-		}
-		// assert that tenant4user can read itself
-		if *user.Username == tenant4Username {
-			tenant4canReadItself = true
-		}
-	}
-	if !tenant4canReadItself {
-		t.Error("expected tenant4user to be able to read itself")
-	}
-
-	// assert that tenant4user cannot update tenant3user
-	if _, _, err = tenant4TOClient.UpdateUserByID(*tenant3User.ID, &tenant3User); err == nil {
-		t.Error("expected tenant4user to be unable to update tenant4user")
-	}
-
-	// assert that tenant4user cannot create a user outside of its tenant
-	rootTenant, _, err := TOSession.TenantByName("root")
-	if err != nil {
-		t.Error("expected to be able to GET the root tenant")
-	}
-	newUser := testData.Users[0]
-	newUser.Email = util.StrPtr("testusertenancy@example.com")
-	newUser.Username = util.StrPtr("testusertenancy")
-	newUser.TenantID = &rootTenant.ID
-	if _, _, err = tenant4TOClient.CreateUser(&newUser); err == nil {
-		t.Error("expected tenant4user to be unable to create a new user in the root tenant")
+		assert.RequireNoError(t, err, "Could not create user: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
 // ForceDeleteTestUsers forcibly deletes the users from the db.
+//  NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
+//  Connects directly to the DB to remove users rather than going through the client.
+//  This is required here because the DeleteUser action does not really delete users,  but disables them.
 func ForceDeleteTestUsers(t *testing.T) {
 
-	// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
-	//  Connects directly to the DB to remove users rather than going thru the client.
-	//  This is required here because the DeleteUser action does not really delete users,  but disables them.
 	db, err := OpenConnection()
-	if err != nil {
-		t.Error("cannot open db")
-	}
+	assert.RequireNoError(t, err, "Cannot open db")
 	defer db.Close()
 
 	var usernames []string
@@ -496,41 +344,9 @@ func ForceDeleteTestUsers(t *testing.T) {
 	// there is a constraint that prevents users from being deleted when they have a log
 	q := `DELETE FROM log WHERE NOT tm_user = (SELECT id FROM tm_user WHERE username = 'admin')`
 	err = execSQL(db, q)
-	if err != nil {
-		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
-	}
+	assert.RequireNoError(t, err, "Cannot execute SQL: %v; SQL is %s", err, q)
 
 	q = `DELETE FROM tm_user WHERE username IN (` + strings.Join(usernames, ",") + `)`
 	err = execSQL(db, q)
-	if err != nil {
-		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
-	}
-}
-
-func DeleteTestUsers(t *testing.T) {
-	for _, user := range testData.Users {
-
-		resp, _, err := TOSession.GetUserByUsername(*user.Username)
-		if err != nil {
-			t.Errorf("cannot GET user by name: %v - %v", *user.Username, err)
-		}
-
-		if resp != nil {
-			respUser := resp[0]
-
-			_, _, err := TOSession.DeleteUserByID(*respUser.ID)
-			if err != nil {
-				t.Errorf("cannot DELETE user by name: '%s' %v", *respUser.Username, err)
-			}
-
-			// Make sure it got deleted
-			resp, _, err := TOSession.GetUserByUsername(*user.Username)
-			if err != nil {
-				t.Errorf("error deleting user by name: %s", err.Error())
-			}
-			if len(resp) > 0 {
-				t.Errorf("expected user: %s to be deleted", *user.Username)
-			}
-		}
-	}
+	assert.NoError(t, err, "Cannot execute SQL: %v; SQL is %s", err, q)
 }
