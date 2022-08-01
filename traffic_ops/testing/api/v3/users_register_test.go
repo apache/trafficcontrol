@@ -43,7 +43,7 @@ func TestUsersRegister(t *testing.T) {
 							"fullName":           "Operations User Updated",
 							"localPasswd":        "pa$$word",
 							"confirmLocalPasswd": "pa$$word",
-							"role":               "operations",
+							"role":               3,
 							"tenant":             "root",
 							"tenantId":           GetTenantID(t, "root")(),
 							"username":           "opsuser",

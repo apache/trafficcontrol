@@ -17,7 +17,6 @@ package v3
 import (
 	"encoding/json"
 	"net/http"
-	"net/url"
 	"sort"
 	"strings"
 	"testing"
@@ -57,16 +56,15 @@ func TestUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateUsersSort()),
 				},
-				"ADMIN can view CHILD TENANT": {
+				"ADMIN can view CHILD TENANTS": {
 					ClientSession: TOSession,
-					RequestParams: url.Values{"tenant": {"tenant4"}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateUsersFields(map[string]interface{}{"Tenant": "tenant4"})),
+						validateTenants(map[string]bool{"tenant3": true, "tenant4": true})),
 				},
-				"EMPTY RESPONSE when CHILD TENANT reads PARENT TENANT": {
+				"CHILD TENANT should NOT read PARENT TENANT": {
 					ClientSession: tenant4UserSession,
-					RequestParams: url.Values{"tenant": {"tenant3"}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateTenants(map[string]bool{"tenant3": false, "tenant4": true})),
 				},
 			},
 			"POST": {
@@ -77,7 +75,7 @@ func TestUsers(t *testing.T) {
 						"fullName":           "Outside Tenancy",
 						"localPasswd":        "pa$$word",
 						"confirmLocalPasswd": "pa$$word",
-						"role":               "operations",
+						"role":               3,
 						"tenantId":           GetTenantID(t, "tenant3")(),
 						"username":           "outsideTenantUser",
 					},
@@ -99,7 +97,7 @@ func TestUsers(t *testing.T) {
 						"localPasswd":        "pa$$word",
 						"confirmLocalPasswd": "pa$$word",
 						"newUser":            false,
-						"role":               "steering",
+						"role":               6,
 						"tenant":             "root",
 						"tenantId":           GetTenantID(t, "root")(),
 						"username":           "steering",
@@ -122,7 +120,7 @@ func TestUsers(t *testing.T) {
 						"fullName":           "Operations User Updated",
 						"localPasswd":        "pa$$word",
 						"confirmLocalPasswd": "pa$$word",
-						"role":               "operations",
+						"role":               3,
 						"tenant":             "root",
 						"tenantId":           GetTenantID(t, "root")(),
 						"username":           "opsuser",
@@ -130,7 +128,7 @@ func TestUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateUsersUpdateCreateFields(map[string]interface{}{"Email": "ops-updated@example.com", "FullName": "Operations User Updated"})),
 				},
-				"NOT FOUND when UPDATING SELF with ROLE that DOESNT EXIST": {
+				"BAD REQUEST when updating OWN ROLE": {
 					EndpointId:    GetUserID(t, "opsuser"),
 					ClientSession: opsUserSession,
 					RequestBody: map[string]interface{}{
@@ -143,12 +141,12 @@ func TestUsers(t *testing.T) {
 						"fullName":           "Operations User Updated",
 						"localPasswd":        "pa$$word",
 						"confirmLocalPasswd": "pa$$word",
-						"role":               "operations_updated",
+						"role":               9999,
 						"tenant":             "root",
 						"tenantId":           GetTenantID(t, "root")(),
 						"username":           "opsuser",
 					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"FORBIDDEN when OPERATIONS USER updates ADMIN USER": {
 					EndpointId:    GetUserID(t, "admin"),
@@ -158,7 +156,7 @@ func TestUsers(t *testing.T) {
 						"fullName":           "oops",
 						"localPasswd":        "pa$$word",
 						"confirmLocalPasswd": "pa$$word",
-						"role":               "admin",
+						"role":               4,
 						"tenant":             "root",
 						"tenantId":           GetTenantID(t, "root")(),
 						"username":           "admin",
@@ -173,7 +171,7 @@ func TestUsers(t *testing.T) {
 						"fullName":           "Parent tenant test",
 						"localPasswd":        "pa$$word",
 						"confirmLocalPasswd": "pa$$word",
-						"role":               "admin",
+						"role":               4,
 						"tenant":             "tenant2",
 						"tenantId":           GetTenantID(t, "tenant2")(),
 						"username":           "tenant3user",
@@ -275,12 +273,28 @@ func validateUsersFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 					assert.Equal(t, expected, *user.Tenant, "Expected Tenant to be %v, but got %s", expected, *user.Tenant)
 				case "TenantID":
 					assert.RequireNotNil(t, user.TenantID, "Expected Tenant to not be nil.")
-					assert.Equal(t, expected, user.TenantID, "Expected TenantID to be %v, but got %d", expected, user.TenantID)
+					assert.Equal(t, expected, *user.TenantID, "Expected TenantID to be %v, but got %d", expected, *user.TenantID)
 				case "Username":
 					assert.RequireNotNil(t, user.Username, "Expected Username to not be nil.")
 					assert.Equal(t, expected, *user.Username, "Expected Username to be %v, but got %s", expected, *user.Username)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
+		}
+	}
+}
+
+func validateTenants(expectedTenants map[string]bool) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Users response to not be nil.")
+		userResp := resp.([]tc.User)
+
+		for _, user := range userResp {
+			for tenant, expected := range expectedTenants {
+				assert.RequireNotNil(t, user.Tenant, "Expected Users response to not be nil.")
+				if *user.Tenant == tenant && !expected {
+					t.Errorf("Tenant: %s was not expected", *user.Tenant)
 				}
 			}
 		}
@@ -301,9 +315,10 @@ func validateUsersSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Users response to not be nil.")
 		var usernames []string
-		usersResp := resp.([]tc.UserV4)
+		usersResp := resp.([]tc.User)
 		for _, user := range usersResp {
-			usernames = append(usernames, user.Username)
+			assert.RequireNotNil(t, user.Username, "Expected Username to not be nil.")
+			usernames = append(usernames, *user.Username)
 		}
 		assert.Equal(t, true, sort.StringsAreSorted(usernames), "List is not sorted by their usernames: %v", usernames)
 	}
