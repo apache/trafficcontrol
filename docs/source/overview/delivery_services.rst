@@ -675,11 +675,23 @@ For HTTP and DNS-:ref:`Routed <ds-types>` Delivery Services, this will be added 
 Directives
 """
 
-The Raw Remap text is ordinarily added at the end of the line, after everything else. However, it may be necessary to add Range Request Handling after the Raw Remap. For example, if you have a plugin which manipulates the Range header. In this case, you can insert the text ``__RANGE_DIRECTIVE__`` in the Raw Remap text, and the range request handling directives will be added at that point.
+The Raw Remap text is ordinarily added at the end of the line, after everything else. However, it may be necessary to change the normal arg ordering, especially if the user needs to modify the cachekey, range headers or URI in a way that may change cachekey or regex_remap behaviors.
+
+It may be necessary to add Range Request Handling after the Raw Remap. For example, if you have a plugin which manipulates the Range header. In this case, you can insert the text ``__RANGE_DIRECTIVE__`` in the Raw Remap text, and the range request handling directives will be added at that point.
 
 For example, if you have an Apache Traffic Server lua plugin which manipulates the range, and are using Slice Range Request Handling which needs to run after your plugin, you can set a Raw Remap, ``@plugin=tslua.so @pparam=range.lua __RANGE_DIRECTIVE__``, and the ``@plugin=slice.so`` range directive will be inserted after your plugin.
 
-Similarly the text ``__CACHEKEY_DIRECTIVE__`` can be moved into the Raw Remap text to allow the Raw Remap text to manipulate the uri contents before the cachekey is generated.
+Another example might be a Delivery Service which modifies the uri in a way that changes the cachey key (cachekey), and affects parent routing (regex_remap) with the possibility of range request handling via background fetch.  Raw Remap Text might then look like: ``@plugin=tslua.so @pparam=uri-manip.lua __CACHEKEY_DIRECTIVE__ __REGEX_REMAP_DIRECTIVE__ __RANGE_DIRECTIVE__``.  This would set things up such that background_fetch would issue a request to the proper remap parent.
+
+.. table:: Supported Raw Remap Directives
+
+	+---------------------------+-------------------------------------------+
+	| Name                      | Use(s)                                    |
+	+===========================+===========================================+
+	| __CACHEKEY_DIRECTIVE__    | Inserts cachekey plugin and args (if any) |
+	| __RANGE_DIRECTIVE__       | Inserts range directive args (if any)     |
+	| __REGEX_REMAP_DIRECTIVE__ | Inserts regex_remap directive (if any)    |
+	+---------------------------+-------------------------------------------+
 
 .. _ds-regex-remap:
 
