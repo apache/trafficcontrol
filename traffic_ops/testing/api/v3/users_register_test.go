@@ -48,9 +48,7 @@ func TestUsersRegister(t *testing.T) {
 							"tenantId":           GetTenantID(t, "root")(),
 							"username":           "opsuser",
 						},
-						Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-							validateUsersRegisterFields("opsuser", map[string]interface{}{"Email": "opsupdated@example.com", "FullName": "Operations User Updated"}),
-							validateDeletion("ops-updated@example.com")),
+						Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDeletion("ops-updated@example.com")),
 					},
 				},
 			}
@@ -80,15 +78,6 @@ func TestUsersRegister(t *testing.T) {
 				})
 			}
 		})
-	}
-}
-
-func validateUsersRegisterFields(username string, expectedResp map[string]interface{}) utils.CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		user, _, err := TOSession.GetUserByUsernameWithHdr(username, nil)
-		assert.RequireNoError(t, err, "Error getting User: %v", err)
-		assert.RequireEqual(t, 1, len(user), "Expected one User returned Got: %d", len(user))
-		validateUsersFields(expectedResp)(t, toclientlib.ReqInf{}, user, tc.Alerts{}, nil)
 	}
 }
 
