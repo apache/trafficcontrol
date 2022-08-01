@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
+- [#6033](https://github.com/apache/trafficcontrol/issues/6033) Added ability to assign multiple server capabilities to a server.
 
 ## [7.0.0] - 2022-07-19
 ### Added
