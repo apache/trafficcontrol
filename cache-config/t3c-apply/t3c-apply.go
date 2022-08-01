@@ -125,13 +125,22 @@ func Main() int {
 
 	metaData.ServerHostName = cfg.CacheHostName
 
+	t3cutil.WriteActionLog(t3cutil.ActionLogActionApplyStart, t3cutil.ActionLogStatusSuccess, metaData)
+
 	if cfg.UseGit == config.UseGitYes {
-		err := util.EnsureConfigDirIsGitRepo(cfg)
+		triedMakingRepo, err := util.EnsureConfigDirIsGitRepo(cfg)
 		if err != nil {
 			log.Errorln("Ensuring config directory '" + cfg.TsConfigDir + "' is a git repo - config may not be a git repo! " + err.Error())
+			if triedMakingRepo {
+				t3cutil.WriteActionLog(t3cutil.ActionLogActionGitInit, t3cutil.ActionLogStatusFailure, metaData)
+			}
 		} else {
 			log.Infoln("Successfully ensured ATS config directory '" + cfg.TsConfigDir + "' is a git repo")
+			if triedMakingRepo {
+				t3cutil.WriteActionLog(t3cutil.ActionLogActionGitInit, t3cutil.ActionLogStatusSuccess, metaData)
+			}
 		}
+
 	} else {
 		log.Infoln("UseGit not 'yes', not creating git repo")
 	}
@@ -141,6 +150,9 @@ func Main() int {
 		// with a keyword indicating it wasn't our change
 		if err := util.MakeGitCommitAll(cfg, util.GitChangeNotSelf, true); err != nil {
 			log.Errorln("git committing existing changes, dir '" + cfg.TsConfigDir + "': " + err.Error())
+			t3cutil.WriteActionLog(t3cutil.ActionLogActionGitCommitInitial, t3cutil.ActionLogStatusFailure, metaData)
+		} else {
+			t3cutil.WriteActionLog(t3cutil.ActionLogActionGitCommitInitial, t3cutil.ActionLogStatusSuccess, metaData)
 		}
 	}
 
@@ -207,7 +219,7 @@ func Main() int {
 				} else if rc == 0 {
 					log.Infoln("updated the remap.config for reloading.")
 				}
-				if err := trops.StartServices(&syncdsUpdate); err != nil {
+				if err := trops.StartServices(&syncdsUpdate, metaData); err != nil {
 					log.Errorln("failed to start services: " + err.Error())
 					metaData.PartialSuccess = true
 					return GitCommitAndExit(ExitCodeServicesError, PostConfigFailureExitMsg, cfg, metaData, oldMetaData)
@@ -250,6 +262,10 @@ func Main() int {
 	syncdsUpdate, err = trops.ProcessConfigFiles(metaData)
 	if err != nil {
 		log.Errorf("Error while processing config files: %s\n", err.Error())
+		t3cutil.WriteActionLog(t3cutil.ActionLogActionUpdateFilesAll, t3cutil.ActionLogStatusFailure, metaData)
+
+	} else {
+		t3cutil.WriteActionLog(t3cutil.ActionLogActionUpdateFilesAll, t3cutil.ActionLogStatusSuccess, metaData)
 	}
 
 	// check for maxmind db updates
@@ -268,7 +284,7 @@ func Main() int {
 		}
 	}
 
-	if err := trops.StartServices(&syncdsUpdate); err != nil {
+	if err := trops.StartServices(&syncdsUpdate, metaData); err != nil {
 		log.Errorln("failed to start services: " + err.Error())
 		metaData.PartialSuccess = true
 		return GitCommitAndExit(ExitCodeServicesError, PostConfigFailureExitMsg, cfg, metaData, oldMetaData)
@@ -335,9 +351,24 @@ func GitCommitAndExit(exitCode int, exitMsg string, cfg config.Cfg, metaData *t3
 	if cfg.UseGit == config.UseGitYes || cfg.UseGit == config.UseGitAuto {
 		if err := util.MakeGitCommitAll(cfg, util.GitChangeIsSelf, success); err != nil {
 			log.Errorln("git committing existing changes, dir '" + cfg.TsConfigDir + "': " + err.Error())
+			// nil metadata to prevent modifying the file after the final git commit
+			t3cutil.WriteActionLog(t3cutil.ActionLogActionGitCommitFinal, t3cutil.ActionLogStatusFailure, nil)
+		} else {
+			// nil metadata to prevent modifying the file after the final git commit
+			t3cutil.WriteActionLog(t3cutil.ActionLogActionGitCommitFinal, t3cutil.ActionLogStatusSuccess, nil)
 		}
 	}
+
+	if metaData.Succeeded {
+		// nil metadata to prevent modifying the file after the final git commit
+		t3cutil.WriteActionLog(t3cutil.ActionLogActionApplyEnd, t3cutil.ActionLogStatusSuccess, nil)
+	} else {
+		// nil metadata to prevent modifying the file after the final git commit
+		t3cutil.WriteActionLog(t3cutil.ActionLogActionApplyEnd, t3cutil.ActionLogStatusFailure, nil)
+	}
+
 	log.Infoln(exitMsg)
+
 	return exitCode
 }
 

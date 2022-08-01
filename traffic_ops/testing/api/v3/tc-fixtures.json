@@ -1487,6 +1487,31 @@
             "xmlId": "ds4",
             "anonymousBlockingEnabled": true,
             "maxRequestHeaderBytes": 131072
+        },
+        {
+            "active": true,
+            "anonymousBlockingEnabled": false,
+            "cdnName": "cdn1",
+            "displayName": "test-rm-ssc",
+            "dscp": 0,
+            "geoLimit": 0,
+            "geoProvider": 0,
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": false,
+            "logsEnabled": false,
+            "missLat": 0,
+            "missLong": 0,
+            "multiSiteOrigin": true,
+            "orgServerFqdn": "https://example.com",
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regionalGeoBlocking": false,
+            "tenant": "tenant1",
+            "topology": "top-with-caches-in-cdn1",
+            "type": "HTTP",
+            "xmlId": "test-rm-ssc",
+            "maxRequestHeaderBytes": 131072
         }
     ],
     "deliveryServicesRegexes": [
@@ -1533,6 +1558,10 @@
         {
             "xmlID": "ds-top-req-cap2",
             "RequiredCapability": "ram"
+        },
+        {
+            "xmlID": "test-rm-ssc",
+            "RequiredCapability": "ram"
         }
     ],
     "deliveryServiceServerAssignments": [
@@ -1547,6 +1576,10 @@
         {
             "xmlId": "ds3",
             "serverNames": ["atlanta-edge-14"]
+        },
+        {
+            "xmlId": "ds2",
+            "serverNames": ["atlanta-org-2"]
         }
     ],
     "topologyBasedDeliveryServicesRequiredCapabilities": [
@@ -2402,6 +2435,10 @@
         {
             "divisionName": "cdn-div2",
             "name": "cdn-region2"
+        },
+        {
+            "divisionName": "division1",
+            "name": "test-deletion"
         }
     ],
     "roles": [
@@ -4781,6 +4818,10 @@
         {
             "serverHostName": "atlanta-edge-16",
             "serverCapability": "blah"
+        },
+        {
+            "serverHostName": "edge-in-cdn1-only",
+            "serverCapability": "ram"
         }
     ],
     "serviceCategories": [

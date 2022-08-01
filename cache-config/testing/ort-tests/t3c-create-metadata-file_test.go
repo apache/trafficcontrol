@@ -18,8 +18,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 )
@@ -57,5 +59,14 @@ func TestT3cCreateMetaDataFile(t *testing.T) {
 		if err := json.Unmarshal(mdFileBts, &mdObj); err != nil {
 			t.Errorf("expected metadata file '%s' to be a json object, actual: %s", filePath, err)
 		}
+
+		metaDataStr := string(mdFileBts)
+		if !strings.Contains(metaDataStr, `"actions":`) {
+			t.Errorf("expected metadata file '%s' to contain action log, actual: %s", filePath, metaDataStr)
+		}
+		if !strings.Contains(metaDataStr, `"`+string(t3cutil.ActionLogActionApplyStart)+`"`) {
+			t.Errorf("expected metadata file '%s' to contain action log apply start message '%v', actual: %s", filePath, t3cutil.ActionLogActionApplyStart, metaDataStr)
+		}
+
 	})
 }

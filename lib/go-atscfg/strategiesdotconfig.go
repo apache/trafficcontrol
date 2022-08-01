@@ -155,10 +155,13 @@ func getStrategySecondaryMode(mode ParentAbstractionServiceParentSecondaryMode) 
 }
 
 func getStrategyErrorCodes(codes []int) string {
-	str := ""
+	str := " ["
+	join := " "
 	for _, code := range codes {
-		str += "\n" + `        - ` + strconv.Itoa(code)
+		str += join + strconv.Itoa(code)
+		join = ", "
 	}
+	str += " ]"
 	return str
 }
 

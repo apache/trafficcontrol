@@ -16,137 +16,314 @@ package v4
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestRegions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
-		GetTestRegionsIMS(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		SortTestRegions(t)
-		SortTestRegionsDesc(t)
-		UpdateTestRegions(t)
-		UpdateTestRegionsWithHeaders(t, header)
-		GetTestRegions(t)
-		GetTestRegionsIMSAfterChange(t, header)
-		DeleteTestRegionsByName(t)
-		VerifyPaginationSupportRegion(t)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestRegionsWithHeaders(t, header)
-		DeleteTestRegionsByInvalidId(t)
-		DeleteTestRegionsByInvalidName(t)
-		GetTestRegionByInvalidId(t)
-		GetTestRegionByInvalidName(t)
-		GetTestRegionByDivision(t)
-		GetTestRegionByInvalidDivision(t)
-		CreateTestRegionsInvalidDivision(t)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateRegionsSort()),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"region1"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateRegionsFields(map[string]interface{}{"Name": "region1"})),
+				},
+				"OK when VALID DIVISION parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"division": {strconv.Itoa(GetDivisionID(t, "division1")())}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateRegionsFields(map[string]interface{}{"DivisionName": "division1"})),
+				},
+				"EMPTY RESPONSE when REGION NAME DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"doesntexist"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when REGION ID DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {"9999999"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when DIVISION DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"division": {"9999999"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"VALID when SORTORDER param is DESC": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateRegionsDescSort()),
+				},
+				"FIRST RESULT when LIMIT=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateRegionsPagination("limit")),
+				},
+				"SECOND RESULT when LIMIT=1 OFFSET=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateRegionsPagination("offset")),
+				},
+				"SECOND RESULT when LIMIT=1 PAGE=2": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateRegionsPagination("page")),
+				},
+				"BAD REQUEST when INVALID LIMIT parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID OFFSET parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID PAGE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"POST": {
+				"NOT FOUND when DIVISION DOESNT EXIST": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":         "invalidDivision",
+						"division":     99999999,
+						"divisionName": "doesntexist",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetRegionID(t, "cdn-region2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":         "newName",
+						"division":     GetDivisionID(t, "cdn-div2")(),
+						"divisionName": "cdn-div2",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateRegionsUpdateCreateFields("newName", map[string]interface{}{"Name": "newName"})),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:    GetRegionID(t, "region1"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody: map[string]interface{}{
+						"name":         "newName",
+						"division":     GetDivisionID(t, "division1")(),
+						"divisionName": "division1",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetRegionID(t, "region1"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":         "newName",
+						"division":     GetDivisionID(t, "division1")(),
+						"divisionName": "division1",
+					},
+					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"test-deletion"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"NOT FOUND when INVALID ID": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {"99999999"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"NOT FOUND when INVALID NAME": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"doesntexist"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					region := tc.Region{}
+					regionName := ""
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &region)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetRegions(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateRegion(region, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateRegion(testCase.EndpointId(), region, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							if val, ok := testCase.RequestOpts.QueryParameters["name"]; ok {
+								regionName = val[0]
+							}
+							alerts, reqInf, err := testCase.ClientSession.DeleteRegion(regionName, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestRegionsWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Regions) < 1 {
-		t.Fatal("Need at least one Region to test updating Regions with HTTP headers")
-	}
-	firstRegion := testData.Regions[0]
-
-	// Retrieve the Region by region so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", firstRegion.Name)
-	opts.Header = header
-	resp, _, err := TOSession.GetRegions(opts)
-	if err != nil {
-		t.Errorf("cannot get Region '%s' by name: %v - alerts: %+v", firstRegion.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Region to exist with name '%s', found: %d", firstRegion.Name, len(resp.Response))
-	}
-
-	remoteRegion := resp.Response[0]
-	remoteRegion.Name = "OFFLINE-TEST"
-
-	opts.QueryParameters.Del("name")
-	_, reqInf, err := TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, opts)
-	if err == nil {
-		t.Errorf("Expected error about precondition failed, but got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-	}
-}
-
-func GetTestRegionsIMS(t *testing.T) {
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-
-	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	for _, region := range testData.Regions {
-		opts.QueryParameters.Set("name", region.Name)
-		resp, reqInf, err := TOSession.GetRegions(opts)
-		if err != nil {
-			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+func validateRegionsFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Regions response to not be nil.")
+		regionResp := resp.([]tc.Region)
+		for field, expected := range expectedResp {
+			for _, region := range regionResp {
+				switch field {
+				case "Division":
+					assert.Equal(t, expected, region.Division, "Expected Division to be %v, but got %d", expected, region.Division)
+				case "DivisionName":
+					assert.Equal(t, expected, region.DivisionName, "Expected DivisionName to be %v, but got %s", expected, region.DivisionName)
+				case "ID":
+					assert.Equal(t, expected, region.ID, "Expected ID to be %v, but got %d", expected, region.ID)
+				case "Name":
+					assert.Equal(t, expected, region.Name, "Expected Name to be %v, but got %s", expected, region.Name)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
 		}
 	}
 }
 
-func GetTestRegionsIMSAfterChange(t *testing.T, header http.Header) {
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	for _, region := range testData.Regions {
-		opts.QueryParameters.Set("name", region.Name)
-		resp, reqInf, err := TOSession.GetRegions(opts)
-		if err != nil {
-			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
-	}
-
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	opts.Header.Set(rfc.IfModifiedSince, timeStr)
-
-	for _, region := range testData.Regions {
-		opts.QueryParameters.Set("name", region.Name)
-		resp, reqInf, err := TOSession.GetRegions(opts)
-		if err != nil {
-			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+func validateRegionsUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", name)
+		region, _, err := TOSession.GetRegions(opts)
+		assert.RequireNoError(t, err, "Error getting Region: %v - alerts: %+v", err, region.Alerts)
+		assert.RequireEqual(t, 1, len(region.Response), "Expected one Region returned Got: %d", len(region.Response))
+		validateRegionsFields(expectedResp)(t, toclientlib.ReqInf{}, region.Response, tc.Alerts{}, nil)
 	}
 }
 
-func GetTestRegions(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, region := range testData.Regions {
-		opts.QueryParameters.Set("name", region.Name)
-		resp, _, err := TOSession.GetRegions(opts)
-		if err != nil {
-			t.Errorf("cannot get Region '%s' by name: %v - alerts: %+v", region.Name, err, resp.Alerts)
+func validateRegionsSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Regions response to not be nil.")
+		var regionNames []string
+		regionResp := resp.([]tc.Region)
+		for _, region := range regionResp {
+			regionNames = append(regionNames, region.Name)
+		}
+		assert.Equal(t, true, sort.StringsAreSorted(regionNames), "List is not sorted by their names: %v", regionNames)
+	}
+}
+
+func validateRegionsDescSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Regions response to not be nil.")
+		regionDescResp := resp.([]tc.Region)
+		var descSortedList []string
+		var ascSortedList []string
+		assert.RequireGreaterOrEqual(t, len(regionDescResp), 2, "Need at least 2 Regions in Traffic Ops to test desc sort, found: %d", len(regionDescResp))
+		// Get Regions in the default ascending order for comparison.
+		regionAscResp, _, err := TOSession.GetRegions(client.RequestOptions{})
+		assert.RequireNoError(t, err, "Unexpected error getting Regions with default sort order: %v - alerts: %+v", err, regionAscResp.Alerts)
+		// Verify the response match in length, i.e. equal amount of Regions.
+		assert.RequireEqual(t, len(regionAscResp.Response), len(regionDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(regionAscResp.Response), len(regionDescResp))
+		// Insert Region names to the front of a new list, so they are now reversed to be in ascending order.
+		for _, region := range regionDescResp {
+			descSortedList = append([]string{region.Name}, descSortedList...)
+		}
+		// Insert Region names by appending to a new list, so they stay in ascending order.
+		for _, region := range regionAscResp.Response {
+			ascSortedList = append(ascSortedList, region.Name)
+		}
+		assert.Exactly(t, ascSortedList, descSortedList, "Region responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
+	}
+}
+
+func validateRegionsPagination(paginationParam string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		paginationResp := resp.([]tc.Region)
+
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("orderby", "id")
+		respBase, _, err := TOSession.GetRegions(opts)
+		assert.RequireNoError(t, err, "Cannot get Regions: %v - alerts: %+v", err, respBase.Alerts)
+
+		region := respBase.Response
+		assert.RequireGreaterOrEqual(t, len(region), 2, "Need at least 2 Regions in Traffic Ops to test pagination support, found: %d", len(region))
+		switch paginationParam {
+		case "limit:":
+			assert.Exactly(t, region[:1], paginationResp, "expected GET Regions with limit = 1 to return first result")
+		case "offset":
+			assert.Exactly(t, region[1:2], paginationResp, "expected GET Regions with limit = 1, offset = 1 to return second result")
+		case "page":
+			assert.Exactly(t, region[1:2], paginationResp, "expected GET Regions with limit = 1, page = 2 to return second result")
 		}
 	}
 }
@@ -154,356 +331,22 @@ func GetTestRegions(t *testing.T) {
 func CreateTestRegions(t *testing.T) {
 	for _, region := range testData.Regions {
 		resp, _, err := TOSession.CreateRegion(region, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("could not create Region '%s': %v - alerts: %+v", region.Name, err, resp.Alerts)
-		}
+		assert.RequireNoError(t, err, "Could not create Region '%s': %v - alerts: %+v", region.Name, err, resp.Alerts)
 	}
-}
-
-func SortTestRegions(t *testing.T) {
-	resp, _, err := TOSession.GetRegions(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	sortedList := make([]string, 0, len(resp.Response))
-	for _, region := range resp.Response {
-		sortedList = append(sortedList, region.Name)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if !res {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
-}
-
-func SortTestRegionsDesc(t *testing.T) {
-	resp, _, err := TOSession.GetRegions(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Expected no error, but got error in Regions with default ordering: %v - alerts: %+v", err, resp.Alerts)
-	}
-	respAsc := resp.Response
-	if len(respAsc) < 1 {
-		t.Fatal("Need at least one Region in Traffic Ops to test Regions sort ordering")
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("sortOrder", "desc")
-	resp, _, err = TOSession.GetRegions(opts)
-	if err != nil {
-		t.Errorf("Expected no error, but got error in Regions with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
-	}
-	respDesc := resp.Response
-	if len(respDesc) < 1 {
-		t.Fatal("Need at least one Region in Traffic Ops to test Regions sort ordering")
-	}
-
-	if len(respAsc) != len(respDesc) {
-		t.Fatalf("Traffic Ops returned %d Regions using default sort order, but %d Regions when sort order was explicitly set to descending", len(respAsc), len(respDesc))
-	}
-
-	// reverse the descending-sorted response and compare it to the ascending-sorted one
-	// TODO ensure at least two in each slice? A list of length one is
-	// trivially sorted both ascending and descending.
-	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
-		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
-	}
-	if respDesc[0].Name != respAsc[0].Name {
-		t.Errorf("Regions responses are not equal after reversal: Asc: %s - Desc: %s", respDesc[0].Name, respAsc[0].Name)
-	}
-}
-
-func UpdateTestRegions(t *testing.T) {
-	if len(testData.Regions) < 1 {
-		t.Fatal("Need at least one Region to test updating a Region")
-	}
-	firstRegion := testData.Regions[0]
-
-	// Retrieve the Region by region so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", firstRegion.Name)
-	resp, _, err := TOSession.GetRegions(opts)
-	if err != nil {
-		t.Errorf("cannot get Region '%s' by name: %v - alerts: %+v", firstRegion.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Region to exist with name '%s', found: %d", firstRegion.Name, len(resp.Response))
-	}
-
-	remoteRegion := resp.Response[0]
-	expectedRegion := "OFFLINE-TEST"
-	remoteRegion.Name = expectedRegion
-
-	alert, _, err := TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update Region: %v - alerts: %+v", err, alert.Alerts)
-	}
-
-	// Retrieve the Region to check region got updated
-	opts.QueryParameters.Del("name")
-	opts.QueryParameters.Set("id", strconv.Itoa(remoteRegion.ID))
-	resp, _, err = TOSession.GetRegions(opts)
-	if err != nil {
-		t.Errorf("cannot get Region '%s' (#%d) by ID: %v - alerts: %+v", firstRegion.Name, remoteRegion.ID, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Region to exist with ID %d, found: %d", remoteRegion.ID, len(resp.Response))
-	}
-	respRegion := resp.Response[0]
-	if respRegion.Name != expectedRegion {
-		t.Errorf("results do not match actual: %s, expected: %s", respRegion.Name, expectedRegion)
-	}
-
-	// Set the name back to the fixture value so we can delete it after
-	remoteRegion.Name = firstRegion.Name
-	alert, _, err = TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update Region: %v - alerts: %+v", err, alert.Alerts)
-	}
-}
-
-func VerifyPaginationSupportRegion(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetRegions(opts)
-	if err != nil {
-		t.Fatalf("cannot get Regions: %v - alerts: %+v", err, resp.Alerts)
-	}
-	regions := resp.Response
-	if len(regions) < 2 {
-		t.Fatalf("Need at least 2 Regions in Traffic Ops to test pagination support, found: %d", len(regions))
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	regionsWithLimit, _, err := TOSession.GetRegions(opts)
-	if err == nil {
-		if !reflect.DeepEqual(regions[:1], regionsWithLimit.Response) {
-			t.Error("expected GET Regions with limit = 1 to return first result")
-		}
-	} else {
-		t.Error("Error in getting regions by limit")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "1")
-	regionsWithOffset, _, err := TOSession.GetRegions(opts)
-	if err == nil {
-		if !reflect.DeepEqual(regions[1:2], regionsWithOffset.Response) {
-			t.Error("expected GET Regions with limit = 1, offset = 1 to return second result")
-		}
-	} else {
-		t.Error("Error in getting regions by limit and offset")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "2")
-	regionsWithPage, _, err := TOSession.GetRegions(opts)
-	if err == nil {
-		if !reflect.DeepEqual(regions[1:2], regionsWithPage.Response) {
-			t.Error("expected GET Regions with limit = 1, page = 2 to return second result")
-		}
-	} else {
-		t.Error("Error in getting regions by limit and page")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "-2")
-	resp, _, err = TOSession.GetRegions(opts)
-	if err == nil {
-		t.Error("expected GET Regions to return an error when limit is not bigger than -1")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
-		t.Errorf("expected GET Regions to return an error for limit is not bigger than -1, actual error: " + err.Error())
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "0")
-	resp, _, err = TOSession.GetRegions(opts)
-	if err == nil {
-		t.Error("expected GET Regions to return an error when offset is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET Regions to return an error for offset is not a positive integer, actual error: " + err.Error())
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "0")
-	resp, _, err = TOSession.GetRegions(opts)
-	if err == nil {
-		t.Error("expected GET Regions to return an error when page is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET Regions to return an error for page is not a positive integer, actual error: " + err.Error())
-	}
-}
-
-func DeleteTestRegionsByName(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, region := range testData.Regions {
-		delResp, _, err := TOSession.DeleteRegion(region.Name, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot delete Region '%s': %v - alerts: %+v", region.Name, err, delResp.Alerts)
-		}
-
-		opts.QueryParameters.Set("limit", "1")
-		deleteLog, _, err := TOSession.GetLogs(opts)
-		opts.QueryParameters.Del("limit")
-		if err != nil {
-			t.Fatalf("unable to get latest audit log entry")
-		}
-		if len(deleteLog.Response) != 1 {
-			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog.Response))
-		}
-		if deleteLog.Response[0].Message == nil {
-			t.Fatal("Traffic Ops returned a representation for a log entry with null or undefined message")
-		}
-		if !strings.Contains(*deleteLog.Response[0].Message, region.Name) {
-			t.Errorf("region deletion audit log entry - expected: message containing region name '%s', actual: %s", region.Name, *deleteLog.Response[0].Message)
-		}
-
-		// Retrieve the Region to see if it got deleted
-		opts.QueryParameters.Set("name", region.Name)
-		regionResp, _, err := TOSession.GetRegions(opts)
-		opts.QueryParameters.Del("name")
-		if err != nil {
-			t.Errorf("error deleting Region '%s': %v - alerts: %+v", region.Name, err, regionResp.Alerts)
-		}
-		if len(regionResp.Response) > 0 {
-			t.Errorf("expected Region '%s' to be deleted, but it was found in Traffic Ops", region.Name)
-		}
-	}
-	CreateTestRegions(t)
 }
 
 func DeleteTestRegions(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, region := range testData.Regions {
-		// Retrieve the Region by name so we can get the id
-		opts.QueryParameters.Set("name", region.Name)
-		resp, _, err := TOSession.GetRegions(opts)
-		opts.QueryParameters.Del("name")
-		if err != nil {
-			t.Errorf("cannot get Region '%s' by name: %v - alerts: %+v", region.Name, err, resp.Alerts)
-		}
-		if len(resp.Response) != 1 {
-			t.Errorf("Expected exactly one Region to exist with name '%s', found: %d", region.Name, len(resp.Response))
-		}
-		respRegion := resp.Response[0]
+	regions, _, err := TOSession.GetRegions(client.RequestOptions{})
+	assert.NoError(t, err, "Cannot get Regions: %v - alerts: %+v", err, regions.Alerts)
 
-		opts.QueryParameters.Set("id", strconv.Itoa(respRegion.ID))
-		delResp, _, err := TOSession.DeleteRegion("", opts)
-		opts.QueryParameters.Del("id")
-		if err != nil {
-			t.Errorf("cannot delete Region: %v - alerts: %+v", err, delResp.Alerts)
-		}
-
+	for _, region := range regions.Response {
+		alerts, _, err := TOSession.DeleteRegion(region.Name, client.RequestOptions{})
+		assert.NoError(t, err, "Unexpected error deleting Region '%s' (#%d): %v - alerts: %+v", region.Name, region.ID, err, alerts.Alerts)
 		// Retrieve the Region to see if it got deleted
-		opts.QueryParameters.Set("name", region.Name)
-		regionResp, _, err := TOSession.GetRegions(opts)
-		if err != nil {
-			t.Errorf("error fetching Region '%s' after deletion: %v - alerts: %+v", region.Name, err, regionResp.Alerts)
-		}
-		if len(regionResp.Response) > 0 {
-			t.Errorf("expected Region '%s' to be deleted, but it was found in Traffic Ops", region.Name)
-		}
-	}
-}
-
-func DeleteTestRegionsByInvalidId(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("id", "10000")
-	delResp, _, err := TOSession.DeleteRegion("", opts)
-	if err == nil {
-		t.Errorf("cannot delete Regions by invalid ID: %v - alerts: %+v", err, delResp.Alerts)
-	}
-}
-
-func DeleteTestRegionsByInvalidName(t *testing.T) {
-	delResp, _, err := TOSession.DeleteRegion("invalid", client.RequestOptions{})
-	if err == nil {
-		t.Errorf("cannot delete Regions by invalid name: %v - alerts: %+v", err, delResp.Alerts)
-	}
-}
-
-func GetTestRegionByInvalidId(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("id", "10000")
-	regionResp, _, err := TOSession.GetRegions(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Regions filtered by presumably non-existent ID: %v - alerts: %+v", err, regionResp.Alerts)
-	}
-	if len(regionResp.Response) >= 1 {
-		t.Errorf("Didn't expect to find any Regions with presumably non-existent ID, found: %d", len(regionResp.Response))
-	}
-}
-
-func GetTestRegionByInvalidName(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "abcd")
-	regionResp, _, err := TOSession.GetRegions(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Regions filtered by presumably non-existent name: %v - alerts: %+v", err, regionResp.Alerts)
-	}
-	if len(regionResp.Response) >= 1 {
-		t.Errorf("Didn't expect to find any Regions with presumably non-existent name, found: %d", len(regionResp.Response))
-	}
-}
-
-func GetTestRegionByDivision(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, region := range testData.Regions {
-		opts.QueryParameters.Set("name", region.DivisionName)
-		resp, _, err := TOSession.GetDivisions(opts)
-		opts.QueryParameters.Del("name")
-		if err != nil {
-			t.Errorf("cannot get Division '%s' by name: %v - alerts: %+v", region.DivisionName, err, resp.Alerts)
-		}
-		if len(resp.Response) != 1 {
-			t.Errorf("Expected exactly one Division to exist with name '%s', found: %d", region.DivisionName, len(resp.Response))
-			continue
-		}
-		respDivision := resp.Response[0]
-
-		opts.QueryParameters.Set("division", strconv.Itoa(respDivision.ID))
-		regionsResp, reqInf, err := TOSession.GetRegions(opts)
-		opts.QueryParameters.Del("division")
-		if err != nil {
-			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, regionsResp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
-	}
-}
-
-func GetTestRegionByInvalidDivision(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("division", "100000")
-	regionResp, _, err := TOSession.GetRegions(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Regions filtered by presumably non-existent Division ID: %v - alerts: %+v", err, regionResp.Alerts)
-	}
-	if len(regionResp.Response) >= 1 {
-		t.Errorf("Didn't expect to find any Regions in presumably non-existent Division, found: %d", len(regionResp.Response))
-	}
-}
-
-func CreateTestRegionsInvalidDivision(t *testing.T) {
-	if len(testData.Regions) < 1 {
-		t.Fatal("Need at least one Region to test creating an invalid Region")
-	}
-	firstRegion := testData.Regions[0]
-	firstRegion.Division = 100
-	firstRegion.Name = "abcd"
-	_, _, err := TOSession.CreateRegion(firstRegion, client.RequestOptions{})
-	if err == nil {
-		t.Error("Expected an error creating a presumably invalid Region (name: 'abcd', Division ID: 100), but didn't get one")
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("id", strconv.Itoa(region.ID))
+		getRegion, _, err := TOSession.GetRegions(opts)
+		assert.NoError(t, err, "Error getting Region '%s' after deletion: %v - alerts: %+v", region.Name, err, getRegion.Alerts)
+		assert.Equal(t, 0, len(getRegion.Response), "Expected Region '%s' to be deleted, but it was found in Traffic Ops", region.Name)
 	}
 }

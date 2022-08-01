@@ -109,7 +109,7 @@
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.5.0",
     "nightwatch": "2.0.0-beta.3",
-    "trafficops-types": "^3.1.0-beta-6",
+    "trafficops-types": "^3.1.0-beta-16",
     "ts-node": "~8.3.0",
     "typescript": "^4.5.4"
   },

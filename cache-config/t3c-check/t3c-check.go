@@ -22,7 +22,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"syscall" // TODO change to x/unix ?
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -78,8 +78,8 @@ func main() {
 	}
 
 	app := "t3c-check-" + cmd
-
-	appPath, err := exec.LookPath(app)
+	appPath := filepath.Join(t3cutil.InstallDir(), app)
+	_, err := os.Stat(appPath)
 	if err != nil {
 		log.Errorf("error finding path to '%s': %s\n", app, err.Error())
 		os.Exit(ExitCodeCommandLookupErr)

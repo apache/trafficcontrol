@@ -744,6 +744,10 @@ func (c *ParentInfo) readParentConfig(parentStatus map[string]ParentStatus) erro
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		sbytes := scanner.Bytes()
+		sbytes = bytes.TrimSpace(sbytes)
+		if len(sbytes) == 0 {
+			continue // skip blank lines
+		}
 		if sbytes[0] == 35 { // skip comment lines, 35 is a '#'.
 			continue
 		}

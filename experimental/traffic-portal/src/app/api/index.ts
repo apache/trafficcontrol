@@ -16,6 +16,8 @@
 import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
 
+import { ChangeLogsService } from "src/app/api/change-logs.service";
+
 import { CacheGroupService } from "./cache-group.service";
 import { CDNService } from "./cdn.service";
 import { DeliveryServiceService } from "./delivery-service.service";
@@ -28,6 +30,7 @@ import { UserService } from "./user.service";
 
 export * from "./cache-group.service";
 export * from "./cdn.service";
+export * from "./change-logs.service";
 export * from "./delivery-service.service";
 export * from "./invalidation-job.service";
 export * from "./physical-location.service";
@@ -47,6 +50,7 @@ export * from "./user.service";
 	providers: [
 		CacheGroupService,
 		CDNService,
+		ChangeLogsService,
 		DeliveryServiceService,
 		InvalidationJobService,
 		PhysicalLocationService,

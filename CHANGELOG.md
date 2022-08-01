@@ -31,6 +31,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added layered profile feature to 4.0 for `GET` /deliveryservices/{id}/servers/ and /deliveryservices/{id}/servers/eligible.
 - Change to t3c regex_revalidate so that STALE is no longer explicitly added for default revalidate rule for ATS version backwards compatibility.
 - Change to t3c diff to flag a config file for replacement if owner/group settings are not `ats` [#6879](https://github.com/apache/trafficcontrol/issues/6879).
+- t3c now looks in the executable dir path for t3c- utilities
+- Added support for parent.config markdown/retry DS parameters using first./inner./last. prefixes.  mso. and <null> prefixes should be deprecated.
+- Add new __REGEX_REMAP_DIRECTIVE__ support to raw remap text to allow moving the regex_remap placement.
 
 ### Fixed
 - Fixed TO to default route ID to 0, if it is not present in the request context.
@@ -67,6 +70,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6834](https://github.com/apache/trafficcontrol/issues/6834) - In API 4.0, fixed `GET` for `/servers` to display all profiles irrespective of the index position. Also, replaced query param `profileId` with `profileName`.
 - [#6299](https://github.com/apache/trafficcontrol/issues/6299) User representations don't match
 - [#6896](https://github.com/apache/trafficcontrol/issues/6896) Fixed the `POST api/cachegroups/id/queue_updates` endpoint so that it doesn't give an internal server error anymore.
+- [#6994](https://github.com/apache/trafficcontrol/issues/6994) Fixed the Health Client to not crash if parent.config has a blank line.
 - [#6933](https://github.com/apache/trafficcontrol/issues/6933) Fixed tc-health-client to handle credentials files with special characters in variables
 - [#6776](https://github.com/apache/trafficcontrol/issues/6776) User properties only required sometimes
 - Fixed TO API `GET /deliveryservicesserver` causing error when an IMS request is made with the `cdn` and `maxRevalDurationDays` parameters set.

@@ -29,11 +29,14 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 type ATSConfigFile struct {
@@ -44,6 +47,25 @@ type ATSConfigFile struct {
 	Secure      bool     `json:"secure"`
 	Text        string   `json:"text"`
 	Warnings    []string `json:"warnings"`
+}
+
+var installdir string
+
+// initializes InstallDir to executable dir
+// If error, returns "/usr/bin" as default.
+func InstallDir() string {
+	if installdir == "" {
+		execpath, err := os.Executable()
+		if err != nil {
+			installdir = `/usr/bin`
+			log.Infof("InstallDir setting to fallback: '%s', %v\n", installdir, err)
+		} else {
+			log.Infof("Executable path is %s", execpath)
+			installdir = filepath.Dir(execpath)
+		}
+	}
+	log.Infof("Return Installdir '%s'", installdir)
+	return installdir
 }
 
 // ATSConfigFiles implements sort.Interface and sorts by the Location and then FileNameOnDisk, i.e. the full file path.
@@ -236,8 +258,9 @@ func UserAgentStr(appName string, versionNum string, gitRevision string) string 
 func NewApplyMetaData() *ApplyMetaData {
 	return &ApplyMetaData{
 		Version:           MetaDataVersion,
-		InstalledPackages: []string{}, // construct a slice, so JSON serializes '[]' not 'null'.
-		OwnedFilePaths:    []string{}, // construct a slice, so JSON serializes '[]' not 'null'.
+		InstalledPackages: []string{},              // construct a slice, so JSON serializes '[]' not 'null'.
+		OwnedFilePaths:    []string{},              // construct a slice, so JSON serializes '[]' not 'null'.
+		Actions:           []ApplyMetaDataAction{}, // construct a map, so JSON serializes '{}' not 'null'.
 	}
 }
 
@@ -329,6 +352,12 @@ type ApplyMetaData struct {
 	// are strongly encouraged to set alarms and read logs in the event it occurs,
 	// to determine what was changed, what failed, and what actions need taken.
 	PartialSuccess bool `json:"partial-success"`
+
+	Actions []ApplyMetaDataAction `json:"actions"`
+}
+type ApplyMetaDataAction struct {
+	Action string `json:"action"`
+	Status string `json:"status"`
 }
 
 // Format prints the ApplyMetaData in a format designed to be written to a file,
