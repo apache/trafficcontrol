@@ -2012,7 +2012,14 @@
             "name": "location",
             "secure": false,
             "value": "/remap/config/location/parameter/"
+        },
+        {
+            "configFile": "secure.config",
+            "name": "testSecure",
+            "secure": true,
+            "value": "hidden value"
         }
+
     ],
     "physLocations": [
         {
