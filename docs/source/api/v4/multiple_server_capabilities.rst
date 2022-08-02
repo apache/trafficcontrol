@@ -44,7 +44,7 @@ Request Structure
 	Content-Length: 84
 	Content-Type: application/json
 
-	{
+    {
         "serverId": 1,
         "serverCapability": ["test", "disk"]
     }
@@ -69,7 +69,7 @@ Response Structure
 	Date: Mon, 02 Aug 2022 22:15:11 GMT
 	Content-Length: 157
 
-	{
+    {
         "alerts": [{
             "text": "Multiple Server Capabilities assigned to a server:1",
             "level": "success"
