@@ -15,9 +15,9 @@
 
 .. _to-api-multiple_server_capabilities:
 
-******************************
+********************************
 ``multiple_server_capabilities``
-******************************
+********************************
 
 ``PUT``
 ========
@@ -70,12 +70,12 @@ Response Structure
 	Content-Length: 157
 
 	{
-	"alerts": [{
-		"text": "Multiple Server Capabilities assigned to a server:1",
-		"level": "success"
-	}],
-	"response": {
-		"serverId": 1,
-		"serverCapability": ["test", "disk"]
-	}
-}
+        "alerts": [{
+            "text": "Multiple Server Capabilities assigned to a server:1",
+            "level": "success"
+        }],
+        "response": {
+            "serverId": 1,
+            "serverCapability": ["test", "disk"]
+        }
+    }
