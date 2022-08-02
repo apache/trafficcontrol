@@ -49,7 +49,7 @@ interface AssignRC {
   validationMessage: string;
 }
 export class DeliveryServicePage extends BasePage {
-  private btnCreateNewDeliveryServices = element(by.linkText("Create Delivery Service"));
+  private btnCreateNewDeliveryServices = element(by.buttonText("Create Delivery Service"));
   private mnuFormDropDown = element(by.name('selectFormDropdown'));
   private btnSubmitFormDropDown = element(by.buttonText('Submit'));
   private txtSearch = element(by.id("quickSearch"))

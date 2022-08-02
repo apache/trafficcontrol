@@ -147,8 +147,6 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 
     // Bound Variables
     /** @type string */
-    this.title = "";
-    /** @type string */
     this.tableName = "";
     /** @type CGC.GridSettings */
     this.options = {};
