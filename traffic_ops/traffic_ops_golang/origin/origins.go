@@ -43,7 +43,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TOOrigin struct {
 	api.APIInfoImpl `json:"-"`
 	tc.Origin
@@ -57,7 +57,7 @@ func (origin TOOrigin) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (origin TOOrigin) GetKeys() (map[string]interface{}, bool) {
 	if origin.ID == nil {
 		return map[string]interface{}{"id": 0}, false
@@ -283,11 +283,11 @@ func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *aut
 	return nil, nil, http.StatusOK
 }
 
-//The TOOrigin implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if an origin with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
+// The TOOrigin implementation of the Updater interface
+// all implementations of Updater should use transactions and return the proper errorType
+// ParsePQUniqueConstraintError is used to determine if an origin with conflicting values exists
+// if so, it will return an errorType of DataConflict and the type should be appended to the
+// generic error message returned
 func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
 	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
@@ -366,13 +366,13 @@ WHERE id=:id RETURNING last_updated`
 	return query
 }
 
-//The TOOrigin implementation of the Inserter interface
-//all implementations of Inserter should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if an origin with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted origin and have
-//to be added to the struct
+// The TOOrigin implementation of the Inserter interface
+// all implementations of Inserter should use transactions and return the proper errorType
+// ParsePQUniqueConstraintError is used to determine if an origin with conflicting values exists
+// if so, it will return an errorType of DataConflict and the type should be appended to the
+// generic error message returned
+// The insert sql returns the id and lastUpdated values of the newly inserted origin and have
+// to be added to the struct
 func (origin *TOOrigin) Create() (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
 	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
@@ -442,8 +442,8 @@ tenant) VALUES (
 	return query
 }
 
-//The Origin implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
+// The Origin implementation of the Deleter interface
+// all implementations of Deleter should use transactions and return the proper errorType
 func (origin *TOOrigin) Delete() (error, error, int) {
 	isPrimary := false
 	q := `SELECT is_primary FROM origin WHERE id = $1`

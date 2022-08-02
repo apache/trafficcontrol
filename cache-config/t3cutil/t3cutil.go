@@ -177,7 +177,6 @@ func UnencodeFilter(body []string) []string {
 //
 // Note if Go fails to run the command, the error from Go will be returned as the stderr and the code -1,
 // which will differ from what would have been returned by a command line.
-//
 func Do(cmdStr string, args ...string) ([]byte, []byte, int) {
 	cmd := exec.Command(cmdStr, args...)
 

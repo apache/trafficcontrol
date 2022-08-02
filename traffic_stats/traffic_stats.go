@@ -166,13 +166,13 @@ type RunningConfig struct {
 	LastSummaryTime time.Time
 }
 
-//InfluxDBProps contains URL and connection information for InfluxDB servers
+// InfluxDBProps contains URL and connection information for InfluxDB servers
 type InfluxDBProps struct {
 	URL          string
 	InfluxClient influx.Client
 }
 
-//Timers struct contains all the timers
+// Timers struct contains all the timers
 type Timers struct {
 	Poll         <-chan time.Time
 	DailySummary <-chan time.Time

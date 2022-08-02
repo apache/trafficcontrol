@@ -78,25 +78,27 @@ type DivisionPathParams struct {
 
 // PostDivision swagger:route POST /divisions Division PostDivision
 //
-// Create a Division
+// # Create a Division
 //
-// A Division is a group of regions
+// # A Division is a group of regions
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func PostDivision(entity DivisionPostParam) (Division, Alerts) {
 	return Division{}, Alerts{}
 }
 
 // GetDivisions swagger:route GET /divisions Division GetDivisions
 //
-// Retrieve a list of Divisions
+// # Retrieve a list of Divisions
 //
-// List of Divisions
+// # List of Divisions
 //
 // Responses:
-//          200: Divisions
-//          400: Alerts
+//
+//	200: Divisions
+//	400: Alerts
 func GetDivisions() (Divisions, Alerts) {
 	return Divisions{}, Alerts{}
 }
@@ -117,37 +119,40 @@ type DivisionPutParam struct {
 
 // PutDivision swagger:route PUT /divisions/{id} Division PutDivision
 //
-// Update a Division by Id
+// # Update a Division by Id
 //
-// Update a single Division
+// # Update a single Division
 //
 // Responses:
-//          200: Division
+//
+//	200: Division
 func PutDivision(entity DivisionPutParam) (Division, Alerts) {
 	return Division{}, Alerts{}
 }
 
 // GetDivisionById swagger:route GET /divisions/{id} Division GetDivisionById
 //
-// Retrieve a specific Division by Id
+// # Retrieve a specific Division by Id
 //
-// Retrieve a single division
+// # Retrieve a single division
 //
 // Responses:
-//          200: Divisions
-//          400: Alerts
+//
+//	200: Divisions
+//	400: Alerts
 func GetDivisionById() (Divisions, Alerts) {
 	return Divisions{}, Alerts{}
 }
 
 // DeleteDivision swagger:route DELETE /divisions/{id} Division DeleteDivision
 //
-// Delete a Division by Id
+// # Delete a Division by Id
 //
-// Delete a single Division
+// # Delete a single Division
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func DeleteDivision(entityId int) Alerts {
 	return Alerts{}
 }

@@ -35,7 +35,6 @@ import (
 // Returns the logged in client, the remote address of Traffic Ops which was translated and used to log in, and any error. If the error is not nil, the remote address may or may not be nil, depending whether the error occurred before the login request.
 //
 // See ClientOpts for details about options, which options are required, and how they behave.
-//
 func Login(url, user, pass string, opts ClientOpts) (*Session, toclientlib.ReqInf, error) {
 	cl, reqInf, err := toclientlib.Login(url, user, pass, opts.ClientOpts, apiVersions())
 	if err != nil {
@@ -61,7 +60,9 @@ func NewSession(user, password, url, userAgent string, client *http.Client, useC
 
 // Login to traffic_ops, the response should set the cookie for this session
 // automatically. Start with
-//     to := traffic_ops.Login("user", "passwd", true)
+//
+//	to := traffic_ops.Login("user", "passwd", true)
+//
 // subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
 // Returns the logged in client, the remote address of Traffic Ops which was translated and used to log in, and any error. If the error is not nil, the remote address may or may not be nil, depending whether the error occurred before the login request.
 // The useCache argument is ignored. It exists to avoid breaking compatibility, and does not exist in newer functions.
@@ -161,11 +162,11 @@ func composeReqFuncs(reqF ReqF, middleware []MidReqF) ReqF {
 //
 // 401 http.StatusUnauthorized - Via to.request(), Same as 403 Forbidden.
 // 403 http.StatusForbidden    - Via to.request()
-//                               Will try to log in again, and try the request again.
-//                               The second request is returned, even if it fails.
+//
+//	Will try to log in again, and try the request again.
+//	The second request is returned, even if it fails.
 //
 // To request the bytes without deserializing, pass a *[]byte response.
-//
 func makeRequestWithHeader(to *Session, method, path string, body interface{}, header http.Header, response interface{}) (toclientlib.ReqInf, error) {
 	var remoteAddr net.Addr
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}

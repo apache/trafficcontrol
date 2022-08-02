@@ -86,25 +86,27 @@ type ASNPathParams struct {
 
 // PostASN swagger:route POST /asns ASN PostASN
 //
-// Create a ASN
+// # Create a ASN
 //
-// An Autonomous System Number
+// # An Autonomous System Number
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func PostASN(entity ASNPostParam) (ASN, Alerts) {
 	return ASN{}, Alerts{}
 }
 
 // GetASNs swagger:route GET /asns ASN GetASNs
 //
-// Retrieve a list of ASNs
+// # Retrieve a list of ASNs
 //
-// A list of ASNs
+// # A list of ASNs
 //
 // Responses:
-//          200: ASNs
-//          400: Alerts
+//
+//	200: ASNs
+//	400: Alerts
 func GetASNs() (ASNs, Alerts) {
 	return ASNs{}, Alerts{}
 }
@@ -125,37 +127,40 @@ type ASNPutParam struct {
 
 // PutASN swagger:route PUT /asns/{id} ASN PutASN
 //
-// Update an ASN by Id
+// # Update an ASN by Id
 //
-// Update an ASN
+// # Update an ASN
 //
 // Responses:
-//          200: ASN
+//
+//	200: ASN
 func PutASN(entity ASNPutParam) (ASN, Alerts) {
 	return ASN{}, Alerts{}
 }
 
 // GetASNById swagger:route GET /asns/{id} ASN GetASNById
 //
-// Retrieve a specific ASN by Id
+// # Retrieve a specific ASN by Id
 //
-// Retrieve an ASN
+// # Retrieve an ASN
 //
 // Responses:
-//          200: ASNs
-//          400: Alerts
+//
+//	200: ASNs
+//	400: Alerts
 func GetASNById() (ASNs, Alerts) {
 	return ASNs{}, Alerts{}
 }
 
 // DeleteASN swagger:route DELETE /asns/{id} ASN DeleteASN
 //
-// Delete an ASN by Id
+// # Delete an ASN by Id
 //
-// Delete an ASN
+// # Delete an ASN
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func DeleteASN(entityId int) Alerts {
 	return Alerts{}
 }

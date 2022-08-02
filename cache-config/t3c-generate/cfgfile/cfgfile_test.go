@@ -80,7 +80,6 @@ func TestWriteConfigs(t *testing.T) {
 //
 // Because Go map iteration is defined to be random, running it multiple times even on the exact same input could be different, if there's a determinism bug.
 // But beyond that, we re-order slices whose order isn't semantically significant (e.g. params) and run it again.
-//
 func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	// TODO expand fake data. Currently, it's only making a remap.config.
 	toData := MakeFakeTOData()

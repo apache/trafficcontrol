@@ -51,7 +51,7 @@ func (cg TOCacheGroup) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (cg TOCacheGroup) GetKeys() (map[string]interface{}, bool) {
 	if cg.ID == nil {
 		return map[string]interface{}{"id": 0}, false
@@ -64,7 +64,7 @@ func (cg *TOCacheGroup) SetKeys(keys map[string]interface{}) {
 	cg.ID = &i
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (cg TOCacheGroup) GetID() (int, bool) {
 	if cg.ID == nil {
 		return 0, false
@@ -293,9 +293,9 @@ func (cg TOCacheGroup) Validate() (error, error) {
 	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
-//The TOCacheGroup implementation of the Creator interface
-//The insert sql returns the id and lastUpdated values of the newly inserted cachegroup and have
-//to be added to the struct
+// The TOCacheGroup implementation of the Creator interface
+// The insert sql returns the id and lastUpdated values of the newly inserted cachegroup and have
+// to be added to the struct
 func (cg *TOCacheGroup) Create() (error, error, int) {
 
 	if cg.Latitude == nil {
@@ -641,7 +641,7 @@ LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.i
 	select max(last_updated) as t from last_deleted l where l.table_name='cachegroup') as res`
 }
 
-//The TOCacheGroup implementation of the Updater interface
+// The TOCacheGroup implementation of the Updater interface
 func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 
 	if cg.Latitude == nil {
@@ -771,8 +771,8 @@ func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
 	return coordinateID, nil
 }
 
-//The CacheGroup implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
+// The CacheGroup implementation of the Deleter interface
+// all implementations of Deleter should use transactions and return the proper errorType
 func (cg *TOCacheGroup) Delete() (error, error, int) {
 	inUse, err := isUsed(cg.ReqInfo.Tx, *cg.ID)
 	if inUse {

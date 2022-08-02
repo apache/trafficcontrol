@@ -94,7 +94,7 @@ func (role TORole) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (role TORole) GetKeys() (map[string]interface{}, bool) {
 	if role.ID == nil {
 		return map[string]interface{}{"id": 0}, false

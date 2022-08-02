@@ -86,25 +86,27 @@ type ProfilePathParams struct {
 
 // PostProfile swagger:route POST /cdns Profile PostProfile
 //
-// Create a Profile
+// # Create a Profile
 //
-// A Profile is a collection of Delivery Services
+// # A Profile is a collection of Delivery Services
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func PostProfile(entity ProfilePostParam) (Profile, Alerts) {
 	return Profile{}, Alerts{}
 }
 
 // GetProfiles swagger:route GET /cdns Profile GetProfiles
 //
-// Retrieve a list of Profiles
+// # Retrieve a list of Profiles
 //
-// List of Profiles
+// # List of Profiles
 //
 // Responses:
-//          200: Profiles
-//          400: Alerts
+//
+//	200: Profiles
+//	400: Alerts
 func GetProfiles() (Profiles, Alerts) {
 	return Profiles{}, Alerts{}
 }
@@ -125,37 +127,40 @@ type ProfilePutParam struct {
 
 // PutProfile swagger:route PUT /cdns/{id} Profile PutProfile
 //
-// Update a Profile by Id
+// # Update a Profile by Id
 //
-// Update a Profile
+// # Update a Profile
 //
 // Responses:
-//          200: Profile
+//
+//	200: Profile
 func PutProfile(entity ProfilePutParam) (Profile, Alerts) {
 	return Profile{}, Alerts{}
 }
 
 // GetProfileById swagger:route GET /cdns/{id} Profile GetProfileById
 //
-// Retrieve a specific Profile by Id
+// # Retrieve a specific Profile by Id
 //
-// Retrieve a specific Profile
+// # Retrieve a specific Profile
 //
 // Responses:
-//          200: Profiles
-//          400: Alerts
+//
+//	200: Profiles
+//	400: Alerts
 func GetProfileById() (Profiles, Alerts) {
 	return Profiles{}, Alerts{}
 }
 
 // DeleteProfile swagger:route DELETE /cdns/{id} Profile DeleteProfile
 //
-// Delete a Profile by Id
+// # Delete a Profile by Id
 //
-// Delete a Profile
+// # Delete a Profile
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func DeleteProfile(entityId int) Alerts {
 	return Alerts{}
 }

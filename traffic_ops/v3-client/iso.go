@@ -34,8 +34,9 @@ const (
 // GetOSVersions GETs all available Operating System (OS) versions for ISO generation,
 // as well as the name of the directory where the "kickstarter" files are found.
 // Structure of returned map:
-//  key:   Name of OS
-//  value: Directory where the ISO source can be found
+//
+//	key:   Name of OS
+//	value: Directory where the ISO source can be found
 func (to *Session) GetOSVersions() (map[string]string, toclientlib.ReqInf, error) {
 	var data struct {
 		Versions tc.OSVersionsResponse `json:"response"`

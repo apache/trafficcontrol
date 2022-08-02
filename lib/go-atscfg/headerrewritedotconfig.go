@@ -526,7 +526,8 @@ var returnRe = regexp.MustCompile(`\s*__RETURN__\s*`)
 //
 // NOTE!! Custom TC injections MUST NOT ever have a `[L]`. Doing so will break custom header rewrites!
 // NOTE!! The TC injections MUST be come before custom rewrites (EdgeHeaderRewrite, InnerHeaderRewrite, etc).
-//        If they're placed after, custom rewrites with [L] directives will result in them being applied inconsistently and incorrectly.
+//
+//	If they're placed after, custom rewrites with [L] directives will result in them being applied inconsistently and incorrectly.
 //
 // The headerRewriteTxt is the custom header rewrite from the Delivery Service. This should be used for any logic that depends on it. The various header rewrite fields (EdgeHeaderRewrite, InnerHeaderRewrite, etc should never be used inside this function, since this function doesn't know what tier the server is at. This function should not insert the headerRewriteText, but may use it to make decisions about what to insert.
 func makeATCHeaderRewriteDirectives(ds *DeliveryService, headerRewriteTxt *string, serverIsLastTier bool, numLastTierServers int, atsMajorVersion int, atsRqstMaxHdrSize int) string {
