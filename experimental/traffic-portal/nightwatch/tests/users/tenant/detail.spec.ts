@@ -29,7 +29,7 @@ describe("Tenant Detail Spec", () => {
 
 	it("Test tenant", () => {
 		const page = browser.page.tenantDetail();
-		browser.url(`${page.api.launchUrl}/core/tenants/2`, res => {
+		browser.url(`${page.api.launchUrl}/core/tenants/${browser.globals.testData.tenant.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@active")

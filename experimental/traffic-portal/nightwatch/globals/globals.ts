@@ -63,7 +63,17 @@ declare module "nightwatch" {
 		trafficOpsURL: string;
 		apiVersion: string;
 		uniqueString: string;
+		testData: CreatedData;
 	}
+}
+
+/**
+ * Contains the data created by the client before the test suite runs.
+ */
+export interface CreatedData {
+	cdn: ResponseCDN;
+	ds: ResponseDeliveryService;
+	tenant: ResponseTenant;
 }
 
 const globals = {
@@ -114,6 +124,8 @@ const globals = {
 		try {
 			let resp = await client.post(`${apiUrl}/cdns`, JSON.stringify(cdn));
 			respCDN = resp.data.response;
+			console.log(`Successfully created CDN ${respCDN.name}`);
+			(globals.testData as CreatedData).cdn = respCDN;
 
 			const ds: RequestDeliveryService = {
 				active: false,
@@ -153,6 +165,7 @@ const globals = {
 			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
 			const respDS: ResponseDeliveryService = resp.data.response[0];
 			console.log(`Successfully created DS '${respDS.displayName}'`);
+			(globals.testData as CreatedData).ds = respDS;
 
 			const tenant: RequestTenant = {
 				active: true,
@@ -162,6 +175,7 @@ const globals = {
 			resp = await client.post(`${apiUrl}/tenants`, JSON.stringify(tenant));
 			const respTenant: ResponseTenant = resp.data.response;
 			console.log(`Successfully created Tenant ${respTenant.name}`);
+			(globals.testData as CreatedData).tenant = respTenant;
 		} catch(e) {
 			console.error((e as AxiosError).message);
 			throw e;
@@ -177,6 +191,7 @@ const globals = {
 			done();
 		});
 	},
+	testData: {},
 	trafficOpsURL: "https://localhost:6443",
 	uniqueString: new Date().getTime().toString()
 };
