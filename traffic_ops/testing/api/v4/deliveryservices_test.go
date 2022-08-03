@@ -408,7 +408,7 @@ func TestDeliveryServices(t *testing.T) {
 				"OK when DS with NO TOPOLOGY updates LEGACY HEADER REWRITE FIELDS": {
 					EndpointId: GetDeliveryServiceId(t, "ds2"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
-						"profileId":         GetProfileId(t, "ATS_EDGE_TIER_CACHE"),
+						"profileId":         GetProfileID(t, "ATS_EDGE_TIER_CACHE")(),
 						"edgeHeaderRewrite": "foo",
 						"midHeaderRewrite":  "bar",
 						"routingName":       "ccr-ds2",
@@ -511,7 +511,7 @@ func TestDeliveryServices(t *testing.T) {
 					}
 					if val, ok := testCase.RequestOpts.QueryParameters["profile"]; ok {
 						if _, err := strconv.Atoi(val[0]); err != nil {
-							testCase.RequestOpts.QueryParameters.Set("profile", strconv.Itoa(GetProfileId(t, val[0])))
+							testCase.RequestOpts.QueryParameters.Set("profile", strconv.Itoa(GetProfileID(t, val[0])()))
 						}
 					}
 					if val, ok := testCase.RequestOpts.QueryParameters["type"]; ok {
@@ -713,18 +713,6 @@ func GetDeliveryServiceId(t *testing.T, xmlId string) func() int {
 
 		return *resp.Response[0].ID
 	}
-}
-
-func GetProfileId(t *testing.T, profileName string) int {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", profileName)
-	resp, _, err := TOSession.GetProfiles(opts)
-
-	assert.RequireNoError(t, err, "Get Profiles Request failed with error: %v", err)
-	assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
-	assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
-
-	return resp.Response[0].ID
 }
 
 func generateDeliveryService(t *testing.T, requestDS map[string]interface{}) map[string]interface{} {
