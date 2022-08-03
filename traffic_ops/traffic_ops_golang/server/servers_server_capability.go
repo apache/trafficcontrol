@@ -443,7 +443,7 @@ func getDSTenantIDsByIDs(tx *sqlx.Tx, dsIDs []int64) ([]DSTenant, error) {
 	return dsTenantIDs, nil
 }
 
-// AssignMultipleServerCapabilities helps assign multiple server capabilities to a given server
+// AssignMultipleServerCapabilities helps assign multiple server capabilities to a given server.
 func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx

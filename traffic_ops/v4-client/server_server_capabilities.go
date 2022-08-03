@@ -24,7 +24,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-// apiServerServerCapabilities is the API version-relative path to the /server_server_capabilities API endpoint.
+// apiServerServerCapabilities is the API version-relative path to the
+// /server_server_capabilities API endpoint.
 const apiServerServerCapabilities = "/server_server_capabilities"
 
 // apiMultipleServerCapabilities is the API version-relative path to the /multiple_server_capabilities API endpoint.

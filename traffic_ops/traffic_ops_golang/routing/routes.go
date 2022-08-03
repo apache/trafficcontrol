@@ -132,7 +132,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		 */
 
 		// Assign Multiple Server Capabilities
-		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodPut, Path: `multiple_server_capabilities/{id}$`, Handler: server.AssignMultipleServerCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:CREATE", "SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 40792419258},
+		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodPut, Path: `multiple_server_capabilities/{id}$`, Handler: server.AssignMultipleServerCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 40792419258},
 
 		// CDNI integration
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `OC/FCI/advertisement/?$`, Handler: cdni.GetCapabilities, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729077},
