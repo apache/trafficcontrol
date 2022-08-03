@@ -19,6 +19,8 @@
 ``multiple_server_capabilities``
 ********************************
 
+.. versionadded:: 4.1
+
 ``PUT``
 ========
 Associates a list of :term:`Server Capability` to a server.

@@ -27,8 +27,9 @@ type ServerServerCapability struct {
 	ServerCapability *string    `json:"serverCapability" db:"server_capability"`
 }
 
+// MultipleServerCapabilities represents an association between a server and list of server capabilities.
 type MultipleServerCapabilities struct {
-	ServerID         *int     `json:"serverId" db:"server"`
+	ServerID         int      `json:"serverId" db:"server"`
 	ServerCapability []string `json:"serverCapability" db:"server_capability"`
 }
 

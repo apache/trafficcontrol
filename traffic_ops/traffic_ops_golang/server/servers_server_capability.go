@@ -460,12 +460,12 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check existence prior to checking type
-	_, exists, err := dbhelpers.GetServerNameFromID(tx, int64(*msc.ServerID))
+	_, exists, err := dbhelpers.GetServerNameFromID(tx, int64(msc.ServerID))
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 	}
 	if !exists {
-		userErr := fmt.Errorf("server %v does not exist", *msc.ServerID)
+		userErr := fmt.Errorf("server %d does not exist", msc.ServerID)
 		api.HandleErr(w, r, tx, http.StatusNotFound, userErr, nil)
 		return
 	}
@@ -473,16 +473,16 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 	// Ensure type is correct
 	correctType := true
 	if err := tx.QueryRow(scCheckServerTypeQuery(), msc.ServerID).Scan(&correctType); err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %v", err))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %w", err))
 		return
 	}
 	if !correctType {
-		userErr := fmt.Errorf("server %v has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", *msc.ServerID)
+		userErr := fmt.Errorf("server %d has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", msc.ServerID)
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
 
-	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx, int64(*msc.ServerID))
+	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx, int64(msc.ServerID))
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
@@ -495,7 +495,7 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Delete existing rows from server_server_capability for a given server
-	_, err = tx.Exec("DELETE FROM server_server_capability ssc WHERE ssc.server=$1", *msc.ServerID)
+	_, err = tx.Exec("DELETE FROM server_server_capability ssc WHERE ssc.server=$1", msc.ServerID)
 	if err != nil {
 		useErr, sysErr, statusCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
@@ -516,13 +516,13 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 			FROM inserted
 		) AS returned(server_capability)`
 
-	err = tx.QueryRow(mscQuery, pq.Array(msc.ServerCapability), *msc.ServerID).Scan(pq.Array(&multipleServerCapabilities))
+	err = tx.QueryRow(mscQuery, pq.Array(msc.ServerCapability), msc.ServerID).Scan(pq.Array(&multipleServerCapabilities))
 	if err != nil {
 		useErr, sysErr, statusCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
 		return
 	}
-	alerts := tc.CreateAlerts(tc.SuccessLevel, fmt.Sprintf("Multiple Server Capabilities assigned to a server:%d", *msc.ServerID))
+	alerts := tc.CreateAlerts(tc.SuccessLevel, fmt.Sprintf("Multiple Server Capabilities assigned to a server:%d", msc.ServerID))
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, msc)
 	return
 }

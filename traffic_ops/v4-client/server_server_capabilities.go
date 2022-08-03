@@ -57,7 +57,7 @@ func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerSe
 	return resp, reqInf, err
 }
 
-// AssignMultipleServerCapability assign multiple server capabilities to a server
+// AssignMultipleServerCapability assigns multiple server capabilities to a server.
 func (to *Session) AssignMultipleServerCapability(msc tc.MultipleServerCapabilities, opts RequestOptions, id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	path := fmt.Sprintf("%s/%d", apiMultipleServerCapabilities, id)
 	var alerts tc.Alerts
