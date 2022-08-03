@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -29,7 +30,7 @@ import (
 )
 
 func TestCDNLocks(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServiceCategories, Topologies, Tenants, Roles, Users, DeliveryServices, StaticDNSEntries, CDNLocks}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, ProfileParameters, Statuses, Divisions, Regions, PhysLocations, Servers, ServiceCategories, Topologies, Tenants, Roles, Users, DeliveryServices, StaticDNSEntries, CDNLocks}, func() {
 
 		opsUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opsuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 		opsUserWithLockSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opslockuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
@@ -229,6 +230,99 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
+			"PROFILE POST": {
+				"OK when USER OWNS LOCK": {
+					ClientSession: opsUserWithLockSession,
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn2")(),
+						"description":      "test cdn locks description",
+						"name":             "TestLocks",
+						"routing_disabled": false,
+						"type":             "ATS_PROFILE",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn2")(),
+						"description":      "test cdn locks description",
+						"name":             "TestLocks",
+						"routing_disabled": false,
+						"type":             "ATS_PROFILE",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"PROFILE PUT": {
+				"OK when USER OWNS LOCK": {
+					EndpointId:    GetProfileID(t, "EDGEInCDN2"),
+					ClientSession: opsUserWithLockSession,
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn2")(),
+						"description":      "edge2 description updated when user owns lock",
+						"name":             "EDGEInCDN2",
+						"routing_disabled": false,
+						"type":             "ATS_PROFILE",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId:    GetProfileID(t, "EDGEInCDN2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn2")(),
+						"description":      "should fail",
+						"name":             "EDGEInCDN2",
+						"routing_disabled": false,
+						"type":             "ATS_PROFILE",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"PROFILE DELETE": {
+				"OK when USER OWNS LOCK": {
+					EndpointId:    GetProfileID(t, "CDN2_EDGE"),
+					ClientSession: opsUserWithLockSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId:    GetProfileID(t, "MID2"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			// SHOULD BELONG TO CDN2
+			"PROFILE PARAMETER POST": {
+				"OK when USER OWNS LOCK": {
+					ClientSession: opsUserWithLockSession,
+					RequestBody: map[string]interface{}{
+						"profileId":   GetProfileID(t, "EDGEInCDN2")(),
+						"parameterId": GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"profileId":   GetProfileID(t, "EDGEInCDN2")(),
+						"parameterId": GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"PROFILE PARAMETER DELETE": {
+				"OK when USER OWNS LOCK": {
+					EndpointId:    GetProfileID(t, "CDN2_EDGE"),
+					ClientSession: opsUserWithLockSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId:    GetProfileID(t, "MID2"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
 			"SERVER POST": {
 				"OK when USER OWNS LOCK": {
 					ClientSession: opsUserWithLockSession,
@@ -379,6 +473,8 @@ func TestCDNLocks(t *testing.T) {
 					server := tc.ServerV4{}
 					topQueueUp := tc.TopologiesQueueUpdateRequest{}
 					staticDNSEntry := tc.StaticDNSEntry{}
+					profile := tc.Profile{}
+					profileParameter := tc.ProfileParameterCreationRequest{}
 
 					if testCase.RequestOpts.QueryParameters.Has("topology") {
 						topology = testCase.RequestOpts.QueryParameters.Get("topology")
@@ -416,6 +512,16 @@ func TestCDNLocks(t *testing.T) {
 							dat, err := json.Marshal(testCase.RequestBody)
 							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 							err = json.Unmarshal(dat, &staticDNSEntry)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						} else if _, ok := testCase.RequestBody["routing_disabled"]; ok {
+							dat, err := json.Marshal(testCase.RequestBody)
+							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+							err = json.Unmarshal(dat, &profile)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						} else if _, ok := testCase.RequestBody["parameterId"]; ok {
+							dat, err := json.Marshal(testCase.RequestBody)
+							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+							err = json.Unmarshal(dat, &profileParameter)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						} else {
 							dat, err := json.Marshal(testCase.RequestBody)
@@ -525,6 +631,52 @@ func TestCDNLocks(t *testing.T) {
 								resp, reqInf, err := testCase.ClientSession.DeleteDeliveryService(testCase.EndpointId(), testCase.RequestOpts)
 								for _, check := range testCase.Expectations {
 									check(t, reqInf, nil, resp.Alerts, err)
+								}
+							})
+						}
+					case "PROFILE POST":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.CreateProfile(profile, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
+					case "PROFILE PUT":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.UpdateProfile(testCase.EndpointId(), profile, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
+					case "PROFILE DELETE":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.DeleteProfile(testCase.EndpointId(), testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
+					case "PROFILE PARAMETER POST":
+						{
+							t.Run(name, func(t *testing.T) {
+								alerts, reqInf, err := testCase.ClientSession.CreateProfileParameter(profileParameter, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							})
+						}
+					case "PROFILE PARAMETER DELETE":
+						{
+							t.Run(name, func(t *testing.T) {
+								parameterId, _ := strconv.Atoi(testCase.RequestOpts.QueryParameters["parameterId"][0])
+								alerts, reqInf, err := testCase.ClientSession.DeleteProfileParameter(testCase.EndpointId(), parameterId, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
 								}
 							})
 						}
