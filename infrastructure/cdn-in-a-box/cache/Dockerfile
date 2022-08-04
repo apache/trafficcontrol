@@ -60,6 +60,7 @@ RUN dnf -y install epel-release && \
         libmaxminddb            \
         libtool-ltdl            \
         libunwind               \
+	libuuid			\
         # luajit is required by the ATS TSB RPM
         luajit                  \
         lzo                     \
@@ -68,6 +69,7 @@ RUN dnf -y install epel-release && \
         openssl                 \
         perl                    \
         tcl                     \
+	xz			\
         $additional_packages
 
 RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel && \
