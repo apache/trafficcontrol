@@ -63,10 +63,12 @@ RUN if [[ ${OS_VERSION%%.*} -ge 8 ]]; then \
 			curl \
 			gcc-toolset-9 \
 			gcc-toolset-9-runtime \
+			geoip \
 			jansson \
 			jansson-devel \
 			libmaxminddb \
-			libmaxminddb-devel); \
+			libmaxminddb-devel \
+			libuuid ); \
 		os_toolset="gcc-toolset-9"; \
 	else \
 		os_pkgs=(devtoolset-9); \
@@ -103,6 +105,7 @@ RUN if [[ ${OS_VERSION%%.*} -ge 8 ]]; then \
 		python3 \
 		sudo \
 		tcl-devel \
+		xz \
 		zlib \
 		zlib-devel \
 	&& yum clean all
