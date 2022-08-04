@@ -30,7 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TORegion struct {
 	api.APIInfoImpl `json:"-"`
 	tc.Region
@@ -63,7 +63,7 @@ func (region TORegion) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (region TORegion) GetKeys() (map[string]interface{}, bool) {
 	return map[string]interface{}{"id": region.ID}, true
 }

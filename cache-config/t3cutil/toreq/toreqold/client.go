@@ -3,7 +3,6 @@
 // This should never be imported by anything except toreq.
 //
 // The toreq.Client will automatically fall back to the older client if necessary.
-//
 package toreqold
 
 /*

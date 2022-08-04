@@ -82,21 +82,23 @@ type RegionPathParams struct {
 
 // PostRegion swagger:route POST /regions Region PostRegion
 //
-// Create a Region
+// # Create a Region
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func PostRegion(entity RegionPostParam) (Region, Alerts) {
 	return Region{}, Alerts{}
 }
 
 // GetRegions swagger:route GET /regions Region GetRegions
 //
-// Retrieve a list of Regions
+// # Retrieve a list of Regions
 //
 // Responses:
-//          200: Regions
-//          400: Alerts
+//
+//	200: Regions
+//	400: Alerts
 func GetRegions() (Regions, Alerts) {
 	return Regions{}, Alerts{}
 }
@@ -117,31 +119,34 @@ type RegionPutParam struct {
 
 // PutRegion swagger:route PUT /regions/{id} Region PutRegion
 //
-// Update a Region
+// # Update a Region
 //
 // Responses:
-//          200: Region
+//
+//	200: Region
 func PutRegion(entity RegionPutParam) (Region, Alerts) {
 	return Region{}, Alerts{}
 }
 
 // GetRegionById swagger:route GET /regions/{id} Region GetRegionById
 //
-// Retrieve a specific Region
+// # Retrieve a specific Region
 //
 // Responses:
-//          200: Regions
-//          400: Alerts
+//
+//	200: Regions
+//	400: Alerts
 func GetRegionById() (Regions, Alerts) {
 	return Regions{}, Alerts{}
 }
 
 // DeleteRegion swagger:route DELETE /regions/{id} Region DeleteRegion
 //
-// Delete a Region
+// # Delete a Region
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func DeleteRegion(entityId int) Alerts {
 	return Alerts{}
 }

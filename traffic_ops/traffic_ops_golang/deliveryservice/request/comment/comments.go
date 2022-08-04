@@ -34,7 +34,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TODeliveryServiceRequestComment struct {
 	api.APIInfoImpl `json:"-"`
 	tc.DeliveryServiceRequestCommentNullable
@@ -74,7 +74,7 @@ func (comment TODeliveryServiceRequestComment) GetKeyFieldsInfo() []api.KeyField
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (comment TODeliveryServiceRequestComment) GetKeys() (map[string]interface{}, bool) {
 	if comment.ID == nil {
 		return map[string]interface{}{"id": 0}, false

@@ -5,7 +5,6 @@
 // Users should always check the returned bool, and if it's false, call the vendored toreq client and set the proper defaults for the new feature(s).
 //
 // All TOClient functions should check for 404 or 503 and return a bool false if so.
-//
 package toreq
 
 /*
@@ -226,7 +225,6 @@ func IsLatestSupported(toClient *toclient.Session) (bool, net.Addr, error) {
 // This is safe to call even if the function returning a ReqInf returned an error;
 // it checks for nil values in all cases, and the TO Client guarantees even if a non-nil
 // error is returned, all ReqInf values are either nil or valid.
-//
 func RequestInfoStr(inf toclientlib.ReqInf, reqPath string) string {
 	return fmt.Sprintf(`requestinfo path=%v ip=%v code=%v, date="%v" age=%v`,
 		reqPath,

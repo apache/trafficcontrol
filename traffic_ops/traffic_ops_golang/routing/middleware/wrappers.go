@@ -140,10 +140,10 @@ func TimeOutWrapper(timeout time.Duration) Middleware {
 }
 
 // WrapHeaders is a Middleware which adds common headers and behavior to the handler. It specifically:
-//  - Adds default CORS headers to the response.
-//  - Adds the Whole-Content-SHA512 checksum header to the response.
-//  - Gzips the response and sets the Content-Encoding header, if the client sent an Accept-Encoding: gzip header.
-//  - Adds the Vary: Accept-Encoding header to the response
+//   - Adds default CORS headers to the response.
+//   - Adds the Whole-Content-SHA512 checksum header to the response.
+//   - Gzips the response and sets the Content-Encoding header, if the client sent an Accept-Encoding: gzip header.
+//   - Adds the Vary: Accept-Encoding header to the response
 func WrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -245,7 +245,7 @@ func GzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 }
 
 // GzipIfAccepts gzips the given bytes, writes a `Content-Encoding: gzip` header to the given writer, and returns the gzipped bytes, if the Request supports GZip (has an Accept-Encoding header). Else, returns the bytes unmodified. Note the given bytes are NOT written to the given writer. It is assumed the bytes may need to pass thru other middleware before being written.
-//TODO: drichardson - refactor these to a generic area
+// TODO: drichardson - refactor these to a generic area
 func GzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, error) {
 	// TODO this could be made more efficient by wrapping ResponseWriter with the GzipWriter, and letting callers writer directly to it - but then we'd have to deal with Closing the gzip.Writer.
 	if len(b) == 0 || !rfc.AcceptsGzip(r) {

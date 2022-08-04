@@ -110,7 +110,7 @@ FROM deliveryservice_request
 WHERE id=$1
 `
 
-//TODO: figure out how to modify 'AddTenancyCheck' so this isn't necessary
+// TODO: figure out how to modify 'AddTenancyCheck' so this isn't necessary
 const customTenancyCheck = `(
 	CASE r.change_type
 	WHEN 'delete' THEN CAST(r.original->>'tenantId' AS BIGINT) = ANY(CAST(:accessibleTenants AS BIGINT[]))
