@@ -80,10 +80,12 @@ export class TenantsComponent implements OnInit, OnDestroy {
 
 	public readonly contextMenuItems: ContextMenuItem<Readonly<Tenant>>[] = [
 		{
+			disabled: (): boolean => !this.auth.hasPermission("TENANT:UPDATE"),
 			href: (t: Tenant): string => `core/tenants/${t.id}`,
 			name: "View Details"
 		},
 		{
+			disabled: (): boolean => !this.auth.hasPermission("TENANT:UPDATE"),
 			href: (t: Tenant): string => `core/tenants/${t.id}`,
 			name: "Open in New Tab",
 			newTab: true
@@ -95,7 +97,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 
 	constructor(
 		private readonly userService: UserService,
-		private readonly auth: CurrentUserService,
+		public readonly auth: CurrentUserService,
 		private readonly headerSvc: TpHeaderService
 	) {
 		this.headerSvc.headerTitle.next("Tenant");

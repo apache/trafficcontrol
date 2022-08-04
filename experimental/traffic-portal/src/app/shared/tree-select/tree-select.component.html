@@ -14,7 +14,7 @@ limitations under the License.
 <div class="tree-select-root" role="combobox">
 	<mat-form-field>
 		<mat-label>{{label}}</mat-label>
-		<input type="text" id="{{handle}}-tree-select" name="{{handle}}-tree-select" matInput required readonly (click)="toggle($event)" [(ngModel)]="selected.name" [disabled]="disabled"/>
+		<input type="search" id="{{handle}}-tree-select" name="{{handle}}-tree-select" matInput required readonly (click)="toggle($event)" [(ngModel)]="selected.name" [disabled]="disabled"/>
 	</mat-form-field>
 	<div class="tree-select-content" *ngIf="shown">
 		<mat-form-field appearance="fill" (click)="$event.stopPropagation()">
@@ -22,7 +22,7 @@ limitations under the License.
 			<input type="text" (input)="filterChanged($event)" id="filter-{{handle}}" name="filter-{{handle}}" matInput/>
 		</mat-form-field>
 		<mat-tree [dataSource]="treeData" [treeControl]="treeControl">
-			<mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle [class.hidden-node]="!isVisible(node)">
+			<mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle [style.display]="!isVisible(node) ? 'none' : 'block'">
 				<div mat-menu-item (click)="select(node)">
 						{{node.name}}
 				</div>
@@ -38,7 +38,7 @@ limitations under the License.
 						{{node.name}}
 					</div>
 				</div>
-				<div [class.hidden-node]="!treeControl.isExpanded(node) && !node.containerNeeded" role="group">
+				<div [style.display]="(!treeControl.isExpanded(node) && !node.containerNeeded) ? 'none' : 'block'" role="group">
 					<ng-container matTreeNodeOutlet></ng-container>
 				</div>
 			</mat-nested-tree-node>

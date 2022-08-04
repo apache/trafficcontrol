@@ -63,7 +63,7 @@ export class TenantDetailsComponent implements OnInit {
 	 * @param tenantByParentId All tenants grouped by parent id.
 	 * @param currentTenant The tenant to populate.
 	 */
-	public breakTenantNode(tenantByParentId: Map<number, Array<ResponseTenant>>, currentTenant: TreeData): void {
+	public breakTenantNode(tenantByParentId: Map<number, Array<TreeData>>, currentTenant: TreeData): void {
 		currentTenant.children = (tenantByParentId.get(currentTenant.id) ?? []).map(t => ({...t, children: []} as TreeData));
 
 		currentTenant.children.forEach(t => {
@@ -75,17 +75,17 @@ export class TenantDetailsComponent implements OnInit {
 	 * Converts the tenants list into the tree-data structure needed by the tree-select component.
 	 */
 	public constructTreeData(): void {
-		const tenantByParentId = new Map<number, Array<ResponseTenant>>();
+		const tenantByParentId = new Map<number, Array<TreeData>>();
 		this.tenants.forEach(t => {
 			if (t.parentId === null) {
 				return;
 			}
-			if (!tenantByParentId.has(t.parentId)) {
-				tenantByParentId.set(t.parentId, []);
+			let children = tenantByParentId.get(t.parentId);
+			if(!children) {
+				children = [];
 			}
-			// The above check ensures this always returns at least `[]`
-			// @ts-ignore
-			tenantByParentId.get(t.parentId).push({...t, children: []});
+			children.push({...t, children: []});
+			tenantByParentId.set(t.parentId, children);
 		});
 		const rootTenant = this.tenants.find(t => t.parentId === null);
 		if (rootTenant === undefined) {
@@ -125,7 +125,8 @@ export class TenantDetailsComponent implements OnInit {
 		}
 		const tenant = this.tenants.find(t => t.id === numID);
 		if (!tenant) {
-			throw new Error(`Unable to find tenant with id ${numID}`);
+			console.error(`Unable to find tenant with id ${numID}`);
+			return;
 		}
 		this.tenant = tenant;
 		this.disabled = this.isRoot();

@@ -27,13 +27,18 @@ div.tree-select-root {
 		z-index: 10;
 
 		mat-tree {
+			overflow-y: scroll;
+			max-height: 500px;
+			padding-bottom: 5px;
+
+			.mat-menu-item {
+				width: 100%;
+			}
+
 			ul, li {
 				margin-top: 0;
 				margin-bottom: 0;
 				list-style-type: none;
-			}
-			.hidden-node {
-				display: none;
 			}
 
 			.mat-nested-tree-node div[role=group] {
