@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 
+### Fixed
+- [#7007](https://github.com/apache/trafficcontrol/issues/7007) Fixed t3c timeout and retries not working.
+
 ## [7.0.0] - 2022-07-19
 ### Added
 - [Traffic Portal] Added Layered Profile feature to /servers/

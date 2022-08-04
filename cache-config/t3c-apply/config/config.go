@@ -83,7 +83,7 @@ type Cfg struct {
 	SkipOSCheck         bool
 	UseStrategies       t3cutil.UseStrategiesFlag
 	TOInsecure          bool
-	TOTimeoutMS         time.Duration
+	TOTimeout           time.Duration
 	TOUser              string
 	TOPass              string
 	TOURL               string
@@ -413,7 +413,6 @@ If any of the related flags are also set, they override the mode's default behav
 	skipOsCheck := *skipOSCheckPtr
 	useStrategies := t3cutil.UseStrategiesFlag(*useStrategiesPtr)
 	toInsecure := *toInsecurePtr
-	toTimeoutMS := time.Millisecond * time.Duration(*toTimeoutMSPtr)
 	toURL := *toURLPtr
 	toUser := *toUserPtr
 	toPass := *toPassPtr
@@ -511,7 +510,7 @@ If any of the related flags are also set, they override the mode's default behav
 		SkipOSCheck:                 skipOsCheck,
 		UseStrategies:               useStrategies,
 		TOInsecure:                  toInsecure,
-		TOTimeoutMS:                 toTimeoutMS,
+		TOTimeout:                   time.Millisecond * time.Duration(*toTimeoutMSPtr),
 		TOUser:                      toUser,
 		TOPass:                      toPass,
 		TOURL:                       toURL,
@@ -616,7 +615,7 @@ func printConfig(cfg Cfg) {
 	log.Debugf("ReverseProxyDisable: %t\n", cfg.ReverseProxyDisable)
 	log.Debugf("SkipOSCheck: %t\n", cfg.SkipOSCheck)
 	log.Debugf("TOInsecure: %t\n", cfg.TOInsecure)
-	log.Debugf("TOTimeoutMS: %d\n", cfg.TOTimeoutMS)
+	log.Debugf("TOTimeout: %v\n", cfg.TOTimeout)
 	log.Debugf("TOUser: %s\n", cfg.TOUser)
 	log.Debugf("TOPass: Pass len: '%d'\n", len(cfg.TOPass))
 	log.Debugf("TOURL: %s\n", cfg.TOURL)

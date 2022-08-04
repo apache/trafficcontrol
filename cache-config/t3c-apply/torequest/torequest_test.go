@@ -21,6 +21,7 @@ package torequest
 
 import (
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -37,7 +38,7 @@ var testCfg config.Cfg = config.Cfg{
 	ReverseProxyDisable: false,
 	Files:               t3cutil.ApplyFilesFlagReval,
 	SkipOSCheck:         false,
-	TOTimeoutMS:         1000,
+	TOTimeout:           time.Millisecond * 1000,
 	TOUser:              "mickey",
 	TOPass:              "mouse",
 	TOURL:               "http://mouse.com",
