@@ -502,6 +502,8 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	multipleServerCapabilities := make([]string, 0, len(msc.ServerCapabilities))
+
 	mscQuery := `WITH inserted AS (
 		INSERT INTO server_server_capability
 		SELECT "server_capability", $2
@@ -514,13 +516,14 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 			FROM inserted
 		) AS returned(server_capability)`
 
-	err = tx.QueryRow(mscQuery, pq.Array(msc.ServerCapability), msc.ServerID).Scan(pq.Array(&msc.ServerCapability))
+	err = tx.QueryRow(mscQuery, pq.Array(msc.ServerCapabilities), msc.ServerID).Scan(pq.Array(&multipleServerCapabilities))
 	if err != nil {
 		useErr, sysErr, statusCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
 		return
 	}
-	alerts := tc.CreateAlerts(tc.SuccessLevel, fmt.Sprintf("Multiple Server Capabilities assigned to a server:%d", msc.ServerID))
+	msc.ServerCapabilities = multipleServerCapabilities
+	alerts := tc.CreateAlerts(tc.SuccessLevel, fmt.Sprintf("Multiple Server Capabilities assigned to a server"))
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, msc)
 	return
 }

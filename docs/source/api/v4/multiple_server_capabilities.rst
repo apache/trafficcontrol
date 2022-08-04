@@ -48,7 +48,7 @@ Request Structure
 
 	{
 		"serverId": 1,
-		"serverCapability": ["test", "disk"]
+		"serverCapabilities": ["test", "disk"]
 	}
 
 Response Structure
@@ -78,6 +78,6 @@ Response Structure
 		}],
 		"response": {
 			"serverId": 1,
-			"serverCapability": ["test", "disk"]
+			"serverCapabilities": ["test", "disk"]
 		}
 	}
