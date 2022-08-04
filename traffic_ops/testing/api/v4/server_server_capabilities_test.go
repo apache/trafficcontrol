@@ -149,11 +149,11 @@ func TestServerServerCapabilities(t *testing.T) {
 				},
 			},
 			"PUT": {
-				"OK When Multiple Server Capability Assignment": {
+				"OK When Assigned Multiple Server Capabilities": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"serverId":         GetServerID(t, "dtrc-mid-04")(),
-						"serverCapability": append(multipleSCs, "disk", "blah"),
+						"serverId":           GetServerID(t, "dtrc-mid-04")(),
+						"serverCapabilities": append(multipleSCs, "disk", "blah"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},

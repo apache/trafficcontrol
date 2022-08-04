@@ -16,7 +16,6 @@ package client
 */
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 
@@ -60,8 +59,7 @@ func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerSe
 
 // AssignMultipleServerCapability assigns multiple server capabilities to a server.
 func (to *Session) AssignMultipleServerCapability(msc tc.MultipleServerCapabilities, opts RequestOptions, id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	path := fmt.Sprintf("%s/%d", apiMultipleServerCapabilities, id)
 	var alerts tc.Alerts
-	reqInf, err := to.put(path, opts, msc, &alerts)
+	reqInf, err := to.put(apiMultipleServerCapabilities, opts, msc, &alerts)
 	return alerts, reqInf, err
 }
