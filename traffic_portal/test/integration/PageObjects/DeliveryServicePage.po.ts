@@ -60,7 +60,7 @@ export class DeliveryServicePage extends BasePage {
   private btnAddRequiredServerCapabilities = element(by.name('addCapabilityBtn'));
   private txtInputRC = element(by.name("selectFormDropdown"));
   private mnuManageServers = element(by.buttonText('Manage Servers'));
-  private btnAssignServer = element(by.name("selectServersMenuItem"));
+  private btnAssignServer = element(by.partialButtonText("Assign"));
   private txtXmlId = element(by.name('xmlId'));
   private txtDisplayName = element(by.name('displayName'));
   private selectActive = element(by.name('active'));
