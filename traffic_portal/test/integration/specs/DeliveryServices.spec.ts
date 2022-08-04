@@ -62,7 +62,7 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
             deliveryservicesData.assignserver.forEach(assignserver => {
                 it(assignserver.description, async function(){
                     await deliveryservicesPage.SearchDeliveryService(assignserver.DSName);
-                    expect(await deliveryservicesPage.AssignServerToDeliveryService(assignserver)).toBe(true);
+                    expect(await deliveryservicesPage.AssignServerToDeliveryService(assignserver)).toBeTrue();
                     await deliveryservicesPage.OpenDeliveryServicePage();
                 }
 

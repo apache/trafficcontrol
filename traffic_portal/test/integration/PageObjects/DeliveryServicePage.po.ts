@@ -190,7 +190,6 @@ export class DeliveryServicePage extends BasePage {
   }
 
   public async AssignServerToDeliveryService(deliveryservice: AssignServer): Promise<boolean>{
-    let result = false;
     const basePage = new BasePage();
     await this.btnMore.click();
     await this.mnuManageServers.click();
@@ -199,9 +198,13 @@ export class DeliveryServicePage extends BasePage {
     await browser.sleep(3000);
     await element(by.cssContainingText(".ag-cell-value", deliveryservice.ServerName)).click();
     await this.ClickSubmit();
-    result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
-    return result;
-  }
+	const msg = await this.GetOutputMessage();
+	if (msg === deliveryservice.validationMessage) {
+		return true;
+	}
+	const bpMsg = await basePage.GetOutputMessage();
+	throw new Error(`bad message; want: '${deliveryservice.validationMessage}', got: '${msg}' (basepage: '${bpMsg}')`);
+}
 
   public async AssignRequiredCapabilitiesToDS(deliveryservice: AssignRC): Promise<boolean>{
     let result = false;
