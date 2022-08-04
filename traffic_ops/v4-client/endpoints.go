@@ -22,7 +22,7 @@ package client
 // Versions are ordered latest-first.
 func apiVersions() []string {
 	return []string{
-		"4.0",
 		"4.1",
+		"4.0",
 	}
 }
