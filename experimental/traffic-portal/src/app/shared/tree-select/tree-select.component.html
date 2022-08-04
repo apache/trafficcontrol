@@ -14,12 +14,12 @@ limitations under the License.
 <div class="tree-select-root" role="combobox">
 	<mat-form-field>
 		<mat-label>{{label}}</mat-label>
-		<input type="search" id="{{handle}}-tree-select" name="{{handle}}-tree-select" matInput required readonly (click)="toggle($event)" [(ngModel)]="selected.name" [disabled]="disabled"/>
+		<input type="text" id="{{handle}}-tree-select" name="{{handle}}-tree-select" matInput required readonly (click)="toggle($event)" [(ngModel)]="selected.name" [disabled]="disabled"/>
 	</mat-form-field>
 	<div class="tree-select-content" *ngIf="shown">
 		<mat-form-field appearance="fill" (click)="$event.stopPropagation()">
 			<mat-label>Filter</mat-label>
-			<input type="text" (input)="filterChanged($event)" id="filter-{{handle}}" name="filter-{{handle}}" matInput/>
+			<input type="search" (input)="filterChanged($event)" id="filter-{{handle}}" name="filter-{{handle}}" matInput/>
 		</mat-form-field>
 		<mat-tree [dataSource]="treeData" [treeControl]="treeControl">
 			<mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle [style.display]="!isVisible(node) ? 'none' : 'block'">
