@@ -38,7 +38,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/4.1/multiple_server_capabilities/1 HTTP/1.1
+	PUT /api/4.1/multiple_server_capabilities/ HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -46,10 +46,10 @@ Request Structure
 	Content-Length: 84
 	Content-Type: application/json
 
-    {
-        "serverId": 1,
-        "serverCapability": ["test", "disk"]
-    }
+	{
+		"serverId": 1,
+		"serverCapability": ["test", "disk"]
+	}
 
 Response Structure
 ------------------
@@ -71,13 +71,13 @@ Response Structure
 	Date: Mon, 02 Aug 2022 22:15:11 GMT
 	Content-Length: 157
 
-    {
-        "alerts": [{
-            "text": "Multiple Server Capabilities assigned to a server:1",
-            "level": "success"
-        }],
-        "response": {
-            "serverId": 1,
-            "serverCapability": ["test", "disk"]
-        }
-    }
+	{
+		"alerts": [{
+			"text": "Multiple Server Capabilities assigned to a server:1",
+			"level": "success"
+		}],
+		"response": {
+			"serverId": 1,
+			"serverCapability": ["test", "disk"]
+		}
+	}

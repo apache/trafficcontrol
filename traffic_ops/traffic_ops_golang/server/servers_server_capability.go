@@ -445,7 +445,7 @@ func getDSTenantIDsByIDs(tx *sqlx.Tx, dsIDs []int64) ([]DSTenant, error) {
 
 // AssignMultipleServerCapabilities helps assign multiple server capabilities to a given server.
 func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -502,8 +502,6 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	multipleServerCapabilities := make([]string, 0, len(msc.ServerCapability))
-
 	mscQuery := `WITH inserted AS (
 		INSERT INTO server_server_capability
 		SELECT "server_capability", $2
@@ -516,7 +514,7 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 			FROM inserted
 		) AS returned(server_capability)`
 
-	err = tx.QueryRow(mscQuery, pq.Array(msc.ServerCapability), msc.ServerID).Scan(pq.Array(&multipleServerCapabilities))
+	err = tx.QueryRow(mscQuery, pq.Array(msc.ServerCapability), msc.ServerID).Scan(pq.Array(&msc.ServerCapability))
 	if err != nil {
 		useErr, sysErr, statusCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
