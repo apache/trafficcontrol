@@ -264,7 +264,6 @@ jobs:
           path: ${{ github.workspace }}/dist
           key: ${{ steps.repo-info.outputs.expected-rpm-name }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
       - name: Build ATS RPM
-        if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/build-ats-test-rpm
         env:
           ATC_COMPONENT: ${{ github.job }}
