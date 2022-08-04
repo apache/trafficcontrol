@@ -337,3 +337,36 @@ input:focus + .slider {
 input:checked + .slider::before {
   transform: translateX(13px);
 }
+
+.revealable-password-container {
+	display: flex;
+	justify-content: space-between;
+	padding: 0;
+	align-content: center;
+
+	> input {
+		appearance: none;
+		border: none;
+		flex: 1;
+		padding: 6px 12px;
+		color: inherit;
+		background: transparent;
+		line-height: inherit;
+		height: 100%;
+	}
+
+	> button {
+		width: 34px;
+		border: none;
+	}
+}
+
+.private-text {
+	color: transparent;
+	text-shadow: 0 0 8px rgba(0,0,0,0.5);
+
+	&:active, &:hover {
+		color: inherit;
+		text-shadow: none;
+	}
+}

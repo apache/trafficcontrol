@@ -52,13 +52,10 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
             });
     };
 
-    var getProfiles = function(cdnId) {
-        profileService.getProfiles({ orderby: 'name', cdn: cdnId })
-            .then(function(result) {
-                $scope.profiles = _.filter(result, function(profile) {
-                    return profile.type != 'DS_PROFILE'; // DS profiles are not intended for servers
-                });
-            });
+	/** @param {number} cdnId */
+    async function getProfiles(cdnId) {
+        const result = await profileService.getProfiles({ orderby: "name", cdn: cdnId })
+		$scope.profiles = result.filter(profile => profile.type !== "DS_PROFILE"); // DS profiles are not intended for servers
     };
 
     $scope.getProfileID = function(profileName) {
@@ -78,6 +75,15 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
             $scope.server.profileNames.push(null);
         }
     }
+
+	$scope.iloInputType = "password";
+	$scope.toggleILO = () => {
+		if ($scope.iloInputType === "password") {
+			$scope.iloInputType = "text";
+		} else {
+			$scope.iloInputType = "password";
+		}
+	};
 
     $scope.deleteProfile = function(index) {
         $scope.serverForm.$setDirty();
