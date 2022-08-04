@@ -992,7 +992,7 @@ func rootHandler(d ServerData) http.Handler {
 	return root{}
 }
 
-//CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines
+// CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines
 func CreateThrottledHandler(handler http.Handler, maxConcurrentCalls int) ThrottledHandler {
 	return ThrottledHandler{handler, make(chan struct{}, maxConcurrentCalls)}
 }

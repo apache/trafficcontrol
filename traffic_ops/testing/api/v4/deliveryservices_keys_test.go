@@ -96,27 +96,27 @@ func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int, 
 
 // getCustomDS returns a DS that is guaranteed to have non-nil:
 //
-//    Active
-//    CDNID
-//    DSCP
-//    DisplayName
-//    RoutingName
-//    GeoLimit
-//    GeoProvider
-//    IPV6RoutingEnabled
-//    InitialDispersion
-//    LogsEnabled
-//    MissLat
-//    MissLong
-//    MultiSiteOrigin
-//    OrgServerFQDN
-//    Protocol
-//    QStringIgnore
-//    RangeRequestHandling
-//    RegionalGeoBlocking
-//    TenantID
-//    TypeID
-//    XMLID
+//	Active
+//	CDNID
+//	DSCP
+//	DisplayName
+//	RoutingName
+//	GeoLimit
+//	GeoProvider
+//	IPV6RoutingEnabled
+//	InitialDispersion
+//	LogsEnabled
+//	MissLat
+//	MissLong
+//	MultiSiteOrigin
+//	OrgServerFQDN
+//	Protocol
+//	QStringIgnore
+//	RangeRequestHandling
+//	RegionalGeoBlocking
+//	TenantID
+//	TypeID
+//	XMLID
 //
 // BUT, will ALWAYS have nil MaxRequestHeaderBytes.
 // Note that the Tenant is hard-coded to #1.

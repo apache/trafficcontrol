@@ -41,11 +41,11 @@ var cmds = map[string]CmdFunc{
 // cmdSetStat sets the rate of the given stat increase for the given remap.
 //
 // query parameters:
-//   remap: string; required; the full name of the remap whose kbps to set.
-//   stat: string; required; the stat to set (in_bytes, out_bytes, status_2xx, status_3xx, status_4xx, status_5xx).
-//   min:   unsigned integer; required; new minimum of kbps increase of InBytes stat for the given remap.
-//   max:   unsigned integer; required; new maximum of kbps increase of InBytes stat for the given remap.
 //
+//	remap: string; required; the full name of the remap whose kbps to set.
+//	stat: string; required; the stat to set (in_bytes, out_bytes, status_2xx, status_3xx, status_4xx, status_5xx).
+//	min:   unsigned integer; required; new minimum of kbps increase of InBytes stat for the given remap.
+//	max:   unsigned integer; required; new maximum of kbps increase of InBytes stat for the given remap.
 func cmdSetStat(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesrvrdata.Ths) {
 	urlQry := r.URL.Query()
 

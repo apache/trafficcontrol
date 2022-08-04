@@ -1,38 +1,38 @@
 // Package cache contains definitions for mechanisms used to extract health
 // and statistics data from cache-server-provided data. The most commonly
-// used format is the ``stats_over_http'' format provided by the plugin of the
-// same name for Apache Traffic Server, followed closely by ``astats''  which
+// used format is the “stats_over_http” format provided by the plugin of the
+// same name for Apache Traffic Server, followed closely by “astats”  which
 // is the legacy format used by older versions of Apache Traffic Control.
 //
-// Creating A New Stats Type
+// # Creating A New Stats Type
 //
 // To create a new Stats Type, for a custom caching proxy with its own stats
 // format:
 //
-// 1. Create a file for your type in the traffic_monitor/cache directory and
-//    package, `github.com/apache/trafficcontrol/traffic_monitor/cache/`
-// 2. Create Parse and (optionally) Precompute functions in your file, with the
-//    signature of `StatisticsParser` and `StatisticsPrecomputer`, respectively
-// 3. In your file's special `init` func, call `registerDecoder` with your two
-//    functions to register the new format. The name of the format MUST be
-//    unique!
-// 4. To apply the new parsing format to a cache server, set its Profile's
-//    ``health.polling.format`` Parameter's Value to the name of the desired
-//    format.
+//  1. Create a file for your type in the traffic_monitor/cache directory and
+//     package, `github.com/apache/trafficcontrol/traffic_monitor/cache/`
+//  2. Create Parse and (optionally) Precompute functions in your file, with the
+//     signature of `StatisticsParser` and `StatisticsPrecomputer`, respectively
+//  3. In your file's special `init` func, call `registerDecoder` with your two
+//     functions to register the new format. The name of the format MUST be
+//     unique!
+//  4. To apply the new parsing format to a cache server, set its Profile's
+//     “health.polling.format“ Parameter's Value to the name of the desired
+//     format.
 //
 // Your Parser should take the raw bytes from the `io.Reader` and populate the
 // raw stats from them. It needs to provide (nearly) all of the data in a
 // Statistics structure. Specifically, the available statistics MUST include:
 //
-// • One-minute "loadavg" value for the cache server. The others are optional,
-//   as we only use the one-minute value for health checks.
-// • At least one network interface (which will be considered the one used for
-//   routing, and if multiple "monitored" network interfaces are configured for
-//   the cache server in Traffic Ops they MUST all be present) and specifically
-//   its name, ``speed'', and bytes in and out. Parsers SHOULD return an error
-//   if at least one interface cannot be found in the payload data.
-// • If your format does not directly indicate if the cache server is available
-//   then NotAvailable should just be set to ``false''.
+//   - One-minute "loadavg" value for the cache server. The others are optional,
+//     as we only use the one-minute value for health checks.
+//   - At least one network interface (which will be considered the one used for
+//     routing, and if multiple "monitored" network interfaces are configured for
+//     the cache server in Traffic Ops they MUST all be present) and specifically
+//     its name, “speed”, and bytes in and out. Parsers SHOULD return an error
+//     if at least one interface cannot be found in the payload data.
+//   - If your format does not directly indicate if the cache server is available
+//     then NotAvailable should just be set to “false”.
 //
 // All other statistics (e.g. Delivery Service stats) should be returned in the
 // map of statistic names to their values.
@@ -54,7 +54,7 @@
 // large endpoint with all stats. If your cache does not have two stat
 // endpoints, you may use your large stat endpoint for the Health poll, and
 // configure the Health poll interval to be arbitrarily slow. These are
-// controlled by the ``health.polling.url' Parameter in Traffic Ops.
+// controlled by the “health.polling.url' Parameter in Traffic Ops.
 //
 // Note your stats functions SHOULD NOT reuse functions from other stats types,
 // even if they are similar, or have identical helper functions. This is a case

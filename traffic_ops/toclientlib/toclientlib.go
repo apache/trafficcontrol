@@ -43,7 +43,6 @@ import (
 // apiVersions is the list of API versions to be supported. This should generally be provided by the specific client version wrapping this library.
 //
 // See ClientOpts for details about options, which options are required, and how they behave.
-//
 func Login(url, user, pass string, opts ClientOpts, apiVersions []string) (*TOClient, ReqInf, error) {
 	if strings.TrimSpace(opts.UserAgent) == "" {
 		return nil, ReqInf{}, errors.New("opts.UserAgent is required")
@@ -323,9 +322,11 @@ func (to *TOClient) logout() (net.Addr, error) {
 // LoginWithAgent returns an authenticated TOClient.
 //
 // Start with
-//     toURL := "https://trafficops.example"
-//     apiVers := []string{"3.0", "3.1"}
-//     to := LoginWithAgent(toURL, "user", "passwd", true, "myapp/1.0", DefaultTimeout, apiVers)
+//
+//	toURL := "https://trafficops.example"
+//	apiVers := []string{"3.0", "3.1"}
+//	to := LoginWithAgent(toURL, "user", "passwd", true, "myapp/1.0", DefaultTimeout, apiVers)
+//
 // subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
 //
 // Returns the logged in client, the remote IP address of Traffic Ops to which
@@ -372,9 +373,11 @@ func LoginWithAgent(
 // authentication.
 //
 // Start with
-//     toURL := "https://trafficops.example"
-//     apiVers := []string{"3.0", "3.1"}
-//     to := LoginWithToken(toURL, "token", true, "myapp/1.0", DefaultTimeout, apiVers)
+//
+//	toURL := "https://trafficops.example"
+//	apiVers := []string{"3.0", "3.1"}
+//	to := LoginWithToken(toURL, "token", true, "myapp/1.0", DefaultTimeout, apiVers)
+//
 // subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
 //
 // Returns the logged in client, the remote IP address of Traffic Ops to which
@@ -429,7 +432,6 @@ func LoginWithToken(
 //
 // apiVersions is the list of API versions supported in this client. This
 // should generally be provided by the client package wrapping this package.
-//
 func LogoutWithAgent(
 	toURL string,
 	toUser string,
@@ -640,7 +642,6 @@ func reqFallback(reqF ReqF) ReqF {
 //
 // For example, path should be like '/deliveryservices'
 // and this will request '/api/3.1/deliveryservices'.
-//
 func reqAPI(reqF ReqF) ReqF {
 	return func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error) {
 		path = strings.TrimSuffix(to.APIBase(), "/") + "/" + strings.TrimPrefix(path, "/")
@@ -656,11 +657,11 @@ func reqAPI(reqF ReqF) ReqF {
 //
 // 401 http.StatusUnauthorized - Via to.request(), Same as 403 Forbidden.
 // 403 http.StatusForbidden    - Via to.request()
-//                               Will try to log in again, and try the request again.
-//                               The second request is returned, even if it fails.
+//
+//	Will try to log in again, and try the request again.
+//	The second request is returned, even if it fails.
 //
 // To request the bytes without deserializing, pass a *[]byte response.
-//
 func makeRequestWithHeader(to *TOClient, method, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error) {
 	var remoteAddr net.Addr
 	var resp *http.Response

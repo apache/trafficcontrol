@@ -67,7 +67,7 @@ func (typ TOType) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (typ TOType) GetKeys() (map[string]interface{}, bool) {
 	if typ.ID == nil {
 		return map[string]interface{}{"id": 0}, false

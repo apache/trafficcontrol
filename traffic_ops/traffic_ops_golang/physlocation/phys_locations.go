@@ -35,7 +35,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TOPhysLocation struct {
 	api.APIInfoImpl `json:"-"`
 	tc.PhysLocationNullable
@@ -63,7 +63,7 @@ func (pl TOPhysLocation) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (pl TOPhysLocation) GetKeys() (map[string]interface{}, bool) {
 	if pl.ID == nil {
 		return map[string]interface{}{"id": 0}, false

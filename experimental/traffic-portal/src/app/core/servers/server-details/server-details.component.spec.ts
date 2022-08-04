@@ -27,6 +27,7 @@ import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { defaultServer } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { SharedModule } from "src/app/shared/shared.module";
 
 import { ServerDetailsComponent } from "./server-details.component";
 
@@ -51,7 +52,8 @@ describe("ServerDetailsComponent", () => {
 				MatFormFieldModule,
 				MatInputModule,
 				BrowserAnimationsModule,
-				APITestingModule
+				APITestingModule,
+				SharedModule
 			],
 			providers: [
 				{provide: CurrentUserService, useValue: mockCurrentUserService},

@@ -102,9 +102,9 @@ func (i JSONIntStr) String() string {
 
 // JSONNameOrIDStr is designed to handle backwards-compatibility for old Perl endpoints which accept both. Please do not use this for new endpoints or new APIs, APIs should be well-typed.
 // NOTE: this differs from JSONIntStr in that this field could be 1 of 3 options:
-//     1. string representing an integer
-//     2. string representing a unique name
-//     3. integer
+//  1. string representing an integer
+//  2. string representing a unique name
+//  3. integer
 type JSONNameOrIDStr struct {
 	Name *string
 	ID   *int

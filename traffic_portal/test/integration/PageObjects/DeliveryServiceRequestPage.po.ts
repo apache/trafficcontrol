@@ -42,7 +42,7 @@ export class DeliveryServicesRequestPage extends BasePage {
   private btnUpdateRequest = element(by.buttonText("Update Request"))
   private btnYes = element(by.buttonText("Yes"))
   private btnMore = element(by.name("moreBtn"))
-  private btnCreateDS = element(by.linkText("Create Delivery Service"));
+  private btnCreateDS = element(by.buttonText("Create Delivery Service"));
   private formDropDown = element(by.name("selectFormDropdown"))
   private txtXmlId = element(by.id("xmlId"));
   private txtDisplayName = element(by.id("displayName"));
@@ -130,4 +130,3 @@ export class DeliveryServicesRequestPage extends BasePage {
     return basePage.GetOutputMessage().then(value => outPutMessage === value);
   }
 }
-

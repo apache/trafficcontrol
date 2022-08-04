@@ -53,7 +53,7 @@ func (i tester) GetKeyFieldsInfo() []KeyFieldInfo {
 	return []KeyFieldInfo{{"id", GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (i tester) GetKeys() (map[string]interface{}, bool) {
 	return map[string]interface{}{"id": i.ID}, true
 }
@@ -71,7 +71,7 @@ func (i *tester) GetAuditName() string {
 	return "testerInstance:" + strconv.Itoa(i.ID)
 }
 
-//Validator interface function
+// Validator interface function
 func (v *tester) Validate() (error, error) {
 	if v.ID < 1 {
 		return errors.New("ID is too low"), nil
@@ -79,12 +79,12 @@ func (v *tester) Validate() (error, error) {
 	return nil, nil
 }
 
-//Creator interface functions
+// Creator interface functions
 func (i *tester) Create() (error, error, int) {
 	return i.userErr, i.sysErr, i.errCode
 }
 
-//Reader interface functions
+// Reader interface functions
 func (i *tester) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	if h.Get(rfc.IfModifiedSince) != "" {
 		if imsDate, ok := rfc.ParseHTTPDate(h.Get(rfc.IfModifiedSince)); !ok {
@@ -98,17 +98,17 @@ func (i *tester) Read(h http.Header, useIMS bool) ([]interface{}, error, error, 
 	return []interface{}{tester{ID: 1}}, nil, nil, http.StatusOK, nil
 }
 
-//Updater interface functions
+// Updater interface functions
 func (i *tester) Update(http.Header) (error, error, int) {
 	return i.userErr, i.sysErr, i.errCode
 }
 
-//Deleter interface functions
+// Deleter interface functions
 func (i *tester) Delete() (error, error, int) {
 	return i.userErr, i.sysErr, i.errCode
 }
 
-//used for testing purposes only
+// used for testing purposes only
 func (t *tester) SetError(userErr error, sysErr error, errCode int) {
 	t.userErr = userErr
 	t.sysErr = sysErr

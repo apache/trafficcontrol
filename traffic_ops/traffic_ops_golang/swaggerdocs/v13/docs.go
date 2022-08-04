@@ -1,34 +1,34 @@
 /*
- Package docs Traffic Ops API
+	 Package docs Traffic Ops API
 
- The following REST APIs are used by the Traffic Portal UI along with several Traffic Control backend component and services.
+	 The following REST APIs are used by the Traffic Portal UI along with several Traffic Control backend component and services.
 
- This documentation is fully compliant with the Swagger 2.0 specification
+	 This documentation is fully compliant with the Swagger 2.0 specification
 
-     Schemes: http, https
-	 Host: your-traffic-ops
-     BasePath: /api/1.3
-     Version: 1.3
-     License: Apache 2 https://github.com/apache/trafficcontrol/blob/master/LICENSE
-     Contact: Traffic Control Dev List<dev@trafficcontrol.apache.org> http://traffic-control-cdn.readthedocs.io/en/latest/index.html
+	     Schemes: http, https
+		 Host: your-traffic-ops
+	     BasePath: /api/1.3
+	     Version: 1.3
+	     License: Apache 2 https://github.com/apache/trafficcontrol/blob/master/LICENSE
+	     Contact: Traffic Control Dev List<dev@trafficcontrol.apache.org> http://traffic-control-cdn.readthedocs.io/en/latest/index.html
 
-     Consumes:
-     - application/json
+	     Consumes:
+	     - application/json
 
-     Produces:
-     - application/json
+	     Produces:
+	     - application/json
 
-     Security:
-     - Cookie:
+	     Security:
+	     - Cookie:
 
-     SecurityDefinitions:
-     Cookie:
-          type: apiKey
-          name: cookie
-          in: header
+	     SecurityDefinitions:
+	     Cookie:
+	          type: apiKey
+	          name: cookie
+	          in: header
 
 
- swagger:meta
+	 swagger:meta
 */
 package v13
 

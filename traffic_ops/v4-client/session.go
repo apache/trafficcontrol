@@ -48,7 +48,6 @@ func NewRequestOptions() RequestOptions {
 // Returns the logged in client, the remote address of Traffic Ops which was translated and used to log in, and any error. If the error is not nil, the remote address may or may not be nil, depending whether the error occurred before the login request.
 //
 // See ClientOpts for details about options, which options are required, and how they behave.
-//
 func Login(url, user, pass string, opts Options) (*Session, toclientlib.ReqInf, error) {
 	cl, reqInf, err := toclientlib.Login(url, user, pass, opts.ClientOpts, apiVersions())
 	if err != nil {

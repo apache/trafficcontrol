@@ -33,7 +33,6 @@ const ApplyCachePath = `/var/lib/trafficcontrol-cache-config/config-data.json`
 // app which returns nothing on successes (which is typical of POSIX apps),
 // so we want the default empty string to represent that.
 // Hence, the default value of ServiceNeeds is success, not invalid
-//
 type ServiceNeeds string
 
 const (

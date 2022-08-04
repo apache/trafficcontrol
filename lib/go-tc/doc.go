@@ -8,7 +8,7 @@
 // Ops API, and usually serve to define payloads of HTTP requests and
 // responses.
 //
-// Enumerated Types
+// # Enumerated Types
 //
 // Enumerated types - which should typically go in enum.go - should be treated
 // as enumerables, and MUST NOT be cast as anything else (integer, strings,
@@ -22,17 +22,17 @@
 // An example of an enumerated string type 'Foo' and an enumerated integral (or
 // arbitrary) type 'Bar' are shown below:
 //
-//     type Foo string
-//     const (
-//         FooA Foo = "A"
-//         FooB Foo = "B"
-//     )
+//	type Foo string
+//	const (
+//	    FooA Foo = "A"
+//	    FooB Foo = "B"
+//	)
 //
-//     type Bar int
-//     const (
-//         BarTest Bar = iota
-//         BarQuest
-//     )
+//	type Bar int
+//	const (
+//	    BarTest Bar = iota
+//	    BarQuest
+//	)
 //
 // Note the way each member of the "enum" is prefixed with the type name, to
 // help avoid collisions. Also note how, for string enumerations, the type must
@@ -54,53 +54,53 @@
 // continue. The way this is normally done is with a 'FromString' method like
 // so:
 //
-//     type Foo string
-//     const (
-//         FooA Foo = "A"
-//         FooB Foo = "B"
-//         FooInvalid = ""
-//     )
+//	type Foo string
+//	const (
+//	    FooA Foo = "A"
+//	    FooB Foo = "B"
+//	    FooInvalid = ""
+//	)
 //
-//     func FooFromString(foo string) Foo {
-//         switch foo {
-//         case FooA:
-//             fallthrough
-//         case FooB:
-//             return Foo(foo)
-//         }
-//         return FooInvalid
-//     }
+//	func FooFromString(foo string) Foo {
+//	    switch foo {
+//	    case FooA:
+//	        fallthrough
+//	    case FooB:
+//	        return Foo(foo)
+//	    }
+//	    return FooInvalid
+//	}
 //
 // However, this requires postprocessing after deserialization, so one might
 // instead implement encoding/json.Unmarshaler:
 //
-//     import "errors"
+//	import "errors"
 //
-//     type Foo string
-//     const (
-//         FooA Foo = "A"
-//         FooB Foo = "B"
-//         FooInvalid = ""
-//     )
+//	type Foo string
+//	const (
+//	    FooA Foo = "A"
+//	    FooB Foo = "B"
+//	    FooInvalid = ""
+//	)
 //
-//     func (f *Foo) UnmarshalJSON(data []byte) error {
-//         if string(data) == "null" {
-//             return errors.New("'null' is not a valid 'Foo'")
-//         }
-//         s := strings.Trim(string(data), "\"")
-//         switch s {
-//         case FooA:
-//             fallthrough
-//         case FooB:
-//             *f = Foo(s)
-//             return
-//         }
-//         // This is an invalid *value* not a parse error, so we don't return
-//         // an error and instead just make it clear that the value was
-//         // invalid.
-//         *f = FooInvalid
-//         return nil
-//     }
+//	func (f *Foo) UnmarshalJSON(data []byte) error {
+//	    if string(data) == "null" {
+//	        return errors.New("'null' is not a valid 'Foo'")
+//	    }
+//	    s := strings.Trim(string(data), "\"")
+//	    switch s {
+//	    case FooA:
+//	        fallthrough
+//	    case FooB:
+//	        *f = Foo(s)
+//	        return
+//	    }
+//	    // This is an invalid *value* not a parse error, so we don't return
+//	    // an error and instead just make it clear that the value was
+//	    // invalid.
+//	    *f = FooInvalid
+//	    return nil
+//	}
 //
 // Though in this case the original, raw, string value of the 'Foo' is lost. Be
 // aware of the limitations of these two designs during implementation.
@@ -123,7 +123,7 @@
 // Enums should always have a String() method, that way they implement
 // fmt.Stringer and can be easily represented in a human-readable way.
 //
-// When to Use Custom Types
+// # When to Use Custom Types
 //
 // A type should be defined whenever there is a need to represent a data
 // *structure* (in a 'struct'), or whenever the type has some enforced
@@ -142,7 +142,7 @@
 // CacheGroupParameter that contains all of the same data as a regular
 // Parameter simply because of this relationship.
 //
-// Versioning Structures
+// # Versioning Structures
 //
 // Structures used by the Traffic Ops API may change over time as the API
 // itself changes. Typically, each new major API version will cause some
@@ -157,23 +157,23 @@
 // necessarily named FooV1/FooV11 etc.) indicating the new structure. For
 // example:
 //
-//     // FooV11 represents a Foo in TO APIv1.1.
-//     //
-//     // Deprecated: TO APIv1.1 is deprecated; upgrade to FooV2.
-//     type FooV11 struct {
-//         Bar string `json:"bar"`
-//     }
-//     // FooV1 represents a Foo in the latest minor version of TO APIv1.
-//     //
-//     // Deprecated: TO APIv1 is deprecated; upgrade to FooV2.
-//     type FooV1 = FooV11
+//	// FooV11 represents a Foo in TO APIv1.1.
+//	//
+//	// Deprecated: TO APIv1.1 is deprecated; upgrade to FooV2.
+//	type FooV11 struct {
+//	    Bar string `json:"bar"`
+//	}
+//	// FooV1 represents a Foo in the latest minor version of TO APIv1.
+//	//
+//	// Deprecated: TO APIv1 is deprecated; upgrade to FooV2.
+//	type FooV1 = FooV11
 //
-//     // FooV20 represents a Foo in TO APIv2.0.
-//     type FooV20 struct {
-//         Bar string `json:"bar"`
-//     }
-//     // FooV2 represents a Foo in the latest minor version of TO APIv2.
-//     type FooV2 = FooV20
+//	// FooV20 represents a Foo in TO APIv2.0.
+//	type FooV20 struct {
+//	    Bar string `json:"bar"`
+//	}
+//	// FooV2 represents a Foo in the latest minor version of TO APIv2.
+//	type FooV2 = FooV20
 //
 // Note that there is no type alias simply named "Foo" - that is exactly how it
 // should be.

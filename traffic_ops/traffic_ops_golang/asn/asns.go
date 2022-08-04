@@ -37,7 +37,7 @@ import (
 // ASNsPrivLevel ...
 const ASNsPrivLevel = 10
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TOASNV11 struct {
 	api.APIInfoImpl `json:"-"`
 	tc.ASNNullable

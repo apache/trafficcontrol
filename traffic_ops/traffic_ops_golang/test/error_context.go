@@ -45,7 +45,6 @@ type errorImpl struct {
 //		err.Code()  // 404
 //		err.Cause() // not found
 //	}
-//
 type Error interface {
 	Error() string
 	Code() int
@@ -76,7 +75,8 @@ func (e errorImpl) Prepend(fmtStr string, fmtArgs ...interface{}) Error {
 // Cause returns the original error made, without extra context. It implements
 // the causer interface defined in the errors package.
 // see:
-//  https://pkg.go.dev/github.com/pkg/errors#Cause
+//
+//	https://pkg.go.dev/github.com/pkg/errors#Cause
 func (e errorImpl) Cause() error {
 	return e.cause
 }
@@ -94,13 +94,13 @@ func AddErrorCode(code int, err error) Error {
 //
 // Implementation details:
 //
-//  contains a list of all valid error codes
-//	- allows user to make sure they are creating the correct errors
-//	- actually a map
-//		lookup can be done without linear search
-//		we can use the map to keep count of which errors are made
-//  contains mapping from error code to name/default message
-//	- not required for all error codes, or for any
+//	 contains a list of all valid error codes
+//		- allows user to make sure they are creating the correct errors
+//		- actually a map
+//			lookup can be done without linear search
+//			we can use the map to keep count of which errors are made
+//	 contains mapping from error code to name/default message
+//		- not required for all error codes, or for any
 //
 // An example setup:
 //
@@ -136,7 +136,6 @@ func AddErrorCode(code int, err error) Error {
 //		// there is no error code with 0, so this panics
 //		err = ErrorContext.NewError(0, "some error msg")
 //	}
-//
 type ErrorContext struct {
 	calledNewError  bool
 	createdNewError bool
@@ -196,18 +195,19 @@ func (ec *ErrorContext) TurnPanicOn() error {
 // Default messages must be configured before errors are created.
 //
 // parameters:
-//  `code` should exist in the error context, only one default message mapping can exist per error context
-//  `msg` should be a plain string without special formatting
+//
+//	`code` should exist in the error context, only one default message mapping can exist per error context
+//	`msg` should be a plain string without special formatting
 //
 // usage:
-//  ErrorContext.SetDefaultMessageForCode(404, "not found")
 //
-//  // err has a default message
-//  err := ErrorContext.NewError(404)
+//	ErrorContext.SetDefaultMessageForCode(404, "not found")
 //
-//  // the default message is overridden to add context to the error
-//  err := ErrorContext.NewError(404, "not found: %v", prev_err")
+//	// err has a default message
+//	err := ErrorContext.NewError(404)
 //
+//	// the default message is overridden to add context to the error
+//	err := ErrorContext.NewError(404, "not found: %v", prev_err")
 func (ec *ErrorContext) SetDefaultMessageForCode(code uint, msg string) error {
 	if ec.calledNewError {
 		return ec.internalError(BadInitOrder, nil)
@@ -227,8 +227,8 @@ func (ec *ErrorContext) SetDefaultMessageForCode(code uint, msg string) error {
 // returned if a duplicate code is added.
 //
 // parameter:
-//  `mapping` is a map of error codes to their default error messages
 //
+//	`mapping` is a map of error codes to their default error messages
 func (ec *ErrorContext) AddDefaultErrorMessages(mapping map[uint]string) error {
 	for code, desc := range mapping {
 		if err := ec.SetDefaultMessageForCode(code, desc); err != nil {
@@ -293,8 +293,9 @@ func (ec *ErrorContext) newError(code uint, fmtStr string, fmtArgs ...interface{
 // if no args are specified a lookup will be made to find the default configured string (see SetDefaultMessageForCode)
 //
 // usage:
-//  cxt.NewError(404, "not found: %v", prev_err)
-//  cxt.NewError(404) // (default message must exist otherwise this is an error)
+//
+//	cxt.NewError(404, "not found: %v", prev_err)
+//	cxt.NewError(404) // (default message must exist otherwise this is an error)
 func (ec *ErrorContext) NewError(code uint, args ...interface{}) Error {
 	ec.calledNewError = true
 
@@ -325,8 +326,9 @@ func (ec ErrorContext) AddErrorCode(code uint, err error) Error {
 
 // GetErrorStats returns the map of error codes.
 // usage:
-//  stats := cxt.GetErrorStats()
-//  stats[code] // represents the number of times an error with the code has been created
+//
+//	stats := cxt.GetErrorStats()
+//	stats[code] // represents the number of times an error with the code has been created
 func (ec ErrorContext) GetErrorStats() map[uint]uint {
 	if ec.createdNewError {
 		return ec.codes

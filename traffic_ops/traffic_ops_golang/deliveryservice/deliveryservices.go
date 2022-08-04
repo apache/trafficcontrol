@@ -53,7 +53,7 @@ const (
 	edgeTier
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TODeliveryService struct {
 	api.APIInfoImpl
 	tc.DeliveryServiceV4
@@ -1056,7 +1056,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 	return dsV40, http.StatusOK, nil, nil
 }
 
-//Delete is the DeliveryService implementation of the Deleter interface.
+// Delete is the DeliveryService implementation of the Deleter interface.
 func (ds *TODeliveryService) Delete() (error, error, int) {
 	if ds.ID == nil {
 		return errors.New("missing id"), nil, http.StatusBadRequest

@@ -74,25 +74,27 @@ type PhysLocationPathParams struct {
 
 // PostPhysLocation swagger:route POST /phys_locations PhysLocation PostPhysLocation
 //
-// Create a PhysLocation
+// # Create a PhysLocation
 //
-// A PhysLocation is a collection of Delivery Services
+// # A PhysLocation is a collection of Delivery Services
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func PostPhysLocation(entity PhysLocationPostParam) (PhysLocation, Alerts) {
 	return PhysLocation{}, Alerts{}
 }
 
 // GetPhysLocations swagger:route GET /phys_locations PhysLocation GetPhysLocations
 //
-// Retrieve a list of PhysLocations
+// # Retrieve a list of PhysLocations
 //
-// List of PhysLocations
+// # List of PhysLocations
 //
 // Responses:
-//          200: PhysLocations
-//          400: Alerts
+//
+//	200: PhysLocations
+//	400: Alerts
 func GetPhysLocations() (PhysLocations, Alerts) {
 	return PhysLocations{}, Alerts{}
 }
@@ -113,37 +115,40 @@ type PhysLocationPutParam struct {
 
 // PutPhysLocation swagger:route PUT /phys_locations/{id} PhysLocation PutPhysLocation
 //
-// Update a PhysLocation by Id
+// # Update a PhysLocation by Id
 //
-// Update a PhysLocation
+// # Update a PhysLocation
 //
 // Responses:
-//          200: PhysLocation
+//
+//	200: PhysLocation
 func PutPhysLocation(entity PhysLocationPutParam) (PhysLocation, Alerts) {
 	return PhysLocation{}, Alerts{}
 }
 
 // GetPhysLocationById swagger:route GET /phys_locations/{id} PhysLocation GetPhysLocationById
 //
-// Retrieve a specific PhysLocation by Id
+// # Retrieve a specific PhysLocation by Id
 //
-// Retrieve a specific PhysLocation
+// # Retrieve a specific PhysLocation
 //
 // Responses:
-//          200: PhysLocations
-//          400: Alerts
+//
+//	200: PhysLocations
+//	400: Alerts
 func GetPhysLocationById() (PhysLocations, Alerts) {
 	return PhysLocations{}, Alerts{}
 }
 
 // DeletePhysLocation swagger:route DELETE /phys_locations/{id} PhysLocation DeletePhysLocation
 //
-// Delete a PhysLocation by Id
+// # Delete a PhysLocation by Id
 //
-// Delete a PhysLocation
+// # Delete a PhysLocation
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func DeletePhysLocation(entityId int) Alerts {
 	return Alerts{}
 }

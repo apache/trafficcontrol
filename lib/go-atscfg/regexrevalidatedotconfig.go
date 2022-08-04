@@ -151,6 +151,7 @@ func (jb jobsSort) Less(i, j int) bool {
 //   - have a non-empty deliveryservice
 //   - have a start time later than (now + maxReval days). That is, we don't query jobs older than maxReval in the past.
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
+//
 // Returns the filtered jobs.
 func filterJobs(tcJobs []InvalidationJob, maxReval time.Duration, minTTL time.Duration) []revalJob {
 

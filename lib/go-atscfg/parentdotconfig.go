@@ -918,7 +918,8 @@ func (dsp *parentDSParams) FillParentRetries(keys ParentConfigRetryKeys, dsParam
 // getDSParams returns the Delivery Service Profile Parameters used in parent.config, and any warnings.
 // If Parameters don't exist, defaults are returned. Non-MSO Delivery Services default to no custom retry logic (we should reevaluate that).
 // Note these Parameters are only used for MSO for legacy DeliveryServiceServers DeliveryServices.
-//      Topology DSes use them for all DSes, MSO and non-MSO.
+//
+//	Topology DSes use them for all DSes, MSO and non-MSO.
 func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]map[string]string, serverPlacement TopologyPlacement, isMSO bool) (parentDSParams, []string) {
 	warnings := []string{}
 	params := parentDSParams{}
@@ -1127,7 +1128,6 @@ func getTopologyParentConfigLine(
 // If maxUnavailableServerRetries is "", ParentConfigDSParamDefaultMaxUnavailableServerRetries will be used.
 //
 // Does not return errors. If any input is malformed, warnings are returned and that value is set to -1.
-//
 func (dsparams parentDSParams) FillParentSvcRetries(isLastCacheTier bool, atsMajorVer int, pasvc *ParentAbstractionService) []string {
 	warnings := []string{}
 

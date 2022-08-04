@@ -84,8 +84,9 @@ func formatParam(p Parameter) string {
 }
 
 // Applies the rule represented by cr to the input parameter.
-//   Any non-empty string value will be replaced in the input with its new value
-//   Additionally an action may indicate a non-replacement operation, such as delete
+//
+//	Any non-empty string value will be replaced in the input with its new value
+//	Additionally an action may indicate a non-replacement operation, such as delete
 func (cr ConversionRule) Apply(param Parameter) (Parameter, bool) {
 	inParam := formatParam(param)
 
@@ -166,7 +167,8 @@ func parseInputRules(inFile string) *ConversionPolicy {
 }
 
 // ValidateParameters will verify that all parameters in paramsToValidate appear
-//  exactly in profile
+//
+//	exactly in profile
 func ValidateParameters(profile *Profile,
 	paramsToValidate []Parameter) bool {
 

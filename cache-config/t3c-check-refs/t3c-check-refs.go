@@ -62,7 +62,6 @@ var (
 //
 // Returns '0' if all plugins on the config line successfully verify
 // otherwise, returns the the count of plugins that failed to verify.
-//
 func checkConfigLine(line string, lineNumber int, filesAdding map[string]struct{}) int {
 
 	pluginErrorCount := 0
