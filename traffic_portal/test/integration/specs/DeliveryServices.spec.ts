@@ -42,7 +42,7 @@ describe("Delivery Services", () => {
 			beforeAll(async () => {
 				browser.get(browser.params.baseUrl);
 				await loginPage.Login(data.login);
-				expect(await loginPage.CheckUserName(data.login)).toBeTrue();
+				expect(await loginPage.CheckUserName(data.login)).toBe(true);
 				await deliveryservicesPage.OpenServicesMenu();
 				await deliveryservicesPage.OpenDeliveryServicePage();
 			});
