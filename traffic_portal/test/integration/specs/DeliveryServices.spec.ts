@@ -52,39 +52,39 @@ describe("Delivery Services", () => {
 			});
 			afterAll(async () => {
 				await deliveryservicesPage.OpenServicesMenu();
-				return expectAsync(topNavigation.Logout()).toBeResolvedTo(true);
+				expect(await topNavigation.Logout()).toBe(true);
 			});
 
 			for (const {description, name, type, tenant, validationMessage} of data.add) {
 				it(description, async () => {
-					return expectAsync(deliveryservicesPage.CreateDeliveryService(name, type, tenant)).toBeResolvedTo(validationMessage);
+					expect(await deliveryservicesPage.CreateDeliveryService(name, type, tenant)).toBe(validationMessage);
 				});
 			}
 			for (const {name, newName, validationMessage} of data.update) {
 				it("updates Delivery Service Display Name", async () => {
 					await deliveryservicesPage.SearchDeliveryService(name);
-					return expectAsync(deliveryservicesPage.UpdateDeliveryServiceDisplayName(newName)).toBeResolved(validationMessage);
+					expect(await deliveryservicesPage.UpdateDeliveryServiceDisplayName(newName)).toBe(validationMessage);
 				});
 			}
 
 			for (const {serverHostname, xmlID, validationMessage} of data.assignServer){
 				it("assigns servers to a Delivery Service", async () => {
 					await deliveryservicesPage.SearchDeliveryService(xmlID);
-					return expectAsync(deliveryservicesPage.AssignServerToDeliveryService(serverHostname)).toBeResolvedTo(validationMessage);
+					expect(await deliveryservicesPage.AssignServerToDeliveryService(serverHostname)).toBe(validationMessage);
 				});
 			}
 
 			for (const {rcName, validationMessage, xmlID} of data.assignRequiredCapabilities) {
 				it("assign required capabilities to delivery service", async () => {
 					await deliveryservicesPage.SearchDeliveryService(xmlID);
-					return expectAsync(deliveryservicesPage.AssignRequiredCapabilitiesToDS(rcName)).toBeResolvedTo(validationMessage);
+					expect(await deliveryservicesPage.AssignRequiredCapabilitiesToDS(rcName)).toBe(validationMessage);
 				});
 			}
 
 			for (const {name, validationMessage} of data.remove) {
 				it("deletes a Delivery Service", async () => {
 					await deliveryservicesPage.SearchDeliveryService(name);
-					return expectAsync(deliveryservicesPage.DeleteDeliveryService(name)).toBeResolvedTo(validationMessage);
+					expect(await deliveryservicesPage.DeleteDeliveryService(name)).toBe(validationMessage);
 				});
 			}
 		});
