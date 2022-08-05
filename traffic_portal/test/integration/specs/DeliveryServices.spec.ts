@@ -28,72 +28,65 @@ const topNavigation = new TopNavigationPage();
 const loginPage = new LoginPage();
 const deliveryservicesPage = new DeliveryServicePage();
 
-describe('Setup API for delivery service test', function () {
-    it('Setup', async () => {
-        await api.UseAPI(deliveryservices.setup);
-    });
-});
+describe("Delivery Services", () => {
+	beforeAll(async () => {
+		await api.UseAPI(deliveryservices.setup);
+	});
 
-deliveryservices.tests.forEach(async deliveryservicesData => {
-    deliveryservicesData.logins.forEach(login =>{
-        describe(`Traffic Portal - Delivery Service - ${login.description}`, () =>{
-            it('can login', async () => {
-                browser.get(browser.params.baseUrl);
-                await loginPage.Login(login);
-                expect(await loginPage.CheckUserName(login)).toBe(true);
-            });
-            it('can open delivery service page', async () => {
-                await deliveryservicesPage.OpenServicesMenu();
-                await deliveryservicesPage.OpenDeliveryServicePage();
-            });
-            deliveryservicesData.add.forEach(add => {
-                it(add.description, async function () {
-                    expect(await deliveryservicesPage.CreateDeliveryService(add)).toBe(true);
-                    await deliveryservicesPage.OpenDeliveryServicePage();
-                });
-            });
-            deliveryservicesData.update.forEach(update => {
-                it(update.description, async function () {
-                    await deliveryservicesPage.SearchDeliveryService(update.Name);
-                    expect(await deliveryservicesPage.UpdateDeliveryService(update)).toBe(true);
-                    await deliveryservicesPage.OpenDeliveryServicePage();
-                });
-            })
-            deliveryservicesData.assignserver.forEach(assignserver => {
-                it(assignserver.description, async function(){
-                    await deliveryservicesPage.SearchDeliveryService(assignserver.DSName);
-                    expect(await deliveryservicesPage.AssignServerToDeliveryService(assignserver)).toBeTrue();
-                    await deliveryservicesPage.OpenDeliveryServicePage();
-                }
+	afterAll(async () => {
+		await api.UseAPI(deliveryservices.cleanup);
+	});
 
-                )
-            })
-            deliveryservicesData.assignrequiredcapabilities.forEach(assignrc => {
-                it(assignrc.description, async function(){
-                    await deliveryservicesPage.SearchDeliveryService(assignrc.DSName);
-                    expect(await deliveryservicesPage.AssignRequiredCapabilitiesToDS(assignrc)).toBe(true);
-                    await deliveryservicesPage.OpenDeliveryServicePage();
-                })
-            })
-            deliveryservicesData.remove.forEach(remove => {
-                it(remove.description, async () => {
-                    await deliveryservicesPage.SearchDeliveryService(remove.Name);
-                    expect(await deliveryservicesPage.DeleteDeliveryService(remove)).toBe(true);
-                    await deliveryservicesPage.OpenDeliveryServicePage();
-                });
-            });
-            it('can close service menu tab', async () => {
-                await deliveryservicesPage.OpenServicesMenu();
-            });
-            it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBe(true);
-            });
-        })
-    })
+	for (const data of deliveryservices.tests) {
+		describe(`Traffic Portal - Delivery Service - ${data.description}`, () =>{
+			beforeAll(async () => {
+				browser.get(browser.params.baseUrl);
+				await loginPage.Login(data.login);
+				expect(await loginPage.CheckUserName(data.login)).toBeTrue();
+				await deliveryservicesPage.OpenServicesMenu();
+				await deliveryservicesPage.OpenDeliveryServicePage();
+			});
+			afterEach(async () => {
+				await deliveryservicesPage.OpenDeliveryServicePage();
+				expect((await browser.getCurrentUrl()).split("#").slice(-1).join().replace(/\/$/, "")).toBe("!/delivery-services");
+			});
+			afterAll(async () => {
+				await deliveryservicesPage.OpenServicesMenu();
+				return expectAsync(topNavigation.Logout()).toBeResolvedTo(true);
+			});
 
-})
-describe('Clean up API for delivery service test', () => {
-    it('Cleanup', async () => {
-        await api.UseAPI(deliveryservices.cleanup);
-    });
+			for (const {description, name, type, tenant, validationMessage} of data.add) {
+				it(description, async () => {
+					return expectAsync(deliveryservicesPage.CreateDeliveryService(name, type, tenant)).toBeResolvedTo(validationMessage);
+				});
+			}
+			for (const {name, newName, validationMessage} of data.update) {
+				it("updates Delivery Service Display Name", async () => {
+					await deliveryservicesPage.SearchDeliveryService(name);
+					return expectAsync(deliveryservicesPage.UpdateDeliveryServiceDisplayName(newName)).toBeResolved(validationMessage);
+				});
+			}
+
+			for (const {serverHostname, xmlID, validationMessage} of data.assignServer){
+				it("assigns servers to a Delivery Service", async () => {
+					await deliveryservicesPage.SearchDeliveryService(xmlID);
+					return expectAsync(deliveryservicesPage.AssignServerToDeliveryService(serverHostname)).toBeResolvedTo(validationMessage);
+				});
+			}
+
+			for (const {rcName, validationMessage, xmlID} of data.assignRequiredCapabilities) {
+				it("assign required capabilities to delivery service", async () => {
+					await deliveryservicesPage.SearchDeliveryService(xmlID);
+					return expectAsync(deliveryservicesPage.AssignRequiredCapabilitiesToDS(rcName)).toBeResolvedTo(validationMessage);
+				});
+			}
+
+			for (const {name, validationMessage} of data.remove) {
+				it("deletes a Delivery Service", async () => {
+					await deliveryservicesPage.SearchDeliveryService(name);
+					return expectAsync(deliveryservicesPage.DeleteDeliveryService(name)).toBeResolvedTo(validationMessage);
+				});
+			}
+		});
+	}
 });
