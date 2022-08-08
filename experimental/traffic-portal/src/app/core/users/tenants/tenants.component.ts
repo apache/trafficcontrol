@@ -79,17 +79,6 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	];
 
 	public readonly contextMenuItems: ContextMenuItem<Readonly<Tenant>>[] = [
-		{
-			disabled: (): boolean => !this.auth.hasPermission("TENANT:UPDATE"),
-			href: (t: Tenant): string => `core/tenants/${t.id}`,
-			name: "View Details"
-		},
-		{
-			disabled: (): boolean => !this.auth.hasPermission("TENANT:UPDATE"),
-			href: (t: Tenant): string => `core/tenants/${t.id}`,
-			name: "Open in New Tab",
-			newTab: true
-		}
 	];
 
 	public loading = true;
@@ -125,7 +114,17 @@ export class TenantsComponent implements OnInit, OnDestroy {
 						multiRow: true,
 						name: "Disable"
 					});
+					this.contextMenuItems.push({
+						href: (t: Tenant): string => `core/tenants/${t.id}`,
+						name: "View Details"
+					});
+					this.contextMenuItems.push({
+						href: (t: Tenant): string => `core/tenants/${t.id}`,
+						name: "Open in New Tab",
+						newTab: true
+					});
 				}
+				console.log(this.contextMenuItems);
 			}
 		);
 		this.loading = false;
