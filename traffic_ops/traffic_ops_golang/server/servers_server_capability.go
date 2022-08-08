@@ -523,7 +523,7 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	msc.ServerCapabilities = multipleServerCapabilities
-	alerts := tc.CreateAlerts(tc.SuccessLevel, fmt.Sprintf("Multiple Server Capabilities assigned to a server"))
+	alerts := tc.CreateAlerts(tc.SuccessLevel, fmt.Sprint("Multiple Server Capabilities assigned to a server"))
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, msc)
 	return
 }
