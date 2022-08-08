@@ -124,7 +124,6 @@ export class TenantsComponent implements OnInit, OnDestroy {
 						newTab: true
 					});
 				}
-				console.log(this.contextMenuItems);
 			}
 		);
 		this.loading = false;
