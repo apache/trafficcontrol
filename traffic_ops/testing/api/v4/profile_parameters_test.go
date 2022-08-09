@@ -120,8 +120,15 @@ func TestProfileParameters(t *testing.T) {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
 					profileParameter := tc.ProfileParameterCreationRequest{}
+					profileParameters := []tc.ProfileParameterCreationRequest{}
 
 					if testCase.RequestBody != nil {
+						if profileParams, ok := testCase.RequestBody["profileParameters"]; ok {
+							dat, err := json.Marshal(profileParams)
+							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+							err = json.Unmarshal(dat, &profileParameters)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						}
 						dat, err := json.Marshal(testCase.RequestBody)
 						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 						err = json.Unmarshal(dat, &profileParameter)
@@ -138,9 +145,16 @@ func TestProfileParameters(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateProfileParameter(profileParameter, testCase.RequestOpts)
-							for _, check := range testCase.Expectations {
-								check(t, reqInf, nil, alerts, err)
+							if len(profileParameters) == 0 {
+								alerts, reqInf, err := testCase.ClientSession.CreateProfileParameter(profileParameter, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							} else {
+								alerts, reqInf, err := testCase.ClientSession.CreateMultipleProfileParameters(profileParameters, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
 							}
 						})
 					case "DELETE":
@@ -160,6 +174,7 @@ func TestProfileParameters(t *testing.T) {
 
 func TestProfileParameter(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles}, func() {
+
 		methodTests := utils.V4TestCase{
 			"POST": {
 				"OK when VALID request": {
@@ -234,7 +249,6 @@ func CreateTestProfileParameters(t *testing.T) {
 }
 
 func DeleteTestProfileParameters(t *testing.T) {
-
 	profileParameters, _, err := TOSession.GetProfileParameters(client.RequestOptions{})
 	assert.NoError(t, err, "Cannot get Profile Parameters: %v - alerts: %+v", err, profileParameters.Alerts)
 

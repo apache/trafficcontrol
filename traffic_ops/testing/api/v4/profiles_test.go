@@ -50,7 +50,6 @@ func TestProfiles(t *testing.T) {
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
-				//t.Run("Check 'parameters' property returned in GET requsets", GetTestProfilesWithParameters)
 				"OK when VALID NAME parameter": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"RASCAL1"}}},
@@ -184,7 +183,8 @@ func TestProfiles(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateProfilesUpdateCreateFields("EDGE2UPDATED",
-							map[string]interface{}{"CDNName": "cdn2", "Description": "edge2 description updated", "Name": "EDGE2UPDATED", "RoutingDisabled": false, "Type": "TR_PROFILE"})),
+							map[string]interface{}{"CDNName": "cdn2", "Description": "edge2 description updated",
+								"Name": "EDGE2UPDATED", "RoutingDisabled": false, "Type": "TR_PROFILE"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					EndpointId:    GetProfileID(t, "CCR1"),
