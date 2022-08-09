@@ -529,26 +529,26 @@ type APIInfo struct {
 // Close() must be called to free resources, and should be called in a defer immediately after NewInfo(), to finish the transaction.
 //
 // Example:
-//  func handler(w http.ResponseWriter, r *http.Request) {
-//    inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-//    if userErr != nil || sysErr != nil {
-//      api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-//      return
-//    }
-//    defer inf.Close()
 //
-//    respObj, err := finalDatabaseOperation(inf.Tx)
-//    if err != nil {
-//      api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("final db op: " + err.Error()))
-//      return
-//    }
-//    if err := inf.Tx.Tx.Commit(); err != nil {
-//      api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("committing transaction: " + err.Error()))
-//      return
-//    }
-//    api.WriteResp(w, r, respObj)
-//  }
+//	func handler(w http.ResponseWriter, r *http.Request) {
+//	  inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+//	  if userErr != nil || sysErr != nil {
+//	    api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+//	    return
+//	  }
+//	  defer inf.Close()
 //
+//	  respObj, err := finalDatabaseOperation(inf.Tx)
+//	  if err != nil {
+//	    api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("final db op: " + err.Error()))
+//	    return
+//	  }
+//	  if err := inf.Tx.Tx.Commit(); err != nil {
+//	    api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("committing transaction: " + err.Error()))
+//	    return
+//	  }
+//	  api.WriteResp(w, r, respObj)
+//	}
 func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (*APIInfo, error, error, int) {
 	db, err := GetDB(r.Context())
 	if err != nil {
@@ -982,7 +982,6 @@ func parseEnumConstraint(err *pq.Error) (error, error, int) {
 //
 // It may be helpful to look at constraints for api_capability, role_capability,
 // and user_role for examples.
-//
 func parseRestrictFKConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`update or delete on table "([a-z_]+)" violates foreign key constraint ".+" on table "([a-z_]+)"`)
 	match := pattern.FindStringSubmatch(err.Message)

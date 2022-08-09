@@ -50,7 +50,7 @@ var (
 	HiddenField = "********"
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TOParameter struct {
 	api.APIInfoImpl `json:"-"`
 	tc.ParameterNullable
@@ -91,7 +91,7 @@ func (param TOParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: IDQueryParam, Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (param TOParameter) GetKeys() (map[string]interface{}, bool) {
 	if param.ID == nil {
 		return map[string]interface{}{IDQueryParam: 0}, false

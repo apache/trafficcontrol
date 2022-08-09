@@ -84,21 +84,23 @@ type StatusPathParams struct {
 
 // PostStatus swagger:route POST /statuses Status PostStatus
 //
-// Create a Status
+// # Create a Status
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func PostStatus(entity StatusPostParam) (Status, Alerts) {
 	return Status{}, Alerts{}
 }
 
 // GetStatuses swagger:route GET /statuses Status GetStatuses
 //
-// Retrieve a list of Statuses
+// # Retrieve a list of Statuses
 //
 // Responses:
-//          200: Statuses
-//          400: Alerts
+//
+//	200: Statuses
+//	400: Alerts
 func GetStatuses() (Statuses, Alerts) {
 	return Statuses{}, Alerts{}
 }
@@ -119,31 +121,34 @@ type StatusPutParam struct {
 
 // PutStatus swagger:route PUT /statuses/{id} Status PutStatus
 //
-// Update a Status
+// # Update a Status
 //
 // Responses:
-//          200: Status
+//
+//	200: Status
 func PutStatus(entity StatusPutParam) (Status, Alerts) {
 	return Status{}, Alerts{}
 }
 
 // GetStatusById swagger:route GET /statuses/{id} Status GetStatusById
 //
-// Retrieve a specific Status
+// # Retrieve a specific Status
 //
 // Responses:
-//          200: Statuses
-//          400: Alerts
+//
+//	200: Statuses
+//	400: Alerts
 func GetStatusById() (Statuses, Alerts) {
 	return Statuses{}, Alerts{}
 }
 
 // DeleteStatus swagger:route DELETE /statuses/{id} Status DeleteStatus
 //
-// Delete a Status
+// # Delete a Status
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func DeleteStatus(entityId int) Alerts {
 	return Alerts{}
 }

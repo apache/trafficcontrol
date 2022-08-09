@@ -222,7 +222,7 @@ under the License.
 
             <label ng-class="{'has-error': hasError(serverForm.iloUsername)}">ILO Username</label>
             <div ng-class="{'has-error': hasError(serverForm.iloUsername), 'has-feedback': hasError(serverForm.iloUsername)}">
-                <input name="iloUsername" type="text" class="form-control" ng-model="server.iloUsername" maxlength="45" pattern="\S*"/>
+                <input name="iloUsername" type="text" class="form-control" ng-model="server.iloUsername" maxlength="45" pattern="\S*" autocomplete="off"/>
                 <small class="input-error" ng-show="hasPropertyError(serverForm.iloUsername, 'maxlength')">Too Long</small>
                 <small class="input-error" ng-show="hasPropertyError(serverForm.iloUsername, 'pattern')">No Spaces</small>
                 <span ng-show="hasError(serverForm.iloUsername)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -230,7 +230,10 @@ under the License.
 
             <label ng-class="{'has-error': hasError(serverForm.iloPassword)}">ILO Password</label>
             <div ng-class="{'has-error': hasError(serverForm.iloPassword), 'has-feedback': hasError(serverForm.iloPassword)}">
-                <input name="iloPassword" type="text" class="form-control" ng-model="server.iloPassword" maxlength="45"/>
+				<div class="form-control revealable-password-container">
+					<input name="iloPassword" type="{{iloInputType}}" class="form-control" ng-model="server.iloPassword" autocomplete="off" maxlength="45"/>
+					<button type="button" title="toggle revealed password" aria-label="toggle revealed password" ng-click="toggleILO()"><i class="fa fa-eye"></i></button>
+				</div>
                 <small class="input-error" ng-show="hasPropertyError(serverForm.iloPassword, 'maxlength')">Too Long</small>
                 <span ng-show="hasError(serverForm.iloPassword)" class="form-control-feedback"><i class="fa fa-times"></i></span>
             </div>

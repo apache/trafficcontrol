@@ -60,7 +60,7 @@ func (dss TODeliveryServiceServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "deliveryservice", Func: api.GetIntKey}, {Field: "server", Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (dss TODeliveryServiceServer) GetKeys() (map[string]interface{}, bool) {
 	if dss.DeliveryService == nil {
 		return map[string]interface{}{"deliveryservice": 0}, false

@@ -158,10 +158,10 @@ func (s *streamISOCmd) streamFromFile(w io.Writer) error {
 // customGenISOPath returns the complete path to an alternative executable
 // for generating the ISO. If not found, an empty string is returned.
 // In order to be valid, the script/executable must:
-// - Be inside the ksDir and named "generate"
-// - Be executable (by somebody)
-// - Accept a single argument indicating where the resulting ISO image should be saved (not
-//   verified by this function)
+//   - Be inside the ksDir and named "generate"
+//   - Be executable (by somebody)
+//   - Accept a single argument indicating where the resulting ISO image should be saved (not
+//     verified by this function)
 func customGenISOPath(dir string) string {
 	customPath := filepath.Join(dir, ksAltCommand)
 	stat, err := os.Stat(customPath)
@@ -343,8 +343,9 @@ func writePasswordCfg(w io.Writer, r isoRequest, salt string) error {
 
 // configWriter is a helper type to create config files
 // of format:
-//   OPT="VALUE"
-//   OPT="VALUE"
+//
+//	OPT="VALUE"
+//	OPT="VALUE"
 type configWriter struct {
 	b    bytes.Buffer
 	line int

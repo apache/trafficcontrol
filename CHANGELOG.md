@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
+### Changed
+- Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 
 ## [7.0.0] - 2022-07-19
 ### Added
@@ -13,7 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added a new Traffic Ops endpoint to `GET` capacity and telemetry data for CDNi integration.
 - Added SOA (Service Oriented Architecture) capability to CDN-In-A-Box.
 - Added a Traffic Ops endpoints to `PUT` a requested configuration change for a full configuration or per host and an endpoint to approve or deny the request.
-- Traffic Monitor config option `distributed_polling` which enables the ability for Traffic Monitor to poll a subset of the CDN and divide into "local peer groups" and "distributed peer groups". Traffic Monitors in the same group are local peers, while Traffic Monitors in other groups are distibuted peers. Each TM group polls the same set of cachegroups and gets availability data for the other cachegroups from other TM groups. This allows each TM to be responsible for polling a subset of the CDN while still having a full view of CDN availability. In order to use this, `stat_polling` must be disabled.
+- Traffic Monitor config option `distributed_polling` which enables the ability for Traffic Monitor to poll a subset of the CDN and divide into "local peer groups" and "distributed peer groups". Traffic Monitors in the same group are local peers, while Traffic Monitors in other groups are distributed peers. Each TM group polls the same set of cachegroups and gets availability data for the other cachegroups from other TM groups. This allows each TM to be responsible for polling a subset of the CDN while still having a full view of CDN availability. In order to use this, `stat_polling` must be disabled.
 - Added support for a new Traffic Ops GLOBAL profile parameter -- `tm_query_status_override` -- to override which status of Traffic Monitors to query (default: ONLINE).
 - Traffic Ops: added new `cdn.conf` option -- `user_cache_refresh_interval_sec` -- which enables an in-memory users cache to improve performance. Default: 0 (disabled).
 - Traffic Ops: added new `cdn.conf` option -- `server_update_status_cache_refresh_interval_sec` -- which enables an in-memory server update status cache to improve performance. Default: 0 (disabled).
@@ -32,6 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Change to t3c diff to flag a config file for replacement if owner/group settings are not `ats` [#6879](https://github.com/apache/trafficcontrol/issues/6879).
 - t3c now looks in the executable dir path for t3c- utilities
 - Added support for parent.config markdown/retry DS parameters using first./inner./last. prefixes.  mso. and <null> prefixes should be deprecated.
+- Add new __REGEX_REMAP_DIRECTIVE__ support to raw remap text to allow moving the regex_remap placement.
 - Added a sub-app t3c-tail to tail diags.log and capture output when t3c reloads and restarts trafficserver
 
 ### Fixed
@@ -113,6 +116,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#4351](https://github.com/apache/trafficcontrol/issues/4351) Updated message to an informative one when deleting a delivery service.
 - Updated Grove to use the TO API v3 client library
 - Updated Ansible Roles to use Traffic Ops API v3
+- Update Go version to 1.19
 
 ## [6.1.0] - 2022-01-18
 ### Added

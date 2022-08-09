@@ -243,7 +243,8 @@ func PackageAction(cmdstr string, name string) (bool, error) {
 // if the return code from rpm == 0, then a valid package list is returned.
 //
 // if the return code is 1, the the 'name' queried for is not part of a
-//   package or is not installed.
+//
+//	package or is not installed.
 //
 // otherwise, if the return code is not 0 or 1 and error is set, a general
 // rpm command execution error is assumed and the error is returned.

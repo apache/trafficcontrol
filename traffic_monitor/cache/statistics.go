@@ -58,7 +58,7 @@ type DSStat struct {
 // Specifically, it contains all of the data stored that can be found in
 // /proc/loadavg on a Linux/Unix system.
 //
-// For more information on what a "loadavg" is, consult the ``proc(5)'' man page
+// For more information on what a "loadavg" is, consult the “proc(5)” man page
 // (web-hosted: https://linux.die.net/man/5/proc).
 type Loadavg struct {
 	// One is the cache server's "loadavg" in the past minute from the time it was

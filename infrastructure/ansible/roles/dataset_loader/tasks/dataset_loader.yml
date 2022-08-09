@@ -1035,7 +1035,7 @@
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/snapshot?cdn={{ item.name }}"
     method: PUT
-  with_items: "{{ get_all_cdns.json.response[1:] }}"
+  with_items: "{{ get_all_cdns.json | json_query(no_all_cdn_query) }}"
   register: snapshot_out
   failed_when: (snapshot_out.status == 400 and snapshot_out.json | to_json | from_json | json_query(error_query) | length != 0) or (snapshot_out.status > 400 and snapshot_out.status < 600)
   no_log: true
@@ -1043,6 +1043,8 @@
   delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    all_cdn: ALL
+    no_all_cdn_query: "response[?name != `{{ all_cdn }}`]"
 
 - name: Queue Caches in all CDNs
   uri:
@@ -1050,7 +1052,7 @@
     method: POST
     body:
       action: "queue"
-  with_items: "{{ get_all_cdns.json.response[1:] }}"
+  with_items: "{{ get_all_cdns.json | json_query(no_all_cdn_query) }}"
   register: queue_out
   failed_when: (queue_out.status == 400 and queue_out.json | to_json | from_json | json_query(error_query) | length != 0) or (queue_out.status > 400 and queue_out.status < 600)
   no_log: true
@@ -1058,3 +1060,5 @@
   delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'action must be')]"
+    all_cdn: ALL
+    no_all_cdn_query: "response[?name != `{{ all_cdn }}`]"

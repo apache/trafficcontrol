@@ -432,8 +432,8 @@ type DeliveryServiceFieldsV30 struct {
 // example, if you wanted to create a DeliveryServiceV32 struct, you would do
 // the following:
 //
-//     type DeliveryServiceNullableV30 DeliveryServiceV32
-//     DeliveryServiceV32 = DeliveryServiceV31 + the new fields.
+//	type DeliveryServiceNullableV30 DeliveryServiceV32
+//	DeliveryServiceV32 = DeliveryServiceV31 + the new fields.
 //
 // Deprecated: API version 3 is deprecated - upgrade to DeliveryServiceV4.
 type DeliveryServiceNullableV30 DeliveryServiceV31
