@@ -20,14 +20,9 @@ import org.apache.traffic_control.traffic_router.secure.HandshakeData;
 import org.apache.traffic_control.traffic_router.secure.KeyManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tomcat.jni.SSL;
-import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.apache.tomcat.util.net.SSLHostConfigCertificate;
-import org.apache.tomcat.util.net.SocketEvent;
-import org.apache.tomcat.util.net.SocketProcessorBase;
-import org.apache.tomcat.util.net.SocketWrapperBase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -137,4 +132,3 @@ public class RouterNioEndpoint extends NioEndpoint {
 	}
 
 }
-

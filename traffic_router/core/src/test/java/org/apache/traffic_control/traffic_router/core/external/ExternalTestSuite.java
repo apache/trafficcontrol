@@ -22,7 +22,6 @@ import org.apache.catalina.LifecycleException;
 import org.apache.logging.log4j.core.appender.ConsoleAppender;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;

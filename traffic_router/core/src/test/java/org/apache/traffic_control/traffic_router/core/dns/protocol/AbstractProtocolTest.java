@@ -35,7 +35,6 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.Random;
 
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
