@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
+### Added
+- [#6033](https://github.com/apache/trafficcontrol/issues/6033) Added ability to assign multiple server capabilities to a server.
+
 ### Changed
 - Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 

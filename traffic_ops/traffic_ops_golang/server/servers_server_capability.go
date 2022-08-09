@@ -20,6 +20,7 @@ package server
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -440,4 +441,89 @@ func getDSTenantIDsByIDs(tx *sqlx.Tx, dsIDs []int64) ([]DSTenant, error) {
 	}
 
 	return dsTenantIDs, nil
+}
+
+// AssignMultipleServerCapabilities helps assign multiple server capabilities to a given server.
+func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var msc tc.MultipleServerCapabilities
+	if err := json.NewDecoder(r.Body).Decode(&msc); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	// Check existence prior to checking type
+	_, exists, err := dbhelpers.GetServerNameFromID(tx, int64(msc.ServerID))
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+	}
+	if !exists {
+		userErr := fmt.Errorf("server %d does not exist", msc.ServerID)
+		api.HandleErr(w, r, tx, http.StatusNotFound, userErr, nil)
+		return
+	}
+
+	// Ensure type is correct
+	correctType := true
+	if err := tx.QueryRow(scCheckServerTypeQuery(), msc.ServerID).Scan(&correctType); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %w", err))
+		return
+	}
+	if !correctType {
+		userErr := fmt.Errorf("server %d has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", msc.ServerID)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx, int64(msc.ServerID))
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	//Delete existing rows from server_server_capability for a given server
+	_, err = tx.Exec("DELETE FROM server_server_capability ssc WHERE ssc.server=$1", msc.ServerID)
+	if err != nil {
+		useErr, sysErr, statusCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
+		return
+	}
+
+	multipleServerCapabilities := make([]string, 0, len(msc.ServerCapabilities))
+
+	mscQuery := `WITH inserted AS (
+		INSERT INTO server_server_capability
+		SELECT "server_capability", $2
+		FROM UNNEST($1::text[]) AS tmp("server_capability")
+		RETURNING server_capability
+		)
+		SELECT ARRAY_AGG(server_capability)
+		FROM (
+			SELECT server_capability
+			FROM inserted
+		) AS returned(server_capability)`
+
+	err = tx.QueryRow(mscQuery, pq.Array(msc.ServerCapabilities), msc.ServerID).Scan(pq.Array(&multipleServerCapabilities))
+	if err != nil {
+		useErr, sysErr, statusCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
+		return
+	}
+	msc.ServerCapabilities = multipleServerCapabilities
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "Multiple Server Capabilities assigned to a server")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, msc)
+	return
 }
