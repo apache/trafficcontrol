@@ -23,17 +23,17 @@
 
 ``PUT``
 ========
-Associates a list of :term:`Server Capability` to a server.
+Associates a list of :term:`Server Capability` to a server. The API call replaces all the server capabilities assigned to a server with the ones specified in the serverCapabilities field.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVER:UPDATE, SERVER:CREATE, SERVER:READ, SERVER-CAPABILITY:READ
+:Permissions Required: SERVER:UPDATE, SERVER:READ, SERVER-CAPABILITY:READ
 :Response Type:  Object
 
 Request Structure
 -----------------
-:serverId:         The integral, unique identifier of a server to be associated with a :term:`Server Capability`
-:serverCapability: List of :term:`Server Capability`'s name to associate
+:serverId:           The integral, unique identifier of a server to be associated with a :term:`Server Capability`
+:serverCapabilities: List of :term:`Server Capability`'s name to associate
 
 .. code-block:: http
 	:caption: Request Example
@@ -53,8 +53,8 @@ Request Structure
 
 Response Structure
 ------------------
-:serverId:         The integral, unique identifier of the newly associated server
-:serverCapability: List of :term:`Server Capability`'s name
+:serverId:           The integral, unique identifier of the newly associated server
+:serverCapabilities: List of :term:`Server Capability`'s name
 
 .. code-block:: http
 	:caption: Response Example
@@ -65,15 +65,15 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 8 Aug 2022 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 8 Aug 2022 22:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: eQrl48zWids0kDpfCYmmtYMpegjnFxfOVvlBYxxLSfp7P7p6oWX4uiC+/Cfh2X9i3G+MQ36eH95gukJqOBOGbQ==
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 02 Aug 2022 22:15:11 GMT
+	Date: Mon, 08 Aug 2022 16:15:11 GMT
 	Content-Length: 157
 
 	{
 		"alerts": [{
-			"text": "Multiple Server Capabilities assigned to a server:1",
+			"text": "Multiple Server Capabilities assigned to a server",
 			"level": "success"
 		}],
 		"response": {
