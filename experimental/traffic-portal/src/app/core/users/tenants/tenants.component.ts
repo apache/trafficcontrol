@@ -78,7 +78,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 		}
 	];
 
-	public readonly contextMenuItems: ContextMenuItem<Readonly<Tenant>>[] = [
+	public contextMenuItems: ContextMenuItem<Readonly<Tenant>>[] = [
 	];
 
 	public loading = true;
@@ -93,6 +93,39 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * Loads the context menu items for the grid.
+	 *
+	 * @private
+	 */
+	private loadContextMenuItems(): void {
+		this.contextMenuItems = [];
+		if (this.auth.hasPermission("USER:READ")) {
+			this.contextMenuItems.push({
+				action: "viewUsers",
+				multiRow: true,
+				name: "View Users"
+			});
+		}
+		if (this.auth.hasPermission("TENANT:UPDATE")) {
+			this.contextMenuItems.push({
+				action: "disable",
+				disabled: (ts): boolean => ts.some(t=>t.name === "root" || t.id === this.auth.currentUser?.tenantId),
+				multiRow: true,
+				name: "Disable"
+			});
+			this.contextMenuItems.push({
+				href: (t: Tenant): string => `core/tenants/${t.id}`,
+				name: "View Details"
+			});
+			this.contextMenuItems.push({
+				href: (t: Tenant): string => `core/tenants/${t.id}`,
+				name: "Open in New Tab",
+				newTab: true
+			});
+		}
+	}
+
+	/**
 	 * Angular lifecycle hook; fetches API data.
 	 */
 	public async ngOnInit(): Promise<void> {
@@ -100,32 +133,10 @@ export class TenantsComponent implements OnInit, OnDestroy {
 		this.tenantMap = Object.fromEntries((this.tenants).map(t => [t.id, t]));
 		this.subscription = this.auth.userChanged.subscribe(
 			() => {
-				if (this.auth.hasPermission("USER:READ")) {
-					this.contextMenuItems.push({
-						action: "viewUsers",
-						multiRow: true,
-						name: "View Users"
-					});
-				}
-				if (this.auth.hasPermission("TENANT:UPDATE")) {
-					this.contextMenuItems.push({
-						action: "disable",
-						disabled: (ts): boolean => ts.some(t=>t.name === "root" || t.id === this.auth.currentUser?.tenantId),
-						multiRow: true,
-						name: "Disable"
-					});
-					this.contextMenuItems.push({
-						href: (t: Tenant): string => `core/tenants/${t.id}`,
-						name: "View Details"
-					});
-					this.contextMenuItems.push({
-						href: (t: Tenant): string => `core/tenants/${t.id}`,
-						name: "Open in New Tab",
-						newTab: true
-					});
-				}
+				this.loadContextMenuItems();
 			}
 		);
+		this.loadContextMenuItems();
 		this.loading = false;
 	}
 
