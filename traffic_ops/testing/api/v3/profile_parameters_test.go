@@ -196,13 +196,11 @@ func CreateTestProfileParameters(t *testing.T) {
 			if len(getParameter) == 0 {
 				alerts, _, err := TOSession.CreateParameter(tc.Parameter{Name: *parameter.Name, Value: *parameter.Value, ConfigFile: *parameter.ConfigFile})
 				assert.RequireNoError(t, err, "Could not create Parameter %s: %v - alerts: %+v", parameter.Name, err, alerts.Alerts)
+				getParameter, _, err = TOSession.GetParameterByNameAndConfigFileAndValueWithHdr(*parameter.Name, *parameter.ConfigFile, *parameter.Value, nil)
+				assert.RequireNoError(t, err, "Could not get Parameter %s: %v", *parameter.Name, err)
+				assert.RequireNotEqual(t, 0, len(getParameter), "Could not get parameter %s: not found", *parameter.Name)
 			}
-
-			param, _, err := TOSession.GetParameterByNameAndConfigFileAndValueWithHdr(*parameter.Name, *parameter.ConfigFile, *parameter.Value, nil)
-			assert.RequireNoError(t, err, "Could not get Parameter %s: %v", *parameter.Name, err)
-			assert.NotEqual(t, 0, len(param), "Could not get parameter %s: not found", *parameter.Name)
-
-			profileParameter := tc.ProfileParameter{ProfileID: profileID, ParameterID: param[0].ID}
+			profileParameter := tc.ProfileParameter{ProfileID: profileID, ParameterID: getParameter[0].ID}
 			alerts, _, err := TOSession.CreateProfileParameter(profileParameter)
 			assert.NoError(t, err, "Could not associate Parameter %s with Profile %s: %v - alerts: %+v", parameter.Name, profile.Name, err, alerts.Alerts)
 		}

@@ -281,7 +281,7 @@ func validateProfilesFields(expectedResp map[string]interface{}) utils.CkReqFunc
 				case "Name":
 					assert.Equal(t, expected, profile.Name, "Expected Name to be %v, but got %s", expected, profile.Name)
 				case "Parameter":
-					assert.Equal(t, expected, profile.Parameter, "Expected Parameter to be %v, but got %s", expected, profile.Parameter)
+					assert.Equal(t, true, validateProfileContainsParameter(t, expected.(string), profile.Parameters), "Expected to find Parameter in Profiles Parameters list.")
 				case "Parameters":
 					assert.Exactly(t, expected, profile.Parameters, "Expected Parameters to be %v, but got %s", expected, profile.Parameters)
 				case "RoutingDisabled":
@@ -327,6 +327,16 @@ func validateProfilesPagination(paginationParam string) utils.CkReqFunc {
 			assert.Exactly(t, profiles[1:2], paginationResp, "expected GET Profiles with limit = 1, page = 2 to return second result")
 		}
 	}
+}
+
+func validateProfileContainsParameter(t *testing.T, expectedParameter string, actualParameters []tc.ParameterNullable) bool {
+	for _, parameter := range actualParameters {
+		assert.RequireNotNil(t, parameter.Name, "Expected Parameter Name to not be nil.")
+		if expectedParameter == *parameter.Name {
+			return true
+		}
+	}
+	return false
 }
 
 func GetProfileID(t *testing.T, profileName string) func() int {
