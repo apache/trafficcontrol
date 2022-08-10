@@ -60,6 +60,9 @@ export class ChangeLogsService {
 		if("user" in params) {
 			return this.changeLogs.filter(cl => cl.user === params.user);
 		}
+		if("days" in params) {
+			return this.changeLogs;
+		}
 		throw new Error(`unknown params ${params}`);
 	}
 }
