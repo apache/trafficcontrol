@@ -14,7 +14,7 @@ limitations under the License.
 <div class="tree-select-root" role="combobox">
 	<mat-form-field>
 		<mat-label>{{label}}</mat-label>
-		<input type="text" id="{{handle}}-tree-select" name="{{handle}}-tree-select" matInput required readonly (click)="toggle($event)" [(ngModel)]="selected.name" [disabled]="disabled"/>
+		<input type="text" class="tree-selection" id="{{handle}}-tree-select" name="{{handle}}-tree-select" matInput required readonly (click)="toggle($event)" [(ngModel)]="selected.name" [disabled]="disabled"/>
 	</mat-form-field>
 	<div class="tree-select-content" *ngIf="shown">
 		<mat-form-field appearance="fill" (click)="$event.stopPropagation()">

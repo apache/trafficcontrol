@@ -20,6 +20,10 @@ div.tree-select-root {
 		width: 100%;
 	}
 
+	.tree-selection {
+		cursor: pointer;
+	}
+
 	div.tree-select-content {
 		border: 1px solid black;
 		position: absolute;
