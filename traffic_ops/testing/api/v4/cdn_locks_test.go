@@ -235,6 +235,7 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: opsUserWithLockSession,
 					RequestBody: map[string]interface{}{
 						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdnName":          "cdn2",
 						"description":      "test cdn locks description",
 						"name":             "TestLocks",
 						"routing_disabled": false,
@@ -246,8 +247,9 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdnName":          "cdn2",
 						"description":      "test cdn locks description",
-						"name":             "TestLocks",
+						"name":             "TestLocksForbidden",
 						"routing_disabled": false,
 						"type":             "ATS_PROFILE",
 					},
@@ -256,12 +258,13 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"PROFILE PUT": {
 				"OK when USER OWNS LOCK": {
-					EndpointId:    GetProfileID(t, "EDGEInCDN2"),
+					EndpointId:    GetProfileID(t, "CDN2_EDGE"),
 					ClientSession: opsUserWithLockSession,
 					RequestBody: map[string]interface{}{
 						"cdn":              GetCDNID(t, "cdn2")(),
-						"description":      "edge2 description updated when user owns lock",
-						"name":             "EDGEInCDN2",
+						"cdnName":          "cdn2",
+						"description":      "cdn2 edge description updated when user owns lock",
+						"name":             "CDN2_EDGE",
 						"routing_disabled": false,
 						"type":             "ATS_PROFILE",
 					},
@@ -272,6 +275,7 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdnName":          "cdn2",
 						"description":      "should fail",
 						"name":             "EDGEInCDN2",
 						"routing_disabled": false,
@@ -282,7 +286,7 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"PROFILE DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointId:    GetProfileID(t, "CDN2_EDGE"),
+					EndpointId:    GetProfileID(t, "CCR2"),
 					ClientSession: opsUserWithLockSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -292,7 +296,6 @@ func TestCDNLocks(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
-			// SHOULD BELONG TO CDN2
 			"PROFILE PARAMETER POST": {
 				"OK when USER OWNS LOCK": {
 					ClientSession: opsUserWithLockSession,
@@ -313,14 +316,20 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"PROFILE PARAMETER DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointId:    GetProfileID(t, "CDN2_EDGE"),
+					EndpointId:    GetProfileID(t, "OKwhenUserOwnLocks"),
 					ClientSession: opsUserWithLockSession,
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
+						"parameterId": {strconv.Itoa(GetParameterID(t, "test.cdnlock.delete", "rascal.properties", "25.0")())},
+					}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointId:    GetProfileID(t, "MID2"),
+					EndpointId:    GetProfileID(t, "FORBIDDENwhenDoesntOwnLock"),
 					ClientSession: TOSession,
-					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
+						"parameterId": {strconv.Itoa(GetParameterID(t, "test.cdnlock.forbidden.delete", "rascal.properties", "25.0")())},
+					}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
 			"SERVER POST": {
