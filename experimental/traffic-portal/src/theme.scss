@@ -15,6 +15,7 @@
 @use "sass:map";
 
 @import "./app/core/servers/server-details/server-details-theme";
+@import "./app/shared/tree-select/tree-select-theme";
 @import "../node_modules/ag-grid-community/src/styles/ag-grid.scss";
 @import "../node_modules/ag-grid-community/src/styles/ag-theme-material/sass/ag-theme-material-mixin";
 
@@ -109,6 +110,7 @@
 		@include theme-color($color);
 		@include grid-theme($theme);
 		@include server-details-theme($color);
+		@include tree-select-theme($color);
 	}
 	@if $typography != null {
 		@include theme-typography($typography);

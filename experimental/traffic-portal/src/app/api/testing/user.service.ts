@@ -14,7 +14,13 @@
 
 import { HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { GetResponseUser, PostRequestUser, PutOrPostResponseUser } from "trafficops-types";
+import type {
+	GetResponseUser,
+	PostRequestUser,
+	PutOrPostResponseUser,
+	RequestTenant,
+	ResponseTenant
+} from "trafficops-types";
 
 import type { Role, Capability, CurrentUser, Tenant } from "src/app/models";
 
@@ -88,13 +94,20 @@ export class UserService {
 			name: "PARAMETER-SECURE:READ"
 		}
 	];
-	private readonly tenants = [
+	private readonly tenants: Array<ResponseTenant> = [
 		{
 			active: true,
 			id: 1,
 			lastUpdated: new Date(),
 			name: "root",
 			parentId: null
+		},
+		{
+			active: true,
+			id: 2,
+			lastUpdated: new Date(),
+			name: "test",
+			parentId: 1
 		}
 	];
 
@@ -395,6 +408,50 @@ export class UserService {
 			return tenant;
 		}
 		return this.tenants;
+	}
+	/**
+	 * Creates a new tenant.
+	 *
+	 * @param tenant The Tenant to create.
+	 * @returns The created tenant.
+	 */
+	public async createTenant(tenant: RequestTenant): Promise<ResponseTenant> {
+		const resp = {
+			...tenant,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+		this.tenants.push(resp);
+		return resp;
+	}
+
+	/**
+	 * Updates an existing tenant.
+	 *
+	 * @param tenant The tenant to update.
+	 * @returns The updated tenant.
+	 */
+	public async updateTenant(tenant: ResponseTenant): Promise<ResponseTenant> {
+		const id = this.tenants.findIndex(t => t.id === tenant.id);
+		if (id < 0) {
+			throw new Error(`no such Tenant: ${tenant.id}`);
+		}
+		this.tenants[id] = tenant;
+		return tenant;
+	}
+
+	/**
+	 * Deletes an existing tenant.
+	 *
+	 * @param id Id of the tenant to delete.
+	 * @returns The deleted tenant.
+	 */
+	public async deleteTenant(id: number): Promise<ResponseTenant> {
+		const index = this.tenants.findIndex(t => t.id === id);
+		if (index < 0) {
+			throw new Error(`no such Tenant: ${id}`);
+		}
+		return this.tenants.splice(index, 1)[0];
 	}
 
 	/** Fetches the User Capability (Permission) with the given name. */
