@@ -25,7 +25,8 @@ under the License.
             <li class="active">Capabilities</li>
         </ol>
         <div class="pull-right">
-            <button ng-if="isCache(server)" type="button" name="addCapabilityBtn" class="btn btn-primary" title="Add Server Capability" ng-click="addServerCapability()"><i class="fa fa-plus"></i></button>
+            <button ng-if="isCache(server)" type="button" name="assignMultipleCapabilityBtn" class="btn btn-primary" title="Assign Multiple Capabilities" ng-click="selectSCs()">Assign Multiple Capabilities</i></button>
+            <button ng-if="isCache(server)" type="button" name="addCapabilityBtn" class="btn btn-primary" title="Add a Server Capability" ng-click="addServerCapability()"><i class="fa fa-plus"></i></button>
             <button type="button" class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
