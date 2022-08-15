@@ -30,11 +30,13 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
+
+	"github.com/lib/pq"
 )
 
 // ServersV4Response is the format of a response to a GET request for API v4.x /servers.
 type ServersV4Response struct {
-	Response []ServerV40 `json:"response"`
+	Response []ServerV41 `json:"response"`
 	Summary  struct {
 		Count uint64 `json:"count"`
 	} `json:"summary"`
@@ -1017,6 +1019,11 @@ func UpdateServerPropertiesV40(profileNames []string, properties CommonServerPro
 		XMPPID:           properties.XMPPID,
 		XMPPPasswd:       properties.XMPPPasswd,
 	}
+}
+
+type ServerV41 struct {
+	ServerV40
+	ASNs pq.Int32Array `json:"asns"`
 }
 
 // ServerV40 is the representation of a Server in version 4.0 of the Traffic Ops API.

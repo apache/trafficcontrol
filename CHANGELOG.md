@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7032](https://github.com/apache/trafficcontrol/issues/7032) Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
 
 - [Traffic Monitor] Added logging for `ipv4Availability` and `ipv6Availability` in TM.
+- [Traffic Ops] Added the `ASN` field in TO Server struct, which provides the ability to query servers by `ASN`.
 
 ### Changed
 - Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.

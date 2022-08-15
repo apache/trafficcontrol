@@ -2024,7 +2024,7 @@ WHERE server.id = $2;`
 }
 
 // GetCommonServerPropertiesFromV4 converts ServerV40 to CommonServerProperties struct.
-func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
+func GetCommonServerPropertiesFromV4(s tc.ServerV41, tx *sql.Tx) (tc.CommonServerProperties, error) {
 	var id int
 	var desc string
 	if len(s.ProfileNames) == 0 {

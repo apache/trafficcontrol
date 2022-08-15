@@ -33,11 +33,34 @@ import (
 )
 
 func TestServers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments, ASN}, func() {
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		// Add a new asn for one of the cachegroups
+		cgResp, _, err := TOSession.GetCacheGroups(client.RequestOptions{QueryParameters: url.Values{"name": {"topology-mid-cg-01"}}})
+		if err != nil {
+			t.Fatalf("couldn't get cachegroups: %v", err)
+		}
+		if len(cgResp.Response) != 1 {
+			t.Fatalf("expected 1 cachegroup, but got %d", len(cgResp.Response))
+		}
+		if cgResp.Response[0].ID == nil {
+			t.Fatalf("ID of cachegroup is nil")
+		}
+
+		asn := tc.ASN{
+			ASN:          1111,
+			Cachegroup:   "topology-mid-cg-01",
+			CachegroupID: *cgResp.Response[0].ID,
+		}
+
+		_, _, err = TOSession.CreateASN(asn, client.NewRequestOptions())
+		if err != nil {
+			t.Fatalf("couldn't create ASN: %v", err)
+		}
 
 		methodTests := utils.V4TestCase{
 			"GET": {
@@ -45,6 +68,11 @@ func TestServers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when CORRECT ASN parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"asn": {"1111"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 				"OK when VALID HOSTNAME parameter": {
 					ClientSession: TOSession,
@@ -57,6 +85,17 @@ func TestServers(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cachegroup": {strconv.Itoa(GetCacheGroupId(t, "cachegroup1")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateServerFields(map[string]interface{}{"CachegroupID": GetCacheGroupId(t, "cachegroup1")()})),
+				},
+				"OK when VALID ASN parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"asn": {"1111"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateServerFields(map[string]interface{}{"Cachegroup": "topology-mid-cg-01"})),
+				},
+				"EMPTY RESPONSE when INVALID ASN parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"asn": {"5555"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 				"OK when VALID CACHEGROUPNAME parameter": {
 					ClientSession: TOSession,
@@ -387,7 +426,7 @@ func TestServers(t *testing.T) {
 func validateServerFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		serverResp := resp.([]tc.ServerV40)
+		serverResp := resp.([]tc.ServerV41)
 		for field, expected := range expectedResp {
 			for _, server := range serverResp {
 				switch field {
@@ -460,7 +499,7 @@ func validateServerFieldsForUpdate(hostname string, expectedResp map[string]inte
 func validateExpectedServers(expectedHostnames []string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		serverResp := resp.([]tc.ServerV40)
+		serverResp := resp.([]tc.ServerV41)
 		var notInResponse []string
 		serverMap := make(map[string]struct{})
 		for _, server := range serverResp {
@@ -479,7 +518,7 @@ func validateExpectedServers(expectedHostnames []string) utils.CkReqFunc {
 func validateServerTypeIsNotMid() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		serverResp := resp.([]tc.ServerV40)
+		serverResp := resp.([]tc.ServerV41)
 		for _, server := range serverResp {
 			assert.RequireNotNil(t, server.HostName, "Expected server host name to not be nil.")
 			assert.NotEqual(t, server.Type, tc.CacheTypeMid.String(), "Expected to find no %s-typed servers but found server %s", tc.CacheTypeMid, *server.HostName)
@@ -490,7 +529,7 @@ func validateServerTypeIsNotMid() utils.CkReqFunc {
 func validateServerPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		paginationResp := resp.([]tc.ServerV40)
+		paginationResp := resp.([]tc.ServerV41)
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
 		respBase, _, err := TOSession.GetServers(opts)
@@ -556,7 +595,7 @@ func UpdateTestServerStatusLastUpdated(t *testing.T) {
 	assert.RequireNoError(t, err, "Cannot get Server by hostname '%s': %v - alerts %+v", hostName, err, resp.Alerts)
 	assert.RequireGreaterOrEqual(t, len(resp.Response), 1, "Expected at least one server to exist by hostname '%s'", hostName)
 	assert.RequireNotNil(t, resp.Response[0].StatusLastUpdated, "Traffic Ops returned a representation for a server with null or undefined Status Last Updated time")
-	originalServer := resp.Response[0]
+	originalServer := resp.Response[0].ServerV40
 
 	// Perform an update with no changes to status
 	alerts, _, err := TOSession.UpdateServer(*originalServer.ID, originalServer, client.RequestOptions{})
@@ -565,7 +604,7 @@ func UpdateTestServerStatusLastUpdated(t *testing.T) {
 	resp, _, err = TOSession.GetServers(opts)
 	assert.RequireNoError(t, err, "Cannot get Server by hostname '%s': %v - alerts %+v", hostName, err, resp.Alerts)
 	assert.RequireGreaterOrEqual(t, len(resp.Response), 1, "Expected at least one server to exist by hostname '%s'", hostName)
-	respServer := resp.Response[0]
+	respServer := resp.Response[0].ServerV40
 	assert.RequireNotNil(t, respServer.StatusLastUpdated, "Traffic Ops returned a representation for a server with null or undefined Status Last Updated time")
 	assert.Equal(t, *originalServer.StatusLastUpdated, *respServer.StatusLastUpdated, "Since status didnt change, no change in 'StatusLastUpdated' time was expected. "+
 		"old value: %v, new value: %v", *originalServer.StatusLastUpdated, *respServer.StatusLastUpdated)
@@ -580,7 +619,7 @@ func UpdateTestServerStatusLastUpdated(t *testing.T) {
 	resp, _, err = TOSession.GetServers(opts)
 	assert.RequireNoError(t, err, "Cannot get Server by hostname '%s': %v - alerts %+v", hostName, err, resp.Alerts)
 	assert.RequireGreaterOrEqual(t, len(resp.Response), 1, "Expected at least one server to exist by hostname '%s'", hostName)
-	respServer = resp.Response[0]
+	respServer = resp.Response[0].ServerV40
 	assert.RequireNotNil(t, respServer.StatusLastUpdated, "Traffic Ops returned a representation for a server with null or undefined Status Last Updated time")
 	assert.NotEqual(t, *originalServer.StatusLastUpdated, *respServer.StatusLastUpdated, "Since status changed, expected 'StatusLastUpdated' to change. "+
 		"old value: %v, new value: %v", *originalServer.StatusLastUpdated, *respServer.StatusLastUpdated)
