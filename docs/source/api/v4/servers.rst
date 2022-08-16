@@ -164,7 +164,7 @@ Response Structure
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
 :asns:       The :abbr:`ASN (Autonomous System Number)` associated with the cachegroups of the current server.
-	.. versionadded:: 4.0
+	.. versionadded:: 4.1
 
 .. code-block:: http
 	:caption: Response Example
