@@ -1021,6 +1021,7 @@ func UpdateServerPropertiesV40(profileNames []string, properties CommonServerPro
 	}
 }
 
+// ServerV41 is the representation of a Server in version 4.1 of the Traffic Ops API.
 type ServerV41 struct {
 	ServerV40
 	ASNs pq.Int32Array `json:"asns"`
