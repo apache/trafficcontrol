@@ -69,6 +69,10 @@ Request Structure
 	|                |          | the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to  |
 	|                |          | make use of ``page``.                                                                                             |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| asn            | no       | Return only the servers that have a cachegroup matching the provided ASN.                                         |
+	|                |          |	.. versionadded:: 4.1                                                                                           |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+
 
 .. code-block:: http
 	:caption: Request Example
@@ -159,6 +163,8 @@ Response Structure
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (:term:`t3c`, formerly ORT)
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server
+:asns:       The :abbr:`ASN (Autonomous System Number)` associated with the cachegroups of the current server.
+	.. versionadded:: 4.0
 
 .. code-block:: http
 	:caption: Response Example
@@ -225,6 +231,10 @@ Response Structure
 				"routerHostName": "",
 				"routerPortName": ""
 			}
+		],
+		"asns": [
+			1,
+			2
 		]
 	}],
 	"summary": {
