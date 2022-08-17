@@ -3,7 +3,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [unreleased]
+## [7.0.1] - 2022-08-17
+### Fixed
+- Fixed an issue in Traffic Portal where the Profile > View Delivery Services table was not filtering correctly.
 
 ## [7.0.0] - 2022-07-19
 ### Added
@@ -83,16 +85,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - The `/servers/details` endpoint of the Traffic Ops API has been dropped in version 4.0, and marked deprecated in earlier versions.
 
 ### Changed
-  - async-http-client: 2.12.1 -> 2.12.3
-  - commons-codec: 1.6 -> 1.15
-  - commons-io: 2.0.1 -> 2.11.0
-  - guava: 18.0 -> 31.1-jre
-  - spring: 5.2.20.RELEASE -> 5.3.20
-  traffic_ctl commands, and adds new markup-poll-threshold config.
 - Added Rocky Linux 8 support
 - Added new fields to the monitoring.json snapshot and made Traffic Monitor prefer data in monitoring.json to the CRConfig snapshot
 - Added permissions to the role form in traffic portal
 - Adds updates to the trafficcontrol-health-client to, use new ATS Host status formats, detect and use proper
+  traffic_ctl commands, and adds new markup-poll-threshold config.
 - Changed the Traffic Ops user last_authenticated update query to only update once per minute to avoid row-locking when the same user logs in frequently.
 - Changed the default Traffic Ops API version requsted by Traffic Router from 2.0 to 3.1
 - Removed the unused `deliveryservice_tmuser` table from Traffic Ops database
@@ -102,6 +99,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated Go version to 1.18
 - Updated Grove to use the TO API v3 client library
 - Updated Traffic Router dependencies:
+  - async-http-client: 2.12.1 -> 2.12.3
+  - commons-codec: 1.6 -> 1.15
+  - commons-io: 2.0.1 -> 2.11.0
+  - guava: 18.0 -> 31.1-jre
+  - spring: 5.2.20.RELEASE -> 5.3.20
 - Updated the CDNs Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated the Cache Stats Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated the Profiles Traffic Portal page to use a more performant AG-Grid-based table.
