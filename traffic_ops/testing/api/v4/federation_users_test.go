@@ -218,18 +218,6 @@ func validateFederationUserIDSort(desc bool) utils.CkReqFunc {
 	}
 }
 
-func GetUserID(t *testing.T, username string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("username", username)
-		users, _, err := TOSession.GetUsers(opts)
-		assert.RequireNoError(t, err, "Get Users Request failed with error:", err)
-		assert.RequireEqual(t, 1, len(users.Response), "Expected response object length 1, but got %d", len(users.Response))
-		assert.RequireNotNil(t, users.Response[0].ID, "Expected ID to not be nil.")
-		return *users.Response[0].ID
-	}
-}
-
 func CreateTestFederationUsers(t *testing.T) {
 	// Prerequisite Federation Users
 	federationUsers := map[string]tc.FederationUserPost{

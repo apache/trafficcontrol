@@ -125,16 +125,6 @@ func TestFederationUsers(t *testing.T) {
 	})
 }
 
-func GetUserID(t *testing.T, username string) func() int {
-	return func() int {
-		users, _, err := TOSession.GetUserByUsernameWithHdr(username, nil)
-		assert.RequireNoError(t, err, "Get Users Request failed with error:", err)
-		assert.RequireEqual(t, 1, len(users), "Expected response object length 1, but got %d", len(users))
-		assert.RequireNotNil(t, users[0].ID, "Expected ID to not be nil.")
-		return *users[0].ID
-	}
-}
-
 func CreateTestFederationUsers(t *testing.T) {
 	// Prerequisite Federation Users
 	federationUsers := map[string]tc.FederationUserPost{
