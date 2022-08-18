@@ -61,3 +61,4 @@ var TableAssignServerSCsController = function(server, serverCapabilities, assign
 
 TableAssignServerSCsController.$inject = ['server', 'serverCapabilities', 'assignedSCs', '$scope', '$uibModalInstance'];
 module.exports = TableAssignServerSCsController;
+
