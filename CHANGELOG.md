@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [unreleased]
 ### Added
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) Added ability to assign multiple server capabilities to a server.
+- [Traffic Monitor] Added logging for `ipv4Availability` and `ipv6Availability` in TM.
 
 ### Fixed
 - Traffic Stats: Reuse InfluxDB client handle to prevent potential connection leaks
