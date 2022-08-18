@@ -47,7 +47,7 @@ import (
 const (
 	t3cgen       = `t3c generate`
 	t3cupd       = `t3c update`
-	t3cdiff      = `t3c diff`
+	t3cdiff      = `t3c-diff`
 	t3cchkrefs   = `t3c check refs`
 	t3cchkreload = `t3c check reload`
 	t3creq       = `t3c request`
@@ -295,7 +295,6 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, perm os.FileMode, uid int, gid int) (bool, error) {
 	diffMsg := ""
 	args := []string{
-		`diff`,
 		"--file-a=stdin",
 		"--file-b=" + fileLocation,
 		"--file-mode=" + fmt.Sprintf("%#o", perm),
@@ -303,7 +302,10 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, 
 		"--file-gid=" + fmt.Sprint(gid),
 	}
 
-	stdOut, stdErr, code := t3cutil.DoInput(newFile, t3cpath, args...)
+	// t3c-diff is called directly for performance reasons.
+	diffpath := t3cpath + `-diff`
+
+	stdOut, stdErr, code := t3cutil.DoInput(newFile, diffpath, args...)
 	if code > 1 {
 		return false, fmt.Errorf("%s returned error code %v stdout '%v' stderr '%v'", t3cdiff, code, string(stdOut), string(stdErr))
 	}
