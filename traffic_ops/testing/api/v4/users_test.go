@@ -327,9 +327,9 @@ func CreateTestUsers(t *testing.T) {
 }
 
 // ForceDeleteTestUsers forcibly deletes the users from the db.
-//  NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
-//  Connects directly to the DB to remove users rather than going through the client.
-//  This is required here because the DeleteUser action does not really delete users,  but disables them.
+// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
+// Connects directly to the DB to remove users rather than going through the client.
+// This is required here because the DeleteUser action does not really delete users,  but disables them.
 func ForceDeleteTestUsers(t *testing.T) {
 
 	db, err := OpenConnection()
@@ -351,10 +351,10 @@ func ForceDeleteTestUsers(t *testing.T) {
 	assert.NoError(t, err, "Cannot execute SQL: %v; SQL is %s", err, q)
 }
 
-//  ForceDeleteTestUsersByUsernames forcibly deletes the users passed in from a slice of usernames from the db.
-//  NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
-//  Connects directly to the DB to remove users rather than going through the client.
-//  This is required here because the DeleteUser action does not really delete users, but disables them.
+// ForceDeleteTestUsersByUsernames forcibly deletes the users passed in from a slice of usernames from the db.
+// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
+// Connects directly to the DB to remove users rather than going through the client.
+// This is required here because the DeleteUser action does not really delete users, but disables them.
 func ForceDeleteTestUsersByUsernames(t *testing.T, usernames []string) {
 
 	db, err := OpenConnection()
