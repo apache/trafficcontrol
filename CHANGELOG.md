@@ -5,8 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
-- [#6033](https://github.com/apache/trafficcontrol/issues/6033) [Traffic Ops] Added ability to assign multiple server capabilities to a server.
-- [#6033](https://github.com/apache/trafficcontrol/issues/6033) [Traffic Portal] Added ability to assign multiple server capabilities to a server in TPv1
+- [#6033](https://github.com/apache/trafficcontrol/issues/6033) [Traffic Ops, Traffic Portal] Added ability to assign multiple server capabilities to a server.
 - [Traffic Monitor] Added logging for `ipv4Availability` and `ipv6Availability` in TM.
 
 ### Fixed
