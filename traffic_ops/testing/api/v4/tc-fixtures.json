@@ -6318,9 +6318,7 @@
             "startTime": "2100-06-19T13:57:51Z",
             "ttlHours": 2160,
             "invalidationType" : "REFRESH"
-        }
-    ],
-    "invalidationJobsRefetch": [
+        },
         {
             "deliveryService": "ds1",
             "regex": "/.*",
