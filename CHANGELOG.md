@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 
+### Fixed
+- [#7021](https://github.com/apache/trafficcontrol/issues/7021) Fixed cache config for Delivery Services with IP Origins
+
 ## [7.0.0] - 2022-07-19
 ### Added
 - [Traffic Portal] Added Layered Profile feature to /servers/
