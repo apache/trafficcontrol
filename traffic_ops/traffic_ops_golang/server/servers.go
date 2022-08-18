@@ -925,7 +925,6 @@ JOIN server_profile sp ON s.id = sp.server`
 
 	servers := make(map[int]tc.ServerV41)
 	ids := []int{}
-	var asns pq.Int32Array
 	for rows.Next() {
 		s := tc.ServerV41{}
 		err := rows.Scan(&s.Cachegroup,
@@ -965,8 +964,7 @@ JOIN server_profile sp ON s.id = sp.server`
 			&s.XMPPID,
 			&s.XMPPPasswd,
 			&s.StatusLastUpdated,
-			&asns)
-		s.ASNs = asns
+			pq.Array(&s.ASNs))
 		if err != nil {
 			return nil, serverCount, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError, nil
 		}
@@ -1153,7 +1151,6 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV41, dsID int, cdnID 
 
 	for rows.Next() {
 		var s tc.ServerV41
-		var asns pq.Int32Array
 		if err := rows.Scan(&s.Cachegroup,
 			&s.CachegroupID,
 			&s.CDNID,
@@ -1191,11 +1188,10 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV41, dsID int, cdnID 
 			&s.XMPPID,
 			&s.XMPPPasswd,
 			&s.StatusLastUpdated,
-			&asns); err != nil {
+			pq.Array(&s.ASNs)); err != nil {
 			log.Errorf("could not scan mid servers: %s\n", err)
 			return nil, nil, err, http.StatusInternalServerError
 		}
-		s.ASNs = asns
 		if s.ID == nil {
 			return nil, nil, errors.New("found server with nil ID"), http.StatusInternalServerError
 		}
