@@ -23,6 +23,19 @@ var TableTenantDeliveryServicesController = function(tenant, deliveryServices, f
 	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'tenantDS', deliveryServices: deliveryServices, filter: filter, $scope: $scope }));
 
 	$scope.tenant = tenant;
+	$scope.breadCrumbs = [
+		{
+			href: "#!/tenants",
+			text: "Tenants"
+		},
+		{
+			getText: () => tenant.name,
+			getHref: () => `#!/tenants/${tenant.id}`
+		},
+		{
+			text: "Delivery Services"
+		}
+	];
 };
 
 TableTenantDeliveryServicesController.$inject = ['tenant', 'deliveryServices', 'filter', '$controller', '$scope'];
