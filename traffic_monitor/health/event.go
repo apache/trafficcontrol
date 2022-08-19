@@ -90,8 +90,8 @@ func (o *ThreadsafeEvents) Get() []Event {
 
 // Add adds the given event. This is threadsafe for one writer, multiple readers. This MUST NOT be called by multiple threads, as it non-atomically fetches and adds.
 func (o *ThreadsafeEvents) Add(e Event) {
-	// host="hostname", type=EDGE, available=true, msg="REPORTED - available"
-	log.Eventf(time.Time(e.Time), "host=\"%s\", type=%s, available=%t, msg=\"%s\"", e.Hostname, e.Type, e.Available, e.Description)
+	// host="hostname", type=EDGE, available=true, ipv4Available=true, ipv6Available=true, msg="REPORTED - available"
+	log.Eventf(time.Time(e.Time), "host=\"%s\", type=%s, available=%t, ipv4Available=%t, ipv6Available=%t, msg=\"%s\"", e.Hostname, e.Type, e.Available, e.IPv4Available, e.IPv6Available, e.Description)
 	o.m.Lock() // TODO test removing
 	events := copyEvents(*o.events)
 	e.Index = *o.nextIndex

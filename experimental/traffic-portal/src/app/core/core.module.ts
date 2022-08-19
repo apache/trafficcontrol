@@ -39,6 +39,7 @@ import { NewDeliveryServiceComponent } from "./new-delivery-service/new-delivery
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
+import { TenantDetailsComponent } from "./users/tenants/tenant-details/tenant-details.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
 import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
@@ -56,7 +57,8 @@ export const ROUTES: Routes = [
 	{ canActivate: [AuthenticatedGuard], component: NewDeliveryServiceComponent, path: "new.Delivery.Service" },
 	{ canActivate: [AuthenticatedGuard], component: CacheGroupTableComponent, path: "cache-groups" },
 	{ canActivate: [AuthenticatedGuard], component: TenantsComponent, path: "tenants"},
-	{ canActivate: [AuthenticatedGuard], component: ChangeLogsComponent, path: "change-logs" }
+	{ canActivate: [AuthenticatedGuard], component: ChangeLogsComponent, path: "change-logs" },
+	{ canActivate: [AuthenticatedGuard], component: TenantDetailsComponent, path: "tenants/:id"}
 ];
 
 /**
@@ -79,6 +81,8 @@ export const ROUTES: Routes = [
 		UpdateStatusComponent,
 		UserDetailsComponent,
 		TenantsComponent,
+		UserRegistrationDialogComponent,
+		TenantDetailsComponent,
 		ChangeLogsComponent,
 		LastDaysComponent,
 		UserRegistrationDialogComponent

@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"errors"
+	"net"
 	"strconv"
 	"strings"
 )
@@ -306,7 +307,15 @@ func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts
 	if opt.AddComments && svc.Comment != "" {
 		txt += LineCommentParentDotConfig + " " + svc.Comment + "\n"
 	}
-	txt += `dest_domain=` + svc.DestDomain
+
+	// if the domain is an IP, we have to use dest_ip.
+	// Using an IP in dest_domain will be silently ignored by ATS, causing the remap/DS to use the fallthrough 'dest_domain=.' rule
+	if domainIsIP := net.ParseIP(svc.DestDomain) != nil; domainIsIP {
+		txt += `dest_ip=` + svc.DestDomain
+	} else {
+		txt += `dest_domain=` + svc.DestDomain
+	}
+
 	if svc.Port != 0 {
 		txt += ` port=` + strconv.Itoa(svc.Port)
 	}

@@ -4,8 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
+### Added
+- [#6033](https://github.com/apache/trafficcontrol/issues/6033) Added ability to assign multiple server capabilities to a server.
+- [Traffic Monitor] Added logging for `ipv4Availability` and `ipv6Availability` in TM.
+
+### Fixed
+- Traffic Stats: Reuse InfluxDB client handle to prevent potential connection leaks
+
 ### Changed
 - Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
+
+### Fixed
+- [#7021](https://github.com/apache/trafficcontrol/issues/7021) Fixed cache config for Delivery Services with IP Origins
 
 ## [7.0.0] - 2022-07-19
 ### Added
@@ -35,6 +45,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - t3c now looks in the executable dir path for t3c- utilities
 - Added support for parent.config markdown/retry DS parameters using first./inner./last. prefixes.  mso. and <null> prefixes should be deprecated.
 - Add new __REGEX_REMAP_DIRECTIVE__ support to raw remap text to allow moving the regex_remap placement.
+- t3c change `t3c diff` call to `t3c-diff` to fix a performance regression.
 - Added a sub-app t3c-tail to tail diags.log and capture output when t3c reloads and restarts trafficserver
 
 ### Fixed
@@ -78,7 +89,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed TO API `GET /deliveryservicesserver` causing error when an IMS request is made with the `cdn` and `maxRevalDurationDays` parameters set.
 - [#6792](https://github.com/apache/trafficcontrol/issues/6792) Remove extraneous field from Topologies and Server Capability POST/PUT.
 - [#6795](https://github.com/apache/trafficcontrol/issues/6795) Removed an unnecessary response wrapper object from being returned in a POST to the federation resolvers endpoint.
-
 
 ### Removed
 - Remove `client.steering.forced.diversity` feature flag(profile parameter) from Traffic Router (TR). Client steering responses now have cache diversity by default.

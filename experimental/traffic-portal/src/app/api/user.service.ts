@@ -14,7 +14,13 @@
 
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { GetResponseUser, PostRequestUser, PutOrPostResponseUser } from "trafficops-types";
+import type {
+	GetResponseUser,
+	PostRequestUser,
+	PutOrPostResponseUser,
+	RequestTenant,
+	ResponseTenant
+} from "trafficops-types";
 
 import {
 	type Role,
@@ -299,14 +305,14 @@ export class UserService extends APIService {
 	 *
 	 * @returns All Tenants visible to the requesting user's Tenant.
 	 */
-	public async getTenants(): Promise<Array<Tenant>>;
+	public async getTenants(): Promise<Array<ResponseTenant>>;
 	/**
 	 * Retrieves a Tenant from Traffic Ops.
 	 *
 	 * @param nameOrID Either the name or ID of the desired Tenant.
 	 * @returns The Tenant identified by `nameOrID`.
 	 */
-	public async getTenants(nameOrID: string | number): Promise<Tenant>;
+	public async getTenants(nameOrID: string | number): Promise<ResponseTenant>;
 	/**
 	 * Retrieves one or all Tenants from Traffic Ops.
 	 *
@@ -314,7 +320,7 @@ export class UserService extends APIService {
 	 * @returns The Tenant identified by `nameOrID` if given, otherwise all
 	 * Tenants visible to the requesting user's Tenant.
 	 */
-	public async getTenants(nameOrID?: string | number): Promise<Array<Tenant> | Tenant> {
+	public async getTenants(nameOrID?: string | number): Promise<Array<ResponseTenant> | ResponseTenant> {
 		const path = "tenants";
 		if (nameOrID !== undefined) {
 			let params;
@@ -325,10 +331,49 @@ export class UserService extends APIService {
 				case "number":
 					params = {id: String(nameOrID)};
 			}
-			const resp = await this.get<[Tenant]>(path, undefined, params).toPromise();
+			const resp = await this.get<[ResponseTenant]>(path, undefined, params).toPromise();
 			return resp[0];
 		}
-		return this.get<Array<Tenant>>(path).toPromise();
+		return this.get<Array<ResponseTenant>>(path).toPromise();
+	}
+
+	/**
+	 * Creates a new tenant.
+	 *
+	 * @param tenant The Tenant to create.
+	 * @returns The created tenant.
+	 */
+	public async createTenant(tenant: RequestTenant): Promise<ResponseTenant> {
+		const response = await this.post<ResponseTenant>("tenants", tenant).toPromise();
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Updates an existing tenant.
+	 *
+	 * @param tenant The tenant to update.
+	 * @returns The updated tenant.
+	 */
+	public async updateTenant(tenant: ResponseTenant): Promise<ResponseTenant> {
+		const response = await this.put<ResponseTenant>(`tenants/${tenant.id}`, tenant).toPromise();
+
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Deletes an existing tenant.
+	 *
+	 * @param id Id of the tenant to delete.
+	 * @returns The deleted tenant.
+	 */
+	public async deleteTenant(id: number): Promise<ResponseTenant> {
+		return this.delete<ResponseTenant>(`tenants/${id}`).toPromise();
 	}
 
 	/** Fetches the User Capability (Permission) with the given name. */
