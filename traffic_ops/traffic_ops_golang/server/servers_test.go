@@ -195,8 +195,6 @@ func TestGetServersByCachegroup(t *testing.T) {
 	//                    or by CSV if types get in the way
 	for _, srv := range testServers {
 		ts := srv.Server
-		asns := &pq.Int64Array{}
-		v, _ := asns.Value()
 		rows = rows.AddRow(
 			*ts.Cachegroup,
 			*ts.CachegroupID,
@@ -235,7 +233,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
 			*ts.StatusLastUpdated,
-			v,
+			[]byte(`{1,2}`),
 		)
 		interfaceRows = interfaceRows.AddRow(
 			srv.Interface.MaxBandwidth,
@@ -317,8 +315,6 @@ func TestGetMidServers(t *testing.T) {
 
 	for _, srv := range testServers {
 		ts := srv.Server
-		asns := &pq.Int64Array{}
-		asnValue, _ := asns.Value()
 		rows = rows.AddRow(
 			*ts.Cachegroup,
 			*ts.CachegroupID,
@@ -357,7 +353,7 @@ func TestGetMidServers(t *testing.T) {
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
 			*ts.StatusLastUpdated,
-			asnValue,
+			[]byte(`{1,2}`),
 		)
 		interfaceRows = interfaceRows.AddRow(
 			srv.Interface.MaxBandwidth,
@@ -464,8 +460,6 @@ func TestGetMidServers(t *testing.T) {
 			break
 		}
 	}
-	asns := &pq.Int64Array{}
-	asnValue, _ := asns.Value()
 	*ts.ID = *ts.ID + 1
 	rows2 = rows2.AddRow(
 		*ts.Cachegroup,
@@ -505,7 +499,7 @@ func TestGetMidServers(t *testing.T) {
 		*ts.XMPPID,
 		*ts.XMPPPasswd,
 		*ts.StatusLastUpdated,
-		asnValue,
+		[]byte(`{1,2}`),
 	)
 
 	mock.ExpectBegin()

@@ -131,7 +131,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		 * 4.x API
 		 */
 
-		// 4.1 GET servers
+		// GET servers
 		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodGet, Path: `servers/?$`, Handler: server.Read, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER:READ", "DELIVERY-SERVICE:READ", "CDN:READ", "PHYSICAL-LOCATION:READ", "CACHE-GROUP:READ", "TYPE:READ", "PROFILE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 47219592853},
 		// Assign Multiple Server Capabilities
 		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodPut, Path: `multiple_server_capabilities/?$`, Handler: server.AssignMultipleServerCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 40792419258},

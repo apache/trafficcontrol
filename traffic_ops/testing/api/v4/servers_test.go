@@ -38,30 +38,7 @@ func TestServers(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
-
-		// Add a new asn for one of the cachegroups
-		cgResp, _, err := TOSession.GetCacheGroups(client.RequestOptions{QueryParameters: url.Values{"name": {"topology-mid-cg-01"}}})
-		if err != nil {
-			t.Fatalf("couldn't get cachegroups: %v", err)
-		}
-		if len(cgResp.Response) != 1 {
-			t.Fatalf("expected 1 cachegroup, but got %d", len(cgResp.Response))
-		}
-		if cgResp.Response[0].ID == nil {
-			t.Fatalf("ID of cachegroup is nil")
-		}
-
-		asn := tc.ASN{
-			ASN:          1111,
-			Cachegroup:   "topology-mid-cg-01",
-			CachegroupID: *cgResp.Response[0].ID,
-		}
-
-		_, _, err = TOSession.CreateASN(asn, client.NewRequestOptions())
-		if err != nil {
-			t.Fatalf("couldn't create ASN: %v", err)
-		}
-
+		setupCacheGroupWithASN(t)
 		methodTests := utils.V4TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
@@ -421,6 +398,31 @@ func TestServers(t *testing.T) {
 		t.Run("STATUSLASTUPDATED ONLY CHANGES when STATUS CHANGES", func(t *testing.T) { UpdateTestServerStatusLastUpdated(t) })
 
 	})
+}
+
+func setupCacheGroupWithASN(t *testing.T) {
+	// Add a new asn for one of the cachegroups
+	cgResp, _, err := TOSession.GetCacheGroups(client.RequestOptions{QueryParameters: url.Values{"name": {"topology-mid-cg-01"}}})
+	if err != nil {
+		t.Fatalf("couldn't get cachegroups: %v", err)
+	}
+	if len(cgResp.Response) != 1 {
+		t.Fatalf("expected 1 cachegroup, but got %d", len(cgResp.Response))
+	}
+	if cgResp.Response[0].ID == nil {
+		t.Fatalf("ID of cachegroup is nil")
+	}
+
+	asn := tc.ASN{
+		ASN:          1111,
+		Cachegroup:   "topology-mid-cg-01",
+		CachegroupID: *cgResp.Response[0].ID,
+	}
+
+	_, _, err = TOSession.CreateASN(asn, client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("couldn't create ASN: %v", err)
+	}
 }
 
 func validateServerFields(expectedResp map[string]interface{}) utils.CkReqFunc {
