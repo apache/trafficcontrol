@@ -100,6 +100,14 @@ type ParentConfigOpts struct {
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
 	// To omit the header comment, pass the empty string.
 	HdrComment string
+
+	// ATSMajorVersion is the integral major version of Apache Traffic server,
+	// used to generate the proper config for the proper version.
+	//
+	// If omitted or 0, the major version will be read from the Server's Profile Parameter config file 'package' name 'trafficserver'. If no such Parameter exists, the ATS version will default to 5.
+	// This was the old Traffic Control behavior, before the version was specifiable externally.
+	//
+	ATSMajorVersion uint
 }
 
 func MakeParentDotConfig(
@@ -116,7 +124,10 @@ func MakeParentDotConfig(
 	cdn *tc.CDN,
 	opt *ParentConfigOpts,
 ) (Cfg, error) {
-	parentAbstraction, warnings, err := makeParentDotConfigData(
+	warnings := []string{}
+	atsMajorVersion := getATSMajorVersion(opt.ATSMajorVersion, tcServerParams, &warnings)
+
+	parentAbstraction, dataWarns, err := makeParentDotConfigData(
 		dses,
 		server,
 		servers,
@@ -129,15 +140,14 @@ func MakeParentDotConfig(
 		dss,
 		cdn,
 		opt,
+		atsMajorVersion,
 	)
+	warnings = append(warnings, dataWarns...)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, err.Error())
 	}
 
-	atsMajorVer, verWarns := getATSMajorVersion(tcServerParams)
-	warnings = append(warnings, verWarns...)
-
-	text, paWarns, err := parentAbstractionToParentDotConfig(parentAbstraction, opt, atsMajorVer)
+	text, paWarns, err := parentAbstractionToParentDotConfig(parentAbstraction, opt, atsMajorVersion)
 	warnings = append(warnings, paWarns...)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, err.Error())
@@ -169,6 +179,7 @@ func makeParentDotConfigData(
 	dss []DeliveryServiceServer,
 	cdn *tc.CDN,
 	opt *ParentConfigOpts,
+	atsMajorVersion uint,
 ) (*ParentAbstraction, []string, error) {
 	if opt == nil {
 		opt = &ParentConfigOpts{}
@@ -187,10 +198,6 @@ func makeParentDotConfigData(
 	} else if server.TCPPort == nil {
 		return nil, warnings, errors.New("server TCPPort missing")
 	}
-
-	// TODO remove, the abstraction shouldn't depend on the ATS version
-	atsMajorVer, verWarns := getATSMajorVersion(tcServerParams)
-	warnings = append(warnings, verWarns...)
 
 	cacheGroups, err := makeCGMap(cacheGroupArr)
 	if err != nil {
@@ -393,7 +400,7 @@ func makeParentDotConfigData(
 				cacheGroups,
 				profileParentConfigParams,
 				isMSO,
-				atsMajorVer,
+				atsMajorVersion,
 				dsOrigins[DeliveryServiceID(*ds.ID)],
 				opt.AddComments,
 			)
@@ -499,7 +506,7 @@ func makeParentDotConfigData(
 						warnings = append(warnings, "DS "+*ds.XMLID+" has no parent servers")
 					}
 
-					parents, secondaryParents, secondaryMode, parentWarns := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
+					parents, secondaryParents, secondaryMode, parentWarns := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVersion, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
 					warnings = append(warnings, parentWarns...)
 					pasvc.Parents = parents
 					pasvc.SecondaryParents = secondaryParents
@@ -510,7 +517,7 @@ func makeParentDotConfigData(
 
 					// textLine += parents + secondaryParents + ` round_robin=` + dsParams.Algorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
 
-					prWarns := dsParams.FillParentSvcRetries(cacheIsTopLevel, atsMajorVer, pasvc)
+					prWarns := dsParams.FillParentSvcRetries(cacheIsTopLevel, atsMajorVersion, pasvc)
 					warnings = append(warnings, prWarns...)
 
 					parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
@@ -526,7 +533,7 @@ func makeParentDotConfigData(
 				goDirect := false
 				// goDirect := `go_direct=false`
 
-				parents, secondaryParents, secondaryMode, parentWarns := getParentStrs(&ds, dsRequiredCapabilities, parentInfos[deliveryServicesAllParentsKey], atsMajorVer, dsParams.TryAllPrimariesBeforeSecondary)
+				parents, secondaryParents, secondaryMode, parentWarns := getParentStrs(&ds, dsRequiredCapabilities, parentInfos[deliveryServicesAllParentsKey], atsMajorVersion, dsParams.TryAllPrimariesBeforeSecondary)
 				warnings = append(warnings, parentWarns...)
 
 				pasvc := &ParentAbstractionService{}
@@ -624,7 +631,7 @@ func makeParentDotConfigData(
 					// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
 				}
 
-				prWarns := dsParams.FillParentSvcRetries(cacheIsTopLevel, atsMajorVer, pasvc)
+				prWarns := dsParams.FillParentSvcRetries(cacheIsTopLevel, atsMajorVersion, pasvc)
 				warnings = append(warnings, prWarns...)
 
 				parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
@@ -641,7 +648,7 @@ func makeParentDotConfigData(
 		invalidDS := &DeliveryService{}
 		invalidDS.ID = util.IntPtr(-1)
 		tryAllPrimariesBeforeSecondary := false
-		parents, secondaryParents, secondaryMode, parentWarns := getParentStrs(invalidDS, dsRequiredCapabilities, parentInfos[deliveryServicesAllParentsKey], atsMajorVer, tryAllPrimariesBeforeSecondary)
+		parents, secondaryParents, secondaryMode, parentWarns := getParentStrs(invalidDS, dsRequiredCapabilities, parentInfos[deliveryServicesAllParentsKey], atsMajorVersion, tryAllPrimariesBeforeSecondary)
 		warnings = append(warnings, parentWarns...)
 
 		defaultDestText.DestDomain = `.`
@@ -1001,7 +1008,7 @@ func getTopologyParentConfigLine(
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
 	profileParentConfigParams map[string]map[string]string,
 	isMSO bool,
-	atsMajorVer int,
+	atsMajorVersion uint,
 	dsOrigins map[ServerID]struct{},
 	addComments bool,
 ) (*ParentAbstractionService, []string, error) {
@@ -1070,7 +1077,7 @@ func getTopologyParentConfigLine(
 		pasvc.SecondaryParents = secondaryParents
 		// txt += ` secondary_parent="` + strings.Join(secondaryParents, `;`) + `"`
 
-		secondaryModeStr, secondaryModeWarnings := getSecondaryModeStr(dsParams.TryAllPrimariesBeforeSecondary, atsMajorVer, tc.DeliveryServiceName(*ds.XMLID))
+		secondaryModeStr, secondaryModeWarnings := getSecondaryModeStr(dsParams.TryAllPrimariesBeforeSecondary, atsMajorVersion, tc.DeliveryServiceName(*ds.XMLID))
 		warnings = append(warnings, secondaryModeWarnings...)
 		// txt += secondaryModeStr
 		pasvc.SecondaryMode = secondaryModeStr // TODO convert
@@ -1103,7 +1110,7 @@ func getTopologyParentConfigLine(
 	// txt += getTopologyParentIsProxyStr(serverPlacement.IsLastCacheTier)
 
 	// TODO convert
-	prWarns := dsParams.FillParentSvcRetries(serverPlacement.IsLastCacheTier, atsMajorVer, pasvc)
+	prWarns := dsParams.FillParentSvcRetries(serverPlacement.IsLastCacheTier, atsMajorVersion, pasvc)
 	warnings = append(warnings, prWarns...)
 
 	// txt += getParentRetryStr(serverPlacement.IsLastCacheTier, atsMajorVer, dsParams.ParentRetry, dsParams.UnavailableServerRetryResponses, dsParams.MaxSimpleRetries, dsParams.MaxUnavailableServerRetries)
@@ -1120,7 +1127,7 @@ func getTopologyParentConfigLine(
 //
 // Returns the MaxSimpleRetries, MaxMarkdownRetries, ErrorREsponseCodes, MarkdownResponseCodes.
 //
-// If atsMajorVer < 6, "" is returned (ATS 5 and below don't support retry directives).
+// If atsMajorVersion < 6, "" is returned (ATS 5 and below don't support retry directives).
 // If isLastCacheTier is false, "" is returned. This argument exists to simplify usage.
 // If parentRetry is "", "" is returned (because the other directives are unused if parent_retry doesn't exist). This is allowed to simplify usage.
 // If unavailableServerRetryResponses is not "", it must be valid. Use unavailableServerRetryResponsesValid to check.
@@ -1128,11 +1135,11 @@ func getTopologyParentConfigLine(
 // If maxUnavailableServerRetries is "", ParentConfigDSParamDefaultMaxUnavailableServerRetries will be used.
 //
 // Does not return errors. If any input is malformed, warnings are returned and that value is set to -1.
-func (dsparams parentDSParams) FillParentSvcRetries(isLastCacheTier bool, atsMajorVer int, pasvc *ParentAbstractionService) []string {
+func (dsparams parentDSParams) FillParentSvcRetries(isLastCacheTier bool, atsMajorVersion uint, pasvc *ParentAbstractionService) []string {
 	warnings := []string{}
 
 	if !dsparams.HasRetryParams || // allow parentRetry to be empty, to simplify usage.
-		atsMajorVer < 6 { // ATS 5 and below don't support parent_retry directives
+		atsMajorVersion < 6 { // ATS 5 and below don't support parent_retry directives
 		// warnings = append(warnings, "ATS 5 doesn't support parent retry, not using parent retry values")
 		pasvc.MaxSimpleRetries = -1
 		pasvc.MaxMarkdownRetries = -1
@@ -1210,13 +1217,13 @@ func (dsparams parentDSParams) FillParentSvcRetries(isLastCacheTier bool, atsMaj
 }
 
 // getSecondaryModeStr returns the secondary_mode string, and any warnings.
-func getSecondaryModeStr(tryAllPrimariesBeforeSecondary bool, atsMajorVer int, ds tc.DeliveryServiceName) (ParentAbstractionServiceParentSecondaryMode, []string) {
+func getSecondaryModeStr(tryAllPrimariesBeforeSecondary bool, atsMajorVersion uint, ds tc.DeliveryServiceName) (ParentAbstractionServiceParentSecondaryMode, []string) {
 	warnings := []string{}
 	if !tryAllPrimariesBeforeSecondary {
 		return ParentAbstractionServiceParentSecondaryModeDefault, warnings
 	}
-	if atsMajorVer < 8 {
-		warnings = append(warnings, "DS '"+string(ds)+"' had Parameter "+ParentConfigRetryKeysDefault.SecondaryMode+" but this cache is "+strconv.Itoa(atsMajorVer)+" and secondary_mode isn't supported in ATS until 8. Not using!")
+	if atsMajorVersion < 8 {
+		warnings = append(warnings, "DS '"+string(ds)+"' had Parameter "+ParentConfigRetryKeysDefault.SecondaryMode+" but this cache is "+strconv.FormatUint(uint64(atsMajorVersion), 10)+" and secondary_mode isn't supported in ATS until 8. Not using!")
 		return ParentAbstractionServiceParentSecondaryModeDefault, warnings
 	}
 
@@ -1527,7 +1534,7 @@ func getParentStrs(
 	ds *DeliveryService,
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	parentInfos []parentInfo,
-	atsMajorVer int,
+	atsMajorVersion uint,
 	tryAllPrimariesBeforeSecondary bool,
 ) ([]*ParentAbstractionServiceParent, []*ParentAbstractionServiceParent, ParentAbstractionServiceParentSecondaryMode, []string) {
 	warnings := []string{}
@@ -1568,10 +1575,10 @@ func getParentStrs(
 	// secondaryParents := "" // "secparents" in Perl
 
 	// TODO the abstract->text needs to take this into account
-	// if atsMajorVer >= 6 && len(secondaryParentInfo) > 0 {
+	// if atsMajorVersion >= 6 && len(secondaryParentInfo) > 0 {
 	// parents = `parent="` + strings.Join(parentInfo, "") + `"`
 	// secondaryParents = ` secondary_parent="` + strings.Join(secondaryParentInfo, "") + `"`
-	secondaryMode, secondaryModeWarnings := getSecondaryModeStr(tryAllPrimariesBeforeSecondary, atsMajorVer, dsName)
+	secondaryMode, secondaryModeWarnings := getSecondaryModeStr(tryAllPrimariesBeforeSecondary, atsMajorVersion, dsName)
 	warnings = append(warnings, secondaryModeWarnings...)
 	// 	secondaryParents += secondaryModeStr
 	// } else {
@@ -1585,7 +1592,7 @@ func getParentStrs(
 func getMSOParentStrs(
 	ds *DeliveryService,
 	parentInfos []parentInfo,
-	atsMajorVer int,
+	atsMajorVersion uint,
 	msoAlgorithm ParentAbstractionServiceRetryPolicy,
 	tryAllPrimariesBeforeSecondary bool,
 ) ([]*ParentAbstractionServiceParent, []*ParentAbstractionServiceParent, ParentAbstractionServiceParentSecondaryMode, []string) {
@@ -1640,10 +1647,10 @@ func getMSOParentStrs(
 	// secondaryParents := ""
 
 	// TODO add this logic to the abstraction->text converter
-	// if atsMajorVer >= 6 && msoAlgorithm == "consistent_hash" && len(secondaryParentStr) > 0 {
+	// if atsMajorVersion >= 6 && msoAlgorithm == "consistent_hash" && len(secondaryParentStr) > 0 {
 	// parents = `parent="` + strings.Join(parentInfoTxt, "") + `"`
 	// secondaryParents = ` secondary_parent="` + secondaryParentStr + `"`
-	secondaryMode, secondaryModeWarnings := getSecondaryModeStr(tryAllPrimariesBeforeSecondary, atsMajorVer, dsName)
+	secondaryMode, secondaryModeWarnings := getSecondaryModeStr(tryAllPrimariesBeforeSecondary, atsMajorVersion, dsName)
 	warnings = append(warnings, secondaryModeWarnings...)
 	// 	secondaryParents += secondaryModeStr
 	// } else {

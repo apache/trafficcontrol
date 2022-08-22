@@ -34,6 +34,13 @@ type CfgMeta struct {
 
 // ConfigFilesListOpts contains settings to configure generation options.
 type ConfigFilesListOpts struct {
+	// ATSMajorVersion is the integral major version of Apache Traffic server,
+	// used to generate the proper config for the proper version.
+	//
+	// If omitted or 0, the major version will be read from the Server's Profile Parameter config file 'package' name 'trafficserver'. If no such Parameter exists, the ATS version will default to 5.
+	// This was the old Traffic Control behavior, before the version was specifiable externally.
+	//
+	ATSMajorVersion uint
 }
 
 // MakeMetaObj returns the list of config files, any warnings, and any errors.
@@ -71,8 +78,7 @@ func MakeConfigFilesList(
 		return nil, warnings, errors.New("server missing Profile")
 	}
 
-	atsMajorVer, verWarns := getATSMajorVersion(serverParams)
-	warnings = append(warnings, verWarns...)
+	atsMajorVersion := getATSMajorVersion(opt.ATSMajorVersion, serverParams, &warnings)
 
 	dses, dsWarns := filterConfigFileDSes(server, deliveryServices, deliveryServiceServers)
 	warnings = append(warnings, dsWarns...)
@@ -129,7 +135,7 @@ locationParamsFor:
 		configFiles = append(configFiles, atsCfg)
 	}
 
-	configFiles, configDirWarns, err := addMetaObjConfigDir(configFiles, configDir, server, locationParams, uriSignedDSes, dses, cacheGroupArr, topologies, atsMajorVer)
+	configFiles, configDirWarns, err := addMetaObjConfigDir(configFiles, configDir, server, locationParams, uriSignedDSes, dses, cacheGroupArr, topologies, atsMajorVersion)
 	warnings = append(warnings, configDirWarns...)
 	return configFiles, warnings, err
 }
@@ -148,7 +154,7 @@ func addMetaObjConfigDir(
 	dses map[tc.DeliveryServiceName]DeliveryService,
 	cacheGroupArr []tc.CacheGroupNullable,
 	topologies []tc.Topology,
-	atsMajorVer int,
+	atsMajorVersion uint,
 ) ([]CfgMeta, []string, error) {
 	warnings := []string{}
 
@@ -171,7 +177,7 @@ func addMetaObjConfigDir(
 	// If they don't exist, create them.
 	// If they exist with a relative path, prepend configDir.
 	// If any exist with a relative path, or don't exist, and configDir is empty, return an error.
-	for _, fileName := range requiredFiles(atsMajorVer) {
+	for _, fileName := range requiredFiles(atsMajorVersion) {
 		if _, ok := configFilesM[fileName]; ok {
 			continue
 		}
@@ -413,8 +419,8 @@ type configProfileParams struct {
 	Path string
 }
 
-func requiredFiles(atsMajorVer int) []string {
-	if atsMajorVer >= 9 {
+func requiredFiles(atsMajorVersion uint) []string {
+	if atsMajorVersion >= 9 {
 		return requiredFiles9()
 	}
 	return requiredFiles8()

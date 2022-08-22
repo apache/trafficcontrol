@@ -4437,6 +4437,251 @@ func TestMakeParentDotConfigFirstInnerLastTopology(t *testing.T) {
 	}
 }
 
+func TestMakeParentDotConfigOptVersion(t *testing.T) {
+	ds1 := makeParentDS()
+	ds1.ID = util.IntPtr(43)
+	ds1Type := tc.DSTypeDNS
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+	ds1.Topology = util.StrPtr("t0")
+	ds1.ProfileName = util.StrPtr("ds1Profile")
+	ds1.ProfileID = util.IntPtr(994)
+	ds1.MultiSiteOrigin = util.BoolPtr(true)
+
+	dses := []DeliveryService{*ds1}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigRetryKeysDefault.Algorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigRetryKeysDefault.Algorithm,
+			ConfigFile: "parent.config",
+			Value:      "consistent_hash",
+			Profiles:   []byte(`["ds1Profile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigRetryKeysDefault.ParentRetry,
+			ConfigFile: "parent.config",
+			Value:      "both",
+			Profiles:   []byte(`["ds1Profile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigRetryKeysDefault.MaxSimpleRetries,
+			ConfigFile: "parent.config",
+			Value:      "14",
+			Profiles:   []byte(`["ds1Profile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigRetryKeysDefault.MaxUnavailableRetries,
+			ConfigFile: "parent.config",
+			Value:      "9",
+			Profiles:   []byte(`["ds1Profile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigRetryKeysDefault.UnavailableRetryResponses,
+			ConfigFile: "parent.config",
+			Value:      `"400,503"`,
+			Profiles:   []byte(`["ds1Profile"]`),
+		},
+	}
+
+	server := makeTestParentServer()
+	server.Cachegroup = util.StrPtr("edgeCG")
+	server.CachegroupID = util.IntPtr(400)
+
+	origin0 := makeTestParentServer()
+	origin0.Cachegroup = util.StrPtr("originCG")
+	origin0.CachegroupID = util.IntPtr(500)
+	origin0.HostName = util.StrPtr("myorigin0")
+	origin0.ID = util.IntPtr(45)
+	setIP(origin0, "192.168.2.2")
+	origin0.Type = tc.OriginTypeName
+	origin0.TypeID = util.IntPtr(991)
+
+	origin1 := makeTestParentServer()
+	origin1.Cachegroup = util.StrPtr("originCG")
+	origin1.CachegroupID = util.IntPtr(500)
+	origin1.HostName = util.StrPtr("myorigin1")
+	origin1.ID = util.IntPtr(46)
+	setIP(origin1, "192.168.2.3")
+	origin1.Type = tc.OriginTypeName
+	origin1.TypeID = util.IntPtr(991)
+
+	servers := []Server{*server, *origin0, *origin1}
+
+	topologies := []tc.Topology{
+		tc.Topology{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "originCG",
+				},
+			},
+		},
+	}
+
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = origin0.Cachegroup
+	eCG.ParentCachegroupID = origin0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	oCG := &tc.CacheGroupNullable{}
+	oCG.Name = origin0.Cachegroup
+	oCG.ID = origin0.CachegroupID
+	oCGType := tc.CacheGroupOriginTypeName
+	oCG.Type = &oCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *oCG}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *origin0.ID,
+			DeliveryService: *ds1.ID,
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	// unavailable_server_retry_responses is not available as a feature in ATS 5, but is in ATS 9.
+
+	t.Run("Package Parameter 9 with no Opt ATSVersion has ATS 9 feature", func(t *testing.T) {
+		serverParams := []tc.Parameter{
+			tc.Parameter{
+				Name:       "trafficserver",
+				ConfigFile: "package",
+				Value:      "9",
+				Profiles:   []byte(`["global"]`),
+			},
+		}
+
+		opt := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, opt.HdrComment)
+
+		if !strings.Contains(txt, `unavailable_server_retry_responses="400,503"`) {
+			t.Errorf(`expected Package Parameter ATS 9 with no Opt ATS Version to have unavailable_server_retry_responses feature', actual: '%v'`, txt)
+		}
+	})
+
+	t.Run("Package Parameter 5 with no Opt ATSVersion does not have the feature it shouldn't", func(t *testing.T) {
+		serverParams := []tc.Parameter{
+			tc.Parameter{
+				Name:       "trafficserver",
+				ConfigFile: "package",
+				Value:      "5",
+				Profiles:   []byte(`["global"]`),
+			},
+		}
+
+		opt := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, opt.HdrComment)
+
+		if strings.Contains(txt, `unavailable_server_retry_responses`) {
+			t.Errorf(`expected Package Parameter ATS 5 with no Opt ATS Version to not have unavailable_server_retry_responses feature', actual: '%v'`, txt)
+		}
+	})
+
+	t.Run("Package Parameter 5 with Opt ATSVersion 9 uses Opt not Param.", func(t *testing.T) {
+		serverParams := []tc.Parameter{
+			tc.Parameter{
+				Name:       "trafficserver",
+				ConfigFile: "package",
+				Value:      "5",
+				Profiles:   []byte(`["global"]`),
+			},
+		}
+
+		opt := &ParentConfigOpts{
+			AddComments:     false,
+			HdrComment:      "myHeaderComment",
+			ATSMajorVersion: 9,
+		}
+
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, opt.HdrComment)
+
+		if !strings.Contains(txt, `unavailable_server_retry_responses`) {
+			t.Errorf(`expected Package Parameter ATS 5 with Opt ATS Version 9 to use Opt not Parameter with ATS 9 unavailable_server_retry_responses feature', actual: '%v'`, txt)
+		}
+	})
+
+	t.Run("Package Parameter 9 with Opt ATSVersion 5 uses Opt not Param.", func(t *testing.T) {
+		serverParams := []tc.Parameter{
+			tc.Parameter{
+				Name:       "trafficserver",
+				ConfigFile: "package",
+				Value:      "9",
+				Profiles:   []byte(`["global"]`),
+			},
+		}
+
+		opt := &ParentConfigOpts{
+			AddComments:     false,
+			HdrComment:      "myHeaderComment",
+			ATSMajorVersion: 5,
+		}
+
+		cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		testComment(t, txt, opt.HdrComment)
+
+		if strings.Contains(txt, `unavailable_server_retry_responses`) {
+			t.Errorf(`expected Package Parameter ATS 9 with Opt ATS Version 5 to use Opt not Parameter with no ATS 9 unavailable_server_retry_responses feature', actual: '%v'`, txt)
+		}
+	})
+}
+
 func TestMakeParentDotConfigOriginIP(t *testing.T) {
 	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 

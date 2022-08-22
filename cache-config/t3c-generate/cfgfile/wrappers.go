@@ -26,16 +26,16 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-//
 // This file has wrappers that turn lib/go-atscfg Make funcs into ConfigFileFunc types.
 //
 // We don't want to make lib/go-atscfg functions take a TOData, because then users wanting to generate a single file would have to fetch all kinds of data that file doesn't need, or else pass objects they know it doesn't currently need as nil and risk it crashing if that func is changed to use it in the future.
 //
 // But it's useful to map filenames to functions for dispatch. Hence these wrappers.
 //
-
+// The atsMajorVersion may be 0 to default to the Server Package Parameter.
+//
 // MakeConfigFilesList returns the list of config files, any warnings, and any error.
-func MakeConfigFilesList(toData *t3cutil.ConfigData, dir string) ([]atscfg.CfgMeta, []string, error) {
+func MakeConfigFilesList(toData *t3cutil.ConfigData, dir string, atsMajorVersion uint) ([]atscfg.CfgMeta, []string, error) {
 	configFiles, warnings, err := atscfg.MakeConfigFilesList(
 		dir,
 		toData.Server,
@@ -45,7 +45,9 @@ func MakeConfigFilesList(toData *t3cutil.ConfigData, dir string) ([]atscfg.CfgMe
 		toData.GlobalParams,
 		toData.CacheGroups,
 		toData.Topologies,
-		&atscfg.ConfigFilesListOpts{},
+		&atscfg.ConfigFilesListOpts{
+			ATSMajorVersion: atsMajorVersion,
+		},
 	)
 	return configFiles, warnings, err
 }
@@ -119,8 +121,14 @@ func MakeLoggingDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommen
 }
 
 func MakeLoggingDotYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
-	opts := &atscfg.LoggingDotYAMLOpts{HdrComment: hdrCommentTxt}
-	return atscfg.MakeLoggingDotYAML(toData.Server, toData.ServerParams, opts)
+	return atscfg.MakeLoggingDotYAML(
+		toData.Server,
+		toData.ServerParams,
+		&atscfg.LoggingDotYAMLOpts{
+			HdrComment:      hdrCommentTxt,
+			ATSMajorVersion: cfg.ATSMajorVersion,
+		},
+	)
 }
 
 func MakeSSLServerNameYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
@@ -188,8 +196,9 @@ func MakeParentDotConfig(toData *t3cutil.ConfigData, fileName string, hdrComment
 		toData.DeliveryServiceServers,
 		toData.CDN,
 		&atscfg.ParentConfigOpts{
-			HdrComment:  hdrCommentTxt,
-			AddComments: cfg.ParentComments, // TODO add a CLI flag?
+			HdrComment:      hdrCommentTxt,
+			AddComments:     cfg.ParentComments, // TODO add a CLI flag?
+			ATSMajorVersion: cfg.ATSMajorVersion,
 		},
 	)
 }
@@ -239,6 +248,7 @@ func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentT
 			VerboseComments:   true,
 			UseStrategies:     cfg.UseStrategies == t3cutil.UseStrategiesFlagTrue || cfg.UseStrategies == t3cutil.UseStrategiesFlagCore,
 			UseStrategiesCore: cfg.UseStrategies == t3cutil.UseStrategiesFlagCore,
+			ATSMajorVersion:   cfg.ATSMajorVersion,
 		},
 	)
 }
@@ -264,7 +274,6 @@ func MakeVolumeDotConfig(toData *t3cutil.ConfigData, fileName string, hdrComment
 }
 
 func MakeHeaderRewrite(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
-	opts := &atscfg.HeaderRewriteDotConfigOpts{HdrComment: hdrCommentTxt}
 	return atscfg.MakeHeaderRewriteDotConfig(
 		fileName,
 		toData.DeliveryServices,
@@ -276,7 +285,10 @@ func MakeHeaderRewrite(toData *t3cutil.ConfigData, fileName string, hdrCommentTx
 		toData.ServerCapabilities,
 		toData.DSRequiredCapabilities,
 		toData.Topologies,
-		opts,
+		&atscfg.HeaderRewriteDotConfigOpts{
+			HdrComment:      hdrCommentTxt,
+			ATSMajorVersion: cfg.ATSMajorVersion,
+		},
 	)
 }
 
@@ -315,6 +327,7 @@ func MakeStrategiesDotYAML(toData *t3cutil.ConfigData, fileName string, hdrComme
 		&atscfg.StrategiesYAMLOpts{
 			HdrComment:      hdrCommentTxt,
 			VerboseComments: cfg.ParentComments, // TODO add a CLI flag?
+			ATSMajorVersion: cfg.ATSMajorVersion,
 		},
 	)
 }

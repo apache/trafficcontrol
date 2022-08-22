@@ -273,7 +273,7 @@ var DefaultUnavailableServerRetryCodes = []int{503}
 
 const DefaultIgnoreQueryStringInParentSelection = false
 
-func parentAbstractionToParentDotConfig(pa *ParentAbstraction, opt *ParentConfigOpts, atsMajorVersion int) (string, []string, error) {
+func parentAbstractionToParentDotConfig(pa *ParentAbstraction, opt *ParentConfigOpts, atsMajorVersion uint) (string, []string, error) {
 	warnings := []string{}
 	txt := ""
 
@@ -301,7 +301,7 @@ func parentAbstractionToParentDotConfig(pa *ParentAbstraction, opt *ParentConfig
 	return txt, warnings, nil
 }
 
-func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts, atsMajorVersion int) (string, []string, error) {
+func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts, atsMajorVersion uint) (string, []string, error) {
 	warnings := []string{}
 	txt := ""
 	if opt.AddComments && svc.Comment != "" {
@@ -371,7 +371,7 @@ func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts
 		if atsMajorVersion >= 9 {
 			txt += ` simple_server_retry_responses="` + strings.Join(intsToStrs(svc.ErrorResponseCodes), `,`) + `"`
 		} else {
-			warnings = append(warnings, "Service '"+svc.Name+"' had simple retry codes '"+strings.Join(intsToStrs(svc.ErrorResponseCodes), ",")+"' but ATS version "+strconv.Itoa(atsMajorVersion)+" < 9 does not support custom simple retry codes, omitting!")
+			warnings = append(warnings, "Service '"+svc.Name+"' had simple retry codes '"+strings.Join(intsToStrs(svc.ErrorResponseCodes), ",")+"' but ATS version "+strconv.FormatUint(uint64(atsMajorVersion), 10)+" < 9 does not support custom simple retry codes, omitting!")
 		}
 	}
 
