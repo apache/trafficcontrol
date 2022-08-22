@@ -5,17 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
-- [#6033](https://github.com/apache/trafficcontrol/issues/6033) Added ability to assign multiple server capabilities to a server.
+- [#6033](https://github.com/apache/trafficcontrol/issues/6033) [Traffic Ops, Traffic Portal] Added ability to assign multiple server capabilities to a server.
 - [Traffic Monitor] Added logging for `ipv4Availability` and `ipv6Availability` in TM.
 
 ### Fixed
 - Traffic Stats: Reuse InfluxDB client handle to prevent potential connection leaks
+- [#7021](https://github.com/apache/trafficcontrol/issues/7021) Fixed cache config for Delivery Services with IP Origins
 
 ### Changed
 - Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
-
-### Fixed
-- [#7021](https://github.com/apache/trafficcontrol/issues/7021) Fixed cache config for Delivery Services with IP Origins
 
 ## [7.0.0] - 2022-07-19
 ### Added
