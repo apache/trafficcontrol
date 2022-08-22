@@ -74,6 +74,9 @@ export class DeliveryserviceComponent implements OnInit {
 	 */
 	public toTime: UntypedFormControl = new UntypedFormControl();
 
+	/* Contains the DS xmlIds that this DS is this steering target for. */
+	public steeringTargetsFor = new Set<string>();
+
 	/** The size of each single interval for data grouping, in seconds. */
 	private bucketSize = 300;
 
@@ -126,8 +129,27 @@ export class DeliveryserviceComponent implements OnInit {
 				this.loadBandwidth();
 				this.loadTPS();
 				this.headerSvc.headerTitle.next(d.displayName);
+
+				this.api.getSteering().then(configs => {
+					configs.forEach(config => {
+						config.targets.forEach(target => {
+							if (target.deliveryService === this.deliveryservice.xmlId) {
+								this.steeringTargetsFor.add(config.deliveryService);
+							}
+						});
+					});
+				});
 			}
 		);
+	}
+
+	/**
+	 * Returns the tooltip text for the steering target displays.
+	 *
+	 * @returns Tooltip text.
+	 */
+	public steeringTargetDisplay(): string {
+		return `Steering target for: ${Array.from(this.steeringTargetsFor).join(", ")}`;
 	}
 
 	/**

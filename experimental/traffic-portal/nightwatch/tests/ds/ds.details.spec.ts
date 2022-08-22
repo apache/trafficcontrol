@@ -17,7 +17,7 @@ describe("DS Detail Spec", () => {
 		browser.page.deliveryServiceCard()
 			.navigate()
 			.section.cards
-			.viewDetails(`testDS${browser.globals.uniqueString}`);
+			.viewDetails(browser.globals.testData.ds.xmlId);
 	});
 
 	it("Verify page test", (): void => {
@@ -47,5 +47,19 @@ describe("DS Detail Spec", () => {
 			.assert.value("@fromTime", "00:00")
 			.assert.value("@toDate", date)
 			.assert.value("@toTime", time);
+	});
+
+	it("Is steering target test", (): void => {
+		let page = browser.page.deliveryServiceDetail();
+		page.section.dateInputForm
+			.assert.visible("@steeringIcon");
+
+		browser.page.deliveryServiceCard()
+			.navigate()
+			.section.cards
+			.viewDetails(browser.globals.testData.steeringDS.xmlId);
+		page = browser.page.deliveryServiceDetail();
+		page.section.dateInputForm
+			.assert.not.visible("@steeringIcon");
 	});
 });

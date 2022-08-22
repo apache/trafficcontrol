@@ -13,6 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import { SteeringConfiguration } from "trafficops-types";
 
 import {
 	type DataPoint,
@@ -156,6 +157,17 @@ export class DeliveryServiceService extends APIService {
 	constructor(http: HttpClient) {
 		super(http);
 		this.deliveryServiceTypes = new Array<Type>();
+	}
+
+	public async getSteering(): Promise<Array<SteeringConfiguration>>;
+	/**
+	 * Gets a list of all Steering Configurations
+	 *
+	 * @returns An array of Steering Configurations
+	 */
+	public async getSteering(): Promise<Array<SteeringConfiguration>> {
+		const path = "steering";
+		return this.get<[SteeringConfiguration]>(path).toPromise();
 	}
 
 	public async getDeliveryServices(id: string | number): Promise<DeliveryService>;
