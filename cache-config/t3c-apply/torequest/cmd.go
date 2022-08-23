@@ -33,6 +33,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -59,6 +60,7 @@ type ServerAndConfigs struct {
 	ConfigFiles json.RawMessage
 }
 
+var stripDate = regexp.MustCompile(`\[\w{3}\s{1,2}\d{1,2}\s\d{2}:\d{2}:\d{2}\.\d{3}\]\s`)
 var t3cpath string = filepath.Join(t3cutil.InstallDir(), `t3c`)
 
 // generate runs t3c-generate and returns the result.
@@ -286,6 +288,31 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 	}
 	logSubApp(t3cupd, stdErr)
 	log.Infoln(t3cupd + " succeeded")
+	return nil
+}
+
+//doTail calls t3c-tail and will run a tail on the log file provided with string for a regex to
+//maatch on default is .* endMatch will make t3c-tail exit when a pattern is matched otherwise
+//a timeout in a given number of seconds will occur.
+func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeoutInMS int) error {
+	args := []string{
+		"--file=" + filepath.Join(cfg.TsHome, file),
+		"--match=" + logMatch,
+		"--end-match=" + endMatch,
+		"--timeout-ms=" + strconv.Itoa(timeoutInMS),
+	}
+	stdOut, stdErr, code := t3cutil.Do(`t3c-tail`, args...)
+	if code > 1 {
+		return fmt.Errorf("t3c-tail returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+	}
+	logSubApp(`t3c-tail`, stdErr)
+
+	stdOut = bytes.TrimSpace(stdOut)
+	lines := strings.Split(string(stdOut), "\n")
+	for _, line := range lines {
+		line = stripDate.ReplaceAllString(line, "")
+		log.Infoln(line)
+	}
 	return nil
 }
 

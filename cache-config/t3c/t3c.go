@@ -48,6 +48,7 @@ var commands = map[string]struct{}{
 	"generate":   struct{}{},
 	"preprocess": struct{}{},
 	"request":    struct{}{},
+	"tail":       struct{}{},
 	"update":     struct{}{},
 }
 
@@ -116,6 +117,7 @@ These are the available commands:
   generate   generate configuration from Traffic Ops data
   preprocess preprocess generated config files
   request    request Traffic Ops data
+  tail       tail a log file
   update     update a cache's queue and reval status in Traffic Ops
 `
 }
