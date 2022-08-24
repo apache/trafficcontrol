@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServerServerCapabilitiesController = function(server, serverCapabilities, $scope, $state, $uibModal, locationUtils, serverUtils, serverService, messageModel) {
+var TableServerServerCapabilitiesController = function(server, serverCapabilities, $scope, $state, $uibModal, locationUtils, serverUtils, serverService, messageModel, serverCapabilityService) {
 
 	$scope.server = server[0];
 
@@ -31,6 +31,35 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 			}
 		}
 	];
+
+	$scope.selectSCs = function () {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/serverServerCapabilities/table.assignServerSCs.tpl.html',
+			controller: 'TableAssignServerSCsController',
+			size: 'md',
+			resolve: {
+				server: function() {
+					return server;
+				},
+				serverCapabilities: function(serverCapabilityService) {
+					return serverCapabilityService.getServerCapabilities();
+				},
+				assignedSCs: function() {
+					return serverCapabilities
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedSCs) {
+			serverCapabilityService.assignSCsServer(server[0].id, selectedSCs)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
 
 	$scope.addServerCapability = function() {
 		const params = {
@@ -116,5 +145,5 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 	$scope.isCache = serverUtils.isCache;
 };
 
-TableServerServerCapabilitiesController.$inject = ['server', 'serverCapabilities', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'serverService', 'messageModel'];
+TableServerServerCapabilitiesController.$inject = ['server', 'serverCapabilities', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'serverService', 'messageModel', 'serverCapabilityService'];
 module.exports = TableServerServerCapabilitiesController;

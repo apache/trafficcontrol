@@ -47,6 +47,15 @@ const (
 	UpdateTropsFailed     UpdateStatus = 3
 )
 
+const (
+	TailDiagsLogRelative = "/var/log/trafficserver/diags.log"
+	TailRestartTimeOutMS = 60000
+	TailReloadTimeOutMS  = 15000
+	tailMatch            = `ET_(TASK|NET)\s\d{1,}`
+	tailRestartEnd       = "Traffic Server is fully initialized"
+	tailReloadEnd        = "remap.config finished loading"
+)
+
 type Package struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
@@ -1111,6 +1120,9 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 		}
 		t3cutil.WriteActionLog(t3cutil.ActionLogActionATSRestart, t3cutil.ActionLogStatusSuccess, metaData)
 		log.Infoln("trafficserver has been " + startStr + "ed")
+		if err := doTail(r.Cfg, TailDiagsLogRelative, ".*", tailRestartEnd, TailRestartTimeOutMS); err != nil {
+			log.Errorln("error running tail")
+		}
 		if *syncdsUpdate == UpdateTropsNeeded {
 			*syncdsUpdate = UpdateTropsSuccessful
 		}
@@ -1137,6 +1149,9 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 				*syncdsUpdate = UpdateTropsSuccessful
 			}
 			log.Infoln("ATS 'traffic_ctl config reload' was successful")
+			if err := doTail(r.Cfg, TailDiagsLogRelative, tailMatch, tailReloadEnd, TailReloadTimeOutMS); err != nil {
+				log.Errorln("error running tail: ", err)
+			}
 		}
 		if *syncdsUpdate == UpdateTropsNeeded {
 			*syncdsUpdate = UpdateTropsSuccessful

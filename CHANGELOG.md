@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added support for parent.config markdown/retry DS parameters using first./inner./last. prefixes.  mso. and <null> prefixes should be deprecated.
 - Add new __REGEX_REMAP_DIRECTIVE__ support to raw remap text to allow moving the regex_remap placement.
 - t3c change `t3c diff` call to `t3c-diff` to fix a performance regression.
+- Added a sub-app t3c-tail to tail diags.log and capture output when t3c reloads and restarts trafficserver
 
 ### Fixed
 - Fixed TO to default route ID to 0, if it is not present in the request context.
