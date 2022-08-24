@@ -92,6 +92,17 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
         )
     };
 
+    this.getSteering = function() {
+        return $http.get(`${ENV.api.unstable}steering/`).then(
+            function(result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        )
+    }
+
     this.addServerCapability = function(deliveryServiceId, capabilityName) {
         return $http.post(ENV.api.unstable + 'deliveryservices_required_capabilities', { deliveryServiceID: deliveryServiceId, requiredCapability: capabilityName}).then(
             function(result) {

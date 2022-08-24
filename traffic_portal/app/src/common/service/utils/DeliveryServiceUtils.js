@@ -17,45 +17,61 @@
  * under the License.
  */
 
-var DeliveryServiceUtils = function($window, propertiesModel) {
+var DeliveryServiceUtils = function ($window, propertiesModel) {
 
-	this.protocols = {
-		0: "HTTP",
-		1: "HTTPS",
-		2: "HTTP AND HTTPS",
-		3: "HTTP TO HTTPS"
-	};
+    this.protocols = {
+        0: "HTTP",
+        1: "HTTPS",
+        2: "HTTP AND HTTPS",
+        3: "HTTP TO HTTPS"
+    };
 
-	this.qstrings = {
-		0: "USE",
-		1: "IGNORE",
-		2: "DROP"
-	};
+    this.qstrings = {
+        0: "USE",
+        1: "IGNORE",
+        2: "DROP"
+    };
 
-	this.geoProviders = {
-		0: "MaxMind",
-		1: "Neustar"
-	};
+    this.geoProviders = {
+        0: "MaxMind",
+        1: "Neustar"
+    };
 
-	this.geoLimits = {
-		0: "None",
-		1: "CZF Only",
-		2: "CZF + Country Code(s)",
-	};
+    this.geoLimits = {
+        0: "None",
+        1: "CZF Only",
+        2: "CZF + Country Code(s)",
+    };
 
-	this.rrhs = {
-		0: "no cache",
-		1: "background_fetch",
-		2: "cache_range_requests",
-		3: "slice"
-	};
+    this.rrhs = {
+        0: "no cache",
+        1: "background_fetch",
+        2: "cache_range_requests",
+        3: "slice"
+    };
 
-	this.openCharts = function(ds) {
-		$window.open(
-			propertiesModel.properties.deliveryServices.charts.customLink.baseUrl + ds.xmlId,
-			'_blank'
-		);
-	};
+    this.openCharts = function (ds) {
+        $window.open(
+            propertiesModel.properties.deliveryServices.charts.customLink.baseUrl + ds.xmlId,
+            '_blank'
+        );
+    };
+
+    this.getSteeringTargetsForDS = function (xmlIds, steeringConfigs) {
+        const targetsFor = new Set();
+        const dsTargets = {};
+        xmlIds.forEach(xmlId => dsTargets[xmlId] = new Set());
+        steeringConfigs.forEach(config => {
+            config.targets.forEach(target => {
+                xmlIds.forEach(xmlId => {
+                    if (target.deliveryService === xmlId) {
+                        dsTargets[xmlId].add(config.deliveryService);
+                    }
+                })
+            })
+        })
+        return dsTargets;
+    }
 
 };
 

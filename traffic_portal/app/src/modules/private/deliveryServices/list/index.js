@@ -33,8 +33,8 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.list', [
                             deliveryServices: function(deliveryServiceService) {
                                 return deliveryServiceService.getDeliveryServices();
                             },
-                            filter: function() {
-                                return null;
+                            steeringTargets: function(deliveryServiceService) {
+                                return deliveryServiceService.getSteering();
                             }
                         }
                     }
