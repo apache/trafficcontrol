@@ -103,19 +103,19 @@ func TestServerUpdateStatus(t *testing.T) {
 			}{
 				{
 					"atlanta-edge-01",
-					&edge1cdn1,
+					&edge1cdn1.ServerV40,
 				},
 				{
 					"atlanta-edge-03",
-					&edge2cdn1,
+					&edge2cdn1.ServerV40,
 				},
 				{
 					"atlanta-mid-16",
-					&mid1cdn1,
+					&mid1cdn1.ServerV40,
 				},
 				{
 					"edge1-cdn2",
-					&edge1cdn2,
+					&edge1cdn2.ServerV40,
 				},
 			} {
 				opts.QueryParameters.Set("hostName", s.name)
@@ -289,7 +289,7 @@ func TestServerQueueUpdate(t *testing.T) {
 			t.Errorf("Expected exactly one server named '%s' to exist", serverName)
 			t.Logf("Testing will proceed with server: %+v", resp.Response[0])
 		}
-		s = resp.Response[0].ServerV40
+		s = resp.Response[0]
 
 		// assert that servers don't have updates pending
 		if s.UpdPending == nil {
@@ -329,7 +329,7 @@ func TestServerQueueUpdate(t *testing.T) {
 					t.Errorf("Expected exactly one server named '%s' to exist", serverName)
 					t.Logf("Testing will proceed with server: %+v", resp.Response[0])
 				}
-				s = resp.Response[0].ServerV40
+				s = resp.Response[0]
 				if s.UpdPending == nil {
 					t.Fatalf("Server '%s' had null (or missing) updPending property", serverName)
 				}
@@ -515,7 +515,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 				if _, ok := cachesByCDNCacheGroup[*s.CDNName]; !ok {
 					cachesByCDNCacheGroup[*s.CDNName] = make(map[string][]tc.ServerV4)
 				}
-				cachesByCDNCacheGroup[*s.CDNName][cacheGroupName] = append(cachesByCDNCacheGroup[*s.CDNName][cacheGroupName], s.ServerV40)
+				cachesByCDNCacheGroup[*s.CDNName][cacheGroupName] = append(cachesByCDNCacheGroup[*s.CDNName][cacheGroupName], s)
 			}
 		}
 		cdnNames := make([]string, 0, len(cachesByCDNCacheGroup))
@@ -554,7 +554,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 				if len(cachesByCDNCacheGroup[*s.CDNName][cacheGroupName]) > 0 {
 					cachesByCDNCacheGroup[*s.CDNName][cacheGroupName] = []tc.ServerV4{}
 				}
-				cachesByCDNCacheGroup[*s.CDNName][cacheGroupName] = append(cachesByCDNCacheGroup[*s.CDNName][cacheGroupName], s.ServerV40)
+				cachesByCDNCacheGroup[*s.CDNName][cacheGroupName] = append(cachesByCDNCacheGroup[*s.CDNName][cacheGroupName], s)
 			}
 		}
 		for _, cacheGroupName := range cacheGroupNames {

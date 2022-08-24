@@ -600,7 +600,7 @@ func UpdateTestServerStatusLastUpdated(t *testing.T) {
 	originalServer := resp.Response[0].ServerV40
 
 	// Perform an update with no changes to status
-	alerts, _, err := TOSession.UpdateServer(*originalServer.ID, originalServer, client.RequestOptions{})
+	alerts, _, err := TOSession.UpdateServer(*originalServer.ID, tc.ServerV4{ServerV40: originalServer}, client.RequestOptions{})
 	assert.RequireNoError(t, err, "Cannot UPDATE Server by ID %d (hostname '%s'): %v - alerts: %+v", *originalServer.ID, hostName, err, alerts)
 
 	resp, _, err = TOSession.GetServers(opts)
@@ -615,7 +615,7 @@ func UpdateTestServerStatusLastUpdated(t *testing.T) {
 	newStatusID := GetStatusID(t, "ONLINE")()
 	originalServer.StatusID = &newStatusID
 
-	alerts, _, err = TOSession.UpdateServer(*originalServer.ID, originalServer, client.RequestOptions{})
+	alerts, _, err = TOSession.UpdateServer(*originalServer.ID, tc.ServerV4{ServerV40: originalServer}, client.RequestOptions{})
 	assert.RequireNoError(t, err, "Cannot UPDATE Server by ID %d (hostname '%s'): %v - alerts: %+v", *originalServer.ID, hostName, err, alerts)
 
 	resp, _, err = TOSession.GetServers(opts)
@@ -669,7 +669,7 @@ func UpdateDSGetServerDSID(t *testing.T) {
 
 func CreateTestServers(t *testing.T) {
 	for _, server := range testData.Servers {
-		resp, _, err := TOSession.CreateServer(server, client.RequestOptions{})
+		resp, _, err := TOSession.CreateServer(tc.ServerV4{ServerV40: server}, client.RequestOptions{})
 		assert.RequireNoError(t, err, "Could not create server '%s': %v - alerts: %+v", *server.HostName, err, resp.Alerts)
 	}
 }

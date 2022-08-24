@@ -71,7 +71,7 @@ Request Structure
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| asn            | no       | Return only the servers that have a cachegroup matching the provided ASN.                                         |
 	|                |          |                                                                                                                   |
-	|                |          |.. versionadded:: 4.1                                                                                              |
+	|                |          | .. versionadded:: 4.1                                                                                             |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
 
 
@@ -86,6 +86,9 @@ Request Structure
 
 Response Structure
 ------------------
+:asns:             The :abbr:`ASN (Autonomous System Number)` associated with the cachegroups of the current server.
+
+	.. versionadded:: 4.1
 :cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
 :cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:            The integral, unique identifier of the CDN to which the server belongs

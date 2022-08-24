@@ -1072,7 +1072,7 @@ type ServerV40 struct {
 
 // ServerV4 is the representation of a Server in the latest minor version of
 // version 4 of the Traffic Ops API.
-type ServerV4 = ServerV40
+type ServerV4 = ServerV41
 
 // ServerV30 is the representation of a Server in version 3 of the Traffic Ops API.
 type ServerV30 struct {
