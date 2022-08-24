@@ -407,7 +407,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 					return;
 				}
 				const selection = window.getSelection();
-				if (!this.options.onRowClick !== undefined) {
+				if (this.options.onRowClick !== undefined) {
 					if (!selection || selection.toString() === "" || selection === $scope.mouseDownSelectionText) {
 						this.options.onRowClick(params);
 						$scope.$apply();
