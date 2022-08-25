@@ -88,6 +88,41 @@ to_dnssec_refresh_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/bin/c
 	cp "$TC_DIR"/traffic_ops/app/bin/checks/DnssecRefresh/ToDnssecRefresh .
 ) || { echo "Could not copy ToDnssecRefresh at $(pwd): $!"; exit 1; };
 
+# copy ToATSCheck
+to_ats_check_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/bin/checks
+( mkdir -p "$to_ats_check_dir" && \
+	cd "$to_ats_check_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/bin/checks/ToATSCheck .
+) || { echo "Could not copy ToATSCheck at $(pwd): $!"; exit 1; };
+
+# copy ToCheck
+to_check_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/bin/checks
+( mkdir -p "$to_check_dir" && \
+	cd "$to_check_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/bin/checks/ToCheck .
+) || { echo "Could not copy ToCheck at $(pwd): $!"; exit 1; };
+
+# copy ToDSCPCheck
+to_dscp_check_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/bin/checks
+( mkdir -p "$to_dscp_check_dir" && \
+	cd "$to_dscp_check_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/bin/checks/ToDSCPCheck .
+) || { echo "Could not copy ToDSCPCheck at $(pwd): $!"; exit 1; };
+
+# copy ToFQDNCheck
+to_fqdn_check_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/bin/checks
+( mkdir -p "$to_fqdn_check_dir" && \
+	cd "$to_fqdn_check_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/bin/checks/ToFQDNCheck .
+) || { echo "Could not copy ToFQDNCheck at $(pwd): $!"; exit 1; };
+
+# copy ToPingCheck
+to_ping_check_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/bin/checks
+( mkdir -p "$to_ping_check_dir" && \
+	cd "$to_ping_check_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/bin/checks/ToPingCheck .
+) || { echo "Could not copy ToPingCheck at $(pwd): $!"; exit 1; };
+
 # copy TV DB reencrypt
 reencrypt_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db/reencrypt
 ( mkdir -p "$reencrypt_dir" && \

@@ -145,6 +145,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6032](https://github.com/apache/trafficcontrol/issues/6032) Add t3c setting mode 0600 for secure files
 - [#6405](https://github.com/apache/trafficcontrol/issues/6405) Added cache config version to all t3c apps and config file headers
 - Traffic Vault: Added additional flag to TV Riak (Deprecated) Util
+- Port Traffic Ops Extensions checks for ILO, 10G, 10G6, MTU, DSCP, CHR, CDU from perl to go (legacy versions retained)
 - Added Traffic Vault Postgres columns, a Traffic Ops API endpoint, and Traffic Portal page to show SSL certificate expiration information.
 - Added cache config `__CACHEGROUP__` preprocess directive, to allow injecting the local server's cachegroup name into any config file
 - Added t3c experimental strategies generation.

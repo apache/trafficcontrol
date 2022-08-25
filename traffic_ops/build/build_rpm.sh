@@ -66,6 +66,8 @@ initBuildArea() {
 		ldflags="${ldflags} -s -w"; # strip binary
 	fi;
 	set -o nounset; }
+	# Ensure dependency is installed
+	dnf --enablerepo=powertools -y install libpcap-devel
 	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.version=traffic_ops-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION} -B 0x$(git rev-parse HEAD)" -tags "$tags" || \
 								{ echo "Could not build traffic_ops_golang binary"; return 1; }
 	cd -
@@ -79,6 +81,31 @@ initBuildArea() {
 	(cd app/bin/checks/DnssecRefresh
 	go build -v -o ToDnssecRefresh -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
 								{ echo "Could not build ToDnssecRefresh binary"; return 1;})
+
+	# compile ToATSCheck.go
+	(cd app/bin/checks
+	go build -v -o ToATSCheck -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" ToATSCheck.go || \
+								{ echo "Could not build ToATSCheck binary"; return 1;})
+	
+	# compile ToCheck.go
+	(cd app/bin/checks
+	go build -v -o ToCheck -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" ToCheck.go || \
+								{ echo "Could not build ToCheck binary"; return 1;})
+
+	# compile ToDSCPCheck.go
+	(cd app/bin/checks
+	go build -v -o ToDSCPCheck -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" ToDSCPCheck.go || \
+								{ echo "Could not build ToDSCPCheck binary"; return 1;})
+
+	# compile ToFQDNCheck.go
+	(cd app/bin/checks
+	go build -v -o ToFQDNCheck -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" ToFQDNCheck.go || \
+								{ echo "Could not build ToFQDNCheck binary"; return 1;})
+
+	# compile ToPingCheck.go
+	(cd app/bin/checks
+	go build -v -o ToPingCheck -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" ToPingCheck.go || \
+								{ echo "Could not build ToPingCheck binary"; return 1;})
 
 	# compile db/reencrypt
 		(cd app/db/reencrypt
