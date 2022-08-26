@@ -191,7 +191,7 @@ func TestParameters(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID REQUEST": {
-					EndpointId:    GetParameterID(t, "LogObject.Format"),
+					EndpointId:    GetParameterID(t, "LogObject.Format", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "updated.config",
@@ -204,7 +204,7 @@ func TestParameters(t *testing.T) {
 							map[string]interface{}{"ConfigFile": "updated.config", "Name": "updated name", "Secure": true, "Value": "updated value"})),
 				},
 				"OK when MISSING VALUE FIELD": {
-					EndpointId:    GetParameterID(t, "LogObject.Filename"),
+					EndpointId:    GetParameterID(t, "LogObject.Filename", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "logs_new.config",
@@ -217,7 +217,7 @@ func TestParameters(t *testing.T) {
 							map[string]interface{}{"ConfigFile": "logs_new.config", "Secure": true, "Value": ""})),
 				},
 				"BAD REQUEST when MISSING NAME FIELD": {
-					EndpointId:    GetParameterID(t, "astats_over_http.so"),
+					EndpointId:    GetParameterID(t, "astats_over_http.so", "plugin.config", ""),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "missingname.config",
@@ -228,7 +228,7 @@ func TestParameters(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING CONFIGFILE FIELD": {
-					EndpointId:    GetParameterID(t, "astats_over_http.so"),
+					EndpointId:    GetParameterID(t, "astats_over_http.so", "plugin.config", ""),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "",
@@ -239,7 +239,7 @@ func TestParameters(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:    GetParameterID(t, "LogFormat.Name"),
+					EndpointId:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: map[string]interface{}{
@@ -250,7 +250,7 @@ func TestParameters(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetParameterID(t, "LogFormat.Name"),
+					EndpointId:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "logs_xml.config",
@@ -350,7 +350,7 @@ func validateParametersFields(expectedResp map[string]interface{}) utils.CkReqFu
 				case "Value":
 					assert.Equal(t, expected, parameter.Value, "Expected Value to be %v, but got %s", expected, parameter.Value)
 				default:
-					t.Errorf("Expected field: %v, does not exist in response", field)
+					t.Fatalf("Expected field: %v, does not exist in response", field)
 				}
 			}
 		}
@@ -390,14 +390,16 @@ func validateParametersPagination(paginationParam string) utils.CkReqFunc {
 	}
 }
 
-func GetParameterID(t *testing.T, name string) func() int {
+func GetParameterID(t *testing.T, name string, configFile string, value string) func() int {
 	return func() int {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", name)
-		parameters, _, err := TOSession.GetParameters(opts)
-		assert.RequireNoError(t, err, "Get Parameters Request failed with error:", err)
-		assert.RequireEqual(t, 1, len(parameters.Response), "Expected response object length 1, but got %d", len(parameters.Response))
-		return parameters.Response[0].ID
+		opts.QueryParameters.Set("configFile", configFile)
+		opts.QueryParameters.Set("value", value)
+		resp, _, err := TOSession.GetParameters(opts)
+		assert.RequireNoError(t, err, "Get Parameters Request failed with error: %v", err)
+		assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
+		return resp.Response[0].ID
 	}
 }
 

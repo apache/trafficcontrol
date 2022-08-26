@@ -83,7 +83,7 @@ func validateProfilesExportFields(expectedResp map[string]interface{}) utils.CkR
 				assert.RequireNotNil(t, profileExport.Profile.Type, "Expected Profile Type to not be nil.")
 				assert.Equal(t, expected, *profileExport.Profile.Type, "Expected Profile.Type to be %v, but got %d", expected, *profileExport.Profile.Type)
 			default:
-				t.Errorf("Expected field: %v, does not exist in response", field)
+				t.Fatalf("Expected field: %v, does not exist in response", field)
 			}
 		}
 	}

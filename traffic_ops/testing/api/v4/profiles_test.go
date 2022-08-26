@@ -289,7 +289,7 @@ func validateProfilesFields(expectedResp map[string]interface{}) utils.CkReqFunc
 				case "Type":
 					assert.Equal(t, expected, profile.Type, "Expected Type to be %v, but got %v", expected, profile.Type)
 				default:
-					t.Errorf("Expected field: %v, does not exist in response", field)
+					t.Fatalf("Expected field: %v, does not exist in response", field)
 				}
 			}
 		}
@@ -345,19 +345,6 @@ func GetProfileID(t *testing.T, profileName string) func() int {
 		opts.QueryParameters.Set("name", profileName)
 		resp, _, err := TOSession.GetProfiles(opts)
 		assert.RequireNoError(t, err, "Get Profiles Request failed with error: %v", err)
-		assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
-		return resp.Response[0].ID
-	}
-}
-
-func GetParameterID(t *testing.T, name string, configFile string, value string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", name)
-		opts.QueryParameters.Set("configFile", configFile)
-		opts.QueryParameters.Set("value", value)
-		resp, _, err := TOSession.GetParameters(opts)
-		assert.RequireNoError(t, err, "Get Parameters Request failed with error: %v", err)
 		assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
 		return resp.Response[0].ID
 	}

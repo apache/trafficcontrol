@@ -133,7 +133,7 @@ func validateProfilesImport(expectedResp map[string]interface{}) utils.CkReqFunc
 				assert.RequireNotNil(t, profileImport.Type, "Expected Profile Type to not be nil.")
 				assert.Equal(t, expected, *profileImport.Type, "Expected Profile Type to be %v, but got %d", expected, *profileImport.Type)
 			default:
-				t.Errorf("Expected field: %v, does not exist in response", field)
+				t.Fatalf("Expected field: %v, does not exist in response", field)
 			}
 		}
 	}
