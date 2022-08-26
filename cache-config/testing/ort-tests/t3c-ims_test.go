@@ -162,6 +162,7 @@ func doTestIMSChangedCDN(t *testing.T) {
 func t3cApplyCache(host string, noCache bool) (string, int) {
 	args := []string{
 		"apply",
+		"--no-confirm-service-action",
 		"--traffic-ops-insecure=true",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,

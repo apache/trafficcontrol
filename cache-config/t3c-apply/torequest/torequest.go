@@ -1120,8 +1120,14 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 		}
 		t3cutil.WriteActionLog(t3cutil.ActionLogActionATSRestart, t3cutil.ActionLogStatusSuccess, metaData)
 		log.Infoln("trafficserver has been " + startStr + "ed")
-		if err := doTail(r.Cfg, TailDiagsLogRelative, ".*", tailRestartEnd, TailRestartTimeOutMS); err != nil {
-			log.Errorln("error running tail")
+
+		if !r.Cfg.NoConfirmServiceAction {
+			log.Infoln("confirming ATS restart succeeded")
+			if err := doTail(r.Cfg, TailDiagsLogRelative, ".*", tailRestartEnd, TailRestartTimeOutMS); err != nil {
+				log.Errorln("error running tail")
+			}
+		} else {
+			log.Infoln("skipping ATS restart success confirmation")
 		}
 		if *syncdsUpdate == UpdateTropsNeeded {
 			*syncdsUpdate = UpdateTropsSuccessful
@@ -1149,8 +1155,14 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 				*syncdsUpdate = UpdateTropsSuccessful
 			}
 			log.Infoln("ATS 'traffic_ctl config reload' was successful")
-			if err := doTail(r.Cfg, TailDiagsLogRelative, tailMatch, tailReloadEnd, TailReloadTimeOutMS); err != nil {
-				log.Errorln("error running tail: ", err)
+
+			if !r.Cfg.NoConfirmServiceAction {
+				log.Infoln("confirming ATS reload succeeded")
+				if err := doTail(r.Cfg, TailDiagsLogRelative, tailMatch, tailReloadEnd, TailReloadTimeOutMS); err != nil {
+					log.Errorln("error running tail: ", err)
+				}
+			} else {
+				log.Infoln("skipping ATS reload success confirmation")
 			}
 		}
 		if *syncdsUpdate == UpdateTropsNeeded {

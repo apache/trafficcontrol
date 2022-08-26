@@ -126,6 +126,7 @@ func gitLogOneline(dir string) (string, error) {
 func t3cUpdateGit(host string, run_mode string) error {
 	args := []string{
 		"apply",
+		"--no-confirm-service-action",
 		"--traffic-ops-insecure=true",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,

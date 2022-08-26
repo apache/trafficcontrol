@@ -108,7 +108,9 @@ type Cfg struct {
 	TsHome          string
 	TsConfigDir     string
 
-	ServiceAction     t3cutil.ApplyServiceActionFlag
+	ServiceAction          t3cutil.ApplyServiceActionFlag
+	NoConfirmServiceAction bool
+
 	ReportOnly        bool
 	Files             t3cutil.ApplyFilesFlag
 	InstallPackages   bool
@@ -258,6 +260,9 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	const serviceActionFlagName = "service-action"
 	const defaultServiceAction = t3cutil.ApplyServiceActionFlagReload
 	serviceActionPtr := getopt.EnumLong(serviceActionFlagName, 'a', []string{string(t3cutil.ApplyServiceActionFlagReload), string(t3cutil.ApplyServiceActionFlagRestart), string(t3cutil.ApplyServiceActionFlagNone), ""}, "", "action to perform on Traffic Server and other system services. Only reloads if necessary, but always restarts. Default is 'reload'")
+
+	const noConfirmServiceActionFlagName = "no-confirm-service-action"
+	noConfirmServiceAction := getopt.BoolLong(noConfirmServiceActionFlagName, 0, "Whether to skip waiting and confirming the service action succeeded (reload or restart) via t3c-tail. Default is false.")
 
 	const reportOnlyFlagName = "report-only"
 	reportOnlyPtr := getopt.BoolLong(reportOnlyFlagName, 'o', "Log information about necessary files and actions, but take no action. Default is false")
@@ -544,16 +549,16 @@ If any of the related flags are also set, they override the mode's default behav
 		MaxMindLocation:             maxmindLocation,
 		TsHome:                      TSHome,
 		TsConfigDir:                 tsConfigDir,
-
-		ServiceAction:     t3cutil.ApplyServiceActionFlag(*serviceActionPtr),
-		ReportOnly:        *reportOnlyPtr,
-		Files:             t3cutil.ApplyFilesFlag(*filesPtr),
-		InstallPackages:   *installPackagesPtr,
-		IgnoreUpdateFlag:  *ignoreUpdateFlagPtr,
-		NoUnsetUpdateFlag: *noUnsetUpdateFlagPtr,
-		Version:           appVersion,
-		GitRevision:       gitRevision,
-		LocalATSVersion:   atsVersionStr,
+		ServiceAction:               t3cutil.ApplyServiceActionFlag(*serviceActionPtr),
+		NoConfirmServiceAction:      *noConfirmServiceAction,
+		ReportOnly:                  *reportOnlyPtr,
+		Files:                       t3cutil.ApplyFilesFlag(*filesPtr),
+		InstallPackages:             *installPackagesPtr,
+		IgnoreUpdateFlag:            *ignoreUpdateFlagPtr,
+		NoUnsetUpdateFlag:           *noUnsetUpdateFlagPtr,
+		Version:                     appVersion,
+		GitRevision:                 gitRevision,
+		LocalATSVersion:             atsVersionStr,
 	}
 
 	if err = log.InitCfg(cfg); err != nil {
@@ -654,6 +659,8 @@ func printConfig(cfg Cfg) {
 	log.Debugf("TSHome: %s\n", TSHome)
 	log.Debugf("LocalATSVersion: %s\n", cfg.LocalATSVersion)
 	log.Debugf("WaitForParents: %v\n", cfg.WaitForParents)
+	log.Debugf("ServiceAction: %v\n", cfg.ServiceAction)
+	log.Debugf("NoConfirmServiceAction: %v\n", cfg.NoConfirmServiceAction)
 	log.Debugf("YumOptions: %s\n", cfg.YumOptions)
 	log.Debugf("MaxmindLocation: %s\n", cfg.MaxMindLocation)
 }
