@@ -395,7 +395,9 @@ func GetParameterID(t *testing.T, name string, configFile string, value string) 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", name)
 		opts.QueryParameters.Set("configFile", configFile)
-		opts.QueryParameters.Set("value", value)
+		if value != "" {
+			opts.QueryParameters.Set("value", value)
+		}
 		resp, _, err := TOSession.GetParameters(opts)
 		assert.RequireNoError(t, err, "Get Parameters Request failed with error: %v", err)
 		assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
