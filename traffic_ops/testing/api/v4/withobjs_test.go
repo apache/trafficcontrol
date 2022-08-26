@@ -60,6 +60,7 @@ const (
 	FederationResolvers
 	FederationFederationResolvers
 	FederationUsers
+	Jobs
 	Origins
 	Parameters
 	PhysLocations
@@ -107,6 +108,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	FederationUsers:                      {CreateTestFederationUsers, DeleteTestFederationUsers},
 	FederationResolvers:                  {CreateTestFederationResolvers, DeleteTestFederationResolvers},
 	FederationFederationResolvers:        {CreateTestFederationFederationResolvers, DeleteTestFederationFederationResolvers},
+	Jobs:                                 {CreateTestJobs, DeleteTestJobs},
 	Origins:                              {CreateTestOrigins, DeleteTestOrigins},
 	Parameters:                           {CreateTestParameters, DeleteTestParameters},
 	PhysLocations:                        {CreateTestPhysLocations, DeleteTestPhysLocations},

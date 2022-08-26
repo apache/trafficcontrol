@@ -156,6 +156,20 @@ func HasStatus(expectedStatus int) CkReqFunc {
 	}
 }
 
+// HasAlertLevel checks that the alert from the request matches the expected level.
+func HasAlertLevel(expectedAlertLevel string) CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, alerts, "Expected alerts to not be nil.")
+		found := false
+		for _, alert := range alerts.Alerts {
+			if expectedAlertLevel == alert.Level {
+				found = true
+			}
+		}
+		assert.Equal(t, true, found, "Expected to find Alert Level: %s", expectedAlertLevel)
+	}
+}
+
 // ResponseHasLength checks that the length of the response is as expected.
 // Determines that response is a slice before checking the length of the reflected value.
 func ResponseHasLength(expected int) CkReqFunc {
