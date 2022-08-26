@@ -40,9 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 )
 
-//
 // Start starts the poller and handler goroutines
-//
 func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData, trafficMonitorConfigFileName string) error {
 	toSession := towrap.NewTrafficOpsSessionThreadsafe(nil, nil, cfg.CRConfigHistoryCount, cfg)
 

@@ -24,15 +24,15 @@ import (
 // is the map key and 'value' is the error value to which it points - this
 // means that error identity is NOT preserved. For example:
 //
-//     errMap := map[string]error{
-//         "sql.ErrNoRows": sql.ErrNoRows,
-//     }
-//     errs := ToErrors(errMap)
-//     if errors.Is(errs[0], sql.ErrNoRows) {
-//         fmt.Println("true")
-//     } else {
-//         fmt.Println("false")
-//     }
+//	errMap := map[string]error{
+//	    "sql.ErrNoRows": sql.ErrNoRows,
+//	}
+//	errs := ToErrors(errMap)
+//	if errors.Is(errs[0], sql.ErrNoRows) {
+//	    fmt.Println("true")
+//	} else {
+//	    fmt.Println("false")
+//	}
 //
 // ... will output 'false'.
 func ToErrors(err map[string]error) []error {

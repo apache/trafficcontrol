@@ -1,7 +1,6 @@
 ## What does this PR (Pull Request) do?
-- [x] This PR is not related to any Issue
 
-This PR makes the Go components of Traffic Control build using Go version {GO_VERSION} and updates the `golang.org/x/` dependencies..
+This PR makes the Go components of Traffic Control build using Go version {GO_VERSION} and updates the `golang.org/x/` dependencies.
 
 See the Go {GO_VERSION} [release notes](https://golang.org/doc/devel/release.html#go{GO_MAJOR_VERSION}):
 
@@ -39,14 +38,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 > {RELEASE_NOTES}
 
 ## Which Traffic Control components are affected by this PR?
-- CDN in a Box - Enroller
-- Grove
-- Traffic Control Client (Go)
+- Traffic Control Cache Config (`t3c`, formerly ORT)
+- Traffic Control Health Client (tc-health-client)
+- Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
 - Traffic Monitor
 - Traffic Ops
-- Traffic Ops ORT
 - Traffic Stats
+- Grove
+- CDN in a Box - Enroller
 - CI tests for Go components
+- Build system - Go version in builder images
 
 ## What is the best way to verify this PR?
 Run unit tests and API tests. Since this is only a patch-level version update, [the only changes]({MILESTONE_URL}?closed=1) were bugfixes. Breaking changes would be unexpected.
@@ -55,8 +56,6 @@ Run unit tests and API tests. Since this is only a patch-level version update, [
 - [x] Existing tests are sufficient, no additional tests necessary
 - [x] The documentation only mentions the major Go version, no documentation updates necessary.
 - [x] The changelog already mentions updating to Go {GO_MAJOR_VERSION}, no additional changelog message necessary.
-- [x] This PR includes any and all required license headers
-- [x] This PR does not include a database migration
 - [x] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines](https://www.apache.org/security/) for details)
 
 <!--

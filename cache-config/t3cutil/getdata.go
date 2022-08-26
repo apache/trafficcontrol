@@ -98,7 +98,8 @@ const SystemInfoParamConfigFile = `global`
 // usually refers to all Parameters on the Profile named 'GLOBAL'.
 //
 // This is identical to the /system/info endpoint, except it does not include a
-//  '{response: {parameters:' wrapper.
+//
+//	'{response: {parameters:' wrapper.
 func WriteSystemInfo(cfg TCCfg, output io.Writer) error {
 	paramArr, _, err := cfg.TOClient.GetConfigFileParameters(SystemInfoParamConfigFile, nil)
 	if err != nil {

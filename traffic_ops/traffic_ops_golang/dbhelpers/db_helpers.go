@@ -441,15 +441,14 @@ func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantCol
 //
 // Example:
 //
-//  tx, err := db.Begin()
-//  txCommit := false
-//  defer dbhelpers.CommitIf(tx, &txCommit)
-//  if err := tx.Exec("select ..."); err != nil {
-//    return errors.New("executing: " + err.Error())
-//  }
-//  txCommit = true
-//  return nil
-//
+//	tx, err := db.Begin()
+//	txCommit := false
+//	defer dbhelpers.CommitIf(tx, &txCommit)
+//	if err := tx.Exec("select ..."); err != nil {
+//	  return errors.New("executing: " + err.Error())
+//	}
+//	txCommit = true
+//	return nil
 func CommitIf(tx *sql.Tx, doCommit *bool) {
 	if *doCommit {
 		tx.Commit()

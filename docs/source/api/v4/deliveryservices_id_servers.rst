@@ -18,7 +18,6 @@
 ***********************************
 ``deliveryservices/{{ID}}/servers``
 ***********************************
-.. caution:: It's often much easier to use :ref:`to-api-deliveryservices-xmlid-servers` instead
 
 ``GET``
 =======

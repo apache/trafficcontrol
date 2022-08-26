@@ -17,6 +17,16 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div id="endpointsContainer">
-    <div ui-view="endpointsContent"></div>
+<div class="modal-header">
+    <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    <h3 class="modal-title">Assign Server Capabilities to {{::server[0].hostName}}</h3>
 </div>
+<div class="modal-body">
+    <common-grid-controller table-name="serverSCsUnassigned" options="gridOptions"
+                            data="serverCapabilities" columns="columns" selected-data="selectedSCs"></common-grid-controller>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-link" ng-click="cancel()">cancel</button>
+    <button class="btn btn-primary" ng-click="submit()">Submit</button>
+</div>
+

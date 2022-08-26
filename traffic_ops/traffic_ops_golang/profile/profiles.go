@@ -56,7 +56,7 @@ const (
 	TypeQueryParam        = "type"
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TOProfile struct {
 	api.APIInfoImpl `json:"-"`
 	tc.ProfileNullable
@@ -75,7 +75,7 @@ func (prof TOProfile) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: IDQueryParam, Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (prof TOProfile) GetKeys() (map[string]interface{}, bool) {
 	if prof.ID == nil {
 		return map[string]interface{}{IDQueryParam: 0}, false

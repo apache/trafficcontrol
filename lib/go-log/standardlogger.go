@@ -29,7 +29,6 @@ import (
 // It does this by wrapping logger's error print as a writer, and sets that as the new Logger's io.Writer.
 //
 // prefix is a prefix to add, which will be added immediately before messages, but after any existing prefix on logger and the timestamp.
-//
 func StandardLogger(logger *log.Logger, prefix string) *log.Logger {
 	return log.New(&standardLoggerWriter{realLogger: logger, prefix: prefix}, "", 0)
 }

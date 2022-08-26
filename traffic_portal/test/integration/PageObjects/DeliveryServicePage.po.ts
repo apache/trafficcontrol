@@ -17,203 +17,174 @@
  * under the License.
  */
 
-import { BasePage } from './BasePage.po';
+import { BasePage } from "./BasePage.po";
 import { randomize } from "../config";
-import { SideNavigationPage } from './SideNavigationPage.po';
-import {browser, by, element} from 'protractor';
+import { SideNavigationPage } from "./SideNavigationPage.po";
+import { browser, by, element, ExpectedConditions } from "protractor";
 
-interface DeliveryServices {
-  Type: string;
-  Name: string;
-  Tenant: string;
-  validationMessage: string;
-}
-interface UpdateDeliveryService {
-  description: string;
-  Name: string;
-  NewName: string;
-  validationMessage: string;
-}
-interface DeleteDeliveryService {
-  Name: string;
-  validationMessage: string;
-}
-interface AssignServer {
-  DSName: string;
-  ServerName: string;
-  validationMessage: string;
-}
-interface AssignRC {
-  RCName: string;
-  DSName: string;
-  validationMessage: string;
-}
+/**
+ * The DeliveryServicePage is a page object modelling of the Delivery Service
+ * editing/creation view. For simplicity"s sake, it also provides functionality
+ * that relates to the Delivery Services table view.
+ */
 export class DeliveryServicePage extends BasePage {
-  private btnCreateNewDeliveryServices = element(by.linkText("Create Delivery Service"));
-  private mnuFormDropDown = element(by.name('selectFormDropdown'));
-  private btnSubmitFormDropDown = element(by.buttonText('Submit'));
-  private txtSearch = element(by.id("quickSearch"))
-  private txtConfirmName = element(by.name('confirmWithNameInput'));
-  private btnDelete = element(by.buttonText('Delete'));
-  private btnMore = element(by.name('moreBtn'));
-  private mnuManageRequiredServerCapabilities = element(by.linkText('Manage Required Server Capabilities'));
-  private btnAddRequiredServerCapabilities = element(by.name('addCapabilityBtn'));
-  private txtInputRC = element(by.name("selectFormDropdown"));
-  private mnuManageServers = element(by.buttonText('Manage Servers'));
-  private btnAssignServer = element(by.name("selectServersMenuItem"));
-  private txtXmlId = element(by.name('xmlId'));
-  private txtDisplayName = element(by.name('displayName'));
-  private selectActive = element(by.name('active'));
-  private selectType = element(by.id('type'));
-  private selectTenant = element(by.name('tenantId'));
-  private selectCDN = element(by.name('cdn'));
-  private txtOrgServerURL = element(by.name('orgServerFqdn'));
-  private txtProtocol = element(by.name('protocol'));
-  private txtRemapText = element(by.name('remapText'));
-  private btnCreateDeliveryServices = element(by.buttonText('Create'));
-  private randomize = randomize;
 
-  public async OpenDeliveryServicePage() {
-    const snp = new SideNavigationPage();
-    await snp.NavigateToDeliveryServicesPage();
-  }
+	/** The search box in the DS table view. */
+	private readonly txtSearch = element(by.id("quickSearch"));
 
-  public async OpenServicesMenu() {
-    const snp = new SideNavigationPage();
-    await snp.ClickServicesMenu();
-  }
+	/** The "Display Name" text input in the editing/creation view(s). */
+	private readonly txtDisplayName = element(by.name("displayName"));
+	/** The "More" dropdown menu button in the editing/creation view(s). */
+	private readonly  btnMore = element(by.name("moreBtn"));
 
-  public async CreateDeliveryService(deliveryservice: DeliveryServices): Promise<boolean> {
-    let result = false;
-    let type: string = deliveryservice.Type;
-    const basePage = new BasePage();
-    await this.btnMore.click();
-    await this.btnCreateNewDeliveryServices.click();
-    await this.mnuFormDropDown.sendKeys(type);
-    await this.btnSubmitFormDropDown.click();
-    switch (type) {
-      case "ANY_MAP": {
-        await this.txtXmlId.sendKeys(deliveryservice.Name + this.randomize);
-        await this.txtDisplayName.sendKeys(deliveryservice.Name + this.randomize);
-        await this.selectActive.sendKeys('Active')
-        await this.selectType.sendKeys('ANY_MAP')
-        await this.selectTenant.click();
-        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
-        await this.selectCDN.sendKeys('dummycdn')
-        await this.txtRemapText.sendKeys('test')
-        break;
-      }
-      case "DNS": {
-        await this.txtXmlId.sendKeys(deliveryservice.Name + this.randomize);
-        await this.txtDisplayName.sendKeys(deliveryservice.Name + this.randomize);
-        await this.selectActive.sendKeys('Active')
-        await this.selectType.sendKeys('DNS')
-        await this.selectTenant.click();
-        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
-        await this.selectCDN.sendKeys('dummycdn')
-        await this.txtOrgServerURL.sendKeys('http://origin.infra.ciab.test');
-        await this.txtProtocol.sendKeys('HTTP')
-        break;
-      }
-      case "HTTP": {
-        await this.txtXmlId.sendKeys(deliveryservice.Name + this.randomize);
-        await this.txtDisplayName.sendKeys(deliveryservice.Name + this.randomize);
-        await this.selectActive.sendKeys('Active')
-        await this.selectType.sendKeys('HTTP')
-        await this.selectTenant.click();
-        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
-        await this.selectCDN.sendKeys('dummycdn')
-        await this.txtOrgServerURL.sendKeys('http://origin.infra.ciab.test');
-        await this.txtProtocol.sendKeys('HTTP')
-        break;
-      }
-      case "STEERING": {
-        await this.txtXmlId.sendKeys(deliveryservice.Name + this.randomize);
-        await this.txtDisplayName.sendKeys(deliveryservice.Name + this.randomize);
-        await this.selectActive.sendKeys('Active')
-        await this.selectType.sendKeys('STEERING')
-        await this.selectTenant.click();
-        await element(by.name(deliveryservice.Tenant + this.randomize)).click();
-        await this.selectCDN.sendKeys('dummycdn')
-        await this.txtProtocol.sendKeys('HTTP')
-        break;
-      }
-      default:
-        {
-          console.log('Wrong Type name');
-          break;
-        }
-    }
-    await this.btnCreateDeliveryServices.click();
-    result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
-    return result;
-  }
+	/**
+	 * Navigates to the Delivery Services table view.
+	 */
+	public async OpenDeliveryServicePage(): Promise<void> {
+		const snp = new SideNavigationPage();
+		return snp.NavigateToDeliveryServicesPage();
+	}
 
-  public async SearchDeliveryService(nameDS: string): Promise<boolean> {
-    const name = nameDS + this.randomize;
-    await this.txtSearch.clear();
-    await this.txtSearch.sendKeys(name);
-    const result = await element(by.cssContainingText("span", name)).isPresent();
-    await element(by.cssContainingText("span", name)).click();
-    return !result;
-  }
+	/**
+	 * Toggles the open/close state of the "Services" sub-menu in the left-side
+	 * navigation pane.
+	 */
+	public async OpenServicesMenu(): Promise<void> {
+		const snp = new SideNavigationPage();
+		return snp.ClickServicesMenu();
+	}
 
-  public async UpdateDeliveryService(deliveryservice: UpdateDeliveryService): Promise<boolean | undefined> {
-    let result: boolean | undefined = false;
-    const basePage = new BasePage();
-    switch (deliveryservice.description) {
-      case "update delivery service display name":
-        await this.txtDisplayName.clear();
-        await this.txtDisplayName.sendKeys(deliveryservice.NewName + this.randomize);
-        await basePage.ClickUpdate();
-        break;
-      default:
-        result = undefined;
-    }
-    if (result = !undefined) {
-      result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
-    }
-    return result;
-  }
+	/**
+	 * Creates a new Delivery Service.
+	 *
+	 * @param deliveryservice Details for the Delivery Service to be created.
+	 * @returns The text shown in the first Alert pane found after creation.
+	 */
+	public async CreateDeliveryService(name: string, type: string, tenant: string): Promise<string> {
+		await this.btnMore.click();
+		await element(by.buttonText("Create Delivery Service")).click();
+		await element(by.name("selectFormDropdown")).sendKeys(type);
+		await element(by.buttonText("Submit")).click();
 
-  public async DeleteDeliveryService(deliveryservice: DeleteDeliveryService): Promise<boolean> {
-    let result = false;
-    const basePage = new BasePage();
-    if (deliveryservice.validationMessage.includes("deleted")) {
-      deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.Name, deliveryservice.Name + this.randomize);
-    }
-    await this.btnDelete.click();
-    await this.txtConfirmName.sendKeys(deliveryservice.Name + this.randomize);
-    await basePage.ClickDeletePermanently();
-    result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
-    return result;
-  }
+		name += randomize;
+		tenant += randomize;
 
-  public async AssignServerToDeliveryService(deliveryservice: AssignServer): Promise<boolean>{
-    let result = false;
-    const basePage = new BasePage();
-    await this.btnMore.click();
-    await this.mnuManageServers.click();
-    await this.btnMore.click();
-    await this.btnAssignServer.click();
-    await browser.sleep(3000);
-    await element(by.cssContainingText(".ag-cell-value", deliveryservice.ServerName)).click();
-    await this.ClickSubmit();
-    result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
-    return result;
-  }
+		const ps = [];
+		switch (type) {
+			case "ANY_MAP":
+				ps.push(element(by.name("remapText")).sendKeys("test"));
+			break;
 
-  public async AssignRequiredCapabilitiesToDS(deliveryservice: AssignRC): Promise<boolean>{
-    let result = false;
-    const basePage = new BasePage();
-    await this.btnMore.click();
-    await this.mnuManageRequiredServerCapabilities.click();
-    await this.btnAddRequiredServerCapabilities.click();
-    await this.txtInputRC.sendKeys(deliveryservice.RCName);
-    await this.ClickSubmit();
-    result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
-    return result;
-  }
+			case "DNS":
+			case "HTTP":
+				ps.push(element(by.name("orgServerFqdn")).sendKeys("http://origin.infra.ciab.test"));
+			case "STEERING":
+				ps.push(element(by.name("protocol")).sendKeys("HTTP"));
+			break;
 
+			default:
+				throw new Error(`invalid Delivery Service routing type: ${type}`);
+		}
+		ps.push(
+			element(by.name("xmlId")).sendKeys(name),
+			this.txtDisplayName.sendKeys(name),
+			element(by.name("active")).sendKeys("Active"),
+			element(by.id("type")).sendKeys(type),
+			element(by.name("tenantId")).click().then(() => element(by.name(tenant)).click()),
+			element(by.name("cdn")).sendKeys("dummycdn")
+		);
 
+		await Promise.all(ps);
+		await element(by.buttonText("Create")).click();
+
+		return this.GetOutputMessage();
+	}
+
+	/**
+	 * Searches the table for a Delivery Service in the table.
+	 *
+	 * (Note this neither checks nor enforces that the sought-after DS is
+	 * actually found.)
+	 *
+	 * @param name The name for which to search.
+	 */
+	public async SearchDeliveryService(name: string): Promise<void> {
+		name += randomize;
+
+		await this.txtSearch.clear();
+		await this.txtSearch.sendKeys(name);
+		const nameSpan = element(by.cssContainingText("span", name));
+		await nameSpan.click();
+	}
+
+	/**
+	 * Changes a Delivery Service's Display Name to the provided value (after
+	 * randomization).
+	 *
+	 * @param newName The new Display Name to be given to the Delivery Service.
+	 * @returns The text shown in the first Alert pane found after attempting to
+	 * submit the update.
+	 */
+	public async UpdateDeliveryServiceDisplayName(newName: string): Promise<string> {
+		await this.txtDisplayName.clear();
+		await this.txtDisplayName.sendKeys(newName + randomize);
+		await this.ClickUpdate();
+		return this.GetOutputMessage();
+	}
+
+	/**
+	 * Attempts to delete a Delivery Service.
+	 *
+	 * @param name The XMLID of the Delivery Service to be deleted.
+	 * @returns The text shown in the first Alert pane found after attempting
+	 * the deletion.
+	 */
+	public async DeleteDeliveryService(name: string): Promise<string> {
+		name += randomize;
+		await element(by.buttonText("Delete")).click();
+		await element(by.name("confirmWithNameInput")).sendKeys(name);
+		await this.ClickDeletePermanently();
+		return this.GetOutputMessage();
+	}
+
+	/**
+	 * Assigns the server with the given hostname to the Delivery Service. Note
+	 * that the browser must already be on a Delivery Service edit view for this
+	 * to work, as this method neither navigates to it nor back to the table
+	 * view afterward!
+	 *
+	 * @param serverName The name of the server being assigned.
+	 * @returns The text shown in the first Alert pane found after attempting
+	 * the assignment.
+	 */
+	public async AssignServerToDeliveryService(serverName: string): Promise<string>{
+		await this.btnMore.click();
+		await element(by.buttonText("Manage Servers")).click();
+		await this.btnMore.click();
+		await element(by.partialButtonText("Assign")).click();
+		const serverCell = element(by.cssContainingText(".ag-cell-value", serverName));
+		await browser.wait(ExpectedConditions.elementToBeClickable(serverCell), 3000);
+		await serverCell.click();
+		await this.ClickSubmit();
+		return this.GetOutputMessage();
+	}
+
+	/**
+	 * Assigns the Capability with the given name as a requirement of the
+	 * Delivery Service. Note that the browser must already be on a Delivery
+	 * Service edit view for this to work, as this method neither navigates to
+	 * it nor back to the table view afterward!
+	 *
+	 * @param name The name of the Capability to be required.
+	 * @returns The text shown in the first Alert pane found after attempting
+	 * the assignment.
+	 */
+	public async AssignRequiredCapabilitiesToDS(name: string): Promise<string>{
+		await this.btnMore.click();
+		await element(by.linkText("Manage Required Server Capabilities")).click();
+		await element(by.name("addCapabilityBtn")).click();
+		await element(by.name("selectFormDropdown")).sendKeys(name);
+		await this.ClickSubmit();
+		return this.GetOutputMessage();
+	}
 }

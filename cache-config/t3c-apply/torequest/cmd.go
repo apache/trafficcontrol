@@ -33,6 +33,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -47,7 +48,7 @@ import (
 const (
 	t3cgen       = `t3c generate`
 	t3cupd       = `t3c update`
-	t3cdiff      = `t3c diff`
+	t3cdiff      = `t3c-diff`
 	t3cchkrefs   = `t3c check refs`
 	t3cchkreload = `t3c check reload`
 	t3creq       = `t3c request`
@@ -59,6 +60,7 @@ type ServerAndConfigs struct {
 	ConfigFiles json.RawMessage
 }
 
+var stripDate = regexp.MustCompile(`\[\w{3}\s{1,2}\d{1,2}\s\d{2}:\d{2}:\d{2}\.\d{3}\]\s`)
 var t3cpath string = filepath.Join(t3cutil.InstallDir(), `t3c`)
 
 // generate runs t3c-generate and returns the result.
@@ -289,13 +291,37 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 	return nil
 }
 
+//doTail calls t3c-tail and will run a tail on the log file provided with string for a regex to
+//maatch on default is .* endMatch will make t3c-tail exit when a pattern is matched otherwise
+//a timeout in a given number of seconds will occur.
+func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeoutInMS int) error {
+	args := []string{
+		"--file=" + filepath.Join(cfg.TsHome, file),
+		"--match=" + logMatch,
+		"--end-match=" + endMatch,
+		"--timeout-ms=" + strconv.Itoa(timeoutInMS),
+	}
+	stdOut, stdErr, code := t3cutil.Do(`t3c-tail`, args...)
+	if code > 1 {
+		return fmt.Errorf("t3c-tail returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+	}
+	logSubApp(`t3c-tail`, stdErr)
+
+	stdOut = bytes.TrimSpace(stdOut)
+	lines := strings.Split(string(stdOut), "\n")
+	for _, line := range lines {
+		line = stripDate.ReplaceAllString(line, "")
+		log.Infoln(line)
+	}
+	return nil
+}
+
 // diff calls t3c-diff to diff the given new file and the file on disk. Returns whether they're different.
 // Logs the difference.
 // If the file on disk doesn't exist, returns true and logs the entire file as a diff.
 func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, perm os.FileMode, uid int, gid int) (bool, error) {
 	diffMsg := ""
 	args := []string{
-		`diff`,
 		"--file-a=stdin",
 		"--file-b=" + fileLocation,
 		"--file-mode=" + fmt.Sprintf("%#o", perm),
@@ -303,7 +329,10 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, 
 		"--file-gid=" + fmt.Sprint(gid),
 	}
 
-	stdOut, stdErr, code := t3cutil.DoInput(newFile, t3cpath, args...)
+	// t3c-diff is called directly for performance reasons.
+	diffpath := t3cpath + `-diff`
+
+	stdOut, stdErr, code := t3cutil.DoInput(newFile, diffpath, args...)
 	if code > 1 {
 		return false, fmt.Errorf("%s returned error code %v stdout '%v' stderr '%v'", t3cdiff, code, string(stdOut), string(stdErr))
 	}
@@ -371,7 +400,7 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 	return nil
 }
 
-//checkCert checks the validity of the ssl certificate.
+// checkCert checks the validity of the ssl certificate.
 func checkCert(c []byte) error {
 	block, _ := pem.Decode(c)
 	cert, err := x509.ParseCertificate(block.Bytes)

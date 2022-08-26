@@ -34,7 +34,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TOCoordinate struct {
 	api.APIInfoImpl `json:"-"`
 	tc.CoordinateNullable
@@ -61,7 +61,7 @@ func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (coordinate TOCoordinate) GetKeys() (map[string]interface{}, bool) {
 	if coordinate.ID == nil {
 		return map[string]interface{}{"id": 0}, false

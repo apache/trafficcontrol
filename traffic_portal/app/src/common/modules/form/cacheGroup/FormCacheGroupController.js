@@ -35,10 +35,6 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
         $location.path($location.path() + '/servers');
     };
 
-    $scope.viewStaticDnsEntries = function() {
-        $location.path($location.path() + '/static-dns-entries');
-    };
-
     $scope.hasLocalizationMethod = function(method) {
         return $scope.cacheGroup.localizationMethods.includes(method);
     };

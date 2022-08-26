@@ -24,7 +24,7 @@ under the License.
             <li class="active">{{serviceCategoryName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button type=button class="btn btn-primary" title="View Delivery Services" ng-click="viewDSs()">View Delivery Services</button>
+            <a class="btn btn-primary" title="View Delivery Services" ng-href="#!/service-categories/{{serviceCategory.name}}/delivery-services">View Delivery Services</a>
         </div>
         <div class="clearfix"></div>
     </div>

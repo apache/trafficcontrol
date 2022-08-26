@@ -77,8 +77,8 @@ else
   echo "$(</ort-tests/tc-fixtures.json jq --arg ATS_RPM "$ATS_RPM" '.profiles[] |= (
     select(.params != null).params[] |= (
       select(.configFile == "package" and .name == "trafficserver").value = $ATS_RPM
-    ))')" >/ort-tests/tc-fixtures.json
-  if ! </ort-tests/tc-fixtures.json jq -r --arg ATS_RPM "$ATS_RPM" '.profiles[] |
+    ))')" >/ort-tests/tc-fixtures.json.tmp
+  if ! </ort-tests/tc-fixtures.json.tmp jq -r --arg ATS_RPM "$ATS_RPM" '.profiles[] |
     select(.params != null).params[] |
     select(.configFile == "package" and .name == "trafficserver")
     .value' |
@@ -106,7 +106,7 @@ while ! nc $TO_HOSTNAME $TO_PORT </dev/null; do
   fi
 done
 
-cp /ort-tests/tc-fixtures.json /tc-fixtures.json
+mv /ort-tests/tc-fixtures.json.tmp /tc-fixtures.json
 (touch test.log && chmod a+rw test.log && tail -f test.log)&
 
 go test --cfg=conf/docker-edge-cache.conf 2>&1 >> test.log
@@ -114,7 +114,5 @@ if [[ $? != 0 ]]; then
   echo "ERROR: ORT tests failure"
   exit 3
 fi
-
-cp /tc-fixtures.json /ort-tests/tc-fixtures.json
 
 exit 0

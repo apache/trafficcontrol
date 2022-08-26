@@ -31,7 +31,6 @@ import (
 //
 // Actions also include the t3c-apply run starting and finishing,
 // to help delineate the actions of different runs in the log.
-//
 type ActionLogAction string
 
 const (
@@ -75,7 +74,6 @@ const (
 //
 // The metaData may be nil, and should be if this is being called after the final git commit,
 // to prevent modifying the file after the commit.
-//
 func WriteActionLog(action ActionLogAction, status ActionLogStatus, metaData *ApplyMetaData) {
 	if metaData != nil {
 		metaData.Actions = append(metaData.Actions, ApplyMetaDataAction{

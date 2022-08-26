@@ -70,50 +70,54 @@ type ProfileParameterPostParam struct {
 
 // PostProfileParameter swagger:route POST /profileparameters ProfileParameter PostProfileParameter
 //
-// Create a ProfileParameter
+// # Create a ProfileParameter
 //
-// A ProfileParameter is a join of the Profile and Parameters
+// # A ProfileParameter is a join of the Profile and Parameters
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func PostProfileParameter(entity ProfileParameterPostParam) (ProfileParameter, Alerts) {
 	return ProfileParameter{}, Alerts{}
 }
 
 // GetProfileParameters swagger:route GET /profileparameters ProfileParameter GetProfileParameters
 //
-// Retrieve a list of ProfileParameters by narrowing down with query parameters
+// # Retrieve a list of ProfileParameters by narrowing down with query parameters
 //
-// List of ProfileParameters
+// # List of ProfileParameters
 //
 // Responses:
-//          200: ProfileParameters
-//          400: Alerts
+//
+//	200: ProfileParameters
+//	400: Alerts
 func GetProfileParameters() (ProfileParameters, Alerts) {
 	return ProfileParameters{}, Alerts{}
 }
 
 // GetProfileParameterById swagger:route GET /profileparameters?id={id} ProfileParameter GetProfileParameterById
 //
-// Retrieve a specific ProfileParameter by Id
+// # Retrieve a specific ProfileParameter by Id
 //
-// Retrieve a single division
+// # Retrieve a single division
 //
 // Responses:
-//          200: ProfileParameters
-//          400: Alerts
+//
+//	200: ProfileParameters
+//	400: Alerts
 func GetProfileParameterById() (ProfileParameters, Alerts) {
 	return ProfileParameters{}, Alerts{}
 }
 
 // DeleteProfileParameter swagger:route DELETE /profileparameters/{id} ProfileParameter DeleteProfileParameter
 //
-// Delete a ProfileParameter by Id
+// # Delete a ProfileParameter by Id
 //
-// Delete a single ProfileParameter
+// # Delete a single ProfileParameter
 //
 // Responses:
-//          200: Alerts
+//
+//	200: Alerts
 func DeleteProfileParameter(entityId int) Alerts {
 	return Alerts{}
 }

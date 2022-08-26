@@ -131,6 +131,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		 * 4.x API
 		 */
 
+		// Assign Multiple Server Capabilities
+		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodPut, Path: `multiple_server_capabilities/?$`, Handler: server.AssignMultipleServerCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 40792419258},
+
 		// CDNI integration
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `OC/FCI/advertisement/?$`, Handler: cdni.GetCapabilities, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729077},
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPut, Path: `OC/CI/configuration/?$`, Handler: cdni.PutConfiguration, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729078},
@@ -989,7 +992,7 @@ func rootHandler(d ServerData) http.Handler {
 	return root{}
 }
 
-//CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines
+// CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines
 func CreateThrottledHandler(handler http.Handler, maxConcurrentCalls int) ThrottledHandler {
 	return ThrottledHandler{handler, make(chan struct{}, maxConcurrentCalls)}
 }

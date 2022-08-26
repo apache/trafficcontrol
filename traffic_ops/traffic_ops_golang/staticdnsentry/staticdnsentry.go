@@ -69,7 +69,7 @@ func (staticDNSEntry TOStaticDNSEntry) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (staticDNSEntry TOStaticDNSEntry) GetKeys() (map[string]interface{}, bool) {
 	if staticDNSEntry.ID == nil {
 		return map[string]interface{}{"id": 0}, false

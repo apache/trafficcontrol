@@ -16,650 +16,409 @@
 package v4
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strconv"
-	"strings"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestParameters(t *testing.T) {
-
-	//toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	//SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Portal, Config.TrafficOps.UserPassword)
-
 	WithObjs(t, []TCObj{Parameters}, func() {
-		GetTestSecureParameter(t)
-		GetTestParametersIMS(t)
-		GetTestParametersByConfigfile(t)
-		GetTestParametersByValue(t)
-		GetTestParametersByName(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		UpdateTestParameters(t)
-		UpdateTestParametersWithHeaders(t, header)
-		GetTestParameters(t)
-		GetTestParametersIMSAfterChange(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestParametersWithHeaders(t, header)
-		GetTestPaginationSupportParameters(t)
-		GetParametersByInvalidId(t)
-		GetParametersByInvalidName(t)
-		GetParametersByInvalidConfigfile(t)
-		GetParametersByInvalidValue(t)
-		CreateTestParametersAlreadyExist(t)
-		CreateTestParametersMissingName(t)
-		CreateTestParametersMissingconfigFile(t)
-		CreateMultipleTestParameters(t)
-		DeleteTestParametersByInvalidId(t)
-		UpdateParametersEmptyValue(t)
-		UpdateParametersEmptyName(t)
-		UpdateParametersEmptyConfigFile(t)
+
+		opsUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "operations", "twelve", Config.Default.Session.TimeoutInSecs)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V4TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"OK when VALID CONFIGFILE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"configFile": {"plugin.config"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateParametersFields(map[string]interface{}{"ConfigFile": "plugin.config"})),
+				},
+				"OK when VALID VALUE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"value": {"90"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateParametersFields(map[string]interface{}{"Value": "90"})),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"tm.instance_name"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateParametersFields(map[string]interface{}{"Name": "tm.instance_name"})),
+				},
+				"VALUE HIDDEN when OPERATIONS USER views SECURE PARAMETER": {
+					ClientSession: opsUserSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"testSecure"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateParametersFields(map[string]interface{}{"Secure": true, "Value": "********"})),
+				},
+				"EMPTY RESPONSE when NON-EXISTENT ID parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {"10000"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when NON-EXISTENT NAME parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"doesntexist"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when NON-EXISTENT CONFIGFILE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"configFile": {"doesntexist"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"EMPTY RESPONSE when NON-EXISTENT VALUE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"value": {"doesntexist"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+				"FIRST RESULT when LIMIT=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateParametersPagination("limit")),
+				},
+				"SECOND RESULT when LIMIT=1 OFFSET=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateParametersPagination("offset")),
+				},
+				"SECOND RESULT when LIMIT=1 PAGE=2": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateParametersPagination("page")),
+				},
+				"BAD REQUEST when INVALID LIMIT parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID OFFSET parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID PAGE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"POST": {
+				"OK when MULTIPLE PARAMETERS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"parameters": []map[string]interface{}{
+							{
+								"configFile": "multiple.config1",
+								"name":       "CONFIG1 multiple config",
+								"secure":     false,
+								"value":      "INT 1",
+							},
+							{
+								"configFile": "multiple.config2",
+								"name":       "CONFIG2 multiple config",
+								"secure":     false,
+								"value":      "INT 2",
+							},
+							{
+								"configFile": "multiple.config3",
+								"name":       "CONFIG3 multiple config",
+								"secure":     false,
+								"value":      "INT 3",
+							},
+						},
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"BAD REQUEST when ALREADY EXISTS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"configFile": "records.config",
+						"name":       "CONFIG proxy.config.allocator.enable_reclaim",
+						"secure":     false,
+						"value":      "INT 0",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING NAME FIELD": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"configFile": "missingname.config",
+						"name":       "",
+						"secure":     false,
+						"value":      "test missing name",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING CONFIGFILE FIELD": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"configFile": "",
+						"name":       "missing config file",
+						"secure":     false,
+						"value":      "test missing config file",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"PUT": {
+				"OK when VALID REQUEST": {
+					EndpointId:    GetParameterID(t, "LogObject.Format"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"configFile": "updated.config",
+						"name":       "updated name",
+						"secure":     true,
+						"value":      "updated value",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateParametersUpdateCreateFields("updated name",
+							map[string]interface{}{"ConfigFile": "updated.config", "Name": "updated name", "Secure": true, "Value": "updated value"})),
+				},
+				"OK when MISSING VALUE FIELD": {
+					EndpointId:    GetParameterID(t, "LogObject.Filename"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"configFile": "logs_new.config",
+						"name":       "LogObject.Filename",
+						"secure":     true,
+						"value":      "",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateParametersUpdateCreateFields("LogObject.Filename",
+							map[string]interface{}{"ConfigFile": "logs_new.config", "Secure": true, "Value": ""})),
+				},
+				"BAD REQUEST when MISSING NAME FIELD": {
+					EndpointId:    GetParameterID(t, "astats_over_http.so"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"configFile": "missingname.config",
+						"name":       "",
+						"secure":     false,
+						"value":      "test missing name",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING CONFIGFILE FIELD": {
+					EndpointId:    GetParameterID(t, "astats_over_http.so"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"configFile": "",
+						"name":       "missing config file",
+						"secure":     false,
+						"value":      "test missing config file",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:    GetParameterID(t, "LogFormat.Name"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody: map[string]interface{}{
+						"configFile": "logs_xml.config",
+						"name":       "LogFormat.Name",
+						"secure":     false,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetParameterID(t, "LogFormat.Name"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"configFile": "logs_xml.config",
+						"name":       "LogFormat.Name",
+						"secure":     false,
+					},
+					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"BAD REQUEST when DOESNT EXIST": {
+					EndpointId:    func() int { return 100000 },
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					parameter := tc.Parameter{}
+					parameters := []tc.Parameter{}
+
+					if testCase.RequestBody != nil {
+						if params, ok := testCase.RequestBody["parameters"]; ok {
+							dat, err := json.Marshal(params)
+							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+							err = json.Unmarshal(dat, &parameters)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						}
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &parameter)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetParameters(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							if len(parameters) == 0 {
+								alerts, reqInf, err := testCase.ClientSession.CreateParameter(parameter, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							} else {
+								alerts, reqInf, err := testCase.ClientSession.CreateMultipleParameters(parameters, testCase.RequestOpts)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, nil, alerts, err)
+								}
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateParameter(testCase.EndpointId(), parameter, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteParameter(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func GetTestSecureParameter(t *testing.T) {
-	tenantResp, _, err := TOSession.GetTenants(client.NewRequestOptions())
-	if err != nil {
-		t.Fatalf("couldn't get tenants: %v", err)
-	}
-	if len(tenantResp.Response) == 0 {
-		t.Fatalf("got no tenants in response")
-	}
-	param := tc.Parameter{
-		ConfigFile: string(tc.GlobalConfigFileName),
-		Name:       "test_secure_param",
-		Secure:     true,
-		Value:      "100",
-	}
-	_, _, err = TOSession.CreateParameter(param, client.NewRequestOptions())
-	if err != nil {
-		t.Fatalf("couldn't create secure parameter: %v", err)
-	}
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "test_secure_param")
-	resp, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Fatalf("couldn't get param by name: %v", err)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("expected just one response, got %d", len(resp.Response))
-	}
-	if resp.Response[0].Value != "100" {
-		t.Errorf("expected value 100, but got %s", resp.Response[0].Value)
-	}
-
-	// Create a new user with operations level privileges
-	user1 := tc.UserV4{
-		Username:         "lock_user1",
-		RegistrationSent: new(time.Time),
-		LocalPassword:    util.StrPtr("test_pa$$word"),
-		Role:             "operations",
-	}
-	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = tenantResp.Response[0].ID
-	user1.FullName = util.StrPtr("firstName LastName")
-	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("could not create test user with username: %s, err: %v", user1.Username, err)
-	}
-	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
-
-	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
-	if err != nil {
-		t.Fatalf("could not login with user lock_user1: %v", err)
-	}
-	resp, _, err = userSession.GetParameters(opts)
-	if err != nil {
-		t.Fatalf("couldn't get param by name: %v", err)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("expected just one response, got %d", len(resp.Response))
-	}
-	if resp.Response[0].Value != "********" {
-		t.Errorf("expected value of secure param to be hidden, but got %s instead", resp.Response[0].Value)
-	}
-	_, _, err = TOSession.DeleteParameter(resp.Response[0].ID, client.NewRequestOptions())
-	if err != nil {
-		t.Errorf("failed to delete param: %v", err)
+func validateParametersFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Parameters response to not be nil.")
+		parameterResp := resp.([]tc.Parameter)
+		for field, expected := range expectedResp {
+			for _, parameter := range parameterResp {
+				switch field {
+				case "ConfigFile":
+					assert.Equal(t, expected, parameter.ConfigFile, "Expected ConfigFile to be %v, but got %s", expected, parameter.ConfigFile)
+				case "ID":
+					assert.Equal(t, expected, parameter.ID, "Expected ID to be %v, but got %d", expected, parameter.ID)
+				case "Name":
+					assert.Equal(t, expected, parameter.Name, "Expected Name to be %v, but got %s", expected, parameter.Name)
+				case "Secure":
+					assert.Equal(t, expected, parameter.Secure, "Expected Secure to be %v, but got %v", expected, parameter.Secure)
+				case "Value":
+					assert.Equal(t, expected, parameter.Value, "Expected Value to be %v, but got %s", expected, parameter.Value)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
+		}
 	}
 }
 
-func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Parameters) < 1 {
-		t.Fatal("Need at least one Parameter to test updating Parameters with HTTP headers")
-	}
-	firstParameter := testData.Parameters[0]
-
-	// Retrieve the Parameter by name so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	opts.QueryParameters.Set("name", firstParameter.Name)
-	resp, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) < 1 {
-		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
-	}
-	remoteParameter := resp.Response[0]
-	expectedParameterValue := "UPDATED"
-	remoteParameter.Value = expectedParameterValue
-	_, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
-	if err == nil {
-		t.Error("Expected error about precondition failed, but got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %d", reqInf.StatusCode)
+func validateParametersUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", name)
+		parameters, _, err := TOSession.GetParameters(opts)
+		assert.RequireNoError(t, err, "Error getting Parameter: %v - alerts: %+v", err, parameters.Alerts)
+		assert.RequireEqual(t, 1, len(parameters.Response), "Expected one Parameter returned Got: %d", len(parameters.Response))
+		validateParametersFields(expectedResp)(t, toclientlib.ReqInf{}, parameters.Response, tc.Alerts{}, nil)
 	}
 }
 
-func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
-	opts := client.NewRequestOptions()
-	opts.Header = header
-	for _, pl := range testData.Parameters {
-		opts.QueryParameters.Set("name", pl.Name)
-		resp, reqInf, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %d", reqInf.StatusCode)
+func validateParametersPagination(paginationParam string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		paginationResp := resp.([]tc.Parameter)
+
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("orderby", "id")
+		respBase, _, err := TOSession.GetParameters(opts)
+		assert.RequireNoError(t, err, "Cannot get Parameters: %v - alerts: %+v", err, respBase.Alerts)
+
+		parameters := respBase.Response
+		assert.RequireGreaterOrEqual(t, len(parameters), 3, "Need at least 3 Parameters in Traffic Ops to test pagination support, found: %d", len(parameters))
+		switch paginationParam {
+		case "limit:":
+			assert.Exactly(t, parameters[:1], paginationResp, "expected GET Parameters with limit = 1 to return first result")
+		case "offset":
+			assert.Exactly(t, parameters[1:2], paginationResp, "expected GET Parameters with limit = 1, offset = 1 to return second result")
+		case "page":
+			assert.Exactly(t, parameters[1:2], paginationResp, "expected GET Parameters with limit = 1, page = 2 to return second result")
 		}
 	}
+}
 
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-
-	opts.Header.Set(rfc.IfModifiedSince, timeStr)
-	for _, pl := range testData.Parameters {
-		opts.QueryParameters.Set("name", pl.Name)
-		resp, reqInf, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %d", reqInf.StatusCode)
-		}
+func GetParameterID(t *testing.T, name string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", name)
+		parameters, _, err := TOSession.GetParameters(opts)
+		assert.RequireNoError(t, err, "Get Parameters Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(parameters.Response), "Expected response object length 1, but got %d", len(parameters.Response))
+		return parameters.Response[0].ID
 	}
 }
 
 func CreateTestParameters(t *testing.T) {
-	resp, _, err := TOSession.CreateMultipleParameters(testData.Parameters, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("could not create Parameters: %v - alerts: %+v", err, resp)
-	}
-}
-
-func UpdateTestParameters(t *testing.T) {
-	if len(testData.Parameters) < 1 {
-		t.Fatal("Need at least one Parameter to test updating Parameters")
-	}
-	firstParameter := testData.Parameters[0]
-
-	// Retrieve the Parameter by name so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", firstParameter.Name)
-	resp, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, resp.Alerts)
-	}
-	if len(resp.Response) < 1 {
-		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
-	}
-	remoteParameter := resp.Response[0]
-
-	expectedParameterValue := "UPDATED"
-	remoteParameter.Value = expectedParameterValue
-	alert, _, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, client.RequestOptions{})
-	if err != nil {
-		t.Errorf("cannot update Parameter: %v - alerts: %+v", err, alert.Alerts)
-	}
-
-	// Retrieve the Parameter to check Parameter name got updated
-	opts.QueryParameters.Del("name")
-	opts.QueryParameters.Set("id", strconv.Itoa(remoteParameter.ID))
-	resp, _, err = TOSession.GetParameters(opts)
-	if err != nil {
-		t.Errorf("cannot get Parameter by ID %d: %v - alerts: %+v", remoteParameter.ID, err, resp.Alerts)
-	}
-	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Parameter to exist with ID %d, found: %d", remoteParameter.ID, len(resp.Response))
-	}
-	respParameter := resp.Response[0]
-	if respParameter.Value != expectedParameterValue {
-		t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
-	}
-}
-
-func GetTestParametersIMS(t *testing.T) {
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-
-	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
-	for _, pl := range testData.Parameters {
-		opts.QueryParameters.Set("name", pl.Name)
-		resp, reqInf, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %d", reqInf.StatusCode)
-		}
-	}
-}
-
-func GetTestParameters(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, pl := range testData.Parameters {
-		opts.QueryParameters.Set("name", pl.Name)
-		resp, _, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by name '%s': %v - alerts: %+v", pl.Name, err, resp.Alerts)
-		}
-	}
-}
-
-func DeleteTestParametersParallel(t *testing.T) {
-	var wg sync.WaitGroup
-	for _, pl := range testData.Parameters {
-		wg.Add(1)
-		go func(p tc.Parameter) {
-			defer wg.Done()
-			DeleteTestParameter(t, p)
-		}(pl)
-	}
-	wg.Wait()
+	alerts, _, err := TOSession.CreateMultipleParameters(testData.Parameters, client.RequestOptions{})
+	assert.RequireNoError(t, err, "Could not create Parameters: %v - alerts: %+v", err, alerts)
 }
 
 func DeleteTestParameters(t *testing.T) {
-	for _, pl := range testData.Parameters {
-		DeleteTestParameter(t, pl)
-	}
-}
+	parameters, _, err := TOSession.GetParameters(client.RequestOptions{})
+	assert.RequireNoError(t, err, "Cannot get Parameters: %v - alerts: %+v", err, parameters.Alerts)
 
-func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
-	// Retrieve the Parameter by name so we can get the id for the Update
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", pl.Name)
-	opts.QueryParameters.Set("configFile", pl.ConfigFile)
-	resp, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Errorf("cannot get Parameter by name '%s' and configFile '%s': %v - alerts: %+v", pl.Name, pl.ConfigFile, err, resp.Alerts)
-	}
-
-	// TODO This fails for the ProfileParameters test; determine a way to check this, even for ProfileParameters
-	// if len(resp.Response) == 0 {
-	// t.Errorf("DeleteTestParameter got no params for %+v %+v", pl.Name, pl.ConfigFile)
-	// TODO figure out why this happens, and be more precise about deleting things where created.
-	// } else if len(resp.Response) > 1 {
-	// t.Errorf("DeleteTestParameter params for %+v %+v expected 1, actual %+v", pl.Name, pl.ConfigFile, len(resp))
-	// }
-
-	opts.QueryParameters.Del("name")
-	opts.QueryParameters.Del("configFile")
-	for _, respParameter := range resp.Response {
-		delResp, _, err := TOSession.DeleteParameter(respParameter.ID, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("cannot delete Parameter #%d: %v - alerts: %+v", respParameter.ID, err, delResp.Alerts)
-		}
+	for _, parameter := range parameters.Response {
+		alerts, _, err := TOSession.DeleteParameter(parameter.ID, client.RequestOptions{})
+		assert.NoError(t, err, "Cannot delete Parameter #%d: %v - alerts: %+v", parameter.ID, err, alerts.Alerts)
 
 		// Retrieve the Parameter to see if it got deleted
-		opts.QueryParameters.Set("id", strconv.Itoa(pl.ID))
-		pls, _, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Errorf("Unexpected error fetching Parameter #%d after deletion: %v - alerts: %+v", pl.ID, err, pls.Alerts)
-		}
-		if len(pls.Response) > 0 {
-			t.Errorf("expected Parameter with name '%s' and configFile '%s' to be deleted, but it was found in a Traffic Ops response", pl.Name, pl.ConfigFile)
-		}
-	}
-}
-
-func DeleteTestParametersByInvalidId(t *testing.T) {
-	opts := client.NewRequestOptions()
-	delResp, reqInf, err := TOSession.DeleteParameter(10000, opts)
-	if err == nil {
-		t.Errorf("cannot DELETE Parameters by Invalid ID: %v - %v", err, delResp)
-	}
-	if reqInf.StatusCode != http.StatusNotFound {
-		t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
-	}
-}
-
-func GetTestPaginationSupportParameters(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
-	resp, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Errorf("Unexpected error getting Parameters: %v - alerts: %+v", err, resp.Alerts)
-	}
-	parameters := resp.Response
-	if len(parameters) > 0 {
-		opts.QueryParameters = url.Values{}
-		opts.QueryParameters.Set("orderby", "id")
-		opts.QueryParameters.Set("limit", "1")
-		parametersWithLimit, _, err := TOSession.GetParameters(opts)
-		if err == nil {
-			if !reflect.DeepEqual(parameters[:1], parametersWithLimit.Response) {
-				t.Error("expected GET Parameters with limit = 1 to return first result")
-			}
-		} else {
-			t.Errorf("Unexpected error getting Parameters with a limit: %v - alerts: %+v", err, parametersWithLimit.Alerts)
-		}
-		if len(parameters) > 1 {
-			opts.QueryParameters = url.Values{}
-			opts.QueryParameters.Set("orderby", "id")
-			opts.QueryParameters.Set("limit", "1")
-			opts.QueryParameters.Set("offset", "1")
-			parametersWithOffset, _, err := TOSession.GetParameters(opts)
-			if err == nil {
-				if !reflect.DeepEqual(parameters[1:2], parametersWithOffset.Response) {
-					t.Error("expected GET Parameters with limit = 1, offset = 1 to return second result")
-				}
-			} else {
-				t.Errorf("Unexpected error getting Parameters with a limit and an offset: %v - alerts: %+v", err, parametersWithOffset.Alerts)
-			}
-
-			opts.QueryParameters = url.Values{}
-			opts.QueryParameters.Set("orderby", "id")
-			opts.QueryParameters.Set("limit", "1")
-			opts.QueryParameters.Set("page", "2")
-			parametersWithPage, _, err := TOSession.GetParameters(opts)
-			if err == nil {
-				if !reflect.DeepEqual(parameters[1:2], parametersWithPage.Response) {
-					t.Error("expected GET Parameters with limit = 1, page = 2 to return second result")
-				}
-			} else {
-				t.Errorf("Unexpected error getting Parameters with a limit and a page: %v - alerts: %+v", err, parametersWithPage.Alerts)
-			}
-		} else {
-			t.Errorf("only one parameters found, so offset functionality can't test")
-		}
-	} else {
-		t.Errorf("No parameters found to check pagination")
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "-2")
-	_, _, err = TOSession.GetParameters(opts)
-	if err == nil {
-		t.Error("expected GET Parameters to return an error when limit is not bigger than -1")
-	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
-		t.Errorf("expected GET Parameters to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("offset", "0")
-	resp, _, err = TOSession.GetParameters(opts)
-	if err == nil {
-		t.Error("expected GET Parameters to return an error when offset is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET Parameters to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("limit", "1")
-	opts.QueryParameters.Set("page", "0")
-	_, _, err = TOSession.GetParameters(opts)
-	if err == nil {
-		t.Error("expected GET Parameters to return an error when page is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET Parameters to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func GetTestParametersByConfigfile(t *testing.T) {
-	for _, parameters := range testData.Parameters {
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("configFile", parameters.ConfigFile)
-		resp, reqInf, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by Config File: %v - %v", parameters.ConfigFile, err)
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
-		if len(resp.Response) <= 0 {
-			t.Errorf("No data available for Get Parameters by Config file")
-		}
-	}
-}
-
-func GetTestParametersByValue(t *testing.T) {
-	for _, parameters := range testData.Parameters {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("value", parameters.Value)
-		resp, reqInf, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by Value: %v - %v", parameters.Value, err)
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
-		if len(resp.Response) <= 0 {
-			t.Errorf("No data available for Get Parameters by Value")
-		}
-	}
-}
-
-func GetTestParametersByName(t *testing.T) {
-	for _, parameters := range testData.Parameters {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", parameters.Name)
-		resp, reqInf, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by Name: %v - %v", parameters.Name, err)
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
-		if len(resp.Response) <= 0 {
-			t.Errorf("No data available for Get Parameters by Name")
-		}
-	}
-}
-
-func GetParametersByInvalidId(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("id", strconv.Itoa(10000))
-	resp, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Errorf("Getting Parameters by Invalid ID %v", err)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Invalid ID shouldn't have any response %v Error %v", resp, err)
-	}
-}
-
-func GetParametersByInvalidName(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "invalidname")
-	resp, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Errorf("Getting Parameters by Invalid Name %v", err)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Invalid name shouldn't have any response %v Error %v", resp, err)
-	}
-}
-
-func GetParametersByInvalidConfigfile(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("configFile", "invalidfile")
-	resp, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Errorf("Getting Parameters by Invalid ConfigFile %v", err)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Invalid config file shouldn't have any response %v Error %v", resp, err)
-	}
-}
-
-func GetParametersByInvalidValue(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("value", "invalidvalue")
-	resp, _, err := TOSession.GetParameters(opts)
-	if err != nil {
-		t.Errorf("Getting Parameters by Invalid value %v", err)
-	}
-	if len(resp.Response) >= 1 {
-		t.Errorf("Invalid value shouldn't have any response %v Error %v", resp, err)
-	}
-}
-
-func CreateTestParametersAlreadyExist(t *testing.T) {
-	opts := client.NewRequestOptions()
-	resp, _, _ := TOSession.GetParameters(opts)
-	if len(resp.Response) > 0 {
-		_, reqInf, _ := TOSession.CreateParameter(resp.Response[0], opts)
-		if reqInf.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
-		}
-	} else {
-		t.Errorf("No existing parameters available to validate duplicate functionality")
-	}
-}
-
-func CreateTestParametersMissingName(t *testing.T) {
-	opts := client.NewRequestOptions()
-	if len(testData.Parameters) > 0 {
-		firstParameter := testData.Parameters[0]
-		firstParameter.Name = ""
-		_, reqInf, _ := TOSession.CreateParameter(firstParameter, opts)
-		if reqInf.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
-		}
-	} else {
-		t.Errorf("No Parameters available, So Create Parameters with missing name can't validate")
-	}
-}
-
-func CreateTestParametersMissingconfigFile(t *testing.T) {
-	opts := client.NewRequestOptions()
-	if len(testData.Parameters) > 0 {
-		firstParameter := testData.Parameters[0]
-		firstParameter.ConfigFile = ""
-		_, reqInf, _ := TOSession.CreateParameter(firstParameter, opts)
-		if reqInf.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
-		}
-	} else {
-		t.Errorf("No Parameters available, So Create Parameters with missing Config file can't validate")
-	}
-}
-
-func UpdateParametersEmptyValue(t *testing.T) {
-	if len(testData.Parameters) > 0 {
-		firstParameter := testData.Parameters[0]
-		// Retrieve the Parameter by name so we can get the id for the Update
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", firstParameter.Name)
-		resp, _, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-		}
-		if len(resp.Response) > 0 {
-			remoteParameter := resp.Response[0]
-			//Parameters can be updated with empty value, so no error while updating
-			remoteParameter.Value = ""
-			opts = client.NewRequestOptions()
-			alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
-			if err != nil {
-				t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
-			}
-			if reqInf.StatusCode != http.StatusOK {
-				t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
-			}
-		} else {
-			t.Errorf("No parameters available to update negative scenarios")
-		}
-	} else {
-		t.Errorf("No parameters available to update negative scenarios")
-	}
-}
-
-func UpdateParametersEmptyName(t *testing.T) {
-	if len(testData.Parameters) > 0 {
-		firstParameter := testData.Parameters[0]
-		// Retrieve the Parameter by name so we can get the id for the Update
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", firstParameter.Name)
-		resp, _, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-		}
-		if len(resp.Response) > 0 {
-			remoteParameter := resp.Response[0]
-			remoteParameter.Name = ""
-			opts = client.NewRequestOptions()
-			alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
-			if err == nil {
-				t.Errorf("Invalid name has been updated by ID: %v - %v", err, alert)
-			}
-			if reqInf.StatusCode != http.StatusBadRequest {
-				t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
-			}
-		} else {
-			t.Errorf("No parameters available to update negative scenarios")
-		}
-	} else {
-		t.Errorf("No parameters available to update negative scenarios")
-	}
-}
-
-func UpdateParametersEmptyConfigFile(t *testing.T) {
-	if len(testData.Parameters) > 0 {
-		firstParameter := testData.Parameters[0]
-		// Retrieve the Parameter by name so we can get the id for the Update
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", firstParameter.Name)
-		resp, _, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-		}
-		if len(resp.Response) > 0 {
-			remoteParameter := resp.Response[0]
-			remoteParameter.ConfigFile = ""
-			opts = client.NewRequestOptions()
-			alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
-			if err == nil {
-				t.Errorf("Invalid Config File has been updated by ID: %v - %v", err, alert)
-			}
-			if reqInf.StatusCode != http.StatusBadRequest {
-				t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
-			}
-		} else {
-			t.Errorf("No parameters available to update negative scenarios")
-		}
-	} else {
-		t.Errorf("No parameters available to update negative scenarios")
-	}
-}
-
-func CreateMultipleTestParameters(t *testing.T) {
-	opts := client.NewRequestOptions()
-	//To avoid duplicate issue, deleting and creating new parameters
-	DeleteTestParameters(t)
-	_, _, err := TOSession.CreateMultipleParameters(testData.Parameters, opts)
-	if err != nil {
-		t.Errorf("could not CREATE parameters: %v", err)
+		opts.QueryParameters.Set("id", strconv.Itoa(parameter.ID))
+		getParameters, _, err := TOSession.GetParameters(opts)
+		assert.NoError(t, err, "Unexpected error fetching Parameter #%d after deletion: %v - alerts: %+v", parameter.ID, err, getParameters.Alerts)
+		assert.Equal(t, 0, len(getParameters.Response), "Expected Parameter '%s' to be deleted, but it was found in Traffic Ops", parameter.Name)
 	}
 }

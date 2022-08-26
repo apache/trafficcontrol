@@ -216,7 +216,7 @@ func ParametersStr(params url.Values) string {
 	return pp
 }
 
-//CommonAPIDataDataFormat is a common Date format for the API
+// CommonAPIDataDataFormat is a common Date format for the API
 const CommonAPIDataDateFormat = "Mon Jan 02 15:04:05 UTC 2006"
 
 // DateStr returns the given time in the format expected by Traffic Monitor 1.0 API users

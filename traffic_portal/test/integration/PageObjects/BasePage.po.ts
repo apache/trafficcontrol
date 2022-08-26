@@ -19,8 +19,8 @@
 import { browser, element, by, ExpectedConditions } from 'protractor';
 /**
  * Class representing generic page.
- * Methods/properties for global elements should go here. 
- * 
+ * Methods/properties for global elements should go here.
+ *
  * @export
  * @class BasePage
  */
@@ -38,10 +38,10 @@ export class BasePage {
   private btnDeletePermanently = element(by.buttonText('Delete Permanently'));
   private btnCancel =  element(by.className('close')).element(by.xpath("//span[text()='×']"));
   private btnUpdate = element(by.buttonText('Update'));
-  private btnSubmit = element(by.xpath("//button[text()='Submit']"));
+  private btnSubmit = element(by.buttonText("Submit"));
   private btnRegister = element(by.buttonText('Send Registration'));
-  private btnNo = element(by.xpath("//button[text()='No']"));
-  
+  private btnNo = element(by.buttonText("No"));
+
   async ClickNo(){
     await this.btnNo.click();
   }
@@ -52,7 +52,7 @@ export class BasePage {
     }else{
       return false;
     }
-    
+
   }
   public async ClickUpdate(): Promise<boolean>{
     if(await this.btnUpdate.isEnabled()){

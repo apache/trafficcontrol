@@ -144,10 +144,11 @@ type readSuccessWriterFunc func(w http.ResponseWriter, r *http.Request, statusCo
 type deleteSuccessWriterFunc func(w http.ResponseWriter, r *http.Request, message string)
 
 // ReadHandler creates a handler function from the pointer to a struct implementing the Reader interface
-//      this handler retrieves the user from the context
-//      combines the path and query parameters
-//      produces the proper status code based on the error code returned
-//      marshals the structs returned into the proper response json
+//
+//	this handler retrieves the user from the context
+//	combines the path and query parameters
+//	produces the proper status code based on the error code returned
+//	marshals the structs returned into the proper response json
 func ReadHandler(reader Reader) http.HandlerFunc {
 	return readHandlerHelper(
 		reader,
@@ -218,12 +219,13 @@ func readHandlerHelper(reader Reader, errHandler errWriterFunc, successHandler r
 }
 
 // UpdateHandler creates a handler function from the pointer to a struct implementing the Updater interface
-//   this generic handler encapsulates the logic for handling:
-//   *fetching the id from the path parameter
-//   *current user
-//   *decoding and validating the struct
-//   *change log entry
-//   *forming and writing the body over the wire
+//
+//	this generic handler encapsulates the logic for handling:
+//	*fetching the id from the path parameter
+//	*current user
+//	*decoding and validating the struct
+//	*change log entry
+//	*forming and writing the body over the wire
 func UpdateHandler(updater Updater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
@@ -314,11 +316,12 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 }
 
 // DeleteHandler creates a handler function from the pointer to a struct implementing the Deleter interface
-//   this generic handler encapsulates the logic for handling:
-//   *fetching the id from the path parameter
-//   *current user
-//   *change log entry
-//   *forming and writing the body over the wire
+//
+//	this generic handler encapsulates the logic for handling:
+//	*fetching the id from the path parameter
+//	*current user
+//	*change log entry
+//	*forming and writing the body over the wire
 func DeleteHandler(deleter Deleter) http.HandlerFunc {
 	return deleteHandlerHelper(
 		deleter,
@@ -336,11 +339,12 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 }
 
 // DeprecatedDeleteHandler creates a handler function from the pointer to a struct implementing the Deleter interface with a optional deprecation notice
-//   this generic handler encapsulates the logic for handling:
-//   *fetching the id from the path parameter
-//   *current user
-//   *change log entry
-//   *forming and writing the body over the wire
+//
+//	this generic handler encapsulates the logic for handling:
+//	*fetching the id from the path parameter
+//	*current user
+//	*change log entry
+//	*forming and writing the body over the wire
 func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerFunc {
 	return deleteHandlerHelper(
 		deleter,
@@ -460,11 +464,12 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 }
 
 // CreateHandler creates a handler function from the pointer to a struct implementing the Creator interface
-//   this generic handler encapsulates the logic for handling:
-//   *current user
-//   *decoding and validating the struct
-//   *change log entry
-//   *forming and writing the body over the wire
+//
+//	this generic handler encapsulates the logic for handling:
+//	*current user
+//	*decoding and validating the struct
+//	*change log entry
+//	*forming and writing the body over the wire
 func CreateHandler(creator Creator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
