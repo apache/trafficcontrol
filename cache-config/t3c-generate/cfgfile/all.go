@@ -42,7 +42,7 @@ func GetAllConfigs(
 		return nil, errors.New("server hostname is nil")
 	}
 
-	configFiles, warnings, err := MakeConfigFilesList(toData, cfg.Dir)
+	configFiles, warnings, err := MakeConfigFilesList(toData, cfg.Dir, cfg.ATSMajorVersion)
 	logWarnings("generating config files list: ", warnings)
 	if err != nil {
 		return nil, errors.New("creating meta: " + err.Error())

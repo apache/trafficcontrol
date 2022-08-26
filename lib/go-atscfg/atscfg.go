@@ -226,21 +226,21 @@ func makeHdrComment(hdrComment string) string {
 	return "# " + hdrComment + "\n\n"
 }
 
-// getATSMajorVersionFromATSVersion returns the major version of the given profile's package trafficserver parameter.
+// GetATSMajorVersionFromATSVersion returns the major version of the given profile's package trafficserver parameter.
 // The atsVersion is typically a Parameter on the Server's Profile, with the configFile "package" name "trafficserver".
 // Returns an error if atsVersion is empty or does not start with an unsigned integer followed by a period or nothing.
-func getATSMajorVersionFromATSVersion(atsVersion string) (int, error) {
+func GetATSMajorVersionFromATSVersion(atsVersion string) (uint, error) {
 	dotPos := strings.Index(atsVersion, ".")
 	if dotPos == -1 {
 		dotPos = len(atsVersion) // if there's no '.' then assume the whole string is just a major version.
 	}
 	majorVerStr := atsVersion[:dotPos]
 
-	majorVer, err := strconv.Atoi(majorVerStr)
-	if err != nil || majorVer < 0 {
+	majorVer, err := strconv.ParseUint(majorVerStr, 10, 64)
+	if err != nil || majorVer == 0 || majorVer > 9999 {
 		return 0, errors.New("unexpected version format '" + majorVerStr + "', expected e.g. '7.1.2.whatever'")
 	}
-	return majorVer, nil
+	return uint(majorVer), nil
 }
 
 // genericProfileConfig generates a generic profile config text, from the profile's parameters with the given config file name.
@@ -617,10 +617,28 @@ func getServiceAddresses(sv *Server) (net.IP, net.IP) {
 	return v4, v6
 }
 
-// getATSMajorVersion returns the ATS major version from the config_file 'package' name 'trafficserver' Parameter on the given Server Profile Parameters.
+// getATSMajorVersion takes a config variable of the version, the Server Parameters, and a pointer to warnings to populate.
+// This allows callers to use the config variable if it was given, or get the ATS version from the Server Parameters if it wasn't, and add to a warnings variable, in a single line.
+//
+// If more flexibility is needed, getATSMajorVersionFromParams may be called directly;
+// but it should generally be avoided, functions should always take a config variable for the
+// ATS version, in case a user wants to manage the ATS package outside ATC.
+func getATSMajorVersion(atsMajorVersion uint, serverParams []tc.Parameter, warnings *[]string) uint {
+	if atsMajorVersion != 0 {
+		return atsMajorVersion
+	}
+	verWarns := []string{}
+	atsMajorVersion, verWarns = getATSMajorVersionFromParams(serverParams)
+	*warnings = append(*warnings, verWarns...)
+	return atsMajorVersion
+}
+
+// getATSMajorVersionFromParams should generally not be called directly. Rather, functions should always take the version as a config parameter which may be omitted, and call getATSMajorVersion.
+//
+// It returns the ATS major version from the config_file 'package' name 'trafficserver' Parameter on the given Server Profile Parameters.
 // If no Parameter is found, or the value is malformed, a warning or error is logged and DefaultATSVersion is returned.
 // Returns the ATS major version, and any warnings
-func getATSMajorVersion(serverParams []tc.Parameter) (int, []string) {
+func getATSMajorVersionFromParams(serverParams []tc.Parameter) (uint, []string) {
 	warnings := []string{}
 	atsVersionParam := ""
 	for _, param := range serverParams {
@@ -635,10 +653,10 @@ func getATSMajorVersion(serverParams []tc.Parameter) (int, []string) {
 		atsVersionParam = DefaultATSVersion
 	}
 
-	atsMajorVer, err := getATSMajorVersionFromATSVersion(atsVersionParam)
+	atsMajorVer, err := GetATSMajorVersionFromATSVersion(atsVersionParam)
 	if err != nil {
 		warnings = append(warnings, "getting ATS major version from server Profile Parameter, using default: "+err.Error())
-		atsMajorVer, err = getATSMajorVersionFromATSVersion(DefaultATSVersion)
+		atsMajorVer, err = GetATSMajorVersionFromATSVersion(DefaultATSVersion)
 		if err != nil {
 			// should never happen
 			warnings = append(warnings, "getting ATS major version from default version! Should never happen! Using 0, config will be malformed! : "+err.Error())

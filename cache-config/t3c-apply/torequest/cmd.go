@@ -96,6 +96,9 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	if cfg.Files == t3cutil.ApplyFilesFlagReval {
 		args = append(args, "--revalidate-only")
 	}
+	if cfg.LocalATSVersion != "" {
+		args = append(args, "--ats-version="+cfg.LocalATSVersion)
+	}
 	args = append(args, "--via-string-release="+strconv.FormatBool(!cfg.OmitViaStringRelease))
 	args = append(args, "--no-outgoing-ip="+strconv.FormatBool(cfg.NoOutgoingIP))
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))

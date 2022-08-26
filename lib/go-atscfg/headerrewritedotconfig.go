@@ -63,6 +63,14 @@ type HeaderRewriteDotConfigOpts struct {
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
 	// To omit the header comment, pass the empty string.
 	HdrComment string
+
+	// ATSMajorVersion is the integral major version of Apache Traffic server,
+	// used to generate the proper config for the proper version.
+	//
+	// If omitted or 0, the major version will be read from the Server's Profile Parameter config file 'package' name 'trafficserver'. If no such Parameter exists, the ATS version will default to 5.
+	// This was the old Traffic Control behavior, before the version was specifiable externally.
+	//
+	ATSMajorVersion uint
 }
 
 // MakeHeaderRewriteDotConfig makes the header rewrite file for
@@ -151,8 +159,7 @@ func MakeHeaderRewriteDotConfig(
 	atsRqstMaxHdrSize, paramWarns := getMaxRequestHeaderParam(tcServerParams)
 	warnings = append(warnings, paramWarns...)
 
-	atsMajorVersion, verWarns := getATSMajorVersion(tcServerParams)
-	warnings = append(warnings, verWarns...)
+	atsMajorVersion := getATSMajorVersion(opt.ATSMajorVersion, tcServerParams, &warnings)
 
 	assignedTierPeers, assignWarns := getAssignedTierPeers(server, ds, topology, servers, deliveryServiceServers, cacheGroupsArr, serverCapabilities, requiredCapabilities[*ds.ID])
 	warnings = append(warnings, assignWarns...)
@@ -530,13 +537,13 @@ var returnRe = regexp.MustCompile(`\s*__RETURN__\s*`)
 //	If they're placed after, custom rewrites with [L] directives will result in them being applied inconsistently and incorrectly.
 //
 // The headerRewriteTxt is the custom header rewrite from the Delivery Service. This should be used for any logic that depends on it. The various header rewrite fields (EdgeHeaderRewrite, InnerHeaderRewrite, etc should never be used inside this function, since this function doesn't know what tier the server is at. This function should not insert the headerRewriteText, but may use it to make decisions about what to insert.
-func makeATCHeaderRewriteDirectives(ds *DeliveryService, headerRewriteTxt *string, serverIsLastTier bool, numLastTierServers int, atsMajorVersion int, atsRqstMaxHdrSize int) string {
+func makeATCHeaderRewriteDirectives(ds *DeliveryService, headerRewriteTxt *string, serverIsLastTier bool, numLastTierServers int, atsMajorVersion uint, atsRqstMaxHdrSize int) string {
 	return makeATCHeaderRewriteDirectiveMaxOriginConns(ds, headerRewriteTxt, serverIsLastTier, numLastTierServers, atsMajorVersion) +
 		makeATCHeaderRewriteDirectiveServiceCategoryHdr(ds, headerRewriteTxt) + makeATCHeaderRewriteDirectiveMaxRequestHeaderSize(ds, serverIsLastTier, atsRqstMaxHdrSize)
 }
 
 // makeATCHeaderRewriteDirectiveMaxOriginConns generates the Max Origin Connections header rewrite text, which may be empty.
-func makeATCHeaderRewriteDirectiveMaxOriginConns(ds *DeliveryService, headerRewriteTxt *string, serverIsLastTier bool, numLastTierServers int, atsMajorVersion int) string {
+func makeATCHeaderRewriteDirectiveMaxOriginConns(ds *DeliveryService, headerRewriteTxt *string, serverIsLastTier bool, numLastTierServers int, atsMajorVersion uint) string {
 	if !serverIsLastTier ||
 		(ds.MaxOriginConnections == nil || *ds.MaxOriginConnections < 1) ||
 		numLastTierServers < 1 {
