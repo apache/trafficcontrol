@@ -962,7 +962,7 @@ Naturally, this assumes that each redundant server is exactly identical, from re
 	| :abbr:`MSO (Multi-Site Origin)` | In documentation and used heavily in discussion in Slack, mailing list etc. | unchanged (usually only used where implicitly ``true``) |
 	+---------------------------------+-----------------------------------------------------------------------------+---------------------------------------------------------+
 
-A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site Origin configuration. These are detailed in `Parameters that Affect Multi-Site Origin`_.
+A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site Origin configuration. These are detailed in `Parameters that Affect Multi-Site Origin and Parent Down Behavior`_.
 
 .. seealso:: A quick guide on setting up Multi-Site Origins is given in :ref:`multi-site-origin-qht`.
 
@@ -1020,9 +1020,9 @@ The following :term:`Parameters` must have the :ref:`Config File <parameter-conf
 	.. deprecated:: ATCv6.2
 		In :ref:`to-api` version 4 (unstable at the time of this writing), TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.
 
-Parameters that Affect Multi-Site Origin and inside a CDN
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`ATS (Apache Traffic Server)` `parent.config file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_ (usually by almost the same name), and documentation for these fields is provided in the form of links to their entries in the :abbr:`ATS (Apache Traffic Server)` documentation.
+Parameters that Affect Multi-Site Origin and Parent Down Behavior
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`ATS (Apache Traffic Server)` `parent.config file <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_ (usually by almost the same name), and documentation for these fields is provided in the form of links to their entries in the :abbr:`ATS (Apache Traffic Server)` documentation.
 
 .. _round_robin: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-round-robin
 .. _max_simple_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-simple-retries
@@ -1059,7 +1059,7 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 	|                                         |                                                            | currently "unavailable".                                                            |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 
-The above :term:`Parameters` are supported for ``first``, ``inner`` and ``last`` tiers by specifying prefixes ``first.``, ``inner.`` and ``last.``, applicable to both topology and non topology.  This allows fine tuning of markdown and retry behavior inside a CDN.
+The above :term:`Parameters` are supported for ``first``, ``inner`` and ``last`` tiers by specifying prefixes ``first.``, ``inner.`` and ``last.``, applicable to both topology and non topology. This allows fine tuning of marking parents "down" and retry behavior inside a CDN.
 
 .. deprecated:: The ``mso.`` prefix is deprecated.  ``last.`` prefix should be preferred although no prefix can also be used.
 

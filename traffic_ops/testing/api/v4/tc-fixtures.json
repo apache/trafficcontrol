@@ -2018,7 +2018,14 @@
             "name": "refetch_enabled",
             "secure": false,
             "value": "true"
+        },
+        {
+            "configFile": "secure.config",
+            "name": "testSecure",
+            "secure": true,
+            "value": "hidden value"
         }
+
     ],
     "physLocations": [
         {

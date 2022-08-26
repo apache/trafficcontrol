@@ -23,6 +23,19 @@ var TableServiceCategoryDeliveryServicesController = function(serviceCategory, d
 	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'scDS', deliveryServices: deliveryServices, filter: filter, $scope: $scope }));
 
 	$scope.serviceCategory = serviceCategory;
+	$scope.breadCrumbs = [
+		{
+			text: "Service Categories",
+			href: "#!/service-categories"
+		},
+		{
+			getText: () => serviceCategory.name,
+			getHref: () => `#!/service-categories/edit?name=${serviceCategory.name}`
+		},
+		{
+			text: "Delivery Services"
+		}
+	]
 };
 
 TableServiceCategoryDeliveryServicesController.$inject = ['serviceCategory', 'deliveryServices', 'filter', '$controller', '$scope'];

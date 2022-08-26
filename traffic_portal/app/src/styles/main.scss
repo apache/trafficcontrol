@@ -269,3 +269,9 @@ input[type="checkbox"].dirty {
   background-color: #d3d3d4;
   border-color: #bcbebf;
 }
+
+// This is, unfortunately, necessary because uibModal doesn't support scoped
+// stylesheets (afaik; it's a dead library so nobody knows).
+.uppercase {
+	text-transform: uppercase;
+}
