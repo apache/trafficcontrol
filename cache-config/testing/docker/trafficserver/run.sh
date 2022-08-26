@@ -25,10 +25,11 @@ function die() {
 OS_VERSION="${OS_VERSION}"
 OS_DISTRO=${OS_DISTRO}
 ATS_VERSION="${ATS_VERSION}"
-
+ATS_MAJOR_VERSION=${ATS_VERSION::1}
 echo "OS_DISTRO:${OS_DISTRO}"
 echo "OS_VERSION:${OS_VERSION}"
 echo "ATS_VERSION:${ATS_VERSION}"
+echo "ATS_MAJOR_VERSION:${ATS_MAJOR_VERSION}"
 
 mkdir -p /opt/build
 cd /opt/build
@@ -115,9 +116,9 @@ rm -f /root/rpmbuild/RPMS/x86_64/trafficserver-*.rpm
 cd trafficserver
 
 if [[ ${RUN_ATS_UNIT_TESTS} == true ]]; then
-  rpmbuild -bb ${rpmbuild_openssl} /trafficserver.spec --define 'run_unit_tests 1' || die "Failed to build the ATS RPM."
+  rpmbuild --define "ats_version $ATS_MAJOR_VERSION" -bb ${rpmbuild_openssl} /trafficserver.spec --define 'run_unit_tests 1' || die "Failed to build the ATS RPM."
 else
-  rpmbuild -bb ${rpmbuild_openssl} /trafficserver.spec || die "Failed to build the ATS RPM."
+  rpmbuild --define "ats_version $ATS_MAJOR_VERSION" -bb ${rpmbuild_openssl} /trafficserver.spec || die "Failed to build the ATS RPM."
 fi
 
 echo "Build completed"
