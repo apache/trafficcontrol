@@ -320,6 +320,7 @@ func getUpdateStatus(hostName string) (atscfg.ServerUpdateStatus, error) {
 func t3cUpdateWaitForParents(host string, runMode string, waitForParents *string) (string, error) {
 	args := []string{
 		"apply",
+		"--no-confirm-service-action",
 		"--traffic-ops-insecure=true",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,

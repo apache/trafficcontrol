@@ -191,6 +191,11 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
     Whether to not use a cache and make conditional requests to
     Traffic Ops. Default is false: use cache.
 
+-\-no-confirm-service-action
+
+    Whether to skip waiting and confirming the service action succeeded (reload or
+    restart) via t3c-tail. Default is false.
+
 -o, -\-report-only
 
     Log information about necessary files and actions, but take

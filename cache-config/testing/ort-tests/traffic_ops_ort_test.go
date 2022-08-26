@@ -162,6 +162,7 @@ func runRequest(host string, getData string) ([]byte, error) {
 func runApply(host string, run_mode string) error {
 	args := []string{
 		"apply",
+		"--no-confirm-service-action",
 		"--traffic-ops-insecure=true",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,

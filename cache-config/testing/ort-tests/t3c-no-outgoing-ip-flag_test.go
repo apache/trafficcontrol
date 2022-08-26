@@ -69,6 +69,7 @@ func TestT3CNoOutgoingIP(t *testing.T) {
 func t3cUpdateNoOutgoingIP(host string, noOutgoingIP *bool) error {
 	args := []string{
 		"apply",
+		"--no-confirm-service-action",
 		"--traffic-ops-insecure=true",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
