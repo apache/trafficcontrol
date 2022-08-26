@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -34,7 +33,12 @@ import (
 func TestJobs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, Jobs}, func() {
 
-		startTime := time.Now().Add(time.Minute).UTC()
+		currentTime := time.Now()
+		pastTime := currentTime.AddDate(0, 0, -1)
+		futureTime := currentTime.AddDate(0, 0, 1)
+		startTime := currentTime.UTC().Add(time.Minute)
+		pastTimeRFC := pastTime.Format(time.RFC3339)
+		futureTimeRFC := futureTime.Format(time.RFC3339)
 
 		methodTests := utils.V4TestCase{
 			"GET": {
@@ -44,9 +48,9 @@ func TestJobs(t *testing.T) {
 				},
 				"OK when VALID ASSETURL parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"assetUrl": {""}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"assetUrl": {"http://origin.example.net/older"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
-						validateInvalidationJobsFields(map[string]interface{}{"AssetURL": ""})),
+						validateInvalidationJobsFields(map[string]interface{}{"AssetURL": "http://origin.example.net/older"})),
 				},
 				"OK when VALID CREATEDBY parameter": {
 					ClientSession: TOSession,
@@ -68,9 +72,9 @@ func TestJobs(t *testing.T) {
 				},
 				"OK when VALID ID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(GetJobID(t, "")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(GetJobID(t, "http://origin.example.net/oldest")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
-						validateInvalidationJobsFields(map[string]interface{}{"ID": GetJobID(t, "")()})),
+						validateInvalidationJobsFields(map[string]interface{}{"ID": GetJobID(t, "http://origin.example.net/oldest")()})),
 				},
 				"OK when VALID INVALIDATIONTYPE parameter": {
 					ClientSession: TOSession,
@@ -82,7 +86,7 @@ func TestJobs(t *testing.T) {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"maxRevalDurationDays": {""}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateInvalidationJobsFields(map[string]interface{}{"MaxRevalDurationDays": ""})),
+						validateMaxRevalDurationDays()),
 				},
 				"OK when VALID USERID parameter": {
 					ClientSession: TOSession,
@@ -94,7 +98,7 @@ func TestJobs(t *testing.T) {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {"cdn2"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateInvalidationJobsFields(map[string]interface{}{"DeliveryServcie": "ds-forked-topology"})),
+						validateInvalidationJobsFields(map[string]interface{}{"DeliveryService": "ds-forked-topology"})),
 				},
 				"EMPTY RESPONSE when INVALID ASSETURL parameter": {
 					ClientSession: TOSession,
@@ -144,23 +148,12 @@ func TestJobs(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
-				"OK when STARTTIME is UNIX FORMAT AND a FUTURE DATE": {
+				"OK when STARTTIME is RFC FORMAT AND a FUTURE DATE": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"deliveryService":  "ds1",
 						"regex":            "/.*",
-						"startTime":        startTime.AddDate(0, 0, 1).Unix(),
-						"ttlHours":         36,
-						"invalidationType": "REFRESH",
-					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-				"OK when STARTTIME is NON-STANDARD FORMAT AND a FUTURE DATE": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"deliveryService":  "ds1",
-						"regex":            "/.*",
-						"startTime":        startTime.AddDate(0, 0, 1).Format("2020-03-11 14:12:20-06"),
+						"startTime":        futureTimeRFC,
 						"ttlHours":         36,
 						"invalidationType": "REFRESH",
 					},
@@ -172,12 +165,12 @@ func TestJobs(t *testing.T) {
 						"deliveryService":  "ds1",
 						"regex":            "/.*",
 						"startTime":        startTime,
-						"ttlHours":         9999999999,
+						"ttlHours":         9999,
 						"invalidationType": "REFRESH",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"BAD REQUEST when ALREADY EXISTS": {
+				"OK when ALREADY EXISTS": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"deliveryService":  "ds1",
@@ -186,7 +179,7 @@ func TestJobs(t *testing.T) {
 						"ttlHours":         72,
 						"invalidationType": "REFRESH",
 					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.HasAlertLevel(tc.WarnLevel.String())),
 				},
 				"NOT FOUND when DELIVERYSERVICE DOESNT EXIST": {
 					ClientSession: TOSession,
@@ -231,34 +224,12 @@ func TestJobs(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"BAD REQUEST when STARTTIME is NON-STANDARD FORMAT AND a PAST DATE": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"deliveryService":  "ds1",
-						"regex":            "/.*",
-						"startTime":        startTime.AddDate(0, 0, -1).Format("2020-03-11 14:12:20-06"),
-						"ttlHours":         36,
-						"invalidationType": "REFRESH",
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-				},
 				"BAD REQUEST when STARTTIME is RFC FORMAT AND is a PAST DATE": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"deliveryService":  "ds1",
 						"regex":            "/.*",
-						"startTime":        startTime.AddDate(0, 0, -1).Format(time.RFC1123),
-						"ttlHours":         36,
-						"invalidationType": "REFRESH",
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-				},
-				"BAD REQUEST when STARTTIME is UNIX FORMAT AND is a PAST DATE": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"deliveryService":  "ds1",
-						"regex":            "/.*",
-						"startTime":        startTime.AddDate(0, 0, -1).Unix,
+						"startTime":        pastTimeRFC,
 						"ttlHours":         36,
 						"invalidationType": "REFRESH",
 					},
@@ -316,11 +287,25 @@ func TestJobs(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
+				"WARNING ALERT when JOB COLLISION": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"deliveryService":  "ds1",
+						"regex":            "/foo",
+						"startTime":        startTime.Add(time.Hour),
+						"ttlHours":         36,
+						"invalidationType": "REFRESH",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.HasAlertLevel(tc.WarnLevel.String())),
+				},
 			},
 			"PUT": {
 				"OK when STARTTIME is a FUTURE DATE": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
+						"assetUrl":         "http://origin.example.net/.*",
+						"createdBy":        "admin",
 						"deliveryService":  "ds1",
 						"regex":            "/.*",
 						"startTime":        startTime.AddDate(0, 0, 1),
@@ -329,32 +314,10 @@ func TestJobs(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
-				"OK when STARTTIME is UNIX FORMAT AND a FUTURE DATE": {
+				"NOT FOUND when INVALID ID": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"deliveryService":  "ds1",
-						"regex":            "/.*",
-						"startTime":        startTime.AddDate(0, 0, 1).Unix(),
-						"ttlHours":         36,
-						"invalidationType": "REFRESH",
-					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-				"OK when STARTTIME is NON-STANDARD FORMAT AND a FUTURE DATE": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"deliveryService":  "ds1",
-						"regex":            "/.*",
-						"startTime":        startTime.AddDate(0, 0, 1).Format("2020-03-11 14:12:20-06"),
-						"ttlHours":         36,
-						"invalidationType": "REFRESH",
-					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-				"BAD REQUEST when INVALID ID": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"assetUrl":         "",
+						"assetUrl":         "http://origin.example.net/.*",
 						"createdBy":        "admin",
 						"deliveryService":  "ds1",
 						"id":               111111111,
@@ -363,12 +326,13 @@ func TestJobs(t *testing.T) {
 						"ttlHours":         2160,
 						"invalidationType": "REFRESH",
 					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when STARTTIME NOT within 2 DAYS FROM NOW": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"assetUrl":         "",
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
+						"assetUrl":         "http://origin.example.net/.*",
 						"createdBy":        "admin",
 						"deliveryService":  "ds1",
 						"regex":            "/old",
@@ -381,7 +345,8 @@ func TestJobs(t *testing.T) {
 				"CONFLICT when DIFFERENT DELIVERY SERVICE": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"assetUrl":         "",
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
+						"assetUrl":         "http://origin.example.net/.*",
 						"createdBy":        "admin",
 						"deliveryService":  "ds3",
 						"regex":            "/old",
@@ -394,7 +359,8 @@ func TestJobs(t *testing.T) {
 				"CONFLICT when INVALID DELIVERY SERVICE": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"assetUrl":         "",
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
+						"assetUrl":         "http://origin.example.net/.*",
 						"createdBy":        "admin",
 						"deliveryService":  "doesntexist",
 						"regex":            "/old",
@@ -407,7 +373,8 @@ func TestJobs(t *testing.T) {
 				"BAD REQUEST when BLANK DELIVERY SERVICE": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"assetUrl":         "",
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
+						"assetUrl":         "http://origin.example.net/.*",
 						"createdBy":        "admin",
 						"deliveryService":  "",
 						"regex":            "/old",
@@ -420,9 +387,10 @@ func TestJobs(t *testing.T) {
 				"BAD REQUEST when INVALID ASSETURL": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
 						"assetUrl":         "http://google.com",
 						"createdBy":        "admin",
-						"deliveryService":  "",
+						"deliveryService":  "ds1",
 						"regex":            "/old",
 						"startTime":        startTime,
 						"ttlHours":         2160,
@@ -433,9 +401,10 @@ func TestJobs(t *testing.T) {
 				"BAD REQUEST when BLANK ASSETURL": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
 						"assetUrl":         "",
 						"createdBy":        "admin",
-						"deliveryService":  "",
+						"deliveryService":  "ds1",
 						"regex":            "/old",
 						"startTime":        startTime,
 						"ttlHours":         2160,
@@ -446,8 +415,9 @@ func TestJobs(t *testing.T) {
 				"BAD REQUEST when BLANK CREATEDBY": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"assetUrl":         "",
-						"deliveryService":  "",
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
+						"assetUrl":         "http://origin.example.net/.*",
+						"deliveryService":  "ds1",
 						"regex":            "/old",
 						"startTime":        startTime,
 						"ttlHours":         2160,
@@ -455,25 +425,27 @@ func TestJobs(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"BAD REQUEST when DIFFERENT CREATEDBY": {
+				"CONFLICT when DIFFERENT CREATEDBY": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"assetUrl":         "",
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
+						"assetUrl":         "http://origin.example.net/.*",
 						"createdBy":        "operator",
-						"deliveryService":  "",
+						"deliveryService":  "ds1",
 						"regex":            "/old",
 						"startTime":        startTime,
 						"ttlHours":         2160,
 						"invalidationType": "REFRESH",
 					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"BAD REQUEST when BLANK INVALIDATION TYPE": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"assetUrl":         "",
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
+						"assetUrl":         "http://origin.example.net/.*",
 						"createdBy":        "operator",
-						"deliveryService":  "",
+						"deliveryService":  "ds1",
 						"regex":            "/old",
 						"startTime":        startTime,
 						"ttlHours":         2160,
@@ -484,6 +456,9 @@ func TestJobs(t *testing.T) {
 				"BAD REQUEST when STARTTIME is a PAST DATE": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
+						"assetUrl":         "http://origin.example.net/.*",
+						"createdBy":        "admin",
 						"deliveryService":  "ds1",
 						"regex":            "/.*",
 						"startTime":        startTime.AddDate(0, 0, -1),
@@ -492,43 +467,38 @@ func TestJobs(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"BAD REQUEST when STARTTIME is NON-STANDARD FORMAT AND a PAST DATE": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"deliveryService":  "ds1",
-						"regex":            "/.*",
-						"startTime":        startTime.AddDate(0, 0, -1).Format("2020-03-11 14:12:20-06"),
-						"ttlHours":         36,
-						"invalidationType": "REFRESH",
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-				},
 				"BAD REQUEST when STARTTIME is RFC FORMAT AND is a PAST DATE": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
+						"id":               GetJobID(t, "http://origin.example.net/.*")(),
+						"assetUrl":         "http://origin.example.net/.*",
+						"createdBy":        "admin",
 						"deliveryService":  "ds1",
 						"regex":            "/.*",
-						"startTime":        startTime.AddDate(0, 0, -1).Format(time.RFC1123),
+						"startTime":        pastTimeRFC,
 						"ttlHours":         36,
 						"invalidationType": "REFRESH",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"BAD REQUEST when STARTTIME is UNIX FORMAT AND is a PAST DATE": {
+				"WARNING ALERT when JOB COLLISION": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
+						"id":               GetJobID(t, "http://origin.example.net/foo")(),
+						"assetUrl":         "http://origin.example.net/foo",
+						"createdBy":        "admin",
 						"deliveryService":  "ds1",
-						"regex":            "/.*",
-						"startTime":        startTime.AddDate(0, 0, -1).Unix,
+						"regex":            "/foo",
+						"startTime":        startTime.Add(time.Hour),
 						"ttlHours":         36,
-						"invalidationType": "REFRESH",
+						"invalidationType": "REFETCH",
 					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.HasAlertLevel(tc.WarnLevel.String())),
 				},
 			},
 			"DELETE": {
 				"NOT FOUND when JOB DOESNT EXIST": {
-					EndpointId:    GetJobID(t, ""),
+					EndpointId:    func() int { return 1111111111 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -539,7 +509,7 @@ func TestJobs(t *testing.T) {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
 					job := tc.InvalidationJobCreateV4{}
-					jobUpdate := tc.InvalidationJob{}
+					jobUpdate := tc.InvalidationJobV4{}
 
 					if testCase.RequestBody != nil {
 						dat, err := json.Marshal(testCase.RequestBody)
@@ -554,7 +524,7 @@ func TestJobs(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetInvalidationJobs(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -570,7 +540,7 @@ func TestJobs(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateInvalidationJob(job, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateInvalidationJob(jobUpdate, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
@@ -586,9 +556,7 @@ func TestJobs(t *testing.T) {
 				}
 			})
 		}
-
-		JobCollisionWarningTest(t)
-		CreateRefetchJobParameterFail(t)
+		t.Run("POST/BAD REQUEST when REFETCH PARAMETER NOT ENABLED", func(t *testing.T) { CreateRefetchJobParameterFail(t) })
 	})
 }
 
@@ -600,31 +568,17 @@ func validateInvalidationJobsFields(expectedResp map[string]interface{}) utils.C
 			for _, job := range jobResp {
 				switch field {
 				case "AssetURL":
-					//			if !strings.HasSuffix(toJob.AssetURL, testJob.Regex) {
-					//				continue
-					//			}
 					assert.Equal(t, expected, job.AssetURL, "Expected AssetURL to be %v, but got %s", expected, job.AssetURL)
 				case "CreatedBy":
 					assert.Equal(t, expected, job.CreatedBy, "Expected CreatedBy to be %v, but got %s", expected, job.CreatedBy)
 				case "DeliveryService":
 					assert.Equal(t, expected, job.DeliveryService, "Expected DeliveryService to be %v, but got %s", expected, job.DeliveryService)
 				case "ID":
-					assert.Equal(t, expected, job.ID, "Expected ID to be %v, but got %s", expected, job.ID)
+					assert.Equal(t, uint64(expected.(int)), job.ID, "Expected ID to be %v, but got %s", expected, job.ID)
 				case "InvalidationType":
 					assert.Equal(t, expected, job.InvalidationType, "Expected InvalidationType to be %v, but got %s", expected, job.InvalidationType)
 				case "StartTime":
-					/*
-								toJobTime := toJob.StartTime.Round(time.Minute)
-						testJobTime := testJob.StartTime.Round(time.Minute)
-						if !toJobTime.Equal(testJobTime) {
-							t.Errorf("test job ds %v regex %s start time expected '%+v' actual '%+v'", testJob.DeliveryService, testJob.Regex, testJobTime, toJobTime)
-							continue
-						}
-							if time.Since(j.StartTime) > time.Duration(maxRevalDurationDays)*24*time.Hour {
-							t.Errorf("GET /jobs by maxRevalDurationDays returned job that is older than %d days: {%s, %s, %v}", maxRevalDurationDays, j.DeliveryService, j.AssetURL, j.StartTime)
-						}
-					*/
-					assert.Equal(t, expected, job.StartTime, "Expected StartTime to be %v, but got %s", expected, job.StartTime)
+					assert.Equal(t, true, job.StartTime.Round(time.Minute).Equal(expected.(time.Time).Round(time.Minute)), "Expected StartTime to be %v, but got %s", expected, job.StartTime)
 				case "TTLHours":
 					assert.Equal(t, expected, job.TTLHours, "Expected TTLHours to be %v, but got %s", expected, job.TTLHours)
 				default:
@@ -635,105 +589,28 @@ func validateInvalidationJobsFields(expectedResp map[string]interface{}) utils.C
 	}
 }
 
-func GetJobID(t *testing.T, name string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", name)
-		jobs, _, err := TOSession.GetInvalidationJobs(opts)
-		assert.RequireNoError(t, err, "Get Jobs Request failed with error:", err)
-		assert.RequireEqual(t, 1, len(jobs.Response), "Expected response object length 1, but got %d", len(jobs.Response))
-		return int(jobs.Response[0].ID)
+func validateMaxRevalDurationDays() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Invalidation Jobs response to not be nil.")
+		maxRevalDurationDays := 90
+		jobResp := resp.([]tc.InvalidationJobV4)
+		for _, job := range jobResp {
+			if time.Since(job.StartTime) > time.Duration(maxRevalDurationDays)*24*time.Hour {
+				t.Errorf("GET /jobs by maxRevalDurationDays returned job that is older than %d days: %v}", maxRevalDurationDays, time.Since(job.StartTime))
+			}
+		}
 	}
 }
 
-func JobCollisionWarningTest(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one Delivery Service to test Invalidation Job collisions")
-	}
-	if testData.DeliveryServices[0].XMLID == nil {
-		t.Fatal("Found a Delivery Service in the testing data with null or undefined XMLID")
-	}
-	xmlID := *testData.DeliveryServices[0].XMLID
-
-	firstJob := tc.InvalidationJobCreateV4{
-		DeliveryService:  xmlID,
-		Regex:            `/\.*([A-Z]0?)`,
-		TTLHours:         16,
-		StartTime:        time.Now().Add(time.Hour),
-		InvalidationType: tc.REFRESH,
-	}
-
-	resp, _, err := TOSession.CreateInvalidationJob(firstJob, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Unexpected error creating a content invalidation Job: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	newJob := tc.InvalidationJobCreateV4{
-		DeliveryService:  firstJob.DeliveryService,
-		Regex:            firstJob.Regex,
-		TTLHours:         firstJob.TTLHours,
-		StartTime:        firstJob.StartTime.Add(time.Hour),
-		InvalidationType: tc.REFRESH,
-	}
-
-	alerts, _, err := TOSession.CreateInvalidationJob(newJob, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("expected invalidation job create to succeed: %v - %+v", err, alerts.Alerts)
-	}
-
-	if len(alerts.Alerts) < 2 {
-		t.Fatalf("expected at least 2 alerts on creation, got %v", len(alerts.Alerts))
-	}
-
-	found := false
-	for _, alert := range alerts.Alerts {
-		if alert.Level == tc.WarnLevel.String() && strings.Contains(alert.Text, firstJob.Regex) {
-			found = true
-		}
-	}
-	if !found {
-		t.Error("Expected a warning-level error about the regular expression, but couldn't find one")
-	}
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("deliveryService", xmlID)
-	jobs, _, err := TOSession.GetInvalidationJobs(opts)
-	if err != nil {
-		t.Fatalf("unable to get invalidation jobs: %v - alerts: %+v", err, jobs.Alerts)
-	}
-
-	var realJob *tc.InvalidationJobV4
-	for i, job := range jobs.Response {
-		diff := newJob.StartTime.Sub(job.StartTime)
-		if job.DeliveryService == xmlID && job.CreatedBy == "admin" && diff < time.Second {
-			realJob = &jobs.Response[i]
-			break
-		}
-	}
-
-	if realJob == nil || realJob.ID == 0 {
-		t.Fatal("could not find new job")
-	}
-
-	time := firstJob.StartTime.Add(time.Hour * 2)
-	realJob.StartTime = time
-	alerts, _, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("expected invalidation job update to succeed: %v - alerts: %+v", err, alerts.Alerts)
-	}
-
-	if len(alerts.Alerts) < 2 {
-		t.Fatalf("expected at least 2 alerts on update, got %v", len(alerts.Alerts))
-	}
-
-	found = false
-	for _, alert := range alerts.Alerts {
-		if alert.Level == tc.WarnLevel.String() && strings.Contains(alert.Text, firstJob.Regex) {
-			found = true
-		}
-	}
-	if !found {
-		t.Error("Expected a warning-level error about the regular expression, but couldn't find one")
+func GetJobID(t *testing.T, assetUrl string) func() int {
+	return func() int {
+		t.Helper()
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("assetUrl", assetUrl)
+		jobs, _, err := TOSession.GetInvalidationJobs(opts)
+		assert.RequireNoError(t, err, "Get Jobs Request failed with error:", err)
+		assert.RequireGreaterOrEqual(t, len(jobs.Response), 1, "Expected at least 1 response object, but got %d", len(jobs.Response))
+		return int(jobs.Response[0].ID)
 	}
 }
 
@@ -762,31 +639,27 @@ func DeleteTestJobs(t *testing.T) {
 }
 
 func CreateRefetchJobParameterFail(t *testing.T) {
-	// Ensure clean slate for parameters
+	// Delete the refetch parameter as a prerequisite
 	clearRefetchEnabledParameter(t)
-
-	// Attempt to create Refetch job w/o refetch_enabled
-	job := testData.InvalidationJobsRefetch[0]
 	createJob := tc.InvalidationJobCreateV4{
-		DeliveryService:  job.DeliveryService,
-		Regex:            job.Regex,
-		TTLHours:         job.TTLHours,
+		DeliveryService:  "ds1",
+		Regex:            "/.*",
+		TTLHours:         72,
 		StartTime:        time.Now().Add(time.Hour).UTC(),
-		InvalidationType: job.InvalidationType,
+		InvalidationType: "REFETCH",
 	}
-
-	_, _, err := TOSession.CreateInvalidationJob(createJob, client.RequestOptions{})
+	_, reqInf, err := TOSession.CreateInvalidationJob(createJob, client.RequestOptions{})
 	assert.Error(t, err, "Expected error preventing the creation of the Refetch Invalidation Job.")
+	assert.Equal(t, http.StatusBadRequest, reqInf.StatusCode, "Expected Status Code: 400, Got: %d", reqInf.StatusCode)
 }
 
 func clearRefetchEnabledParameter(t *testing.T) {
-	// Ensure Parameter is not set
-	paramsResp, _, err := TOSession.GetParameters(client.RequestOptions{})
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", string(tc.RefetchEnabled))
+	paramsResp, _, err := TOSession.GetParameters(opts)
 	assert.RequireNoError(t, err, "Error retrieving parameters. err: %v \n alerts: %v", err, paramsResp.Alerts)
-
-	for _, param := range paramsResp.Response {
-		if param.Name == string(tc.RefetchEnabled) {
-			TOSession.DeleteParameter(param.ID, client.RequestOptions{})
-		}
-	}
+	assert.RequireEqual(t, 1, len(paramsResp.Response), "Expected one parameter returned from response Got: %d", len(paramsResp.Response))
+	assert.RequireEqual(t, string(tc.RefetchEnabled), paramsResp.Response[0].Name, "Expected the RefetchEnabled parameter Got: %s", paramsResp.Response[0].Name)
+	alerts, _, err := TOSession.DeleteParameter(paramsResp.Response[0].ID, client.RequestOptions{})
+	assert.RequireNoError(t, err, "Expected no error when deleting RefetchEnabled parameter: %v Alerts: %v", err, alerts.Alerts)
 }

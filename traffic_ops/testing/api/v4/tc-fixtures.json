@@ -2012,6 +2012,12 @@
             "name": "location",
             "secure": false,
             "value": "/remap/config/location/parameter/"
+        },
+        {
+            "configFile": "global",
+            "name": "refetch_enabled",
+            "secure": false,
+            "value": "true"
         }
     ],
     "physLocations": [
