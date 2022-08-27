@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#4654](https://github.com/apache/trafficcontrol/pull/4654) *Traffic Ops, Traffic Portal* Switched Delivery Service active state to a three-value system, adding a state that will be used to prevent cache servers from deploying DS configuration.
 - [#7242](https://github.com/apache/trafficcontrol/pull/7276) *Traffic Portal* Now depends on NodeJS version 16 or later.
 - [#7120](https://github.com/apache/trafficcontrol/pull/7120) *Docs* Update t3c documentation regarding parent.config parent_retry.
+- [#7044](https://github.com/apache/trafficcontrol/issues/7044) *CDN in a Box* [CDN in a Box, the t3c integration tests, and the tc health client integration tests now use Apache Traffic Server 9.1.
 
 ### Fixed
 - [#5557](https://github.com/apache/trafficcontrol/issues/5557) *Traffic Portal* Moved `Fair Queueing Pacing Rate Bps` DS field to `Cache Configuration Settings` section.
