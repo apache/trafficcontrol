@@ -38,7 +38,10 @@ EXPOSE 80 443
 # no checks required at this time.
 RUN yum install -y epel-release && yum repolist && \
   yum install -y brotli initscripts jansson jansson-devel \
-    git gcc hwloc jq lua luajit man-db tcl && \
+    git gcc hwloc jq lua luajit man-db tcl \
+    # libmaxminddb is required by trafficserver
+    libmaxminddb \
+    && \
   yum clean all
 
 RUN echo "Using Image ${OS_DISTRO}:${OS_VERSION}"
