@@ -17,6 +17,7 @@ package v4
 
 import (
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -34,8 +35,8 @@ func TestProfilesExport(t *testing.T) {
 					EndpointId:    GetProfileID(t, "EDGE1"),
 					ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateProfilesExportFields(map[string]interface{}{"ProfileCDNName": "cdn1", "ProfileName": "EDGE1",
-							"ProfileDescription": "edge1 description", "ProfileType": "ATS_PROFILE"})),
+						validateProfilesExportFields(map[string]interface{}{"CDNName": "cdn1", "Name": "EDGE1",
+							"Description": "edge1 description", "Type": "ATS_PROFILE"})),
 				},
 				"NOT FOUND when PROFILE DOESNT EXIST": {
 					EndpointId:    func() int { return 1111111111 },
@@ -69,22 +70,9 @@ func validateProfilesExportFields(expectedResp map[string]interface{}) utils.CkR
 		assert.RequireNotNil(t, resp, "Expected Profiles Export response to not be nil.")
 		profileExport := resp.(tc.ProfileExportResponse)
 		for field, expected := range expectedResp {
-			switch field {
-			case "ProfileCDNName":
-				assert.RequireNotNil(t, profileExport.Profile.CDNName, "Expected Profile CDNName to not be nil.")
-				assert.Equal(t, expected, *profileExport.Profile.CDNName, "Expected Profile.CDNName to be %v, but got %d", expected, *profileExport.Profile.CDNName)
-			case "ProfileDescription":
-				assert.RequireNotNil(t, profileExport.Profile.Description, "Expected Profile Description to not be nil.")
-				assert.Equal(t, expected, *profileExport.Profile.Description, "Expected Profile.Description to be %v, but got %d", expected, *profileExport.Profile.Description)
-			case "ProfileName":
-				assert.RequireNotNil(t, profileExport.Profile.Name, "Expected Profile Name to not be nil.")
-				assert.Equal(t, expected, *profileExport.Profile.Name, "Expected Profile.Name to be %v, but got %d", expected, *profileExport.Profile.Name)
-			case "ProfileType":
-				assert.RequireNotNil(t, profileExport.Profile.Type, "Expected Profile Type to not be nil.")
-				assert.Equal(t, expected, *profileExport.Profile.Type, "Expected Profile.Type to be %v, but got %d", expected, *profileExport.Profile.Type)
-			default:
-				t.Fatalf("Expected field: %v, does not exist in response", field)
-			}
+			fieldValue := reflect.Indirect(reflect.ValueOf(profileExport.Profile).FieldByName(field)).String()
+			assert.RequireNotNil(t, fieldValue, "Expected %s to not be nil.", field)
+			assert.Equal(t, expected, fieldValue, "Expected %s to be %v, but got %s", field, expected, fieldValue)
 		}
 	}
 }

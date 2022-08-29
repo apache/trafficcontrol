@@ -18,6 +18,7 @@ package v3
 import (
 	"encoding/json"
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -56,8 +57,8 @@ func TestProfilesImport(t *testing.T) {
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateProfilesImport(map[string]interface{}{"ProfileName": "GLOBAL", "ProfileCDNName": "cdn1",
-							"ProfileDescription": "Global Traffic Ops profile", "ProfileType": "UNK_PROFILE"})),
+						validateProfilesImport(map[string]interface{}{"Name": "GLOBAL", "CDNName": "cdn1",
+							"Description": "Global Traffic Ops profile", "Type": "UNK_PROFILE"})),
 				},
 				"BAD REQUEST when SPACE in PROFILE NAME": {
 					ClientSession: TOSession,
@@ -119,22 +120,9 @@ func validateProfilesImport(expectedResp map[string]interface{}) utils.CkReqFunc
 		profileImportResp := resp.(tc.ProfileImportResponseObj)
 		profileImport := profileImportResp.ProfileExportImportNullable
 		for field, expected := range expectedResp {
-			switch field {
-			case "ProfileCDNName":
-				assert.RequireNotNil(t, profileImport.CDNName, "Expected Profile CDNName to not be nil.")
-				assert.Equal(t, expected, *profileImport.CDNName, "Expected Profile CDNName to be %v, but got %d", expected, *profileImport.CDNName)
-			case "ProfileDescription":
-				assert.RequireNotNil(t, profileImport.Description, "Expected Profile Description to not be nil.")
-				assert.Equal(t, expected, *profileImport.Description, "Expected Profile Description to be %v, but got %d", expected, *profileImport.Description)
-			case "ProfileName":
-				assert.RequireNotNil(t, profileImport.Name, "Expected Profile Name to not be nil.")
-				assert.Equal(t, expected, *profileImport.Name, "Expected Profile Name to be %v, but got %d", expected, *profileImport.Name)
-			case "ProfileType":
-				assert.RequireNotNil(t, profileImport.Type, "Expected Profile Type to not be nil.")
-				assert.Equal(t, expected, *profileImport.Type, "Expected Profile Type to be %v, but got %d", expected, *profileImport.Type)
-			default:
-				t.Fatalf("Expected field: %v, does not exist in response", field)
-			}
+			fieldValue := reflect.Indirect(reflect.ValueOf(profileImport).FieldByName(field)).String()
+			assert.RequireNotNil(t, fieldValue, "Expected %s to not be nil.", field)
+			assert.Equal(t, expected, fieldValue, "Expected %s to be %v, but got %s", field, expected, fieldValue)
 		}
 	}
 }

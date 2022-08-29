@@ -287,7 +287,7 @@ func validateProfilesFields(expectedResp map[string]interface{}) utils.CkReqFunc
 				case "RoutingDisabled":
 					assert.Equal(t, expected, profile.RoutingDisabled, "Expected RoutingDisabled to be %v, but got %v", expected, profile.RoutingDisabled)
 				case "Type":
-					assert.Equal(t, expected, profile.Type, "Expected Type to be %v, but got %v", expected, profile.Type)
+					assert.Equal(t, expected, profile.Type, "Expected Type to be %v, but got %s", expected, profile.Type)
 				default:
 					t.Fatalf("Expected field: %v, does not exist in response", field)
 				}
