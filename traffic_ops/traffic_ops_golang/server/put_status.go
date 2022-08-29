@@ -121,7 +121,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if *status.Name == tc.CacheStatusAdminDown.String() || *status.Name == tc.CacheStatusOffline.String() {
+	if *status.Name != tc.CacheStatusOnline.String() && *status.Name != tc.CacheStatusReported.String() {
 		if reqObj.OfflineReason == nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("offlineReason is required for "+tc.CacheStatusAdminDown.String()+" or "+tc.CacheStatusOffline.String()+" status"), nil)
 			return
