@@ -159,7 +159,6 @@ export class DeliveryServiceService extends APIService {
 		this.deliveryServiceTypes = new Array<Type>();
 	}
 
-	public async getSteering(): Promise<Array<SteeringConfiguration>>;
 	/**
 	 * Gets a list of all Steering Configurations
 	 *

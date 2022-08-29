@@ -168,7 +168,6 @@ export class DeliveryServiceService {
 		}
 	];
 
-	public async getSteering(): Promise<Array<SteeringConfiguration>>;
 	/**
 	 * Gets a list of all Steering Configurations
 	 *

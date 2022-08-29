@@ -119,12 +119,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     }
     $scope.validateTLS = validateTLS;
 
-    let getSteeringTargets = function() {
+    async function getSteeringTargets() {
         if(type.indexOf("HTTP") > -1)  {
-            deliveryServiceService.getSteering().then(function(configs) {
-                const dsTargets = deliveryServiceUtils.getSteeringTargetsForDS([deliveryService.xmlId], configs);
-                $scope.steeringTargetsFor = Array.from(dsTargets[deliveryService.xmlId]);
-            })
+            const configs = await deliveryServiceService.getSteering();
+            const dsTargets = deliveryServiceUtils.getSteeringTargetsForDS([deliveryService.xmlId], configs);
+            $scope.steeringTargetsFor = Array.from(dsTargets[deliveryService.xmlId]);
         }
     }
 
