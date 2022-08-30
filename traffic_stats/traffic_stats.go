@@ -726,7 +726,7 @@ func queryDB(con influx.Client, cmd string, database string) (res []influx.Resul
 }
 
 func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummary) {
-	to, _, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, time.Duration(config.ToRequestTimeoutSeconds))
+	to, _, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, time.Duration(config.ToRequestTimeoutSeconds)*time.Second)
 	if err != nil {
 		newErr := fmt.Errorf("Could not store summary stats! Error logging in to %v: %v", config.ToURL, err)
 		errorln(newErr)
@@ -740,7 +740,7 @@ func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummary) {
 
 func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	var runningConfig RunningConfig
-	to, _, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, time.Duration(config.ToRequestTimeoutSeconds))
+	to, _, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, time.Duration(config.ToRequestTimeoutSeconds)*time.Second)
 	if err != nil {
 		msg := fmt.Sprintf("Error logging in to %v: %v", config.ToURL, err)
 		if init {

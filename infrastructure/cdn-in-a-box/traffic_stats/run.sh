@@ -75,7 +75,7 @@ cat <<-EOF >$TSCONF
 	"toUser": "$TO_ADMIN_USER",
 	"toPasswd": "$TO_ADMIN_PASSWORD",
 	"toUrl": "$TO_URL",
-  "toRequestTimeout": 10,
+	"toRequestTimeout": 10,
 	"influxUser": "$INFLUXDB_ADMIN_USER",
 	"influxPassword": "$INFLUXDB_ADMIN_PASSWORD",
 	"pollingInterval": 10,
