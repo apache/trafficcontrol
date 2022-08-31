@@ -231,7 +231,7 @@ under the License.
             <label ng-class="{'has-error': hasError(serverForm.iloPassword)}">ILO Password</label>
             <div ng-class="{'has-error': hasError(serverForm.iloPassword), 'has-feedback': hasError(serverForm.iloPassword)}">
 				<div class="form-control revealable-password-container">
-					<input name="iloPassword" type="{{iloInputType}}" class="form-control" ng-model="server.iloPassword" autocomplete="off" maxlength="45"/>
+					<input name="iloPassword" type="{{iloInputType}}" class="form-control" ng-model="server.iloPassword" autocomplete="new-password" maxlength="45"/>
 					<button type="button" title="toggle revealed password" aria-label="toggle revealed password" ng-click="toggleILO()"><i class="fa fa-eye"></i></button>
 				</div>
                 <small class="input-error" ng-show="hasPropertyError(serverForm.iloPassword, 'maxlength')">Too Long</small>

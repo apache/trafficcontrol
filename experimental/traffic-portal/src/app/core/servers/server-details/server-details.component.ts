@@ -21,7 +21,7 @@ import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService,
 import { ServerService } from "src/app/api/server.service";
 import { CacheGroup, CDN, DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
 import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
-import { IP, IP_WITH_CIDR } from "src/app/utils";
+import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 
 /**
  * ServerDetailsComponent is the controller for a server's "details" page.
@@ -120,6 +120,8 @@ export class ServerDetailsComponent implements OnInit {
 	 * The set of all Types that can be applied to a server.
 	 */
 	public types = new Array<Type>();
+
+	public autocompleteNew = AutocompleteValue.NEW_PASSWORD;
 
 	/**
 	 * Constructor.
