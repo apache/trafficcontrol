@@ -39,10 +39,10 @@ under the License.
         <div class="row" ng-show="offline()">
             <div class="col-sm-12 col-md-12">
                 <div class="form-group" ng-class="{'has-error': hasError(statusForm.offlineReason), 'has-feedback': hasError(statusForm.offlineReason)}">
-                    <label class="control-label" for="offlineReason">Offline Reason *
+                    <label class="control-label" for="offlineReason">Offline Reason
                         <small class="input-error" ng-show="hasPropertyError(statusForm.offlineReason, 'maxlength')">Too Long</small>
                     </label>
-                    <input id="offlineReason" name="offlineReason" type="text" class="form-control" ng-model="status.offlineReason" ng-maxlength="256" ng-required="offline()" autofocus>
+                    <input id="offlineReason" name="offlineReason" type="text" class="form-control" ng-model="status.offlineReason" ng-maxlength="256" autofocus>
                     <span ng-show="hasError(statusForm.offlineReason)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
