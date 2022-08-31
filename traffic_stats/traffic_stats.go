@@ -517,7 +517,7 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 		config.MaxPublishSize = defaultMaxPublishSize
 	}
 
-	if config.ToRequestTimeoutSeconds == 0 {
+	if config.ToRequestTimeoutSeconds <= 0 {
 		config.ToRequestTimeoutSeconds = defaultTrafficOpsRequestTimeout
 	}
 
