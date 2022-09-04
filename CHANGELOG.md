@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) [Traffic Ops, Traffic Portal] Added ability to assign multiple server capabilities to a server.
 - [#7032](https://github.com/apache/trafficcontrol/issues/7032) Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
 - [Traffic Monitor] Added logging for `ipv4Availability` and `ipv6Availability` in TM.
+- [Traffic Portal] Added the ability to turn ACME on/off when generating SSL keys for a delivery service. This change requires a change to TP's config file: traffic_portal_properties.json.
 
 ### Fixed
 - Traffic Stats: Reuse InfluxDB client handle to prevent potential connection leaks
