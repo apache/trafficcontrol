@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, sslKeys, sslRequest, $scope, $uibModal, locationUtils, deliveryServiceSslKeysService, formUtils) {
+var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, propertiesModel, sslKeys, sslRequest, $scope, $uibModal, locationUtils, deliveryServiceSslKeysService, formUtils) {
 
 	var setSSLRequest = function(sslRequest) {
 		if (!sslRequest.hostname) {
@@ -49,6 +49,8 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
 			getAcmeProviders();
 		}
 	};
+
+	$scope.showAcme = propertiesModel.properties.deliveryServices.showAcme;
 
 	$scope.useAcme = false;
 	$scope.acmeProviders = [];
@@ -366,5 +368,5 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
 
 };
 
-FormGenerateDeliveryServiceSslKeysController.$inject = ['deliveryService', 'sslKeys', 'sslRequest', '$scope', '$uibModal', 'locationUtils', 'deliveryServiceSslKeysService', 'formUtils'];
+FormGenerateDeliveryServiceSslKeysController.$inject = ['deliveryService', 'propertiesModel', 'sslKeys', 'sslRequest', '$scope', '$uibModal', 'locationUtils', 'deliveryServiceSslKeysService', 'formUtils'];
 module.exports = FormGenerateDeliveryServiceSslKeysController;

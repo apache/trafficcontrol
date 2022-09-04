@@ -181,6 +181,7 @@
           "ecsEnabled": false
         }
       },
+      "showAcme": true,
       "charts": {
         "_comment": "Delivery Service Charts",
         "autoRefresh": true,
