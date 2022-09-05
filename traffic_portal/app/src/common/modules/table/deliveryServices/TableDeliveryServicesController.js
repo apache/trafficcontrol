@@ -370,7 +370,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 	async function clone(ds) {
 		const params = {
 			title: `Clone Delivery Service: ${ds.xmlId}`,
-			message: "Please select a content routing category for the clone"
+			message: "Please select a <a href='https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#ds-types' target='_blank'>content routing category</a> for the clone"
 		};
 
 		const modalInstance = $uibModal.open({
@@ -535,7 +535,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 	async function selectDSType() {
 		const params = {
 			title: "Create Delivery Service",
-			message: "Please select a content routing category"
+			message: "Please select a <a href='https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#ds-types' target='_blank'>content routing category</a>"
 		};
 		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
