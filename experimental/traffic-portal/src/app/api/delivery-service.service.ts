@@ -166,7 +166,7 @@ export class DeliveryServiceService extends APIService {
 	 */
 	public async getSteering(): Promise<Array<SteeringConfiguration>> {
 		const path = "steering";
-		return this.get<[SteeringConfiguration]>(path).toPromise();
+		return this.get<Array<SteeringConfiguration>>(path).toPromise();
 	}
 
 	public async getDeliveryServices(id: string | number): Promise<DeliveryService>;
