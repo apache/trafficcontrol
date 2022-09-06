@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -29,7 +30,7 @@ import (
 )
 
 func TestCDNLocks(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServiceCategories, Topologies, Tenants, Roles, Users, DeliveryServices, StaticDNSEntries, CDNLocks}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, ProfileParameters, Statuses, Divisions, Regions, PhysLocations, Servers, ServiceCategories, Topologies, Tenants, Roles, Users, DeliveryServices, StaticDNSEntries, CDNLocks}, func() {
 
 		opsUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opsuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 		opsUserWithLockSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opslockuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
@@ -180,7 +181,7 @@ func TestCDNLocks(t *testing.T) {
 						"name":      "cachegroup1",
 						"shortName": "newShortName",
 						"typeName":  "EDGE_LOC",
-						"typeId":    -1,
+						"typeId":    GetTypeId(t, "EDGE_LOC"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -190,7 +191,7 @@ func TestCDNLocks(t *testing.T) {
 						"name":      "cachegroup1",
 						"shortName": "newShortName",
 						"typeName":  "EDGE_LOC",
-						"typeId":    -1,
+						"typeId":    GetTypeId(t, "EDGE_LOC"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -229,6 +230,108 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
+			"PROFILE POST": {
+				"OK when USER OWNS LOCK": {
+					ClientSession: opsUserWithLockSession,
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdnName":          "cdn2",
+						"description":      "test cdn locks description",
+						"name":             "TestLocks",
+						"routing_disabled": false,
+						"type":             "ATS_PROFILE",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdnName":          "cdn2",
+						"description":      "test cdn locks description",
+						"name":             "TestLocksForbidden",
+						"routing_disabled": false,
+						"type":             "ATS_PROFILE",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"PROFILE PUT": {
+				"OK when USER OWNS LOCK": {
+					EndpointId:    GetProfileID(t, "CDN2_EDGE"),
+					ClientSession: opsUserWithLockSession,
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdnName":          "cdn2",
+						"description":      "cdn2 edge description updated when user owns lock",
+						"name":             "CDN2_EDGE",
+						"routing_disabled": false,
+						"type":             "ATS_PROFILE",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId:    GetProfileID(t, "EDGEInCDN2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdnName":          "cdn2",
+						"description":      "should fail",
+						"name":             "EDGEInCDN2",
+						"routing_disabled": false,
+						"type":             "ATS_PROFILE",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"PROFILE DELETE": {
+				"OK when USER OWNS LOCK": {
+					EndpointId:    GetProfileID(t, "CCR2"),
+					ClientSession: opsUserWithLockSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId:    GetProfileID(t, "MID2"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"PROFILE PARAMETER POST": {
+				"OK when USER OWNS LOCK": {
+					ClientSession: opsUserWithLockSession,
+					RequestBody: map[string]interface{}{
+						"profileId":   GetProfileID(t, "EDGEInCDN2")(),
+						"parameterId": GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"profileId":   GetProfileID(t, "EDGEInCDN2")(),
+						"parameterId": GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"PROFILE PARAMETER DELETE": {
+				"OK when USER OWNS LOCK": {
+					EndpointId:    GetProfileID(t, "OKwhenUserOwnLocks"),
+					ClientSession: opsUserWithLockSession,
+					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
+						"parameterId": {strconv.Itoa(GetParameterID(t, "test.cdnlock.delete", "rascal.properties", "25.0")())},
+					}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
+					EndpointId:    GetProfileID(t, "FORBIDDENwhenDoesntOwnLock"),
+					ClientSession: TOSession,
+					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
+						"parameterId": {strconv.Itoa(GetParameterID(t, "test.cdnlock.forbidden.delete", "rascal.properties", "25.0")())},
+					}},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
 			"SERVER POST": {
 				"OK when USER OWNS LOCK": {
 					ClientSession: opsUserWithLockSession,
@@ -258,7 +361,7 @@ func TestCDNLocks(t *testing.T) {
 				"OK when USER OWNS LOCK": {
 					EndpointId:    GetServerID(t, "edge1-cdn2"),
 					ClientSession: opsUserWithLockSession,
-					RequestBody: generateServer(t, generateServer(t, map[string]interface{}{
+					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "edge1-cdn2")(),
 						"cdnId":        GetCDNID(t, "cdn2")(),
 						"profileNames": []string{"EDGEInCDN2"},
@@ -269,13 +372,13 @@ func TestCDNLocks(t *testing.T) {
 							}},
 							"name": "eth0",
 						}},
-					})),
+					}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					EndpointId:    GetServerID(t, "dtrc-edge-07"),
 					ClientSession: TOSession,
-					RequestBody: generateServer(t, generateServer(t, map[string]interface{}{
+					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "dtrc-edge-07")(),
 						"cdnId":        GetCDNID(t, "cdn2")(),
 						"cachegroupId": GetCacheGroupId(t, "dtrc2")(),
@@ -287,7 +390,7 @@ func TestCDNLocks(t *testing.T) {
 							}},
 							"name": "eth0",
 						}},
-					})),
+					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
@@ -370,219 +473,199 @@ func TestCDNLocks(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-
-					topology := ""
-					cdn := tc.CDN{}
-					cdnLock := tc.CDNLock{}
-					cacheGroup := tc.CacheGroupNullable{}
-					ds := tc.DeliveryServiceV4{}
-					server := tc.ServerV4{}
-					topQueueUp := tc.TopologiesQueueUpdateRequest{}
-					staticDNSEntry := tc.StaticDNSEntry{}
-
-					if testCase.RequestOpts.QueryParameters.Has("topology") {
-						topology = testCase.RequestOpts.QueryParameters.Get("topology")
-					}
+					var dat []byte
+					var err error
 
 					if testCase.RequestBody != nil {
-						if _, ok := testCase.RequestBody["xmlId"]; ok {
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &ds)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						} else if _, ok := testCase.RequestBody["hostName"]; ok {
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &server)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						} else if getId, ok := testCase.RequestBody["cdnId"]; ok {
-							testCase.RequestBody["cdnId"] = getId.(int)
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &topQueueUp)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						} else if typeName, ok := testCase.RequestBody["typeName"]; ok {
-							testCase.RequestBody["typeId"] = GetTypeId(t, typeName.(string))
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &cacheGroup)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						} else if _, ok := testCase.RequestBody["dnssecEnabled"]; ok {
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &cdn)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						} else if _, ok := testCase.RequestBody["host"]; ok {
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &staticDNSEntry)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						} else {
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &cdnLock)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						}
+						dat, err = json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 					}
 
-					switch method {
-					case "GET":
-						t.Run(name, func(t *testing.T) {
+					cases := map[string]func(*testing.T){
+						"GET": func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetCDNLocks(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
-						})
-					case "POST":
-						t.Run(name, func(t *testing.T) {
+						},
+						"POST": func(t *testing.T) {
+							cdnLock := tc.CDNLock{}
+							err = json.Unmarshal(dat, &cdnLock)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							resp, reqInf, err := testCase.ClientSession.CreateCDNLock(cdnLock, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
-						})
-					case "DELETE":
-						t.Run(name, func(t *testing.T) {
+						},
+						"DELETE": func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.DeleteCDNLocks(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
-						})
-					case "SNAPSHOT":
-						{
-							t.Run(name, func(t *testing.T) {
-								resp, reqInf, err := testCase.ClientSession.SnapshotCRConfig(testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, resp.Response, resp.Alerts, err)
-								}
-							})
-						}
-					case "SERVERS QUEUE UPDATES":
-						{
-							t.Run(name, func(t *testing.T) {
-								resp, reqInf, err := testCase.ClientSession.SetServerQueueUpdate(testCase.EndpointId(), true, testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, resp.Response, resp.Alerts, err)
-								}
-							})
-						}
-					case "TOPOLOGY QUEUE UPDATES":
-						{
-							t.Run(name, func(t *testing.T) {
-								resp, reqInf, err := testCase.ClientSession.TopologiesQueueUpdate(topology, topQueueUp, testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, resp.Alerts, err)
-								}
-							})
-						}
-					case "CACHE GROUP UPDATE":
-						{
-							t.Run(name, func(t *testing.T) {
-								resp, reqInf, err := testCase.ClientSession.UpdateCacheGroup(testCase.EndpointId(), cacheGroup, testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, resp.Alerts, err)
-								}
-							})
-						}
-					case "CDN UPDATE":
-						{
-							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.ClientSession.UpdateCDN(testCase.EndpointId(), cdn, testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, alerts, err)
-								}
-							})
-						}
-					case "CDN DELETE":
-						{
-							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.ClientSession.DeleteCDN(testCase.EndpointId(), testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, alerts, err)
-								}
-							})
-						}
-					case "DELIVERY SERVICE POST":
-						{
-							t.Run(name, func(t *testing.T) {
-								resp, reqInf, err := testCase.ClientSession.CreateDeliveryService(ds, testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, resp.Alerts, err)
-								}
-							})
-						}
-					case "DELIVERY SERVICE PUT":
-						{
-							t.Run(name, func(t *testing.T) {
-								resp, reqInf, err := testCase.ClientSession.UpdateDeliveryService(testCase.EndpointId(), ds, testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, resp.Alerts, err)
-								}
-							})
-						}
-					case "DELIVERY SERVICE DELETE":
-						{
-							t.Run(name, func(t *testing.T) {
-								resp, reqInf, err := testCase.ClientSession.DeleteDeliveryService(testCase.EndpointId(), testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, resp.Alerts, err)
-								}
-							})
-						}
-					case "SERVER POST":
-						{
-							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.ClientSession.CreateServer(server, testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, alerts, err)
-								}
-							})
-						}
-					case "SERVER PUT":
-						{
-							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.ClientSession.UpdateServer(testCase.EndpointId(), server, testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, alerts, err)
-								}
-							})
-						}
-					case "SERVER DELETE":
-						{
-							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.ClientSession.DeleteServer(testCase.EndpointId(), testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, alerts, err)
-								}
-							})
-						}
-					case "STATIC DNS ENTRIES POST":
-						{
-							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.ClientSession.CreateStaticDNSEntry(staticDNSEntry, testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, alerts, err)
-								}
-							})
-						}
-					case "STATIC DNS ENTRIES PUT":
-						{
-							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.ClientSession.UpdateStaticDNSEntry(testCase.EndpointId(), staticDNSEntry, testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, alerts, err)
-								}
-							})
-						}
-					case "STATIC DNS ENTRIES DELETE":
-						{
-							t.Run(name, func(t *testing.T) {
-								alerts, reqInf, err := testCase.ClientSession.DeleteStaticDNSEntry(testCase.EndpointId(), testCase.RequestOpts)
-								for _, check := range testCase.Expectations {
-									check(t, reqInf, nil, alerts, err)
-								}
-							})
-						}
-					default:
+						},
+						"SNAPSHOT": func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.SnapshotCRConfig(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						},
+						"SERVERS QUEUE UPDATES": func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.SetServerQueueUpdate(testCase.EndpointId(), true, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						},
+						"TOPOLOGY QUEUE UPDATES": func(t *testing.T) {
+							topology := testCase.RequestOpts.QueryParameters.Get("topology")
+							topQueueUp := tc.TopologiesQueueUpdateRequest{}
+							err = json.Unmarshal(dat, &topQueueUp)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							resp, reqInf, err := testCase.ClientSession.TopologiesQueueUpdate(topology, topQueueUp, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, resp.Alerts, err)
+							}
+						},
+						"CACHE GROUP UPDATE": func(t *testing.T) {
+							cacheGroup := tc.CacheGroupNullable{}
+							err = json.Unmarshal(dat, &cacheGroup)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							resp, reqInf, err := testCase.ClientSession.UpdateCacheGroup(testCase.EndpointId(), cacheGroup, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, resp.Alerts, err)
+							}
+						},
+						"CDN UPDATE": func(t *testing.T) {
+							cdn := tc.CDN{}
+							err = json.Unmarshal(dat, &cdn)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							alerts, reqInf, err := testCase.ClientSession.UpdateCDN(testCase.EndpointId(), cdn, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"CDN DELETE": func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteCDN(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"DELIVERY SERVICE POST": func(t *testing.T) {
+							ds := tc.DeliveryServiceV4{}
+							err = json.Unmarshal(dat, &ds)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							resp, reqInf, err := testCase.ClientSession.CreateDeliveryService(ds, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, resp.Alerts, err)
+							}
+						},
+						"DELIVERY SERVICE PUT": func(t *testing.T) {
+							ds := tc.DeliveryServiceV4{}
+							err = json.Unmarshal(dat, &ds)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryService(testCase.EndpointId(), ds, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, resp.Alerts, err)
+							}
+						},
+						"DELIVERY SERVICE DELETE": func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.DeleteDeliveryService(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, resp.Alerts, err)
+							}
+						},
+						"PROFILE POST": func(t *testing.T) {
+							profile := tc.Profile{}
+							err = json.Unmarshal(dat, &profile)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							alerts, reqInf, err := testCase.ClientSession.CreateProfile(profile, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"PROFILE PUT": func(t *testing.T) {
+							profile := tc.Profile{}
+							err = json.Unmarshal(dat, &profile)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							alerts, reqInf, err := testCase.ClientSession.UpdateProfile(testCase.EndpointId(), profile, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"PROFILE DELETE": func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteProfile(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"PROFILE PARAMETER POST": func(t *testing.T) {
+							profileParameter := tc.ProfileParameterCreationRequest{}
+							err = json.Unmarshal(dat, &profileParameter)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							alerts, reqInf, err := testCase.ClientSession.CreateProfileParameter(profileParameter, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"PROFILE PARAMETER DELETE": func(t *testing.T) {
+							parameterId, _ := strconv.Atoi(testCase.RequestOpts.QueryParameters["parameterId"][0])
+							alerts, reqInf, err := testCase.ClientSession.DeleteProfileParameter(testCase.EndpointId(), parameterId, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"SERVER POST": func(t *testing.T) {
+							server := tc.ServerV4{}
+							err = json.Unmarshal(dat, &server)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							alerts, reqInf, err := testCase.ClientSession.CreateServer(server, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"SERVER PUT": func(t *testing.T) {
+							server := tc.ServerV4{}
+							err = json.Unmarshal(dat, &server)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							alerts, reqInf, err := testCase.ClientSession.UpdateServer(testCase.EndpointId(), server, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"SERVER DELETE": func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteServer(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"STATIC DNS ENTRIES POST": func(t *testing.T) {
+							staticDNSEntry := tc.StaticDNSEntry{}
+							err = json.Unmarshal(dat, &staticDNSEntry)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							alerts, reqInf, err := testCase.ClientSession.CreateStaticDNSEntry(staticDNSEntry, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"STATIC DNS ENTRIES PUT": func(t *testing.T) {
+							staticDNSEntry := tc.StaticDNSEntry{}
+							err = json.Unmarshal(dat, &staticDNSEntry)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							alerts, reqInf, err := testCase.ClientSession.UpdateStaticDNSEntry(testCase.EndpointId(), staticDNSEntry, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+						"STATIC DNS ENTRIES DELETE": func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteStaticDNSEntry(testCase.EndpointId(), testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						},
+					}
+
+					if _, ok := cases[method]; ok {
+						t.Run(name, cases[method])
+					} else {
 						t.Errorf("Test Case: %s not found. Test: %s failed to run.", method, name)
 					}
 				}

@@ -2590,6 +2590,36 @@
             "name": "CDN2_MID",
             "routing_disabled": false,
             "type": "ATS_PROFILE"
+        },
+        {
+            "cdnName": "cdn2",
+            "description": "cdn lock test",
+            "name": "OKwhenUserOwnLocks",
+            "routing_disabled": false,
+            "type": "ATS_PROFILE",
+            "params": [
+                {
+                    "configFile": "rascal.properties",
+                    "name": "test.cdnlock.delete",
+                    "secure": false,
+                    "value": "25.0"
+                }
+            ]
+        },
+        {
+            "cdnName": "cdn2",
+            "description": "cdn lock forbidden test",
+            "name": "FORBIDDENwhenDoesntOwnLock",
+            "routing_disabled": false,
+            "type": "ATS_PROFILE",
+            "params": [
+                {
+                    "configFile": "rascal.properties",
+                    "name": "test.cdnlock.forbidden.delete",
+                    "secure": false,
+                    "value": "25.0"
+                }
+            ]
         }
     ],
     "regions": [

@@ -61,7 +61,7 @@ func TestParameters(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID REQUEST": {
-					EndpointId:    GetParameterID(t, "LogObject.Format"),
+					EndpointId:    GetParameterID(t, "LogObject.Format", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "updated.config",
@@ -74,7 +74,7 @@ func TestParameters(t *testing.T) {
 							map[string]interface{}{"ConfigFile": "updated.config", "Name": "updated name", "Secure": true, "Value": "updated value"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:     GetParameterID(t, "LogFormat.Name"),
+					EndpointId:     GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: map[string]interface{}{
@@ -85,7 +85,7 @@ func TestParameters(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetParameterID(t, "LogFormat.Name"),
+					EndpointId:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "logs_xml.config",
@@ -171,7 +171,7 @@ func validateParametersFields(expectedResp map[string]interface{}) utils.CkReqFu
 				case "Value":
 					assert.Equal(t, expected, parameter.Value, "Expected Value to be %v, but got %s", expected, parameter.Value)
 				default:
-					t.Errorf("Expected field: %v, does not exist in response", field)
+					t.Fatalf("Expected field: %v, does not exist in response", field)
 				}
 			}
 		}
@@ -187,12 +187,12 @@ func validateParametersUpdateCreateFields(name string, expectedResp map[string]i
 	}
 }
 
-func GetParameterID(t *testing.T, name string) func() int {
+func GetParameterID(t *testing.T, name string, configFile string, value string) func() int {
 	return func() int {
-		parameters, _, err := TOSession.GetParameterByNameWithHdr(name, nil)
-		assert.RequireNoError(t, err, "Get Parameters Request failed with error:", err)
-		assert.RequireEqual(t, 1, len(parameters), "Expected response object length 1, but got %d", len(parameters))
-		return parameters[0].ID
+		resp, _, err := TOSession.GetParameterByNameAndConfigFileAndValueWithHdr(name, configFile, value, nil)
+		assert.RequireNoError(t, err, "Get Parameters Request failed with error: %v", err)
+		assert.RequireEqual(t, 1, len(resp), "Expected response object length 1, but got %d", len(resp))
+		return resp[0].ID
 	}
 }
 
