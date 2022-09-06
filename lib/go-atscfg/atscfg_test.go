@@ -76,7 +76,7 @@ func TestTrimParamUnderscoreNumSuffix(t *testing.T) {
 }
 
 func TestGetATSMajorVersionFromATSVersion(t *testing.T) {
-	inputExpected := map[string]int{
+	inputExpected := map[string]uint{
 		`7.1.2-34.56abcde.el7.centos.x86_64`:    7,
 		`8`:                                     8,
 		`8.1`:                                   8,
@@ -98,14 +98,14 @@ func TestGetATSMajorVersionFromATSVersion(t *testing.T) {
 	}
 
 	for input, expected := range inputExpected {
-		if actual, err := getATSMajorVersionFromATSVersion(input); err != nil {
+		if actual, err := GetATSMajorVersionFromATSVersion(input); err != nil {
 			t.Errorf("expected %v actual: error '%v'", expected, err)
 		} else if actual != expected {
 			t.Errorf("expected %v actual: %v", expected, actual)
 		}
 	}
 	for _, input := range errExpected {
-		if actual, err := getATSMajorVersionFromATSVersion(input); err == nil {
+		if actual, err := GetATSMajorVersionFromATSVersion(input); err == nil {
 			t.Errorf("input %v expected: error, actual: nil error '%v'", input, actual)
 		}
 	}

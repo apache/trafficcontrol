@@ -61,6 +61,13 @@ The output is a JSON array of objects containing the file and its metadata.
     records.config is not serving H2. If omitted, H2 is
     disabled.
 
+-a, -\-ats-version
+
+    The ATS version, e.g. 9.1.2-42.abc123.el7.x86_64. If omitted
+    generation will attempt to get the ATS version from the
+    Server Profile Parameters, and fall back to
+    lib/go-atscfg.DefaultATSVersion.
+
 -b, -\-dns-local-bind
 
     Whether to use the server's Service Addresses to set the ATS

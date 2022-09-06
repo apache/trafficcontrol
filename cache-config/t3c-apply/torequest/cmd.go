@@ -96,6 +96,9 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	if cfg.Files == t3cutil.ApplyFilesFlagReval {
 		args = append(args, "--revalidate-only")
 	}
+	if cfg.LocalATSVersion != "" {
+		args = append(args, "--ats-version="+cfg.LocalATSVersion)
+	}
 	args = append(args, "--via-string-release="+strconv.FormatBool(!cfg.OmitViaStringRelease))
 	args = append(args, "--no-outgoing-ip="+strconv.FormatBool(cfg.NoOutgoingIP))
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
@@ -291,9 +294,21 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 	return nil
 }
 
-//doTail calls t3c-tail and will run a tail on the log file provided with string for a regex to
-//maatch on default is .* endMatch will make t3c-tail exit when a pattern is matched otherwise
-//a timeout in a given number of seconds will occur.
+// doTail calls t3c-tail, which will read lines from the file at the provided
+// path, and will print lines matching the 'logMatch' regular expression.
+// When a line matching the 'endMatch' regular expression is encountered,
+// t3c-tail will exit - which means it MUST NOT be an empty string or only the
+// first line of the file will ever be read (and possibly printed, if it matches
+// 'logMatch'). In any case, the process will terminate after 'timeoutInMS'
+// milliseconds.
+// Note that apart from an exit code difference on timeout, this is almost
+// exactly equivalent to the bash command:
+//
+//	timeout timeoutInS tail -fn+2 file | grep -m 1 -B "$(wc -l file | cut -d ' ' -f1)" -E endMatch | grep -E logMatch
+//
+// ... where 'timeoutInS' is 1/1000 of 'timeoutInMS' and the string values of
+// arguments are otherwise substituted wherever they are found (GNU coreutils
+// are assumed to be present).
 func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeoutInMS int) error {
 	args := []string{
 		"--file=" + filepath.Join(cfg.TsHome, file),
@@ -302,8 +317,8 @@ func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeo
 		"--timeout-ms=" + strconv.Itoa(timeoutInMS),
 	}
 	stdOut, stdErr, code := t3cutil.Do(`t3c-tail`, args...)
-	if code > 1 {
-		return fmt.Errorf("t3c-tail returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+	if code >= 1 {
+		return fmt.Errorf("t3c-tail returned error code %d stdout '%s' stderr '%s'", code, stdOut, stdErr)
 	}
 	logSubApp(`t3c-tail`, stdErr)
 

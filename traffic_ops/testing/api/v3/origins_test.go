@@ -16,257 +16,355 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
-	"reflect"
-	"strings"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestOrigins(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Coordinates, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Users, Topologies, DeliveryServices, Origins}, func() {
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		UpdateTestOrigins(t)
-		UpdateTestOriginsWithHeaders(t, header)
-		GetTestOrigins(t)
-		NotFoundDeleteTest(t)
-		OriginTenancyTest(t)
-		VerifyPaginationSupport(t)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestOriginsWithHeaders(t, header)
+	WithObjs(t, []TCObj{CDNs, Coordinates, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Users, Topologies, ServiceCategories, DeliveryServices, Origins}, func() {
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+
+		tenant4UserSession := utils.CreateV3Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"origin1"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateOriginsFields(map[string]interface{}{"Name": "origin1"})),
+				},
+				"EMPTY RESPONSE when CHILD TENANT reads PARENT TENANT ORIGIN": {
+					ClientSession: tenant4UserSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
+				},
+			},
+			"GET QUERY PARAMS": {
+				"FIRST RESULT when LIMIT=1": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"orderby": {"id"}, "limit": {"1"}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateOriginsPagination("limit")),
+				},
+				"SECOND RESULT when LIMIT=1 OFFSET=1": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateOriginsPagination("offset")),
+				},
+				"SECOND RESULT when LIMIT=1 PAGE=2": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateOriginsPagination("page")),
+				},
+				"BAD REQUEST when INVALID LIMIT parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"limit": {"-2"}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID OFFSET parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"limit": {"1"}, "offset": {"0"}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID PAGE parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"limit": {"1"}, "page": {"0"}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"PUT": {
+				"OK when VALID request": {
+					EndpointId:    GetOriginID(t, "origin2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":            "origin2",
+						"cachegroup":      "multiOriginCachegroup",
+						"Coordinate":      "coordinate2",
+						"deliveryService": "ds3",
+						"fqdn":            "originupdated.example.com",
+						"ipAddress":       "1.2.3.4",
+						"ip6Address":      "0000::1111",
+						"port":            1234,
+						"protocol":        "http",
+						"tenantId":        GetTenantID(t, "tenant2")(),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateOriginsUpdateCreateFields("origin2", map[string]interface{}{"Cachegroup": "multiOriginCachegroup", "Coordinate": "coordinate2", "DeliveryService": "ds3",
+							"FQDN": "originupdated.example.com", "IPAddress": "1.2.3.4", "IP6Address": "0000::1111", "Port": 1234, "Protocol": "http", "Tenant": "tenant2"})),
+				},
+				"FORBIDDEN when CHILD TENANT updates PARENT TENANT ORIGIN": {
+					EndpointId:    GetOriginID(t, "origin2"),
+					ClientSession: tenant4UserSession,
+					RequestBody: map[string]interface{}{
+						"name":              "testtenancy",
+						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
+						"fqdn":              "testtenancy.example.com",
+						"protocol":          "http",
+						"tenantId":          GetTenantID(t, "tenant1")(),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+				"NOT FOUND when ORIGIN DOESNT EXIST": {
+					EndpointId:    func() int { return 1111111 },
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":              "testid",
+						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
+						"fqdn":              "testid.example.com",
+						"protocol":          "http",
+						"tenantId":          GetTenantID(t, "tenant1")(),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:     GetOriginID(t, "origin2"),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestBody: map[string]interface{}{
+						"name":            "origin2",
+						"cachegroup":      "originCachegroup",
+						"deliveryService": "ds2",
+						"fqdn":            "origin2.example.com",
+						"protocol":        "http",
+						"tenantId":        GetTenantID(t, "tenant1")(),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetOriginID(t, "origin2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"name":            "origin2",
+						"cachegroup":      "originCachegroup",
+						"deliveryService": "ds2",
+						"fqdn":            "origin2.example.com",
+						"protocol":        "http",
+						"tenantId":        GetTenantID(t, "tenant1")(),
+					},
+					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+			"DELETE": {
+				"NOT FOUND when DOESNT EXIST": {
+					EndpointId:    func() int { return 11111111 },
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"FORBIDDEN when CHILD TENANT deletes PARENT TENANT ORIGIN": {
+					EndpointId:    GetOriginID(t, "origin2"),
+					ClientSession: tenant4UserSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					origin := tc.Origin{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &origin)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							if name == "OK when VALID NAME parameter" {
+								resp, reqInf, err := testCase.ClientSession.GetOriginByName(testCase.RequestParams["name"][0])
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetOrigins()
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							}
+						})
+					case "GET QUERY PARAMS":
+						t.Run(name, func(t *testing.T) {
+							queryParams := "?" + testCase.RequestParams.Encode()
+							resp, reqInf, err := testCase.ClientSession.GetOriginsByQueryParams(queryParams)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp, tc.Alerts{}, err)
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.CreateOrigin(origin)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.UpdateOriginByIDWithHdr(testCase.EndpointId(), origin, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteOriginByID(testCase.EndpointId())
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestOriginsWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Origins) > 0 {
-		firstOrigin := testData.Origins[0]
-		if firstOrigin.Name == nil {
-			t.Fatalf("couldn't get the name of test origin server")
-		}
-		// Retrieve the origin by name so we can get the id for the Update
-		resp, _, err := TOSession.GetOriginByName(*firstOrigin.Name)
-		if err != nil {
-			t.Errorf("cannot GET origin by name: %v - %v", *firstOrigin.Name, err)
-		}
-		if len(resp) > 0 {
-			remoteOrigin := resp[0]
-			if remoteOrigin.ID == nil {
-				t.Fatalf("couldn't get the ID of the response origin server")
+func validateOriginsFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Origin response to not be nil.")
+		originResp := resp.([]tc.Origin)
+		for field, expected := range expectedResp {
+			for _, origin := range originResp {
+				switch field {
+				case "Cachegroup":
+					assert.RequireNotNil(t, origin.Cachegroup, "Expected Cachegroup to not be nil.")
+					assert.Equal(t, expected, *origin.Cachegroup, "Expected Cachegroup to be %v, but got %s", expected, *origin.Cachegroup)
+				case "CachegroupID":
+					assert.RequireNotNil(t, origin.CachegroupID, "Expected CachegroupID to not be nil.")
+					assert.Equal(t, expected, *origin.CachegroupID, "Expected CachegroupID to be %v, but got %d", expected, *origin.Cachegroup)
+				case "Coordinate":
+					assert.RequireNotNil(t, origin.Coordinate, "Expected Coordinate to not be nil.")
+					assert.Equal(t, expected, *origin.Coordinate, "Expected Coordinate to be %v, but got %s", expected, *origin.Coordinate)
+				case "CoordinateID":
+					assert.RequireNotNil(t, origin.CoordinateID, "Expected CoordinateID to not be nil.")
+					assert.Equal(t, expected, *origin.CoordinateID, "Expected CoordinateID to be %v, but got %d", expected, *origin.CoordinateID)
+				case "DeliveryService":
+					assert.RequireNotNil(t, origin.DeliveryService, "Expected DeliveryService to not be nil.")
+					assert.Equal(t, expected, *origin.DeliveryService, "Expected DeliveryService to be %v, but got %s", expected, *origin.DeliveryService)
+				case "DeliveryServiceID":
+					assert.RequireNotNil(t, origin.DeliveryServiceID, "Expected DeliveryServiceID to not be nil.")
+					assert.Equal(t, expected, *origin.DeliveryServiceID, "Expected DeliveryServiceID to be %v, but got %d", expected, *origin.DeliveryServiceID)
+				case "FQDN":
+					assert.RequireNotNil(t, origin.FQDN, "Expected FQDN to not be nil.")
+					assert.Equal(t, expected, *origin.FQDN, "Expected FQDN to be %v, but got %s", expected, *origin.FQDN)
+				case "ID":
+					assert.RequireNotNil(t, origin.ID, "Expected ID to not be nil.")
+					assert.Equal(t, expected, *origin.ID, "Expected ID to be %v, but got %d", expected, *origin.ID)
+				case "IPAddress":
+					assert.RequireNotNil(t, origin.IPAddress, "Expected IPAddress to not be nil.")
+					assert.Equal(t, expected, *origin.IPAddress, "Expected IPAddress to be %v, but got %s", expected, *origin.IPAddress)
+				case "IP6Address":
+					assert.RequireNotNil(t, origin.IP6Address, "Expected IP6Address to not be nil.")
+					assert.Equal(t, expected, *origin.IP6Address, "Expected IP6Address to be %v, but got %s", expected, *origin.IP6Address)
+				case "IsPrimary":
+					assert.RequireNotNil(t, origin.IsPrimary, "Expected IsPrimary to not be nil.")
+					assert.Equal(t, expected, *origin.IsPrimary, "Expected IsPrimary to be %v, but got %v", expected, *origin.IsPrimary)
+				case "Name":
+					assert.RequireNotNil(t, origin.Name, "Expected Name to not be nil.")
+					assert.Equal(t, expected, *origin.Name, "Expected Name to be %v, but got %s", expected, *origin.Name)
+				case "Port":
+					assert.RequireNotNil(t, origin.Port, "Expected Port to not be nil.")
+					assert.Equal(t, expected, *origin.Port, "Expected Port to be %v, but got %d", expected, *origin.Port)
+				case "Profile":
+					assert.RequireNotNil(t, origin.Profile, "Expected Profile to not be nil.")
+					assert.Equal(t, expected, *origin.Profile, "Expected Profile to be %v, but got %s", expected, *origin.Profile)
+				case "ProfileID":
+					assert.RequireNotNil(t, origin.ProfileID, "Expected ProfileID to not be nil.")
+					assert.Equal(t, expected, *origin.ProfileID, "Expected ProfileID to be %v, but got %d", expected, *origin.ProfileID)
+				case "Protocol":
+					assert.RequireNotNil(t, origin.Protocol, "Expected Protocol to not be nil.")
+					assert.Equal(t, expected, *origin.Protocol, "Expected Tenant to be %v, but got %s", expected, *origin.Protocol)
+				case "Tenant":
+					assert.RequireNotNil(t, origin.Tenant, "Expected Tenant to not be nil.")
+					assert.Equal(t, expected, *origin.Tenant, "Expected Tenant to be %v, but got %s", expected, *origin.Tenant)
+				case "TenantID":
+					assert.RequireNotNil(t, origin.TenantID, "Expected TenantID to not be nil.")
+					assert.Equal(t, expected, *origin.TenantID, "Expected TenantID to be %v, but got %d", expected, *origin.TenantID)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
 			}
-			updatedPort := 4321
-			updatedFQDN := "updated.example.com"
+		}
+	}
+}
 
-			// update port and FQDN values on origin
-			remoteOrigin.Port = &updatedPort
-			remoteOrigin.FQDN = &updatedFQDN
-			_, reqInf, err := TOSession.UpdateOriginByIDWithHdr(*remoteOrigin.ID, remoteOrigin, header)
-			if err == nil {
-				t.Errorf("Expected error about precondition failed, but got none")
-			}
-			if reqInf.StatusCode != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-			}
+func validateOriginsUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		origin, _, err := TOSession.GetOriginByName(name)
+		assert.RequireNoError(t, err, "Error getting Origin: %v", err)
+		assert.RequireEqual(t, 1, len(origin), "Expected one Origin returned Got: %d", len(origin))
+		validateOriginsFields(expectedResp)(t, toclientlib.ReqInf{}, origin, tc.Alerts{}, nil)
+	}
+}
+
+func validateOriginsPagination(paginationParam string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		paginationResp := resp.([]tc.Origin)
+		respBase, _, err := TOSession.GetOriginsByQueryParams("?orderby=id")
+		assert.RequireNoError(t, err, "Cannot get Origins: %v", err)
+
+		origin := respBase
+		assert.RequireGreaterOrEqual(t, len(origin), 3, "Need at least 3 Origins in Traffic Ops to test pagination support, found: %d", len(origin))
+		switch paginationParam {
+		case "limit:":
+			assert.Exactly(t, origin[:1], paginationResp, "expected GET Origins with limit = 1 to return first result")
+		case "offset":
+			assert.Exactly(t, origin[1:2], paginationResp, "expected GET Origins with limit = 1, offset = 1 to return second result")
+		case "page":
+			assert.Exactly(t, origin[1:2], paginationResp, "expected GET Origins with limit = 1, page = 2 to return second result")
 		}
+	}
+}
+
+func GetOriginID(t *testing.T, name string) func() int {
+	return func() int {
+		origins, _, err := TOSession.GetOriginByName(name)
+		assert.RequireNoError(t, err, "Get Origins Request failed with error:", err)
+		assert.RequireEqual(t, 1, len(origins), "Expected response object length 1, but got %d", len(origins))
+		assert.RequireNotNil(t, origins[0].ID, "Expected ID to not be nil.")
+		return *origins[0].ID
 	}
 }
 
 func CreateTestOrigins(t *testing.T) {
-	// loop through origins, assign FKs and create
 	for _, origin := range testData.Origins {
-		_, _, err := TOSession.CreateOrigin(origin)
-		if err != nil {
-			t.Errorf("could not CREATE origins: %v", err)
-		}
-	}
-}
-
-func NotFoundDeleteTest(t *testing.T) {
-	_, _, err := TOSession.DeleteOriginByID(2020)
-	if err == nil {
-		t.Error("deleting origin with what should be a non-existent id - expected: error, actual: nil error")
-	} else if !strings.Contains(err.Error(), "not found") {
-		t.Errorf("deleted origin with what should be a non-existent id - expected: 'not found' error, actual: %s", err.Error())
-	}
-}
-
-func GetTestOrigins(t *testing.T) {
-	_, _, err := TOSession.GetOrigins()
-	if err != nil {
-		t.Errorf("cannot GET origins: %v", err)
-	}
-
-	for _, origin := range testData.Origins {
-		resp, _, err := TOSession.GetOriginByName(*origin.Name)
-		if err != nil {
-			t.Errorf("cannot GET Origin by name: %v - %v", err, resp)
-		}
-	}
-}
-
-func UpdateTestOrigins(t *testing.T) {
-	firstOrigin := testData.Origins[0]
-	// Retrieve the origin by name so we can get the id for the Update
-	resp, _, err := TOSession.GetOriginByName(*firstOrigin.Name)
-	if err != nil {
-		t.Errorf("cannot GET origin by name: %v - %v", *firstOrigin.Name, err)
-	}
-	if len(resp) > 0 {
-		remoteOrigin := resp[0]
-		updatedPort := 4321
-		updatedFQDN := "updated.example.com"
-
-		// update port and FQDN values on origin
-		remoteOrigin.Port = &updatedPort
-		remoteOrigin.FQDN = &updatedFQDN
-		updResp, _, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin)
-		if err != nil && updResp != nil {
-			t.Errorf("cannot UPDATE Origin by name: %v - %v", err, updResp.Alerts)
-		}
-
-		// Retrieve the origin to check port and FQDN values were updated
-		resp, _, err = TOSession.GetOriginByID(*remoteOrigin.ID)
-		if err != nil {
-			t.Errorf("cannot GET Origin by ID: %v - %v", *remoteOrigin.Name, err)
-		}
-
-		if len(resp) > 0 {
-			respOrigin := resp[0]
-			if *respOrigin.Port != updatedPort {
-				t.Errorf("results do not match actual: %d, expected: %d", *respOrigin.Port, updatedPort)
-			}
-			if *respOrigin.FQDN != updatedFQDN {
-				t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.FQDN, updatedFQDN)
-			}
-		}
-	}
-}
-
-func OriginTenancyTest(t *testing.T) {
-	origins, _, err := TOSession.GetOrigins()
-	if err != nil {
-		t.Errorf("cannot GET origins: %v", err)
-	}
-	tenant3Origin := tc.Origin{}
-	foundTenant3Origin := false
-	for _, o := range origins {
-		if *o.FQDN == "origin.ds3.example.net" {
-			tenant3Origin = o
-			foundTenant3Origin = true
-		}
-	}
-	if !foundTenant3Origin {
-		t.Error("expected to find origin with tenant 'tenant3' and fqdn 'origin.ds3.example.net'")
-	}
-
-	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v3-client-tests/tenant4user", true, toReqTimeout)
-	if err != nil {
-		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
-	}
-
-	originsReadableByTenant4, _, err := tenant4TOClient.GetOrigins()
-	if err != nil {
-		t.Error("tenant4user cannot GET origins")
-	}
-
-	// assert that tenant4user cannot read origins outside of its tenant
-	for _, origin := range originsReadableByTenant4 {
-		if *origin.FQDN == "origin.ds3.example.net" {
-			t.Error("expected tenant4 to be unable to read origins from tenant 3")
-		}
-	}
-
-	// assert that tenant4user cannot update tenant3user's origin
-	if _, _, err = tenant4TOClient.UpdateOriginByID(*tenant3Origin.ID, tenant3Origin); err == nil {
-		t.Error("expected tenant4user to be unable to update tenant3's origin")
-	}
-
-	// assert that tenant4user cannot delete an origin outside of its tenant
-	if _, _, err = tenant4TOClient.DeleteOriginByID(*origins[0].ID); err == nil {
-		t.Errorf("expected tenant4user to be unable to delete an origin outside of its tenant (origin %s)", *origins[0].Name)
-	}
-
-	// assert that tenant4user cannot create origins outside of its tenant
-	tenant3Origin.FQDN = util.StrPtr("origin.tenancy.test.example.com")
-	if _, _, err = tenant4TOClient.CreateOrigin(tenant3Origin); err == nil {
-		t.Error("expected tenant4user to be unable to create an origin outside of its tenant")
-	}
-}
-
-func VerifyPaginationSupport(t *testing.T) {
-	origins, _, err := TOSession.GetOriginsByQueryParams("?orderby=id")
-	if err != nil {
-		t.Fatalf("cannot GET origins: %v", err)
-	}
-
-	originsWithLimit, _, err := TOSession.GetOriginsByQueryParams("?orderby=id&limit=1")
-	if !reflect.DeepEqual(origins[:1], originsWithLimit) {
-		t.Error("expected GET origins with limit = 1 to return first result")
-	}
-
-	originsWithOffset, _, err := TOSession.GetOriginsByQueryParams("?orderby=id&limit=1&offset=1")
-	if !reflect.DeepEqual(origins[1:2], originsWithOffset) {
-		t.Error("expected GET origins with limit = 1, offset = 1 to return second result")
-	}
-
-	originsWithPage, _, err := TOSession.GetOriginsByQueryParams("?orderby=id&limit=1&page=2")
-	if !reflect.DeepEqual(origins[1:2], originsWithPage) {
-		t.Error("expected GET origins with limit = 1, page = 2 to return second result")
-	}
-
-	_, _, err = TOSession.GetOriginsByQueryParams("?limit=-2")
-	if err == nil {
-		t.Error("expected GET origins to return an error when limit is not bigger than -1")
-	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
-		t.Errorf("expected GET origins to return an error for limit is not bigger than -1, actual error: " + err.Error())
-	}
-	_, _, err = TOSession.GetOriginsByQueryParams("?limit=1&offset=0")
-	if err == nil {
-		t.Error("expected GET origins to return an error when offset is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET origins to return an error for offset is not a positive integer, actual error: " + err.Error())
-	}
-	_, _, err = TOSession.GetOriginsByQueryParams("?limit=1&page=0")
-	if err == nil {
-		t.Error("expected GET origins to return an error when page is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET origins to return an error for page is not a positive integer, actual error: " + err.Error())
+		resp, _, err := TOSession.CreateOrigin(origin)
+		assert.RequireNoError(t, err, "Could not create Origins: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
 func DeleteTestOrigins(t *testing.T) {
-	for _, origin := range testData.Origins {
-		resp, _, err := TOSession.GetOriginByName(*origin.Name)
-		if err != nil {
-			t.Errorf("cannot GET Origin by name: %v - %v", *origin.Name, err)
-		}
-		if len(resp) > 0 {
-			respOrigin := resp[0]
+	origins, _, err := TOSession.GetOrigins()
+	assert.NoError(t, err, "Cannot get Origins : %v", err)
 
-			delResp, _, err := TOSession.DeleteOriginByID(*respOrigin.ID)
-			if err != nil {
-				t.Errorf("cannot DELETE Origin by ID: %v - %v", err, delResp)
-			}
-
+	for _, origin := range origins {
+		assert.RequireNotNil(t, origin.ID, "Expected origin ID to not be nil.")
+		assert.RequireNotNil(t, origin.Name, "Expected origin ID to not be nil.")
+		assert.RequireNotNil(t, origin.IsPrimary, "Expected origin ID to not be nil.")
+		if !*origin.IsPrimary {
+			alerts, _, err := TOSession.DeleteOriginByID(*origin.ID)
+			assert.NoError(t, err, "Unexpected error deleting Origin '%s' (#%d): %v - alerts: %+v", *origin.Name, *origin.ID, err, alerts.Alerts)
 			// Retrieve the Origin to see if it got deleted
-			org, _, err := TOSession.GetOriginByName(*origin.Name)
-			if err != nil {
-				t.Errorf("error deleting Origin name: %s", err.Error())
-			}
-			if len(org) > 0 {
-				t.Errorf("expected Origin name: %s to be deleted", *origin.Name)
-			}
+			getOrigin, _, err := TOSession.GetOriginByID(*origin.ID)
+			assert.NoError(t, err, "Error getting Origin '%s' after deletion: %v", *origin.Name, err)
+			assert.Equal(t, 0, len(getOrigin), "Expected Origin '%s' to be deleted, but it was found in Traffic Ops", *origin.Name)
 		}
 	}
 }

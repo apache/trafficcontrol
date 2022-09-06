@@ -299,196 +299,174 @@ export const deliveryservices = {
 	],
 	tests: [
 		{
-			logins: [
-				{
-					description: "Admin Role",
-					username: "TPAdmin",
-					password: "pa$$word"
-				}
-			],
+			description: "Admin Role Delivery Service actions",
+			login: {
+				username: "TPAdmin",
+				password: "pa$$word"
+			},
 			add: [
 				{
 					description: "create ANY_MAP delivery service",
-					Name: "tpdservice1",
-					Tenant: "tenantSame",
-					Type: "ANY_MAP",
+					name: "tpdservice1",
+					tenant: "tenantSame",
+					type: "ANY_MAP",
 					validationMessage: "Delivery Service creation was successful"
 				},
 				{
 					description: "create DNS delivery service",
-					Name: "tpdservice2",
-					Tenant: "tenantSame",
-					Type: "DNS",
+					name: "tpdservice2",
+					tenant: "tenantSame",
+					type: "DNS",
 					validationMessage: "Delivery Service creation was successful"
 				},
 				{
 					description: "create STEERING delivery service",
-					Name: "tpdservice3",
-					Tenant: "tenantSame",
-					Type: "STEERING",
+					name: "tpdservice3",
+					tenant: "tenantSame",
+					type: "STEERING",
 					validationMessage: "Delivery Service creation was successful"
 				}
 			],
 			update: [
 				{
-					description: "update delivery service display name",
-					Name: "tpdservice1",
-					NewName: "TPServiceNew1",
+					name: "tpdservice1",
+					newName: "TPServiceNew1",
 					validationMessage: "Delivery Service update was successful"
 				}
 			],
-			assignserver: [
+			assignServer: [
 				{
-					description: "assign server to delivery service",
-					ServerName: "DSTest",
-					DSName: "TPServiceNew1",
+					serverHostname: "DSTest",
+					xmlID: "TPServiceNew1",
 					validationMessage: "server assignments complete"
 				}
 			],
-			assignrequiredcapabilities: [
+			assignRequiredCapabilities: [
 				{
-					description: "assign required capabilities to delivery service",
-					RCName: "DSTestCap",
-					DSName: "tpdservice2",
+					rcName: "DSTestCap",
+					xmlID: "tpdservice2",
 					validationMessage: "deliveryservice.RequiredCapability was created."
 				}
 			],
 			remove: [
 				{
-					description: "delete a delivery service",
-					Name: "tpdservice1",
+					name: "tpdservice1",
 					validationMessage: "ds was deleted."
 				},
 				{
-					description: "delete a delivery service",
-					Name: "tpdservice2",
+					name: "tpdservice2",
 					validationMessage: "ds was deleted."
 				},
 				{
-					description: "delete a delivery service",
-					Name: "tpdservice3",
+					name: "tpdservice3",
 					validationMessage: "ds was deleted."
 				}
 			]
 		},
 		{
-			logins: [
-				{
-					description: "Read Only Role",
-					username: "TPReadOnly",
-					password: "pa$$word"
-				}
-			],
+			description: "Read Only Role Delivery Service actions",
+			login: {
+				username: "TPReadOnly",
+				password: "pa$$word"
+			},
 			add: [
 				{
 					description: "create ANY_MAP delivery service",
-					Name: "tpdservice1",
-					Type: "ANY_MAP",
-					Tenant: "tenantSame",
+					name: "tpdservice1",
+					type: "ANY_MAP",
+					tenant: "tenantSame",
 					validationMessage: "missing required Permissions: DELIVERY-SERVICE:CREATE"
 				}
 			],
 			update: [
 				{
-					description: "update delivery service display name",
-					Name: "dstestro1",
-					NewName: "TPServiceNew1",
+					name: "dstestro1",
+					newName: "TPServiceNew1",
 					validationMessage: "missing required Permissions: DELIVERY-SERVICE:UPDATE"
 				}
 			],
-			assignserver: [
+			assignServer: [
 				{
-					description: "assign server to delivery service",
-					ServerName: "DSTest",
-					DSName: "dstestro1",
+					serverHostname: "DSTest",
+					xmlID: "dstestro1",
 					validationMessage: "missing required Permissions: SERVER:UPDATE, DELIVERY-SERVICE:UPDATE"
 				}
 			],
-			assignrequiredcapabilities: [
+			assignRequiredCapabilities: [
 				{
-					description: "assign required capabilities to delivery service",
-					RCName: "DSTestCap",
-					DSName: "dstestro1",
+					rcName: "DSTestCap",
+					xmlID: "dstestro1",
 					validationMessage: "missing required Permissions: DELIVERY-SERVICE:UPDATE"
 				}
 			],
 			remove: [
 				{
-					description: "delete a delivery service",
-					Name: "dstestro1",
+					name: "dstestro1",
 					validationMessage: "missing required Permissions: DELIVERY-SERVICE:DELETE"
 				}
 			]
 		},
 		{
-			logins: [
-				{
-					description: "Operation Role",
-					username: "TPOperator",
-					password: "pa$$word"
-				}
-			],
+			description: "Operation Role Delivery Service actions",
+			login: {
+				username: "TPOperator",
+				password: "pa$$word"
+			},
 			add: [
 				{
 					description: "create ANY_MAP delivery service",
-					Name: "optpdservice1",
-					Tenant: "tenantSame",
-					Type: "ANY_MAP",
+					name: "optpdservice1",
+					tenant: "tenantSame",
+					type: "ANY_MAP",
 					validationMessage: "Delivery Service creation was successful"
 				},
 				{
 					description: "create DNS delivery service",
-					Name: "optpdservice2",
-					Tenant: "tenantSame",
-					Type: "DNS",
+					name: "optpdservice2",
+					tenant: "tenantSame",
+					type: "DNS",
 					validationMessage: "Delivery Service creation was successful"
 				},
 				{
 					description: "create STEERING delivery service",
-					Name: "optpdservice3",
-					Tenant: "tenantSame",
-					Type: "STEERING",
+					name: "optpdservice3",
+					tenant: "tenantSame",
+					type: "STEERING",
 					validationMessage: "Delivery Service creation was successful"
 				}
 			],
 			update: [
 				{
-					description: "update delivery service display name",
-					Name: "optpdservice1",
-					NewName: "opTPServiceNew1",
+					name: "optpdservice1",
+					newName: "opTPServiceNew1",
 					validationMessage: "Delivery Service update was successful"
 				}
 			],
-			assignserver: [
+			assignServer: [
 				{
-					description: "assign server to delivery service",
-					ServerName: "DSTest",
-					DSName: "opTPServiceNew1",
+					serverHostname: "DSTest",
+					xmlID: "opTPServiceNew1",
 					validationMessage: "server assignments complete"
 				}
 			],
-			assignrequiredcapabilities: [
+			assignRequiredCapabilities: [
 				{
-					description: "assign required capabilities to delivery service",
-					RCName: "DSTestCap",
-					DSName: "optpdservice2",
+					rcName: "DSTestCap",
+					xmlID: "optpdservice2",
 					validationMessage: "deliveryservice.RequiredCapability was created."
 				}
 			],
 			remove: [
 				{
-					description: "delete a delivery service",
-					Name: "optpdservice1",
+					name: "optpdservice1",
 					validationMessage: "ds was deleted."
 				},
 				{
-					description: "delete a delivery service",
-					Name: "optpdservice2",
+					name: "optpdservice2",
 					validationMessage: "ds was deleted."
 				},
 				{
-					description: "delete a delivery service",
-					Name: "optpdservice3",
+					name: "optpdservice3",
 					validationMessage: "ds was deleted."
 				}
 			]

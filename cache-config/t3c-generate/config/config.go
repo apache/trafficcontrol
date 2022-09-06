@@ -55,6 +55,7 @@ type Cfg struct {
 	ViaRelease         bool
 	SetDNSLocalBind    bool
 	NoOutgoingIP       bool
+	ATSMajorVersion    uint
 	ParentComments     bool
 	DefaultEnableH2    bool
 	DefaultTLSVersions []atscfg.TLSVersion
@@ -83,6 +84,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	defaultEnableH2 := getopt.BoolLong("default-client-enable-h2", '2', "Whether to enable HTTP/2 on Delivery Services by default, if they have no explicit Parameter. This is irrelevant if ATS records.config is not serving H2. If omitted, H2 is disabled.")
 	defaultTLSVersionsStr := getopt.StringLong("default-client-tls-versions", 'T', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. '--default-tls-versions=1.1,1.2,1.3'. If omitted, all versions are enabled.")
 	noOutgoingIP := getopt.BoolLong("no-outgoing-ip", 'i', "Whether to not set the records.config outgoing IP to the server's addresses in Traffic Ops. Default is false.")
+	atsVersion := getopt.StringLong("ats-version", 'a', "", "The ATS version, e.g. 9.1.2-42.abc123.el7.x86_64. If omitted, generation will attempt to get the ATS version from the Server Parameters, and fall back to lib/go-atscfg.DefaultATSVersion")
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
 	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
@@ -123,6 +125,17 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
 	}
 
+	// The flag takes the full version, for forward-compatibility in case we need it in the future,
+	// but we only need the major version at the moment.
+	atsMajorVersion := uint(0)
+	if *atsVersion != "" {
+		err := error(nil)
+		atsMajorVersion, err = atscfg.GetATSMajorVersionFromATSVersion(*atsVersion)
+		if err != nil {
+			return Cfg{}, errors.New("parsing ATS version '" + *atsVersion + "': " + err.Error())
+		}
+	}
+
 	defaultTLSVersions := atscfg.DefaultDefaultTLSVersions
 
 	*defaultTLSVersionsStr = strings.TrimSpace(*defaultTLSVersionsStr)
@@ -154,6 +167,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		ViaRelease:         *viaRelease,
 		SetDNSLocalBind:    *dnsLocalBind,
 		NoOutgoingIP:       *noOutgoingIP,
+		ATSMajorVersion:    atsMajorVersion,
 		ParentComments:     !(*disableParentConfigComments),
 		DefaultEnableH2:    *defaultEnableH2,
 		DefaultTLSVersions: defaultTLSVersions,

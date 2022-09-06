@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -107,7 +108,9 @@ type Cfg struct {
 	TsHome          string
 	TsConfigDir     string
 
-	ServiceAction     t3cutil.ApplyServiceActionFlag
+	ServiceAction          t3cutil.ApplyServiceActionFlag
+	NoConfirmServiceAction bool
+
 	ReportOnly        bool
 	Files             t3cutil.ApplyFilesFlag
 	InstallPackages   bool
@@ -116,6 +119,7 @@ type Cfg struct {
 	UpdateIPAllow     bool
 	Version           string
 	GitRevision       string
+	LocalATSVersion   string
 }
 
 func (cfg Cfg) AppVersion() string { return t3cutil.VersionStr(AppName, cfg.Version, cfg.GitRevision) }
@@ -257,6 +261,9 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	const defaultServiceAction = t3cutil.ApplyServiceActionFlagReload
 	serviceActionPtr := getopt.EnumLong(serviceActionFlagName, 'a', []string{string(t3cutil.ApplyServiceActionFlagReload), string(t3cutil.ApplyServiceActionFlagRestart), string(t3cutil.ApplyServiceActionFlagNone), ""}, "", "action to perform on Traffic Server and other system services. Only reloads if necessary, but always restarts. Default is 'reload'")
 
+	const noConfirmServiceActionFlagName = "no-confirm-service-action"
+	noConfirmServiceAction := getopt.BoolLong(noConfirmServiceActionFlagName, 0, "Whether to skip waiting and confirming the service action succeeded (reload or restart) via t3c-tail. Default is false.")
+
 	const reportOnlyFlagName = "report-only"
 	reportOnlyPtr := getopt.BoolLong(reportOnlyFlagName, 'o', "Log information about necessary files and actions, but take no action. Default is false")
 
@@ -277,6 +284,9 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	const useStrategiesFlagName = "use-strategies"
 	const defaultUseStrategies = t3cutil.UseStrategiesFlagFalse
 	useStrategiesPtr := getopt.EnumLong(useStrategiesFlagName, 0, []string{string(t3cutil.UseStrategiesFlagTrue), string(t3cutil.UseStrategiesFlagCore), string(t3cutil.UseStrategiesFlagCore), ""}, "", "[true | core| false] whether to generate config using strategies.yaml instead of parent.config. If true use the parent_select plugin, if 'core' use ATS core strategies, if false use parent.config.")
+
+	const useLocalATSVersionFlagName = "local-ats-version"
+	useLocalATSVersionPtr := getopt.BoolLong(useLocalATSVersionFlagName, 0, "[true | false] whether to use the local installed ATS version for config generation. If false, attempt to use the Server Package Parameter and fall back to ATS 5. If true and the local ATS version cannot be found, an error will be logged and the version set to ATS 5. Default is false")
 
 	const runModeFlagName = "run-mode"
 	runModePtr := getopt.StringLong(runModeFlagName, 'm', "", `[badass | report | revalidate | syncds] run mode. Optional, convenience flag which sets other flags for common usage scenarios.
@@ -475,6 +485,15 @@ If any of the related flags are also set, they override the mode's default behav
 		toInfoLog = append(toInfoLog, fmt.Sprintf("TSHome: %s, TSConfigDir: %s\n", TSHome, tsConfigDir))
 	}
 
+	atsVersionStr := ""
+	if *useLocalATSVersionPtr {
+		atsVersionStr, err = GetATSVersionStr(tsHome)
+		if err != nil {
+			return Cfg{}, errors.New("getting local ATS version: " + err.Error())
+		}
+	}
+	toInfoLog = append(toInfoLog, fmt.Sprintf("ATSVersionStr: '%s'\n", atsVersionStr))
+
 	usageStr := "basic usage: t3c-apply --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
 	if strings.TrimSpace(toURL) == "" {
 		return Cfg{}, errors.New("Missing required argument --traffic-ops-url or TO_URL environment variable. " + usageStr)
@@ -530,15 +549,16 @@ If any of the related flags are also set, they override the mode's default behav
 		MaxMindLocation:             maxmindLocation,
 		TsHome:                      TSHome,
 		TsConfigDir:                 tsConfigDir,
-
-		ServiceAction:     t3cutil.ApplyServiceActionFlag(*serviceActionPtr),
-		ReportOnly:        *reportOnlyPtr,
-		Files:             t3cutil.ApplyFilesFlag(*filesPtr),
-		InstallPackages:   *installPackagesPtr,
-		IgnoreUpdateFlag:  *ignoreUpdateFlagPtr,
-		NoUnsetUpdateFlag: *noUnsetUpdateFlagPtr,
-		Version:           appVersion,
-		GitRevision:       gitRevision,
+		ServiceAction:               t3cutil.ApplyServiceActionFlag(*serviceActionPtr),
+		NoConfirmServiceAction:      *noConfirmServiceAction,
+		ReportOnly:                  *reportOnlyPtr,
+		Files:                       t3cutil.ApplyFilesFlag(*filesPtr),
+		InstallPackages:             *installPackagesPtr,
+		IgnoreUpdateFlag:            *ignoreUpdateFlagPtr,
+		NoUnsetUpdateFlag:           *noUnsetUpdateFlagPtr,
+		Version:                     appVersion,
+		GitRevision:                 gitRevision,
+		LocalATSVersion:             atsVersionStr,
 	}
 
 	if err = log.InitCfg(cfg); err != nil {
@@ -604,6 +624,22 @@ func getOSSvcManagement() SvcManagement {
 	return _svcManager
 }
 
+func GetATSVersionStr(tsHome string) (string, error) {
+	tsPath := tsHome
+	tsPath = filepath.Join(tsPath, "bin")
+	tsPath = filepath.Join(tsPath, "traffic_server")
+
+	stdOut, stdErr, code := t3cutil.Do(`sh`, `-c`, `set -o pipefail && `+tsPath+` --version | head -1 | awk '{print $3}'`)
+	if code != 0 {
+		return "", fmt.Errorf("traffic_server --version returned code %v stderr '%v' stdout '%v'", code, string(stdErr), string(stdOut))
+	}
+	atsVersion := strings.TrimSpace(string(stdOut))
+	if atsVersion == "" {
+		return "", fmt.Errorf("traffic_server --version returned nothing, code %v stderr '%v' stdout '%v'", code, string(stdErr), string(stdOut))
+	}
+	return atsVersion, nil
+}
+
 func printConfig(cfg Cfg) {
 	// TODO add new flags
 	log.Debugf("LogLocationDebug: %s\n", cfg.LogLocationDebug)
@@ -621,7 +657,10 @@ func printConfig(cfg Cfg) {
 	log.Debugf("TOPass: Pass len: '%d'\n", len(cfg.TOPass))
 	log.Debugf("TOURL: %s\n", cfg.TOURL)
 	log.Debugf("TSHome: %s\n", TSHome)
+	log.Debugf("LocalATSVersion: %s\n", cfg.LocalATSVersion)
 	log.Debugf("WaitForParents: %v\n", cfg.WaitForParents)
+	log.Debugf("ServiceAction: %v\n", cfg.ServiceAction)
+	log.Debugf("NoConfirmServiceAction: %v\n", cfg.NoConfirmServiceAction)
 	log.Debugf("YumOptions: %s\n", cfg.YumOptions)
 	log.Debugf("MaxmindLocation: %s\n", cfg.MaxMindLocation)
 }

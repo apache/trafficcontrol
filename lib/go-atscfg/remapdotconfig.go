@@ -56,6 +56,14 @@ type RemapDotConfigOpts struct {
 	// UseCoreStrategies is whether to use the ATS core strategies, rather than the parent_select plugin.
 	// This has no effect if UseStrategies is false.
 	UseStrategiesCore bool
+
+	// ATSMajorVersion is the integral major version of Apache Traffic server,
+	// used to generate the proper config for the proper version.
+	//
+	// If omitted or 0, the major version will be read from the Server's Profile Parameter config file 'package' name 'trafficserver'. If no such Parameter exists, the ATS version will default to 5.
+	// This was the old Traffic Control behavior, before the version was specifiable externally.
+	//
+	ATSMajorVersion uint
 }
 
 func MakeRemapDotConfig(
@@ -104,8 +112,8 @@ func MakeRemapDotConfig(
 		warnings = append(warnings, "making Delivery Service Cache Key Params, cache key will be missing! : "+err.Error())
 	}
 
-	atsMajorVersion, verWarns := getATSMajorVersion(serverParams)
-	warnings = append(warnings, verWarns...)
+	atsMajorVersion := getATSMajorVersion(opt.ATSMajorVersion, serverParams, &warnings)
+
 	serverPackageParamData, paramWarns := makeServerPackageParamData(server, serverParams)
 	warnings = append(warnings, paramWarns...)
 	cacheGroups, err := makeCGMap(cacheGroupArr)
@@ -246,7 +254,7 @@ func lastPrePostRemapLinesFor(dsConfigParamsMap map[string][]tc.Parameter, dsid 
 
 // getServerConfigRemapDotConfigForMid returns the remap lines, any warnings, and any error.
 func getServerConfigRemapDotConfigForMid(
-	atsMajorVersion int,
+	atsMajorVersion uint,
 	profilesConfigParams map[int][]tc.Parameter,
 	dses []DeliveryService,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
@@ -389,7 +397,7 @@ func getServerConfigRemapDotConfigForEdge(
 	serverPackageParamData map[string]string, // map[paramName]paramVal for this server, config file 'package'
 	dses []DeliveryService,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
-	atsMajorVersion int,
+	atsMajorVersion uint,
 	header string,
 	server *Server,
 	nameTopologies map[TopologyName]tc.Topology,
@@ -497,7 +505,7 @@ type RemapLines struct {
 // The cacheKeyConfigParams map may be nil, if this ds profile had no cache key config params.
 // Returns the remap line, any warnings, and any error.
 func buildEdgeRemapLine(
-	atsMajorVersion int,
+	atsMajorVersion uint,
 	server *Server,
 	pData map[string]string,
 	text string,
@@ -739,7 +747,7 @@ func midHeaderRewriteConfigFileName(dsName string) string {
 }
 
 // getQStringIgnoreRemap returns the remap, whether cachekey was added.
-func getQStringIgnoreRemap(atsMajorVersion int) string {
+func getQStringIgnoreRemap(atsMajorVersion uint) string {
 	if atsMajorVersion < 7 {
 		log.Errorf("Unsupport version of ats found %v", atsMajorVersion)
 		return ""
