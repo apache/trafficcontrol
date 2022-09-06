@@ -82,7 +82,7 @@ func TestServers(t *testing.T) {
 				},
 				"OK when VALID PROFILEID parameter": {
 					ClientSession: TOSession,
-					RequestParams: url.Values{"profileId": {strconv.Itoa(GetProfileId(t, "EDGE1"))}},
+					RequestParams: url.Values{"profileId": {strconv.Itoa(GetProfileID(t, "EDGE1")())}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 				"OK when VALID STATUS parameter": {
@@ -155,7 +155,7 @@ func TestServers(t *testing.T) {
 							"routerPort":     "9004",
 						}},
 						"physLocationId": GetPhysicalLocationID(t, "Denver")(),
-						"profileId":      GetProfileId(t, "EDGE1"),
+						"profileId":      GetProfileID(t, "EDGE1")(),
 						"rack":           "RR 119.03",
 						"statusId":       GetStatusID(t, "REPORTED")(),
 						"tcpPort":        8080,
@@ -203,7 +203,7 @@ func TestServers(t *testing.T) {
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "midInTopologyMidCg01")(),
 						"cdnId":        GetCDNID(t, "cdn1")(),
-						"profileId":    GetProfileId(t, "MID1"),
+						"profileId":    GetProfileID(t, "MID1")(),
 						"cachegroupId": GetCacheGroupId(t, "topology-mid-cg-01")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -215,7 +215,7 @@ func TestServers(t *testing.T) {
 						"id":           GetServerID(t, "midInTopologyMidCg01")(),
 						"hostName":     "midInTopologyMidCg01",
 						"cdnId":        GetCDNID(t, "cdn2")(),
-						"profileId":    GetProfileId(t, "CDN2_MID"),
+						"profileId":    GetProfileID(t, "CDN2_MID")(),
 						"cachegroupId": GetCacheGroupId(t, "topology-mid-cg-02")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -458,7 +458,7 @@ func generateServer(t *testing.T, requestServer map[string]interface{}) map[stri
 			"name": "eth0",
 		}},
 		"physLocationId": GetPhysicalLocationID(t, "Denver")(),
-		"profileId":      GetProfileId(t, "EDGE1"),
+		"profileId":      GetProfileID(t, "EDGE1")(),
 		"statusId":       GetStatusID(t, "REPORTED")(),
 		"typeId":         GetTypeId(t, "EDGE"),
 	}

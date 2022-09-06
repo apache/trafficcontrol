@@ -323,7 +323,7 @@ func TestDeliveryServices(t *testing.T) {
 					}
 					if val, ok := testCase.RequestParams["profile"]; ok {
 						if _, err := strconv.Atoi(val[0]); err != nil {
-							testCase.RequestParams.Set("profile", strconv.Itoa(GetProfileId(t, val[0])))
+							testCase.RequestParams.Set("profile", strconv.Itoa(GetProfileID(t, val[0])()))
 						}
 					}
 					if val, ok := testCase.RequestParams["type"]; ok {
@@ -457,14 +457,6 @@ func GetDeliveryServiceId(t *testing.T, xmlId string) func() int {
 		assert.RequireNotNil(t, resp[0].ID, "Expected id to not be nil")
 		return *resp[0].ID
 	}
-}
-
-func GetProfileId(t *testing.T, profileName string) int {
-	resp, _, err := TOSession.GetProfileByNameWithHdr(profileName, http.Header{})
-	assert.RequireNoError(t, err, "Get Profiles Request failed with error: %v", err)
-	assert.RequireEqual(t, 1, len(resp), "Expected response object length 1, but got %d", len(resp))
-	assert.RequireNotNil(t, &resp[0].ID, "Expected id to not be nil")
-	return resp[0].ID
 }
 
 func generateDeliveryService(t *testing.T, requestDS map[string]interface{}) map[string]interface{} {
