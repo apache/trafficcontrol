@@ -50,8 +50,8 @@ Example:
 	:caption: An example of a bundled dependency license pointer
 
 	This product bundles go-acme/lego, which is available under an MIT license.
-	@vendor/github.com/go-acme/lego/*
-	./vendor/github.com/go-acme/lego/LICENSE
+	@vendor/github.com/go-acme/lego/v3/*
+	./vendor/github.com/go-acme/lego/v3/LICENSE
 	Refer to the above license for the full text.
 
 The ATC repository includes a GitHub Actions workflorkflow (:atc-file:`.github/workflows/license-file-coverage.yml`) to verify that changes to the LICENSE file will not result in pkg.go.dev hiding the Apache Traffic Control Godocs.
