@@ -72,9 +72,9 @@ func TestOrigins(t *testing.T) {
 				},
 				"OK when VALID PROFILEID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"profileId": {strconv.Itoa(GetProfileId(t, "ATS_EDGE_TIER_CACHE"))}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"profileId": {strconv.Itoa(GetProfileID(t, "ATS_EDGE_TIER_CACHE")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateOriginsFields(map[string]interface{}{"ProfileID": GetProfileId(t, "ATS_EDGE_TIER_CACHE")})),
+						validateOriginsFields(map[string]interface{}{"ProfileID": GetProfileID(t, "ATS_EDGE_TIER_CACHE")()})),
 				},
 				"OK when VALID PRIMARY parameter": {
 					ClientSession: TOSession,

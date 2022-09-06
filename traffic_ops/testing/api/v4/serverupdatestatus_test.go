@@ -29,6 +29,12 @@ import (
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
+func TestServerStatus(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServiceCategories, Topologies, DeliveryServices}, func() {
+
+	})
+}
+
 func TestServerUpdateStatusLastAssigned(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServiceCategories, Topologies, DeliveryServices}, func() {
 		opts := client.NewRequestOptions()
