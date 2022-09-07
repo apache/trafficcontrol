@@ -1018,7 +1018,7 @@ The following :term:`Parameters` must have the :ref:`Config File <parameter-conf
 - ``merge_parent_groups`` - on a Deliver Service :term:`Profile`, if this exists, moves each of the space-separated :term:`Cache Groups` named in the :ref:`parameter-value` from the secondary parent list into the primary parent list. This can be used to combine all parents into a single consistent hash ring.
 
 	.. deprecated:: ATCv6.2
-		In :ref:`to-api` version 4 (unstable at the time of this writing), TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.
+		In :ref:`to-api` version 4, TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.
 
 Parameters that Affect Multi-Site Origin and Parent Down Behavior
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
