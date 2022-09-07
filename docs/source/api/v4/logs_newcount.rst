@@ -14,7 +14,7 @@
 ..
 
 
-.. _to-api-logs-newcount:
+.. _to-api-v4-logs-newcount:
 
 *****************
 ``logs/newcount``
@@ -22,9 +22,9 @@
 
 ``GET``
 =======
-Gets the number of new changes made to the Traffic Control system - "new" being defined as the last time the client requested either :ref:`to-api-logs`
+Gets the number of new changes made to the Traffic Control system - "new" being defined as the last time the client requested either :ref:`to-api-v4-logs`
 
-.. note:: This endpoint's functionality is implemented by the :ref:`to-api-logs` endpoint's response setting cookies for the client to use when requesting _this_ endpoint. Take care that your client respects cookies!
+.. note:: This endpoint's functionality is implemented by the :ref:`to-api-v4-logs` endpoint's response setting cookies for the client to use when requesting _this_ endpoint. Take care that your client respects cookies!
 
 :Auth. Required: Yes
 :Roles Required: None

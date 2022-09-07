@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-xmlid-urisignkeys:
+.. _to-api-v4-deliveryservices-xmlid-urisignkeys:
 
 *******************************************
 ``deliveryservices/{{xml_id}}/urisignkeys``

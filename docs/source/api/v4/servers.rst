@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers:
+.. _to-api-v4-servers:
 
 ***********
 ``servers``
@@ -40,7 +40,7 @@ Request Structure
 	| cachegroupName | no       | Return only those servers within the :term:`Cache Group` that has this :ref:`cache-group-name`                    |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| dsId           | no       | Return only those servers assigned to the :term:`Delivery Service` identified by this integral, unique identifier.|
-	|                |          | If the Delivery Service has a :term:`Topology` assigned to it, the :ref:`to-api-servers` endpoint will return     |
+	|                |          | If the Delivery Service has a :term:`Topology` assigned to it, the :ref:`to-api-v4-servers` endpoint will return     |
 	|                |          | each server whose :term:`Cache Group` is associated with a :term:`Topology Node` of that Topology and has the     |
 	|                |          | :term:`Server Capabilities` that are                                                                              |
 	|                |          | :term:`required by the Delivery Service <Delivery Service required capabilities>` but excluding                   |

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-user-current:
+.. _to-api-v4-user-current:
 
 ****************
 ``user/current``
@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-.. caution:: As a username is needed to log in, any administrator or application must necessarily know the current username at any given time. Thus it's generally better to use the ``username`` query parameter of a ``GET`` request to :ref:`to-api-users` instead.
+.. caution:: As a username is needed to log in, any administrator or application must necessarily know the current username at any given time. Thus it's generally better to use the ``username`` query parameter of a ``GET`` request to :ref:`to-api-v4-users` instead.
 
 Retrieves the details of the authenticated user.
 
@@ -67,7 +67,7 @@ Response Structure
 :phoneNumber:       The user's phone number
 :postalCode:        The postal code of the area in which the user resides
 :publicSshKey:      The user's public key used for the SSH protocol
-:registrationSent:  If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
+:registrationSent:  If the user was created using the :ref:`to-api-v4-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
 :role:              The name of the :term:`Role` assigned to this user
 :stateOrProvince:   The name of the state or province where this user resides
 :tenant:            The name of the :term:`Tenant` to which this user belongs
@@ -126,7 +126,7 @@ Response Structure
 
 ``PUT``
 =======
-.. warning:: Assuming the current user's integral, unique identifier is known, it's generally better to use the ``PUT`` method of the :ref:`to-api-users` instead.
+.. warning:: Assuming the current user's integral, unique identifier is known, it's generally better to use the ``PUT`` method of the :ref:`to-api-v4-users` instead.
 
 .. warning:: Users that login via LDAP pass-back cannot be modified
 
@@ -233,7 +233,7 @@ Response Structure
 :phoneNumber:      The user's phone number
 :postalCode:       The postal code of the area in which the user resides
 :publicSshKey:     The user's public key used for the SSH protocol
-:registrationSent: If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
+:registrationSent: If the user was created using the :ref:`to-api-v4-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
 :role:             The name of the :term:`Role` assigned to this user
 :stateOrProvince:  The name of the state or province where this user resides
 :tenant:           The name of the :term:`Tenant` to which this user belongs

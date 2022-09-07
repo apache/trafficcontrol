@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id-servers-eligible:
+.. _to-api-v4-deliveryservices-id-servers-eligible:
 
 ********************************************
 ``deliveryservices/{{ID}}/servers/eligible``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservice-requests:
+.. _to-api-v4-deliveryservice-requests:
 
 ****************************
 ``deliveryservice_requests``
@@ -194,7 +194,7 @@ The response is an array of representations of :term:`Delivery Service Requests`
 		"status": "draft"
 	}]}
 
-.. _to-api-deliveryservice-requests-post:
+.. _to-api-v4-deliveryservice-requests-post:
 
 ``POST``
 ========
@@ -524,7 +524,7 @@ The response will be a representation of the created :term:`Delivery Service Req
 =======
 Updates an existing :term:`Delivery Service Request`. Note that "closed" :term:`Delivery Service Requests` are uneditable.
 
-.. seealso:: The proper way to change a :term:`Delivery Service Request`'s :ref:`dsr-status` is by using the :ref:`to-api-deliveryservice_requests-id-status` endpoint's ``PUT`` handler.
+.. seealso:: The proper way to change a :term:`Delivery Service Request`'s :ref:`dsr-status` is by using the :ref:`to-api-v4-deliveryservice_requests-id-status` endpoint's ``PUT`` handler.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"

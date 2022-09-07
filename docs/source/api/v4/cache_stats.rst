@@ -14,14 +14,14 @@
 ..
 
 
-.. _to-api-cache_stats:
+.. _to-api-v4-cache_stats:
 
 ***************
 ``cache_stats``
 ***************
 Retrieves detailed, aggregated statistics for caches in a specific CDN.
 
-.. seealso:: This gives an aggregate of statistics for *all caches* within a particular CDN and time range. For statistics basic statistics from all caches regardless of CDN and at the current time, use :ref:`to-api-caches-stats`.
+.. seealso:: This gives an aggregate of statistics for *all caches* within a particular CDN and time range. For statistics basic statistics from all caches regardless of CDN and at the current time, use :ref:`to-api-v4-caches-stats`.
 
 ``GET``
 -------

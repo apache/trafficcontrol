@@ -13,12 +13,12 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-id-queue_update:
+.. _to-api-v4-servers-id-queue_update:
 
 *******************************
 ``servers/{{ID}}/queue_update``
 *******************************
-.. caution:: In the vast majority of cases, it is advisable that the ``PUT`` method of the :ref:`to-api-servers-id` endpoint be used instead.
+.. caution:: In the vast majority of cases, it is advisable that the ``PUT`` method of the :ref:`to-api-v4-servers-id` endpoint be used instead.
 
 ``POST``
 ========
