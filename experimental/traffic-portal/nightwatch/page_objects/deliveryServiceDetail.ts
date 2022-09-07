@@ -45,6 +45,9 @@ const deliveryServiceDetailPageObject = {
 				refreshBtn: {
 					selector: "button[name='timespanRefresh']"
 				},
+				steeringIcon: {
+					selector: "div.actions > mat-icon"
+				},
 				toDate: {
 					selector: "input[name='todate']"
 				},

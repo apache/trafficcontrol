@@ -818,6 +818,22 @@ under the License.
                             </aside>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="steeringTargetsFor">
+                            Steering Targets For*
+                            <div class="helptooltip">
+                                <div class="helptext">
+                                    Which Delivery Services this Delivery Service is a potential Steering Target for.
+                                    <br />
+                                    <br />
+                                    <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-steering" target="_blank">See Steering Feature</a>
+                                </div>
+                            </div>
+                            </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="steeringTargetsFor" readonly type="text" class="form-control" ng-model="steeringTargetsFor" />
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.deepCachingType), 'has-feedback': hasError(cacheConfig.deepCachingType)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="deepCachingType">Deep Caching *<div class="helptooltip">
                             <div class="helptext">

@@ -30,6 +30,15 @@ form {
 		margin-top: 15px;
 		grid-column: 1 / span 2;
 	}
+
+	div.actions {
+		grid-column: 1 / span 2;
+
+		mat-icon {
+			margin-left: 15px;
+			cursor: help;
+		}
+	}
 }
 
 #invalidate {
