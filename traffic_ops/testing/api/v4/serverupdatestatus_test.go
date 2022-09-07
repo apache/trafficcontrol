@@ -84,7 +84,18 @@ func TestServerUpdateApplyTimeLocked(t *testing.T) {
 				t.Errorf("cannot login as '%s' user: %v", Config.TrafficOps.Users.Operations, err)
 			}
 
-			// Make change
+			badQueryOpts := client.NewRequestOptions()
+			badQueryOpts.QueryParameters.Set("updated", "true")
+			if _, _, err := opsSession.SetUpdateServerStatusTimes(*testServer.HostName, configApply, revalApply, badQueryOpts); err == nil {
+				t.Fatalf("expected SetUpdateServerStatusTimes to not allow updates due to `updated` field")
+			}
+
+			badQueryOpts = client.NewRequestOptions()
+			badQueryOpts.QueryParameters.Set("reval_updated", "true")
+			if _, _, err := opsSession.SetUpdateServerStatusTimes(*testServer.HostName, configApply, revalApply, badQueryOpts); err == nil {
+				t.Fatalf("expected SetUpdateServerStatusTimes to not allow updates due to `reval_updated` field")
+			}
+
 			if alerts, _, err := opsSession.SetUpdateServerStatusTimes(*testServer.HostName, configApply, revalApply, client.RequestOptions{}); err != nil {
 				t.Fatalf("SetUpdateServerStatusTimes error. expected: nil, actual: %v - alerts: %+v", err, alerts.Alerts)
 			}

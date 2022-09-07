@@ -297,11 +297,15 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, hasConfigUpdatedBoolParam := inf.Params["updated"]
+	_, hasRevalUpdatedBoolParam := inf.Params["reval_updated"]
 	_, hasConfigApplyTimeParam := inf.Params["config_apply_time"]
 	_, hasRevalidateApplyTimeParam := inf.Params["revalidate_apply_time"]
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if sysErr != nil || (userErr != nil && !hasConfigApplyTimeParam && !hasRevalidateApplyTimeParam) {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+	// Allow `apply_time` changes when the CDN is locked, but not `updated`
+	canIgnoreLock := (hasConfigApplyTimeParam || hasRevalidateApplyTimeParam) && !hasConfigUpdatedBoolParam && !hasRevalUpdatedBoolParam
+	userDoesntHaveLockErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if sysErr != nil || (userDoesntHaveLockErr != nil && !canIgnoreLock) {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userDoesntHaveLockErr, sysErr)
 		return
 	}
 
