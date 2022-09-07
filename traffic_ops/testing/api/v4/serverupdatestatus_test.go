@@ -103,19 +103,19 @@ func TestServerUpdateStatus(t *testing.T) {
 			}{
 				{
 					"atlanta-edge-01",
-					&edge1cdn1,
+					&edge1cdn1.ServerV40,
 				},
 				{
 					"atlanta-edge-03",
-					&edge2cdn1,
+					&edge2cdn1.ServerV40,
 				},
 				{
 					"atlanta-mid-16",
-					&mid1cdn1,
+					&mid1cdn1.ServerV40,
 				},
 				{
 					"edge1-cdn2",
-					&edge1cdn2,
+					&edge1cdn2.ServerV40,
 				},
 			} {
 				opts.QueryParameters.Set("hostName", s.name)
@@ -130,7 +130,7 @@ func TestServerUpdateStatus(t *testing.T) {
 					t.Errorf("Expected exactly one server named '%s' to exist - actual: %d", s.name, len(resp.Response))
 					t.Logf("Testing will proceed with server: %+v", resp.Response[0])
 				}
-				*s.server = resp.Response[0]
+				*s.server = resp.Response[0].ServerV40
 				if s.server.ID == nil {
 					t.Fatalf("server '%s' was returned with nil ID", s.name)
 				}

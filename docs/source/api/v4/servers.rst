@@ -69,6 +69,11 @@ Request Structure
 	|                |          | the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to  |
 	|                |          | make use of ``page``.                                                                                             |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| asn            | no       | Return only the servers that have a cachegroup matching the provided ASN.                                         |
+	|                |          |                                                                                                                   |
+	|                |          | .. versionadded:: 4.1                                                                                             |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+
 
 .. code-block:: http
 	:caption: Request Example
@@ -81,6 +86,9 @@ Request Structure
 
 Response Structure
 ------------------
+:asns:             The :abbr:`ASN (Autonomous System Number)` associated with the cachegroups of the current server.
+
+	.. versionadded:: 4.1
 :cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
 :cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:            The integral, unique identifier of the CDN to which the server belongs
@@ -225,6 +233,10 @@ Response Structure
 				"routerHostName": "",
 				"routerPortName": ""
 			}
+		],
+		"asns": [
+			1,
+			2
 		]
 	}],
 	"summary": {
