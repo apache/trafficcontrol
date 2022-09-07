@@ -215,7 +215,7 @@ Response Structure
 		],
 		"trafficMonitors": [
 			{
-				"profile": "RASCAL-Traffic_Monitor",
+				"profile": "Traffic_Monitor",
 				"status": "ONLINE",
 				"ip": "172.16.239.40",
 				"ip6": "fc01:9400:1000:8::40",

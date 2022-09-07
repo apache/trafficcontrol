@@ -342,7 +342,7 @@ func TestCDNLocks(t *testing.T) {
 					EndpointId:    GetProfileID(t, "OKwhenUserOwnLocks"),
 					ClientSession: opsUserWithLockSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
-						"parameterId": {strconv.Itoa(GetParameterID(t, "test.cdnlock.delete", "rascal.properties", "25.0")())},
+						"parameterId": {strconv.Itoa(GetParameterID(t, "test.cdnlock.delete", "tm.properties", "25.0")())},
 					}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -350,7 +350,7 @@ func TestCDNLocks(t *testing.T) {
 					EndpointId:    GetProfileID(t, "FORBIDDENwhenDoesntOwnLock"),
 					ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
-						"parameterId": {strconv.Itoa(GetParameterID(t, "test.cdnlock.forbidden.delete", "rascal.properties", "25.0")())},
+						"parameterId": {strconv.Itoa(GetParameterID(t, "test.cdnlock.forbidden.delete", "tm.properties", "25.0")())},
 					}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},

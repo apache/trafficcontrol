@@ -497,7 +497,7 @@ For each Parameter with this Config File value on the same :ref:`Profile <profil
 
 .. _tm-related-cache-server-params:
 
-rascal.properties
+tm.properties
 '''''''''''''''''
 This Config File is meant to be on Parameters assigned to either Traffic Monitor Profiles_ or :term:`cache server` Profiles_. Its allowed :ref:`Parameter Names <parameter-name>` are all configuration options for Traffic Monitor. The :ref:`Names <parameter-name>` with meaning are as follows.
 

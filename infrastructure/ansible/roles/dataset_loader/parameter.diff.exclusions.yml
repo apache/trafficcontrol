@@ -25,9 +25,9 @@ parameter_diff_exclusions:
     name: Drive_Letters
   - configFile: storage.config
     name: Drive_Prefix
-  - configFile: rascal.properties
+  - configFile: tm.properties
     name: health.threshold.kbps
-  - configFile: rascal.properties
+  - configFile: tm.properties
     name: health.threshold.loadavg
   - configFile: ip_allow.config
     name: purge_allow_ip
@@ -41,7 +41,7 @@ parameter_diff_exclusions:
     name: trafficserver
   - configFile: records.config
     name: CONFIG proxy.config.http.referer_default_redirect
-  - configFile: rascal.properties
+  - configFile: tm.properties
     name: health.threshold.availableBandwidthInKbps
   - configFile: package
     name: jemalloc-

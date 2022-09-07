@@ -552,7 +552,7 @@ Response Structure
 					"ip6": "",
 					"location": "CDN_in_a_Box_Edge",
 					"port": 80,
-					"profile": "RASCAL-Traffic_Monitor",
+					"profile": "Traffic_Monitor",
 					"status": "ONLINE"
 				}
 			},

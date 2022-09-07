@@ -46,8 +46,8 @@ INSERT INTO snapshot (
 	monitoring
 ) VALUES (
 	'dev',
-	'{"config":{"coveragezone.polling.url":"file:///go/src/github.com/apache/trafficcontrol/dev/traffic_router/czf.json","dnssec.enabled":"false","domain_name":"ciab.test","geolocation.polling.url":"file:///go/src/github.com/apache/trafficcontrol/traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz"},"contentServers":{"edge":{"cacheGroup":"dev","fqdn":"edge.dev.ciab.test","hashCount":999,"hashId":"edge","httpsPort":443,"interfaceName":"eth0","ip":"129.0.0.2","ip6":"","locationId":"dev","port":80,"profile":"EDGE_dev","status":"REPORTED","type":"EDGE","deliveryServices":{"dev-ds":["edge.dev-ds.ciab.test"]},"routingDisabled":0}},"contentRouters":{"trafficrouter":{"fqdn":"trafficrouter.dev.ciab.test","httpsPort":443,"ip":"","ip6":"","location":"tr-cg","port":80,"profile":"CCR_dev","status":"ONLINE"}},"deliveryServices":{"dev-ds":{"anonymousBlockingEnabled":"false","coverageZoneOnly":"false","deepCachingType":"NEVER","dispersion":{"limit":1,"shuffled":"true"},"domains":["dev-ds.ciab.test"],"ecsEnabled":"false","geolocationProvider":"maxmindGeolocationService","ip6RoutingEnabled":"false","matchsets":[{"protocol":"HTTP","matchlist":[{"regex":".*\\.dev-ds\\..*","match-type":"HOST"}]}],"missLocation":{"lat":1,"long":1},"protocol":{"acceptHttps":"false","redirectToHttps":"false"},"regionalGeoBlocking":"false","routingName":"cdn","soa":{"admin":"traffic_ops","expire":"604800","minimum":"30","refresh":"28800","retry":"7200"},"sslEnabled":"false","ttls":{"A":"","AAAA":"","NS":"3600","SOA":"86400"}}},"edgeLocations":{"dev":{"latitude":1,"longitude":1,"backupLocations":{"fallbackToClosest":"true"},"localizationMethods":["GEO","CZ","DEEP_CZ"]}},"trafficRouterLocations":{"tr-cg":{"latitude":1,"longitude":1,"backupLocations":{"fallbackToClosest":"false"},"localizationMethods":["GEO","CZ","DEEP_CZ"]}},"monitors":{"trafficmonitor":{"fqdn":"trafficmonitor.dev.ciab.test","httpsPort":null,"ip":"129.0.0.1","ip6":"","location":"dev","port":80,"profile":"RASCAL_TM_dev","status":"ONLINE"}},"stats":{"CDN_name":"dev","date":1649361181,"tm_host":"trafficops","tm_user":"admin","tm_version":"development"}}',
-	'{"trafficServers":[{"profile":"EDGE_dev","status":"REPORTED","port":80,"cachegroup":"dev","hostname":"edge","fqdn":"edge.dev.ciab.test","interfaces":[{"ipAddresses":[{"address":"129.0.0.2","gateway":null,"serviceAddress":true}],"maxBandwidth":null,"monitor":true,"mtu":1500,"name":"eth0"}],"type":"EDGE","hashid":"","deliveryServices":[{"xmlId":"dev-ds"}]}],"trafficMonitors":[{"profile":"RASCAL_TM_dev","status":"ONLINE","port":80,"cachegroup":"dev","hostname":"trafficmonitor","fqdn":"trafficmonitor.dev.ciab.test","ip":"129.0.0.1","ip6":""}],"cacheGroups":[{"name":"dev","coordinates":{"latitude":1,"longitude":1}},{"name":"tr-cg","coordinates":{"latitude":1,"longitude":1}}],"profiles":[{"name":"CCR_dev","type":"CCR","parameters":null},{"name":"EDGE_dev","type":"EDGE","parameters":{"health.polling.format":"stats_over_http","health.polling.url":"http://edge:8080/_stats?application=\\u0026inf.name=${interface_name}"}}],"deliveryServices":[{"xmlId":"dev-ds","totalTpsThreshold":0,"status":"REPORTED","totalKbpsThreshold":0,"type":"HTTP","topology":"","hostRegexes":[".*\\.dev-ds\\..*"]}],"config":{"health.polling.interval":6000,"heartbeat.polling.interval":3000,"peers.polling.interval":3000,"tm.polling.interval":2000},"topologies":{}}'
+	'{"config":{"coveragezone.polling.url":"file:///go/src/github.com/apache/trafficcontrol/dev/traffic_router/czf.json","dnssec.enabled":"false","domain_name":"ciab.test","geolocation.polling.url":"file:///go/src/github.com/apache/trafficcontrol/traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz"},"contentServers":{"edge":{"cacheGroup":"dev","fqdn":"edge.dev.ciab.test","hashCount":999,"hashId":"edge","httpsPort":443,"interfaceName":"eth0","ip":"129.0.0.2","ip6":"","locationId":"dev","port":80,"profile":"EDGE_dev","status":"REPORTED","type":"EDGE","deliveryServices":{"dev-ds":["edge.dev-ds.ciab.test"]},"routingDisabled":0}},"contentRouters":{"trafficrouter":{"fqdn":"trafficrouter.dev.ciab.test","httpsPort":443,"ip":"","ip6":"","location":"tr-cg","port":80,"profile":"CCR_dev","status":"ONLINE"}},"deliveryServices":{"dev-ds":{"anonymousBlockingEnabled":"false","coverageZoneOnly":"false","deepCachingType":"NEVER","dispersion":{"limit":1,"shuffled":"true"},"domains":["dev-ds.ciab.test"],"ecsEnabled":"false","geolocationProvider":"maxmindGeolocationService","ip6RoutingEnabled":"false","matchsets":[{"protocol":"HTTP","matchlist":[{"regex":".*\\.dev-ds\\..*","match-type":"HOST"}]}],"missLocation":{"lat":1,"long":1},"protocol":{"acceptHttps":"false","redirectToHttps":"false"},"regionalGeoBlocking":"false","routingName":"cdn","soa":{"admin":"traffic_ops","expire":"604800","minimum":"30","refresh":"28800","retry":"7200"},"sslEnabled":"false","ttls":{"A":"","AAAA":"","NS":"3600","SOA":"86400"}}},"edgeLocations":{"dev":{"latitude":1,"longitude":1,"backupLocations":{"fallbackToClosest":"true"},"localizationMethods":["GEO","CZ","DEEP_CZ"]}},"trafficRouterLocations":{"tr-cg":{"latitude":1,"longitude":1,"backupLocations":{"fallbackToClosest":"false"},"localizationMethods":["GEO","CZ","DEEP_CZ"]}},"monitors":{"trafficmonitor":{"fqdn":"trafficmonitor.dev.ciab.test","httpsPort":null,"ip":"129.0.0.1","ip6":"","location":"dev","port":80,"profile":"TM_dev","status":"ONLINE"}},"stats":{"CDN_name":"dev","date":1649361181,"tm_host":"trafficops","tm_user":"admin","tm_version":"development"}}',
+	'{"trafficServers":[{"profile":"EDGE_dev","status":"REPORTED","port":80,"cachegroup":"dev","hostname":"edge","fqdn":"edge.dev.ciab.test","interfaces":[{"ipAddresses":[{"address":"129.0.0.2","gateway":null,"serviceAddress":true}],"maxBandwidth":null,"monitor":true,"mtu":1500,"name":"eth0"}],"type":"EDGE","hashid":"","deliveryServices":[{"xmlId":"dev-ds"}]}],"trafficMonitors":[{"profile":"TM_dev","status":"ONLINE","port":80,"cachegroup":"dev","hostname":"trafficmonitor","fqdn":"trafficmonitor.dev.ciab.test","ip":"129.0.0.1","ip6":""}],"cacheGroups":[{"name":"dev","coordinates":{"latitude":1,"longitude":1}},{"name":"tr-cg","coordinates":{"latitude":1,"longitude":1}}],"profiles":[{"name":"CCR_dev","type":"CCR","parameters":null},{"name":"EDGE_dev","type":"EDGE","parameters":{"health.polling.format":"stats_over_http","health.polling.url":"http://edge:8080/_stats?application=\\u0026inf.name=${interface_name}"}}],"deliveryServices":[{"xmlId":"dev-ds","totalTpsThreshold":0,"status":"REPORTED","totalKbpsThreshold":0,"type":"HTTP","topology":"","hostRegexes":[".*\\.dev-ds\\..*"]}],"config":{"health.polling.interval":6000,"heartbeat.polling.interval":3000,"peers.polling.interval":3000,"tm.polling.interval":2000},"topologies":{}}'
 )
 ON CONFLICT DO NOTHING;
 
@@ -57,7 +57,7 @@ INSERT INTO profile (
 	"type",
 	cdn
 ) VALUES (
-	'RASCAL_TM_dev',
+	'TM_dev',
 	'dev TM Profile',
 	'TM_PROFILE',
 	(SELECT id FROM cdn WHERE "name" = 'dev')
@@ -79,27 +79,27 @@ INSERT INTO parameter (
 	"name",
 	"value"
 ) VALUES (
-	'rascal-config.txt',
+	'tm-config.txt',
 	'health.polling.interval',
 	'6000'
 ), (
-	'rascal-config.txt',
+	'tm-config.txt',
 	'heartbeat.polling.interval',
 	'3000'
 ), (
-	'rascal-config.txt',
+	'tm-config.txt',
 	'peers.polling.interval',
 	'3000'
 ), (
-	'rascal-config.txt',
+	'tm-config.txt',
 	'tm.polling.interval',
 	'2000'
 ), (
-	'rascal.properties',
+	'tm.properties',
 	'health.polling.url',
 	'http://edge:8080/_stats?application=&inf.name=${interface_name}'
 ), (
-	'rascal.properties',
+	'tm.properties',
 	'health.polling.format',
 	'stats_over_http'
 ), (
@@ -120,15 +120,15 @@ ON CONFLICT DO NOTHING;
 INSERT INTO profile_parameter
 SELECT profile.id, parameter.id
 FROM profile, parameter
-WHERE parameter.config_file = 'rascal-config.txt'
+WHERE parameter.config_file = 'tm-config.txt'
 AND parameter."name" LIKE '%.polling.%'
-AND profile."name" = 'RASCAL_TM_dev'
+AND profile."name" = 'TM_dev'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO profile_parameter
 SELECT profile.id, parameter.id
 FROM profile, parameter
-WHERE parameter.config_file = 'rascal.properties'
+WHERE parameter.config_file = 'tm.properties'
 AND profile."name" = 'EDGE_dev'
 ON CONFLICT DO NOTHING;
 
@@ -214,9 +214,9 @@ INSERT INTO "server" (
 	NULL,
 	(SELECT id FROM phys_location WHERE "name" = 'dev'),
 	(SELECT id FROM cachegroup WHERE "name" = 'dev'),
-	(SELECT id FROM "type" WHERE "name" = 'RASCAL'),
+	(SELECT id FROM "type" WHERE "name" = 'TRAFFIC_MONITOR'),
 	(SELECT id FROM status WHERE "name" = 'ONLINE'),
-	(SELECT id FROM profile WHERE "name"= 'RASCAL_TM_dev'),
+	(SELECT id FROM profile WHERE "name"= 'TM_dev'),
 	(SELECT id FROM cdn WHERE "name" = 'dev')
 ), (
 	'edge',
