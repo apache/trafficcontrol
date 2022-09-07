@@ -29,6 +29,108 @@ import (
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
+func TestServerUpdateApplyTimeLocked(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServiceCategories, Topologies, DeliveryServices}, func() {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("hostName", "atlanta-edge-01")
+		resp, _, err := TOSession.GetServers(opts)
+		if err != nil {
+			t.Fatalf("cannot get server by hostname: %v", err)
+		}
+		if len(resp.Response) != 1 {
+			t.Fatalf("Expected a server named 'atlanta-edge-01' to exist")
+		}
+		testServer := resp.Response[0]
+
+		testVals := func(configApply, revalApply *time.Time) {
+			resp, _, err := TOSession.GetServers(opts)
+			if err != nil {
+				t.Errorf("cannot get Server by name '%s': %v - alerts: %+v", *testServer.HostName, err, resp.Alerts)
+			} else if len(resp.Response) != 1 {
+				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
+			}
+
+			beforeServer := resp.Response[0]
+
+			// Ensure baseline
+			if beforeServer.UpdPending == nil {
+				t.Fatalf("Server '%s' had nil UpdPending before update status change", *testServer.HostName)
+			}
+			if beforeServer.RevalPending == nil {
+				t.Fatalf("Server '%s' had nil RevalPending before update status change", *testServer.HostName)
+			}
+			if beforeServer.ConfigUpdateTime == nil {
+				t.Fatalf("Server '%s' had nil ConfigUpdateTime before update status change", *testServer.HostName)
+			}
+			if beforeServer.ConfigApplyTime == nil {
+				t.Fatalf("Server '%s' had nil ConfigApplyTime before update status change", *testServer.HostName)
+			}
+			if beforeServer.RevalUpdateTime == nil {
+				t.Fatalf("Server '%s' had nil RevalUpdateTime before update status change", *testServer.HostName)
+			}
+			if beforeServer.RevalApplyTime == nil {
+				t.Fatalf("Server '%s' had nil RevalApplyTime before update status change", *testServer.HostName)
+			}
+
+			_, _, err = TOSession.CreateCDNLock(tc.CDNLock{CDN: *testServer.CDNName, Soft: util.BoolPtr(false)}, client.NewRequestOptions())
+			if err != nil {
+				t.Errorf("cannont acquire lock on the Server '%s' CDN '%s: %v", *testServer.HostName, *testServer.CDNName, err)
+			}
+
+			opsSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, Config.TrafficOps.Users.Operations,
+				Config.TrafficOps.UserPassword, true, "to-api-v4-locks-ops",
+				true, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
+			if err != nil {
+				t.Errorf("cannot login as '%s' user: %v", Config.TrafficOps.Users.Operations, err)
+			}
+
+			// Make change
+			if alerts, _, err := opsSession.SetUpdateServerStatusTimes(*testServer.HostName, configApply, revalApply, client.RequestOptions{}); err != nil {
+				t.Fatalf("SetUpdateServerStatusTimes error. expected: nil, actual: %v - alerts: %+v", err, alerts.Alerts)
+			}
+
+			resp, _, err = opsSession.GetServers(opts)
+			if err != nil {
+				t.Errorf("cannot GET Server by name '%s': %v - alerts: %+v", *testServer.HostName, err, resp.Alerts)
+			} else if len(resp.Response) != 1 {
+				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
+			}
+			afterServer := resp.Response[0]
+
+			opts := client.NewRequestOptions()
+			opts.QueryParameters.Set("cdn", *testServer.CDNName)
+			_, _, err = TOSession.DeleteCDNLocks(opts)
+			if err != nil {
+				t.Errorf("cannont delete acquired lock on the Server '%s' CDN '%s: %v", *testServer.HostName, *testServer.CDNName, err)
+			}
+
+			if afterServer.UpdPending == nil {
+				t.Fatalf("Server '%s' had nil UpdPending after update status change", *testServer.HostName)
+			}
+			if afterServer.RevalPending == nil {
+				t.Fatalf("Server '%s' had nil RevalPending after update status change", *testServer.HostName)
+			}
+
+			// Ensure values were actually set
+			if configApply != nil {
+				if afterServer.ConfigApplyTime == nil || !afterServer.ConfigApplyTime.Equal(*configApply) {
+					t.Errorf("Failed to set server's ConfigApplyTime. expected: %v actual: %v", *configApply, afterServer.ConfigApplyTime)
+				}
+			}
+			if revalApply != nil {
+				if afterServer.RevalApplyTime == nil || !afterServer.RevalApplyTime.Equal(*revalApply) {
+					t.Errorf("Failed to set server's RevalApplyTime. expected: %v actual: %v", *revalApply, afterServer.RevalApplyTime)
+				}
+			}
+
+		}
+
+		now := time.Now().Round(time.Microsecond)
+		testVals(util.TimePtr(now), nil)
+		testVals(nil, util.TimePtr(now))
+	})
+}
+
 func TestServerUpdateStatusLastAssigned(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServiceCategories, Topologies, DeliveryServices}, func() {
 		opts := client.NewRequestOptions()

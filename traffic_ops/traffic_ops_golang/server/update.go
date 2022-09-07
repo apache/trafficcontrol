@@ -296,8 +296,11 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
+
+	_, hasConfigApplyTimeParam := inf.Params["config_apply_time"]
+	_, hasRevalidateApplyTimeParam := inf.Params["revalidate_apply_time"]
 	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
+	if sysErr != nil || (userErr != nil && !hasConfigApplyTimeParam && !hasRevalidateApplyTimeParam) {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
