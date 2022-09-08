@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7023](https://github.com/apache/trafficcontrol/pull/7023) *Traffic Ops* Added the `ASN` field in TO Server struct, which provides the ability to query servers by `ASN`.
 - [#2101](https://github.com/apache/trafficcontrol/issues/2101) *Traffic Portal* Added the ability to tell if a Delivery Service is the target of another steering DS.
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) *Traffic Ops, Traffic Portal* Added ability to assign multiple server capabilities to a server.
+- [#7096](https://github.com/apache/trafficcontrol/issues/7096) [Health Client] Added health client parent health
 - [#7032](https://github.com/apache/trafficcontrol/issues/7032) *Cache Config* Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
 
 ### Changed

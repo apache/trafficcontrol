@@ -25,21 +25,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/tc-health-client/config"
 	"github.com/apache/trafficcontrol/tc-health-client/util"
-	"github.com/apache/trafficcontrol/traffic_monitor/tmclient"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -57,20 +57,175 @@ const (
 // auto updated to 1
 var traffic_ctl_index = 0
 
-type ParentAvailable interface {
-	available(reasonCode string) bool
-}
-
-// the necessary data required to keep track of trafficserver config
+// ParentInfo contains the necessary data required to keep track of trafficserver config
 // files, lists of parents a trafficserver instance uses, and directory
 // locations used for configuration and trafficserver executables.
+//
+// All AtomicPtr members MUST NOT be modified.
+// All AtomicPtr members are accessed concurrently by multiple goroutines,
+// and their objects must be atomically replaced by a single writer, and never modified.
 type ParentInfo struct {
 	ParentDotConfig        util.ConfigFile
 	StrategiesDotYaml      util.ConfigFile
 	TrafficServerBinDir    string
 	TrafficServerConfigDir string
-	Parents                map[string]ParentStatus
-	Cfg                    config.Cfg
+
+	Cfg    *util.AtomicPtr[config.Cfg]
+	TOData *util.AtomicPtr[TOData]
+
+	TrafficMonitorHealth *util.AtomicPtr[TrafficMonitorHealth]
+	ParentHealthL4       *util.AtomicPtr[ParentHealth]
+	ParentHealthL7       *util.AtomicPtr[ParentHealth]
+	ParentServiceHealth  *util.AtomicPtr[ParentServiceHealth]
+	ParentHealthLog      io.WriteCloser
+
+	MarkdownMethods map[config.HealthMethod]struct{}
+	HealthMethods   map[config.HealthMethod]struct{}
+
+	parents util.SyncMap[string, ParentStatus]
+
+	// ParentHostFQDNs maps hostnames to fqdns, of parents.
+	// This is necessary because Traffic Monitor's CRStates API only maps hostnames to health,
+	// which is mostly okay for CDN caches; but we can't key on hostname anywhere else, because hostnames for non-cache parents aren't unique or meaningful.
+	// So, we key on FQDN everywhere, and this mapping is used to map TM hostnames to their FQDNs.
+	//
+	// Don't use this for anything that includes non-cache (origin) servers.
+	// Hostnames for any servers but caches are not unique and cannot be used as keys.
+	ParentHostFQDNs util.SyncMap[string, string]
+}
+
+// TOData is the Traffic Ops data needed by various services.
+type TOData struct {
+	UserAgent string
+	TOClient  *toclient.Session
+	Monitors  map[string]struct{} `json:"trafficmonitors,omitempty"` // set[fqdn]
+	Caches    map[string]struct{} `json:"caches,omitempty"`          // set[fqdn]
+}
+
+// Clone copies the TOData into a new object.
+// Note the TOClient, which is safe for use by multiple goroutines, is not copied.
+func (td *TOData) Clone() *TOData {
+	newTD := NewTOData(td.UserAgent)
+	for fqdn, _ := range td.Monitors {
+		newTD.Monitors[fqdn] = struct{}{}
+	}
+	for fqdn, _ := range td.Caches {
+		newTD.Caches[fqdn] = struct{}{}
+	}
+	newTD.TOClient = td.TOClient
+	return newTD
+}
+
+func NewTOData(userAgent string) *TOData {
+	return &TOData{
+		UserAgent: userAgent,
+		Monitors:  map[string]struct{}{},
+		Caches:    map[string]struct{}{},
+	}
+}
+
+// CombineParentHealth takes a ParentHealth directly queried from the parent service (ATS or the Origin)
+// and the ParentServiceHealth directly queried from the parent's HealthService,
+// combines them,
+// and returns a ParentServiceHealth with each direct parent's RecursiveParentHealth containing
+// both the direct ParentHealth and the ParentServiceHealth.
+//
+// If any parent exists in the direct ParentHealth but not ParentServiceHealth (which may be common,
+// if cache parents aren't running the Health Service; and will always be true for origin parents),
+// the direct parent will be inserted into the ParentServiceHealth.
+//
+// If any parent exists in the ParentServiceHealth but not ParentHealth, that means the actual parent
+// service (ATS or the Origin) was unreachable, even though the Parent Health Service was reachable.
+// In which case, we don't want to ever consider that parent healthy, so it will not be included.
+func CombineParentHealth(parentHealthL4 *ParentHealth, parentHealthL7 *ParentHealth, parentServiceHealth *ParentServiceHealth) *ParentServiceHealth {
+	// have to copy, we aren't allowed to modify the ParentHealth or ParentServiceHealth
+	// (because there are many concurrent readers).
+
+	combined := NewParentServiceHealth()
+	for parentFQDN, parentDirectHealthL4 := range parentHealthL4.ParentHealthPollResults {
+		parentCombined := RecursiveParentHealth{}
+
+		parentHealthL4Copy := parentDirectHealthL4
+		parentCombined.ParentHealthL4 = &parentHealthL4Copy
+
+		// generally both L4 and L7 health should always exist,
+		// but this might occur if the service just started, or just got a new parent,
+		// and it hasn't had time to poll both yet
+		if parentHealthL7, parentHealthL7Exists := parentHealthL7.ParentHealthPollResults[parentFQDN]; parentHealthL7Exists {
+			parentHealthL7Copy := parentHealthL7
+			parentCombined.ParentHealthL7 = &parentHealthL7Copy
+		}
+
+		if parentServiceHealth, ok := parentServiceHealth.ParentServiceHealthPollResults[parentFQDN]; ok {
+			if parentServiceHealth.ParentServiceHealth == nil {
+				log.Errorln("combining parent health: parent '" + parentFQDN + "' was in parent service health with a null recursive.ParentServiceHealth! Should never happen, the health should only ever contain polled service objects")
+				continue
+			}
+			parentServiceHealthCopy := *parentServiceHealth.ParentServiceHealth
+			parentCombined.ParentServiceHealth = &parentServiceHealthCopy
+		}
+		// TODO warn/err if parent is in parentHealth but not parentServiceHealth? And the reverse?
+		combined.ParentServiceHealthPollResults[parentFQDN] = parentCombined
+	}
+	return combined
+}
+
+// LoadParentStatus returns parent's status and whether the parent existed.
+// It is safe for multiple goroutines.
+func (pi *ParentInfo) LoadParentStatus(fqdn string) (ParentStatus, bool) {
+	return pi.parents.Load(fqdn)
+}
+
+// StoreParentStatus Sets a parent's status.
+// It is safe for multiple goroutines.
+func (pi *ParentInfo) StoreParentStatus(fqdn string, st ParentStatus) {
+	pi.parents.Store(fqdn, st)
+}
+
+// GetParents returns a list of parent FQDNs.
+// The map of parents is not locked during execution, so if the map data is changed concurrently,
+// whether or not changes are returned will be nondeterministic.
+// It is safe for multiple goroutines.
+func (pi *ParentInfo) GetParents() []string {
+	parentFQDNs := []string{}
+	pi.parents.Range(func(parentFQDN string, parent ParentStatus) bool {
+		parentFQDNs = append(parentFQDNs, parentFQDN)
+		return true
+	})
+	return parentFQDNs
+}
+
+// GetCacheParents returns a list of parent FQDNs which are caches (as opposed to origins).
+// See GetParents for concurrency and other details.
+func (pi *ParentInfo) GetCacheParents() []string {
+	// TODO make this smarter.
+	parentFQDNs := []string{}
+	toData := pi.TOData.Get()
+	caches := toData.Caches
+	numParents := 0
+	numCaches := 0
+	pi.parents.Range(func(parentFQDN string, parent ParentStatus) bool {
+		numParents++
+		if _, ok := caches[parentFQDN]; !ok {
+			// log.Debugf("GetCacheParents parent '%v' not in caches, skipping\n", parent.Fqdn)
+			return true // skip parents that aren't caches (i.e. origins)
+		}
+		numCaches++
+		parentFQDNs = append(parentFQDNs, parentFQDN)
+		return true
+	})
+	return parentFQDNs
+}
+
+// LoadOrStoreParentStatus adds the given status if fqdn does not exist,
+// and returns the existing value if it does exist.
+// Returns true if the value was loaded, false if it was stored.
+//
+// This behaves identical to sync.Map.LoadOrStore.
+//
+// It is safe for multiple goroutines.
+func (pi *ParentInfo) LoadOrStoreParentStatus(fdqn string, status ParentStatus) (ParentStatus, bool) {
+	return pi.parents.LoadOrStore(fdqn, status)
 }
 
 // when reading the 'strategies.yaml', these fields are used to help
@@ -82,73 +237,6 @@ type FailOver struct {
 	ResponseCodes         []int    `yaml:"response_codes,omitempty"`
 	MarkDownCodes         []int    `yaml:"markdown_codes,omitempty"`
 	HealthCheck           []string `yaml:"health_check,omitempty"`
-}
-
-// the trafficserver 'HostStatus' fields that are necessary to interface
-// with the trafficserver 'traffic_ctl' command.
-type ParentStatus struct {
-	Fqdn                 string
-	ActiveReason         bool
-	LocalReason          bool
-	ManualReason         bool
-	LastTmPoll           int64
-	UnavailablePollCount int
-	MarkUpPollCount      int
-}
-
-// used to get the overall parent availablity from the
-// HostStatus markdown reasons.  all markdown reasons
-// must be true for a parent to be considered available.
-func (p ParentStatus) available(reasonCode string) bool {
-	rc := false
-
-	switch reasonCode {
-	case "active":
-		rc = p.ActiveReason
-	case "local":
-		rc = p.LocalReason
-	case "manual":
-		rc = p.ManualReason
-	}
-	return rc
-}
-
-// used to log that a parent's status is either UP or
-// DOWN based upon the HostStatus reason codes.  to
-// be considered UP, all reason codes must be 'true'.
-func (p ParentStatus) Status() string {
-	if !p.ActiveReason {
-		return "DOWN"
-	} else if !p.LocalReason {
-		return "DOWN"
-	} else if !p.ManualReason {
-		return "DOWN"
-	}
-	return "UP"
-}
-
-type StatusReason int
-
-// these are the HostStatus reason codes used withing
-// trafficserver.
-const (
-	ACTIVE StatusReason = iota
-	LOCAL
-	MANUAL
-)
-
-// used for logging a parent's HostStatus reason code
-// setting.
-func (s StatusReason) String() string {
-	switch s {
-	case ACTIVE:
-		return "ACTIVE"
-	case LOCAL:
-		return "LOCAL"
-	case MANUAL:
-		return "MANUAL"
-	}
-	return "UNDEFINED"
 }
 
 // the fields used from 'strategies.yaml' that describe
@@ -190,7 +278,8 @@ type Strategies struct {
 // used at startup to load a trafficservers list of parents from
 // it's 'parent.config', 'strategies.yaml' and current parent
 // status from trafficservers HostStatus subsystem.
-func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
+func NewParentInfo(cfgPtr *util.AtomicPtr[config.Cfg]) (*ParentInfo, error) {
+	cfg := cfgPtr.Get()
 
 	parentConfig := filepath.Join(cfg.TrafficServerConfigDir, ParentsFile)
 	modTime, err := util.GetFileModificationTime(parentConfig)
@@ -220,234 +309,97 @@ func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
 		TrafficServerConfigDir: cfg.TrafficServerConfigDir,
 	}
 
-	// initialize the trafficserver parents map.
-	parentStatus := make(map[string]ParentStatus)
-
 	// read the 'parent.config'.
-	if err := parentInfo.readParentConfig(parentStatus); err != nil {
+	if err := parentInfo.readParentConfig(); err != nil {
 		return nil, errors.New("loading " + ParentsFile + " file: " + err.Error())
 	}
 
 	// read the strategies.yaml.
-	if err := parentInfo.readStrategies(parentStatus); err != nil {
+	if err := parentInfo.readStrategies(); err != nil {
 		return nil, errors.New("loading parent " + StrategiesFile + " file: " + err.Error())
 	}
 
 	// collect the trafficserver parent status from the HostStatus subsystem.
-	if err := parentInfo.readHostStatus(parentStatus); err != nil {
+	if err := parentInfo.readHostStatus(cfg); err != nil {
 		return nil, fmt.Errorf("reading trafficserver host status: %w", err)
 	}
 
-	log.Infof("startup loaded %d parent records\n", len(parentStatus))
+	// TODO remove old parents no longer in parent.config, strategies.yaml, or traffic_ctl host status
 
-	parentInfo.Parents = parentStatus
-	parentInfo.Cfg = cfg
+	// log.Infof("startup loaded %d parent records\n", len(parentStatus))
+	// TODO track how many elements are in the map?
+	log.Infof("startup loaded x parent records\n")
+
+	parentInfo.Cfg = cfgPtr
+	parentInfo.ParentHealthL4 = NewParentHealthPtr()
+	parentInfo.ParentHealthL7 = NewParentHealthPtr()
+	parentInfo.TrafficMonitorHealth = util.NewAtomicPtr(NewTrafficMonitorHealth())
+	parentInfo.ParentServiceHealth = NewParentServiceHealthPtr()
+	parentInfo.TOData = util.NewAtomicPtr(NewTOData(cfg.UserAgent))
+
+	parentInfo.HealthMethods = map[config.HealthMethod]struct{}{}
+	for _, hm := range *cfg.HealthMethods {
+		parentInfo.HealthMethods[hm] = struct{}{}
+	}
+
+	parentInfo.MarkdownMethods = map[config.HealthMethod]struct{}{}
+	for _, hm := range *cfg.MarkdownMethods {
+		parentInfo.MarkdownMethods[hm] = struct{}{}
+	}
 
 	return &parentInfo, nil
-}
-
-// Queries a traffic monitor that is monitoring the trafficserver instance running on a host to
-// obtain the availability, health, of a parent used by trafficserver.
-func (c *ParentInfo) GetCacheStatuses() (tc.CRStates, error) {
-
-	tmHostName, err := c.findATrafficMonitor()
-	if err != nil {
-		return tc.CRStates{}, errors.New("finding a trafficmonitor: " + err.Error())
-	}
-	tmc := tmclient.New("http://"+tmHostName, config.GetRequestTimeout())
-
-	// Use a proxy to query TM if the ProxyURL is set
-	if c.Cfg.ParsedProxyURL != nil {
-		tmc.Transport = &http.Transport{Proxy: http.ProxyURL(c.Cfg.ParsedProxyURL)}
-	}
-
-	return tmc.CRStates(false)
-}
-
-// The main polling function that keeps the parents list current if
-// with any changes to the trafficserver 'parent.config' or 'strategies.yaml'.
-// Also, it keeps parent status current with the the trafficserver HostStatus
-// subsystem.  Finally, on each poll cycle a trafficmonitor is queried to check
-// that all parents used by this trafficserver are available for use based upon
-// the trafficmonitors idea from it's health protocol.  Parents are marked up or
-// down in the trafficserver subsystem based upon that hosts current status and
-// the status that trafficmonitor health protocol has determined for a parent.
-func (c *ParentInfo) PollAndUpdateCacheStatus() {
-	toLoginDispersion := config.GetTOLoginDispersion(c.Cfg.TOLoginDispersionFactor)
-	log.Infoln("polling started")
-	log.Infof("TO login dispersion: %v seconds\n", toLoginDispersion.Seconds())
-
-	for {
-		pollingInterval := config.GetTMPollingInterval()
-		// check for config file updates
-		newCfg := config.Cfg{
-			HealthClientConfigFile: c.Cfg.HealthClientConfigFile,
-		}
-		isNew, err := config.LoadConfig(&newCfg)
-		if err != nil {
-			log.Errorf("error reading changed config file %s: %s\n", c.Cfg.HealthClientConfigFile.Filename, err.Error())
-		}
-		if isNew {
-			if err = config.ReadCredentials(&newCfg, false); err != nil {
-				log.Errorln("could not load credentials for config updates, keeping the old config")
-			} else {
-				if err = config.GetTrafficMonitors(&newCfg); err != nil {
-					log.Errorln("could not update the list of trafficmonitors, keeping the old config")
-				} else {
-					config.UpdateConfig(&c.Cfg, &newCfg)
-					log.Infoln("the configuration has been successfully updated")
-				}
-			}
-		} else { // check for updates to the credentials file
-			if c.Cfg.CredentialFile.Filename != "" {
-				modTime, err := util.GetFileModificationTime(c.Cfg.CredentialFile.Filename)
-				if err != nil {
-					log.Errorf("could not stat the credential file %s", c.Cfg.CredentialFile.Filename)
-				}
-				if modTime > c.Cfg.CredentialFile.LastModifyTime {
-					log.Infoln("the credential file has changed, loading new credentials")
-					if err = config.ReadCredentials(&c.Cfg, true); err != nil {
-						log.Errorf("could not load credentials from the updated credential file: %s", c.Cfg.CredentialFile.Filename)
-					}
-				}
-			}
-		}
-
-		// check for parent and strategies config file updates, and trafficserver
-		// host status changes.  If an error is encountered reading data the current
-		// parents lists and hoststatus remains unchanged.
-		if err := c.UpdateParentInfo(); err != nil {
-			log.Errorf("could not load new ATS parent info: %s\n", err.Error())
-		} else {
-			log.Debugf("updated parent info, total number of parents: %d\n", len(c.Parents))
-		}
-
-		// read traffic manager cache statuses.
-		_c, err := c.GetCacheStatuses()
-
-		// get the current poll time
-		now := time.Now().Unix()
-
-		caches := _c.Caches
-		if err != nil {
-			log.Errorf("error in TrafficMonitor polling: %s\n", err.Error())
-			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
-				log.Errorln("could not update the list of trafficmonitors, keeping the old config")
-			} else {
-				log.Infoln("updated TrafficMonitor statuses from TrafficOps")
-			}
-
-			// log the poll state data if enabled
-			if c.Cfg.EnablePollStateLog {
-				err = c.WritePollState()
-				if err != nil {
-					log.Errorf("could not write the poll state log: %s\n", err.Error())
-				}
-			}
-
-			time.Sleep(pollingInterval)
-			continue
-		}
-
-		for k, v := range caches {
-			hostName := string(k)
-			cs, ok := c.Parents[hostName]
-			if ok {
-				// update the polling time
-				cs.LastTmPoll = now
-				c.Parents[hostName] = cs
-				tmAvailable := v.IsAvailable
-				if cs.available(c.Cfg.ReasonCode) != tmAvailable {
-					// do not mark down if the configuration disables mark downs.
-					if !c.Cfg.EnableActiveMarkdowns && !tmAvailable {
-						log.Infof("TM reports that %s is not available and should be marked DOWN but, mark downs are disabled by configuration", hostName)
-					} else {
-						if err = c.markParent(cs.Fqdn, v.Status, tmAvailable); err != nil {
-							log.Errorln(err.Error())
-						}
-					}
-				}
-				// if the host is available clear the unavailable poll count if not 0.
-				if cs.available(c.Cfg.ReasonCode) && tmAvailable {
-					if cs.UnavailablePollCount > 0 {
-						log.Debugf("resetting the UnavailablePollCount for %s from %d to 0",
-							hostName, cs.UnavailablePollCount)
-						cs.UnavailablePollCount = 0
-						c.Parents[hostName] = cs
-					}
-				}
-			}
-		}
-
-		// periodically update the TrafficMonitor list and statuses
-		if toLoginDispersion <= 0 {
-			toLoginDispersion = config.GetTOLoginDispersion(c.Cfg.TOLoginDispersionFactor)
-			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
-				log.Errorln("could not update the list of trafficmonitors, keeping the old config")
-			} else {
-				log.Infoln("updated TrafficMonitor statuses from TrafficOps")
-			}
-		} else {
-			toLoginDispersion -= pollingInterval
-		}
-
-		// log the poll state data if enabled
-		if c.Cfg.EnablePollStateLog {
-			err = c.WritePollState()
-			if err != nil {
-				log.Errorf("could not write the poll state log: %s\n", err.Error())
-			}
-		}
-
-		time.Sleep(pollingInterval)
-	}
 }
 
 // Used by the polling function to update the parents list from
 // changes to 'parent.config' and 'strategies.yaml'.  The parents
 // availability is also updated to reflect the current state from
 // the trafficserver HostStatus subsystem.
-func (c *ParentInfo) UpdateParentInfo() error {
-	ptime, err := util.GetFileModificationTime(c.ParentDotConfig.Filename)
+func (pi *ParentInfo) UpdateParentInfo(cfg *config.Cfg) error {
+	ptime, err := util.GetFileModificationTime(pi.ParentDotConfig.Filename)
 	if err != nil {
 		return errors.New("error reading " + ParentsFile + ": " + err.Error())
 	}
-	stime, err := util.GetFileModificationTime(c.StrategiesDotYaml.Filename)
+	stime, err := util.GetFileModificationTime(pi.StrategiesDotYaml.Filename)
 	if err != nil {
 		return errors.New("error reading " + StrategiesFile + ": " + err.Error())
 	}
-	if c.ParentDotConfig.LastModifyTime < ptime {
+	if pi.ParentDotConfig.LastModifyTime < ptime {
 		// read the 'parent.config'.
-		if err := c.readParentConfig(c.Parents); err != nil {
+		if err := pi.readParentConfig(); err != nil {
 			return errors.New("updating " + ParentsFile + " file: " + err.Error())
 		} else {
-			log.Infof("updated parents from new %s, total parents: %d\n", ParentsFile, len(c.Parents))
+			// log.Infof("updated parents from new %s, total parents: %d\n", ParentsFile, len(pi.Parents))
+			// TODO track map len
+			log.Infof("updated parents from new %s, total parents: %v\n", ParentsFile, "x")
 		}
 	}
 
-	if c.StrategiesDotYaml.LastModifyTime < stime {
+	if pi.StrategiesDotYaml.LastModifyTime < stime {
 		// read the 'strategies.yaml'.
-		if err := c.readStrategies(c.Parents); err != nil {
+		if err := pi.readStrategies(); err != nil {
 			return errors.New("updating parent " + StrategiesFile + " file: " + err.Error())
 		} else {
-			log.Infof("updated parents from new %s total parents: %d\n", StrategiesFile, len(c.Parents))
+			// log.Infof("updated parents from new %s total parents: %d\n", StrategiesFile, len(pi.Parents))
+			// TODO track map len
+			log.Infof("updated parents from new %s total parents: %v\n", StrategiesFile, "x")
 		}
 	}
 
 	// collect the trafficserver current host status.
-	if err := c.readHostStatus(c.Parents); err != nil {
+	if err := pi.readHostStatus(cfg); err != nil {
 		return errors.New("trafficserver may not be running: " + err.Error())
 	}
 
 	return nil
 }
 
-func (c *ParentInfo) WritePollState() error {
-	data, err := json.MarshalIndent(c, "", "\t")
+func (pi *ParentInfo) WritePollState() error {
+	cfg := pi.Cfg.Get()
+	data, err := json.MarshalIndent(pi, "", "\t")
 	if err != nil {
 		return fmt.Errorf("marshaling configuration state: %s\n", err.Error())
 	} else {
-		err = os.WriteFile(c.Cfg.PollStateJSONLog, data, 0644)
+		err = os.WriteFile(cfg.PollStateJSONLog, data, 0644)
 		if err != nil {
 			return fmt.Errorf("writing configuration state: %s\n", err.Error())
 		}
@@ -455,28 +407,27 @@ func (c *ParentInfo) WritePollState() error {
 	return nil
 }
 
-// choose an available trafficmonitor, returns an error if
-// there are none.
-func (c *ParentInfo) findATrafficMonitor() (string, error) {
+// findATrafficMonitor chooses an available trafficmonitor,
+// and returns an error if there are none.
+func (pi *ParentInfo) findATrafficMonitor() (string, error) {
+	toData := pi.TOData.Get()
+
 	var tmHostname string
-	lth := len(c.Cfg.TrafficMonitors)
+	lth := len(toData.Monitors)
 	if lth == 0 {
 		return "", errors.New("there are no available traffic monitors")
 	}
 
 	// build an array of available traffic monitors.
-	tms := make([]string, 0)
-	for k, v := range c.Cfg.TrafficMonitors {
-		if v == true {
-			log.Debugf("traffic monitor %s is available\n", k)
-			tms = append(tms, k)
-		}
+	tms := []string{}
+	for fqdn, _ := range toData.Monitors {
+		tms = append(tms, fqdn)
 	}
 
 	// choose one at random.
 	lth = len(tms)
 	if lth > 0 {
-		rand.Seed(time.Now().UnixNano())
+		// TODO make deterministic. Hash of hostname?
 		r := (rand.Intn(lth))
 		tmHostname = tms[r]
 	} else {
@@ -502,111 +453,229 @@ func parseFqdn(fqdn string) string {
 	return hostName
 }
 
-func (c *ParentInfo) execTrafficCtl(fqdn string, available bool) error {
-	reason := c.Cfg.ReasonCode
-	tc := filepath.Join(c.TrafficServerBinDir, TrafficCtl)
+// readParentConfig loads the parents list from the Trafficserver 'parent.config' file.
+func (pi *ParentInfo) readParentConfig() error {
+	fn := pi.ParentDotConfig.Filename
 
-	var status string
-	if available {
-		status = "up"
-	} else {
-		status = "down"
-	}
-
-	cmd := exec.Command(tc, "host", status, "--reason", reason, fqdn)
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
+	_, err := os.Stat(fn)
 	if err != nil {
-		return errors.New("marking " + fqdn + " " + status + ": " + TrafficCtl + " error: " + err.Error())
+		log.Warnf("skipping 'parents': %s\n", err.Error())
+		return nil
 	}
+
+	log.Debugf("loading %s\n", fn)
+
+	f, err := os.Open(fn)
+
+	if err != nil {
+		return errors.New("failed to open + " + fn + " :" + err.Error())
+	}
+	defer f.Close()
+
+	finfo, err := os.Stat(fn)
+	if err != nil {
+		return errors.New("failed to Stat + " + fn + " :" + err.Error())
+	}
+	pi.ParentDotConfig.LastModifyTime = finfo.ModTime().UnixNano()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		sbytes := scanner.Bytes()
+		sbytes = bytes.TrimSpace(sbytes)
+		if len(sbytes) == 0 {
+			continue // skip blank lines
+		}
+		if sbytes[0] == 35 { // skip comment lines, 35 is a '#'.
+			continue
+		}
+		// search for the parent list.
+		if i := strings.Index(string(sbytes), "parent="); i > 0 {
+			var plist []string
+			res := bytes.Split(sbytes, []byte("\""))
+			// 'parent.config' parent separators are ';' or ','.
+			plist = strings.Split(strings.TrimSpace(string(res[1])), ";")
+			if len(plist) == 1 {
+				plist = strings.Split(strings.TrimSpace(string(res[1])), ",")
+			}
+			// parse the parent list to get each hostName and it's associated
+			// port.
+			if len(plist) > 1 {
+				for _, v := range plist {
+					parent := strings.Split(v, ":")
+					if len(parent) == 2 {
+						fqdn := parent[0]
+
+						{
+							parentHostName := parseFqdn(fqdn)
+							pi.ParentHostFQDNs.Store(parentHostName, fqdn)
+						}
+
+						// create the ParentStatus struct and add it to the
+						// Parents map only if an entry in the map does not
+						// already exist.
+						_, loaded := pi.LoadOrStoreParentStatus(fqdn, ParentStatus{
+							Fqdn:                 strings.TrimSpace(fqdn),
+							ActiveReason:         true,
+							LocalReason:          true,
+							ManualReason:         true,
+							LastTmPoll:           0,
+							UnavailablePollCount: 0,
+						})
+						if !loaded {
+							log.Debugf("added Host '%s' from %s to the parents map\n", fqdn, fn)
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// load the parent hosts from 'strategies.yaml'.
+func (pi *ParentInfo) readStrategies() error {
+	var includes []string
+	fn := pi.StrategiesDotYaml.Filename
+
+	_, err := os.Stat(fn)
+	if err != nil {
+		log.Warnf("skipping 'strategies': %s\n", err.Error())
+		return nil
+	}
+
+	log.Debugf("loading %s\n", fn)
+
+	// open the strategies file for scanning.
+	f, err := os.Open(fn)
+	if err != nil {
+		return errors.New("failed to open + " + fn + " :" + err.Error())
+	}
+	defer f.Close()
+
+	finfo, err := os.Stat(fn)
+	if err != nil {
+		return errors.New("failed to Stat + " + fn + " :" + err.Error())
+	}
+	pi.StrategiesDotYaml.LastModifyTime = finfo.ModTime().UnixNano()
+
+	scanner := bufio.NewScanner(f)
+
+	// search for any yaml files that should be included in the
+	// yaml stream.
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if strings.HasPrefix(line, "#include") {
+			fields := strings.Split(line, " ")
+			if len(fields) >= 2 {
+				includeFile := filepath.Join(pi.TrafficServerConfigDir, fields[1])
+				includes = append(includes, includeFile)
+			}
+		}
+	}
+
+	includes = append(includes, fn)
+
+	var yamlContent string
+
+	// load all included and 'strategies yaml' files to
+	// the yamlContent.
+	for _, includeFile := range includes {
+		log.Debugf("loading %s\n", includeFile)
+		content, err := ioutil.ReadFile(includeFile)
+		if err != nil {
+			return errors.New(err.Error())
+		}
+
+		yamlContent = yamlContent + string(content)
+	}
+
+	strategies := Strategies{}
+
+	if err := yaml.Unmarshal([]byte(yamlContent), &strategies); err != nil {
+		return errors.New("failed to unmarshall " + fn + ": " + err.Error())
+	}
+
+	for _, host := range strategies.Hosts {
+		fqdn := host.HostName
+
+		{
+			parentHostName := parseFqdn(fqdn)
+			pi.ParentHostFQDNs.Store(parentHostName, fqdn)
+		}
+
+		_, loaded := pi.LoadOrStoreParentStatus(fqdn, ParentStatus{
+			Fqdn:                 strings.TrimSpace(fqdn),
+			ActiveReason:         true,
+			LocalReason:          true,
+			ManualReason:         true,
+			LastTmPoll:           0,
+			UnavailablePollCount: 0,
+		})
+		if !loaded {
+			log.Debugf("added Host '%s' from %s to the parents map\n", fqdn, fn)
+		}
+	}
+	return nil
+}
+
+// GetTOData fetches data needed from Traffic Ops and refreshes it in the ParentInfo object.
+//
+// Note it takes a Config, even though ParentInfo has a AtomicPtr[Config], because callers typically
+// need to atomically operate on a single Config.
+// If a caller doesn't already have a Config, simply call pi.GetTOData(pi.Cfg.Get()).
+func (pi *ParentInfo) GetTOData(cfg *config.Cfg) error {
+	// TODO can we use the t3c cache here?
+	toData := pi.TOData.Get().Clone()
+
+	if toData.TOClient == nil {
+		session, _, err := toclient.LoginWithAgent(cfg.TOUrl, cfg.TOUser, cfg.TOPass, true, toData.UserAgent, false, cfg.TORequestTimeout)
+		if err != nil {
+			return fmt.Errorf("could not establish a TrafficOps session: %w", err)
+		} else {
+			toData.TOClient = session
+		}
+	}
+
+	srvs, _, err := toData.TOClient.GetServersWithHdr(nil, nil)
+	if err != nil {
+		// next time we'll login again and get a new session.
+		toData.TOClient = nil
+		pi.TOData.Set(toData)
+		return errors.New("error fetching Trafficmonitor server list: " + err.Error())
+	}
+
+	toData.Monitors = map[string]struct{}{}
+	toData.Caches = map[string]struct{}{}
+	for _, sv := range srvs.Response {
+		log.Debugf("GetTOData server '%v' type '%v'\n", *sv.HostName, sv.Type)
+		if sv.HostName == nil {
+			log.Errorf("Traffic Ops returned server with nil hostname, skipping!")
+		} else if sv.CDNName == nil || sv.DomainName == nil || sv.Status == nil {
+			log.Errorf("Traffic Ops returned server '" + *sv.HostName + "' with nil required fields, skipping!")
+		}
+		if *sv.CDNName != cfg.CDNName {
+			continue
+		}
+		if sv.Type == tc.MonitorTypeName && tc.CacheStatus(*sv.Status) == tc.CacheStatusOnline {
+			fqdn := *sv.HostName + "." + *sv.DomainName
+			toData.Monitors[fqdn] = struct{}{}
+			continue
+		}
+		if tc.CacheType(sv.Type) == tc.CacheTypeEdge || tc.CacheType(sv.Type) == tc.CacheTypeMid {
+			fqdn := *sv.HostName + "." + *sv.DomainName
+			toData.Caches[fqdn] = struct{}{}
+			continue
+		}
+	}
+
+	pi.TOData.Set(toData)
 
 	return nil
 }
 
-// used to mark a parent as up or down in the trafficserver HostStatus
-// subsystem.
-func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool) error {
-	var hostAvailable bool
-	var err error
-	hostName := parseFqdn(fqdn)
-
-	log.Debugf("fqdn: %s, available: %v", fqdn, available)
-
-	pv, ok := c.Parents[hostName]
-	if ok {
-		activeReason := pv.ActiveReason
-		localReason := pv.LocalReason
-		unavailablePollCount := pv.UnavailablePollCount
-		markUpPollCount := pv.MarkUpPollCount
-
-		log.Debugf("hostName: %s, UnavailablePollCount: %d, available: %v", hostName, unavailablePollCount, available)
-
-		if !available { // unavailable
-			unavailablePollCount += 1
-			if unavailablePollCount < c.Cfg.UnavailablePollThreshold {
-				log.Infof("TM indicates %s is unavailable but the UnavailablePollThreshold has not been reached", hostName)
-				hostAvailable = true
-			} else {
-				// marking the host down
-				err = c.execTrafficCtl(fqdn, available)
-				if err != nil {
-					log.Errorln(err.Error())
-				} else {
-					hostAvailable = false
-					// reset the poll counts
-					markUpPollCount = 0
-					unavailablePollCount = 0
-					log.Infof("marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
-				}
-			}
-		} else { // available
-			// marking the host up
-			markUpPollCount += 1
-			if markUpPollCount < c.Cfg.MarkUpPollThreshold {
-				log.Infof("TM indicates %s is available but the MarkUpPollThreshold has not been reached", hostName)
-				hostAvailable = false
-			} else {
-				err = c.execTrafficCtl(fqdn, available)
-				if err != nil {
-					log.Errorln(err.Error())
-				} else {
-					hostAvailable = true
-					// reset the poll counts
-					unavailablePollCount = 0
-					markUpPollCount = 0
-					log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
-				}
-			}
-		}
-
-		// update parent info
-		if err == nil {
-			reason := c.Cfg.ReasonCode
-			switch reason {
-			case "active":
-				activeReason = hostAvailable
-			case "local":
-				localReason = hostAvailable
-			}
-			// save updates
-			pv.ActiveReason = activeReason
-			pv.LocalReason = localReason
-			pv.UnavailablePollCount = unavailablePollCount
-			pv.MarkUpPollCount = markUpPollCount
-			c.Parents[hostName] = pv
-			log.Debugf("Updated parent status: %v", pv)
-		}
-	}
-	return err
-}
-
-// reads the current parent statuses from the trafficserver HostStatus
-// subsystem.
-func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error {
-	tc := filepath.Join(c.TrafficServerBinDir, TrafficCtl)
+// readHostStatus reads the current parent statuses from the trafficserver HostStatus subsystem.
+func (pi *ParentInfo) readHostStatus(cfg *config.Cfg) error {
+	tc := filepath.Join(pi.TrafficServerBinDir, TrafficCtl)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
@@ -642,7 +711,6 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 		var activeReason bool
 		var localReason bool
 		var manualReason bool
-		var hostName string
 		var fqdn string
 		scanner := bufio.NewScanner(bytes.NewReader(stdout.Bytes()))
 		for scanner.Scan() {
@@ -691,189 +759,33 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 					MarkUpPollCount:      0,
 				}
 				log.Debugf("processed host status record: %v\n", pstat)
-				hostName = parseFqdn(fqdn)
-				pv, ok := parentStatus[hostName]
+
+				{
+					parentHostName := parseFqdn(fqdn)
+					pi.ParentHostFQDNs.Store(parentHostName, fqdn)
+				}
+
 				// create the ParentStatus struct and add it to the
 				// Parents map only if an entry in the map does not
 				// already exist.
-				if !ok {
-					parentStatus[hostName] = pstat
-					log.Infof("added Host '%s' from ATS Host Status to the parents map\n", hostName)
+				pv, loaded := pi.LoadOrStoreParentStatus(fqdn, pstat)
+				if !loaded {
+					log.Infof("added Host '%s' from ATS Host Status to the parents map\n", fqdn)
 				} else {
-					available := pstat.available(c.Cfg.ReasonCode)
-					if pv.available(c.Cfg.ReasonCode) != available {
-						log.Infof("host status for '%s' has changed to %s\n", hostName, pstat.Status())
+					available := pstat.available(cfg.ReasonCode)
+					if pv.available(cfg.ReasonCode) != available {
+						log.Infof("host status for '%s' has changed to %s\n", fqdn, pstat.Status())
 						pstat.LastTmPoll = pv.LastTmPoll
 						pstat.UnavailablePollCount = pv.UnavailablePollCount
 						pstat.MarkUpPollCount = pv.MarkUpPollCount
-						parentStatus[hostName] = pstat
+						pi.StoreParentStatus(fqdn, pstat)
 					}
 				}
 			}
 		}
-		log.Debugf("processed trafficserver host status results, total parents: %d\n", len(parentStatus))
-	}
-	return nil
-}
-
-// load parents list from the Trafficserver 'parent.config' file.
-func (c *ParentInfo) readParentConfig(parentStatus map[string]ParentStatus) error {
-	fn := c.ParentDotConfig.Filename
-
-	_, err := os.Stat(fn)
-	if err != nil {
-		log.Warnf("skipping 'parents': %s\n", err.Error())
-		return nil
-	}
-
-	log.Debugf("loading %s\n", fn)
-
-	f, err := os.Open(fn)
-
-	if err != nil {
-		return errors.New("failed to open + " + fn + " :" + err.Error())
-	}
-	defer f.Close()
-
-	finfo, err := os.Stat(fn)
-	if err != nil {
-		return errors.New("failed to Stat + " + fn + " :" + err.Error())
-	}
-	c.ParentDotConfig.LastModifyTime = finfo.ModTime().UnixNano()
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		sbytes := scanner.Bytes()
-		sbytes = bytes.TrimSpace(sbytes)
-		if len(sbytes) == 0 {
-			continue // skip blank lines
-		}
-		if sbytes[0] == 35 { // skip comment lines, 35 is a '#'.
-			continue
-		}
-		// search for the parent list.
-		if i := strings.Index(string(sbytes), "parent="); i > 0 {
-			var plist []string
-			res := bytes.Split(sbytes, []byte("\""))
-			// 'parent.config' parent separators are ';' or ','.
-			plist = strings.Split(strings.TrimSpace(string(res[1])), ";")
-			if len(plist) == 1 {
-				plist = strings.Split(strings.TrimSpace(string(res[1])), ",")
-			}
-			// parse the parent list to get each hostName and it's associated
-			// port.
-			if len(plist) > 1 {
-				for _, v := range plist {
-					parent := strings.Split(v, ":")
-					if len(parent) == 2 {
-						fqdn := parent[0]
-						hostName := parseFqdn(fqdn)
-						_, ok := parentStatus[hostName]
-						// create the ParentStatus struct and add it to the
-						// Parents map only if an entry in the map does not
-						// already exist.
-						if !ok {
-							pstat := ParentStatus{
-								Fqdn:                 strings.TrimSpace(fqdn),
-								ActiveReason:         true,
-								LocalReason:          true,
-								ManualReason:         true,
-								LastTmPoll:           0,
-								UnavailablePollCount: 0,
-							}
-							parentStatus[hostName] = pstat
-							log.Debugf("added Host '%s' from %s to the parents map\n", hostName, fn)
-						}
-					}
-				}
-			}
-		}
-	}
-	return nil
-}
-
-// load the parent hosts from 'strategies.yaml'.
-func (c *ParentInfo) readStrategies(parentStatus map[string]ParentStatus) error {
-	var includes []string
-	fn := c.StrategiesDotYaml.Filename
-
-	_, err := os.Stat(fn)
-	if err != nil {
-		log.Warnf("skipping 'strategies': %s\n", err.Error())
-		return nil
-	}
-
-	log.Debugf("loading %s\n", fn)
-
-	// open the strategies file for scanning.
-	f, err := os.Open(fn)
-	if err != nil {
-		return errors.New("failed to open + " + fn + " :" + err.Error())
-	}
-	defer f.Close()
-
-	finfo, err := os.Stat(fn)
-	if err != nil {
-		return errors.New("failed to Stat + " + fn + " :" + err.Error())
-	}
-	c.StrategiesDotYaml.LastModifyTime = finfo.ModTime().UnixNano()
-
-	scanner := bufio.NewScanner(f)
-
-	// search for any yaml files that should be included in the
-	// yaml stream.
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "#include") {
-			fields := strings.Split(line, " ")
-			if len(fields) >= 2 {
-				includeFile := filepath.Join(c.TrafficServerConfigDir, fields[1])
-				includes = append(includes, includeFile)
-			}
-		}
-	}
-
-	includes = append(includes, fn)
-
-	var yamlContent string
-
-	// load all included and 'strategies yaml' files to
-	// the yamlContent.
-	for _, includeFile := range includes {
-		log.Debugf("loading %s\n", includeFile)
-		content, err := ioutil.ReadFile(includeFile)
-		if err != nil {
-			return errors.New(err.Error())
-		}
-
-		yamlContent = yamlContent + string(content)
-	}
-
-	strategies := Strategies{}
-
-	if err := yaml.Unmarshal([]byte(yamlContent), &strategies); err != nil {
-		return errors.New("failed to unmarshall " + fn + ": " + err.Error())
-	}
-
-	for _, host := range strategies.Hosts {
-		fqdn := host.HostName
-		hostName := parseFqdn(fqdn)
-		// create the ParentStatus struct and add it to the
-		// Parents map only if an entry in the map does not
-		// already exist.
-		_, ok := parentStatus[hostName]
-		if !ok {
-			pstat := ParentStatus{
-				Fqdn:                 strings.TrimSpace(fqdn),
-				ActiveReason:         true,
-				LocalReason:          true,
-				ManualReason:         true,
-				LastTmPoll:           0,
-				UnavailablePollCount: 0,
-			}
-			parentStatus[hostName] = pstat
-			log.Debugf("added Host '%s' from %s to the parents map\n", hostName, fn)
-		}
+		// log.Debugf("processed trafficserver host status results, total parents: %d\n", len(parentStatus))
+		// TODO count parentStatus len?
+		log.Debugf("processed trafficserver host status results, total parents: %v\n", "x")
 	}
 	return nil
 }
