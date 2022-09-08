@@ -3204,7 +3204,7 @@
       "routerPortName": "",
       "status": "ONLINE",
       "tcpPort": 81,
-      "type": "TRAFFIC_MONITORv",
+      "type": "TRAFFIC_MONITOR",
       "updPending": false,
       "xmppId": "",
       "xmppPasswd": "X"
