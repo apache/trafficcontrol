@@ -91,7 +91,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(userForm.uPass), 'has-feedback': hasError(userForm.uPass)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Password <span ng-if="settings.isNew">*</span></label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="uPass" type="password" class="form-control" ng-model="user.localPasswd" ng-required="settings.isNew" ng-maxlength="40" ng-minlength="8" autofocus>
+                    <input name="uPass" type="password" class="form-control" ng-model="user.localPasswd" ng-required="settings.isNew" ng-maxlength="40" ng-minlength="8" autocomplete="new-password"  autofocus>
                     <small class="input-error" ng-show="hasPropertyError(userForm.uPass, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(userForm.uPass, 'minlength')">Too Short</small>
                     <small class="input-error" ng-show="hasPropertyError(userForm.uPass, 'maxlength')">Too Long</small>
