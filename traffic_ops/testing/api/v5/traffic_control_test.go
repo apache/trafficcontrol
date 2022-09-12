@@ -45,7 +45,7 @@ type TrafficControl struct {
 	PhysLocations                                     []tc.PhysLocation                       `json:"physLocations"`
 	Regions                                           []tc.Region                             `json:"regions"`
 	Roles                                             []tc.RoleV4                             `json:"roles"`
-	Servers                                           []tc.ServerV40                          `json:"servers"`
+	Servers                                           []tc.ServerV4                           `json:"servers"`
 	ServerServerCapabilities                          []tc.ServerServerCapability             `json:"serverServerCapabilities"`
 	ServerCapabilities                                []tc.ServerCapability                   `json:"serverCapabilities"`
 	ServiceCategories                                 []tc.ServiceCategory                    `json:"serviceCategories"`

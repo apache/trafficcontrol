@@ -99,7 +99,7 @@ func TestServerUpdateStatus(t *testing.T) {
 		getServers := func() {
 			for _, s := range []struct {
 				name   string
-				server *tc.ServerV40
+				server *tc.ServerV4
 			}{
 				{
 					"atlanta-edge-01",
