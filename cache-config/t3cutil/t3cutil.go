@@ -438,3 +438,10 @@ func sortAndCombineStrs(as []string, bs []string) []string {
 	}
 	return combined
 }
+
+// CheckRefsInputFileAndAdding is the input (stdin or file) for t3c-check-refs if
+// --files-adding=input. If not, the input is simply the raw file to check.
+type CheckRefsInputFileAndAdding struct {
+	File   []byte   `json:"file"`
+	Adding []string `json:"adding"`
+}

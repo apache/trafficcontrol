@@ -33,6 +33,11 @@ import (
 
 const AppName = "t3c-check-refs"
 
+// ArgFilesAddingInput is the value of the --files-adding flag to indicate to
+// the input (file or stdin, depending whether a filename argument was passed)
+// is a t3cutil.CheckRefsInputFileAndAdding JSON object.
+const ArgFilesAddingInput = "input"
+
 type Cfg struct {
 	CommandArgs            []string
 	LogLocationDebug       string
@@ -42,6 +47,7 @@ type Cfg struct {
 	TrafficServerConfigDir string
 	TrafficServerPluginDir string
 	FilesAdding            map[string]struct{}
+	FilesAddingInput       bool
 	Version                string
 	GitRevision            string
 }
@@ -106,13 +112,12 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
 	}
 
+	filesAddingInput := false
 	filesAddingSet := map[string]struct{}{}
-	for _, fileAdding := range strings.Split(*filesAdding, ",") {
-		fileAdding := strings.TrimSpace(fileAdding)
-		if fileAdding == "" {
-			continue
-		}
-		filesAddingSet[fileAdding] = struct{}{}
+	if strings.ToLower(strings.TrimSpace(*filesAdding)) == ArgFilesAddingInput {
+		filesAddingInput = true
+	} else {
+		filesAddingSet = ArgToFilesAdding(*filesAdding)
 	}
 
 	cfg := Cfg{
@@ -126,6 +131,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 		FilesAdding:            filesAddingSet,
 		Version:                appVersion,
 		GitRevision:            gitRevision,
+		FilesAddingInput:       filesAddingInput,
 	}
 
 	if err := log.InitCfg(cfg); err != nil {
@@ -133,4 +139,17 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	}
 
 	return cfg, nil
+}
+
+// ArgToFilesAdding converts a comma-delimited list of files being added to a set.
+func ArgToFilesAdding(filesAddingVal string) map[string]struct{} {
+	filesAddingSet := map[string]struct{}{}
+	for _, fileAdding := range strings.Split(filesAddingVal, ",") {
+		fileAdding := strings.TrimSpace(fileAdding)
+		if fileAdding == "" {
+			continue
+		}
+		filesAddingSet[fileAdding] = struct{}{}
+	}
+	return filesAddingSet
 }
