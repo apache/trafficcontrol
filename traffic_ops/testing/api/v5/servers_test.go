@@ -387,7 +387,7 @@ func TestServers(t *testing.T) {
 func validateServerFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		serverResp := resp.([]tc.ServerV40)
+		serverResp := resp.([]tc.ServerV4)
 		for field, expected := range expectedResp {
 			for _, server := range serverResp {
 				switch field {
@@ -460,7 +460,7 @@ func validateServerFieldsForUpdate(hostname string, expectedResp map[string]inte
 func validateExpectedServers(expectedHostnames []string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		serverResp := resp.([]tc.ServerV40)
+		serverResp := resp.([]tc.ServerV4)
 		var notInResponse []string
 		serverMap := make(map[string]struct{})
 		for _, server := range serverResp {
@@ -479,7 +479,7 @@ func validateExpectedServers(expectedHostnames []string) utils.CkReqFunc {
 func validateServerTypeIsNotMid() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		serverResp := resp.([]tc.ServerV40)
+		serverResp := resp.([]tc.ServerV4)
 		for _, server := range serverResp {
 			assert.RequireNotNil(t, server.HostName, "Expected server host name to not be nil.")
 			assert.NotEqual(t, server.Type, tc.CacheTypeMid.String(), "Expected to find no %s-typed servers but found server %s", tc.CacheTypeMid, *server.HostName)
@@ -490,7 +490,7 @@ func validateServerTypeIsNotMid() utils.CkReqFunc {
 func validateServerPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		paginationResp := resp.([]tc.ServerV40)
+		paginationResp := resp.([]tc.ServerV4)
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
 		respBase, _, err := TOSession.GetServers(opts)
