@@ -58,7 +58,7 @@ Response Structure
 ------------------
 Unlike most API endpoints, this will return a JSON response body containing both a "response" object as well as other, top-level fields (besides the optional "alerts" field). For this reason, this section contains a "response" key, which normally is implicit.
 
-.. seealso:: :ref:`to-api-v4-response-structure`
+.. seealso:: :ref:`to-api-response-structure`
 
 :limit:    The maximum size of the ``response`` array, also indicative of the number of results per page using the pagination requested by the query parameters (if any) - this should be the same as the ``limit`` query parameter (if given)
 :orderby:  A string that names the field by which the elements of the ``response`` array are ordered - should be the same as the ``orderby`` request query parameter (if given)
