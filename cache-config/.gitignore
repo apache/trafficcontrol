@@ -26,6 +26,7 @@ t3c-diff/t3c-diff
 t3c-generate/t3c-generate
 t3c-preprocess/t3c-preprocess
 t3c-request/t3c-request
+t3c-tail/t3c-tail
 t3c-update/t3c-update
 
 # generated documentation
