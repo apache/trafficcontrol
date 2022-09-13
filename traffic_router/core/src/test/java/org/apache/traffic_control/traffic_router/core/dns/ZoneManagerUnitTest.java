@@ -177,11 +177,11 @@ public class ZoneManagerUnitTest {
         LoadingCache<ZoneKey, Zone> dynamicZoneCache = CacheBuilder.newBuilder().build(loader);
 
         // stub calls for signatureManager, dynamicZoneCache and generateDynamicZoneKey
-        when(ZoneManager.getDynamicZoneCache()).thenReturn(dynamicZoneCache);
+        when(ZoneManager.getDynamicZoneCache()).thenAnswer(invocation -> dynamicZoneCache);
         ZoneKey zk = new ZoneKey(Name.fromString("dns1.example.com."), recordList);
         dynamicZoneCache.put(zk, dynamicZone);
 
-        when(ZoneManager.getSignatureManager()).thenReturn(signatureManager);
+        when(ZoneManager.getSignatureManager()).thenAnswer(invocation -> signatureManager);
         Answer<ZoneKey> currentTimeAnswer = invocation -> zk;
 
         when(ZoneManager.getSignatureManager().generateDynamicZoneKey(
