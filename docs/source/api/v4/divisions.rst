@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-divisions:
+.. _to-api-v4-divisions:
 
 *************
 ``divisions``

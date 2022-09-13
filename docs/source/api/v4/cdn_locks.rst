@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdn-locks:
+.. _to-api-v4-cdn-locks:
 
 *****************
 ``cdn_locks``

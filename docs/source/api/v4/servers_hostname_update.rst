@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-hostname-update:
+.. _to-api-v4-servers-hostname-update:
 
 *************************************
 ``servers/{{HostName-Or-ID}}/update``

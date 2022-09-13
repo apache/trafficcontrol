@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#2101](https://github.com/apache/trafficcontrol/issues/2101) Added the ability to tell if a Delivery Service is the target of another steering DS.
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) Added ability to assign multiple server capabilities to a server.
 - [#7032](https://github.com/apache/trafficcontrol/issues/7032) Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
+- Traffic Ops API version 5.0
 
 - [Traffic Monitor] Added logging for `ipv4Availability` and `ipv6Availability` in TM.
 - [Traffic Ops] Added the `ASN` field in TO Server struct, which provides the ability to query servers by `ASN`.
@@ -15,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Traffic Portal now obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 - Traffic Router now uses Traffic Ops API 4.0 by default
+- The Traffic Ops Python client now uses Traffic Ops API 4.1 by default.
 
 ### Fixed
 - Traffic Stats: Reuse InfluxDB client handle to prevent potential connection leaks

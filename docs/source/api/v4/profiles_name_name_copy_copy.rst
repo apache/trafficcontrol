@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-profiles-name-name-copy-copy:
+.. _to-api-v4-profiles-name-name-copy-copy:
 
 ****************************************
 ``profiles/name/{{name}}/copy/{{copy}}``

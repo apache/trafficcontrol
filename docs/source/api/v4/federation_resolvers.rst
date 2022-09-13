@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-federation_resolvers:
+.. _to-api-v4-federation_resolvers:
 
 ************************
 ``federation_resolvers``
@@ -114,7 +114,7 @@ Request Structure
 
 	.. caution:: This field should only ever be an identifier for one of the :term:`Types` "RESOLVE4" or "RESOLVE6", but there is **no protection for this built into Traffic Ops** and therefore **any valid** :term:`Type` **identifier will be silently accepted by Traffic Ops** and so care should be taken to ensure that these :term:`Types` are properly identified. If any :term:`Type` besides "RESOLVE4" or "RESOLVE6" is identified, the resulting resolver *will* **not** *work*.
 
-	.. seealso:: :ref:`to-api-types` is the endpoint that can be used to determine the identifier for various :term:`Types`
+	.. seealso:: :ref:`to-api-v4-types` is the endpoint that can be used to determine the identifier for various :term:`Types`
 
 .. code-block:: http
 	:caption: Request Example

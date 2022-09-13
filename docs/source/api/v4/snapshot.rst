@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-snapshot:
+.. _to-api-v4-snapshot:
 
 ************
 ``snapshot``
@@ -21,8 +21,8 @@
 
 ``PUT``
 =======
-Performs a CDN :term:`Snapshot`. Effectively, this propagates the new *configuration* of the CDN to its *operating state*, which replaces the output of the :ref:`to-api-cdns-name-snapshot` endpoint with the output of the :ref:`to-api-cdns-name-snapshot-new` endpoint.
-This also changes the output of the :ref:`to-api-cdns-name-configs-monitoring` endpoint since that endpoint returns the latest monitoring information from the *operating state*.
+Performs a CDN :term:`Snapshot`. Effectively, this propagates the new *configuration* of the CDN to its *operating state*, which replaces the output of the :ref:`to-api-v4-cdns-name-snapshot` endpoint with the output of the :ref:`to-api-v4-cdns-name-snapshot-new` endpoint.
+This also changes the output of the :ref:`to-api-v4-cdns-name-configs-monitoring` endpoint since that endpoint returns the latest monitoring information from the *operating state*.
 
 .. Note:: By default, snapshotting the CDN also deletes all HTTPS certificates for every :term:`Delivery Service` which has been deleted since the last :term:`Snapshot`. In order to disable this behavior, set ``disable_auto_cert_deletion`` in :ref:`cdn.conf` to ``true``.
 

@@ -112,7 +112,7 @@ class TOSession(RestApiSession):
 	.. note:: Only a small subset of the API endpoints are implemented. More can be implemented as needed.
 	"""
 
-	def __init__(self, host_ip, host_port=443, api_version='3.0', ssl=True, headers=None,
+	def __init__(self, host_ip, host_port=443, api_version='4.1', ssl=True, headers=None,
 	             verify_cert=True):
 		"""
 		The class initializer.
@@ -266,7 +266,7 @@ class TOSession(RestApiSession):
 	#
 	# ASN
 	#
-	@api_request('get', 'asns', ('3.0',))
+	@api_request('get', 'asns', ('3.0', '4.0', '4.1', '5.0'))
 	def get_asns(self, query_params=None):
 		"""
 		Get ASNs.
@@ -275,7 +275,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'asns', ('3.0',))
+	@api_request('post', 'asns', ('3.0', '4.0', '4.1', '5.0'))
 	def create_asn(self, data=None):
 		"""
 		Create ASN
@@ -286,7 +286,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'asns', ('3.0',))
+	@api_request('put', 'asns', ('3.0', '4.0', '4.1', '5.0'))
 	def update_asn(self, query_params=None):
 		"""
 		Update ASN
@@ -297,7 +297,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'asns', ('3.0',))
+	@api_request('delete', 'asns', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_asn(self, query_params=None):
 		"""
 		Delete ASN
@@ -311,7 +311,7 @@ class TOSession(RestApiSession):
 	#
 	# Cache Statistics
 	#
-	@api_request('get', 'cache_stats', ('3.0',))
+	@api_request('get', 'cache_stats', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cache_stats(self, query_params=None):
 		"""
 		Retrieves statistics about the CDN.
@@ -322,7 +322,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'caches/stats', ('3.0',))
+	@api_request('get', 'caches/stats', ('3.0', '4.0', '4.1', '5.0'))
 	def get_traffic_monitor_cache_stats(self):
 		"""
 		Retrieves cache stats from Traffic Monitor. Also includes rows for aggregates
@@ -334,7 +334,7 @@ class TOSession(RestApiSession):
 	#
 	# Cache Groups
 	#
-	@api_request('get', 'cachegroups', ('3.0',))
+	@api_request('get', 'cachegroups', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cachegroups(self, query_params=None):
 		"""
 		Get Cache Groups.
@@ -365,7 +365,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'cachegroups', ('3.0',))
+	@api_request('post', 'cachegroups', ('4.0', '4.1', '5.0',))
 	def create_cachegroups(self, data=None):
 		"""
 		Create a Cache Group
@@ -376,7 +376,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'cachegroups/{cache_group_id:d}', ('3.0',))
+	@api_request('put', 'cachegroups/{cache_group_id:d}', ('4.0', '4.1', '5.0',))
 	def update_cachegroups(self, cache_group_id=None, data=None):
 		"""
 		Update a cache group
@@ -389,7 +389,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'cachegroups/{cache_group_id:d}', ('3.0',))
+	@api_request('delete', 'cachegroups/{cache_group_id:d}', ('4.0', '4.1', '5.0',))
 	def delete_cachegroups(self, cache_group_id=None):
 		"""
 		Delete a cache group
@@ -400,7 +400,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'cachegroups/{cache_group_id:d}/queue_update', ('3.0',))
+	@api_request('post', 'cachegroups/{cache_group_id:d}/queue_update', ('4.0', '4.1', '5.0',))
 	def cachegroups_queue_update(self, cache_group_id=None, data=None):
 		"""
 		Queue Updates by Cache Group ID
@@ -444,7 +444,7 @@ class TOSession(RestApiSession):
 	#
 	# CDN
 	#
-	@api_request('get', 'cdns', ('3.0',))
+	@api_request('get', 'cdns', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cdns(self, query_params=None):
 		"""
 		Get all CDNs.
@@ -455,7 +455,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'cdns', ('3.0',))
+	@api_request('post', 'cdns', ('3.0', '4.0', '4.1', '5.0'))
 	def create_cdn(self, data=None):
 		"""
 		Create a new CDN.
@@ -466,7 +466,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'cdns/{cdn_id:d}', ('3.0',))
+	@api_request('put', 'cdns/{cdn_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_cdn_by_id(self, cdn_id=None, data=None):
 		"""
 		Update a CDN by Id.
@@ -479,7 +479,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'cdns/{cdn_id:d}', ('3.0',))
+	@api_request('delete', 'cdns/{cdn_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_cdn_by_id(self, cdn_id=None):
 		"""
 		Delete a CDN by Id.
@@ -490,7 +490,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'cdns/{cdn_id:d}/queue_update', ('3.0',))
+	@api_request('post', 'cdns/{cdn_id:d}/queue_update', ('3.0', '4.0', '4.1', '5.0'))
 	def cdns_queue_update(self, cdn_id=None, data=None):
 		"""
 		Queue Updates by CDN Id.
@@ -506,7 +506,7 @@ class TOSession(RestApiSession):
 	#
 	# CDN Health/Usage
 	#
-	@api_request('get', 'cdns/health', ('3.0',))
+	@api_request('get', 'cdns/health', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cdns_health(self):
 		"""
 		Retrieves the health of all locations (cache groups) for all CDNs
@@ -516,7 +516,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('get', 'cdns/{cdn_name:s}/health', ('3.0',))
+	@api_request('get', 'cdns/{cdn_name:s}/health', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cdn_health_by_name(self, cdn_name=None):
 		"""
 		Retrieves the health of all locations (cache groups) for a given CDN
@@ -527,7 +527,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'cdns/capacity', ('3.0',))
+	@api_request('get', 'cdns/capacity', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cdns_capacity(self):
 		"""
 		Retrieves the aggregate capacity percentages of all locations (cache groups) for a given CDN.
@@ -539,7 +539,7 @@ class TOSession(RestApiSession):
 	#
 	# CDN Routing
 	#
-	@api_request('get', 'cdns/routing', ('3.0',))
+	@api_request('get', 'cdns/routing', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cdns_routing(self):
 		"""
 		Retrieves the aggregate routing percentages of all locations (cache groups) for a given CDN.
@@ -551,7 +551,7 @@ class TOSession(RestApiSession):
 	#
 	# CDN Domains
 	#
-	@api_request('get', 'cdns/domains', ('3.0',))
+	@api_request('get', 'cdns/domains', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cdns_domains(self):
 		"""
 		Retrieves the different CDN domains
@@ -564,7 +564,7 @@ class TOSession(RestApiSession):
 	# CDN Topology
 	#
 
-	@api_request('get', 'cdns/{cdn_name:s}/configs/monitoring', ('3.0',))
+	@api_request('get', 'cdns/{cdn_name:s}/configs/monitoring', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cdn_monitoring_info(self, cdn_name=None):
 		"""
 		Retrieves CDN monitoring information
@@ -578,7 +578,7 @@ class TOSession(RestApiSession):
 	#
 	# DNSSEC Keys
 	#
-	@api_request('get', 'cdns/name/{cdn_name:s}/dnsseckeys', ('3.0',))
+	@api_request('get', 'cdns/name/{cdn_name:s}/dnsseckeys', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cdn_dns_sec_keys(self, cdn_name=None):
 		"""
 		Gets a list of dnsseckeys for a CDN and all associated Delivery Services
@@ -589,7 +589,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'cdns/name/{cdn_name:s}/dnsseckeys', ('3.0',))
+	@api_request('delete', 'cdns/name/{cdn_name:s}/dnsseckeys', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_cdn_dns_sec_keys(self, cdn_name=None):
 		"""
 		Delete dnssec keys for a cdn and all associated delivery services
@@ -600,7 +600,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'cnds/dnsseckeys/generate', ('3.0',))
+	@api_request('post', 'cnds/dnsseckeys/generate', ('3.0', '4.0', '4.1', '5.0'))
 	def create_cdn_dns_sec_keys(self, data=None):
 		"""
 		Generates ZSK and KSK keypairs for a CDN and all associated Delivery Services
@@ -614,7 +614,7 @@ class TOSession(RestApiSession):
 	#
 	# CDN SSL Keys
 	#
-	@api_request('get', 'cdns/name/{cdn_name:s}/sslkeys', ('3.0',))
+	@api_request('get', 'cdns/name/{cdn_name:s}/sslkeys', ('3.0', '4.0', '4.1', '5.0'))
 	def get_cdn_ssl_keys(self, cdn_name=None):
 		"""
 		Returns ssl certificates for all Delivery Services that are a part of the CDN.
@@ -628,7 +628,7 @@ class TOSession(RestApiSession):
 	#
 	# Change Logs
 	#
-	@api_request('get', 'logs', ('3.0',))
+	@api_request('get', 'logs', ('3.0', '4.0', '4.1', '5.0'))
 	def get_change_logs(self, query_params=None):
 		"""
 		Retrieve all change logs from traffic ops
@@ -637,7 +637,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'logs/newcount', ('3.0',))
+	@api_request('get', 'logs/newcount', ('3.0', '4.0', '4.1', '5.0'))
 	def get_change_logs_newcount(self):
 		"""
 		Get amount of new logs from traffic ops
@@ -649,7 +649,7 @@ class TOSession(RestApiSession):
 	#
 	# Delivery Service
 	#
-	@api_request('get', 'deliveryservices', ('3.0',))
+	@api_request('get', 'deliveryservices', ('3.0', '4.0', '4.1', '5.0'))
 	def get_deliveryservices(self, query_params=None):
 		"""
 		Retrieves all delivery services (if admin or ops) or all delivery services assigned to user.
@@ -658,7 +658,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'deliveryservices', ('3.0',))
+	@api_request('post', 'deliveryservices', ('3.0', '4.0', '4.1', '5.0'))
 	def create_deliveryservice(self, data=None):
 		"""
 		Allows user to create a delivery service.
@@ -669,7 +669,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'deliveryservices/{delivery_service_id:d}', ('3.0',))
+	@api_request('put', 'deliveryservices/{delivery_service_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_deliveryservice_by_id(self, delivery_service_id=None, data=None):
 		"""
 		Update a Delivery Service by Id.
@@ -682,7 +682,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'deliveryservices/{delivery_service_id:d}/safe', ('3.0',))
+	@api_request('put', 'deliveryservices/{delivery_service_id:d}/safe', ('3.0', '4.0', '4.1', '5.0'))
 	def update_deliveryservice_safe(self, delivery_service_id=None, data=None):
 		"""
 		Allows a user to edit limited fields of a Delivery Service.
@@ -696,7 +696,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('delete', 'deliveryservices/{delivery_service_id:d}', ('3.0',))
+	@api_request('delete', 'deliveryservices/{delivery_service_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_deliveryservice_by_id(self, delivery_service_id=None):
 		"""
 		Allows user to delete a delivery service.
@@ -710,7 +710,7 @@ class TOSession(RestApiSession):
 	#
 	# Delivery Service Health
 	#
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}/health', ('3.0',))
+	@api_request('get', 'deliveryservices/{delivery_service_id:d}/health', ('3.0', '4.0', '4.1', '5.0'))
 	def get_delivery_service_health(self, delivery_service_id=None):
 		"""
 		Retrieves the health of all locations (cache groups) for a delivery service. Delivery
@@ -722,7 +722,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}/capacity', ('3.0',))
+	@api_request('get', 'deliveryservices/{delivery_service_id:d}/capacity', ('3.0', '4.0', '4.1', '5.0'))
 	def get_delivery_service_capacity(self, delivery_service_id=None):
 		"""
 		Retrieves the capacity percentages of a delivery service. Delivery service must be assigned
@@ -737,7 +737,7 @@ class TOSession(RestApiSession):
 	#
 	# Delivery Service Server
 	#
-	@api_request('get', 'deliveryserviceserver', ('3.0',))
+	@api_request('get', 'deliveryserviceserver', ('3.0', '4.0', '4.1', '5.0'))
 	def get_deliveryserviceserver(self, query_params=None):
 		"""
 		Retrieves delivery service / server assignments. (Allows pagination and limits)
@@ -748,7 +748,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'deliveryserviceserver', ('3.0',))
+	@api_request('post', 'deliveryserviceserver', ('3.0', '4.0', '4.1', '5.0'))
 	def assign_deliveryservice_servers_by_ids(self, data=None):
 		"""
 		Assign servers by id to a Delivery Service. (New Method)
@@ -759,7 +759,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'deliveryservices/{xml_id}/servers', ('3.0',))
+	@api_request('post', 'deliveryservices/{xml_id}/servers', ('3.0', '4.0', '4.1', '5.0'))
 	def assign_deliveryservice_servers_by_names(self, xml_id=None, data=None):
 		"""
 		Assign servers by name to a Delivery Service by xmlId.
@@ -772,7 +772,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'deliveryserviceserver/{delivery_service_id:d}/{server_id:d}',('3.0',))
+	@api_request('delete', 'deliveryserviceserver/{delivery_service_id:d}/{server_id:d}',('3.0', '4.0', '4.1', '5.0'))
 	def delete_deliveryservice_servers_by_id(self, delivery_service_id=None, server_id=None):
 		"""
 		Removes a server (cache) from a delivery service.
@@ -785,7 +785,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}/servers', ('3.0',))
+	@api_request('get', 'deliveryservices/{delivery_service_id:d}/servers', ('3.0', '4.0', '4.1', '5.0'))
 	def get_deliveryservice_servers(self, delivery_service_id=None):
 		"""
 		Retrieves properties of CDN EDGE or ORG servers assigned to a delivery service.
@@ -796,7 +796,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}/servers/eligible', ('3.0',))
+	@api_request('get', 'deliveryservices/{delivery_service_id:d}/servers/eligible', ('3.0', '4.0', '4.1', '5.0'))
 	def get_deliveryservice_ineligible_servers(self, delivery_service_id=None):
 		"""
 		Retrieves properties of CDN EDGE or ORG servers not eligible for assignment to a delivery
@@ -811,7 +811,7 @@ class TOSession(RestApiSession):
 	#
 	# Delivery Service SSL Keys
 	#
-	@api_request('get', 'deliveryservices/xmlId/{xml_id}/sslkeys', ('3.0',))
+	@api_request('get', 'deliveryservices/xmlId/{xml_id}/sslkeys', ('3.0', '4.0', '4.1', '5.0'))
 	def get_deliveryservice_ssl_keys_by_xml_id(self, xml_id=None, query_params=None):
 		"""
 		Get SSL keys for a Delivery Service by xmlId.
@@ -824,7 +824,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'deliveryservices/xmlId/{xml_id}/sslkeys', ('3.0',))
+	@api_request('delete', 'deliveryservices/xmlId/{xml_id}/sslkeys', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_deliveryservice_ssl_keys_by_xml_id(self, xml_id=None, query_params=None):
 		"""
 		Delete SSL keys for a Delivery Service by xmlId.
@@ -837,7 +837,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'deliveryservices/sslkeys/generate', ('3.0',))
+	@api_request('post', 'deliveryservices/sslkeys/generate', ('3.0', '4.0', '4.1', '5.0'))
 	def generate_deliveryservice_ssl_keys(self, data=None):
 		"""
 		Generate an SSL certificate. (self-signed)
@@ -848,7 +848,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'deliveryservices/sslkeys/add', ('3.0',))
+	@api_request('post', 'deliveryservices/sslkeys/add', ('3.0', '4.0', '4.1', '5.0'))
 	def add_ssl_keys_to_deliveryservice(self, data=None):
 		"""
 		Add SSL keys to a Delivery Service.
@@ -862,7 +862,7 @@ class TOSession(RestApiSession):
 	#
 	# Delivery Service URL Sig Keys
 	#
-	@api_request('post', 'deliveryservices/xmlId/{xml_id}/urlkeys/generate', ('3.0',))
+	@api_request('post', 'deliveryservices/xmlId/{xml_id}/urlkeys/generate', ('3.0', '4.0', '4.1', '5.0'))
 	def generate_deliveryservice_url_signature_keys(self, xml_id=None):
 		"""
 		Generate URL Signature Keys for a Delivery Service by xmlId.
@@ -876,7 +876,7 @@ class TOSession(RestApiSession):
 	#
 	# Delivery Service Regexes
 	#
-	@api_request('get', 'deliveryservices_regexes', ('3.0',))
+	@api_request('get', 'deliveryservices_regexes', ('3.0', '4.0', '4.1', '5.0'))
 	def get_deliveryservices_regexes(self):
 		"""
 		Get RegExes for all Delivery Services.
@@ -885,7 +885,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}/regexes', ('3.0',))
+	@api_request('get', 'deliveryservices/{delivery_service_id:d}/regexes', ('3.0', '4.0', '4.1', '5.0'))
 	def get_deliveryservice_regexes_by_id(self, delivery_service_id=None, query_params=None):
 		"""
 		Get RegExes for a Delivery Service by Id.
@@ -898,7 +898,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'deliveryservices/{delivery_service_id:d}/regexes', ('3.0',))
+	@api_request('post', 'deliveryservices/{delivery_service_id:d}/regexes', ('3.0', '4.0', '4.1', '5.0'))
 	def create_deliveryservice_regexes(self, delivery_service_id=None, data=None):
 		"""
 		Create a regex for a delivery service
@@ -911,7 +911,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'deliveryservices/{delivery_service_id:d}/regexes/{regex_id:d}', ('3.0',))
+	@api_request('put', 'deliveryservices/{delivery_service_id:d}/regexes/{regex_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_deliveryservice_regexes(self, delivery_service_id=None, regex_id=None,
 	                                   query_params=None):
 		"""
@@ -928,7 +928,7 @@ class TOSession(RestApiSession):
 		"""
 
 	@api_request('delete', 'deliveryservices/{delivery_service_id:d}/regexes/'
-	                        '{delivery_service_regex_id:d}', ('3.0',))
+	                        '{delivery_service_regex_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_deliveryservice_regex_by_regex_id(self, delivery_service_id=None,
 	                                             delivery_service_regex_id=None):
 		"""
@@ -945,7 +945,7 @@ class TOSession(RestApiSession):
 	#
 	# Delivery Service Statistics
 	#
-	@api_request('get', 'deliveryservice_stats', ('3.0',))
+	@api_request('get', 'deliveryservice_stats', ('3.0', '4.0', '4.1', '5.0'))
 	def get_delivery_service_stats(self, query_params=None):
 		"""
 		Retrieves statistics on the delivery services.
@@ -959,7 +959,7 @@ class TOSession(RestApiSession):
 	#
 	# Divisions
 	#
-	@api_request('get', 'divisions', ('3.0',))
+	@api_request('get', 'divisions', ('3.0', '4.0', '4.1', '5.0'))
 	def get_divisions(self, query_params=None):
 		"""
 		Get all divisions.
@@ -968,7 +968,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'divisions/{division_id:d}', ('3.0',))
+	@api_request('put', 'divisions/{division_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_division(self, division_id=None, query_params=None):
 		"""
 		Update a division by division id
@@ -981,7 +981,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'divisions', ('3.0',))
+	@api_request('post', 'divisions', ('3.0', '4.0', '4.1', '5.0'))
 	def create_division(self, data=None):
 		"""
 		Create a division
@@ -992,7 +992,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'divisions/{division_id:d}', ('3.0',))
+	@api_request('delete', 'divisions/{division_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_division(self, division_id=None, query_params=None):
 		"""
 		Delete a division by division id
@@ -1008,7 +1008,7 @@ class TOSession(RestApiSession):
 	#
 	# Federation
 	#
-	@api_request('get', 'federations', ('3.0',))
+	@api_request('get', 'federations', ('3.0', '4.0', '4.1', '5.0'))
 	def get_federations(self):
 		"""
 		Retrieves a list of federation mappings (aka federation resolvers) for a the current user
@@ -1018,7 +1018,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('post', 'federations', ('3.0',))
+	@api_request('post', 'federations', ('3.0', '4.0', '4.1', '5.0'))
 	def create_federation(self, data=None):
 		"""
 		Allows a user to add federations for their delivery service(s).
@@ -1030,7 +1030,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('get', 'cdns/{cdn_name:s}/federations', ('3.0',))
+	@api_request('get', 'cdns/{cdn_name:s}/federations', ('3.0', '4.0', '4.1', '5.0'))
 	def get_federations_for_cdn(self, cdn_name=None, query_params=None):
 		"""
 		Retrieves a list of federations for a cdn.
@@ -1044,7 +1044,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('post', 'cdns/{cdn_name:s}/federations', ('3.0',))
+	@api_request('post', 'cdns/{cdn_name:s}/federations', ('3.0', '4.0', '4.1', '5.0'))
 	def create_federation_in_cdn(self, cdn_name=None, data=None):
 		"""
 		Create a federation.
@@ -1055,7 +1055,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'cdns/{cdn_name:s}/federations/{federation_id:d}', ('3.0',))
+	@api_request('put', 'cdns/{cdn_name:s}/federations/{federation_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_federation_in_cdn(self, cdn_name=None, federation_id=None, query_params=None):
 		"""
 		Update a federation.
@@ -1068,7 +1068,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'cdns/{cdn_name:s}/federations/{federation_id:d}', ('3.0',))
+	@api_request('delete', 'cdns/{cdn_name:s}/federations/{federation_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_federation_in_cdn(self, cdn_name=None, federation_id=None):
 		"""
 		Delete a federation.
@@ -1084,7 +1084,7 @@ class TOSession(RestApiSession):
 	#
 	# Federation Delivery Service
 	#
-	@api_request('get', 'federations/{federation_id:d}/deliveryservices', ('3.0',))
+	@api_request('get', 'federations/{federation_id:d}/deliveryservices', ('3.0', '4.0', '4.1', '5.0'))
 	def get_federation_delivery_services(self, federation_id=None):
 		"""
 		Retrieves delivery services assigned to a federation
@@ -1098,7 +1098,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('post', 'federations/{federation_id:d}/deliveryservices', ('3.0',))
+	@api_request('post', 'federations/{federation_id:d}/deliveryservices', ('3.0', '4.0', '4.1', '5.0'))
 	def assign_delivery_services_to_federations(self, federation_id=None, data=None):
 		"""
 		Create one or more federation / delivery service assignments.
@@ -1114,7 +1114,7 @@ class TOSession(RestApiSession):
 	#
 	# Federation Federation Resolver
 	#
-	@api_request('get', 'federations/{federation_id:d}/federation_resolvers', ('3.0',))
+	@api_request('get', 'federations/{federation_id:d}/federation_resolvers', ('3.0', '4.0', '4.1', '5.0'))
 	def get_federation_resolvers_by_id(self, federation_id=None):
 		"""
 		:ref:`to-api-federations-id-federation_resolvers`
@@ -1126,7 +1126,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('post', 'federations/{federation_id:d}/federation_resolvers', ('3.0',))
+	@api_request('post', 'federations/{federation_id:d}/federation_resolvers', ('3.0', '4.0', '4.1', '5.0'))
 	def assign_federation_resolver_to_federations(self, federation_id=None, data=None):
 		"""
 		Create one or more federation / federation resolver assignments.
@@ -1142,7 +1142,7 @@ class TOSession(RestApiSession):
 	#
 	# Federation Resolver
 	#
-	@api_request('get', 'federation_resolvers', ('3.0',))
+	@api_request('get', 'federation_resolvers', ('3.0', '4.0', '4.1', '5.0'))
 	def get_federation_resolvers(self, query_params=None):
 		"""
 		Get federation resolvers.
@@ -1152,7 +1152,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('post', 'federation_resolvers', ('3.0',))
+	@api_request('post', 'federation_resolvers', ('3.0', '4.0', '4.1', '5.0'))
 	def create_federation_resolver(self, data=None):
 		"""
 		Create a federation resolver.
@@ -1162,7 +1162,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'federation_resolvers/{federation_resolver_id:d}', ('3.0',))
+	@api_request('delete', 'federation_resolvers/{federation_resolver_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_federation_resolver(self, federation_resolver_id=None):
 		"""
 		Delete a federation resolver.
@@ -1175,7 +1175,7 @@ class TOSession(RestApiSession):
 	#
 	# Federation User
 	#
-	@api_request('get', 'federations/{federation_id:d}/users', ('3.0',))
+	@api_request('get', 'federations/{federation_id:d}/users', ('3.0', '4.0', '4.1', '5.0'))
 	def get_federation_users(self, federation_id=None):
 		"""
 		Retrieves users assigned to a federation.
@@ -1184,7 +1184,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'federations/{federation_id:d}/users', ('3.0',))
+	@api_request('post', 'federations/{federation_id:d}/users', ('3.0', '4.0', '4.1', '5.0'))
 	def create_federation_user(self, federation_id=None, data=None):
 		"""
 		Create one or more federation / user assignments.
@@ -1197,7 +1197,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'federations/{federation_id:d}/users/{user_id:d}', ('3.0',))
+	@api_request('delete', 'federations/{federation_id:d}/users/{user_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_federation_user(self, federation_id=None, user_id=None):
 		"""
 		Delete one or more federation / user assignments.
@@ -1213,7 +1213,7 @@ class TOSession(RestApiSession):
 	#
 	# ISO
 	#
-	@api_request('get', 'osversions', ('3.0',))
+	@api_request('get', 'osversions', ('3.0', '4.0', '4.1', '5.0'))
 	def get_osversions(self):
 		"""
 		Get all OS versions for ISO generation and the directory where the kickstarter files are
@@ -1225,7 +1225,7 @@ class TOSession(RestApiSession):
 		"""
 
 	#TODO: this currently doesn't work, as /isos wasn't rewritten yet
-	@api_request('post', 'isos', ('3.0',))
+	@api_request('post', 'isos', ('3.0', '4.0', '4.1', '5.0'))
 	def generate_iso(self, data=None):
 		"""
 		Generate an ISO
@@ -1239,7 +1239,7 @@ class TOSession(RestApiSession):
 	#
 	# Jobs
 	#
-	@api_request('get', 'jobs', ('3.0',))
+	@api_request('get', 'jobs', ('3.0', '4.0', '4.1', '5.0'))
 	def get_jobs(self, query_params=None):
 		"""
 		Get all content-invalidation jobs (tenancy permitting).
@@ -1248,7 +1248,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'jobs', ('3.0',))
+	@api_request('post', 'jobs', ('3.0', '4.0', '4.1', '5.0'))
 	def create_job(self, data=None):
 		"""
 		Creates a new content-invalidation job sorted by start time.
@@ -1259,7 +1259,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'jobs', ('3.0',))
+	@api_request('get', 'jobs', ('3.0', '4.0', '4.1', '5.0'))
 	def update_job(self, data=None, query_params=None):
 		"""
 		Replaces a content-invalidation job with the one passed.
@@ -1271,7 +1271,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'jobs', ('3.0',))
+	@api_request('delete', 'jobs', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_job(self, query_params=None):
 		"""
 		Deletes a content-invalidation job.
@@ -1284,7 +1284,7 @@ class TOSession(RestApiSession):
 	#
 	# Parameter
 	#
-	@api_request('get', 'parameters', ('3.0',))
+	@api_request('get', 'parameters', ('3.0', '4.0', '4.1', '5.0'))
 	def get_parameters(self, query_params=None):
 		"""
 		Get all Parameters.
@@ -1293,7 +1293,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'profiles/{profile_id:d}/parameters', ('3.0',))
+	@api_request('get', 'profiles/{profile_id:d}/parameters', ('3.0', '4.0', '4.1', '5.0'))
 	def get_parameters_by_profile_id(self, profile_id=None):
 		"""
 		Get all Parameters associated with a Profile by Id.
@@ -1304,7 +1304,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'profiles/name/{profile_name}/parameters', ('3.0',))
+	@api_request('get', 'profiles/name/{profile_name}/parameters', ('3.0', '4.0', '4.1', '5.0'))
 	def get_parameters_by_profile_name(self, profile_name=None):
 		"""
 		Get all Parameters associated with a Profile by Name.
@@ -1315,7 +1315,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'parameters', ('3.0',))
+	@api_request('post', 'parameters', ('3.0', '4.0', '4.1', '5.0'))
 	def create_parameter(self, data=None):
 		"""
 		Create Parameter
@@ -1326,7 +1326,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'parameters/{parameter_id:d}', ('3.0',))
+	@api_request('put', 'parameters/{parameter_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_parameter(self, parameter_id=None, query_params=None):
 		"""
 		Update Parameter
@@ -1338,7 +1338,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('delete', 'parameters/{parameter_id:d}', ('3.0',))
+	@api_request('delete', 'parameters/{parameter_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_parameter(self, parameter_id=None):
 		"""
 		Delete Parameter
@@ -1352,7 +1352,7 @@ class TOSession(RestApiSession):
 	#
 	# Physical Location
 	#
-	@api_request('get', 'phys_locations', ('3.0',))
+	@api_request('get', 'phys_locations', ('3.0', '4.0', '4.1', '5.0'))
 	def get_physical_locations(self, query_params=None):
 		"""
 		Get Physical Locations.
@@ -1361,7 +1361,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'phys_locations/{physical_location_id:d}', ('3.0',))
+	@api_request('put', 'phys_locations/{physical_location_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_physical_location(self, physical_location_id=None, query_params=None):
 		"""
 		Update Physical Location by id
@@ -1372,7 +1372,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'phys_locations/{physical_location_id:d}', ('3.0',))
+	@api_request('delete', 'phys_locations/{physical_location_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_physical_location(self, physical_location_id=None, query_params=None):
 		"""
 		Delete Physical Location by id
@@ -1386,7 +1386,7 @@ class TOSession(RestApiSession):
 	#
 	# Plugins
 	#
-	@api_request('get', 'plugins', ('3.0',))
+	@api_request('get', 'plugins', ('3.0', '4.0', '4.1', '5.0'))
 	def get_plugins(self):
 		"""
 		Retrieves the list of plugins.
@@ -1398,7 +1398,7 @@ class TOSession(RestApiSession):
 	#
 	# Profiles
 	#
-	@api_request('get', 'profiles', ('3.0',))
+	@api_request('get', 'profiles', ('3.0', '4.0', '4.1', '5.0'))
 	def get_profiles(self, query_params=None):
 		"""
 		Get Profiles.
@@ -1407,7 +1407,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'profiles', ('3.0',))
+	@api_request('post', 'profiles', ('3.0', '4.0', '4.1', '5.0'))
 	def create_profile(self, data=None):
 		"""
 		Create a profile
@@ -1418,7 +1418,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'profiles/name/{new_profile_name:s}/copy/{copy_profile_name:s}', ('3.0',))
+	@api_request('post', 'profiles/name/{new_profile_name:s}/copy/{copy_profile_name:s}', ('3.0', '4.0', '4.1', '5.0'))
 	def copy_profile(self, new_profile_name=None, copy_profile_name=None, data=None):
 		"""
 		Copy profile to a new profile. The new profile name must not exist
@@ -1433,7 +1433,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'profiles/{profile_id:d}', ('3.0',))
+	@api_request('put', 'profiles/{profile_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_profile_by_id(self, profile_id=None, data=None):
 		"""
 		Update Profile by Id.
@@ -1446,7 +1446,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'profiles/{profile_id:d}', ('3.0',))
+	@api_request('delete', 'profiles/{profile_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_profile_by_id(self, profile_id=None):
 		"""
 		Delete Profile by Id.
@@ -1460,7 +1460,7 @@ class TOSession(RestApiSession):
 	#
 	# Profile Parameters
 	#
-	@api_request('post', 'profileparameters', ('3.0',))
+	@api_request('post', 'profileparameters', ('3.0', '4.0', '4.1', '5.0'))
 	def associate_paramater_to_profile(self, data=None):
 		"""
 		Associate parameter to profile.
@@ -1470,7 +1470,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('post', 'profiles/{profile_id:d}/parameters', ('3.0',))
+	@api_request('post', 'profiles/{profile_id:d}/parameters', ('3.0', '4.0', '4.1', '5.0'))
 	def associate_parameters_by_profile_id(self, profile_id=None, data=None):
 		"""
 		Associate Parameters to a Profile by Id.
@@ -1483,7 +1483,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'profileparameter', ('3.0',))
+	@api_request('post', 'profileparameter', ('3.0', '4.0', '4.1', '5.0'))
 	def assign_profile_to_parameter_ids(self, data=None):
 		"""
 		Create one or more profile / parameter assignments.
@@ -1494,7 +1494,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'parameterprofile', ('3.0',))
+	@api_request('post', 'parameterprofile', ('3.0', '4.0', '4.1', '5.0'))
 	def assign_parameter_to_profile_ids(self, data=None):
 		"""
 		Create one or more parameter / profile assignments.
@@ -1506,7 +1506,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('post', 'profiles/name/{profile_name}/parameters', ('3.0',))
+	@api_request('post', 'profiles/name/{profile_name}/parameters', ('3.0', '4.0', '4.1', '5.0'))
 	def associate_parameters_by_profile_name(self, profile_name=None, data=None):
 		"""
 		Associate Parameters to a Profile by Name.
@@ -1519,7 +1519,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'profileparameters/{profile_id:d}/{parameter_id:d}', ('3.0',))
+	@api_request('delete', 'profileparameters/{profile_id:d}/{parameter_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_profile_parameter_association_by_id(self, profile_id=None, parameter_id=None):
 		"""
 		Delete Parameter association by Id for a Profile by Id.
@@ -1535,7 +1535,7 @@ class TOSession(RestApiSession):
 	#
 	# Regions
 	#
-	@api_request('get', 'regions', ('3.0',))
+	@api_request('get', 'regions', ('3.0', '4.0', '4.1', '5.0'))
 	def get_regions(self, query_params=None):
 		"""
 		Get Regions.
@@ -1546,7 +1546,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'regions', ('3.0',))
+	@api_request('post', 'regions', ('3.0', '4.0', '4.1', '5.0'))
 	def create_region(self, query_params=None, data=None):
 		"""
 		Create a region
@@ -1557,7 +1557,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'regions', ('3.0',))
+	@api_request('delete', 'regions', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_region(self, query_params=None):
 		"""
 		Delete a region by name or ID as a query parameter
@@ -1568,7 +1568,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'regions/{region_id:d}', ('3.0',))
+	@api_request('put', 'regions/{region_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_region(self, region_id=None):
 		"""
 		Update a region
@@ -1582,7 +1582,7 @@ class TOSession(RestApiSession):
 	#
 	# Roles
 	#
-	@api_request('get', 'roles', ('3.0',))
+	@api_request('get', 'roles', ('3.0', '4.0', '4.1', '5.0'))
 	def get_roles(self):
 		"""
 		Get Roles.
@@ -1591,7 +1591,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'roles', ('3.0',))
+	@api_request('post', 'roles', ('3.0', '4.0', '4.1', '5.0'))
 	def create_role(self, data=None):
 		"""
 		Create a new Role.
@@ -1602,7 +1602,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'roles', ('3.0',))
+	@api_request('put', 'roles', ('3.0', '4.0', '4.1', '5.0'))
 	def update_role(self, data=None, query_params=None):
 		"""
 		Get Roles.
@@ -1614,7 +1614,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'roles', ('3.0',))
+	@api_request('delete', 'roles', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_role(self, query_params=None):
 		"""
 		Delete a Role.
@@ -1626,7 +1626,7 @@ class TOSession(RestApiSession):
 	#
 	# Server
 	#
-	@api_request('get', 'servers', ('3.0',))
+	@api_request('get', 'servers', ('3.0', '4.0', '4.1', '5.0'))
 	def get_servers(self, query_params=None):
 		"""
 		Get Servers.
@@ -1637,7 +1637,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'servers/{server_id:d}/deliveryservices', ('3.0',))
+	@api_request('get', 'servers/{server_id:d}/deliveryservices', ('3.0', '4.0', '4.1', '5.0'))
 	def get_server_delivery_services(self, server_id=None):
 		"""
 		Retrieves all delivery services assigned to the server
@@ -1660,7 +1660,7 @@ class TOSession(RestApiSession):
 			The endpoint this represents has been removed from APIv4 and clients should use get_servers instead.
 		"""
 
-	@api_request('post', 'servercheck', ('3.0',))
+	@api_request('post', 'servercheck', ('3.0', '4.0', '4.1', '5.0'))
 	def create_servercheck(self, data=None):
 		"""
 		Post a server check result to the serverchecks table.
@@ -1671,7 +1671,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'servers', ('3.0',))
+	@api_request('post', 'servers', ('3.0', '4.0', '4.1', '5.0'))
 	def create_server(self, data=None):
 		"""
 		Create a new Server.
@@ -1682,7 +1682,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'servers/{server_id:d}', ('3.0',))
+	@api_request('put', 'servers/{server_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_server_by_id(self, server_id=None, data=None):
 		"""
 		Update a Server by Id.
@@ -1694,7 +1694,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	@api_request('put', 'servers/{server_id:d}/status', ('3.0',))
+	@api_request('put', 'servers/{server_id:d}/status', ('3.0', '4.0', '4.1', '5.0'))
 	def update_server_status_by_id(self, server_id=None, data=None):
 		"""
 		Update server_status by Id.
@@ -1706,7 +1706,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'servers/{server_id:d}', ('3.0',))
+	@api_request('delete', 'servers/{server_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_server_by_id(self, server_id=None):
 		"""
 		Delete a Server by Id.
@@ -1717,7 +1717,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'servers/{server_id:d}/queue_update', ('3.0',))
+	@api_request('post', 'servers/{server_id:d}/queue_update', ('3.0', '4.0', '4.1', '5.0'))
 	def servers_queue_update(self, server_id=None, data=None):
 		"""
 		Queue Updates by Server Id.
@@ -1730,7 +1730,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'servers/{server_name}/update_status', ('3.0',))
+	@api_request('get', 'servers/{server_name}/update_status', ('3.0', '4.0', '4.1', '5.0'))
 	def get_server_update_status(self, server_name=None):
 		"""
 		Gets the current update status of a server named ``server_name``.
@@ -1743,7 +1743,7 @@ class TOSession(RestApiSession):
 	#
 	# Static DNS Entries
 	#
-	@api_request('get', 'staticdnsentries', ('3.0',))
+	@api_request('get', 'staticdnsentries', ('3.0', '4.0', '4.1', '5.0'))
 	def get_staticdnsentries(self, query_params=None):
 		"""
 		Get static DNS entries associated with the delivery service
@@ -1754,7 +1754,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'staticdnsentries', ('3.0',))
+	@api_request('post', 'staticdnsentries', ('3.0', '4.0', '4.1', '5.0'))
 	def create_staticdnsentries(self, data=None):
 		"""
 		Create static DNS entries associated with the delivery service
@@ -1765,7 +1765,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'staticdnsentries', ('3.0',))
+	@api_request('put', 'staticdnsentries', ('3.0', '4.0', '4.1', '5.0'))
 	def update_staticdnsentries(self, data=None, query_params=None):
 		"""
 		Update static DNS entries associated with the delivery service
@@ -1778,7 +1778,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'staticdnsentries', ('3.0',))
+	@api_request('delete', 'staticdnsentries', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_staticdnsentries(self, query_params=None):
 		"""
 		Delete static DNS entries associated with the delivery service
@@ -1792,7 +1792,7 @@ class TOSession(RestApiSession):
 	#
 	# Status
 	#
-	@api_request('get', 'statuses', ('3.0',))
+	@api_request('get', 'statuses', ('3.0', '4.0', '4.1', '5.0'))
 	def get_statuses(self, query_params=None):
 		"""
 		Retrieves a list of the server status codes available.
@@ -1804,7 +1804,7 @@ class TOSession(RestApiSession):
 	#
 	# System
 	#
-	@api_request('get', 'system/info', ('3.0',))
+	@api_request('get', 'system/info', ('3.0', '4.0', '4.1', '5.0'))
 	def get_system_info(self):
 		"""
 		Get information on the traffic ops system.
@@ -1817,7 +1817,7 @@ class TOSession(RestApiSession):
 	#
 	# Tenants
 	#
-	@api_request('get', 'tenants', ('3.0',))
+	@api_request('get', 'tenants', ('3.0', '4.0', '4.1', '5.0'))
 	def get_tenants(self, query_params=None):
 		"""
 		Get all tenants.
@@ -1826,7 +1826,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'tenants/{tenant_id:d}', ('3.0',))
+	@api_request('put', 'tenants/{tenant_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_tenant(self, tenant_id=None):
 		"""
 		Update a tenant
@@ -1837,7 +1837,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'tenants', ('3.0',))
+	@api_request('post', 'tenants', ('3.0', '4.0', '4.1', '5.0'))
 	def create_tenant(self, data=None):
 		"""
 		Create a tenant
@@ -1852,7 +1852,7 @@ class TOSession(RestApiSession):
 	#
 	# TO Extensions
 	#
-	@api_request('get', 'servercheck/extensions', ('3.0',))
+	@api_request('get', 'servercheck/extensions', ('3.0', '4.0', '4.1', '5.0'))
 	def get_servercheck_extensions(self):
 		"""
 		Retrieves the list of extensions.
@@ -1861,7 +1861,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'servercheck/extensions', ('3.0',))
+	@api_request('post', 'servercheck/extensions', ('3.0', '4.0', '4.1', '5.0'))
 	def create_to_extension(self, data=None):
 		"""
 		Creates a Traffic Ops extension.
@@ -1872,7 +1872,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'servercheck/extensions/{extension_id:d}', ('3.0',))
+	@api_request('delete', 'servercheck/extensions/{extension_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_to_extension(self, extension_id=None):
 		"""
 		Deletes a Traffic Ops extension.
@@ -1886,7 +1886,7 @@ class TOSession(RestApiSession):
 	#
 	# Topologies
 	#
-	@api_request('post', 'topologies', ('3.0',))
+	@api_request('post', 'topologies', ('3.0', '4.0', '4.1', '5.0'))
 	def create_topology(self, data: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
 		"""
 		Create a topology
@@ -1897,7 +1897,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'topologies', ('3.0',))
+	@api_request('get', 'topologies', ('3.0', '4.0', '4.1', '5.0'))
 	def get_topologies(self, query_params: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
 		"""
 		Get Topologies.
@@ -1908,7 +1908,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'topologies?name={name:s}', ('3.0',))
+	@api_request('put', 'topologies?name={name:s}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_topology(self, name: str=None, data: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
 		"""
 		Update a Topology
@@ -1921,7 +1921,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'topologies?name={name:s}', ('3.0',))
+	@api_request('delete', 'topologies?name={name:s}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_topology(self, name: str=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
 		"""
 		Delete a Topology
@@ -1932,7 +1932,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'topologies/{name:s}/queue_update', ('3.0',))
+	@api_request('post', 'topologies/{name:s}/queue_update', ('3.0', '4.0', '4.1', '5.0'))
 	def topologies_queue_update(self, name=None, data=None):
 		"""
 		Queue Updates by Topology name.
@@ -1948,7 +1948,7 @@ class TOSession(RestApiSession):
 	#
 	# Types
 	#
-	@api_request('get', 'types', ('3.0',))
+	@api_request('get', 'types', ('3.0', '4.0', '4.1', '5.0'))
 	def get_types(self, query_params=None):
 		"""
 		Get Data Types.
@@ -1960,7 +1960,7 @@ class TOSession(RestApiSession):
 	#
 	# Users
 	#
-	@api_request('get', 'users', ('3.0',))
+	@api_request('get', 'users', ('3.0', '4.0', '4.1', '5.0'))
 	def get_users(self):
 		"""
 		Retrieves all users.
@@ -1969,7 +1969,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'users/{user_id:d}', ('3.0',))
+	@api_request('get', 'users/{user_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def get_user_by_id(self, user_id=None):
 		"""
 		Retrieves user by ID.
@@ -1980,7 +1980,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'users', ('3.0',))
+	@api_request('post', 'users', ('3.0', '4.0', '4.1', '5.0'))
 	def create_user(self, data=None):
 		"""
 		Create a user.
@@ -1991,7 +1991,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'users/{user_id:d}', ('3.0',))
+	@api_request('put', 'users/{user_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_user_by_id(self, user_id=None, data=None):
 		"""
 		Update a user.
@@ -2002,7 +2002,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'users/register', ('3.0',))
+	@api_request('post', 'users/register', ('3.0', '4.0', '4.1', '5.0'))
 	def create_user_with_registration(self, data=None):
 		"""
 		Register a user and send registration email
@@ -2013,7 +2013,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'user/current', ('3.0',))
+	@api_request('get', 'user/current', ('3.0', '4.0', '4.1', '5.0'))
 	def get_authenticated_user(self):
 		"""
 		Retrieves the profile for the authenticated user.
@@ -2022,7 +2022,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'user/current', ('3.0',))
+	@api_request('put', 'user/current', ('3.0', '4.0', '4.1', '5.0'))
 	def replace_authenticated_user(self, data=None):
 		"""
 		Updates the currently authenticated user.
@@ -2036,7 +2036,7 @@ class TOSession(RestApiSession):
 	#
 	# Snapshot CRConfig
 	#
-	@api_request('get', 'cdns/{cdn_name}/snapshot', ('3.0',))
+	@api_request('get', 'cdns/{cdn_name}/snapshot', ('3.0', '4.0', '4.1', '5.0'))
 	def get_current_snapshot_crconfig(self, cdn_name=None):
 		"""
 		Retrieves the CURRENT snapshot for a CDN which doesn't necessarily represent the current
@@ -2049,7 +2049,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'cdns/{cdn_name}/snapshot/new', ('3.0',))
+	@api_request('get', 'cdns/{cdn_name}/snapshot/new', ('3.0', '4.0', '4.1', '5.0'))
 	def get_pending_snapshot_crconfig(self, cdn_name=None):
 		"""
 		Retrieves a PENDING snapshot for a CDN which represents the current state of the CDN. The
@@ -2063,7 +2063,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'snapshot', ('3.0',))
+	@api_request('put', 'snapshot', ('3.0', '4.0', '4.1', '5.0'))
 	def snapshot_crconfig(self, query_params=None):
 		"""
 		Snapshot CRConfig by CDN Name or ID.
@@ -2077,7 +2077,7 @@ class TOSession(RestApiSession):
 	#
 	# Coordinate
 	#
-	@api_request('get', 'coordinates', ('3.0',))
+	@api_request('get', 'coordinates', ('3.0', '4.0', '4.1', '5.0'))
 	def get_coordinates(self, query_params=None):
 		"""
 		Get all coordinates associated with the cdn
@@ -2088,7 +2088,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'coordinates', ('3.0',))
+	@api_request('post', 'coordinates', ('3.0', '4.0', '4.1', '5.0'))
 	def create_coordinates(self, data=None):
 		"""
 		Create coordinates
@@ -2099,7 +2099,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'coordinates', ('3.0',))
+	@api_request('put', 'coordinates', ('3.0', '4.0', '4.1', '5.0'))
 	def update_coordinates(self, query_params=None, data=None):
 		"""
 		Update coordinates
@@ -2112,7 +2112,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'coordinates', ('3.0',))
+	@api_request('delete', 'coordinates', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_coordinates(self, query_params=None):
 		"""
 		Delete coordinates
@@ -2126,7 +2126,7 @@ class TOSession(RestApiSession):
 	#
 	# Origin
 	#
-	@api_request('get', 'origins', ('3.0',))
+	@api_request('get', 'origins', ('3.0', '4.0', '4.1', '5.0'))
 	def get_origins(self, query_params=None):
 		"""
 		Get origins associated with the delivery service
@@ -2137,7 +2137,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'origins', ('3.0',))
+	@api_request('post', 'origins', ('3.0', '4.0', '4.1', '5.0'))
 	def create_origins(self, data=None):
 		"""
 		Creates origins associated with a delivery service
@@ -2148,7 +2148,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'origins', ('3.0',))
+	@api_request('put', 'origins', ('3.0', '4.0', '4.1', '5.0'))
 	def update_origins(self, query_params=None):
 		"""
 		Updates origins associated with a delivery service
@@ -2161,7 +2161,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'origins', ('3.0',))
+	@api_request('delete', 'origins', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_origins(self, query_params=None):
 		"""
 		Updates origins associated with a delivery service

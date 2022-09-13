@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-xmlid-xmlid-sslkeys:
+.. _to-api-v4-deliveryservices-xmlid-xmlid-sslkeys:
 
 ********************************************
 ``deliveryservices/xmlId/{{XMLID}}/sslkeys``

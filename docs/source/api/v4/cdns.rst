@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns:
+.. _to-api-v4-cdns:
 
 ********
 ``cdns``
