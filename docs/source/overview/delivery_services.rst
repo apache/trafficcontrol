@@ -1028,6 +1028,7 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 .. _max_simple_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-simple-retries
 .. _max_unavailable_server_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-unavailable-server-retries
 .. _parent_retry: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent-retry
+.. _simple_server_retry_responses: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-simple-server-retry-responses
 .. _unavailable_server_retry_responses: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-unavailable-server-retry-responses
 .. _parent.config: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html
 .. _parent: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent
@@ -1043,20 +1044,20 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 	| algorithm                               | `round_robin`_                                             | Sets the algorithm used to determine from which :term:`origin server` content will  |
 	|                                         |                                                            | be requested.                                                                       |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| max_simple_retries                      | `max_simple_retries`_                                      | Sets a strict limit on the number of "simple retries" allowed before giving up      |
+	| max_simple_retries                      | `max_simple_retries`_                                      | The number of times to try a different  :term:`origin server`  after receiving a    |
+	|                                         |                                                            | simple_retry response code.                                                         |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| max_unavailable_server_retries          | `max_unavailable_server_retries`_                          | Sets a strict limit on the number of times the :term:`cache server` will attempt to |
-	|                                         |                                                            | request content from an :term:`origin server` that has previously been considered   |
-	|                                         |                                                            | "unavailable".                                                                      |
+	| max_unavailable_server_retries          | `max_unavailable_server_retries`_                          | The number of times to try a different  :term:`origin server`  after receiving an   |
+	|                                         |                                                            | unavailable_server_retry response code.                                             |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| parent_retry                            | `parent_retry`_                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
 	|                                         |                                                            | "unavailable server retries", or both.                                              |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| simple_retry_response_codes             | **UNKNOWN**                                                | **UNKNOWN** - supposedly defines HTTP response codes from an :term:`origin server`  |
-	|                                         |                                                            | that necessitate a "simple retry".                                                  |
+	| simple_server_retry_responses           | `simple_server_retry_responses`_                           | Defines HTTP response codes from an :term:`origin server` that will be considered   |
+	|                                         |                                                            | failures but the server will still be considered healthy for future requests.       |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |
-	|                                         |                                                            | currently "unavailable".                                                            |
+	| unavailable_server_retry_responses      | `unavailable_server_retry_responses`_                      | Defines HTTP response codes from an :term:`origin server` that will be considered   |
+	|                                         |                                                            | failures and the server will be marked as unhealthy.                                |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 
 The above :term:`Parameters` are supported for ``first``, ``inner`` and ``last`` tiers by specifying prefixes ``first.``, ``inner.`` and ``last.``, applicable to both topology and non topology. This allows fine tuning of marking parents "down" and retry behavior inside a CDN.

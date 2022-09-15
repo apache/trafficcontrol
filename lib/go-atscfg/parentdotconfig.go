@@ -1125,7 +1125,7 @@ func getTopologyParentConfigLine(
 
 // getParentRetries builds the parent retry directive(s).
 //
-// Returns the MaxSimpleRetries, MaxMarkdownRetries, ErrorREsponseCodes, MarkdownResponseCodes.
+// Returns the MaxSimpleRetries, MaxMarkdownRetries, ErrorResponseCodes, MarkdownResponseCodes.
 //
 // If atsMajorVersion < 6, "" is returned (ATS 5 and below don't support retry directives).
 // If isLastCacheTier is false, "" is returned. This argument exists to simplify usage.
