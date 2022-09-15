@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-oc-fci-configuration-request-id-approved:
+.. _to-api-v4-oc-fci-configuration-request-id-approved:
 
 ***************************************************
 ``OC/CI/configuration/request/{{id}}/{{approved}}``

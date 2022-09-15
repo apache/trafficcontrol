@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id-regexes-rid:
+.. _to-api-v4-deliveryservices-id-regexes-rid:
 
 *******************************************
 ``deliveryservices/{{ID}}/regexes/{{rID}}``

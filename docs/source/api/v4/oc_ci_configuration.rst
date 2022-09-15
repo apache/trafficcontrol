@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-oc-fci-configuration:
+.. _to-api-v4-oc-fci-configuration:
 
 ***********************
 ``OC/CI/configuration``

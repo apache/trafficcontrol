@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-user-login-token:
+.. _to-api-v4-user-login-token:
 
 ********************
 ``user/login/token``
@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Authentication of a user using a token. Normally, the token is obtained via a call to either :ref:`to-api-user-reset_password` or :ref:`to-api-users-register`.
+Authentication of a user using a token. Normally, the token is obtained via a call to either :ref:`to-api-v4-user-reset_password` or :ref:`to-api-v4-users-register`.
 
 :Auth. Required: No
 :Roles Required: None

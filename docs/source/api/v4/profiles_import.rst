@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-profiles-import:
+.. _to-api-v4-profiles-import:
 
 *******************
 ``profiles/import``
@@ -22,7 +22,7 @@
 ``POST``
 ========
 
-Imports a :term:`Profile` that was exported via :ref:`to-api-profiles-id-export`
+Imports a :term:`Profile` that was exported via :ref:`to-api-v4-profiles-id-export`
 
 .. note:: On import of the :term:`Profile` :term:`Parameters` if a :term:`Parameter` already exists with the same :ref:`parameter-name`, :ref:`parameter-config-file` and :ref:`parameter-value` it will link that to the :term:`Profile` instead of creating it.
 

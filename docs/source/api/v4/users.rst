@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-users:
+.. _to-api-v4-users:
 
 *********
 ``users``
@@ -91,7 +91,7 @@ Response Structure
 :phoneNumber:       The user's phone number
 :postalCode:        The postal code of the area in which the user resides
 :publicSshKey:      The user's public key used for the SSH protocol
-:registrationSent:  If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
+:registrationSent:  If the user was created using the :ref:`to-api-v4-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
 :role:              The name of the role assigned to this user
 :stateOrProvince:   The name of the state or province where this user resides
 :tenant:            The name of the tenant to which this user belongs
@@ -238,7 +238,7 @@ Response Structure
 :phoneNumber:       The user's phone number
 :postalCode:        The postal code of the area in which the user resides
 :publicSshKey:      The user's public key used for the SSH protocol
-:registrationSent:  If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
+:registrationSent:  If the user was created using the :ref:`to-api-v4-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
 :role:              The name of the role assigned to this user
 :stateOrProvince:   The name of the state or province where this user resides
 :tenant:            The name of the tenant to which this user belongs

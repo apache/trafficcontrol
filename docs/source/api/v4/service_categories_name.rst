@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-service-categories-name:
+.. _to-api-v4-service-categories-name:
 
 *******************************
 ``service_categories/{{name}}``

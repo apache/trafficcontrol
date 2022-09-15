@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-profiles:
+.. _to-api-v4-profiles:
 
 ************
 ``profiles``
