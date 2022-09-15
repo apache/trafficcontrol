@@ -305,7 +305,7 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 	canIgnoreLock := (hasConfigApplyTimeParam || hasRevalidateApplyTimeParam) && !hasConfigUpdatedBoolParam && !hasRevalUpdatedBoolParam
 	if !canIgnoreLock {
 		userDoesntHaveLockErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-		if sysErr != nil || (userDoesntHaveLockErr != nil && !canIgnoreLock) {
+		if sysErr != nil || userDoesntHaveLockErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userDoesntHaveLockErr, sysErr)
 			return
 		}
