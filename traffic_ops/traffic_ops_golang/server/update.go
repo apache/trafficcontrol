@@ -303,10 +303,12 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 	_, hasRevalidateApplyTimeParam := inf.Params["revalidate_apply_time"]
 	// Allow `apply_time` changes when the CDN is locked, but not `updated`
 	canIgnoreLock := (hasConfigApplyTimeParam || hasRevalidateApplyTimeParam) && !hasConfigUpdatedBoolParam && !hasRevalUpdatedBoolParam
-	userDoesntHaveLockErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if sysErr != nil || (userDoesntHaveLockErr != nil && !canIgnoreLock) {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userDoesntHaveLockErr, sysErr)
-		return
+	if !canIgnoreLock {
+		userDoesntHaveLockErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+		if sysErr != nil || (userDoesntHaveLockErr != nil && !canIgnoreLock) {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userDoesntHaveLockErr, sysErr)
+			return
+		}
 	}
 
 	// TODO parse JSON body to trump Query Params?
