@@ -215,7 +215,7 @@ Response Structure
 		],
 		"trafficMonitors": [
 			{
-				"profile": "Traffic_Monitor",
+				"profile": "TRAFFIC_MONITOR",
 				"status": "ONLINE",
 				"ip": "172.16.239.40",
 				"ip6": "fc01:9400:1000:8::40",

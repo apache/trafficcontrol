@@ -536,7 +536,7 @@ Response Structure
 					"ip6": "",
 					"location": "CDN_in_a_Box_Edge",
 					"port": 80,
-					"profile": "Traffic_Monitor",
+					"profile": "TRAFFIC_MONITOR",
 					"status": "ONLINE"
 				}
 			},
