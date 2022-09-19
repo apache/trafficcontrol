@@ -724,7 +724,15 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v3ServerList)
 		return
 	}
-
+	if inf.Version.Major == 4 && inf.Version.Minor < 1 {
+		v40ServerList := []tc.DSServerV40{}
+		for _, s := range servers {
+			sV40 := s.DSServerV40
+			v40ServerList = append(v40ServerList, sV40)
+		}
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v40ServerList)
+		return
+	}
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, servers)
 }
 
@@ -758,7 +766,8 @@ s.status as status_id,
 s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
-s.config_update_time > s.config_apply_time AS upd_pending
+s.config_update_time > s.config_apply_time AS upd_pending,
+(SELECT ARRAY_AGG(asn) AS asns FROM asn a WHERE a.cachegroup = s.cachegroup) AS asns
 `
 
 	queryFormatString := `
@@ -833,6 +842,7 @@ WHERE s.id in (select server from deliveryservice_server where deliveryservice =
 			&s.Type,
 			&s.TypeID,
 			&s.UpdPending,
+			pq.Array(&s.ASNs),
 		)
 		if err != nil {
 			return nil, errors.New("error scanning dss rows: " + err.Error())

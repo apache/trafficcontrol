@@ -115,7 +115,8 @@ func TestReadServers(t *testing.T) {
 		"tcp_port",
 		"server_type",
 		"server_type_id",
-		"upd_pending"}
+		"upd_pending",
+		"asns"}
 
 	rows := sqlmock.NewRows(cols)
 
@@ -150,6 +151,7 @@ func TestReadServers(t *testing.T) {
 			s.Type,
 			s.TypeID,
 			s.UpdPending,
+			[]byte(`{1,2}`),
 		)
 	}
 
@@ -192,9 +194,12 @@ func getMockDSServers() []tc.DSServerV4 {
 		CDNName:      util.StrPtr("cdnTest"),
 		DomainName:   util.StrPtr("domain"),
 	}
-	srv := tc.DSServerV4{
+	srvV40 := tc.DSServerV40{
 		DSServerBaseV4:   base,
 		ServerInterfaces: &[]tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
+	}
+	srv := tc.DSServerV4{
+		DSServerV40: srvV40,
 	}
 	srvsExpected := []tc.DSServerV4{srv}
 	return srvsExpected
