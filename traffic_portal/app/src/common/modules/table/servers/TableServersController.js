@@ -171,7 +171,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: false,
 			valueGetter:  function(params) {
 				if (params.data.profileNames.length > 1) {
-					return params.data.profileName + ' *';
+					return params.data.profileNames;
 				}
 				return params.data.profileName;
 			},
