@@ -143,7 +143,7 @@ Response Structure
 			"type": "EDGE",
 			"typeId": 11,
 			"updPending": false,
-			"asns":[1,2],
+			"asns": [1,2],
 			"interfaces": [{
 				"ipAddresses": [
 					{

@@ -116,7 +116,8 @@ func TestReadServers(t *testing.T) {
 		"server_type",
 		"server_type_id",
 		"upd_pending",
-		"asns"}
+		"asns",
+	}
 
 	rows := sqlmock.NewRows(cols)
 

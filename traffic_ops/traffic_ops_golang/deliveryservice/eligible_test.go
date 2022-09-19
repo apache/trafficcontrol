@@ -85,7 +85,8 @@ func TestGetEligibleServers(t *testing.T) {
 		"upd_pending",
 		"server_capabilities",
 		"deliveryservice_capabilities",
-		"asns"}
+		"asns",
+	}
 	eligbleRows := sqlmock.NewRows(cols)
 
 	for _, s := range testServers {
@@ -151,21 +152,14 @@ func TestGetEligibleServers(t *testing.T) {
 }
 
 func getMockDSServers() []tc.DSServerV4 {
-	base := tc.DSServerBaseV4{
-		ID:           util.IntPtr(1),
-		Cachegroup:   util.StrPtr("cgTest"),
-		CachegroupID: util.IntPtr(1),
-		CDNID:        util.IntPtr(1),
-		CDNName:      util.StrPtr("cdnTest"),
-		DomainName:   util.StrPtr("domain"),
-	}
-	srvV40 := tc.DSServerV40{
-		DSServerBaseV4:   base,
-		ServerInterfaces: &[]tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
-	}
-	srv := tc.DSServerV4{
-		DSServerV40: srvV40,
-	}
+	srv := tc.DSServerV4{}
+	srv.ID = util.IntPtr(1)
+	srv.Cachegroup = util.StrPtr("cgTest")
+	srv.CachegroupID = util.IntPtr(1)
+	srv.CDNID = util.IntPtr(1)
+	srv.CDNName = util.StrPtr("cdnTest")
+	srv.DomainName = util.StrPtr("domain")
+	srv.ServerInterfaces = &[]tc.ServerInterfaceInfoV40{}
 	srvsExpected := []tc.DSServerV4{srv}
 	return srvsExpected
 }
