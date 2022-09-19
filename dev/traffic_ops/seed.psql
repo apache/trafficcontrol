@@ -79,27 +79,27 @@ INSERT INTO parameter (
 	"name",
 	"value"
 ) VALUES (
-	'tm-config.txt',
+	'traffic_monitor-config.txt',
 	'health.polling.interval',
 	'6000'
 ), (
-	'tm-config.txt',
+	'traffic_monitor-config.txt',
 	'heartbeat.polling.interval',
 	'3000'
 ), (
-	'tm-config.txt',
+	'traffic_monitor-config.txt',
 	'peers.polling.interval',
 	'3000'
 ), (
-	'tm-config.txt',
+	'traffic_monitor-config.txt',
 	'tm.polling.interval',
 	'2000'
 ), (
-	'tm.properties',
+	'traffic_monitor.properties',
 	'health.polling.url',
 	'http://edge:8080/_stats?application=&inf.name=${interface_name}'
 ), (
-	'tm.properties',
+	'traffic_monitor.properties',
 	'health.polling.format',
 	'stats_over_http'
 ), (
@@ -120,7 +120,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO profile_parameter
 SELECT profile.id, parameter.id
 FROM profile, parameter
-WHERE parameter.config_file = 'tm-config.txt'
+WHERE parameter.config_file = 'traffic_monitor-config.txt'
 AND parameter."name" LIKE '%.polling.%'
 AND profile."name" = 'TM_dev'
 ON CONFLICT DO NOTHING;
@@ -128,7 +128,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO profile_parameter
 SELECT profile.id, parameter.id
 FROM profile, parameter
-WHERE parameter.config_file = 'tm.properties'
+WHERE parameter.config_file = 'traffic_monitor.properties'
 AND profile."name" = 'EDGE_dev'
 ON CONFLICT DO NOTHING;
 

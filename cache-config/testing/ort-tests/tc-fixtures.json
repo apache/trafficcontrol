@@ -1345,21 +1345,21 @@
   ],
   "parameters": [
     {
-      "configFile": "tm.properties",
+      "configFile": "traffic_monitor.properties",
       "lastUpdated": "2018-01-19T19:01:21.455131+00:00",
       "name": "health.threshold.loadavg",
       "secure": false,
       "value": "25.0"
     },
     {
-      "configFile": "tm.properties",
+      "configFile": "traffic_monitor.properties",
       "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
       "name": "health.threshold.availableBandwidthInKbps",
       "secure": false,
       "value": ">1750000"
     },
     {
-      "configFile": "tm.properties",
+      "configFile": "traffic_monitor.properties",
       "lastUpdated": "2018-01-19T19:01:21.489534+00:00",
       "name": "history.count",
       "secure": false,
@@ -1681,13 +1681,13 @@
           "value": "INT 0"
         },
         {
-          "configFile": "tm.properties",
+          "configFile": "traffic_monitor.properties",
           "name": "health.threshold.queryTime",
           "secure": false,
           "value": "1000"
         },
         {
-          "configFile": "tm.properties",
+          "configFile": "traffic_monitor.properties",
           "name": "health.polling.url",
           "secure": false,
           "value": "http://${hostname}/_astats?application=&inf.name=${interface_name}"
@@ -1699,7 +1699,7 @@
           "value": "1"
         },
         {
-          "configFile": "tm.properties",
+          "configFile": "traffic_monitor.properties",
           "name": "health.connection.timeout",
           "secure": false,
           "value": "2000"
@@ -2078,13 +2078,13 @@
           "value": "INT 0"
         },
         {
-          "configFile": "tm.properties",
+          "configFile": "traffic_monitor.properties",
           "name": "health.threshold.queryTime",
           "secure": false,
           "value": "1000"
         },
         {
-          "configFile": "tm.properties",
+          "configFile": "traffic_monitor.properties",
           "name": "health.polling.url",
           "secure": false,
           "value": "http://${hostname}/_astats?application=&inf.name=${interface_name}"
@@ -2096,7 +2096,7 @@
           "value": "1"
         },
         {
-          "configFile": "tm.properties",
+          "configFile": "traffic_monitor.properties",
           "name": "health.connection.timeout",
           "secure": false,
           "value": "2000"
@@ -2397,26 +2397,26 @@
       "type": "TM_PROFILE",
       "params": [
         {
-          "configFile": "tm.properties",
+          "configFile": "traffic_monitor.properties",
           "name": "health.threshold.queryTime",
           "secure": false,
           "value": "1000"
         },
         {
-          "configFile": "tm.properties",
+          "configFile": "traffic_monitor.properties",
           "name": "health.polling.url",
           "secure": false,
           "value": "http://${hostname}/_astats?application=&inf.name=${interface_name}"
         },
         {
-          "configFile": "tm-config.txt",
+          "configFile": "traffic_monitor-config.txt",
           "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
           "name": "peers.polling.interval",
           "secure": false,
           "value": "60"
         },
         {
-          "configFile": "tm-config.txt",
+          "configFile": "traffic_monitor-config.txt",
           "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
           "name": "health.polling.interval",
           "secure": false,

@@ -59,7 +59,7 @@ func TestProfiles(t *testing.T) {
 					ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
 						"id":    {strconv.Itoa(GetProfileID(t, "EDGE1")())},
-						"param": {strconv.Itoa(GetParameterID(t, "health.threshold.loadavg", "tm.properties", "25.0")())},
+						"param": {strconv.Itoa(GetParameterID(t, "health.threshold.loadavg", "traffic_monitor.properties", "25.0")())},
 					}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateProfilesFields(map[string]interface{}{"Parameter": "health.threshold.loadavg"})),

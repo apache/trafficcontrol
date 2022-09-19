@@ -226,7 +226,7 @@ to-enroll() {
 			;;
 		"tm" )
 			export MY_TYPE="TRAFFIC_MONITOR"
-			export MY_PROFILE="Traffic_Monitor"
+			export MY_PROFILE="TRAFFIC_MONITOR"
 			export MY_STATUS="ONLINE"
 			;;
 		"to" )

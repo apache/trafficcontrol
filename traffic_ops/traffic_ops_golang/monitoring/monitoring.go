@@ -36,11 +36,11 @@ import (
 	"github.com/lib/pq"
 )
 
-const CacheMonitorConfigFile = "tm.properties"
+const CacheMonitorConfigFile = "traffic_monitor.properties"
 
 const MonitorType = "TRAFFIC_MONITOR"
 const RouterType = "CCR"
-const MonitorConfigFile = "tm-config.txt"
+const MonitorConfigFile = "traffic_monitor-config.txt"
 const KilobitsPerMegabit = 1000
 const DeliveryServiceStatus = "REPORTED"
 
