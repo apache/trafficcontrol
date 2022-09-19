@@ -170,10 +170,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			field: "profileName",
 			hide: false,
 			valueGetter:  function(params) {
-				if (params.data.profileNames.length > 1) {
-					return params.data.profileNames;
-				}
-				return params.data.profileName;
+				return params.data.profileNames;
 			},
 			tooltipValueGetter: function(params) {
 				return params.data.profileNames.join(", ");
