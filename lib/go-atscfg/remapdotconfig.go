@@ -1002,11 +1002,54 @@ func serverIsLastCacheForDS(server *Server, ds *DeliveryService, topologies map[
 		return topoPlacement.IsLastCacheTier, nil
 	}
 
-	return noTopologyServerIsLastCacheForDS(server, ds), nil
+	return noTopologyServerIsLastCacheForDS(server, ds, cacheGroups), nil
 }
 
 // noTopologyServerIsLastCacheForDS returns whether the server is the last tier for the DS, if the DS has no Topology.
 // This helper MUST NOT be called if the DS has a Topology. It does not check.
-func noTopologyServerIsLastCacheForDS(server *Server, ds *DeliveryService) bool {
-	return strings.HasPrefix(server.Type, tc.MidTypePrefix) || !ds.Type.UsesMidCache()
+func noTopologyServerIsLastCacheForDS(server *Server, ds *DeliveryService, cgs map[tc.CacheGroupName]tc.CacheGroupNullable) bool {
+	if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
+		return true // if the type is "MID" it's always the last cache for non-topologies
+	}
+	if !ds.Type.UsesMidCache() {
+		return true // if this DS type never uses mids (for pre-topology type-parentage), it's the last cache
+	}
+
+	// pre-topology parentage is based on Cachegroups
+
+	if server.Cachegroup == nil {
+		// if the server has no CG (which TO shouldn't allow), it can't possibly have parents.
+		return true
+	}
+
+	cg, ok := cgs[tc.CacheGroupName(*server.Cachegroup)]
+	if !ok {
+		// if the server's CG doesn't exist (which TO shouldn't allow), it can't possibly have parents.
+		return true
+	}
+
+	if cg.ParentName == nil || *cg.ParentName == "" {
+		// if the server's CG has no parents, it's going direct to the origin
+		return true
+	}
+
+	parentCG, ok := cgs[tc.CacheGroupName(*cg.ParentName)]
+	if !ok {
+		// if the server's parent CG doesn't exist (which TO shouldn't allow), it can't possibly have parents.
+		return true
+	}
+
+	if parentCG.Type == nil {
+		// if the server's parent CG has no type (which TO shouldn't allow), then it must not be a cache, so this server is the last cache tier
+		return true
+	}
+
+	if *parentCG.Type != tc.CacheGroupEdgeTypeName && *parentCG.Type != tc.CacheGroupMidTypeName {
+		// if the server's parent CG isn't a cache, then this server is the last cache tier.
+		return true
+	}
+
+	// at this point, this server's CG has a cache parent,
+	// so this server isn't the last cache tier
+	return false
 }

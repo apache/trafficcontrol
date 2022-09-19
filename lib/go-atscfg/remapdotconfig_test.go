@@ -7445,6 +7445,134 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 	}
 }
 
+func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
+	hdr := "myHeaderComment"
+
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("http://origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []DeliveryService{ds}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.ProfileNames[0]),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.ProfileNames[0]),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{}
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	txt = strings.TrimSpace(txt)
+
+	testComment(t, txt, hdr)
+
+	txtLines := strings.Split(txt, "\n")
+
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	}
+
+	remapLine := txtLines[2]
+
+	if !strings.HasPrefix(remapLine, "map") {
+		t.Errorf("expected to start with 'map', actual '%v'", txt)
+	}
+
+	if strings.Contains(remapLine, "https://origin.example.test") {
+		t.Errorf("expected edge->origin http origin to not create https remap target, actual: ''%v''' warn %v", txt, cfg.Warnings)
+	}
+
+	if !strings.Contains(remapLine, "http://origin.example.test") {
+		t.Errorf("expected edge->origin http origin to create http remap target, actual: ''%v'''", txt)
+	}
+
+	if strings.Contains(remapLine, "443") {
+		t.Errorf("expected https origin to create http remap target not using 443 (edge->mid communication always uses http), actual: ''%v'''", txt)
+	}
+}
+
 func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 	hdr := "myHeaderComment"
 
@@ -7560,12 +7688,12 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
 	}
 
-	if strings.Contains(remapLine, "https://origin.example.test") {
-		t.Errorf("expected https origin to create http remap target not https (edge->mid communication always uses http), actual: ''%v'''", txt)
+	if strings.Contains(remapLine, "http://origin.example.test") {
+		t.Errorf("expected edge->origin https origin to not create http remap target, actual: ''%v''' warn %v", txt, cfg.Warnings)
 	}
 
-	if !strings.Contains(remapLine, "http://origin.example.test") {
-		t.Errorf("expected https origin to create http remap target (edge->mid communication always uses http), actual: ''%v'''", txt)
+	if !strings.Contains(remapLine, "https://origin.example.test") {
+		t.Errorf("expected edge->origin https origin to create https remap target, actual: ''%v'''", txt)
 	}
 
 	if strings.Contains(remapLine, "443") {

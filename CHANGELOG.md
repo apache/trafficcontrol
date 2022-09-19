@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - *Traffic Stats* Reuse InfluxDB client handle to prevent potential connection leaks.
 - [#7021](https://github.com/apache/trafficcontrol/issues/7021) *Cache Config* Fixed cache config for Delivery Services with IP Origins.
+- [#7043](https://github.com/apache/trafficcontrol/issues/7043) Fixed cache config missing retry parameters for non-topology MSO Delivery Services going direct from edge to origin.
 - [#7047](https://github.com/apache/trafficcontrol/issues/7047) *Traffic Ops* allow `apply_time` query parameters on the `servers/{id-name}/update` when the CDN is locked.
 
 ## [7.0.0] - 2022-07-19
