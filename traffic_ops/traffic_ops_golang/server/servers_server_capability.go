@@ -544,7 +544,7 @@ func AssignMultipleServersToCapability(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//loop through server list to check if the type is MID and/opr EDGE
+	//loop through server list to check if the type is MID and/or EDGE
 	for _, sid := range mspc.ServersIDs {
 		correctType := true
 		if err := tx.QueryRow(scCheckServerTypeQuery(), sid).Scan(&correctType); err != nil {

@@ -81,6 +81,19 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 		);
 	};
 
+	this.assignServersPerSC = function(serverCapability, serverIds) {
+		return $http.put(ENV.api.unstable + 'multiple_servers_per_capability',{ serverCapability: serverCapability, serverIds: serverIds, replace: true } ).then(
+			function(result) {
+				messageModel.setMessages(result.data.alerts, false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
+	};
+
 	this.updateServerCapability = function(currentName, serverCapability) {
 		return $http.put(ENV.api.unstable + 'server_capabilities', serverCapability, {params: {"name": currentName}}).then(
 			function(result) {

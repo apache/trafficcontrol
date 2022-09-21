@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $uibModal, $window, locationUtils, serverService, messageModel) {
+var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $uibModal, $window, locationUtils, serverService, messageModel, serverCapabilityService) {
 
 	var removeCapability = function(serverId) {
 		serverService.removeServerCapability(serverId, serverCapability.name)
@@ -66,6 +66,36 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 		locationUtils.navigateToPath('/servers/' + id);
 	};
 
+	$scope.selectServers = function () {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/serverCapabilityServers/table.assignServersPerCapability.tpl.html',
+			controller: 'TableAssignServersPerCapabilityController',
+			size: 'md',
+			resolve: {
+				serverCapability: function() {
+					return serverCapability;
+				},
+				servers: function(servers) {
+					return servers.getServers({cdn: servers.cdnId});
+				},
+				assignedServers: function() {
+					return servers
+				}
+			}
+		});
+		console.log(servers, serverCapability)
+		modalInstance.result.then(function(selectedServers) {
+			serverCapabilityService.assignServersPerSC(serverCapability, selectedServers)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
 	$scope.confirmRemoveCapability = function(serverId, $event) {
 		if ($event) {
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
@@ -94,6 +124,8 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.navigateToPath = locationUtils.navigateToPath;
+
 	angular.element(document).ready(function () {
 		$('#serverCapabilityServersTable').dataTable({
 			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -104,5 +136,5 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 
 };
 
-TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'serverService', 'messageModel'];
+TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'serverService', 'messageModel', 'serverCapabilityService'];
 module.exports = TableServerCapabilityServersController;
