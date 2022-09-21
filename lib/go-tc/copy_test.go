@@ -43,11 +43,25 @@ func TestCopyIntIfNotNil(t *testing.T) {
 	}
 }
 
+func TestCoalesceInt(t *testing.T) {
+	var i *int
+	copiedI := coalesceInt(i, 9000)
+	if copiedI != 9000 {
+		t.Errorf("Coalescing a nil int should've given the default value, got: %d", copiedI)
+	}
+	i = new(int)
+	*i = 9001
+	copiedI = coalesceInt(i, 9000)
+	if copiedI != 9001 {
+		t.Errorf("Coalescing a non-nil int should've given %d, got: %d", *i, copiedI)
+	}
+}
+
 func TestCopyFloatIfNotNil(t *testing.T) {
 	var f *float64
 	copiedF := copyFloatIfNotNil(f)
 	if copiedF != nil {
-		t.Errorf("Copying a nil int should've given nil, got: %f", *copiedF)
+		t.Errorf("Copying a nil float should've given nil, got: %f", *copiedF)
 	}
 	f = new(float64)
 	*f = 9000
@@ -65,11 +79,25 @@ func TestCopyFloatIfNotNil(t *testing.T) {
 	}
 }
 
+func TestCoalesceFloat(t *testing.T) {
+	var f *float64
+	copiedF := coalesceFloat(f, 9000)
+	if copiedF != 9000 {
+		t.Errorf("Coalescing a nil float should've given the default value, got: %f", copiedF)
+	}
+	f = new(float64)
+	*f = 9001
+	copiedF = coalesceFloat(f, 9000)
+	if copiedF != 9001 {
+		t.Errorf("Coalescing a non-nil float should've given %f, got: %f", *f, copiedF)
+	}
+}
+
 func TestCopyBoolIfNotNil(t *testing.T) {
 	var b *bool
 	copiedB := copyBoolIfNotNil(b)
 	if copiedB != nil {
-		t.Errorf("Copying a nil int should've given nil, got: %t", *copiedB)
+		t.Errorf("Copying a nil boolean should've given nil, got: %t", *copiedB)
 	}
 	b = new(bool)
 	*b = true
@@ -84,6 +112,20 @@ func TestCopyBoolIfNotNil(t *testing.T) {
 		if *copiedB == *b {
 			t.Error("Expected copy to be 'deep' but modifying the original bool changed the copy")
 		}
+	}
+}
+
+func TestCoalesceBool(t *testing.T) {
+	var b *bool
+	copiedB := coalesceBool(b, true)
+	if copiedB != true {
+		t.Errorf("Coalescing a nil boolean should've given the default value, got: %t", copiedB)
+	}
+	b = new(bool)
+	*b = false
+	copiedB = coalesceBool(b, true)
+	if copiedB != false {
+		t.Errorf("Coalescing a non-nil bool should've given %t, got: %t", *b, copiedB)
 	}
 }
 
@@ -106,5 +148,19 @@ func TestCopyStringIfNotNil(t *testing.T) {
 		if *copiedS == *s {
 			t.Error("Expected copy to be 'deep' but modifying the original string changed the copy")
 		}
+	}
+}
+
+func TestCoalesceString(t *testing.T) {
+	var s *string
+	copiedS := coalesceString(s, "test")
+	if copiedS != "test" {
+		t.Errorf("Coalescing a nil string should've given the default value, got: %s", copiedS)
+	}
+	s = new(string)
+	*s = "quest"
+	copiedS = coalesceString(s, "test")
+	if copiedS != "quest" {
+		t.Errorf("Coalescing a non-nil string should've given %s, got: %s", *s, copiedS)
 	}
 }
