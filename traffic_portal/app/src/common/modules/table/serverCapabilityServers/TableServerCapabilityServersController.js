@@ -75,15 +75,14 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 				serverCapability: function() {
 					return serverCapability;
 				},
-				servers: function(servers) {
-					return servers.getServers({cdn: servers.cdnId});
+				servers: function(serversList) {
+					return serversList.getServers();
 				},
 				assignedServers: function() {
-					return servers
+					return servers;
 				}
 			}
 		});
-		console.log(servers, serverCapability)
 		modalInstance.result.then(function(selectedServers) {
 			serverCapabilityService.assignServersPerSC(serverCapability, selectedServers)
 				.then(

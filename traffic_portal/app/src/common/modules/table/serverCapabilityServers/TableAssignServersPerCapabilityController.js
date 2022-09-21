@@ -39,7 +39,7 @@ var TableAssignServersPerCapabilityController = function(servers, serverCapabili
         }
     ];
 
-    $scope.serverss = servers.map(server => {
+    $scope.servers = servers.map(server => {
         let isAssigned = assignedServers.find(assignedServers => assignedServers.servers === server.id);
         if (isAssigned) {
             server['selected'] = true;
@@ -48,7 +48,7 @@ var TableAssignServersPerCapabilityController = function(servers, serverCapabili
     });
 
     $scope.submit = function() {
-        const selectedServerIds = this.selectedServers.map(spc => spc["id"]);
+        const selectedServerIds = this.selectedServers.map(mspc => mspc["id"]);
         $uibModalInstance.close(selectedServerIds);
     };
 
