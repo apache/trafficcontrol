@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#6033](https://github.com/apache/trafficcontrol/issues/6033) *Traffic Ops, Traffic Portal* Added ability to assign multiple servers per capability.
 - [#7081](https://github.com/apache/trafficcontrol/issues/7081) *Traffic Router* Added better log messages for TR connection exceptions.
 - [#7089](https://github.com/apache/trafficcontrol/issues/7089) *Traffic Router* Added the ability to specify HTTPS certificate attributes.
 - [#7109](https://github.com/apache/trafficcontrol/pull/7109) *Traffic Router* Removed `dnssec.zone.diffing.enabled` and `dnssec.rrsig.cache.enabled` parameters.
@@ -14,7 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Added API version 5.0 (IN DEVELOPMENT)
 - [#2101](https://github.com/apache/trafficcontrol/issues/2101) *Traffic Portal* Added the ability to tell if a Delivery Service is the target of another steering DS.
 - [#6021](https://github.com/apache/trafficcontrol/issues/6021) *Traffic Portal* Added the ability to view a change logs message in it's entirety by clicking on it.
-- [#6033](https://github.com/apache/trafficcontrol/issues/6033) *Traffic Ops, Traffic Portal* Added ability to assign multiple server capabilities to a server.
+- [#7078](https://github.com/apache/trafficcontrol/issues/7078) *Traffic Ops, Traffic Portal* Added ability to assign multiple server capabilities to a server.
 - [#7096](https://github.com/apache/trafficcontrol/issues/7096) [Health Client] Added health client parent health
 - [#7032](https://github.com/apache/trafficcontrol/issues/7032) *Cache Config* Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
 - [#7097](https://github.com/apache/trafficcontrol/issues/7097) *Traffic Ops, Traffic Portal, t3c* Added the `regional` field to Delivery Services, which affects whether `maxOriginConnections` should be per Cache Group

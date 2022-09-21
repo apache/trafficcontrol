@@ -527,3 +527,70 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, msc)
 	return
 }
+
+// AssignMultipleServersToCapability helps assign multiple servers to a given capability.
+func AssignMultipleServersToCapability(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var mspc tc.MultipleServersToCapability
+	if err := json.NewDecoder(r.Body).Decode(&mspc); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	//loop through server list to check if the type is MID and/opr EDGE
+	for _, sid := range mspc.ServersIDs {
+		correctType := true
+		if err := tx.QueryRow(scCheckServerTypeQuery(), sid).Scan(&correctType); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %w", err))
+			return
+		}
+		if !correctType {
+			userErr := fmt.Errorf("server %d has an incorrect server type. Server capability can only be assigned to EDGE or MID servers", sid)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+			return
+		}
+	}
+
+	multipleServersPerCapability := make([]string, 0, len(mspc.ServersIDs))
+
+	//Delete existing rows from server_server_capability for a given server capability
+	_, err := tx.Exec("DELETE FROM server_server_capability ssc WHERE ssc.server_capability=$1", mspc.ServerCapability)
+	if err != nil {
+		useErr, sysErr, statusCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
+		return
+	}
+
+	mspcQuery := `WITH inserted AS (
+		INSERT INTO server_server_capability
+		SELECT $2, "server" 
+		FROM UNNEST($1::int[]) AS tmp("server")
+		RETURNING server
+		)
+		SELECT ARRAY_AGG(server)
+		FROM (
+			SELECT server
+			FROM inserted
+		) AS returned(server)`
+
+	err = tx.QueryRow(mspcQuery, pq.Array(mspc.ServersIDs), mspc.ServerCapability).Scan(pq.Array(&multipleServersPerCapability))
+	if err != nil {
+		useErr, sysErr, statusCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
+		return
+	}
+	for i, val := range multipleServersPerCapability {
+		mspc.ServersIDs[i], _ = strconv.Atoi(val)
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "Multiple Servers assigned to a capability")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, mspc)
+	return
+
+}

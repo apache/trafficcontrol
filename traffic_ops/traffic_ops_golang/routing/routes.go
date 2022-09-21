@@ -530,7 +530,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		/**
 		 * 4.x API
 		 */
-
+		// Assign Multiple Servers to a capability
+		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodPut, Path: `multiple_servers_per_capability.rst/?$`, Handler: server.AssignMultipleServersToCapability, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:READ", "SERVER-CAPABILITY:READ", "SERVER-CAPABILITY:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 40752312825},
 		// Assign Multiple Server Capabilities
 		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodPut, Path: `multiple_server_capabilities/?$`, Handler: server.AssignMultipleServerCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 40792419258},
 

@@ -33,6 +33,12 @@ type MultipleServerCapabilities struct {
 	ServerCapabilities []string `json:"serverCapabilities" db:"server_capability"`
 }
 
+// MultipleServersToCapability represents an association between a server capability and list of servers.
+type MultipleServersToCapability struct {
+	ServerCapability string `json:"serverCapability" db:"server_capability"`
+	ServersIDs       []int  `json:"serverIds" db:"server"`
+}
+
 // ServerServerCapabilitiesResponse is the type of a response from Traffic
 // Ops to a request made to its /server_server_capabilities.
 type ServerServerCapabilitiesResponse struct {

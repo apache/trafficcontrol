@@ -16,6 +16,7 @@ package v4
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -37,6 +38,8 @@ func TestServerServerCapabilities(t *testing.T) {
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+		var multipleSCs []string
+		var multipleServerIDs []int
 
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerServerCapability]{
 			"GET": {
@@ -147,6 +150,24 @@ func TestServerServerCapabilities(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
+			"PUT": {
+				"OK When Assigned Multiple Server Capabilities": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverId":           GetServerID(t, "dtrc-mid-04")(),
+						"serverCapabilities": append(multipleSCs, "disk", "blah"),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK When Assigned Multiple Servers Per Capability": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverIds":        append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")(), GetServerID(t, "dtrc-mid-01")()),
+						"serverCapability": "disk",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+			},
 			"DELETE": {
 				"OK when NOT the LAST SERVER of CACHE GROUP of TOPOLOGY DS which has REQUIRED CAPABILITIES": {
 					ClientSession: TOSession,
@@ -179,6 +200,23 @@ func TestServerServerCapabilities(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
+					ssc := tc.ServerServerCapability{}
+					msc := tc.MultipleServerCapabilities{}
+					mspc := tc.MultipleServersToCapability{}
+					var serverId int
+					var serverCapability string
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						if method == "PUT" {
+							err = json.Unmarshal(dat, &msc)
+						} else {
+							err = json.Unmarshal(dat, &ssc)
+						}
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -190,6 +228,21 @@ func TestServerServerCapabilities(t *testing.T) {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
 							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(testCase.RequestBody, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(ssc, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							var alerts tc.Alerts
+							var reqInf toclientlib.ReqInf
+							var err error
+							if name == "OK When Assigned Multiple Server Capabilities" {
+								alerts, reqInf, err = testCase.ClientSession.AssignMultipleServerCapabilities(msc, testCase.RequestOpts)
+							} else if name == "OK When Assigned Multiple Servers Per Capability" {
+								alerts, reqInf, err = testCase.ClientSession.AssignMultipleServersPerCapability(mspc, testCase.RequestOpts)
+							}
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
