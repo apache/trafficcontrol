@@ -166,7 +166,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: true
 		},
 		{
-			headerName: "Profile",
+			headerName: "Profile(s)",
 			field: "profileName",
 			hide: false,
 			valueGetter:  function(params) {
