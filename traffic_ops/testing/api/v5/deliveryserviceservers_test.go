@@ -124,7 +124,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 			},
 			"SERVER STATUS PUT": {
 				"BAD REQUEST when UPDATING SERVER STATUS when ONLY EDGE SERVER ASSIGNED": {
-					EndpointId: GetServerID(t, "test-ds-server-assignments"), ClientSession: TOSession,
+					EndpointID: GetServerID(t, "test-ds-server-assignments"), ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"status":        "ADMIN_DOWN",
 						"offlineReason": "admin down",
@@ -132,7 +132,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"BAD REQUEST when UPDATING SERVER STATUS when ONLY ORIGIN SERVER ASSIGNED": {
-					EndpointId: GetServerID(t, "test-mso-org-01"), ClientSession: TOSession,
+					EndpointID: GetServerID(t, "test-mso-org-01"), ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"status":        "ADMIN_DOWN",
 						"offlineReason": "admin down",
@@ -184,7 +184,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 						})
 					case "SERVER STATUS PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateServerStatus(testCase.EndpointId(), status, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateServerStatus(testCase.EndpointID(), status, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
@@ -258,7 +258,7 @@ func TestDeliveryServicesIDServers(t *testing.T) {
 		dsIDServersTests := utils.V5TestCase{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceId(t, "test-ds-server-assignments"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "test-ds-server-assignments"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						utils.ResponseHasLength(2)),
 				},
@@ -270,7 +270,7 @@ func TestDeliveryServicesIDServers(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetServersByDeliveryService(testCase.EndpointId(), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetServersByDeliveryService(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

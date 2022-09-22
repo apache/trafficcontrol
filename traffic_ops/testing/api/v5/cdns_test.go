@@ -150,7 +150,7 @@ func TestCDNs(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetCDNID(t, "cdn1"),
+					EndpointID:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
 					RequestBody: tc.CDN{
 						DNSSECEnabled: false,
@@ -161,7 +161,7 @@ func TestCDNs(t *testing.T) {
 						validateCDNUpdateFields("cdn1", map[string]interface{}{"DomainName": "domain2"})),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Headers": {
-					EndpointId:    GetCDNID(t, "cdn1"),
+					EndpointID:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.CDN{
@@ -172,7 +172,7 @@ func TestCDNs(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetCDNID(t, "cdn1"),
+					EndpointID:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					RequestBody: tc.CDN{
@@ -185,7 +185,7 @@ func TestCDNs(t *testing.T) {
 			},
 			"DELETE": {
 				"NOT FOUND when INVALID ID parameter": {
-					EndpointId:    func() int { return 111111 },
+					EndpointID:    func() int { return 111111 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -211,14 +211,14 @@ func TestCDNs(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateCDN(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateCDN(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteCDN(testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteCDN(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

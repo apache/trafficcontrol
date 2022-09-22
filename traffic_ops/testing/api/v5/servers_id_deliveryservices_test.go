@@ -36,20 +36,20 @@ func TestServersIDDeliveryServices(t *testing.T) {
 		methodTests := utils.V5TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					EndpointId:    GetServerID(t, "atlanta-edge-14"),
+					EndpointID:    GetServerID(t, "atlanta-edge-14"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					EndpointId:    GetServerID(t, "atlanta-edge-14"),
+					EndpointID:    GetServerID(t, "atlanta-edge-14"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 			"POST": {
 				"OK when VALID request": {
-					EndpointId:    GetServerID(t, "atlanta-edge-01"),
+					EndpointID:    GetServerID(t, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"dsIds":   []int{GetDeliveryServiceId(t, "ds1")()},
@@ -59,7 +59,7 @@ func TestServersIDDeliveryServices(t *testing.T) {
 						validateServersDeliveryServicesPost(GetServerID(t, "atlanta-edge-01")(), GetDeliveryServiceId(t, "ds1")())),
 				},
 				"OK when ASSIGNING EDGE to TOPOLOGY BASED DELIVERY SERVICE": {
-					EndpointId:    GetServerID(t, "atlanta-edge-03"),
+					EndpointID:    GetServerID(t, "atlanta-edge-03"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"dsIds":   []int{GetDeliveryServiceId(t, "top-ds-in-cdn1")()},
@@ -69,7 +69,7 @@ func TestServersIDDeliveryServices(t *testing.T) {
 						validateServersDeliveryServicesPost(GetServerID(t, "atlanta-edge-03")(), GetDeliveryServiceId(t, "top-ds-in-cdn1")())),
 				},
 				"OK when ASSIGNING ORIGIN to TOPOLOGY BASED DELIVERY SERVICE": {
-					EndpointId:    GetServerID(t, "denver-mso-org-01"),
+					EndpointID:    GetServerID(t, "denver-mso-org-01"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"dsIds":   []int{GetDeliveryServiceId(t, "ds-top")()},
@@ -79,7 +79,7 @@ func TestServersIDDeliveryServices(t *testing.T) {
 						validateServersDeliveryServicesPost(GetServerID(t, "denver-mso-org-01")(), GetDeliveryServiceId(t, "ds-top")())),
 				},
 				"CONFLICT when SERVER NOT IN SAME CDN as DELIVERY SERVICE": {
-					EndpointId:    GetServerID(t, "cdn2-test-edge"),
+					EndpointID:    GetServerID(t, "cdn2-test-edge"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"dsIds":   []int{GetDeliveryServiceId(t, "ds1")()},
@@ -88,7 +88,7 @@ func TestServersIDDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"BAD REQUEST when ORIGIN'S CACHEGROUP IS NOT A PART OF TOPOLOGY BASED DELIVERY SERVICE": {
-					EndpointId:    GetServerID(t, "denver-mso-org-01"),
+					EndpointID:    GetServerID(t, "denver-mso-org-01"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"dsIds":   []int{GetDeliveryServiceId(t, "ds-top-req-cap")()},
@@ -97,7 +97,7 @@ func TestServersIDDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"CONFLICT when REMOVING ONLY EDGE SERVER ASSIGNMENT": {
-					EndpointId:    GetServerID(t, "test-ds-server-assignments"),
+					EndpointID:    GetServerID(t, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"dsIds":   []int{},
@@ -106,7 +106,7 @@ func TestServersIDDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"CONFLICT when REMOVING ONLY ORIGIN SERVER ASSIGNMENT": {
-					EndpointId:    GetServerID(t, "test-mso-org-01"),
+					EndpointID:    GetServerID(t, "test-mso-org-01"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"dsIds":   []int{},
@@ -136,14 +136,14 @@ func TestServersIDDeliveryServices(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetServerIDDeliveryServices(testCase.EndpointId(), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetServerIDDeliveryServices(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.AssignDeliveryServiceIDsToServerID(testCase.EndpointId(), dsIds, replace, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.AssignDeliveryServiceIDsToServerID(testCase.EndpointID(), dsIds, replace, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

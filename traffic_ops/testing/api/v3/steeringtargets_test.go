@@ -41,20 +41,20 @@ func TestSteeringTargets(t *testing.T) {
 		methodTests := utils.V3TestCaseT[tc.SteeringTargetNullable]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					EndpointId:     GetDeliveryServiceId(t, "ds1"),
+					EndpointID:     GetDeliveryServiceId(t, "ds1"),
 					ClientSession:  steeringUserSession,
 					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
 					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					EndpointID:    GetDeliveryServiceId(t, "ds1"),
 					ClientSession: steeringUserSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						validateSteeringTargetFields(map[string]interface{}{"DeliveryService": "ds1", "DeliveryServiceID": uint64(GetDeliveryServiceId(t, "ds1")()),
 							"Target": "ds2", "TargetID": uint64(GetDeliveryServiceId(t, "ds2")()), "Type": "STEERING_WEIGHT", "TypeID": GetTypeID(t, "STEERING_WEIGHT")(), "Value": util.JSONIntStr(42)})),
 				},
 				"OK when CHANGES made": {
-					EndpointId:     GetDeliveryServiceId(t, "ds1"),
+					EndpointID:     GetDeliveryServiceId(t, "ds1"),
 					ClientSession:  steeringUserSession,
 					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
 					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -108,7 +108,7 @@ func TestSteeringTargets(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetSteeringTargetsWithHdr(testCase.EndpointId(), testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.GetSteeringTargetsWithHdr(testCase.EndpointID(), testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
@@ -137,7 +137,7 @@ func TestSteeringTargets(t *testing.T) {
 									assert.RequireNoError(t, err, "Expected no error converting targetID to an integer: %v", err)
 								}
 							}
-							alerts, reqInf, err := testCase.ClientSession.DeleteSteeringTarget(testCase.EndpointId(), targetID)
+							alerts, reqInf, err := testCase.ClientSession.DeleteSteeringTarget(testCase.EndpointID(), targetID)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

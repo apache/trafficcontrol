@@ -94,17 +94,17 @@ func Compare(t *testing.T, expected []string, alertsStrs []string) {
 }
 
 // CreateV3Session creates a session for client v4 using the passed in username and password.
-func CreateV3Session(t *testing.T, TrafficOpsURL string, username string, password string, toReqTimeout int) *v3client.Session {
-	userSession, _, err := v3client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v3-client-tests", false, time.Second*time.Duration(toReqTimeout))
+func CreateV3Session(t *testing.T, trafficOpsURL string, username string, password string, toReqTimeout int) *v3client.Session {
 	t.Helper()
+	userSession, _, err := v3client.LoginWithAgent(trafficOpsURL, username, password, true, "to-api-v3-client-tests", false, time.Second*time.Duration(toReqTimeout))
 	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
 	return userSession
 }
 
 // CreateV4Session creates a session for client v4 using the passed in username and password.
-func CreateV4Session(t *testing.T, TrafficOpsURL string, username string, password string, toReqTimeout int) *v4client.Session {
-	userSession, _, err := v4client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v4-client-tests", false, time.Second*time.Duration(toReqTimeout))
+func CreateV4Session(t *testing.T, trafficOpsURL string, username string, password string, toReqTimeout int) *v4client.Session {
 	t.Helper()
+	userSession, _, err := v4client.LoginWithAgent(trafficOpsURL, username, password, true, "to-api-v4-client-tests", false, time.Second*time.Duration(toReqTimeout))
 	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
 	return userSession
 }
@@ -119,7 +119,7 @@ func CreateV5Session(t *testing.T, trafficOpsURL, username, password string, toR
 
 // V3TestData represents the data needed for testing the v3 api endpoints.
 type V3TestData struct {
-	EndpointId     func() int
+	EndpointID     func() int
 	ClientSession  *v3client.Session
 	RequestParams  url.Values
 	RequestHeaders http.Header
@@ -130,7 +130,7 @@ type V3TestData struct {
 
 // V3TestDataT represents the data needed for testing the v3 api endpoints.
 type V3TestDataT[B any] struct {
-	EndpointId     func() int
+	EndpointID     func() int
 	ClientSession  *v3client.Session
 	RequestParams  url.Values
 	RequestHeaders http.Header
@@ -140,7 +140,7 @@ type V3TestDataT[B any] struct {
 
 // V4TestData represents the data needed for testing the v4 api endpoints.
 type V4TestData struct {
-	EndpointId    func() int
+	EndpointID    func() int
 	ClientSession *v4client.Session
 	RequestOpts   v4client.RequestOptions
 	RequestBody   map[string]interface{}
@@ -150,7 +150,7 @@ type V4TestData struct {
 
 // V5TestData represents the data needed for testing the v5 api endpoints.
 type V5TestData struct {
-	EndpointId    func() int
+	EndpointID    func() int
 	ClientSession *v5client.Session
 	RequestOpts   v5client.RequestOptions
 	RequestBody   map[string]interface{}
@@ -168,7 +168,7 @@ type requestOpts interface {
 
 // TestData represents the data needed for testing the api endpoints.
 type TestData[C clientSession, R requestOpts, B any] struct {
-	EndpointId    func() int
+	EndpointID    func() int
 	ClientSession *C
 	RequestOpts   R
 	RequestBody   B
