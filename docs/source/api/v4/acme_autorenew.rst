@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-acme-autorenew:
+.. _to-api-v4-acme-autorenew:
 
 ******************
 ``acme_autorenew``

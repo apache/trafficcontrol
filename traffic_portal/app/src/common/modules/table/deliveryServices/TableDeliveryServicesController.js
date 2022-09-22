@@ -17,7 +17,7 @@
  * under the License.
  */
 
-function TableDeliveryServicesController(tableName, deliveryServices, $anchorScroll, $scope, $state, $location, $uibModal, deliveryServiceService, deliveryServiceRequestService, deliveryServiceUtils, locationUtils, messageModel, propertiesModel, userModel) {
+function TableDeliveryServicesController(tableName, deliveryServices, steeringTargets, $anchorScroll, $scope, $state, $location, $uibModal, deliveryServiceService, deliveryServiceRequestService, deliveryServiceUtils, locationUtils, messageModel, propertiesModel, userModel) {
 	$scope.tableName = tableName;
 
 	/** The columns of the ag-grid table */
@@ -320,6 +320,13 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 			filter: "agNumberColumnFilter"
 		},
 		{
+			headerName: "Target For",
+			field: "isTargetFor",
+			hide: true,
+			valueFormatter: params => params.data.isTargetsFor,
+			tooltipValueGetter: params => `Steering targets for: ${params.data.isTargetsFor.join(", ")}`
+		},
+		{
 			headerName: "Tenant",
 			field: "tenant",
 			hide: false
@@ -360,7 +367,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 	 */
 	function createDeliveryService(typeName) {
 		locationUtils.navigateToPath(`/delivery-services/new?dsType=${typeName}`);
-	};
+	}
 
 	/**
 	 * Opens a dialog that the user uses to clone the given Delivery Service.
@@ -370,7 +377,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 	async function clone(ds) {
 		const params = {
 			title: `Clone Delivery Service: ${ds.xmlId}`,
-			message: "Please select a content routing category for the clone"
+			message: "Please select a <a href='https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#ds-types' target='_blank'>content routing category</a> for the clone"
 		};
 
 		const modalInstance = $uibModal.open({
@@ -392,7 +399,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 
 		const {name} = await modalInstance.result;
 		locationUtils.navigateToPath(`/delivery-services/${ds.id}/clone?dsType=${name}`);
-	};
+	}
 
 	/**
 	 * Opens a dialog asking the user for confirmation before deleting the given
@@ -426,7 +433,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 				messageModel.setMessages(fault.data.alerts, false);
 			}
 		} catch {}
-	};
+	}
 
 	/**
 	 * Creates a new DSR to delete the given Delivery Service.
@@ -460,7 +467,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 		let status = 'draft';
 		if (options.status.id == $scope.SUBMITTED || options.status.id == $scope.COMPLETE) {
 			status = 'submitted';
-		};
+		}
 
 		const dsRequest = {
 			changeType: 'delete',
@@ -506,10 +513,6 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 		}
 	}
 
-	/** All of the delivery services - lastUpdated fields converted to actual Dates */
-	$scope.deliveryServices = deliveryServices.map(
-		x => ({...x, lastUpdated: x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z").replace(" ", "T")) : x.lastUpdated})
-	);
 
 	$scope.DRAFT = 0;
 	$scope.SUBMITTED = 1;
@@ -526,7 +529,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 		} else {
 			locationUtils.navigateToPath(`/delivery-services/${ds.id}/charts?dsType=${ds.type}`);
 		}
-	};
+	}
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
@@ -535,7 +538,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 	async function selectDSType() {
 		const params = {
 			title: "Create Delivery Service",
-			message: "Please select a content routing category"
+			message: "Please select a <a href='https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#ds-types' target='_blank'>content routing category</a>"
 		};
 		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
@@ -559,7 +562,19 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 		} catch {
 			// do nothing
 		}
-	};
+	}
+
+	this.$onInit = function() {
+		const xmlIds = [];
+		for(const ds of deliveryServices) {
+			xmlIds.push(ds.xmlId);
+		}
+		const dsTargets = deliveryServiceUtils.getSteeringTargetsForDS(xmlIds, steeringTargets);
+		/** All the delivery services - lastUpdated fields converted to actual Dates */
+		$scope.deliveryServices = deliveryServices.map(
+			x => ({...x, isTargetsFor: Array.from(dsTargets[x.xmlId]), lastUpdated: x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z").replace(" ", "T")) : x.lastUpdated})
+		);
+	}
 
 	async function compareDSs() {
 		const params = {
@@ -582,7 +597,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 		} catch {
 			// do nothing
 		}
-	};
+	}
 
 	$scope.options = {
 		onRowClick: params => {
@@ -691,7 +706,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, $anchorScr
 		},
 
 	];
-};
+}
 
-TableDeliveryServicesController.$inject = ["tableName", "deliveryServices", "$anchorScroll", "$scope", "$state", "$location", "$uibModal", "deliveryServiceService", "deliveryServiceRequestService", "deliveryServiceUtils", "locationUtils", "messageModel", "propertiesModel", "userModel"];
+TableDeliveryServicesController.$inject = ["tableName", "deliveryServices", "steeringTargets", "$anchorScroll", "$scope", "$state", "$location", "$uibModal", "deliveryServiceService", "deliveryServiceRequestService", "deliveryServiceUtils", "locationUtils", "messageModel", "propertiesModel", "userModel"];
 module.exports = TableDeliveryServicesController;

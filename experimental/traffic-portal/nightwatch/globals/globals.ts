@@ -34,7 +34,7 @@ import {
 	ResponseCDN,
 	ResponseDeliveryService,
 	RequestTenant,
-	ResponseTenant
+	ResponseTenant, TypeFromResponse, RequestSteeringTarget
 } from "trafficops-types";
 
 declare module "nightwatch" {
@@ -73,6 +73,8 @@ declare module "nightwatch" {
 export interface CreatedData {
 	cdn: ResponseCDN;
 	ds: ResponseDeliveryService;
+	ds2: ResponseDeliveryService;
+	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 }
 
@@ -98,9 +100,9 @@ const globals = {
 			u: globals.adminUser
 		};
 		try {
-			const resp = await client.post(`${apiUrl}/user/login`, JSON.stringify(loginReq));
-			if(resp.headers["set-cookie"]) {
-				for (const cookie of resp.headers["set-cookie"]) {
+			const logResp = await client.post(`${apiUrl}/user/login`, JSON.stringify(loginReq));
+			if(logResp.headers["set-cookie"]) {
+				for (const cookie of logResp.headers["set-cookie"]) {
 					if(cookie.indexOf("access_token") > -1) {
 						accessToken = cookie;
 						break;
@@ -121,11 +123,28 @@ const globals = {
 			dnssecEnabled: false, domainName: `tests${globals.uniqueString}.com`, name: `testCDN${globals.uniqueString}`
 		};
 		let respCDN: ResponseCDN;
+
+		let resp = await client.get(`${apiUrl}/types`);
+		const types: Array<TypeFromResponse> = resp.data.response;
+		const httpType = types.find(typ => typ.name === "HTTP" && typ.useInTable === "deliveryservice");
+		if(httpType === undefined) {
+			throw new Error("Unable to find `HTTP` type");
+		}
+		const steeringType = types.find(typ => typ.name === "STEERING" && typ.useInTable === "deliveryservice");
+		if(steeringType === undefined) {
+			throw new Error("Unable to find `STEERING` type");
+		}
+		const steeringWeightType = types.find(typ => typ.name === "STEERING_WEIGHT" && typ.useInTable === "steering_target");
+		if(steeringWeightType === undefined) {
+			throw new Error("Unable to find `STEERING_WEIGHT` type");
+		}
+
 		try {
-			let resp = await client.post(`${apiUrl}/cdns`, JSON.stringify(cdn));
+			const testData = globals.testData as CreatedData;
+			resp = await client.post(`${apiUrl}/cdns`, JSON.stringify(cdn));
 			respCDN = resp.data.response;
 			console.log(`Successfully created CDN ${respCDN.name}`);
-			(globals.testData as CreatedData).cdn = respCDN;
+			testData.cdn = respCDN;
 
 			const ds: RequestDeliveryService = {
 				active: false,
@@ -159,13 +178,38 @@ const globals = {
 				routingName: "test",
 				signed: false,
 				tenantId: 1,
-				typeId: 1,
+				typeId: httpType.id,
 				xmlId: `testDS${globals.uniqueString}`
 			};
 			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
-			const respDS: ResponseDeliveryService = resp.data.response[0];
+			let respDS: ResponseDeliveryService = resp.data.response[0];
 			console.log(`Successfully created DS '${respDS.displayName}'`);
-			(globals.testData as CreatedData).ds = respDS;
+			testData.ds = respDS;
+
+			ds.displayName = `test DS2${globals.uniqueString}`;
+			ds.xmlId = `testDS2${globals.uniqueString}`;
+			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
+			respDS = resp.data.response[0];
+			console.log(`Successfully created DS '${respDS.displayName}'`);
+			testData.ds2 = respDS;
+
+			ds.displayName = `test steering DS${globals.uniqueString}`;
+			ds.xmlId = `testSDS${globals.uniqueString}`;
+			ds.typeId = steeringType.id;
+			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
+			respDS = resp.data.response[0];
+			console.log(`Successfully created DS '${respDS.displayName}'`);
+			testData.steeringDS = respDS;
+
+			const target: RequestSteeringTarget = {
+				targetId: testData.ds.id,
+				typeId: steeringWeightType.id,
+				value: 1
+			};
+			await client.post(`${apiUrl}/steering/${testData.steeringDS.id}/targets`, JSON.stringify(target));
+			target.targetId = testData.ds2.id;
+			await client.post(`${apiUrl}/steering/${testData.steeringDS.id}/targets`, JSON.stringify(target));
+			console.log(`Created steering targets for ${testData.steeringDS.displayName}`);
 
 			const tenant: RequestTenant = {
 				active: true,

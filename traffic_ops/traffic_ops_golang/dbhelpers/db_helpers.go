@@ -105,7 +105,12 @@ WHERE tm_user.email = $1
 // CheckIfCurrentUserHasCdnLock checks if the current user has the lock on the cdn that the requested operation is to be performed on.
 // This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
 func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, int) {
-	query := `SELECT c.username, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames FROM cdn_lock c LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn WHERE c.cdn=$1 GROUP BY c.username`
+	query := `
+SELECT c.username, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames 
+FROM cdn_lock c 
+    LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn 
+WHERE c.cdn=$1 
+GROUP BY c.username`
 	var userName string
 	var sharedUserNames []string
 	rows, err := tx.Query(query, cdn)
@@ -2024,7 +2029,7 @@ WHERE server.id = $2;`
 }
 
 // GetCommonServerPropertiesFromV4 converts ServerV40 to CommonServerProperties struct.
-func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
+func GetCommonServerPropertiesFromV4(s tc.ServerV41, tx *sql.Tx) (tc.CommonServerProperties, error) {
 	var id int
 	var desc string
 	if len(s.ProfileNames) == 0 {

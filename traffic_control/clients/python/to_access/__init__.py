@@ -53,7 +53,7 @@ Arguments and Flags
 .. option:: -a API_VERSION, --api-version API_VERSION
 
 	Specifies the version of the Traffic Ops API that will be used for the request. Has no effect if
-	:option:`--raw-path` is used. (Default: 2.0)
+	:option:`--raw-path` is used. (Default: 4.1)
 
 .. option:: -f, --full
 
@@ -271,7 +271,7 @@ def parse_arguments(program):
 	                    help="Request exactly PATH; it won't be prefaced with '/api/{{api-version}}/")
 	parser.add_argument("-a", "--api-version",
 	                    type=float,
-	                    default=3.0,
+	                    default=4.1,
 	                    help="Specify the API version to request against")
 	parser.add_argument("-p", "--pretty",
 	                    action="store_true",

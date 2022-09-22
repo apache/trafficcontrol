@@ -524,6 +524,141 @@ func TestMakeParentDotConfigMSONoPrimaryParent(t *testing.T) {
 	}
 }
 
+func TestMakeParentDotConfigMSONoTopologyNoMid(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+	ds0.MultiSiteOrigin = util.BoolPtr(true)
+	ds0.ProfileName = util.StrPtr("dsprofile")
+	dses := []DeliveryService{*ds0}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigRetryKeysDefault.Algorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "mso.parent_retry",
+			ConfigFile: "parent.config",
+			Value:      "both",
+			Profiles:   []byte(`["` + *ds0.ProfileName + `"]`),
+		},
+		tc.Parameter{
+			Name:       "mso.algorithm",
+			ConfigFile: "parent.config",
+			Value:      "consistent_hash",
+			Profiles:   []byte(`["` + *ds0.ProfileName + `"]`),
+		},
+		tc.Parameter{
+			Name:       "mso.unavailable_server_retry_responses",
+			ConfigFile: "parent.config",
+			Value:      `"500,502,503,542"`,
+			Profiles:   []byte(`["` + *ds0.ProfileName + `"]`),
+		},
+		tc.Parameter{
+			Name:       "mso.max_simple_retries",
+			ConfigFile: "parent.config",
+			Value:      "2",
+			Profiles:   []byte(`["` + *ds0.ProfileName + `"]`),
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	server := makeTestParentServer()
+
+	origin0 := makeTestParentServer()
+	origin0.Cachegroup = util.StrPtr("originCG")
+	origin0.CachegroupID = util.IntPtr(500)
+	origin0.HostName = util.StrPtr("myorigin0")
+	origin0.ID = util.IntPtr(45)
+	setIP(origin0, "192.168.2.2")
+	origin0.Type = tc.OriginTypeName
+	origin0.TypeID = util.IntPtr(991)
+
+	servers := []Server{*server, *origin0}
+
+	topologies := []tc.Topology{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = origin0.Cachegroup
+	eCG.ParentCachegroupID = origin0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	oCG := &tc.CacheGroupNullable{}
+	oCG.Name = origin0.Cachegroup
+	oCG.ID = origin0.CachegroupID
+	oCGType := tc.CacheGroupOriginTypeName
+	oCG.Type = &oCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *oCG}
+
+	dss := []DeliveryServiceServer{
+		{
+			Server:          *server.ID,
+			DeliveryService: *ds0.ID,
+		},
+		{
+			Server:          *origin0.ID,
+			DeliveryService: *ds0.ID,
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr.HdrComment)
+
+	txtx := strings.Replace(txt, " ", "", -1)
+
+	if !strings.Contains(txtx, `parent="myorigin0.mydomain.example.net:80`) {
+		t.Errorf("expected parent myorigin0, actual: '%v'", txt)
+	}
+	if !strings.Contains(txtx, `unavailable_server_retry_responses="500,502,503,542`) {
+		t.Errorf(`expected unavailable_server_retry_repsonse 500,502,503,542 from DS params, actual: '%v'`, txt)
+	}
+	if !strings.Contains(txtx, `max_simple_retries=2`) {
+		t.Errorf(`expected max_simple_retries=2 from DS params, actual: '%v'`, txt)
+	}
+}
+
 func TestMakeParentDotConfigTopologies(t *testing.T) {
 	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
@@ -3993,7 +4128,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 				dsline := lineWhichContains(lines, dsstr)
 				missing := missingFrom(dsline, needs)
 				if 0 < len(missing) {
-					t.Errorf("Missing required string(s) from line: %v\n%v", missing, dsline)
+					t.Errorf("Missing required string(s) from line: %v\n%v (warnings: %v)", missing, dsline, cfg.Warnings)
 				}
 			}
 		}
@@ -4013,10 +4148,10 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 			` go_direct=true`,
 			` parent_is_proxy=false`,
 			` parent_retry=both`,
-			` max_simple_retries=12`,
-			` max_unavailable_server_retries=22`,
-			` simple_server_retry_responses="401,402"`,
-			` unavailable_server_retry_responses="501,502"`,
+			` max_simple_retries=14`,
+			` max_unavailable_server_retries=24`,
+			` simple_server_retry_responses="401,404"`,
+			` unavailable_server_retry_responses="501,504"`,
 		}
 
 		{
@@ -4029,7 +4164,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 				dsline := lineWhichContains(lines, dsstr)
 				missing := missingFrom(dsline, needs)
 				if 0 < len(missing) {
-					t.Errorf("Missing required string(s) from line: %v\n%v", missing, dsline)
+					t.Errorf("Missing required string(s) from line: %v\n%v (warnings: %v)", missing, dsline, cfg.Warnings)
 				}
 			}
 		}

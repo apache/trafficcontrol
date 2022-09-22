@@ -625,7 +625,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" class="form-control private-text ng-model="deliveryService.edgeHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" class="form-control private-text" ng-model="deliveryService.edgeHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.edgeHeaderRewrite, 'maxlength')">Only applicable with non topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.edgeHeaderRewrite != dsCurrent.edgeHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>
@@ -650,7 +650,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="midHeaderRewrite" name="midHeaderRewrite" class="form-control private-text ng-model="deliveryService.midHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="midHeaderRewrite" name="midHeaderRewrite" class="form-control private-text" ng-model="deliveryService.midHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.midHeaderRewrite, 'maxlength')">Only applicable with non topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.midHeaderRewrite != dsCurrent.midHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>
@@ -675,7 +675,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="firstHeaderRewrite" name="firstHeaderRewrite" class="form-control private-text ng-model="deliveryService.firstHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="firstHeaderRewrite" name="firstHeaderRewrite" class="form-control private-text" ng-model="deliveryService.firstHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.firstHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.firstHeaderRewrite != dsCurrent.firstHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>
@@ -700,7 +700,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="innerHeaderRewrite" name="innerHeaderRewrite" class="form-control private-text ng-model="deliveryService.innerHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="innerHeaderRewrite" name="innerHeaderRewrite" class="form-control private-text" ng-model="deliveryService.innerHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.innerHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.innerHeaderRewrite != dsCurrent.innerHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>
@@ -725,7 +725,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="lastHeaderRewrite" name="lastHeaderRewrite" class="form-control private-text ng-model="deliveryService.lastHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="lastHeaderRewrite" name="lastHeaderRewrite" class="form-control private-text" ng-model="deliveryService.lastHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.lastHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.lastHeaderRewrite != dsCurrent.lastHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>
@@ -816,6 +816,22 @@ under the License.
                                 <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.routingName}}</pre>
                             </aside>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="steeringTargetsFor">
+                            Steering Targets For*
+                            <div class="helptooltip">
+                                <div class="helptext">
+                                    Which Delivery Services this Delivery Service is a potential Steering Target for.
+                                    <br />
+                                    <br />
+                                    <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-steering" target="_blank">See Steering Feature</a>
+                                </div>
+                            </div>
+                            </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="steeringTargetsFor" readonly type="text" class="form-control" ng-model="steeringTargetsFor" />
                         </div>
                     </div>
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.deepCachingType), 'has-feedback': hasError(cacheConfig.deepCachingType)}">

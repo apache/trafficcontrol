@@ -14,7 +14,7 @@
 ..
 
 
-.. _to-api-current-stats:
+.. _to-api-v4-current-stats:
 
 *****************
 ``current_stats``

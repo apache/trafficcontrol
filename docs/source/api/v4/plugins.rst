@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-plugins:
+.. _to-api-v4-plugins:
 
 ***********
 ``plugins``

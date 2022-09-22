@@ -725,7 +725,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="lastHeaderRewrite" name="lastHeaderRewrite" class="form-control private-text ng-model="deliveryService.lastHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="lastHeaderRewrite" name="lastHeaderRewrite" class="form-control private-text" ng-model="deliveryService.lastHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.lastHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.lastHeaderRewrite != dsCurrent.lastHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-sslkey_expirations:
+.. _to-api-v4-sslkey_expirations:
 
 **********************
 ``sslkey_expirations``

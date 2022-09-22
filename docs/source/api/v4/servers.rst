@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers:
+.. _to-api-v4-servers:
 
 ***********
 ``servers``
@@ -40,7 +40,7 @@ Request Structure
 	| cachegroupName | no       | Return only those servers within the :term:`Cache Group` that has this :ref:`cache-group-name`                    |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| dsId           | no       | Return only those servers assigned to the :term:`Delivery Service` identified by this integral, unique identifier.|
-	|                |          | If the Delivery Service has a :term:`Topology` assigned to it, the :ref:`to-api-servers` endpoint will return     |
+	|                |          | If the Delivery Service has a :term:`Topology` assigned to it, the :ref:`to-api-v4-servers` endpoint will return  |
 	|                |          | each server whose :term:`Cache Group` is associated with a :term:`Topology Node` of that Topology and has the     |
 	|                |          | :term:`Server Capabilities` that are                                                                              |
 	|                |          | :term:`required by the Delivery Service <Delivery Service required capabilities>` but excluding                   |
@@ -69,6 +69,11 @@ Request Structure
 	|                |          | the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to  |
 	|                |          | make use of ``page``.                                                                                             |
 	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| asn            | no       | Return only the servers that have a cachegroup matching the provided ASN.                                         |
+	|                |          |                                                                                                                   |
+	|                |          | .. versionadded:: 4.1                                                                                             |
+	+----------------+----------+-------------------------------------------------------------------------------------------------------------------+
+
 
 .. code-block:: http
 	:caption: Request Example
@@ -81,6 +86,9 @@ Request Structure
 
 Response Structure
 ------------------
+:asns:             The :abbr:`ASN (Autonomous System Number)` associated with the cachegroups of the current server.
+
+	.. versionadded:: 4.1
 :cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
 :cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:            The integral, unique identifier of the CDN to which the server belongs
@@ -225,6 +233,10 @@ Response Structure
 				"routerHostName": "",
 				"routerPortName": ""
 			}
+		],
+		"asns": [
+			1,
+			2
 		]
 	}],
 	"summary": {

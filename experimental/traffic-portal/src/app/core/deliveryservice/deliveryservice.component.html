@@ -34,7 +34,10 @@ limitations under the License.
 					<input matInput [formControl]="toTime" type="time" title="To (time)" name="totime">
 				</mat-form-field>
 			</div>
-			<button name="timespanRefresh" mat-raised-button>Refresh</button>
+			<div class="actions">
+				<button name="timespanRefresh" mat-raised-button>Refresh</button>
+				<mat-icon *ngIf="steeringTargetsFor.size > 0" [matTooltip]="steeringTargetDisplay()" >assistant_direction</mat-icon>
+			</div>
 		</form>
 		<mat-divider></mat-divider>
 		<canvas linechart chartTitle="Bandwidth of Cache Tiers" id="bandwidthData" [chartDataSets]="bandwidthData" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">

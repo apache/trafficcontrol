@@ -34,6 +34,7 @@ import { MatSelectModule } from "@angular/material/select";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatTooltipModule } from "@angular/material/tooltip";
 import { MatTreeModule } from "@angular/material/tree";
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { AgGridModule } from "ag-grid-angular";
@@ -72,6 +73,7 @@ import { AgGridModule } from "ag-grid-angular";
 		MatSnackBarModule,
 		MatStepperModule,
 		MatToolbarModule,
+		MatTooltipModule,
 		MatTreeModule
 	]
 })

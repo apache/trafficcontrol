@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servercheck:
+.. _to-api-v4-servercheck:
 
 ***************
 ``servercheck``
@@ -149,4 +149,3 @@ Response Structure
 	]}
 
 .. [1] No roles are required to use this endpoint, however access is controlled by username. Only the reserved user ``extension`` is permitted the use of this endpoint.
-

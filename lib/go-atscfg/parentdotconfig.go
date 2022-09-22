@@ -24,7 +24,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -415,7 +414,7 @@ func makeParentDotConfigData(
 				parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
 			}
 		} else {
-			isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds)
+			isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds, cacheGroups)
 			serverPlacement := TopologyPlacement{
 				IsLastCacheTier:  isLastCacheTier,
 				IsFirstCacheTier: !isLastCacheTier || !ds.Type.UsesMidCache(),
@@ -1179,13 +1178,13 @@ func (dsparams parentDSParams) FillParentSvcRetries(isLastCacheTier bool, atsMaj
 	if simpleResponseInts, err := ParseRetryResponses(dsparams.SimpleServerRetryResponses); err == nil {
 		pasvc.ErrorResponseCodes = simpleResponseInts
 	} else {
-		warnings = append(warnings, "malformed simpleServerRetryResponses '"+dsparams.SimpleServerRetryResponses+"', using default")
+		warnings = append(warnings, "malformed simpleServerRetryResponses '"+dsparams.SimpleServerRetryResponses+"', using default (parse err: "+err.Error()+")")
 	}
 
 	if unavailResponseInts, err := ParseRetryResponses(dsparams.UnavailableServerRetryResponses); err == nil {
 		pasvc.MarkdownResponseCodes = unavailResponseInts
 	} else {
-		warnings = append(warnings, "malformed unavailableServerRetryResponses '"+dsparams.UnavailableServerRetryResponses+"', using default")
+		warnings = append(warnings, "malformed unavailableServerRetryResponses '"+dsparams.UnavailableServerRetryResponses+"', using default (parse err: "+err.Error()+")")
 	}
 
 	// TODO make consts
@@ -1715,12 +1714,8 @@ func makeParentInfo(
 
 // unavailableServerRetryResponsesValid returns whether a unavailable_server_retry_responses parameter is valid for an ATS parent rule.
 func unavailableServerRetryResponsesValid(s string) bool {
-	// optimization if param is empty
-	if s == "" {
-		return false
-	}
-	re := regexp.MustCompile(`^"(:?\d{3},)+\d{3}"\s*$`) // TODO benchmark, cache if performance matters
-	return re.MatchString(s)
+	_, err := ParseRetryResponses(s)
+	return err == nil
 }
 
 // getOriginServers returns the origin servers with parameters, any warnings, and any error.

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-hostname-update_status:
+.. _to-api-v4-servers-hostname-update_status:
 
 **************************************
 ``servers/{{hostname}}/update_status``
@@ -67,7 +67,7 @@ Each object in the returned array\ [#uniqueness]_ will contain the following fie
 :revalApplyTime:       The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
 :status:               The name of the status of this server
 
-	.. seealso:: :ref:`health-proto` gives more information on how these statuses are used, and the ``GET`` method of the :ref:`to-api-statuses` endpoint can be used to retrieve information about all server statuses configured in Traffic Ops.
+	.. seealso:: :ref:`health-proto` gives more information on how these statuses are used, and the ``GET`` method of the :ref:`to-api-v4-statuses` endpoint can be used to retrieve information about all server statuses configured in Traffic Ops.
 
 :upd_pending:       ``true`` if the server has pending updates, ``false`` otherwise
 :use_reval_pending: A boolean which tells :term:`ORT` whether or not this version of Traffic Ops should use pending :term:`Content Invalidation Jobs`

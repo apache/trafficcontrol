@@ -42,6 +42,8 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 %build
 		npm install
 		grunt dist
+		cd app/dist
+		npm install -production
 
 %install
 		%__mkdir -p ${RPM_BUILD_ROOT}/etc/init.d

@@ -296,10 +296,19 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-		return
+
+	_, hasConfigUpdatedBoolParam := inf.Params["updated"]
+	_, hasRevalUpdatedBoolParam := inf.Params["reval_updated"]
+	_, hasConfigApplyTimeParam := inf.Params["config_apply_time"]
+	_, hasRevalidateApplyTimeParam := inf.Params["revalidate_apply_time"]
+	// Allow `apply_time` changes when the CDN is locked, but not `updated`
+	canIgnoreLock := (hasConfigApplyTimeParam || hasRevalidateApplyTimeParam) && !hasConfigUpdatedBoolParam && !hasRevalUpdatedBoolParam
+	if !canIgnoreLock {
+		userDoesntHaveLockErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+		if sysErr != nil || userDoesntHaveLockErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userDoesntHaveLockErr, sysErr)
+			return
+		}
 	}
 
 	// TODO parse JSON body to trump Query Params?

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-oc-fci-advertisement:
+.. _to-api-v4-oc-fci-advertisement:
 
 ************************
 ``OC/FCI/advertisement``
@@ -135,4 +135,3 @@ Response Structure
 			}
 		]
 	}
-
