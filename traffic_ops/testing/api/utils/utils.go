@@ -52,10 +52,9 @@ func FindNeedle[T comparable](needle T, haystack []T) bool {
 // ErrorsToStrings converts a slice of errors to a slice of their error
 // messages.
 func ErrorsToStrings(errs []error) []string {
-	errorStrs := []string{}
-	for _, errType := range errs {
-		et := errType.Error()
-		errorStrs = append(errorStrs, et)
+	errorStrs := make([]string, 0, len(errs))
+	for _, err := range errs {
+		errorStrs = append(errorStrs, err.Error())
 	}
 	return errorStrs
 }
@@ -66,6 +65,7 @@ func ErrorsToStrings(errs []error) []string {
 // Note that this isn't particularly efficient, which is fine because it's only
 // meant to be used in testing.
 func Compare(t *testing.T, expected []string, alertsStrs []string) {
+	t.Helper()
 	sort.Strings(alertsStrs)
 	expectedFmt, _ := json.MarshalIndent(expected, "", "  ")
 	errorsFmt, _ := json.MarshalIndent(alertsStrs, "", "  ")
@@ -96,6 +96,7 @@ func Compare(t *testing.T, expected []string, alertsStrs []string) {
 // CreateV3Session creates a session for client v4 using the passed in username and password.
 func CreateV3Session(t *testing.T, TrafficOpsURL string, username string, password string, toReqTimeout int) *v3client.Session {
 	userSession, _, err := v3client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v3-client-tests", false, time.Second*time.Duration(toReqTimeout))
+	t.Helper()
 	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
 	return userSession
 }
@@ -103,12 +104,14 @@ func CreateV3Session(t *testing.T, TrafficOpsURL string, username string, passwo
 // CreateV4Session creates a session for client v4 using the passed in username and password.
 func CreateV4Session(t *testing.T, TrafficOpsURL string, username string, password string, toReqTimeout int) *v4client.Session {
 	userSession, _, err := v4client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v4-client-tests", false, time.Second*time.Duration(toReqTimeout))
+	t.Helper()
 	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
 	return userSession
 }
 
 // CreateV5Session creates a session for client v5 using the passed in username and password.
 func CreateV5Session(t *testing.T, trafficOpsURL, username, password string, toReqTimeout int) *v5client.Session {
+	t.Helper()
 	userSession, _, err := v5client.LoginWithAgent(trafficOpsURL, username, password, true, "to-api-v5-client-tests", false, time.Second*time.Duration(toReqTimeout))
 	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
 	return userSession
@@ -204,6 +207,7 @@ func CkRequest(c ...CkReqFunc) []CkReqFunc {
 // NoError checks that no error was returned (i.e. `nil`).
 func NoError() CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, _ tc.Alerts, err error) {
+		t.Helper()
 		assert.NoError(t, err, "Expected no error. Got: %v", err)
 	}
 }
@@ -211,6 +215,7 @@ func NoError() CkReqFunc {
 // HasError checks that an error was returned (i.e. not `nil`).
 func HasError() CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, alerts tc.Alerts, err error) {
+		t.Helper()
 		assert.Error(t, err, "Expected error. Got: %v", alerts)
 	}
 }
@@ -218,6 +223,7 @@ func HasError() CkReqFunc {
 // HasStatus checks that the status code from the request is as expected.
 func HasStatus(expectedStatus int) CkReqFunc {
 	return func(t *testing.T, reqInf toclientlib.ReqInf, _ interface{}, _ tc.Alerts, _ error) {
+		t.Helper()
 		assert.Equal(t, expectedStatus, reqInf.StatusCode, "Expected Status Code: %d Got: %d", expectedStatus, reqInf.StatusCode)
 	}
 }
@@ -225,6 +231,7 @@ func HasStatus(expectedStatus int) CkReqFunc {
 // HasAlertLevel checks that the alert from the request matches the expected level.
 func HasAlertLevel(expectedAlertLevel string) CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, alerts tc.Alerts, _ error) {
+		t.Helper()
 		assert.RequireNotNil(t, alerts, "Expected alerts to not be nil.")
 		found := false
 		for _, alert := range alerts.Alerts {
@@ -240,6 +247,7 @@ func HasAlertLevel(expectedAlertLevel string) CkReqFunc {
 // Determines that response is a slice before checking the length of the reflected value.
 func ResponseHasLength(expected int) CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		t.Helper()
 		rt := reflect.TypeOf(resp)
 		switch rt.Kind() {
 		case reflect.Slice:
@@ -255,6 +263,7 @@ func ResponseHasLength(expected int) CkReqFunc {
 // Determines that response is a slice before checking the length of the reflected value.
 func ResponseLengthGreaterOrEqual(expected int) CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		t.Helper()
 		rt := reflect.TypeOf(resp)
 		switch rt.Kind() {
 		case reflect.Slice:
