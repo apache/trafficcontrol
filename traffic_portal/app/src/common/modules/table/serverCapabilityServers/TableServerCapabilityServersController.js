@@ -75,8 +75,8 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 				serverCapability: function() {
 					return serverCapability;
 				},
-				servers: function(serversList) {
-					return serversList.getServers();
+				servers: function(serverService) {
+					return serverService.getServers();
 				},
 				assignedServers: function() {
 					return servers;

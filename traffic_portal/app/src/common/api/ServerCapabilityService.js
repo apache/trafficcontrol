@@ -82,7 +82,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.assignServersPerSC = function(serverCapability, serverIds) {
-		return $http.put(ENV.api.unstable + 'multiple_servers_per_capability',{ serverCapability: serverCapability, serverIds: serverIds, replace: true } ).then(
+		return $http.put(ENV.api.unstable + 'multiple_servers_per_capability',{ serverCapability: serverCapability.name, serverIds: serverIds, replace: true } ).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, false);
 				return result;

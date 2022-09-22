@@ -44,7 +44,7 @@ var TableAssignServersPerCapabilityController = function(servers, serverCapabili
         if (isAssigned) {
             server['selected'] = true;
         }
-        return SCs;
+        return server;
     });
 
     $scope.submit = function() {
