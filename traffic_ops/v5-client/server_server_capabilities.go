@@ -70,6 +70,6 @@ func (to *Session) AssignMultipleServerCapabilities(msc tc.MultipleServerCapabil
 // AssignMultipleServersPerCapability assigns multiple servers to a given capability.
 func (to *Session) AssignMultipleServersPerCapability(mspc tc.MultipleServersToCapability, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.put(apiMultipleServerCapabilities, opts, mspc, &alerts)
+	reqInf, err := to.put(apiMultipleServersPerCapability, opts, mspc, &alerts)
 	return alerts, reqInf, err
 }
