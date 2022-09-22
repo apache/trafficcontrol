@@ -36,11 +36,6 @@ import (
 	v5client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
-type ErrorAndMessage struct {
-	Error   error
-	Message string
-}
-
 // FindNeedle searches a "haystack" slice of values for the the "needle" value,
 // returning true if the value is in the haystack, false otherwise.
 func FindNeedle[T comparable](needle T, haystack []T) bool {
