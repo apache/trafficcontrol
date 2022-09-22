@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -24,7 +23,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -122,24 +120,6 @@ func TestDeliveryServiceServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
-			"SERVER STATUS PUT": {
-				"BAD REQUEST when UPDATING SERVER STATUS when ONLY EDGE SERVER ASSIGNED": {
-					EndpointId: GetServerID(t, "test-ds-server-assignments"), ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status":        "ADMIN_DOWN",
-						"offlineReason": "admin down",
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
-				},
-				"BAD REQUEST when UPDATING SERVER STATUS when ONLY ORIGIN SERVER ASSIGNED": {
-					EndpointId: GetServerID(t, "test-mso-org-01"), ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status":        "ADMIN_DOWN",
-						"offlineReason": "admin down",
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
-				},
-			},
 		}
 		for method, testCases := range dssTests {
 			t.Run(method, func(t *testing.T) {
@@ -147,7 +127,6 @@ func TestDeliveryServiceServers(t *testing.T) {
 					var dsID int
 					var replace bool
 					var serverIDs []int
-					status := tc.ServerPutStatus{}
 
 					if testCase.RequestBody != nil {
 						if val, ok := testCase.RequestBody["dsId"]; ok {
@@ -158,12 +137,6 @@ func TestDeliveryServiceServers(t *testing.T) {
 						}
 						if val, ok := testCase.RequestBody["servers"]; ok {
 							serverIDs = val.([]int)
-						}
-						if _, ok := testCase.RequestBody["offlineReason"]; ok {
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &status)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 						}
 					}
 
@@ -180,13 +153,6 @@ func TestDeliveryServiceServers(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.CreateDeliveryServiceServers(dsID, serverIDs, replace, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
-							}
-						})
-					case "SERVER STATUS PUT":
-						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateServerStatus(testCase.EndpointId(), status, testCase.RequestOpts)
-							for _, check := range testCase.Expectations {
-								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					}

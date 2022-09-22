@@ -17,7 +17,6 @@ package v4
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -26,64 +25,128 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
-func TestServerUpdateStatusLastAssigned(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServiceCategories, Topologies, DeliveryServices}, func() {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("hostName", "atlanta-edge-01")
-		resp, _, err := TOSession.GetServers(opts)
-		if err != nil {
-			t.Fatalf("cannot get server by hostname: %v", err)
+func TestServersIDStatus(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServiceCategories, Topologies, DeliveryServices, DeliveryServiceServerAssignments}, func() {
+
+		methodTests := utils.V4TestCase{
+			"PUT": {
+				"VALID request when using SERVER ID FIELD": {
+					EndpointId:    GetServerID(t, "atlanta-mid-16"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"status":        GetStatusID(t, "OFFLINE"),
+						"offlineReason": "test last edge",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"NOT FOUND when SERVER DOESNT EXIST": {
+					EndpointId:    func() int { return 11111111 },
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"status":        "OFFLINE",
+						"offlineReason": "test last edge",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"BAD REQUEST when STATUS DOESNT EXIST": {
+					EndpointId:    GetServerID(t, "atlanta-mid-16"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"status":        "NOT_A_REAL_STATUS",
+						"offlineReason": "test last edge",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING OFFLINE REASON when OFFLINE STATUS": {
+					EndpointId:    GetServerID(t, "atlanta-mid-16"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"status": "OFFLINE",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING OFFLINE REASON when ADMIN_DOWN STATUS": {
+					EndpointId:    GetServerID(t, "atlanta-mid-16"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"status": "ADMIN_DOWN",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"CONFLICT when SERVER STATUS OFFLINE when ONLY EDGE SERVER ASSIGNED": {
+					EndpointId:    GetServerID(t, "test-ds-server-assignments"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"status":        "OFFLINE",
+						"offlineReason": "test last edge",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
+				},
+				"CONFLICT when SERVER STATUS OFFLINE when ONLY ORIGIN SERVER ASSIGNED": {
+					EndpointId:    GetServerID(t, "test-mso-org-01"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"status":        "OFFLINE",
+						"offlineReason": "test last origin",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
+				},
+			},
 		}
-		if len(resp.Response) != 1 {
-			t.Fatalf("Expected a server named 'atlanta-edge-01' to exist")
-		}
-		edge := resp.Response[0]
-		opts = client.NewRequestOptions()
-		opts.QueryParameters.Set("xmlId", "ds-top")
-		dsResp, _, err := TOSession.GetDeliveryServices(opts)
-		if err != nil {
-			t.Fatalf("cannot get delivery service by xmlId: %v", err)
-		}
-		if len(resp.Response) != 1 {
-			t.Fatalf("Expected one delivery service with xmlId 'ds-top' to exist")
-		}
-		// temporarily unassign the topology in order to assign an EDGE
-		ds := dsResp.Response[0]
-		tmpTop := *ds.Topology
-		ds.Topology = nil
-		ds.FirstHeaderRewrite = nil
-		ds.LastHeaderRewrite = nil
-		ds.InnerHeaderRewrite = nil
-		_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-		if err != nil {
-			t.Fatalf("cannot update delivery service 'ds-top': %v", err)
-		}
-		_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*edge.ID}, true, client.RequestOptions{})
-		if err != nil {
-			t.Fatalf("cannot create delivery service server: %v", err)
-		}
-		// reassign the topology
-		ds.Topology = &tmpTop
-		_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
-		if err != nil {
-			t.Fatalf("cannot update delivery service 'ds-top': %v", err)
-		}
-		// attempt to set the edge to OFFLINE
-		_, _, err = TOSession.UpdateServerStatus(*edge.ID, tc.ServerPutStatus{
-			Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
-			OfflineReason: util.StrPtr("testing")}, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("setting edge to OFFLINE when it's the only edge assigned to a topology-based delivery service - expected: no error, actual: %v", err)
-		}
-		// remove EDGE assignment
-		_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{}, true, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("removing delivery service servers from topology-based delivery service - expected: no error, actual: %v", err)
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					serverStatus := tc.ServerPutStatus{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &serverStatus)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateServerStatus(testCase.EndpointId(), serverStatus, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
 		}
 	})
+}
+
+func validateLastUpdatedField(hostName string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("hostName", hostName)
+		servers, _, err := TOSession.GetServers(opts)
+		assert.RequireNoError(t, err, "Expected no error when getting servers: %v", err)
+		assert.RequireEqual(t, 1, len(servers.Response), "Expecetd exactly one server returned from response, Got: %d", len(servers.Response))
+
+		opts.QueryParameters.Del("hostName")
+		assert.RequireNotNil(t, servers.Response[0].Cachegroup, "Expected Server's Cachegroup to NOT be nil.")
+		opts.QueryParameters.Set("name", *servers.Response[0].Cachegroup)
+		cacheGroups, _, err := TOSession.GetCacheGroups(opts)
+		assert.RequireNoError(t, err, "Expected no error when getting cache groups: %v", err)
+		assert.RequireEqual(t, 1, len(cacheGroups.Response), "Expecetd exactly one cache group returned from response, Got: %d", len(cacheGroups.Response))
+
+		opts.QueryParameters.Del("name")
+		assert.RequireNotNil(t, cacheGroups.Response[0].ParentCachegroupID, "Expected Cachegroup's Parent Cachegroup ID to NOT be nil.")
+		opts.QueryParameters.Set("cachroup", *servers.Response[0].Cachegroup)
+
+	}
 }
 
 func TestServerUpdateStatus(t *testing.T) {
@@ -210,158 +273,6 @@ func TestServerUpdateStatus(t *testing.T) {
 			t.Errorf("cannot update server status: %v - alerts: %+v", err, alerts.Alerts)
 		}
 
-		// negative cases:
-		// server doesn't exist
-		_, _, err = TOSession.UpdateServerStatus(
-			-1,
-			tc.ServerPutStatus{
-				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
-				OfflineReason: util.StrPtr("testing"),
-			},
-			client.RequestOptions{},
-		)
-		if err == nil {
-			t.Error("update server status exected: err, actual: nil")
-		}
-
-		// status does not exist
-		_, _, err = TOSession.UpdateServerStatus(
-			*mid1cdn1.ID,
-			tc.ServerPutStatus{
-				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("NOT_A_REAL_STATUS")},
-				OfflineReason: util.StrPtr("testing"),
-			},
-			client.RequestOptions{},
-		)
-		if err == nil {
-			t.Error("update server status exected: err, actual: nil")
-		}
-
-		// offlineReason required for OFFLINE status
-		_, _, err = TOSession.UpdateServerStatus(
-			*mid1cdn1.ID,
-			tc.ServerPutStatus{
-				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
-				OfflineReason: nil,
-			},
-			client.RequestOptions{},
-		)
-		if err == nil {
-			t.Error("update server status exected: err, actual: nil")
-		}
-
-		// offlineReason required for ADMIN_DOWN status
-		_, _, err = TOSession.UpdateServerStatus(
-			*mid1cdn1.ID,
-			tc.ServerPutStatus{
-				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("ADMIN_DOWN")},
-				OfflineReason: nil,
-			},
-			client.RequestOptions{},
-		)
-		if err == nil {
-			t.Error("update server status exected: err, actual: nil")
-		}
-	})
-}
-
-func TestServerQueueUpdate(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
-		// TODO: DON'T hard-code server hostnames!
-		const serverName = "atlanta-edge-01"
-
-		queueUpdateActions := map[bool]string{
-			false: "dequeue",
-			true:  "queue",
-		}
-
-		var s tc.ServerV4
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Add("hostName", serverName)
-		resp, _, err := TOSession.GetServers(opts)
-		if err != nil {
-			t.Fatalf("failed to get Server by hostname '%s': %v - alerts: %+v", serverName, err, resp.Alerts)
-		}
-		if len(resp.Response) < 1 {
-			t.Fatalf("Expected a server named '%s' to exist", serverName)
-		}
-		if len(resp.Response) > 1 {
-			t.Errorf("Expected exactly one server named '%s' to exist", serverName)
-			t.Logf("Testing will proceed with server: %+v", resp.Response[0])
-		}
-		s = resp.Response[0]
-
-		// assert that servers don't have updates pending
-		if s.UpdPending == nil {
-			t.Fatalf("Server '%s' had null (or missing) updPending property", serverName)
-		}
-		if got, want := *s.UpdPending, false; got != want {
-			t.Fatalf("unexpected UpdPending, got: %v, want: %v", got, want)
-		}
-
-		if s.ID == nil {
-			t.Fatalf("Server '%s' had nil ID", serverName)
-		}
-
-		for _, setVal := range [...]bool{true, false} {
-			t.Run(fmt.Sprint(setVal), func(t *testing.T) {
-				// queue update and check response
-				quResp, _, err := TOSession.SetServerQueueUpdate(*s.ID, setVal, client.RequestOptions{})
-				if err != nil {
-					t.Fatalf("failed to set queue update for server with ID %d to %t: %v - alerts: %+v", s.ID, setVal, err, quResp.Alerts)
-				}
-				if got, want := int(quResp.Response.ServerID), *s.ID; got != want {
-					t.Errorf("wrong serverId in response, got: %v, want: %v", got, want)
-				}
-				if got, want := quResp.Response.Action, queueUpdateActions[setVal]; got != want {
-					t.Errorf("wrong action in response, got: %v, want: %v", got, want)
-				}
-
-				// assert that the server has updates queued
-				resp, _, err = TOSession.GetServers(opts)
-				if err != nil {
-					t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
-				}
-				if len(resp.Response) < 1 {
-					t.Fatalf("Expected a server named '%s' to exist", serverName)
-				}
-				if len(resp.Response) > 1 {
-					t.Errorf("Expected exactly one server named '%s' to exist", serverName)
-					t.Logf("Testing will proceed with server: %+v", resp.Response[0])
-				}
-				s = resp.Response[0]
-				if s.UpdPending == nil {
-					t.Fatalf("Server '%s' had null (or missing) updPending property", serverName)
-				}
-				if got, want := *s.UpdPending, setVal; got != want {
-					t.Errorf("unexpected UpdPending, got: %v, want: %v", got, want)
-				}
-			})
-		}
-
-		t.Run("validations", func(t *testing.T) {
-			// server doesn't exist
-			_, _, err = TOSession.SetServerQueueUpdate(-1, true, client.RequestOptions{})
-			if err == nil {
-				t.Error("update server status expected: error, actual: nil")
-			}
-
-			// invalid action
-			req, err := json.Marshal(tc.ServerQueueUpdateRequest{Action: "foobar"})
-			if err != nil {
-				t.Fatalf("failed to encode request body: %v", err)
-			}
-
-			// TODO: don't construct URLs like this, nor use "RawRequest"
-			path := fmt.Sprintf(TestAPIBase+"/servers/%d/queue_update", *s.ID)
-			httpResp, _, err := TOSession.RawRequest(http.MethodPost, path, req)
-			if err != nil {
-				t.Fatalf("POST request failed: %v", err)
-			}
-			if httpResp.StatusCode >= 200 && httpResp.StatusCode <= 299 {
-				t.Errorf("unexpected status code: got %v, want something outside the range [200, 299]", httpResp.StatusCode)
-			}
-		})
 	})
 }
 
