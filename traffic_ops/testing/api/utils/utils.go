@@ -1,3 +1,9 @@
+// Package utils provides helpful utilities for easing the process of testing
+// Traffic Ops API clients. The functions here don't depend on any particular
+// API version, so they need not be copy/pasted along with the entire testing
+// suites.
+package utils
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +18,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-
-package utils
 
 import (
 	"encoding/json"
@@ -37,7 +41,9 @@ type ErrorAndMessage struct {
 	Message string
 }
 
-func FindNeedle(needle string, haystack []string) bool {
+// FindNeedle searches a "haystack" slice of values for the the "needle" value,
+// returning true if the value is in the haystack, false otherwise.
+func FindNeedle[T comparable](needle T, haystack []T) bool {
 	found := false
 	for _, s := range haystack {
 		if s == needle {
@@ -48,6 +54,8 @@ func FindNeedle(needle string, haystack []string) bool {
 	return found
 }
 
+// ErrorsToStrings converts a slice of errors to a slice of their error
+// messages.
 func ErrorsToStrings(errs []error) []string {
 	errorStrs := []string{}
 	for _, errType := range errs {
@@ -57,6 +65,11 @@ func ErrorsToStrings(errs []error) []string {
 	return errorStrs
 }
 
+// Compare compares a set of expected alert messages to those actually received.
+// It checks for the existence of each expected alert, not that they appear in
+// any particular order. It also checks that no unexpected alert strings exist.
+// Note that this isn't particularly efficient, which is fine because it's only
+// meant to be used in testing.
 func Compare(t *testing.T, expected []string, alertsStrs []string) {
 	sort.Strings(alertsStrs)
 	expectedFmt, _ := json.MarshalIndent(expected, "", "  ")
@@ -100,8 +113,8 @@ func CreateV4Session(t *testing.T, TrafficOpsURL string, username string, passwo
 }
 
 // CreateV5Session creates a session for client v5 using the passed in username and password.
-func CreateV5Session(t *testing.T, TrafficOpsURL, username, password string, toReqTimeout int) *v5client.Session {
-	userSession, _, err := v5client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v5-client-tests", false, time.Second*time.Duration(toReqTimeout))
+func CreateV5Session(t *testing.T, trafficOpsURL, username, password string, toReqTimeout int) *v5client.Session {
+	userSession, _, err := v5client.LoginWithAgent(trafficOpsURL, username, password, true, "to-api-v5-client-tests", false, time.Second*time.Duration(toReqTimeout))
 	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
 	return userSession
 }
