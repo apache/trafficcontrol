@@ -40,7 +40,7 @@ var TableAssignServersPerCapabilityController = function(servers, serverCapabili
     ];
 
     $scope.servers = servers.map(server => {
-        let isAssigned = assignedServers.find(assignedServers => assignedServers.servers === server.id);
+        let isAssigned = assignedServers.find(assignedServers => assignedServers.serverId === server.id);
         if (isAssigned) {
             server['selected'] = true;
         }
