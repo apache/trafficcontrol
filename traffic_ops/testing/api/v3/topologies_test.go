@@ -430,6 +430,8 @@ func TestTopologies(t *testing.T) {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
+					default:
+						t.Errorf("Method: %s, is not a valid test method.", method)
 					}
 				}
 			})
