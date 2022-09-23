@@ -206,7 +206,7 @@ type DSServerResponseV40 struct {
 	Alerts
 }
 
-// DSServerResponseV40 is the type of a response from Traffic Ops to a request
+// DSServerResponseV41 is the type of a response from Traffic Ops to a request
 // for servers assigned to a Delivery Service - in API version 4.1.
 type DSServerResponseV41 struct {
 	Response []DSServerV4 `json:"response"`
