@@ -99,6 +99,7 @@ func CreateV4Session(t *testing.T, TrafficOpsURL string, username string, passwo
 	return userSession
 }
 
+// CreateV5Session creates a session for client v5 using the passed in username and password.
 func CreateV5Session(t *testing.T, TrafficOpsURL, username, password string, toReqTimeout int) *v5client.Session {
 	userSession, _, err := v5client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v5-client-tests", false, time.Second*time.Duration(toReqTimeout))
 	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
