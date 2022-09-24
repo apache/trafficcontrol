@@ -114,7 +114,7 @@ Arguments and Flags
 Environment Variables
 ---------------------
 If defined, :program:`toaccess` scripts will use the :envvar:`TO_URL`, :envvar:`TO_USER`, and
-:envvar`TO_PASSWORD` environment variables to define their connection to and authentication with the
+:envvar:`TO_PASSWORD` environment variables to define their connection to and authentication with the
 Traffic Ops server. Typically, setting these is easier than using the long options :option:`--to-url`,
 :option:`--to-user`, and :option:`--to-password` on every invocation.
 
