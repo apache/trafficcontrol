@@ -23,6 +23,7 @@ import { AlertComponent } from "./alert/alert.component";
 import { AlertService } from "./alert/alert.service";
 import { LinechartDirective } from "./charts/linechart.directive";
 import { CurrentUserService } from "./currentUser/current-user.service";
+import { TextDialogComponent } from "./dialogs/text-dialog/text-dialog.component";
 import { GenericTableComponent } from "./generic-table/generic-table.component";
 import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
@@ -54,7 +55,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		EmailCellRendererComponent,
 		TelephoneCellRendererComponent,
 		ObscuredTextInputComponent,
-		TreeSelectComponent
+		TreeSelectComponent,
+		TextDialogComponent
 	],
 	exports: [
 		AlertComponent,
