@@ -301,6 +301,34 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 					this.columns[i].tooltipValueGetter = dateCellFormatterUTC;
 					this.columns[i].valueFormatter = dateCellFormatterUTC;
 				}
+			} else if (this.columns[i].filter === 'arrayTextColumnFilter') {
+				this.columns[i].filter = 'agTextColumnFilter'
+				this.columns[i].filterParams = {
+					textCustomComparator: (filter, value, filterText) => {
+						const filterTextLowerCase = filterText.toLowerCase();
+						const valueLowerCase = value.toString().toLowerCase();
+						const profileNameValue = valueLowerCase.split(",");
+						switch (filter) {
+							case 'contains':
+								return valueLowerCase.indexOf(filterTextLowerCase) >= 0;
+							case 'notContains':
+								return valueLowerCase.indexOf(filterTextLowerCase) === -1;
+							case 'equals':
+								return profileNameValue.includes(filterTextLowerCase);
+							case 'notEqual':
+								return !profileNameValue.includes(filterTextLowerCase);
+							case 'startsWith':
+								return valueLowerCase.indexOf(filterTextLowerCase) === 0;
+							case 'endsWith':
+								var index = valueLowerCase.lastIndexOf(filterTextLowerCase);
+								return index >= 0 && index === (valueLowerCase.length - filterTextLowerCase.length);
+							default:
+								// should never happen
+								console.warn('invalid filter type ' + filter);
+								return false;
+						}
+					}
+				}
 			}
 		}
 

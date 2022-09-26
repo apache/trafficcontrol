@@ -174,7 +174,8 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			},
 			tooltipValueGetter: function(params) {
 				return params.data.profileNames.join(", ");
-			}
+			},
+			filter: 'arrayTextColumnFilter'
 		},
 		{
 			headerName: "Rack",
