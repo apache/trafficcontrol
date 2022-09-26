@@ -5,20 +5,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
-- *Traffic Monitor* Added logging for `ipv4Availability` and `ipv6Availability` in TM.
-- *Traffic Ops* Added API version 5.0
-- *Traffic Ops* Added the `ASN` field in TO Server struct, which provides the ability to query servers by `ASN`.
+- [#7024](https://github.com/apache/trafficcontrol/pull/7024) *Traffic Monitor* Added logging for `ipv4Availability` and `ipv6Availability` in TM.
+- [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Added API version 5.0 (IN DEVELOPMENT)
+- [#7023](https://github.com/apache/trafficcontrol/pull/7023) *Traffic Ops* Added the `ASN` field in TO Server struct, which provides the ability to query servers by `ASN`.
 - [#2101](https://github.com/apache/trafficcontrol/issues/2101) *Traffic Portal* Added the ability to tell if a Delivery Service is the target of another steering DS.
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) *Traffic Ops, Traffic Portal* Added ability to assign multiple server capabilities to a server.
 - [#7032](https://github.com/apache/trafficcontrol/issues/7032) *Cache Config* Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
 
 ### Changed
-- *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
-- *Traffic Portal* Obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
-- *Traffic Router* Uses Traffic Ops API 4.0 by default
+- [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
+- [#6981](https://github.com/apache/trafficcontrol/pull/6981) *Traffic Portal* Obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
+- [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
 
 ### Fixed
-- *Traffic Stats* Reuse InfluxDB client handle to prevent potential connection leaks.
+- [#7022](https://github.com/apache/trafficcontrol/pull/7022) *Traffic Stats* Reuse InfluxDB client handle to prevent potential connection leaks.
 - [#7021](https://github.com/apache/trafficcontrol/issues/7021) *Cache Config* Fixed cache config for Delivery Services with IP Origins.
 - [#7043](https://github.com/apache/trafficcontrol/issues/7043) Fixed cache config missing retry parameters for non-topology MSO Delivery Services going direct from edge to origin.
 - [#7047](https://github.com/apache/trafficcontrol/issues/7047) *Traffic Ops* allow `apply_time` query parameters on the `servers/{id-name}/update` when the CDN is locked.
