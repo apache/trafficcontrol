@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#7055](https://github.com/apache/trafficcontrol/issues/7055) *Traffic Portal* Made `Clear Table Filters` option visible to the user.
 - [#7024](https://github.com/apache/trafficcontrol/pull/7024) *Traffic Monitor* Added logging for `ipv4Availability` and `ipv6Availability` in TM.
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Added API version 5.0 (IN DEVELOPMENT)
 - [#7023](https://github.com/apache/trafficcontrol/pull/7023) *Traffic Ops* Added the `ASN` field in TO Server struct, which provides the ability to query servers by `ASN`.
