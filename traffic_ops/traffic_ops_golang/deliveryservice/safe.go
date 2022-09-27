@@ -121,7 +121,7 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Warnf("Couldn't get config %v", e)
 	}
-	dses, userErr, sysErr, errCode, _ := readGetDeliveryServices(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
+	dses, userErr, sysErr, errCode, _ := readGetDeliveryServices(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -132,10 +132,7 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds := dses[0]
-	if version.Major > 3 {
-		ds = ds.RemoveLD1AndLD2()
-	}
+	ds := dses[0].DS
 	alertMsg := "Delivery Service safe update successful."
 	if inf.Version == nil {
 		log.Warnln("API version found to be null in DS safe update")
@@ -144,23 +141,32 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		switch inf.Version.Major {
 		default:
 			fallthrough
+		case 5:
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, ds)
 		case 4:
 			if inf.Version.Minor >= 1 {
-				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, dses)
+				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV41{})
 			} else {
 				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV40{ds.DeliveryServiceV40})
 			}
 		case 3:
+			legacyDS := ds.Downgrade()
+			legacyDS.LongDesc1 = dses[0].LongDesc1
+			legacyDS.LongDesc2 = dses[0].LongDesc2
+			ret := legacyDS.DowngradeToV31()
 			if inf.Version.Minor >= 1 {
-				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV31{tc.DeliveryServiceV31(ds.DowngradeToV31())})
+				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV31{tc.DeliveryServiceV31(ret)})
 			}
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV30{ds.DowngradeToV31().DeliveryServiceV30})
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV30{ret.DeliveryServiceV30})
 		case 2:
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV15{ds.DowngradeToV31().DeliveryServiceNullableV15})
+			legacyDS := ds.Downgrade()
+			legacyDS.LongDesc1 = dses[0].LongDesc1
+			legacyDS.LongDesc2 = dses[0].LongDesc2
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV15{legacyDS.DowngradeToV31().DeliveryServiceNullableV15})
 		}
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %d, ACTION: Updated safe fields", *ds.XMLID, *ds.ID), inf.User, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %d, ACTION: Updated safe fields", ds.XMLID, *ds.ID), inf.User, tx)
 }
 
 // updateDSSafe updates the given delivery service in the database. Returns whether the DS existed, and any error.
