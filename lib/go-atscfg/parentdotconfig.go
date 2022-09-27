@@ -1192,17 +1192,33 @@ func (dsparams parentDSParams) FillParentSvcRetries(isLastCacheTier bool, atsMaj
 	case "simple_retry":
 		if len(pasvc.ErrorResponseCodes) == 0 {
 			pasvc.ErrorResponseCodes = DefaultSimpleRetryCodes
+			if pasvc.MaxSimpleRetries == 0 {
+				pasvc.MaxSimpleRetries = ParentConfigDSParamDefaultMaxSimpleRetries
+			}
 		}
+		pasvc.MarkdownResponseCodes = []int{}
+		pasvc.MaxMarkdownRetries = 0
 	case "unavailable_server_retry":
 		if len(pasvc.MarkdownResponseCodes) == 0 {
 			pasvc.MarkdownResponseCodes = DefaultUnavailableServerRetryCodes
+			if pasvc.MaxMarkdownRetries == 0 {
+				pasvc.MaxMarkdownRetries = ParentConfigDSParamDefaultMaxUnavailableServerRetries
+			}
 		}
+		pasvc.ErrorResponseCodes = []int{}
+		pasvc.MaxSimpleRetries = 0
 	case "both":
 		if len(pasvc.ErrorResponseCodes) == 0 {
 			pasvc.ErrorResponseCodes = DefaultSimpleRetryCodes
+			if pasvc.MaxSimpleRetries == 0 {
+				pasvc.MaxSimpleRetries = ParentConfigDSParamDefaultMaxSimpleRetries
+			}
 		}
 		if len(pasvc.MarkdownResponseCodes) == 0 {
 			pasvc.MarkdownResponseCodes = DefaultUnavailableServerRetryCodes
+			if pasvc.MaxMarkdownRetries == 0 {
+				pasvc.MaxMarkdownRetries = ParentConfigDSParamDefaultMaxUnavailableServerRetries
+			}
 		}
 	default:
 	}
