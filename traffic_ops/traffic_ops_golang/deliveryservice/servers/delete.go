@@ -141,30 +141,14 @@ func deleteDSS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds := dses[0]
-	if ds.Active == nil {
-		errCode = http.StatusInternalServerError
-		sysErr = fmt.Errorf("Delivery Service #%d had nil Active", dsID)
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
-	}
-
-	if *ds.Active {
-		usesMSO := ds.MultiSiteOrigin == nil || *ds.MultiSiteOrigin
-		hasTopology := ds.Topology != nil
-		errCode, userErr, sysErr = checkLastAvailableEdgeOrOrigin(dsID, serverID, usesMSO, hasTopology, tx)
+	ds := dses[0].DS
+	if ds.Active == tc.DSActiveStateActive {
+		errCode, userErr, sysErr = checkLastAvailableEdgeOrOrigin(dsID, serverID, ds.MultiSiteOrigin, ds.Topology != nil, tx)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 	}
-	if ds.XMLID == nil {
-		errCode = http.StatusInternalServerError
-		sysErr = fmt.Errorf("Delivery Service #%d had nil XMLID", dsID)
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
-	}
-	dsName := *ds.XMLID
 
 	if ds.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *ds.CDNName, inf.User.UserName)
@@ -175,7 +159,7 @@ func deleteDSS(w http.ResponseWriter, r *http.Request) {
 	}
 	serverName, exists, err := dbhelpers.GetServerNameFromID(tx, int64(serverID))
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from id: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting server name from id: %w", err))
 		return
 	} else if !exists {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server not found"), nil)
@@ -184,14 +168,14 @@ func deleteDSS(w http.ResponseWriter, r *http.Request) {
 
 	ok, err := deleteDSServer(tx, dsID, serverID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting delivery service server: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting delivery service server: %w", err))
 		return
 	}
 	if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Remove server "+string(serverName)+" from delivery service", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+ds.XMLID+", ID: "+strconv.Itoa(dsID)+", ACTION: Remove server "+string(serverName)+" from delivery service", inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Server unlinked from delivery service.")
 }
 
