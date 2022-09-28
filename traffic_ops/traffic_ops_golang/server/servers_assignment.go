@@ -74,7 +74,7 @@ WHERE d.id IN (
 	FROM deliveryservice_server dss
 	INNER JOIN deliveryservice d ON d.id = dss.deliveryservice
 	WHERE dss.server=$1
-	AND d.active
+	AND d.active = 'ACTIVE'
 )
 AND NOT (dss.deliveryservice = ANY($2::BIGINT[]))
 AND (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
