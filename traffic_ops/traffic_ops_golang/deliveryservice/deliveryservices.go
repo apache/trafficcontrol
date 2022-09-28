@@ -1335,7 +1335,9 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	var maxTime time.Time
 	var runSecond bool
 	// TODO: is this necessary?
-	params["id"] = strings.TrimSuffix(params["id"], ".json")
+	if idParam, ok := params["id"]; ok {
+		params["id"] = strings.TrimSuffix(idParam, ".json")
+	}
 	if _, ok := params["orderby"]; !ok {
 		params["orderby"] = "xml_id"
 	}
