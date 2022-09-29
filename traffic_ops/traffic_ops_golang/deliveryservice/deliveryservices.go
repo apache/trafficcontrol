@@ -198,6 +198,33 @@ func CreateV31(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service creation was successful", []tc.DeliveryServiceV31{*res})
 }
 
+// CreateV50 is used to handle POST requests to create a Delivery Service at
+// version 5.0 of the Traffic Ops API.
+func CreateV50(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var ds tc.DeliveryServiceV5
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("decoding: %w", err), nil)
+		return
+	}
+	res, status, userErr, sysErr := createV50(w, r, inf, ds, true, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	alerts := res.TLSVersionsAlerts()
+	alerts.AddNewAlert(tc.SuccessLevel, "Delivery Service creation was successful")
+
+	w.Header().Set("Location", fmt.Sprintf("/api/4.0/deliveryservices?id=%d", *res.ID))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, *res)
+}
+
 // CreateV40 is used to handle POST requests to create a Delivery Service at
 // version 4.0 of the Traffic Ops API (and isomorphic API versions thereof, with
 // respect to Delivery Service representations).
@@ -772,11 +799,14 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, []tc.DeliveryServiceV40{*res})
 }
 
-// UpdateV41 is a handler for PUT requests used to update a Delivery Service.
+// UpdateV41 is used to handle PUT requests to update a Delivery Service in
+// version 4.1 of the Traffic Ops API (and isomorphic API versions thereof, with
+// respect to Delivery Service representations).
 func UpdateV41(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
@@ -784,18 +814,22 @@ func UpdateV41(w http.ResponseWriter, r *http.Request) {
 
 	var ds tc.DeliveryServiceV41
 	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("malformed JSON: %w", err), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("malformed JSON: %w", err), nil)
 		return
 	}
 	ds.ID = &id
-	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, id)
+	_, cdn, exists, err := dbhelpers.GetDSNameAndCDNFromID(tx, id)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("deliveryservice update: getting CDN from DS ID: %w", err))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("deliveryservice update: getting CDN from DS ID %w", err))
 		return
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+	if !exists {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no such Delivery Service: #%d", id), nil)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdn), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 	res, status, userErr, sysErr := updateV41(w, r, inf, &ds, true)
@@ -807,6 +841,50 @@ func UpdateV41(w http.ResponseWriter, r *http.Request) {
 	alerts.AddNewAlert(tc.SuccessLevel, "Delivery Service update was successful")
 
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, []tc.DeliveryServiceV41{*res})
+}
+
+// UpdateV50 is used to handle PUT requests to update a Delivery Service in
+// version 5.0 of the Traffic Ops API (and isomorphic API versions thereof, with
+// respect to Delivery Service representations).
+func UpdateV50(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	id := inf.IntParams["id"]
+
+	var ds tc.DeliveryServiceV5
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("malformed JSON: %w", err), nil)
+		return
+	}
+	ds.ID = &id
+	_, cdn, exists, err := dbhelpers.GetDSNameAndCDNFromID(tx, id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("deliveryservice update: getting CDN from DS ID %w", err))
+		return
+	}
+	if !exists {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no such Delivery Service: #%d", id), nil)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdn), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+	res, status, userErr, sysErr := updateV50(w, r, inf, &ds, true, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	alerts := res.TLSVersionsAlerts()
+	alerts.AddNewAlert(tc.SuccessLevel, "Delivery Service update was successful")
+
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, *res)
 }
 
 func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 *tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
