@@ -166,7 +166,9 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 		opts.QueryParameters.Set("xmlId", comment.XMLID)
 		resp, _, err := TOSession.GetDeliveryServiceRequests(opts)
 		assert.NoError(t, err, "Cannot get Delivery Service Request by XMLID '%s': %v - alerts: %+v", comment.XMLID, err, resp.Alerts)
-		assert.Equal(t, len(resp.Response), 1, "Found %d Delivery Service request by XMLID '%s, expected exactly one", len(resp.Response), comment.XMLID)
+		if !assert.Equal(t, len(resp.Response), 1, "Found %d Delivery Service request by XMLID '%s, expected exactly one", len(resp.Response), comment.XMLID) {
+			continue
+		}
 		assert.NotNil(t, resp.Response[0].ID, "Got Delivery Service Request with xml_id '%s' that had a null ID", comment.XMLID)
 
 		comment.DeliveryServiceRequestID = *resp.Response[0].ID

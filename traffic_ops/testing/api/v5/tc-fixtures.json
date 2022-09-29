@@ -341,7 +341,7 @@
         {
             "changeType": "create",
             "requested": {
-                "active": true,
+                "active": "ACTIVE",
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",
@@ -371,7 +371,7 @@
         {
             "changeType": "create",
             "requested": {
-                "active": true,
+                "active": "ACTIVE",
                 "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",

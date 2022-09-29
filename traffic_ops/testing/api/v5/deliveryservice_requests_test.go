@@ -42,15 +42,15 @@ import (
 // A better solution _might_ be to reload all the test fixtures every time
 // to wipe any and all referential modifications made to any test data, but
 // for now that's overkill.
-func resetDS(ds *tc.DeliveryServiceV4) {
+func resetDS(ds *tc.DeliveryServiceV5) {
 	if ds == nil {
 		return
 	}
-	ds.CDNID = nil
+	ds.CDNID = -1
 	ds.ID = nil
 	ds.ProfileID = nil
-	ds.TenantID = nil
-	ds.TypeID = nil
+	ds.TenantID = -1
+	ds.TypeID = -1
 }
 
 func TestDeliveryServiceRequests(t *testing.T) {
@@ -102,21 +102,6 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validatePutDSRequestFields(map[string]interface{}{"STATUS": tc.RequestStatusSubmitted})),
-				},
-				"BAD REQUEST when using LONG DESCRIPTION 2 and 3 fields": {
-					EndpointID:    GetDeliveryServiceRequestId(t, "test-ds1"),
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"changeType": "create",
-						"requested": generateDeliveryService(t, map[string]interface{}{
-							"longDesc1": "long desc 1",
-							"longDesc2": "long desc 2",
-							"tenantId":  GetTenantID(t, "tenant1")(),
-							"xmlId":     "test-ds1",
-						}),
-						"status": "draft",
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Header": {
 					EndpointID:    GetDeliveryServiceRequestId(t, "test-ds1"),
@@ -203,7 +188,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": map[string]interface{}{
-							"active":               false,
+							"active":               "INACTIVE",
 							"cdnName":              "cdn1",
 							"displayName":          "Testing transitions",
 							"dscp":                 3,
@@ -234,7 +219,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": map[string]interface{}{
-							"active":               true,
+							"active":               "ACTIVE",
 							"cdnName":              "cdn1",
 							"displayName":          "Good Kabletown CDN",
 							"dscp":                 1,
@@ -280,7 +265,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					dsReq := tc.DeliveryServiceRequestV4{}
+					var dsReq tc.DeliveryServiceRequestV5
 
 					if testCase.RequestBody != nil {
 						dat, err := json.Marshal(testCase.RequestBody)
@@ -340,12 +325,13 @@ func GetDeliveryServiceRequestId(t *testing.T, xmlId string) func() int {
 
 func validateGetDSRequestFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		dsReqResp := resp.([]tc.DeliveryServiceRequestV40)
+		dsReqResp := resp.([]tc.DeliveryServiceRequestV5)
 		for field, expected := range expectedResp {
 			for _, ds := range dsReqResp {
 				switch field {
 				case "XMLID":
-					assert.Equal(t, expected, *ds.Requested.XMLID, "Expected XMLID to be %v, but got %v", expected, *ds.Requested.XMLID)
+					assert.RequireNotNil(t, ds.Requested, "expected 'requested' DS in DSR to not be null/undefined")
+					assert.Equal(t, expected, ds.Requested.XMLID, "Expected XMLID to be %v, but got %v", expected, ds.Requested.XMLID)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
@@ -356,7 +342,7 @@ func validateGetDSRequestFields(expectedResp map[string]interface{}) utils.CkReq
 
 func validatePutDSRequestFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		dsReqResp := resp.(tc.DeliveryServiceRequestV40)
+		dsReqResp := resp.(tc.DeliveryServiceRequestV5)
 		for field, expected := range expectedResp {
 			switch field {
 			case "STATUS":
@@ -372,8 +358,8 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 	for _, dsr := range testData.DeliveryServiceRequests {
 		resetDS(dsr.Original)
 		resetDS(dsr.Requested)
-		respDSR, _, err := TOSession.CreateDeliveryServiceRequest(dsr, client.RequestOptions{})
-		assert.NoError(t, err, "Could not create Delivery Service Requests: %v - alerts: %+v", err, respDSR.Alerts)
+		_, _, err := TOSession.CreateDeliveryServiceRequest(dsr, client.RequestOptions{})
+		assert.NoError(t, err, "Could not create Delivery Service Requests: %v", err)
 	}
 }
 
