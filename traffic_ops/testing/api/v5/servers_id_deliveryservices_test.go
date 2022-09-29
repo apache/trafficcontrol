@@ -159,7 +159,7 @@ func validateServersDeliveryServices(expectedDSID int) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Server Delivery Service response to not be nil.")
 		var found bool
-		deliveryServices := resp.([]tc.DeliveryServiceV4)
+		deliveryServices := resp.([]tc.DeliveryServiceV5)
 		for _, ds := range deliveryServices {
 			if ds.ID != nil && *ds.ID == expectedDSID {
 				found = true
