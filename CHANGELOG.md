@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
 
 ### Fixed
+- [#7080](https://github.com/apache/trafficcontrol/issues/7080), [#6335](https://github.com/apache/trafficcontrol/issues/6335) *Traffic Portal* Fixed redirect links for server capability.
 - [#7022](https://github.com/apache/trafficcontrol/pull/7022) *Traffic Stats* Reuse InfluxDB client handle to prevent potential connection leaks.
 - [#7021](https://github.com/apache/trafficcontrol/issues/7021) *Cache Config* Fixed cache config for Delivery Services with IP Origins.
 - [#7043](https://github.com/apache/trafficcontrol/issues/7043) Fixed cache config missing retry parameters for non-topology MSO Delivery Services going direct from edge to origin.
