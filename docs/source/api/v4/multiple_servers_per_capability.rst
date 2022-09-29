@@ -38,7 +38,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/4.1/multiple_server_capabilities/ HTTP/1.1
+	PUT /api/4.1/multiple_servers_per_capability/ HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

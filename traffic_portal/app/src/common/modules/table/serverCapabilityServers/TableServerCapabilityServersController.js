@@ -67,7 +67,7 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 	};
 
 	$scope.selectServers = function () {
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/table/serverCapabilityServers/table.assignServersPerCapability.tpl.html',
 			controller: 'TableAssignServersPerCapabilityController',
 			size: 'md',
@@ -122,8 +122,6 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
 	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
 		$('#serverCapabilityServersTable').dataTable({

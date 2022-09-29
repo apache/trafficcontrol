@@ -455,7 +455,7 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 
 	var msc tc.MultipleServerCapabilities
 	if err := json.NewDecoder(r.Body).Decode(&msc); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("error decoding PUT request body into MultipleServerCapabilities struct %w", err), nil)
 		return
 	}
 
@@ -540,14 +540,25 @@ func AssignMultipleServersToCapability(w http.ResponseWriter, r *http.Request) {
 
 	var mspc tc.MultipleServersToCapability
 	if err := json.NewDecoder(r.Body).Decode(&mspc); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("error decoding PUT request body into MultipleServersToCapability struct %w", err), nil)
 		return
 	}
+	//for i, val := range mspc {
+	//	serversIDs[i], _ = strconv.Itoa(val)
+	//}
 
 	//loop through server list to check if the type is MID and/or EDGE
+	fmt.Println(mspc.ServersIDs)
+	queryType := `SELECT array_agg(s.id) 
+		FROM server s
+		JOIN type t ON s.type = t.id
+		WHERE s.id = any ($1)
+		AND t.use_in_table = 'server'
+		AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%')`
+	var servArray []string
 	for _, sid := range mspc.ServersIDs {
 		correctType := true
-		if err := tx.QueryRow(scCheckServerTypeQuery(), sid).Scan(&correctType); err != nil {
+		if err := tx.QueryRow(queryType, pq.Array(mspc.ServersIDs)).Scan(pq.Array(&servArray)); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %w", err))
 			return
 		}

@@ -33,7 +33,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 	];
 
 	$scope.selectSCs = function () {
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/table/serverServerCapabilities/table.assignServerSCs.tpl.html',
 			controller: 'TableAssignServerSCsController',
 			size: 'md',
@@ -121,7 +121,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 	};
 
 	$scope.editServerCapability = function(capabilityName) {
-		locationUtils.navigateToPath('/server-capabilities/edit?name=' + capabilityName);
+		locationUtils.navigateToPath('/server-capabilities/' + capabilityName);
 	};
 
 	$scope.refresh = function() {
