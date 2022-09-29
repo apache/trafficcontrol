@@ -543,34 +543,33 @@ func AssignMultipleServersToCapability(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("error decoding PUT request body into MultipleServersToCapability struct %w", err), nil)
 		return
 	}
-	//for i, val := range mspc {
-	//	serversIDs[i], _ = strconv.Itoa(val)
-	//}
 
-	//loop through server list to check if the type is MID and/or EDGE
-	fmt.Println(mspc.ServersIDs)
+	//Check if the server type is MID and/or EDGE
+	var servArray []int64
 	queryType := `SELECT array_agg(s.id) 
 		FROM server s
 		JOIN type t ON s.type = t.id
 		WHERE s.id = any ($1)
 		AND t.use_in_table = 'server'
 		AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%')`
-	var servArray []string
+	if err := tx.QueryRow(queryType, pq.Array(mspc.ServersIDs)).Scan(pq.Array(&servArray)); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %w", err))
+		return
+	}
+
+	cmp := make(map[int64]bool)
+	for _, item := range servArray {
+		cmp[item] = true
+	}
 	for _, sid := range mspc.ServersIDs {
-		correctType := true
-		if err := tx.QueryRow(queryType, pq.Array(mspc.ServersIDs)).Scan(pq.Array(&servArray)); err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %w", err))
-			return
-		}
-		if !correctType {
-			userErr := fmt.Errorf("server %d has an incorrect server type. Server capability can only be assigned to EDGE or MID servers", sid)
+		if _, ok := cmp[sid]; !ok {
+			userErr := fmt.Errorf("server id: %d has an incorrect server type. Server capability can only be assigned to EDGE or MID servers", sid)
 			api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 			return
 		}
 	}
 
-	multipleServersPerCapability := make([]string, 0, len(mspc.ServersIDs))
-
+	multipleServersPerCapability := make([]int64, 0, len(mspc.ServersIDs))
 	//Delete existing rows from server_server_capability for a given server capability
 	_, err := tx.Exec("DELETE FROM server_server_capability ssc WHERE ssc.server_capability=$1", mspc.ServerCapability)
 	if err != nil {
@@ -597,11 +596,9 @@ func AssignMultipleServersToCapability(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
 		return
 	}
-	for i, val := range multipleServersPerCapability {
-		mspc.ServersIDs[i], _ = strconv.Atoi(val)
-	}
+	mspc.ServersIDs = multipleServersPerCapability
+
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Multiple Servers assigned to a capability")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, mspc)
 	return
-
 }
