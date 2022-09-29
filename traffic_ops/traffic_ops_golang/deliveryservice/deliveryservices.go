@@ -221,7 +221,7 @@ func CreateV50(w http.ResponseWriter, r *http.Request) {
 	alerts := res.TLSVersionsAlerts()
 	alerts.AddNewAlert(tc.SuccessLevel, "Delivery Service creation was successful")
 
-	w.Header().Set("Location", fmt.Sprintf("/api/4.0/deliveryservices?id=%d", *res.ID))
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservices?id=%d", inf.Version.Major, inf.Version.Minor, *res.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, *res)
 }
 
@@ -249,7 +249,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 	alerts := res.TLSVersionsAlerts()
 	alerts.AddNewAlert(tc.SuccessLevel, "Delivery Service creation was successful")
 
-	w.Header().Set("Location", fmt.Sprintf("/api/4.0/deliveryservices?id=%d", *res.ID))
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservices?id=%d", inf.Version.Major, inf.Version.Minor, *res.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, []tc.DeliveryServiceV40{*res})
 }
 
