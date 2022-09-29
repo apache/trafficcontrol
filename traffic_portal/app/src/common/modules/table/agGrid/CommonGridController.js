@@ -320,7 +320,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 							case 'startsWith':
 								return valueLowerCase.indexOf(filterTextLowerCase) === 0;
 							case 'endsWith':
-								var index = valueLowerCase.lastIndexOf(filterTextLowerCase);
+								let index = valueLowerCase.lastIndexOf(filterTextLowerCase);
 								return index >= 0 && index === (valueLowerCase.length - filterTextLowerCase.length);
 							default:
 								// should never happen
