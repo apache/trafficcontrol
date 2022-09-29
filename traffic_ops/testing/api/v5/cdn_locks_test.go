@@ -592,7 +592,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"DELIVERY SERVICE POST": func(t *testing.T) {
-							ds := tc.DeliveryServiceV4{}
+							var ds tc.DeliveryServiceV5
 							err = json.Unmarshal(dat, &ds)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							resp, reqInf, err := testCase.ClientSession.CreateDeliveryService(ds, testCase.RequestOpts)
@@ -601,7 +601,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"DELIVERY SERVICE PUT": func(t *testing.T) {
-							ds := tc.DeliveryServiceV4{}
+							var ds tc.DeliveryServiceV5
 							err = json.Unmarshal(dat, &ds)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryService(testCase.EndpointID(), ds, testCase.RequestOpts)

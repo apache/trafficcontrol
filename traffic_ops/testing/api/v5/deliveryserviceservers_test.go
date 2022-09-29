@@ -351,11 +351,10 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		assert.NoError(t, err, "Error retrieving Delivery Service: %v - alerts: %+v", err, getDS.Alerts)
 		assert.Equal(t, 1, len(getDS.Response), "Expected 1 Delivery Service.")
 		// Update active to false in order to remove the server assignment
-		active := false
-		getDS.Response[0].Active = &active
+		getDS.Response[0].Active = tc.DSActiveStateInactive
 		updResp, _, err := TOSession.UpdateDeliveryService(*dss.DeliveryService, getDS.Response[0], client.RequestOptions{})
 		assert.NoError(t, err, "Error updating Delivery Service: %v - alerts: %+v", err, updResp.Alerts)
-		assert.Equal(t, false, *updResp.Response[0].Active, "Expected Delivery Service to be Inactive.")
+		assert.Equal(t, tc.DSActiveStateInactive, updResp.Response.Active, "Expected Delivery Service to be Inactive.")
 
 		alerts, _, err := TOSession.DeleteDeliveryServiceServer(*dss.DeliveryService, *dss.Server, client.RequestOptions{})
 		assert.NoError(t, err, "Unexpected error removing server-to-Delivery-Service assignments: %v - alerts: %+v", err, alerts.Alerts)

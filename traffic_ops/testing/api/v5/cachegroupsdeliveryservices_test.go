@@ -131,12 +131,8 @@ func setInactive(t *testing.T, dsID int) {
 	assert.RequireEqual(t, len(resp.Response), 1, "Expected exactly one Delivery Service to exist with ID %d, found: %d", dsID, len(resp.Response))
 
 	ds := resp.Response[0]
-	if ds.Active == nil {
-		t.Errorf("Deliver Service #%d had null or undefined 'active'", dsID)
-		ds.Active = new(bool)
-	}
-	if *ds.Active {
-		*ds.Active = false
+	if ds.Active == tc.DSActiveStateActive {
+		ds.Active = tc.DSActiveStateInactive
 		_, _, err = TOSession.UpdateDeliveryService(dsID, ds, client.RequestOptions{})
 		assert.NoError(t, err, "Failed to set Delivery Service #%d to inactive: %v", dsID, err)
 	}
