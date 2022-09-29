@@ -403,6 +403,72 @@ func (d dsrManipulationResult) String() string {
 	return builder.String()
 }
 
+func createV5(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
+	tx := inf.Tx.Tx
+	var dsr tc.DeliveryServiceRequestV5
+	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %w", err), nil)
+		return
+	}
+	if userErr, sysErr := validateV5(dsr, tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
+		return
+	}
+
+	if dsr.Status != tc.RequestStatusDraft && dsr.Status != tc.RequestStatusSubmitted {
+		userErr := fmt.Errorf("invalid initial request status '%s' - must be '%s' or '%s'", dsr.Status, tc.RequestStatusDraft, tc.RequestStatusSubmitted)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	ok, err := isTenantAuthorized(dsr, inf)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	dsr.SetXMLID()
+	if ok, err = dbhelpers.DSRExistsWithXMLID(dsr.XMLID, tx); err != nil {
+		err = fmt.Errorf("checking for existence of DSR with xmlid '%s'", dsr.XMLID)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	} else if ok {
+		userErr := fmt.Errorf("an open Delivery Service Request for XMLID '%s' already exists", dsr.XMLID)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+	if dsr.Original != nil {
+		if len(dsr.Original.TLSVersions) < 1 {
+			dsr.Original.TLSVersions = nil
+		}
+	}
+	if dsr.Requested != nil {
+		if len(dsr.Requested.TLSVersions) < 1 {
+			dsr.Requested.TLSVersions = nil
+		}
+	}
+	errCode, userErr, sysErr := insert(&dsr, inf)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservice_requests/%d", inf.Version.Major, inf.Version.Minor, *dsr.ID))
+	w.WriteHeader(http.StatusCreated)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", dsr)
+
+	result.Successful = true
+	result.Assignee = dsr.Assignee
+	result.XMLID = dsr.XMLID
+	result.ChangeType = dsr.ChangeType
+	result.Action = api.Created
+	return
+}
+
 func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
 	var dsr tc.DeliveryServiceRequestV4
@@ -576,9 +642,14 @@ func Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var result dsrManipulationResult
-	if version.Major >= 4 {
+	switch version.Major {
+	default:
+		fallthrough
+	case 5:
+		result = createV5(w, r, inf)
+	case 4:
 		result = createV4(w, r, inf)
-	} else {
+	case 3:
 		result = createLegacy(w, r, inf)
 	}
 
@@ -683,6 +754,106 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		ChangeType: dsr.ChangeType,
 	}
 	inf.CreateChangeLog(res.String())
+}
+
+func putV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
+	tx := inf.Tx.Tx
+	var dsr tc.DeliveryServiceRequestV5
+	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %w", err), nil)
+		return
+	}
+	if userErr, sysErr := validateV5(dsr, tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
+		return
+	}
+
+	if dsr.Status != tc.RequestStatusDraft && dsr.Status != tc.RequestStatusSubmitted {
+		userErr := fmt.Errorf("cannot change DeliveryServiceRequest status to '%s'", dsr.Status)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	if dsr.ChangeType != tc.DSRChangeTypeDelete {
+		dsr.Original = nil
+	} else {
+		dsr.Requested = nil
+	}
+
+	authorized, err := isTenantAuthorized(dsr, inf)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	dsr.LastEditedBy = inf.User.UserName
+	dsr.LastEditedByID = new(int)
+	*dsr.LastEditedByID = inf.User.ID
+
+	if dsr.Requested != nil && len(dsr.Requested.TLSVersions) < 1 {
+		dsr.Requested.TLSVersions = nil
+	}
+	if dsr.Original != nil && len(dsr.Original.TLSVersions) < 1 {
+		dsr.Original.TLSVersions = nil
+	}
+
+	args := []interface{}{
+		dsr.AssigneeID,
+		dsr.ChangeType,
+		inf.User.ID,
+		dsr.Requested,
+		dsr.Original,
+		dsr.Status,
+		inf.IntParams["id"],
+	}
+
+	if err := tx.QueryRow(updateQuery, args...).Scan(&dsr.CreatedAt, &dsr.LastUpdated); err != nil {
+		var userErr, sysErr error
+		var errCode int
+		if errors.Is(err, sql.ErrNoRows) {
+			userErr = fmt.Errorf("no such Delivery Service Request: #%d", inf.IntParams["id"])
+			errCode = http.StatusNotFound
+			sysErr = fmt.Errorf("running update query for Delivery Service Requests: %w", err)
+		} else {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+		}
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	dsr.SetXMLID()
+
+	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
+		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
+		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+		if len(originals) < 1 {
+			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+			return
+		}
+		if len(originals) > 1 {
+			sysErr = fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		dsr.Original = new(tc.DeliveryServiceV5)
+		*dsr.Original = originals[0].DS
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)
+	result.Successful = true
+	result.Action = "Updated"
+	result.Assignee = dsr.Assignee
+	result.ChangeType = dsr.ChangeType
+	result.XMLID = dsr.XMLID
+	return
 }
 
 func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
@@ -930,9 +1101,14 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var result dsrManipulationResult
-	if inf.Version.Major >= 4 {
+	switch inf.Version.Major {
+	default:
+		fallthrough
+	case 5:
+		result = putV50(w, r, inf)
+	case 4:
 		result = putV40(w, r, inf)
-	} else {
+	case 3:
 		result = putLegacy(w, r, inf)
 	}
 
