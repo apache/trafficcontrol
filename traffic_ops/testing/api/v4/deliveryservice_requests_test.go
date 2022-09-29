@@ -331,7 +331,7 @@ func GetDeliveryServiceRequestId(t *testing.T, xmlId string) func() int {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("xmlId", xmlId)
 		resp, _, err := TOSession.GetDeliveryServiceRequests(opts)
-		assert.RequireNoError(t, err, "Get Delivery Service Requests failed with error: %v", err)
+		assert.RequireNoError(t, err, "Get Delivery Service Request '%s' failed with error: %v", xmlId, err)
 		assert.RequireGreaterOrEqual(t, len(resp.Response), 1, "Expected delivery service requests response object length of atleast 1, but got %d", len(resp.Response))
 		assert.RequireNotNil(t, resp.Response[0].ID, "Expected id to not be nil")
 		return *resp.Response[0].ID
@@ -381,8 +381,8 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 	resp, _, err := TOSession.GetDeliveryServiceRequests(client.RequestOptions{})
 	assert.NoError(t, err, "Cannot get Delivery Service Requests: %v - alerts: %+v", err, resp.Alerts)
 	for _, request := range resp.Response {
-		alert, _, err := TOSession.DeleteDeliveryServiceRequest(*request.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Cannot delete Delivery Service Request #%d: %v - alerts: %+v", request.ID, err, alert.Alerts)
+		_, _, err := TOSession.DeleteDeliveryServiceRequest(*request.ID, client.RequestOptions{})
+		assert.NoError(t, err, "Cannot delete Delivery Service Request #%d: %v", request.ID, err)
 
 		// Retrieve the DeliveryServiceRequest to see if it got deleted
 		opts := client.NewRequestOptions()

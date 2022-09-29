@@ -448,7 +448,7 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 			return
 		}
 		if len(dsr.Original.TLSVersions) < 1 {
-			dsr.Original.TLSVersions = nil
+			upgraded.Original.TLSVersions = nil
 		}
 	}
 	if dsr.Requested != nil {
@@ -457,7 +457,7 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 			return
 		}
 		if len(dsr.Requested.TLSVersions) < 1 {
-			dsr.Requested.TLSVersions = nil
+			upgraded.Requested.TLSVersions = nil
 		}
 	}
 	errCode, userErr, sysErr := insert(&upgraded, inf)
@@ -465,6 +465,8 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
+
+	dsr = upgraded.Downgrade()
 
 	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservice_requests/%d", inf.Version.Major, inf.Version.Minor, *dsr.ID))
 	w.WriteHeader(http.StatusCreated)
@@ -660,10 +662,15 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var resp interface{}
-	if inf.Version.Major >= 4 {
+	switch inf.Version.Major {
+	default:
+		fallthrough
+	case 5:
 		resp = dsr
-	} else {
+	case 4:
 		resp = dsr.Downgrade()
+	case 3:
+		resp = dsr.Downgrade().Downgrade()
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d deleted", inf.IntParams["id"]), resp)
@@ -713,24 +720,24 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		return
 	}
 
-	dsr.LastEditedBy = inf.User.UserName
-	dsr.LastEditedByID = new(int)
-	*dsr.LastEditedByID = inf.User.ID
+	upgraded.LastEditedBy = inf.User.UserName
+	upgraded.LastEditedByID = new(int)
+	*upgraded.LastEditedByID = inf.User.ID
 
-	if dsr.Requested != nil && len(dsr.Requested.TLSVersions) < 1 {
-		dsr.Requested.TLSVersions = nil
+	if upgraded.Requested != nil && len(upgraded.Requested.TLSVersions) < 1 {
+		upgraded.Requested.TLSVersions = nil
 	}
-	if dsr.Original != nil && len(dsr.Original.TLSVersions) < 1 {
-		dsr.Original.TLSVersions = nil
+	if upgraded.Original != nil && len(upgraded.Original.TLSVersions) < 1 {
+		upgraded.Original.TLSVersions = nil
 	}
 
 	args := []interface{}{
-		dsr.AssigneeID,
-		dsr.ChangeType,
+		upgraded.AssigneeID,
+		upgraded.ChangeType,
 		inf.User.ID,
-		dsr.Requested,
-		dsr.Original,
-		dsr.Status,
+		upgraded.Requested,
+		upgraded.Original,
+		upgraded.Status,
 		inf.IntParams["id"],
 	}
 	if dsr.Original != nil {
@@ -745,7 +752,7 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 			return
 		}
 	}
-	if err := tx.QueryRow(updateQuery, args...).Scan(&dsr.CreatedAt, &dsr.LastUpdated); err != nil {
+	if err := tx.QueryRow(updateQuery, args...).Scan(&upgraded.CreatedAt, &upgraded.LastUpdated); err != nil {
 		var userErr, sysErr error
 		var errCode int
 		if errors.Is(err, sql.ErrNoRows) {
@@ -758,6 +765,7 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
+	dsr = upgraded.Downgrade()
 	dsr.SetXMLID()
 
 	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
