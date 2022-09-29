@@ -27,7 +27,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-util"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -561,7 +560,6 @@ func (r RequestStatus) MarshalJSON() ([]byte, error) {
 // Value implements driver.Valuer.
 func (r *RequestStatus) Value() (driver.Value, error) {
 	v, err := json.Marshal(r)
-	log.Debugf("value is %v; err is %v", v, err)
 	v = []byte(strings.Trim(string(v), `"`))
 	return v, err
 }

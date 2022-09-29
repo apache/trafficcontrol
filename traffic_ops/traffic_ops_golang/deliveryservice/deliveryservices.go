@@ -1463,7 +1463,6 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 	noLineBreaks := validation.NewStringRule(tovalidate.NoLineBreaks, "cannot contain line breaks")
 	errs := tovalidate.ToErrors(validation.Errors{
-		"active":              validation.Validate(ds.Active, validation.NotNil),
 		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
 		"deepCachingType":     validation.Validate(ds.DeepCachingType, neverOrAlways),
 		"displayName":         validation.Validate(ds.DisplayName, validation.Required, validation.Length(1, 48)),
@@ -2335,9 +2334,6 @@ func sanitize(ds *tc.DeliveryServiceV5) {
 	}
 	if ds.MaxOriginConnections == nil || *ds.MaxOriginConnections < 0 {
 		ds.MaxOriginConnections = util.IntPtr(0)
-	}
-	if ds.DeepCachingType == tc.DeepCachingTypeInvalid {
-		ds.DeepCachingType = tc.DeepCachingTypeNever
 	}
 	ds.DeepCachingType = tc.DeepCachingTypeFromString(string(ds.DeepCachingType))
 	if ds.MaxRequestHeaderBytes == nil {

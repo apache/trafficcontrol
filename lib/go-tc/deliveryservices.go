@@ -1643,7 +1643,7 @@ func (ds DeliveryServiceV4) Upgrade() DeliveryServiceV5 {
 		CheckPath:                 copyStringIfNotNil(ds.CheckPath),
 		ConsistentHashQueryParams: make([]string, len(ds.ConsistentHashQueryParams)),
 		ConsistentHashRegex:       copyStringIfNotNil(ds.ConsistentHashRegex),
-		DeepCachingType:           DeepCachingType(coalesceString((*string)(ds.DeepCachingType), string(DeepCachingTypeInvalid))),
+		DeepCachingType:           DeepCachingType(coalesceString((*string)(ds.DeepCachingType), "")),
 		DisplayName:               coalesceString(ds.DisplayName, ""),
 		DNSBypassCNAME:            copyStringIfNotNil(ds.DNSBypassCNAME),
 		DNSBypassIP:               copyStringIfNotNil(ds.DNSBypassIP),
