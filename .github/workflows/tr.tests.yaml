@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Traffic Router Unit Tests
+name: Traffic Router Tests
 
 env:
   M2_HOME: ${{ github.workspace }}/.m2
@@ -23,12 +23,12 @@ env:
 on:
   push:
     paths:
-      - .github/workflows/tr.unit.tests.yaml
+      - .github/workflows/tr.tests.yaml
       - traffic_router/**
   create:
   pull_request:
     paths:
-      - .github/workflows/tr.unit.tests.yaml
+      - .github/workflows/tr.tests.yaml
       - traffic_router/**
     types: [ opened, reopened, ready_for_review, synchronize ]
 
@@ -48,14 +48,14 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Run Traffic Router unit tests
-        run: mvn -Djava.library.path=/usr/lib/x86_64-linux-gnu test
+      - name: Run Traffic Router tests
+        run: mvn -Djava.library.path=/usr/lib/x86_64-linux-gnu verify
         working-directory: ${{ github.workspace }}/traffic_router
-      - name: Upload Surefire Reports
+      - name: Upload Surefire and Failsafe Reports
         uses: actions/upload-artifact@v3
         if: ${{ failure() }}
         with:
-          name: surefire-reports
+          name: junit-reports
           path: ${{ github.workspace }}/traffic_router/*/target/*-reports/TEST-*.xml
       - name: Convert Junit Reports to Annotations
         uses: mikepenz/action-junit-report@v3
