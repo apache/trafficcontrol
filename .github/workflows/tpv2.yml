@@ -217,7 +217,7 @@ jobs:
       - name: Build TPv2
         run: |
           cd experimental/traffic-portal
-          ng build
+          npx ng build
           npx ng run traffic-portal:server
       - name: Run everything and test
         uses: ./.github/actions/tpv2-integration-tests
