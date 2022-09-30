@@ -187,7 +187,7 @@ function run(): number {
 			console.log(`Node Express server listening on port ${config.port}`);
 		});
 		try {
-			createRedirectServer(
+			const redirectServer = createRedirectServer(
 				(req, res) => {
 					if (!req.url) {
 						res.statusCode = 500;
@@ -199,7 +199,15 @@ function run(): number {
 					res.setHeader("Location", req.url.replace(/^[hH][tT][tT][pP]:/, "https:"));
 					res.end();
 				}
-			).listen(80);
+			);
+			redirectServer.listen(80);
+			redirectServer.on("error", e => {
+				console.error(`redirect server encountered error: ${e}`);
+				if (Object.prototype.hasOwnProperty.call(e, "code") && (e as typeof e & {code: unknown}).code === "EACCES") {
+					console.warn("access to port 80 not allowed; closing redirect server");
+					redirectServer.close();
+				}
+			});
 		} catch (e) {
 			console.warn("Failed to initialize HTTP-to-HTTPS redirect listener:", e);
 		}
