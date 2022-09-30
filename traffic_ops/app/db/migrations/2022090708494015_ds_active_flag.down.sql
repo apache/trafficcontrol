@@ -20,11 +20,11 @@ ADD COLUMN active_flag boolean DEFAULT FALSE NOT NULL;
 
 UPDATE public.deliveryservice
 SET active_flag = FALSE
-WHERE active IS 'PRIMED' OR active IS 'INACTIVE';
+WHERE active = 'PRIMED' OR active = 'INACTIVE';
 
 UPDATE public.deliveryservice
 SET active_flag = TRUE
-WHERE active IS 'ACTIVE';
+WHERE active = 'ACTIVE';
 
 ALTER TABLE public.deliveryservice DROP COLUMN active;
 ALTER TABLE public.deliveryservice RENAME COLUMN active_flag TO active;
