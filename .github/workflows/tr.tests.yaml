@@ -64,8 +64,17 @@ jobs:
         with:
           name: junit-reports
           path: ${{ github.workspace }}/traffic_router/*/target/*-reports/TEST-*.xml
-      - name: Convert Junit Reports to Annotations
-        uses: mikepenz/action-junit-report@v3
-        with:
-          report_paths: ${{ github.workspace }}/traffic_router/*/target/*-reports/TEST-*.xml
+      - name: Checkout junit-report-annotations action
         if: ${{ always() }}
+        uses: actions/checkout@v3
+        with:
+          repository: zrhoffman/junit-report-annotations-action
+          ref: 399056ab38c3da69c5b27f924357e10aec3caf8f # Fri Sep 25 02:02:53 2020 -0600 Make all properties string type (see actions/toolkit#398)
+          path: .github/actions/junit-report-annotations
+      - name: Convert Junit Report to Annotations
+        if: ${{ always() }}
+        uses: ./.github/actions/junit-report-annotations
+        with:
+          path: ${{ github.workspace }}/traffic_router/core/*/*-reports/TEST-*.xml
+          numFailures: 999 # The maximum number of test failures to annotate
+          cwd: ${{ github.workspace }}/traffic_router
