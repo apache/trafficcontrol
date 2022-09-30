@@ -18,7 +18,6 @@
 name: Traffic Router Tests
 
 env:
-  M2_HOME: ${{ github.workspace }}/.m2
   # environment variables for traffic_router_rpm
   BUILD_LOCK: build_lock
   BUILD_NUMBER: build_number
@@ -52,7 +51,7 @@ jobs:
       - name: Cache local Maven repository
         uses: actions/cache@v3
         with:
-          path: ${{ env.M2_HOME }}
+          path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
