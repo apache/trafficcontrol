@@ -36,8 +36,14 @@ var TableAssignDSServersController = function(deliveryService, servers, assigned
 			field: "cachegroup",
 		},
 		{
-			headerName: "Profile",
-			field: "profile"
+			headerName: "Profile(s)",
+			field: "profile",
+			valueGetter:  function(params) {
+				return params.data.profileNames;
+			},
+			tooltipValueGetter: function(params) {
+				return params.data.profileNames.join(", ");
+			}
 		}
 	];
 
