@@ -50,7 +50,7 @@ jobs:
       - name: Import cached Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
       - name: Cache local Maven repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -59,23 +59,15 @@ jobs:
       - name: Run Traffic Router unit tests
         uses: ./.github/actions/tr-unit-tests
       - name: Upload Surefire Reports
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: ${{ failure() }}
         with:
           name: surefire-reports
-          path: ${{ github.workspace }}/traffic_router/core/target/surefire-reports/TEST-*.xml
-      - name: Checkout junit-report-annotations action
-        uses: actions/checkout@v2
+          path: ${{ github.workspace }}/traffic_router/*/target/*-reports/TEST-*.xml
+      - name: Convert Junit Reports to Annotations
+        uses: mikepenz/action-junit-report@v3
         with:
-          repository: zrhoffman/junit-report-annotations-action
-          ref: 399056ab38c3da69c5b27f924357e10aec3caf8f # Fri Sep 25 02:02:53 2020 -0600 Make all properties string type (see actions/toolkit#398)
-          path: .github/actions/junit-report-annotations
-      - name: Convert Junit Report to Annotations
-        uses: ./.github/actions/junit-report-annotations
-        with:
-          path: ${{ github.workspace }}/traffic_router/core/target/surefire-reports/TEST-*.xml
-          numFailures: 999 # The maximum number of test failures to annotate
-          cwd: ${{ github.workspace }}/traffic_router
-        if: always()
+          report_paths: ${{ github.workspace }}/traffic_router/*/target/*-reports/TEST-*.xml
+        if: ${{ always() }}
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
