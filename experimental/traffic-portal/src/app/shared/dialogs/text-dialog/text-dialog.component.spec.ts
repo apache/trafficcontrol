@@ -13,7 +13,7 @@
 */
 
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
+import { MAT_DIALOG_DATA } from "@angular/material/dialog";
 
 import { TextDialogComponent } from "./text-dialog.component";
 
@@ -22,10 +22,9 @@ describe("TextDialogComponent", () => {
 	let fixture: ComponentFixture<TextDialogComponent>;
 
 	beforeEach(async () => {
-		const mockMatDialog = jasmine.createSpyObj("MatDialogRef", ["close", "afterClosed"]);
 		await TestBed.configureTestingModule({
-			declarations: [ TextDialogComponent ],
-			providers: [{provide: MatDialogRef, useValue: mockMatDialog},
+			declarations: [TextDialogComponent],
+			providers: [
 				{provide: MAT_DIALOG_DATA, useValue: {message: "", title: ""}}]
 		})
 			.compileComponents();

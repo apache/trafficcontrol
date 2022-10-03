@@ -17,7 +17,7 @@
  * under the License.
  */
 import { Component, Inject } from "@angular/core";
-import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
+import { MAT_DIALOG_DATA } from "@angular/material/dialog";
 
 /**
  * Contains the structure of the data the TextDialogComponent expects
@@ -37,14 +37,6 @@ export interface TextDialogData {
 })
 export class TextDialogComponent {
 
-	constructor(private readonly dialogRef: MatDialogRef<TextDialogComponent>,
-		@Inject(MAT_DIALOG_DATA) public readonly dialogData: TextDialogData) {
-	}
-
-	/**
-	 * Closes the dialog
-	 */
-	public close(): void {
-		this.dialogRef.close();
+	constructor(@Inject(MAT_DIALOG_DATA) public readonly dialogData: TextDialogData) {
 	}
 }
