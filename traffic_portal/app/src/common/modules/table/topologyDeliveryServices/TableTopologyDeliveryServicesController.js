@@ -19,8 +19,6 @@
 
 function TableTopologyDeliveryServicesController(topologies, deliveryServices, steeringTargets, filter, $controller, $scope) {
 
-	console.log(steeringTargets);
-
 	// extends the TableDeliveryServicesController to inherit common methods
 	angular.extend(this, $controller("TableDeliveryServicesController", { tableName: "topDS", deliveryServices, steeringTargets, filter, $scope }));
 
