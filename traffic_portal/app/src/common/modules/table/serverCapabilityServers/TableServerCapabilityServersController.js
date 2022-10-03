@@ -84,7 +84,7 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 			}
 		});
 		modalInstance.result.then(function(selectedServers) {
-			serverCapabilityService.assignServersPerSC(serverCapability, selectedServers)
+			serverCapabilityService.assignServersCapabilities(selectedServers, [serverCapability.name])
 				.then(
 					function() {
 						$scope.refresh();

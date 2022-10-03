@@ -614,7 +614,7 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 
 	var mssc tc.MultipleServersCapabilities
 	if err := json.NewDecoder(r.Body).Decode(&mssc); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("error decoding PUT request body into MultipleServerCapabilities struct %w", err), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("error decoding PUT request body into MultipleServersCapabilities struct %w", err), nil)
 		return
 	}
 
@@ -667,21 +667,24 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//Delete existing rows from server_server_capability for a given server
+	//Delete existing rows from server_server_capability for a given server or for a given capability
 	var where string
 	sid := make([]int64, len(mssc.ServerCapabilities))
 	scs := make([]string, len(mssc.ServerIDs))
 	if len(mssc.ServerIDs) == 1 {
 		where = fmt.Sprintf("WHERE ssc.server=%v", mssc.ServerIDs[0])
-		for i := range mssc.ServerCapabilities {
-			fmt.Println("in here", i, mssc.ServerIDs[0])
-			sid[i] = mssc.ServerIDs[0]
+		if len(mssc.ServerCapabilities) >= 1 {
+			for i := range mssc.ServerCapabilities {
+				sid[i] = mssc.ServerIDs[0]
+			}
 		}
 		scs = mssc.ServerCapabilities
 	} else if len(mssc.ServerCapabilities) == 1 {
 		where = fmt.Sprintf("WHERE ssc.server_capability='%s'", mssc.ServerCapabilities[0])
-		for i := range mssc.ServerIDs {
-			scs[i] = mssc.ServerCapabilities[0]
+		if len(mssc.ServerIDs) >= 1 {
+			for i := range mssc.ServerIDs {
+				scs[i] = mssc.ServerCapabilities[0]
+			}
 		}
 		sid = mssc.ServerIDs
 	} else {
@@ -698,34 +701,35 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert rows in DB
-	multipleServersPerCapability := make([]int64, 0, len(mssc.ServerIDs))
-	multipleServerCapabilities := make([]string, 0, len(mssc.ServerCapabilities))
-	mscQuery := `WITH inserted AS (
-		INSERT INTO server_server_capability
+	if len(mssc.ServerIDs) >= 1 && len(mssc.ServerCapabilities) >= 1 {
+		msscQuery := `INSERT INTO server_server_capability
 			select "server_capability", "server"
-			FROM UNNEST($1::text[], $2::int[]) AS tmp("server_capability", "server")
-			RETURNING server_capability, server
-		)
-		SELECT ARRAY_AGG(server_capability), ARRAY_AGG(server)
-		FROM (
-			SELECT server_capability, server
-			FROM inserted
-		) AS returned(server_capability, server)`
-
-	err = tx.QueryRow(mscQuery, pq.Array(scs), pq.Array(sid)).Scan(pq.Array(&multipleServerCapabilities), pq.Array(&multipleServersPerCapability))
-	if err != nil {
-		useErr, sysErr, statusCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
-		return
+			FROM UNNEST($1::text[], $2::int[]) AS tmp("server_capability", "server")`
+		err = tx.QueryRow(msscQuery, pq.Array(scs), pq.Array(sid))
+		if err != nil {
+			useErr, sysErr, statusCode := api.ParseDBError(err)
+			api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
+			return
+		}
 	}
-	//mssc.ServerIDs = multipleServersPerCapability
-	//mssc.ServerCapabilities = multipleServerCapabilities
 
 	var alerts tc.Alerts
-	if len(mssc.ServerIDs) == 1 && len(mssc.ServerCapabilities) > 1 {
-		alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Server Capabilities assigned to a server")
-	} else if len(mssc.ServerIDs) == 1 && len(mssc.ServerCapabilities) > 1 {
-		alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Servers assigned to a capability")
+	if len(mssc.ServerCapabilities) == 1 && len(mssc.ServerIDs) == 1 {
+		alerts = tc.CreateAlerts(tc.SuccessLevel, "Assigned either a Server Capability to a server or a Server to a capability")
+	} else if len(mssc.ServerIDs) == 1 {
+		if len(mssc.ServerCapabilities) > 1 {
+			alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Server Capabilities assigned to a server")
+		} else if len(mssc.ServerCapabilities) < 1 {
+			alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed a Server Capability from a server")
+		}
+	} else if len(mssc.ServerCapabilities) == 1 {
+		if len(mssc.ServerIDs) > 1 {
+			alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Servers assigned to a capability")
+		} else if len(mssc.ServerIDs) < 1 {
+			alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed a Server from a capability")
+		}
+	} else if len(mssc.ServerCapabilities) < 1 && len(mssc.ServerIDs) < 1 {
+		alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed multiple servers from multiple capabilities")
 	} else {
 		alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Servers assigned to multiple capabilities")
 	}

@@ -27,11 +27,8 @@ import (
 // /server_server_capabilities API endpoint.
 const apiServerServerCapabilities = "/server_server_capabilities"
 
-// apiMultipleServerCapabilities is the API version-relative path to the /multiple_server_capabilities API endpoint.
-const apiMultipleServerCapabilities = "/multiple_server_capabilities"
-
-// apiMultipleServersPerCapability is the API version-relative path to the /multiple_servers_per_capability API endpoint.
-const apiMultipleServersPerCapability = "/multiple_servers_per_capability"
+// apiMultipleServersCapabilities is the API version-relative path to the /multiple_servers_capabilities API endpoint.
+const apiMultipleServersCapabilities = "/multiple_servers_capabilities"
 
 // CreateServerServerCapability assigns a Server Capability to a Server.
 func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
@@ -61,15 +58,8 @@ func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerSe
 }
 
 // AssignMultipleServerCapabilities assigns multiple server capabilities to a server.
-func (to *Session) AssignMultipleServerCapabilities(msc tc.MultipleServerCapabilities, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) AssignMultipleServerCapabilities(mssc tc.MultipleServersCapabilities, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.put(apiMultipleServerCapabilities, opts, msc, &alerts)
-	return alerts, reqInf, err
-}
-
-// AssignMultipleServersPerCapability assigns multiple servers to a given capability.
-func (to *Session) AssignMultipleServersPerCapability(mspc tc.MultipleServersToCapability, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
-	var alerts tc.Alerts
-	reqInf, err := to.put(apiMultipleServersPerCapability, opts, mspc, &alerts)
+	reqInf, err := to.put(apiMultipleServersCapabilities, opts, mssc, &alerts)
 	return alerts, reqInf, err
 }

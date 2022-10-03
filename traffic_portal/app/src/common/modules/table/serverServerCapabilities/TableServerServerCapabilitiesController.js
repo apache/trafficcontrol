@@ -50,7 +50,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 			}
 		});
 		modalInstance.result.then(function(selectedSCs) {
-			serverCapabilityService.assignSCsServer(server[0].id, selectedSCs)
+			serverCapabilityService.assignServersCapabilities([server[0].id], selectedSCs)
 				.then(
 					function() {
 						$scope.refresh();
@@ -121,7 +121,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 	};
 
 	$scope.editServerCapability = function(capabilityName) {
-		locationUtils.navigateToPath('/server-capabilities/' + capabilityName);
+		locationUtils.navigateToPath('/server-capabilities/edit?name=' + capabilityName);
 	};
 
 	$scope.refresh = function() {

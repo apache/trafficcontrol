@@ -154,16 +154,16 @@ func TestServerServerCapabilities(t *testing.T) {
 				"OK When Assigned Multiple Server Capabilities": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"serverId":           GetServerID(t, "dtrc-mid-04")(),
 						"serverCapabilities": append(multipleSCs, "disk", "blah"),
+						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK When Assigned Multiple Servers Per Capability": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"serverIds":        append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")(), GetServerID(t, "dtrc-mid-01")()),
-						"serverCapability": "disk",
+						"serverCapabilities": append(multipleSCs, "disk"),
+						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")(), GetServerID(t, "dtrc-mid-01")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -201,8 +201,7 @@ func TestServerServerCapabilities(t *testing.T) {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
 					ssc := tc.ServerServerCapability{}
-					msc := tc.MultipleServerCapabilities{}
-					mspc := tc.MultipleServersToCapability{}
+					mssc := tc.MultipleServersCapabilities{}
 					var serverId int
 					var serverCapability string
 
@@ -210,7 +209,7 @@ func TestServerServerCapabilities(t *testing.T) {
 						dat, err := json.Marshal(testCase.RequestBody)
 						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 						if method == "PUT" {
-							err = json.Unmarshal(dat, &msc)
+							err = json.Unmarshal(dat, &mssc)
 						} else {
 							err = json.Unmarshal(dat, &ssc)
 						}
@@ -238,11 +237,7 @@ func TestServerServerCapabilities(t *testing.T) {
 							var alerts tc.Alerts
 							var reqInf toclientlib.ReqInf
 							var err error
-							if name == "OK When Assigned Multiple Server Capabilities" {
-								alerts, reqInf, err = testCase.ClientSession.AssignMultipleServerCapabilities(msc, testCase.RequestOpts)
-							} else if name == "OK When Assigned Multiple Servers Per Capability" {
-								alerts, reqInf, err = testCase.ClientSession.AssignMultipleServersPerCapability(mspc, testCase.RequestOpts)
-							}
+							alerts, reqInf, err = testCase.ClientSession.AssignMultipleServerCapabilities(mssc, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
