@@ -17,10 +17,10 @@
  * under the License.
  */
 
-function TableServerDeliveryServicesController(server, deliveryServices, filter, $controller, $scope, $uibModal, locationUtils, serverUtils, deliveryServiceService, serverService) {
+function TableServerDeliveryServicesController(server, deliveryServices, steeringTargets, filter, $controller, $scope, $uibModal, locationUtils, serverUtils, deliveryServiceService, serverService) {
 
 	// extends the TableDeliveryServicesController to inherit common methods
-	angular.extend(this, $controller("TableDeliveryServicesController", { tableName: "serverDS", deliveryServices, filter, $scope }));
+	angular.extend(this, $controller("TableDeliveryServicesController", { tableName: "serverDS", deliveryServices, steeringTargets, filter, $scope }));
 
 	server = Array.isArray(server) ? server[0] : server;
 
@@ -158,5 +158,5 @@ function TableServerDeliveryServicesController(server, deliveryServices, filter,
 
 };
 
-TableServerDeliveryServicesController.$inject = ["server", "deliveryServices", "filter", "$controller", "$scope", "$uibModal", "locationUtils", "serverUtils", "deliveryServiceService", "serverService"];
+TableServerDeliveryServicesController.$inject = ["server", "deliveryServices", "steeringTargets", "filter", "$controller", "$scope", "$uibModal", "locationUtils", "serverUtils", "deliveryServiceService", "serverService"];
 module.exports = TableServerDeliveryServicesController;

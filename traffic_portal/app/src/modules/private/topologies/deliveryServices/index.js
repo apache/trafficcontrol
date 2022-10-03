@@ -18,7 +18,7 @@
  */
 
 module.exports = angular.module('trafficPortal.private.topologies.deliveryServices', [])
-	.config(function($stateProvider, $urlRouterProvider) {
+	.config(function ($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.topologies.deliveryServices', {
 				url: '/delivery-services?name',
@@ -27,13 +27,16 @@ module.exports = angular.module('trafficPortal.private.topologies.deliveryServic
 						templateUrl: 'common/modules/table/topologyDeliveryServices/table.topologyDeliveryServices.tpl.html',
 						controller: 'TableTopologyDeliveryServicesController',
 						resolve: {
-							topologies: function($stateParams, topologyService) {
-								return topologyService.getTopologies({ name: $stateParams.name });
+							topologies: function ($stateParams, topologyService) {
+								return topologyService.getTopologies({name: $stateParams.name});
 							},
-							deliveryServices: function(topologies, deliveryServiceService) {
-								return deliveryServiceService.getDeliveryServices({ topology: topologies[0].name });
+							deliveryServices: function (topologies, deliveryServiceService) {
+								return deliveryServiceService.getDeliveryServices({topology: topologies[0].name});
 							},
-							filter: function(topologies) {
+							steeringTargets: function (deliveryServiceService) {
+								return deliveryServiceService.getSteering();
+							},
+							filter: function (topologies) {
 								return {
 									topology: {
 										filterType: "text",
