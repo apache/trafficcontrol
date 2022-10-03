@@ -13,30 +13,34 @@
 .. limitations under the License.
 ..
 
-.. _to-api-multiple_server_capabilities:
+.. _to-api-v4-multiple_servers_capabilities:
 
 ********************************
-``multiple_server_capabilities``
+``multiple_servers_capabilities``
 ********************************
+
+.. versionadded:: 4.1
 
 ``PUT``
 ========
 Associates a list of :term:`Server Capability` to a server. The API call replaces all the server capabilities assigned to a server with the ones specified in the serverCapabilities field.
+And also Associates a list of :term:`Servers` to a server capability. The API call replaces all the servers assigned to a server capability with the ones specified in the servers field.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVER:UPDATE, SERVER:READ, SERVER-CAPABILITY:READ
+:Permissions Required: SERVER:READ, SERVER:UPDATE, SERVER-CAPABILITY:READ, SERVER-CAPABILITY:UPDATE
 :Response Type:  Object
 
 Request Structure
 -----------------
-:serverId:           The integral, unique identifier of a server to be associated with a :term:`Server Capability`
-:serverCapabilities: List of :term:`Server Capability`'s name to associate
+:serverIds:          List of :term:`Server` ids ((integral, unique identifier) associated with a :term:`Server Capability`
+:serverCapabilities: List of :term:`Server Capability`'s name to associate with a :term:`Server` id
+
 
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/5.0/multiple_server_capabilities/ HTTP/1.1
+	PUT /api/4.1/multiple_servers_capabilities/ HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -45,14 +49,21 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"serverId": 1,
+		"serverIds": [1],
 		"serverCapabilities": ["test", "disk"]
+	}
+
+	OR
+
+	{
+		"serverIds": [2, 3]
+		"serverCapabilities": ["eas"],
 	}
 
 Response Structure
 ------------------
-:serverId:           The integral, unique identifier of the newly associated server
-:serverCapabilities: List of :term:`Server Capability`'s name
+:serverId:           List of :term:`Server` ids ((integral, unique identifier) associated with a server capability.
+:serverCapabilities: List of :term:`Server Capability`'s name to be associated with a :term:`Server` id.
 
 .. code-block:: http
 	:caption: Response Example
@@ -75,7 +86,21 @@ Response Structure
 			"level": "success"
 		}],
 		"response": {
-			"serverId": 1,
+		"serverIds": [1],
 			"serverCapabilities": ["test", "disk"]
 		}
 	}
+
+	OR
+
+	{
+	"alerts": [{
+			"text": "Multiple Servers assigned to a capability",
+			"level": "success"
+		}],
+		"response": {
+			"serverIds": [2, 3]
+			"serverCapabilities": ["eas"],
+		}
+	}
+

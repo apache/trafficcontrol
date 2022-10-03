@@ -13,32 +13,31 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v4-multiple_servers_per_capability:
+.. _to-api-multiple_servers_capabilities:
 
-***********************************
-``multiple_servers_per_capability``
-***********************************
-
-.. versionadded:: 4.1
+********************************
+``multiple_servers_capabilities``
+********************************
 
 ``PUT``
 ========
-Associates a list of :term:`Servers` to a server capability. The API call replaces all the servers assigned to a server capability with the ones specified in the servers field.
+Associates a list of :term:`Server Capability` to a server. The API call replaces all the server capabilities assigned to a server with the ones specified in the serverCapabilities field.
+And also Associates a list of :term:`Servers` to a server capability. The API call replaces all the servers assigned to a server capability with the ones specified in the servers field.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVER:READ, SERVER-CAPABILITY:READ, SERVER-CAPABILITY:UPDATE
+:Permissions Required: SERVER:READ, SERVER:UPDATE, SERVER-CAPABILITY:READ, SERVER-CAPABILITY:UPDATE
 :Response Type:  Object
 
 Request Structure
 -----------------
-:serverCapability:  The unique identifier of a server capability to be associated with a :term:`Server`
-:serverIds:         List of :term:`Server` ids associated with a server capability
+:serverIds:          List of :term:`Server` ids ((integral, unique identifier) associated with a :term:`Server Capability`
+:serverCapabilities: List of :term:`Server Capability`'s name to associate with a :term:`Server` id
 
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/4.1/multiple_servers_per_capability/ HTTP/1.1
+	PUT /api/5.0/multiple_servers_capabilities/ HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -47,14 +46,21 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"serverCapability": "eas",
+		"serverIds": [1],
+		"serverCapabilities": ["test", "disk"]
+	}
+
+	OR
+
+	{
 		"serverIds": [2, 3]
+		"serverCapabilities": ["eas"],
 	}
 
 Response Structure
 ------------------
-:serverCapability:   The unique identifier of a server capability to be associated with a :term:`Server`
-:serverIds:          List of :term:`Server` ids associated with a server capability
+:serverId:           List of :term:`Server` ids ((integral, unique identifier) associated with a server capability.
+:serverCapabilities: List of :term:`Server Capability`'s name to be associated with a :term:`Server` id.
 
 .. code-block:: http
 	:caption: Response Example
@@ -65,11 +71,24 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Sat, 24 Sep 2022 22:40:54 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 8 Aug 2022 22:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: eQrl48zWids0kDpfCYmmtYMpegjnFxfOVvlBYxxLSfp7P7p6oWX4uiC+/Cfh2X9i3G+MQ36eH95gukJqOBOGbQ==
 	X-Server-Name: traffic_ops_golang/
-	Date: Tues, 20 Sep 2022 16:15:11 GMT
+	Date: Mon, 08 Aug 2022 16:15:11 GMT
 	Content-Length: 157
+
+	{
+		"alerts": [{
+			"text": "Multiple Server Capabilities assigned to a server",
+			"level": "success"
+		}],
+		"response": {
+			"serverIds": [1],
+			"serverCapabilities": ["test", "disk"]
+		}
+	}
+
+	OR
 
 	{
 	"alerts": [{
@@ -77,7 +96,7 @@ Response Structure
 			"level": "success"
 		}],
 		"response": {
-			"serverCapability": "eas",
 			"serverIds": [2, 3]
+			"serverCapabilities": ["eas"],
 		}
 	}

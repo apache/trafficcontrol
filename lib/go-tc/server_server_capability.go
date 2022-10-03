@@ -45,3 +45,10 @@ type ServerServerCapabilitiesResponse struct {
 	Response []ServerServerCapability `json:"response"`
 	Alerts
 }
+
+// MultipleServersCapabilities represents an association between a server capability and list of servers
+// and an association between a server and list of server capabilities.
+type MultipleServersCapabilities struct {
+	ServerCapabilities []string `json:"serverCapabilities" db:"server_capability"`
+	ServerIDs          []int64  `json:"serverIds" db:"server"`
+}
