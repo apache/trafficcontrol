@@ -112,7 +112,7 @@ Response Structure
 	Date: Mon, 08 Aug 2022 16:15:11 GMT
 	Content-Length: 157
 	{
-	"alerts": [{
+		"alerts": [{
 			"text": "Multiple Servers assigned to a capability",
 			"level": "success"
 		}],

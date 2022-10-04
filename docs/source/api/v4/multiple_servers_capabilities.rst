@@ -95,12 +95,12 @@ Response Structure
 			"level": "success"
 		}],
 		"response": {
-		"serverIds": [1],
+			"serverIds": [1],
 			"serverCapabilities": ["test", "disk"]
 		}
 	}
 
-. code-block:: http
+.. code-block:: http
 	:caption: Response Example2
 
 	HTTP/1.1 200 OK
@@ -116,7 +116,7 @@ Response Structure
 	Content-Length: 157
 
 	{
-	"alerts": [{
+		"alerts": [{
 			"text": "Multiple Servers assigned to a capability",
 			"level": "success"
 		}],
