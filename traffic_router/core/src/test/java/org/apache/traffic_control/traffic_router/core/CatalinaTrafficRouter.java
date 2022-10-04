@@ -49,19 +49,11 @@ public class CatalinaTrafficRouter {
 
 		// Override the port and app base property of server.xml
 		StandardService trafficRouterService = (StandardService) catalina.getServer().findService("traffic_router_core");
-
-		List<Connector> secureConnectorList = Arrays.stream(trafficRouterService.findConnectors()).filter(k -> k.getAttribute("portAttribute").equals("SecureApiPort")).collect(Collectors.toList());
-		boolean hasHttpsPort = secureConnectorList.size() > 0;
-		int securePort = hasHttpsPort ? secureConnectorList.get(0).getPort() : 0;
-		int apiPort = Arrays.stream(trafficRouterService.findConnectors()).filter(k -> k.getAttribute("portAttribute").equals("ApiPort")).collect(Collectors.toList()).get(0).getPort();
-
 		Connector[] connectors = trafficRouterService.findConnectors();
 		for (Connector connector : connectors) {
 			if (connector.getPort() == 80) {
 				connector.setPort(Integer.parseInt(System.getProperty("routerHttpPort", "8888")));
 			}
-
-			SocketUtils.findAvailableTcpPort();
 
 			if (connector.getPort() == 443) {
 				connector.setPort(Integer.parseInt(System.getProperty("routerSecurePort", "8443")));

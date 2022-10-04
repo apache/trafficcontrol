@@ -177,7 +177,7 @@ public class ZoneManager extends Resolver {
 
 			final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys = new ConcurrentHashMap<>();
 
-			if (tr.isDnssecZoneDiffingEnabled()) {
+			if (tr.isDnssecEnabled()) {
 				if (ZoneManager.dynamicZoneCache == null || ZoneManager.zoneCache == null) {
 					initZoneDirectory();
 				} else {
@@ -511,7 +511,7 @@ public class ZoneManager extends Resolver {
 		generationTasks.add(() -> {
 			try {
 				final ZoneKey newZoneKey = signatureManager.generateZoneKey(name, list);
-				if (tr.isDnssecZoneDiffingEnabled() && domainsToZoneKeys.containsKey(domain)) {
+				if (tr.isDnssecEnabled() && domainsToZoneKeys.containsKey(domain)) {
 					final ZoneKey oldZoneKey = domainsToZoneKeys.get(domain);
 					if (zonesAreEqual(newZoneKey.getRecords(), oldZoneKey.getRecords())) {
 						final Zone oldZone = ZoneManager.zoneCache.getIfPresent(oldZoneKey);
@@ -527,7 +527,7 @@ public class ZoneManager extends Resolver {
 					}
 				}
 				final Zone zone = zc.get(newZoneKey); // cause the zone to be loaded into the new cache
-				if (tr.isDnssecZoneDiffingEnabled()) {
+				if (tr.isDnssecEnabled()) {
 					newDomainsToZoneKeys.put(domain, newZoneKey);
 				}
 				final CacheRegister data = tr.getCacheRegister();
