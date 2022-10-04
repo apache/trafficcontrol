@@ -15,9 +15,9 @@
 
 .. _to-api-v4-multiple_servers_capabilities:
 
-********************************
+*********************************
 ``multiple_servers_capabilities``
-********************************
+*********************************
 
 .. versionadded:: 4.1
 
@@ -38,7 +38,7 @@ Request Structure
 
 
 .. code-block:: http
-	:caption: Request Example
+	:caption: Request Example1
 
 	PUT /api/4.1/multiple_servers_capabilities/ HTTP/1.1
 	Host: trafficops.infra.ciab.test
@@ -53,7 +53,16 @@ Request Structure
 		"serverCapabilities": ["test", "disk"]
 	}
 
-	OR
+.. code-block:: http
+	:caption: Request Example2
+
+	PUT /api/4.1/multiple_servers_capabilities/ HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 84
+	Content-Type: application/json
 
 	{
 		"serverIds": [2, 3]
@@ -66,7 +75,7 @@ Response Structure
 :serverCapabilities: List of :term:`Server Capability`'s name to be associated with a :term:`Server` id.
 
 .. code-block:: http
-	:caption: Response Example
+	:caption: Response Example1
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
@@ -91,7 +100,20 @@ Response Structure
 		}
 	}
 
-	OR
+. code-block:: http
+	:caption: Response Example2
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 8 Aug 2022 22:40:54 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: eQrl48zWids0kDpfCYmmtYMpegjnFxfOVvlBYxxLSfp7P7p6oWX4uiC+/Cfh2X9i3G+MQ36eH95gukJqOBOGbQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Mon, 08 Aug 2022 16:15:11 GMT
+	Content-Length: 157
 
 	{
 	"alerts": [{

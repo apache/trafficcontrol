@@ -69,7 +69,6 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.assignServersCapabilities = function(server, serverCapability) {
-		console.log(server, serverCapability)
 		return $http.put(ENV.api.unstable + 'multiple_servers_capabilities',{ serverIds: server, serverCapabilities: serverCapability, replace: true } ).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, false);
