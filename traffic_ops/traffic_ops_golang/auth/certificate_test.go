@@ -32,6 +32,8 @@ import (
 // certs on demand for testing, such as expired Before/After dates
 
 func TestVerifyClientCertificate_Success(t *testing.T) {
+	rootPool = nil // ensure root pool is empty
+
 	rootCertPEMBlock, _ := pem.Decode([]byte(rootCertPEM))
 	rootCert, err := x509.ParseCertificate(rootCertPEMBlock.Bytes)
 	if err != nil {
@@ -68,6 +70,8 @@ func TestVerifyClientCertificate_Success(t *testing.T) {
 }
 
 func TestVerifyClientCertificate_NoIntermediate_Fail(t *testing.T) {
+	rootPool = nil // ensure root pool is empty
+
 	rootCertPEMBlock, _ := pem.Decode([]byte(rootCertPEM))
 	rootCert, err := x509.ParseCertificate(rootCertPEMBlock.Bytes)
 	if err != nil {
@@ -98,17 +102,6 @@ func TestVerifyClientCertificate_NoIntermediate_Fail(t *testing.T) {
 	}
 }
 
-func TestLoadRootCerts_Success(t *testing.T) {
-	rootPool = nil
-
-	err := loadRootCerts("test/success")
-
-	if err != nil {
-		t.Fatalf("failed to load certs. err: %s", err)
-	}
-
-}
-
 func TestLoadRootCerts_EmptyDirPath_Fail(t *testing.T) {
 	rootPool = nil
 
@@ -120,18 +113,9 @@ func TestLoadRootCerts_EmptyDirPath_Fail(t *testing.T) {
 
 }
 
-func TestLoadRootCerts_InvalidDir_Fail(t *testing.T) {
-	rootPool = nil
-
-	err := loadRootCerts("test/fail")
-
-	if err == nil {
-		t.Fatalf("should have failed to load certs attempting to parse PEM key into x509 Cert. err: %s", err)
-	}
-
-}
-
 func TestVerifyClientChainSuccess(t *testing.T) {
+	rootPool = nil // ensure root pool is empty
+
 	rootCertPEMBlock, _ := pem.Decode([]byte(rootCertPEM))
 	rootCert, err := x509.ParseCertificate(rootCertPEMBlock.Bytes)
 	if err != nil {
@@ -158,6 +142,8 @@ func TestVerifyClientChainSuccess(t *testing.T) {
 }
 
 func TestVerifyClientChain_EmptyClient_Fail(t *testing.T) {
+	rootPool = nil // ensure root pool is empty
+
 	rootCertPEMBlock, _ := pem.Decode([]byte(rootCertPEM))
 	rootCert, err := x509.ParseCertificate(rootCertPEMBlock.Bytes)
 	if err != nil {
@@ -173,6 +159,8 @@ func TestVerifyClientChain_EmptyClient_Fail(t *testing.T) {
 }
 
 func TestVerifyClientChain_EmptyRoot_Fail(t *testing.T) {
+	rootPool = nil // ensure root pool is empty
+
 	clientCertPEMBlock, _ := pem.Decode([]byte(clientCertPEM))
 	clientCert, err := x509.ParseCertificate(clientCertPEMBlock.Bytes)
 	if err != nil {
@@ -185,6 +173,8 @@ func TestVerifyClientChain_EmptyRoot_Fail(t *testing.T) {
 }
 
 func TestVerifyClientChain_WrongCertKeyUsage_Fail(t *testing.T) {
+	rootPool = nil // ensure root pool is empty
+
 	rootCertPEMBlock, _ := pem.Decode([]byte(rootCertPEM))
 	rootCert, err := x509.ParseCertificate(rootCertPEMBlock.Bytes)
 	if err != nil {
@@ -207,6 +197,8 @@ func TestVerifyClientChain_WrongCertKeyUsage_Fail(t *testing.T) {
 }
 
 func TestParseClientCertificateUID_Success(t *testing.T) {
+	rootPool = nil // ensure root pool is empty
+
 	clientCertPEMBlock, _ := pem.Decode([]byte(clientCertPEM))
 	clientCert, err := x509.ParseCertificate(clientCertPEMBlock.Bytes)
 	if err != nil {
@@ -219,6 +211,8 @@ func TestParseClientCertificateUID_Success(t *testing.T) {
 }
 
 func TestParseClientCertificateUID_Fail(t *testing.T) {
+	rootPool = nil // ensure root pool is empty
+
 	// Server cert does not contain a UID object identifier
 	serverCertPEMBlock, _ := pem.Decode([]byte(serverCertPEM))
 	serverCert, err := x509.ParseCertificate(serverCertPEMBlock.Bytes)
