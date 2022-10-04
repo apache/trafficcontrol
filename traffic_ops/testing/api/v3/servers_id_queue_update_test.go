@@ -1,4 +1,4 @@
-package v4
+package v3
 
 import (
 	"net/http"
@@ -14,7 +14,7 @@ import (
 func TestServersIDQueueUpdate(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.V3TestCase{
 			"POST": {
 				"OK when VALID QUEUE request": {
 					EndpointId:    GetServerID(t, "atlanta-edge-01"),
@@ -65,7 +65,7 @@ func TestServersIDQueueUpdate(t *testing.T) {
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.SetServerQueueUpdate(testCase.EndpointId(), queueUpdate, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.SetServerQueueUpdate(testCase.EndpointId(), queueUpdate)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
