@@ -95,7 +95,7 @@ type Config struct {
 	RoleBasedPermissions                      bool                    `json:"role_based_permissions"`
 	DefaultCertificateInfo                    *DefaultCertificateInfo `json:"default_certificate_info"`
 	Cdni                                      *CdniConf               `json:"cdni"`
-	ClientCertAuth                            *ClientCertAuth         `json:"client_cert_auth"`
+	ClientCertAuth                            *ClientCertAuth         `json:"client_certificate_authentication"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -276,7 +276,7 @@ type CdniConf struct {
 }
 
 type ClientCertAuth struct {
-	RootCertsDir string `json:"root_certs_dir"`
+	RootCertsDir string `json:"root_certificates_directory"`
 }
 
 // NewFakeConfig returns a fake Config struct with just enough data to view Routes.
