@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
-- [](https://github.com/apache/trafficcontrol/issues/7055) *Traffic Router* Removed `dnssec.zone.diffing.enabled` and `dnssec.rrsig.cache.enabled` parameters.
+- [#7109](https://github.com/apache/trafficcontrol/pull/7109) *Traffic Router* Removed `dnssec.zone.diffing.enabled` and `dnssec.rrsig.cache.enabled` parameters.
 - [#7055](https://github.com/apache/trafficcontrol/issues/7055) *Traffic Portal* Made `Clear Table Filters` option visible to the user.
 - [#7024](https://github.com/apache/trafficcontrol/pull/7024) *Traffic Monitor* Added logging for `ipv4Availability` and `ipv6Availability` in TM.
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Added API version 5.0 (IN DEVELOPMENT)
