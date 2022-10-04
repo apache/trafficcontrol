@@ -108,3 +108,12 @@ func (to *Session) GetCDNSSLKeysWithHdr(name string, header http.Header) ([]tc.C
 func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, toclientlib.ReqInf, error) {
 	return to.GetCDNSSLKeysWithHdr(name, nil)
 }
+
+// QueueUpdatesForCDN set the "updPending" field of a list of servers identified by
+// 'cdnID' and any other query params (type or profile) to the value of 'queueUpdate'
+func (to *Session) QueueUpdatesForCDN(cdnID int, cdnQueueUpdate tc.CDNQueueUpdateRequest) (tc.CDNQueueUpdateResponse, toclientlib.ReqInf, error) {
+	var resp tc.CDNQueueUpdateResponse
+	path := fmt.Sprintf("/cdns/%d/queue_update", cdnID)
+	reqInf, err := to.post(path, cdnQueueUpdate, nil, &resp)
+	return resp, reqInf, err
+}
