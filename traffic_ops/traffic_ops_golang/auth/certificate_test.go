@@ -29,9 +29,9 @@ import (
  */
 
 // TODO: Utilize expirimental/certificate_auth/generate_cert.go to create appropriate
-// certs on demand for testing, such as expired Bofore/After dates
+// certs on demand for testing, such as expired Before/After dates
 
-func TestVerifyClientCertificateSuccess(t *testing.T) {
+func TestVerifyClientCertificate_Success(t *testing.T) {
 	rootCertPEMBlock, _ := pem.Decode([]byte(rootCertPEM))
 	rootCert, err := x509.ParseCertificate(rootCertPEMBlock.Bytes)
 	if err != nil {
@@ -51,20 +51,54 @@ func TestVerifyClientCertificateSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to extract x509 from PEM string for clientCert. err: %s", err)
 	}
+	intermediateCertPEMBlock, _ := pem.Decode([]byte(intermediateCertPEM))
+	intermediateCert, err := x509.ParseCertificate(intermediateCertPEMBlock.Bytes)
+	if err != nil {
+		t.Fatalf("failed to extract x509 from PEM string for intermediateCert. err: %s", err)
+	}
+	connState := new(tls.ConnectionState)
+	connState.PeerCertificates = append(connState.PeerCertificates, clientCert)
+	connState.PeerCertificates = append(connState.PeerCertificates, intermediateCert)
+	req.TLS = connState
+
+	err = VerifyClientCertificate(req, "root/pool/created/above")
+	if err != nil {
+		t.Fatalf("error failed to verify client certificate: %s", err)
+	}
+}
+
+func TestVerifyClientCertificate_NoIntermediate_Fail(t *testing.T) {
+	rootCertPEMBlock, _ := pem.Decode([]byte(rootCertPEM))
+	rootCert, err := x509.ParseCertificate(rootCertPEMBlock.Bytes)
+	if err != nil {
+		t.Fatalf("failed to extract x509 from PEM string for rootCert. err: %s", err)
+	}
+
+	rootPool = x509.NewCertPool()
+	rootPool.AddCert(rootCert)
+
+	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer([]byte{}))
+	if err != nil {
+		t.Fatal("failed to create request")
+	}
+
+	clientCertPEMBlock, _ := pem.Decode([]byte(clientCertPEM))
+	clientCert, err := x509.ParseCertificate(clientCertPEMBlock.Bytes)
+	if err != nil {
+		t.Fatalf("failed to extract x509 from PEM string for clientCert. err: %s", err)
+	}
+
 	connState := new(tls.ConnectionState)
 	connState.PeerCertificates = append(connState.PeerCertificates, clientCert)
 	req.TLS = connState
 
-	success, err := VerifyClientCertificate(req, "root/pool/created/above")
-	if err != nil {
-		t.Fatalf("error attempting failed to verify client certificate: %s", err)
-	}
-	if !success {
-		t.Fatal("failed to verify client certificate")
+	err = VerifyClientCertificate(req, "root/pool/created/above")
+	if err == nil {
+		t.Fatalf("should have failed without intermediate certificate: %s", err)
 	}
 }
 
-func TestLoadRootCertsSuccess(t *testing.T) {
+func TestLoadRootCerts_Success(t *testing.T) {
 	rootPool = nil
 
 	err := loadRootCerts("test/success")
@@ -75,18 +109,18 @@ func TestLoadRootCertsSuccess(t *testing.T) {
 
 }
 
-func TestLoadRootCertsEmptyDirPathFail(t *testing.T) {
+func TestLoadRootCerts_EmptyDirPath_Fail(t *testing.T) {
 	rootPool = nil
 
 	err := loadRootCerts("")
 
 	if err == nil {
-		t.Fatalf("shoudl have failed to load certs with empty path. err: %s", err)
+		t.Fatalf("should have failed to load certs with empty path. err: %s", err)
 	}
 
 }
 
-func TestLoadRootCertsFail(t *testing.T) {
+func TestLoadRootCerts_InvalidDir_Fail(t *testing.T) {
 	rootPool = nil
 
 	err := loadRootCerts("test/fail")
@@ -112,13 +146,18 @@ func TestVerifyClientChainSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to extract x509 from PEM string for clientCert. err: %s", err)
 	}
+	intermediateCertPEMBlock, _ := pem.Decode([]byte(intermediateCertPEM))
+	intermediateCert, err := x509.ParseCertificate(intermediateCertPEMBlock.Bytes)
+	if err != nil {
+		t.Fatalf("failed to extract x509 from PEM string for intermediateCert. err: %s", err)
+	}
 
-	if err = verifyClientRootChain([]*x509.Certificate{clientCert}); err != nil {
+	if err = verifyClientRootChain([]*x509.Certificate{clientCert, intermediateCert}); err != nil {
 		t.Fatalf("failed to verify certificate chain with valid certs. err: %s", err)
 	}
 }
 
-func TestVerifyClientChainEmptyClientFail(t *testing.T) {
+func TestVerifyClientChain_EmptyClient_Fail(t *testing.T) {
 	rootCertPEMBlock, _ := pem.Decode([]byte(rootCertPEM))
 	rootCert, err := x509.ParseCertificate(rootCertPEMBlock.Bytes)
 	if err != nil {
@@ -133,7 +172,7 @@ func TestVerifyClientChainEmptyClientFail(t *testing.T) {
 	}
 }
 
-func TestVerifyClientChainEmptyRootFail(t *testing.T) {
+func TestVerifyClientChain_EmptyRoot_Fail(t *testing.T) {
 	clientCertPEMBlock, _ := pem.Decode([]byte(clientCertPEM))
 	clientCert, err := x509.ParseCertificate(clientCertPEMBlock.Bytes)
 	if err != nil {
@@ -145,7 +184,7 @@ func TestVerifyClientChainEmptyRootFail(t *testing.T) {
 	}
 }
 
-func TestVerifyClientChainWrongCertKeyUsageFail(t *testing.T) {
+func TestVerifyClientChain_WrongCertKeyUsage_Fail(t *testing.T) {
 	rootCertPEMBlock, _ := pem.Decode([]byte(rootCertPEM))
 	rootCert, err := x509.ParseCertificate(rootCertPEMBlock.Bytes)
 	if err != nil {
@@ -167,7 +206,7 @@ func TestVerifyClientChainWrongCertKeyUsageFail(t *testing.T) {
 	}
 }
 
-func TestParseClientCertificateUIDSuccess(t *testing.T) {
+func TestParseClientCertificateUID_Success(t *testing.T) {
 	clientCertPEMBlock, _ := pem.Decode([]byte(clientCertPEM))
 	clientCert, err := x509.ParseCertificate(clientCertPEMBlock.Bytes)
 	if err != nil {
@@ -179,7 +218,7 @@ func TestParseClientCertificateUIDSuccess(t *testing.T) {
 	}
 }
 
-func TestParseClientCertificateUIDFail(t *testing.T) {
+func TestParseClientCertificateUID_Fail(t *testing.T) {
 	// Server cert does not contain a UID object identifier
 	serverCertPEMBlock, _ := pem.Decode([]byte(serverCertPEM))
 	serverCert, err := x509.ParseCertificate(serverCertPEMBlock.Bytes)
@@ -193,108 +232,142 @@ func TestParseClientCertificateUIDFail(t *testing.T) {
 }
 
 const rootCertPEM = `-----BEGIN CERTIFICATE-----
-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
+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
-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
+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
-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
+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
+-----END CERTIFICATE-----
+`
+
+const intermediateCertPEM = `-----BEGIN CERTIFICATE-----
+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
+oXi7IrLNF0+1/RFnYmKY
 -----END CERTIFICATE-----
 `
 
 const clientCertPEM = `-----BEGIN CERTIFICATE-----
-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
+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
-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
-reqlKjsX1XKA3+uPcxYJ/22o
+BAoTBkFwYWNoZTEMMAoGA1UECxMDQVRDMRswGQYDVQQDExJpbnRlcm1lZGlhdGUu
+bG9jYWwwHhcNMjIxMDA0MjA0MjE4WhcNMjcxMDA0MjA0MjE4WjB/MQswCQYDVQQG
+EwJVUzERMA8GA1UECBMIQ29sb3JhZG8xDzANBgNVBAcTBkRlbnZlcjEPMA0GA1UE
+ChMGQXBhY2hlMQwwCgYDVQQLEwNBVEMxFTATBgNVBAMTDGNsaWVudC5sb2NhbDEW
+MBQGCgmSJomT8ixkAQETBnVzZXJpZDCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCC
+AgoCggIBAKIjAo5kSO+MYvTLc8yLjzNMvTmOIncYFWd6qUFh4io1aTO3CiD+bEWp
+3m5Q+8tACFAIBfLLf06cM0PW2bTwJet4Ol+Wp6v5ieKWDGtz5Ae6piGfu+C3TCW5
+mljdEwDVEXMxftufhgfdc4qVj/plg8iuQRyj4AEhmFtXEvOssWixAPoyk5afUBOB
+qaJwqwDY2xja6lE9ECvHULJIGviKFHsZ69TzkMzq0af2/dYRrjG+Zj1ACm9WO6y0
+Y/v/ztcnFtA6Z4EEqDfMA7+BJqDdhjzJ7ISymboNLEtq2sYWrJe+5DPsACSpoTly
+FPqn3omy4ax8c4lAnF2Ud/KUqouctGzBwP3lz48aW/Nj5anXh6HoI/h1qGXrRRHI
+fTAf0rcbSELkIRiDHpCzIMLBjEZefPiBqjukvZHstR34+TwItnCqNhfGl/+dLGbZ
+W5xw2JGcOu+ccTNqUI7bs0wxC8zppAEZ5epXmifhMEwsrQPB66vQIR8lWZyyczOm
+rllE36gwDoMjcjSJLuOv7iHzmJVK1S0lccZ1gfoCAhV1cK+YN/BE0Qbtq1ehmYV2
+R0B6kIqzlG3L+s7rNWTj814YbPh8WgMlnApHE523OdeTaScw8ukGz/p4apP/VRsX
+fuLzUwB3xabIsllFClNfr8MaZgirMzYVDDuvTbzezSorbplU4I5nAgMBAAGjSDBG
+MA4GA1UdDwEB/wQEAwIDiDATBgNVHSUEDDAKBggrBgEFBQcDAjAfBgNVHSMEGDAW
+gBR1Nbxb5q86K9ipzGyVmAnCR9HwJTANBgkqhkiG9w0BAQsFAAOCAgEAd/kOLQyr
+5PNMirK1EfoYnO2lme/QyO44Wr3kZZQ4X6ZsBKYciuC09nVmBc2VDQS/YOWP1vLu
+6UbH8pho5xdqoj+KvDsJtRhKeN+0LxHgJ0u6kmq2Fid3GG5kwxeSEz/7LOJd5Qp9
+E0MbRtm1eu19IVl+3XMSyNLvA0vfAAawpFa85E/rDZfUKWa3JgrjweYXCpz8EgmB
+mGroZO4uBc40gLcJOcxGqEB0YioQ6WqLDpOGhWZRxQRdzC1kp64fYkiI7wtX7fBp
+VnUwJmi1+A3gLvrT67zkauO8W9niLrorvu3naBDgtRoZhxTsRCjx26NV4aQ9Kx1p
+4c5H8RfrD5b8vo+QXbodE9Zj2IZfJZew3/xM9W2GQYT/gPk7AInWKnefUbes3WuE
+gzdVaS8FpQCbP7+VJNTIutG5AdvZMz66nYtJOMDb1NB8w/oAI9DBKhNyGwL8AFGq
+FbYSDEWpwnu/bBq4uXMRyEUVcbPdRRaabRG4XeowVA40d/VeDkbWlihTDEg49dLd
+DIkfv7MZSwYYo35pbGyqzpTEotAZCqeXGSVwwMsjNfSwjb7JTohnnL+0aLfgpxH6
+6v5GpzUawbJrwqvj3/BsBjJAa/95Dyh8IaCB/Jk6pgGLP8+s3SPNpE/JVHDDcKtD
+83Q6ELF+UUDc7BsykJBtsxddSkFI9u9Hm7s=
 -----END CERTIFICATE-----
 `
 
 const serverCertPEM = `-----BEGIN CERTIFICATE-----
-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
+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
-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
+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
+qrCR
 -----END CERTIFICATE-----
 `
-
-//TODO: Create and add intermediate to chain for testing.
-const intermediateCertPEM = ``

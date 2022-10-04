@@ -1,15 +1,5 @@
 package auth
 
-import (
-	"crypto/x509"
-	"encoding/pem"
-	"fmt"
-	"io/fs"
-	"io/ioutil"
-	"net/http"
-	"path/filepath"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -29,23 +19,32 @@ import (
  * under the License.
  */
 
+import (
+	"crypto/x509"
+	"encoding/pem"
+	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"net/http"
+	"path/filepath"
+)
+
 // ParseCertificate takes a http.Request, pulls the (optionally) provided client TLS
 // certificates and attempts to verify them against the directory of provided Root CA
 // certificates. The Root CA certificates can be different than those utilized by the
-// http.Server. Returns a bool signifying whether the verification process was
-// successful or an error if one was encountered.
-func VerifyClientCertificate(r *http.Request, rootCertsDirPath string) (bool, error) {
-	// TODO: Parse client headers
+// http.Server. Returns an error if the verification process fails
+func VerifyClientCertificate(r *http.Request, rootCertsDirPath string) error {
+	// TODO: Parse client headers as alternative to TLS in the request
 
 	if err := loadRootCerts(rootCertsDirPath); err != nil {
-		return false, fmt.Errorf("failed to load root certificates")
+		return fmt.Errorf("failed to load root certificates")
 	}
 
 	if err := verifyClientRootChain(r.TLS.PeerCertificates); err != nil {
-		return false, fmt.Errorf("failed to verify client to root certificate chain")
+		return fmt.Errorf("failed to verify client to root certificate chain")
 	}
 
-	return true, nil
+	return nil
 }
 
 func verifyClientRootChain(clientChain []*x509.Certificate) error {
@@ -74,7 +73,7 @@ func verifyClientRootChain(clientChain []*x509.Certificate) error {
 	return nil
 }
 
-// Lazy initialized, only added to once, need mutex?
+// Lazy initialized
 var rootPool *x509.CertPool
 
 func loadRootCerts(dirPath string) error {

@@ -36,12 +36,14 @@ import (
 	"time"
 )
 
-// Public and Private key pair for the certificate.
+// CertificateKeyPair contains the parsed representation of a certificate
+// and private key.
 type CertificateKeyPair struct {
 	Certificate *x509.Certificate
-	PrivateKey  *rsa.PrivateKey // TODO convert to ECDSA
+	PrivateKey  *rsa.PrivateKey
 }
 
+// CertificatePEMPair contains the PEM encoded certificate and private key.
 type CertificatePEMPair struct {
 	CertificatePEM, PrivateKeyPEM string
 }
@@ -55,7 +57,14 @@ func main() {
 	ioutil.WriteFile("rootca.crt.pem", []byte(rootCAPEMPair.CertificatePEM), 0644)
 	ioutil.WriteFile("rootca.key.pem", []byte(rootCAPEMPair.PrivateKeyPEM), 0644)
 
-	serverPEMPair, err := GenerateServerCertificate(rootCAPEMPair)
+	intermediatePEMPair, err := GenerateIntermediateCertificate(rootCAPEMPair)
+	if err != nil {
+		log.Fatalf("Failed to generate and sign Intermediate certificate\nErr: %s\n", err)
+	}
+	ioutil.WriteFile("intermediate.crt.pem", []byte(intermediatePEMPair.CertificatePEM), 0644)
+	ioutil.WriteFile("intermediate.key.pem", []byte(intermediatePEMPair.PrivateKeyPEM), 0644)
+
+	serverPEMPair, err := GenerateServerCertificate(intermediatePEMPair)
 	if err != nil {
 		log.Fatalf("Failed to generate and sign Server certificate\nErr: %s\n", err)
 	}
@@ -64,7 +73,7 @@ func main() {
 	ioutil.WriteFile("server.crt.pem", []byte(serverPEMPair.CertificatePEM), 0644)
 	ioutil.WriteFile("server.key.pem", []byte(serverPEMPair.PrivateKeyPEM), 0644)
 
-	clientPEMPair, err := GenerateClientCertificate(rootCAPEMPair)
+	clientPEMPair, err := GenerateClientCertificate(intermediatePEMPair)
 	if err != nil {
 		log.Fatalf("Failed to generate and sign Client certificate\nErr: %s\n", err)
 	}
@@ -73,11 +82,13 @@ func main() {
 	ioutil.WriteFile("client.crt.pem", []byte(clientPEMPair.CertificatePEM), 0644)
 	ioutil.WriteFile("client.key.pem", []byte(clientPEMPair.PrivateKeyPEM), 0644)
 
-	if err := VerifyCertificates(rootCAPEMPair, clientPEMPair, serverPEMPair); err != nil {
+	if err := VerifyCertificates(rootCAPEMPair, intermediatePEMPair, clientPEMPair, serverPEMPair); err != nil {
 		log.Fatalf("failed to verify certificate: %s", err)
 	}
 }
 
+// ParseCertificateKeyPair decodes the provided PEM pair (key, cert) and returns a
+// parsed private key and x509 certificate.
 func ParseCertificateKeyPair(pemPair *CertificatePEMPair) (*CertificateKeyPair, error) {
 
 	keyPair := new(CertificateKeyPair)
@@ -103,6 +114,8 @@ func ParseCertificateKeyPair(pemPair *CertificatePEMPair) (*CertificateKeyPair, 
 	return keyPair, nil
 }
 
+// GenereateRootCACertificate creates a Root CA certificate that can be used
+// for signing intermediate, client, and server x509 certificates.
 func GenerateRootCACertificate() (*CertificatePEMPair, error) {
 
 	now := time.Now()
@@ -123,7 +136,7 @@ func GenerateRootCACertificate() (*CertificatePEMPair, error) {
 			CommonName:         "root.local",
 		},
 		NotBefore:             now,
-		NotAfter:              now.AddDate(1, 0, 0),
+		NotAfter:              now.AddDate(15, 0, 0),
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 		BasicConstraintsValid: true,
 		IsCA:                  true,
@@ -164,16 +177,84 @@ func GenerateRootCACertificate() (*CertificatePEMPair, error) {
 	return certPEMPair, nil
 }
 
+// GenerateIntermediateCeertificate creates an intermediate based on the provided Root certificate.
+// This certificate can be used for signing client and server certificates to establish
+// a chain to the Root certificate.
+func GenerateIntermediateCertificate(root *CertificatePEMPair) (*CertificatePEMPair, error) {
+
+	rootKeyPair, err := ParseCertificateKeyPair(root)
+	if err != nil {
+		log.Fatalln("Failed to parse root cert and key")
+	}
+
+	now := time.Now()
+
+	serialNumber, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate random serial number: %w", err)
+	}
+
+	cert := &x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			OrganizationalUnit: []string{"ATC"},
+			Organization:       []string{"Apache"},
+			Country:            []string{"US"},
+			Province:           []string{"Colorado"},
+			Locality:           []string{"Denver"},
+			CommonName:         "intermediate.local",
+		},
+		NotBefore:             now,
+		NotAfter:              now.AddDate(10, 0, 0),
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+		BasicConstraintsValid: true,
+		MaxPathLenZero:        true,
+		IsCA:                  true,
+	}
+
+	certPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate RSA key: %w", err)
+	}
+
+	certDERBytes, err := x509.CreateCertificate(rand.Reader, cert, rootKeyPair.Certificate, &certPrivKey.PublicKey, rootKeyPair.PrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create certificate: %w", err)
+	}
+
+	certPEMPair := new(CertificatePEMPair)
+
+	certPEM := new(bytes.Buffer)
+	pem.Encode(certPEM, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certDERBytes,
+	})
+
+	certPrivKeyPEM := new(bytes.Buffer)
+	certPrivKeyByes, err := x509.MarshalPKCS8PrivateKey(certPrivKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal private key to PKCS8: %w", err)
+	}
+
+	pem.Encode(certPrivKeyPEM, &pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: certPrivKeyByes,
+	})
+
+	certPEMPair.CertificatePEM = certPEM.String()
+	certPEMPair.PrivateKeyPEM = certPrivKeyPEM.String()
+
+	return certPEMPair, nil
+}
+
 // GenerateClientCertificate creates and signs a certificate based on the provided RootCA. This differs
 // from the Server certificate in that it includes the OID for LDAP UID as well as Client Auth key usage.
 //
 // Currently the key is an RSA key, which also entails adding KeyEncipherment key usage.
-//
-// TODO: CommonName for client?
-// TODO: Elliptic Curve instead of RSA (Remember to drop KeyEncipherment key usage as well)
-func GenerateClientCertificate(root *CertificatePEMPair) (*CertificatePEMPair, error) {
+func GenerateClientCertificate(intermediate *CertificatePEMPair) (*CertificatePEMPair, error) {
 
-	rootKeyPair, err := ParseCertificateKeyPair(root)
+	intermediateKeyPair, err := ParseCertificateKeyPair(intermediate)
 	if err != nil {
 		log.Fatalln("Failed to parse root cert and key")
 	}
@@ -204,7 +285,7 @@ func GenerateClientCertificate(root *CertificatePEMPair) (*CertificatePEMPair, e
 			ExtraNames:         []pkix.AttributeTypeAndValue{uidPkix},
 		},
 		NotBefore:   now,
-		NotAfter:    now.AddDate(1, 0, 0),
+		NotAfter:    now.AddDate(5, 0, 0),
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyAgreement,
 	}
@@ -214,7 +295,7 @@ func GenerateClientCertificate(root *CertificatePEMPair) (*CertificatePEMPair, e
 		return nil, fmt.Errorf("failed to generate RSA key: %w", err)
 	}
 
-	certDERBytes, err := x509.CreateCertificate(rand.Reader, cert, rootKeyPair.Certificate, &certPrivKey.PublicKey, rootKeyPair.PrivateKey)
+	certDERBytes, err := x509.CreateCertificate(rand.Reader, cert, intermediateKeyPair.Certificate, &certPrivKey.PublicKey, intermediateKeyPair.PrivateKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create certificate: %w", err)
 	}
@@ -248,11 +329,9 @@ func GenerateClientCertificate(root *CertificatePEMPair) (*CertificatePEMPair, e
 // from the Client certificate in that it ServerAuth key usage. It also does NOT include the OID for LDAP UID.
 //
 // Currently the key is an RSA key, which also entails adding KeyEncipherment key usage.
-//
-// TODO: Elliptic Curve instead of RSA (Remember to drop KeyEncipherment key usage as well)
-func GenerateServerCertificate(root *CertificatePEMPair) (*CertificatePEMPair, error) {
+func GenerateServerCertificate(intermediate *CertificatePEMPair) (*CertificatePEMPair, error) {
 
-	rootKeyPair, err := ParseCertificateKeyPair(root)
+	intermediateKeyPair, err := ParseCertificateKeyPair(intermediate)
 	if err != nil {
 		log.Fatalln("Failed to parse root cert and key")
 	}
@@ -277,7 +356,7 @@ func GenerateServerCertificate(root *CertificatePEMPair) (*CertificatePEMPair, e
 		DNSNames:    []string{"server.local"},
 		IPAddresses: []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
 		NotBefore:   now,
-		NotAfter:    now.AddDate(1, 0, 0),
+		NotAfter:    now.AddDate(5, 0, 0),
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageKeyAgreement,
 	}
@@ -287,7 +366,7 @@ func GenerateServerCertificate(root *CertificatePEMPair) (*CertificatePEMPair, e
 		return nil, fmt.Errorf("failed to generate RSA key: %w", err)
 	}
 
-	certDERBytes, err := x509.CreateCertificate(rand.Reader, cert, rootKeyPair.Certificate, &certPrivKey.PublicKey, rootKeyPair.PrivateKey)
+	certDERBytes, err := x509.CreateCertificate(rand.Reader, cert, intermediateKeyPair.Certificate, &certPrivKey.PublicKey, intermediateKeyPair.PrivateKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create certificate: %w", err)
 	}
@@ -317,18 +396,26 @@ func GenerateServerCertificate(root *CertificatePEMPair) (*CertificatePEMPair, e
 	return certPEMPair, nil
 }
 
-func VerifyCertificates(root, client, server *CertificatePEMPair) error {
+// VerifyCertificates checks that the client and server certificates match the
+// Root and Intermediate chains.
+func VerifyCertificates(root, intermediate, client, server *CertificatePEMPair) error {
 
 	rootKeyPair, err := ParseCertificateKeyPair(root)
 	if err != nil {
 		log.Fatalln("Failed to parse root cert and key")
 	}
+	intermediateKeyPair, err := ParseCertificateKeyPair(intermediate)
+	if err != nil {
+		log.Fatalln("Failed to parse intermediate cert and key")
+	}
 
 	rootPool := x509.NewCertPool()
 	rootPool.AddCert(rootKeyPair.Certificate)
+	intermediatePool := x509.NewCertPool()
+	intermediatePool.AddCert(intermediateKeyPair.Certificate)
 
 	opts := x509.VerifyOptions{
-		Intermediates: x509.NewCertPool(),
+		Intermediates: intermediatePool,
 		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 		Roots:         rootPool,
 	}
