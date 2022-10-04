@@ -546,7 +546,7 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 		msscQuery := `INSERT INTO server_server_capability
 			select "server_capability", "server"
 			FROM UNNEST($1::text[], $2::int[]) AS tmp("server_capability", "server")`
-		err = tx.QueryRow(msscQuery, pq.Array(scs), pq.Array(sid))
+		_, err := tx.Query(msscQuery, pq.Array(scs), pq.Array(sid))
 		if err != nil {
 			useErr, sysErr, statusCode := api.ParseDBError(err)
 			api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
