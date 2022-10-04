@@ -30,7 +30,7 @@ EXPOSE 3053:53/tcp \
 
 RUN apk add --no-cache openjdk11 inotify-tools maven tomcat-native openssl && ln -s /usr/lib/jvm/java-11-openjdk/bin/jdb /bin/jdb
 
-ADD https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.43/bin/apache-tomcat-9.0.43.tar.gz /opt/tomcat.tgz
+ADD https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.67/bin/apache-tomcat-9.0.67.tar.gz /opt/tomcat.tgz
 
 RUN cd /opt && \
 	tar -xf tomcat.tgz && \
