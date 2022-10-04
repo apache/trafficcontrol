@@ -147,6 +147,18 @@ If a development environment is already set up for the previous version of Traff
 	mvn clean verify -Djava.library.path=[tomcat native library path on your box]
 	java -Djava.library.path=[tomcat native library path on your box] TrafficRouterStart
 
+
+Converting Traffic Router to Kotlin
+===================================
+
+:ref:`tr-to-kotlin`
+
+.. toctree::
+	:hidden:
+	:maxdepth: 1
+
+	traffic_router/converting_to_kotlin
+
 Manual Testing
 ==============
 Look up the URL for a test HTTP :term:`Delivery Service` in Traffic Ops and then make a request. When Traffic Router is running and used as a resolver for the host in the :term:`Delivery Service` URL, the requested origin content should be found through an Edge-tier :term:`cache server`.
