@@ -390,9 +390,7 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, 
 // The cfgFile should be the full text of either a plugin.config or remap.config.
 // Returns nil if t3c-check-refs returned no errors found, or the error found if any.
 func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
-	args := []string{`check`, `refs`,
-		"--files-adding=" + strings.Join(filesAdding, ","),
-	}
+	args := []string{`check`, `refs`, `--files-adding=input`}
 	if cfg.LogLocationErr == log.LogLocationNull {
 		args = append(args, "-s")
 	}
@@ -403,7 +401,12 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 		args = append(args, "-v")
 	}
 
-	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, t3cpath, args...)
+	inputBts, err := json.Marshal(&t3cutil.CheckRefsInputFileAndAdding{File: cfgFile, Adding: filesAdding})
+	if err != nil {
+		return errors.New("marshalling json input: " + err.Error())
+	}
+
+	stdOut, stdErr, code := t3cutil.DoInput(inputBts, t3cpath, args...)
 
 	if code != 0 {
 		logSubAppErr(t3cchkrefs+` stdout`, stdOut)

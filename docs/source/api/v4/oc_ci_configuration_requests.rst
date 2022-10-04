@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-oc-ci-configuration_requests:
+.. _to-api-v4-oc-ci-configuration_requests:
 
 ********************************
 ``OC/CI/configuration/requests``

@@ -1,10 +1,5 @@
 # Traffic Ops Go Client
 
-## Unstable
-The version of the Traffic Ops API for which this client was made is
-*unstable*, meaning that breaking changes to it - and to this client - can
-occur at any time. Use at your own peril!
-
 ## Getting Started
 1. Obtain the latest version of the library
 

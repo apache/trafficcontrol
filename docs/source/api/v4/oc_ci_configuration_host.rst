@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-oc-fci-configuration-host:
+.. _to-api-v4-oc-fci-configuration-host:
 
 ********************************
 ``OC/CI/configuration/{{host}}``

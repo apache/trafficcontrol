@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-async_status:
+.. _to-api-v4-async_status:
 
 ***********************
 ``async_status/{{id}}``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-capacity:
+.. _to-api-v4-cdns-capacity:
 
 *****************
 ``cdns/capacity``

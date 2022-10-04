@@ -22,7 +22,7 @@ The Traffic Ops API provides programmatic access to read and write Traffic Contr
 
 How to Read this Documentation
 ==============================
-Each endpoint for each version is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 3.0, 3.1, and 4.0. All endpoints are documented as though they were being used in version 3.1 in the version 3 documentation and version 4.0 in the version 4 documentation. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.
+Each endpoint for each version is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 3.0, 3.1, 4.0, 4.1, and 5.0. All endpoints are documented as though they were being used in version 3.1 in the version 3 documentation, version 4.1 in the version 4 documentation, and version 5.0 in the version 5 documentation. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.
 
 Every endpoint is documented with a section for each method, containing the subsections "Request Structure" and "Response Structure" which identify all properties and structure of the Request to and Response from the endpoint. Before these subsections, three key pieces of information will be provided:
 
@@ -331,6 +331,16 @@ API routes available in version 4.
 	:glob:
 
 	v4/*
+
+API V5 Routes
+=============
+API routes available in version 5.
+
+.. toctree::
+	:maxdepth: 4
+	:glob:
+
+	v5/*
 
 
 .. [1] A cookie obtained by logging in through Traffic Portal can be used to access API endpoints under the Traffic Portal domain name - since it will proxy such requests back to Traffic Ops. This is not recommended in actual deployments, however, because it will involve an extra network connection which could be avoided by simply using the Traffic Ops domain itself.

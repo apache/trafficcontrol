@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-federations:
+.. _to-api-v4-federations:
 
 ***************
 ``federations``
@@ -80,9 +80,9 @@ Response Structure
 ========
 Allows a user to create :term:`Federation` Resolvers for :term:`Delivery Services`, providing the :term:`Delivery Service` is within a CDN that has some associated :term:`Federation`.
 
-.. warning:: Confusingly, this method of this endpoint does **not** create a new :term:`Federation`; to do that, the :ref:`to-api-cdns-name-federations` endpoint must be used. Furthermore, the :term:`Federation` must properly be assigned to a :term:`Delivery Service` using the :ref:`to-api-federations-id-deliveryservices` and assigned to the user creating Resolvers using :ref:`to-api-federations-id-users`.
+.. warning:: Confusingly, this method of this endpoint does **not** create a new :term:`Federation`; to do that, the :ref:`to-api-v4-cdns-name-federations` endpoint must be used. Furthermore, the :term:`Federation` must properly be assigned to a :term:`Delivery Service` using the :ref:`to-api-v4-federations-id-deliveryservices` and assigned to the user creating Resolvers using :ref:`to-api-v4-federations-id-users`.
 
-.. seealso:: The :ref:`to-api-federations-id-federation_resolvers` endpoint duplicates this functionality.
+.. seealso:: The :ref:`to-api-v4-federations-id-federation_resolvers` endpoint duplicates this functionality.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"

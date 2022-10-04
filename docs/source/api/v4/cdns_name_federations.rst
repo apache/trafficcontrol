@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-name-federations:
+.. _to-api-v4-cdns-name-federations:
 
 *****************************
 ``cdns/{{name}}/federations``

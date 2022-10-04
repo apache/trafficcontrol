@@ -12,13 +12,13 @@
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
 ..
-.. _to-api-logs:
+.. _to-api-v4-logs:
 
 ********
 ``logs``
 ********
 
-.. note:: This endpoint's responses will contain a cookie (``last_seen_log``) that is used by :ref:`to-api-logs-newcount` to determine the time of last access. Be sure your client uses cookies properly if you intend to use :ref:`to-api-logs-newcount` in concert with this endpoint!
+.. note:: This endpoint's responses will contain a cookie (``last_seen_log``) that is used by :ref:`to-api-v4-logs-newcount` to determine the time of last access. Be sure your client uses cookies properly if you intend to use :ref:`to-api-v4-logs-newcount` in concert with this endpoint!
 
 ``GET``
 =======

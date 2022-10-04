@@ -169,6 +169,7 @@ Traffic Ops Project Tree Overview
 
 	- v3-client - The official Traffic Ops Go client package for working with the version 3 :ref:`to-api`.
 	- v4-client - The official Traffic Ops Go client package for working with the version 4 :ref:`to-api`.
+	- v5-client - The official Traffic Ops Go client package for working with the version 5 :ref:`to-api`.
 	- vendor/ - contains "vendored" Go packages from third party sources
 
 .. _database-management:

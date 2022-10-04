@@ -121,7 +121,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 	};
 
 	$scope.editServerCapability = function(capabilityName) {
-		locationUtils.navigateToPath('/server-capabilities/' + capabilityName);
+		locationUtils.navigateToPath('/server-capabilities/edit?name=' + capabilityName);
 	};
 
 	$scope.refresh = function() {
