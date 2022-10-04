@@ -120,41 +120,45 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 		defer cancelTx()
 
-		// Attempt to perform client certificate authentication. If fails, goto standard form auth
+		// Attempt to perform client certificate authentication. If fails, goto standard form auth. If the
+		// certificate was verified, has a UID, and the UID matches an existing user we consider this to
+		// be a successful login.
 		{
-			// No certs provided by the client (or enabled on the server), skip to form authentication
+			// No certs provided by the client. Skip to form authentication
 			if len(r.TLS.PeerCertificates) == 0 {
 				goto FormAuth
 			}
 
 			// Perform certificate verification to ensure it is valid against Root CAs
-			validCert, err := auth.VerifyClientCertificate(r, "") // TODO Pass in TLS Client Root Path from cfg
+			err := auth.VerifyClientCertificate(r, cfg.ClientCertAuth.RootCertsDir)
 			if err != nil {
-				log.Warnf("error attempting to verify client provided TLS certificate. err: %s\n", err)
+				log.Warnf("ClientCertAuth: error attempting to verify client provided TLS certificate. err: %s\n", err)
 				goto FormAuth
 			}
 
 			// Client provided a verified certificate. Extract UID value.
-			if validCert {
-				form.Username = auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0])
-				if len(form.Username) == 0 {
-					log.Infoln("client provided certificate did not contain a UID object identifier or value")
-					goto FormAuth
-				}
+			form.Username = auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0])
+			if len(form.Username) == 0 {
+				log.Infoln("ClientCertAuth: client provided certificate did not contain a UID object identifier or value")
+				goto FormAuth
 			}
 
-			// Only check if we successfully retrieved a UID from the certificate
-			if validCert && form.Username != "" {
-				// Check if user exists and has a role. If the certificate was verified, has a UID, and the UID matches
-				// an existing user we consider this to be a successful login.
-				var blockingErr error
-				authenticated, err, blockingErr = auth.CheckLocalUserIsAllowed(form.Username, db, dbCtx)
-				if blockingErr != nil {
-					api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user has role: %s", blockingErr.Error()))
-					return
-				}
+			// Check if user exists locally (TODB) and has a role.
+			var blockingErr error
+			authenticated, err, blockingErr = auth.CheckLocalUserIsAllowed(form.Username, db, dbCtx)
+			if blockingErr != nil {
+				api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user has role: %s", blockingErr.Error()))
+				return
+			}
+			if err != nil {
+				log.Warnf("ClientCertAuth: checking local user: %s\n", err.Error())
+			}
+
+			// Check LDAP if enabled
+			if !authenticated && cfg.LDAPEnabled {
+				_, authenticated, err = auth.LookupUserDN(form.Username, cfg.ConfigLDAP)
 				if err != nil {
-					log.Errorf("checking local user: %s\n", err.Error())
+					log.Warnf("ClientCertAuth: checking ldap user: %s\n", err.Error())
 				}
 			}
 		}
@@ -200,12 +204,10 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				log.Errorf("checking local user password: %s\n", err.Error())
 			}
 			var ldapErr error
-			if !authenticated {
-				if cfg.LDAPEnabled {
-					authenticated, ldapErr = auth.CheckLDAPUser(form, cfg.ConfigLDAP)
-					if ldapErr != nil {
-						log.Errorf("checking ldap user: %s\n", ldapErr.Error())
-					}
+			if !authenticated && cfg.LDAPEnabled {
+				authenticated, ldapErr = auth.CheckLDAPUser(form, cfg.ConfigLDAP)
+				if ldapErr != nil {
+					log.Errorf("checking ldap user: %s\n", ldapErr.Error())
 				}
 			}
 		}

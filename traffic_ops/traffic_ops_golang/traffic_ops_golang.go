@@ -199,8 +199,7 @@ func main() {
 	}
 	if httpServer.TLSConfig == nil {
 		httpServer.TLSConfig = &tls.Config{
-			// Allow for clients to optionally send TLS certificates for authentication
-			ClientAuth: tls.RequestClientCert,
+			ClientAuth: tls.NoClientCert, // Can still send, but don't verify
 		}
 	}
 	// Deprecated in 5.0
