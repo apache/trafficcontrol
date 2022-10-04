@@ -237,7 +237,7 @@ func TestServerServerCapabilities(t *testing.T) {
 							var alerts tc.Alerts
 							var reqInf toclientlib.ReqInf
 							var err error
-							alerts, reqInf, err = testCase.ClientSession.AssignMultipleServerCapabilities(mssc, testCase.RequestOpts)
+							alerts, reqInf, err = testCase.ClientSession.AssignMultipleServersCapabilities(mssc, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

@@ -57,8 +57,8 @@ func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerSe
 	return resp, reqInf, err
 }
 
-// AssignMultipleServerCapabilities assigns multiple server capabilities to a server.
-func (to *Session) AssignMultipleServerCapabilities(mssc tc.MultipleServersCapabilities, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+// AssignMultipleServersCapabilities assigns multiple server capabilities to a server.
+func (to *Session) AssignMultipleServersCapabilities(mssc tc.MultipleServersCapabilities, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.put(apiMultipleServersCapabilities, opts, mssc, &alerts)
 	return alerts, reqInf, err
