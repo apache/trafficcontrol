@@ -125,7 +125,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		// be a successful login.
 		{
 			// No certs provided by the client. Skip to form authentication
-			if len(r.TLS.PeerCertificates) == 0 {
+			if r.TLS == nil || len(r.TLS.PeerCertificates) == 0 {
 				goto FormAuth
 			}
 
