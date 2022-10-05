@@ -82,7 +82,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	];
 
 	public loading = true;
-	private subscription!: Subscription;
+	private readonly subscription: Subscription;
 
 	constructor(
 		private readonly userService: UserService,
@@ -90,6 +90,11 @@ export class TenantsComponent implements OnInit, OnDestroy {
 		private readonly headerSvc: TpHeaderService
 	) {
 		this.headerSvc.headerTitle.next("Tenant");
+		this.subscription = this.auth.userChanged.subscribe(
+			() => {
+				this.loadContextMenuItems();
+			}
+		);
 	}
 
 	/**
@@ -131,11 +136,6 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	public async ngOnInit(): Promise<void> {
 		this.tenants = await this.userService.getTenants();
 		this.tenantMap = Object.fromEntries((this.tenants).map(t => [t.id, t]));
-		this.subscription = this.auth.userChanged.subscribe(
-			() => {
-				this.loadContextMenuItems();
-			}
-		);
 		this.loadContextMenuItems();
 		this.loading = false;
 	}
