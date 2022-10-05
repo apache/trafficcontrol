@@ -16,6 +16,7 @@ package client
 */
 
 import (
+	"net/http"
 	"net/url"
 	"strconv"
 
@@ -57,9 +58,16 @@ func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerSe
 	return resp, reqInf, err
 }
 
-// AssignMultipleServersCapabilities assigns multiple server capabilities to a server.
+// AssignMultipleServersCapabilities assigns multiple server capabilities to a server or multiple servers to a capability.
 func (to *Session) AssignMultipleServersCapabilities(mssc tc.MultipleServersCapabilities, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.put(apiMultipleServersCapabilities, opts, mssc, &alerts)
+	reqInf, err := to.post(apiMultipleServersCapabilities, opts, mssc, &alerts)
+	return alerts, reqInf, err
+}
+
+// DeleteMultipleServersCapabilities deletes multiple assigned server capabilities to a server or multiple servers to a capability.
+func (to *Session) DeleteMultipleServersCapabilities(mssc tc.MultipleServersCapabilities, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	var alerts tc.Alerts
+	reqInf, err := to.req(http.MethodDelete, apiMultipleServersCapabilities, opts, mssc, &alerts)
 	return alerts, reqInf, err
 }

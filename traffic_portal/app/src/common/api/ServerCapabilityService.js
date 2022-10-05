@@ -69,7 +69,20 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.assignServersCapabilities = function(server, serverCapability) {
-		return $http.put(ENV.api.unstable + 'multiple_servers_capabilities',{ serverIds: server, serverCapabilities: serverCapability, replace: true } ).then(
+		return $http.post(ENV.api.unstable + 'multiple_servers_capabilities',{ serverIds: server, serverCapabilities: serverCapability, replace: true }).then(
+			function(result) {
+				messageModel.setMessages(result.data.alerts, false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
+	};
+
+	this.deleteServersCapabilities = function(server, serverCapability) {
+		return $http.delete(ENV.api.unstable + 'multiple_servers_capabilities',{ data: {serverIds: server, serverCapabilities: serverCapability} }).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, false);
 				return result;

@@ -20,6 +20,7 @@ package server
  */
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -455,31 +456,14 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 
 	var mssc tc.MultipleServersCapabilities
 	if err := json.NewDecoder(r.Body).Decode(&mssc); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("error decoding PUT request body into MultipleServersCapabilities struct %w", err), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("error decoding POST request body into MultipleServersCapabilities struct %w", err), nil)
 		return
 	}
 
 	if len(mssc.ServerIDs) == 1 {
-		// Check existence prior to checking type
-		_, exists, err := dbhelpers.GetServerNameFromID(tx, mssc.ServerIDs[0])
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		}
-		if !exists {
-			userErr := fmt.Errorf("server %d does not exist", mssc.ServerIDs[0])
-			api.HandleErr(w, r, tx, http.StatusNotFound, userErr, nil)
-			return
-		}
-
-		cdnName, err := dbhelpers.GetCDNNameFromServerID(tx, mssc.ServerIDs[0])
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), inf.User.UserName)
+		errCode, userErr, sysErr = checkExistingServer(tx, mssc.ServerIDs[0], inf.User.UserName)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 	}
@@ -508,72 +492,129 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//Delete existing rows from server_server_capability for a given server or for a given capability
-	var where string
+	// Insert rows in DB
 	sid := make([]int64, len(mssc.ServerCapabilities))
 	scs := make([]string, len(mssc.ServerIDs))
 	if len(mssc.ServerIDs) == 1 {
-		where = fmt.Sprintf("WHERE ssc.server=%v", mssc.ServerIDs[0])
 		if len(mssc.ServerCapabilities) >= 1 {
 			for i := range mssc.ServerCapabilities {
 				sid[i] = mssc.ServerIDs[0]
 			}
+			scs = mssc.ServerCapabilities
 		}
-		scs = mssc.ServerCapabilities
 	} else if len(mssc.ServerCapabilities) == 1 {
-		where = fmt.Sprintf("WHERE ssc.server_capability='%s'", mssc.ServerCapabilities[0])
 		if len(mssc.ServerIDs) >= 1 {
 			for i := range mssc.ServerIDs {
 				scs[i] = mssc.ServerCapabilities[0]
 			}
+			sid = mssc.ServerIDs
 		}
-		sid = mssc.ServerIDs
 	} else {
 		scs = mssc.ServerCapabilities
 		sid = mssc.ServerIDs
 	}
 
-	delString := "DELETE FROM server_server_capability ssc " + where
-	_, err := tx.Exec(delString)
+	msscQuery := `INSERT INTO server_server_capability
+			select "server_capability", "server"
+			FROM UNNEST($1::text[], $2::int[]) AS tmp("server_capability", "server")`
+	_, err := tx.Query(msscQuery, pq.Array(scs), pq.Array(sid))
 	if err != nil {
 		useErr, sysErr, statusCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
 		return
 	}
 
-	// Insert rows in DB
-	if len(mssc.ServerIDs) >= 1 && len(mssc.ServerCapabilities) >= 1 {
-		msscQuery := `INSERT INTO server_server_capability
-			select "server_capability", "server"
-			FROM UNNEST($1::text[], $2::int[]) AS tmp("server_capability", "server")`
-		_, err := tx.Query(msscQuery, pq.Array(scs), pq.Array(sid))
-		if err != nil {
-			useErr, sysErr, statusCode := api.ParseDBError(err)
-			api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
-			return
-		}
-	}
-
 	var alerts tc.Alerts
 	if len(mssc.ServerCapabilities) == 1 && len(mssc.ServerIDs) == 1 {
 		alerts = tc.CreateAlerts(tc.SuccessLevel, "Assigned either a Server Capability to a server or a Server to a capability")
-	} else if len(mssc.ServerIDs) == 1 {
-		if len(mssc.ServerCapabilities) > 1 {
-			alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Server Capabilities assigned to a server")
-		} else if len(mssc.ServerCapabilities) < 1 {
-			alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed a Server Capability from a server")
-		}
-	} else if len(mssc.ServerCapabilities) == 1 {
-		if len(mssc.ServerIDs) > 1 {
-			alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Servers assigned to a capability")
-		} else if len(mssc.ServerIDs) < 1 {
-			alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed a Server from a capability")
-		}
-	} else if len(mssc.ServerCapabilities) < 1 && len(mssc.ServerIDs) < 1 {
-		alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed multiple servers from multiple capabilities")
+	} else if len(mssc.ServerCapabilities) > 1 && len(mssc.ServerIDs) == 1 {
+		alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Server Capabilities assigned to a server")
+	} else if len(mssc.ServerCapabilities) == 1 && len(mssc.ServerIDs) > 1 {
+		alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Servers assigned to a capability")
 	} else {
 		alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Servers assigned to multiple capabilities")
 	}
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, mssc)
 	return
+}
+
+// DeleteMultipleServersCapabilities deletes multiple servers to a capability or multiple server capabilities to a server
+func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var mssc tc.MultipleServersCapabilities
+	if err := json.NewDecoder(r.Body).Decode(&mssc); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("error decoding DELETE request body into MultipleServersCapabilities struct %w", err), nil)
+		return
+	}
+
+	if len(mssc.ServerIDs) == 1 {
+		errCode, userErr, sysErr = checkExistingServer(tx, mssc.ServerIDs[0], inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+	}
+
+	//Delete existing rows from server_server_capability for a given server or for a given capability
+	var where string
+	if len(mssc.ServerCapabilities) == 1 && len(mssc.ServerIDs) == 1 {
+		where = fmt.Sprintf("WHERE ssc.server_capability='%s' AND ssc.server=%v", mssc.ServerCapabilities[0], mssc.ServerIDs[0])
+	} else if len(mssc.ServerCapabilities) == 1 {
+		where = fmt.Sprintf("WHERE ssc.server_capability='%s'", mssc.ServerCapabilities[0])
+	} else if len(mssc.ServerIDs) == 1 {
+		where = fmt.Sprintf("WHERE ssc.server=%v", mssc.ServerIDs[0])
+	}
+
+	delString := "DELETE FROM server_server_capability ssc " + where
+	result, err := tx.Exec(delString)
+	if err != nil {
+		useErr, sysErr, statusCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows were deleted from server_server_capability table: %w", err), sysErr)
+		return
+	}
+	var alerts tc.Alerts
+	if rowsAffected == 1 {
+		alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed either a Server Capability to a server or a Server to a capability")
+	} else if rowsAffected > 1 {
+		alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed multiple servers from capabilities or multiple servers to a capability")
+	}
+
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, mssc)
+	return
+}
+
+// checkExistingServer checks server existence
+func checkExistingServer(tx *sql.Tx, sid int64, uName string) (int, error, error) {
+	_, exists, err := dbhelpers.GetServerNameFromID(tx, sid)
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+	if !exists {
+		userErr := fmt.Errorf("server %d does not exist", sid)
+		return http.StatusNotFound, userErr, nil
+	}
+
+	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx, sid)
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), uName)
+	if userErr != nil || sysErr != nil {
+		return errCode, userErr, sysErr
+	}
+	return http.StatusOK, nil, nil
 }

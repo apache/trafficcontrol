@@ -67,6 +67,7 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 	};
 
 	$scope.selectServers = function () {
+        const oldServerIDs = new Set(servers.map(s=>s.serverId));
 		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/table/serverCapabilityServers/table.assignServersPerCapability.tpl.html',
 			controller: 'TableAssignServersPerCapabilityController',
@@ -84,12 +85,24 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 			}
 		});
 		modalInstance.result.then(function(selectedServers) {
-			serverCapabilityService.assignServersCapabilities(selectedServers, [serverCapability.name])
-				.then(
-					function() {
-						$scope.refresh();
-					}
-				);
+			const selectedServerIDs = new Set(selectedServers);
+			const toDelete = Array.from(oldServerIDs).filter(s => !selectedServerIDs.has(s));
+			const toCreate = Array.from(selectedServerIDs).filter(s => !oldServerIDs.has(s));
+			if (toCreate.length >= 1) {
+				serverCapabilityService.assignServersCapabilities(toCreate, [serverCapability.name])
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+			} else if (toDelete.length >= 1) {
+				serverCapabilityService.deleteServersCapabilities(toDelete, [serverCapability.name])
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+			}
 		}, function () {
 			// do nothing
 		});

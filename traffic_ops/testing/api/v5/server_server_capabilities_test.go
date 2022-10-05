@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -149,8 +150,6 @@ func TestServerServerCapabilities(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-			},
-			"PUT": {
 				"OK When Assigned Multiple Server Capabilities": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
@@ -194,6 +193,22 @@ func TestServerServerCapabilities(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "atlanta-org-1")())}, "serverCapability": {""}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
+				"OK When Delete Multiple Assigned Servers Per Capability": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverCapabilities": append(multipleSCs, "disk"),
+						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")(), GetServerID(t, "dtrc-mid-01")()),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK When Delete Multiple Assigned Server Capabilities": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverCapabilities": append(multipleSCs, "disk", "blah"),
+						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")()),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 		}
 
@@ -226,26 +241,22 @@ func TestServerServerCapabilities(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(testCase.RequestBody, testCase.RequestOpts)
-							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(ssc, testCase.RequestOpts)
-							for _, check := range testCase.Expectations {
-								check(t, reqInf, nil, alerts, err)
-							}
-						})
-					case "PUT":
-						t.Run(name, func(t *testing.T) {
 							var alerts tc.Alerts
 							var reqInf toclientlib.ReqInf
 							var err error
-							alerts, reqInf, err = testCase.ClientSession.AssignMultipleServersCapabilities(mssc, testCase.RequestOpts)
+							if strings.Contains(name, "Multiple") {
+								alerts, reqInf, err = testCase.ClientSession.AssignMultipleServersCapabilities(mssc, testCase.RequestOpts)
+							} else {
+								alerts, reqInf, err = testCase.ClientSession.CreateServerServerCapability(ssc, testCase.RequestOpts)
+							}
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							var serverId int
-							var serverCapability string
+							var alerts tc.Alerts
+							var reqInf toclientlib.ReqInf
 							var err error
 							if val, ok := testCase.RequestOpts.QueryParameters["serverId"]; ok {
 								serverId, err = strconv.Atoi(val[0])
@@ -258,7 +269,11 @@ func TestServerServerCapabilities(t *testing.T) {
 							} else {
 								t.Fatalf("Query Parameter: \"serverCapability\" is required for DELETE method tests.")
 							}
-							alerts, reqInf, err := testCase.ClientSession.DeleteServerServerCapability(serverId, serverCapability, testCase.RequestOpts)
+							if strings.Contains(name, "Multiple") {
+								alerts, reqInf, err = testCase.ClientSession.DeleteMultipleServersCapabilities(mssc, testCase.RequestOpts)
+							} else {
+								alerts, reqInf, err = testCase.ClientSession.DeleteServerServerCapability(serverId, serverCapability, testCase.RequestOpts)
+							}
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

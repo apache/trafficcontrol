@@ -33,6 +33,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 	];
 
 	$scope.selectSCs = function () {
+		const oldSCNames = new Set(serverCapabilities.map(sc=>sc.serverCapability));
 		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/table/serverServerCapabilities/table.assignServerSCs.tpl.html',
 			controller: 'TableAssignServerSCsController',
@@ -50,12 +51,24 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 			}
 		});
 		modalInstance.result.then(function(selectedSCs) {
-			serverCapabilityService.assignServersCapabilities([server[0].id], selectedSCs)
-				.then(
-					function() {
-						$scope.refresh();
-					}
-				);
+			const selectedSCNames = new Set(selectedSCs);
+			const toDelete = Array.from(oldSCNames).filter(sc => !selectedSCNames.has(sc));
+			const toCreate = Array.from(selectedSCNames).filter(sc => !oldSCNames.has(sc));
+			if (toCreate.length >= 1) {
+				serverCapabilityService.assignServersCapabilities([server[0].id], toCreate)
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+			} else if (toDelete.length >= 1) {
+				serverCapabilityService.deleteServersCapabilities([server[0].id], toDelete)
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+			}
 		}, function () {
 			// do nothing
 		});
