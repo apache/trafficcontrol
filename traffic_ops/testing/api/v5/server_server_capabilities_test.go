@@ -223,7 +223,7 @@ func TestServerServerCapabilities(t *testing.T) {
 					if testCase.RequestBody != nil {
 						dat, err := json.Marshal(testCase.RequestBody)
 						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						if method == "PUT" {
+						if strings.Contains(name, "Multiple") {
 							err = json.Unmarshal(dat, &mssc)
 						} else {
 							err = json.Unmarshal(dat, &ssc)
