@@ -243,6 +243,10 @@ type DeliveryServiceV40 struct {
 	DeliveryServiceFieldsV13
 	DeliveryServiceNullableFieldsV11
 
+	// Regional indicates whether the Delivery Service's MaxOriginConnections is
+	// only per Cache Group, rather than divided over all Cache Servers in child
+	// Cache Groups of the Origin.
+	Regional bool `json:"regional" db:"regional"`
 	// TLSVersions is the list of explicitly supported TLS versions for cache
 	// servers serving the Delivery Service's content.
 	TLSVersions       []string              `json:"tlsVersions" db:"tls_versions"`

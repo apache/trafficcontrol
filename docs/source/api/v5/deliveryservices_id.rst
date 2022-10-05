@@ -78,6 +78,7 @@ Request Structure
 :qstringIgnore:             An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
 :rangeRequestHandling:      An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
 :regexRemap:                A :ref:`ds-regex-remap`
+:regional:                  A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:       A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:                 :ref:`ds-raw-remap`
 :routingName:               The :ref:`ds-routing-name` of this :term:`Delivery Service`
@@ -158,6 +159,7 @@ Request Structure
 		"qstringIgnore": 0,
 		"rangeRequestHandling": 0,
 		"regexRemap": null,
+		"regional": false,
 		"regionalGeoBlocking": false,
 		"routingName": "test",
 		"serviceCategory": null,
@@ -237,6 +239,7 @@ Response Structure
 :qstringIgnore:         An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
 :rangeRequestHandling:  An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
 :regexRemap:            A :ref:`ds-regex-remap`
+:regional:              A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:             :ref:`ds-raw-remap`
 :serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
@@ -338,6 +341,7 @@ Response Structure
 		"rangeRequestHandling": 0,
 		"rangeSliceBlockSize": null,
 		"regexRemap": null,
+		"regional": false,
 		"regionalGeoBlocking": false,
 		"remapText": null,
 		"routingName": "test",

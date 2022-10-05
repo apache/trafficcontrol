@@ -317,6 +317,7 @@ func TestReadGetDeliveryServices(t *testing.T) {
 		{"query_keys", "{}"},
 		{"range_request_handling", 0},
 		{"regex_remap", nil},
+		{"regional", false},
 		{"regional_geo_blocking", false},
 		{"remap_text", nil},
 		{"routing_name", "video"},

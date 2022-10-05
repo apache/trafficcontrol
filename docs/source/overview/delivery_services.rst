@@ -505,6 +505,9 @@ Max Origin Connections
 ----------------------
 The maximum number of TCP connections individual :term:`Mid-tier cache servers` are allowed to make to the `Origin Server Base URL`. A value of ``0`` in this field indicates that there is no maximum.
 
+
+		.. note:: Max Origin Connections can be made per-:ref:`Cache Group <cache-groups>` by setting the :ref:`ds-regional` field.
+
 .. _ds-max-request-header-bytes:
 
 Max Request Header Bytes
@@ -716,6 +719,12 @@ Allows remapping of incoming requests URL using regular expressions to search an
 	+============+============================================================================+=============================+
 	| regexRemap | Traffic Ops source code and database, and :ref:`to-api` requests/responses | unchanged (``string`` etc.) |
 	+------------+----------------------------------------------------------------------------+-----------------------------+
+
+.. _ds-regional:
+
+Regional
+--------
+A boolean value. If a Delivery Service is Regional (``true``), then :ref:`ds-max-origin-connections` is per :ref:`Cache Group <cache-groups>`, rather than divided over all :term:`Cache Servers` in child Cache Groups of the :term:`Origin` (``false``, the default).
 
 .. _ds-regionalgeo:
 
