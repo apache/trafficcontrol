@@ -565,14 +565,14 @@ func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 	//Delete existing rows from server_server_capability for a given server or for a given capability
 	var where string
 	if len(mssc.ServerCapabilities) == 1 && len(mssc.ServerIDs) == 1 {
-		where = fmt.Sprintf("WHERE ssc.server_capability='%s' AND ssc.server=%v", mssc.ServerCapabilities[0], mssc.ServerIDs[0])
+		where = fmt.Sprintf(`WHERE ssc.server_capability='%s' AND ssc.server=%v`, mssc.ServerCapabilities[0], mssc.ServerIDs[0])
 	} else if len(mssc.ServerCapabilities) == 1 {
-		where = fmt.Sprintf("WHERE ssc.server_capability='%s'", mssc.ServerCapabilities[0])
+		where = fmt.Sprintf(`WHERE ssc.server_capability='%s'`, mssc.ServerCapabilities[0])
 	} else if len(mssc.ServerIDs) == 1 {
-		where = fmt.Sprintf("WHERE ssc.server=%v", mssc.ServerIDs[0])
+		where = fmt.Sprintf(`WHERE ssc.server=%v`, mssc.ServerIDs[0])
 	}
 
-	delString := "DELETE FROM server_server_capability ssc " + where
+	delString := `DELETE FROM server_server_capability ssc ` + where
 	result, err := tx.Exec(delString)
 	if err != nil {
 		useErr, sysErr, statusCode := api.ParseDBError(err)

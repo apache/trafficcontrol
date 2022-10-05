@@ -88,15 +88,29 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 			const selectedServerIDs = new Set(selectedServers);
 			const toDelete = Array.from(oldServerIDs).filter(s => !selectedServerIDs.has(s));
 			const toCreate = Array.from(selectedServerIDs).filter(s => !oldServerIDs.has(s));
-			if (toCreate.length >= 1) {
+			console.log()
+			if (toCreate.length >= 1 && toDelete.length === 0) {
 				serverCapabilityService.assignServersCapabilities(toCreate, [serverCapability.name])
 					.then(
 						function() {
 							$scope.refresh();
 						}
 					);
-			} else if (toDelete.length >= 1) {
+			} else if (toDelete.length >= 1 && toCreate.length === 0)  {
 				serverCapabilityService.deleteServersCapabilities(toDelete, [serverCapability.name])
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+			} else if (toCreate.length >= 1 && toDelete.length >= 1) {
+				serverCapabilityService.deleteServersCapabilities(toDelete, [serverCapability.name])
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+				serverCapabilityService.assignServersCapabilities(toCreate, [serverCapability.name])
 					.then(
 						function() {
 							$scope.refresh();

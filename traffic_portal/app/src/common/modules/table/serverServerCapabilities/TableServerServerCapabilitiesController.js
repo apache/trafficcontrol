@@ -54,15 +54,28 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 			const selectedSCNames = new Set(selectedSCs);
 			const toDelete = Array.from(oldSCNames).filter(sc => !selectedSCNames.has(sc));
 			const toCreate = Array.from(selectedSCNames).filter(sc => !oldSCNames.has(sc));
-			if (toCreate.length >= 1) {
+			if (toCreate.length >= 1 && toDelete.length === 0) {
 				serverCapabilityService.assignServersCapabilities([server[0].id], toCreate)
 					.then(
 						function() {
 							$scope.refresh();
 						}
 					);
-			} else if (toDelete.length >= 1) {
+			} else if (toDelete.length >= 1 && toCreate.length === 0) {
 				serverCapabilityService.deleteServersCapabilities([server[0].id], toDelete)
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+			} else if (toCreate.length >= 1 && toDelete.length >= 1) {
+				serverCapabilityService.deleteServersCapabilities([server[0].id], toDelete)
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+				serverCapabilityService.assignServersCapabilities([server[0].id], toCreate)
 					.then(
 						function() {
 							$scope.refresh();
