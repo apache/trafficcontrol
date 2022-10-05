@@ -28,7 +28,7 @@ And also Associates a list of :term:`Servers` to a server capability. The API ca
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVER:READ, SERVER:UPDATE, SERVER-CAPABILITY:READ, SERVER-CAPABILITY:UPDATE
+:Permissions Required: SERVER:READ, SERVER:CREATE, SERVER-CAPABILITY:READ, SERVER-CAPABILITY:CREATE
 :Response Type:  Object
 
 Request Structure
