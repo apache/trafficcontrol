@@ -96,6 +96,15 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		api.WriteResp(w, r, v3ServerList)
 		return
 	}
+	if inf.Version.Major == 4 && inf.Version.Minor < 1 {
+		v40ServerList := []tc.DSServerV40{}
+		for _, s := range servers {
+			sV40 := s.DSServerV40
+			v40ServerList = append(v40ServerList, sV40)
+		}
+		api.WriteResp(w, r, v40ServerList)
+		return
+	}
 	api.WriteResp(w, r, servers)
 }
 
@@ -147,7 +156,8 @@ t.name as server_type,
 s.type as server_type_id,
 s.config_update_time > s.config_apply_time AS upd_pending,
 ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities,
-ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability) as deliveryservice_capabilities
+ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability) as deliveryservice_capabilities,
+(SELECT ARRAY_AGG(asn) AS asns FROM asn a WHERE a.cachegroup = s.cachegroup) AS asns
 `
 	idRows, err := tx.Query(fmt.Sprintf(queryFormatString, "", queryWhereClause), dsID)
 	if err != nil {
@@ -209,6 +219,7 @@ ARRAY(select drc.required_capability from deliveryservices_required_capability d
 			&s.UpdPending,
 			pq.Array(&s.ServerCapabilities),
 			pq.Array(&s.DeliveryServiceCapabilities),
+			pq.Array(&s.ASNs),
 		)
 		if err != nil {
 			return nil, errors.New("scanning delivery service eligible servers: " + err.Error())

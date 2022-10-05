@@ -15,23 +15,27 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Traffic Router Unit Tests
+name: Traffic Router Tests
 
 env:
-  # alpine:3.13
-  ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
+  # environment variables for traffic_router_rpm
+  BUILD_LOCK: build_lock
+  BUILD_NUMBER: build_number
+  RHEL_VERSION: rhel_version
+  STARTUP_SCRIPT_DIR: /startup-dir
+  STARTUP_SCRIPT_LOC: ../core/src/main/lib/systemd/system
+  TOMCAT_RELEASE: tomcat_release
+  TOMCAT_VERSION: tomcat_version
 
 on:
   push:
     paths:
-      - .github/actions/tr-unit-tests/**
-      - .github/workflows/tr.unit.tests.yaml
+      - .github/workflows/tr.tests.yaml
       - traffic_router/**
   create:
   pull_request:
     paths:
-      - .github/actions/tr-unit-tests/**
-      - .github/workflows/tr.unit.tests.yaml
+      - .github/workflows/tr.tests.yaml
       - traffic_router/**
     types: [ opened, reopened, ready_for_review, synchronize ]
 
@@ -42,40 +46,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-      - name: Cache Alpine Docker image
-        uses: actions/cache@v2
-        with:
-          path: ${{ github.workspace }}/docker-images
-          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
-      - name: Import cached Alpine Docker image
-        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
+      - name: Install Java dependencies
+        run: sudo apt -y install libtcnative-1 maven
       - name: Cache local Maven repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/.m2/repository
+          path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Run Traffic Router unit tests
-        uses: ./.github/actions/tr-unit-tests
-      - name: Upload Surefire Reports
-        uses: actions/upload-artifact@v2
+      - name: Run Traffic Router tests
+        run: mvn -Djava.library.path=/usr/lib/x86_64-linux-gnu verify
+        working-directory: ${{ github.workspace }}/traffic_router
+      - name: Upload Surefire and Failsafe Reports
+        uses: actions/upload-artifact@v3
         if: ${{ failure() }}
         with:
-          name: surefire-reports
-          path: ${{ github.workspace }}/traffic_router/core/target/surefire-reports/TEST-*.xml
+          name: junit-reports
+          path: ${{ github.workspace }}/traffic_router/*/target/*-reports/TEST-*.xml
       - name: Checkout junit-report-annotations action
-        uses: actions/checkout@v2
+        if: ${{ always() }}
+        uses: actions/checkout@v3
         with:
           repository: zrhoffman/junit-report-annotations-action
           ref: 399056ab38c3da69c5b27f924357e10aec3caf8f # Fri Sep 25 02:02:53 2020 -0600 Make all properties string type (see actions/toolkit#398)
           path: .github/actions/junit-report-annotations
       - name: Convert Junit Report to Annotations
+        if: ${{ always() }}
         uses: ./.github/actions/junit-report-annotations
         with:
-          path: ${{ github.workspace }}/traffic_router/core/target/surefire-reports/TEST-*.xml
+          path: ${{ github.workspace }}/traffic_router/core/*/*-reports/TEST-*.xml
           numFailures: 999 # The maximum number of test failures to annotate
           cwd: ${{ github.workspace }}/traffic_router
-        if: always()
-      - name: Save Alpine Docker image
-        run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

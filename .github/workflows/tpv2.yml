@@ -22,6 +22,10 @@ env:
 
 on:
   push:
+    paths:
+      - experimental/traffic-portal/**
+      - .github/workflows/tpv2.yml
+      - .github/actions/tpv2-integration-tests
   create:
   pull_request:
     paths:

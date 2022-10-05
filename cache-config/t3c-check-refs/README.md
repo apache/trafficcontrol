@@ -71,6 +71,22 @@ supplied, t3c-check-refs reads its config file input from stdin.
     comma-delimited list of file names being added, to not fail
     to verify if they don't already exist.
 
+    Alternatively, this may be "input" in which case the input
+    (stdin or the passed argument filename) should be JSON of
+    the form:
+
+    {"file": "config-file-text", "adding": ["files-adding"]}
+
+    Where 'config-file-text' is the text of the config file to check
+    (which otherwise would have been passed to input unadorned),
+    and 'files-adding' is a JSON array of the files added
+    (which otherwise would have been passed to --files-adding).
+    and the full input is properly formed JSON, with the config
+    file escaped for JSON.
+
+    Callers are encouraged to use the --files-adding=input format
+    to avoid errors from operating system argument length limits.
+
 -h, -\-help
 
     Print usage information and exit

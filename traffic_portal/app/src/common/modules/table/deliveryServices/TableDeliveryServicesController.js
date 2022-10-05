@@ -323,7 +323,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			headerName: "Target For",
 			field: "isTargetFor",
 			hide: true,
-			valueFormatter: params => params.data.isTargetsFor,
+			valueGetter: params => params.data.isTargetsFor,
 			tooltipValueGetter: params => `Steering targets for: ${params.data.isTargetsFor.join(", ")}`
 		},
 		{
