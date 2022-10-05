@@ -48,7 +48,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [Traffic Portal] Added the ability for users to view Delivery Service Requests corresponding to individual Delivery Services in TP.
 - [Traffic Ops] Added support for backend configurations so that Traffic Ops can act as a reverse proxy for these services [#6754](https://github.com/apache/trafficcontrol/pull/6754).
 - Added functionality for CDN locks, so that they can be shared amongst a list of specified usernames.
-- [Traffic) Ops | Traffic Go Clients | T3C] Add additional timestamp fields to server for queuing and dequeueing config and revalidate updates.
+- [Traffic Ops | Traffic Go Clients | T3C] Add additional timestamp fields to server for queuing and dequeueing config and revalidate updates.
 - Added layered profile feature to 4.0 for `GET` /servers/, `POST` /servers/, `PUT` /servers/{id} and `DELETE` /servers/{id}.
 - Added a Traffic Ops endpoint and Traffic Portal page to view all CDNi configuration update requests and approve or deny.
 - Added layered profile feature to 4.0 for `GET` /deliveryservices/{id}/servers/ and /deliveryservices/{id}/servers/eligible.
