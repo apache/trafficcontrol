@@ -15,5 +15,13 @@
  * the License.
  */
 
-ALTER TABLE public.deliveryservice 
+ALTER TABLE public.deliveryservice
 DROP COLUMN regional;
+
+/* Remove `regional` from deliveryservice */
+UPDATE public.deliveryservice_request
+SET deliveryservice = deliveryservice - 'regional';
+
+/* Remove `regional` from original */
+UPDATE public.deliveryservice_request
+SET original = original - 'regional';
