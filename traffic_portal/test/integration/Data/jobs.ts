@@ -53,6 +53,7 @@ export const jobs = {
 					initialDispersion: 1,
 					ipv6RoutingEnabled: true,
 					logsEnabled: false,
+					maxOriginConnections: 4500,
 					missLat: 41.881944,
 					missLong: -87.627778,
 					multiSiteOrigin: false,
@@ -60,6 +61,7 @@ export const jobs = {
 					protocol: 0,
 					qstringIgnore: 0,
 					rangeRequestHandling: 0,
+					regional: false,
 					regionalGeoBlocking: false,
 					tenantId: 0,
 					typeId: 1,
@@ -102,5 +104,5 @@ export const jobs = {
 				}
 			],
 		}
-    ] 
+    ]
 }
