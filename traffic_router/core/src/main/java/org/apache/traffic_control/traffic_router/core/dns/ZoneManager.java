@@ -103,7 +103,6 @@ public class ZoneManager extends Resolver {
 	private final TrafficRouter trafficRouter;
 	private static LoadingCache<ZoneKey, Zone> dynamicZoneCache = null;
 	private static LoadingCache<ZoneKey, Zone> zoneCache = null;
-	private static ConcurrentMap<String, ZoneKey> domainsToZoneKeys = new ConcurrentHashMap<>();
 	private static ScheduledExecutorService zoneMaintenanceExecutor = null;
 	private static ExecutorService zoneExecutor = null;
 	private static final int DEFAULT_PRIMER_LIMIT = 500;
@@ -218,8 +217,6 @@ public class ZoneManager extends Resolver {
 				final long oldDCZSize = tzc == null ? 0 : tdzc.size();
 				LOGGER.info("old static zone cache size: " + oldZCSize + ", new static zone cache size: " + zc.size() +
 						", old dynamic zone cache size: " + oldDCZSize + ", new dynamic zone cache size: " + dzc.size());
-
-				ZoneManager.domainsToZoneKeys = newDomainsToZoneKeys;
 
 				if (tze != null) {
 					tze.shutdownNow();
@@ -511,21 +508,6 @@ public class ZoneManager extends Resolver {
 		generationTasks.add(() -> {
 			try {
 				final ZoneKey newZoneKey = signatureManager.generateZoneKey(name, list);
-				if (tr.isDnssecEnabled() && domainsToZoneKeys.containsKey(domain)) {
-					final ZoneKey oldZoneKey = domainsToZoneKeys.get(domain);
-					if (zonesAreEqual(newZoneKey.getRecords(), oldZoneKey.getRecords())) {
-						final Zone oldZone = ZoneManager.zoneCache.getIfPresent(oldZoneKey);
-						if (oldZone != null) {
-							LOGGER.info("found matching ZoneKey for " + domain + " - copying from current Zone cache into new Zone cache - no re-signing necessary");
-							zc.put(oldZoneKey, oldZone);
-							newDomainsToZoneKeys.put(domain, oldZoneKey);
-							return;
-						}
-						LOGGER.warn("found matching ZoneKey for " + domain + " but the Zone was not found in the Zone cache");
-					} else {
-						LOGGER.info("new zone for " + domain + " is not equal to the old zone - re-signing necessary");
-					}
-				}
 				final Zone zone = zc.get(newZoneKey); // cause the zone to be loaded into the new cache
 				if (tr.isDnssecEnabled()) {
 					newDomainsToZoneKeys.put(domain, newZoneKey);
