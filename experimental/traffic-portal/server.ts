@@ -54,31 +54,22 @@ export function app(): express.Express {
 		maxAge: "1y"
 	}));
 
-	// All regular routes use the Universal engine
-	server.get("*", (req, res) => {
-		res.render(indexHtml, { providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }], req });
-	});
-
-	server.use("/api/**", (req, res) => {
+	/**
+	 * A handler for proxying the Traffic Ops API.
+	 *
+	 * @param req The client's request.
+	 * @param res The server's response writer.
+	 */
+	function toProxyHandler(req: express.Request, res: express.Response): void {
 		console.log(`Making TO API request to \`${req.originalUrl}\``);
 
-		let origURL: URL;
-		try {
-			origURL = new URL(req.originalUrl);
-		} catch (err) {
-			console.error(`Failed to parse request URL ${req.originalUrl} as a URL: ${err}`);
-			res.statusCode = 502;
-			res.setHeader("Content-Type", "application/json");
-			res.write('{"alerts":[{"level":"error","text":"Traffic Ops is unreachable"}]}');
-			return;
-		}
-
 		const fwdRequest = {
-			headers: req.headers,
-			host:    config.trafficOps.hostname,
-			method:  req.method,
-			path:    origURL.pathname+origURL.search,
-			port:    config.trafficOps.port,
+			headers:            req.headers,
+			host:               config.trafficOps.hostname,
+			method:             req.method,
+			path:               req.originalUrl,
+			port:               config.trafficOps.port,
+			rejectUnauthorized: !config.insecure,
 		};
 
 		try {
@@ -90,7 +81,14 @@ export function app(): express.Express {
 		} catch (e) {
 			console.error("proxying request:", e);
 		}
-		res.end();
+	}
+
+	server.use("api/**", toProxyHandler);
+	server.use("/api/**", toProxyHandler);
+
+	// All regular routes use the Universal engine
+	server.get("*", (req, res) => {
+		res.render(indexHtml, { providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }], req });
 	});
 
 	server.enable("trust proxy");
@@ -126,7 +124,7 @@ function run(): number {
 		}
 	});
 	parser.add_argument("-k", "--insecure", {
-		action: "storeTrue",
+		action: "store_true",
 		help: "Skip Traffic Ops server certificate validation. This affects requests from Traffic Portal to Traffic Ops AND signature" +
 			" verification of any passed SSL keys/certificates"
 	});
@@ -182,14 +180,14 @@ function run(): number {
 			{
 				cert,
 				key,
-				rejectUnauthorized: !config.insecure
+				rejectUnauthorized: !config.insecure,
 			},
 			server
 		).listen(config.port, ()=> {
 			console.log(`Node Express server listening on port ${config.port}`);
 		});
 		try {
-			createRedirectServer(
+			const redirectServer = createRedirectServer(
 				(req, res) => {
 					if (!req.url) {
 						res.statusCode = 500;
@@ -198,10 +196,18 @@ function run(): number {
 						return;
 					}
 					res.statusCode = 308;
-					res.setHeader("Location", req.url.replace(/^[hH][tT][tT][pP]:/, "https"));
+					res.setHeader("Location", req.url.replace(/^[hH][tT][tT][pP]:/, "https:"));
 					res.end();
 				}
-			).listen(80);
+			);
+			redirectServer.listen(80);
+			redirectServer.on("error", e => {
+				console.error(`redirect server encountered error: ${e}`);
+				if (Object.prototype.hasOwnProperty.call(e, "code") && (e as typeof e & {code: unknown}).code === "EACCES") {
+					console.warn("access to port 80 not allowed; closing redirect server");
+					redirectServer.close();
+				}
+			});
 		} catch (e) {
 			console.warn("Failed to initialize HTTP-to-HTTPS redirect listener:", e);
 		}
@@ -223,7 +229,10 @@ declare const __non_webpack_require__: NodeRequire;
 const mainModule = __non_webpack_require__.main;
 const moduleFilename = mainModule && mainModule.filename || "";
 if (moduleFilename === __filename || moduleFilename.includes("iisnode")) {
-	process.exit(run());
+	const code = run();
+	if (code) {
+		process.exit(code);
+	}
 }
 
 export * from "./src/main.server";

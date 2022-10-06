@@ -44,7 +44,12 @@ export interface ServerVersion {
 	arch?: string;
 }
 
-/** Converts the given version to a string. */
+/**
+ * Converts the given version to a string.
+ *
+ * @param v The server version to convert.
+ * @returns A string representation of `v`.
+ */
 export function versionToString(v: ServerVersion): string {
 	let ret = `traffic-portal-${v.version}`;
 
@@ -70,8 +75,13 @@ export function versionToString(v: ServerVersion): string {
 	return ret;
 }
 
+/**
+ * Checks if some unknown Javascript value is a valid {@link ServerVersion}.
+ *
+ * @param v The object to check.
+ * @returns Whether `v` is a valid {@link ServerVersion}.
+ */
 function isServerVersion(v: unknown): v is ServerVersion {
-	// tslint:disable completed-docs
 	if (typeof(v) !== "object") {
 		console.error("version does not represent a server version");
 		return false;
@@ -85,30 +95,34 @@ function isServerVersion(v: unknown): v is ServerVersion {
 		console.error("version missing required field 'version'");
 		return false;
 	}
-	if (typeof((v as {version: unknown; }).version) !== "string") {
+	if (typeof((v as {version: unknown}).version) !== "string") {
 		return false;
 	}
 
-	if (Object.prototype.hasOwnProperty.call(v, "commits") && (typeof((v as {commits: unknown; }).commits)) !== "string") {
-		console.error(`version property 'commits' has incorrect type; want: string, got: ${typeof((v as {commits: unknown; }).commits)}`);
+	if (Object.prototype.hasOwnProperty.call(v, "commits") && (typeof((v as {commits: unknown}).commits)) !== "string") {
+		console.error(`version property 'commits' has incorrect type; want: string, got: ${typeof((v as {commits: unknown}).commits)}`);
 		return false;
 	}
-	if (Object.prototype.hasOwnProperty.call(v, "hash") && (typeof((v as {hash: unknown; }).hash)) !== "string") {
-		console.error(`version property 'hash' has incorrect type; want: string, got: ${typeof((v as {hash: unknown; }).hash)}`);
+	if (Object.prototype.hasOwnProperty.call(v, "hash") && (typeof((v as {hash: unknown}).hash)) !== "string") {
+		console.error(`version property 'hash' has incorrect type; want: string, got: ${typeof((v as {hash: unknown}).hash)}`);
 		return false;
 	}
-	if (Object.prototype.hasOwnProperty.call(v, "elRelease") && (typeof((v as {elRelease: unknown; }).elRelease)) !== "string") {
-		console.error(`version property 'elRelease' has incorrect type; want: string, got: ${typeof((v as {elRelease: unknown; }).elRelease)}`);
+	if (Object.prototype.hasOwnProperty.call(v, "elRelease") && (typeof((v as {elRelease: unknown}).elRelease)) !== "string") {
+		console.error(
+			`version property 'elRelease' has incorrect type; want: string, got: ${typeof (v as {elRelease: unknown}).elRelease}`
+		);
 		return false;
 	}
-	if (Object.prototype.hasOwnProperty.call(v, "arch") && (typeof((v as {arch: unknown; }).arch)) !== "string") {
-		console.error(`version property 'arch' has incorrect type; want: string, got: ${typeof((v as {arch: unknown; }).arch)}`);
+	if (Object.prototype.hasOwnProperty.call(v, "arch") && (typeof((v as {arch: unknown}).arch)) !== "string") {
+		console.error(`version property 'arch' has incorrect type; want: string, got: ${typeof((v as {arch: unknown}).arch)}`);
 		return false;
 	}
 	return true;
-	// tslint:enable completed-docs
 }
 
+/**
+ * The base properties shared by all ServerConfigs.
+ */
 interface BaseConfig {
 	/** Whether or not SSL certificate errors from Traffic Ops will be ignored. */
 	insecure?: boolean;
@@ -122,6 +136,9 @@ interface BaseConfig {
 	version: ServerVersion;
 }
 
+/**
+ * The properties a ServerConfig has if SSL is in use.
+ */
 interface ConfigWithSSL {
 	/** The path to the SSL certificate Traffic Portal will use. */
 	certPath: string;
@@ -131,6 +148,9 @@ interface ConfigWithSSL {
 	useSSL: true;
 }
 
+/**
+ * The properties a ServerConfig has if SSL is not in use.
+ */
 interface ConfigWithoutSSL {
 	/** Whether or not to serve HTTPS */
 	useSSL?: false;
@@ -143,9 +163,11 @@ export type ServerConfig = BaseConfig & (ConfigWithSSL | ConfigWithoutSSL);
  * isConfig checks specifically the contents of configuration files
  * passed through JSON.parse, so it doesn't validate the 'version', since
  * that doesn't need to be in the configuration file.
+ *
+ * @param c The ostensibly configuration object to check.
+ * @returns Whether c is a valid server configuration.
  */
 function isConfig(c: unknown): c is ServerConfig {
-	// tslint:disable completed-docs
 	if (typeof(c) !== "object") {
 		throw new Error("configuration is not an object");
 	}
@@ -154,53 +176,52 @@ function isConfig(c: unknown): c is ServerConfig {
 	}
 
 	if (Object.prototype.hasOwnProperty.call(c, "insecure")) {
-		if (typeof((c as {insecure: unknown; }).insecure) !== "boolean") {
+		if (typeof((c as {insecure: unknown}).insecure) !== "boolean") {
 			throw new Error("'insecure' must be a boolean");
 		}
 	} else {
-		(c as {insecure: boolean; }).insecure = false;
+		(c as {insecure: boolean}).insecure = false;
 	}
 	if (!Object.prototype.hasOwnProperty.call(c, "port")) {
 		throw new Error("'port' is required");
 	}
-	if (typeof((c as {port: unknown; }).port) !== "number") {
+	if (typeof((c as {port: unknown}).port) !== "number") {
 		throw new Error("'port' must be a number");
 	}
 	if (!Object.prototype.hasOwnProperty.call(c, "trafficOps")) {
 		throw new Error("'trafficOps' is required");
 	}
-	if (typeof((c as {trafficOps: unknown; }).trafficOps) !== "string") {
+	if (typeof((c as {trafficOps: unknown}).trafficOps) !== "string") {
 		throw new Error("'trafficOps' must be a string");
 	}
 
 	try {
-		(c as {trafficOps: URL; }).trafficOps = new URL((c as {trafficOps: string; }).trafficOps);
+		(c as {trafficOps: URL}).trafficOps = new URL((c as {trafficOps: string}).trafficOps);
 	} catch (e) {
 		throw new Error(`'trafficOps' is not a valid URL: ${e}`);
 	}
 
 	if (Object.prototype.hasOwnProperty.call(c, "useSSL")) {
-		if (typeof((c as {useSSL: unknown; }).useSSL) !== "boolean") {
+		if (typeof((c as {useSSL: unknown}).useSSL) !== "boolean") {
 			throw new Error("'useSSL' must be a boolean");
 		}
-		if ((c as {useSSL: boolean; }).useSSL) {
+		if ((c as {useSSL: boolean}).useSSL) {
 			if (!Object.prototype.hasOwnProperty.call(c, "certPath")) {
 				throw new Error("'certPath' is required to use SSL");
 			}
-			if (typeof((c as {certPath: unknown; }).certPath) !== "string") {
+			if (typeof((c as {certPath: unknown}).certPath) !== "string") {
 				throw new Error("'certPath' must be a string");
 			}
 			if (!Object.prototype.hasOwnProperty.call(c, "keyPath")) {
 				throw new Error("'keyPath' is required to use SSL");
 			}
-			if (typeof((c as {keyPath: unknown; }).keyPath) !== "string") {
+			if (typeof((c as {keyPath: unknown}).keyPath) !== "string") {
 				throw new Error("'keyPath' must be a string");
 			}
 		}
 	}
 
 	return true;
-	// tstlint:enable completed-docs
 }
 
 const defaultVersionFile = "/etc/traffic-portal/version.json";
@@ -212,6 +233,7 @@ const defaultVersionFile = "/etc/traffic-portal/version.json";
  * Defaults to /etc/traffic-portal/version.json. If this file doesn't exist,
  * the version may be deduced from the execution environment using git and
  * looking for the ATC VERSION file.
+ * @returns The parsed server version.
  */
 export function getVersion(path?: string): ServerVersion {
 	if (!path) {
@@ -257,6 +279,7 @@ export function getVersion(path?: string): ServerVersion {
 	return ver;
 }
 
+/** The type of command line arguments to Traffic Portal. */
 interface Args {
 	trafficOps?: URL;
 	insecure?: boolean;
@@ -268,6 +291,13 @@ interface Args {
 
 export const defaultConfigFile = "/etc/traffic-portal/config.js";
 
+/**
+ * Gets the configuration for the Traffic Portal server.
+ *
+ * @param args The arguments passed to Traffic Portal.
+ * @param ver The version to use for the server.
+ * @returns A full configuration for the server.
+ */
 export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 	let cfg: ServerConfig = {
 		insecure: false,
@@ -303,15 +333,14 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 	if (args.trafficOps) {
 		cfg.trafficOps = args.trafficOps;
 	} else if (!readFromFile) {
-		if (Object.prototype.hasOwnProperty.call(process.env, "TO_URL")) {
-			const envURL = (process.env as {TO_URL: string; }).TO_URL;
-			try {
-				cfg.trafficOps = new URL(envURL);
-			} catch (e) {
-				throw new Error(`invalid Traffic Ops URL from environment: ${envURL}`);
-			}
-		} else {
+		const envURL = process.env.TO_URL;
+		if (!envURL) {
 			throw new Error("Traffic Ops URL must be specified");
+		}
+		try {
+			cfg.trafficOps = new URL(envURL);
+		} catch (e) {
+			throw new Error(`invalid Traffic Ops URL from environment: ${envURL}`);
 		}
 	}
 
@@ -340,6 +369,8 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 			throw new Error("must specify either both a key path and a cert path, or neither");
 		}
 	}
+
+	cfg.insecure = args.insecure ?? cfg.insecure;
 
 	if (cfg.useSSL) {
 		if (!existsSync(cfg.certPath)) {

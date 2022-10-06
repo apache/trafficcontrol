@@ -137,7 +137,7 @@ SELECT
 	s.offline_reason,
 	pl.name AS phys_location,
 	s.phys_location AS phys_location_id,
-	(SELECT ARRAY_AGG(sp.profile_name) FROM server_profile AS sp where sp.server=s.id) AS profile_name,
+	(SELECT ARRAY_AGG(sp.profile_name ORDER BY sp.priority ASC) FROM server_profile AS sp where sp.server=s.id) AS profile_name,
 	s.rack,
 	s.revalidate_update_time > s.revalidate_apply_time AS reval_pending,
 	s.revalidate_update_time,
@@ -329,7 +329,7 @@ RETURNING
 	offline_reason,
 	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
 	phys_location AS phys_location_id,
-	(SELECT ARRAY_AGG(profile_name) FROM server_profile WHERE server_profile.server=server.id) AS profile_name,
+	(SELECT ARRAY_AGG(profile_name ORDER BY priority ASC) FROM server_profile WHERE server_profile.server=server.id) AS profile_name,
 	rack,
 	(SELECT name FROM status WHERE status.id=server.status) AS status,
 	status AS status_id,
@@ -1631,7 +1631,27 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr.ServerV40)
+	if inf.Version.Major >= 5 {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr)
+	} else if inf.Version.Major >= 4 {
+		if version.Minor >= 1 {
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr)
+		} else {
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr.ServerV40)
+		}
+	} else if inf.Version.Major >= 3 {
+		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(srvr, inf.Tx.Tx)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		srvrV30, err := srvr.ServerV40.ToServerV3FromV4(csp)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvrV30)
+	}
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: updated", *srvr.HostName, *srvr.DomainName, *srvr.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
@@ -1980,7 +2000,15 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	srvr.Interfaces = server.Interfaces
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr.ServerV40)
+	if inf.Version.Major == 5 {
+		api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr)
+	} else {
+		if inf.Version.Minor >= 1 {
+			api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr)
+		} else {
+			api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr.ServerV40)
+		}
+	}
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *srvr.HostName, *srvr.DomainName, *srvr.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
@@ -2243,7 +2271,11 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inf.Version.Major >= 4 {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server.ServerV40)
+		if inf.Version.Minor >= 1 || inf.Version.Major == 5 {
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
+		} else {
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server.ServerV40)
+		}
 	} else {
 		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
 		if err != nil {

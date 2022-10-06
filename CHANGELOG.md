@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [unreleased]
 ### Added
 - [#7109](https://github.com/apache/trafficcontrol/pull/7109) *Traffic Router* Removed `dnssec.zone.diffing.enabled` and `dnssec.rrsig.cache.enabled` parameters.
+- [#7075](https://github.com/apache/trafficcontrol/pull/7075) *Traffic Portal* Added the `lastUpdated` field to all delivery service forms.
 - [#7055](https://github.com/apache/trafficcontrol/issues/7055) *Traffic Portal* Made `Clear Table Filters` option visible to the user.
 - [#7024](https://github.com/apache/trafficcontrol/pull/7024) *Traffic Monitor* Added logging for `ipv4Availability` and `ipv6Availability` in TM.
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Added API version 5.0 (IN DEVELOPMENT)
@@ -20,10 +21,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
 
 ### Fixed
+- [#6903](https://github.com/apache/trafficcontrol/issues/6903), [#6903](https://github.com/apache/trafficcontrol/issues/6903) *Docs* Fixed docs for /cdns/dnsseckeys/refresh in APIv4 and APIv5.
+- [#7049](https://github.com/apache/trafficcontrol/issues/7049), [#7052](https://github.com/apache/trafficcontrol/issues/7052) *Traffic Portal* Fixed server table's quick search and filter option for multiple profiles.
+- [#7080](https://github.com/apache/trafficcontrol/issues/7080), [#6335](https://github.com/apache/trafficcontrol/issues/6335) *Traffic Portal* Fixed redirect links for server capability.
 - [#7022](https://github.com/apache/trafficcontrol/pull/7022) *Traffic Stats* Reuse InfluxDB client handle to prevent potential connection leaks.
 - [#7021](https://github.com/apache/trafficcontrol/issues/7021) *Cache Config* Fixed cache config for Delivery Services with IP Origins.
 - [#7043](https://github.com/apache/trafficcontrol/issues/7043) Fixed cache config missing retry parameters for non-topology MSO Delivery Services going direct from edge to origin.
 - [#7047](https://github.com/apache/trafficcontrol/issues/7047) *Traffic Ops* allow `apply_time` query parameters on the `servers/{id-name}/update` when the CDN is locked.
+- Updated Apache Tomcat from 9.0.43 to 9.0.67
 
 ## [7.0.0] - 2022-07-19
 ### Added

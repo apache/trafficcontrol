@@ -19,7 +19,7 @@
 ``cdns/dnsseckeys/refresh``
 ***************************
 
-``GET``
+``PUT``
 =======
 Refresh the DNSSEC keys for all CDNs. This call initiates a background process to refresh outdated keys, and immediately returns a response that the process has started.
 
