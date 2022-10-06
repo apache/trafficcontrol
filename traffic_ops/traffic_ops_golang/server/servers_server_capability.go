@@ -563,29 +563,28 @@ func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Delete existing rows from server_server_capability for a given server or for a given capability
-	var where string
+	const delQuery = `DELETE FROM server_server_capability ssc WHERE `
+	var err error
+	var result sql.Result
+	var alerts tc.Alerts
 	if len(mssc.ServerCapabilities) == 1 && len(mssc.ServerIDs) == 1 {
-		where = fmt.Sprintf(`WHERE ssc.server_capability='%s' AND ssc.server=%v`, mssc.ServerCapabilities[0], mssc.ServerIDs[0])
+		result, err = tx.Exec(delQuery+`ssc.server_capability=$1 AND ssc.server=$2`, mssc.ServerCapabilities[0], mssc.ServerIDs[0])
 	} else if len(mssc.ServerCapabilities) == 1 {
-		where = fmt.Sprintf(`WHERE ssc.server_capability='%s'`, mssc.ServerCapabilities[0])
+		result, err = tx.Exec(delQuery+`ssc.server_capability=$1`, mssc.ServerCapabilities[0])
 	} else if len(mssc.ServerIDs) == 1 {
-		where = fmt.Sprintf(`WHERE ssc.server=%v`, mssc.ServerIDs[0])
+		result, err = tx.Exec(delQuery+`ssc.server=$1`, mssc.ServerIDs[0])
 	}
 
-	delString := `DELETE FROM server_server_capability ssc ` + where
-	result, err := tx.Exec(delString)
 	if err != nil {
 		useErr, sysErr, statusCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
 		return
 	}
-
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows were deleted from server_server_capability table: %w", err), sysErr)
 		return
 	}
-	var alerts tc.Alerts
 	if rowsAffected == 1 {
 		alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed either a Server Capability to a server or a Server to a capability")
 	} else if rowsAffected > 1 {
