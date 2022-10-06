@@ -196,8 +196,8 @@ func TestServerServerCapabilities(t *testing.T) {
 				"OK When Delete Multiple Assigned Servers Per Capability": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"serverCapabilities": append(multipleSCs, "ram"),
-						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")(), GetServerID(t, "dtrc-edge-07")()),
+						"serverCapabilities": append(multipleSCs, "asdf"),
+						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")(), GetServerID(t, "dtrc-edge-08")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
