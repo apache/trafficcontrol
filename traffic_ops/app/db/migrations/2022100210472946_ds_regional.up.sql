@@ -21,11 +21,9 @@ ADD COLUMN regional BOOLEAN NOT NULL DEFAULT FALSE;
 /* Set `regional` to `false` if it does not exist */
 UPDATE public.deliveryservice_request
 SET deliveryservice = deliveryservice || '{"regional": false}'
-WHERE deliveryservice IS NOT NULL
-AND deliveryservice->>'regional' IS NULL;
+WHERE deliveryservice->>'regional' IS NULL;
 
 /* Set `regional` to `false` it does not exist and `original` is not null */
 UPDATE public.deliveryservice_request
 SET original = original || '{"regional": false}'
-WHERE original IS NOT NULL
-AND original->>'regional' IS NULL;
+WHERE original->>'regional' IS NULL;
