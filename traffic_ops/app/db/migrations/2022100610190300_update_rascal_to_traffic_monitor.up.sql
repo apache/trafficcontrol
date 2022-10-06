@@ -21,14 +21,15 @@ SET name = 'TRAFFIC_MONITOR',
 WHERE name = 'RASCAL';
 
 UPDATE PARAMETER
-SET config_file = REPLACE(config_file, 'rascal', 'traffic_monitor'),
+SET config_file = REPLACE(config_file, 'rascal', 'traffic_monitor')
 WHERE config_file = 'rascal-config.txt' OR config_file = 'rascal.properties';
 
 UPDATE PARAMETER
-SET value = 'TRAFFIC_MONITOR_TOP',
+SET value = 'TRAFFIC_MONITOR_TOP'
 WHERE value = 'RASCAL_TOP' AND name = 'latest_traffic_monitor';
 
 UPDATE PROFILE
-SET description = REPLACE(description, 'Rascal', 'Traffic Monitor'), name= REPLACE(name, 'RASCAL', 'TRAFFIC_MONITOR')
+SET description = REPLACE(description, 'Rascal', 'Traffic Monitor'),
+    name= REPLACE(name, 'RASCAL', 'TRAFFIC_MONITOR')
 WHERE type = 'TM_PROFILE';
 
