@@ -506,7 +506,7 @@ Max Origin Connections
 The maximum number of TCP connections individual :term:`Mid-tier cache servers` are allowed to make to the `Origin Server Base URL`. A value of ``0`` in this field indicates that there is no maximum.
 
 
-		.. note:: Max Origin Connections can be made per-:ref:`Cache Group <cache-groups>` by setting the :ref:`ds-regional` field.
+.. note:: Max Origin Connections can be made per-:ref:`Cache Group <cache-groups>` by setting the :ref:`ds-regional` field.
 
 .. _ds-max-request-header-bytes:
 
