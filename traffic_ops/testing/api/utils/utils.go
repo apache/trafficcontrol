@@ -150,8 +150,6 @@ type V4TestCase map[string]map[string]V4TestData
 // Uses nested map to represent the method being tested and the test's description.
 type V5TestCase map[string]map[string]V5TestData
 
-type PreReqFuncType func()
-
 // CkReqFunc defines the reusable signature for all other functions that perform checks.
 // Common parameters that are checked include the request's info, response, alerts, and errors.
 type CkReqFunc func(*testing.T, toclientlib.ReqInf, interface{}, tc.Alerts, error)
