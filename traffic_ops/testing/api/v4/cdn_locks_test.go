@@ -21,8 +21,10 @@ import (
 	"net/url"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -32,6 +34,7 @@ import (
 func TestCDNLocks(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, ProfileParameters, Statuses, Divisions, Regions, PhysLocations, Servers, ServiceCategories, Topologies, Tenants, Roles, Users, DeliveryServices, StaticDNSEntries, CDNLocks}, func() {
 
+		now := time.Now().Round(time.Microsecond)
 		opsUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opsuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 		opsUserWithLockSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "opslockuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
@@ -113,6 +116,26 @@ func TestCDNLocks(t *testing.T) {
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					EndpointId: GetServerID(t, "cdn2-test-edge"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
+				},
+			},
+			"SERVERS HOSTNAME UPDATE": {
+				"CONFIG_APPLY_TIME is SET EVEN when CDN LOCKED": {
+					ClientSession: opsUserWithLockSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"hostName": {"cdn2-test-edge"}}},
+					RequestBody: map[string]interface{}{
+						"config_apply_time": util.TimePtr(now),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"ConfigApplyTime": now})),
+				},
+				"REVALIDATE_APPLY_TIME is SET EVEN when CDN LOCKED": {
+					ClientSession: opsUserWithLockSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"hostName": {"cdn2-test-edge"}}},
+					RequestBody: map[string]interface{}{
+						"revalidate_apply_time": util.TimePtr(now),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"RevalApplyTime": now})),
 				},
 			},
 			"TOPOLOGY QUEUE UPDATES": {
@@ -513,6 +536,25 @@ func TestCDNLocks(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.SetServerQueueUpdate(testCase.EndpointId(), true, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						},
+						"SERVERS HOSTNAME UPDATE": func(t *testing.T) {
+							var hostName string
+							var configApplyTime *time.Time
+							var revalApplyTime *time.Time
+
+							if hostNameParam, ok := testCase.RequestOpts.QueryParameters["hostName"]; ok {
+								hostName = hostNameParam[0]
+							}
+							if configApplyTimeVal, ok := testCase.RequestBody["config_apply_time"]; ok {
+								configApplyTime = configApplyTimeVal.(*time.Time)
+							}
+							if revalApplyTimeVal, ok := testCase.RequestBody["revalidate_apply_time"]; ok {
+								revalApplyTime = revalApplyTimeVal.(*time.Time)
+							}
+							alerts, reqInf, err := testCase.ClientSession.SetUpdateServerStatusTimes(hostName, configApplyTime, revalApplyTime, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
 							}
 						},
 						"TOPOLOGY QUEUE UPDATES": func(t *testing.T) {

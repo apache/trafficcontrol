@@ -4720,6 +4720,94 @@
             "updPending": false,
             "xmppId": "atlanta-edge-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "parentCachegroup3",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "non-unique-hostname",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.1.0.8/30",
+                            "gateway": "127.1.0.8",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router55",
+                    "routerPort": "9011"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false,
+            "xmppId": "non-unique-hostname\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "parentCachegroup3",
+            "cdnName": "cdn1",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "non-unique-hostname",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.1.0.9/30",
+                            "gateway": "127.1.0.9",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router55",
+                    "routerPort": "9011"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false,
+            "xmppId": "non-unique-hostname\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
         }
     ],
     "serverCapabilities": [
