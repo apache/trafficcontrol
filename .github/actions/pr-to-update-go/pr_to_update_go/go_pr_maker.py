@@ -146,7 +146,7 @@ def parse_release_notes(version: str, content: str) -> str:
 	"""
 	go_version_pattern = version.replace('.', r"\.")
 	release_notes_pattern = re.compile(
-		r"<p>\s*\n\s*go" + go_version_pattern + r".*?</p>",
+		r"<p[^>]*>\s*\n\s*go" + go_version_pattern + r".*?</p>",
 		re.MULTILINE | re.DOTALL
 	)
 	matches = release_notes_pattern.search(content)

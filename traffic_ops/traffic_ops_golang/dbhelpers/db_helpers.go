@@ -105,7 +105,12 @@ WHERE tm_user.email = $1
 // CheckIfCurrentUserHasCdnLock checks if the current user has the lock on the cdn that the requested operation is to be performed on.
 // This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
 func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, int) {
-	query := `SELECT c.username, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames FROM cdn_lock c LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn WHERE c.cdn=$1 GROUP BY c.username`
+	query := `
+SELECT c.username, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames 
+FROM cdn_lock c 
+    LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn 
+WHERE c.cdn=$1 
+GROUP BY c.username`
 	var userName string
 	var sharedUserNames []string
 	rows, err := tx.Query(query, cdn)
@@ -441,15 +446,14 @@ func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantCol
 //
 // Example:
 //
-//  tx, err := db.Begin()
-//  txCommit := false
-//  defer dbhelpers.CommitIf(tx, &txCommit)
-//  if err := tx.Exec("select ..."); err != nil {
-//    return errors.New("executing: " + err.Error())
-//  }
-//  txCommit = true
-//  return nil
-//
+//	tx, err := db.Begin()
+//	txCommit := false
+//	defer dbhelpers.CommitIf(tx, &txCommit)
+//	if err := tx.Exec("select ..."); err != nil {
+//	  return errors.New("executing: " + err.Error())
+//	}
+//	txCommit = true
+//	return nil
 func CommitIf(tx *sql.Tx, doCommit *bool) {
 	if *doCommit {
 		tx.Commit()
@@ -540,6 +544,13 @@ func GetCapabilitiesFromRoleName(tx *sql.Tx, role string) ([]string, error) {
 		caps = append(caps, cap)
 	}
 	return caps, nil
+}
+
+// RoleExists returns whether or not the role with the given roleName exists, and any error that occurred.
+func RoleExists(tx *sql.Tx, roleID int) (bool, error) {
+	exists := false
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * FROM role WHERE role.id = $1)`, roleID).Scan(&exists)
+	return exists, err
 }
 
 // GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
@@ -1805,18 +1816,6 @@ func GetRoleIDFromName(tx *sql.Tx, roleName string) (int, bool, error) {
 	return id, true, nil
 }
 
-// GetRoleNameFromID returns the name of the role associated with the supplied ID.
-func GetRoleNameFromID(tx *sql.Tx, roleID int) (string, bool, error) {
-	var name string
-	if err := tx.QueryRow(`SELECT name FROM role WHERE id = $1`, roleID).Scan(&name); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return name, false, nil
-		}
-		return name, false, fmt.Errorf("querying role name from ID: %w", err)
-	}
-	return name, true, nil
-}
-
 // GetCDNNameDomain returns the name and domain for a given CDN ID.
 func GetCDNNameDomain(cdnID int, tx *sql.Tx) (string, string, error) {
 	q := `SELECT cdn.name, cdn.domain_name from cdn where cdn.id = $1`
@@ -2030,7 +2029,7 @@ WHERE server.id = $2;`
 }
 
 // GetCommonServerPropertiesFromV4 converts ServerV40 to CommonServerProperties struct.
-func GetCommonServerPropertiesFromV4(s tc.ServerV40, tx *sql.Tx) (tc.CommonServerProperties, error) {
+func GetCommonServerPropertiesFromV4(s tc.ServerV41, tx *sql.Tx) (tc.CommonServerProperties, error) {
 	var id int
 	var desc string
 	if len(s.ProfileNames) == 0 {

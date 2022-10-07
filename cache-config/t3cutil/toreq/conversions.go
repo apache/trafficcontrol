@@ -34,7 +34,11 @@ import (
 )
 
 func serversToLatest(svs tc.ServersV4Response) ([]atscfg.Server, error) {
-	return atscfg.ToServers(svs.Response), nil
+	serversV40 := make([]tc.ServerV40, 0)
+	for _, srv := range svs.Response {
+		serversV40 = append(serversV40, srv.ServerV40)
+	}
+	return atscfg.ToServers(serversV40), nil
 }
 
 func serverToLatest(oldSv *tc.ServerV40) (*atscfg.Server, error) {
@@ -218,7 +222,7 @@ func (cl *TOClient) GetServersCompat(opts toclient.RequestOptions) (tc.ServersV4
 		if err != nil {
 			return tc.ServersV4Response{}, reqInf, errors.New("converting server from possible legacy format: " + err.Error())
 		}
-		resp.Response = append(resp.Response, newSv)
+		resp.Response = append(resp.Response, tc.ServerV41{ServerV40: newSv})
 	}
 	return resp, reqInf, nil
 }

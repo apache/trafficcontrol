@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id-urlkeys:
+.. _to-api-v4-deliveryservices-id-urlkeys:
 
 ***********************************
 ``deliveryservices/{{ID}}/urlkeys``
@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-.. seealso:: :ref:`to-api-deliveryservices-xmlid-xmlid-urlkeys`
+.. seealso:: :ref:`to-api-v4-deliveryservices-xmlid-xmlid-urlkeys`
 
 Retrieves URL signing keys for a :term:`Delivery Service`.
 
@@ -83,20 +83,20 @@ Response Structure
 			"key6": "...",
 			"key7": "...",
 			"key8": "...",
-			"key9": "..."
+			"key9": "...",
 			"key10": "...",
 			"key11": "...",
 			"key12": "...",
 			"key13": "...",
 			"key14": "...",
-			"key15": "...",
+			"key15": "..."
 		}
 	}
 
 
 ``DELETE``
 ==========
-.. seealso:: :ref:`to-api-deliveryservices-xmlid-xmlid-urlkeys`
+.. seealso:: :ref:`to-api-v4-deliveryservices-xmlid-xmlid-urlkeys`
 
 Deletes URL signing keys for a :term:`Delivery Service`.
 

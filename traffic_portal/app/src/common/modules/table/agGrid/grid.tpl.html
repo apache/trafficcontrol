@@ -18,75 +18,79 @@ under the License.
 -->
 
 <div class="x_title grid-comp">
-    <div class="pull-left">
-        <ol class="breadcrumb pull-left" ng-if="$ctrl.breadCrumbs !== undefined">
-            <li ng-repeat="bc in $ctrl.breadCrumbs track by $index" ng-class="{'active': ($index+1 === $ctrl.breadCrumbs.length)}">
-                <a ng-if="$ctrl.bcHasHref(bc)" ng-href="{{ $ctrl.bcGetHref(bc) }}">{{ $ctrl.bcGetText(bc) }}</a>
-                <span class="bc" ng-if="!$ctrl.bcHasHref(bc)">{{  $ctrl.bcGetText(bc) }}</span>
-            </li>
-        </ol>
-        <ol class="breadcrumb pull-left" ng-if="$ctrl.breadCrumbs === undefined || $ctrl.breadCrumbs.length < 1">
-            <li class="active" ng-if="$ctrl.title">
-                {{ $ctrl.title }}
-            </li>
-        </ol>
-        <button ng-if="$ctrl.titleButton !== undefined" type="button" class="btn btn-link"
-                ng-click="$ctrl.titleButton.onClick()">{{ $ctrl.titleButton.getText() }}</button>
-        <span ng-if="$ctrl.options.selectRows">{{ $ctrl.selectedData.length }} row(s) selected</span>
-    </div>
-    <div class="pull-right">
-        <div class="form-inline" role="search">
-            <input id="quickSearch" name="quickSearch" type="search" class="form-control text-input" placeholder="Quick search..." ng-model="$ctrl.quickSearch" ng-change="$ctrl.onQuickSearchChanged()" aria-label="Search"/>
-            <div class="input-group text-input">
-                    <span class="input-group-addon">
-                        <label for="pageSize">Page size</label>
-                    </span>
-                <input id="pageSize" name="pageSize" type="number" min="1" class="form-control" placeholder="100" ng-model="$ctrl.pageSize" ng-change="$ctrl.onPageSizeChanged()" />
-            </div>
-            <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    <i class="fa fa-columns"></i>&nbsp;
-                    <span class="caret"></span>
-                </button>
-                <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-repeat="c in $ctrl.gridOptions.columnApi.getAllColumns() | orderBy:'colDef.headerName'">
-                        <div class="checkbox">
-                            <label><input type="checkbox" ng-checked="c.isVisible()" ng-click="$ctrl.toggleVisibility(c.colId)">{{::c.colDef.headerName}}</label>
-                        </div>
-                    </li>
-                </menu>
-            </div>
-            <button class="btn btn-default" title="Refresh" ng-if="$ctrl.options.refreshable" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    More&nbsp;
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li ng-repeat="dd in $ctrl.dropDownOptions" name="{{ dd.name }}" role="menuitem" ng-class="{'divider': dd.type == 0}" ng-if="$ctrl.isShown(dd)">
-                        <button ng-if="dd.type == 1" class="menu-item-button" type="button" ng-click="dd.onClick($ctrl.entry)">{{ $ctrl.getText(dd) }}</button>
-                        <a ng-if="dd.type == 2" href="{{ $ctrl.getHref(dd) }}">{{ dd.text }}</a>
-                    </li>
-                    <li ng-if="$ctrl.dropDownOptions.length > 0" class="divider"></li>
-                    <li role="menuitem"><button class="menu-item-button" type="button" ng-click="$ctrl.clearTableFilters()">Clear Table Filters</button></li>
-                    <li role="menuitem"><button class="menu-item-button" type="button" ng-click="$ctrl.exportCSV()">Export CSV</button></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-    <div class="clearfix"></div>
+	<div class="pull-left">
+		<ol class="breadcrumb pull-left" ng-if="$ctrl.breadCrumbs !== undefined">
+			<li ng-repeat="bc in $ctrl.breadCrumbs track by $index" ng-class="{'active': ($index+1 === $ctrl.breadCrumbs.length)}">
+				<a ng-if="$ctrl.bcHasHref(bc)" ng-href="{{ $ctrl.bcGetHref(bc) }}">{{ $ctrl.bcGetText(bc) }}</a>
+				<span class="bc" ng-if="!$ctrl.bcHasHref(bc)">{{  $ctrl.bcGetText(bc) }}</span>
+			</li>
+		</ol>
+		<ol class="breadcrumb pull-left" ng-if="$ctrl.breadCrumbs === undefined || $ctrl.breadCrumbs.length < 1">
+			<li class="active" ng-if="$ctrl.tableTitle">
+				{{ $ctrl.tableTitle }}
+			</li>
+		</ol>
+		<button ng-if="$ctrl.titleButton !== undefined" type="button" class="btn btn-link"
+				ng-click="$ctrl.titleButton.onClick()">{{ $ctrl.titleButton.getText() }}</button>
+		<span ng-if="$ctrl.options.selectRows">{{ $ctrl.selectedData.length }} row(s) selected</span>
+	</div>
+	<div class="pull-right">
+		<div class="form-inline" role="search">
+			<input id="quickSearch" name="quickSearch" type="search" class="form-control text-input" placeholder="Quick search..." ng-model="$ctrl.quickSearch" ng-change="$ctrl.onQuickSearchChanged()" aria-label="Search"/>
+			<div class="input-group text-input">
+					<span class="input-group-addon">
+						<label for="pageSize">Page size</label>
+					</span>
+				<input id="pageSize" name="pageSize" type="number" min="1" class="form-control" placeholder="100" ng-model="$ctrl.pageSize" ng-change="$ctrl.onPageSizeChanged()" />
+			</div>
+			<div class="input-group text-input" ng-if="$ctrl.hasSensitiveColumns()">
+				<label for="showSensitive" style="color: #333; font-size: 14px">Show Sensitive Data Columns</label>
+				<input id="showSensitive" name="showSensitive" type="checkbox" ng-model="$ctrl.sensitiveColumnsShown" ng-change="$ctrl.toggleSensitiveFields()"/>
+			</div>
+			<div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
+				<button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+					<i class="fa fa-columns"></i>&nbsp;
+					<span class="caret"></span>
+				</button>
+				<menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+					<li role="menuitem" ng-repeat="c in $ctrl.getColumns() | orderBy:'colDef.headerName'">
+						<div class="checkbox">
+							<label><input type="checkbox" ng-checked="c.isVisible()" ng-click="$ctrl.toggleVisibility(c.colId)">{{::c.colDef.headerName}}</label>
+						</div>
+					</li>
+				</menu>
+			</div>
+			<button class="btn btn-default" title="Refresh" ng-if="$ctrl.options.refreshable" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+			<button class="btn btn-default" title="Clear Table Filters" ng-click="$ctrl.clearTableFilters()">Clear <i class="fa fa-filter"></i></button>
+			<div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+				<button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+					More&nbsp;
+					<span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+					<li ng-repeat="dd in $ctrl.dropDownOptions" name="{{ dd.name }}" role="menuitem" ng-class="{'divider': dd.type == 0}" ng-if="$ctrl.isShown(dd)">
+						<button ng-if="dd.type == 1" class="menu-item-button" type="button" ng-click="dd.onClick($ctrl.entry)">{{ $ctrl.getText(dd) }}</button>
+						<a ng-if="dd.type == 2" href="{{ $ctrl.getHref(dd) }}">{{ dd.text }}</a>
+					</li>
+					<li ng-if="$ctrl.dropDownOptions.length > 0" class="divider"></li>
+					<li role="menuitem"><button class="menu-item-button" type="button" ng-click="$ctrl.exportCSV()">Export CSV</button></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="clearfix"></div>
 </div>
 <div class="x_content">
-    <div style="height: 740px;" ag-grid="$ctrl.gridOptions" class="jobs-table ag-theme-alpine"></div>
+	<div style="height: 740px;" ag-grid="$ctrl.gridOptions" class="jobs-table ag-theme-alpine"></div>
 </div>
 
 <menu id="context-menu" class="dropdown-menu" ng-style="$ctrl.menuStyle" type="contextmenu" ng-show="$ctrl.showMenu">
-    <ul>
-        <li role="menuitem" ng-repeat="menu in $ctrl.contextMenuOptions" ng-if="$ctrl.isShown(menu)">
-            <hr ng-if="menu.type == 0" class="divider"/>
-            <button ng-if="menu.type == 1" type="button" ng-disabled="$ctrl.contextIsDisabled(menu)" type="button" ng-click="$ctrl.contextMenuClick(menu, $event)">{{ $ctrl.getText(menu) }}</button>
-            <a ng-if="menu.type == 2 && !$ctrl.contextIsDisabled(menu)" href="{{ $ctrl.getHref(menu) }}" target="{{ menu.newTab ? '_blank' : '' }}">{{ $ctrl.getText(menu) }}</a>
-            <button ng-if="menu.type == 2 && $ctrl.contextIsDisabled(menu)" type="button" disabled>{{ $ctrl.getText(menu) }}</a>
-        </li>
-    </ul>
+	<ul>
+		<li role="menuitem" ng-repeat="menu in $ctrl.contextMenuOptions" ng-if="$ctrl.isShown(menu)">
+			<hr ng-if="menu.type == 0" class="divider"/>
+			<button ng-if="menu.type == 1" type="button" ng-disabled="$ctrl.contextIsDisabled(menu)" type="button" ng-click="$ctrl.contextMenuClick(menu, $event)">{{ $ctrl.getText(menu) }}</button>
+			<a ng-if="menu.type == 2 && !$ctrl.contextIsDisabled(menu)" href="{{ $ctrl.getHref(menu) }}" target="{{ menu.newTab ? '_blank' : '' }}">{{ $ctrl.getText(menu) }}</a>
+			<button ng-if="menu.type == 2 && $ctrl.contextIsDisabled(menu)" type="button" disabled>{{ $ctrl.getText(menu) }}</a>
+		</li>
+	</ul>
 </menu>

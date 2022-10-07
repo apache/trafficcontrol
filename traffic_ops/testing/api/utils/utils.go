@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	v3client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 	v4client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	v5client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 type ErrorAndMessage struct {
@@ -98,13 +99,12 @@ func CreateV4Session(t *testing.T, TrafficOpsURL string, username string, passwo
 	return userSession
 }
 
-// V3TestCase is the type of the V3TestData struct.
-// Uses nested map to represent the method being tested and the test's description.
-type V3TestCase map[string]map[string]V3TestData
-
-// V4TestCase is the type of the V4TestData struct.
-// Uses nested map to represent the method being tested and the test's description.
-type V4TestCase map[string]map[string]V4TestData
+// CreateV5Session creates a session for client v5 using the passed in username and password.
+func CreateV5Session(t *testing.T, TrafficOpsURL, username, password string, toReqTimeout int) *v5client.Session {
+	userSession, _, err := v5client.LoginWithAgent(TrafficOpsURL, username, password, true, "to-api-v5-client-tests", false, time.Second*time.Duration(toReqTimeout))
+	assert.RequireNoError(t, err, "Could not login with user %v: %v", username, err)
+	return userSession
+}
 
 // V3TestData represents the data needed for testing the v3 api endpoints.
 type V3TestData struct {
@@ -124,6 +124,28 @@ type V4TestData struct {
 	RequestBody   map[string]interface{}
 	Expectations  []CkReqFunc
 }
+
+// V5TestData represents the data needed for testing the v5 api endpoints.
+type V5TestData struct {
+	EndpointId    func() int
+	ClientSession *v5client.Session
+	RequestOpts   v5client.RequestOptions
+	RequestBody   map[string]interface{}
+	Expectations  []CkReqFunc
+}
+
+// V3TestCase is the type of the V3TestData struct.
+// Uses nested map to represent the method being tested and the test's description.
+type V3TestCase map[string]map[string]V3TestData
+
+// V4TestCase is the type of the V4TestData struct.
+// Uses nested map to represent the method being tested and the test's description.
+type V4TestCase map[string]map[string]V4TestData
+
+// V5TestCase is a map of test names to maps of HTTP request method descriptions
+// to V5TestData structures.
+// Uses nested map to represent the method being tested and the test's description.
+type V5TestCase map[string]map[string]V5TestData
 
 // CkReqFunc defines the reusable signature for all other functions that perform checks.
 // Common parameters that are checked include the request's info, response, alerts, and errors.
@@ -153,6 +175,20 @@ func HasError() CkReqFunc {
 func HasStatus(expectedStatus int) CkReqFunc {
 	return func(t *testing.T, reqInf toclientlib.ReqInf, _ interface{}, _ tc.Alerts, _ error) {
 		assert.Equal(t, expectedStatus, reqInf.StatusCode, "Expected Status Code: %d Got: %d", expectedStatus, reqInf.StatusCode)
+	}
+}
+
+// HasAlertLevel checks that the alert from the request matches the expected level.
+func HasAlertLevel(expectedAlertLevel string) CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, _ interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, alerts, "Expected alerts to not be nil.")
+		found := false
+		for _, alert := range alerts.Alerts {
+			if expectedAlertLevel == alert.Level {
+				found = true
+			}
+		}
+		assert.Equal(t, true, found, "Expected to find Alert Level: %s", expectedAlertLevel)
 	}
 }
 

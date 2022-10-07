@@ -39,7 +39,7 @@ const (
 	ParameterIDQueryParam = "parameterId"
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TOProfileParameter struct {
 	api.APIInfoImpl `json:"-"`
 	tc.ProfileParameterNullable
@@ -62,7 +62,7 @@ func (pp TOProfileParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: ProfileIDQueryParam, Func: api.GetIntKey}, {Field: ParameterIDQueryParam, Func: api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (pp TOProfileParameter) GetKeys() (map[string]interface{}, bool) {
 	if pp.ProfileID == nil {
 		return map[string]interface{}{ProfileIDQueryParam: 0}, false
@@ -109,13 +109,13 @@ func (pp *TOProfileParameter) Validate() (error, error) {
 	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
-//The TOProfileParameter implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a profileparameter with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the profile and lastUpdated values of the newly inserted profileparameter and have
-//to be added to the struct
+// The TOProfileParameter implementation of the Creator interface
+// all implementations of Creator should use transactions and return the proper errorType
+// ParsePQUniqueConstraintError is used to determine if a profileparameter with conflicting values exists
+// if so, it will return an errorType of DataConflict and the type should be appended to the
+// generic error message returned
+// The insert sql returns the profile and lastUpdated values of the newly inserted profileparameter and have
+// to be added to the struct
 func (pp *TOProfileParameter) Create() (error, error, int) {
 	if pp.ProfileID != nil {
 		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pp.ReqInfo.Tx.Tx, *pp.ProfileID)

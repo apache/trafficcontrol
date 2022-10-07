@@ -675,9 +675,23 @@ For HTTP and DNS-:ref:`Routed <ds-types>` Delivery Services, this will be added 
 Directives
 """
 
-The Raw Remap text is ordinarily added at the end of the line, after everything else. However, it may be necessary to add Range Request Handling after the Raw Remap. For example, if you have a plugin which manipulates the Range header. In this case, you can insert the text ``__RANGE_DIRECTIVE__`` in the Raw Remap text, and the range request handling directives will be added at that point.
+The Raw Remap text is ordinarily added at the end of the line, after everything else. However, it may be necessary to change the normal arg ordering, especially if the user needs to modify the cachekey, range headers or URI in a way that may change cachekey or regex_remap behaviors.
+
+It may be necessary to add Range Request Handling after the Raw Remap. For example, if you have a plugin which manipulates the Range header. In this case, you can insert the text ``__RANGE_DIRECTIVE__`` in the Raw Remap text, and the range request handling directives will be added at that point.
 
 For example, if you have an Apache Traffic Server lua plugin which manipulates the range, and are using Slice Range Request Handling which needs to run after your plugin, you can set a Raw Remap, ``@plugin=tslua.so @pparam=range.lua __RANGE_DIRECTIVE__``, and the ``@plugin=slice.so`` range directive will be inserted after your plugin.
+
+Another example might be a Delivery Service which modifies the uri in a way that changes the cachey key (cachekey), and affects parent routing (regex_remap) with the possibility of range request handling via background fetch.  Raw Remap Text might then look like: ``@plugin=tslua.so @pparam=uri-manip.lua __CACHEKEY_DIRECTIVE__ __REGEX_REMAP_DIRECTIVE__ __RANGE_DIRECTIVE__``.  This would set things up such that background_fetch would issue a request to the proper remap parent.
+
+.. table:: Supported Raw Remap Directives
+
+	+---------------------------+-------------------------------------------+
+	| Name                      | Use(s)                                    |
+	+===========================+===========================================+
+	| __CACHEKEY_DIRECTIVE__    | Inserts cachekey plugin and args (if any) |
+	| __RANGE_DIRECTIVE__       | Inserts range directive args (if any)     |
+	| __REGEX_REMAP_DIRECTIVE__ | Inserts regex_remap directive (if any)    |
+	+---------------------------+-------------------------------------------+
 
 .. _ds-regex-remap:
 
@@ -948,7 +962,7 @@ Naturally, this assumes that each redundant server is exactly identical, from re
 	| :abbr:`MSO (Multi-Site Origin)` | In documentation and used heavily in discussion in Slack, mailing list etc. | unchanged (usually only used where implicitly ``true``) |
 	+---------------------------------+-----------------------------------------------------------------------------+---------------------------------------------------------+
 
-A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site Origin configuration. These are detailed in `Parameters that Affect Multi-Site Origin`_.
+A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site Origin configuration. These are detailed in `Parameters that Affect Multi-Site Origin and Parent Down Behavior`_.
 
 .. seealso:: A quick guide on setting up Multi-Site Origins is given in :ref:`multi-site-origin-qht`.
 
@@ -1001,12 +1015,14 @@ The following :term:`Parameters` must have the :ref:`Config File <parameter-conf
 
 	.. impl-detail:: This :term:`Parameter` does not affect the contents of ``parent.config``, but instead ``strategies.yaml`` in :abbr:`ATS (Apache Traffic Server)` 9. It has the ``parent.config`` :ref:`parameter-config-file` value for consistency.
 
-	.. deprecated:: ATCv6.2
-		In :ref:`to-api` version 4 (unstable at the time of this writing), TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.
+- ``merge_parent_groups`` - on a Deliver Service :term:`Profile`, if this exists, moves each of the space-separated :term:`Cache Groups` named in the :ref:`parameter-value` from the secondary parent list into the primary parent list. This can be used to combine all parents into a single consistent hash ring.
 
-Parameters that Affect Multi-Site Origin
-''''''''''''''''''''''''''''''''''''''''
-Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`ATS (Apache Traffic Server)` `parent.config file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_ (usually by almost the same name), and documentation for these fields is provided in the form of links to their entries in the :abbr:`ATS (Apache Traffic Server)` documentation.
+	.. deprecated:: ATCv6.2
+		In :ref:`to-api` version 4, TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.
+
+Parameters that Affect Multi-Site Origin and Parent Down Behavior
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`ATS (Apache Traffic Server)` `parent.config file <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_ (usually by almost the same name), and documentation for these fields is provided in the form of links to their entries in the :abbr:`ATS (Apache Traffic Server)` documentation.
 
 .. _round_robin: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-round-robin
 .. _max_simple_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-simple-retries
@@ -1021,33 +1037,33 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 
 .. table:: :term:`Parameters` of a Delivery Service Profile_ that Affect :abbr:`MSO (Multi-Site-Origin)` Configuration
 
-	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| Name                                        | :abbr:`ATS (Apache Traffic Server)` `parent.config`_ field                 | Effect                                                                              |
-	+=============================================+============================================================================+=====================================================================================+
-	| mso.algorithm                               | `round_robin`_                                                             | Sets the algorithm used to determine from which :term:`origin server` content will  |
-	|                                             |                                                                            | be requested.                                                                       |
-	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| mso.max_simple_retries                      | `max_simple_retries`_                                                      | Sets a strict limit on the number of "simple retries" allowed before giving up      |
-	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| mso.max_unavailable_server_retries          | `max_unavailable_server_retries`_                                          | Sets a strict limit on the number of times the :term:`cache server` will attempt to |
-	|                                             |                                                                            | request content from an :term:`origin server` that has previously been considered   |
-	|                                             |                                                                            | "unavailable".                                                                      |
-	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| mso.parent_retry                            | `parent_retry`_                                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
-	|                                             |                                                                            | "unavailable server retries", or both.                                              |
-	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| mso.simple_retry_response_codes             | **UNKNOWN**                                                                | **UNKNOWN** - supposedly defines HTTP response codes from an :term:`origin server`  |
-	|                                             |                                                                            | that necessitate a "simple retry".                                                  |
-	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| mso.unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |
-	|                                             |                                                                            | currently "unavailable".                                                            |
-	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| merge_parent_groups                         | `parent`_ and `secondary_parent`_                                          | Moves each of the space-separated :term:`Cache Groups` named in the                 |
-	|                                             |                                                                            | :ref:`parameter-value` from the secondary parent list into the primary parent list. |
-	|                                             |                                                                            | This can be used to combine all parents into a single consistent hash ring.         |
-	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	+---------------------------------------------+--------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| Name                                    | :abbr:`ATS (Apache Traffic Server)` `parent.config`_ field | Effect                                                                              |
+	+=========================================+============================================================+=====================================================================================+
+	| algorithm                               | `round_robin`_                                             | Sets the algorithm used to determine from which :term:`origin server` content will  |
+	|                                         |                                                            | be requested.                                                                       |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| max_simple_retries                      | `max_simple_retries`_                                      | Sets a strict limit on the number of "simple retries" allowed before giving up      |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| max_unavailable_server_retries          | `max_unavailable_server_retries`_                          | Sets a strict limit on the number of times the :term:`cache server` will attempt to |
+	|                                         |                                                            | request content from an :term:`origin server` that has previously been considered   |
+	|                                         |                                                            | "unavailable".                                                                      |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| parent_retry                            | `parent_retry`_                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
+	|                                         |                                                            | "unavailable server retries", or both.                                              |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| simple_retry_response_codes             | **UNKNOWN**                                                | **UNKNOWN** - supposedly defines HTTP response codes from an :term:`origin server`  |
+	|                                         |                                                            | that necessitate a "simple retry".                                                  |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |
+	|                                         |                                                            | currently "unavailable".                                                            |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 
-.. warning:: The ``mso.simple_retry_response_codes`` :term:`Parameter` has no apparent, possible use according to the :abbr:`ATS (Apache Traffic Server)` `parent.config documentation <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_. Whether or not it has any effect - let alone the *intended* effect - is not known, and its use is therefore strongly discouraged.
+The above :term:`Parameters` are supported for ``first``, ``inner`` and ``last`` tiers by specifying prefixes ``first.``, ``inner.`` and ``last.``, applicable to both topology and non topology. This allows fine tuning of marking parents "down" and retry behavior inside a CDN.
+
+.. deprecated:: The ``mso.`` prefix is deprecated.  ``last.`` prefix should be preferred although no prefix can also be used.
+
+.. warning:: The `simple_retry_response_codes`` :term:`Parameter` has no apparent, possible use according to the :abbr:`ATS (Apache Traffic Server)` `parent.config documentation <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_. Whether or not it has any effect - let alone the *intended* effect - is not known, and its use is therefore strongly discouraged.
 
 .. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
 

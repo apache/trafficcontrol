@@ -36,3 +36,13 @@ func Stacktrace() []byte {
 		buf = make([]byte, len(buf)*2)
 	}
 }
+
+// SliceToSet converts a slice to a map whose keys are the slice members, that is, a set.
+// Note duplicates will be lost, as is the nature of a set.
+func SliceToSet[T comparable](sl []T) map[T]struct{} {
+	st := map[T]struct{}{}
+	for _, val := range sl {
+		st[val] = struct{}{}
+	}
+	return st
+}

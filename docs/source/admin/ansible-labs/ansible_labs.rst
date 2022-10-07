@@ -37,7 +37,6 @@ Lab Implementation Concepts
 ===========================
 
 .. figure:: ATC.lab.layers.svg
-	:scale: 100 %
 	:align: center
 	:figclass: align-center
 
@@ -150,7 +149,6 @@ It's very useful to still review the Administrator's Guide in the documentation 
 If you're attempting to optimize the wallclock time needed to deploy all the components in parallel, they should be installed like the following:
 
 .. figure:: ATC.Installation.dependencies.svg
-	:scale: 100 %
 	:align: center
 	:figclass: align-center
 

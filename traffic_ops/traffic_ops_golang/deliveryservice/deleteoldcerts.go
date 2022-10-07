@@ -42,7 +42,6 @@ import (
 // Note because it is asynchronous, this may return a nil error, but the asynchronous goroutine may error when fetching or deleting the certificates. If such an error occurs, it will be logged to the error log.
 //
 // If certificate deletion is already being processed by a goroutine, another delete will be queued, and this immediately returns nil. Only one delete will ever be queued.
-//
 func DeleteOldCerts(db *sql.DB, tx *sql.Tx, cfg *config.Config, cdn tc.CDNName, tv trafficvault.TrafficVault) error {
 	if !cfg.TrafficVaultEnabled {
 		log.Infoln("deleting old delivery service certificates: Traffic Vault is not enabled, returning without cleaning up old certificates.")

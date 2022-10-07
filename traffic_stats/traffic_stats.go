@@ -166,13 +166,13 @@ type RunningConfig struct {
 	LastSummaryTime time.Time
 }
 
-//InfluxDBProps contains URL and connection information for InfluxDB servers
+// InfluxDBProps contains URL and connection information for InfluxDB servers
 type InfluxDBProps struct {
 	URL          string
 	InfluxClient influx.Client
 }
 
-//Timers struct contains all the timers
+// Timers struct contains all the timers
 type Timers struct {
 	Poll         <-chan time.Time
 	DailySummary <-chan time.Time
@@ -1041,6 +1041,18 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 		host := hosts[n]
 		hosts = append(hosts[:n], hosts[n+1:]...)
 		parsedURL, _ := url.Parse(host.URL)
+		if host.InfluxClient != nil && parsedURL.Scheme == "http" {
+			// NOTE: closing an http client just closes idle connections -- the client can still make new requests
+			if err := host.InfluxClient.Close(); err != nil {
+				errorf("closing http influx client: %s", err)
+			}
+			_, _, err := host.InfluxClient.Ping(10)
+			if err != nil {
+				warnf("pinging InfluxDB: %v", err)
+				continue
+			}
+			return host.InfluxClient, nil
+		}
 		if parsedURL.Scheme == "udp" {
 			conf := influx.UDPConfig{
 				Addr: parsedURL.Host,
@@ -1063,12 +1075,6 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 			errorf("An error occurred creating InfluxDB HTTP client: %v", err)
 			continue
 		}
-		//Close old connections explicitly
-		if host.InfluxClient != nil {
-			if err := host.InfluxClient.Close(); err != nil {
-				errorf("closing influx client: %s", err)
-			}
-		}
 		host.InfluxClient = con
 		_, _, err = con.Ping(10)
 		if err != nil {
@@ -1077,7 +1083,7 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 		}
 		return con, nil
 	}
-	err := errors.New("Could not connect to any of the InfluxDb servers defined in the influxUrls config.")
+	err := errors.New("could not connect to any of the InfluxDb servers defined in the influxUrls config")
 	return nil, err
 }
 

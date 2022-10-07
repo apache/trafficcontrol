@@ -31,7 +31,7 @@ var FormEditRoleController = function(roles, $scope, $controller, $uibModal, $an
 	};
 
 	var save = function(role) {
-		roleService.updateRole(role).
+		roleService.updateRole(role, $scope.roleName).
 			then(function(result) {
 				$scope.roleName = angular.copy(role.name);
 				messageModel.setMessages(result.alerts, false);

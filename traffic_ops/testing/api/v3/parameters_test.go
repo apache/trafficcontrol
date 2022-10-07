@@ -16,234 +16,202 @@
 package v3
 
 import (
+	"encoding/json"
 	"net/http"
-	"sync"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestParameters(t *testing.T) {
-
-	//toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	//SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Portal, Config.TrafficOps.UserPassword)
-
 	WithObjs(t, []TCObj{Parameters}, func() {
-		GetTestParametersIMS(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		UpdateTestParameters(t)
-		UpdateTestParametersWithHeaders(t, header)
-		GetTestParameters(t)
-		GetTestParametersIMSAfterChange(t, header)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestParametersWithHeaders(t, header)
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"tm.instance_name"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateParametersFields(map[string]interface{}{"Name": "tm.instance_name"})),
+				},
+			},
+			"PUT": {
+				"OK when VALID REQUEST": {
+					EndpointId:    GetParameterID(t, "LogObject.Format", "logs_xml.config", "custom_ats_2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"configFile": "updated.config",
+						"name":       "updated name",
+						"secure":     true,
+						"value":      "updated value",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateParametersUpdateCreateFields("updated name",
+							map[string]interface{}{"ConfigFile": "updated.config", "Name": "updated name", "Secure": true, "Value": "updated value"})),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:     GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestBody: map[string]interface{}{
+						"configFile": "logs_xml.config",
+						"name":       "LogFormat.Name",
+						"secure":     false,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"configFile": "logs_xml.config",
+						"name":       "LogFormat.Name",
+						"secure":     false,
+					},
+					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					parameter := tc.Parameter{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &parameter)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							if name == "OK when VALID NAME parameter" {
+								resp, reqInf, err := testCase.ClientSession.GetParameterByNameWithHdr(testCase.RequestParams["name"][0], testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetParametersWithHdr(testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateParameter(parameter)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateParameterByIDWithHdr(testCase.EndpointId(), parameter, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteParameterByID(testCase.EndpointId())
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Parameters) > 0 {
-		firstParameter := testData.Parameters[0]
-		// Retrieve the Parameter by name so we can get the id for the Update
-		resp, _, err := TOSession.GetParametersByProfileNameWithHdr(firstParameter.Name, header)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-		}
-		if len(resp) > 0 {
-			remoteParameter := resp[0]
-			expectedParameterValue := "UPDATED"
-			remoteParameter.Value = expectedParameterValue
-			_, reqInf, err := TOSession.UpdateParameterByIDWithHdr(remoteParameter.ID, remoteParameter, header)
-			if err == nil {
-				t.Errorf("Expected error about precondition failed, but got none")
-			}
-			if reqInf.StatusCode != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+func validateParametersFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Parameters response to not be nil.")
+		parameterResp := resp.([]tc.Parameter)
+		for field, expected := range expectedResp {
+			for _, parameter := range parameterResp {
+				switch field {
+				case "ConfigFile":
+					assert.Equal(t, expected, parameter.ConfigFile, "Expected ConfigFile to be %v, but got %s", expected, parameter.ConfigFile)
+				case "ID":
+					assert.Equal(t, expected, parameter.ID, "Expected ID to be %v, but got %d", expected, parameter.ID)
+				case "Name":
+					assert.Equal(t, expected, parameter.Name, "Expected Name to be %v, but got %s", expected, parameter.Name)
+				case "Secure":
+					assert.Equal(t, expected, parameter.Secure, "Expected Secure to be %v, but got %v", expected, parameter.Secure)
+				case "Value":
+					assert.Equal(t, expected, parameter.Value, "Expected Value to be %v, but got %s", expected, parameter.Value)
+				default:
+					t.Fatalf("Expected field: %v, does not exist in response", field)
+				}
 			}
 		}
 	}
 }
 
-func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
-	for _, pl := range testData.Parameters {
-		_, reqInf, err := TOSession.GetParameterByNameWithHdr(pl.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
+func validateParametersUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		parameters, _, err := TOSession.GetParameterByNameWithHdr(name, nil)
+		assert.RequireNoError(t, err, "Error getting Parameter: %v", err)
+		assert.RequireEqual(t, 1, len(parameters), "Expected one Parameter returned Got: %d", len(parameters))
+		validateParametersFields(expectedResp)(t, toclientlib.ReqInf{}, parameters, tc.Alerts{}, nil)
 	}
-	currentTime := time.Now().UTC()
-	currentTime = currentTime.Add(1 * time.Second)
-	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	for _, pl := range testData.Parameters {
-		_, reqInf, err := TOSession.GetParameterByNameWithHdr(pl.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
+}
+
+func GetParameterID(t *testing.T, name string, configFile string, value string) func() int {
+	return func() int {
+		resp, _, err := TOSession.GetParameterByNameAndConfigFileAndValueWithHdr(name, configFile, value, nil)
+		assert.RequireNoError(t, err, "Get Parameters Request failed with error: %v", err)
+		assert.RequireEqual(t, 1, len(resp), "Expected response object length 1, but got %d", len(resp))
+		return resp[0].ID
 	}
 }
 
 func CreateTestParameters(t *testing.T) {
-
-	for _, pl := range testData.Parameters {
-		resp, _, err := TOSession.CreateParameter(pl)
-		t.Log("Response: ", resp)
-		if err != nil {
-			t.Errorf("could not CREATE parameters: %v", err)
-		}
-	}
-
-}
-
-func CreateNegativeTestParameters(t *testing.T) {
-	invalidParameters := []struct {
-		Reason string       `json:"reason"`
-		Entity tc.Parameter `json:"entity"`
-	}{{
-		Reason: "the weight value does not parse to a float",
-		Entity: tc.Parameter{
-			ConfigFile: "parent.config",
-			Name:       "weight",
-			Secure:     false,
-		}}, {
-		Reason: "NaN is not a valid float",
-		Entity: tc.Parameter{
-			ConfigFile: "parent.config",
-			Name:       "weight",
-			Secure:     false,
-		}}}
-
-	for _, negativeTest := range invalidParameters {
-		pl := negativeTest.Entity
-		resp, _, err := TOSession.CreateParameter(pl)
-		t.Log("Response: ", resp)
-		if err == nil {
-			t.Fatalf("Expected an error because %s but received no error, invalid parameter was created", negativeTest.Reason)
-		}
-	}
-
-}
-
-func UpdateTestParameters(t *testing.T) {
-
-	firstParameter := testData.Parameters[0]
-	// Retrieve the Parameter by name so we can get the id for the Update
-	resp, _, err := TOSession.GetParameterByName(firstParameter.Name)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-	}
-	remoteParameter := resp[0]
-	expectedParameterValue := "UPDATED"
-	remoteParameter.Value = expectedParameterValue
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter)
-	if err != nil {
-		t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
-	}
-
-	// Retrieve the Parameter to check Parameter name got updated
-	resp, _, err = TOSession.GetParameterByID(remoteParameter.ID)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-	}
-	respParameter := resp[0]
-	if respParameter.Value != expectedParameterValue {
-		t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
-	}
-
-}
-
-func GetTestParametersIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	for _, pl := range testData.Parameters {
-		_, reqInf, err := TOSession.GetParameterByNameWithHdr(pl.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
-	}
-}
-
-func GetTestParameters(t *testing.T) {
-
-	for _, pl := range testData.Parameters {
-		resp, _, err := TOSession.GetParameterByName(pl.Name)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v", err, resp)
-		}
-	}
-}
-
-func DeleteTestParametersParallel(t *testing.T) {
-
-	var wg sync.WaitGroup
-	for _, pl := range testData.Parameters {
-
-		wg.Add(1)
-		go func(p tc.Parameter) {
-			defer wg.Done()
-			DeleteTestParameter(t, p)
-		}(pl)
-
-	}
-	wg.Wait()
+	alerts, _, err := TOSession.CreateMultipleParameters(testData.Parameters)
+	assert.RequireNoError(t, err, "Could not create Parameters: %v - alerts: %+v", err, alerts)
 }
 
 func DeleteTestParameters(t *testing.T) {
+	parameters, _, err := TOSession.GetParametersWithHdr(nil)
+	assert.RequireNoError(t, err, "Cannot get Parameters: %v", err)
 
-	for _, pl := range testData.Parameters {
-		DeleteTestParameter(t, pl)
-	}
-}
-
-func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
-
-	// Retrieve the Parameter by name so we can get the id for the Update
-	resp, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", pl.Name, err)
-	}
-
-	if len(resp) == 0 {
-		// TODO This fails for the ProfileParameters test; determine a way to check this, even for ProfileParameters
-		// t.Errorf("DeleteTestParameter got no params for %+v %+v", pl.Name, pl.ConfigFile)
-	} else if len(resp) > 1 {
-		// TODO figure out why this happens, and be more precise about deleting things where created.
-		// t.Errorf("DeleteTestParameter params for %+v %+v expected 1, actual %+v", pl.Name, pl.ConfigFile, len(resp))
-	}
-	for _, respParameter := range resp {
-		delResp, _, err := TOSession.DeleteParameterByID(respParameter.ID)
-		if err != nil {
-			t.Errorf("cannot DELETE Parameter by name: %v - %v", err, delResp)
-		}
+	for _, parameter := range parameters {
+		alerts, _, err := TOSession.DeleteParameterByID(parameter.ID)
+		assert.NoError(t, err, "Cannot delete Parameter #%d: %v - alerts: %+v", parameter.ID, err, alerts.Alerts)
 
 		// Retrieve the Parameter to see if it got deleted
-		pls, _, err := TOSession.GetParameterByID(pl.ID)
-		if err != nil {
-			t.Errorf("error deleting Parameter name: %s", err.Error())
-		}
-		if len(pls) > 0 {
-			t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted", pl.Name, pl.ConfigFile)
-		}
+		getParameters, _, err := TOSession.GetParameterByIDWithHdr(parameter.ID, nil)
+		assert.NoError(t, err, "Unexpected error fetching Parameter #%d after deletion: %v", parameter.ID, err)
+		assert.Equal(t, 0, len(getParameters), "Expected Parameter '%s' to be deleted, but it was found in Traffic Ops", parameter.Name)
 	}
 }

@@ -29,10 +29,6 @@ var FormServiceCategoryController = function(serviceCategory, $scope, $location,
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
-    $scope.viewDSs = function() {
-        $location.path('/service-categories/' + encodeURIComponent(serviceCategory.name) + '/delivery-services');
-    };
-
 };
 
 FormServiceCategoryController.$inject = ['serviceCategory', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];

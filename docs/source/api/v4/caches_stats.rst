@@ -14,14 +14,14 @@
 ..
 
 
-.. _to-api-caches-stats:
+.. _to-api-v4-caches-stats:
 
 ****************
 ``caches/stats``
 ****************
 An API endpoint that returns cache statistics using the :ref:`tm-api`.
 
-.. seealso:: This gives a set of basic statistics for *all* :term:`cache servers` at the current time. For statistics from time ranges and/or aggregated over a specific CDN, use :ref:`to-api-cache_stats`.
+.. seealso:: This gives a set of basic statistics for *all* :term:`cache servers` at the current time. For statistics from time ranges and/or aggregated over a specific CDN, use :ref:`to-api-v4-cache_stats`.
 
 ``GET``
 =======

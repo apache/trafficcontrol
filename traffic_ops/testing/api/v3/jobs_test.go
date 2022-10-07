@@ -16,310 +16,211 @@ package v3
 */
 
 import (
+	"encoding/json"
 	"net/http"
-	"strconv"
-	"strings"
+	"net/url"
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestJobs(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
-		CreateTestJobs(t)
-		CreateTestInvalidationJobs(t)
-		CreateTestInvalidJob(t)
-		GetTestJobsQueryParams(t)
-		GetTestJobs(t)
-		GetTestInvalidationJobs(t)
-		JobCollisionWarningTest(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, Jobs}, func() {
+
+		currentTime := time.Now()
+		startTime := currentTime.UTC().Add(time.Minute)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+				},
+				"OK when VALID DELIVERYSERVICE parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"deliveryService": {"ds2"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateInvalidationJobsFields(map[string]interface{}{"DeliveryService": "ds2"})),
+				},
+			},
+			"POST": {
+				"BAD REQUEST when TTLHours value GREATER than MAXREVALDURATIONDAYS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"deliveryService": "ds1",
+						"regex":           "/.*",
+						"startTime":       startTime,
+						"ttl":             9999,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"WARNING ALERT when JOB COLLISION": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"deliveryService": "ds1",
+						"regex":           "/foo",
+						"startTime":       startTime.Add(time.Hour),
+						"ttl":             2160,
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.HasAlertLevel(tc.WarnLevel.String())),
+				},
+			},
+			"PUT": {
+				"WARNING ALERT when JOB COLLISION": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"id":              GetJobID(t, "ds1", "admin")(),
+						"assetUrl":        "http://origin.example.net/foo",
+						"createdBy":       "admin",
+						"deliveryService": "ds1",
+						"regex":           "/foo",
+						"keyword":         "PURGE",
+						"parameters":      "TTL:2h",
+						"startTime":       startTime.Add(time.Hour),
+						"ttl":             2160,
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.HasAlertLevel(tc.WarnLevel.String())),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					job := tc.InvalidationJobInput{}
+					jobUpdate := tc.InvalidationJob{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						if method == "POST" {
+							err = json.Unmarshal(dat, &job)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						} else if method == "PUT" {
+							err = json.Unmarshal(dat, &jobUpdate)
+							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+						}
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							var ds interface{}
+							if val, ok := testCase.RequestParams["deliveryService"]; ok {
+								ds = val[0]
+								resp, reqInf, err := testCase.ClientSession.GetInvalidationJobsWithHdr(&ds, nil, testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetInvalidationJobsWithHdr(nil, nil, testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateInvalidationJob(job)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateInvalidationJob(jobUpdate)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteInvalidationJob(uint64(testCase.EndpointId()))
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func CreateTestJobs(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
-	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
+func validateInvalidationJobsFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Invalidation Jobs response to not be nil.")
+		jobResp := resp.([]tc.InvalidationJob)
+		for field, expected := range expectedResp {
+			for _, job := range jobResp {
+				switch field {
+				case "AssetURL":
+					assert.RequireNotNil(t, job.AssetURL, "Expected AssetURL to not be nil.")
+					assert.Equal(t, expected, *job.AssetURL, "Expected AssetURL to be %v, but got %s", expected, *job.AssetURL)
+				case "CreatedBy":
+					assert.RequireNotNil(t, job.CreatedBy, "Expected CreatedBy to not be nil.")
+					assert.Equal(t, expected, *job.CreatedBy, "Expected CreatedBy to be %v, but got %s", expected, *job.CreatedBy)
+				case "DeliveryService":
+					assert.RequireNotNil(t, job.DeliveryService, "Expected DeliveryService to not be nil.")
+					assert.Equal(t, expected, *job.DeliveryService, "Expected DeliveryService to be %v, but got %s", expected, *job.DeliveryService)
+				case "ID":
+					assert.RequireNotNil(t, job.ID, "Expected ID to not be nil.")
+					assert.Equal(t, uint64(expected.(int)), *job.ID, "Expected ID to be %v, but got %s", expected, *job.ID)
+				case "Keyword":
+					assert.RequireNotNil(t, job.Keyword, "Expected Keyword to not be nil.")
+					assert.Equal(t, expected, *job.Keyword, "Expected Keyword to be %v, but got %s", expected, *job.Keyword)
+				case "Parameters":
+					assert.RequireNotNil(t, job.Parameters, "Expected Parameters to not be nil.")
+					assert.Equal(t, expected, *job.Parameters, "Expected Parameters to be %v, but got %s", expected, *job.Parameters)
+				case "StartTime":
+					assert.RequireNotNil(t, job.StartTime, "Expected StartTime to not be nil.")
+					assert.Equal(t, true, job.StartTime.Round(time.Minute).Equal(expected.(time.Time).Round(time.Minute)), "Expected StartTime to be %v, but got %s", expected, job.StartTime)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
+		}
 	}
+}
 
-	for i, job := range testData.InvalidationJobs {
+func GetJobID(t *testing.T, ds interface{}, user interface{}) func() int {
+	return func() int {
+		t.Helper()
+		jobs, _, err := TOSession.GetInvalidationJobsWithHdr(&ds, &user, nil)
+		assert.RequireNoError(t, err, "Get Jobs Request failed with error:", err)
+		assert.RequireGreaterOrEqual(t, len(jobs), 1, "Expected at least 1 response object, but got %d", len(jobs))
+		assert.RequireNotNil(t, jobs[0].ID, "Expected Job ID to not be nil.")
+		return int(*jobs[0].ID)
+	}
+}
+
+func CreateTestJobs(t *testing.T) {
+	for _, job := range testData.InvalidationJobs {
 		job.StartTime = &tc.Time{
 			Time:  time.Now().Add(time.Minute).UTC(),
 			Valid: true,
 		}
-		testData.InvalidationJobs[i] = job
-	}
-
-	for _, job := range testData.InvalidationJobs {
-		request := tc.InvalidationJobInput{
-			DeliveryService: job.DeliveryService,
-			Regex:           job.Regex,
-			StartTime:       job.StartTime,
-			TTL:             job.TTL,
-		}
-		_, _, err := TOSession.CreateInvalidationJob(request)
-		if err != nil {
-			t.Errorf("could not CREATE job: %v", err)
-		}
+		resp, _, err := TOSession.CreateInvalidationJob(job)
+		assert.RequireNoError(t, err, "Could not create job: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
-func JobCollisionWarningTest(t *testing.T) {
-	startTime := tc.Time{
-		Time:  time.Now().Add(time.Hour),
-		Valid: true,
-	}
-	firstJob := tc.InvalidationJobInput{
-		DeliveryService: util.InterfacePtr(testData.DeliveryServices[0].XMLID),
-		Regex:           util.StrPtr(`/\.*([A-Z]0?)`),
-		TTL:             util.InterfacePtr(16),
-		StartTime:       &startTime,
-	}
+func DeleteTestJobs(t *testing.T) {
+	jobs, _, err := TOSession.GetInvalidationJobsWithHdr(nil, nil, nil)
+	assert.NoError(t, err, "Cannot get Jobs: %v - alerts: %+v", err)
 
-	_, _, err := TOSession.CreateInvalidationJob(firstJob)
-	if err != nil {
-		t.Fatal(err)
+	for _, job := range jobs {
+		assert.RequireNotNil(t, job.ID, "Expected JOB ID to not be nil.")
+		alerts, _, err := TOSession.DeleteInvalidationJob(*job.ID)
+		assert.NoError(t, err, "Unexpected error deleting Job with ID: (#%d): %v - alerts: %+v", *job.ID, err, alerts.Alerts)
 	}
-
-	newTime := tc.Time{
-		Time:  startTime.Time.Add(time.Hour),
-		Valid: true,
-	}
-	newJob := tc.InvalidationJobInput{
-		DeliveryService: firstJob.DeliveryService,
-		Regex:           firstJob.Regex,
-		TTL:             firstJob.TTL,
-		StartTime:       &newTime,
-	}
-
-	alerts, _, err := TOSession.CreateInvalidationJob(newJob)
-	if err != nil {
-		t.Fatalf("expected invalidation job create to succeed: %v", err)
-	}
-
-	if len(alerts.Alerts) != 2 {
-		t.Fatalf("expected 2 alerts on creation, got %v", len(alerts.Alerts))
-	}
-
-	if alerts.Alerts[0].Level != tc.WarnLevel.String() {
-		t.Fatalf("expected first alert to be a warning, got %v", alerts.Alerts[0].Level)
-	}
-
-	if !strings.Contains(alerts.Alerts[0].Text, *firstJob.Regex) {
-		t.Fatalf("expected first alert to be about the first job, got: %v", alerts.Alerts[0].Text)
-	}
-
-	jobs, _, err := TOSession.GetInvalidationJobs(util.InterfacePtr(*testData.DeliveryServices[0].XMLID), nil)
-	if err != nil {
-		t.Fatalf("unable to get invalidation jobs: %v", err)
-	}
-
-	var realJob *tc.InvalidationJob
-	for i, job := range jobs {
-		d := (*newJob.DeliveryService)
-		y := d.(*string)
-		diff := newJob.StartTime.Time.Sub(job.StartTime.Time)
-		if *job.DeliveryService == *y && *job.CreatedBy == "admin" &&
-			diff < time.Second {
-			realJob = &jobs[i]
-			break
-		}
-	}
-
-	if realJob == nil || *realJob.ID == 0 {
-		t.Fatal("could not find new job")
-	}
-
-	newTime.Time = startTime.Time.Add(time.Hour * 2)
-	realJob.StartTime = &newTime
-	alerts, _, err = TOSession.UpdateInvalidationJob(*realJob)
-	if err != nil {
-		t.Fatalf("expected invalidation job update to succeed: %v", err)
-	}
-
-	if len(alerts.Alerts) != 2 {
-		t.Fatalf("expected 2 alerts on update, got %v", len(alerts.Alerts))
-	}
-
-	if alerts.Alerts[0].Level != tc.WarnLevel.String() {
-		t.Fatalf("expected first alert to be a warning, got %v", alerts.Alerts[0].Level)
-	}
-
-	if !strings.Contains(alerts.Alerts[0].Text, *firstJob.Regex) {
-		t.Fatalf("expected first alert to be about the first job, got: %v", alerts.Alerts[0].Text)
-	}
-}
-
-func CreateTestInvalidationJobs(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
-	if err != nil {
-		t.Fatalf("cannot GET Delivery Services: %v - %v", err, toDSes)
-	}
-	dsNameIDs := map[string]int64{}
-	for _, ds := range toDSes {
-		dsNameIDs[*ds.XMLID] = int64(*ds.ID)
-	}
-
-	for _, job := range testData.InvalidationJobs {
-		_, ok := dsNameIDs[(*job.DeliveryService).(string)]
-		if !ok {
-			t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DeliveryService)
-		}
-		if _, _, err := TOSession.CreateInvalidationJob(job); err != nil {
-			t.Errorf("could not CREATE job: %v", err)
-		}
-	}
-}
-
-func CreateTestInvalidJob(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
-	if err != nil {
-		t.Fatalf("cannot GET Delivery Services: %v - %v", err, toDSes)
-	}
-	dsNameIDs := map[string]int64{}
-	for _, ds := range toDSes {
-		dsNameIDs[*ds.XMLID] = int64(*ds.ID)
-	}
-
-	job := testData.InvalidationJobs[0]
-	_, ok := dsNameIDs[(*job.DeliveryService).(string)]
-	if !ok {
-		t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DeliveryService)
-	}
-	maxRevalDays := 0
-	foundMaxRevalDays := false
-	for _, p := range testData.Parameters {
-		if p.Name != "maxRevalDurationDays" {
-			continue
-		}
-		maxRevalDays, err = strconv.Atoi(p.Value)
-		if err != nil {
-			t.Fatalf("unable to parse maxRevalDurationDays value '%s' to int", p.Value)
-		}
-		foundMaxRevalDays = true
-	}
-	if !foundMaxRevalDays {
-		t.Fatalf("expected: parameter named maxRevalDurationDays, actual: not found")
-	}
-	tooHigh := interface{}((maxRevalDays * 24) + 1)
-	job.TTL = &tooHigh
-	_, reqInf, err := TOSession.CreateInvalidationJob(job)
-	if err == nil {
-		t.Error("creating invalid job (TTL higher than maxRevalDurationDays) - expected: error, actual: nil error")
-	}
-	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
-		t.Errorf("creating invalid job (TTL higher than maxRevalDurationDays) - expected: 400-level status code, actual: %d", reqInf.StatusCode)
-	}
-}
-
-func GetTestJobsQueryParams(t *testing.T) {
-	var xmlId interface{} = "ds2"
-	toJobs, _, err := TOSession.GetInvalidationJobs(&xmlId, nil)
-	if err != nil {
-		t.Fatalf("error getting jobs: %v", err)
-	}
-	foundOne := false
-	for _, j := range toJobs {
-		if j.DeliveryService == nil {
-			t.Error("expected: non-nil DeliveryService pointer, actual: nil")
-		} else if *j.DeliveryService != "ds2" {
-			t.Errorf("expected: DeliveryService == ds2, actual: DeliveryService == %s", *j.DeliveryService)
-		} else {
-			foundOne = true
-		}
-	}
-	if !foundOne {
-		t.Error("expected: to find at least one job with deliveryService == ds2, actual: found none")
-	}
-}
-
-func GetTestJobs(t *testing.T) {
-	toJobs, _, err := TOSession.GetInvalidationJobs(nil, nil)
-	if err != nil {
-		t.Fatalf("error getting jobs: %v", err)
-	}
-
-	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
-	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
-	}
-
-	for i, testJob := range testData.InvalidationJobs {
-		found := false
-		if testJob.DeliveryService == nil {
-			t.Errorf("test job (index %v) has nil delivery service", i)
-			continue
-		} else if testJob.Regex == nil {
-			t.Errorf("test job (index %v) has nil regex", i)
-			continue
-		}
-		for j, toJob := range toJobs {
-			if toJob.DeliveryService == nil {
-				t.Errorf("to job (index %v) has nil delivery service", j)
-				continue
-			} else if toJob.AssetURL == nil {
-				t.Errorf("to job (index %v) has nil asset url", j)
-				continue
-			}
-			if *toJob.DeliveryService != *testJob.DeliveryService {
-				continue
-			}
-			if !strings.HasSuffix(*toJob.AssetURL, *testJob.Regex) {
-				continue
-			}
-			toJobTime := toJob.StartTime.Round(time.Minute)
-			testJobTime := testJob.StartTime.Round(time.Minute)
-			if !toJobTime.Equal(testJobTime) {
-				t.Errorf("test job ds %v regex %v start time expected '%+v' actual '%+v'", *testJob.DeliveryService, *testJob.Regex, testJobTime, toJobTime)
-				continue
-			}
-			found = true
-			break
-		}
-		if !found {
-			t.Errorf("test job ds %v regex %v expected: exists, actual: not found", *testJob.DeliveryService, *testJob.Regex)
-		}
-	}
-}
-
-func GetTestInvalidationJobs(t *testing.T) {
-	jobs, _, err := TOSession.GetInvalidationJobs(nil, nil)
-	if err != nil {
-		t.Fatalf("error getting invalidation jobs: %v", err)
-	}
-
-	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
-	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
-	}
-
-	for _, ds := range toDSes {
-		if *ds.ID <= 0 {
-			t.Fatalf("Erroneous Delivery Service - has invalid ID: %+v", ds)
-		}
-	}
-
-	for _, testJob := range testData.InvalidationJobs {
-		found := false
-		for _, toJob := range jobs {
-			if *toJob.DeliveryService != (*testJob.DeliveryService).(string) {
-				continue
-			}
-			if !strings.HasSuffix(*toJob.AssetURL, *testJob.Regex) {
-				continue
-			}
-			if !toJob.StartTime.Round(time.Minute).Equal(testJob.StartTime.Round(time.Minute)) {
-				t.Errorf("test invalidation job start time expected '%+v' actual '%+v'", testJob.StartTime, toJob.StartTime)
-				continue
-			}
-			found = true
-			break
-		}
-		if !found {
-			t.Errorf("expected a test job %+v to exist, but it didn't", testJob)
-		}
-	}
+	// Retrieve the Jobs to see if they got deleted
+	getJobs, _, err := TOSession.GetInvalidationJobsWithHdr(nil, nil, nil)
+	assert.NoError(t, err, "Error getting Jobs after deletion: %v", err)
+	assert.Equal(t, 0, len(getJobs), "Expected Jobs to be deleted, but %d jobs were found in Traffic Ops", len(getJobs))
 }

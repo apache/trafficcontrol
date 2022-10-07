@@ -364,7 +364,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="remapText" name="remapText" class="form-control" ng-model="deliveryService.remapText" ng-pattern="/^[^\n\r]*$/" rows="3" required></textarea>
+                            <textarea id="remapText" name="remapText" class="form-control private-text" ng-model="deliveryService.remapText" ng-pattern="/^[^\n\r]*$/" rows="3" required></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.remapText, 'pattern')">No Line Breaks</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.remapText != dsCurrent.remapText">
                                 <h3 ng-if="open()">Current Value</h3>

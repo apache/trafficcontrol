@@ -21,10 +21,9 @@ gives the version of this *Apache-TrafficControl package* and **not** the versio
 client to grow in a version-controlled manner without being tied to the release cadence of Apache
 Traffic Control as a whole.
 
-Version 3.0 is supported for use with Apache Traffic Control versions 5.1 and 6.1 (release pending
-at the time of this writing). New functionality will be added as the :ref:`to-api` evolves, but
-changes to this client will remain non-breaking for existing code using it until the next major
-version is released.
+Version 3.0 is supported for use with Apache Traffic Control versions 7.0 and 6.1. New functionality
+will be added as the :ref:`to-api` evolves, but changes to this client will remain non-breaking for
+existing code using it until the next major version is released.
 """
 
-__version__ = '3.0.0'
+__version__ = '3.1.0'

@@ -14,6 +14,7 @@
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 import type { ValueGetterParams } from "ag-grid-community";
 
@@ -28,7 +29,29 @@ import { UsersComponent } from "./users.component";
 describe("UsersComponent", () => {
 	let component: UsersComponent;
 	let fixture: ComponentFixture<UsersComponent>;
-	const testUser = {id: 1, newUser: false, role: 1, tenant: "root", tenantId: 1, username: "admin"};
+	const testUser = {
+		addressLine1: null,
+		addressLine2: null,
+		city: null,
+		company: null,
+		country: null,
+		email: "a@b.c" as const,
+		fullName: "admin",
+		gid: null,
+		id: 1,
+		lastUpdated: new Date(0),
+		newUser: false,
+		phoneNumber: null,
+		postalCode: null,
+		publicSshKey: null,
+		role: 1,
+		rolename: "admin",
+		stateOrProvince: null,
+		tenant: "root",
+		tenantId: 1,
+		uid: null,
+		username: "admin"
+	};
 
 	beforeEach(waitForAsync(() => {
 		// mock the API
@@ -47,7 +70,8 @@ describe("UsersComponent", () => {
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
-				RouterTestingModule
+				RouterTestingModule,
+				MatDialogModule
 			],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService }
@@ -121,11 +145,6 @@ describe("UsersComponent", () => {
 		if (isAction(item)) {
 			return fail("the first context menu item should've been a link but it was an action");
 		}
-		if (!item.disabled) {
-			return fail("missing 'disabled' property");
-		}
-		expect(item.disabled([])).toBe(true, "should be disabled for multiple selected users");
-		expect(item.disabled(testUser)).toBe(false, "should be enabled for single selected user");
 		if (!item.href) {
 			return fail("missing 'href' property");
 		}
@@ -147,11 +166,6 @@ describe("UsersComponent", () => {
 			return fail("the second context menu item should've been a link but it was an action");
 		}
 		expect(item.newTab).toBeTrue();
-		if (!item.disabled) {
-			return fail("missing 'disabled' property");
-		}
-		expect(item.disabled([])).toBe(true, "should be disabled for multiple selected users");
-		expect(item.disabled(testUser)).toBe(false, "should be enabled for single selected user");
 		if (!item.href) {
 			return fail("missing 'href' property");
 		}
@@ -169,16 +183,15 @@ describe("UsersComponent", () => {
 		if (item.name !== "View User Changelogs") {
 			return fail(`The third context menu item should've been 'View User Changelogs', but it was '${item.name}'`);
 		}
-		if (!isAction(item)) {
-			return fail("the third context menu item should've been an action but it was a link");
+		if (isAction(item)) {
+			return fail("the third context menu item should've been a link but it was an action");
 		}
-		expect(item.action).toBe("viewChangelogs", "incorrect 'action' property");
-		if (item.multiRow) {
-			return fail("should not act on multiple rows");
+		if (!item.href) {
+			return fail("missing 'href' property");
 		}
-		if (!item.disabled) {
-			return fail("missing 'disabled' property");
+		if (typeof(item.href) === "string") {
+			return fail(`should use a function to generate an href, but uses static string: '${item.href}'`);
 		}
-		expect(item.disabled(testUser)).toBeTrue();
+		expect(item.href(testUser)).toBe(`/core/change-logs?search=${testUser.username}`, "generated incorrect href");
 	});
 });

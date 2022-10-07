@@ -17,12 +17,25 @@
  * under the License.
  */
 
-var TableCDNDeliveryServicesController = function(cdn, deliveryServices, filter, $controller, $scope) {
+function TableCDNDeliveryServicesController(cdn, deliveryServices, filter, $controller, $scope) {
 
 	// extends the TableDeliveryServicesController to inherit common methods
 	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'cdnDS', deliveryServices: deliveryServices, filter: filter, $scope: $scope }));
 
 	$scope.cdn = cdn;
+	$scope.breadCrumbs = [
+		{
+			href: "#!/cdns",
+			text: "CDNs"
+		},
+		{
+			href: `#!/cdns/${cdn.id}`,
+			text: cdn.name
+		},
+		{
+			text: "Delivery Services"
+		}
+	];
 };
 
 TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', 'filter', '$controller', '$scope'];

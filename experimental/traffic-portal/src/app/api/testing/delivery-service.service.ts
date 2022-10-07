@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
+import { SteeringConfiguration } from "trafficops-types";
 
 import type {
 	DataPoint,
@@ -166,6 +167,15 @@ export class DeliveryServiceService {
 			useInTable: "deliveryservice"
 		}
 	];
+
+	/**
+	 * Gets a list of all Steering Configurations
+	 *
+	 * @returns An array of Steering Configurations
+	 */
+	public async getSteering(): Promise<Array<SteeringConfiguration>> {
+		return [];
+	}
 
 	public async getDeliveryServices(id: string | number): Promise<DeliveryService>;
 	public async getDeliveryServices(): Promise<Array<DeliveryService>>;

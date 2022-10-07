@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-name-name-sslkeys:
+.. _to-api-v4-cdns-name-name-sslkeys:
 
 ******************************
 ``cdns/name/{{name}}/sslkeys``

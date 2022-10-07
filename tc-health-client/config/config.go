@@ -389,7 +389,6 @@ func Usage() {
 //
 // Note this returns empty strings with no error if the file doesn't exist,
 // or if any variables aren't declared.
-//
 func getCredentialsFromFile(filePath string) (string, string, string, error) {
 
 	if inf, err := os.Stat(filePath); os.IsNotExist(err) {

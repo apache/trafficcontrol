@@ -35,7 +35,9 @@ const CacheKeyParameterConfigFile = "cachekey.config"
 const ContentTypeRemapDotConfig = ContentTypeTextASCII
 const LineCommentRemapDotConfig = LineCommentHash
 
+const RemapConfigCachekeyDirective = `__CACHEKEY_DIRECTIVE__`
 const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
+const RemapConfigRegexRemapDirective = `__REGEX_REMAP_DIRECTIVE__`
 
 // RemapDotConfigOpts contains settings to configure generation options.
 type RemapDotConfigOpts struct {
@@ -54,6 +56,14 @@ type RemapDotConfigOpts struct {
 	// UseCoreStrategies is whether to use the ATS core strategies, rather than the parent_select plugin.
 	// This has no effect if UseStrategies is false.
 	UseStrategiesCore bool
+
+	// ATSMajorVersion is the integral major version of Apache Traffic server,
+	// used to generate the proper config for the proper version.
+	//
+	// If omitted or 0, the major version will be read from the Server's Profile Parameter config file 'package' name 'trafficserver'. If no such Parameter exists, the ATS version will default to 5.
+	// This was the old Traffic Control behavior, before the version was specifiable externally.
+	//
+	ATSMajorVersion uint
 }
 
 func MakeRemapDotConfig(
@@ -102,8 +112,8 @@ func MakeRemapDotConfig(
 		warnings = append(warnings, "making Delivery Service Cache Key Params, cache key will be missing! : "+err.Error())
 	}
 
-	atsMajorVersion, verWarns := getATSMajorVersion(serverParams)
-	warnings = append(warnings, verWarns...)
+	atsMajorVersion := getATSMajorVersion(opt.ATSMajorVersion, serverParams, &warnings)
+
 	serverPackageParamData, paramWarns := makeServerPackageParamData(server, serverParams)
 	warnings = append(warnings, paramWarns...)
 	cacheGroups, err := makeCGMap(cacheGroupArr)
@@ -244,7 +254,7 @@ func lastPrePostRemapLinesFor(dsConfigParamsMap map[string][]tc.Parameter, dsid 
 
 // getServerConfigRemapDotConfigForMid returns the remap lines, any warnings, and any error.
 func getServerConfigRemapDotConfigForMid(
-	atsMajorVersion int,
+	atsMajorVersion uint,
 	profilesConfigParams map[int][]tc.Parameter,
 	dses []DeliveryService,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
@@ -387,7 +397,7 @@ func getServerConfigRemapDotConfigForEdge(
 	serverPackageParamData map[string]string, // map[paramName]paramVal for this server, config file 'package'
 	dses []DeliveryService,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
-	atsMajorVersion int,
+	atsMajorVersion uint,
 	header string,
 	server *Server,
 	nameTopologies map[TopologyName]tc.Topology,
@@ -495,7 +505,7 @@ type RemapLines struct {
 // The cacheKeyConfigParams map may be nil, if this ds profile had no cache key config params.
 // Returns the remap line, any warnings, and any error.
 func buildEdgeRemapLine(
-	atsMajorVersion int,
+	atsMajorVersion uint,
 	server *Server,
 	pData map[string]string,
 	text string,
@@ -557,8 +567,15 @@ func buildEdgeRemapLine(
 		}
 	}
 
+	// Raw remap text, this allows the directive hacks
+	remapText := ""
+	if ds.RemapText != nil {
+		remapText = *ds.RemapText
+	}
+
 	// Form the cachekey args string, qstring ignore, then
 	// remap.config then cachekey.config
+	cachekeyTxt := ""
 	cachekeyArgs := ""
 
 	if ds.QStringIgnore != nil {
@@ -575,12 +592,28 @@ func buildEdgeRemapLine(
 	}
 
 	if cachekeyArgs != "" {
-		text += " @plugin=cachekey.so" + cachekeyArgs
+		cachekeyTxt = " @plugin=cachekey.so" + cachekeyArgs
 	}
+
+	// Hack for moving the cachekey directive into the raw remap text
+	if strings.Contains(remapText, RemapConfigCachekeyDirective) {
+		remapText = strings.Replace(remapText, RemapConfigCachekeyDirective, cachekeyTxt, 1)
+	} else {
+		text += cachekeyTxt
+	}
+
+	regexRemapTxt := ""
 
 	// Note: should use full path here?
 	if ds.RegexRemap != nil && *ds.RegexRemap != "" {
-		text += ` @plugin=regex_remap.so @pparam=regex_remap_` + *ds.XMLID + ".config"
+		regexRemapTxt = ` @plugin=regex_remap.so @pparam=regex_remap_` + *ds.XMLID + ".config"
+	}
+
+	// Hack for moving the regex_remap directive into the raw remap text
+	if strings.Contains(remapText, RemapConfigRegexRemapDirective) {
+		remapText = strings.Replace(remapText, RemapConfigRegexRemapDirective, regexRemapTxt, 1)
+	} else {
+		text += regexRemapTxt
 	}
 
 	rangeReqTxt := ""
@@ -605,12 +638,7 @@ func buildEdgeRemapLine(
 		}
 	}
 
-	remapText := ""
-	if ds.RemapText != nil {
-		remapText = *ds.RemapText
-	}
-
-	// Temporary hack for moving the range directive into the raw remap text
+	// Hack for moving the range directive into the raw remap text
 	if strings.Contains(remapText, RemapConfigRangeDirective) {
 		remapText = strings.Replace(remapText, RemapConfigRangeDirective, rangeReqTxt, 1)
 	} else {
@@ -719,7 +747,7 @@ func midHeaderRewriteConfigFileName(dsName string) string {
 }
 
 // getQStringIgnoreRemap returns the remap, whether cachekey was added.
-func getQStringIgnoreRemap(atsMajorVersion int) string {
+func getQStringIgnoreRemap(atsMajorVersion uint) string {
 	if atsMajorVersion < 7 {
 		log.Errorf("Unsupport version of ats found %v", atsMajorVersion)
 		return ""
@@ -974,11 +1002,54 @@ func serverIsLastCacheForDS(server *Server, ds *DeliveryService, topologies map[
 		return topoPlacement.IsLastCacheTier, nil
 	}
 
-	return noTopologyServerIsLastCacheForDS(server, ds), nil
+	return noTopologyServerIsLastCacheForDS(server, ds, cacheGroups), nil
 }
 
 // noTopologyServerIsLastCacheForDS returns whether the server is the last tier for the DS, if the DS has no Topology.
 // This helper MUST NOT be called if the DS has a Topology. It does not check.
-func noTopologyServerIsLastCacheForDS(server *Server, ds *DeliveryService) bool {
-	return strings.HasPrefix(server.Type, tc.MidTypePrefix) || !ds.Type.UsesMidCache()
+func noTopologyServerIsLastCacheForDS(server *Server, ds *DeliveryService, cgs map[tc.CacheGroupName]tc.CacheGroupNullable) bool {
+	if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
+		return true // if the type is "MID" it's always the last cache for non-topologies
+	}
+	if !ds.Type.UsesMidCache() {
+		return true // if this DS type never uses mids (for pre-topology type-parentage), it's the last cache
+	}
+
+	// pre-topology parentage is based on Cachegroups
+
+	if server.Cachegroup == nil {
+		// if the server has no CG (which TO shouldn't allow), it can't possibly have parents.
+		return true
+	}
+
+	cg, ok := cgs[tc.CacheGroupName(*server.Cachegroup)]
+	if !ok {
+		// if the server's CG doesn't exist (which TO shouldn't allow), it can't possibly have parents.
+		return true
+	}
+
+	if cg.ParentName == nil || *cg.ParentName == "" {
+		// if the server's CG has no parents, it's going direct to the origin
+		return true
+	}
+
+	parentCG, ok := cgs[tc.CacheGroupName(*cg.ParentName)]
+	if !ok {
+		// if the server's parent CG doesn't exist (which TO shouldn't allow), it can't possibly have parents.
+		return true
+	}
+
+	if parentCG.Type == nil {
+		// if the server's parent CG has no type (which TO shouldn't allow), then it must not be a cache, so this server is the last cache tier
+		return true
+	}
+
+	if *parentCG.Type != tc.CacheGroupEdgeTypeName && *parentCG.Type != tc.CacheGroupMidTypeName {
+		// if the server's parent CG isn't a cache, then this server is the last cache tier.
+		return true
+	}
+
+	// at this point, this server's CG has a cache parent,
+	// so this server isn't the last cache tier
+	return false
 }

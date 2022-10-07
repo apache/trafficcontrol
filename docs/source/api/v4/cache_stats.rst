@@ -14,14 +14,14 @@
 ..
 
 
-.. _to-api-cache_stats:
+.. _to-api-v4-cache_stats:
 
 ***************
 ``cache_stats``
 ***************
 Retrieves detailed, aggregated statistics for caches in a specific CDN.
 
-.. seealso:: This gives an aggregate of statistics for *all caches* within a particular CDN and time range. For statistics basic statistics from all caches regardless of CDN and at the current time, use :ref:`to-api-caches-stats`.
+.. seealso:: This gives an aggregate of statistics for *all caches* within a particular CDN and time range. For statistics basic statistics from all caches regardless of CDN and at the current time, use :ref:`to-api-v4-caches-stats`.
 
 ``GET``
 -------
@@ -65,7 +65,7 @@ Request Structure
 	|                     |                   | Epoch, or in the same, proprietary format as the ``lastUpdated`` fields prevalent throughout the Traffic Ops API                                                                          |
 	+---------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-.. _cache_stats-get-request-example:
+.. _cache_stats-v4-get-request-example:
 .. code-block:: http
 	:caption: Request Example
 
@@ -78,7 +78,7 @@ Request Structure
 
 Content Format
 """"""""""""""
-It's important to note in :ref:`cache_stats-get-request-example` the use of a complex "Accept" header. This endpoint accepts two special media types in the "Accept" header that instruct it on how to format the timestamps associated with the returned data. Specifically, Traffic Ops will recognize the special, optional, non-standard parameter of :mimetype:`application/json`: ``timestamp``. The values of this parameter are restricted to one of
+It's important to note in :ref:`cache_stats-v4-get-request-example` the use of a complex "Accept" header. This endpoint accepts two special media types in the "Accept" header that instruct it on how to format the timestamps associated with the returned data. Specifically, Traffic Ops will recognize the special, optional, non-standard parameter of :mimetype:`application/json`: ``timestamp``. The values of this parameter are restricted to one of
 
 rfc
 	Returned timestamps will be formatted according to :rfc:`3339` (no sub-second precision).

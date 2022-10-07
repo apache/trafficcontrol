@@ -14,7 +14,7 @@
 ..
 
 
-.. _to-api-deliveryservices_regexes:
+.. _to-api-v4-deliveryservices_regexes:
 
 ****************************
 ``deliveryservices_regexes``

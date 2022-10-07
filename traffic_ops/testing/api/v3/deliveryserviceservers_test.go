@@ -254,51 +254,6 @@ func TestDeliveryServicesIDServers(t *testing.T) {
 	})
 }
 
-func TestServersIDDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments}, func() {
-		serversIDDSTests := utils.V3TestCase{
-			"POST": {
-				"BAD REQUEST when REMOVING ONLY EDGE SERVER ASSIGNMENT": {
-					ClientSession: TOSession, RequestBody: map[string]interface{}{
-						"server":  GetServerID(t, "test-ds-server-assignments")(),
-						"dsIds":   []int{GetDeliveryServiceId(t, "test-ds-server-assignments")()},
-						"replace": true,
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
-				},
-			},
-		}
-		for method, testCases := range serversIDDSTests {
-			t.Run(method, func(t *testing.T) {
-				for name, testCase := range testCases {
-
-					var server int
-					var replace bool
-
-					if testCase.RequestBody != nil {
-						if val, ok := testCase.RequestBody["server"]; ok {
-							server = val.(int)
-						}
-						if val, ok := testCase.RequestBody["replace"]; ok {
-							replace = val.(bool)
-						}
-					}
-
-					switch method {
-					case "POST":
-						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.AssignDeliveryServiceIDsToServerID(server, []int{}, replace)
-							for _, check := range testCase.Expectations {
-								check(t, reqInf, nil, resp, err)
-							}
-						})
-					}
-				}
-			})
-		}
-	})
-}
-
 func TestDeliveryServicesDSIDServerID(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments}, func() {
 		dssDSIDServerIDTests := utils.V3TestCase{

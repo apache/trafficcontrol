@@ -47,6 +47,15 @@ const (
 	UpdateTropsFailed     UpdateStatus = 3
 )
 
+const (
+	TailDiagsLogRelative = "/var/log/trafficserver/diags.log"
+	TailRestartTimeOutMS = 60000
+	TailReloadTimeOutMS  = 15000
+	tailMatch            = `ET_(TASK|NET)\s\d{1,}`
+	tailRestartEnd       = "Traffic Server is fully initialized"
+	tailReloadEnd        = "remap.config finished loading"
+)
+
 type Package struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
@@ -725,8 +734,9 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 	return updateStatus, nil
 }
 
-// CheckSYncDSState retrieves and returns the DS Update status from Traffic Ops.
-func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
+// CheckSyncDSState retrieves and returns the DS Update status from Traffic Ops.
+// The metaData is this run's metadata. It must not be nil, and this function may add to it.
+func (r *TrafficOpsReq) CheckSyncDSState(metaData *t3cutil.ApplyMetaData) (UpdateStatus, error) {
 	updateStatus := UpdateTropsNotNeeded
 	randDispSec := time.Duration(0)
 	log.Debugln("Checking syncds state.")
@@ -763,7 +773,7 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 			}
 		} else if !r.Cfg.IgnoreUpdateFlag {
 			log.Errorln("no queued update needs to be applied.  Running revalidation before exiting.")
-			r.RevalidateWhileSleeping()
+			r.RevalidateWhileSleeping(metaData)
 			return UpdateTropsNotNeeded, nil
 		} else {
 			log.Errorln("Traffic Ops is signaling that no update is waiting to be applied.")
@@ -793,7 +803,7 @@ func (r *TrafficOpsReq) CheckReloadRestart(data []FileRestartData) RestartData {
 }
 
 // ProcessConfigFiles processes all config files retrieved from Traffic Ops.
-func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
+func (r *TrafficOpsReq) ProcessConfigFiles(metaData *t3cutil.ApplyMetaData) (UpdateStatus, error) {
 	var updateStatus UpdateStatus = UpdateTropsNotNeeded
 
 	log.Infoln(" ======== Start processing config files ========")
@@ -832,6 +842,8 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 	shouldRestartReload := ShouldReloadRestart{[]FileRestartData{}}
 
 	for _, cfg := range r.configFiles {
+		metaData.OwnedFilePaths = append(metaData.OwnedFilePaths, cfg.Path) // all config files are added to OwnedFiles, even if they aren't changed on disk.
+
 		if cfg.ChangeNeeded &&
 			!cfg.ChangeApplied &&
 			cfg.AuditComplete &&
@@ -1016,7 +1028,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 	return nil
 }
 
-func (r *TrafficOpsReq) RevalidateWhileSleeping() (UpdateStatus, error) {
+func (r *TrafficOpsReq) RevalidateWhileSleeping(metaData *t3cutil.ApplyMetaData) (UpdateStatus, error) {
 	updateStatus, err := r.CheckRevalidateState(true)
 	if err != nil {
 		return updateStatus, err
@@ -1032,12 +1044,15 @@ func (r *TrafficOpsReq) RevalidateWhileSleeping() (UpdateStatus, error) {
 			return updateStatus, err
 		}
 
-		updateStatus, err := r.ProcessConfigFiles()
+		updateStatus, err := r.ProcessConfigFiles(metaData)
 		if err != nil {
+			t3cutil.WriteActionLog(t3cutil.ActionLogActionUpdateFilesReval, t3cutil.ActionLogStatusFailure, metaData)
 			return updateStatus, err
+		} else {
+			t3cutil.WriteActionLog(t3cutil.ActionLogActionUpdateFilesReval, t3cutil.ActionLogStatusSuccess, metaData)
 		}
 
-		if err := r.StartServices(&updateStatus); err != nil {
+		if err := r.StartServices(&updateStatus, metaData); err != nil {
 			return updateStatus, errors.New("failed to start services: " + err.Error())
 		}
 
@@ -1054,7 +1069,7 @@ func (r *TrafficOpsReq) RevalidateWhileSleeping() (UpdateStatus, error) {
 // StartServices reloads, restarts, or starts ATS as necessary,
 // according to the changed config files and run mode.
 // Returns nil on success or any error.
-func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
+func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cutil.ApplyMetaData) error {
 	serviceNeeds := t3cutil.ServiceNeedsNothing
 	if r.Cfg.ServiceAction == t3cutil.ApplyServiceActionFlagRestart {
 		serviceNeeds = t3cutil.ServiceNeedsRestart
@@ -1100,9 +1115,20 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 			startStr = "start"
 		}
 		if _, err := util.ServiceStart("trafficserver", startStr); err != nil {
+			t3cutil.WriteActionLog(t3cutil.ActionLogActionATSRestart, t3cutil.ActionLogStatusFailure, metaData)
 			return errors.New("failed to restart trafficserver")
 		}
+		t3cutil.WriteActionLog(t3cutil.ActionLogActionATSRestart, t3cutil.ActionLogStatusSuccess, metaData)
 		log.Infoln("trafficserver has been " + startStr + "ed")
+
+		if !r.Cfg.NoConfirmServiceAction {
+			log.Infoln("confirming ATS restart succeeded")
+			if err := doTail(r.Cfg, TailDiagsLogRelative, ".*", tailRestartEnd, TailRestartTimeOutMS); err != nil {
+				log.Errorln("error running tail")
+			}
+		} else {
+			log.Infoln("skipping ATS restart success confirmation")
+		}
 		if *syncdsUpdate == UpdateTropsNeeded {
 			*syncdsUpdate = UpdateTropsSuccessful
 		}
@@ -1116,15 +1142,28 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 		} else if serviceNeeds == t3cutil.ServiceNeedsReload {
 			log.Infoln("ATS configuration has changed, Running 'traffic_ctl config reload' now.")
 			if _, _, err := util.ExecCommand(config.TSHome+config.TrafficCtl, "config", "reload"); err != nil {
+				t3cutil.WriteActionLog(t3cutil.ActionLogActionATSReload, t3cutil.ActionLogStatusFailure, metaData)
+
 				if *syncdsUpdate == UpdateTropsNeeded {
 					*syncdsUpdate = UpdateTropsFailed
 				}
 				return errors.New("ATS configuration has changed and 'traffic_ctl config reload' failed, check ATS logs: " + err.Error())
 			}
+			t3cutil.WriteActionLog(t3cutil.ActionLogActionATSReload, t3cutil.ActionLogStatusSuccess, metaData)
+
 			if *syncdsUpdate == UpdateTropsNeeded {
 				*syncdsUpdate = UpdateTropsSuccessful
 			}
 			log.Infoln("ATS 'traffic_ctl config reload' was successful")
+
+			if !r.Cfg.NoConfirmServiceAction {
+				log.Infoln("confirming ATS reload succeeded")
+				if err := doTail(r.Cfg, TailDiagsLogRelative, tailMatch, tailReloadEnd, TailReloadTimeOutMS); err != nil {
+					log.Errorln("error running tail: ", err)
+				}
+			} else {
+				log.Infoln("skipping ATS reload success confirmation")
+			}
 		}
 		if *syncdsUpdate == UpdateTropsNeeded {
 			*syncdsUpdate = UpdateTropsSuccessful
@@ -1132,6 +1171,12 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 		return nil
 	}
 	return nil
+}
+
+func (r *TrafficOpsReq) ShowUpdateStatus(flagType []string, start time.Time, curSetting, newSetting bool) {
+	for _, flag := range flagType {
+		log.Infof("%s flag currently set to %v, setting to %v took %v", flag, curSetting, newSetting, time.Since(start).Round(time.Millisecond))
+	}
 }
 
 func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
@@ -1166,17 +1211,25 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 
 	// TODO: The boolean flags/representation can be removed after ATC (v7.0+)
 	if !r.Cfg.ReportOnly && !r.Cfg.NoUnsetUpdateFlag {
+		start := time.Now()
+		apply := []string{}
+		var b bool
 		if r.Cfg.Files == t3cutil.ApplyFilesFlagAll {
-			b := false
+			b = false
+			apply = append(apply, "update")
+			log.Infof("Update flag currently set to %v, setting to %v", serverStatus.UpdatePending, b)
 			err = sendUpdate(r.Cfg, serverStatus.ConfigUpdateTime, nil, &b, nil)
 		} else if r.Cfg.Files == t3cutil.ApplyFilesFlagReval {
-			b := false
+			b = false
+			apply = append(apply, t3cutil.ApplyFilesFlagReval.String())
+			log.Infof("Reval flag currently set to %v, setting to %v", serverStatus.RevalPending, b)
 			err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime, nil, &b)
 		}
 		if err != nil {
 			return errors.New("Traffic Ops Update failed: " + err.Error())
 		}
 		log.Infoln("Traffic Ops has been updated.")
+		r.ShowUpdateStatus(apply, start, serverStatus.UpdatePending, b)
 	}
 	return nil
 }

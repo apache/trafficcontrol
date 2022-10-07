@@ -78,7 +78,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.privateKey), 'has-feedback': hasError(dsSslKeyForm.privateKey)}">
                 <label for="privateKey" class="control-label col-md-2 col-sm-2 col-xs-12">Private Key *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="privateKey" name="privateKey" type="text" class="form-control" ng-model="sslKeys.certificate.key" rows="25" required></textarea>
+                    <textarea id="privateKey" name="privateKey" type="text" class="form-control private-text" ng-model="sslKeys.certificate.key" rows="25" required></textarea>
                     <small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.privateKey, 'required')">Required</small>
                     <span ng-show="hasError(dsSslKeyForm.privateKey)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>

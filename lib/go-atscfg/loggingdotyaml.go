@@ -37,15 +37,23 @@ type LoggingDotYAMLOpts struct {
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
 	// To omit the header comment, pass the empty string.
 	HdrComment string
+
+	// ATSMajorVersion is the integral major version of Apache Traffic server,
+	// used to generate the proper config for the proper version.
+	//
+	// If omitted or 0, the major version will be read from the Server's Profile Parameter config file 'package' name 'trafficserver'. If no such Parameter exists, the ATS version will default to 5.
+	// This was the old Traffic Control behavior, before the version was specifiable externally.
+	//
+	ATSMajorVersion uint
 }
 
 func MakeLoggingDotYAML(
 	server *Server,
 	serverParams []tc.Parameter,
-	opts *LoggingDotYAMLOpts,
+	opt *LoggingDotYAMLOpts,
 ) (Cfg, error) {
-	if opts == nil {
-		opts = &LoggingDotYAMLOpts{}
+	if opt == nil {
+		opt = &LoggingDotYAMLOpts{}
 	}
 	warnings := []string{}
 	requiredIndent := 0
@@ -61,15 +69,15 @@ func MakeLoggingDotYAML(
 	paramData, paramWarns := paramsToMap(filterParams(serverParams, LoggingYAMLFileName, "", "", "location"))
 	warnings = append(warnings, paramWarns...)
 
-	hdr := makeHdrComment(opts.HdrComment)
+	hdr := makeHdrComment(opt.HdrComment)
 
-	version, vWarn := getATSMajorVersion(serverParams)
-	warnings = append(warnings, vWarn...)
+	atsMajorVersion := getATSMajorVersion(opt.ATSMajorVersion, serverParams, &warnings)
+
 	// note we use the same const as logs.xml - this isn't necessarily a requirement, and we may want to make separate variables in the future.
 	maxLogObjects := MaxLogObjects
 
 	text := hdr
-	if version >= 9 {
+	if atsMajorVersion >= 9 {
 		text += "\nlogging:"
 		requiredIndent += 2
 	}

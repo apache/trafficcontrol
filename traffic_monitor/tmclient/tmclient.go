@@ -156,8 +156,6 @@ func (c *TMClient) CRConfig() (tc.CRConfig, error) {
 //
 // This can be useful to check for serialization or versioning issues, in case the Go object
 // is missing values sent by Traffic Ops, or has other serialization issues.
-//
-//
 func (c *TMClient) CRConfigBytes() ([]byte, error) { return c.getBytes("publish/CrConfig") }
 
 func (c *TMClient) PeerStates() (datareq.APIPeerStates, error) {

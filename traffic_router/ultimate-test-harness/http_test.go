@@ -337,10 +337,14 @@ func getTrafficRouters(trafficRouterName string, cdnName tc.CDNName) ([]tc.Serve
 		return nil, fmt.Errorf("requesting %s-status Traffic Routers: %s", requestOptions.QueryParameters["status"], err.Error())
 	}
 	trafficRouters := response.Response
-	if len(trafficRouters) < 1 {
-		return trafficRouters, fmt.Errorf("no Traffic Routers were found with these criteria: %v", requestOptions.QueryParameters)
+	trafficRoutersV40 := make([]tc.ServerV40, 0)
+	for _, tr := range trafficRouters {
+		trafficRoutersV40 = append(trafficRoutersV40, tr.ServerV40)
 	}
-	return trafficRouters, nil
+	if len(trafficRouters) < 1 {
+		return trafficRoutersV40, fmt.Errorf("no Traffic Routers were found with these criteria: %v", requestOptions.QueryParameters)
+	}
+	return trafficRoutersV40, nil
 }
 
 func getDSes(t *testing.T, cdnId int, dsTypeName tc.DSType, dsName tc.DeliveryServiceName) []tc.DeliveryServiceV40 {

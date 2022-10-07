@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id-capacity:
+.. _to-api-v4-deliveryservices-id-capacity:
 
 ************************************
 ``deliveryservices/{{ID}}/capacity``

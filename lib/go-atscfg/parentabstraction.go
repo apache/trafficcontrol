@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"errors"
+	"net"
 	"strconv"
 	"strings"
 )
@@ -272,7 +273,7 @@ var DefaultUnavailableServerRetryCodes = []int{503}
 
 const DefaultIgnoreQueryStringInParentSelection = false
 
-func parentAbstractionToParentDotConfig(pa *ParentAbstraction, opt *ParentConfigOpts, atsMajorVersion int) (string, []string, error) {
+func parentAbstractionToParentDotConfig(pa *ParentAbstraction, opt *ParentConfigOpts, atsMajorVersion uint) (string, []string, error) {
 	warnings := []string{}
 	txt := ""
 
@@ -300,13 +301,21 @@ func parentAbstractionToParentDotConfig(pa *ParentAbstraction, opt *ParentConfig
 	return txt, warnings, nil
 }
 
-func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts, atsMajorVersion int) (string, []string, error) {
+func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts, atsMajorVersion uint) (string, []string, error) {
 	warnings := []string{}
 	txt := ""
 	if opt.AddComments && svc.Comment != "" {
 		txt += LineCommentParentDotConfig + " " + svc.Comment + "\n"
 	}
-	txt += `dest_domain=` + svc.DestDomain
+
+	// if the domain is an IP, we have to use dest_ip.
+	// Using an IP in dest_domain will be silently ignored by ATS, causing the remap/DS to use the fallthrough 'dest_domain=.' rule
+	if domainIsIP := net.ParseIP(svc.DestDomain) != nil; domainIsIP {
+		txt += `dest_ip=` + svc.DestDomain
+	} else {
+		txt += `dest_domain=` + svc.DestDomain
+	}
+
 	if svc.Port != 0 {
 		txt += ` port=` + strconv.Itoa(svc.Port)
 	}
@@ -362,7 +371,7 @@ func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts
 		if atsMajorVersion >= 9 {
 			txt += ` simple_server_retry_responses="` + strings.Join(intsToStrs(svc.ErrorResponseCodes), `,`) + `"`
 		} else {
-			warnings = append(warnings, "Service '"+svc.Name+"' had simple retry codes '"+strings.Join(intsToStrs(svc.ErrorResponseCodes), ",")+"' but ATS version "+strconv.Itoa(atsMajorVersion)+" < 9 does not support custom simple retry codes, omitting!")
+			warnings = append(warnings, "Service '"+svc.Name+"' had simple retry codes '"+strings.Join(intsToStrs(svc.ErrorResponseCodes), ",")+"' but ATS version "+strconv.FormatUint(uint64(atsMajorVersion), 10)+" < 9 does not support custom simple retry codes, omitting!")
 		}
 	}
 

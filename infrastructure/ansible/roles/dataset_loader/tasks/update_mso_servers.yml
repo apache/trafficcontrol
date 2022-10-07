@@ -51,6 +51,7 @@
     ip6Address: "{{ item.ip6Address }}"
     ip6IsService: "{{ item.ip6IsService }}"
     ip6Gateway: "{{ item.ip6Gateway }}"
+    monitorInterface: "{{ item.monitorInterface }}"
     interfaceMtu: "{{ item.interfaceMtu }}"
     tcpPort: "{{ item.tcpPort }}"
     httpsPort: "{{ item.httpsPort }}"

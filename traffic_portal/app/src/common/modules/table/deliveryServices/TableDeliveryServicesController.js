@@ -17,856 +17,696 @@
  * under the License.
  */
 
-var TableDeliveryServicesController = function(tableName, deliveryServices, filter, $anchorScroll, $document, $scope, $state, $location, $uibModal, deliveryServiceService, deliveryServiceRequestService, dateUtils, deliveryServiceUtils, locationUtils, messageModel, propertiesModel, userModel) {
+function TableDeliveryServicesController(tableName, deliveryServices, steeringTargets, $anchorScroll, $scope, $state, $location, $uibModal, deliveryServiceService, deliveryServiceRequestService, deliveryServiceUtils, locationUtils, messageModel, propertiesModel, userModel) {
+	$scope.tableName = tableName;
 
-    /**
-     * Gets value to display a default tooltip.
-     */
-    function defaultTooltip(params) {
-        return params.value;
-    }
+	/** The columns of the ag-grid table */
+	$scope.columns = [
+		{
+			headerName: "Active",
+			field: "active",
+			hide: false
+		},
+		{
+			headerName: "Anonymous Blocking",
+			field: "anonymousBlockingEnabled",
+			hide: true
+		},
+		{
+			headerName: "CDN",
+			field: "cdnName",
+			hide: false
+		},
+		{
+			headerName: "Check Path",
+			field: "checkPath",
+			hide: true
+		},
+		{
+			headerName: "Consistent Hash Query Params",
+			field: "consistentHashQueryParams",
+			hide: true,
+			valueFormatter: params => params.data.consistentHashQueryParams.join(', '),
+			tooltipValueGetter: params => params.data.consistentHashQueryParams.join(', ')
+		},
+		{
+			headerName: "Consistent Hash Regex",
+			field: "consistentHashRegex",
+			hide: true
+		},
+		{
+			headerName: "Deep Caching Type",
+			field: "deepCachingType",
+			hide: true
+		},
+		{
+			headerName: "Display Name",
+			field: "displayName",
+			hide: false
+		},
+		{
+			headerName: "DNS Bypass CNAME",
+			field: "dnsBypassCname",
+			hide: true
+		},
+		{
+			headerName: "DNS Bypass IP",
+			field: "dnsBypassIp",
+			hide: true
+		},
+		{
+			headerName: "DNS Bypass IPv6",
+			field: "dnsBypassIp6",
+			hide: true
+		},
+		{
+			headerName: "DNS Bypass TTL",
+			field: "dnsBypassTtl",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "DNS TTL",
+			field: "ccrDnsTtl",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "DSCP",
+			field: "dscp",
+			hide: false,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "ECS Enabled",
+			field: "ecsEnabled",
+			hide: true
+		},
+		{
+			headerName: "Edge Header Rewrite Rules",
+			field: "edgeHeaderRewrite",
+			hide: true
+		},
+		{
+			headerName: "First Header Rewrite Rules",
+			field: "firstHeaderRewrite",
+			hide: true
+		},
+		{
+			headerName: "FQ Pacing Rate",
+			field: "fqPacingRate",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Geo Limit",
+			field: "geoLimit",
+			hide: true,
+			valueFormatter: params => deliveryServiceUtils.geoLimits[params.data.geoLimit],
+			tooltipValueGetter: params => deliveryServiceUtils.geoLimits[params.data.geoLimit]
+		},
+		{
+			headerName: "Geo Limit Countries",
+			field: "geoLimitCountries",
+			hide: true
+		},
+		{
+			headerName: "Geo Limit Redirect URL",
+			field: "geoLimitRedirectURL",
+			hide: true
+		},
+		{
+			headerName: "Geolocation Provider",
+			field: "geoProvider",
+			hide: true,
+			valueFormatter: params => deliveryServiceUtils.geoProviders[params.data.geoProvider],
+			tooltipValueGetter: params => deliveryServiceUtils.geoProviders[params.data.geoProvider]
+		},
+		{
+			headerName: "Geo Miss Latitude",
+			field: "missLat",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Geo Miss Longitude",
+			field: "missLong",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Global Max Mbps",
+			field: "globalMaxMbps",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Global Max TPS",
+			field: "globalMaxTps",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "HTTP Bypass FQDN",
+			field: "httpBypassFqdn",
+			hide: true
+		},
+		{
+			headerName: "ID",
+			field: "id",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Info URL",
+			field: "infoUrl",
+			hide: true
+		},
+		{
+			headerName: "Initial Dispersion",
+			field: "initialDispersion",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Inner Header Rewrite Rules",
+			field: "innerHeaderRewrite",
+			hide: true
+		},
+		{
+			headerName: "IPv6 Routing",
+			field: "ipv6RoutingEnabled",
+			hide: true
+		},
+		{
+			headerName: "Last Header Rewrite Rules",
+			field: "lastHeaderRewrite",
+			hide: true
+		},
+		{
+			headerName: "Last Updated",
+			field: "lastUpdated",
+			hide: true,
+			filter: "agDateColumnFilter",
+		},
+		{
+			headerName: "Long Desc",
+			field: "longDesc",
+			hide: true
+		},
+		{
+			headerName: "Max DNS Answers",
+			field: "maxDnsAnswers",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Max Origin Connections",
+			field: "maxOriginConnections",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Max Request Header Bytes",
+			field: "maxRequestHeaderBytes",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Mid Header Rewrite Rules",
+			field: "midHeaderRewrite",
+			hide: true
+		},
+		{
+			headerName: "Multi-Site Origin",
+			field: "multiSiteOrigin",
+			hide: true
+		},
+		{
+			headerName: "Origin Shield",
+			field: "originShield",
+			hide: true
+		},
+		{
+			headerName: "Origin FQDN",
+			field: "orgServerFqdn",
+			hide: false
+		},
+		{
+			headerName: "Profile",
+			field: "profileName",
+			hide: true
+		},
+		{
+			headerName: "Protocol",
+			field: "protocol",
+			hide: false,
+			valueFormatter: params => deliveryServiceUtils.protocols[params.data.protocol],
+			tooltipValueGetter: params => deliveryServiceUtils.protocols[params.data.protocol]
+		},
+		{
+			headerName: "Qstring Handling",
+			field: "qstringIgnore",
+			hide: true,
+			valueFormatter: params => deliveryServiceUtils.qstrings[params.data.qstringIgnore],
+			tooltipValueGetter: params => deliveryServiceUtils.qstrings[params.data.qstringIgnore]
+		},
+		{
+			headerName: "Range Request Handling",
+			field: "rangeRequestHandling",
+			hide: true,
+			valueFormatter: params => deliveryServiceUtils.rrhs[params.data.rangeRequestHandling],
+			tooltipValueGetter: params => deliveryServiceUtils.rrhs[params.data.rangeRequestHandling]
+		},
+		{
+			headerName: "Regex Remap Expression",
+			field: "regexRemap",
+			hide: true
+		},
+		{
+			headerName: "Regional Geoblocking",
+			field: "regionalGeoBlocking",
+			hide: true
+		},
+		{
+			headerName: "Raw Remap Text",
+			field: "remapText",
+			hide: true
+		},
+		{
+			headerName: "Routing Name",
+			field: "routingName",
+			hide: true
+		},
+		{
+			headerName: "Service Category",
+			field: "serviceCategory",
+			hide: true
+		},
+		{
+			headerName: "Signed",
+			field: "signed",
+			hide: true
+		},
+		{
+			headerName: "Signing Algorithm",
+			field: "signingAlgorithm",
+			hide: true
+		},
+		{
+			headerName: "Range Slice Block Size",
+			field: "rangeSliceBlockSize",
+			hide: true,
+			filter: "agNumberColumnFilter"
+		},
+		{
+			headerName: "Target For",
+			field: "isTargetFor",
+			hide: true,
+			valueGetter: params => params.data.isTargetsFor,
+			tooltipValueGetter: params => `Steering targets for: ${params.data.isTargetsFor.join(", ")}`
+		},
+		{
+			headerName: "Tenant",
+			field: "tenant",
+			hide: false
+		},
+		{
+			headerName: "Topology",
+			field: "topology",
+			hide: false
+		},
+		{
+			headerName: "TR Request Headers",
+			field: "trRequestHeaders",
+			hide: true
+		},
+		{
+			headerName: "TR Response Headers",
+			field: "trResponseHeaders",
+			hide: true
+		},
+		{
+			headerName: "Type",
+			field: "type",
+			hide: false
+		},
+		{
+			headerName: "XML ID (Key)",
+			field: "xmlId",
+			hide: false
+		}
+	];
 
-    /**
-     * Formats the contents of a 'lastUpdated' column cell as "relative to now".
-     */
-    function dateCellFormatter(params) {
-        return params.value ? dateUtils.getRelativeTime(params.value) : params.value;
-    }
+	let dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
-    /** The columns of the ag-grid table */
-    const columns = [
-        {
-            headerName: "Active",
-            field: "active",
-            hide: false
-        },
-        {
-            headerName: "Anonymous Blocking",
-            field: "anonymousBlockingEnabled",
-            hide: true
-        },
-        {
-            headerName: "CDN",
-            field: "cdnName",
-            hide: false
-        },
-        {
-            headerName: "Check Path",
-            field: "checkPath",
-            hide: true
-        },
-        {
-            headerName: "Consistent Hash Query Params",
-            field: "consistentHashQueryParams",
-            hide: true,
-            valueFormatter: function(params) {
-                return params.data.consistentHashQueryParams.join(', ');
-            },
-            tooltipValueGetter: function(params) {
-                return params.data.consistentHashQueryParams.join(', ');
-            }
-        },
-        {
-            headerName: "Consistent Hash Regex",
-            field: "consistentHashRegex",
-            hide: true
-        },
-        {
-            headerName: "Deep Caching Type",
-            field: "deepCachingType",
-            hide: true
-        },
-        {
-            headerName: "Display Name",
-            field: "displayName",
-            hide: false
-        },
-        {
-            headerName: "DNS Bypass CNAME",
-            field: "dnsBypassCname",
-            hide: true
-        },
-        {
-            headerName: "DNS Bypass IP",
-            field: "dnsBypassIp",
-            hide: true
-        },
-        {
-            headerName: "DNS Bypass IPv6",
-            field: "dnsBypassIp6",
-            hide: true
-        },
-        {
-            headerName: "DNS Bypass TTL",
-            field: "dnsBypassTtl",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "DNS TTL",
-            field: "ccrDnsTtl",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "DSCP",
-            field: "dscp",
-            hide: false,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "ECS Enabled",
-            field: "ecsEnabled",
-            hide: true
-        },
-        {
-            headerName: "Edge Header Rewrite Rules",
-            field: "edgeHeaderRewrite",
-            hide: true
-        },
-        {
-            headerName: "First Header Rewrite Rules",
-            field: "firstHeaderRewrite",
-            hide: true
-        },
-        {
-            headerName: "FQ Pacing Rate",
-            field: "fqPacingRate",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "Geo Limit",
-            field: "geoLimit",
-            hide: true,
-            valueFormatter: function(params) {
-                return deliveryServiceUtils.geoLimits[params.data.geoLimit];
-            },
-            tooltipValueGetter: function(params) {
-                return deliveryServiceUtils.geoLimits[params.data.geoLimit];
-            }
-        },
-        {
-            headerName: "Geo Limit Countries",
-            field: "geoLimitCountries",
-            hide: true
-        },
-        {
-            headerName: "Geo Limit Redirect URL",
-            field: "geoLimitRedirectURL",
-            hide: true
-        },
-        {
-            headerName: "Geolocation Provider",
-            field: "geoProvider",
-            hide: true,
-            valueFormatter: function(params) {
-                return deliveryServiceUtils.geoProviders[params.data.geoProvider];
-            },
-            tooltipValueGetter: function(params) {
-                return deliveryServiceUtils.geoProviders[params.data.geoProvider];
-            }
-        },
-        {
-            headerName: "Geo Miss Latitude",
-            field: "missLat",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "Geo Miss Longitude",
-            field: "missLong",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "Global Max Mbps",
-            field: "globalMaxMbps",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "Global Max TPS",
-            field: "globalMaxTps",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "HTTP Bypass FQDN",
-            field: "httpBypassFqdn",
-            hide: true
-        },
-        {
-            headerName: "ID",
-            field: "id",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "Info URL",
-            field: "infoUrl",
-            hide: true
-        },
-        {
-            headerName: "Initial Dispersion",
-            field: "initialDispersion",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "Inner Header Rewrite Rules",
-            field: "innerHeaderRewrite",
-            hide: true
-        },
-        {
-            headerName: "IPv6 Routing",
-            field: "ipv6RoutingEnabled",
-            hide: true
-        },
-        {
-            headerName: "Last Header Rewrite Rules",
-            field: "lastHeaderRewrite",
-            hide: true
-        },
-        {
-            headerName: "Last Updated",
-            field: "lastUpdated",
-            hide: true,
-            filter: "agDateColumnFilter",
-            valueFormatter: dateCellFormatter
-        },
-        {
-            headerName: "Long Desc",
-            field: "longDesc",
-            hide: true
-        },
-        {
-            headerName: "Max DNS Answers",
-            field: "maxDnsAnswers",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "Max Origin Connections",
-            field: "maxOriginConnections",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "Max Request Header Bytes",
-            field: "maxRequestHeaderBytes",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "Mid Header Rewrite Rules",
-            field: "midHeaderRewrite",
-            hide: true
-        },
-        {
-            headerName: "Multi-Site Origin",
-            field: "multiSiteOrigin",
-            hide: true
-        },
-        {
-            headerName: "Origin Shield",
-            field: "originShield",
-            hide: true
-        },
-        {
-            headerName: "Origin FQDN",
-            field: "orgServerFqdn",
-            hide: false
-        },
-        {
-            headerName: "Profile",
-            field: "profileName",
-            hide: true
-        },
-        {
-            headerName: "Protocol",
-            field: "protocol",
-            hide: false,
-            valueFormatter: function(params) {
-                return deliveryServiceUtils.protocols[params.data.protocol];
-            },
-            tooltipValueGetter: function(params) {
-                return deliveryServiceUtils.protocols[params.data.protocol];
-            }
-        },
-        {
-            headerName: "Qstring Handling",
-            field: "qstringIgnore",
-            hide: true,
-            valueFormatter: function(params) {
-                return deliveryServiceUtils.qstrings[params.data.qstringIgnore];
-            },
-            tooltipValueGetter: function(params) {
-                return deliveryServiceUtils.qstrings[params.data.qstringIgnore];
-            }
-        },
-        {
-            headerName: "Range Request Handling",
-            field: "rangeRequestHandling",
-            hide: true,
-            valueFormatter: function(params) {
-                return deliveryServiceUtils.rrhs[params.data.rangeRequestHandling];
-            },
-            tooltipValueGetter: function(params) {
-                return deliveryServiceUtils.rrhs[params.data.rangeRequestHandling];
-            }
-        },
-        {
-            headerName: "Regex Remap Expression",
-            field: "regexRemap",
-            hide: true
-        },
-        {
-            headerName: "Regional Geoblocking",
-            field: "regionalGeoBlocking",
-            hide: true
-        },
-        {
-            headerName: "Raw Remap Text",
-            field: "remapText",
-            hide: true
-        },
-        {
-            headerName: "Routing Name",
-            field: "routingName",
-            hide: true
-        },
-        {
-            headerName: "Service Category",
-            field: "serviceCategory",
-            hide: true
-        },
-        {
-            headerName: "Signed",
-            field: "signed",
-            hide: true
-        },
-        {
-            headerName: "Signing Algorithm",
-            field: "signingAlgorithm",
-            hide: true
-        },
-        {
-            headerName: "Range Slice Block Size",
-            field: "rangeSliceBlockSize",
-            hide: true,
-            filter: "agNumberColumnFilter"
-        },
-        {
-            headerName: "Tenant",
-            field: "tenant",
-            hide: false
-        },
-        {
-            headerName: "Topology",
-            field: "topology",
-            hide: false
-        },
-        {
-            headerName: "TR Request Headers",
-            field: "trRequestHeaders",
-            hide: true
-        },
-        {
-            headerName: "TR Response Headers",
-            field: "trResponseHeaders",
-            hide: true
-        },
-        {
-            headerName: "Type",
-            field: "type",
-            hide: false
-        },
-        {
-            headerName: "XML ID (Key)",
-            field: "xmlId",
-            hide: false
-        }
-    ];
+	let showCustomCharts = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
-    let dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+	/**
+	 * @param {string} typeName
+	 */
+	function createDeliveryService(typeName) {
+		locationUtils.navigateToPath(`/delivery-services/new?dsType=${typeName}`);
+	}
 
-    let showCustomCharts = propertiesModel.properties.deliveryServices.charts.customLink.show;
+	/**
+	 * Opens a dialog that the user uses to clone the given Delivery Service.
+	 *
+	 * @param {{readonly id: number; readonly xmlId: string;}} ds
+	 */
+	async function clone(ds) {
+		const params = {
+			title: `Clone Delivery Service: ${ds.xmlId}`,
+			message: "Please select a <a href='https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#ds-types' target='_blank'>content routing category</a> for the clone"
+		};
 
-    var createDeliveryService = function(typeName) {
-        var path = '/delivery-services/new?dsType=' + typeName;
-        locationUtils.navigateToPath(path);
-    };
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/select/dialog.select.tpl.html",
+			controller: "DialogSelectController",
+			size: "md",
+			resolve: {
+				params,
+				// the following represent the 4 categories of delivery services
+				// the ids are arbitrary but the dialog.select dropdown needs them
+				collection: () => [
+					{ id: 1, name: "ANY_MAP" },
+					{ id: 2, name: "DNS" },
+					{ id: 3, name: "HTTP" },
+					{ id: 4, name: "STEERING" }
+				]
+			}
+		});
 
-    $scope.clone = function(ds, event) {
-        event.stopPropagation();
-        var params = {
-            title: 'Clone Delivery Service: ' + ds.xmlId,
-            message: "Please select a content routing category for the clone"
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-            controller: 'DialogSelectController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                },
-                collection: function() {
-                    // the following represent the 4 categories of delivery services
-                    // the ids are arbitrary but the dialog.select dropdown needs them
-                    return [
-                        { id: 1, name: 'ANY_MAP' },
-                        { id: 2, name: 'DNS' },
-                        { id: 3, name: 'HTTP' },
-                        { id: 4, name: 'STEERING' }
-                    ];
-                }
-            }
-        });
-        modalInstance.result.then(function(type) {
-            locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?dsType=' + type.name);
-        });
-    };
+		const {name} = await modalInstance.result;
+		locationUtils.navigateToPath(`/delivery-services/${ds.id}/clone?dsType=${name}`);
+	}
 
-    $scope.confirmDelete = function(deliveryService, event) {
-        event.stopPropagation();
-        var params = {
-            title: 'Delete Delivery Service: ' + deliveryService.xmlId,
-            key: deliveryService.xmlId
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-            controller: 'DialogDeleteController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            if (dsRequestsEnabled) {
-                createDeliveryServiceDeleteRequest(deliveryService);
-            } else {
-                deliveryServiceService.deleteDeliveryService(deliveryService)
-                    .then(
-                        function() {
-                            messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted' } ], false);
-                            $scope.refresh();                        },
-                        function(fault) {
-                            $anchorScroll(); // scrolls window to top
-                            messageModel.setMessages(fault.data.alerts, false);
-                        }
-                    );
-            }
-        }, function () {
-            // do nothing
-        });
-    };
+	/**
+	 * Opens a dialog asking the user for confirmation before deleting the given
+	 * Delivery Service.
+	 *
+	 * @param {{readonly xmlId: string;}} ds
+	 */
+	async function confirmDelete(ds) {
+		const params = {
+			title: `Delete Delivery Service: ${ds.xmlId}`,
+			key: ds.xmlId
+		};
 
-    var createDeliveryServiceDeleteRequest = function(deliveryService) {
-        var params = {
-            title: "Delivery Service Delete Request",
-            message: 'All delivery service deletions must be reviewed.'
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/deliveryServiceRequest/dialog.deliveryServiceRequest.tpl.html',
-            controller: 'DialogDeliveryServiceRequestController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                },
-                statuses: function() {
-                    var statuses = [
-                        { id: $scope.DRAFT, name: 'Save Request as Draft' },
-                        { id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
-                    ];
-                    if (userModel.user.role == propertiesModel.properties.dsRequests.overrideRole) {
-                        statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
-                    }
-                    return statuses;
-                }
-            }
-        });
-        modalInstance.result.then(function(options) {
-            var status = 'draft';
-            if (options.status.id == $scope.SUBMITTED || options.status.id == $scope.COMPLETE) {
-                status = 'submitted';
-            };
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/delete/dialog.delete.tpl.html",
+			controller: "DialogDeleteController",
+			size: "md",
+			resolve: { params }
+		});
+		try {
+			await modalInstance.result;
+			if (dsRequestsEnabled) {
+				return createDeliveryServiceDeleteRequest(ds);
+			}
+			try {
+				await deliveryServiceService.deleteDeliveryService(ds);
+				messageModel.setMessages([ { level: "success", text: `Delivery service [ ${ds.xmlId} ] deleted` } ], false);
+				$scope.refresh();
+			} catch (fault) {
+				$anchorScroll(); // scrolls window to top
+				messageModel.setMessages(fault.data.alerts, false);
+			}
+		} catch {}
+	}
 
-            var dsRequest = {
-                changeType: 'delete',
-                status: status,
-                original: deliveryService
-            };
+	/**
+	 * Creates a new DSR to delete the given Delivery Service.
+	 *
+	 * @param {{readonly xmlId: string}} ds
+	 */
+	async function createDeliveryServiceDeleteRequest(ds) {
+		const params = {
+			title: "Delivery Service Delete Request",
+			message: "All delivery service deletions must be reviewed."
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/deliveryServiceRequest/dialog.deliveryServiceRequest.tpl.html",
+			controller: "DialogDeliveryServiceRequestController",
+			size: "md",
+			resolve: {
+				params,
+				statuses: () => {
+					const statuses = [
+						{ id: $scope.DRAFT, name: "Save Request as Draft" },
+						{ id: $scope.SUBMITTED, name: "Submit Request for Review and Deployment" }
+					];
+					if (userModel.user.role == propertiesModel.properties.dsRequests.overrideRole) {
+						statuses.push({ id: $scope.COMPLETE, name: "Fulfill Request Immediately" });
+					}
+					return statuses;
+				}
+			}
+		});
+		const options = await modalInstance.result;
+		let status = 'draft';
+		if (options.status.id == $scope.SUBMITTED || options.status.id == $scope.COMPLETE) {
+			status = 'submitted';
+		}
 
-            // if the user chooses to complete/fulfill the delete request immediately, the ds will be deleted and behind the
-            // scenes a delivery service request will be created and marked as complete
-            if (options.status.id == $scope.COMPLETE) {
-                // first delete the ds
-                deliveryServiceService.deleteDeliveryService(deliveryService)
-                    .then(
-                        function() {
-                            // then create the ds request
-                            deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
-                            then(
-                                function(response) {
-                                    var comment = {
-                                        deliveryServiceRequestId: response.id,
-                                        value: options.comment
-                                    };
-                                    // then create the ds request comment
-                                    deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
-                                    then(
-                                        function() {
-                                            var promises = [];
-                                            // assign the ds request
-                                            promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.username));
-                                            // set the status to 'complete'
-                                            promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
-                                            // and finally refresh the delivery services table
-                                            messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted' } ], false);
-                                            $scope.refresh();
-                                        }
-                                    );
-                                }
-                            );
-                        },
-                        function(fault) {
-                            $anchorScroll(); // scrolls window to top
-                            messageModel.setMessages(fault.data.alerts, false);
-                        }
-                    );
-            } else {
-                deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
-                    then(
-                        function(response) {
-                            var comment = {
-                                deliveryServiceRequestId: response.id,
-                                value: options.comment
-                            };
-                            deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
-                                then(
-                                    function() {
-                                        const xmlId = (dsRequest.requested) ? dsRequest.requested.xmlId : dsRequest.original.xmlId;
-                                        messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + xmlId + ' delivery service' } ], true);
-                                        locationUtils.navigateToPath('/delivery-service-requests');
-                                    }
-                                );
-                        }
-                    );
-            }
-        });
-    };
+		const dsRequest = {
+			changeType: 'delete',
+			status: status,
+			original: ds
+		};
 
-    /** All of the delivery services - lastUpdated fields converted to actual Dates */
-    $scope.deliveryServices = deliveryServices.map(
-        function(x) {
-            x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
-        });
+		// if the user chooses to complete/fulfill the delete request immediately, the ds will be deleted and behind the
+		// scenes a delivery service request will be created and marked as complete
+		if (options.status.id == $scope.COMPLETE) {
+			try {
+				// first delete the ds
+				await deliveryServiceService.deleteDeliveryService(ds);
+				const response = await deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest);
+				const comment = {
+					deliveryServiceRequestId: response.id,
+					value: options.comment
+				};
+				// then create the ds request comment
+				await deliveryServiceRequestService.createDeliveryServiceRequestComment(comment);
+				const promises = [];
+				// assign the ds request
+				promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.username));
+				// set the status to 'complete'
+				promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, "complete"));
+				// and finally refresh the delivery services table
+				messageModel.setMessages([ { level: "success", text: `Delivery service [ ${ds.xmlId} ] deleted` } ], false);
+				$scope.refresh();
+			} catch (fault) {
+				$anchorScroll(); // scrolls window to top
+				messageModel.setMessages(fault.data.alerts, false);
+			}
+		} else {
+			const response = await deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest);
+			const comment = {
+				deliveryServiceRequestId: response.id,
+				value: options.comment
+			};
+			await deliveryServiceRequestService.createDeliveryServiceRequestComment(comment);
+			const xmlId = (dsRequest.requested) ? dsRequest.requested.xmlId : dsRequest.original.xmlId;
+			messageModel.setMessages([ { level: "success", text: `Created request to ${dsRequest.changeType} the ${xmlId} delivery service` } ], true);
+			locationUtils.navigateToPath("/delivery-service-requests");
+		}
+	}
 
-    /** The currently selected server - at the moment only used by the context menu */
-    $scope.deliveryService = {
-        xmlId: "",
-        id: -1
-    };
 
-    $scope.quickSearch = '';
+	$scope.DRAFT = 0;
+	$scope.SUBMITTED = 1;
+	$scope.REJECTED = 2;
+	$scope.PENDING = 3;
+	$scope.COMPLETE = 4;
 
-    $scope.pageSize = 100;
+	/**
+	 * @param {{readonly id: number; type: string}} ds
+	 */
+	function viewCharts(ds) {
+		if (showCustomCharts) {
+			deliveryServiceUtils.openCharts(ds);
+		} else {
+			locationUtils.navigateToPath(`/delivery-services/${ds.id}/charts?dsType=${ds.type}`);
+		}
+	}
 
-    $scope.mouseDownSelectionText = "";
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+	async function selectDSType() {
+		const params = {
+			title: "Create Delivery Service",
+			message: "Please select a <a href='https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#ds-types' target='_blank'>content routing category</a>"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params,
+				// the following represent the 4 categories of delivery services
+				// the ids are arbitrary but the dialog.select dropdown needs them
+				collection: () => [
+					{ id: 1, name: 'ANY_MAP' },
+					{ id: 2, name: 'DNS' },
+					{ id: 3, name: 'HTTP' },
+					{ id: 4, name: 'STEERING' }
+				]
+			}
+		});
+		try {
+			const type = await modalInstance.result;
+			createDeliveryService(type.name);
+		} catch {
+			// do nothing
+		}
+	}
 
-    $scope.DRAFT = 0;
-    $scope.SUBMITTED = 1;
-    $scope.REJECTED = 2;
-    $scope.PENDING = 3;
-    $scope.COMPLETE = 4;
+	this.$onInit = function() {
+		const xmlIds = [];
+		for(const ds of deliveryServices) {
+			xmlIds.push(ds.xmlId);
+		}
+		const dsTargets = deliveryServiceUtils.getSteeringTargetsForDS(xmlIds, steeringTargets);
+		/** All the delivery services - lastUpdated fields converted to actual Dates */
+		$scope.deliveryServices = deliveryServices.map(
+			x => ({...x, isTargetsFor: Array.from(dsTargets[x.xmlId]), lastUpdated: x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z").replace(" ", "T")) : x.lastUpdated})
+		);
+	}
 
-    $scope.viewCharts = function(ds, $event) {
-        $event.stopPropagation();
-        if (showCustomCharts) {
-            deliveryServiceUtils.openCharts(ds);
-        } else {
-            locationUtils.navigateToPath('/delivery-services/' + ds.id + '/charts?dsType=' + ds.type);
-        }
-    };
+	async function compareDSs() {
+		const params = {
+			title: "Compare Delivery Services",
+			message: "Please select 2 delivery services to compare",
+			label: "xmlId"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/compare/dialog.compare.tpl.html',
+			controller: 'DialogCompareController',
+			size: 'md',
+			resolve: {
+				params,
+				collection: deliveryServiceService => deliveryServiceService.getDeliveryServices()
+			}
+		});
+		try {
+			const dss = await modalInstance.result;
+			$location.path(`${$location.path()}/compare/${dss[0].id}/${dss[1].id}`);
+		} catch {
+			// do nothing
+		}
+	}
 
-    $scope.refresh = function() {
-        $state.reload(); // reloads all the resolves for the view
-    };
+	$scope.options = {
+		onRowClick: params => {
+			const selection = window.getSelection()?.toString();
+			if(!selection) {
+				locationUtils.navigateToPath(`/delivery-services/${params.data.id}?dsType=${params.data.type}`);
+				// Event is outside the digest cycle, so we need to trigger one.
+				$scope.$apply();
+			}
+		}
+	};
 
-    $scope.selectDSType = function() {
-        var params = {
-            title: 'Create Delivery Service',
-            message: "Please select a content routing category"
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-            controller: 'DialogSelectController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                },
-                collection: function() {
-                    // the following represent the 4 categories of delivery services
-                    // the ids are arbitrary but the dialog.select dropdown needs them
-                    return [
-                        { id: 1, name: 'ANY_MAP' },
-                        { id: 2, name: 'DNS' },
-                        { id: 3, name: 'HTTP' },
-                        { id: 4, name: 'STEERING' }
-                    ];
-                }
-            }
-        });
-        modalInstance.result.then(function(type) {
-            createDeliveryService(type.name);
-        }, function () {
-            // do nothing
-        });
-    };
+	$scope.dropDownOptions = [
+		{
+			onClick: selectDSType,
+			text: "Create Delivery Service",
+			type: 1
+		},
+		{
+			onClick: compareDSs,
+			text: "Compare Delivery Services",
+			type: 1
+		}
+	];
 
-    $scope.compareDSs = function() {
-        var params = {
-            title: 'Compare Delivery Services',
-            message: "Please select 2 delivery services to compare",
-            label: "xmlId"
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/compare/dialog.compare.tpl.html',
-            controller: 'DialogCompareController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                },
-                collection: function(deliveryServiceService) {
-                    return deliveryServiceService.getDeliveryServices();
-                }
-            }
-        });
-        modalInstance.result.then(function(dss) {
-            $location.path($location.path() + '/compare/' + dss[0].id + '/' + dss[1].id);
-        }, function () {
-            // do nothing
-        });
-    };
+	$scope.contextMenuOptions = [
+		{
+			getHref: ds => `/delivery-services/${ds.id}?dsType=${ds.type}`,
+			getText: ds => `Open ${ds.xmlId} in a new tab`,
+			newTab: true,
+			type: 2
+		},
+		{type: 0},
+		{
+			getHref: ds => `/delivery-services/${ds.id}?dsType=${ds.type}`,
+			text: "Edit",
+			type: 2
+		},
+		{
+			onClick: clone,
+			text: "Clone",
+			type: 1
+		},
+		{
+			onClick: confirmDelete,
+			text: "Delete",
+			type: 1
+		},
+		{type: 0},
+		{
+			onClick: viewCharts,
+			text: "View Charts",
+			type: 1
+		},
+		{type: 0},
+		{
+			getHref: ds => `#!/delivery-services/${ds.id}/ssl-keys?dsType=${ds.type}`,
+			text: "Manage SSL Keys",
+			type: 2
+		},
+		{
+			getHref: ds => `#!/delivery-services/${ds.id}/url-sig-keys?dsType=${ds.type}`,
+			text: "Manage URL Sig Keys",
+			type: 2
+		},
+		{
+			getHref: ds => `#!/delivery-services/${ds.id}/uri-signing-keys?dsType=${ds.type}`,
+			text: "Manage URI Signing Keys",
+			type: 2
+		},
+		{ type: 0 },
+		{
+			getHref: ds => `#!/delivery-services/${ds.id}/jobs?dsType=${ds.type}`,
+			text: "Manage Invalidation Requests",
+			type: 2
+		},
+		{
+			getHref: ds => `#!/delivery-services/${ds.id}/origins?dsType=${ds.type}`,
+			text: "Manage Origins",
+			type: 2
+		},
+		{
+			getHref: ds => `#!/delivery-services/${ds.id}/regexes?dsType=${ds.type}`,
+			text: "Manage Regexes",
+			type: 2
+		},
+		{
+			getHref: ds => `#!/delivery-services/${ds.id}/required-server-capabilities?dsType=${ds.type}`,
+			text: "Manage Required Server Capabilities",
+			type: 2
+		},
+		{
+			getHref: ds => `#!/delivery-services/${ds.id}/servers?dsType=${ds.type}`,
+			text: "Manage Servers",
+			type: 2
+		},
+		{
+			getHref: ds => `#!/delivery-services/${ds.id}/targets?dsType=${ds.type}`,
+			text: "Manage Targets",
+			type: 2
+		},
+		{
+			getHref: ds => `#!/delivery-services/${ds.id}/static-dns-entries?dsType=${ds.type}`,
+			text: "Manage Static DNS Entries",
+			type: 2
+		},
 
-    /** Toggles the visibility of a column that has the ID provided as 'col'. */
-    $scope.toggleVisibility = function(col) {
-        const visible = $scope.gridOptions.columnApi.getColumn(col).isVisible();
-        $scope.gridOptions.columnApi.setColumnVisible(col, !visible);
-    };
+	];
+}
 
-    /** Options, configuration, data and callbacks for the ag-grid table. */
-    $scope.gridOptions = {
-        columnDefs: columns,
-        enableCellTextSelection:true,
-        suppressMenuHide: true,
-        multiSortKey: 'ctrl',
-        alwaysShowVerticalScroll: true,
-        defaultColDef: {
-            filter: true,
-            sortable: true,
-            resizable: true,
-            tooltipValueGetter: defaultTooltip
-        },
-        rowData: deliveryServices,
-        pagination: true,
-        paginationPageSize: $scope.pageSize,
-        rowBuffer: 0,
-        tooltipShowDelay: 500,
-        allowContextMenuWithControlKey: true,
-        preventDefaultOnContextMenu: true,
-        colResizeDefault: "shift",
-        onColumnVisible: function(params) {
-            if (params.visible){
-                return;
-            }
-            const filterModel = $scope.gridOptions.api.getFilterModel();
-            for (let column of params.columns) {
-                if (column.filterActive) {
-                    if (column.colId in filterModel) {
-                        delete filterModel[column.colId];
-                        $scope.gridOptions.api.setFilterModel(filterModel);
-                    }
-                }
-            }
-        },
-        onCellContextMenu: function(params) {
-            $scope.showMenu = true;
-            $scope.menuStyle.left = String(params.event.clientX) + "px";
-            $scope.menuStyle.top = String(params.event.clientY) + "px";
-            $scope.menuStyle.bottom = "unset";
-            $scope.menuStyle.right = "unset";
-            $scope.$apply();
-            const boundingRect = document.getElementById("context-menu").getBoundingClientRect();
-
-            if (boundingRect.bottom > window.innerHeight){
-                $scope.menuStyle.bottom = String(window.innerHeight - params.event.clientY) + "px";
-                $scope.menuStyle.top = "unset";
-            }
-            if (boundingRect.right > window.innerWidth) {
-                $scope.menuStyle.right = String(window.innerWidth - params.event.clientX) + "px";
-                $scope.menuStyle.left = "unset";
-            }
-            $scope.deliveryService = params.data;
-            $scope.$apply();
-        },
-        onCellMouseDown: function() {
-            $scope.mouseDownSelectionText = window.getSelection().toString();
-        },
-        onRowClicked: function(params) {
-            const selection = window.getSelection().toString();
-            if(selection === "" || selection === $scope.mouseDownSelectionText) {
-                locationUtils.navigateToPath('/delivery-services/' + params.data.id + '?dsType=' + params.data.type);
-                // Event is outside the digest cycle, so we need to trigger one.
-                $scope.$apply();
-            }
-            $scope.mouseDownSelectionText = "";
-        },
-        onColumnResized: function(params) {
-            localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
-        },
-        onFirstDataRendered: function(event) {
-            try {
-                const filterState = JSON.parse(localStorage.getItem(tableName + "_table_filters")) || {};
-                // apply any filter provided to the controller
-                Object.assign(filterState, filter);
-                $scope.gridOptions.api.setFilterModel(filterState);
-            } catch (e) {
-                console.error("Failure to load stored filter state:", e);
-            }
-
-            $scope.gridOptions.api.addEventListener("filterChanged", function() {
-                localStorage.setItem(tableName + "_table_filters", JSON.stringify($scope.gridOptions.api.getFilterModel()));
-            });
-        },
-        onGridReady: function() {
-            try { // need to create the show/hide column checkboxes and bind to the current visibility
-                const colstates = JSON.parse(localStorage.getItem(tableName + "_table_columns"));
-                if (colstates) {
-                    if (!$scope.gridOptions.columnApi.setColumnState(colstates)) {
-                        console.error("Failed to load stored column state: one or more columns not found");
-                    }
-                } else {
-                    $scope.gridOptions.api.sizeColumnsToFit();
-                }
-            } catch (e) {
-                console.error("Failure to retrieve required column info from localStorage (key=" + tableName + "_table_columns):", e);
-            }
-
-            try {
-                const sortState = JSON.parse(localStorage.getItem(tableName + "_table_sort"));
-                $scope.gridOptions.api.setSortModel(sortState);
-            } catch (e) {
-                console.error("Failure to load stored sort state:", e);
-            }
-
-            try {
-                $scope.quickSearch = localStorage.getItem(tableName + "_quick_search");
-                $scope.gridOptions.api.setQuickFilter($scope.quickSearch);
-            } catch (e) {
-                console.error("Failure to load stored quick search:", e);
-            }
-
-            try {
-                const ps = localStorage.getItem(tableName + "_page_size");
-                if (ps && ps > 0) {
-                    $scope.pageSize = Number(ps);
-                    $scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
-                }
-            } catch (e) {
-                console.error("Failure to load stored page size:", e);
-            }
-            
-            try {
-                const page = parseInt(localStorage.getItem(tableName + "_table_page"));
-                const totalPages = $scope.gridOptions.api.paginationGetTotalPages();
-                if (page !== undefined && page > 0 && page <= totalPages-1) {
-                    $scope.gridOptions.api.paginationGoToPage(page);
-                }
-            } catch (e) {
-                console.error("Failed to load stored page number:", e);
-            }
-
-            $scope.gridOptions.api.addEventListener("paginationChanged", function() {
-                localStorage.setItem(tableName + "_table_page", $scope.gridOptions.api.paginationGetCurrentPage());
-            });
-
-            $scope.gridOptions.api.addEventListener("sortChanged", function() {
-                localStorage.setItem(tableName + "_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
-            });
-
-            $scope.gridOptions.api.addEventListener("columnMoved", function() {
-                localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
-            });
-
-            $scope.gridOptions.api.addEventListener("columnVisible", function() {
-                $scope.gridOptions.api.sizeColumnsToFit();
-                try {
-                    const colStates = $scope.gridOptions.columnApi.getColumnState();
-                    localStorage.setItem(tableName + "_table_columns", JSON.stringify(colStates));
-                } catch (e) {
-                    console.error("Failed to store column defs to local storage:", e);
-                }
-            });
-        }
-    };
-
-    /** This is used to position the context menu under the cursor. */
-    $scope.menuStyle = {
-        left: 0,
-        top: 0,
-    };
-
-    /** Controls whether or not the context menu is visible. */
-    $scope.showMenu = false;
-
-    /** Downloads the table as a CSV */
-    $scope.exportCSV = function() {
-        const params = {
-            allColumns: true,
-            fileName: "delivery-services.csv",
-        };
-        $scope.gridOptions.api.exportDataAsCsv(params);
-    };
-
-    $scope.onQuickSearchChanged = function() {
-        $scope.gridOptions.api.setQuickFilter($scope.quickSearch);
-        localStorage.setItem(tableName + "_quick_search", $scope.quickSearch);
-    };
-
-    $scope.onPageSizeChanged = function() {
-        const value = Number($scope.pageSize);
-        $scope.gridOptions.api.paginationSetPageSize(value);
-        localStorage.setItem(tableName + "_page_size", value);
-    };
-
-    $scope.clearTableFilters = function() {
-        // clear the quick search
-        $scope.quickSearch = '';
-        $scope.onQuickSearchChanged();
-        // clear any column filters
-        $scope.gridOptions.api.setFilterModel(null);
-    };
-
-    angular.element(document).ready(function () {
-        // clicks outside the context menu will hide it
-        $document.bind("click", function(e) {
-            $scope.showMenu = false;
-            e.stopPropagation();
-            $scope.$apply();
-        });
-    });
-
-};
-
-TableDeliveryServicesController.$inject = ['tableName', 'deliveryServices', 'filter', '$anchorScroll', '$document', '$scope', '$state', '$location', '$uibModal', 'deliveryServiceService', 'deliveryServiceRequestService', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'messageModel', 'propertiesModel', 'userModel'];
+TableDeliveryServicesController.$inject = ["tableName", "deliveryServices", "steeringTargets", "$anchorScroll", "$scope", "$state", "$location", "$uibModal", "deliveryServiceService", "deliveryServiceRequestService", "deliveryServiceUtils", "locationUtils", "messageModel", "propertiesModel", "userModel"];
 module.exports = TableDeliveryServicesController;

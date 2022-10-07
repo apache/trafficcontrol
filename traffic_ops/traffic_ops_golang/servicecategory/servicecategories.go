@@ -61,7 +61,7 @@ func (serviceCategory TOServiceCategory) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "name", Func: api.GetStringKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (serviceCategory TOServiceCategory) GetKeys() (map[string]interface{}, bool) {
 	if serviceCategory.Name == "" {
 		return map[string]interface{}{"name": ""}, false

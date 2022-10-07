@@ -16,12 +16,15 @@ import * as https from "https";
 
 import axios, {AxiosError} from "axios";
 import {NightwatchBrowser} from "nightwatch";
+import { ChangeLogsPageObject } from "nightwatch/page_objects/changeLogs";
 import type {CommonPageObject} from "nightwatch/page_objects/common";
 import type {DeliveryServiceCardPageObject} from "nightwatch/page_objects/deliveryServiceCard";
 import type {DeliveryServiceDetailPageObject} from "nightwatch/page_objects/deliveryServiceDetail";
 import type {DeliveryServiceInvalidPageObject} from "nightwatch/page_objects/deliveryServiceInvalidationJobs";
 import type {LoginPageObject} from "nightwatch/page_objects/login";
 import type {ServersPageObject} from "nightwatch/page_objects/servers";
+import { TenantDetailPageObject } from "nightwatch/page_objects/tenantDetail";
+import { TenantsPageObject } from "nightwatch/page_objects/tenants";
 import type {UsersPageObject} from "nightwatch/page_objects/users";
 import {
 	CDN,
@@ -29,7 +32,9 @@ import {
 	Protocol,
 	RequestDeliveryService,
 	ResponseCDN,
-	ResponseDeliveryService
+	ResponseDeliveryService,
+	RequestTenant,
+	ResponseTenant, TypeFromResponse, RequestSteeringTarget
 } from "trafficops-types";
 
 declare module "nightwatch" {
@@ -38,11 +43,14 @@ declare module "nightwatch" {
 	 */
 	export interface NightwatchCustomPageObjects {
 		common: () => CommonPageObject;
+		changeLogs: () => ChangeLogsPageObject;
 		deliveryServiceCard: () => DeliveryServiceCardPageObject;
 		deliveryServiceDetail: () => DeliveryServiceDetailPageObject;
 		deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;
 		login: () => LoginPageObject;
 		servers: () => ServersPageObject;
+		tenants: () => TenantsPageObject;
+		tenantDetail: () => TenantDetailPageObject;
 		users: () => UsersPageObject;
 	}
 
@@ -55,7 +63,19 @@ declare module "nightwatch" {
 		trafficOpsURL: string;
 		apiVersion: string;
 		uniqueString: string;
+		testData: CreatedData;
 	}
+}
+
+/**
+ * Contains the data created by the client before the test suite runs.
+ */
+export interface CreatedData {
+	cdn: ResponseCDN;
+	ds: ResponseDeliveryService;
+	ds2: ResponseDeliveryService;
+	steeringDS: ResponseDeliveryService;
+	tenant: ResponseTenant;
 }
 
 const globals = {
@@ -80,9 +100,9 @@ const globals = {
 			u: globals.adminUser
 		};
 		try {
-			const resp = await client.post(`${apiUrl}/user/login`, JSON.stringify(loginReq));
-			if(resp.headers["set-cookie"]) {
-				for (const cookie of resp.headers["set-cookie"]) {
+			const logResp = await client.post(`${apiUrl}/user/login`, JSON.stringify(loginReq));
+			if(logResp.headers["set-cookie"]) {
+				for (const cookie of logResp.headers["set-cookie"]) {
 					if(cookie.indexOf("access_token") > -1) {
 						accessToken = cookie;
 						break;
@@ -103,9 +123,28 @@ const globals = {
 			dnssecEnabled: false, domainName: `tests${globals.uniqueString}.com`, name: `testCDN${globals.uniqueString}`
 		};
 		let respCDN: ResponseCDN;
+
+		let resp = await client.get(`${apiUrl}/types`);
+		const types: Array<TypeFromResponse> = resp.data.response;
+		const httpType = types.find(typ => typ.name === "HTTP" && typ.useInTable === "deliveryservice");
+		if(httpType === undefined) {
+			throw new Error("Unable to find `HTTP` type");
+		}
+		const steeringType = types.find(typ => typ.name === "STEERING" && typ.useInTable === "deliveryservice");
+		if(steeringType === undefined) {
+			throw new Error("Unable to find `STEERING` type");
+		}
+		const steeringWeightType = types.find(typ => typ.name === "STEERING_WEIGHT" && typ.useInTable === "steering_target");
+		if(steeringWeightType === undefined) {
+			throw new Error("Unable to find `STEERING_WEIGHT` type");
+		}
+
 		try {
-			let resp = await client.post(`${apiUrl}/cdns`, JSON.stringify(cdn));
+			const testData = globals.testData as CreatedData;
+			resp = await client.post(`${apiUrl}/cdns`, JSON.stringify(cdn));
 			respCDN = resp.data.response;
+			console.log(`Successfully created CDN ${respCDN.name}`);
+			testData.cdn = respCDN;
 
 			const ds: RequestDeliveryService = {
 				active: false,
@@ -139,12 +178,48 @@ const globals = {
 				routingName: "test",
 				signed: false,
 				tenantId: 1,
-				typeId: 1,
+				typeId: httpType.id,
 				xmlId: `testDS${globals.uniqueString}`
 			};
 			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
-			const respDS: ResponseDeliveryService = resp.data.response[0];
+			let respDS: ResponseDeliveryService = resp.data.response[0];
 			console.log(`Successfully created DS '${respDS.displayName}'`);
+			testData.ds = respDS;
+
+			ds.displayName = `test DS2${globals.uniqueString}`;
+			ds.xmlId = `testDS2${globals.uniqueString}`;
+			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
+			respDS = resp.data.response[0];
+			console.log(`Successfully created DS '${respDS.displayName}'`);
+			testData.ds2 = respDS;
+
+			ds.displayName = `test steering DS${globals.uniqueString}`;
+			ds.xmlId = `testSDS${globals.uniqueString}`;
+			ds.typeId = steeringType.id;
+			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
+			respDS = resp.data.response[0];
+			console.log(`Successfully created DS '${respDS.displayName}'`);
+			testData.steeringDS = respDS;
+
+			const target: RequestSteeringTarget = {
+				targetId: testData.ds.id,
+				typeId: steeringWeightType.id,
+				value: 1
+			};
+			await client.post(`${apiUrl}/steering/${testData.steeringDS.id}/targets`, JSON.stringify(target));
+			target.targetId = testData.ds2.id;
+			await client.post(`${apiUrl}/steering/${testData.steeringDS.id}/targets`, JSON.stringify(target));
+			console.log(`Created steering targets for ${testData.steeringDS.displayName}`);
+
+			const tenant: RequestTenant = {
+				active: true,
+				name: `testT${globals.uniqueString}`,
+				parentId: 1
+			};
+			resp = await client.post(`${apiUrl}/tenants`, JSON.stringify(tenant));
+			const respTenant: ResponseTenant = resp.data.response;
+			console.log(`Successfully created Tenant ${respTenant.name}`);
+			(globals.testData as CreatedData).tenant = respTenant;
 		} catch(e) {
 			console.error((e as AxiosError).message);
 			throw e;
@@ -160,6 +235,7 @@ const globals = {
 			done();
 		});
 	},
+	testData: {},
 	trafficOpsURL: "https://localhost:6443",
 	uniqueString: new Date().getTime().toString()
 };

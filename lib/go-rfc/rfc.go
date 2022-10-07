@@ -6,7 +6,6 @@
 //
 // This is primarily intended for IETF HTTP RFCs, but may include other specifications as well (e.g. ANSI, W3C, WHATWG, etc).
 // If a symbol documents simply "RFC" then it refers to an IETF RFC. If the symbol is an RFC from a different organization, it should document the organization or project, e.g. "Rust RFC 2436" or "ISO/IEC 23009."
-//
 package rfc
 
 /*

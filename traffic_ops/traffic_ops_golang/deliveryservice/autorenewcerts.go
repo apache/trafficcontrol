@@ -62,7 +62,7 @@ const emailTemplateFile = "/opt/traffic_ops/app/templates/send_mail/autorenewcer
 const API_ACME_AUTORENEW = "acme_autorenew"
 
 // RenewCertificatesDeprecated renews all SSL certificates that are expiring within a certain time limit with a deprecation alert.
-//// This will renew Let's Encrypt and ACME certificates.
+// // This will renew Let's Encrypt and ACME certificates.
 func RenewCertificatesDeprecated(w http.ResponseWriter, r *http.Request) {
 	renewCertificates(w, r, true)
 }

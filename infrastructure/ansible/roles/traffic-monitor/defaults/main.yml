@@ -26,7 +26,9 @@ tm_group: traffic_monitor
 # traffic_monitor.cfg
 tm_monitor_config_polling_interval_ms: 5000
 tm_http_timeout_ms: 2000
-tm_peer_optimistic: true
+tm_peer_optimistic_quorum_min: 0
+tm_stat_polling: true
+tm_distributed_polling: false
 tm_max_events: 200
 tm_health_flush_interval_ms: 20
 tm_log_location_error: "{{ tm_log_dir }}/traffic_monitor.log"

@@ -14,17 +14,33 @@
 
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import type {
+	GetResponseUser,
+	PostRequestUser,
+	PutOrPostResponseUser,
+	RequestTenant,
+	ResponseTenant
+} from "trafficops-types";
 
 import {
 	type Role,
 	type Tenant,
-	type User,
 	type Capability,
 	type CurrentUser,
 	newCurrentUser
 } from "src/app/models";
 
 import { APIService } from "./base-api.service";
+
+/**
+ * Represents a request to register a user via email using the `/users/register`
+ * API endpoint.
+ */
+interface UserRegistrationRequest {
+	email: string;
+	role: number;
+	tenantId: number;
+}
 
 /**
  * UserService exposes API functionality related to Users, Roles and Capabilities.
@@ -113,15 +129,34 @@ export class UserService extends APIService {
 		);
 	}
 
-	public async getUsers(nameOrID: string | number): Promise<User>;
-	public async getUsers(): Promise<Array<User>>;
 	/**
-	 * Gets an array of all users in Traffic Ops.
+	 * Gets a specific user from Traffic Ops.
 	 *
-	 * @param nameOrID If given, returns only the User with the given username (string) or ID (number).
-	 * @returns An Array of User objects - or a single User object if 'nameOrID' was given.
+	 * @param nameOrID The username (string) or ID (number) of the user to
+	 * fetch.
+	 * @returns An Array of User objects - or a single User object if 'nameOrID'
+	 * was given.
 	 */
-	public async getUsers(nameOrID?: string | number): Promise<Array<User> | User> {
+	public async getUsers(nameOrID: string | number): Promise<GetResponseUser>;
+	/**
+	 * Gets an array of all users in Traffic Ops visible to the current user's
+	 * Tenant.
+	 *
+	 * @param nameOrID If given, returns only the User with the given username
+	 * (string) or ID (number).
+	 * @returns An Array of User objects - or a single User object if 'nameOrID'
+	 * was given.
+	 */
+	public async getUsers(): Promise<Array<GetResponseUser>>;
+	/**
+	 * Gets an array of users from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the User with the given username
+	 * (string) or ID (number).
+	 * @returns An Array of User objects - or a single User object if 'nameOrID'
+	 * was given.
+	 */
+	public async getUsers(nameOrID?: string | number): Promise<Array<GetResponseUser> | GetResponseUser> {
 		const path = "users";
 		if (nameOrID) {
 			let params;
@@ -132,32 +167,12 @@ export class UserService extends APIService {
 				case "number":
 					params = {id: String(nameOrID)};
 			}
-			return this.get<[User]>(path, undefined, params).toPromise().then(
-				r => {
-					r[0].lastUpdated = new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"));
-					return r[0];
-				}
-			).catch(
-				e => {
-					console.error("Failed to get user:", e);
-					return {
-						id: -1,
-						newUser: false,
-						username: ""
-					};
-				}
-			);
+			const r = await this.get<[GetResponseUser]>(path, undefined, params).toPromise();
+			return {...r[0], lastUpdated: new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"))};
 		}
-		return this.get<Array<User>>(path).toPromise().then(r => r.map(
-			u => {
-				u.lastUpdated = new Date((u.lastUpdated as unknown as string).replace("+00", "Z"));
-				return u;
-			}
-		)).catch(
-			e => {
-				console.error("Failed to get users:", e);
-				return [];
-			}
+		const users = await this.get<Array<GetResponseUser>>(path).toPromise();
+		return users.map(
+			u => ({...u, lastUpdated: new Date((u.lastUpdated as unknown as string).replace("+00", "Z"))})
 		);
 	}
 
@@ -167,9 +182,79 @@ export class UserService extends APIService {
 	 * @param user The new definition of the User.
 	 * @returns The user as updated.
 	 */
-	public async updateUser(user: User): Promise<User> {
+	public async updateUser(user: PutOrPostResponseUser | GetResponseUser): Promise<PutOrPostResponseUser> {
 		const path = `users/${user.id}`;
-		return this.put<User>(path, user).toPromise();
+		const response = await this.put<PutOrPostResponseUser>(path, user).toPromise();
+		if (response.registrationSent) {
+			response.registrationSent = new Date((response.registrationSent as unknown as string));
+		}
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Creates a new user through the API.
+	 *
+	 * @param user The user to create.
+	 * @returns The created user.
+	 */
+	public async createUser(user: PostRequestUser): Promise<PutOrPostResponseUser> {
+		const response = await  this.post<PutOrPostResponseUser>("users", user).toPromise();
+		if (response.registrationSent) {
+			response.registrationSent = new Date((response.registrationSent as unknown as string));
+		}
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Registers a new user via email.
+	 *
+	 * @param request The full registration request.
+	 */
+	public async registerUser(request: UserRegistrationRequest): Promise<void>;
+	/**
+	 * Registers a new user via email.
+	 *
+	 * @param email The email address to use for registration.
+	 * @param role The new user's Role (or just its ID).
+	 * @param tenant The new user's Tenant (or just its ID).
+	 */
+	public async registerUser(email: string, role: number | Role, tenant: number | Tenant): Promise<void>;
+	/**
+	 * Registers a new user via email.
+	 *
+	 * @param userOrEmail Either the full registration request, or just the
+	 * email address to use for registration.
+	 * @param role The new user's Role (or just its ID). This is required if
+	 * `userOrEmail` is given as an email address, and is ignored otherwise.
+	 * @param tenant The new user's Tenant (or just its ID). This is required if
+	 * `userOrEmail` is given as an email address, and is ignored otherwise.
+	 */
+	public async registerUser(
+		userOrEmail: UserRegistrationRequest | string,
+		role?: number | Role,
+		tenant?: number | Tenant
+	): Promise<void> {
+		let request;
+		if (typeof(userOrEmail) === "string") {
+			if (role === undefined || tenant === undefined) {
+				throw new Error("arguments 'role' and 'tenant' must be supplied when 'userOrEmail' is an email address");
+			}
+			request = {
+				email: userOrEmail,
+				role: typeof(role) === "number" ? role : role.id,
+				tenantId: typeof(tenant) === "number" ? tenant : tenant.id
+			};
+		} else {
+			request = userOrEmail;
+		}
+
+		await this.post("users/register", request).toPromise();
 	}
 
 	/** Fetches the Role with the given ID. */
@@ -220,14 +305,14 @@ export class UserService extends APIService {
 	 *
 	 * @returns All Tenants visible to the requesting user's Tenant.
 	 */
-	public async getTenants(): Promise<Array<Tenant>>;
+	public async getTenants(): Promise<Array<ResponseTenant>>;
 	/**
 	 * Retrieves a Tenant from Traffic Ops.
 	 *
 	 * @param nameOrID Either the name or ID of the desired Tenant.
 	 * @returns The Tenant identified by `nameOrID`.
 	 */
-	public async getTenants(nameOrID: string | number): Promise<Tenant>;
+	public async getTenants(nameOrID: string | number): Promise<ResponseTenant>;
 	/**
 	 * Retrieves one or all Tenants from Traffic Ops.
 	 *
@@ -235,7 +320,7 @@ export class UserService extends APIService {
 	 * @returns The Tenant identified by `nameOrID` if given, otherwise all
 	 * Tenants visible to the requesting user's Tenant.
 	 */
-	public async getTenants(nameOrID?: string | number): Promise<Array<Tenant> | Tenant> {
+	public async getTenants(nameOrID?: string | number): Promise<Array<ResponseTenant> | ResponseTenant> {
 		const path = "tenants";
 		if (nameOrID !== undefined) {
 			let params;
@@ -246,10 +331,49 @@ export class UserService extends APIService {
 				case "number":
 					params = {id: String(nameOrID)};
 			}
-			const resp = await this.get<[Tenant]>(path, undefined, params).toPromise();
+			const resp = await this.get<[ResponseTenant]>(path, undefined, params).toPromise();
 			return resp[0];
 		}
-		return this.get<Array<Tenant>>(path).toPromise();
+		return this.get<Array<ResponseTenant>>(path).toPromise();
+	}
+
+	/**
+	 * Creates a new tenant.
+	 *
+	 * @param tenant The Tenant to create.
+	 * @returns The created tenant.
+	 */
+	public async createTenant(tenant: RequestTenant): Promise<ResponseTenant> {
+		const response = await this.post<ResponseTenant>("tenants", tenant).toPromise();
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Updates an existing tenant.
+	 *
+	 * @param tenant The tenant to update.
+	 * @returns The updated tenant.
+	 */
+	public async updateTenant(tenant: ResponseTenant): Promise<ResponseTenant> {
+		const response = await this.put<ResponseTenant>(`tenants/${tenant.id}`, tenant).toPromise();
+
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Deletes an existing tenant.
+	 *
+	 * @param id Id of the tenant to delete.
+	 * @returns The deleted tenant.
+	 */
+	public async deleteTenant(id: number): Promise<ResponseTenant> {
+		return this.delete<ResponseTenant>(`tenants/${id}`).toPromise();
 	}
 
 	/** Fetches the User Capability (Permission) with the given name. */

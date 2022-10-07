@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import { Component, type OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { UntypedFormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { faBroom } from "@fortawesome/free-solid-svg-icons";
 import { Subject } from "rxjs";
@@ -54,25 +54,28 @@ export class DeliveryserviceComponent implements OnInit {
 	 * Form controller for the user's date selector for the end of the time
 	 * range.
 	 */
-	public fromDate: FormControl = new FormControl();
+	public fromDate: UntypedFormControl = new UntypedFormControl();
 
 	/**
 	 * Form controller for the user's time selector for the end of the time
 	 * range.
 	 */
-	public fromTime: FormControl = new FormControl();
+	public fromTime: UntypedFormControl = new UntypedFormControl();
 
 	/**
 	 * Form controller for the user's date selector for the beginning of the
 	 * time range.
 	 */
-	public toDate: FormControl = new FormControl();
+	public toDate: UntypedFormControl = new UntypedFormControl();
 
 	/**
 	 * Form controller for the user's date selector for the beginning of the
 	 * time range.
 	 */
-	public toTime: FormControl = new FormControl();
+	public toTime: UntypedFormControl = new UntypedFormControl();
+
+	/* Contains the DS xmlIds that this DS is this steering target for. */
+	public steeringTargetsFor = new Set<string>();
 
 	/** The size of each single interval for data grouping, in seconds. */
 	private bucketSize = 300;
@@ -108,11 +111,11 @@ export class DeliveryserviceComponent implements OnInit {
 			"-", String(this.from.getMonth() + 1).padStart(2, "0").concat(
 				"-", String(this.from.getDate()).padStart(2, "0")));
 
-		this.fromDate = new FormControl(dateStr);
-		this.fromTime = new FormControl("00:00");
-		this.toDate = new FormControl(dateStr);
+		this.fromDate = new UntypedFormControl(dateStr);
+		this.fromTime = new UntypedFormControl("00:00");
+		this.toDate = new UntypedFormControl(dateStr);
 		const timeStr = String(this.to.getHours()).padStart(2, "0").concat(":", String(this.to.getMinutes()).padStart(2, "0"));
-		this.toTime = new FormControl(timeStr);
+		this.toTime = new UntypedFormControl(timeStr);
 
 		const DSID = this.route.snapshot.paramMap.get("id");
 		if (!DSID) {
@@ -126,8 +129,27 @@ export class DeliveryserviceComponent implements OnInit {
 				this.loadBandwidth();
 				this.loadTPS();
 				this.headerSvc.headerTitle.next(d.displayName);
+
+				this.api.getSteering().then(configs => {
+					configs.forEach(config => {
+						config.targets.forEach(target => {
+							if (target.deliveryService === this.deliveryservice.xmlId) {
+								this.steeringTargetsFor.add(config.deliveryService);
+							}
+						});
+					});
+				});
 			}
 		);
+	}
+
+	/**
+	 * Returns the tooltip text for the steering target displays.
+	 *
+	 * @returns Tooltip text.
+	 */
+	public steeringTargetDisplay(): string {
+		return `Steering target for: ${Array.from(this.steeringTargetsFor).join(", ")}`;
 	}
 
 	/**

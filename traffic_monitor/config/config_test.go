@@ -27,7 +27,6 @@ const exampleTMConfig = `
 {
 	"monitor_config_polling_interval_ms": 5000,
 	"http_timeout_ms": 30000,
-	"peer_optimistic": false,
 	"peer_optimistic_quorum_min": 3,
 	"max_events": 200,
 	"health_flush_interval_ms": 1000,
@@ -56,7 +55,6 @@ const exampleBadTMConfig = `
 {
 	"monitor_config_polling_interval_ms": 5000,
 	"http_timeout_ms": 30000,
-	"peer_optimistic": false,
 	"peer_optimistic_quorum_min": 3,
 	"max_events": 200,
 	"health_flush_interval_ms": 1000,

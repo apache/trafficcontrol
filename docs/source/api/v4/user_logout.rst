@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-user-logout:
+.. _to-api-v4-user-logout:
 
 ***************
 ``user/logout``

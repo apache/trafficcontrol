@@ -89,17 +89,17 @@ describe("LoginComponent", () => {
 		}
 	});
 
-	it("submits a login request", () => {
+	it("submits a login request", async () => {
 		expect(mockCurrentUserService.login).not.toHaveBeenCalled();
+		await expectAsync(component.submitLogin()).toBeRejected();
+		expect(mockCurrentUserService.login).not.toHaveBeenCalled();
+		component.u = "test-admin";
+		component.p = "twelve12!";
 		component.submitLogin();
 		expect(mockCurrentUserService.login).toHaveBeenCalled();
-		component.u.setValue("test-admin");
-		component.p.setValue("twelve12!");
+		component.u = "server error";
 		component.submitLogin();
 		expect(mockCurrentUserService.login).toHaveBeenCalledTimes(2);
-		component.u.setValue("server error");
-		component.submitLogin();
-		expect(mockCurrentUserService.login).toHaveBeenCalledTimes(3);
 	});
 
 	it("opens the password reset dialog", () => {

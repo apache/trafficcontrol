@@ -739,6 +739,7 @@
     ip6Address: "{{ hostvars[item].not_autoconf_default_ipv6_address | default(hostvars[item].ansible_default_ipv6.address) | default(omit) }}"
     ip6IsService: true
     ip6Gateway: "{{ hostvars[item].ansible_default_ipv6.gateway | default(omit) }}"
+    monitorInterface: true
     interfaceMtu: "{{ hostvars[item].ansible_default_ipv4.mtu | default('9000') }}"
     default_inventory_hostname: "{{ hostvars[item].component | default('server') }}.kabletown.invalid"
     merged_server_attrs: "{{ dl_ds_merged_servers['server.kabletown.invalid'] | combine(dl_ds_merged_servers[default_inventory_hostname] | default({}) ) | combine(dl_ds_merged_servers[item] | default({}) ) }}"
@@ -816,6 +817,7 @@
     ip6Address: "{{ omit }}"
     ip6IsService: true
     ip6Gateway: "{{ omit }}"
+    monitorInterface: true
     interfaceMtu: "9000"
     default_inventory_hostname: "{{ hostvars[item].component | default('server') }}.kabletown.invalid"
     merged_server_attrs: "{{ dl_ds_merged_servers['server.kabletown.invalid'] | combine(dl_ds_merged_servers[default_inventory_hostname] | default({}) ) | combine(dl_ds_merged_servers[item] | default({}) ) }}"
@@ -1033,7 +1035,7 @@
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/snapshot?cdn={{ item.name }}"
     method: PUT
-  with_items: "{{ get_all_cdns.json.response[1:] }}"
+  with_items: "{{ get_all_cdns.json | json_query(no_all_cdn_query) }}"
   register: snapshot_out
   failed_when: (snapshot_out.status == 400 and snapshot_out.json | to_json | from_json | json_query(error_query) | length != 0) or (snapshot_out.status > 400 and snapshot_out.status < 600)
   no_log: true
@@ -1041,3 +1043,22 @@
   delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    all_cdn: ALL
+    no_all_cdn_query: "response[?name != `{{ all_cdn }}`]"
+
+- name: Queue Caches in all CDNs
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/{{ item.id }}/queue_update"
+    method: POST
+    body:
+      action: "queue"
+  with_items: "{{ get_all_cdns.json | json_query(no_all_cdn_query) }}"
+  register: queue_out
+  failed_when: (queue_out.status == 400 and queue_out.json | to_json | from_json | json_query(error_query) | length != 0) or (queue_out.status > 400 and queue_out.status < 600)
+  no_log: true
+  retries: 10
+  delay: 10
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'action must be')]"
+    all_cdn: ALL
+    no_all_cdn_query: "response[?name != `{{ all_cdn }}`]"

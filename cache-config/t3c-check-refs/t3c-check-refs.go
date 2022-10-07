@@ -21,6 +21,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -30,7 +32,9 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-check-refs/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 // Version is the application version.
@@ -62,7 +66,6 @@ var (
 //
 // Returns '0' if all plugins on the config line successfully verify
 // otherwise, returns the the count of plugins that failed to verify.
-//
 func checkConfigLine(line string, lineNumber int, filesAdding map[string]struct{}) int {
 
 	pluginErrorCount := 0
@@ -259,8 +262,8 @@ func main() {
 	// load up the names of available plugins (at cfg.TrafficServerPluginDir).
 	loadAvailablePlugins()
 
-	var scanner *bufio.Scanner
 	var reader io.Reader
+	var scanner *bufio.Scanner
 
 	// open the indicated 'filename' argument or os.Stdin.
 	length := len(args)
@@ -278,8 +281,22 @@ func main() {
 		os.Exit(-1)
 	}
 
+	// If --files-adding=input, then the input (stdin or file) is a JSON object containing the file contents and the list of files to add, and we need to set cfg.FilesAdding from it.
+	// Otherwise, the input is the raw file, and config loading has already set cfg.FilesAdding.
+	if cfg.FilesAddingInput {
+		inputObj := &t3cutil.CheckRefsInputFileAndAdding{}
+		if err := json.NewDecoder(reader).Decode(inputObj); err != nil {
+			log.Errorln("decoding input: " + err.Error())
+			os.Exit(-1)
+		}
+		cfg.FilesAdding = util.SliceToSet(inputObj.Adding)
+		scanner = bufio.NewScanner(bytes.NewBuffer(inputObj.File))
+	} else {
+		scanner = bufio.NewScanner(reader)
+	}
+
 	// process the config file contents verifying plugins.
-	scanner = bufio.NewScanner(reader)
+
 	lineNumber := 1
 	line := ""
 	textArray := make([]string, 0)

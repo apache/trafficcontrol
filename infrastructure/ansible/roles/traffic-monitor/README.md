@@ -48,7 +48,6 @@ Example Playbook
       name: traffic-monitor
     vars:
       install_traffic_monitor: true
-      tm_peer_optimistic: true
 ```
 
 License

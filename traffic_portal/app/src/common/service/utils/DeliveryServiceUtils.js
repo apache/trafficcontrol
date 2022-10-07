@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DeliveryServiceUtils = function($window, propertiesModel) {
+var DeliveryServiceUtils = function ($window, propertiesModel) {
 
 	this.protocols = {
 		0: "HTTP",
@@ -50,12 +50,28 @@ var DeliveryServiceUtils = function($window, propertiesModel) {
 		3: "slice"
 	};
 
-	this.openCharts = function(ds) {
+	this.openCharts = function (ds) {
 		$window.open(
 			propertiesModel.properties.deliveryServices.charts.customLink.baseUrl + ds.xmlId,
 			'_blank'
 		);
 	};
+
+	this.getSteeringTargetsForDS = function (xmlIds, steeringConfigs) {
+		const targetsFor = new Set();
+		const dsTargets = {};
+		xmlIds.forEach(xmlId => dsTargets[xmlId] = new Set());
+		steeringConfigs.forEach(config => {
+			config.targets.forEach(target => {
+				xmlIds.forEach(xmlId => {
+					if (target.deliveryService === xmlId) {
+						dsTargets[xmlId].add(config.deliveryService);
+					}
+				})
+			})
+		})
+		return dsTargets;
+	}
 
 };
 

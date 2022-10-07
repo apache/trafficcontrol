@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-steering-id-targets-targetID:
+.. _to-api-v4-steering-id-targets-targetID:
 
 ****************************************
 ``steering/{{ID}}/targets/{{targetID}}``

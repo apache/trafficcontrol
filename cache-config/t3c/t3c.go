@@ -22,7 +22,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"syscall" // TODO change to x/unix ?
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -48,6 +48,7 @@ var commands = map[string]struct{}{
 	"generate":   struct{}{},
 	"preprocess": struct{}{},
 	"request":    struct{}{},
+	"tail":       struct{}{},
 	"update":     struct{}{},
 }
 
@@ -84,7 +85,8 @@ func main() {
 
 	app := "t3c-" + cmd
 
-	appPath, err := exec.LookPath(app)
+	appPath := filepath.Join(t3cutil.InstallDir(), app)
+	_, err := os.Stat(appPath)
 	if err != nil {
 		log.Errorf("error finding path to '%s': %s\n", app, err.Error())
 		os.Exit(ExitCodeCommandLookupErr)
@@ -115,6 +117,7 @@ These are the available commands:
   generate   generate configuration from Traffic Ops data
   preprocess preprocess generated config files
   request    request Traffic Ops data
+  tail       tail a log file
   update     update a cache's queue and reval status in Traffic Ops
 `
 }

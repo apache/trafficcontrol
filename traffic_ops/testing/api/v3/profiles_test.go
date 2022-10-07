@@ -16,454 +16,305 @@
 package v3
 
 import (
+	"encoding/json"
 	"net/http"
-	"strings"
+	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 func TestProfiles(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Profiles, Parameters}, func() {
-		CreateBadProfiles(t)
-		UpdateTestProfiles(t)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
-		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfUnmodifiedSince, time)
-		UpdateTestProfilesWithHeaders(t, header)
-		GetTestProfilesIMS(t)
-		GetTestProfiles(t)
-		GetTestProfilesWithParameters(t)
-		ImportProfile(t)
-		CopyProfile(t)
-		header = make(map[string][]string)
-		etag := rfc.ETag(currentTime)
-		header.Set(rfc.IfMatch, etag)
-		UpdateTestProfilesWithHeaders(t, header)
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
+
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+
+		methodTests := utils.V3TestCase{
+			"GET": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when VALID NAME parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"RASCAL1"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateProfilesFields(map[string]interface{}{"Name": "RASCAL1"})),
+				},
+				"OK when VALID CDN parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"cdn": {strconv.Itoa(GetCDNID(t, "cdn1")())}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateProfilesFields(map[string]interface{}{"CDNName": "cdn1"})),
+				},
+				"OK when VALID ID parameter": {
+					ClientSession: TOSession,
+					RequestParams: url.Values{"id": {strconv.Itoa(GetProfileID(t, "EDGEInCDN2")())}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateProfilesFields(map[string]interface{}{"ID": GetProfileID(t, "EDGEInCDN2")()})),
+				},
+			},
+			"POST": {
+				"BAD REQUEST when NAME has SPACES": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":         GetCDNID(t, "cdn1")(),
+						"description": "name has spaces test",
+						"name":        "name has space",
+						"type":        tc.CacheServerProfileType,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING ALL FIELDS": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":         0,
+						"description": "",
+						"name":        "",
+						"type":        "",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when INVALID CDN ID": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":         0,
+						"description": "description",
+						"name":        "badprofile",
+						"type":        tc.CacheServerProfileType,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING DESCRIPTION FIELD": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":         GetCDNID(t, "cdn1")(),
+						"description": "",
+						"name":        "missing_description",
+						"type":        tc.CacheServerProfileType,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING NAME FIELD": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":         GetCDNID(t, "cdn1")(),
+						"description": "missing name",
+						"name":        "",
+						"type":        tc.CacheServerProfileType,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"BAD REQUEST when MISSING TYPE FIELD": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":         GetCDNID(t, "cdn1")(),
+						"description": "missing type",
+						"name":        "missing_type",
+						"type":        "",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
+			"PUT": {
+				"OK when VALID REQUEST": {
+					EndpointId:    GetProfileID(t, "EDGE2"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn2")(),
+						"description":      "edge2 description updated",
+						"name":             "EDGE2UPDATED",
+						"routing_disabled": false,
+						"type":             "TR_PROFILE",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateProfilesUpdateCreateFields("EDGE2UPDATED",
+							map[string]interface{}{"CDNName": "cdn2", "Description": "edge2 description updated",
+								"Name": "EDGE2UPDATED", "RoutingDisabled": false, "Type": "TR_PROFILE"})),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointId:     GetProfileID(t, "CCR1"),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn1")(),
+						"description":      "cdn1 description",
+						"name":             "CCR1",
+						"routing_disabled": false,
+						"type":             "TR_PROFILE",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointId:    GetProfileID(t, "CCR1"),
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"cdn":              GetCDNID(t, "cdn1")(),
+						"description":      "cdn1 description",
+						"name":             "CCR1",
+						"routing_disabled": false,
+						"type":             "TR_PROFILE",
+					},
+					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
+					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+			},
+		}
+
+		for method, testCases := range methodTests {
+			t.Run(method, func(t *testing.T) {
+				for name, testCase := range testCases {
+					profile := tc.Profile{}
+
+					if testCase.RequestBody != nil {
+						dat, err := json.Marshal(testCase.RequestBody)
+						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
+						err = json.Unmarshal(dat, &profile)
+						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+					}
+
+					switch method {
+					case "GET":
+						t.Run(name, func(t *testing.T) {
+							if name == "OK when VALID NAME parameter" {
+								resp, reqInf, err := testCase.ClientSession.GetProfileByNameWithHdr(testCase.RequestParams["name"][0], testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else if name == "OK when VALID CDN parameter" {
+								cdnID, err := strconv.Atoi(testCase.RequestParams["cdn"][0])
+								resp, reqInf, err := testCase.ClientSession.GetProfileByCDNIDWithHdr(cdnID, testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else if name == "OK when VALID ID parameter" {
+								id, err := strconv.Atoi(testCase.RequestParams["id"][0])
+								resp, reqInf, err := testCase.ClientSession.GetProfileByIDWithHdr(id, testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else if name == "OK when VALID PARAM parameter" {
+								paramID, err := strconv.Atoi(testCase.RequestParams["param"][0])
+								resp, reqInf, err := testCase.ClientSession.GetProfileByParameterIdWithHdr(paramID, testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							} else {
+								resp, reqInf, err := testCase.ClientSession.GetProfilesWithHdr(testCase.RequestHeaders)
+								for _, check := range testCase.Expectations {
+									check(t, reqInf, resp, tc.Alerts{}, err)
+								}
+							}
+						})
+					case "POST":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.CreateProfile(profile)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.UpdateProfileByIDWithHdr(testCase.EndpointId(), profile, testCase.RequestHeaders)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							alerts, reqInf, err := testCase.ClientSession.DeleteProfileByID(testCase.EndpointId())
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
+					}
+				}
+			})
+		}
 	})
 }
 
-func UpdateTestProfilesWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Profiles) > 0 {
-		firstProfile := testData.Profiles[0]
-		// Retrieve the Profile by name so we can get the id for the Update
-		resp, _, err := TOSession.GetProfileByNameWithHdr(firstProfile.Name, header)
-		if err != nil {
-			t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
-		}
-		if len(resp) > 0 {
-			remoteProfile := resp[0]
-			_, reqInf, err := TOSession.UpdateProfileByIDWithHdr(remoteProfile.ID, remoteProfile, header)
-			if err == nil {
-				t.Errorf("Expected error about precondition failed, but got none")
-			}
-			if reqInf.StatusCode != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+func validateProfilesFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Profiles response to not be nil.")
+		profileResp := resp.([]tc.Profile)
+		for field, expected := range expectedResp {
+			for _, profile := range profileResp {
+				switch field {
+				case "CDNID":
+					assert.Equal(t, expected, profile.CDNID, "Expected CDNID to be %v, but got %d", expected, profile.CDNID)
+				case "CDNName":
+					assert.Equal(t, expected, profile.CDNName, "Expected CDNName to be %v, but got %s", expected, profile.CDNName)
+				case "Description":
+					assert.Equal(t, expected, profile.Description, "Expected Description to be %v, but got %s", expected, profile.Description)
+				case "ID":
+					assert.Equal(t, expected, profile.ID, "Expected ID to be %v, but got %d", expected, profile.ID)
+				case "Name":
+					assert.Equal(t, expected, profile.Name, "Expected Name to be %v, but got %s", expected, profile.Name)
+				case "Parameter":
+					assert.Equal(t, expected, profile.Parameter, "Expected Parameter to be %v, but got %s", expected, profile.Parameter)
+				case "Parameters":
+					assert.Exactly(t, expected, profile.Parameters, "Expected Parameters to be %v, but got %s", expected, profile.Parameters)
+				case "RoutingDisabled":
+					assert.Equal(t, expected, profile.RoutingDisabled, "Expected RoutingDisabled to be %v, but got %v", expected, profile.RoutingDisabled)
+				case "Type":
+					assert.Equal(t, expected, profile.Type, "Expected Type to be %v, but got %s", expected, profile.Type)
+				default:
+					t.Fatalf("Expected field: %v, does not exist in response", field)
+				}
 			}
 		}
 	}
 }
 
-func GetTestProfilesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	for _, pr := range testData.Profiles {
-		_, reqInf, err := TOSession.GetProfileByNameWithHdr(pr.Name, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-		}
-		if len(pr.Parameters) > 0 {
-			parameter := pr.Parameters[0]
-			respParameter, _, err := TOSession.GetParameterByName(*parameter.Name)
-			if err != nil {
-				t.Errorf("Cannot GET Parameter by name: %v", err)
-			}
-			if len(respParameter) > 0 {
-				parameterID := respParameter[0].ID
-				if parameterID > 0 {
-					resp, _, err := TOSession.GetProfileByParameterIdWithHdr(parameterID, nil)
-					if err != nil {
-						t.Fatalf("Expected no error, but got %v", err.Error())
-					}
-					if reqInf.StatusCode != http.StatusNotModified {
-						t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
-					}
-					if len(resp) < 1 {
-						t.Errorf("Expected atleast one response for Get Profile by Parameters, but found %d", len(resp))
-					}
-				} else {
-					t.Errorf("Invalid parameter ID %d", parameterID)
-				}
-			} else {
-				t.Errorf("No response found for GET Parameters by name")
-			}
-		}
+func validateProfilesUpdateCreateFields(name string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		profiles, _, err := TOSession.GetProfileByNameWithHdr(name, nil)
+		assert.RequireNoError(t, err, "Error getting Profile: %v", err)
+		assert.RequireEqual(t, 1, len(profiles), "Expected one Profile returned Got: %d", len(profiles))
+		validateProfilesFields(expectedResp)(t, toclientlib.ReqInf{}, profiles, tc.Alerts{}, nil)
 	}
 }
 
-// CreateBadProfiles ensures that profiles can't be created with bad values
-func CreateBadProfiles(t *testing.T) {
-
-	// blank profile
-	prs := []tc.Profile{
-		{Type: "", Name: "", Description: "", CDNID: 0},
-		{Type: tc.CacheServerProfileType, Name: "badprofile", Description: "description", CDNID: 0},
-		{Type: tc.CacheServerProfileType, Name: "badprofile", Description: "", CDNID: 1},
-		{Type: tc.CacheServerProfileType, Name: "", Description: "description", CDNID: 1},
-		{Type: "", Name: "badprofile", Description: "description", CDNID: 1},
-	}
-
-	for _, pr := range prs {
-		resp, _, err := TOSession.CreateProfile(pr)
-
-		if err == nil {
-			t.Errorf("Creating bad profile succeeded: %+v\nResponse is %+v", pr, resp)
-		}
-	}
-}
-
-func CopyProfile(t *testing.T) {
-	testCases := []struct {
-		description  string
-		profile      tc.ProfileCopy
-		expectedResp string
-		err          string
-	}{
-		{
-			description: "copy profile",
-			profile: tc.ProfileCopy{
-				Name:         "profile-2",
-				ExistingName: "EDGE1",
-			},
-			expectedResp: "created new profile [profile-2] from existing profile [EDGE1]",
-		},
-		{
-			description: "existing profile does not exist",
-			profile: tc.ProfileCopy{
-				Name:         "profile-3",
-				ExistingName: "bogus",
-			},
-			err: "profile with name bogus does not exist",
-		},
-		{
-			description: "new profile already exists",
-			profile: tc.ProfileCopy{
-				Name:         "EDGE2",
-				ExistingName: "EDGE1",
-			},
-			err: "profile with name EDGE2 already exists",
-		},
-	}
-
-	var newProfileNames []string
-	for _, c := range testCases {
-		t.Run(c.description, func(t *testing.T) {
-			resp, _, err := TOSession.CopyProfile(c.profile)
-			if c.err != "" {
-				if err != nil && !strings.Contains(err.Error(), c.err) {
-					t.Fatalf("got err= %s; expected err= %s", err, c.err)
-				}
-			} else if err != nil {
-				t.Fatalf("got err= %s; expected err= nil", err)
-			}
-
-			if err == nil {
-				if got, want := resp.Alerts.ToStrings()[0], c.expectedResp; got != want {
-					t.Fatalf("got= %s; expected= %s", got, want)
-				}
-
-				newProfileNames = append(newProfileNames, c.profile.Name)
-			}
-		})
-	}
-
-	// Cleanup profiles
-	for _, name := range newProfileNames {
-		profiles, _, err := TOSession.GetProfileByName(name)
-		if err != nil {
-			t.Fatalf("got err= %s; expected err= nil", err)
-		}
-		if len(profiles) == 0 {
-			t.Errorf("could not GET profile %+v: not found", name)
-		}
-		_, _, err = TOSession.DeleteProfileByID(profiles[0].ID)
-		if err != nil {
-			t.Fatalf("got err= %s; expected err= nil", err)
-		}
+func GetProfileID(t *testing.T, profileName string) func() int {
+	return func() int {
+		resp, _, err := TOSession.GetProfileByNameWithHdr(profileName, nil)
+		assert.RequireNoError(t, err, "Get Profiles Request failed with error: %v", err)
+		assert.RequireEqual(t, 1, len(resp), "Expected response object length 1, but got %d", len(resp))
+		return resp[0].ID
 	}
 }
 
 func CreateTestProfiles(t *testing.T) {
-
-	for _, pr := range testData.Profiles {
-		resp, _, err := TOSession.CreateProfile(pr)
-
-		t.Log("Response: ", resp)
-		if err != nil {
-			t.Errorf("could not CREATE profiles with name: %s %v", pr.Name, err)
-		}
-		profiles, _, err := TOSession.GetProfileByName(pr.Name)
-		if err != nil {
-			t.Errorf("could not GET profile with name: %s %v", pr.Name, err)
-		}
-		if len(profiles) == 0 {
-			t.Errorf("could not GET profile %+v: not found", pr)
-		}
-		profileID := profiles[0].ID
-
-		for _, param := range pr.Parameters {
-			if param.Name == nil || param.Value == nil || param.ConfigFile == nil {
-				t.Errorf("invalid parameter specification: %+v", param)
-				continue
-			}
-			_, _, err := TOSession.CreateParameter(tc.Parameter{Name: *param.Name, Value: *param.Value, ConfigFile: *param.ConfigFile})
-			if err != nil {
-				// ok if already exists
-				if !strings.Contains(err.Error(), "already exists") {
-					t.Errorf("could not CREATE parameter %+v: %s", param, err.Error())
-					continue
-				}
-			}
-			p, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(*param.Name, *param.ConfigFile, *param.Value)
-			if err != nil {
-				t.Errorf("could not GET parameter %+v: %s", param, err.Error())
-			}
-			if len(p) == 0 {
-				t.Errorf("could not GET parameter %+v: not found", param)
-			}
-			_, _, err = TOSession.CreateProfileParameter(tc.ProfileParameter{ProfileID: profileID, ParameterID: p[0].ID})
-			if err != nil {
-				t.Errorf("could not CREATE profile_parameter %+v: %s", param, err.Error())
-			}
-		}
-
-	}
-}
-
-func UpdateTestProfiles(t *testing.T) {
-
-	firstProfile := testData.Profiles[0]
-	// Retrieve the Profile by name so we can get the id for the Update
-	resp, _, err := TOSession.GetProfileByName(firstProfile.Name)
-	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
-	}
-	remoteProfile := resp[0]
-	expectedProfileDesc := "UPDATED"
-	remoteProfile.Description = expectedProfileDesc
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile)
-	if err != nil {
-		t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
-	}
-
-	// Retrieve the Profile to check Profile name got updated
-	resp, _, err = TOSession.GetProfileByID(remoteProfile.ID)
-	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
-	}
-	respProfile := resp[0]
-	if respProfile.Description != expectedProfileDesc {
-		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
-	}
-
-}
-
-func GetTestProfiles(t *testing.T) {
-
-	for _, pr := range testData.Profiles {
-		resp, _, err := TOSession.GetProfileByName(pr.Name)
-		if err != nil {
-			t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
-		}
-		profileID := resp[0].ID
-		if len(pr.Parameters) > 0 {
-			parameter := pr.Parameters[0]
-			respParameter, _, err := TOSession.GetParameterByName(*parameter.Name)
-			if err != nil {
-				t.Errorf("Cannot GET Parameter by name: %v", err)
-			}
-			if len(respParameter) > 0 {
-				parameterID := respParameter[0].ID
-				if parameterID > 0 {
-					resp, _, err = TOSession.GetProfileByParameterId(parameterID)
-					if err != nil {
-						t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
-					}
-					if len(resp) < 1 {
-						t.Errorf("Expected atleast one response for Get Profile by Parameters, but found %d", len(resp))
-					}
-				} else {
-					t.Errorf("Invalid parameter ID %d", parameterID)
-				}
-			} else {
-				t.Errorf("No response found for GET Parameters by name")
-			}
-		}
-
-		resp, _, err = TOSession.GetProfileByCDNID(pr.CDNID)
-		if err != nil {
-			t.Errorf("cannot GET Profile by cdn: %v - %v", err, resp)
-		}
-
-		// Export Profile
-		exportResp, _, err := TOSession.ExportProfile(profileID)
-		if err != nil {
-			t.Errorf("error exporting Profile: %v - %v", profileID, err)
-		}
-		if exportResp == nil {
-			t.Error("error exporting Profile: response nil")
-		}
-	}
-}
-
-func ImportProfile(t *testing.T) {
-	// Get ID of Profile to export
-	resp, _, err := TOSession.GetProfileByName(testData.Profiles[0].Name)
-	if err != nil {
-		t.Fatalf("cannot GET Profile by name: %v - %v", err, resp)
-	}
-	if resp == nil {
-		t.Fatal("error getting Profile: response nil")
-	}
-	if len(resp) != 1 {
-		t.Fatalf("Profiles expected 1, actual %v", len(resp))
-	}
-	profileID := resp[0].ID
-
-	// Export Profile to import
-	exportResp, _, err := TOSession.ExportProfile(profileID)
-	if err != nil {
-		t.Fatalf("error exporting Profile: %v - %v", profileID, err)
-	}
-	if exportResp == nil {
-		t.Fatal("error exporting Profile: response nil")
-	}
-
-	// Modify Profile and import
-
-	// Add parameter and change name
-	profile := exportResp.Profile
-	profile.Name = util.StrPtr("TestProfileImport")
-
-	newParam := tc.ProfileExportImportParameterNullable{
-		ConfigFile: util.StrPtr("config_file_import_test"),
-		Name:       util.StrPtr("param_import_test"),
-		Value:      util.StrPtr("import_test"),
-	}
-	parameters := append(exportResp.Parameters, newParam)
-	// Import Profile
-	importReq := tc.ProfileImportRequest{
-		Profile:    profile,
-		Parameters: parameters,
-	}
-	importResp, _, err := TOSession.ImportProfile(&importReq)
-	if err != nil {
-		t.Fatalf("error importing Profile: %v - %v", profileID, err)
-	}
-	if importResp == nil {
-		t.Error("error importing Profile: response nil")
-	}
-
-	// Add newly create profile and parameter to testData so it gets deleted
-	testData.Profiles = append(testData.Profiles, tc.Profile{
-		Name:        *profile.Name,
-		CDNName:     *profile.CDNName,
-		Description: *profile.Description,
-		Type:        *profile.Type,
-	})
-
-	testData.Parameters = append(testData.Parameters, tc.Parameter{
-		ConfigFile: *newParam.ConfigFile,
-		Name:       *newParam.Name,
-		Value:      *newParam.Value,
-	})
-}
-
-func GetTestProfilesWithParameters(t *testing.T) {
-	firstProfile := testData.Profiles[0]
-	resp, _, err := TOSession.GetProfileByName(firstProfile.Name)
-	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
-		return
-	}
-	if len(resp) == 0 {
-		t.Errorf("cannot GET Profile by name: not found - %v", resp)
-		return
-	}
-	respProfile := resp[0]
-	// query by name does not retrieve associated parameters.  But query by id does.
-	resp, _, err = TOSession.GetProfileByID(respProfile.ID)
-	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
-	}
-	if len(resp) > 0 {
-		respProfile = resp[0]
-		respParameters := respProfile.Parameters
-		if len(respParameters) == 0 {
-			t.Errorf("expected a profile with parameters to be retrieved: %v - %v", err, respParameters)
-		}
+	for _, profile := range testData.Profiles {
+		resp, _, err := TOSession.CreateProfile(profile)
+		assert.RequireNoError(t, err, "Could not create Profile '%s': %v - alerts: %+v", profile.Name, err, resp.Alerts)
 	}
 }
 
 func DeleteTestProfiles(t *testing.T) {
-
-	for _, pr := range testData.Profiles {
-		// Retrieve the Profile by name so we can get the id for the Update
-		resp, _, err := TOSession.GetProfileByName(pr.Name)
-		if err != nil {
-			t.Errorf("cannot GET Profile by name: %s - %v", pr.Name, err)
-			continue
-		}
-		if len(resp) == 0 {
-			t.Errorf("cannot GET Profile by name: not found - %s", pr.Name)
-			continue
-		}
-
-		profileID := resp[0].ID
-		// query by name does not retrieve associated parameters.  But query by id does.
-		resp, _, err = TOSession.GetProfileByID(profileID)
-		if err != nil {
-			t.Errorf("cannot GET Profile by id: %v - %v", err, resp)
-		}
-		// delete any profile_parameter associations first
-		// the parameter is what's being deleted, but the delete is cascaded to profile_parameter
-		for _, param := range resp[0].Parameters {
-			_, _, err := TOSession.DeleteParameterByID(*param.ID)
-			if err != nil {
-				t.Errorf("cannot DELETE parameter with parameterID %d: %s", *param.ID, err.Error())
-			}
-		}
-		delResp, _, err := TOSession.DeleteProfileByID(profileID)
-		if err != nil {
-			t.Errorf("cannot DELETE Profile by name: %v - %v", err, delResp)
-		}
-		//time.Sleep(1 * time.Second)
-
+	profiles, _, err := TOSession.GetProfilesWithHdr(nil)
+	assert.NoError(t, err, "Cannot get Profiles: %v", err)
+	for _, profile := range profiles {
+		alerts, _, err := TOSession.DeleteProfileByID(profile.ID)
+		assert.NoError(t, err, "Cannot delete Profile: %v - alerts: %+v", err, alerts.Alerts)
 		// Retrieve the Profile to see if it got deleted
-		prs, _, err := TOSession.GetProfileByName(pr.Name)
-		if err != nil {
-			t.Errorf("error deleting Profile name: %s", err.Error())
-		}
-		if len(prs) > 0 {
-			t.Errorf("expected Profile Name: %s to be deleted", pr.Name)
-		}
-
-		// Attempt to export Profile
-		_, _, err = TOSession.ExportProfile(profileID)
-		if err == nil {
-			t.Errorf("export deleted profile %s - expected: error, actual: nil", pr.Name)
-		}
+		getProfiles, _, err := TOSession.GetProfileByIDWithHdr(profile.ID, nil)
+		assert.NoError(t, err, "Error getting Profile '%s' after deletion: %v", profile.Name, err)
+		assert.Equal(t, 0, len(getProfiles), "Expected Profile '%s' to be deleted, but it was found in Traffic Ops", profile.Name)
 	}
 }

@@ -51,7 +51,7 @@ const cfgFmt = `Using Config values:
 func TestMain(m *testing.M) {
 	tcd = tcdata.NewTCData()
 	configFileName := flag.String("cfg", "conf/traffic-ops-test.conf", "The config file path")
-	tcFixturesFileName := flag.String("fixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
+	tcFixturesFileName := flag.String("fixtures", "/tc-fixtures.json", "The test fixtures for the API test tool")
 	cliIncludeSystemTests := *flag.Bool("includeSystemTests", false, "Whether to enable tests that have environment dependencies beyond a database")
 	flag.Parse()
 
@@ -162,6 +162,7 @@ func runRequest(host string, getData string) ([]byte, error) {
 func runApply(host string, run_mode string) error {
 	args := []string{
 		"apply",
+		"--no-confirm-service-action",
 		"--traffic-ops-insecure=true",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,

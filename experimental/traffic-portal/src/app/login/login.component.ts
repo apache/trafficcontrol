@@ -12,12 +12,13 @@
 * limitations under the License.
 */
 import { Component, OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { Router, ActivatedRoute } from "@angular/router";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+
+import { AutocompleteValue } from "../utils";
 
 import { ResetPasswordDialogComponent } from "./reset-password-dialog/reset-password-dialog.component";
 
@@ -36,10 +37,13 @@ export class LoginComponent implements OnInit {
 	/** Controls if the password is shown in plain text */
 	public hide = true;
 
+	/** The password field's autocomplete value. */
+	public readonly passwordAutocomplete = AutocompleteValue.CURRENT_PASSWORD;
+
 	/** The user-entered username. */
-	public u = new FormControl("");
+	public u = "";
 	/** The user-entered password. */
-	public p = new FormControl("");
+	public p: string | null = "";
 
 	constructor(
 		private readonly route: ActivatedRoute,
@@ -74,22 +78,25 @@ export class LoginComponent implements OnInit {
 	}
 
 	/**
-	 * Handles submission of the Login form, and redirects the user back to their requested page
-	 * should it be succesful. If the user had not yet requested a page, they will be redirected to
-	 * `/`
+	 * Handles submission of the Login form, and redirects the user back to
+	 * their requested page should it be successful. If the user had not yet
+	 * requested a page, they will be redirected to `/`
 	 */
-	public submitLogin(): void {
-		this.auth.login(this.u.value, this.p.value).then(
-			response => {
-				if (response) {
-					this.headerSvc.headerHidden.next(false);
-					this.router.navigate([this.returnURL]);
-				}
-			},
-			err => {
-				console.error("login failed:", err);
+	public async submitLogin(): Promise<void> {
+		if (!this.p) {
+			// This shouldn't really be possible, since the value will only be
+			// `null` if the control is invalid.
+			throw new Error("password is required");
+		}
+		try {
+			const response = await this.auth.login(this.u, this.p);
+			if (response) {
+				this.headerSvc.headerHidden.next(false);
+				this.router.navigate([this.returnURL]);
 			}
-		);
+		} catch (err) {
+			console.error("login failed:", err);
+		}
 	}
 
 	/** Opens the "reset password" dialog. */

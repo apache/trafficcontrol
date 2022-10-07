@@ -22,7 +22,7 @@ import (
 )
 
 func TestMonitoring(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, ProfileParameters, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		GetTestMonitoringConfigNoSnapshotOnTheFly(t) // MUST run first
 		AllCDNsCanSnapshot(t)
 	})

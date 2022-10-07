@@ -156,14 +156,26 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: true
 		},
 		{
+			headerName: "ASNs",
+			field: "asns",
+			hide: true
+		},
+		{
 			headerName: "Phys Location",
 			field: "physLocation",
 			hide: true
 		},
 		{
-			headerName: "Profile",
+			headerName: "Profile(s)",
 			field: "profileName",
-			hide: false
+			hide: false,
+			valueGetter:  function(params) {
+				return params.data.profileNames;
+			},
+			tooltipValueGetter: function(params) {
+				return params.data.profileNames.join(", ");
+			},
+			filter: 'arrayTextColumnFilter'
 		},
 		{
 			headerName: "Rack",

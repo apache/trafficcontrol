@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-profiles-id-export:
+.. _to-api-v4-profiles-id-export:
 
 **************************
 ``profiles/{{ID}}/export``

@@ -68,32 +68,34 @@ The following steps will take you through the procedure of setting up an :abbr:`
 
 	#) Click :guilabel:`Show profile parameters` to bring up the :term:`Parameters` screen for the :term:`Profile`. Create the following :term:`Parameters`:
 
-		+----------------------------------------+------------------+--------------------------+-------------------------+
-		| Parameter Name                         | Config File Name | Value                    | ATS parent.config value |
-		+========================================+==================+==========================+=========================+
-		| mso.algorithm                          | parent.config    | true, false, strict,     | round_robin             |
-		|                                        |                  | consistent_hash          |                         |
-		+----------------------------------------+------------------+--------------------------+-------------------------+
-		| mso.parent_retry                       | parent.config    | simple_retry, both,      | parent_retry            |
-		|                                        |                  | unavailable_server_retry |                         |
-		+----------------------------------------+------------------+--------------------------+-------------------------+
-		| mso.unavailable_server_retry_responses | parent.config    | list of server response  | defaults to the value   |
-		|                                        |                  | codes, eg "500,502,503"  | in records.config       |
-		|                                        |                  |                          | when unused.            |
-		+----------------------------------------+------------------+--------------------------+-------------------------+
-		| mso.max_simple_retries                 | parent.config    | Nubmer of retries made   | defaults to the value   |
-		|                                        |                  | after a 4xx error        | in records.config       |
-		|                                        |                  |                          | when unused.            |
-		+----------------------------------------+------------------+--------------------------+-------------------------+
-		| mso.max_unavailable_server_retries     | parent.config    | Nubmer of retries made   | defaults to the value   |
-		|                                        |                  | after a 5xx error        | in records.config       |
-		|                                        |                  |                          | when unused.            |
-		+----------------------------------------+------------------+--------------------------+-------------------------+
+		+-----------------------------------------+------------------+--------------------------+-------------------------+
+		| Parameter Name                          | Config File Name | Value                    | ATS parent.config value |
+		+=========================================+==================+==========================+=========================+
+		| last.algorithm                          | parent.config    | true, false, strict,     | round_robin             |
+		|                                         |                  | consistent_hash          |                         |
+		+-----------------------------------------+------------------+--------------------------+-------------------------+
+		| last.parent_retry                       | parent.config    | simple_retry, both,      | parent_retry            |
+		|                                         |                  | unavailable_server_retry |                         |
+		+-----------------------------------------+------------------+--------------------------+-------------------------+
+		| last.unavailable_server_retry_responses | parent.config    | list of server response  | defaults to the value   |
+		|                                         |                  | codes, eg "500,502,503"  | in records.config       |
+		|                                         |                  |                          | when unused.            |
+		+-----------------------------------------+------------------+--------------------------+-------------------------+
+		| last.max_simple_retries                 | parent.config    | Nubmer of retries made   | defaults to the value   |
+		|                                         |                  | after a 4xx error        | in records.config       |
+		|                                         |                  |                          | when unused.            |
+		+-----------------------------------------+------------------+--------------------------+-------------------------+
+		| last.max_unavailable_server_retries     | parent.config    | Nubmer of retries made   | defaults to the value   |
+		|                                         |                  | after a 5xx error        | in records.config       |
+		|                                         |                  |                          | when unused.            |
+		+-----------------------------------------+------------------+--------------------------+-------------------------+
 
 
 		.. figure:: multi_site/ds_profile_parameters.png
 			:scale: 100%
 			:align: center
+
+    .. deprecated:: ATC 6.2
 
 	#) In the :term:`Delivery Service` page, select the newly created ``DS_PROFILE`` and save the :term:`Delivery Service`.
 

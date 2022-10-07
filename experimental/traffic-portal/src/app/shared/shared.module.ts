@@ -14,6 +14,7 @@
 import { CommonModule } from "@angular/common";
 import { HTTP_INTERCEPTORS } from "@angular/common/http";
 import { NgModule } from "@angular/core";
+import { MatMenuModule } from "@angular/material/menu";
 import { RouterModule } from "@angular/router";
 
 import { AppUIModule } from "src/app/app.ui.module";
@@ -26,12 +27,14 @@ import { GenericTableComponent } from "./generic-table/generic-table.component";
 import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
 import { LoadingComponent } from "./loading/loading.component";
+import { ObscuredTextInputComponent } from "./obscured-text-input/obscured-text-input.component";
 import { BooleanFilterComponent } from "./table-components/boolean-filter/boolean-filter.component";
 import { EmailCellRendererComponent } from "./table-components/email-cell-renderer/email-cell-renderer.component";
 import { SSHCellRendererComponent } from "./table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import { TelephoneCellRendererComponent } from "./table-components/telephone-cell-renderer/telephone-cell-renderer.component";
 import { UpdateCellRendererComponent } from "./table-components/update-cell-renderer/update-cell-renderer.component";
 import { TpHeaderComponent } from "./tp-header/tp-header.component";
+import { TreeSelectComponent } from "./tree-select/tree-select.component";
 import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 
 /**
@@ -49,7 +52,9 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		LinechartDirective,
 		SSHCellRendererComponent,
 		EmailCellRendererComponent,
-		TelephoneCellRendererComponent
+		TelephoneCellRendererComponent,
+		ObscuredTextInputComponent,
+		TreeSelectComponent
 	],
 	exports: [
 		AlertComponent,
@@ -59,12 +64,15 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
 		CustomvalidityDirective,
-		LinechartDirective
+		LinechartDirective,
+		ObscuredTextInputComponent,
+		TreeSelectComponent
 	],
 	imports: [
 		AppUIModule,
 		CommonModule,
-		RouterModule
+		RouterModule,
+		MatMenuModule
 	],
 	providers: [
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },

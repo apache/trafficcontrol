@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 
+import { CdkMenuModule } from "@angular/cdk/menu";
 import { NgModule } from "@angular/core";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
@@ -33,6 +34,8 @@ import { MatSelectModule } from "@angular/material/select";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatTooltipModule } from "@angular/material/tooltip";
+import { MatTreeModule } from "@angular/material/tree";
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { AgGridModule } from "ag-grid-angular";
 
@@ -50,6 +53,7 @@ import { AgGridModule } from "ag-grid-angular";
 
 		FontAwesomeModule,
 
+		CdkMenuModule,
 		MatButtonModule,
 		MatButtonToggleModule,
 		MatCardModule,
@@ -68,7 +72,9 @@ import { AgGridModule } from "ag-grid-angular";
 		MatSelectModule,
 		MatSnackBarModule,
 		MatStepperModule,
-		MatToolbarModule
+		MatToolbarModule,
+		MatTooltipModule,
+		MatTreeModule
 	]
 })
 export class AppUIModule {}

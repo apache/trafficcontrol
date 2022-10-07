@@ -233,7 +233,7 @@
 						},
 						"checkConstructors": false,
 						"checkGetters": true,
-						"checkSetters": true,
+						"checkSetters": false,
 						"enableFixer": false
 					}
 				],

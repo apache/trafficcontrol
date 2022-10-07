@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-sslkeys-generate-acme:
+.. _to-api-v4-deliveryservices-sslkeys-generate-acme:
 
 ******************************************
 ``deliveryservices/sslkeys/generate/acme``

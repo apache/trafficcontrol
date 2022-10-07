@@ -14,7 +14,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-isos:
+.. _to-api-v4-isos:
 
 ********
 ``isos``
@@ -53,7 +53,7 @@ Request Structure
 :ipNetmask:    An optional\ [1]_ string specifying the subnet mask of the generated system image
 :osversionDir: The name of the directory containing the ISO source
 
-	.. seealso:: :ref:`to-api-osversions`
+	.. seealso:: :ref:`to-api-v4-osversions`
 
 :rootPass: The password used by the generated system image's ``root`` user
 
@@ -107,4 +107,3 @@ ISO image as a streaming download.
 	Transfer-Encoding: chunked
 	Whole-Content-sha512: sLSVQGrLCQ4hGQhv2reragQHWNi2aKMcz2c/HMAH45tLcZ1LenPyOzWRcRfHUNbV4PEEKOoiTfwE2HlA+WtRIQ==
 	X-Server-Name: traffic_ops_golang/
-

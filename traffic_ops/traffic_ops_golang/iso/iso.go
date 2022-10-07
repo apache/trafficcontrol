@@ -70,20 +70,21 @@ const (
 // Response types:
 //
 // Error:
-//   HTTP 400
-//   {
-//     "alerts": [
-//       {"level":"error","text":"hostName is required"},
-//       {"level":"error","text":"disk is required"},
-//       ...,
-//     ]
-//   }
+//
+//	HTTP 400
+//	{
+//	  "alerts": [
+//	    {"level":"error","text":"hostName is required"},
+//	    {"level":"error","text":"disk is required"},
+//	    ...,
+//	  ]
+//	}
 //
 // Success:
-//   HTTP 200
-//   Content-Disposition: attachment; filename="db.infra.ciab.test-centos72.iso"
-//   Content-Type: application/download
 //
+//	HTTP 200
+//	Content-Disposition: attachment; filename="db.infra.ciab.test-centos72.iso"
+//	Content-Type: application/download
 func ISOs(w http.ResponseWriter, req *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(req, nil, nil)
 	if userErr != nil || sysErr != nil {

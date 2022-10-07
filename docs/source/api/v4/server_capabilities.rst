@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-server_capabilities:
+.. _to-api-v4-server_capabilities:
 
 ***********************
 ``server_capabilities``
@@ -153,7 +153,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/4.0/server_capabilities/edit?name=RAM HTTP/1.1
+	PUT /api/4.0/server_capabilities?name=RAM HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

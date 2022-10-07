@@ -52,12 +52,12 @@ __Code Status__
 __Test Status__
 
 [![Go Unit Tests](https://github.com/apache/trafficcontrol/workflows/Go%20Unit%20Tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/go.unit.tests.yaml)
-[![Traffic Ops Integration Tests](https://github.com/apache/trafficcontrol/workflows/Traffic%20Ops%20Go%20client/API%20integration%20tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/traffic-ops.yml) 
+[![TO Go Client Integration Tests](https://github.com/apache/trafficcontrol/workflows/TO%20Go%20Client%20Integration%20Tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/traffic-ops.yml) 
 [![TP Integration Tests](https://github.com/apache/trafficcontrol/workflows/TP%20Integration%20Tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/tp.integration.tests.yml) 
 [![TM Integration Tests](https://github.com/apache/trafficcontrol/workflows/TM%20Integration%20Tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/tm.integration.tests.yml) 
 [![TR Ultimate Test Harness](https://github.com/apache/trafficcontrol/workflows/TR%20Ultimate%20Test%20Harness/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/tr-ultimate-test-harness.yml) 
-[![Traffic Control Cache Config integration tests](https://github.com/apache/trafficcontrol/workflows/Traffic%20Control%20Cache%20Config%20integration%20tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/cache-config-tests.yml)
-[![Traffic Control Health Client integration tests](https://github.com/apache/trafficcontrol/workflows/Traffic%20Control%20Health%20Client%20integration%20tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/health-client-tests.yml)
+[![T3C Integration Tests](https://github.com/apache/trafficcontrol/workflows/T3C%20Integration%20Tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/cache-config-tests.yml)
+[![TC Health Client Integration Tests](https://github.com/apache/trafficcontrol/workflows/TC%20Health%20Client%20Integration%20Tests/badge.svg)](https://github.com/apache/trafficcontrol/actions/workflows/health-client-tests.yml)
 
 ## Documentation [^1]
 * [Intro](http://traffic-control-cdn.readthedocs.io/en/latest/index.html)

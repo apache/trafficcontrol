@@ -92,7 +92,7 @@ var TableDeliveryServiceCapabilitiesController = function(deliveryService, requi
 	};
 
 	$scope.editServerCapability = function(capabilityName) {
-		locationUtils.navigateToPath('/server-capabilities/' + capabilityName);
+		locationUtils.navigateToPath('/server-capabilities/edit?name=' + capabilityName);
 	};
 
 	$scope.refresh = function() {

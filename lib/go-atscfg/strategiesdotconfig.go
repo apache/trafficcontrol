@@ -41,6 +41,14 @@ type StrategiesYAMLOpts struct {
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
 	// To omit the header comment, pass the empty string.
 	HdrComment string
+
+	// ATSMajorVersion is the integral major version of Apache Traffic server,
+	// used to generate the proper config for the proper version.
+	//
+	// If omitted or 0, the major version will be read from the Server's Profile Parameter config file 'package' name 'trafficserver'. If no such Parameter exists, the ATS version will default to 5.
+	// This was the old Traffic Control behavior, before the version was specifiable externally.
+	//
+	ATSMajorVersion uint
 }
 
 func MakeStrategiesDotYAML(
@@ -57,10 +65,14 @@ func MakeStrategiesDotYAML(
 	cdn *tc.CDN,
 	opt *StrategiesYAMLOpts,
 ) (Cfg, error) {
+	warnings := []string{}
 	if opt == nil {
 		opt = &StrategiesYAMLOpts{}
 	}
-	parentAbstraction, warnings, err := makeParentDotConfigData(
+
+	atsMajorVersion := getATSMajorVersion(opt.ATSMajorVersion, tcServerParams, &warnings)
+
+	parentAbstraction, dataWarns, err := makeParentDotConfigData(
 		dses,
 		server,
 		servers,
@@ -73,18 +85,18 @@ func MakeStrategiesDotYAML(
 		dss,
 		cdn,
 		&ParentConfigOpts{
-			AddComments: opt.VerboseComments,
-			HdrComment:  opt.HdrComment,
+			AddComments:     opt.VerboseComments,
+			HdrComment:      opt.HdrComment,
+			ATSMajorVersion: opt.ATSMajorVersion,
 		}, // TODO change makeParentDotConfigData to its own opt?
+		atsMajorVersion,
 	)
+	warnings = append(warnings, dataWarns...)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, err.Error())
 	}
 
-	atsMajorVer, verWarns := getATSMajorVersion(tcServerParams)
-	warnings = append(warnings, verWarns...)
-
-	text, paWarns, err := parentAbstractionToStrategiesDotYaml(parentAbstraction, opt, atsMajorVer)
+	text, paWarns, err := parentAbstractionToStrategiesDotYaml(parentAbstraction, opt, atsMajorVersion)
 	warnings = append(warnings, paWarns...)
 	if err != nil {
 		return Cfg{}, makeErr(warnings, err.Error())
@@ -107,7 +119,7 @@ func MakeStrategiesDotYAML(
 const YAMLDocumentStart = "---"
 const YAMLDocumentEnd = "..."
 
-func parentAbstractionToStrategiesDotYaml(pa *ParentAbstraction, opt *StrategiesYAMLOpts, atsMajorVersion int) (string, []string, error) {
+func parentAbstractionToStrategiesDotYaml(pa *ParentAbstraction, opt *StrategiesYAMLOpts, atsMajorVersion uint) (string, []string, error) {
 	warnings := []string{}
 	txt := YAMLDocumentStart +
 		getStrategyHostsSection(pa) +
@@ -155,10 +167,13 @@ func getStrategySecondaryMode(mode ParentAbstractionServiceParentSecondaryMode) 
 }
 
 func getStrategyErrorCodes(codes []int) string {
-	str := ""
+	str := " ["
+	join := " "
 	for _, code := range codes {
-		str += "\n" + `        - ` + strconv.Itoa(code)
+		str += join + strconv.Itoa(code)
+		join = ", "
 	}
+	str += " ]"
 	return str
 }
 

@@ -143,6 +143,14 @@ export function isAction<T=unknown>(i: ContextMenuItem<T>): i is ContextMenuActi
 }
 
 /**
+ * TableTitleButton represents a button added to the heading of the table.
+ */
+export interface TableTitleButton {
+	action: string;
+	text: string;
+}
+
+/**
  * GenericTableComponent is the controller for generic tables.
  */
 @Component({
@@ -161,9 +169,13 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	/** Optionally a context to load from localstorage. Providing a unique value for this allows for persistent filter, sort, etc. */
 	@Input() public context: string | undefined;
 	/** Optionally a set of context menu items. If not given, the context menu is disabled. */
-	@Input() public contextMenuItems: Array<ContextMenuItem<T>> = [];
+	@Input() public contextMenuItems: readonly ContextMenuItem<Readonly<T>>[] = [];
+	/** Optionally a set of additional table title buttons. */
+	@Input() public tableTitleButtons: Array<TableTitleButton> = [];
 	/** Emits when context menu actions are clicked. Type safety is the host's responsibility! */
 	@Output() public contextMenuAction = new EventEmitter<ContextMenuActionEvent<T>>();
+	/** Emits when title button actions are clicked. Type safety is the host's responsibility! */
+	@Output() public tableTitleButtonAction = new EventEmitter<string>();
 
 	public isAction = isAction;
 
@@ -292,6 +304,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 				}
 			);
 		}
+		this.cols.sort((a, b) => a.headerName === b.headerName ? 0 : ((a.headerName ?? "") > (b.headerName ?? "" ) ? -1 : 1));
 	}
 
 	/**
@@ -327,19 +340,19 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		}
 
 		try {
-			const storedSort = localStorage.getItem(`${this.context}_table_sort`);
-			if (storedSort) {
-				this.gridAPI.setSortModel(JSON.parse(storedSort));
+			const filterState = localStorage.getItem(`${this.context}_table_filter`);
+			if (filterState) {
+				this.gridAPI.setFilterModel(JSON.parse(filterState));
 			}
 		} catch (e) {
-			console.error("Failure to load stored sort state:", e);
+			console.error(`Failure to retrieve stored column sort info from localStorage (key=${this.context}_table_filter:`, e);
 		}
 	}
 
-	/** When sorting changes, stores the sorting state if a context was provided. */
-	public storeSort(): void {
+	/** When filter changes, stores the filter state if a context was provided. */
+	public storeFilter(): void {
 		if (this.context && this.gridAPI) {
-			localStorage.setItem(`${this.context}_table_sort`, JSON.stringify(this.gridAPI.getSortModel()));
+			localStorage.setItem(`${this.context}_table_filter`, JSON.stringify(this.gridAPI.getFilterModel()));
 		}
 	}
 
@@ -545,7 +558,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		}
 		if (a.disabled) {
 			if (a.multiRow) {
-				return a.disabled(this.fullSelection, this.gridAPI);
+				return a.disabled(this.selectionCount > 1 ? this.fullSelection : [this.selected], this.gridAPI);
 			}
 			return a.disabled(this.selected, this.gridAPI);
 		}
@@ -576,6 +589,15 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			});
 		}
 		this.showContextMenu = false;
+	}
+
+	/**
+	 * Handles when the user clicks on a title button action item by emitting the proper data.
+	 *
+	 * @param action The action that was clicked.
+	 */
+	public emitTitleButtonAction(action: string): void {
+		this.tableTitleButtonAction.emit(action);
 	}
 
 	/**

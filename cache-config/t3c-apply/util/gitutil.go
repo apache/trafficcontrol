@@ -32,31 +32,35 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 )
 
-func EnsureConfigDirIsGitRepo(cfg config.Cfg) error {
+// EnsureConfigDirIsGitRepo ensures the ATS config directory is a git repo.
+// Returns whether it tried to create a git repo, and any error.
+// Note the return will be (false, nil) if a git repo already exists.
+// Note true and a non-nil error may be returned, if creating a git repo is necessary and attempted and fails.
+func EnsureConfigDirIsGitRepo(cfg config.Cfg) (bool, error) {
 	cmd := exec.Command("git", "status")
 	cmd.Dir = cfg.TsConfigDir
 
 	errPipe, err := cmd.StderrPipe()
 	if err != nil {
-		return errors.New("getting stderr pipe for command: " + err.Error())
+		return false, errors.New("getting stderr pipe for command: " + err.Error())
 	}
 
 	if err := cmd.Start(); err != nil {
 		if _, ok := err.(*exec.ExitError); !ok {
 			// this means Go failed to run the command, not that the command returned an error.
-			return errors.New("git status returned: " + err.Error())
+			return false, errors.New("git status returned: " + err.Error())
 		}
 	}
 
 	errOutput, err := ioutil.ReadAll(errPipe)
 	if err != nil {
-		return errors.New("reading stderr: " + err.Error())
+		return false, errors.New("reading stderr: " + err.Error())
 	}
 
 	if err := cmd.Wait(); err != nil {
 		if _, ok := err.(*exec.ExitError); !ok {
 			// this means Go failed to run the command, not that the command returned an error.
-			return errors.New("waiting for git command: " + err.Error())
+			return false, errors.New("waiting for git command: " + err.Error())
 		}
 	}
 
@@ -64,14 +68,14 @@ func EnsureConfigDirIsGitRepo(cfg config.Cfg) error {
 
 	errOutput = bytes.ToLower(errOutput)
 	if !bytes.Contains(errOutput, []byte(GitNotARepoMsgPrefix)) {
-		return nil // it's already a git repo
+		return false, nil // it's already a git repo
 	}
 
 	if err := makeConfigDirGitRepo(cfg); err != nil {
-		return errors.New("making config dir '" + cfg.TsConfigDir + "' a git repo: " + err.Error())
+		return true, errors.New("making config dir '" + cfg.TsConfigDir + "' a git repo: " + err.Error())
 	}
 
-	return nil
+	return true, nil
 }
 
 func makeConfigDirGitRepo(cfg config.Cfg) error {

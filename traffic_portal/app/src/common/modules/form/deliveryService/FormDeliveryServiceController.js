@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel, userModel, serviceCategoryService) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serviceCategoryService) {
 
     /**
      * This is used to cache TLS version settings when the checkbox is toggled.
@@ -33,7 +33,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.tlsVersionInsecure = v => v && insecureVersions.has(v);
 
     /**
-     * This toggles whether or not TLS versions are restricted for the Delivery
+     * This toggles whether TLS versions are restricted for the Delivery
      * Service.
      *
      * It uses cachedTLSVersions to cache TLS version restrictions, so that the
@@ -118,6 +118,14 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         }
     }
     $scope.validateTLS = validateTLS;
+
+    async function getSteeringTargets() {
+        if(type.indexOf("HTTP") > -1)  {
+            const configs = await deliveryServiceService.getSteering();
+            const dsTargets = deliveryServiceUtils.getSteeringTargetsForDS([deliveryService.xmlId], configs);
+            $scope.steeringTargetsFor = Array.from(dsTargets[deliveryService.xmlId]);
+        }
+    }
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -450,6 +458,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         getProfiles();
         getTenants();
         getServiceCategories();
+        getSteeringTargets();
         if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
             // add an empty one so the dynamic form widget is visible. empty strings get stripped out on save anyhow.
             $scope.deliveryService.consistentHashQueryParams = [ '' ];
@@ -459,5 +468,5 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'topologies', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel', 'userModel', 'serviceCategoryService'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'topologies', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'deliveryServiceService', 'cdnService', 'profileService', 'tenantService', 'propertiesModel', 'userModel', 'serviceCategoryService'];
 module.exports = FormDeliveryServiceController;

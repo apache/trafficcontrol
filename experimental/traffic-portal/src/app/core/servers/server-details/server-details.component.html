@@ -166,7 +166,7 @@ limitations under the License.
 					</mat-form-field>
 					<mat-form-field>
 						<mat-label><abbr title="Integrated Lights-Out Management">ILO</abbr> Password</mat-label>
-						<input matInput name="iloPassword" [(ngModel)]="server.iloPassword"/>
+						<tp-obscured-text-input name="iloPassword" [autocomplete]="autocompleteNew" [(value)]="server.iloPassword"></tp-obscured-text-input>
 					</mat-form-field>
 				</div>
 			</fieldset>

@@ -44,13 +44,13 @@ under the License.
                         </li>
                     </menu>
                 </div>
+                <button class="btn btn-default" title="Clear Table Filters" ng-click="clearTableFilters()">Clear <i class="fa fa-filter"></i></button>
                 <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                     <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                         More&nbsp;
                         <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                        <li role="menuitem"><button class="menu-item-button" type="button" ng-click="clearTableFilters()">Clear Table Filters</button></li>
                         <li role="menuitem"><button class="menu-item-button" type="button" ng-click="exportCSV()">Export CSV</button></li>
                     </ul>
                 </div>
