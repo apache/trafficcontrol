@@ -145,7 +145,7 @@ type V5TestData struct {
 }
 
 type clientSession interface {
-	v3client.Session | v4client.Session | v5client.Session
+	v4client.Session | v5client.Session
 }
 
 type requestOpts interface {
