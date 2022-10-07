@@ -113,6 +113,7 @@ type V3TestData struct {
 	RequestParams  url.Values
 	RequestHeaders http.Header
 	RequestBody    map[string]interface{}
+	PreReqFuncs    []func()
 	Expectations   []CkReqFunc
 }
 
@@ -132,6 +133,7 @@ type V5TestData struct {
 	ClientSession *v5client.Session
 	RequestOpts   v5client.RequestOptions
 	RequestBody   map[string]interface{}
+	PreReqFuncs   []func()
 	Expectations  []CkReqFunc
 }
 

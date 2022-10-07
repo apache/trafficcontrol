@@ -73,7 +73,6 @@ const (
 	ServerServerCapabilities
 	Servers
 	ServiceCategories
-	Snapshot
 	Statuses
 	StaticDNSEntries
 	SteeringTargets
