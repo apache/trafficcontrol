@@ -105,7 +105,6 @@ public class TrafficRouter {
 	 * Diversity").
 	 */
 	public static final String DNSSEC_ENABLED = "dnssec.enabled";
-	public static final String DNSSEC_ZONE_DIFFING = "dnssec.zone.diffing.enabled";
 	public static final String DNSSEC_RRSIG_CACHE_ENABLED = "dnssec.rrsig.cache.enabled";
 	public static final String STRIP_SPECIAL_QUERY_PARAMS = "strip.special.query.params";
 	private static final long DEFAULT_EDGE_NS_TTL = 3600;
@@ -118,7 +117,7 @@ public class TrafficRouter {
 	private final AnonymousIpDatabaseService anonymousIpService;
 	private final FederationRegistry federationRegistry;
 	private final boolean consistentDNSRouting;
-	private final boolean dnssecZoneDiffingEnabled;
+	private final boolean dnssecEnabled;
 	private final boolean stripSpecialQueryParamsEnabled;
 	private final boolean edgeDNSRouting;
 	private final boolean edgeHTTPRouting;
@@ -155,7 +154,7 @@ public class TrafficRouter {
 		this.anonymousIpService = anonymousIpService;
 		this.federationRegistry = federationRegistry;
 		this.stripSpecialQueryParamsEnabled = JsonUtils.optBoolean(cr.getConfig(), STRIP_SPECIAL_QUERY_PARAMS);
-		this.dnssecZoneDiffingEnabled = JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ENABLED) && JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ZONE_DIFFING);
+		this.dnssecEnabled = JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ENABLED);
 		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing"); // previous/default behavior
 		this.edgeDNSRouting =  JsonUtils.optBoolean(cr.getConfig(), "edge.dns.routing") && cr.hasEdgeTrafficRouters();
 		this.edgeHTTPRouting = JsonUtils.optBoolean(cr.getConfig(), "edge.http.routing") && cr.hasEdgeTrafficRouters();
@@ -1924,8 +1923,8 @@ public class TrafficRouter {
 		return consistentDNSRouting;
 	}
 
-	public boolean isDnssecZoneDiffingEnabled() {
-		return dnssecZoneDiffingEnabled;
+	public boolean isDnssecEnabled() {
+		return dnssecEnabled;
 	}
 
 	private List<Cache> enforceGeoRedirect(final Track track, final DeliveryService ds, final String clientIp, final Geolocation queriedClientLocation, final IPVersions requestVersion) {

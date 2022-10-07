@@ -58,7 +58,6 @@ public final class SignatureManager {
 	private CacheRegister cacheRegister;
 	private static ConcurrentMap<RRSIGCacheKey, ConcurrentMap<RRsetKey, RRSIGRecord>> RRSIGCache = new ConcurrentHashMap<>();
 	private static final Object RRSIGCacheLock = new Object(); // to ensure that the RRSIGCache is totally empty if disabled
-	private boolean RRSIGCacheEnabled = false;
 	private static ScheduledExecutorService keyMaintenanceExecutor;
 	private TrafficOpsUtils trafficOpsUtils;
 	private boolean dnssecEnabled = false;
@@ -73,7 +72,6 @@ public final class SignatureManager {
 		this.setCacheRegister(cacheRegister);
 		this.setTrafficOpsUtils(trafficOpsUtils);
 		this.setZoneManager(zoneManager);
-		setRRSIGCacheEnabled(cacheRegister.getConfig());
 		initKeyMap();
 	}
 
@@ -81,19 +79,6 @@ public final class SignatureManager {
 		if (keyMaintenanceExecutor != null) {
 			keyMaintenanceExecutor.shutdownNow();
 		}
-	}
-
-	private void setRRSIGCacheEnabled(final JsonNode config) {
-		RRSIGCacheEnabled = JsonUtils.optBoolean(config, TrafficRouter.DNSSEC_RRSIG_CACHE_ENABLED, false);
-		if (!RRSIGCacheEnabled) {
-			synchronized (RRSIGCacheLock) {
-				RRSIGCache = new ConcurrentHashMap<>();
-			}
-		}
-	}
-
-	private boolean isRRSIGCacheEnabled() {
-		return this.RRSIGCacheEnabled;
 	}
 
 	private void initKeyMap() {
@@ -508,7 +493,7 @@ public final class SignatureManager {
 				final ZoneSigner zoneSigner = new ZoneSignerImpl();
 
 				signedRecords = zoneSigner.signZone(records, kskPairs, zskPairs, start.getTime(),
-						signatureExpiration.getTime(), isRRSIGCacheEnabled() ? RRSIGCache : null);
+						signatureExpiration.getTime(), RRSIGCache);
 
 				zoneKey.setMinimumSignatureExpiration(signedRecords, signatureExpiration);
 				zoneKey.setKSKExpiration(kskExpiration);
