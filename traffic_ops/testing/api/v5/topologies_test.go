@@ -20,7 +20,6 @@ package v5
  */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"testing"
@@ -43,7 +42,7 @@ func TestTopologies(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Topology]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -68,48 +67,48 @@ func TestTopologies(t *testing.T) {
 			"POST": {
 				"OK when MISSING DESCRIPTION": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":  "topology-missing-description",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "topology-missing-description",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when EMPTY NODES": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":  "topology-no-nodes",
-						"nodes": []map[string]interface{}{},
+					RequestBody: tc.Topology{
+						Name:  "topology-no-nodes",
+						Nodes: []tc.TopologyNode{},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when NODE PARENT of ITSELF": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":  "self-parent",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{0}}},
+					RequestBody: tc.Topology{
+						Name:  "self-parent",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{0}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when TOO MANY PARENTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name": "too-many-parents",
-						"nodes": []map[string]interface{}{
+					RequestBody: tc.Topology{
+						Name: "too-many-parents",
+						Nodes: []tc.TopologyNode{
 							{
-								"cachegroup": "parentCachegroup",
-								"parents":    []int{},
+								Cachegroup: "parentCachegroup",
+								Parents:    []int{},
 							},
 							{
-								"cachegroup": "secondaryCachegroup",
-								"parents":    []int{},
+								Cachegroup: "secondaryCachegroup",
+								Parents:    []int{},
 							},
 							{
-								"cachegroup": "parentCachegroup2",
-								"parents":    []int{},
+								Cachegroup: "parentCachegroup2",
+								Parents:    []int{},
 							},
 							{
-								"cachegroup": "cachegroup1",
-								"parents":    []int{0, 1, 2},
+								Cachegroup: "cachegroup1",
+								Parents:    []int{0, 1, 2},
 							},
 						},
 					},
@@ -117,16 +116,16 @@ func TestTopologies(t *testing.T) {
 				},
 				"BAD REQUEST when EDGE_LOC PARENTS MID_LOC": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name": "edge-parents-mid",
-						"nodes": []map[string]interface{}{
+					RequestBody: tc.Topology{
+						Name: "edge-parents-mid",
+						Nodes: []tc.TopologyNode{
 							{
-								"cachegroup": "parentCachegroup",
-								"parents":    []int{1},
+								Cachegroup: "parentCachegroup",
+								Parents:    []int{1},
 							},
 							{
-								"cachegroup": "cachegroup2",
-								"parents":    []int{},
+								Cachegroup: "cachegroup2",
+								Parents:    []int{},
 							},
 						},
 					},
@@ -134,20 +133,20 @@ func TestTopologies(t *testing.T) {
 				},
 				"BAD REQUEST when CYCLICAL NODES": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name": "cyclical-nodes",
-						"nodes": []map[string]interface{}{
+					RequestBody: tc.Topology{
+						Name: "cyclical-nodes",
+						Nodes: []tc.TopologyNode{
 							{
-								"cachegroup": "cachegroup1",
-								"parents":    []int{1, 2},
+								Cachegroup: "cachegroup1",
+								Parents:    []int{1, 2},
 							},
 							{
-								"cachegroup": "parentCachegroup",
-								"parents":    []int{2},
+								Cachegroup: "parentCachegroup",
+								Parents:    []int{2},
 							},
 							{
-								"cachegroup": "secondaryCachegroup",
-								"parents":    []int{1},
+								Cachegroup: "secondaryCachegroup",
+								Parents:    []int{1},
 							},
 						},
 					},
@@ -155,20 +154,20 @@ func TestTopologies(t *testing.T) {
 				},
 				"BAD REQUEST when CYCLES ACROSS TOPOLOGIES": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name": "cyclical-nodes-tiered",
-						"nodes": []map[string]interface{}{
+					RequestBody: tc.Topology{
+						Name: "cyclical-nodes-tiered",
+						Nodes: []tc.TopologyNode{
 							{
-								"cachegroup": "parentCachegroup",
-								"parents":    []int{1},
+								Cachegroup: "parentCachegroup",
+								Parents:    []int{1},
 							},
 							{
-								"cachegroup": "parentCachegroup2",
-								"parents":    []int{},
+								Cachegroup: "parentCachegroup2",
+								Parents:    []int{},
 							},
 							{
-								"cachegroup": "cachegroup1",
-								"parents":    []int{0},
+								Cachegroup: "cachegroup1",
+								Parents:    []int{0},
 							},
 						},
 					},
@@ -176,16 +175,16 @@ func TestTopologies(t *testing.T) {
 				},
 				"BAD REQUEST when CYCLICAL NODES BUT EMPTY CACHE GROUPS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name": "cyclical-nodes-nontopology",
-						"nodes": []map[string]interface{}{
+					RequestBody: tc.Topology{
+						Name: "cyclical-nodes-nontopology",
+						Nodes: []tc.TopologyNode{
 							{
-								"cachegroup": "edge-parent1",
-								"parents":    []int{1},
+								Cachegroup: "edge-parent1",
+								Parents:    []int{1},
 							},
 							{
-								"cachegroup": "has-edge-parent1",
-								"parents":    []int{},
+								Cachegroup: "has-edge-parent1",
+								Parents:    []int{},
 							},
 						},
 					},
@@ -193,56 +192,56 @@ func TestTopologies(t *testing.T) {
 				},
 				"BAD REQUEST when OUT-OF-BOUNDS PARENT INDEX": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":  "outofbounds",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{7}}},
+					RequestBody: tc.Topology{
+						Name:  "outofbounds",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{7}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when CACHEGROUP DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":  "topology-nonexistent-cachegroup",
-						"nodes": []map[string]interface{}{{"cachegroup": "doesntexist", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "topology-nonexistent-cachegroup",
+						Nodes: []tc.TopologyNode{{Cachegroup: "doesntexist", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING NAME": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"description": "missing name",
-						"nodes":       []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Description: "missing name",
+						Nodes:       []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":  "mso-topology",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "mso-topology",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when CACHEGROUP has NO SERVERS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":  "topology-empty-cg",
-						"nodes": []map[string]interface{}{{"cachegroup": "noServers", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "topology-empty-cg",
+						Nodes: []tc.TopologyNode{{Cachegroup: "noServers", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when DUPLICATE PARENTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name": "topology-duplicate-parents",
-						"nodes": []map[string]interface{}{
+					RequestBody: tc.Topology{
+						Name: "topology-duplicate-parents",
+						Nodes: []tc.TopologyNode{
 							{
-								"cachegroup": "parentCachegroup",
-								"parents":    []int{},
+								Cachegroup: "parentCachegroup",
+								Parents:    []int{},
 							},
 							{
-								"cachegroup": "cachegroup1",
-								"parents":    []int{0, 0},
+								Cachegroup: "cachegroup1",
+								Parents:    []int{0, 0},
 							},
 						},
 					},
@@ -250,16 +249,16 @@ func TestTopologies(t *testing.T) {
 				},
 				"BAD REQUEST when ORG_LOC is CHILD NODE": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name": "topology-orgloc-child",
-						"nodes": []map[string]interface{}{
+					RequestBody: tc.Topology{
+						Name: "topology-orgloc-child",
+						Nodes: []tc.TopologyNode{
 							{
-								"cachegroup": "cachegroup1",
-								"parents":    []int{},
+								Cachegroup: "cachegroup1",
+								Parents:    []int{},
 							},
 							{
-								"cachegroup": "multiOriginCachegroup",
-								"parents":    []int{0},
+								Cachegroup: "multiOriginCachegroup",
+								Parents:    []int{0},
 							},
 						},
 					},
@@ -267,25 +266,25 @@ func TestTopologies(t *testing.T) {
 				},
 				"BAD REQUEST when LEAF NODE is a MID_LOC": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":  "topology-midloc-leaf",
-						"nodes": []map[string]interface{}{{"cachegroup": "parentCachegroup", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "topology-midloc-leaf",
+						Nodes: []tc.TopologyNode{{Cachegroup: "parentCachegroup", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"WARNING LEVEL ALERT when MID PARENTING EDGE": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":        "topology-mid-parent",
-						"description": "mid parent to edge",
-						"nodes": []map[string]interface{}{
+					RequestBody: tc.Topology{
+						Name:        "topology-mid-parent",
+						Description: "mid parent to edge",
+						Nodes: []tc.TopologyNode{
 							{
-								"cachegroup": "cachegroup1",
-								"parents":    []int{1},
+								Cachegroup: "cachegroup1",
+								Parents:    []int{1},
 							},
 							{
-								"cachegroup": "cachegroup2",
-								"parents":    []int{},
+								Cachegroup: "cachegroup2",
+								Parents:    []int{},
 							},
 						},
 					},
@@ -293,9 +292,9 @@ func TestTopologies(t *testing.T) {
 				},
 				"FORBIDDEN when READ-ONLY USER": {
 					ClientSession: readOnlyUserSession,
-					RequestBody: map[string]interface{}{
-						"name":  "topology-ro",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "topology-ro",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -304,10 +303,10 @@ func TestTopologies(t *testing.T) {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"top-with-no-mids"}}},
-					RequestBody: map[string]interface{}{
-						"name":        "top-with-no-mids-updated",
-						"description": "Updating fields",
-						"nodes":       []map[string]interface{}{{"cachegroup": "cachegroup2", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:        "top-with-no-mids-updated",
+						Description: "Updating fields",
+						Nodes:       []tc.TopologyNode{{Cachegroup: "cachegroup2", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateTopologiesUpdateCreateFields(map[string]interface{}{"Name": "top-with-no-mids-updated", "Description": "Updating fields"})),
@@ -315,61 +314,61 @@ func TestTopologies(t *testing.T) {
 				"BAD REQUEST when OUT-OF-BOUNDS PARENT INDEX": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another-topology"}}},
-					RequestBody: map[string]interface{}{
-						"name":  "topology-invalid-parent",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{100}}},
+					RequestBody: tc.Topology{
+						Name:  "topology-invalid-parent",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{100}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when CACHEGROUP has NO SERVERS": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another-topology"}}},
-					RequestBody: map[string]interface{}{
-						"name":  "topology-empty-cg",
-						"nodes": []map[string]interface{}{{"cachegroup": "noServers", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "topology-empty-cg",
+						Nodes: []tc.TopologyNode{{Cachegroup: "noServers", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when CACHEGROUP SERVERS DO NOT HAVE REQUIRED CAPABILITIES": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"top-for-ds-req"}}},
-					RequestBody: map[string]interface{}{
-						"name":  "top-for-ds-req",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "top-for-ds-req",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when NODE PARENT of ITSELF": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another-topology"}}},
-					RequestBody: map[string]interface{}{
-						"name":  "another-topology",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{0}}},
+					RequestBody: tc.Topology{
+						Name:  "another-topology",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{0}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when CACHEGROUP HAS NO SERVERS IN TOPOLOGY CDN": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"top-used-by-cdn1-and-cdn2"}}},
-					RequestBody: map[string]interface{}{
-						"name":  "top-used-by-cdn1-and-cdn2",
-						"nodes": []map[string]interface{}{{"cachegroup": "cdn1-only", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "top-used-by-cdn1-and-cdn2",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cdn1-only", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ORG_LOC is CHILD NODE": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another-topology"}}},
-					RequestBody: map[string]interface{}{
-						"name": "topology-orgloc-child",
-						"nodes": []map[string]interface{}{
+					RequestBody: tc.Topology{
+						Name: "topology-orgloc-child",
+						Nodes: []tc.TopologyNode{
 							{
-								"cachegroup": "cachegroup1",
-								"parents":    []int{},
+								Cachegroup: "cachegroup1",
+								Parents:    []int{},
 							},
 							{
-								"cachegroup": "multiOriginCachegroup",
-								"parents":    []int{0},
+								Cachegroup: "multiOriginCachegroup",
+								Parents:    []int{0},
 							},
 						},
 					},
@@ -378,26 +377,26 @@ func TestTopologies(t *testing.T) {
 				"BAD REQUEST when LEAF NODE is a MID_LOC": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another-topology"}}},
-					RequestBody: map[string]interface{}{
-						"name":        "topology-child-midloc",
-						"description": "child mid_loc",
-						"nodes":       []map[string]interface{}{{"cachegroup": "parentCachegroup", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:        "topology-child-midloc",
+						Description: "child mid_loc",
+						Nodes:       []tc.TopologyNode{{Cachegroup: "parentCachegroup", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when DUPLICATE PARENTS": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another-topology"}}},
-					RequestBody: map[string]interface{}{
-						"name": "topology-same-parents",
-						"nodes": []map[string]interface{}{
+					RequestBody: tc.Topology{
+						Name: "topology-same-parents",
+						Nodes: []tc.TopologyNode{
 							{
-								"cachegroup": "cachegroup1",
-								"parents":    []int{},
+								Cachegroup: "cachegroup1",
+								Parents:    []int{},
 							},
 							{
-								"cachegroup": "cachegroup2",
-								"parents":    []int{0, 0},
+								Cachegroup: "cachegroup2",
+								Parents:    []int{0, 0},
 							},
 						},
 					},
@@ -406,18 +405,18 @@ func TestTopologies(t *testing.T) {
 				"BAD REQUEST when REMOVING ORG ASSIGNED DS": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"mso-topology"}}},
-					RequestBody: map[string]interface{}{
-						"name":  "mso-topology",
-						"nodes": []map[string]interface{}{{"cachegroup": "topology-edge-cg-01", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "mso-topology",
+						Nodes: []tc.TopologyNode{{Cachegroup: "topology-edge-cg-01", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"FORBIDDEN when READ-ONLY USER": {
 					ClientSession: readOnlyUserSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another-topology"}}},
-					RequestBody: map[string]interface{}{
-						"name":  "topology-ro",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "topology-ro",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -427,9 +426,9 @@ func TestTopologies(t *testing.T) {
 						QueryParameters: url.Values{"name": {"another-topology"}},
 						Header:          http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					},
-					RequestBody: map[string]interface{}{
-						"name":  "another-topology",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "another-topology",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
@@ -439,9 +438,9 @@ func TestTopologies(t *testing.T) {
 						QueryParameters: url.Values{"name": {"another-topology"}},
 						Header:          http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					},
-					RequestBody: map[string]interface{}{
-						"name":  "another-topology",
-						"nodes": []map[string]interface{}{{"cachegroup": "cachegroup1", "parents": []int{}}},
+					RequestBody: tc.Topology{
+						Name:  "another-topology",
+						Nodes: []tc.TopologyNode{{Cachegroup: "cachegroup1", Parents: []int{}}},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
@@ -468,14 +467,7 @@ func TestTopologies(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					topology := tc.Topology{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &topology)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
+					topology := testCase.RequestBody
 
 					switch method {
 					case "GET", "GET AFTER CHANGES":
