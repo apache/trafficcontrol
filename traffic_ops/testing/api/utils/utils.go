@@ -134,6 +134,23 @@ type V5TestData struct {
 	Expectations  []CkReqFunc
 }
 
+type clientSession interface {
+	v3client.Session | v4client.Session | v5client.Session
+}
+
+type requestOpts interface {
+	url.Values | v4client.RequestOptions | v5client.RequestOptions
+}
+
+// TestData represents the data needed for testing the api endpoints.
+type TestData[C clientSession, R requestOpts, B any] struct {
+	EndpointId    func() int
+	ClientSession *C
+	RequestOpts   R
+	RequestBody   B
+	Expectations  []CkReqFunc
+}
+
 // V3TestCase is the type of the V3TestData struct.
 // Uses nested map to represent the method being tested and the test's description.
 type V3TestCase map[string]map[string]V3TestData
@@ -146,6 +163,8 @@ type V4TestCase map[string]map[string]V4TestData
 // to V5TestData structures.
 // Uses nested map to represent the method being tested and the test's description.
 type V5TestCase map[string]map[string]V5TestData
+
+type TestCase[C clientSession, R requestOpts, B any] map[string]map[string]TestData[C, R, B]
 
 // CkReqFunc defines the reusable signature for all other functions that perform checks.
 // Common parameters that are checked include the request's info, response, alerts, and errors.
