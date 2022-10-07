@@ -122,6 +122,7 @@ type V4TestData struct {
 	ClientSession *v4client.Session
 	RequestOpts   v4client.RequestOptions
 	RequestBody   map[string]interface{}
+	PreReqFuncs   []func()
 	Expectations  []CkReqFunc
 }
 
@@ -146,6 +147,8 @@ type V4TestCase map[string]map[string]V4TestData
 // to V5TestData structures.
 // Uses nested map to represent the method being tested and the test's description.
 type V5TestCase map[string]map[string]V5TestData
+
+type PreReqFuncType func()
 
 // CkReqFunc defines the reusable signature for all other functions that perform checks.
 // Common parameters that are checked include the request's info, response, alerts, and errors.
