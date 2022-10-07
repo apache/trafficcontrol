@@ -1,4 +1,4 @@
-package v4
+package v5
 
 /*
 
@@ -25,15 +25,15 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func TestSnapshot(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments}, func() {
 
-		readOnlyUserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "readonlyuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
+		readOnlyUserSession := utils.CreateV5Session(t, Config.TrafficOps.URL, "readonlyuser", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.V5TestCase{
 			"PUT": {
 				"VERIFY ANYMAP DELIVERY SERVICE is NOT in CRCONFIG": {
 					ClientSession: TOSession,
