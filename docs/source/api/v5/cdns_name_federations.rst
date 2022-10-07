@@ -158,6 +158,7 @@ Request Structure
 
 Response Structure
 ------------------
+:id:          The integral, unique identifier of the :term:`Federation`
 :cname:       The Canonical Name (CNAME) used by the federation
 :description: An optionally-present field containing a description of the field
 
