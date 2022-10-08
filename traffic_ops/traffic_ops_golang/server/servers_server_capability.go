@@ -298,19 +298,19 @@ func (ssc *TOServerServerCapability) Create() (error, error, int) {
 	}
 
 	// Ensure type is correct
-	correctType := true
-	if err := tx.Tx.QueryRow(scCheckServerTypeQuery(), ssc.ServerID).Scan(&correctType); err != nil {
-		return nil, fmt.Errorf("checking server type: %v", err), http.StatusInternalServerError
-	}
-	if !correctType {
-		return fmt.Errorf("server %v has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", *ssc.ServerID), nil, http.StatusBadRequest
+	var sidList []int64
+	sidList = append(sidList, int64(*ssc.ServerID))
+	errCode, userErr, sysErr := checkServerType(tx.Tx, sidList)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+
 	}
 
 	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx.Tx, int64(*ssc.ServerID))
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
-	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
@@ -358,17 +358,6 @@ server_capability,
 server) VALUES (
 :server_capability,
 :server) RETURNING server, server_capability, last_updated`
-}
-
-func scCheckServerTypeQuery() string {
-	return `
-SELECT EXISTS (
-	SELECT s.id
-	FROM server s
-	JOIN type t ON s.type = t.id
-	WHERE s.id = $1
-	AND t.use_in_table = 'server'
-	AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%'))`
 }
 
 func checkDSReqCapQuery() string {
@@ -460,36 +449,19 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(mssc.ServerIDs) == 1 {
-		errCode, userErr, sysErr = checkExistingServer(tx, mssc.ServerIDs[0], inf.User.UserName)
+	if len(mssc.ServerIDs) >= 1 {
+		errCode, userErr, sysErr = checkExistingServer(tx, mssc.ServerIDs, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 	}
 
-	//Check if the server type is MID and/or EDGE
-	var servArray []int64
-	queryType := `SELECT array_agg(s.id) 
-		FROM server s
-		JOIN type t ON s.type = t.id
-		WHERE s.id = any ($1)
-		AND t.use_in_table = 'server'
-		AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%')`
-	if err := tx.QueryRow(queryType, pq.Array(mssc.ServerIDs)).Scan(pq.Array(&servArray)); err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %w", err))
+	// Ensure type is correct
+	errCode, userErr, sysErr = checkServerType(tx, mssc.ServerIDs)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
-	}
-	cmp := make(map[int64]bool)
-	for _, item := range servArray {
-		cmp[item] = true
-	}
-	for _, sid := range mssc.ServerIDs {
-		if _, ok := cmp[sid]; !ok {
-			userErr := fmt.Errorf("server id: %d has an incorrect server type. Server capability can only be assigned to EDGE or MID servers", sid)
-			api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
-			return
-		}
 	}
 
 	// Insert rows in DB
@@ -554,8 +526,8 @@ func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(mssc.ServerIDs) == 1 {
-		errCode, userErr, sysErr = checkExistingServer(tx, mssc.ServerIDs[0], inf.User.UserName)
+	if len(mssc.ServerIDs) >= 1 {
+		errCode, userErr, sysErr = checkExistingServer(tx, mssc.ServerIDs, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
@@ -596,24 +568,51 @@ func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 }
 
 // checkExistingServer checks server existence
-func checkExistingServer(tx *sql.Tx, sid int64, uName string) (int, error, error) {
-	_, exists, err := dbhelpers.GetServerNameFromID(tx, sid)
-	if err != nil {
-		return http.StatusInternalServerError, nil, err
-	}
-	if !exists {
-		userErr := fmt.Errorf("server %d does not exist", sid)
-		return http.StatusNotFound, userErr, nil
-	}
+func checkExistingServer(tx *sql.Tx, sidList []int64, uName string) (int, error, error) {
+	for _, sid := range sidList {
+		_, exists, err := dbhelpers.GetServerNameFromID(tx, sid)
+		if err != nil {
+			return http.StatusInternalServerError, nil, err
+		}
+		if !exists {
+			userErr := fmt.Errorf("server %d does not exist", sid)
+			return http.StatusNotFound, userErr, nil
+		}
 
-	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx, sid)
-	if err != nil {
-		return http.StatusInternalServerError, nil, err
-	}
+		cdnName, err := dbhelpers.GetCDNNameFromServerID(tx, sid)
+		if err != nil {
+			return http.StatusInternalServerError, nil, err
+		}
 
-	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), uName)
-	if userErr != nil || sysErr != nil {
-		return errCode, userErr, sysErr
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), uName)
+		if userErr != nil || sysErr != nil {
+			return errCode, userErr, sysErr
+		}
+	}
+	return http.StatusOK, nil, nil
+}
+
+// checkServerType checks if the server type is MID and/or EDGE
+func checkServerType(tx *sql.Tx, sids []int64) (int, error, error) {
+	var servArray []int64
+	queryType := `SELECT array_agg(s.id) 
+		FROM server s
+		JOIN type t ON s.type = t.id
+		WHERE s.id = any ($1)
+		AND t.use_in_table = 'server'
+		AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%')`
+	if err := tx.QueryRow(queryType, pq.Array(sids)).Scan(pq.Array(&servArray)); err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %w", err)
+	}
+	cmp := make(map[int64]bool)
+	for _, item := range servArray {
+		cmp[item] = true
+	}
+	for _, sid := range sids {
+		if _, ok := cmp[sid]; !ok {
+			userErr := fmt.Errorf("server id: %d has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", sid)
+			return http.StatusBadRequest, userErr, nil
+		}
 	}
 	return http.StatusOK, nil, nil
 }

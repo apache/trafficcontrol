@@ -23,8 +23,7 @@
 
 ``POST``
 ========
-Associates a list of :term:`Server Capability` to a server. The API call replaces all the server capabilities assigned to a server with the ones specified in the serverCapabilities field.
-And also Associates a list of :term:`Servers` to a server capability. The API call replaces all the servers assigned to a server capability with the ones specified in the servers field.
+Inserts a list of :term:`Server Capability` associated to a server and vice versa i.e insert a list of :term:`Server` associated to a server capability.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -33,9 +32,8 @@ And also Associates a list of :term:`Servers` to a server capability. The API ca
 
 Request Structure
 -----------------
-:serverIds:          List of :term:`Server` ids ((integral, unique identifier) associated with a :term:`Server Capability`
-:serverCapabilities: List of :term:`Server Capability`'s name to associate with a :term:`Server` id
-
+:serverIds:          List of :term:`Server` ids (integral, unique identifier) associated with a :term:`Server Capability`
+:serverCapabilities: List of :term:`Server Capability`'s names to associate with a :term:`Server` id
 
 .. code-block:: http
 	:caption: Request Example1
@@ -71,8 +69,8 @@ Request Structure
 
 Response Structure
 ------------------
-:serverId:           List of :term:`Server` ids ((integral, unique identifier) associated with a server capability.
-:serverCapabilities: List of :term:`Server Capability`'s name to be associated with a :term:`Server` id.
+:serverId:           List of :term:`Server` ids (integral, unique identifier) associated with a server capability.
+:serverCapabilities: List of :term:`Server Capability`'s names to be associated with a :term:`Server` id.
 
 .. code-block:: http
 	:caption: Response Example1
@@ -128,8 +126,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Deletes a list of :term:`Server Capability` associated to a server. The API call deletes all the server capabilities assigned to a server with the ones specified in the serverCapabilities field.
-And also deletes a list of :term:`Servers` associated to a server capability. The API call deletes all the servers assigned to a server capability with the ones specified in the servers field.
+Deletes a list of :term:`Server Capability` associated to a server and vice versa i.e. deletes a list of :term:`Server` associated to a server capability.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -138,8 +135,8 @@ And also deletes a list of :term:`Servers` associated to a server capability. Th
 
 Request Structure
 -----------------
-:serverIds:          List of :term:`Server` ids ((integral, unique identifier) associated with a :term:`Server Capability`
-:serverCapabilities: List of :term:`Server Capability`'s name to associate with a :term:`Server` id
+:serverIds:          List of :term:`Server` ids (integral, unique identifier) associated with a :term:`Server Capability`
+:serverCapabilities: List of :term:`Server Capability`'s names to associate with a :term:`Server` id
 
 .. code-block:: http
 	:caption: Request Example
@@ -159,8 +156,8 @@ Request Structure
 
 Response Structure
 ------------------
-:serverId:           List of :term:`Server` ids ((integral, unique identifier) associated with a server capability.
-:serverCapabilities: List of :term:`Server Capability`'s name to be associated with a :term:`Server` id.
+:serverId:           List of :term:`Server` ids (integral, unique identifier) associated with a server capability.
+:serverCapabilities: List of :term:`Server Capability`'s names to be associated with a :term:`Server` id.
 
 .. code-block:: http
 	:caption: Response Example
