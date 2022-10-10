@@ -199,7 +199,7 @@ func main() {
 	}
 	if httpServer.TLSConfig == nil {
 		httpServer.TLSConfig = &tls.Config{
-			ClientAuth: tls.NoClientCert, // Can still send, but don't verify
+			ClientAuth: tls.RequestClientCert,
 		}
 	}
 	// Deprecated in 5.0

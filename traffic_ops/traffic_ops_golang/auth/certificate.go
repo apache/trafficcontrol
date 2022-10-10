@@ -78,6 +78,8 @@ var rootPool *x509.CertPool
 
 func loadRootCerts(dirPath string) error {
 	// Root cert pool already populated
+	// TODO: This will prevent rolling cert renewals at runtime and will require a TO restart
+	// to pick up additional certificates.
 	if rootPool != nil {
 		return nil
 	}
@@ -114,11 +116,16 @@ func loadRootCerts(dirPath string) error {
 				return filepath.SkipDir
 			}
 
+			// Read file
 			pemBytes, err := ioutil.ReadFile(path)
 			if err != nil {
 				return fmt.Errorf("failed to open cert at %s. err: %w", path, err)
 			}
 			pemBlock, _ := pem.Decode(pemBytes)
+			// Failed to decode PEM, skip file
+			if pemBlock == nil {
+				return nil
+			}
 			certificate, err := x509.ParseCertificate(pemBlock.Bytes)
 			if err != nil {
 				return fmt.Errorf("failed to parse PEM into x509. err: %w", err)
@@ -128,8 +135,6 @@ func loadRootCerts(dirPath string) error {
 				rootPool = x509.NewCertPool()
 			}
 			rootPool.AddCert(certificate)
-
-			fmt.Printf("Added cert %s\n", path)
 
 			return nil
 		})
