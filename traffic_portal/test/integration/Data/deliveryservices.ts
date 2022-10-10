@@ -121,7 +121,8 @@ export const deliveryservices = {
 					name: "location",
 					value: "/a/b/c/d",
 					configFile: "remap.config",
-					secure: false
+					secure: false,
+					noRandomize: true
 				}
 			]
 		},

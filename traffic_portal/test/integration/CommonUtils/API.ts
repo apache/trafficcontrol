@@ -296,7 +296,7 @@ export class API {
             const rand = () => Math.floor(Math.random()*255)+1;
             data.ipAddress = `${rand()}.${rand()}.${rand()}.${rand()}`;
         }
-        if(hasProperty(data, 'name')) {
+        if(hasProperty(data, 'name') && !hasProperty(data, 'noRandomize')) {
             data.name = data.name + randomize;
         }
         if(hasProperty(data, 'requiredCapability')) {
