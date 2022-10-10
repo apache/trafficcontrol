@@ -1804,7 +1804,7 @@
         },
         {
             "xmlId": "anymap-ds",
-            "serverNames": ["atlanta-edge-01"]
+            "serverNames": ["atlanta-edge-15"]
         }
     ],
     "divisions": [
