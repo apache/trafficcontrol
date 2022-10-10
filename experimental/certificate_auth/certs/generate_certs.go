@@ -27,6 +27,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/pem"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -48,7 +49,21 @@ type CertificatePEMPair struct {
 	CertificatePEM, PrivateKeyPEM string
 }
 
+var (
+	rootCN   = "root.local"
+	interCN  = "intermediate.local"
+	clientCN = "client.local"
+	serverCN = "server.local"
+
+	uid = "userid"
+	// useEcdsa = false //TODO: Enable and refactor
+)
+
 func main() {
+	flag.StringVar(&uid, "uid", uid, "[Optional] The User ID value to be added to the client certificate")
+	// flag.BoolVar(&useEcdsa, "useEcdsa", useEcdsa, "[Optional] Use ECDSA 256 when generating the keys. Default is RSA 4096")
+
+	flag.Parse()
 
 	rootCAPEMPair, err := GenerateRootCACertificate()
 	if err != nil {
@@ -69,7 +84,6 @@ func main() {
 		log.Fatalf("Failed to generate and sign Server certificate\nErr: %s\n", err)
 	}
 
-	log.Println("Certificate: ", serverPEMPair.CertificatePEM)
 	ioutil.WriteFile("server.crt.pem", []byte(serverPEMPair.CertificatePEM), 0644)
 	ioutil.WriteFile("server.key.pem", []byte(serverPEMPair.PrivateKeyPEM), 0644)
 
@@ -78,9 +92,11 @@ func main() {
 		log.Fatalf("Failed to generate and sign Client certificate\nErr: %s\n", err)
 	}
 
-	log.Println("Certificate: ", clientPEMPair.CertificatePEM)
 	ioutil.WriteFile("client.crt.pem", []byte(clientPEMPair.CertificatePEM), 0644)
 	ioutil.WriteFile("client.key.pem", []byte(clientPEMPair.PrivateKeyPEM), 0644)
+
+	clientIntermediateChain := clientPEMPair.CertificatePEM + intermediatePEMPair.CertificatePEM
+	ioutil.WriteFile("client-intermediate-chain.crt.pem", []byte(clientIntermediateChain), 0644)
 
 	if err := VerifyCertificates(rootCAPEMPair, intermediatePEMPair, clientPEMPair, serverPEMPair); err != nil {
 		log.Fatalf("failed to verify certificate: %s", err)
@@ -120,10 +136,7 @@ func GenerateRootCACertificate() (*CertificatePEMPair, error) {
 
 	now := time.Now()
 
-	serialNumber, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate random serial number: %w", err)
-	}
+	serialNumber, _ := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
 
 	cert := &x509.Certificate{
 		SerialNumber: serialNumber,
@@ -133,10 +146,10 @@ func GenerateRootCACertificate() (*CertificatePEMPair, error) {
 			Country:            []string{"US"},
 			Province:           []string{"Colorado"},
 			Locality:           []string{"Denver"},
-			CommonName:         "root.local",
+			CommonName:         rootCN,
 		},
 		NotBefore:             now,
-		NotAfter:              now.AddDate(15, 0, 0),
+		NotAfter:              now.AddDate(1, 0, 0),
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 		BasicConstraintsValid: true,
 		IsCA:                  true,
@@ -189,10 +202,7 @@ func GenerateIntermediateCertificate(root *CertificatePEMPair) (*CertificatePEMP
 
 	now := time.Now()
 
-	serialNumber, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate random serial number: %w", err)
-	}
+	serialNumber, _ := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
 
 	cert := &x509.Certificate{
 		SerialNumber: serialNumber,
@@ -202,10 +212,10 @@ func GenerateIntermediateCertificate(root *CertificatePEMPair) (*CertificatePEMP
 			Country:            []string{"US"},
 			Province:           []string{"Colorado"},
 			Locality:           []string{"Denver"},
-			CommonName:         "intermediate.local",
+			CommonName:         interCN,
 		},
 		NotBefore:             now,
-		NotAfter:              now.AddDate(10, 0, 0),
+		NotAfter:              now.AddDate(1, 0, 0),
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 		BasicConstraintsValid: true,
@@ -261,16 +271,13 @@ func GenerateClientCertificate(intermediate *CertificatePEMPair) (*CertificatePE
 
 	now := time.Now()
 
-	serialNumber, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate random serial number: %w", err)
-	}
+	serialNumber, _ := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
 
 	// LDAP OID reference: https://ldap.com/ldap-oid-reference-guide/
 	// 0.9.2342.19200300.100.1.1 	uid Attribute Type
 	uidPkix := pkix.AttributeTypeAndValue{
 		Type:  asn1.ObjectIdentifier([]int{0, 9, 2342, 19200300, 100, 1, 1}),
-		Value: "userid",
+		Value: uid,
 	}
 
 	cert := &x509.Certificate{
@@ -281,11 +288,11 @@ func GenerateClientCertificate(intermediate *CertificatePEMPair) (*CertificatePE
 			Country:            []string{"US"},
 			Province:           []string{"Colorado"},
 			Locality:           []string{"Denver"},
-			CommonName:         "client.local",
+			CommonName:         clientCN,
 			ExtraNames:         []pkix.AttributeTypeAndValue{uidPkix},
 		},
 		NotBefore:   now,
-		NotAfter:    now.AddDate(5, 0, 0),
+		NotAfter:    now.AddDate(1, 0, 0),
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyAgreement,
 	}
@@ -338,10 +345,7 @@ func GenerateServerCertificate(intermediate *CertificatePEMPair) (*CertificatePE
 
 	now := time.Now()
 
-	serialNumber, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate random serial number: %w", err)
-	}
+	serialNumber, _ := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
 
 	cert := &x509.Certificate{
 		SerialNumber: serialNumber,
@@ -351,12 +355,12 @@ func GenerateServerCertificate(intermediate *CertificatePEMPair) (*CertificatePE
 			Country:            []string{"US"},
 			Province:           []string{"Colorado"},
 			Locality:           []string{"Denver"},
-			CommonName:         "server.local",
+			CommonName:         serverCN,
 		},
-		DNSNames:    []string{"server.local"},
+		DNSNames:    []string{serverCN},
 		IPAddresses: []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
 		NotBefore:   now,
-		NotAfter:    now.AddDate(5, 0, 0),
+		NotAfter:    now.AddDate(1, 0, 0),
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageKeyAgreement,
 	}

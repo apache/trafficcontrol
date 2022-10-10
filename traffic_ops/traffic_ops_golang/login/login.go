@@ -129,6 +129,11 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				goto FormAuth
 			}
 
+			// If no configuration is set, skip to form auth
+			if cfg.ClientCertAuth == nil || len(cfg.ClientCertAuth.RootCertsDir) == 0 {
+				goto FormAuth
+			}
+
 			// Perform certificate verification to ensure it is valid against Root CAs
 			err := auth.VerifyClientCertificate(r, cfg.ClientCertAuth.RootCertsDir)
 			if err != nil {
@@ -212,7 +217,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			}
 		}
 
-		// User does not exist in either local DB or LDAP, return unauthorized
+		// Failed to authenticate in either local DB or LDAP, return unauthorized
 		if !authenticated {
 			resp = tc.CreateAlerts(tc.ErrorLevel, "Invalid username or password.")
 			w.WriteHeader(http.StatusUnauthorized)
