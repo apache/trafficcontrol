@@ -48,12 +48,6 @@ export const parameters = {
 					value: "quest",
 					configFile: "records.config",
 					secure: true
-				},
-				{
-					name: "location",
-					value: "/a/b/c/d",
-					configFile: "remap.config",
-					secure: false
 				}
 			]
 		}

@@ -113,6 +113,19 @@ export const deliveryservices = {
 	],
 	setup: [
 		{
+			action: "CreateParameters",
+			route: "/parameters",
+			method: "post",
+			data: [
+				{
+					name: "location",
+					value: "/a/b/c/d",
+					configFile: "remap.config",
+					secure: false
+				}
+			]
+		},
+		{
 			action: "CreateDeliveryServices",
 			route: "/deliveryservices",
 			method: "post",
