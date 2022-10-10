@@ -21,6 +21,12 @@ package util
 
 import "fmt"
 
+func ExamplePtr() {
+	ptr := Ptr("testquest")
+	fmt.Println(*ptr)
+	// Output: testquest
+}
+
 func ExampleStrPtr() {
 	ptr := StrPtr("testquest")
 	fmt.Println(*ptr)

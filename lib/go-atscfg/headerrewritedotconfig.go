@@ -297,7 +297,7 @@ func getAssignedTierPeers(
 	dsRequiredCapabilities map[ServerCapability]struct{},
 ) ([]Server, []string) {
 	if ds.Topology != nil {
-		return getTopologyTierServers(dsRequiredCapabilities, tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, servers, serverCapabilities)
+		return getTopologyTierServers(ds, dsRequiredCapabilities, tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, servers, serverCapabilities)
 	}
 	if serverIsMid(server) {
 		return getAssignedMids(server, ds, servers, deliveryServiceServers, cacheGroups)
@@ -390,6 +390,9 @@ func getAssignedMids(
 		if tc.CacheStatus(*sv.Status) != tc.CacheStatusReported && tc.CacheStatus(*sv.Status) != tc.CacheStatusOnline {
 			continue
 		}
+		if ds != nil && ds.Regional && *sv.Cachegroup != *server.Cachegroup {
+			continue
+		}
 		serverCGs[tc.CacheGroupName(*sv.Cachegroup)] = struct{}{}
 	}
 
@@ -434,7 +437,7 @@ func getAssignedMids(
 // This should only be used for DSes with Topologies.
 // It returns all servers in with the Capabilities of ds in the same tier as cg.
 // Returns the servers, and any warnings.
-func getTopologyTierServers(dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, topology tc.Topology, cacheGroups []tc.CacheGroupNullable, servers []Server, serverCapabilities map[int]map[ServerCapability]struct{}) ([]Server, []string) {
+func getTopologyTierServers(ds *DeliveryService, dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, topology tc.Topology, cacheGroups []tc.CacheGroupNullable, servers []Server, serverCapabilities map[int]map[ServerCapability]struct{}) ([]Server, []string) {
 	warnings := []string{}
 	topoServers := []Server{}
 	cacheGroupsInSameTier := getCachegroupsInSameTopologyTier(string(cg), cacheGroups, topology)
@@ -451,6 +454,9 @@ func getTopologyTierServers(dsRequiredCapabilities map[ServerCapability]struct{}
 			continue
 		}
 		if !hasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities) {
+			continue
+		}
+		if ds != nil && ds.Regional && *sv.Cachegroup != string(cg) {
 			continue
 		}
 		topoServers = append(topoServers, sv)
