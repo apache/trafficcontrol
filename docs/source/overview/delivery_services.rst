@@ -1109,8 +1109,6 @@ The above :term:`Parameters` are supported for ``first``, ``inner`` and ``last``
 
 .. deprecated:: The parent_retry parameter is now inferred from the "simple retry" and "unavailable server retry" parameters.  To disable "simple retries" associate parameter ``max_simple_retries`` of ``0`` and ``max_simple_retry_responses`` of ``""``.  Similarly "unavailable server retries" may also be disabled.
 
-.. warning:: The `simple_retry_response_codes`` :term:`Parameter` has no apparent, possible use according to the :abbr:`ATS (Apache Traffic Server)` `parent.config documentation <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_. Whether or not it has any effect - let alone the *intended* effect - is not known, and its use is therefore strongly discouraged.
-
 .. impl-detail:: With Apache Traffic Server 8.1.x the `simple_retry_response_codes` setting is not available.
 .. impl-detail:: With Apache Traffic Server 9.1.x `unavailable_server_retry_response_codes` are limited to 5xx responses and `simple_retry_response_codes` are limited to 4xx.
 .. impl-detail:: Apache Traffic Server 9.2.x allows more flexibility with 4xx and 5xx codes available for use with `simple_retry_response_codes`.
