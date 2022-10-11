@@ -17,10 +17,10 @@
  * under the License.
  */
 
-function TableTopologyDeliveryServicesController(topologies, deliveryServices, filter, $controller, $scope) {
+function TableTopologyDeliveryServicesController(topologies, deliveryServices, steeringTargets, filter, $controller, $scope) {
 
 	// extends the TableDeliveryServicesController to inherit common methods
-	angular.extend(this, $controller("TableDeliveryServicesController", { tableName: "topDS", deliveryServices, filter, $scope }));
+	angular.extend(this, $controller("TableDeliveryServicesController", { tableName: "topDS", deliveryServices, steeringTargets, filter, $scope }));
 
 	const topology = topologies[0];
 	$scope.breadCrumbs = [
@@ -38,5 +38,5 @@ function TableTopologyDeliveryServicesController(topologies, deliveryServices, f
 	];
 };
 
-TableTopologyDeliveryServicesController.$inject = ["topologies", "deliveryServices", "filter", "$controller", "$scope"];
+TableTopologyDeliveryServicesController.$inject = ["topologies", "deliveryServices", "steeringTargets", "filter", "$controller", "$scope"];
 module.exports = TableTopologyDeliveryServicesController;

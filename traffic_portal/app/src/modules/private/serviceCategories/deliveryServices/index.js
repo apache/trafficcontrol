@@ -33,6 +33,9 @@ module.exports = angular.module('trafficPortal.private.serviceCategories.deliver
 							deliveryServices: function(serviceCategory, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryServices({ serviceCategory: serviceCategory.name });
 							},
+							steeringTargets: function (deliveryServiceService) {
+								return deliveryServiceService.getSteering();
+							},
 							filter: function(serviceCategory) {
 								return {
 									serviceCategory: {

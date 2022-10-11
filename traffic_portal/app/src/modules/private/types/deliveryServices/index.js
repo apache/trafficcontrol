@@ -18,7 +18,7 @@
  */
 
 module.exports = angular.module('trafficPortal.private.types.deliveryServices', [])
-	.config(function($stateProvider, $urlRouterProvider) {
+	.config(function ($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.types.deliveryServices', {
 				url: '/{typeId}/delivery-services',
@@ -27,13 +27,16 @@ module.exports = angular.module('trafficPortal.private.types.deliveryServices', 
 						templateUrl: 'common/modules/table/typeDeliveryServices/table.typeDeliveryServices.tpl.html',
 						controller: 'TableTypeDeliveryServicesController',
 						resolve: {
-							type: function($stateParams, typeService) {
+							type: function ($stateParams, typeService) {
 								return typeService.getType($stateParams.typeId);
 							},
-							deliveryServices: function($stateParams, deliveryServiceService) {
-								return deliveryServiceService.getDeliveryServices({ type: $stateParams.typeId });
+							deliveryServices: function ($stateParams, deliveryServiceService) {
+								return deliveryServiceService.getDeliveryServices({type: $stateParams.typeId});
 							},
-							filter: function(type) {
+							steeringTargets: function (deliveryServiceService) {
+								return deliveryServiceService.getSteering();
+							},
+							filter: function (type) {
 								return {
 									type: {
 										filterType: "text",
