@@ -1087,27 +1087,33 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 	| algorithm                               | `round_robin`_                                             | Sets the algorithm used to determine from which :term:`origin server` content will  |
 	|                                         |                                                            | be requested.                                                                       |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| max_simple_retries                      | `max_simple_retries`_                                      | Sets a strict limit on the number of "simple retries" allowed before giving up      |
-	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| max_unavailable_server_retries          | `max_unavailable_server_retries`_                          | Sets a strict limit on the number of times the :term:`cache server` will attempt to |
-	|                                         |                                                            | request content from an :term:`origin server` that has previously been considered   |
-	|                                         |                                                            | "unavailable".                                                                      |
-	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| parent_retry                            | `parent_retry`_                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
-	|                                         |                                                            | "unavailable server retries", or both.                                              |
+	|                                         |                                                            | "unavailable server retries", or both.  Deprecated (see below).                     |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| simple_retry_response_codes             | **UNKNOWN**                                                | **UNKNOWN** - supposedly defines HTTP response codes from an :term:`origin server`  |
 	|                                         |                                                            | that necessitate a "simple retry".                                                  |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| max_simple_retries                      | `max_simple_retries`_                                      | Sets a strict limit on the number of "simple retries" allowed before giving up      |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |
 	|                                         |                                                            | currently "unavailable".                                                            |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| max_unavailable_server_retries          | `max_unavailable_server_retries`_                          | Sets a strict limit on the number of times the :term:`cache server` will attempt to |
+	|                                         |                                                            | request content from an :term:`origin server` that has previously been considered   |
+	|                                         |                                                            | "unavailable".                                                                      |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 
 The above :term:`Parameters` are supported for ``first``, ``inner`` and ``last`` tiers by specifying prefixes ``first.``, ``inner.`` and ``last.``, applicable to both topology and non topology. This allows fine tuning of marking parents "down" and retry behavior inside a CDN.
 
 .. deprecated:: The ``mso.`` prefix is deprecated.  ``last.`` prefix should be preferred although no prefix can also be used.
 
+.. deprecated:: The parent_retry parameter is now inferred from the "simple retry" and "unavailable server retry" parameters.  To disable "simple retries" associate parameter ``max_simple_retries`` of ``0`` and ``max_simple_retry_responses`` of ``""``.  Similarly "unavailable server retries" may also be disabled.
+
 .. warning:: The `simple_retry_response_codes`` :term:`Parameter` has no apparent, possible use according to the :abbr:`ATS (Apache Traffic Server)` `parent.config documentation <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_. Whether or not it has any effect - let alone the *intended* effect - is not known, and its use is therefore strongly discouraged.
+
+.. impl-detail:: With Apache Traffic Server 8.1.x the `simple_retry_response_codes` setting is not available.
+.. impl-detail:: With Apache Traffic Server 9.1.x `unavailable_server_retry_response_codes` are limited to 5xx responses and `simple_retry_response_codes` are limited to 4xx.
+.. impl-detail:: Apache Traffic Server 9.2.x allows more flexibility with 4xx and 5xx codes available for use with `simple_retry_response_codes`.
 
 .. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
 
