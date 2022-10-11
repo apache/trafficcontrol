@@ -20,11 +20,11 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/phys-locations')">Physical Locations</a></li>
+            <li><a href="#!/phys-locations">Physical Locations</a></li>
             <li class="active">{{physLocationName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="View Servers" ng-click="viewServers()">View Servers</button>
+            <a class="btn btn-primary" title="View Servers" ng-href="#!/servers?physLocation={{physLocationName}}">View Servers</a>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -47,7 +47,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(physLocationForm.region, 'required')">Required</small>
-                    <small ng-show="physLocation.regionId"><a href="/#!/regions/{{physLocation.regionId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="physLocation.regionId"><a ng-href="/#!/regions/{{physLocation.regionId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group">

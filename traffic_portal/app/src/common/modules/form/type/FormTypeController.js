@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormTypeController = function(type, $scope, $location, formUtils, stringUtils, locationUtils, $uibModal, cdnService, typeService) {
+var FormTypeController = function(type, $scope, formUtils, stringUtils, $uibModal, typeService) {
 
     $scope.type = type;
 
@@ -27,10 +27,6 @@ var FormTypeController = function(type, $scope, $location, formUtils, stringUtil
     ];
 
     $scope.labelize = stringUtils.labelize;
-
-    $scope.viewServers = function() {
-        $location.path($location.path() + '/servers');
-    };
 
     $scope.queueUpdatesByType = function() {
         const params = {
@@ -82,25 +78,11 @@ var FormTypeController = function(type, $scope, $location, formUtils, stringUtil
         });
     };
 
-    $scope.viewDeliveryServices = function() {
-        $location.path($location.path() + '/delivery-services');
-    };
-
-    $scope.viewCacheGroups = function() {
-        $location.path($location.path() + '/cache-groups');
-    };
-
-    $scope.viewStaticDnsEntries = function() {
-        $location.path($location.path() + '/static-dns-entries');
-    };
-
-    $scope.navigateToPath = locationUtils.navigateToPath;
-
     $scope.hasError = formUtils.hasError;
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-FormTypeController.$inject = ['type', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', '$uibModal', 'cdnService', 'typeService'];
+FormTypeController.$inject = ['type', '$scope', 'formUtils', 'stringUtils', '$uibModal', 'typeService'];
 module.exports = FormTypeController;

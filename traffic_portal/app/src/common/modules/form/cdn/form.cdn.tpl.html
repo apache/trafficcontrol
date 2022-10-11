@@ -20,19 +20,19 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/cdns')">CDNs</a></li>
+            <li><a href="#!/cdns">CDNs</a></li>
             <li class="active">{{cdnName}}</li>
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
-            <button ng-show="cdn.name != 'ALL'" name="diffCDNbtn" class="btn btn-primary" title="Diff CDN Snapshot" ng-click="viewConfig()"><i class="fa fa-camera"></i>&nbsp;&nbsp;Diff CDN Config Snapshot</button>
-            <div ng-show="cdn.name != 'ALL'" class="btn-group" role="group" uib-dropdown is-open="queue.isopen">
+            <a ng-if="cdn.name !== 'ALL'" name="diffCDNbtn" class="btn btn-primary" title="Diff CDN Snapshot" ng-href="#!/cdns/{{cdn.id}}/config/changes"><i class="fa fa-camera"></i>&nbsp;&nbsp;Diff CDN Config Snapshot</a>
+            <div ng-if="cdn.name !== 'ALL'" class="btn-group" role="group" uib-dropdown is-open="queue.isopen">
                 <button type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     Queue Updates&nbsp;
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="queueServerUpdates(cdn)">Queue {{cdn.name}} Server Updates</a></li>
-                    <li role="menuitem"><a ng-click="clearServerUpdates(cdn)">Clear {{cdn.name}} Server Updates</a></li>
+                    <li role="menuitem"><button type="button" ng-click="queueServerUpdates(cdn)">Queue {{cdn.name}} Server Updates</button></li>
+                    <li role="menuitem"><button type="button" ng-click="clearServerUpdates(cdn)">Clear {{cdn.name}} Server Updates</button></li>
                 </ul>
             </div>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
@@ -41,14 +41,14 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li ng-show="cdn.name != 'ALL'" role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
-                    <li ng-show="cdn.name != 'ALL'" role="menuitem"><a ng-click="manageFederations()">Manage Federations</a></li>
-                    <li ng-show="cdn.name != 'ALL'" class="divider"></li>
-                    <li ng-show="cdn.name != 'ALL'" role="menuitem"><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
-                    <li role="menuitem"><a ng-click="viewProfiles()">View Profiles</a></li>
-                    <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
+                    <li ng-if="cdn.name !== 'ALL'" role="menuitem"><a ng-href="#!/cdns/{{cdn.id}}/dnssec-keys">Manage DNSSEC Keys</a></li>
+                    <li ng-if="cdn.name !== 'ALL'" role="menuitem"><a ng-href="#!/cdns/{{cdn.id}}/federations">Manage Federations</a></li>
+                    <li ng-if="cdn.name !== 'ALL'" class="divider"></li>
+                    <li ng-if="cdn.name !== 'ALL'" role="menuitem"><a ng-href="#!/delivery-services?cdnName={{cdnName}}">View Delivery Services</a></li>
+                    <li role="menuitem"><a ng-href="#!/profiles?cdnName={{cdnName}}">View Profiles</a></li>
+                    <li role="menuitem"><a ng-href="#!/servers?cdnName={{cdnName}}">View Servers</a></li>
                     <li class="divider"></li>
-                    <li role="menuitem"><a ng-click="viewNotifications()">View Notifications</a></li>
+                    <li role="menuitem"><a ng-href="#!/cdns/{{cdn.id}}/notifications">View Notifications</a></li>
                 </ul>
             </div>
         </div>
@@ -78,7 +78,10 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cdnForm.dnssecEnabled), 'has-feedback': hasError(cdnForm.dnssecEnabled)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">DNSSEC Enabled *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="dnssecEnabled" class="form-control" ng-model="cdn.dnssecEnabled" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <select name="dnssecEnabled" class="form-control" ng-model="cdn.dnssecEnabled" required>
+						<option ng-value="true">True</option>
+						<option ng-value="false">False</option>
+					</select>
                     <small class="input-error" ng-show="hasPropertyError(cdnForm.dnssecEnabled, 'required')">Required</small>
                 </div>
             </div>

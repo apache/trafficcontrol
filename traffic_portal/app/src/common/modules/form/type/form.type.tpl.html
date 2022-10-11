@@ -20,14 +20,14 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/types')">Types</a></li>
+            <li><a href="#!/types">Types</a></li>
             <li class="active">{{typeName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="View Servers" ng-show="type.useInTable == 'server'" ng-click="viewServers()">View Servers</button>
-            <button class="btn btn-primary" title="View Delivery Services" ng-show="type.useInTable == 'deliveryservice'" ng-click="viewDeliveryServices()">View Delivery Services</button>
-            <button class="btn btn-primary" title="View Cache Groups" ng-show="type.useInTable == 'cachegroup'" ng-click="viewCacheGroups()">View Cache Groups</button>
-            <button class="btn btn-primary" title="View Static DNS Entries" ng-show="type.useInTable == 'staticdnsentry'" ng-click="viewStaticDnsEntries()">View Static DNS Entries</button>
+            <a class="btn btn-primary" title="View Servers" ng-if="type.useInTable === 'server'" ng-href="#!/servers?type={{typeName}}">View Servers</a>
+            <a class="btn btn-primary" title="View Delivery Services" ng-if="type.useInTable == 'deliveryservice'" ng-href="#!/delivery-services?type={{typeName}}">View Delivery Services</a>
+            <a class="btn btn-primary" title="View Cache Groups" ng-if="type.useInTable == 'cachegroup'" ng-href="#!/types/{{type.id}}/cache-groups">View Cache Groups</a>
+            <a class="btn btn-primary" title="View Static DNS Entries" ng-if="type.useInTable == 'staticdnsentry'" ng-click="#!/types/{{type.id}}/static-dns-entries">View Static DNS Entries</a>
             <div class="btn-group pull-right" role="group" uib-dropdown is-open="more.isopen" ng-show="type.useInTable == 'server'">
                 <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle pull-right" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
