@@ -169,7 +169,7 @@ func (cl *TOClient) GetServerByHostName(serverHostName string, reqHdr http.Heade
 			if len(toServers.Response) < 1 {
 				return errors.New("getting server name '" + serverHostName + "' from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': no servers returned")
 			}
-			asv, err := serverToLatest(&toServers.Response[0].ServerV40)
+			asv, err := serverToLatest(&toServers.Response[0])
 			if err != nil {
 				return errors.New("converting server to latest version: " + err.Error())
 			}

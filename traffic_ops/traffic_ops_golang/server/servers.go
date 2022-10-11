@@ -152,8 +152,7 @@ SELECT
 	s.config_apply_time,
 	s.xmpp_id,
 	s.xmpp_passwd,
-	s.status_last_updated,
-	(SELECT ARRAY_AGG(asn) AS asns FROM asn a WHERE a.cachegroup = s.cachegroup) AS asns
+	s.status_last_updated
 ` + serversFromAndJoin
 
 const selectIDQuery = `
@@ -689,7 +688,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	servers := []tc.ServerV41{}
+	servers := []tc.ServerV40{}
 	var serverCount uint64
 	cfg, e := api.GetConfig(r.Context())
 	useIMS := false
@@ -705,7 +704,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 	if errCode == http.StatusNotModified {
 		w.WriteHeader(errCode)
-		api.WriteResp(w, r, []tc.ServerV41{})
+		api.WriteResp(w, r, []tc.ServerV40{})
 		return
 	}
 	if userErr != nil || sysErr != nil {
@@ -719,7 +718,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		}
 		v40Servers := make([]tc.ServerV40, 0)
 		for _, server := range servers {
-			v40Servers = append(v40Servers, server.ServerV40)
+			v40Servers = append(v40Servers, server)
 		}
 		api.WriteRespWithSummary(w, r, v40Servers, serverCount)
 		return
@@ -768,7 +767,7 @@ func getServerCount(tx *sqlx.Tx, query string, queryValues map[string]interface{
 	return serverCount, nil
 }
 
-func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool, version api.Version) ([]tc.ServerV41, uint64, error, error, int, *time.Time) {
+func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool, version api.Version) ([]tc.ServerV40, uint64, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	// Query Parameters to Database Query column mappings
@@ -795,12 +794,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	if version.Major >= 4 {
-		if version.Minor >= 1 {
-			queryParamsToSQLCols["asn"] = dbhelpers.WhereColumnInfo{
-				Column:  "a.asn",
-				Checker: api.IsInt,
-			}
-		}
 		queryParamsToSQLCols["profileName"] = dbhelpers.WhereColumnInfo{
 			Column:  "sp.profile_name",
 			Checker: nil,
@@ -868,14 +861,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	queryString = selectQuery
 	countQueryString = serverCountQuery
 	if version.Major >= 4 {
-		if version.Minor >= 1 {
-			if _, ok := params["asn"]; ok {
-				queryString = selectQuery + `
-JOIN asn a ON s.cachegroup = a.cachegroup`
-				countQueryString = serverCountQuery + `
-JOIN asn a ON s.cachegroup = a.cachegroup`
-			}
-		}
 		if _, ok := params["profileName"]; ok {
 			queryString = queryString + `
 JOIN server_profile sp ON s.id = sp.server`
@@ -896,7 +881,7 @@ JOIN server_profile sp ON s.id = sp.server`
 		return nil, 0, nil, fmt.Errorf("failed to get servers count: %v", err), http.StatusInternalServerError, nil
 	}
 
-	serversList := []tc.ServerV41{}
+	serversList := []tc.ServerV40{}
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(queryAddition, where))
 		if !runSecond {
@@ -923,10 +908,10 @@ JOIN server_profile sp ON s.id = sp.server`
 
 	HiddenField := "********"
 
-	servers := make(map[int]tc.ServerV41)
+	servers := make(map[int]tc.ServerV40)
 	ids := []int{}
 	for rows.Next() {
-		s := tc.ServerV41{}
+		s := tc.ServerV40{}
 		err := rows.Scan(&s.Cachegroup,
 			&s.CachegroupID,
 			&s.CDNID,
@@ -963,8 +948,7 @@ JOIN server_profile sp ON s.id = sp.server`
 			&s.ConfigApplyTime,
 			&s.XMPPID,
 			&s.XMPPPasswd,
-			&s.StatusLastUpdated,
-			pq.Array(&s.ASNs))
+			&s.StatusLastUpdated)
 		if err != nil {
 			return nil, serverCount, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError, nil
 		}
@@ -997,7 +981,7 @@ JOIN server_profile sp ON s.id = sp.server`
 	}
 
 	if len(ids) < 1 {
-		return []tc.ServerV41{}, serverCount, nil, nil, http.StatusOK, nil
+		return []tc.ServerV40{}, serverCount, nil, nil, http.StatusOK, nil
 	}
 
 	query, args, err := sqlx.In(`SELECT max_bandwidth, monitor, mtu, name, server, router_host_name, router_port_name FROM interface WHERE server IN (?)`, ids)
@@ -1068,7 +1052,7 @@ JOIN server_profile sp ON s.id = sp.server`
 		}
 	}
 
-	returnable := make([]tc.ServerV41, 0, len(ids))
+	returnable := make([]tc.ServerV40, 0, len(ids))
 
 	for _, id := range ids {
 		server := servers[id]
@@ -1082,7 +1066,7 @@ JOIN server_profile sp ON s.id = sp.server`
 }
 
 // getMidServers gets the mids used by the edges provided with an option to filter for a given cdn
-func getMidServers(edgeIDs []int, servers map[int]tc.ServerV41, dsID int, cdnID int, tx *sqlx.Tx, includeCapabilities bool) ([]int, error, error, int) {
+func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID int, tx *sqlx.Tx, includeCapabilities bool) ([]int, error, error, int) {
 	if len(edgeIDs) == 0 {
 		return nil, nil, nil, http.StatusOK
 	}
@@ -1150,7 +1134,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV41, dsID int, cdnID 
 	ids := []int{}
 
 	for rows.Next() {
-		var s tc.ServerV41
+		var s tc.ServerV40
 		if err := rows.Scan(&s.Cachegroup,
 			&s.CachegroupID,
 			&s.CDNID,
@@ -1187,8 +1171,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV41, dsID int, cdnID 
 			&s.ConfigApplyTime,
 			&s.XMPPID,
 			&s.XMPPPasswd,
-			&s.StatusLastUpdated,
-			pq.Array(&s.ASNs)); err != nil {
+			&s.StatusLastUpdated); err != nil {
 			log.Errorf("could not scan mid servers: %s\n", err)
 			return nil, nil, err, http.StatusInternalServerError
 		}
@@ -1349,7 +1332,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	original := originals[0].ServerV40
+	original := originals[0]
 	if original.XMPPID == nil || *original.XMPPID == "" {
 		log.Warnf("original server %s had no XMPPID\n", *original.HostName)
 	}
@@ -1572,7 +1555,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	} else {
 		selquery = selectQuery + where
 	}
-	var srvr tc.ServerV41
+	var srvr tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&srvr.Cachegroup,
 		&srvr.CachegroupID,
 		&srvr.CDNID,
@@ -1609,8 +1592,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		&srvr.ConfigApplyTime,
 		&srvr.XMPPID,
 		&srvr.XMPPPasswd,
-		&srvr.StatusLastUpdated,
-		pq.Array(&srvr.ASNs))
+		&srvr.StatusLastUpdated)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -1634,18 +1616,14 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if inf.Version.Major >= 5 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr)
 	} else if inf.Version.Major >= 4 {
-		if version.Minor >= 1 {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr)
-		} else {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr.ServerV40)
-		}
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", srvr)
 	} else if inf.Version.Major >= 3 {
 		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(srvr, inf.Tx.Tx)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
 		}
-		srvrV30, err := srvr.ServerV40.ToServerV3FromV4(csp)
+		srvrV30, err := srvr.ToServerV3FromV4(csp)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
@@ -1817,7 +1795,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	where := `WHERE s.id = $1`
 	selquery := selectQuery + where
-	var s4 tc.ServerV41
+	var s4 tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&s4.Cachegroup,
 		&s4.CachegroupID,
 		&s4.CDNID,
@@ -1854,8 +1832,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		&s4.ConfigApplyTime,
 		&s4.XMPPID,
 		&s4.XMPPPasswd,
-		&s4.StatusLastUpdated,
-		pq.Array(&s4.ASNs))
+		&s4.StatusLastUpdated)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -1952,7 +1929,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	where := `WHERE s.id = $1`
 	selquery := selectQuery + joinProfileV4 + where
-	var srvr tc.ServerV41
+	var srvr tc.ServerV40
 	err = inf.Tx.QueryRow(selquery, serverID).Scan(&srvr.Cachegroup,
 		&srvr.CachegroupID,
 		&srvr.CDNID,
@@ -1989,8 +1966,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		&srvr.ConfigApplyTime,
 		&srvr.XMPPID,
 		&srvr.XMPPPasswd,
-		&srvr.StatusLastUpdated,
-		pq.Array(&srvr.ASNs))
+		&srvr.StatusLastUpdated)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -2000,15 +1976,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	srvr.Interfaces = server.Interfaces
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
-	if inf.Version.Major == 5 {
-		api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr)
-	} else {
-		if inf.Version.Minor >= 1 {
-			api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr)
-		} else {
-			api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr.ServerV40)
-		}
-	}
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr)
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *srvr.HostName, *srvr.DomainName, *srvr.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
@@ -2212,7 +2180,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var servers []tc.ServerV41
+	var servers []tc.ServerV40
 	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false, *version)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -2271,11 +2239,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inf.Version.Major >= 4 {
-		if inf.Version.Minor >= 1 || inf.Version.Major == 5 {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
-		} else {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server.ServerV40)
-		}
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
 	} else {
 		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server, tx)
 		if err != nil {
