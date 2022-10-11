@@ -155,16 +155,19 @@ func TestServerServerCapabilities(t *testing.T) {
 					RequestBody: map[string]interface{}{
 						"serverCapabilities": append(multipleSCs, "disk", "blah"),
 						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")()),
+						"pageType":           "server",
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateSSC("dtrc-mid-04", "server")),
 				},
 				"OK When Assigned Multiple Servers Per Capability": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"serverCapabilities": append(multipleSCs, "ram"),
 						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")(), GetServerID(t, "dtrc-edge-08")()),
+						"pageType":           "sc",
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSSC("ram", "sc")),
 				},
 			},
 			"DELETE": {
@@ -196,8 +199,8 @@ func TestServerServerCapabilities(t *testing.T) {
 				"OK When Delete Multiple Assigned Servers Per Capability": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"serverCapabilities": append(multipleSCs, "ram"),
-						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")()),
+						"serverCapabilities": append(multipleSCs, "asdf"),
+						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")(), GetServerID(t, "dtrc-edge-08")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -374,5 +377,20 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		assert.RequireNotNil(t, ssc.ServerCapability, "Expected Server Capability to not be nil.")
 		alerts, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability, client.RequestOptions{})
 		assert.NoError(t, err, "Could not remove Capability '%s' from server '%s' (#%d): %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, *ssc.ServerID, err, alerts.Alerts)
+	}
+}
+
+func validateSSC(name, pageType string) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		opts := client.NewRequestOptions()
+		switch pageType {
+		case "server":
+			opts.QueryParameters.Set("serverId", strconv.Itoa(GetServerID(t, name)()))
+		case "sc":
+			opts.QueryParameters.Set("serverCapability", name)
+		}
+		ssc, _, err := TOSession.GetServerServerCapabilities(opts)
+		assert.RequireGreaterOrEqual(t, len(ssc.Response), 1, "Expected one or more association with:%s, Got:%d", name, len(ssc.Response))
+		assert.RequireNoError(t, err, "Cannot get response: %v - alerts: %+v", err, ssc.Alerts)
 	}
 }

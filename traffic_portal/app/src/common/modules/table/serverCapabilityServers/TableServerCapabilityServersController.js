@@ -90,27 +90,27 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 			const toCreate = Array.from(selectedServerIDs).filter(s => !oldServerIDs.has(s));
 			console.log()
 			if (toCreate.length >= 1 && toDelete.length === 0) {
-				serverCapabilityService.assignServersCapabilities(toCreate, [serverCapability.name])
+				serverCapabilityService.assignServersCapabilities(toCreate, [serverCapability.name], "sc")
 					.then(
 						function() {
 							$scope.refresh();
 						}
 					);
 			} else if (toDelete.length >= 1 && toCreate.length === 0)  {
-				serverCapabilityService.deleteServersCapabilities(toDelete, [serverCapability.name])
+				serverCapabilityService.deleteServersCapabilities(toDelete, [serverCapability.name], "sc")
 					.then(
 						function() {
 							$scope.refresh();
 						}
 					);
 			} else if (toCreate.length >= 1 && toDelete.length >= 1) {
-				serverCapabilityService.deleteServersCapabilities(toDelete, [serverCapability.name])
+				serverCapabilityService.deleteServersCapabilities(toDelete, [serverCapability.name], "sc")
 					.then(
 						function() {
 							$scope.refresh();
 						}
 					);
-				serverCapabilityService.assignServersCapabilities(toCreate, [serverCapability.name])
+				serverCapabilityService.assignServersCapabilities(toCreate, [serverCapability.name], "sc")
 					.then(
 						function() {
 							$scope.refresh();

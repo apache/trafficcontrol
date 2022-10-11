@@ -68,8 +68,12 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 		);
 	};
 
-	this.assignServersCapabilities = function(server, serverCapability) {
-		return $http.post(ENV.api.unstable + 'multiple_servers_capabilities',{ serverIds: server, serverCapabilities: serverCapability, replace: true }).then(
+	this.assignServersCapabilities = function(server, serverCapability, pageType) {
+		return $http.post(ENV.api.unstable + 'multiple_servers_capabilities',{
+			serverIds: server,
+			serverCapabilities: serverCapability,
+			pageType: pageType, replace: true
+		}).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, false);
 				return result;
@@ -81,8 +85,12 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 		);
 	};
 
-	this.deleteServersCapabilities = function(server, serverCapability) {
-		return $http.delete(ENV.api.unstable + 'multiple_servers_capabilities',{ data: {serverIds: server, serverCapabilities: serverCapability} }).then(
+	this.deleteServersCapabilities = function(server, serverCapability, pageType) {
+		return $http.delete(ENV.api.unstable + 'multiple_servers_capabilities',{ data: {
+			serverIds: server,
+			serverCapabilities: serverCapability,
+			pageType: pageType
+		} }).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, false);
 				return result;

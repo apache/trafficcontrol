@@ -497,14 +497,10 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var alerts tc.Alerts
-	if len(mssc.ServerCapabilities) == 1 && len(mssc.ServerIDs) == 1 {
-		alerts = tc.CreateAlerts(tc.SuccessLevel, "Assigned either a Server Capability to a server or a Server to a capability")
-	} else if len(mssc.ServerCapabilities) > 1 && len(mssc.ServerIDs) == 1 {
-		alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Server Capabilities assigned to a server")
-	} else if len(mssc.ServerCapabilities) == 1 && len(mssc.ServerIDs) > 1 {
-		alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Servers assigned to a capability")
+	if mssc.PageType == "sc" {
+		alerts = tc.CreateAlerts(tc.SuccessLevel, "Assign Server(s) to a capability")
 	} else {
-		alerts = tc.CreateAlerts(tc.SuccessLevel, "Multiple Servers assigned to multiple capabilities")
+		alerts = tc.CreateAlerts(tc.SuccessLevel, "Assign Server Capability(ies) to a server")
 	}
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, mssc)
 	return
@@ -536,17 +532,21 @@ func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 
 	//Delete existing rows from server_server_capability for a given server or for a given capability
 	const delQuery = `DELETE FROM server_server_capability ssc WHERE `
-	var err error
-	var result sql.Result
+	var dq string
 	var alerts tc.Alerts
-	if len(mssc.ServerCapabilities) == 1 && len(mssc.ServerIDs) == 1 {
-		result, err = tx.Exec(delQuery+`ssc.server_capability=$1 AND ssc.server=$2`, mssc.ServerCapabilities[0], mssc.ServerIDs[0])
-	} else if len(mssc.ServerCapabilities) == 1 {
-		result, err = tx.Exec(delQuery+`ssc.server_capability=$1`, mssc.ServerCapabilities[0])
-	} else if len(mssc.ServerIDs) == 1 {
-		result, err = tx.Exec(delQuery+`ssc.server=$1`, mssc.ServerIDs[0])
+	if mssc.PageType == "sc" {
+		dq = delQuery + fmt.Sprintf("ssc.server_capability='%v'", mssc.ServerCapabilities[0])
+		if len(mssc.ServerIDs) == 1 {
+			dq = dq + fmt.Sprintf(" AND ssc.server=%v", mssc.ServerIDs[0])
+		}
+	} else {
+		dq = delQuery + fmt.Sprintf("ssc.server=%v", mssc.ServerIDs[0])
+		if len(mssc.ServerCapabilities) == 1 {
+			dq = dq + fmt.Sprintf(" AND ssc.server_capability='%v'", mssc.ServerCapabilities[0])
+		}
 	}
 
+	result, err := tx.Exec(dq)
 	if err != nil {
 		useErr, sysErr, statusCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
@@ -557,10 +557,12 @@ func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows were deleted from server_server_capability table: %w", err), sysErr)
 		return
 	}
-	if rowsAffected == 1 {
-		alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed either a Server Capability to a server or a Server to a capability")
-	} else if rowsAffected > 1 {
-		alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed multiple servers from capabilities or multiple servers to a capability")
+	if rowsAffected >= 1 {
+		if mssc.PageType == "sc" {
+			alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed Server(s) associated with a capability")
+		} else {
+			alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed Server Capability(ies) associated with a server")
+		}
 	}
 
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, mssc)
