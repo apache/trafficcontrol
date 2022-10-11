@@ -483,6 +483,26 @@ under the License.
                             </aside>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="regional">
+                            Regional Max Origin Connections
+                            <div class="helptooltip">
+                                <div class="helptext">
+                                    If your Delivery Service is Regional, then you only expect it to be used by a single Cache Group. Enable this to make Max Origin Connections per Cache Group instead of a value used over all last-tier Cache Groups. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#regional" target="_blank">See Regional Delivery Services</a>
+                                </div>
+                            </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12" style="display:inline-grid;grid-template-columns:auto;justify-content:start;">
+                            <input
+                                    type="checkbox"
+                                    id="regional"
+                                    name="regional"
+                                    class="form-control"
+                                    ng-model="deliveryService.regional"
+                                    style="max-width: max-content; min-width: 1em;"
+                            />
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.maxRequestHeaderBytes), 'has-feedback': hasError(cacheConfig.maxRequestHeaderBytes)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="maxRequestHeaderBytes">Max Request Header Bytes<div class="helptooltip">
                                 <div class="helptext">
