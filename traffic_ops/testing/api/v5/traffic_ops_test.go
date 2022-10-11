@@ -35,7 +35,7 @@ var (
 	includeSystemTests bool
 )
 
-const TestAPIBase = "/api/4.0"
+const TestAPIBase = "/api/5.0"
 
 func TestMain(m *testing.M) {
 	configFileName := flag.String("cfg", "traffic-ops-test.conf", "The config file path")
