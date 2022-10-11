@@ -29,6 +29,17 @@ var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, 
 		}
 	};
 
+	/** @type CGC.ContextMenuOption */
+	$scope.contextMenuOptions = [
+		{
+			text: "Expand Log",
+			onClick: function(row) {
+				showDialog(row);
+			},
+			type: 1
+		}
+	]
+
 	/** @type CGC.ColumnDefinition */
 	$scope.columns = [
 		{
@@ -71,7 +82,32 @@ var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, 
 		});
 
 	/** @type CGC.GridSettings */
-	$scope.gridOptions = {};
+	$scope.gridOptions = {
+		onRowClick(event) {
+			showDialog(event.data);
+		}
+	};
+
+	const showDialog = (row) => {
+		const params = {
+			title: "Change Log for " + row.user,
+			message: row.message
+		};
+		$uibModal.open({
+			templateUrl: "common/modules/dialog/text/dialog.text.tpl.html",
+			controller: "DialogTextController",
+			size: "md",
+			resolve: {
+				params: function() {
+					return params;
+				},
+				text: function() {
+					return null;
+				}
+			}
+		});
+
+	}
 
 	/** Allows the user to change the number of days queried for change logs. */
 	$scope.changeDays = function() {
