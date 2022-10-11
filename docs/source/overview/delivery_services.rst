@@ -1107,7 +1107,7 @@ The above :term:`Parameters` are supported for ``first``, ``inner`` and ``last``
 
 .. deprecated:: The ``mso.`` prefix is deprecated.  ``last.`` prefix should be preferred although no prefix can also be used.
 
-.. deprecated:: The parent_retry parameter is now inferred from the "simple retry" and "unavailable server retry" parameters.  To disable "simple retries" associate parameter ``max_simple_retries`` of ``0`` and ``max_simple_retry_responses`` of ``""``.  Similarly "unavailable server retries" may also be disabled.
+.. deprecated:: The parent_retry parameter is now inferred from the `simple retry` and `unavailable server retry` parameters.  To disable `simple retries` associate parameter ``max_simple_retries`` of ``0`` and ``max_simple_retry_responses`` of ``""``.  Similarly "unavailable server retries" may also be disabled.
 
 .. impl-detail:: With Apache Traffic Server 8.1.x the `simple_retry_response_codes` setting is not available.
 .. impl-detail:: With Apache Traffic Server 9.1.x `unavailable_server_retry_response_codes` are limited to 5xx responses and `simple_retry_response_codes` are limited to 4xx.
