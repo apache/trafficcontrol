@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -29,7 +28,7 @@ import (
 func TestFederationFederationResolvers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Tenants, CacheGroups, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, ServiceCategories, DeliveryServices, CDNFederations, FederationResolvers, FederationFederationResolvers}, func() {
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.AssignFederationResolversRequest]{
 			"GET": {
 				"OK when VALID request AND RESOLVERS ASSIGNED": {
 					EndpointId:    GetFederationID(t, "booya.com."),
@@ -46,40 +45,40 @@ func TestFederationFederationResolvers(t *testing.T) {
 				"OK when ASSIGNING ONE FEDERATION RESOLVER": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"resolverIDs": []int{GetFederationResolverID(t, "1.2.3.4")()},
-						"replace":     false,
+					RequestBody: tc.AssignFederationResolversRequest{
+						FedResolverIDs: []int{GetFederationResolverID(t, "1.2.3.4")()},
+						Replace:        false,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when ASSIGNING MULTIPLE FEDERATION RESOLVERS": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"resolverIDs": []int{
+					RequestBody: tc.AssignFederationResolversRequest{
+						FedResolverIDs: []int{
 							GetFederationResolverID(t, "1.2.3.4")(),
 							GetFederationResolverID(t, "0.0.0.0/12")(),
 							GetFederationResolverID(t, "::f1d0:f00d/123")(),
 						},
-						"replace": false,
+						Replace: false,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when REPLACING ALL FEDERATION RESOLVERS": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"resolverIDs": []int{GetFederationResolverID(t, "dead::babe")()},
-						"replace":     true,
+					RequestBody: tc.AssignFederationResolversRequest{
+						FedResolverIDs: []int{GetFederationResolverID(t, "dead::babe")()},
+						Replace:        true,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when FEDERATION DOESNT EXIST": {
 					EndpointId:    func() int { return -1 },
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"resolverIDs": []int{GetFederationResolverID(t, "1.2.3.4")()},
-						"replace":     false,
+					RequestBody: tc.AssignFederationResolversRequest{
+						FedResolverIDs: []int{GetFederationResolverID(t, "1.2.3.4")()},
+						Replace:        false,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -89,15 +88,6 @@ func TestFederationFederationResolvers(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					frAssignment := tc.AssignFederationResolversRequest{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &frAssignment)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -108,6 +98,7 @@ func TestFederationFederationResolvers(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
+							frAssignment := testCase.RequestBody
 							resp, reqInf, err := testCase.ClientSession.AssignFederationFederationResolver(testCase.EndpointId(), frAssignment.FedResolverIDs, frAssignment.Replace, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)

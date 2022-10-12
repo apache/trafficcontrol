@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"sort"
 	"testing"
@@ -37,7 +36,7 @@ func TestFederations(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.DeliveryServiceFederationResolverMappingRequest]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -67,25 +66,28 @@ func TestFederations(t *testing.T) {
 							},
 						})),
 				},
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"POST": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"federations": []map[string]interface{}{
-							{
-								"deliveryService": "ds1",
-								"mappings": map[string]interface{}{
-									"resolve4": []string{"0.0.0.0"},
-									"resolve6": []string{"::1"},
-								},
+					RequestBody: tc.DeliveryServiceFederationResolverMappingRequest{
+						tc.DeliveryServiceFederationResolverMapping{
+							DeliveryService: "ds1",
+							Mappings: tc.ResolverMapping{
+								Resolve4: []string{"0.0.0.0"},
+								Resolve6: []string{"::1"},
 							},
-							{
-								"deliveryService": "ds2",
-								"mappings": map[string]interface{}{
-									"resolve4": []string{"1.2.3.4/28"},
-									"resolve6": []string{"1234::/110"},
-								},
+						},
+						tc.DeliveryServiceFederationResolverMapping{
+							DeliveryService: "ds2",
+							Mappings: tc.ResolverMapping{
+								Resolve4: []string{"1.2.3.4/28"},
+								Resolve6: []string{"1234::/110"},
 							},
 						},
 					},
@@ -93,14 +95,12 @@ func TestFederations(t *testing.T) {
 				},
 				"CONFLICT when INVALID DELIVERY SERVICE": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"federations": []map[string]interface{}{
-							{
-								"deliveryService": "aoeuhtns",
-								"mappings": map[string]interface{}{
-									"resolve4": []string{"1.2.3.4/28"},
-									"resolve6": []string{"dead::beef", "f1d0::f00d/82"},
-								},
+					RequestBody: tc.DeliveryServiceFederationResolverMappingRequest{
+						tc.DeliveryServiceFederationResolverMapping{
+							DeliveryService: "aoeuhtns",
+							Mappings: tc.ResolverMapping{
+								Resolve4: []string{"1.2.3.4/28"},
+								Resolve6: []string{"dead::beef", "f1d0::f00d/82"},
 							},
 						},
 					},
@@ -110,21 +110,19 @@ func TestFederations(t *testing.T) {
 			"PUT": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"federations": []map[string]interface{}{
-							{
-								"deliveryService": "ds1",
-								"mappings": map[string]interface{}{
-									"resolve4": []string{"192.0.2.0/25", "192.0.2.128/25"},
-									"resolve6": []string{"2001:db8::/33", "2001:db8:8000::/33"},
-								},
+					RequestBody: tc.DeliveryServiceFederationResolverMappingRequest{
+						tc.DeliveryServiceFederationResolverMapping{
+							DeliveryService: "ds1",
+							Mappings: tc.ResolverMapping{
+								Resolve4: []string{"192.0.2.0/25", "192.0.2.128/25"},
+								Resolve6: []string{"2001:db8::/33", "2001:db8:8000::/33"},
 							},
-							{
-								"deliveryService": "ds2",
-								"mappings": map[string]interface{}{
-									"resolve4": []string{"192.0.2.0/25", "192.0.2.128/25"},
-									"resolve6": []string{"2001:db8::/33", "2001:db8:8000::/33"},
-								},
+						},
+						tc.DeliveryServiceFederationResolverMapping{
+							DeliveryService: "ds2",
+							Mappings: tc.ResolverMapping{
+								Resolve4: []string{"192.0.2.0/25", "192.0.2.128/25"},
+								Resolve6: []string{"2001:db8::/33", "2001:db8:8000::/33"},
 							},
 						},
 					},
@@ -144,25 +142,16 @@ func TestFederations(t *testing.T) {
 				},
 				"CONFLICT when INVALID DELIVERY SERVICE": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"federations": []map[string]interface{}{
-							{
-								"deliveryService": "aoeuhtns",
-								"mappings": map[string]interface{}{
-									"resolve4": []string{"1.2.3.4/28"},
-									"resolve6": []string{"dead::beef", "f1d0::f00d/82"},
-								},
+					RequestBody: tc.DeliveryServiceFederationResolverMappingRequest{
+						tc.DeliveryServiceFederationResolverMapping{
+							DeliveryService: "aoeuhtns",
+							Mappings: tc.ResolverMapping{
+								Resolve4: []string{"1.2.3.4/28"},
+								Resolve6: []string{"dead::beef", "f1d0::f00d/82"},
 							},
 						},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
-				},
-			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -170,19 +159,8 @@ func TestFederations(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					federation := tc.DeliveryServiceFederationResolverMappingRequest{}
-
-					if testCase.RequestBody != nil {
-						for _, federationRequest := range testCase.RequestBody {
-							dat, err := json.Marshal(federationRequest)
-							assert.RequireNoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &federation)
-							assert.RequireNoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						}
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.AllFederations(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -191,14 +169,14 @@ func TestFederations(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.AddFederationResolverMappingsForCurrentUser(federation, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.AddFederationResolverMappingsForCurrentUser(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.ReplaceFederationResolverMappingsForCurrentUser(federation, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.ReplaceFederationResolverMappingsForCurrentUser(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

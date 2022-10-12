@@ -20,17 +20,20 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestAcmeAutoRenew(t *testing.T) {
 
-	methodTests := utils.V4TestCase{
+	methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 		"POST": {
 			"OK when VALID request": {
-				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusAccepted)),
+				ClientSession: TOSession,
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusAccepted)),
 			},
 		},
 	}
+
 	for method, testCases := range methodTests {
 		t.Run(method, func(t *testing.T) {
 			for name, testCase := range testCases {

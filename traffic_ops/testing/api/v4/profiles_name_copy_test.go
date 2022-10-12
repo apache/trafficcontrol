@@ -16,49 +16,48 @@
 package v4
 
 import (
-	"encoding/json"
 	"net/http"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestProfilesNameCopy(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ProfileCopy]{
 			"POST": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"profileCopyFrom": "EDGE1",
-						"name":            "edge1-copy",
+					RequestBody: tc.ProfileCopy{
+						ExistingName: "EDGE1",
+						Name:         "edge1-copy",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when NEW PROFILE NAME has SPACES": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"profileCopyFrom": "EDGE1",
-						"name":            "Profile Has Spaces",
+					RequestBody: tc.ProfileCopy{
+						ExistingName: "EDGE1",
+						Name:         "Profile Has Spaces",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when PROFILE NAME ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"profileCopyFrom": "EDGE1",
-						"name":            "EDGE2",
+					RequestBody: tc.ProfileCopy{
+						ExistingName: "EDGE1",
+						Name:         "EDGE2",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when PROFILE to COPY FROM DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"profileCopyFrom": "DOESNTEXIST",
-						"name":            "profileCopyFail",
+					RequestBody: tc.ProfileCopy{
+						ExistingName: "DOESNTEXIST",
+						Name:         "profileCopyFail",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -68,19 +67,10 @@ func TestProfilesNameCopy(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					profileCopy := tc.ProfileCopy{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &profileCopy)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CopyProfile(profileCopy, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.CopyProfile(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
