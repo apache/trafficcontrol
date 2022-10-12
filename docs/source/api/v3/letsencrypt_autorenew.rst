@@ -43,10 +43,6 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "This endpoint is deprecated, please use letsencrypt/autorenew instead",
-			"level": "warning"
-		},
-		{
 			"text": "Beginning async call to renew certificates. This may take a few minutes.",
 			"level": "success"
 		}
