@@ -417,7 +417,7 @@ Glossary
 
 	Server
 	Servers
-		A :dfn:`Server` implies a :dfn:`cache servers` and/or :dfn:`origin servers` associated with a :dfn:`Delivery Service`.
+		A :dfn:`Server` implies a :term:`cache servers` and/or :term:`origin servers` and/or any different type of servers (e.g: Traffic_Monitor, Traffic_Ops etc) associated with a :term:`Delivery Service`.
 
 	Server Capability
 	Server Capabilities

@@ -36,6 +36,12 @@ var TableAssignServersPerCapabilityController = function(servers, serverCapabili
         {
             headerName: "Type",
             field: "type",
+            hide: false
+        },
+        {
+            headerName: "CDN",
+            field: "cdnName",
+            hide: false
         }
     ];
 

@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Inserts a list of :term:`Server Capability` associated to a server and vice versa i.e insert a list of :term:`Server` associated to a server capability.
+Inserts a list of :term:`Server Capability` names associated to a server and vice versa i.e insert a list of :term:`Server` ids associated to a server capability.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,7 +31,7 @@ Inserts a list of :term:`Server Capability` associated to a server and vice vers
 Request Structure
 -----------------
 :serverIds:          List of :term:`Server` ids (integral, unique identifier) associated with a :term:`Server Capability`
-:serverCapabilities: List of :term:`Server Capability`'s names to associate with a :term:`Server` id
+:serverCapabilities: List of :term:`Server Capability` names to associate with a :term:`Server` id
 
 .. code-block:: http
 	:caption: Request Example1
@@ -68,7 +68,7 @@ Request Structure
 Response Structure
 ------------------
 :serverId:           List of :term:`Server` ids (integral, unique identifier) associated with a server capability.
-:serverCapabilities: List of :term:`Server Capability`'s names to be associated with a :term:`Server` id.
+:serverCapabilities: List of :term:`Server Capability` names to be associated with a :term:`Server` id.
 
 .. code-block:: http
 	:caption: Response Example1
@@ -124,7 +124,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Deletes a list of :term:`Server Capability` associated to a server and vice versa i.e. deletes a list of :term:`Server` associated to a server capability.
+Deletes a list of :term:`Server Capability` names associated to a server and vice versa i.e. deletes a list of :term:`Server` ids associated to a server capability.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -134,7 +134,7 @@ Deletes a list of :term:`Server Capability` associated to a server and vice vers
 Request Structure
 -----------------
 :serverIds:          List of :term:`Server` ids (integral, unique identifier) associated with a :term:`Server Capability`
-:serverCapabilities: List of :term:`Server Capability`'s names to associate with a :term:`Server` id
+:serverCapabilities: List of :term:`Server Capability` names to associate with a :term:`Server` id
 
 .. code-block:: http
 	:caption: Request Example
@@ -155,7 +155,7 @@ Request Structure
 Response Structure
 ------------------
 :serverId:           List of :term:`Server` ids (integral, unique identifier) associated with a server capability.
-:serverCapabilities: List of :term:`Server Capability`'s names to be associated with a :term:`Server` id.
+:serverCapabilities: List of :term:`Server Capability` names to be associated with a :term:`Server` id.
 
 .. code-block:: http
 	:caption: Response Example

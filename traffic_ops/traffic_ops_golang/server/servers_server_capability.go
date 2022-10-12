@@ -534,19 +534,26 @@ func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 	const delQuery = `DELETE FROM server_server_capability ssc WHERE `
 	var dq string
 	var alerts tc.Alerts
+	var result sql.Result
+	var err error
 	if mssc.PageType == "sc" {
-		dq = delQuery + fmt.Sprintf("ssc.server_capability='%v'", mssc.ServerCapabilities[0])
+		dq = delQuery + `ssc.server_capability=$1`
 		if len(mssc.ServerIDs) == 1 {
-			dq = dq + fmt.Sprintf(" AND ssc.server=%v", mssc.ServerIDs[0])
+			dq = dq + ` AND ssc.server=$2`
+			result, err = tx.Exec(dq, mssc.ServerCapabilities[0], mssc.ServerIDs[0])
+		} else {
+			result, err = tx.Exec(dq, mssc.ServerCapabilities[0])
 		}
 	} else {
-		dq = delQuery + fmt.Sprintf("ssc.server=%v", mssc.ServerIDs[0])
+		dq = delQuery + `ssc.server=$1`
 		if len(mssc.ServerCapabilities) == 1 {
-			dq = dq + fmt.Sprintf(" AND ssc.server_capability='%v'", mssc.ServerCapabilities[0])
+			dq = dq + ` AND ssc.server_capability=$2`
+			result, err = tx.Exec(dq, mssc.ServerIDs[0], mssc.ServerCapabilities[0])
+		} else {
+			result, err = tx.Exec(dq, mssc.ServerIDs[0])
 		}
 	}
 
-	result, err := tx.Exec(dq)
 	if err != nil {
 		useErr, sysErr, statusCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)

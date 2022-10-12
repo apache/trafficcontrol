@@ -88,7 +88,6 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 			const selectedServerIDs = new Set(selectedServers);
 			const toDelete = Array.from(oldServerIDs).filter(s => !selectedServerIDs.has(s));
 			const toCreate = Array.from(selectedServerIDs).filter(s => !oldServerIDs.has(s));
-			console.log()
 			if (toCreate.length >= 1 && toDelete.length === 0) {
 				serverCapabilityService.assignServersCapabilities(toCreate, [serverCapability.name], "sc")
 					.then(
