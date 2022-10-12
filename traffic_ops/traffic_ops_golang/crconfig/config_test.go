@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -46,7 +47,7 @@ func MockGetConfigParams(mock sqlmock.Sqlmock, expected []CRConfigConfigParamete
 		v := param.Value
 		rows = rows.AddRow(n, v)
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("select").WithArgs(cdn, tc.RouterTypeName).WillReturnRows(rows)
 }
 
 func TestGetConfigParams(t *testing.T) {
