@@ -591,7 +591,7 @@ func TestGetAssignedMids(t *testing.T) {
 			actualHostnames = append(actualHostnames, *as.HostName)
 		}
 		if !reflect.DeepEqual(tc.expectedHostnames, actualHostnames) {
-			t.Errorf("getting servers in same topology tier -- expected: %v, actual: %v", tc.expectedHostnames, actualHostnames)
+			t.Errorf("getting servers in same cachegroup tier -- expected: %v, actual: %v", tc.expectedHostnames, actualHostnames)
 		}
 	}
 }
