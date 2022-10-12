@@ -289,6 +289,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added support for DS plugin parameters for cachekey, slice, cache_range_requests, background_fetch, url_sig  as remap.config parameters.
 - Updated T3C changes in Ansible playbooks
 - Updated all endpoints in infrastructure code to use API version 2.0
+- Added HTTP Header equivalent of ``format`` query parameter in Traffic Router - ``X-TC-Format``.
 
 ### Fixed
 - [#5690](https://github.com/apache/trafficcontrol/issues/5690) - Fixed github action for added/modified db migration file.
