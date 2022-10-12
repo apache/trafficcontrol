@@ -29,7 +29,7 @@ type ConfigFile struct {
 	LastModifyTime int64
 }
 
-// get the file modification times for a configuration file.
+// GetFileModificationTime returns the file modification times for a configuration file.
 func GetFileModificationTime(fn string) (int64, error) {
 	f, err := os.Open(fn)
 	if err != nil {
