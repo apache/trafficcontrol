@@ -165,6 +165,11 @@ func MakeParentDotConfig(
 	}, nil
 }
 
+// Check if this ds type is edge only
+func IsGoDirect(ds DeliveryService) bool {
+	return *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive
+}
+
 func makeParentDotConfigData(
 	dses []DeliveryService,
 	server *Server,
@@ -355,6 +360,8 @@ func makeParentDotConfigData(
 	dsOrigins, dsOriginWarns := makeDSOrigins(dss, dses, servers)
 	warnings = append(warnings, dsOriginWarns...)
 
+	ocgmap := map[OriginHost][]string{}
+
 	for _, ds := range dses {
 
 		if ds.XMLID == nil || *ds.XMLID == "" {
@@ -381,6 +388,79 @@ func makeParentDotConfigData(
 			// this check needs to be after the HTTP|DNS check, because Steering DSes without origins are ok'
 			warnings = append(warnings, "DS '"+*ds.XMLID+"' has no origin server! Skipping!")
 			continue
+		}
+
+		// manufacture a topology for this DS.
+		if ds.Topology == nil || *ds.Topology == "" {
+			// only populate if there are non topology ds's
+			if len(ocgmap) == 0 {
+				ocgmap = makeOCGMap(parentInfos)
+				if len(ocgmap) == 0 {
+					ocgmap[""] = []string{}
+				}
+			}
+
+			orgFQDNStr := *ds.OrgServerFQDN
+			orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
+			warnings = append(warnings, orgWarns...)
+			if err != nil {
+				warnings = append(warnings, "DS '"+*ds.XMLID+"' has malformed origin URI: '"+orgFQDNStr+"': skipping!"+err.Error())
+				continue
+			}
+
+			// use the topology name for the fqdn
+			topoName := orgURI.Hostname()
+			cgnames, ok := ocgmap[OriginHost(topoName)]
+			if !ok {
+				topoName = deliveryServicesAllParentsKey
+				cgnames, ok = ocgmap[OriginHost(topoName)]
+				if !ok {
+					warnings = append(warnings, "DS '"+*ds.XMLID+"' has no parent cache groups! Skipping!")
+					continue
+				}
+			}
+
+			// Manufactured topology
+			topo := tc.Topology{Name: topoName}
+
+			if IsGoDirect(ds) {
+				node := tc.TopologyNode{
+					Cachegroup: *server.Cachegroup,
+				}
+				topo.Nodes = append(topo.Nodes, node)
+			} else {
+				// If mid cache group, insert fake edge cache group.
+				// This is incorrect if there are multiple MID tiers.
+				pind := 1
+				if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
+					parents := []int{pind}
+					pind++
+					edgeNode := tc.TopologyNode{
+						Cachegroup: "fake_edgecg",
+						Parents:    parents,
+					}
+					topo.Nodes = append(topo.Nodes, edgeNode)
+				}
+
+				parents := []int{}
+				for ind := 0; ind < len(cgnames); ind++ {
+					parents = append(parents, pind)
+					pind++
+				}
+
+				node := tc.TopologyNode{
+					Cachegroup: *server.Cachegroup,
+					Parents:    parents,
+				}
+				topo.Nodes = append(topo.Nodes, node)
+
+				for _, cg := range cgnames {
+					topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: cg})
+				}
+			}
+
+			nameTopologies[TopologyName(topoName)] = topo
+			ds.Topology = util.StrPtr(topoName)
 		}
 
 		isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
@@ -414,227 +494,8 @@ func makeParentDotConfigData(
 				parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
 			}
 		} else {
-			isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds, cacheGroups)
-			serverPlacement := TopologyPlacement{
-				IsLastCacheTier:  isLastCacheTier,
-				IsFirstCacheTier: !isLastCacheTier || !ds.Type.UsesMidCache(),
-			}
-
-			dsParams, dswarns := getParentDSParams(ds, profileParentConfigParams, serverPlacement, isMSO)
-			warnings = append(warnings, dswarns...)
-
-			if cacheIsTopLevel {
-				parentQStr := false
-				if dsParams.QueryStringHandling == "" && dsParams.Algorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp {
-					parentQStr = true
-				}
-
-				orgFQDNStr := *ds.OrgServerFQDN
-				// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
-				if !isLastCacheTier {
-					orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
-				}
-				orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
-				warnings = append(warnings, orgWarns...)
-				if err != nil {
-					warnings = append(warnings, "DS '"+*ds.XMLID+"' has malformed origin URI: '"+orgFQDNStr+"': skipping!"+err.Error())
-					continue
-				}
-
-				pasvc := &ParentAbstractionService{}
-				pasvc.Name = *ds.XMLID
-
-				if ds.OriginShield != nil && *ds.OriginShield != "" {
-
-					policy := ParentAbstractionServiceRetryPolicyConsistentHash
-
-					if parentSelectAlg := serverParams[ParentConfigRetryKeysDefault.Algorithm]; strings.TrimSpace(parentSelectAlg) != "" {
-						paramPolicy := ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy(parentSelectAlg)
-						if paramPolicy != ParentAbstractionServiceRetryPolicyInvalid {
-							policy = paramPolicy
-						} else {
-							warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigRetryKeysDefault.Algorithm+" parameter '"+parentSelectAlg+"', not using!")
-						}
-					}
-					pasvc.Comment = makeParentComment(opt.AddComments, *ds.XMLID, "")
-					pasvc.DestDomain = orgURI.Hostname()
-					pasvc.Port, err = strconv.Atoi(orgURI.Port())
-					if err != nil {
-						if strings.ToLower(orgURI.Scheme) == "https" {
-							pasvc.Port = 443
-						} else {
-							pasvc.Port = 80
-						}
-						warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(pasvc.Port)+"! : "+err.Error())
-					}
-
-					fqdnPort := strings.Split(*ds.OriginShield, ":")
-					parent := &ParentAbstractionServiceParent{}
-					parent.FQDN = fqdnPort[0]
-					if len(fqdnPort) > 1 {
-						parent.Port, err = strconv.Atoi(fqdnPort[1])
-						if err != nil {
-							parent.Port = 80
-							warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+*ds.OriginShield+"': using "+strconv.Itoa(parent.Port)+"! : "+err.Error())
-						}
-					} else {
-						parent.Port = 80
-						warnings = append(warnings, "DS '"+*ds.XMLID+"' had no origin port: '"+*ds.OriginShield+"': using "+strconv.Itoa(parent.Port)+"!")
-					}
-					pasvc.Parents = append(pasvc.Parents, parent)
-					pasvc.RetryPolicy = policy
-					pasvc.GoDirect = true
-
-					// textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " parent=" + *ds.OriginShield + " " + algorithm + " go_direct=true\n"
-
-				} else if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin {
-					pasvc.Comment = makeParentComment(opt.AddComments, *ds.XMLID, "")
-					pasvc.DestDomain = orgURI.Hostname()
-					pasvc.Port, err = strconv.Atoi(orgURI.Port())
-					if err != nil {
-						pasvc.Port = 80
-						warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(pasvc.Port)+"! : "+err.Error())
-					}
-
-					// textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " "
-					if len(parentInfos) == 0 {
-					}
-
-					if len(parentInfos[OriginHost(orgURI.Hostname())]) == 0 {
-						// TODO error? emulates Perl
-						warnings = append(warnings, "DS "+*ds.XMLID+" has no parent servers")
-					}
-
-					parents, secondaryParents, secondaryMode, parentWarns := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVersion, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
-					warnings = append(warnings, parentWarns...)
-					pasvc.Parents = parents
-					pasvc.SecondaryParents = secondaryParents
-					pasvc.SecondaryMode = secondaryMode
-					pasvc.RetryPolicy = dsParams.Algorithm // TODO convert
-					pasvc.IgnoreQueryStringInParentSelection = !parentQStr
-					pasvc.GoDirect = true
-
-					// textLine += parents + secondaryParents + ` round_robin=` + dsParams.Algorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
-
-					prWarns := dsParams.FillParentSvcRetries(cacheIsTopLevel, atsMajorVersion, pasvc)
-					warnings = append(warnings, prWarns...)
-
-					parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
-				}
-			} else {
-				queryStringHandling := ParentSelectParamQStringHandlingToBool(serverParams[ParentConfigParamQStringHandling]) // "qsh" in Perl
-				if queryStringHandling == nil && serverParams[ParentConfigParamQStringHandling] != "" {
-					warnings = append(warnings, "Server Parameter '"+ParentConfigParamQStringHandling+"' value '"+serverParams[ParentConfigParamQStringHandling]+"' malformed, not using!")
-				}
-
-				roundRobin := ParentAbstractionServiceRetryPolicyConsistentHash
-				// roundRobin := `round_robin=consistent_hash`
-				goDirect := false
-				// goDirect := `go_direct=false`
-
-				parents, secondaryParents, secondaryMode, parentWarns := getParentStrs(&ds, dsRequiredCapabilities, parentInfos[deliveryServicesAllParentsKey], atsMajorVersion, dsParams.TryAllPrimariesBeforeSecondary)
-				warnings = append(warnings, parentWarns...)
-
-				pasvc := &ParentAbstractionService{}
-				pasvc.Name = *ds.XMLID
-
-				// peering ring check
-				if dsParams.UsePeering {
-					secondaryMode = ParentAbstractionServiceParentSecondaryModePeering
-				}
-
-				orgFQDNStr := *ds.OrgServerFQDN
-				// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
-				if !isLastCacheTier {
-					orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
-				}
-				orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
-				warnings = append(warnings, orgWarns...)
-				if err != nil {
-					warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
-					continue
-				}
-
-				pasvc.Comment = makeParentComment(opt.AddComments, *ds.XMLID, "")
-
-				// TODO encode this in a DSType func, IsGoDirect() ?
-				if *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive {
-					pasvc.DestDomain = orgURI.Hostname()
-					pasvc.Port, err = strconv.Atoi(orgURI.Port())
-					if err != nil {
-						if strings.ToLower(orgURI.Scheme) == "https" {
-							pasvc.Port = 443
-						} else {
-							pasvc.Port = 80
-						}
-						warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(pasvc.Port)+"! : "+err.Error())
-					}
-
-					pasvc.GoDirect = true
-
-					pasvc.Parents = []*ParentAbstractionServiceParent{&ParentAbstractionServiceParent{
-						FQDN:   pasvc.DestDomain,
-						Port:   pasvc.Port,
-						Weight: 1.0,
-					}}
-
-					// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
-				} else {
-
-					// check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
-					// then edges will use the qstring handling value specified in the parameter for all profiles.
-
-					// If there is no defined parameter in the profile, then check the delivery service profile.
-					// If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
-					// This is used only if not overridden by a server profile qstring handling parameter.
-
-					// TODO refactor this logic, hard to understand (transliterated from Perl)
-					dsQSH := queryStringHandling
-					if dsQSH == nil {
-						dsQSH = ParentSelectParamQStringHandlingToBool(dsParams.QueryStringHandling)
-						if dsQSH == nil && dsParams.QueryStringHandling != "" {
-							warnings = append(warnings, "Delivery Service parameter '"+ParentConfigParamQStringHandling+"' value '"+dsParams.QueryStringHandling+"' malformed, not using!")
-						}
-
-					}
-					parentQStr := dsQSH
-					if parentQStr == nil {
-						v := false
-						parentQStr = &v
-					}
-					if ds.QStringIgnore != nil && tc.QStringIgnore(*ds.QStringIgnore) == tc.QStringIgnoreUseInCacheKeyAndPassUp && dsQSH == nil {
-						v := true
-						parentQStr = &v
-					}
-					if parentQStr == nil {
-						b := !DefaultIgnoreQueryStringInParentSelection
-						parentQStr = &b
-					}
-
-					pasvc.DestDomain = orgURI.Hostname()
-					pasvc.Port, err = strconv.Atoi(orgURI.Port())
-					if err != nil {
-						if strings.ToLower(orgURI.Scheme) == "https" {
-							pasvc.Port = 443
-						} else {
-							pasvc.Port = 80
-						}
-						warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  port: '"+orgURI.Port()+"': using "+strconv.Itoa(pasvc.Port)+"! : "+err.Error())
-					}
-					pasvc.Parents = parents
-					pasvc.SecondaryParents = secondaryParents
-					pasvc.SecondaryMode = secondaryMode
-					pasvc.RetryPolicy = roundRobin
-					pasvc.GoDirect = goDirect
-					pasvc.IgnoreQueryStringInParentSelection = !*parentQStr
-					// text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
-				}
-
-				prWarns := dsParams.FillParentSvcRetries(cacheIsTopLevel, atsMajorVersion, pasvc)
-				warnings = append(warnings, prWarns...)
-
-				parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
-			}
+			warnings = append(warnings, "No topology found for: '"+*ds.XMLID+"'")
+			continue
 		}
 	}
 
@@ -701,6 +562,7 @@ type parentInfo struct {
 	UseIP           bool
 	Rank            int
 	IP              string
+	Cachegroup      string
 	PrimaryParent   bool
 	SecondaryParent bool
 	Capabilities    map[ServerCapability]struct{}
@@ -731,6 +593,24 @@ func (p parentInfo) ToAbstract() *ParentAbstractionServiceParent {
 }
 
 type parentInfos map[OriginHost]parentInfo
+
+// Returns a map of parent cache groups names per origin host.
+func makeOCGMap(opis map[OriginHost][]parentInfo) map[OriginHost][]string {
+	ocgnames := map[OriginHost][]string{}
+
+	for host, pis := range opis {
+		cgnames := make(map[string]struct{})
+		for _, pi := range pis {
+			cgnames[string(pi.Cachegroup)] = struct{}{}
+		}
+
+		for cg, _ := range cgnames {
+			ocgnames[host] = append(ocgnames[host], cg)
+		}
+	}
+
+	return ocgnames
+}
 
 type parentInfoSortByRank []parentInfo
 
@@ -1012,6 +892,7 @@ func getTopologyParentConfigLine(
 	addComments bool,
 ) (*ParentAbstractionService, []string, error) {
 	warnings := []string{}
+
 	if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
 		return nil, warnings, nil
 	}
@@ -1025,6 +906,8 @@ func getTopologyParentConfigLine(
 	if err != nil {
 		return nil, warnings, errors.New("getting topology placement: " + err.Error())
 	}
+
+	fmt.Println("serverPlacement", *server.HostName, serverPlacement)
 
 	if !serverPlacement.InTopology {
 		return nil, warnings, nil // server isn't in topology, no error
@@ -1391,6 +1274,8 @@ func getTopologyParents(
 	warnings := []string{}
 	// If it's the last tier, then the parent is the origin.
 	// Note this doesn't include MSO, whose final tier cachegroup points to the origin cachegroup.
+
+	fmt.Println("serverIsLastTier", serverIsLastTier)
 	if serverIsLastTier {
 		orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN) // TODO pass, instead of calling again
 		warnings = append(warnings, orgWarns...)
@@ -1699,6 +1584,7 @@ func makeParentInfo(
 				UseIP:           sv.Params.UseIP,
 				Rank:            sv.Params.Rank,
 				IP:              ipAddr.String(),
+				Cachegroup:      *sv.Cachegroup,
 				PrimaryParent:   serverParentCGData.ParentID == *sv.CachegroupID,
 				SecondaryParent: serverParentCGData.SecondaryParentID == *sv.CachegroupID,
 				Capabilities:    serverCapabilities[*sv.ID],
@@ -1706,6 +1592,7 @@ func makeParentInfo(
 			if parentInf.Port < 1 {
 				parentInf.Port = *sv.TCPPort
 			}
+
 			parentInfos[originHost] = append(parentInfos[originHost], parentInf)
 		}
 	}
