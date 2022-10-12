@@ -55,7 +55,6 @@ func TestCombineCacheState(t *testing.T) {
 		},
 	}
 	events := health.NewThreadsafeEvents(1)
-	peerOptimistic := true
 	peerStates := peer.NewCRStatesPeersThreadsafe(1)
 	peerStates.SetTimeout(time.Duration(rand.Int63()))
 	peerResult := peer.Result{
@@ -88,7 +87,7 @@ func TestCombineCacheState(t *testing.T) {
 	}
 
 	for _, localCacheState := range localCacheStates {
-		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates.GetCRStatesPeersInfo(), combinedStates, overrideMap, toData)
+		combineCacheState(cacheName, localCacheState, events, peerStates.GetCRStatesPeersInfo(), combinedStates, overrideMap, toData)
 
 		if !combinedStates.Get().Caches[cacheName].IsAvailable {
 			t.Fatalf("cache is unavailable and should be available")
@@ -111,7 +110,6 @@ func TestCombineCacheStateCacheDown(t *testing.T) {
 	}
 
 	events := health.NewThreadsafeEvents(1)
-	peerOptimistic := true
 	peerStates := peer.NewCRStatesPeersThreadsafe(1)
 	peerStates.SetTimeout(time.Duration(rand.Int63()))
 	peerResult := peer.Result{
@@ -143,7 +141,7 @@ func TestCombineCacheStateCacheDown(t *testing.T) {
 		cacheName: tc.CacheTypeEdge,
 	}
 
-	combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates.GetCRStatesPeersInfo(), combinedStates, overrideMap, toData)
+	combineCacheState(cacheName, localCacheState, events, peerStates.GetCRStatesPeersInfo(), combinedStates, overrideMap, toData)
 
 	if !combinedStates.Get().Caches[cacheName].IsAvailable {
 		t.Fatalf("cache is unavailable and should be available")
