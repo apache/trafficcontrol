@@ -151,7 +151,8 @@ public class CertificateRegistry {
 			return new HandshakeData(DEFAULT_SSL_KEY, DEFAULT_SSL_KEY, chain, keyPair.getPrivate());
 		}
 		catch (Exception e) {
-			log.error("Could not generate the default certificate: " + e + " message is: " + e.getMessage());
+			log.error("Could not generate the default certificate: " + e);
+			e.printStackTrace();
 			return null;
 		}
 	}
