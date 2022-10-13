@@ -2,7 +2,6 @@ package deliveryservice
 
 import (
 	"encoding/pem"
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -2261,7 +2260,6 @@ func TestVerifyAndEncodeCertificateSelfSignedX509v1(t *testing.T) {
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedX509v1Certificate, SelfSignedX509v1PrivateKey, "", true)
 
 	if err != nil {
-		fmt.Println(err)
 		t.Fatalf("unexpected result: the x509v1 cert/key pair is valid and should have passed validation")
 	}
 
