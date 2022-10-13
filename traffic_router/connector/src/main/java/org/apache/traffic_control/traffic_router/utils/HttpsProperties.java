@@ -25,24 +25,46 @@ import java.util.Map;
 
 public class HttpsProperties {
     private static final Logger log = LogManager.getLogger(HttpsProperties.class);
-    private static final String HTTPS_PROPERTIES_FILE = "/opt/traffic_router/conf/https.properties";
+    private static final String HTTPS_CERTIFICATE_OU = "https.certificate.organizational.unit";
+
     private final Map<String, String> httpsPropertiesMap;
 
-    public HttpsProperties() {
-        this.httpsPropertiesMap = loadHttpsProperties();
+    public HttpsProperties(final String fileName) {
+        this.httpsPropertiesMap = loadHttpsProperties(fileName);
     }
 
     public Map<String, String> getHttpsPropertiesMap() {
         return httpsPropertiesMap;
     }
 
-    private static Map<String, String> loadHttpsProperties() {
+    private static Map<String, String> loadHttpsProperties(final String fileName) {
         try {
             final Map<String, String> httpsProperties = new HashMap<>();
-            Files.readAllLines(Paths.get(HTTPS_PROPERTIES_FILE)).forEach(propString -> {
+            Files.readAllLines(Paths.get(fileName)).forEach(propString -> {
                 if (!propString.startsWith("#")) { // Ignores comments in properties file
-                    final String[] prop = propString.split("=");
-                    httpsProperties.put(prop[0], prop[1]);
+                    final String[] props = propString.split("=");
+                    if (props.length < 2) {
+                        log.error("Property malformed, should be in the form key=value");
+                    } else {
+                        final String key = props[0];
+                        final String val = props[1];
+                        if (key.equals(HTTPS_CERTIFICATE_OU)) {
+                            if (val.equals("") || val.length() < 2) {
+                                log.error("Malformed " + HTTPS_CERTIFICATE_OU + " property value");
+                            } else {
+                                final String[] orgUnits = val.split(",");
+                                String organizationalUnit = "";
+                                StringBuilder sb = new StringBuilder(organizationalUnit);
+                                for (final String ou : orgUnits) {
+                                    sb = sb.append("; OU=" + ou);
+                                }
+                                organizationalUnit = sb.toString();
+                                httpsProperties.put(key, organizationalUnit);
+                            }
+                        } else {
+                            httpsProperties.put(key, val);
+                        }
+                    }
                 }
             });
             return httpsProperties;
