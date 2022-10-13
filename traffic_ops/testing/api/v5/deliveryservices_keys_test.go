@@ -15,6 +15,7 @@ package v5
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -332,6 +333,38 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 	}
 	if dsSSLKey.Certificate.CSR == "" {
 		t.Errorf("expected a valid CSR, but got nothing")
+	}
+
+	var otherKey *tc.DeliveryServiceSSLKeys
+	for _, ds := range testData.DeliveryServices {
+		if !(*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
+			continue
+		}
+		var err error
+		dsSSLKey := new(tc.DeliveryServiceSSLKeys)
+		for tries := 0; tries < 5; tries++ {
+			time.Sleep(time.Second)
+			var sslKeysResp tc.DeliveryServiceSSLKeysResponse
+			sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(*ds.XMLID, client.RequestOptions{})
+			*dsSSLKey = sslKeysResp.Response
+			if err == nil && dsSSLKey != nil {
+				break
+			}
+		}
+		if dsSSLKey != nil {
+			otherKey = dsSSLKey
+			break
+		}
+	}
+	assert.RequireNotNil(t, otherKey, "Expected to find another DS  with a valid SSL certificate")
+	err = deliveryservice.Base64DecodeCertificate(&otherKey.Certificate)
+	assert.RequireNoError(t, err, "Couldn't decode certificate: %v", err)
+
+	dsSSLKeyReq.Certificate.Crt += otherKey.Certificate.Crt
+	_, _, err = TOSession.AddSSLKeysForDS(tc.DeliveryServiceAddSSLKeysReq{DeliveryServiceSSLKeysReq: dsSSLKeyReq}, client.RequestOptions{})
+	assert.RequireNotNil(t, err, "Expected inconsistent certificate chain to be rejected")
+	if !strings.Contains(err.Error(), "intermediate chain contains certificates that do not match") {
+		t.Fatalf("Expected failure with chain issue, instead got: %s", err.Error())
 	}
 }
 

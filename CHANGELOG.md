@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7047](https://github.com/apache/trafficcontrol/issues/7047) *Traffic Ops* allow `apply_time` query parameters on the `servers/{id-name}/update` when the CDN is locked.
 - Updated Apache Tomcat from 9.0.43 to 9.0.67
 - [#7125](https://github.com/apache/trafficcontrol/issues/7125) *Docs* Reflect implementation and deprecation notice for `letsencrypt/autorenew` endpoint.
+- [#7046](https://github.com/apache/trafficcontrol/issues/7046) *Traffic Ops* `deliveryservices/sslkeys/add` now checks that each cert in the chain is related.
 
 ## [7.0.0] - 2022-07-19
 ### Added
