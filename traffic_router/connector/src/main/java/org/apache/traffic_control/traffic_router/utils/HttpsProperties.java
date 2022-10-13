@@ -69,7 +69,7 @@ public class HttpsProperties {
             });
             return httpsProperties;
         } catch (Exception e) {
-            log.error("Error loading https properties file at ", fileName, ", error: ",e.getMessage());
+            log.error("Error loading https properties file at "+ fileName+ ", error: " +e.getMessage());
             return null;
         }
     }

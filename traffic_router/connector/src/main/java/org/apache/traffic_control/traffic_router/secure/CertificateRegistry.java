@@ -91,8 +91,20 @@ public class CertificateRegistry {
 		try {
 			final Map<String, String> httpsProperties = (new HttpsProperties(HTTPS_PROPERTIES_FILE)).getHttpsPropertiesMap();
 			final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-			int keysize = 2048;
-			keysize = Integer.parseInt(httpsProperties.getOrDefault(HTTPS_KEY_SIZE, String.valueOf(keysize)));
+			int keysize = 2048, validityLength = 3;
+			String country = "US", state = "CO", locality = "Denver", organization = "Apache Traffic Control",
+					organizationalUnit = ";OU=Apache Foundation; OU=Hosted by Traffic Control; OU=CDNDefault",
+					signingAlgorithm = "SHA1WithRSA";
+			if (httpsProperties != null) {
+				keysize = Integer.parseInt(httpsProperties.getOrDefault(HTTPS_KEY_SIZE, String.valueOf(keysize)));
+				country = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_COUNTRY, country);
+				state = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_STATE, state);
+				locality = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_LOCALITY, locality);
+				organization = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_ORGANIZATION, organization);
+				organizationalUnit = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_OU, organizationalUnit);
+				validityLength = Integer.parseInt(httpsProperties.getOrDefault(HTTPS_VALIDITY_YEARS, String.valueOf(validityLength)));
+				signingAlgorithm = httpsProperties.getOrDefault(HTTPS_SIGNATURE_ALGORITHM, signingAlgorithm);
+			}
 			keyPairGenerator.initialize(keysize);
 			final KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
@@ -105,29 +117,15 @@ public class CertificateRegistry {
 			// Generate cert details
 			final long now = System.currentTimeMillis();
 			final Date startDate = new Date(System.currentTimeMillis());
-
-			String country = "US", state = "CO", locality = "Denver", organization = "Apache Traffic Control",
-					organizationalUnit = "OU=Apache Foundation; OU=Hosted by Traffic Control; OU=CDNDefault",
-					signingAlgorithm = "SHA1WithRSA";
-			int validityLength = 3;
-
-			country = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_COUNTRY, country);
-			state = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_STATE, state);
-			locality = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_LOCALITY, locality);
-			organization = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_ORGANIZATION, organization);
-			organizationalUnit = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_OU, organizationalUnit);
 			final String certAttributes = "C=" + country + "; ST=" + state + "; L=" + locality + "; O=" + organization + organizationalUnit + "; CN=" + DEFAULT_SSL_KEY;
 			final X500Name dnName = new X500Name(certAttributes);
 			final BigInteger certSerialNumber = new BigInteger(Long.toString(now));
 
 			final Calendar calendar = Calendar.getInstance();
 			calendar.setTime(startDate);
-			validityLength = Integer.parseInt(httpsProperties.getOrDefault(HTTPS_VALIDITY_YEARS, String.valueOf(validityLength)));
 			calendar.add(Calendar.YEAR, validityLength);
 
 			final Date endDate = calendar.getTime();
-			signingAlgorithm = httpsProperties.getOrDefault(HTTPS_SIGNATURE_ALGORITHM, signingAlgorithm);
-
 			// Build certificate
 			final ContentSigner contentSigner = new JcaContentSignerBuilder(signingAlgorithm).build(keyPair.getPrivate());
 
