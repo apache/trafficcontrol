@@ -36,6 +36,9 @@ module.exports = angular.module('trafficPortal.private.tenants.deliveryServices'
 								}
 								return deliveryServiceService.getDeliveryServices({ tenant: tenant.id });
 							},
+							steeringTargets: function (deliveryServiceService) {
+								return deliveryServiceService.getSteering();
+							},
 							filter: function($stateParams, tenant) {
 								if ($stateParams.all && $stateParams.all === 'true') {
 									return null;

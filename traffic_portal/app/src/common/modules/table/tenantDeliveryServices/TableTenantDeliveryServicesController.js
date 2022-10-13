@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var TableTenantDeliveryServicesController = function(tenant, deliveryServices, filter, $controller, $scope) {
+var TableTenantDeliveryServicesController = function(tenant, deliveryServices, steeringTargets, filter, $controller, $scope) {
 
 	// extends the TableDeliveryServicesController to inherit common methods
-	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'tenantDS', deliveryServices: deliveryServices, filter: filter, $scope: $scope }));
+	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'tenantDS', deliveryServices: deliveryServices, steeringTargets: steeringTargets, filter: filter, $scope: $scope }));
 
 	$scope.tenant = tenant;
 	$scope.breadCrumbs = [
@@ -38,5 +38,5 @@ var TableTenantDeliveryServicesController = function(tenant, deliveryServices, f
 	];
 };
 
-TableTenantDeliveryServicesController.$inject = ['tenant', 'deliveryServices', 'filter', '$controller', '$scope'];
+TableTenantDeliveryServicesController.$inject = ['tenant', 'deliveryServices', 'steeringTargets', 'filter', '$controller', '$scope'];
 module.exports = TableTenantDeliveryServicesController;
