@@ -24,6 +24,9 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func makeCRConfigConfig(cdn string, tx *sql.Tx, dnssecEnabled bool, domain string) (map[string]interface{}, error) {
@@ -94,16 +97,18 @@ select name, value from parameter where id in (
   select parameter from profile_parameter where profile in (
   	select distinct profile from server where cdn_id = (
 	    select id from cdn where name = $1
+    ) and type = (
+        select id from type where name = $2
     )
   )
 )
 and config_file = 'CRConfig.json'
 `
-	rows, err := tx.Query(q, cdn)
+	rows, err := tx.Query(q, cdn, tc.RouterTypeName)
 	if err != nil {
 		return nil, errors.New("Error querying router params: " + err.Error())
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing crconfig parameter rows")
 
 	params := []CRConfigConfigParameter{}
 	for rows.Next() {
