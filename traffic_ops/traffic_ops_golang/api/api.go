@@ -1082,9 +1082,9 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), nil, http.StatusUnauthorized
 	}
 
-	oldCookie, err := tocookie.Parse(secret, cookie.Value)
-	if err != nil {
-		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
+	oldCookie, userErr, sysErr := tocookie.Parse(secret, cookie.Value)
+	if userErr != nil || sysErr != nil {
+		return auth.CurrentUser{}, userErr, sysErr, http.StatusUnauthorized
 	}
 
 	username := oldCookie.AuthData
