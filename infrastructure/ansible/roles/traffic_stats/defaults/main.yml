@@ -28,6 +28,7 @@ ts_install_logdir: "{{ ts_install_basedir }}/var/log/traffic_stats"
 ts_toUser:
 ts_toPasswd:
 ts_toUrl: https://kabletown.invalid
+ts_toRequestTimeout: 10
 
 # InfluxDB credentials
 ts_influxUser: influxUser
