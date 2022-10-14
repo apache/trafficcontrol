@@ -118,7 +118,7 @@ func TestFederationUsers(t *testing.T) {
 							GetUserID(t, "readonlyuser")(),
 							GetUserID(t, "disalloweduser")(),
 						},
-						Replace: util.BoolPtr(false),
+						Replace: util.Ptr(false),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -127,7 +127,7 @@ func TestFederationUsers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{GetUserID(t, "readonlyuser")()},
-						Replace: util.BoolPtr(true),
+						Replace: util.Ptr(true),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -136,7 +136,7 @@ func TestFederationUsers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{GetUserID(t, "disalloweduser")()},
-						Replace: util.BoolPtr(false),
+						Replace: util.Ptr(false),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -145,7 +145,7 @@ func TestFederationUsers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{},
-						Replace: util.BoolPtr(false),
+						Replace: util.Ptr(false),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -154,7 +154,7 @@ func TestFederationUsers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{-1},
-						Replace: util.BoolPtr(false),
+						Replace: util.Ptr(false),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},

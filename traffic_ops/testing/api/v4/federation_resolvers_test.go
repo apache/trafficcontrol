@@ -117,8 +117,8 @@ func TestFederationResolvers(t *testing.T) {
 				"BAD REQUEST when INVALID IP ADDRESS": {
 					ClientSession: TOSession,
 					RequestBody: tc.FederationResolver{
-						IPAddress: util.StrPtr("not a valid IP address"),
-						TypeID:    util.UIntPtr((uint)(GetTypeId(t, "RESOLVE4"))),
+						IPAddress: util.Ptr("not a valid IP address"),
+						TypeID:    util.Ptr((uint)(GetTypeId(t, "RESOLVE4"))),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},

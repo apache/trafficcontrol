@@ -37,21 +37,21 @@ func TestProfilesImport(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: tc.ProfileImportRequest{
 						Profile: tc.ProfileExportImportNullable{
-							Name:        util.StrPtr("GLOBAL"),
-							Description: util.StrPtr("Global Traffic Ops profile"),
-							CDNName:     util.StrPtr("cdn1"),
-							Type:        util.StrPtr("UNK_PROFILE"),
+							Name:        util.Ptr("GLOBAL"),
+							Description: util.Ptr("Global Traffic Ops profile"),
+							CDNName:     util.Ptr("cdn1"),
+							Type:        util.Ptr("UNK_PROFILE"),
 						},
 						Parameters: []tc.ProfileExportImportParameterNullable{
 							{
-								ConfigFile: util.StrPtr("global"),
-								Name:       util.StrPtr("tm.instance_name"),
-								Value:      util.StrPtr("Traffic Ops CDN"),
+								ConfigFile: util.Ptr("global"),
+								Name:       util.Ptr("tm.instance_name"),
+								Value:      util.Ptr("Traffic Ops CDN"),
 							},
 							{
-								ConfigFile: util.StrPtr("global"),
-								Name:       util.StrPtr("tm.toolname"),
-								Value:      util.StrPtr("Traffic Ops"),
+								ConfigFile: util.Ptr("global"),
+								Name:       util.Ptr("tm.toolname"),
+								Value:      util.Ptr("Traffic Ops"),
 							},
 						},
 					},
@@ -63,16 +63,16 @@ func TestProfilesImport(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: tc.ProfileImportRequest{
 						Profile: tc.ProfileExportImportNullable{
-							Name:        util.StrPtr("GLOBAL SPACES"),
-							Description: util.StrPtr("Global Traffic Ops profile"),
-							CDNName:     util.StrPtr("cdn1"),
-							Type:        util.StrPtr("UNK_PROFILE"),
+							Name:        util.Ptr("GLOBAL SPACES"),
+							Description: util.Ptr("Global Traffic Ops profile"),
+							CDNName:     util.Ptr("cdn1"),
+							Type:        util.Ptr("UNK_PROFILE"),
 						},
 						Parameters: []tc.ProfileExportImportParameterNullable{
 							{
-								ConfigFile: util.StrPtr("global"),
-								Name:       util.StrPtr("tm.instance_name"),
-								Value:      util.StrPtr("Traffic Ops CDN"),
+								ConfigFile: util.Ptr("global"),
+								Name:       util.Ptr("tm.instance_name"),
+								Value:      util.Ptr("Traffic Ops CDN"),
 							},
 						},
 					},
