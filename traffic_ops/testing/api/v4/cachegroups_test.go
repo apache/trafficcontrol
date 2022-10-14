@@ -183,7 +183,7 @@ func TestCacheGroups(t *testing.T) {
 						Name:      util.Ptr("topology-edge-cg-01"),
 						ShortName: util.Ptr("te1"),
 						Type:      util.Ptr("MID_LOC"),
-						TypeID:    util.Ptr(GetTypeId(t, "MIC_LOC")),
+						TypeID:    util.Ptr(GetTypeId(t, "MID_LOC")),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
