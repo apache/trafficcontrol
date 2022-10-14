@@ -27,6 +27,33 @@ To override the self signed certificates with new ones from a certificate author
 The API can be configured via HTTPS on port 3443 in :file:`/opt/traffic_router/conf/server.xml` or by setting a :term:`Parameter` named ``secure.api.port`` with ``configFile`` ``server.xml`` on the Traffic Router's :term:`Profile`.  When ``systemctl start traffic_router`` is run, it will generate self signed certificates at ``/opt/traffic_router/conf/``, create a new Java Keystore named :file:`/opt/traffic_router/conf/keyStore.jks`, and add the new certificate to the Keystore.  The password for the Java Keystore and the Keystore location are stored in :file:`/opt/traffic_router/conf/https.properties`.
 To override the self signed certificates with new ones from a certificate authority, either replace the Java Keystore in the default location or update the properties for the new Keystore location and password at :file:`/opt/traffic_router/conf/https.properties` and then restart the Traffic Router using ``systemctl``.
 
+Other attributes of the default certificate can also be customized by specifying appropriate values for the following properties in :file:`/opt/traffic_router/conf/https.properties`. These properties are listed below:
+
+.. table:: HTTPS Certificate Attributes
+
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
+	| Name                                     | Description                                                            | Default                                                 |
+	+==========================================+========================================================================+=========================================================+
+	|  https.certificate.location              | The location of the certificate key store                              |                                                         |
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
+	|  https.password                          | The password for the certificate key store                             |                                                         |
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
+	|  https.key.size                          | The size for the HTTPS keys                                            | 2048                                                    |
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
+	|  https.signature.algorithm               | The HTTPS signing algorithm to be used                                 | SHA1WithRSA                                             |
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
+	|  https.validity.years                    | The amount of time (in years) for which the cert is valid              | 3                                                       |
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
+	|  https.certificate.country               | The country of the certificate                                         | US                                                      |
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
+	|  https.certificate.state                 | The state of the certificate                                           | CO                                                      |
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
+	|  https.certificate.locality              | The locality of the certificate                                        | Denver                                                  |
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
+	|  https.certificate.organization          | The organization of the certificate                                    | Apache Traffic Control                                  |
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
+	|  https.certificate.organizational.unit   | The organizational unit of the certificate                             | Apache Foundation, Hosted by Traffic Control, CDNDefault|
+	+------------------------------------------+------------------------------------------------------------------------+---------------------------------------------------------+
 
 Traffic Router API endpoints only respond to ``GET`` requests.
 
