@@ -466,36 +466,36 @@ func makeParentDotConfigData(
 		isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
 
 		// TODO put these in separate functions. No if-statement should be this long.
-		if ds.Topology != nil && *ds.Topology != "" {
-			pasvc, topoWarnings, err := getTopologyParentConfigLine(
-				server,
-				serversWithParams,
-				&ds,
-				serverParams,
-				parentConfigParams,
-				nameTopologies,
-				serverCapabilities,
-				dsRequiredCapabilities,
-				cacheGroups,
-				profileParentConfigParams,
-				isMSO,
-				atsMajorVersion,
-				dsOrigins[DeliveryServiceID(*ds.ID)],
-				opt.AddComments,
-			)
-			warnings = append(warnings, topoWarnings...)
-			if err != nil {
-				// we don't want to fail generation with an error if one ds is malformed
-				warnings = append(warnings, err.Error()) // getTopologyParentConfigLine includes error context
-				continue
-			}
-
-			if pasvc != nil { // will be nil with no error if this server isn't in the Topology, or if it doesn't have the Required Capabilities
-				parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
-			}
-		} else {
+		if ds.Topology == nil || *ds.Topology == "" {
 			warnings = append(warnings, "No topology found for: '"+*ds.XMLID+"'")
 			continue
+		}
+
+		pasvc, topoWarnings, err := getTopologyParentConfigLine(
+			server,
+			serversWithParams,
+			&ds,
+			serverParams,
+			parentConfigParams,
+			nameTopologies,
+			serverCapabilities,
+			dsRequiredCapabilities,
+			cacheGroups,
+			profileParentConfigParams,
+			isMSO,
+			atsMajorVersion,
+			dsOrigins[DeliveryServiceID(*ds.ID)],
+			opt.AddComments,
+		)
+		warnings = append(warnings, topoWarnings...)
+		if err != nil {
+			// we don't want to fail generation with an error if one ds is malformed
+			warnings = append(warnings, err.Error()) // getTopologyParentConfigLine includes error context
+			continue
+		}
+
+		if pasvc != nil { // will be nil with no error if this server isn't in the Topology, or if it doesn't have the Required Capabilities
+			parentAbstraction.Services = append(parentAbstraction.Services, pasvc)
 		}
 	}
 
@@ -907,8 +907,6 @@ func getTopologyParentConfigLine(
 		return nil, warnings, errors.New("getting topology placement: " + err.Error())
 	}
 
-	fmt.Println("serverPlacement", *server.HostName, serverPlacement)
-
 	if !serverPlacement.InTopology {
 		return nil, warnings, nil // server isn't in topology, no error
 	}
@@ -1275,7 +1273,6 @@ func getTopologyParents(
 	// If it's the last tier, then the parent is the origin.
 	// Note this doesn't include MSO, whose final tier cachegroup points to the origin cachegroup.
 
-	fmt.Println("serverIsLastTier", serverIsLastTier)
 	if serverIsLastTier {
 		orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN) // TODO pass, instead of calling again
 		warnings = append(warnings, orgWarns...)
