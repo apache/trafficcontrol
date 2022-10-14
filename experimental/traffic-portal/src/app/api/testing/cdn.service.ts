@@ -12,8 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-
-import { CDN } from "src/app/models";
+import type { CDN, ResponseCDN, Snapshot } from "trafficops-types";
 
 /**
  * CDNService expose API functionality relating to CDNs.
@@ -44,8 +43,21 @@ export class CDNService {
 		]
 	]);
 
-	public async getCDNs(id: number): Promise<CDN>;
-	public async getCDNs(): Promise<Map<string, CDN>>;
+	private readonly snapshots: Record<PropertyKey, {current: Snapshot; pending: Snapshot}> = {
+		// this is, unfortunately, standard
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		ALL: {
+			current: {},
+			pending: {}
+		},
+		test: {
+			current: {},
+			pending: {}
+		}
+	};
+
+	public async getCDNs(id: number): Promise<ResponseCDN>;
+	public async getCDNs(): Promise<Map<string, ResponseCDN>>;
 	/**
 	 * Gets one or all CDNs from Traffic Ops
 	 *
@@ -54,7 +66,7 @@ export class CDNService {
 	 * 	passed.
 	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
 	 */
-	public async getCDNs(id?: number): Promise<Map<string, CDN> | CDN> {
+	public async getCDNs(id?: number): Promise<Map<string, ResponseCDN> | ResponseCDN> {
 		if (id !== undefined) {
 			const cdn = Array.from(this.cdns.values()).filter(c=>c.id===id)[0];
 			if (!cdn) {
@@ -63,5 +75,35 @@ export class CDNService {
 			return cdn;
 		}
 		return this.cdns;
+	}
+
+	/**
+	 * Gets the *current* Snapshot for a given CDN.
+	 *
+	 * @param cdn The CDN for which to fetch a Snapshot.
+	 * @returns The current Snapshot of the requested CDN.
+	 */
+	public async getCurrentSnapshot(cdn: CDN | string): Promise<Snapshot> {
+		const name = typeof(cdn) === "string" ? cdn : cdn.name;
+		const snap = this.snapshots[name];
+		if (!snap) {
+			throw new Error(`no such CDN: '${name}'`);
+		}
+		return snap.current;
+	}
+
+	/**
+	 * Gets the *pending* Snapshot for a given CDN.
+	 *
+	 * @param cdn The CDN for which to fetch a Snapshot.
+	 * @returns The current Snapshot of the requested CDN.
+	 */
+	public async getPendingSnapshot(cdn: CDN | string): Promise<Snapshot> {
+		const name = typeof(cdn) === "string" ? cdn : cdn.name;
+		const snap = this.snapshots[name];
+		if (!snap) {
+			throw new Error(`no such CDN: '${name}'`);
+		}
+		return snap.pending;
 	}
 }
