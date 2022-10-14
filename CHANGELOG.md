@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6021](https://github.com/apache/trafficcontrol/issues/6021) *Traffic Portal* Added the ability to view a change logs message in it's entirety by clicking on it.
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) *Traffic Ops, Traffic Portal* Added ability to assign multiple server capabilities to a server.
 - [#7032](https://github.com/apache/trafficcontrol/issues/7032) *Cache Config* Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
-- [#7097](https://github.com/apache/trafficcontrol/issues/7097) *Traffic Ops, Traffic Portal* Added the `regional` field to Delivery Services, which indicates whether `maxOriginConnections` should be per Cache Group
+- [#7097](https://github.com/apache/trafficcontrol/issues/7097) *Traffic Ops, Traffic Portal, t3c* Added the `regional` field to Delivery Services, which affects whether `maxOriginConnections` should be per Cache Group
 
 ### Changed
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
