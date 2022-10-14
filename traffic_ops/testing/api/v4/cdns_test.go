@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -41,7 +40,7 @@ func TestCDNs(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.CDN]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -105,41 +104,46 @@ func TestCDNs(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"POST": {
 				"BAD REQUEST when CDN ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":          "cdn3",
-						"dnssecEnabled": false,
-						"domainName":    "test.cdn3.net",
+					RequestBody: tc.CDN{
+						Name:          "cdn3",
+						DNSSECEnabled: false,
+						DomainName:    "test.cdn3.net",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when EMPTY NAME": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":          "",
-						"dnssecEnabled": false,
-						"domainName":    "test.noname.net",
+					RequestBody: tc.CDN{
+						Name:          "",
+						DNSSECEnabled: false,
+						DomainName:    "test.noname.net",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when EMPTY DOMAIN NAME": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":          "nodomain",
-						"dnssecEnabled": false,
-						"domainName":    "",
+					RequestBody: tc.CDN{
+						Name:          "nodomain",
+						DNSSECEnabled: false,
+						DomainName:    "",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"FORBIDDEN when READ ONLY USER": {
 					ClientSession: readOnlyUserSession,
-					RequestBody: map[string]interface{}{
-						"name":          "readOnlyTest",
-						"dnssecEnabled": false,
-						"domainName":    "test.ro",
+					RequestBody: tc.CDN{
+						Name:          "readOnlyTest",
+						DNSSECEnabled: false,
+						DomainName:    "test.ro",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -148,10 +152,10 @@ func TestCDNs(t *testing.T) {
 				"OK when VALID request": {
 					EndpointId:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"dnssecEnabled": false,
-						"domainName":    "domain2",
-						"name":          "cdn1",
+					RequestBody: tc.CDN{
+						DNSSECEnabled: false,
+						DomainName:    "domain2",
+						Name:          "cdn1",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateCDNUpdateFields("cdn1", map[string]interface{}{"DomainName": "domain2"})),
@@ -160,10 +164,10 @@ func TestCDNs(t *testing.T) {
 					EndpointId:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: map[string]interface{}{
-						"dnssecEnabled": false,
-						"domainName":    "newDomain",
-						"name":          "cdn1",
+					RequestBody: tc.CDN{
+						DNSSECEnabled: false,
+						DomainName:    "newDomain",
+						Name:          "cdn1",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
@@ -171,10 +175,10 @@ func TestCDNs(t *testing.T) {
 					EndpointId:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
-					RequestBody: map[string]interface{}{
-						"dnssecEnabled": false,
-						"domainName":    "newDomain",
-						"name":          "cdn1",
+					RequestBody: tc.CDN{
+						DNSSECEnabled: false,
+						DomainName:    "newDomain",
+						Name:          "cdn1",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
@@ -186,28 +190,12 @@ func TestCDNs(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-			},
 		}
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					cdn := tc.CDN{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &cdn)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetCDNs(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -216,14 +204,14 @@ func TestCDNs(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateCDN(cdn, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.CreateCDN(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateCDN(testCase.EndpointId(), cdn, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateCDN(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

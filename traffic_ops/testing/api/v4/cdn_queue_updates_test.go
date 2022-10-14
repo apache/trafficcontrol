@@ -31,15 +31,13 @@ import (
 func TestCDNQueueUpdates(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, bool]{
 			"POST": {
 				"OK when VALID TYPE parameter": {
 					EndpointId:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"type": {"EDGE"}}},
-					RequestBody: map[string]interface{}{
-						"action": "queue",
-					},
+					RequestBody:   true,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServersUpdatePending(GetCDNID(t, "cdn1")(), map[string]string{"type": "EDGE"})),
 				},
@@ -47,9 +45,7 @@ func TestCDNQueueUpdates(t *testing.T) {
 					EndpointId:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"profile": {"EDGE1"}}},
-					RequestBody: map[string]interface{}{
-						"action": "queue",
-					},
+					RequestBody:   true,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServersUpdatePending(GetCDNID(t, "cdn1")(), map[string]string{"profileName": "EDGE1"})),
 				},
@@ -58,27 +54,13 @@ func TestCDNQueueUpdates(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-
-					var queueUpdate bool
-					if testCase.RequestBody != nil {
-						if action, ok := testCase.RequestBody["action"]; ok {
-							if action == "queue" {
-								queueUpdate = true
-							} else if action == "dequeue" {
-								queueUpdate = false
-							} else {
-								t.Errorf("Not a valid action: %v", action)
-							}
-						}
-					}
-
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
 							// Clear updates on all associated cdn servers to begin with
 							_, _, err := TOSession.QueueUpdatesForCDN(testCase.EndpointId(), false, client.RequestOptions{})
 							assert.RequireNoError(t, err, "Failed to clear updates for cdn %d", testCase.EndpointId())
-							resp, reqInf, err := testCase.ClientSession.QueueUpdatesForCDN(testCase.EndpointId(), queueUpdate, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.QueueUpdatesForCDN(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}

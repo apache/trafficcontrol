@@ -24,12 +24,13 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestProfilesExport(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 			"GET": {
 				"OK when VALID request": {
 					EndpointId:    GetProfileID(t, "EDGE1"),
