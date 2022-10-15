@@ -1,0 +1,13 @@
+<code *ngIf="name">{{name}}</code>
+<p class="no-change" *ngIf="(value.oldValue === undefined && value.newValue === undefined) || (value.oldValue === '' && value.newValue === ''); else oneIsDefined"><code>(no value)</code></p>
+<ng-template #oneIsDefined>
+	<p *ngIf="value.oldValue === undefined || value.oldValue === ''"><ins>{{value.newValue}}</ins></p>
+	<p *ngIf="value.newValue === undefined || value.newValue === ''"><del>{{value.oldValue}}</del></p>
+	<ng-container *ngIf="value.oldValue !== undefined && value.newValue !== undefined && value.oldValue !== '' && value.newValue !== ''">
+		<p *ngIf="value.oldValue !== value.newValue">
+			<del>{{value.oldValue}}</del>&nbsp;<ins>{{value.newValue}}</ins>
+		</p>
+		<p class="no-change" *ngIf="value.oldValue === value.newValue">{{value.oldValue}}</p>
+	</ng-container>
+</ng-template>
+<mat-divider *ngIf="!last"></mat-divider>

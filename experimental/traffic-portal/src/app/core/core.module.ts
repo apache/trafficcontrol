@@ -31,6 +31,7 @@ import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
 import { SharedModule } from "../shared/shared.module";
 
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
+import { DiffFieldComponent } from "./cdns/snapshot/diff-field/diff-field.component";
 import { ChangeLogsComponent } from "./change-logs/change-logs.component";
 import { CurrentuserComponent } from "./currentuser/currentuser.component";
 import { UpdatePasswordDialogComponent } from "./currentuser/update-password-dialog/update-password-dialog.component";
@@ -99,7 +100,8 @@ export const ROUTES: Routes = [
 		DivisionsTableComponent,
 		DivisionDetailComponent,
 		RegionsTableComponent,
-		RegionDetailComponent
+		RegionDetailComponent,
+		DiffFieldComponent,
 	],
 	exports: [],
 	imports: [
