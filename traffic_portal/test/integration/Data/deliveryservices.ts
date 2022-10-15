@@ -113,6 +113,20 @@ export const deliveryservices = {
 	],
 	setup: [
 		{
+			action: "CreateParameters",
+			route: "/parameters",
+			method: "post",
+			data: [
+				{
+					name: "location",
+					value: "/a/b/c/d",
+					configFile: "remap.config",
+					secure: false,
+					noRandomize: true
+				}
+			]
+		},
+		{
 			action: "CreateDeliveryServices",
 			route: "/deliveryservices",
 			method: "post",
@@ -127,6 +141,7 @@ export const deliveryservices = {
 					initialDispersion: 1,
 					ipv6RoutingEnabled: true,
 					logsEnabled: false,
+					maxOriginConnections: 4500,
 					missLat: 41.881944,
 					missLong: -87.627778,
 					multiSiteOrigin: false,
@@ -134,6 +149,7 @@ export const deliveryservices = {
 					protocol: 0,
 					qstringIgnore: 0,
 					rangeRequestHandling: 0,
+					regional: false,
 					regionalGeoBlocking: false,
 					tenantId: 0,
 					typeId: 1,

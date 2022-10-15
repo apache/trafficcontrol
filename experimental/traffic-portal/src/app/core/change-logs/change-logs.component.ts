@@ -21,7 +21,12 @@ import { Log } from "trafficops-types";
 
 import { ChangeLogsService } from "src/app/api/change-logs.service";
 import { LastDaysComponent } from "src/app/core/change-logs/last-days/last-days.component";
-import { TableTitleButton } from "src/app/shared/generic-table/generic-table.component";
+import { TextDialogComponent } from "src/app/shared/dialogs/text-dialog/text-dialog.component";
+import {
+	ContextMenuActionEvent,
+	ContextMenuItem,
+	TableTitleButton
+} from "src/app/shared/generic-table/generic-table.component";
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 import { relativeTimeString } from "src/app/utils";
 
@@ -70,6 +75,13 @@ export class ChangeLogsComponent implements OnInit {
 		{
 			action: "lastDays",
 			text: `Last ${this.lastDays} days`,
+		}
+	];
+
+	public contextMenuOptions: Array<ContextMenuItem<AugmentedChangeLog>> = [
+		{
+			action: "viewChangeLog",
+			name: "Expand Log"
 		}
 	];
 
@@ -132,6 +144,27 @@ export class ChangeLogsComponent implements OnInit {
 		);
 
 		await this.loadData();
+	}
+
+	/**
+	 * handles when a context menu event is emitted
+	 *
+	 * @param action which button was pressed
+	 */
+	public async handleContextMenu(action: ContextMenuActionEvent<AugmentedChangeLog>): Promise<void> {
+		switch (action.action) {
+			case "viewChangeLog":
+				let changeLog: AugmentedChangeLog;
+				if (Array.isArray(action.data)) {
+					changeLog = action.data[0];
+				} else {
+					changeLog = action.data;
+				}
+				this.dialog.open(TextDialogComponent, {
+					data: {message: changeLog.message, title: `Change Log for ${changeLog.user}`}
+				});
+				break;
+		}
 	}
 
 	/**

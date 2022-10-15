@@ -47,7 +47,7 @@ func StartStateCombiner(events health.ThreadsafeEvents, peerStates peer.CRStates
 	go func() {
 		overrideMap := map[tc.CacheName]bool{}
 		for range combineStateChan {
-			combineCrStates(events, true, peerStates.GetCRStatesPeersInfo(), localStates.Get(), combinedStates, overrideMap, toData.Get())
+			combineCrStates(events, peerStates.GetCRStatesPeersInfo(), localStates.Get(), combinedStates, overrideMap, toData.Get())
 		}
 	}()
 
@@ -58,7 +58,6 @@ func combineCacheState(
 	cacheName tc.CacheName,
 	localCacheState tc.IsAvailable,
 	events health.ThreadsafeEvents,
-	peerOptimistic bool,
 	peerCrStatesInfo peer.CRStatesPeersInfo,
 	combinedStates peer.CRStatesThreadsafe,
 	overrideMap map[tc.CacheName]bool,
@@ -77,46 +76,42 @@ func combineCacheState(
 			overrideCondition = "cleared; healthy locally"
 			overrideMap[cacheName] = false
 		}
-	} else if peerOptimistic {
-		if !peerCrStatesInfo.HasAvailablePeers() {
-			if override {
-				overrideCondition = "irrelevant; no peers online"
-				overrideMap[cacheName] = false
-			}
-		} else {
-			onlineOnPeers := make([]string, 0)
-			ipv4OnlineOnPeers := make([]string, 0)
-			ipv6OnlineOnPeers := make([]string, 0)
+	} else if !peerCrStatesInfo.HasAvailablePeers() {
+		if override {
+			overrideCondition = "irrelevant; no peers online"
+			overrideMap[cacheName] = false
+		}
+	} else {
+		onlineOnPeers := make([]string, 0)
+		ipv4OnlineOnPeers := make([]string, 0)
+		ipv6OnlineOnPeers := make([]string, 0)
 
-			for peerName, peerCrStates := range peerCrStatesInfo.GetCrStates() {
-				if peerCrStatesInfo.GetPeerAvailability(peerName) {
-					if peerCrStates.Caches[cacheName].IsAvailable {
-						onlineOnPeers = append(onlineOnPeers, peerName.String())
-					}
-					if peerCrStates.Caches[cacheName].Ipv4Available {
-						ipv4OnlineOnPeers = append(ipv4OnlineOnPeers, peerName.String())
-					}
-					if peerCrStates.Caches[cacheName].Ipv6Available {
-						ipv6OnlineOnPeers = append(ipv6OnlineOnPeers, peerName.String())
-					}
+		for peerName, peerCrStates := range peerCrStatesInfo.GetCrStates() {
+			if peerCrStatesInfo.GetPeerAvailability(peerName) {
+				if peerCrStates.Caches[cacheName].IsAvailable {
+					onlineOnPeers = append(onlineOnPeers, peerName.String())
+				}
+				if peerCrStates.Caches[cacheName].Ipv4Available {
+					ipv4OnlineOnPeers = append(ipv4OnlineOnPeers, peerName.String())
+				}
+				if peerCrStates.Caches[cacheName].Ipv6Available {
+					ipv6OnlineOnPeers = append(ipv6OnlineOnPeers, peerName.String())
 				}
 			}
+		}
 
-			if len(onlineOnPeers) > 0 {
-				available = true
-				ipv4Available = ipv4Available || len(ipv4OnlineOnPeers) > 0 // optimistically accept true from local or peer
-				ipv6Available = ipv6Available || len(ipv6OnlineOnPeers) > 0 // optimistically accept true from local or peer
+		if len(onlineOnPeers) > 0 {
+			available = true
+			ipv4Available = ipv4Available || len(ipv4OnlineOnPeers) > 0 // optimistically accept true from local or peer
+			ipv6Available = ipv6Available || len(ipv6OnlineOnPeers) > 0 // optimistically accept true from local or peer
 
-				if !override {
-					overrideCondition = fmt.Sprintf("detected; healthy on (at least) %s", strings.Join(onlineOnPeers, ", "))
-					overrideMap[cacheName] = true
-				}
-			} else {
-				if override {
-					overrideCondition = "irrelevant; not online on any peers"
-					overrideMap[cacheName] = false
-				}
+			if !override {
+				overrideCondition = fmt.Sprintf("detected; healthy on (at least) %s", strings.Join(onlineOnPeers, ", "))
+				overrideMap[cacheName] = true
 			}
+		} else if override {
+			overrideCondition = "irrelevant; not online on any peers"
+			overrideMap[cacheName] = false
 		}
 	}
 
@@ -188,16 +183,16 @@ func pruneCombinedDSState(combinedStates peer.CRStatesThreadsafe, localStates tc
 // pruneCombinedCaches deletes caches in combined states which have been removed from localStates.
 func pruneCombinedCaches(combinedStates peer.CRStatesThreadsafe, localStates tc.CRStates) {
 	combinedCaches := combinedStates.GetCaches()
-	for cacheName, _ := range combinedCaches {
+	for cacheName := range combinedCaches {
 		if _, ok := localStates.Caches[cacheName]; !ok {
 			combinedStates.DeleteCache(cacheName)
 		}
 	}
 }
 
-func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerCrStatesInfo peer.CRStatesPeersInfo, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
+func combineCrStates(events health.ThreadsafeEvents, peerCrStatesInfo peer.CRStatesPeersInfo, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
-		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerCrStatesInfo, combinedStates, overrideMap, toData)
+		combineCacheState(cacheName, localCacheState, events, peerCrStatesInfo, combinedStates, overrideMap, toData)
 	}
 
 	for deliveryServiceName, localDeliveryService := range localStates.DeliveryService {
@@ -208,7 +203,7 @@ func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerCr
 	pruneCombinedCaches(combinedStates, localStates)
 }
 
-// CacheNameSlice is a slice of cache names, which fulfills the `sort.Interface` interface.
+// CacheGroupNameSlice is a slice of cache names, which fulfills the `sort.Interface` interface.
 type CacheGroupNameSlice []tc.CacheGroupName
 
 func (p CacheGroupNameSlice) Len() int           { return len(p) }

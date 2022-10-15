@@ -53,7 +53,7 @@ Response Structure
 :config: An object containing basic configurations on the actual CDN object
 
 	:api.cache-control.max-age:     A string containing an integer which specifies the value of ``max-age`` in the :mailheader:`Cache-Control` header of some HTTP responses, likely the :ref:`tr-api` responses
-	:certificates.polling.interval: A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for updated SSL certificates
+	:certificates.polling.interval: A string containing an integer which specifies the interval, in milliseconds, on which other Traffic Control components should check for updated SSL certificates
 	:consistent.dns.routing:        A string containing a boolean which indicates whether DNS routing will use a consistent hashing method or "round-robin"
 
 		"false"
@@ -61,7 +61,7 @@ Response Structure
 		"true"
 			A consistent hashing method will be used to define DNS routing
 
-	:coveragezone.polling.interval:      A string containing an integer which specifies the interval, in seconds, on which Traffic Routers should check for a new Coverage Zone file
+	:coveragezone.polling.interval:      A string containing an integer which specifies the interval, in milliseconds, on which Traffic Routers should check for a new Coverage Zone file
 	:coveragezone.polling.url:           The URL where a :term:`Coverage Zone File` may be requested by Traffic Routers
 	:dnssec.dynamic.response.expiration: A string containing a number and unit suffix that specifies the length of time for which dynamic responses to DNSSEC lookup queries should remain valid
 	:dnssec.dynamic.concurrencylevel:    An integer that defines the size of the concurrency level (threads) of the Guava cache used by ZoneManager to store zone material
@@ -75,9 +75,9 @@ Response Structure
 			DNSSEC is used within this CDN
 
 	:domain_name:                        A string that is the :abbr:`TLD (Top-Level Domain)` served by the CDN
-	:federationmapping.polling.interval: A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for new federation mappings
+	:federationmapping.polling.interval: A string containing an integer which specifies the interval, in milliseconds, on which other Traffic Control components should check for new federation mappings
 	:federationmapping.polling.url:      The URL where Traffic Control components can request federation mappings
-	:geolocation.polling.interval:       A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for new IP-to-geographic-location mapping databases
+	:geolocation.polling.interval:       A string containing an integer which specifies the interval, in milliseconds, on which other Traffic Control components should check for new IP-to-geographic-location mapping databases
 	:geolocation.polling.url:            The URL where Traffic Control components can request IP-to-geographic-location mapping database files
 	:keystore.maintenance.interval:      A string containing an integer which specifies the interval, in seconds, on which Traffic Routers should refresh their zone caches
 	:neustar.polling.interval:           A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for new "Neustar" databases
@@ -97,7 +97,7 @@ Response Structure
 
 		.. seealso:: `The Wikipedia page on Start of Authority records <https://en.wikipedia.org/wiki/SOA_record>`_.
 
-	:steeringmapping.polling.interval:       A string containing an integer which specifies the interval, in seconds, on which Traffic Control components should check for new steering mappings
+	:steeringmapping.polling.interval:       A string containing an integer which specifies the interval, in milliseconds, on which Traffic Control components should check for new steering mappings
 	:ttls:                                   An object that contains keys which are types of DNS records that have values which are strings containing integers that specify the time for which a response to the specific type of record request should remain valid
 	:zonemanager.cache.maintenance.interval: A configuration option for the ZoneManager Java class of Traffic Router
 	:zonemanager.threadpool.scale:           A configuration option for the ZoneManager Java class of Traffic Router

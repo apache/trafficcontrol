@@ -19,9 +19,11 @@ limitations under the License.
 	<tp-generic-table
 		[data]="changeLogs | async"
 		[cols]="columnDefs"
+		[contextMenuItems]="contextMenuOptions"
 		[fuzzySearch]="fuzzySubj"
 		[tableTitleButtons]="titleBtns"
 		(tableTitleButtonAction)="handleTitleButton($event)"
+		(contextMenuAction)="handleContextMenu($event)"
 		context="change-logs">
 	</tp-generic-table>
 

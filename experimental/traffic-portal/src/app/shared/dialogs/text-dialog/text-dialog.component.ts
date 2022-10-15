@@ -16,27 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { Component, Inject } from "@angular/core";
+import { MAT_DIALOG_DATA } from "@angular/material/dialog";
 
-function TableCDNDeliveryServicesController(cdn, deliveryServices, steeringTargets, filter, $controller, $scope) {
+/**
+ * Contains the structure of the data the TextDialogComponent expects
+ */
+export interface TextDialogData {
+	title: string;
+	message: string;
+}
 
-	// extends the TableDeliveryServicesController to inherit common methods
-	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'cdnDS', deliveryServices: deliveryServices, steeringTargets: steeringTargets, filter: filter, $scope: $scope }));
+/**
+ * TextDialogComponent contains code for displaying a simple text mat-dialog.
+ */
+@Component({
+	selector: "tp-text-dialog",
+	styleUrls: ["./text-dialog.component.scss"],
+	templateUrl: "./text-dialog.component.html"
+})
+export class TextDialogComponent {
 
-	$scope.cdn = cdn;
-	$scope.breadCrumbs = [
-		{
-			href: "#!/cdns",
-			text: "CDNs"
-		},
-		{
-			href: `#!/cdns/${cdn.id}`,
-			text: cdn.name
-		},
-		{
-			text: "Delivery Services"
-		}
-	];
-};
-
-TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', 'steeringTargets', 'filter', '$controller', '$scope'];
-module.exports = TableCDNDeliveryServicesController;
+	constructor(@Inject(MAT_DIALOG_DATA) public readonly dialogData: TextDialogData) {
+	}
+}

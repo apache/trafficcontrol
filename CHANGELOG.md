@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#7089](https://github.com/apache/trafficcontrol/issues/7089) *Traffic Router* Added the ability to specify HTTPS certificate attributes.
 - [#7109](https://github.com/apache/trafficcontrol/pull/7109) *Traffic Router* Removed `dnssec.zone.diffing.enabled` and `dnssec.rrsig.cache.enabled` parameters.
 - [#7075](https://github.com/apache/trafficcontrol/pull/7075) *Traffic Portal* Added the `lastUpdated` field to all delivery service forms.
 - [#7055](https://github.com/apache/trafficcontrol/issues/7055) *Traffic Portal* Made `Clear Table Filters` option visible to the user.
@@ -12,8 +13,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Added API version 5.0 (IN DEVELOPMENT)
 - [#7023](https://github.com/apache/trafficcontrol/pull/7023) *Traffic Ops* Added the `ASN` field in TO Server struct, which provides the ability to query servers by `ASN`.
 - [#2101](https://github.com/apache/trafficcontrol/issues/2101) *Traffic Portal* Added the ability to tell if a Delivery Service is the target of another steering DS.
+- [#6021](https://github.com/apache/trafficcontrol/issues/6021) *Traffic Portal* Added the ability to view a change logs message in it's entirety by clicking on it.
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) *Traffic Ops, Traffic Portal* Added ability to assign multiple server capabilities to a server.
 - [#7032](https://github.com/apache/trafficcontrol/issues/7032) *Cache Config* Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
+- [#7097](https://github.com/apache/trafficcontrol/issues/7097) *Traffic Ops, Traffic Portal, t3c* Added the `regional` field to Delivery Services, which affects whether `maxOriginConnections` should be per Cache Group
 
 ### Changed
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
@@ -29,7 +32,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7021](https://github.com/apache/trafficcontrol/issues/7021) *Cache Config* Fixed cache config for Delivery Services with IP Origins.
 - [#7043](https://github.com/apache/trafficcontrol/issues/7043) Fixed cache config missing retry parameters for non-topology MSO Delivery Services going direct from edge to origin.
 - [#7047](https://github.com/apache/trafficcontrol/issues/7047) *Traffic Ops* allow `apply_time` query parameters on the `servers/{id-name}/update` when the CDN is locked.
+- [#7048](https://github.com/apache/trafficcontrol/issues/7048) *Traffic Stats* Add configuration value to set the client request timeout for calls to Traffic Ops.
 - Updated Apache Tomcat from 9.0.43 to 9.0.67
+- [#7125](https://github.com/apache/trafficcontrol/issues/7125) *Docs* Reflect implementation and deprecation notice for `letsencrypt/autorenew` endpoint.
 
 ## [7.0.0] - 2022-07-19
 ### Added

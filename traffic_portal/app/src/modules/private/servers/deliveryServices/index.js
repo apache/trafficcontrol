@@ -18,7 +18,7 @@
  */
 
 module.exports = angular.module('trafficPortal.private.servers.deliveryServices', [])
-	.config(function($stateProvider, $urlRouterProvider) {
+	.config(function ($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.servers.deliveryServices', {
 				url: '/{serverId}/delivery-services',
@@ -27,13 +27,16 @@ module.exports = angular.module('trafficPortal.private.servers.deliveryServices'
 						templateUrl: 'common/modules/table/serverDeliveryServices/table.serverDeliveryServices.tpl.html',
 						controller: 'TableServerDeliveryServicesController',
 						resolve: {
-							server: function($stateParams, serverService) {
+							server: function ($stateParams, serverService) {
 								return serverService.getServers({id: $stateParams.serverId});
 							},
-							deliveryServices: function($stateParams, deliveryServiceService) {
+							deliveryServices: function ($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getServerDeliveryServices($stateParams.serverId);
 							},
-							filter: function() {
+							steeringTargets: function (deliveryServiceService) {
+								return deliveryServiceService.getSteering();
+							},
+							filter: function () {
 								return null;
 							}
 						}

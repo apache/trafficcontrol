@@ -284,6 +284,11 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			hide: true
 		},
 		{
+			headerName: "Regional Max Origin Connections",
+			field: "regional",
+			hide: true
+		},
+		{
 			headerName: "Regional Geoblocking",
 			field: "regionalGeoBlocking",
 			hide: true

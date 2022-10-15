@@ -44,7 +44,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "This endpoint is deprecated, please use letsencrypt/autorenew instead",
+			"text": "This endpoint is deprecated, please use acme_autorenew/ instead",
 			"level": "warning"
 		},
 		{

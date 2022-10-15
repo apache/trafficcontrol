@@ -127,6 +127,7 @@ Response Structure
 :qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
 :rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
 :regexRemap:           A :ref:`ds-regex-remap`
+:regional:             A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:            :ref:`ds-raw-remap`
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
@@ -223,6 +224,7 @@ Response Structure
 		"rangeRequestHandling": 0,
 		"rangeSliceBlockSize": null,
 		"regexRemap": null,
+		"regional": false,
 		"regionalGeoBlocking": false,
 		"remapText": null,
 		"routingName": "cdn",
