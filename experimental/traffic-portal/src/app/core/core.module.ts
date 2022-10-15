@@ -33,6 +33,7 @@ import { SharedModule } from "../shared/shared.module";
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
 import { DiffFieldComponent } from "./cdns/snapshot/diff-field/diff-field.component";
 import { ContentRouterComponent } from "./cdns/snapshot/router-diff/content-router/content-router.component";
+import { RouterDiffComponent } from "./cdns/snapshot/router-diff/router-diff.component";
 import { ContentServerComponent } from "./cdns/snapshot/server-diff/content-server/content-server.component";
 import { ChangeLogsComponent } from "./change-logs/change-logs.component";
 import { CurrentuserComponent } from "./currentuser/currentuser.component";
@@ -106,6 +107,7 @@ export const ROUTES: Routes = [
 		DiffFieldComponent,
 		ContentRouterComponent,
 		ContentServerComponent,
+		RouterDiffComponent,
 	],
 	exports: [],
 	imports: [

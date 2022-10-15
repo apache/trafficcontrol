@@ -1,0 +1,68 @@
+<mat-expansion-panel [expanded]="numChanges > 0">
+	<mat-expansion-panel-header>
+		<mat-panel-title>Traffic Routers</mat-panel-title>
+		<mat-panel-description>Traffic Routers configured to service this CDN ({{numChanges}} pending change{{numChanges === 1 ? '' : 's'}})</mat-panel-description>
+	</mat-expansion-panel-header>
+	<mat-accordion multi>
+		<mat-expansion-panel *ngIf="new.length > 0">
+			<mat-expansion-panel-header>
+				<mat-panel-title>New Traffic Routers</mat-panel-title>
+				<mat-panel-description>{{pendingChangesStr(new)}}</mat-panel-description>
+				<ng-template matExpansionPanelContent>
+					<ng-template matExpansionPanelContent>
+						<tp-content-router *ngFor="let tr of new" [router]="tr" kind="new"></tp-content-router>
+					</ng-template>
+				</ng-template>
+			</mat-expansion-panel-header>
+		</mat-expansion-panel>
+		<mat-expansion-panel *ngIf="deleted.length > 0">
+			<mat-expansion-panel-header>
+				<mat-panel-title>Removed Traffic Routers</mat-panel-title>
+				<mat-panel-description>{{pendingChangesStr(deleted)}}</mat-panel-description>
+				<ng-template matExpansionPanelContent>
+					<tp-content-router *ngFor="let tr of deleted" [router]="tr" kind="deleted"></tp-content-router>
+				</ng-template>
+			</mat-expansion-panel-header>
+		</mat-expansion-panel>
+		<mat-expansion-panel *ngIf="changed.length > 0">
+			<mat-expansion-panel-header>
+				<mat-panel-title>Changed Traffic Routers</mat-panel-title>
+				<mat-panel-description>{{pendingChangesStr(changed)}}</mat-panel-description>
+				<ng-template matExpansionPanelContent>
+					<mat-card *ngFor="let router of changed">
+						<mat-card-header>
+							<mat-card-title>
+								<ng-container *ngIf="router.fqdn.oldValue !== router.fqdn.newValue; else fqdnElse">
+									<ins>{{router.fqdn.newValue}}</ins>&nbsp;<del>{{router.fqdn.oldValue}}</del>
+								</ng-container>
+								<ng-template #fqdnElse>
+									<span class="no-change">{{router.fqdn.oldValue}}</span>
+								</ng-template>
+							</mat-card-title>
+						</mat-card-header>
+						<mat-card-content>
+							<tp-diff-field name="HTTP Port" [value]="router.port"></tp-diff-field>
+							<tp-diff-field name="HTTPS Port" [value]="router.httpsPort"></tp-diff-field>
+							<tp-diff-field name="API Port" [value]="router['api.port']"></tp-diff-field>
+							<tp-diff-field name="Secure API Port" [value]="router['secure.api.port']"></tp-diff-field>
+							<tp-diff-field name="IPv4 Address" [value]="router.ip"></tp-diff-field>
+							<tp-diff-field name="IPv6 Address" [value]="router.ip6"></tp-diff-field>
+							<tp-diff-field name="Location" [value]="router.location"></tp-diff-field>
+							<tp-diff-field name="Profile" [value]="router.profile"></tp-diff-field>
+							<tp-diff-field name="Status" [value]="router.status"></tp-diff-field>
+						</mat-card-content>
+					</mat-card>
+				</ng-template>
+			</mat-expansion-panel-header>
+		</mat-expansion-panel>
+		<mat-expansion-panel *ngIf="unchanged.length > 0">
+			<mat-expansion-panel-header>
+				<mat-panel-title>Unchanged Traffic Routers</mat-panel-title>
+				<mat-panel-description>{{unchanged.length}} Traffic Router{{unchanged.length === 1 ? "" : "s"}} unchanged</mat-panel-description>
+			</mat-expansion-panel-header>
+			<ng-template matExpansionPanelContent>
+				<tp-content-router *ngFor="let tr of unchanged" [router]="tr"></tp-content-router>
+			</ng-template>
+		</mat-expansion-panel>
+	</mat-accordion>
+</mat-expansion-panel>
