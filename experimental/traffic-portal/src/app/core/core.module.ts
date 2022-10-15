@@ -36,6 +36,7 @@ import { ContentRouterComponent } from "./cdns/snapshot/router-diff/content-rout
 import { RouterDiffComponent } from "./cdns/snapshot/router-diff/router-diff.component";
 import { ContentServerComponent } from "./cdns/snapshot/server-diff/content-server/content-server.component";
 import { ServerDiffComponent } from "./cdns/snapshot/server-diff/server-diff.component";
+import { SnapshotComponent } from "./cdns/snapshot/snapshot.component";
 import { ChangeLogsComponent } from "./change-logs/change-logs.component";
 import { CurrentuserComponent } from "./currentuser/currentuser.component";
 import { UpdatePasswordDialogComponent } from "./currentuser/update-password-dialog/update-password-dialog.component";
@@ -110,6 +111,7 @@ export const ROUTES: Routes = [
 		ContentServerComponent,
 		RouterDiffComponent,
 		ServerDiffComponent,
+		SnapshotComponent,
 	],
 	exports: [],
 	imports: [

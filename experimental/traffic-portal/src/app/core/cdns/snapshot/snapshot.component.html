@@ -1,0 +1,22 @@
+<mat-card>
+	<mat-card-title>Pending Configuration Changes for the "{{cdn.name}}" CDN</mat-card-title>
+	<mat-card-subtitle>{{totalChangesPending}} pending change{{totalChangesPending === 1 ? '' : 's'}}</mat-card-subtitle>
+	<mat-card-content>
+		<mat-accordion multi>
+		<mat-expansion-panel [expanded]="configDiff.num > 0">
+			<mat-expansion-panel-header>
+				<mat-panel-title>Miscellaneous</mat-panel-title>
+				<mat-panel-description>Miscellaneous settings used to configure Traffic Router ({{configDiff.num}} pending change{{configDiff.num === 1 ? '' : 's'}})</mat-panel-description>
+			</mat-expansion-panel-header>
+			<ng-template matExpansionPanelContent>
+				<tp-diff-field *ngFor="let field of configDiffFields; last as last" [value]="field[1]" [name]="field[0]" [last]="last"></tp-diff-field>
+			</ng-template>
+		</mat-expansion-panel>
+		<tp-router-diff [snapshots]="snaps" (changesPending)="setChangeAmount('router', $event)"></tp-router-diff>
+		<tp-server-diff [snapshots]="snaps" (changesPending)="setChangeAmount('server', $event)"></tp-server-diff>
+		</mat-accordion>
+	</mat-card-content>
+	<mat-card-actions>
+		<button type="button" mat-raised-button color="primary">Take Snapshot</button>
+	</mat-card-actions>
+</mat-card>
