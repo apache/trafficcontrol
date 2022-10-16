@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
 
 ### Fixed
+- [#7131](https://github.com/apache/trafficcontrol/issues/7131) *Docs* Fixed Docs for staticdnsentries API endpoint missing lastUpdated response property description in APIv3, APIv4 and APIv5.
 - [#6947](https://github.com/apache/trafficcontrol/issues/6947) *Docs* Fixed docs for `cdns/{{name}}/federations` in APIv3, APIv4 and APIv5.
 - [#6903](https://github.com/apache/trafficcontrol/issues/6903), [#6903](https://github.com/apache/trafficcontrol/issues/6903) *Docs* Fixed docs for /cdns/dnsseckeys/refresh in APIv4 and APIv5.
 - [#7049](https://github.com/apache/trafficcontrol/issues/7049), [#7052](https://github.com/apache/trafficcontrol/issues/7052) *Traffic Portal* Fixed server table's quick search and filter option for multiple profiles.

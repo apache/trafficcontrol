@@ -88,6 +88,7 @@ Response Structure
 :deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
 :id:                An integral, unique identifier for this static DNS entry
+:lastUpdated:       The date and time at which this static DNS entry was last updated
 :ttl:               The :abbr:`TTL (Time To Live)` of this static DNS entry in seconds
 :type:              The name of the type of this static DNS entry
 :typeId:            The integral, unique identifier of the :term:`Type` of this static DNS entry
@@ -177,6 +178,7 @@ Response Structure
 :deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
 :id:                An integral, unique identifier for this static DNS entry
+:lastUpdated:       The date and time at which this static DNS entry was last updated
 :ttl:               The :abbr:`TTL (Time To Live)` of this static DNS entry in seconds
 :type:              The name of the :term:`Type` of this static DNS entry
 :typeId:            The integral, unique identifier of the :term:`Type` of this static DNS entry
@@ -278,6 +280,7 @@ Response Structure
 :deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the :abbr:`FQDN (Fully Qualified Domain Name)` which shall resolve to ``address``
 :id:                An integral, unique identifier for this static DNS entry
+:lastUpdated:       The date and time at which this static DNS entry was last updated
 :ttl:               The :abbr:`TTL (Time To Live)` of this static DNS entry in seconds
 :type:              The name of the :term:`Type` of this static DNS entry
 :typeId:            The integral, unique identifier of the :term:`Type` of this static DNS entry
