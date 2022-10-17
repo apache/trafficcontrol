@@ -199,13 +199,13 @@ func TestServerServerCapabilities(t *testing.T) {
 							var serverId int
 							var serverCapability string
 							var err error
-							if val, ok := testCase.RequestOpts.QueryParameters["serverId"]; !ok {
+							if val, ok := testCase.RequestOpts.QueryParameters["serverId"]; ok {
 								serverId, err = strconv.Atoi(val[0])
 								assert.RequireNoError(t, err, "Expected no error when converting string to int: %v", err)
 							} else {
 								t.Fatalf("Query Parameter: \"serverId\" is required for DELETE method tests.")
 							}
-							if val, ok := testCase.RequestOpts.QueryParameters["serverCapability"]; !ok {
+							if val, ok := testCase.RequestOpts.QueryParameters["serverCapability"]; ok {
 								serverCapability = val[0]
 							} else {
 								t.Fatalf("Query Parameter: \"serverCapability\" is required for DELETE method tests.")
