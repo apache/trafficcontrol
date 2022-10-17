@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -26,6 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -37,9 +37,8 @@ func TestServerServerCapabilities(t *testing.T) {
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
-		var multipleSCs []string
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerServerCapability]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -103,59 +102,49 @@ func TestServerServerCapabilities(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId":         GetServerID(t, "dtrc-mid-01")(),
-						"serverCapability": "disk",
+					RequestBody: tc.ServerServerCapability{
+						ServerID:         util.Ptr(GetServerID(t, "dtrc-mid-01")()),
+						ServerCapability: util.Ptr("disk"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING SERVER ID": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverCapability": "disk",
+					RequestBody: tc.ServerServerCapability{
+						Server: util.Ptr("disk"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING SERVER CAPABILITY": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId": GetServerID(t, "dtrc-mid-01")(),
+					RequestBody: tc.ServerServerCapability{
+						ServerID: util.Ptr(GetServerID(t, "dtrc-mid-01")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when SERVER CAPABILITY DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId":         GetServerID(t, "dtrc-mid-01")(),
-						"serverCapability": "bogus",
+					RequestBody: tc.ServerServerCapability{
+						ServerID:         util.Ptr(GetServerID(t, "dtrc-mid-01")()),
+						ServerCapability: util.Ptr("bogus"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when SERVER DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId":         99999999,
-						"serverCapability": "bogus",
+					RequestBody: tc.ServerServerCapability{
+						ServerID:         util.Ptr(99999999),
+						ServerCapability: util.Ptr("bogus"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when SERVER TYPE NOT EDGE or MID": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId":         GetServerID(t, "trafficvault")(),
-						"serverCapability": "bogus",
+					RequestBody: tc.ServerServerCapability{
+						ServerID:         util.Ptr(GetServerID(t, "trafficvault")()),
+						ServerCapability: util.Ptr("bogus"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-				},
-			},
-			"PUT": {
-				"OK When Assigned Multiple Server Capabilities": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId":           GetServerID(t, "dtrc-mid-04")(),
-						"serverCapabilities": append(multipleSCs, "disk", "blah"),
-					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 			"DELETE": {
@@ -190,22 +179,6 @@ func TestServerServerCapabilities(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					ssc := tc.ServerServerCapability{}
-					msc := tc.MultipleServerCapabilities{}
-					var serverId int
-					var serverCapability string
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						if method == "PUT" {
-							err = json.Unmarshal(dat, &msc)
-						} else {
-							err = json.Unmarshal(dat, &ssc)
-						}
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -216,25 +189,26 @@ func TestServerServerCapabilities(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(ssc, testCase.RequestOpts)
-							for _, check := range testCase.Expectations {
-								check(t, reqInf, nil, alerts, err)
-							}
-						})
-					case "PUT":
-						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.AssignMultipleServerCapability(msc, testCase.RequestOpts, serverId)
+							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							if val, ok := testCase.RequestOpts.QueryParameters["serverId"]; ok {
-								serverId, _ = strconv.Atoi(val[0])
+							var serverId int
+							var serverCapability string
+							var err error
+							if val, ok := testCase.RequestOpts.QueryParameters["serverId"]; !ok {
+								serverId, err = strconv.Atoi(val[0])
+								assert.RequireNoError(t, err, "Expected no error when converting string to int: %v", err)
+							} else {
+								t.Fatalf("Query Parameter: \"serverId\" is required for DELETE method tests.")
 							}
-							if val, ok := testCase.RequestOpts.QueryParameters["serverCapability"]; ok {
+							if val, ok := testCase.RequestOpts.QueryParameters["serverCapability"]; !ok {
 								serverCapability = val[0]
+							} else {
+								t.Fatalf("Query Parameter: \"serverCapability\" is required for DELETE method tests.")
 							}
 							alerts, reqInf, err := testCase.ClientSession.DeleteServerServerCapability(serverId, serverCapability, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
