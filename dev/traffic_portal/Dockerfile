@@ -19,15 +19,16 @@ RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 	openssl req -new -key server.key -out server.csr \
 		-subj "/C=US/ST=CO/L=Denver/O=Apache/OU=Traffic Control/CN=trafficops.dev.ciab.test" && \
 	openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt && \
-	openssl rand 32 | base64 > /aes.key
+	openssl rand 32 | base64 > /aes.key && \
+    chmod 644 /server.key /aes.key
 
 FROM node:14-bullseye AS trafficportal-dev
 
-ENV TC="/root/go/src/github.com/apache/trafficcontrol/"
-VOLUME /root/go/src/github.com/apache/trafficcontrol
+ENV TC="/go/src/github.com/apache/trafficcontrol"
+VOLUME $TC
 EXPOSE 443
 ENV TP_SERVER_CONFIG_FILE="$TC/dev/traffic_portal/config.js"
 
 COPY --from=certbuilder /server.key /server.crt /
 
-CMD /root/go/src/github.com/apache/trafficcontrol/dev/traffic_portal/run.sh
+CMD ${TC}/dev/traffic_portal/run.sh

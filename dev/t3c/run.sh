@@ -18,9 +18,23 @@
 # under the License.
 
 set -o errexit
+set -o xtrace
 trap '[ $? -eq 0 ] && exit 0 || echo "Error on line ${LINENO} of ${0}"; exit 1' EXIT
 
 cd "$TC/tc-health-client"
+
+user=t3c
+uid="$(stat -c%u .)"
+gid="$(stat -c%g .)"
+if [[ "$(id -u)" != "$uid" ]]; then
+	if ! adduser -Du"$uid" "$user"; then
+		user="$(cat /etc/passwd | grep :x:1000: | cut -d: -f1)"
+	fi
+	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
+	chown "${uid}:${gid}" /usr/bin
+	exec su "$user" -- "$0"
+fi
+
 go build --gcflags "all=-N -l" .
 
 cd "$TC/cache-config"
@@ -38,11 +52,11 @@ if [[ ! -f /usr/bin/tc-health-client ]]; then
 	ln -s "$TC/tc-health-client/tc-health-client" /usr/bin/
 fi
 
-su -c traffic_server ats &
+traffic_server &
 
 while inotifywait --exclude '.*(\.md|\.json|\.pl|\.rst|_test\.go|\.gitignore|__debug_bin|-logrotate|.service)$|^\./(build|t3c-check-refs/test-files|testing|t3util/testing|tm-health-client/(config|tmagent)/test_files)/.*' -e modify -r . ; do
 	T3C_PID="$(ps | grep t3c | grep -v grep | grep -v inotifywait | grep -v run.sh | tr -s ' ' | cut -d ' ' -f2)"
-	if [[ ! -z "$T3"]]; then
+	if [[ ! -z "$T3" ]]; then
 		echo "$T3C_PID" | xargs kill;
 	fi
 	# TODO: is it even necessary to restart ATS?

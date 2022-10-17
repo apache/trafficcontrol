@@ -16,5 +16,18 @@
 set -o errexit
 
 cd "$TC/traffic_portal"
+
+user=trafficportal
+uid="$(stat -c%u .)"
+gid="$(stat -c%g .)"
+if [[ "$(id -u)" != "$uid" ]]; then
+	if ! adduser -Du"$uid" "$user"; then
+		user="$(cat /etc/passwd | grep :x:1000: | cut -d: -f1)"
+	fi
+	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
+	chown "${uid}:${gid}" /usr/bin
+	exec su "$user" -- "$0"
+fi
+
 npm ci
 ./node_modules/.bin/grunt

@@ -17,9 +17,18 @@
 # under the License.
 
 set -o errexit
+set -o xtrace
 trap '[ $? -eq 0 ] && exit 0 || echo "Error on line ${LINENO} of ${0}"; exit 1' EXIT
 
 cd "$TC/traffic_monitor"
+user=trafficmonitor
+uid="$(stat -c%u .)"
+gid="$(stat -c%g .)"
+if [[ "$(id -u)" != "$uid" ]]; then
+	adduser -Du"$uid" "$user"
+	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
+	exec su "$user" -- "$0"
+fi
 
 dlv --accept-multiclient --continue --listen=:81 --headless --api-version=2 debug -- --opsCfg="$TC/dev/traffic_monitor/ops.config.json" --config="$TC/dev/traffic_monitor/tm.config.json" &
 

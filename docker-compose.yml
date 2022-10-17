@@ -34,7 +34,7 @@ services:
             - 6443:443
             - 6444:6444
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol/
+            - .:/go/src/github.com/apache/trafficcontrol
 
     db:
         image: postgres:13.2-alpine
@@ -58,7 +58,7 @@ services:
         ports:
             - 444:443
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol
+            - .:/go/src/github.com/apache/trafficcontrol
             - ./.npm:/root/.npm
 
     tpv2:
@@ -73,7 +73,7 @@ services:
         ports:
             - 443:443
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol
+            - .:/go/src/github.com/apache/trafficcontrol
 
     trafficmonitor:
         build:
@@ -90,7 +90,7 @@ services:
             - 80:80
             - 81:81
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol
+            - .:/go/src/github.com/apache/trafficcontrol
 
     t3c:
         build:
@@ -108,7 +108,7 @@ services:
             - 8080:80
             - 8081:8081
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol
+            - .:/go/src/github.com/apache/trafficcontrol
 
     trafficrouter:
         build:

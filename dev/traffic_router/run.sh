@@ -22,14 +22,18 @@ set -o errexit
 
 
 cd "$TC/traffic_router"
-user=trafficrouter
+
+user=trafficportal
 uid="$(stat -c%u .)"
 gid="$(stat -c%g .)"
-adduser -Du"$uid" "$user"
-sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
-chown -R "${uid}:${gid}" /opt
+if [[ "$(id -u)" != "$uid" ]]; then
+	adduser -Du"$uid" "$user"
+	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
+	chown -R "${uid}:${gid}" /opt
+	exec su "$user" -- "$0"
+fi
 
-su "$user" -- /usr/bin/mvn -Dmaven.test.skip=true compile package -P \!rpm-build
+mvn -Dmaven.test.skip=true compile package -P \!rpm-build
 
 cd "$TC/dev/traffic_router"
-exec su "$user" -- /opt/tomcat/bin/catalina.sh jpda run
+exec /opt/tomcat/bin/catalina.sh jpda run

@@ -20,12 +20,13 @@ RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 	openssl req -new -key server.key -out server.csr \
 		-subj "/C=US/ST=CO/L=Denver/O=Apache/OU=Traffic Control/CN=trafficops.dev.ciab.test" && \
 	openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt && \
-	openssl rand 32 | base64 > /aes.key
+	openssl rand 32 | base64 > /aes.key && \
+    chmod 644 /server.key /aes.key
 
 FROM golang:${GO_VERSION}-alpine AS trafficops-dev
 
-ENV TC="/root/go/src/github.com/apache/trafficcontrol/" GOFLAGS="--buildvcs=false"
-VOLUME /root/go/src/github.com/apache/trafficcontrol
+ENV TC="/go/src/github.com/apache/trafficcontrol" GOFLAGS="--buildvcs=false"
+VOLUME $TC
 ENV ADMIN="$TC/traffic_ops/app/db/admin"
 EXPOSE 443 6444
 
@@ -38,4 +39,4 @@ RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 COPY .pgpass /root/.pgpass
 RUN chmod 0600 /root/.pgpass
 
-CMD /root/go/src/github.com/apache/trafficcontrol/dev/traffic_ops/run.sh
+CMD $TC/dev/traffic_ops/run.sh

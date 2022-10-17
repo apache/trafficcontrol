@@ -16,5 +16,18 @@
 set -o errexit
 
 cd "$TC/experimental/traffic-portal"
+
+user=tpv2
+uid="$(stat -c%u .)"
+gid="$(stat -c%g .)"
+if [[ "$(id -u)" != "$uid" ]]; then
+	if ! adduser -Du"$uid" "$user"; then
+		user="$(cat /etc/passwd | grep :x:1000: | cut -d: -f1)"
+	fi
+	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
+	chown "${uid}:${gid}" /usr/bin
+	exec su "$user" -- "$0"
+fi
+
 npm ci --ignore-scripts
 ./node_modules/.bin/ng serve --ssl --ssl-cert /server.crt --ssl-key /server.key --watch --proxy-config "$TC/dev/tpv2/proxy.json" --port 443 --host "::0" --live-reload
