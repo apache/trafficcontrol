@@ -67,6 +67,7 @@ Response Structure
 :id:            The integral, unique identifier for the CDN
 :lastUpdated:   Date and time when the CDN was last modified in :ref:`non-rfc-datetime`
 :name:          The name of the CDN
+:ttlOverride:	A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set set TTL values on :term:`Delivery Services` in this :term:`CDN`
 
 .. code-block:: http
 	:caption: Response Example
@@ -89,7 +90,8 @@ Response Structure
 			"domainName": "-",
 			"id": 1,
 			"lastUpdated": "2018-11-14 18:21:06+00",
-			"name": "ALL"
+			"name": "ALL",
+			"ttlOverride": 60
 		},
 		{
 			"dnssecEnabled": false,
@@ -115,6 +117,7 @@ Request Structure
 :dnssecEnabled: If ``true``, this CDN will use DNSSEC, if ``false`` it will not
 :domainName:    The top-level domain (TLD) belonging to the new CDN
 :name:          Name of the new CDN
+:ttlOverride:	A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set set TTL values on :term:`Delivery Services` in this :term:`CDN`
 
 .. code-block:: http
 	:caption: Request Structure
@@ -135,6 +138,7 @@ Response Structure
 :domainName:    The top-level domain (TLD) assigned to the newly created CDN
 :id:            An integral, unique identifier for the newly created CDN
 :name:          The newly created CDN's name
+:ttlOverride:	A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set set TTL values on :term:`Delivery Services` in this :term:`CDN`
 
 
 .. code-block:: http
@@ -163,5 +167,5 @@ Response Structure
 		"domainName": "quest",
 		"id": 3,
 		"lastUpdated": "2018-11-14 20:49:28+00",
-		"name": "test"
+		"name": "test",
 	}}

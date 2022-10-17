@@ -71,6 +71,10 @@ type CDN struct {
 	//
 	// required: true
 	Name string `json:"name" db:"name"`
+
+	// TTLOverride
+	//
+	TTLOverride int `json:"ttlOverride,omitempty" db:"ttl_override"`
 }
 
 // CDNNullable is identical to CDN except that its fields are reference values,
@@ -102,6 +106,10 @@ type CDNNullable struct {
 	//
 	// required: true
 	Name *string `json:"name" db:"name"`
+
+	// TTLOverride
+	//
+	TTLOverride *int `json:"ttlOverride,omitempty" db:"ttl_override"`
 }
 
 // CDNSSLKeysResponse is the structure of the Traffic Ops API's response to
