@@ -16,13 +16,13 @@ package v5
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -34,7 +34,7 @@ func TestServerChecks(t *testing.T) {
 
 		extensionSession := utils.CreateV5Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServercheckRequestNullable]{
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: extensionSession,
@@ -55,49 +55,49 @@ func TestServerChecks(t *testing.T) {
 			"POST": {
 				"OK when UPDATING EXISTING SERVER CHECK": {
 					ClientSession: extensionSession,
-					RequestBody: map[string]interface{}{
-						"servercheck_short_name": "ILO",
-						"host_name":              "atlanta-edge-01",
-						"value":                  0,
+					RequestBody: tc.ServercheckRequestNullable{
+						Name:     util.Ptr("ILO"),
+						HostName: util.Ptr("atlanta-edge-01"),
+						Value:    util.Ptr(0),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServerCheckCreateFields("atlanta-edge-01", map[string]interface{}{"HostName": "atlanta-edge-01", "Checks": map[string]int{"ORT": 13, "ILO": 0}})),
 				},
 				"BAD REQUEST when NO SERVER ID": {
 					ClientSession: extensionSession,
-					RequestBody: map[string]interface{}{
-						"id":                     nil,
-						"servercheck_short_name": "ILO",
-						"value":                  1,
+					RequestBody: tc.ServercheckRequestNullable{
+						ID:    nil,
+						Name:  util.Ptr("ILO"),
+						Value: util.Ptr(1),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID SERVER ID": {
 					ClientSession: extensionSession,
-					RequestBody: map[string]interface{}{
-						"host_name":              "atlanta-edge-01",
-						"id":                     -1,
-						"servercheck_short_name": "ILO",
-						"value":                  1,
+					RequestBody: tc.ServercheckRequestNullable{
+						HostName: util.Ptr("atlanta-edge-01"),
+						ID:       util.Ptr(-1),
+						Name:     util.Ptr("ILO"),
+						Value:    util.Ptr(1),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID SERVERCHECK SHORT NAME": {
 					ClientSession: extensionSession,
-					RequestBody: map[string]interface{}{
-						"host_name":              "atlanta-edge-01",
-						"servercheck_short_name": "BOGUS",
-						"value":                  1,
+					RequestBody: tc.ServercheckRequestNullable{
+						HostName: util.Ptr("atlanta-edge-01"),
+						Name:     util.Ptr("BOGUS"),
+						Value:    util.Ptr(1),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"FORBIDDEN when NON EXTENSION USER": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"host_name":              "atlanta-edge-01",
-						"id":                     GetServerID(t, "atlanta-edge-01")(),
-						"servercheck_short_name": "TEST",
-						"value":                  1,
+					RequestBody: tc.ServercheckRequestNullable{
+						HostName: util.Ptr("atlanta-edge-01"),
+						ID:       util.Ptr(GetServerID(t, "atlanta-edge-01")()),
+						Name:     util.Ptr("TEST"),
+						Value:    util.Ptr(1),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -107,15 +107,6 @@ func TestServerChecks(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					serverCheck := tc.ServercheckRequestNullable{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &serverCheck)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -126,7 +117,7 @@ func TestServerChecks(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.InsertServerCheckStatus(serverCheck, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.InsertServerCheckStatus(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, tc.Alerts{Alerts: resp.Alerts}, err)
 							}

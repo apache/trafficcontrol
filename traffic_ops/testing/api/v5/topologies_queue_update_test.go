@@ -20,7 +20,6 @@ package v5
  */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -36,14 +35,14 @@ import (
 func TestTopologiesQueueUpdate(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.TopologiesQueueUpdateRequest]{
 			"POST": {
 				"OK when VALID REQUEST": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"mso-topology"}}},
-					RequestBody: map[string]interface{}{
-						"action": "queue",
-						"cdnId":  GetCDNID(t, "cdn1")(),
+					RequestBody: tc.TopologiesQueueUpdateRequest{
+						Action: "queue",
+						CDNID:  int64(GetCDNID(t, "cdn1")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateTopologiesQueueUpdateFields(map[string]interface{}{"Action": "queue", "CDNID": int64(GetCDNID(t, "cdn1")()), "Topology": tc.TopologyName("mso-topology")}),
@@ -52,27 +51,27 @@ func TestTopologiesQueueUpdate(t *testing.T) {
 				"BAD REQUEST when INVALID CDNID": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"mso-topology"}}},
-					RequestBody: map[string]interface{}{
-						"action": "queue",
-						"cdnId":  -1,
+					RequestBody: tc.TopologiesQueueUpdateRequest{
+						Action: "queue",
+						CDNID:  -1,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID ACTION": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"mso-topology"}}},
-					RequestBody: map[string]interface{}{
-						"action": "requeue",
-						"cdnId":  GetCDNID(t, "cdn1")(),
+					RequestBody: tc.TopologiesQueueUpdateRequest{
+						Action: "requeue",
+						CDNID:  int64(GetCDNID(t, "cdn1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when TOPOLOGY DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"nonexistent"}}},
-					RequestBody: map[string]interface{}{
-						"action": "queue",
-						"cdnId":  GetCDNID(t, "cdn1")(),
+					RequestBody: tc.TopologiesQueueUpdateRequest{
+						Action: "queue",
+						CDNID:  int64(GetCDNID(t, "cdn1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -82,19 +81,14 @@ func TestTopologiesQueueUpdate(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					topQueueUpdate := tc.TopologiesQueueUpdateRequest{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &topQueueUpdate)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.TopologiesQueueUpdate(testCase.RequestOpts.QueryParameters["name"][0], topQueueUpdate, testCase.RequestOpts)
+							topologyQueueUpdate := testCase.RequestBody
+							if _, ok := testCase.RequestOpts.QueryParameters["name"]; !ok {
+								t.Fatalf("Query Parameter: \"name\" is required for POST method tests.")
+							}
+							resp, reqInf, err := testCase.ClientSession.TopologiesQueueUpdate(testCase.RequestOpts.QueryParameters["name"][0], topologyQueueUpdate, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.TopologiesQueueUpdate, resp.Alerts, err)
 							}

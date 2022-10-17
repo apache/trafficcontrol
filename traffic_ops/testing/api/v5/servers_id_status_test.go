@@ -16,11 +16,11 @@ package v5
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -30,32 +30,32 @@ import (
 func TestServersIDStatus(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServiceCategories, Topologies, DeliveryServices, DeliveryServiceServerAssignments}, func() {
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerPutStatus]{
 			"PUT": {
 				"OK when VALID request": {
 					EndpointId:    GetServerID(t, "atlanta-mid-01"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status":        GetStatusID(t, "OFFLINE")(),
-						"offlineReason": "test mid",
+					RequestBody: tc.ServerPutStatus{
+						Status:        util.JSONNameOrIDStr{ID: util.Ptr(GetStatusID(t, "OFFLINE")())},
+						OfflineReason: util.Ptr("test mid"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateUpdPending("atlanta-mid-01")),
 				},
 				"OK when using STATUS ID FIELD": {
 					EndpointId:    GetServerID(t, "atlanta-mid-16"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status":        GetStatusID(t, "OFFLINE")(),
-						"offlineReason": "test mid",
+					RequestBody: tc.ServerPutStatus{
+						Status:        util.JSONNameOrIDStr{ID: util.Ptr(GetStatusID(t, "OFFLINE")())},
+						OfflineReason: util.Ptr("test mid"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateUpdPending("atlanta-mid-16")),
 				},
 				"VALIDATE TOPOLOGY DESCENDANTS receive STATUS UPDATES": {
 					EndpointId:    GetServerID(t, "topology-mid-04"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status":        GetStatusID(t, "OFFLINE")(),
-						"offlineReason": "test topology mid cachegroup",
+					RequestBody: tc.ServerPutStatus{
+						Status:        util.JSONNameOrIDStr{ID: util.Ptr(GetStatusID(t, "OFFLINE")())},
+						OfflineReason: util.Ptr("test topology mid cachegroup"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateUpdPendingSpecificServers(map[string]bool{"topology-mid-04": false, "midInTopologyMidCg04": false,
@@ -65,52 +65,52 @@ func TestServersIDStatus(t *testing.T) {
 				"NOT FOUND when SERVER DOESNT EXIST": {
 					EndpointId:    func() int { return 11111111 },
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status":        "OFFLINE",
-						"offlineReason": "test last edge",
+					RequestBody: tc.ServerPutStatus{
+						Status:        util.JSONNameOrIDStr{Name: util.Ptr("OFFLINE")},
+						OfflineReason: util.Ptr("test last edge"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when STATUS DOESNT EXIST": {
 					EndpointId:    GetServerID(t, "atlanta-mid-16"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status":        "NOT_A_REAL_STATUS",
-						"offlineReason": "test last edge",
+					RequestBody: tc.ServerPutStatus{
+						Status:        util.JSONNameOrIDStr{Name: util.Ptr("NOT_A_REAL_STATUS")},
+						OfflineReason: util.Ptr("test last edge"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING OFFLINE REASON when OFFLINE STATUS": {
 					EndpointId:    GetServerID(t, "atlanta-mid-16"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status": "OFFLINE",
+					RequestBody: tc.ServerPutStatus{
+						Status: util.JSONNameOrIDStr{Name: util.Ptr("OFFLINE")},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING OFFLINE REASON when ADMIN_DOWN STATUS": {
 					EndpointId:    GetServerID(t, "atlanta-mid-16"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status": "ADMIN_DOWN",
+					RequestBody: tc.ServerPutStatus{
+						Status: util.JSONNameOrIDStr{Name: util.Ptr("ADMIN_DOWN")},
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"CONFLICT when SERVER STATUS OFFLINE when ONLY EDGE SERVER ASSIGNED": {
 					EndpointId:    GetServerID(t, "test-ds-server-assignments"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status":        "OFFLINE",
-						"offlineReason": "test last edge",
+					RequestBody: tc.ServerPutStatus{
+						Status:        util.JSONNameOrIDStr{Name: util.Ptr("OFFLINE")},
+						OfflineReason: util.Ptr("test last edge"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"CONFLICT when SERVER STATUS OFFLINE when ONLY ORIGIN SERVER ASSIGNED": {
 					EndpointId:    GetServerID(t, "test-mso-org-01"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"status":        "OFFLINE",
-						"offlineReason": "test last origin",
+					RequestBody: tc.ServerPutStatus{
+						Status:        util.JSONNameOrIDStr{Name: util.Ptr("OFFLINE")},
+						OfflineReason: util.Ptr("test last origin"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
@@ -120,20 +120,11 @@ func TestServersIDStatus(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					serverStatus := tc.ServerPutStatus{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &serverStatus)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
 							clearUpdates(t)
-							alerts, reqInf, err := testCase.ClientSession.UpdateServerStatus(testCase.EndpointId(), serverStatus, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateServerStatus(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

@@ -1,18 +1,17 @@
 package v5
 
 /*
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+		http://www.apache.org/licenses/LICENSE-2.0
 
-   http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
 */
 
 import (
@@ -24,19 +23,18 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func TestServersIDQueueUpdate(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, bool]{
 			"POST": {
 				"OK when VALID QUEUE request": {
 					EndpointId:    GetServerID(t, "atlanta-edge-01"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"action": "queue",
-					},
+					RequestBody:   true,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServerQueueUpdateFields(map[string]interface{}{"Action": "queue", "ServerID": GetServerID(t, "atlanta-edge-01")()}),
 						validateUpdPendingSpecificServers(map[string]bool{"atlanta-edge-01": true})),
@@ -44,9 +42,7 @@ func TestServersIDQueueUpdate(t *testing.T) {
 				"OK when VALID DEQUEUE request": {
 					EndpointId:    GetServerID(t, "atlanta-edge-01"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"action": "dequeue",
-					},
+					RequestBody:   false,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServerQueueUpdateFields(map[string]interface{}{"Action": "dequeue", "ServerID": GetServerID(t, "atlanta-edge-01")()}),
 						validateUpdPendingSpecificServers(map[string]bool{"atlanta-edge-01": false})),
@@ -57,9 +53,7 @@ func TestServersIDQueueUpdate(t *testing.T) {
 				"NOT FOUND when NON-EXISTENT SERVER": {
 					EndpointId:    func() int { return 999999 },
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"action": "queue",
-					},
+					RequestBody: true,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				}, */
 			},
@@ -68,19 +62,10 @@ func TestServersIDQueueUpdate(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					var queueUpdate bool
-					if val, ok := testCase.RequestBody["action"]; ok {
-						if val == "queue" {
-							queueUpdate = true
-						} else if val == "dequeue" {
-							queueUpdate = false
-						}
-					}
-
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.SetServerQueueUpdate(testCase.EndpointId(), queueUpdate, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.SetServerQueueUpdate(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

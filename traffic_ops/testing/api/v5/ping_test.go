@@ -20,17 +20,20 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func TestPing(t *testing.T) {
 
-	methodTests := utils.V5TestCase{
+	methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 		"GET": {
 			"OK when VALID request": {
-				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				ClientSession: TOSession,
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 			},
 			"OK when UNAUTHENTICATED": {
-				ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				ClientSession: NoAuthTOSession,
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 			},
 		},
 	}

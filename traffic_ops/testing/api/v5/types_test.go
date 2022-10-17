@@ -16,7 +16,6 @@ package v5
 */
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -40,7 +39,7 @@ func TestTypes(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Type]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -58,23 +57,28 @@ func TestTypes(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						validateTypeFields(map[string]interface{}{"Name": "ORG"})),
 				},
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"POST": {
-				"BAD REQUEST when useInTable NOT server": {
+				"BAD REQUEST when INVALID useInTable NOT server": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"description": "Host header regular expression-Test",
-						"name":        "TEST_1",
-						"useInTable":  "regex",
+					RequestBody: tc.Type{
+						Description: "Host header regular expression-Test",
+						Name:        "TEST_1",
+						UseInTable:  "regex",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when VALID request when useInTable=server": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"description": "Host header regular expression-Test",
-						"name":        "TEST_4",
-						"useInTable":  "server",
+					RequestBody: tc.Type{
+						Description: "Host header regular expression-Test",
+						Name:        "TEST_4",
+						UseInTable:  "server",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateTypeUpdateCreateFields("TEST_4", map[string]interface{}{"Name": "TEST_4"})),
@@ -84,20 +88,20 @@ func TestTypes(t *testing.T) {
 				"BAD REQUEST when useInTable NOT server": {
 					EndpointId:    GetTypeID(t, "ACTIVE_DIRECTORY"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"description": "Active Directory User",
-						"name":        "TEST_3",
-						"useInTable":  "cachegroup",
+					RequestBody: tc.Type{
+						Description: "Active Directory User",
+						Name:        "TEST_3",
+						UseInTable:  "cachegroup",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when VALID request when useInTable=server": {
 					EndpointId:    GetTypeID(t, "RIAK"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"description": "riak type",
-						"name":        "TEST_5",
-						"useInTable":  "server",
+					RequestBody: tc.Type{
+						Description: "riak type",
+						Name:        "TEST_5",
+						UseInTable:  "server",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateTypeUpdateCreateFields("TEST_5", map[string]interface{}{"Name": "TEST_5"})),
@@ -110,29 +114,13 @@ func TestTypes(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-			},
 		}
 
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					typ := tc.Type{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &typ)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetTypes(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -141,14 +129,14 @@ func TestTypes(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateType(typ, client.RequestOptions{})
+							alerts, reqInf, err := testCase.ClientSession.CreateType(testCase.RequestBody, client.RequestOptions{})
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateType(testCase.EndpointId(), typ, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateType(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
