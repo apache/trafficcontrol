@@ -99,7 +99,7 @@ func TestReadCDNs(t *testing.T) {
 }
 
 func TestFuncs(t *testing.T) {
-	apiVersion := &api.Version{4, 1}
+	apiVersion := &api.Version{Major: 4, Minor: 1}
 	if strings.Index(selectQuery(apiVersion), "SELECT") != 0 {
 		t.Errorf("expected selectQuery to start with SELECT")
 	}
