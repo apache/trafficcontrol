@@ -799,6 +799,14 @@ type Version struct {
 	Minor uint64
 }
 
+func (v *Version) LessThan(otherVersion *Version) bool {
+	return v.Major < otherVersion.Major || (v.Major == otherVersion.Major && v.Minor < otherVersion.Minor)
+}
+
+func (v *Version) GreaterThanOrEqualTo(otherVersion *Version) bool {
+	return !v.LessThan(otherVersion)
+}
+
 // GetRequestedAPIVersion returns a pointer to the requested API Version from the request if it exists or returns nil otherwise.
 func GetRequestedAPIVersion(path string) *Version {
 	pathParts := strings.Split(path, "/")

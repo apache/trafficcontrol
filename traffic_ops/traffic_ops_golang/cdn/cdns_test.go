@@ -99,13 +99,14 @@ func TestReadCDNs(t *testing.T) {
 }
 
 func TestFuncs(t *testing.T) {
-	if strings.Index(selectQuery(4), "SELECT") != 0 {
+	apiVersion := &api.Version{4, 1}
+	if strings.Index(selectQuery(apiVersion), "SELECT") != 0 {
 		t.Errorf("expected selectQuery to start with SELECT")
 	}
-	if strings.Index(insertQuery(4), "INSERT") != 0 {
+	if strings.Index(insertQuery(apiVersion), "INSERT") != 0 {
 		t.Errorf("expected insertQuery to start with INSERT")
 	}
-	if strings.Index(updateQuery(4), "UPDATE") != 0 {
+	if strings.Index(updateQuery(apiVersion), "UPDATE") != 0 {
 		t.Errorf("expected updateQuery to start with UPDATE")
 	}
 	if strings.Index(deleteQuery(), "DELETE") != 0 {

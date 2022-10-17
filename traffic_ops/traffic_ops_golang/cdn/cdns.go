@@ -54,9 +54,9 @@ func (v *TOCDN) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName 
 }
 
 func (v *TOCDN) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOCDN) InsertQuery() string           { return insertQuery(v.APIInfo().Version.Major) }
+func (v *TOCDN) InsertQuery() string           { return insertQuery(v.APIInfo().Version) }
 func (v *TOCDN) NewReadObj() interface{}       { return &tc.CDNNullable{} }
-func (v *TOCDN) SelectQuery() string           { return selectQuery(v.APIInfo().Version.Major) }
+func (v *TOCDN) SelectQuery() string           { return selectQuery(v.APIInfo().Version) }
 func (v *TOCDN) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	columnInfo := map[string]dbhelpers.WhereColumnInfo{
 		"domainName":    dbhelpers.WhereColumnInfo{Column: "domain_name"},
@@ -64,12 +64,12 @@ func (v *TOCDN) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 		"id":            dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
 		"name":          dbhelpers.WhereColumnInfo{Column: "name"},
 	}
-	if v.APIInfo().Version.Major >= 4 {
+	if v.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{4, 1}) {
 		columnInfo["ttlOverride"] = dbhelpers.WhereColumnInfo{Column: "ttl_override", Checker: api.IsInt}
 	}
 	return columnInfo
 }
-func (v *TOCDN) UpdateQuery() string { return updateQuery(v.APIInfo().Version.Major) }
+func (v *TOCDN) UpdateQuery() string { return updateQuery(v.APIInfo().Version) }
 func (v *TOCDN) DeleteQuery() string { return deleteQuery() }
 
 func (cdn TOCDN) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -133,7 +133,7 @@ func (cdn TOCDN) Validate() (error, error) {
 		"name":       validation.Validate(cdn.Name, validation.Required, validName),
 		"domainName": validation.Validate(cdn.DomainName, validation.Required, validDomainName),
 	}
-	if cdn.APIInfo().Version.Major >= 4 {
+	if cdn.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{4, 1}) {
 		errs["ttlOverride"] = validation.Validate(cdn.TTLOverride, validation.By(tovalidate.IsGreaterThanZero))
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
@@ -141,7 +141,7 @@ func (cdn TOCDN) Validate() (error, error) {
 
 func (cdn *TOCDN) Create() (error, error, int) {
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
-	if cdn.APIInfo().Version.Major < 4 {
+	if cdn.APIInfo().Version.LessThan(&api.Version{4, 1}) {
 		cdn.TTLOverride = nil
 	}
 	return api.GenericCreate(cdn)
@@ -160,7 +160,7 @@ func (cdn *TOCDN) Update(h http.Header) (error, error, int) {
 		}
 	}
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
-	if cdn.APIInfo().Version.Major < 4 {
+	if cdn.APIInfo().Version.LessThan(&api.Version{4, 1}) {
 		cdn.TTLOverride = nil
 	}
 	return api.GenericUpdate(h, cdn)
@@ -176,9 +176,9 @@ func (cdn *TOCDN) Delete() (error, error, int) {
 	return api.GenericDelete(cdn)
 }
 
-func selectQuery(apiMajorVersion uint64) string {
+func selectQuery(apiVersion *api.Version) string {
 	var ttlOverrideColumn string
-	if apiMajorVersion >= 4 {
+	if apiVersion.GreaterThanOrEqualTo(&api.Version{4, 1}) {
 		ttlOverrideColumn = `
 			ttl_override,
 `
@@ -199,9 +199,9 @@ FROM cdn c`
 	return query
 }
 
-func updateQuery(majorAPIVersion uint64) string {
+func updateQuery(apiVersion *api.Version) string {
 	var ttlOverrideColumn string
-	if majorAPIVersion >= 4 {
+	if apiVersion.GreaterThanOrEqualTo(&api.Version{4, 1}) {
 		ttlOverrideColumn = `,
 ttl_override=:ttl_override
 `
@@ -219,10 +219,10 @@ WHERE id=:id RETURNING last_updated`
 	return query
 }
 
-func insertQuery(majorAPIVersion uint64) string {
+func insertQuery(apiVersion *api.Version) string {
 	var ttlOverrideColumn string
 	var ttlOverrideValue string
-	if majorAPIVersion >= 4 {
+	if apiVersion.GreaterThanOrEqualTo(&api.Version{4, 1}) {
 		ttlOverrideColumn = `,
 ttl_override
 `
