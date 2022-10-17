@@ -176,16 +176,21 @@ func (cdn *TOCDN) Delete() (error, error, int) {
 	return api.GenericDelete(cdn)
 }
 
-func selectQuery(apiVersion *api.Version) string {
-	var ttlOverrideColumn string
-	if apiVersion.GreaterThanOrEqualTo(&api.Version{Major: 4, Minor: 1}) {
-		ttlOverrideColumn = `
-			ttl_override,
-`
-	} else {
-		ttlOverrideColumn = `
-`
+func formatQueryByAPIVersion(apiVersion *api.Version, minimumAPIVersion *api.Version, queryFormatString string, columnStrs []string, lowAPIVersionColumnStrs []string) string {
+	if apiVersion.LessThan(&api.Version{Major: 4, Minor: 1}) {
+		for index, _ := range columnStrs {
+			columnStrs[index] = lowAPIVersionColumnStrs[index]
+		}
 	}
+	columnStrArgs := make([]interface{}, len(columnStrs))
+	for index, _ := range columnStrs {
+		columnStrArgs[index] = columnStrs[index]
+	}
+	query := fmt.Sprintf(queryFormatString, columnStrArgs...)
+	return query
+}
+
+func selectQuery(apiVersion *api.Version) string {
 	query := `SELECT
 dnssec_enabled,
 domain_name,
@@ -195,19 +200,12 @@ last_updated,
 name
 
 FROM cdn c`
-	query = fmt.Sprintf(query, ttlOverrideColumn)
-	return query
+	return formatQueryByAPIVersion(apiVersion, &api.Version{Major: 4, Minor: 1}, query, []string{`
+			ttl_override,
+`}, []string{``})
 }
 
 func updateQuery(apiVersion *api.Version) string {
-	var ttlOverrideColumn string
-	if apiVersion.GreaterThanOrEqualTo(&api.Version{Major: 4, Minor: 1}) {
-		ttlOverrideColumn = `,
-ttl_override=:ttl_override
-`
-	} else {
-		ttlOverrideColumn = ``
-	}
 	query := `UPDATE
 cdn SET
 dnssec_enabled=:dnssec_enabled,
@@ -215,24 +213,12 @@ domain_name=:domain_name,
 name=:name
 %s
 WHERE id=:id RETURNING last_updated`
-	query = fmt.Sprintf(query, ttlOverrideColumn)
-	return query
+	return formatQueryByAPIVersion(apiVersion, &api.Version{Major: 4, Minor: 1}, query, []string{`,
+ttl_override=:ttl_override
+`}, []string{``})
 }
 
 func insertQuery(apiVersion *api.Version) string {
-	var ttlOverrideColumn string
-	var ttlOverrideValue string
-	if apiVersion.GreaterThanOrEqualTo(&api.Version{Major: 4, Minor: 1}) {
-		ttlOverrideColumn = `,
-ttl_override
-`
-		ttlOverrideValue = `,
-:ttl_override
-`
-	} else {
-		ttlOverrideValue = ``
-		ttlOverrideColumn = ``
-	}
 	query := `INSERT INTO cdn (
 dnssec_enabled,
 domain_name,
@@ -244,8 +230,11 @@ name
 :name
 %s
 ) RETURNING id,last_updated`
-	query = fmt.Sprintf(query, ttlOverrideColumn, ttlOverrideValue)
-	return query
+	return formatQueryByAPIVersion(apiVersion, &api.Version{Major: 4, Minor: 1}, query, []string{`,
+ttl_override
+`, `,
+:ttl_override
+`}, []string{``, ``})
 }
 
 func deleteQuery() string {
