@@ -58,6 +58,9 @@ type CRConfigConfig struct {
 	ZoneManagerThreadpoolScale                 *string      `json:"zonemanager.threadpool.scale,omitempty"`
 }
 
+const CrConfigTTLSOA = "tld.ttls.SOA"
+const CrConfigTTLNS = "tld.ttls.NS"
+
 // CRConfigTTL defines the Time-To-Live (TTL) of various record types served by
 // Traffic Router.
 //

@@ -130,7 +130,7 @@ export const cdns = {
 					description: "update cdn ttl override",
 					Name: "TPCDN2",
 					NewName: "",
-					validationMessage: "missing required Permissions: CDN:UPDATE"
+					validationMessage: "cdn was updated."
 				},
 				{
 					description: "update cdn name",
