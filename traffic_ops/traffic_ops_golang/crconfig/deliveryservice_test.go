@@ -22,6 +22,7 @@ package crconfig
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -45,18 +46,10 @@ func randDS(ttlOverride int) tc.CRConfigDeliveryService {
 	ttlRefresh := 28800
 	ttlRetry := 7200
 	if ttlOverride > 0 {
-		if ttlOverride < ttlExpire {
-			ttlExpire = ttlOverride
-		}
-		if ttlOverride < ttlMinimum {
-			ttlMinimum = ttlOverride
-		}
-		if ttlOverride < ttlRefresh {
-			ttlRefresh = ttlOverride
-		}
-		if ttlOverride < ttlRetry {
-			ttlRetry = ttlOverride
-		}
+		ttlExpire = int(math.Min(float64(ttlOverride), float64(ttlExpire)))
+		ttlMinimum = int(math.Min(float64(ttlOverride), float64(ttlMinimum)))
+		ttlRefresh = int(math.Min(float64(ttlOverride), float64(ttlRefresh)))
+		ttlRetry = int(math.Min(float64(ttlOverride), float64(ttlRetry)))
 	}
 
 	ttlExpireStr := strconv.Itoa(ttlExpire)

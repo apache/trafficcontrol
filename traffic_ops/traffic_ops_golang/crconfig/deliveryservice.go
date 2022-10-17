@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -52,18 +53,10 @@ func makeDSes(cdn string, domain string, ttlOverride int, tx *sql.Tx) (map[strin
 	refreshSeconds := int(CDNSOARefresh / time.Second)
 	retrySeconds := int(CDNSOARetry / time.Second)
 	if ttlOverride > 0 {
-		if ttlOverride < expireSeconds {
-			expireSeconds = ttlOverride
-		}
-		if ttlOverride < minimumSeconds {
-			minimumSeconds = ttlOverride
-		}
-		if ttlOverride < refreshSeconds {
-			refreshSeconds = ttlOverride
-		}
-		if ttlOverride < retrySeconds {
-			retrySeconds = ttlOverride
-		}
+		expireSeconds = int(math.Min(float64(ttlOverride), float64(expireSeconds)))
+		minimumSeconds = int(math.Min(float64(ttlOverride), float64(minimumSeconds)))
+		refreshSeconds = int(math.Min(float64(ttlOverride), float64(refreshSeconds)))
+		retrySeconds = int(math.Min(float64(ttlOverride), float64(retrySeconds)))
 	}
 
 	expireSecondsStr := strconv.Itoa(expireSeconds)
