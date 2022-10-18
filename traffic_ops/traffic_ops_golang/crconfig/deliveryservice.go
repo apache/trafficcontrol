@@ -227,8 +227,8 @@ AND d.active = true
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
 
-		if ttlOverride > 0 && ds.TTL != nil && ttlOverride < *ds.TTL {
-			*ds.TTL = ttlOverride
+		if ttlOverride > 0 && ds.TTL != nil {
+			*ds.TTL = int(math.Min(float64(ttlOverride), float64(*ds.TTL)))
 		}
 
 		// TODO prevent (lat XOR lon) in the Tx and UI
@@ -360,8 +360,8 @@ AND d.active = true
 			}
 			if dnsBypassTTL.Valid {
 				i := int(dnsBypassTTL.Int64)
-				if ttlOverride > 0 && ttlOverride < i {
-					i = ttlOverride
+				if ttlOverride > 0 {
+					i = int(math.Min(float64(ttlOverride), float64(i)))
 				}
 				bypassDest.TTL = &i
 			}
