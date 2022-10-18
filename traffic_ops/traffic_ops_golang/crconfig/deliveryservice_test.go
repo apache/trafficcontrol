@@ -22,6 +22,7 @@ package crconfig
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -35,19 +36,45 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func randDS() tc.CRConfigDeliveryService {
+func randDS(ttlOverride int) tc.CRConfigDeliveryService {
 	// truePtr := true
 	falseStrPtr := "false"
 	// numStr := "42"
 	ttlAdmin := "traffic_ops"
-	ttlExpire := "604800"
-	ttlMinimum := "30"
-	ttlRefresh := "28800"
-	ttlRetry := "7200"
-	ttl := util.IntPtr(test.RandInt())
-	ttlStr := strconv.Itoa(*ttl)
-	ttlNS := "3600"
-	ttlSOA := "86400"
+	ttlExpire := 604800
+	ttlMinimum := 30
+	ttlRefresh := 28800
+	ttlRetry := 7200
+	if ttlOverride > 0 {
+		ttlExpire = int(math.Min(float64(ttlOverride), float64(ttlExpire)))
+		ttlMinimum = int(math.Min(float64(ttlOverride), float64(ttlMinimum)))
+		ttlRefresh = int(math.Min(float64(ttlOverride), float64(ttlRefresh)))
+		ttlRetry = int(math.Min(float64(ttlOverride), float64(ttlRetry)))
+	}
+
+	ttlExpireStr := strconv.Itoa(ttlExpire)
+	ttlMinimumStr := strconv.Itoa(ttlMinimum)
+	ttlRefreshStr := strconv.Itoa(ttlRefresh)
+	ttlRetryStr := strconv.Itoa(ttlRetry)
+
+	var ttl *int
+	var ttlStr string
+	var ttlNS, ttlSOA string
+	var staticDNSTTL int
+
+	if ttlOverride > 0 {
+		ttl = util.Ptr(ttlOverride)
+		ttlStr = strconv.Itoa(*ttl)
+		ttlNS = ttlStr
+		ttlSOA = ttlStr
+		staticDNSTTL = ttlOverride
+	} else {
+		ttl = util.IntPtr(test.RandInt())
+		ttlStr = strconv.Itoa(*ttl)
+		ttlNS = "3600"
+		ttlSOA = "86400"
+		staticDNSTTL = test.RandInt()
+	}
 	geoProviderStr := GeoProviderMaxmindStr
 	ecsEnabled := false
 	return tc.CRConfigDeliveryService{
@@ -76,10 +103,10 @@ func randDS() tc.CRConfigDeliveryService {
 		RequiredCapabilities: test.RandStrArray(),
 		Soa: &tc.SOA{
 			Admin:          &ttlAdmin,
-			ExpireSeconds:  &ttlExpire,
-			MinimumSeconds: &ttlMinimum,
-			RefreshSeconds: &ttlRefresh,
-			RetrySeconds:   &ttlRetry,
+			ExpireSeconds:  &ttlExpireStr,
+			MinimumSeconds: &ttlMinimumStr,
+			RefreshSeconds: &ttlRefreshStr,
+			RetrySeconds:   &ttlRetryStr,
 		},
 		SSLEnabled: false,
 		EcsEnabled: &ecsEnabled,
@@ -110,7 +137,7 @@ func randDS() tc.CRConfigDeliveryService {
 		StaticDNSEntries: []tc.CRConfigStaticDNSEntry{
 			tc.CRConfigStaticDNSEntry{
 				Name:  test.RandStr(),
-				TTL:   test.RandInt(),
+				TTL:   staticDNSTTL,
 				Type:  test.RandStr(),
 				Value: test.RandStr(),
 			},
@@ -118,10 +145,10 @@ func randDS() tc.CRConfigDeliveryService {
 	}
 }
 
-func ExpectedMakeDSes() map[string]tc.CRConfigDeliveryService {
+func ExpectedMakeDSes(ttlOverride int) map[string]tc.CRConfigDeliveryService {
 	return map[string]tc.CRConfigDeliveryService{
-		"ds1": randDS(),
-		"ds2": randDS(),
+		"ds1": randDS(ttlOverride),
+		"ds2": randDS(ttlOverride),
 	}
 }
 
@@ -211,7 +238,11 @@ func TestMakeDSesGeoLimit(t *testing.T) {
 	cdn := "mycdn"
 	domain := "mycdn.invalid"
 
-	expected := ExpectedMakeDSes()
+	ttlOverride := 0
+	if test.RandBool() {
+		ttlOverride = 1 + test.RandIntn(200)
+	}
+	expected := ExpectedMakeDSes(ttlOverride)
 	delete(expected, "ds2")
 	expectedDS := expected["ds1"]
 	geoEnabled := make([]tc.CRConfigGeoEnabled, 0)
@@ -245,7 +276,7 @@ func TestMakeDSesGeoLimit(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := makeDSes(cdn, domain, tx)
+	actual, err := makeDSes(cdn, domain, ttlOverride, tx)
 	if err != nil {
 		t.Fatalf("makeDSes expected: nil error, actual: %v", err)
 	}
@@ -281,7 +312,11 @@ func TestMakeDSes(t *testing.T) {
 	cdn := "mycdn"
 	domain := "mycdn.invalid"
 
-	expected := ExpectedMakeDSes()
+	ttlOverride := 0
+	if test.RandBool() {
+		ttlOverride = 1 + test.RandIntn(200)
+	}
+	expected := ExpectedMakeDSes(ttlOverride)
 	expectedParams := ExpectedGetServerProfileParams(expected)
 	expectedDSParams, err := getDSParams(expectedParams)
 	if err != nil {
@@ -305,7 +340,7 @@ func TestMakeDSes(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := makeDSes(cdn, domain, tx)
+	actual, err := makeDSes(cdn, domain, ttlOverride, tx)
 	if err != nil {
 		t.Fatalf("makeDSes expected: nil error, actual: %v", err)
 	}
@@ -358,7 +393,11 @@ func TestGetServerProfileParams(t *testing.T) {
 
 	cdn := "mycdn"
 
-	expectedMakeDSes := ExpectedMakeDSes()
+	ttlOverride := 0
+	if test.RandBool() {
+		ttlOverride = 1 + test.RandIntn(200)
+	}
+	expectedMakeDSes := ExpectedMakeDSes(ttlOverride)
 	expected := ExpectedGetServerProfileParams(expectedMakeDSes)
 
 	mock.ExpectBegin()
@@ -442,7 +481,11 @@ func TestGetDSRegexesDomains(t *testing.T) {
 	cdn := "mycdn"
 	domain := "mycdn.invalid"
 
-	expectedMakeDSes := ExpectedMakeDSes()
+	ttlOverride := 0
+	if test.RandBool() {
+		ttlOverride = 1 + test.RandIntn(200)
+	}
+	expectedMakeDSes := ExpectedMakeDSes(ttlOverride)
 	expectedServerProfileParams := ExpectedGetServerProfileParams(expectedMakeDSes)
 	expectedDSParams, err := getDSParams(expectedServerProfileParams)
 	if err != nil {
@@ -511,7 +554,11 @@ func TestGetStaticDNSEntries(t *testing.T) {
 
 	cdn := "mycdn"
 
-	expectedMakeDSes := ExpectedMakeDSes()
+	ttlOverride := 0
+	if test.RandBool() {
+		ttlOverride = 1 + test.RandIntn(200)
+	}
+	expectedMakeDSes := ExpectedMakeDSes(ttlOverride)
 	expected := ExpectedGetStaticDNSEntries(expectedMakeDSes)
 
 	mock.ExpectBegin()

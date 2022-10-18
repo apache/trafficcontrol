@@ -540,13 +540,13 @@ func TestGetServerDSes(t *testing.T) {
 	}
 }
 
-func ExpectedGetCDNInfo() (string, bool) {
-	return test.RandStr(), test.RandBool()
+func ExpectedGetCDNInfo() (string, bool, int) {
+	return test.RandStr(), test.RandBool(), test.RandInt()
 }
 
-func MockGetCDNInfo(mock sqlmock.Sqlmock, expectedDomain string, expectedDNSSECEnabled bool, cdn string) {
-	rows := sqlmock.NewRows([]string{"domain_name", "dnssec_enabled"})
-	rows = rows.AddRow(expectedDomain, expectedDNSSECEnabled)
+func MockGetCDNInfo(mock sqlmock.Sqlmock, expectedDomain string, expectedDNSSECEnabled bool, expectedTTLOverride int, cdn string) {
+	rows := sqlmock.NewRows([]string{"domain_name", "dnssec_enabled", "ttl_override"})
+	rows = rows.AddRow(expectedDomain, expectedDNSSECEnabled, expectedTTLOverride)
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
 }
 
@@ -560,8 +560,8 @@ func TestGetCDNInfo(t *testing.T) {
 	cdn := "mycdn"
 
 	mock.ExpectBegin()
-	expectedDomain, expectedDNSSECEnabled := ExpectedGetCDNInfo()
-	MockGetCDNInfo(mock, expectedDomain, expectedDNSSECEnabled, cdn)
+	expectedDomain, expectedDNSSECEnabled, expectedTTLOverride := ExpectedGetCDNInfo()
+	MockGetCDNInfo(mock, expectedDomain, expectedDNSSECEnabled, expectedTTLOverride, cdn)
 	mock.ExpectCommit()
 
 	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
@@ -572,7 +572,7 @@ func TestGetCDNInfo(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actualDomain, actualDNSSECEnabled, err := getCDNInfo(cdn, tx)
+	actualDomain, actualDNSSECEnabled, actualTTLOverride, err := getCDNInfo(cdn, tx)
 	if err != nil {
 		t.Fatalf("getCDNInfo expected: nil error, actual: %v", err)
 	}
@@ -582,6 +582,9 @@ func TestGetCDNInfo(t *testing.T) {
 	}
 	if expectedDNSSECEnabled != actualDNSSECEnabled {
 		t.Errorf("getCDNInfo expected: %v, actual: %v", expectedDNSSECEnabled, actualDNSSECEnabled)
+	}
+	if expectedTTLOverride != actualTTLOverride {
+		t.Errorf("getCDNInfo expected: %v, actual: %v", expectedTTLOverride, actualTTLOverride)
 	}
 }
 

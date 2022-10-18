@@ -17,7 +17,7 @@
  * under the License.
  */
 import { browser, by, element } from "protractor";
-import { randomize } from "../config";
+import { randomize, twoNumberRandomize } from "../config";
 import { SideNavigationPage } from "./SideNavigationPage.po";
 
 interface CDN {
@@ -25,6 +25,7 @@ interface CDN {
 	DNSSEC: string;
 	Domain: string;
 	Name: string;
+	TTLOverride?: string;
 	validationMessage?: string;
 }
 
@@ -38,6 +39,7 @@ interface UpdateCDN {
 export class CDNPage extends SideNavigationPage {
 
 	private readonly txtCDNName = element(by.name("name"));
+	private readonly txtCDNTTLOverride = element(by.name("ttlOverride"));
 
 	/**
 	 * Navigates the browser to the CDNs table page.
@@ -58,11 +60,15 @@ export class CDNPage extends SideNavigationPage {
 		await this.openCDNsPage();
 		await element(by.buttonText("More")).click();
 		await element(by.linkText("Create New CDN")).click();
-		await Promise.all([
+		const actions = [
 			this.txtCDNName.sendKeys(cdn.Name + randomize),
 			element(by.name("domainName")).sendKeys(cdn.Domain),
-			element(by.name("dnssecEnabled")).sendKeys(cdn.DNSSEC)
-		]);
+			element(by.name("dnssecEnabled")).sendKeys(cdn.DNSSEC),
+		];
+		if (cdn.TTLOverride !== undefined) {
+			actions.push(element(this.txtCDNTTLOverride).sendKeys(cdn.TTLOverride));
+		}
+		await Promise.all(actions);
 		await this.ClickCreate();
 		return this.GetOutputMessage().then(v => cdn.validationMessage === v);
 	}
@@ -123,6 +129,11 @@ export class CDNPage extends SideNavigationPage {
 			case "update cdn name":
 				await this.txtCDNName.clear();
 				await this.txtCDNName.sendKeys(cdn.NewName + randomize);
+				await this.ClickUpdate();
+				break;
+			case "update cdn ttl override":
+				await this.txtCDNTTLOverride.clear();
+				await this.txtCDNTTLOverride.sendKeys(twoNumberRandomize);
 				await this.ClickUpdate();
 				break;
 			default:

@@ -69,11 +69,17 @@ export const cdns = {
 					validationMessage: "Cleared CDN server updates"
 				},
 				{
+					description: "update cdn ttl override",
+					Name: "TPCDN2",
+					NewName: "",
+					validationMessage: "cdn was updated."
+				},
+				{
 					description: "update cdn name",
 					Name: "TPCDN1",
 					NewName: "TPNewCDN1",
 					validationMessage: "cdn was updated."
-				}
+				},
 			],
 			remove: [
 				{
@@ -121,11 +127,17 @@ export const cdns = {
 					validationMessage: "missing required Permissions: SERVER:QUEUE"
 				},
 				{
+					description: "update cdn ttl override",
+					Name: "TPCDN2",
+					NewName: "",
+					validationMessage: "missing required Permissions: CDN:UPDATE"
+				},
+				{
 					description: "update cdn name",
 					Name: "TPCDN2",
 					NewName: "TPNewCDN2",
 					validationMessage: "missing required Permissions: CDN:UPDATE"
-				}
+				},
 			],
 			remove: [
 				{
@@ -186,11 +198,17 @@ export const cdns = {
 					validationMessage: "Cleared CDN server updates"
 				},
 				{
+					description: "update cdn ttl override",
+					Name: "TPCDN4",
+					NewName: "",
+					validationMessage: "cdn was updated."
+				},
+				{
 					description: "update cdn name",
 					Name: "TPCDN3",
 					NewName: "TPNewCDN3",
 					validationMessage: "cdn was updated."
-				}
+				},
 			],
 			remove: [
 				{
