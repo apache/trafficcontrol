@@ -40,18 +40,23 @@ done
 # if [[ -x ]]; then;./config.sh; done          traffic_ops/run-go.sh
 source config.sh
 
-exit_code=0
+failed=0
+
 for api_version in v{3..5}; do
 	./traffic_ops_${api_version}_integration_test -test.v -cfg=traffic-ops-test.conf -fixtures=tc-fixtures-${api_version}.json 2>&1 | ./go-junit-report --package-name=golang.test.toapi.${api_version} --set-exit-code > /junit/golang.test.toapi.${api_version}.xml && find /junit -type 'f' | xargs chmod 664
-	declare ${api_version}_exit_code=$?
+	exit_code_var=${api_version}_exit_code
+	declare ${exit_code_var}=$?
+	cat /junit/golang.test.toapi.${api_version}.xml
+	if [[ ${!exit_code_var} -ne 0 ]]; then
+		echo "TO API ${api_version} tests failed"
+		failed=1
+	fi
 done
 
-cat /junit/golang.test.toapi.v{3..5}.xml
-
-
-if [[ $v3_exit_code -eq 0 && $v4_exit_code -eq 0 ]]; then
+if [[ $failed -eq 0 ]]; then
 	echo "TO API tests success"
 else
 	echo "TO API tests failed"
 	exit 1
 fi
+
