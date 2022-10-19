@@ -23,15 +23,13 @@ trap '[ $? -eq 0 ] && exit 0 || echo "Error on line ${LINENO} of ${0}"; exit 1' 
 
 cd "$TC/tc-health-client"
 
-user=t3c
+user=ats
 uid="$(stat -c%u .)"
 gid="$(stat -c%g .)"
-if [[ "$(id -u)" != "$uid" ]]; then
-	if ! adduser -Du"$uid" "$user"; then
-		user="$(cat /etc/passwd | grep :x:1000: | cut -d: -f1)"
-	fi
+if [[ "$(id -u "$user")" != "$uid" ]]; then
+	sed -Ei "s/^(${user}:.*:)([0-9]+:){2}(.*)/\1${uid}:${gid}:\3/" /etc/passwd
 	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
-	chown "${uid}:${gid}" /usr/bin
+	chown -R "${uid}:${gid}" /usr/bin "/home/${user}" /etc/trafficserver /var/log/trafficserver /var/trafficserver
 	exec su "$user" -- "$0"
 fi
 
