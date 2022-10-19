@@ -121,14 +121,14 @@ public class TCP extends AbstractProtocol {
                     hostAddress = client.getHostAddress();
                 }
                 LOGGER.error("The socket with the Client at: " +
-                        hostAddress + " has timed out. Error: " + e.getMessage(), e);
+                        hostAddress + " has timed out. Error: " + e.getMessage());
             } catch (final EOFException e) {
                 String hostAddress = "unavailable";
                 if (client != null) {
                     hostAddress = client.getHostAddress();
                 }
                 LOGGER.error("The client at " + hostAddress +
-                        " has closed the connection prematurely. Error: " + e.getMessage(), e);
+                        " has closed the connection prematurely. Error: " + e.getMessage());
             } catch (final Exception e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {
