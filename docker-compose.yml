@@ -59,7 +59,7 @@ services:
             - 444:443
         volumes:
             - .:/go/src/github.com/apache/trafficcontrol
-            - ./.npm:/root/.npm
+            - ./.npm:/trafficportal/.npm
 
     tpv2:
         build:
@@ -74,6 +74,7 @@ services:
             - 443:443
         volumes:
             - .:/go/src/github.com/apache/trafficcontrol
+            - ./.npm:/trafficportal/.npm
 
     trafficmonitor:
         build:
