@@ -130,6 +130,7 @@ services:
             - 5005:5005
         volumes:
             - .:/go/src/github.com/apache/trafficcontrol
+            - ./.m2:/home/trafficrouter/.m2
 networks:
     ciab:
         name: dev.ciab.test
