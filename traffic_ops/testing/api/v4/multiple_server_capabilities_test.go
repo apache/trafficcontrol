@@ -19,23 +19,23 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
-func TestTrafficVaultPing(t *testing.T) {
+func TestMultipleServerCapabilities(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilities}, func() {
 
-	if !includeSystemTests {
-		t.Skip()
-	}
-
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
-
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
-			"GET": {
-				"OK when VALID request": {
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.MultipleServerCapabilities]{
+			"PUT": {
+				"OK when VALID REQUEST": {
 					ClientSession: TOSession,
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					RequestBody: tc.MultipleServerCapabilities{
+						ServerID:           GetServerID(t, "dtrc-mid-04")(),
+						ServerCapabilities: []string{"disk", "blah"},
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -44,11 +44,11 @@ func TestTrafficVaultPing(t *testing.T) {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
 					switch method {
-					case "GET":
+					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.TrafficVaultPing(testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.AssignMultipleServerCapability(testCase.RequestBody, testCase.RequestOpts, testCase.RequestBody.ServerID)
 							for _, check := range testCase.Expectations {
-								check(t, reqInf, resp, resp.Alerts, err)
+								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					}

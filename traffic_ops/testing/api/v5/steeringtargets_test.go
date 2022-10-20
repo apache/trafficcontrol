@@ -16,8 +16,8 @@ package v5
 */
 
 import (
-	"encoding/json"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -39,7 +39,7 @@ func TestSteeringTargets(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.SteeringTargetNullable]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					EndpointId:    GetDeliveryServiceId(t, "ds1"),
@@ -54,15 +54,21 @@ func TestSteeringTargets(t *testing.T) {
 						validateSteeringTargetFields(map[string]interface{}{"DeliveryService": "ds1", "DeliveryServiceID": uint64(GetDeliveryServiceId(t, "ds1")()),
 							"Target": "ds2", "TargetID": uint64(GetDeliveryServiceId(t, "ds2")()), "Type": "STEERING_WEIGHT", "TypeID": GetTypeID(t, "STEERING_WEIGHT")(), "Value": util.JSONIntStr(42)})),
 				},
+				"OK when CHANGES made": {
+					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					ClientSession: steeringUserSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"PUT": {
 				"OK when VALID request": {
 					ClientSession: steeringUserSession,
-					RequestBody: map[string]interface{}{
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds3")(),
-						"targetId":          GetDeliveryServiceId(t, "ds4")(),
-						"value":             -12345,
-						"typeId":            GetTypeID(t, "STEERING_WEIGHT")(),
+					RequestBody: tc.SteeringTargetNullable{
+						DeliveryServiceID: util.Ptr(uint64(GetDeliveryServiceId(t, "ds3")())),
+						TargetID:          util.Ptr(uint64(GetDeliveryServiceId(t, "ds4")())),
+						Value:             util.Ptr(util.JSONIntStr(-12345)),
+						TypeID:            util.Ptr(GetTypeID(t, "STEERING_WEIGHT")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateSteeringTargetUpdateCreateFields(GetDeliveryServiceId(t, "ds3")(),
@@ -73,34 +79,26 @@ func TestSteeringTargets(t *testing.T) {
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					ClientSession: steeringUserSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: map[string]interface{}{
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds3")(),
-						"targetId":          GetDeliveryServiceId(t, "ds4")(),
-						"value":             -12345,
-						"type":              "STEERING_WEIGHT",
-						"typeId":            GetTypeID(t, "STEERING_WEIGHT")(),
+					RequestBody: tc.SteeringTargetNullable{
+						DeliveryServiceID: util.Ptr(uint64(GetDeliveryServiceId(t, "ds3")())),
+						TargetID:          util.Ptr(uint64(GetDeliveryServiceId(t, "ds4")())),
+						Value:             util.Ptr(util.JSONIntStr(-12345)),
+						Type:              util.Ptr("STEERING_WEIGHT"),
+						TypeID:            util.Ptr(GetTypeID(t, "STEERING_WEIGHT")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					ClientSession: steeringUserSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
-					RequestBody: map[string]interface{}{
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds3")(),
-						"targetId":          GetDeliveryServiceId(t, "ds4")(),
-						"value":             -12345,
-						"type":              "STEERING_WEIGHT",
-						"typeId":            GetTypeID(t, "STEERING_WEIGHT")(),
+					RequestBody: tc.SteeringTargetNullable{
+						DeliveryServiceID: util.Ptr(uint64(GetDeliveryServiceId(t, "ds3")())),
+						TargetID:          util.Ptr(uint64(GetDeliveryServiceId(t, "ds4")())),
+						Value:             util.Ptr(util.JSONIntStr(-12345)),
+						Type:              util.Ptr("STEERING_WEIGHT"),
+						TypeID:            util.Ptr(GetTypeID(t, "STEERING_WEIGHT")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
-				},
-			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					EndpointId:    GetDeliveryServiceId(t, "ds1"),
-					ClientSession: steeringUserSession,
-					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -108,17 +106,8 @@ func TestSteeringTargets(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					steeringTarget := tc.SteeringTargetNullable{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &steeringTarget)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetSteeringTargets(testCase.EndpointId(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -127,26 +116,25 @@ func TestSteeringTargets(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateSteeringTarget(steeringTarget, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.CreateSteeringTarget(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateSteeringTarget(steeringTarget, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateSteeringTarget(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							var targetID int
-							if testCase.RequestBody != nil {
-								if val, ok := testCase.RequestBody["targetID"]; ok {
-									targetID = val.(int)
-								}
+							if _, ok := testCase.RequestOpts.QueryParameters["targetID"]; !ok {
+								t.Fatalf("Query Parameter: \"name\" is required for PUT method tests.")
 							}
+							targetID, err := strconv.Atoi(testCase.RequestOpts.QueryParameters["targetID"][0])
+							assert.RequireNoError(t, err, "Expected no error converting string to int for target ID: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.DeleteSteeringTarget(testCase.EndpointId(), targetID, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)

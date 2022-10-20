@@ -20,16 +20,18 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func TestDeliveryServicesEligible(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
+					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 			},
 		}

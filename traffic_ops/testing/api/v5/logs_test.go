@@ -30,21 +30,22 @@ import (
 func TestLogs(t *testing.T) {
 	WithObjs(t, []TCObj{Roles, Tenants, Users}, func() { // Objs added to create logs when this test is run alone
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 			"GET": {
 				"OK when VALID request": {
-					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						utils.ResponseLengthGreaterOrEqual(1)),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 				"OK when VALID USERNAME parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"username": {"admin"}}},
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"username": {"admin"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateLogsFields(map[string]interface{}{"User": "admin"})),
 				},
 				"RESPONSE LENGTH matches LIMIT parameter": {
-					ClientSession: TOSession, RequestOpts: client.RequestOptions{QueryParameters: url.Values{"limit": {"10"}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						utils.ResponseHasLength(10)),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"10"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(10)),
 				},
 			},
 		}

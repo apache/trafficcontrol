@@ -16,7 +16,6 @@
 package v5
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -32,25 +31,28 @@ import (
 func TestDeliveryServicesRegexes(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, DeliveryServicesRegexes}, func() {
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.DeliveryServiceRegexPost]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(3)),
+					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(3)),
 				},
 				"OK when VALID ID parameter": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
-					RequestOpts:  client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(getDSRegexID(t, "ds1"))}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
+					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(getDSRegexID(t, "ds1"))}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
 				},
 			},
 			"POST": {
 				"BAD REQUEST when MISSING REGEX PATTERN": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"type":      GetTypeId(t, "HOST_REGEXP"),
-						"setNumber": 3,
-						"pattern":   "",
+					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					ClientSession: TOSession,
+					RequestBody: tc.DeliveryServiceRegexPost{
+						Type:      GetTypeId(t, "HOST_REGEXP"),
+						SetNumber: 3,
+						Pattern:   "",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -60,15 +62,6 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-
-					dsRegex := tc.DeliveryServiceRegexPost{}
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &dsRegex)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -79,7 +72,7 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.PostDeliveryServiceRegexesByDSID(testCase.EndpointId(), dsRegex, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.PostDeliveryServiceRegexesByDSID(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

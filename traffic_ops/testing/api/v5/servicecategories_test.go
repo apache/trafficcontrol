@@ -16,7 +16,6 @@ package v5
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -38,7 +37,7 @@ func TestServiceCategories(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServiceCategory]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -95,28 +94,29 @@ func TestServiceCategories(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"POST": {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name": "serviceCategory1",
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					RequestBody:   tc.ServiceCategory{Name: "serviceCategory1"},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when NAME FIELD is BLANK": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name": "",
-					},
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					RequestBody:   tc.ServiceCategory{Name: ""},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
 			"PUT": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"barServiceCategory2"}}},
-					RequestBody:   map[string]interface{}{"name": "newName"},
+					RequestBody:   tc.ServiceCategory{Name: "newName"},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServiceCategoriesUpdateCreateFields("newName", map[string]interface{}{"Name": "newName"})),
 				},
@@ -126,12 +126,12 @@ func TestServiceCategories(t *testing.T) {
 						QueryParameters: url.Values{"name": {"serviceCategory1"}},
 						Header:          http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					},
-					RequestBody:  map[string]interface{}{"name": "newName"},
+					RequestBody:  tc.ServiceCategory{Name: "newName"},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"name": "newName"},
+					RequestBody:   tc.ServiceCategory{Name: "newName"},
 					RequestOpts: client.RequestOptions{
 						QueryParameters: url.Values{"name": {"serviceCategory1"}},
 						Header:          http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
@@ -146,29 +146,13 @@ func TestServiceCategories(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-			},
 		}
 
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					serviceCategory := tc.ServiceCategory{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &serviceCategory)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetServiceCategories(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -177,20 +161,26 @@ func TestServiceCategories(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateServiceCategory(serviceCategory, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.CreateServiceCategory(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateServiceCategory(testCase.RequestOpts.QueryParameters["name"][0], serviceCategory, testCase.RequestOpts)
+							if _, ok := testCase.RequestOpts.QueryParameters["name"]; !ok {
+								t.Fatalf("Query Parameter: \"name\" is required for PUT method tests.")
+							}
+							alerts, reqInf, err := testCase.ClientSession.UpdateServiceCategory(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
+							if _, ok := testCase.RequestOpts.QueryParameters["name"]; !ok {
+								t.Fatalf("Query Parameter: \"name\" is required for DELETE method tests.")
+							}
 							alerts, reqInf, err := testCase.ClientSession.DeleteServiceCategory(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
