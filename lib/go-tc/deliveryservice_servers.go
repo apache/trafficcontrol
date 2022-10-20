@@ -189,12 +189,6 @@ type DSServerResponseV30 struct {
 
 // DSServerV4 contains information for a V4.x Delivery Service Server.
 type DSServerV4 struct {
-	DSServerV40
-	ASNs []int64 `json:"asns"`
-}
-
-// DSServerV40 contains information for a V4.0 Delivery Service Server.
-type DSServerV40 struct {
 	DSServerBaseV4
 	ServerInterfaces *[]ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 }
@@ -202,13 +196,6 @@ type DSServerV40 struct {
 // DSServerResponseV40 is the type of a response from Traffic Ops to a request
 // for servers assigned to a Delivery Service - in API version 4.0.
 type DSServerResponseV40 struct {
-	Response []DSServerV40 `json:"response"`
-	Alerts
-}
-
-// DSServerResponseV41 is the type of a response from Traffic Ops to a request
-// for servers assigned to a Delivery Service - in API version 4.1.
-type DSServerResponseV41 struct {
 	Response []DSServerV4 `json:"response"`
 	Alerts
 }
@@ -216,7 +203,7 @@ type DSServerResponseV41 struct {
 // DSServerResponseV4 is the type of a response from Traffic Ops to a request
 // for servers assigned to a Delivery Service - in the latest minor version of
 // API version 4.
-type DSServerResponseV4 = DSServerResponseV41
+type DSServerResponseV4 = DSServerResponseV40
 
 // ToDSServerBaseV4 upgrades the DSServerBase to the structure used by the
 // latest minor version of version 4 of Traffic Ops's API.

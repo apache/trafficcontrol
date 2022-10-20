@@ -32,12 +32,11 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 type ServerAndInterfaces struct {
-	Server    tc.ServerV41
+	Server    tc.ServerV40
 	Interface tc.ServerInterfaceInfoV40
 }
 
@@ -82,10 +81,6 @@ func getTestServers() []ServerAndInterfaces {
 		RevalUpdateTime:   &(time.Time{}),
 		RevalApplyTime:    &(time.Time{}),
 	}
-	testServer := tc.ServerV41{
-		ServerV40: testServerV40,
-		ASNs:      pq.Int64Array{1, 2},
-	}
 	mtu := uint64(9500)
 
 	iface := tc.ServerInterfaceInfoV40{
@@ -106,15 +101,15 @@ func getTestServers() []ServerAndInterfaces {
 		RouterPortName: "routerPortName",
 	}
 
-	servers = append(servers, ServerAndInterfaces{Server: testServer, Interface: iface})
+	servers = append(servers, ServerAndInterfaces{Server: testServerV40, Interface: iface})
 
-	testServer2 := testServer
+	testServer2 := testServerV40
 	testServer2.Cachegroup = util.StrPtr("cachegroup2")
 	testServer2.HostName = util.StrPtr("server2")
 	testServer2.ID = util.IntPtr(2)
 	servers = append(servers, ServerAndInterfaces{Server: testServer2, Interface: iface})
 
-	testServer3 := testServer
+	testServer3 := testServerV40
 	testServer3.Cachegroup = util.StrPtr("cachegroup3")
 	testServer3.HostName = util.StrPtr("server3")
 	testServer3.ID = util.IntPtr(3)
@@ -183,7 +178,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 		"last_updated", "mgmt_ip_address", "mgmt_ip_gateway", "mgmt_ip_netmask", "offline_reason", "phys_location",
 		"phys_location_id", "profile_name", "rack", "reval_pending", "revalidate_update_time", "revalidate_apply_time",
 		"status", "status_id", "tcp_port", "server_type", "server_type_id", "upd_pending", "config_update_time",
-		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated", "asns"}
+		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated"}
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -233,7 +228,6 @@ func TestGetServersByCachegroup(t *testing.T) {
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
 			*ts.StatusLastUpdated,
-			[]byte(`{1,2}`),
 		)
 		interfaceRows = interfaceRows.AddRow(
 			srv.Interface.MaxBandwidth,
@@ -305,7 +299,7 @@ func TestGetMidServers(t *testing.T) {
 		"last_updated", "mgmt_ip_address", "mgmt_ip_gateway", "mgmt_ip_netmask", "offline_reason", "phys_location",
 		"phys_location_id", "profile_name", "rack", "reval_pending", "revalidate_update_time", "revalidate_apply_time",
 		"status", "status_id", "tcp_port", "server_type", "server_type_id", "upd_pending", "config_update_time",
-		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated", "asns"}
+		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated"}
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -353,7 +347,6 @@ func TestGetMidServers(t *testing.T) {
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
 			*ts.StatusLastUpdated,
-			[]byte(`{1,2}`),
 		)
 		interfaceRows = interfaceRows.AddRow(
 			srv.Interface.MaxBandwidth,
@@ -397,7 +390,7 @@ func TestGetMidServers(t *testing.T) {
 		"last_updated", "mgmt_ip_address", "mgmt_ip_gateway", "mgmt_ip_netmask", "offline_reason", "phys_location",
 		"phys_location_id", "profile_name", "rack", "reval_pending", "revalidate_update_time", "revalidate_apply_time",
 		"status", "status_id", "tcp_port", "server_type", "server_type_id", "upd_pending", "config_update_time",
-		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated", "asns"}
+		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated"}
 	rows2 := sqlmock.NewRows(cols2)
 
 	cgs := []tc.CacheGroup{}
@@ -443,7 +436,7 @@ func TestGetMidServers(t *testing.T) {
 	}
 	cgs = append(cgs, testCG2)
 
-	serverMap := make(map[int]tc.ServerV41, len(servers))
+	serverMap := make(map[int]tc.ServerV40, len(servers))
 	serverIDs := make([]int, 0, len(servers))
 	for _, server := range servers {
 		if server.ID == nil {
@@ -453,7 +446,7 @@ func TestGetMidServers(t *testing.T) {
 		serverMap[*server.ID] = server
 	}
 
-	var ts tc.ServerV41
+	var ts tc.ServerV40
 	for _, s := range servers {
 		if s.HostName != nil && *s.HostName == "server2" {
 			ts = s
@@ -499,7 +492,6 @@ func TestGetMidServers(t *testing.T) {
 		*ts.XMPPID,
 		*ts.XMPPPasswd,
 		*ts.StatusLastUpdated,
-		[]byte(`{1,2}`),
 	)
 
 	mock.ExpectBegin()

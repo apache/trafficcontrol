@@ -2260,7 +2260,7 @@ func TestVerifyAndEncodeCertificateSelfSignedX509v1(t *testing.T) {
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedX509v1Certificate, SelfSignedX509v1PrivateKey, "", true)
 
 	if err != nil {
-		t.Fatalf("unexpected result: the x509v1 cert/key pair is valid and should have passed validation")
+		t.Fatalf("unexpected result: the x509v1 cert/key pair is valid and should have passed validation: %v", err)
 	}
 
 	if !unknownAuth {
@@ -2286,7 +2286,7 @@ func TestVerifyAndEncodeCertificateSelfSignedNoSkiAkiCertKeyPair(t *testing.T) {
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedNOSKIAKIRSACertificate, SelfSignedNOSKIAKIRSAPrivateKey, "", true)
 
 	if err != nil {
-		t.Fatalf("unexpected result: a certificate verification error should have occured")
+		t.Fatalf("unexpected result: a certificate verification error should have occured: %v", err)
 	}
 
 	if !unknownAuth {
@@ -2312,7 +2312,7 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPair(t *testing.T) {
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedRSACertificate, SelfSignedRSAPrivateKey, "", true)
 
 	if err != nil {
-		t.Fatalf("unexpected result, a certificate verification error should have occured")
+		t.Fatalf("unexpected result, a certificate verification error should have occured: %v", err)
 	}
 
 	if !unknownAuth {
