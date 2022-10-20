@@ -23,7 +23,7 @@ set -o errexit
 
 cd "$TC/traffic_router"
 
-user=trafficportal
+user=trafficrouter
 uid="$(stat -c%u .)"
 gid="$(stat -c%g .)"
 if [[ "$(id -u)" != "$uid" ]]; then
