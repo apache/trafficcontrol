@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -37,7 +36,7 @@ func TestPhysLocations(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.PhysLocation]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -89,22 +88,27 @@ func TestPhysLocations(t *testing.T) {
 					RequestParams: url.Values{"limit": {"1"}, "page": {"0"}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"POST": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"address":   "100 blah lane",
-						"city":      "foo",
-						"comments":  "comment",
-						"email":     "bar@foobar.com",
-						"name":      "testPhysicalLocation",
-						"phone":     "111-222-3333",
-						"region":    "region1",
-						"regionId":  GetRegionID(t, "region1")(),
-						"shortName": "testLocation1",
-						"state":     "CO",
-						"zip":       "80602",
+					RequestBody: tc.PhysLocation{
+						Address:    "100 blah lane",
+						City:       "foo",
+						Comments:   "comment",
+						Email:      "bar@foobar.com",
+						Name:       "testPhysicalLocation",
+						Phone:      "111-222-3333",
+						RegionName: "region1",
+						RegionID:   GetRegionID(t, "region1")(),
+						ShortName:  "testLocation1",
+						State:      "CO",
+						Zip:        "80602",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validatePhysicalLocationUpdateCreateFields("testPhysicalLocation", map[string]interface{}{"Name": "testPhysicalLocation"})),
@@ -112,16 +116,16 @@ func TestPhysLocations(t *testing.T) {
 				"BAD REQUEST when REGION ID does NOT MATCH REGION NAME": {
 					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"address":   "1234 southern way",
-						"city":      "Atlanta",
-						"name":      "HotAtlanta",
-						"phone":     "404-222-2222",
-						"region":    "region1",
-						"regionId":  GetRegionID(t, "cdn-region2")(),
-						"shortName": "atlanta",
-						"state":     "GA",
-						"zip":       "30301",
+					RequestBody: tc.PhysLocation{
+						Address:    "1234 southern way",
+						City:       "Atlanta",
+						Name:       "HotAtlanta",
+						Phone:      "404-222-2222",
+						RegionName: "region1",
+						RegionID:   GetRegionID(t, "cdn-region2")(),
+						ShortName:  "atlanta",
+						State:      "GA",
+						Zip:        "30301",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -130,15 +134,15 @@ func TestPhysLocations(t *testing.T) {
 				"OK when VALID request": {
 					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"address":   "1234 southern way",
-						"city":      "NewCity",
-						"name":      "HotAtlanta",
-						"phone":     "404-222-2222",
-						"regionId":  GetRegionID(t, "region1")(),
-						"shortName": "atlanta",
-						"state":     "GA",
-						"zip":       "30301",
+					RequestBody: tc.PhysLocation{
+						Address:   "1234 southern way",
+						City:      "NewCity",
+						Name:      "HotAtlanta",
+						Phone:     "404-222-2222",
+						RegionID:  GetRegionID(t, "region1")(),
+						ShortName: "atlanta",
+						State:     "GA",
+						Zip:       "30301",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validatePhysicalLocationUpdateCreateFields("HotAtlanta", map[string]interface{}{"City": "NewCity"})),
@@ -147,28 +151,28 @@ func TestPhysLocations(t *testing.T) {
 					EndpointId:     GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody: map[string]interface{}{
-						"address":   "1234 southern way",
-						"city":      "Atlanta",
-						"regionId":  GetRegionID(t, "region1")(),
-						"name":      "HotAtlanta",
-						"shortName": "atlanta",
-						"state":     "GA",
-						"zip":       "30301",
+					RequestBody: tc.PhysLocation{
+						Address:   "1234 southern way",
+						City:      "Atlanta",
+						RegionID:  GetRegionID(t, "region1")(),
+						Name:      "HotAtlanta",
+						ShortName: "atlanta",
+						State:     "GA",
+						Zip:       "30301",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"address":   "1234 southern way",
-						"city":      "Atlanta",
-						"regionId":  GetRegionID(t, "region1")(),
-						"name":      "HotAtlanta",
-						"shortName": "atlanta",
-						"state":     "GA",
-						"zip":       "30301",
+					RequestBody: tc.PhysLocation{
+						Address:   "1234 southern way",
+						City:      "Atlanta",
+						RegionID:  GetRegionID(t, "region1")(),
+						Name:      "HotAtlanta",
+						ShortName: "atlanta",
+						State:     "GA",
+						Zip:       "30301",
 					},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -181,27 +185,13 @@ func TestPhysLocations(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession:  TOSession,
-					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
-					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-			},
 		}
 
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					pl := tc.PhysLocation{}
-					params := make(map[string]string)
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &pl)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
 
+					params := make(map[string]string)
 					if testCase.RequestParams != nil {
 						for k, v := range testCase.RequestParams {
 							params[k] = v[0]
@@ -209,7 +199,7 @@ func TestPhysLocations(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetPhysLocationsWithHdr(params, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
@@ -218,14 +208,14 @@ func TestPhysLocations(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreatePhysLocation(pl)
+							alerts, reqInf, err := testCase.ClientSession.CreatePhysLocation(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdatePhysLocationByIDWithHdr(testCase.EndpointId(), pl, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdatePhysLocationByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

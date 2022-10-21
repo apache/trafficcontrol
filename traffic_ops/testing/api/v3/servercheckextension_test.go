@@ -16,12 +16,12 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
@@ -35,44 +35,44 @@ func TestServerCheckExtensions(t *testing.T) {
 
 		extensionUser := utils.CreateV3Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.ServerCheckExtensionNullable]{
 			"POST": {
 				"FORBIDDEN when NOT EXTENSION USER": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":                   "MEM_CHECKER",
-						"version":                "3.0.3",
-						"info_url":               "-",
-						"script_file":            "mem.py",
-						"isactive":               1,
-						"servercheck_short_name": "MC",
-						"type":                   "CHECK_EXTENSION_MEM",
+					RequestBody: tc.ServerCheckExtensionNullable{
+						Name:                 util.Ptr("MEM_CHECKER"),
+						Version:              util.Ptr("3.0.3"),
+						InfoURL:              util.Ptr("-"),
+						ScriptFile:           util.Ptr("mem.py"),
+						IsActive:             util.Ptr(1),
+						ServercheckShortName: util.Ptr("MC"),
+						Type:                 util.Ptr("CHECK_EXTENSION_MEM"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"BAD REQUEST when NO OPEN SLOTS": {
 					ClientSession: extensionUser,
-					RequestBody: map[string]interface{}{
-						"name":                   "MEM_CHECKER",
-						"version":                "3.0.3",
-						"info_url":               "-",
-						"script_file":            "mem.py",
-						"isactive":               1,
-						"servercheck_short_name": "MC",
-						"type":                   "CHECK_EXTENSION_NUM",
+					RequestBody: tc.ServerCheckExtensionNullable{
+						Name:                 util.Ptr("MEM_CHECKER"),
+						Version:              util.Ptr("3.0.3"),
+						InfoURL:              util.Ptr("-"),
+						ScriptFile:           util.Ptr("mem.py"),
+						IsActive:             util.Ptr(1),
+						ServercheckShortName: util.Ptr("MC"),
+						Type:                 util.Ptr("CHECK_EXTENSION_NUM"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID TYPE": {
 					ClientSession: extensionUser,
-					RequestBody: map[string]interface{}{
-						"name":                   "MEM_CHECKER",
-						"version":                "3.0.3",
-						"info_url":               "-",
-						"script_file":            "mem.py",
-						"isactive":               1,
-						"servercheck_short_name": "MC",
-						"type":                   "INVALID_TYPE",
+					RequestBody: tc.ServerCheckExtensionNullable{
+						Name:                 util.Ptr("MEM_CHECKER"),
+						Version:              util.Ptr("3.0.3"),
+						InfoURL:              util.Ptr("-"),
+						ScriptFile:           util.Ptr("mem.py"),
+						IsActive:             util.Ptr(1),
+						ServercheckShortName: util.Ptr("MC"),
+						Type:                 util.Ptr("INVALID_TYPE"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -81,19 +81,10 @@ func TestServerCheckExtensions(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					serverCheckExtension := tc.ServerCheckExtensionNullable{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &serverCheckExtension)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateServerCheckExtension(serverCheckExtension)
+							alerts, reqInf, err := testCase.ClientSession.CreateServerCheckExtension(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

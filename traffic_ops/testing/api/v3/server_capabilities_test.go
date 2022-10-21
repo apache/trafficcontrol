@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -31,7 +30,7 @@ import (
 func TestServerCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{ServerCapabilities}, func() {
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.ServerCapability]{
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
@@ -47,7 +46,7 @@ func TestServerCapabilities(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when INVALID NAME": {
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"name": "b@dname"},
+					RequestBody:   tc.ServerCapability{Name: "b@dname"},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
@@ -56,15 +55,6 @@ func TestServerCapabilities(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					serverCapability := tc.ServerCapability{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &serverCapability)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						if name == "OK when VALID NAME parameter" {
@@ -80,7 +70,7 @@ func TestServerCapabilities(t *testing.T) {
 						}
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateServerCapability(serverCapability)
+							resp, reqInf, err := testCase.ClientSession.CreateServerCapability(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								if resp != nil {
 									check(t, reqInf, resp.Response, resp.Alerts, err)

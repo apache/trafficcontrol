@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -25,6 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -37,7 +37,7 @@ func TestRoles(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.Role]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -59,56 +59,69 @@ func TestRoles(t *testing.T) {
 					RequestParams: url.Values{"orderby": {"name"}, "sortOrder": {"desc"}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateRoleDescSort()),
 				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"POST": {
 				"BAD REQUEST when INVALID CAPABILITY": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":        "bad_admin",
-						"description": "super-user 3",
-						"privLevel":   30,
-						"capabilities": []string{
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Name:        util.Ptr("bad_admin"),
+							Description: util.Ptr("super-user 3"),
+							PrivLevel:   util.Ptr(30),
+						},
+						Capabilities: util.Ptr([]string{
 							"all-read",
 							"all-write",
 							"invalid-capability",
-						},
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING NAME": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"description": "missing name",
-						"privLevel":   30,
-						"capabilities": []string{
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Description: util.Ptr("missing name"),
+							PrivLevel:   util.Ptr(30),
+						},
+						Capabilities: util.Ptr([]string{
 							"all-read",
 							"all-write",
-						},
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING DESCRIPTION": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":      "nodescription",
-						"privLevel": 30,
-						"capabilities": []string{
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Name:      util.Ptr("nodescription"),
+							PrivLevel: util.Ptr(30),
+						},
+						Capabilities: util.Ptr([]string{
 							"all-read",
 							"all-write",
-						},
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":        "new_admin",
-						"description": "description",
-						"privLevel":   30,
-						"capabilities": []string{
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Name:        util.Ptr("new_admin"),
+							Description: util.Ptr("description"),
+							PrivLevel:   util.Ptr(30),
+						},
+						Capabilities: util.Ptr([]string{
 							"all-read",
 							"all-write",
-						},
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -117,14 +130,16 @@ func TestRoles(t *testing.T) {
 				"OK when VALID request": {
 					EndpointId:    GetRoleID(t, "update_role"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":        "new_name",
-						"description": "new updated description",
-						"privLevel":   30,
-						"capabilities": []string{
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Name:        util.Ptr("new_name"),
+							Description: util.Ptr("new updated description"),
+							PrivLevel:   util.Ptr(30),
+						},
+						Capabilities: util.Ptr([]string{
 							"all-read",
 							"all-write",
-						},
+						}),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateRoleUpdateCreateFields("new_name", map[string]interface{}{"Name": "new_name", "Description": "new updated description"})),
@@ -132,68 +147,78 @@ func TestRoles(t *testing.T) {
 				"BAD REQUEST when MISSING NAME": {
 					EndpointId:    GetRoleID(t, "another_role"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"description": "missing name",
-						"privLevel":   30,
-						"capabilities": []string{
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Description: util.Ptr("missing name"),
+							PrivLevel:   util.Ptr(30),
+						},
+						Capabilities: util.Ptr([]string{
 							"all-read",
 							"all-write",
-						},
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING DESCRIPTION": {
 					EndpointId:    GetRoleID(t, "another_role"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":      "noDescription",
-						"privLevel": 30,
-						"capabilities": []string{
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Name:      util.Ptr("noDescription"),
+							PrivLevel: util.Ptr(30),
+						},
+						Capabilities: util.Ptr([]string{
 							"all-read",
 							"all-write",
-						},
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ADMIN ROLE": {
 					EndpointId:    GetRoleID(t, "admin"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":        "adminUpdated",
-						"privLevel":   30,
-						"description": "description",
-						"capabilities": []string{
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Name:        util.Ptr("adminUpdated"),
+							PrivLevel:   util.Ptr(30),
+							Description: util.Ptr("description"),
+						},
+						Capabilities: util.Ptr([]string{
 							"all-read",
 							"all-write",
-						},
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when ROLE DOESNT EXIST": {
 					EndpointId:    func() int { return 9999999 },
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":        "doesntexist",
-						"privLevel":   30,
-						"description": "description",
-						"capabilities": []string{
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Name:        util.Ptr("doesntexist"),
+							PrivLevel:   util.Ptr(30),
+							Description: util.Ptr("description"),
+						},
+						Capabilities: util.Ptr([]string{
 							"all-read",
 							"all-write",
-						},
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
 					EndpointId:    GetRoleID(t, "another_role"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":        "new_admin",
-						"privLevel":   30,
-						"description": "description",
-						"capabilities": []string{
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Name:        util.Ptr("new_admin"),
+							PrivLevel:   util.Ptr(30),
+							Description: util.Ptr("description"),
+						},
+						Capabilities: util.Ptr([]string{
 							"all-read",
 							"all-write",
-						},
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -201,13 +226,15 @@ func TestRoles(t *testing.T) {
 					EndpointId:     GetRoleID(t, "another_role"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody: map[string]interface{}{
-						"name":        "another_role",
-						"description": "super-user 3",
-						"privLevel":   30,
-						"capabilities": []string{
-							"all-read",
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Name:        util.Ptr("another_role"),
+							Description: util.Ptr("super-user 3"),
+							PrivLevel:   util.Ptr(30),
 						},
+						Capabilities: util.Ptr([]string{
+							"all-read",
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
@@ -215,22 +242,17 @@ func TestRoles(t *testing.T) {
 					EndpointId:     GetRoleID(t, "another_role"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
-					RequestBody: map[string]interface{}{
-						"name":        "another_role",
-						"description": "super-user 3",
-						"privLevel":   30,
-						"capabilities": []string{
-							"all-read",
+					RequestBody: tc.Role{
+						RoleV11: tc.RoleV11{
+							Name:        util.Ptr("another_role"),
+							Description: util.Ptr("super-user 3"),
+							PrivLevel:   util.Ptr(30),
 						},
+						Capabilities: util.Ptr([]string{
+							"all-read",
+						}),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
-				},
-			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession:  TOSession,
-					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
-					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -238,16 +260,8 @@ func TestRoles(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					role := tc.Role{}
+
 					params := make(map[string]string)
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &role)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					if testCase.RequestParams != nil {
 						for k, v := range testCase.RequestParams {
 							params[k] = v[0]
@@ -255,7 +269,7 @@ func TestRoles(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, _, err := testCase.ClientSession.GetRoleByQueryParamsWithHdr(params, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
@@ -264,14 +278,14 @@ func TestRoles(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, _, err := testCase.ClientSession.CreateRole(role)
+							alerts, reqInf, _, err := testCase.ClientSession.CreateRole(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, _, err := testCase.ClientSession.UpdateRoleByIDWithHdr(testCase.EndpointId(), role, testCase.RequestHeaders)
+							alerts, reqInf, _, err := testCase.ClientSession.UpdateRoleByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

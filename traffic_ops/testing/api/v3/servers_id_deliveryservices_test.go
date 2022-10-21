@@ -32,7 +32,7 @@ func TestServersIDDeliveryServices(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[map[string]interface{}]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					EndpointId:     GetServerID(t, "atlanta-edge-14"),
