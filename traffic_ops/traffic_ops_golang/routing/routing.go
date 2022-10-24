@@ -256,6 +256,7 @@ func Handler(
 	tv trafficvault.TrafficVault,
 	w http.ResponseWriter,
 	r *http.Request,
+	inBatch bool, // prevent batch recursion
 ) {
 	reqID := getReqID()
 
@@ -279,6 +280,13 @@ func Handler(
 	onReqData := plugin.OnRequestData{Data: plugin.Data{RequestID: reqID, AppCfg: *cfg}, W: w, R: pluginReq}
 	if handled := plugins.OnRequest(onReqData); handled {
 		return
+	}
+
+	if !inBatch {
+		reqIDF := func() uint64 { return reqID } // give all batch ops the same reqid. We could do something more clever in the future
+		if handled := HandleBatchReq(routes, versions, catchall, db, cfg, reqIDF, plugins, tv, w, r); handled {
+			return
+		}
 	}
 
 	requested := r.URL.Path[1:]
@@ -453,7 +461,7 @@ func RegisterRoutes(d ServerData) error {
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
 	d.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, d.TrafficVault, w, r)
+		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, d.TrafficVault, w, r, false)
 	})
 	return nil
 }

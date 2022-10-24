@@ -92,3 +92,34 @@ func (i *BodyInterceptor) RealWrite(b []byte) (int, error) {
 func (i *BodyInterceptor) Body() []byte {
 	return i.BodyBytes
 }
+
+// FullInterceptor implements http.ResponseWriter.
+// It intercepts writes to w, and saves the HTTP code, body, and header.
+type FullInterceptor struct {
+	Code    int
+	Body    []byte
+	Headers http.Header
+}
+
+func NewFullInterceptor() *FullInterceptor {
+	return &FullInterceptor{
+		Headers: http.Header{},
+	}
+}
+
+// WriteHeader implements http.ResponseWriter.
+func (fi *FullInterceptor) WriteHeader(code int) { fi.Code = code }
+
+// Write implements http.ResponseWriter.
+// In addition to saving the body, it also sets the code to 200 if WriteHeader wasn't called
+// (which is what a real http.ResponseWriter would write to the client).
+func (fi *FullInterceptor) Write(bts []byte) (int, error) {
+	fi.Body = append(fi.Body, bts...)
+	if fi.Code == 0 {
+		fi.Code = 200
+	}
+	return len(bts), nil
+}
+
+// Header implements http.ResponseWriter.
+func (fi *FullInterceptor) Header() http.Header { return fi.Headers }
