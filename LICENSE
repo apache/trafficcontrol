@@ -712,3 +712,8 @@ This product bundles jcmturner/rpc.v1, which is available under an Apache-2.0 li
 @vendor/gopkg.in/jcmturner/rpc.v1/*
 ./vendor/gopkg.in/jcmturner/rpc.v1/LICENSE
 Refer to the above license for the full text.
+
+This product bundles cbroglie/mustache which is available under an MIT license.
+@vendor/github.com/cbroglie/mustache/*
+./vendor/github.com/cbroglie/mustache/LICENSE
+Refer to the above license for the full text.

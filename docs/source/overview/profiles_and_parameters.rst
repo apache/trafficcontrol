@@ -616,7 +616,60 @@ In order to support difficult configurations at MID/LAST, a
 and Value the raw remap lines.  The Value in this parameter will be pre
 or post pended to the end of ``remap.config``.
 
-.. seealso:: For an explanation of the syntax of this configuration file, refer to `the Apache Traffic Server remap.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_.
+To provide the most flexibility for managing :term:`Delivery Service` generated ``remap.config`` lines there are options for redefining the internal mustache template used to generate these ``remap.config`` lines.
+
+- ``template.first``
+- ``template.inner``
+- ``template.last``
+
+
+.. table:: ``remap.config`` Template Tags
+
+	+------------------+-----------------------------------+-------------------------------+
+	| :ref:`tag-name`  | Value_                            | Associated plugin/directive   |
+	+==================+===================================+===============================+
+	| Source           | Target, or request "from" URL     |                               |
+	+------------------+-----------------------------------+-------------------------------+
+	| Destination      | Replacement, or origin (“to”) URL |                               |
+	+------------------+-----------------------------------+-------------------------------+
+	| Strategy         | NextHop selection strategy        | parent_select.so              |
+	+------------------+-----------------------------------+-------------------------------+
+	| Dscp             | IP packet marking                 | header_rewrite.so             |
+	+------------------+-----------------------------------+-------------------------------+
+	| HeaderRewrite    | Header rewrite rules              | header_rewrite.so             |
+	+------------------+-----------------------------------+-------------------------------+
+	| DropQstring      | Query string handling at edge     | regex_remap.so                |
+	+------------------+-----------------------------------+-------------------------------+
+	| Signing          | URL Signing method                | url_sig.so, uri_signing.so    |
+	+------------------+-----------------------------------+-------------------------------+
+	| RegexRemap       | Regex remap expressions           | regex_remap.so                |
+	+------------------+-----------------------------------+-------------------------------+
+	| Cachekey         | Cachekey plugin parameters        | cachekey.so                   |
+	+------------------+-----------------------------------+-------------------------------+
+	| RangeRequests    | Range request handling            | background_fetch.so, slice.so |
+	+------------------+-----------------------------------+-------------------------------+
+	| Pacing           | Fair-Queuing Pacing Rate          | fq_pacing.so                  |
+	+------------------+-----------------------------------+-------------------------------+
+	| RawText          | Raw remap text for edge           |                               |
+	+------------------+-----------------------------------+-------------------------------+
+
+Default internal template values:
+
+.. code-block:: text
+	:caption: Default for template.first
+
+	map {{{Source}}} {{{Destination}}} {{{Strategy}}} {{{Dscp}}} {{{HeaderRewrite}}} {{{DropQstring}}} {{{Signing}}} {{{RegexRemap}}} {{{Cachekey}}} {{{RangeRequests}}} {{{Pacing}}} {{{RawText}}}
+
+.. code-block:: text
+	:caption: Default for template.inner, template.last
+
+	map {{{Source}}} {{{Destination}}} {{{Strategy}}} {{{HeaderRewrite}}} {{{Cachekey}}} {{{RangeRequests}}} {{{RawText}}}
+
+Users may use the above templates do things like manipulate the inputs to the cachekey via other plugins or modify the rule type from ``map`` to ``map_with_recv_port``.
+
+.. seealso:: For an explanation of the mustache syntax of the template, refer to `the mustache spec documentation <https://github.com/mustache/spec>`_.
+
+.. seealso:: For an explanation of the syntax of this ``remap.config`` file, refer to `the Apache Traffic Server remap.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_.
 
 :file:`set_dscp_{anything}.config`
 ''''''''''''''''''''''''''''''''''
