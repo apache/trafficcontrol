@@ -421,6 +421,10 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 // checkCert checks the validity of the ssl certificate.
 func checkCert(c []byte) error {
 	block, _ := pem.Decode(c)
+	if block == nil {
+		log.Errorln("Bad Certificate:\n'", string(c), "'")
+		return errors.New("Error Decoding Certificate")
+	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		return errors.New("Error Parsing Certificate: " + err.Error())
