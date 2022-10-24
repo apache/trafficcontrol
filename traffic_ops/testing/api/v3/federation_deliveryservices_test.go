@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -31,7 +30,7 @@ import (
 func TestFederationsDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, CDNFederations, FederationDeliveryServices}, func() {
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.FederationDSPost]{
 			"GET": {
 				"OK when VALID request": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
@@ -58,16 +57,6 @@ func TestFederationsDeliveryServices(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					var dsID int
-					fedDS := tc.FederationDSPost{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &fedDS)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -78,13 +67,14 @@ func TestFederationsDeliveryServices(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							reqInf, err := testCase.ClientSession.CreateFederationDeliveryServices(testCase.EndpointId(), fedDS.DSIDs, *fedDS.Replace)
+							reqInf, err := testCase.ClientSession.CreateFederationDeliveryServices(testCase.EndpointId(), testCase.RequestBody.DSIDs, *testCase.RequestBody.Replace)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, tc.Alerts{}, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
+							var dsID int
 							if val, ok := testCase.RequestParams["dsID"]; ok {
 								id, err := strconv.Atoi(val[0])
 								assert.RequireNoError(t, err, "Failed to convert dsID to an integer.")

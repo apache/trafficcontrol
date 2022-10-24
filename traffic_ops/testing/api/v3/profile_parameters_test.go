@@ -16,7 +16,6 @@
 package v3
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -38,7 +37,7 @@ func TestProfileParameters(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[[]tc.ProfileParameter]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -56,53 +55,51 @@ func TestProfileParameters(t *testing.T) {
 			"POST": {
 				"OK when MULTIPLE PARAMETERS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"profileParameters": []map[string]interface{}{
-							{
-								"profileId":   GetProfileID(t, "MID1")(),
-								"parameterId": GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
-							},
-							{
-								"profileId":   GetProfileID(t, "MID2")(),
-								"parameterId": GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
-							},
+					RequestBody: []tc.ProfileParameter{
+						{
+							ProfileID:   GetProfileID(t, "MID1")(),
+							ParameterID: GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
+						},
+						{
+							ProfileID:   GetProfileID(t, "MID2")(),
+							ParameterID: GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
 						},
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when INVALID PROFILEID and PARAMETERID": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"profileId":   0,
-						"parameterId": 0,
-					},
+					RequestBody: []tc.ProfileParameter{{
+						ProfileID:   0,
+						ParameterID: 0,
+					}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING PROFILEID field": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"parameterId": GetParameterID(t, "health.threshold.queryTime", "rascal.properties", "1000")(),
-					},
+					RequestBody: []tc.ProfileParameter{{
+						ParameterID: GetParameterID(t, "health.threshold.queryTime", "rascal.properties", "1000")(),
+					}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING PARAMETERID field": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"profileId": GetProfileID(t, "EDGE2")(),
-					},
+					RequestBody: []tc.ProfileParameter{{
+						ProfileID: GetProfileID(t, "EDGE2")(),
+					}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when EMPTY BODY": {
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{},
+					RequestBody:   []tc.ProfileParameter{},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"profileId":   GetProfileID(t, "EDGE1")(),
-						"parameterId": GetParameterID(t, "health.threshold.availableBandwidthInKbps", "rascal.properties", ">1750000")(),
-					},
+					RequestBody: []tc.ProfileParameter{{
+						ProfileID:   GetProfileID(t, "EDGE1")(),
+						ParameterID: GetParameterID(t, "health.threshold.availableBandwidthInKbps", "rascal.properties", ">1750000")(),
+					}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
@@ -121,22 +118,6 @@ func TestProfileParameters(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					profileParameter := tc.ProfileParameter{}
-					profileParameters := []tc.ProfileParameter{}
-
-					if testCase.RequestBody != nil {
-						if profileParams, ok := testCase.RequestBody["profileParameters"]; ok {
-							dat, err := json.Marshal(profileParams)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &profileParameters)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						}
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &profileParameter)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -155,13 +136,13 @@ func TestProfileParameters(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							if len(profileParameters) == 0 {
-								alerts, reqInf, err := testCase.ClientSession.CreateProfileParameter(profileParameter)
+							if len(testCase.RequestBody) == 1 {
+								alerts, reqInf, err := testCase.ClientSession.CreateProfileParameter(testCase.RequestBody[0])
 								for _, check := range testCase.Expectations {
 									check(t, reqInf, nil, alerts, err)
 								}
-							} else {
-								alerts, reqInf, err := testCase.ClientSession.CreateMultipleProfileParameters(profileParameters)
+							} else if len(testCase.RequestBody) >= 1 {
+								alerts, reqInf, err := testCase.ClientSession.CreateMultipleProfileParameters(testCase.RequestBody)
 								for _, check := range testCase.Expectations {
 									check(t, reqInf, nil, alerts, err)
 								}

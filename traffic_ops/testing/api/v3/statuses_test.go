@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -37,7 +36,7 @@ func TestStatuses(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.Status]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -54,14 +53,19 @@ func TestStatuses(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateStatusesFields(map[string]interface{}{"Name": "CCR_IGNORE"})),
 				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"PUT": {
 				"OK when VALID request": {
 					EndpointId:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"description": "new description",
-						"name":        "TEST_NULL_DESCRIPTION",
+					RequestBody: tc.Status{
+						Description: "new description",
+						Name:        "TEST_NULL_DESCRIPTION",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateStatusesUpdateCreateFields("TEST_NULL_DESCRIPTION", map[string]interface{}{"Description": "new description"})),
@@ -70,28 +74,21 @@ func TestStatuses(t *testing.T) {
 					EndpointId:     GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody: map[string]interface{}{
-						"description": "new description",
-						"name":        "TEST_NULL_DESCRIPTION",
+					RequestBody: tc.Status{
+						Description: "new description",
+						Name:        "TEST_NULL_DESCRIPTION",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"description": "new description",
-						"name":        "TEST_NULL_DESCRIPTION",
+					RequestBody: tc.Status{
+						Description: "new description",
+						Name:        "TEST_NULL_DESCRIPTION",
 					},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
-				},
-			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession:  TOSession,
-					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
-					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -99,17 +96,8 @@ func TestStatuses(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					status := tc.Status{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &status)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							if name == "OK when VALID NAME parameter" {
 								resp, reqInf, err := testCase.ClientSession.GetStatusByNameWithHdr(testCase.RequestParams["name"][0], testCase.RequestHeaders)
@@ -125,7 +113,7 @@ func TestStatuses(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateStatusByIDWithHdr(testCase.EndpointId(), status, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateStatusByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

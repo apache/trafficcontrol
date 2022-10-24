@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"testing"
@@ -34,7 +33,7 @@ func TestStatsSummary(t *testing.T) {
 
 	CreateTestStatsSummaries(t)
 
-	methodTests := utils.V3TestCase{
+	methodTests := utils.V3TestCaseT[tc.StatsSummary]{
 		"GET": {
 			"OK when VALID request": {
 				ClientSession: TOSession,
@@ -84,7 +83,6 @@ func TestStatsSummary(t *testing.T) {
 	for method, testCases := range methodTests {
 		t.Run(method, func(t *testing.T) {
 			for name, testCase := range testCases {
-				statsSummary := tc.StatsSummary{}
 				var cdn *string
 				var statName *string
 				var deliveryService *string
@@ -97,13 +95,6 @@ func TestStatsSummary(t *testing.T) {
 				}
 				if val, ok := testCase.RequestParams["deliveryServiceName"]; ok {
 					deliveryService = &val[0]
-				}
-
-				if testCase.RequestBody != nil {
-					dat, err := json.Marshal(testCase.RequestBody)
-					assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-					err = json.Unmarshal(dat, &statsSummary)
-					assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 				}
 
 				switch method {
@@ -123,7 +114,7 @@ func TestStatsSummary(t *testing.T) {
 					})
 				case "POST":
 					t.Run(name, func(t *testing.T) {
-						alerts, reqInf, err := testCase.ClientSession.CreateSummaryStats(statsSummary)
+						alerts, reqInf, err := testCase.ClientSession.CreateSummaryStats(testCase.RequestBody)
 						for _, check := range testCase.Expectations {
 							check(t, reqInf, nil, alerts, err)
 						}

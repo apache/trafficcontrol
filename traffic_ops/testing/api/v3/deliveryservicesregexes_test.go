@@ -16,7 +16,6 @@
 package v3
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -31,25 +30,28 @@ import (
 func TestDeliveryServicesRegexes(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, DeliveryServicesRegexes}, func() {
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.DeliveryServiceRegexPost]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(3)),
+					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(3)),
 				},
 				"OK when VALID ID parameter": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					ClientSession: TOSession,
 					RequestParams: url.Values{"id": {strconv.Itoa(getDSRegexID(t, "ds1"))}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
 				},
 			},
 			"POST": {
 				"BAD REQUEST when MISSING REGEX PATTERN": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"type":      GetTypeId(t, "HOST_REGEXP"),
-						"setNumber": 3,
-						"pattern":   "",
+					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					ClientSession: TOSession,
+					RequestBody: tc.DeliveryServiceRegexPost{
+						Type:      GetTypeId(t, "HOST_REGEXP"),
+						SetNumber: 3,
+						Pattern:   "",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -59,17 +61,11 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					dsRegex := tc.DeliveryServiceRegexPost{}
+
 					params := make(map[string]string)
 					if testCase.RequestParams.Has("id") {
 						val := testCase.RequestParams.Get("id")
 						params["id"] = val
-					}
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &dsRegex)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 					}
 
 					switch method {
@@ -82,7 +78,7 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.PostDeliveryServiceRegexesByDSID(testCase.EndpointId(), dsRegex)
+							alerts, reqInf, err := testCase.ClientSession.PostDeliveryServiceRegexesByDSID(testCase.EndpointId(), testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

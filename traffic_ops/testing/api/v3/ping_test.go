@@ -25,13 +25,15 @@ import (
 
 func TestPing(t *testing.T) {
 
-	methodTests := utils.V3TestCase{
+	methodTests := utils.V3TestCaseT[struct{}]{
 		"GET": {
 			"OK when VALID request": {
-				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				ClientSession: TOSession,
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 			},
 			"OK when UNAUTHENTICATED": {
-				ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				ClientSession: NoAuthTOSession,
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 			},
 		},
 	}

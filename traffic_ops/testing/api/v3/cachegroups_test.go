@@ -16,15 +16,14 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -33,105 +32,116 @@ import (
 func TestCacheGroups(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies}, func() {
 
-		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.CacheGroupNullable]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					ClientSession: TOSession, RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"NOT MODIFIED when VALID NAME parameter when NO CHANGES made": {
-					ClientSession: TOSession, RequestParams: url.Values{"name": {"originCachegroup"}},
+					ClientSession:  TOSession,
+					RequestParams:  url.Values{"name": {"originCachegroup"}},
 					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
 					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"NOT MODIFIED when VALID SHORTNAME parameter when NO CHANGES made": {
-					ClientSession: TOSession, RequestParams: url.Values{"shortName": {"mog1"}},
+					ClientSession:  TOSession,
+					RequestParams:  url.Values{"shortName": {"mog1"}},
 					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
 					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when VALID NAME parameter": {
-					ClientSession: TOSession, RequestParams: url.Values{"name": {"parentCachegroup"}},
+					ClientSession: TOSession,
+					RequestParams: url.Values{"name": {"parentCachegroup"}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						ValidateExpectedField("Name", "parentCachegroup")),
 				},
 				"OK when VALID SHORTNAME parameter": {
-					ClientSession: TOSession, RequestParams: url.Values{"shortName": {"pg2"}},
+					ClientSession: TOSession,
+					RequestParams: url.Values{"shortName": {"pg2"}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						ValidateExpectedField("ShortName", "pg2")),
 				},
 				"OK when VALID TOPOLOGY parameter": {
-					ClientSession: TOSession, RequestParams: url.Values{"topology": {"mso-topology"}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					ClientSession: TOSession,
+					RequestParams: url.Values{"topology": {"mso-topology"}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+					ClientSession: NoAuthTOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 			"POST": {
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+					ClientSession: NoAuthTOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"latitude":            17.5,
-						"longitude":           17.5,
-						"name":                "cachegroup1",
-						"shortName":           "newShortName",
-						"localizationMethods": []string{"CZ"},
-						"fallbacks":           []string{"fallback1"},
-						"typeName":            "EDGE_LOC",
-						"typeId":              -1,
+					EndpointId:    GetCacheGroupId(t, "cachegroup1"),
+					ClientSession: TOSession,
+					RequestBody: tc.CacheGroupNullable{
+						Latitude:            util.Ptr(17.5),
+						Longitude:           util.Ptr(17.5),
+						Name:                util.Ptr("cachegroup1"),
+						ShortName:           util.Ptr("newShortName"),
+						LocalizationMethods: util.Ptr([]tc.LocalizationMethod{tc.LocalizationMethodCZ}),
+						Fallbacks:           util.Ptr([]string{"fallback1"}),
+						Type:                util.Ptr("EDGE_LOC"),
+						TypeID:              util.Ptr(GetTypeId(t, "EDGE_LOC")),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody: map[string]interface{}{
-						"name":      "cachegroup1",
-						"shortName": "changeName",
-						"typeName":  "EDGE_LOC",
-						"typeId":    -1,
+					RequestBody: tc.CacheGroupNullable{
+						Name:      util.Ptr("cachegroup1"),
+						ShortName: util.Ptr("changeName"),
+						Type:      util.Ptr("EDGE_LOC"),
+						TypeID:    util.Ptr(GetTypeId(t, "EDGE_LOC")),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":      "cachegroup1",
-						"shortName": "changeName",
-						"typeName":  "EDGE_LOC",
-						"typeId":    -1,
+					EndpointId:    GetCacheGroupId(t, "cachegroup1"),
+					ClientSession: TOSession,
+					RequestBody: tc.CacheGroupNullable{
+						Name:      util.Ptr("cachegroup1"),
+						ShortName: util.Ptr("changeName"),
+						Type:      util.Ptr("EDGE_LOC"),
+						TypeID:    util.Ptr(GetTypeId(t, "EDGE_LOC")),
 					},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: NoAuthTOSession,
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+					EndpointId:    GetCacheGroupId(t, "cachegroup1"),
+					ClientSession: NoAuthTOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"DELETE": {
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: NoAuthTOSession,
-					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
-				},
-			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession:  TOSession,
-					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
-					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					EndpointId:    GetCacheGroupId(t, "cachegroup1"),
+					ClientSession: NoAuthTOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 		}
@@ -139,34 +149,8 @@ func TestCacheGroups(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					cg := tc.CacheGroupNullable{}
-
-					if testCase.RequestParams.Has("type") {
-						val := testCase.RequestParams.Get("type")
-						if _, err := strconv.Atoi(val); err != nil {
-							testCase.RequestParams.Set("type", strconv.Itoa(GetTypeId(t, val)))
-						}
-					}
-
-					if testCase.RequestBody != nil {
-						if _, ok := testCase.RequestBody["id"]; ok {
-							testCase.RequestBody["id"] = testCase.EndpointId()
-						}
-						if typeId, ok := testCase.RequestBody["typeId"]; ok {
-							if typeId == -1 {
-								if typeName, ok := testCase.RequestBody["typeName"]; ok {
-									testCase.RequestBody["typeId"] = GetTypeId(t, typeName.(string))
-								}
-							}
-						}
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &cg)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetCacheGroupsByQueryParamsWithHdr(testCase.RequestParams, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
@@ -175,14 +159,14 @@ func TestCacheGroups(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateCacheGroupNullable(cg)
+							resp, reqInf, err := testCase.ClientSession.CreateCacheGroupNullable(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateCacheGroupNullableByIDWithHdr(testCase.EndpointId(), cg, testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.UpdateCacheGroupNullableByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
