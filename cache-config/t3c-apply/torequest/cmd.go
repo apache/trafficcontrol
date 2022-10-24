@@ -419,15 +419,18 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 }
 
 // checkCert checks the validity of the ssl certificate.
-func checkCert(c []byte) error {
+func checkCert(c []byte) (error, bool) {
+	fatal := false
 	block, _ := pem.Decode(c)
 	if block == nil {
 		log.Errorln("Bad Certificate:\n'", string(c), "'")
-		return errors.New("Error Decoding Certificate")
+		fatal = true
+		return errors.New("Error Decoding Certificate"), fatal
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return errors.New("Error Parsing Certificate: " + err.Error())
+		fatal = true
+		return errors.New("Error Parsing Certificate: " + err.Error()), fatal
 	}
 	if cert.NotAfter.Unix() < time.Now().Unix() {
 		err = errors.New("Certificate expired: " + cert.NotAfter.Format(config.TimeAndDateLayout))
@@ -435,7 +438,7 @@ func checkCert(c []byte) error {
 	} else {
 		log.Infof("Certificate valid until %s ", cert.NotAfter.Format(config.TimeAndDateLayout))
 	}
-	return err
+	return err, fatal
 }
 
 // checkReload is a helper for the sub-command t3c-check-reload.

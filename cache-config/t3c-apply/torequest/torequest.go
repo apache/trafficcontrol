@@ -238,11 +238,14 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 	}
 
 	if strings.HasSuffix(cfg.Name, ".cer") {
-		if err := checkCert(cfg.Body); err != nil {
+		err, fatal := checkCert(cfg.Body)
+		if err != nil {
 			r.configFileWarnings[cfg.Name] = append(r.configFileWarnings[cfg.Name], err.Error())
-			return err
 		}
 		r.configFileWarnings[cfg.Name] = append(r.configFileWarnings[cfg.Name], cfg.Warnings...)
+		if fatal {
+			return errors.New(err.Error() + " for: " + cfg.Name)
+		}
 	}
 
 	changeNeeded, err := diff(r.Cfg, cfg.Body, cfg.Path, r.Cfg.ReportOnly, cfg.Perm, cfg.Uid, cfg.Gid)
