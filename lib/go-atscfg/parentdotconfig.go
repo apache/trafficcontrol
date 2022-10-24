@@ -165,9 +165,78 @@ func MakeParentDotConfig(
 	}, nil
 }
 
-// Check if this ds type is edge only
-func IsGoDirect(ds DeliveryService) bool {
-	return *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive
+// CreateTopology creates an on the fly topology for this server and non topology delivery service.
+func CreateTopology(server *Server, ds DeliveryService, nameTopologies map[TopologyName]tc.Topology, ocgmap map[OriginHost][]string) (string, tc.Topology, []string) {
+
+	topoName := ""
+	topo := tc.Topology{}
+	warns := []string{}
+
+	orgFQDNStr := *ds.OrgServerFQDN
+	orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
+	warns = append(warns, orgWarns...)
+	if err != nil {
+		warns = append(warns, "DS '"+*ds.XMLID+"' has malformed origin URI: '"+orgFQDNStr+"': skipping!"+err.Error())
+		return topoName, topo, warns
+	}
+
+	// use the topology name for the fqdn
+	cgnames, ok := ocgmap[OriginHost(orgURI.Hostname())]
+	if !ok {
+		cgnames, ok = ocgmap[OriginHost(deliveryServicesAllParentsKey)]
+		if !ok {
+			warns = append(warns, "DS '"+*ds.XMLID+"' has no parent cache groups! Skipping!")
+			return topoName, topo, warns
+		}
+	}
+
+	// Manufactured topology
+	topoName = "otf_" + *ds.XMLID
+
+	// ensure name is unique
+	if _, ok := nameTopologies[TopologyName(topoName)]; ok {
+		warns = append(warns, "Found collision for topo name '"+topoName+"' for ds: '", *ds.XMLID+"'")
+		topoName = topoName + "_"
+	}
+
+	topo = tc.Topology{Name: topoName}
+
+	if IsGoDirect(ds) {
+		node := tc.TopologyNode{
+			Cachegroup: *server.Cachegroup,
+		}
+		topo.Nodes = append(topo.Nodes, node)
+	} else {
+		// If mid cache group, insert fake edge cache group.
+		// This is incorrect if there are multiple MID tiers.
+		pind := 1
+		if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
+			parents := []int{pind}
+			pind++
+			edgeNode := tc.TopologyNode{
+				Cachegroup: "fake_edgecg",
+				Parents:    parents,
+			}
+			topo.Nodes = append(topo.Nodes, edgeNode)
+		}
+
+		parents := []int{}
+		for ind := 0; ind < len(cgnames); ind++ {
+			parents = append(parents, pind)
+			pind++
+		}
+
+		node := tc.TopologyNode{
+			Cachegroup: *server.Cachegroup,
+			Parents:    parents,
+		}
+		topo.Nodes = append(topo.Nodes, node)
+
+		for _, cg := range cgnames {
+			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: cg})
+		}
+	}
+	return topoName, topo, warns
 }
 
 func makeParentDotConfigData(
@@ -392,6 +461,7 @@ func makeParentDotConfigData(
 
 		// manufacture a topology for this DS.
 		if ds.Topology == nil || *ds.Topology == "" {
+
 			// only populate if there are non topology ds's
 			if len(ocgmap) == 0 {
 				ocgmap = makeOCGMap(parentInfos)
@@ -400,76 +470,19 @@ func makeParentDotConfigData(
 				}
 			}
 
-			orgFQDNStr := *ds.OrgServerFQDN
-			orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
-			warnings = append(warnings, orgWarns...)
-			if err != nil {
-				warnings = append(warnings, "DS '"+*ds.XMLID+"' has malformed origin URI: '"+orgFQDNStr+"': skipping!"+err.Error())
+			topoName, topo, warns := CreateTopology(server, ds, nameTopologies, ocgmap)
+
+			warnings = append(warnings, warns...)
+			if topoName == "" {
 				continue
 			}
 
-			// use the topology name for the fqdn
-			topoName := orgURI.Hostname()
-			cgnames, ok := ocgmap[OriginHost(topoName)]
-			if !ok {
-				topoName = deliveryServicesAllParentsKey
-				cgnames, ok = ocgmap[OriginHost(topoName)]
-				if !ok {
-					warnings = append(warnings, "DS '"+*ds.XMLID+"' has no parent cache groups! Skipping!")
-					continue
-				}
-			}
-
-			// Manufactured topology
-			topo := tc.Topology{Name: topoName}
-
-			if IsGoDirect(ds) {
-				node := tc.TopologyNode{
-					Cachegroup: *server.Cachegroup,
-				}
-				topo.Nodes = append(topo.Nodes, node)
-			} else {
-				// If mid cache group, insert fake edge cache group.
-				// This is incorrect if there are multiple MID tiers.
-				pind := 1
-				if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
-					parents := []int{pind}
-					pind++
-					edgeNode := tc.TopologyNode{
-						Cachegroup: "fake_edgecg",
-						Parents:    parents,
-					}
-					topo.Nodes = append(topo.Nodes, edgeNode)
-				}
-
-				parents := []int{}
-				for ind := 0; ind < len(cgnames); ind++ {
-					parents = append(parents, pind)
-					pind++
-				}
-
-				node := tc.TopologyNode{
-					Cachegroup: *server.Cachegroup,
-					Parents:    parents,
-				}
-				topo.Nodes = append(topo.Nodes, node)
-
-				for _, cg := range cgnames {
-					topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: cg})
-				}
-			}
-
+			// check if topology already exists
 			nameTopologies[TopologyName(topoName)] = topo
 			ds.Topology = util.StrPtr(topoName)
 		}
 
 		isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
-
-		// TODO put these in separate functions. No if-statement should be this long.
-		if ds.Topology == nil || *ds.Topology == "" {
-			warnings = append(warnings, "No topology found for: '"+*ds.XMLID+"'")
-			continue
-		}
 
 		pasvc, topoWarnings, err := getTopologyParentConfigLine(
 			server,
