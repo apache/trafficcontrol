@@ -59,7 +59,7 @@ type Server tc.ServerV40
 // DeliveryService is a tc.DeliveryService for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type DeliveryService tc.DeliveryServiceV40
+type DeliveryService tc.DeliveryServiceV4
 
 // InvalidationJob is a tc.InvalidationJob for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
@@ -72,7 +72,7 @@ type InvalidationJob tc.InvalidationJobV4
 type ServerUpdateStatus tc.ServerUpdateStatusV4
 
 // ToDeliveryServices converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
+func ToDeliveryServices(dses []tc.DeliveryServiceV4) []DeliveryService {
 	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
@@ -81,7 +81,7 @@ func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 }
 
 // V40ToDeliveryServices converts a slice of the old traffic_ops/v4-client type to the local alias.
-func V40ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
+func V4ToDeliveryServices(dses []tc.DeliveryServiceV4) []DeliveryService {
 	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))

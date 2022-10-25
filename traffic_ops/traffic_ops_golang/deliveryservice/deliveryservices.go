@@ -195,6 +195,33 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, []tc.DeliveryServiceV40{*res})
 }
 
+// CreateV41 is a handler for POST requests to create Delivery Services in
+// version 4.1 of the Traffic Ops API.
+func CreateV41(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var ds tc.DeliveryServiceV41
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("decoding: %w", err), nil)
+		return
+	}
+	res, status, userErr, sysErr := createV41(w, r, inf, ds, true)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	alerts := res.TLSVersionsAlerts()
+	alerts.AddNewAlert(tc.SuccessLevel, "Delivery Service creation was successful")
+
+	w.Header().Set("Location", fmt.Sprintf("/api/4.0/deliveryservices?id=%d", *res.ID))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, []tc.DeliveryServiceV41{*res})
+}
+
 func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
 	ds := tc.DeliveryServiceV31{DeliveryServiceV30: dsV30}
 	res, status, userErr, sysErr := createV31(w, r, inf, ds)
@@ -207,16 +234,17 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 	tx := inf.Tx.Tx
 	dsNullable := tc.DeliveryServiceNullableV30(dsV31)
 	ds := dsNullable.UpgradeToV4()
-	res, status, userErr, sysErr := createV40(w, r, inf, tc.DeliveryServiceV40(ds), false)
+	res, status, userErr, sysErr := createV40(w, r, inf, ds.DeliveryServiceV40, false)
 	if res == nil {
 		return nil, status, userErr, sysErr
 	}
 
-	ds = tc.DeliveryServiceV4(*res)
+	ds = tc.DeliveryServiceV41{DeliveryServiceV40: *res}
 	if dsV31.CacheURL != nil {
 		_, err := tx.Exec("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
-			&dsV31.CacheURL,
-			&ds.ID)
+			dsV31.CacheURL,
+			ds.ID,
+		)
 		if err != nil {
 			usrErr, sysErr, code := api.ParseDBError(err)
 			return nil, code, usrErr, sysErr
@@ -261,10 +289,24 @@ func recreateTLSVersions(versions []string, dsid int, tx *sql.Tx) error {
 }
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
+func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV4 tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
+	ds, code, userErr, sysErr := createV41(w, r, inf, tc.DeliveryServiceV41{DeliveryServiceV40: dsV4}, omitExtraLongDescFields)
+	if userErr != nil || sysErr != nil || ds == nil {
+		return nil, code, userErr, sysErr
+	}
+	d := ds.DeliveryServiceV40
+	return &d, code, nil, nil
+}
+
+// createV41 creates the given Delivery Service in the database, and returns a
+// reference to the Delivery Service with its ID and other fields which are
+// created on insert set. On error, an HTTP status code, user error, and system
+// error are returned. The status code SHOULD NOT be used, if both errors are
+// nil.
+func createV41(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV4 tc.DeliveryServiceV41, omitExtraLongDescFields bool) (*tc.DeliveryServiceV41, int, error, error) {
 	user := inf.User
 	tx := inf.Tx.Tx
-	ds := tc.DeliveryServiceV4(dsV40)
+	ds := tc.DeliveryServiceV4(dsV4)
 	err := Validate(tx, &ds)
 	var geoLimitCountries string
 	if err != nil {
@@ -299,127 +341,127 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 			return nil, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil
 		}
 		resultRows, err = tx.Query(insertQueryWithoutLD1AndLD2(),
-			&ds.Active,
-			&ds.AnonymousBlockingEnabled,
-			&ds.CCRDNSTTL,
-			&ds.CDNID,
-			&ds.CheckPath,
-			&ds.ConsistentHashRegex,
-			&deepCachingType,
-			&ds.DisplayName,
-			&ds.DNSBypassCNAME,
-			&ds.DNSBypassIP,
-			&ds.DNSBypassIP6,
-			&ds.DNSBypassTTL,
-			&ds.DSCP,
-			&ds.EdgeHeaderRewrite,
-			&ds.GeoLimitRedirectURL,
-			&ds.GeoLimit,
-			&geoLimitCountries,
-			&ds.GeoProvider,
-			&ds.GlobalMaxMBPS,
-			&ds.GlobalMaxTPS,
-			&ds.FQPacingRate,
-			&ds.HTTPBypassFQDN,
-			&ds.InfoURL,
-			&ds.InitialDispersion,
-			&ds.IPV6RoutingEnabled,
-			&ds.LogsEnabled,
-			&ds.LongDesc,
-			&ds.MaxDNSAnswers,
-			&ds.MaxOriginConnections,
-			&ds.MidHeaderRewrite,
-			&ds.MissLat,
-			&ds.MissLong,
-			&ds.MultiSiteOrigin,
-			&ds.OriginShield,
-			&ds.ProfileID,
-			&ds.Protocol,
-			&ds.QStringIgnore,
-			&ds.RangeRequestHandling,
-			&ds.RegexRemap,
-			&ds.Regional,
-			&ds.RegionalGeoBlocking,
-			&ds.RemapText,
-			&ds.RoutingName,
-			&ds.SigningAlgorithm,
-			&ds.SSLKeyVersion,
-			&ds.TenantID,
-			&ds.Topology,
-			&ds.TRRequestHeaders,
-			&ds.TRResponseHeaders,
-			&ds.TypeID,
-			&ds.XMLID,
-			&ds.EcsEnabled,
-			&ds.RangeSliceBlockSize,
-			&ds.FirstHeaderRewrite,
-			&ds.InnerHeaderRewrite,
-			&ds.LastHeaderRewrite,
-			&ds.ServiceCategory,
-			&ds.MaxRequestHeaderBytes,
+			ds.Active,
+			ds.AnonymousBlockingEnabled,
+			ds.CCRDNSTTL,
+			ds.CDNID,
+			ds.CheckPath,
+			ds.ConsistentHashRegex,
+			deepCachingType,
+			ds.DisplayName,
+			ds.DNSBypassCNAME,
+			ds.DNSBypassIP,
+			ds.DNSBypassIP6,
+			ds.DNSBypassTTL,
+			ds.DSCP,
+			ds.EdgeHeaderRewrite,
+			ds.GeoLimitRedirectURL,
+			ds.GeoLimit,
+			geoLimitCountries,
+			ds.GeoProvider,
+			ds.GlobalMaxMBPS,
+			ds.GlobalMaxTPS,
+			ds.FQPacingRate,
+			ds.HTTPBypassFQDN,
+			ds.InfoURL,
+			ds.InitialDispersion,
+			ds.IPV6RoutingEnabled,
+			ds.LogsEnabled,
+			ds.LongDesc,
+			ds.MaxDNSAnswers,
+			ds.MaxOriginConnections,
+			ds.MidHeaderRewrite,
+			ds.MissLat,
+			ds.MissLong,
+			ds.MultiSiteOrigin,
+			ds.OriginShield,
+			ds.ProfileID,
+			ds.Protocol,
+			ds.QStringIgnore,
+			ds.RangeRequestHandling,
+			ds.RegexRemap,
+			ds.Regional,
+			ds.RegionalGeoBlocking,
+			ds.RemapText,
+			ds.RoutingName,
+			ds.SigningAlgorithm,
+			ds.SSLKeyVersion,
+			ds.TenantID,
+			ds.Topology,
+			ds.TRRequestHeaders,
+			ds.TRResponseHeaders,
+			ds.TypeID,
+			ds.XMLID,
+			ds.EcsEnabled,
+			ds.RangeSliceBlockSize,
+			ds.FirstHeaderRewrite,
+			ds.InnerHeaderRewrite,
+			ds.LastHeaderRewrite,
+			ds.ServiceCategory,
+			ds.MaxRequestHeaderBytes,
 		)
 	} else {
 		resultRows, err = tx.Query(insertQuery(),
-			&ds.Active,
-			&ds.AnonymousBlockingEnabled,
-			&ds.CCRDNSTTL,
-			&ds.CDNID,
-			&ds.CheckPath,
-			&ds.ConsistentHashRegex,
-			&deepCachingType,
-			&ds.DisplayName,
-			&ds.DNSBypassCNAME,
-			&ds.DNSBypassIP,
-			&ds.DNSBypassIP6,
-			&ds.DNSBypassTTL,
-			&ds.DSCP,
-			&ds.EdgeHeaderRewrite,
-			&ds.GeoLimitRedirectURL,
-			&ds.GeoLimit,
-			&geoLimitCountries,
-			&ds.GeoProvider,
-			&ds.GlobalMaxMBPS,
-			&ds.GlobalMaxTPS,
-			&ds.FQPacingRate,
-			&ds.HTTPBypassFQDN,
-			&ds.InfoURL,
-			&ds.InitialDispersion,
-			&ds.IPV6RoutingEnabled,
-			&ds.LogsEnabled,
-			&ds.LongDesc,
-			&ds.LongDesc1,
-			&ds.LongDesc2,
-			&ds.MaxDNSAnswers,
-			&ds.MaxOriginConnections,
-			&ds.MidHeaderRewrite,
-			&ds.MissLat,
-			&ds.MissLong,
-			&ds.MultiSiteOrigin,
-			&ds.OriginShield,
-			&ds.ProfileID,
-			&ds.Protocol,
-			&ds.QStringIgnore,
-			&ds.RangeRequestHandling,
-			&ds.RegexRemap,
-			&ds.Regional,
-			&ds.RegionalGeoBlocking,
-			&ds.RemapText,
-			&ds.RoutingName,
-			&ds.SigningAlgorithm,
-			&ds.SSLKeyVersion,
-			&ds.TenantID,
-			&ds.Topology,
-			&ds.TRRequestHeaders,
-			&ds.TRResponseHeaders,
-			&ds.TypeID,
-			&ds.XMLID,
-			&ds.EcsEnabled,
-			&ds.RangeSliceBlockSize,
-			&ds.FirstHeaderRewrite,
-			&ds.InnerHeaderRewrite,
-			&ds.LastHeaderRewrite,
-			&ds.ServiceCategory,
-			&ds.MaxRequestHeaderBytes,
+			ds.Active,
+			ds.AnonymousBlockingEnabled,
+			ds.CCRDNSTTL,
+			ds.CDNID,
+			ds.CheckPath,
+			ds.ConsistentHashRegex,
+			deepCachingType,
+			ds.DisplayName,
+			ds.DNSBypassCNAME,
+			ds.DNSBypassIP,
+			ds.DNSBypassIP6,
+			ds.DNSBypassTTL,
+			ds.DSCP,
+			ds.EdgeHeaderRewrite,
+			ds.GeoLimitRedirectURL,
+			ds.GeoLimit,
+			geoLimitCountries,
+			ds.GeoProvider,
+			ds.GlobalMaxMBPS,
+			ds.GlobalMaxTPS,
+			ds.FQPacingRate,
+			ds.HTTPBypassFQDN,
+			ds.InfoURL,
+			ds.InitialDispersion,
+			ds.IPV6RoutingEnabled,
+			ds.LogsEnabled,
+			ds.LongDesc,
+			ds.LongDesc1,
+			ds.LongDesc2,
+			ds.MaxDNSAnswers,
+			ds.MaxOriginConnections,
+			ds.MidHeaderRewrite,
+			ds.MissLat,
+			ds.MissLong,
+			ds.MultiSiteOrigin,
+			ds.OriginShield,
+			ds.ProfileID,
+			ds.Protocol,
+			ds.QStringIgnore,
+			ds.RangeRequestHandling,
+			ds.RegexRemap,
+			ds.Regional,
+			ds.RegionalGeoBlocking,
+			ds.RemapText,
+			ds.RoutingName,
+			ds.SigningAlgorithm,
+			ds.SSLKeyVersion,
+			ds.TenantID,
+			ds.Topology,
+			ds.TRRequestHeaders,
+			ds.TRResponseHeaders,
+			ds.TypeID,
+			ds.XMLID,
+			ds.EcsEnabled,
+			ds.RangeSliceBlockSize,
+			ds.FirstHeaderRewrite,
+			ds.InnerHeaderRewrite,
+			ds.LastHeaderRewrite,
+			ds.ServiceCategory,
+			ds.MaxRequestHeaderBytes,
 		)
 	}
 
@@ -515,16 +557,16 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 
-	dsV40 = ds
+	dsV4 = ds
 
 	if inf.Config.TrafficVaultEnabled && ds.Protocol != nil && (*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
-		err, errCode := GeneratePlaceholderSelfSignedCert(dsV40, inf, r.Context())
+		err, errCode := GeneratePlaceholderSelfSignedCert(dsV4, inf, r.Context())
 		if err != nil || errCode != http.StatusOK {
 			return nil, errCode, nil, fmt.Errorf("creating self signed default cert: %v", err)
 		}
 	}
 
-	return &dsV40, http.StatusOK, nil, nil
+	return &dsV4, http.StatusOK, nil, nil
 }
 
 func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
@@ -572,8 +614,10 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 	for _, ds := range dses {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Major > 3:
+		case version.Major >= 4 && version.Minor >= 1:
 			returnable = append(returnable, ds.RemoveLD1AndLD2())
+		case version.Major >= 4:
+			returnable = append(returnable, ds.DeliveryServiceV40.RemoveLD1AndLD2())
 		case version.Major >= 3 && version.Minor >= 1:
 			returnable = append(returnable, ds.DowngradeToV31())
 		case version.Major >= 3:
@@ -668,6 +712,43 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, []tc.DeliveryServiceV40{*res})
 }
 
+// UpdateV41 is a handler for PUT requests used to update a Delivery Service.
+func UpdateV41(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	id := inf.IntParams["id"]
+
+	var ds tc.DeliveryServiceV41
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("malformed JSON: %w", err), nil)
+		return
+	}
+	ds.ID = &id
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, id)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("deliveryservice update: getting CDN from DS ID: %w", err))
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+	res, status, userErr, sysErr := updateV41(w, r, inf, &ds, true)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	alerts := res.TLSVersionsAlerts()
+	alerts.AddNewAlert(tc.SuccessLevel, "Delivery Service update was successful")
+
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, []tc.DeliveryServiceV41{*res})
+}
+
 func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 *tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
 	dsV31 := tc.DeliveryServiceV31{DeliveryServiceV30: *dsV30}
 	// query the DB for existing 3.1 fields in order to "upgrade" this 3.0 request into a 3.1 request
@@ -695,26 +776,27 @@ WHERE
 func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
 	dsNull := tc.DeliveryServiceNullableV30(*dsV31)
 	ds := dsNull.UpgradeToV4()
-	dsV40 := ds
-	if dsV40.ID == nil {
+	dsV41 := ds
+	if dsV41.ID == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("cannot update a Delivery Service with nil ID")
 	}
 
 	tx := inf.Tx.Tx
 	var sysErr error
-	if dsV40.TLSVersions, sysErr = GetDSTLSVersions(*dsV40.ID, tx); sysErr != nil {
-		return nil, http.StatusInternalServerError, nil, fmt.Errorf("getting TLS versions for DS #%d in API version < 4.0: %w", *dsV40.ID, sysErr)
+	if dsV41.TLSVersions, sysErr = GetDSTLSVersions(*dsV41.ID, tx); sysErr != nil {
+		return nil, http.StatusInternalServerError, nil, fmt.Errorf("getting TLS versions for DS #%d in API version < 4.0: %w", *dsV41.ID, sysErr)
 	}
 
-	res, status, usrErr, sysErr := updateV40(w, r, inf, &dsV40, false)
+	res, status, usrErr, sysErr := updateV40(w, r, inf, &dsV41.DeliveryServiceV40, false)
 	if res == nil || usrErr != nil || sysErr != nil {
 		return nil, status, usrErr, sysErr
 	}
-	ds = *res
+	ds.DeliveryServiceV40 = *res
 	if dsV31.CacheURL != nil {
 		_, err := tx.Exec("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
-			&dsV31.CacheURL,
-			&ds.ID)
+			dsV31.CacheURL,
+			ds.ID,
+		)
 		if err != nil {
 			usrErr, sysErr, code := api.ParseDBError(err)
 			return nil, code, usrErr, sysErr
@@ -729,9 +811,17 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	return &oldRes, http.StatusOK, nil, nil
 }
 func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
+	ds, code, userErr, sysErr := updateV41(w, r, inf, &tc.DeliveryServiceV41{DeliveryServiceV40: *dsV40}, omitExtraLongDescFields)
+	if userErr != nil || sysErr != nil || ds == nil {
+		return nil, code, userErr, sysErr
+	}
+	d := ds.DeliveryServiceV40
+	return &d, code, nil, nil
+}
+func updateV41(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV4 *tc.DeliveryServiceV41, omitExtraLongDescFields bool) (*tc.DeliveryServiceV41, int, error, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
-	ds := tc.DeliveryServiceV4(*dsV40)
+	ds := tc.DeliveryServiceV4(*dsV4)
 	if err := Validate(tx, &ds); err != nil {
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
 	}
@@ -833,128 +923,130 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 			return nil, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil
 		}
 		resultRows, err = tx.Query(updateDSQueryWithoutLD1AndLD2(),
-			&ds.Active,
-			&ds.CCRDNSTTL,
-			&ds.CDNID,
-			&ds.CheckPath,
-			&deepCachingType,
-			&ds.DisplayName,
-			&ds.DNSBypassCNAME,
-			&ds.DNSBypassIP,
-			&ds.DNSBypassIP6,
-			&ds.DNSBypassTTL,
-			&ds.DSCP,
-			&ds.EdgeHeaderRewrite,
-			&ds.GeoLimitRedirectURL,
-			&ds.GeoLimit,
-			&geoLimitCountries,
-			&ds.GeoProvider,
-			&ds.GlobalMaxMBPS,
-			&ds.GlobalMaxTPS,
-			&ds.FQPacingRate,
-			&ds.HTTPBypassFQDN,
-			&ds.InfoURL,
-			&ds.InitialDispersion,
-			&ds.IPV6RoutingEnabled,
-			&ds.LogsEnabled,
-			&ds.LongDesc,
-			&ds.MaxDNSAnswers,
-			&ds.MidHeaderRewrite,
-			&ds.MissLat,
-			&ds.MissLong,
-			&ds.MultiSiteOrigin,
-			&ds.OriginShield,
-			&ds.ProfileID,
-			&ds.Protocol,
-			&ds.QStringIgnore,
-			&ds.RangeRequestHandling,
-			&ds.RegexRemap,
-			&ds.Regional,
-			&ds.RegionalGeoBlocking,
-			&ds.RemapText,
-			&ds.RoutingName,
-			&ds.SigningAlgorithm,
-			&ds.SSLKeyVersion,
-			&ds.TenantID,
-			&ds.TRRequestHeaders,
-			&ds.TRResponseHeaders,
-			&ds.TypeID,
-			&ds.XMLID,
-			&ds.AnonymousBlockingEnabled,
-			&ds.ConsistentHashRegex,
-			&ds.MaxOriginConnections,
-			&ds.EcsEnabled,
-			&ds.RangeSliceBlockSize,
-			&ds.Topology,
-			&ds.FirstHeaderRewrite,
-			&ds.InnerHeaderRewrite,
-			&ds.LastHeaderRewrite,
-			&ds.ServiceCategory,
-			&ds.MaxRequestHeaderBytes,
-			&ds.ID)
+			ds.Active,
+			ds.CCRDNSTTL,
+			ds.CDNID,
+			ds.CheckPath,
+			deepCachingType,
+			ds.DisplayName,
+			ds.DNSBypassCNAME,
+			ds.DNSBypassIP,
+			ds.DNSBypassIP6,
+			ds.DNSBypassTTL,
+			ds.DSCP,
+			ds.EdgeHeaderRewrite,
+			ds.GeoLimitRedirectURL,
+			ds.GeoLimit,
+			geoLimitCountries,
+			ds.GeoProvider,
+			ds.GlobalMaxMBPS,
+			ds.GlobalMaxTPS,
+			ds.FQPacingRate,
+			ds.HTTPBypassFQDN,
+			ds.InfoURL,
+			ds.InitialDispersion,
+			ds.IPV6RoutingEnabled,
+			ds.LogsEnabled,
+			ds.LongDesc,
+			ds.MaxDNSAnswers,
+			ds.MidHeaderRewrite,
+			ds.MissLat,
+			ds.MissLong,
+			ds.MultiSiteOrigin,
+			ds.OriginShield,
+			ds.ProfileID,
+			ds.Protocol,
+			ds.QStringIgnore,
+			ds.RangeRequestHandling,
+			ds.RegexRemap,
+			ds.Regional,
+			ds.RegionalGeoBlocking,
+			ds.RemapText,
+			ds.RoutingName,
+			ds.SigningAlgorithm,
+			ds.SSLKeyVersion,
+			ds.TenantID,
+			ds.TRRequestHeaders,
+			ds.TRResponseHeaders,
+			ds.TypeID,
+			ds.XMLID,
+			ds.AnonymousBlockingEnabled,
+			ds.ConsistentHashRegex,
+			ds.MaxOriginConnections,
+			ds.EcsEnabled,
+			ds.RangeSliceBlockSize,
+			ds.Topology,
+			ds.FirstHeaderRewrite,
+			ds.InnerHeaderRewrite,
+			ds.LastHeaderRewrite,
+			ds.ServiceCategory,
+			ds.MaxRequestHeaderBytes,
+			ds.ID,
+		)
 	} else {
 		resultRows, err = tx.Query(updateDSQuery(),
-			&ds.Active,
-			&ds.CCRDNSTTL,
-			&ds.CDNID,
-			&ds.CheckPath,
-			&deepCachingType,
-			&ds.DisplayName,
-			&ds.DNSBypassCNAME,
-			&ds.DNSBypassIP,
-			&ds.DNSBypassIP6,
-			&ds.DNSBypassTTL,
-			&ds.DSCP,
-			&ds.EdgeHeaderRewrite,
-			&ds.GeoLimitRedirectURL,
-			&ds.GeoLimit,
-			&geoLimitCountries,
-			&ds.GeoProvider,
-			&ds.GlobalMaxMBPS,
-			&ds.GlobalMaxTPS,
-			&ds.FQPacingRate,
-			&ds.HTTPBypassFQDN,
-			&ds.InfoURL,
-			&ds.InitialDispersion,
-			&ds.IPV6RoutingEnabled,
-			&ds.LogsEnabled,
-			&ds.LongDesc,
-			&ds.LongDesc1,
-			&ds.LongDesc2,
-			&ds.MaxDNSAnswers,
-			&ds.MidHeaderRewrite,
-			&ds.MissLat,
-			&ds.MissLong,
-			&ds.MultiSiteOrigin,
-			&ds.OriginShield,
-			&ds.ProfileID,
-			&ds.Protocol,
-			&ds.QStringIgnore,
-			&ds.RangeRequestHandling,
-			&ds.RegexRemap,
-			&ds.Regional,
-			&ds.RegionalGeoBlocking,
-			&ds.RemapText,
-			&ds.RoutingName,
-			&ds.SigningAlgorithm,
-			&ds.SSLKeyVersion,
-			&ds.TenantID,
-			&ds.TRRequestHeaders,
-			&ds.TRResponseHeaders,
-			&ds.TypeID,
-			&ds.XMLID,
-			&ds.AnonymousBlockingEnabled,
-			&ds.ConsistentHashRegex,
-			&ds.MaxOriginConnections,
-			&ds.EcsEnabled,
-			&ds.RangeSliceBlockSize,
-			&ds.Topology,
-			&ds.FirstHeaderRewrite,
-			&ds.InnerHeaderRewrite,
-			&ds.LastHeaderRewrite,
-			&ds.ServiceCategory,
-			&ds.MaxRequestHeaderBytes,
-			&ds.ID)
+			ds.Active,
+			ds.CCRDNSTTL,
+			ds.CDNID,
+			ds.CheckPath,
+			deepCachingType,
+			ds.DisplayName,
+			ds.DNSBypassCNAME,
+			ds.DNSBypassIP,
+			ds.DNSBypassIP6,
+			ds.DNSBypassTTL,
+			ds.DSCP,
+			ds.EdgeHeaderRewrite,
+			ds.GeoLimitRedirectURL,
+			ds.GeoLimit,
+			geoLimitCountries,
+			ds.GeoProvider,
+			ds.GlobalMaxMBPS,
+			ds.GlobalMaxTPS,
+			ds.FQPacingRate,
+			ds.HTTPBypassFQDN,
+			ds.InfoURL,
+			ds.InitialDispersion,
+			ds.IPV6RoutingEnabled,
+			ds.LogsEnabled,
+			ds.LongDesc,
+			ds.LongDesc1,
+			ds.LongDesc2,
+			ds.MaxDNSAnswers,
+			ds.MidHeaderRewrite,
+			ds.MissLat,
+			ds.MissLong,
+			ds.MultiSiteOrigin,
+			ds.OriginShield,
+			ds.ProfileID,
+			ds.Protocol,
+			ds.QStringIgnore,
+			ds.RangeRequestHandling,
+			ds.RegexRemap,
+			ds.Regional,
+			ds.RegionalGeoBlocking,
+			ds.RemapText,
+			ds.RoutingName,
+			ds.SigningAlgorithm,
+			ds.SSLKeyVersion,
+			ds.TenantID,
+			ds.TRRequestHeaders,
+			ds.TRResponseHeaders,
+			ds.TypeID,
+			ds.XMLID,
+			ds.AnonymousBlockingEnabled,
+			ds.ConsistentHashRegex,
+			ds.MaxOriginConnections,
+			ds.EcsEnabled,
+			ds.RangeSliceBlockSize,
+			ds.Topology,
+			ds.FirstHeaderRewrite,
+			ds.InnerHeaderRewrite,
+			ds.LastHeaderRewrite,
+			ds.ServiceCategory,
+			ds.MaxRequestHeaderBytes,
+			ds.ID,
+		)
 	}
 
 	if err != nil {
@@ -1048,16 +1140,16 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 		return nil, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
 	}
 
-	dsV40 = (*tc.DeliveryServiceV40)(&ds)
+	dsV4 = &ds
 
 	if inf.Config.TrafficVaultEnabled && ds.Protocol != nil && (*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
-		err, errCode := GeneratePlaceholderSelfSignedCert(*dsV40, inf, r.Context())
+		err, errCode := GeneratePlaceholderSelfSignedCert(*dsV4, inf, r.Context())
 		if err != nil || errCode != http.StatusOK {
 			return nil, errCode, nil, fmt.Errorf("creating self signed default cert: %v", err)
 		}
 	}
 
-	return dsV40, http.StatusOK, nil, nil
+	return dsV4, http.StatusOK, nil, nil
 }
 
 // Delete is the DeliveryService implementation of the Deleter interface.
@@ -1589,7 +1681,8 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 	for rows.Next() {
 		ds := tc.DeliveryServiceV4{}
 		cdnDomain := ""
-		err := rows.Scan(&ds.Active,
+		err := rows.Scan(
+			&ds.Active,
 			&ds.AnonymousBlockingEnabled,
 			&ds.CCRDNSTTL,
 			&ds.CDNID,

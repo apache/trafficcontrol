@@ -50,7 +50,7 @@ func serverToLatest(oldSv *tc.ServerV30) (*atscfg.Server, error) {
 }
 
 func dsesToLatest(dses []tc.DeliveryServiceNullableV30) []atscfg.DeliveryService {
-	newDSes := []tc.DeliveryServiceV40{}
+	newDSes := []tc.DeliveryServiceV4{}
 	for _, ds := range dses {
 		newDSes = append(newDSes, ds.UpgradeToV4())
 	}
