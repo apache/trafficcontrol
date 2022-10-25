@@ -156,13 +156,9 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 			ret := legacyDS.DowngradeToV31()
 			if inf.Version.Minor >= 1 {
 				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV31{tc.DeliveryServiceV31(ret)})
+			} else {
+				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV30{ret.DeliveryServiceV30})
 			}
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV30{ret.DeliveryServiceV30})
-		case 2:
-			legacyDS := ds.Downgrade()
-			legacyDS.LongDesc1 = dses[0].LongDesc1
-			legacyDS.LongDesc2 = dses[0].LongDesc2
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV15{legacyDS.DowngradeToV31().DeliveryServiceNullableV15})
 		}
 	}
 
