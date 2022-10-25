@@ -347,7 +347,7 @@ func getTrafficRouters(trafficRouterName string, cdnName tc.CDNName) ([]tc.Serve
 	return trafficRoutersV40, nil
 }
 
-func getDSes(t *testing.T, cdnId int, dsTypeName tc.DSType, dsName tc.DeliveryServiceName) []tc.DeliveryServiceV40 {
+func getDSes(t *testing.T, cdnId int, dsTypeName tc.DSType, dsName tc.DeliveryServiceName) []tc.DeliveryServiceV4 {
 	requestOptions := client.RequestOptions{QueryParameters: url.Values{"name": {dsTypeName.String()}}}
 	var dsType tc.Type
 	{
