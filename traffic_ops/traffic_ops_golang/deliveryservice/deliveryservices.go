@@ -614,7 +614,7 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 	for _, ds := range dses {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Major > 4 || (version.Major == 4 && version.Minor >= 1):
+		case version.Major >= 4 && version.Minor >= 1:
 			returnable = append(returnable, ds.RemoveLD1AndLD2())
 		case version.Major >= 4:
 			returnable = append(returnable, ds.DeliveryServiceV40.RemoveLD1AndLD2())
