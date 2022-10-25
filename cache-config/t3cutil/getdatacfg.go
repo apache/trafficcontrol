@@ -517,7 +517,8 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			return nil
 		}
 		serverParamsFs := []func() error{}
-		for _, profileName := range server.ProfileNames {
+		for _, profileNamePtr := range server.ProfileNames {
+			profileName := profileNamePtr // must copy, because Go for-loops overwrite the variable every iteration
 			serverParamsFs = append(serverParamsFs, func() error { return serverParamsF(atscfg.ProfileName(profileName)) })
 		}
 
