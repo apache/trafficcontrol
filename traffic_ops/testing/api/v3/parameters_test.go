@@ -16,7 +16,6 @@
 package v3
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"testing"
@@ -36,7 +35,7 @@ func TestParameters(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.Parameter]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -63,11 +62,11 @@ func TestParameters(t *testing.T) {
 				"OK when VALID REQUEST": {
 					EndpointId:    GetParameterID(t, "LogObject.Format", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"configFile": "updated.config",
-						"name":       "updated name",
-						"secure":     true,
-						"value":      "updated value",
+					RequestBody: tc.Parameter{
+						ConfigFile: "updated.config",
+						Name:       "updated name",
+						Secure:     true,
+						Value:      "updated value",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateParametersUpdateCreateFields("updated name",
@@ -77,20 +76,20 @@ func TestParameters(t *testing.T) {
 					EndpointId:     GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody: map[string]interface{}{
-						"configFile": "logs_xml.config",
-						"name":       "LogFormat.Name",
-						"secure":     false,
+					RequestBody: tc.Parameter{
+						ConfigFile: "logs_xml.config",
+						Name:       "LogFormat.Name",
+						Secure:     false,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"configFile": "logs_xml.config",
-						"name":       "LogFormat.Name",
-						"secure":     false,
+					RequestBody: tc.Parameter{
+						ConfigFile: "logs_xml.config",
+						Name:       "LogFormat.Name",
+						Secure:     false,
 					},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -101,17 +100,8 @@ func TestParameters(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					parameter := tc.Parameter{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &parameter)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							if name == "OK when VALID NAME parameter" {
 								resp, reqInf, err := testCase.ClientSession.GetParameterByNameWithHdr(testCase.RequestParams["name"][0], testCase.RequestHeaders)
@@ -127,14 +117,14 @@ func TestParameters(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateParameter(parameter)
+							alerts, reqInf, err := testCase.ClientSession.CreateParameter(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateParameterByIDWithHdr(testCase.EndpointId(), parameter, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateParameterByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

@@ -16,12 +16,12 @@
 package v3
 
 import (
-	"encoding/json"
 	"net/http"
 	"reflect"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -30,29 +30,27 @@ import (
 func TestProfilesImport(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.ProfileImportRequest]{
 			"POST": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"importProfile": map[string]interface{}{
-							"profile": map[string]interface{}{
-								"name":        "GLOBAL",
-								"description": "Global Traffic Ops profile",
-								"cdn":         "cdn1",
-								"type":        "UNK_PROFILE",
+					RequestBody: tc.ProfileImportRequest{
+						Profile: tc.ProfileExportImportNullable{
+							Name:        util.Ptr("GLOBAL"),
+							Description: util.Ptr("Global Traffic Ops profile"),
+							CDNName:     util.Ptr("cdn1"),
+							Type:        util.Ptr("UNK_PROFILE"),
+						},
+						Parameters: []tc.ProfileExportImportParameterNullable{
+							{
+								ConfigFile: util.Ptr("global"),
+								Name:       util.Ptr("tm.instance_name"),
+								Value:      util.Ptr("Traffic Ops CDN"),
 							},
-							"parameters": []map[string]interface{}{
-								{
-									"config_file": "global",
-									"name":        "tm.instance_name",
-									"value":       "Traffic Ops CDN",
-								},
-								{
-									"config_file": "global",
-									"name":        "tm.toolname",
-									"value":       "Traffic Ops",
-								},
+							{
+								ConfigFile: util.Ptr("global"),
+								Name:       util.Ptr("tm.toolname"),
+								Value:      util.Ptr("Traffic Ops"),
 							},
 						},
 					},
@@ -62,20 +60,18 @@ func TestProfilesImport(t *testing.T) {
 				},
 				"BAD REQUEST when SPACE in PROFILE NAME": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"importProfile": map[string]interface{}{
-							"profile": map[string]interface{}{
-								"name":        "GLOBAL SPACES",
-								"description": "Global Traffic Ops profile",
-								"cdn":         "cdn1",
-								"type":        "UNK_PROFILE",
-							},
-							"parameters": []map[string]interface{}{
-								{
-									"config_file": "global",
-									"name":        "tm.instance_name",
-									"value":       "Traffic Ops CDN",
-								},
+					RequestBody: tc.ProfileImportRequest{
+						Profile: tc.ProfileExportImportNullable{
+							Name:        util.Ptr("GLOBAL SPACES"),
+							Description: util.Ptr("Global Traffic Ops profile"),
+							CDNName:     util.Ptr("cdn1"),
+							Type:        util.Ptr("UNK_PROFILE"),
+						},
+						Parameters: []tc.ProfileExportImportParameterNullable{
+							{
+								ConfigFile: util.Ptr("global"),
+								Name:       util.Ptr("tm.instance_name"),
+								Value:      util.Ptr("Traffic Ops CDN"),
 							},
 						},
 					},
@@ -87,21 +83,10 @@ func TestProfilesImport(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					importProfile := tc.ProfileImportRequest{}
-
-					if testCase.RequestBody != nil {
-						if importProfileBody, ok := testCase.RequestBody["importProfile"]; ok {
-							dat, err := json.Marshal(importProfileBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &importProfile)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						}
-					}
-
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.ImportProfile(&importProfile)
+							resp, reqInf, err := testCase.ClientSession.ImportProfile(&testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

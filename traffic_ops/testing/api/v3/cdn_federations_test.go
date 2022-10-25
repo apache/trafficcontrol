@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -26,6 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -44,7 +44,7 @@ func TestCDNFederations(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.CDNFederation]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -61,15 +61,20 @@ func TestCDNFederations(t *testing.T) {
 					RequestParams: url.Values{"orderby": {"cname"}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNFederationCNameSort()),
 				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"PUT": {
 				"OK when VALID request": {
 					EndpointId:    GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"cname":       "new.cname.",
-						"ttl":         34,
-						"description": "updated",
+					RequestBody: tc.CDNFederation{
+						CName:       util.Ptr("new.cname."),
+						TTL:         util.Ptr(34),
+						Description: util.Ptr("updated"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNFederationUpdateFields(map[string]interface{}{"CName": "new.cname."})),
 				},
@@ -77,30 +82,23 @@ func TestCDNFederations(t *testing.T) {
 					EndpointId:     GetFederationID(t, "booya.com."),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody: map[string]interface{}{
-						"cname":       "booya.com.",
-						"ttl":         34,
-						"description": "fooya",
+					RequestBody: tc.CDNFederation{
+						CName:       util.Ptr("booya.com."),
+						TTL:         util.Ptr(34),
+						Description: util.Ptr("fooya"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"cname":       "new.cname.",
-						"ttl":         34,
-						"description": "updated",
+					RequestBody: tc.CDNFederation{
+						CName:       util.Ptr("new.cname."),
+						TTL:         util.Ptr(34),
+						Description: util.Ptr("updated"),
 					},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
-				},
-			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession:  TOSession,
-					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
-					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -109,17 +107,8 @@ func TestCDNFederations(t *testing.T) {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
 					var fedID int
-					cdnFederation := tc.CDNFederation{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &cdnFederation)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							if name == "OK when VALID ID parameter" {
 								if val, ok := testCase.RequestParams["id"]; ok {
@@ -140,14 +129,14 @@ func TestCDNFederations(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateCDNFederationByName(cdnFederation, cdnName)
+							resp, reqInf, err := testCase.ClientSession.CreateCDNFederationByName(testCase.RequestBody, cdnName)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateCDNFederationsByIDWithHdr(cdnFederation, cdnName, testCase.EndpointId(), testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.UpdateCDNFederationsByIDWithHdr(testCase.RequestBody, cdnName, testCase.EndpointId(), testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

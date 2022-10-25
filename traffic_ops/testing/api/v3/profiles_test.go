@@ -16,7 +16,6 @@
 package v3
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -37,7 +36,7 @@ func TestProfiles(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.Profile]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -71,61 +70,61 @@ func TestProfiles(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when NAME has SPACES": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"cdn":         GetCDNID(t, "cdn1")(),
-						"description": "name has spaces test",
-						"name":        "name has space",
-						"type":        tc.CacheServerProfileType,
+					RequestBody: tc.Profile{
+						CDNID:       GetCDNID(t, "cdn1")(),
+						Description: "name has spaces test",
+						Name:        "name has space",
+						Type:        tc.CacheServerProfileType,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING ALL FIELDS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"cdn":         0,
-						"description": "",
-						"name":        "",
-						"type":        "",
+					RequestBody: tc.Profile{
+						CDNID:       0,
+						Description: "",
+						Name:        "",
+						Type:        "",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID CDN ID": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"cdn":         0,
-						"description": "description",
-						"name":        "badprofile",
-						"type":        tc.CacheServerProfileType,
+					RequestBody: tc.Profile{
+						CDNID:       0,
+						Description: "description",
+						Name:        "badprofile",
+						Type:        tc.CacheServerProfileType,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING DESCRIPTION FIELD": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"cdn":         GetCDNID(t, "cdn1")(),
-						"description": "",
-						"name":        "missing_description",
-						"type":        tc.CacheServerProfileType,
+					RequestBody: tc.Profile{
+						CDNID:       GetCDNID(t, "cdn1")(),
+						Description: "",
+						Name:        "missing_description",
+						Type:        tc.CacheServerProfileType,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING NAME FIELD": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"cdn":         GetCDNID(t, "cdn1")(),
-						"description": "missing name",
-						"name":        "",
-						"type":        tc.CacheServerProfileType,
+					RequestBody: tc.Profile{
+						CDNID:       GetCDNID(t, "cdn1")(),
+						Description: "missing name",
+						Name:        "",
+						Type:        tc.CacheServerProfileType,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING TYPE FIELD": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"cdn":         GetCDNID(t, "cdn1")(),
-						"description": "missing type",
-						"name":        "missing_type",
-						"type":        "",
+					RequestBody: tc.Profile{
+						CDNID:       GetCDNID(t, "cdn1")(),
+						Description: "missing type",
+						Name:        "missing_type",
+						Type:        "",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -134,12 +133,12 @@ func TestProfiles(t *testing.T) {
 				"OK when VALID REQUEST": {
 					EndpointId:    GetProfileID(t, "EDGE2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"cdn":              GetCDNID(t, "cdn2")(),
-						"description":      "edge2 description updated",
-						"name":             "EDGE2UPDATED",
-						"routing_disabled": false,
-						"type":             "TR_PROFILE",
+					RequestBody: tc.Profile{
+						CDNID:           GetCDNID(t, "cdn2")(),
+						Description:     "edge2 description updated",
+						Name:            "EDGE2UPDATED",
+						RoutingDisabled: false,
+						Type:            "TR_PROFILE",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateProfilesUpdateCreateFields("EDGE2UPDATED",
@@ -150,24 +149,24 @@ func TestProfiles(t *testing.T) {
 					EndpointId:     GetProfileID(t, "CCR1"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody: map[string]interface{}{
-						"cdn":              GetCDNID(t, "cdn1")(),
-						"description":      "cdn1 description",
-						"name":             "CCR1",
-						"routing_disabled": false,
-						"type":             "TR_PROFILE",
+					RequestBody: tc.Profile{
+						CDNID:           GetCDNID(t, "cdn1")(),
+						Description:     "cdn1 description",
+						Name:            "CCR1",
+						RoutingDisabled: false,
+						Type:            "TR_PROFILE",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetProfileID(t, "CCR1"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"cdn":              GetCDNID(t, "cdn1")(),
-						"description":      "cdn1 description",
-						"name":             "CCR1",
-						"routing_disabled": false,
-						"type":             "TR_PROFILE",
+					RequestBody: tc.Profile{
+						CDNID:           GetCDNID(t, "cdn1")(),
+						Description:     "cdn1 description",
+						Name:            "CCR1",
+						RoutingDisabled: false,
+						Type:            "TR_PROFILE",
 					},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -178,15 +177,6 @@ func TestProfiles(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					profile := tc.Profile{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &profile)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -222,14 +212,14 @@ func TestProfiles(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateProfile(profile)
+							alerts, reqInf, err := testCase.ClientSession.CreateProfile(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateProfileByIDWithHdr(testCase.EndpointId(), profile, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateProfileByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

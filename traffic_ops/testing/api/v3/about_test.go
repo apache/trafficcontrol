@@ -25,13 +25,15 @@ import (
 
 func TestAbout(t *testing.T) {
 
-	methodTests := utils.V3TestCase{
+	methodTests := utils.V3TestCaseT[struct{}]{
 		"GET": {
 			"OK when VALID request": {
-				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				ClientSession: TOSession,
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 			},
 			"UNAUTHORIZED when NOT LOGGED IN": {
-				ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+				ClientSession: NoAuthTOSession,
+				Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 			},
 		},
 	}

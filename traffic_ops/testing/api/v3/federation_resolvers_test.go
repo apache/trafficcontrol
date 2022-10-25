@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -37,7 +36,7 @@ func TestFederationResolvers(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.FederationResolver]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -70,14 +69,14 @@ func TestFederationResolvers(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when MISSING IPADDRESS and TYPE FIELDS": {
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{},
+					RequestBody:   tc.FederationResolver{},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IP ADDRESS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"ipAddress": "not a valid IP address",
-						"typeId":    GetTypeId(t, "RESOLVE4"),
+					RequestBody: tc.FederationResolver{
+						IPAddress: util.Ptr("not a valid IP address"),
+						TypeID:    util.Ptr(uint(GetTypeId(t, "RESOLVE4"))),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -94,17 +93,8 @@ func TestFederationResolvers(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					fr := tc.FederationResolver{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &fr)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							if name == "OK when VALID ID parameter" {
 								id, err := strconv.Atoi(testCase.RequestParams["id"][0])
@@ -132,7 +122,7 @@ func TestFederationResolvers(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateFederationResolver(fr)
+							alerts, reqInf, err := testCase.ClientSession.CreateFederationResolver(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

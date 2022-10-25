@@ -27,7 +27,8 @@ import (
 
 func TestSteering(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, Users, SteeringTargets}, func() {
-		methodTests := utils.V3TestCase{
+
+		methodTests := utils.V3TestCaseT[struct{}]{
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
@@ -37,6 +38,7 @@ func TestSteering(t *testing.T) {
 				},
 			},
 		}
+
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
