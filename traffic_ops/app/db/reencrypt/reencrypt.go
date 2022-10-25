@@ -160,49 +160,56 @@ func readKey(keyLocation string) ([]byte, error) {
 	return key, nil
 }
 
+type sslInfo struct {
+	xmlId        string
+	version      string
+	previousData []byte
+	newData      []byte
+}
+
 func reEncryptSslKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
-	rows, err := tx.Query("SELECT deliveryservice, data FROM sslkey")
+	rows, err := tx.Query("SELECT deliveryservice, version, data FROM sslkey")
 	if err != nil {
 		return fmt.Errorf("querying: %w", err)
 	}
 	defer rows.Close()
 
-	sslKeyMap := map[string][]byte{}
+	var sslKeyInfos []sslInfo
 
 	for rows.Next() {
-		xmlid := ""
-		var encryptedSslKeys []byte
-		if err = rows.Scan(&xmlid, &encryptedSslKeys); err != nil {
+		sslKeyInfo := sslInfo{}
+
+		if err = rows.Scan(&sslKeyInfo.xmlId, &sslKeyInfo.version, &sslKeyInfo.previousData); err != nil {
 			return fmt.Errorf("getting SSL Keys: %w", err)
 		}
-		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
+		jsonKeys, err := util.AESDecrypt(sslKeyInfo.previousData, previousKey)
 		if err != nil {
 			return fmt.Errorf("reading SSL Keys: %w", err)
 		}
 
 		if !bytes.HasPrefix(jsonKeys, []byte("{")) {
-			return fmt.Errorf("decrypted SSL Key did not have prefix '{' for xmlid %s", xmlid)
+			return fmt.Errorf("decrypted SSL Key did not have prefix '{' for xmlid %s", sslKeyInfo.xmlId)
 		}
 
-		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
+		sslKeyInfo.newData, err = util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
 			return fmt.Errorf("encrypting SSL Keys with new key: %w", err)
 		}
 
-		sslKeyMap[xmlid] = reencryptedKeys
+		sslKeyInfos = append(sslKeyInfos, sslKeyInfo)
 	}
 
-	for xmlid, reencryptedKeys := range sslKeyMap {
-		res, err := tx.Exec(`UPDATE sslkey SET data = $1 WHERE deliveryservice = $2`, reencryptedKeys, xmlid)
+	for _, sslKeyInfo := range sslKeyInfos {
+		res, err := tx.Exec(`UPDATE sslkey SET data = $1 WHERE deliveryservice = $2 AND version = $3`, sslKeyInfo.newData, sslKeyInfo.xmlId, sslKeyInfo.version)
 		if err != nil {
-			return fmt.Errorf("updating SSL Keys for xmlid %s: %w", xmlid, err)
+			return fmt.Errorf("updating SSL Keys for xmlid %s: %w", sslKeyInfo.xmlId, err)
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("determining rows affected for reencrypting SSL Keys with xmlid %s: %w", xmlid, err)
+			return fmt.Errorf("determining rows affected for reencrypting SSL Keys with xmlid %s: %w", sslKeyInfo.xmlId, err)
 		}
 		if rowsAffected == 0 {
-			return fmt.Errorf("no rows updated for reencrypting SSL Keys for xmlid %s", xmlid)
+			return fmt.Errorf("no rows updated for reencrypting SSL Keys for xmlid %s", sslKeyInfo.xmlId)
 		}
 	}
 
