@@ -329,11 +329,11 @@ func getAssignedEdges(
 	assignedEdges := []Server{}
 	for _, sv := range servers {
 		if sv.CDNName == nil {
-			warnings = append(warnings, "servers had sv with missing cdnName, skipping!")
+			warnings = append(warnings, "servers had server with missing cdnName, skipping!")
 			continue
 		}
 		if sv.ID == nil {
-			warnings = append(warnings, "servers had sv with missing id, skipping!")
+			warnings = append(warnings, "servers had server with missing id, skipping!")
 			continue
 		}
 		if *sv.CDNName != *ds.CDNName {
