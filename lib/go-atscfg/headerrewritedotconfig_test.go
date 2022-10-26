@@ -364,96 +364,7 @@ func TestGetCachegroupsInSameTopologyTier(t *testing.T) {
 	}
 }
 
-func TestGetTopologyTierServers(t *testing.T) {
-	allCachegroups := []tc.CacheGroupNullable{
-		{
-			Name: util.StrPtr("edge1"),
-			Type: util.StrPtr(tc.CacheGroupEdgeTypeName),
-		},
-		{
-			Name: util.StrPtr("edge2"),
-			Type: util.StrPtr(tc.CacheGroupEdgeTypeName),
-		},
-		{
-			Name: util.StrPtr("org1"),
-			Type: util.StrPtr(tc.CacheGroupOriginTypeName),
-		},
-	}
-
-	allServers := []Server{
-		{
-			Cachegroup: util.Ptr("edge1"),
-			HostName:   util.Ptr("edgeCache1"),
-			ID:         util.Ptr(0),
-		},
-		{
-			Cachegroup: util.Ptr("edge2"),
-			HostName:   util.Ptr("edgeCache2"),
-			ID:         util.Ptr(0),
-		},
-	}
-
-	topology := tc.Topology{
-		Nodes: []tc.TopologyNode{
-			{
-				Cachegroup: "edge1",
-				Parents:    []int{2},
-			},
-			{
-				Cachegroup: "edge2",
-				Parents:    []int{2},
-			},
-			{
-				Cachegroup: "org1",
-			},
-		},
-	}
-
-	type testCase struct {
-		ds                     *DeliveryService
-		dsRequiredCapabilities map[ServerCapability]struct{}
-		cg                     tc.CacheGroupName
-		topology               tc.Topology
-		cacheGroups            []tc.CacheGroupNullable
-		servers                []Server
-		serverCapabilities     map[int]map[ServerCapability]struct{}
-
-		expectedHostnames []string
-	}
-	testCases := []testCase{
-		{
-			ds:          &DeliveryService{},
-			cg:          tc.CacheGroupName("edge1"),
-			topology:    topology,
-			cacheGroups: allCachegroups,
-			servers:     allServers,
-
-			expectedHostnames: []string{"edgeCache1", "edgeCache2"},
-		},
-		{
-			ds:          &DeliveryService{Regional: true},
-			cg:          tc.CacheGroupName("edge1"),
-			topology:    topology,
-			cacheGroups: allCachegroups,
-			servers:     allServers,
-
-			expectedHostnames: []string{"edgeCache1"},
-		},
-	}
-
-	for _, tc := range testCases {
-		actualServers, _ := getTopologyTierServers(tc.ds, tc.dsRequiredCapabilities, tc.cg, tc.topology, tc.cacheGroups, tc.servers, tc.serverCapabilities)
-		actualHostnames := []string{}
-		for _, as := range actualServers {
-			actualHostnames = append(actualHostnames, *as.HostName)
-		}
-		if !reflect.DeepEqual(tc.expectedHostnames, actualHostnames) {
-			t.Errorf("getting servers in same topology tier -- expected: %v, actual: %v", tc.expectedHostnames, actualHostnames)
-		}
-	}
-}
-
-func TestGetAssignedMids(t *testing.T) {
+func TestGetAssignedTierPeers(t *testing.T) {
 	allCachegroups := []tc.CacheGroupNullable{
 		{
 			Name:       util.StrPtr("edge1"),
@@ -481,7 +392,7 @@ func TestGetAssignedMids(t *testing.T) {
 		},
 	}
 
-	allServers := []Server{
+	edges := []Server{
 		{
 			Cachegroup: util.Ptr("edge1"),
 			CDNName:    util.Ptr("mycdn"),
@@ -496,7 +407,8 @@ func TestGetAssignedMids(t *testing.T) {
 			ID:         util.Ptr(2),
 			Status:     util.Ptr(string(tc.CacheStatusReported)),
 		},
-
+	}
+	mids := []Server{
 		{
 			Cachegroup: util.Ptr("mid1"),
 			CDNName:    util.Ptr("mycdn"),
@@ -512,28 +424,74 @@ func TestGetAssignedMids(t *testing.T) {
 			Status:     util.Ptr(string(tc.CacheStatusReported)),
 		},
 	}
+	allServers := append(edges, mids...)
+	_ = allServers
 
-	allDeliveryServices := []DeliveryService{{}, {}}
+	topology := tc.Topology{
+		Name: "mytopology",
+		Nodes: []tc.TopologyNode{
+			{
+				Cachegroup: "edge1",
+				Parents:    []int{2},
+			},
+			{
+				Cachegroup: "edge2",
+				Parents:    []int{2},
+			},
+			{
+				Cachegroup: "org1",
+			},
+		},
+	}
+	_ = topology
+
+	allDeliveryServices := []DeliveryService{{}, {}, {}, {}}
 	allDeliveryServices[0].ID = util.Ptr(1)
 	allDeliveryServices[0].CDNName = util.Ptr("mycdn")
 	allDeliveryServices[1].ID = util.Ptr(2)
 	allDeliveryServices[1].Regional = true
 	allDeliveryServices[1].CDNName = util.Ptr("mycdn")
+	allDeliveryServices[2].Topology = util.Ptr(topology.Name)
+	allDeliveryServices[3].Topology = util.Ptr(topology.Name)
+	allDeliveryServices[3].Regional = true
 
 	type testCase struct {
 		server                 *Server
 		ds                     *DeliveryService
+		topology               tc.Topology
 		deliveryServiceServers []DeliveryServiceServer
+		dsRequiredCapabilities map[ServerCapability]struct{}
 		servers                []Server
 		cacheGroups            []tc.CacheGroupNullable
+		serverCapabilities     map[int]map[ServerCapability]struct{}
 
 		expectedHostnames []string
 	}
 	testCases := []testCase{
+		// topology
 		{
-			server:  &allServers[0],
+			ds:          &allDeliveryServices[2],
+			server:      &allServers[0],
+			topology:    topology,
+			cacheGroups: allCachegroups,
+			servers:     allServers,
+
+			expectedHostnames: []string{"edgeCache1", "edgeCache2"},
+		},
+		{
+			ds:          &allDeliveryServices[3],
+			server:      &allServers[0],
+			topology:    topology,
+			cacheGroups: allCachegroups,
+			servers:     allServers,
+
+			expectedHostnames: []string{"edgeCache1"},
+		},
+		// mid
+		{
+			server:  &mids[0],
 			ds:      &allDeliveryServices[0],
-			servers: allServers,
+			servers: mids,
 			deliveryServiceServers: []DeliveryServiceServer{
 				{
 					Server:          1,
@@ -557,9 +515,9 @@ func TestGetAssignedMids(t *testing.T) {
 			expectedHostnames: []string{"midCache1", "midCache2"},
 		},
 		{
-			server:  &allServers[0],
+			server:  &mids[0],
 			ds:      &allDeliveryServices[1],
-			servers: allServers,
+			servers: mids,
 			deliveryServiceServers: []DeliveryServiceServer{
 				{
 					Server:          1,
@@ -582,10 +540,63 @@ func TestGetAssignedMids(t *testing.T) {
 
 			expectedHostnames: []string{"midCache1"},
 		},
+		// edge
+		{
+			server:  &edges[0],
+			ds:      &allDeliveryServices[0],
+			servers: edges,
+			deliveryServiceServers: []DeliveryServiceServer{
+				{
+					Server:          1,
+					DeliveryService: 1,
+				},
+				{
+					Server:          2,
+					DeliveryService: 1,
+				},
+				{
+					Server:          3,
+					DeliveryService: 1,
+				},
+				{
+					Server:          4,
+					DeliveryService: 1,
+				},
+			},
+			cacheGroups: allCachegroups,
+
+			expectedHostnames: []string{"edgeCache1", "edgeCache2"},
+		},
+		{
+			server:  &edges[0],
+			ds:      &allDeliveryServices[1],
+			servers: edges,
+			deliveryServiceServers: []DeliveryServiceServer{
+				{
+					Server:          1,
+					DeliveryService: 2,
+				},
+				{
+					Server:          2,
+					DeliveryService: 2,
+				},
+				{
+					Server:          3,
+					DeliveryService: 2,
+				},
+				{
+					Server:          4,
+					DeliveryService: 2,
+				},
+			},
+			cacheGroups: allCachegroups,
+
+			expectedHostnames: []string{"edgeCache1"},
+		},
 	}
 
 	for _, tc := range testCases {
-		actualServers, _ := getAssignedMids(tc.server, tc.ds, tc.servers, tc.deliveryServiceServers, tc.cacheGroups)
+		actualServers, _ := getAssignedTierPeers(tc.server, tc.ds, tc.topology, tc.servers, tc.deliveryServiceServers, tc.cacheGroups, tc.serverCapabilities, tc.dsRequiredCapabilities)
 		actualHostnames := []string{}
 		for _, as := range actualServers {
 			actualHostnames = append(actualHostnames, *as.HostName)
