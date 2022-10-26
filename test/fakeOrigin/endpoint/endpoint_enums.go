@@ -32,6 +32,7 @@ const (
 	Event
 	Static
 	Dir
+	Testing
 )
 
 func (e Type) String() string {
@@ -48,6 +49,8 @@ func (e Type) String() string {
 		return "static"
 	case Dir:
 		return "dir"
+	case Testing:
+		return "testing"
 	default:
 		return "invalid type"
 	}

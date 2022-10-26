@@ -79,3 +79,4 @@ There is also another [set of instructions](build/README.md) if you're intereste
 * Optional in-memory caching
 * Support for arbitrary external commands to perform transcoding
   * Supports vod, live, and event m3u8 HLS manifest types
+* Support for testing various types of transaction elements using generated output when setting a type of "testing". See the [dtp](./docs/Testing.md) documentation

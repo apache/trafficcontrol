@@ -33,10 +33,12 @@ The underlying data structures for these can be found in [endpoint.go](../endpoi
   "ssl_cert": "server.crt",
   "ssl_key": "server.key",
   "binding_address": "127.0.0.1",
-  "crossdomain_xml_file": "./example/crossdomain.xml"
+  "crossdomain_xml_file": "./example/crossdomain.xml",
+  "read_timeout": 0,
+  "write_timeout": 0,
 }
 ```
-This allows you to set what ports and IP addresses you'd like to listen on.  You can also supply where your SSL certificates and key should be located or created.  They should be in PEM format.
+This allows you to set what ports and IP addresses you'd like to listen on.  You can also supply where your SSL certificates and key should be located or created.  They should be in PEM format. The read and write timeouts are optional with a default of 0 that means no timeout, values should be in seconds and will impose a time limit on the read or write side of transactions.
 
 ## Endpoints
 This is where the meat of your config will be.
@@ -138,3 +140,5 @@ curl -vs4 -o /dev/null http://localhost:8080/SampleVideo/kelloggs.mp4 -H 'Fakeor
 < Transfer-Encoding: chunked
 <
 ```
+## Deterministic Testing Protocol
+This is a special type of endpoint when using type `testing`. The user can give various arguments in the path of the request on this endpoint in order to generate expected responses from the origin. Headers can be generated or manipulated and various conditions set like an initial stall or delay in response and various other things. See the [dtp](./docs/Testing.md) documentation

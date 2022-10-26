@@ -107,7 +107,7 @@ func clipToRange(ranges []httpRange, obody []byte, contentHeader string) ([]byte
 	// this also means we have to start dealing with slice string values
 
 	if len(ranges) == 0 {
-		return nil, nil, errors.New("No ranges supplied")
+		return nil, nil, errors.New("no ranges supplied")
 	} else if len(ranges) == 1 {
 		// single part ranges
 		r := ranges[0]

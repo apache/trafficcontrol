@@ -34,6 +34,7 @@ var (
 		"Event":       Event,
 		"Static":      Static,
 		"Dir":         Dir,
+		"Testing":     Testing,
 	}
 
 	_TypeValueToName = map[Type]string{
@@ -43,6 +44,7 @@ var (
 		Event:       "Event",
 		Static:      "Static",
 		Dir:         "Dir",
+		Testing:     "Testing",
 	}
 )
 
@@ -56,6 +58,7 @@ func init() {
 			interface{}(Event).(fmt.Stringer).String():       Event,
 			interface{}(Static).(fmt.Stringer).String():      Static,
 			interface{}(Dir).(fmt.Stringer).String():         Dir,
+			interface{}(Testing).(fmt.Stringer).String():         Testing,
 		}
 	}
 }
