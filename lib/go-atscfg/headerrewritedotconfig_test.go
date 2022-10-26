@@ -415,6 +415,7 @@ func TestGetAssignedTierPeers(t *testing.T) {
 			HostName:   util.Ptr("midCache1"),
 			ID:         util.Ptr(3),
 			Status:     util.Ptr(string(tc.CacheStatusReported)),
+			Type:       tc.MidTypePrefix,
 		},
 		{
 			Cachegroup: util.Ptr("mid2"),
@@ -422,6 +423,7 @@ func TestGetAssignedTierPeers(t *testing.T) {
 			HostName:   util.Ptr("midCache2"),
 			ID:         util.Ptr(4),
 			Status:     util.Ptr(string(tc.CacheStatusReported)),
+			Type:       tc.MidTypePrefix,
 		},
 	}
 	allServers := append(edges, mids...)
@@ -489,9 +491,9 @@ func TestGetAssignedTierPeers(t *testing.T) {
 		},
 		// mid
 		{
-			server:  &mids[0],
+			server:  &allServers[2],
 			ds:      &allDeliveryServices[0],
-			servers: mids,
+			servers: allServers,
 			deliveryServiceServers: []DeliveryServiceServer{
 				{
 					Server:          1,
@@ -515,9 +517,9 @@ func TestGetAssignedTierPeers(t *testing.T) {
 			expectedHostnames: []string{"midCache1", "midCache2"},
 		},
 		{
-			server:  &mids[0],
+			server:  &allServers[2],
 			ds:      &allDeliveryServices[1],
-			servers: mids,
+			servers: allServers,
 			deliveryServiceServers: []DeliveryServiceServer{
 				{
 					Server:          1,
