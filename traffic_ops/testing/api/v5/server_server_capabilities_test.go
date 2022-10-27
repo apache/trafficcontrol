@@ -16,12 +16,10 @@ package v5
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -39,8 +37,6 @@ func TestServerServerCapabilities(t *testing.T) {
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
-		var multipleSCs []string
-		var multipleServerIDs []int
 
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerServerCapability]{
 			"GET": {
@@ -193,7 +189,7 @@ func TestServerServerCapabilities(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(ssc, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
