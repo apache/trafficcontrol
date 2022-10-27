@@ -66,9 +66,9 @@ func JoinErrs(errs []error) error {
 //
 // Note that this DOES NOT preserve error identity. For example:
 //
-//     err := JoinErrsSep([]error{sql.ErrNoRows, errors.New("foo")})
-//     fmt.Println(errors.Is(err, sql.ErrNoRows))
-//     // Output: false
+//	err := JoinErrsSep([]error{sql.ErrNoRows, errors.New("foo")})
+//	fmt.Println(errors.Is(err, sql.ErrNoRows))
+//	// Output: false
 func JoinErrsSep(errs []error, separator string) error {
 	if separator == "" {
 		separator = ", "

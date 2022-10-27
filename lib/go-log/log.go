@@ -7,7 +7,7 @@
 //
 // Inspired by https://www.goinggo.net/2013/11/using-log-package-in-go.html
 //
-// Usage
+// # Usage
 //
 // Normally, one will have some command-line program that takes in some kind of
 // configuration either via command-line arguments or a configuration file, and
@@ -15,21 +15,20 @@
 // logging up and running is to put that configuration into a type that
 // implements this package's Config interface, like:
 //
+//	type Configuration struct {
+//		ErrorLogs     string `json:"errorLogs"`
+//		WarningLogs   string `json:"warningLogs"`
+//		InfoLogs      string `json:"infoLogs"`
+//		DebugLogs     string `json:"debugLogs"`
+//		EventLogs     string `json:"eventLogs"`
+//		EnableFeature bool   `json:"enableFeature"`
+//	}
 //
-//      type Configuration struct {
-//      	ErrorLogs     string `json:"errorLogs"`
-//      	WarningLogs   string `json:"warningLogs"`
-//      	InfoLogs      string `json:"infoLogs"`
-//      	DebugLogs     string `json:"debugLogs"`
-//      	EventLogs     string `json:"eventLogs"`
-//      	EnableFeature bool   `json:"enableFeature"`
-//      }
-//
-//      func (c Configuration) ErrorLog() string { return c.ErrorLogs}
-//      func (c Configuration) WarningLog() string { return c.WarningLogs }
-//      func (c Configuration) InfoLog() string { return c.InfoLogs }
-//      func (c Configuration) DebugLog() string { return c.DebugLogs }
-//      func (c Configuration) EventLog() string { return c.EventLogs }
+//	func (c Configuration) ErrorLog() string { return c.ErrorLogs}
+//	func (c Configuration) WarningLog() string { return c.WarningLogs }
+//	func (c Configuration) InfoLog() string { return c.InfoLogs }
+//	func (c Configuration) DebugLog() string { return c.DebugLogs }
+//	func (c Configuration) EventLog() string { return c.EventLogs }
 //
 // Then the configuration can be unmarshaled from JSON and the resulting
 // Configuration can be passed directly to InitCfg, and then everything is
@@ -185,11 +184,11 @@ const stackFrame = 3
 // end in a newline character, one will be appended, so it's not necessary to
 // do things like e.g.
 //
-//     Errorf("%v\n", 5)
+//	Errorf("%v\n", 5)
 //
 // Instead, just:
 //
-//     Errorf("%v", 5)
+//	Errorf("%v", 5)
 //
 // will suffice, and will print exactly the same message.
 func Errorf(format string, v ...interface{}) { Logf(Error, format, v...) }
@@ -202,11 +201,11 @@ func Errorf(format string, v ...interface{}) { Logf(Error, format, v...) }
 // the context in which it was logged. For example, if line 36 of foo.go
 // invokes this like so:
 //
-//     log.Errorln("something wicked happened")
+//	log.Errorln("something wicked happened")
 //
 // ... the resulting log line will look like:
 //
-//     ERROR: foo.go:36: 2006-01-02T15:04:05Z: something wicked happened
+//	ERROR: foo.go:36: 2006-01-02T15:04:05Z: something wicked happened
 //
 // (assuming the log call occurred at the time package's formatting reference
 // date/time). This allows multiple log streams to be directed to the same file
@@ -262,12 +261,11 @@ func eventTime(t time.Time) float64 {
 // according to the format string (if present) as defined by the fmt package.
 // For example, if line 36 of foo.go invokes this like so:
 //
-//     log.Accessln("%s\n", "my message")
+//	log.Accessln("%s\n", "my message")
 //
 // ... the resulting log line will look like:
 //
-//     my message
-//
+//	my message
 func Accessln(v ...interface{}) {
 	if Access != nil {
 		Access.Println(v...)
@@ -283,11 +281,11 @@ func Accessln(v ...interface{}) {
 // format string as defined by the fmt package. For example, if line 36 of
 // foo.go invokes this like so:
 //
-//     log.Eventf(time.Now(), "%s\n", "my message")
+//	log.Eventf(time.Now(), "%s\n", "my message")
 //
 // ... the resulting log line will look like:
 //
-//     1136214245.000 my message
+//	1136214245.000 my message
 //
 // Note that this WILL NOT add trailing newlines if the resulting formatted
 // message string doesn't end with one.
@@ -331,7 +329,7 @@ func EventRaw(s string) {
 //
 // This is primarily designed to be used in `defer`, for example:
 //
-//     defer log.Close(resp.Body, "readData fetching /foo/bar")
+//	defer log.Close(resp.Body, "readData fetching /foo/bar")
 //
 // Note that some Go linting tools may not properly detect this as both Closing
 // the Closer and checking the error value that Close returns, but it does both
@@ -353,13 +351,13 @@ func Close(c io.Closer, context string) {
 // This actually results in two distinct lines being printed in the Error log
 // stream. For example, if line 36 of foo.go invokes this like so:
 //
-//     log.Closef(resp.Body, "doing %s", "something")
+//	log.Closef(resp.Body, "doing %s", "something")
 //
 // ... and resp.Body.Close() returns a non-nil error with the message "failed",
 // the resulting log lines will look like:
 //
-//     ERROR: log.go:271: 2006-01-02T15:04:05Z: doing something
-//     ERROR: log.go:272: 2006-01-02T15:04:05Z: : failed
+//	ERROR: log.go:271: 2006-01-02T15:04:05Z: doing something
+//	ERROR: log.go:272: 2006-01-02T15:04:05Z: : failed
 //
 // (please please please don't count on those line numbers).
 func Closef(c io.Closer, contextFormat string, v ...interface{}) {
@@ -377,12 +375,12 @@ func Closef(c io.Closer, contextFormat string, v ...interface{}) {
 // a trailing newline is guaranteed. For example, if line 36 of foo.go invokes
 // this like so:
 //
-//     log.Write(someWriter, []byte("write me"), "trying to write")
+//	log.Write(someWriter, []byte("write me"), "trying to write")
 //
 // ... and someWriter.Write() returns a non-nil error with the message
 // "failed", the resulting log line will look like:
 //
-//     ERROR: log.go:294: 2006-01-02T15:04:05Z: trying to write: failed
+//	ERROR: log.go:294: 2006-01-02T15:04:05Z: trying to write: failed
 //
 // (please please please don't count on that line number).
 func Write(w io.Writer, b []byte, context string) {
@@ -402,13 +400,13 @@ func Write(w io.Writer, b []byte, context string) {
 // This actually results in two distinct lines being printed in the Error log
 // stream. For example, if line 36 of foo.go invokes this like so:
 //
-//     log.Writef(someWriter, "doing %s", "something")
+//	log.Writef(someWriter, "doing %s", "something")
 //
 // ... and someWriter.Write() returns a non-nil error with the message
 // "failed", the resulting log lines will look like:
 //
-//     ERROR: log.go:320: 2006-01-02T15:04:05Z: doing something
-//     ERROR: log.go:321: 2006-01-02T15:04:05Z: : failed
+//	ERROR: log.go:320: 2006-01-02T15:04:05Z: doing something
+//	ERROR: log.go:321: 2006-01-02T15:04:05Z: : failed
 //
 // (please please please don't count on those line numbers).
 func Writef(w io.Writer, b []byte, contextFormat string, v ...interface{}) {

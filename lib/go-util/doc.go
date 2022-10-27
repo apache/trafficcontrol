@@ -4,12 +4,12 @@
 // of functions that yield references to their arguments. This allows for
 // one-line assignment of pointers to most primitive types.
 //
-//     myInt := new(int)
-//     *myInt = 5
+//	myInt := new(int)
+//	*myInt = 5
 //
 // ... can be written on one line using IntPtr like so:
 //
-//     myInt := IntPtr(5)
+//	myInt := IntPtr(5)
 package util
 
 /*

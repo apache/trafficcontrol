@@ -113,30 +113,30 @@ var tlsVersionsToATS = map[TLSVersion]string{
 // Examples of Values for these Parameters that would cause HTTP/2 to be enabled
 // are:
 //
-//     true
-//     TrUe
-//     Yes
-//     yno
-//     yFalse
-//     tFalse
-//     talse
-//     ts"<>an177otehucau$%*(@YDU)
+//	true
+//	TrUe
+//	Yes
+//	yno
+//	yFalse
+//	tFalse
+//	talse
+//	ts"<>an177otehucau$%*(@YDU)
 //
 // Examples of Values for these Parameters that would cause HTTP/2 to be
 // disabled are:
 //
-//     false
-//     No
-//     off
-//     on
-//     use
-//     enable
-//     1
-//     affirmative
-//     I wish to use this feature
-//     frue
-//     nYes
-//     s"<>an177otehucau$%*(@YDU)
+//	false
+//	No
+//	off
+//	on
+//	use
+//	enable
+//	1
+//	affirmative
+//	I wish to use this feature
+//	frue
+//	nYes
+//	s"<>an177otehucau$%*(@YDU)
 const SSLServerNameYAMLParamEnableH2 = "enable_h2"
 
 // SSLServerNameYAMLParamTLSVersions is the Name of a Parameter which, if found
