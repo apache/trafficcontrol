@@ -298,7 +298,7 @@ func TestReadGetDeliveryServices(t *testing.T) {
 		{"last_header_rewrite", nil},
 		{"last_updated", time.Now()},
 		{"logs_enabled", false},
-		{"long_desc", nil},
+		{"long_desc", ""},
 		{"long_desc_1", nil},
 		{"long_desc_2", nil},
 		{"max_dns_answers", nil},
@@ -355,7 +355,7 @@ func TestReadGetDeliveryServices(t *testing.T) {
 	mock.ExpectQuery("SELECT ds\\.xml_id as ds_name, t\\.name as type, r\\.pattern, COALESCE\\(dsr\\.set_number, 0\\) FROM regex").WillReturnRows(regexRows)
 	mock.ExpectCommit()
 
-	_, userErr, sysErr, _, _ := readGetDeliveryServices(nil, nil, db.MustBegin(), &u, false, api.Version{Major: 4, Minor: 1})
+	_, userErr, sysErr, _, _ := readGetDeliveryServices(nil, nil, db.MustBegin(), &u, false, api.Version{Major: 5, Minor: 0})
 	if userErr != nil {
 		t.Errorf("Unexpected user error reading Delivery Services: %v", userErr)
 	}
