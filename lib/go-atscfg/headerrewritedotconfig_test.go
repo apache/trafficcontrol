@@ -427,7 +427,6 @@ func TestGetAssignedTierPeers(t *testing.T) {
 		},
 	}
 	allServers := append(edges, mids...)
-	_ = allServers
 
 	topology := tc.Topology{
 		Name: "mytopology",
@@ -445,7 +444,6 @@ func TestGetAssignedTierPeers(t *testing.T) {
 			},
 		},
 	}
-	_ = topology
 
 	allDeliveryServices := []DeliveryService{{}, {}, {}, {}}
 	allDeliveryServices[0].ID = util.Ptr(1)
