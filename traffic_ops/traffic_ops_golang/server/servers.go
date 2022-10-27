@@ -849,12 +849,6 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 `
 	}
 
-	if version.Major >= 5 {
-		if params["type"] == "RASCAL" {
-			params["type"] = "TRAFFIC_MONITOR"
-		}
-	}
-
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if dsHasRequiredCapabilities {
 		where += requiredCapabilitiesCondition
