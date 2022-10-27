@@ -16,12 +16,10 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -39,8 +37,6 @@ func TestServerServerCapabilities(t *testing.T) {
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
-		var multipleSCs []string
-		var multipleServerIDs []int
 
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerServerCapability]{
 			"GET": {
@@ -150,25 +146,6 @@ func TestServerServerCapabilities(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"OK When Assigned Multiple Server Capabilities": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverCapabilities": append(multipleSCs, "disk", "blah"),
-						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")()),
-						"pageType":           "server",
-					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateSSC("dtrc-mid-04", "server")),
-				},
-				"OK When Assigned Multiple Servers Per Capability": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverCapabilities": append(multipleSCs, "ram"),
-						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")(), GetServerID(t, "dtrc-edge-08")()),
-						"pageType":           "sc",
-					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSSC("ram", "sc")),
-				},
 			},
 			"DELETE": {
 				"OK when NOT the LAST SERVER of CACHE GROUP of TOPOLOGY DS which has REQUIRED CAPABILITIES": {
@@ -196,44 +173,12 @@ func TestServerServerCapabilities(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "atlanta-org-1")())}, "serverCapability": {""}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-				"OK When Delete Multiple Assigned Servers Per Capability": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverCapabilities": append(multipleSCs, "asdf"),
-						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")(), GetServerID(t, "dtrc-edge-08")()),
-					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-				"OK When Delete Multiple Assigned Server Capabilities": {
-					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverCapabilities": append(multipleSCs, "disk", "blah"),
-						"serverIds":          append(multipleServerIDs, GetServerID(t, "dtrc-mid-04")()),
-					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
 			},
 		}
 
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					ssc := tc.ServerServerCapability{}
-					mssc := tc.MultipleServersCapabilities{}
-					var serverId int
-					var serverCapability string
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						if strings.Contains(name, "Multiple") {
-							err = json.Unmarshal(dat, &mssc)
-						} else {
-							err = json.Unmarshal(dat, &ssc)
-						}
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -244,22 +189,15 @@ func TestServerServerCapabilities(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							var alerts tc.Alerts
-							var reqInf toclientlib.ReqInf
-							var err error
-							if strings.Contains(name, "Multiple") {
-								alerts, reqInf, err = testCase.ClientSession.AssignMultipleServersCapabilities(mssc, testCase.RequestOpts)
-							} else {
-								alerts, reqInf, err = testCase.ClientSession.CreateServerServerCapability(ssc, testCase.RequestOpts)
-							}
+							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							var alerts tc.Alerts
-							var reqInf toclientlib.ReqInf
+							var serverId int
+							var serverCapability string
 							var err error
 							if val, ok := testCase.RequestOpts.QueryParameters["serverId"]; ok {
 								serverId, err = strconv.Atoi(val[0])
@@ -272,11 +210,7 @@ func TestServerServerCapabilities(t *testing.T) {
 							} else {
 								t.Fatalf("Query Parameter: \"serverCapability\" is required for DELETE method tests.")
 							}
-							if strings.Contains(name, "Multiple") {
-								alerts, reqInf, err = testCase.ClientSession.DeleteMultipleServersCapabilities(mssc, testCase.RequestOpts)
-							} else {
-								alerts, reqInf, err = testCase.ClientSession.DeleteServerServerCapability(serverId, serverCapability, testCase.RequestOpts)
-							}
+							alerts, reqInf, err := testCase.ClientSession.DeleteServerServerCapability(serverId, serverCapability, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
@@ -377,20 +311,5 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		assert.RequireNotNil(t, ssc.ServerCapability, "Expected Server Capability to not be nil.")
 		alerts, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability, client.RequestOptions{})
 		assert.NoError(t, err, "Could not remove Capability '%s' from server '%s' (#%d): %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, *ssc.ServerID, err, alerts.Alerts)
-	}
-}
-
-func validateSSC(name, pageType string) utils.CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
-		opts := client.NewRequestOptions()
-		switch pageType {
-		case "server":
-			opts.QueryParameters.Set("serverId", strconv.Itoa(GetServerID(t, name)()))
-		case "sc":
-			opts.QueryParameters.Set("serverCapability", name)
-		}
-		ssc, _, err := TOSession.GetServerServerCapabilities(opts)
-		assert.RequireGreaterOrEqual(t, len(ssc.Response), 1, "Expected one or more association with:%s, Got:%d", name, len(ssc.Response))
-		assert.RequireNoError(t, err, "Cannot get response: %v - alerts: %+v", err, ssc.Alerts)
 	}
 }
