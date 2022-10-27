@@ -467,14 +467,14 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 	// Insert rows in DB
 	sid := make([]int64, len(mssc.ServerCapabilities))
 	scs := make([]string, len(mssc.ServerIDs))
-	if len(mssc.ServerIDs) == 1 {
+	if mssc.PageType == "server" {
 		if len(mssc.ServerCapabilities) >= 1 {
 			for i := range mssc.ServerCapabilities {
 				sid[i] = mssc.ServerIDs[0]
 			}
 			scs = mssc.ServerCapabilities
 		}
-	} else if len(mssc.ServerCapabilities) == 1 {
+	} else if mssc.PageType == "sc" {
 		if len(mssc.ServerIDs) >= 1 {
 			for i := range mssc.ServerIDs {
 				scs[i] = mssc.ServerCapabilities[0]

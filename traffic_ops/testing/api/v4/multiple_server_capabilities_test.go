@@ -33,23 +33,23 @@ func TestMultipleServerCapabilities(t *testing.T) {
 		var multipleSCs []string
 		var multipleServerIDs []int64
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.MultipleServersCapabilities]{
+		methodTests := utils.V4TestCase{
 			"POST": {
 				"OK When Assigned Multiple Server Capabilities": {
 					ClientSession: TOSession,
-					RequestBody: tc.MultipleServersCapabilities{
-						ServerCapabilities: append(multipleSCs, "disk", "blah"),
-						ServerIDs:          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")())),
-						PageType:           "server",
+					RequestBody: map[string]interface{}{
+						"serverCapabilities": append(multipleSCs, "disk", "blah"),
+						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")())),
+						"pageType":           "server",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSSC("dtrc-mid-04", "server")),
 				},
 				"OK When Assigned Multiple Servers Per Capability": {
 					ClientSession: TOSession,
-					RequestBody: tc.MultipleServersCapabilities{
-						ServerCapabilities: append(multipleSCs, "ram"),
-						ServerIDs:          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")()), int64(GetServerID(t, "dtrc-edge-08")())),
-						PageType:           "sc",
+					RequestBody: map[string]interface{}{
+						"serverCapabilities": append(multipleSCs, "ram"),
+						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")()), int64(GetServerID(t, "dtrc-edge-08")())),
+						"pageType":           "sc",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSSC("ram", "sc")),
 				},
@@ -57,17 +57,17 @@ func TestMultipleServerCapabilities(t *testing.T) {
 			"DELETE": {
 				"OK When Delete Multiple Assigned Servers Per Capability": {
 					ClientSession: TOSession,
-					RequestBody: tc.MultipleServersCapabilities{
-						ServerCapabilities: append(multipleSCs, "asdf"),
-						ServerIDs:          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")()), int64(GetServerID(t, "dtrc-edge-08")())),
+					RequestBody: map[string]interface{}{
+						"serverCapabilities": append(multipleSCs, "asdf"),
+						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")()), int64(GetServerID(t, "dtrc-edge-08")())),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK When Delete Multiple Assigned Server Capabilities": {
 					ClientSession: TOSession,
-					RequestBody: tc.MultipleServersCapabilities{
-						ServerCapabilities: append(multipleSCs, "disk", "blah"),
-						ServerIDs:          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")())),
+					RequestBody: map[string]interface{}{
+						"serverCapabilities": append(multipleSCs, "disk", "blah"),
+						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")())),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},

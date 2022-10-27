@@ -34,6 +34,7 @@ Request Structure
 -----------------
 :serverIds:          List of :term:`Server` ids (integral, unique identifier) associated with a :term:`Server Capability`
 :serverCapabilities: List of :term:`Server Capability` names to associate with a :term:`Server` id
+:pageType:           To determine which configuration (server or server capabilities) is requesting association. Only two values are permitted: `server` or `sc` (short for server capability). If `server` is chosen, it implies that multiple server capabilities are to be associated with a given server id. If `sc` is chosen, it implies that multiple server ids are to be associated with a given server capability.
 
 .. code-block:: http
 	:caption: Request Example1
@@ -49,6 +50,7 @@ Request Structure
 	{
 		"serverIds": [1],
 		"serverCapabilities": ["test", "disk"]
+		"pageType": "server"
 	}
 
 .. code-block:: http
@@ -65,6 +67,7 @@ Request Structure
 	{
 		"serverIds": [2, 3]
 		"serverCapabilities": ["eas"],
+		"pageType": "sc"
 	}
 
 Response Structure
@@ -137,6 +140,7 @@ Request Structure
 -----------------
 :serverIds:          List of :term:`Server` ids (integral, unique identifier) associated with a :term:`Server Capability`
 :serverCapabilities: List of :term:`Server Capability` names to associate with a :term:`Server` id
+:pageType:           To determine which configuration (server or server capabilities) is requesting deletion. Only two values are permitted: `server` or `sc` (short for server capability). If `server` is chosen, it implies that multiple server capabilities are to be deleted for a given server id. If `sc` is chosen, it implies that multiple server ids are to be deleted for a given server capability.
 
 .. code-block:: http
 	:caption: Request Example
@@ -152,6 +156,7 @@ Request Structure
 	{
 		"serverIds": [2, 3]
 		"serverCapabilities": ["eas"],
+		"pageType": "sc"
 	}
 
 Response Structure
