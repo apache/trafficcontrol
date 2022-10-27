@@ -302,7 +302,7 @@ func getAssignedTierPeers(
 	if serverIsMid(server) {
 		return getAssignedMids(server, ds, servers, deliveryServiceServers, cacheGroups)
 	}
-	return getAssignedEdges(ds, servers, deliveryServiceServers)
+	return getAssignedEdges(ds, server, servers, deliveryServiceServers)
 }
 
 // getAssignedEdges returns all EDGE caches assigned to ds via DeliveryService-Service. Does not consider Topologies.
@@ -310,6 +310,7 @@ func getAssignedTierPeers(
 // Returns the list of assigned servers, and any warnings.
 func getAssignedEdges(
 	ds *DeliveryService,
+	server *Server,
 	servers []Server,
 	deliveryServiceServers []DeliveryServiceServer,
 ) ([]Server, []string) {
@@ -326,22 +327,25 @@ func getAssignedEdges(
 	}
 
 	assignedEdges := []Server{}
-	for _, server := range servers {
-		if server.CDNName == nil {
+	for _, sv := range servers {
+		if sv.CDNName == nil {
 			warnings = append(warnings, "servers had server with missing cdnName, skipping!")
 			continue
 		}
-		if server.ID == nil {
+		if sv.ID == nil {
 			warnings = append(warnings, "servers had server with missing id, skipping!")
 			continue
 		}
-		if *server.CDNName != *ds.CDNName {
+		if *sv.CDNName != *ds.CDNName {
 			continue
 		}
-		if _, ok := dsServerIDs[*server.ID]; !ok && ds.Topology == nil {
+		if _, ok := dsServerIDs[*sv.ID]; !ok && ds.Topology == nil {
 			continue
 		}
-		assignedEdges = append(assignedEdges, server)
+		if ds != nil && ds.Regional && *sv.Cachegroup != *server.Cachegroup {
+			continue
+		}
+		assignedEdges = append(assignedEdges, sv)
 	}
 	return assignedEdges, warnings
 }
@@ -368,16 +372,16 @@ func getAssignedMids(
 	serverCGs := map[tc.CacheGroupName]struct{}{}
 	for _, sv := range servers {
 		if sv.CDNName == nil {
-			warnings = append(warnings, "TO returned Servers server with missing CDNName, skipping!")
+			warnings = append(warnings, "TO returned Servers sv with missing CDNName, skipping!")
 			continue
 		} else if sv.ID == nil {
-			warnings = append(warnings, "TO returned Servers server with missing ID, skipping!")
+			warnings = append(warnings, "TO returned Servers sv with missing ID, skipping!")
 			continue
 		} else if sv.Status == nil {
-			warnings = append(warnings, "TO returned Servers server with missing Status, skipping!")
+			warnings = append(warnings, "TO returned Servers sv with missing Status, skipping!")
 			continue
 		} else if sv.Cachegroup == nil {
-			warnings = append(warnings, "TO returned Servers server with missing Cachegroup, skipping!")
+			warnings = append(warnings, "TO returned Servers sv with missing Cachegroup, skipping!")
 			continue
 		}
 
@@ -388,9 +392,6 @@ func getAssignedMids(
 			continue
 		}
 		if tc.CacheStatus(*sv.Status) != tc.CacheStatusReported && tc.CacheStatus(*sv.Status) != tc.CacheStatusOnline {
-			continue
-		}
-		if ds != nil && ds.Regional && *sv.Cachegroup != *server.Cachegroup {
 			continue
 		}
 		serverCGs[tc.CacheGroupName(*sv.Cachegroup)] = struct{}{}
@@ -412,22 +413,25 @@ func getAssignedMids(
 	}
 
 	assignedMids := []Server{}
-	for _, server := range servers {
-		if server.CDNName == nil {
+	for _, sv := range servers {
+		if sv.CDNName == nil {
 			warnings = append(warnings, "TO returned Servers server with missing CDNName, skipping!")
 			continue
 		}
-		if server.Cachegroup == nil {
+		if sv.Cachegroup == nil {
 			warnings = append(warnings, "TO returned Servers server with missing Cachegroup, skipping!")
 			continue
 		}
-		if *server.CDNName != *ds.CDNName {
+		if *sv.CDNName != *ds.CDNName {
 			continue
 		}
-		if _, ok := parentCGs[*server.Cachegroup]; !ok {
+		if _, ok := parentCGs[*sv.Cachegroup]; !ok {
 			continue
 		}
-		assignedMids = append(assignedMids, server)
+		if ds != nil && ds.Regional && *sv.Cachegroup != *server.Cachegroup {
+			continue
+		}
+		assignedMids = append(assignedMids, sv)
 	}
 
 	return assignedMids, warnings
