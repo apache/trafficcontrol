@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v4/totest"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -42,10 +43,10 @@ func TestTopologiesQueueUpdate(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"mso-topology"}}},
 					RequestBody: tc.TopologiesQueueUpdateRequest{
 						Action: "queue",
-						CDNID:  int64(GetCDNID(t, "cdn1")()),
+						CDNID:  int64(totest.GetCDNID(t, TOSession, "cdn1")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateTopologiesQueueUpdateFields(map[string]interface{}{"Action": "queue", "CDNID": int64(GetCDNID(t, "cdn1")()), "Topology": tc.TopologyName("mso-topology")}),
+						validateTopologiesQueueUpdateFields(map[string]interface{}{"Action": "queue", "CDNID": int64(totest.GetCDNID(t, TOSession, "cdn1")()), "Topology": tc.TopologyName("mso-topology")}),
 						validateServerUpdatesAreQueued("ds-top")),
 				},
 				"BAD REQUEST when INVALID CDNID": {
@@ -62,7 +63,7 @@ func TestTopologiesQueueUpdate(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"mso-topology"}}},
 					RequestBody: tc.TopologiesQueueUpdateRequest{
 						Action: "requeue",
-						CDNID:  int64(GetCDNID(t, "cdn1")()),
+						CDNID:  int64(totest.GetCDNID(t, TOSession, "cdn1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -71,7 +72,7 @@ func TestTopologiesQueueUpdate(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"nonexistent"}}},
 					RequestBody: tc.TopologiesQueueUpdateRequest{
 						Action: "queue",
-						CDNID:  int64(GetCDNID(t, "cdn1")()),
+						CDNID:  int64(totest.GetCDNID(t, TOSession, "cdn1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -126,7 +127,7 @@ func validateServerUpdatesAreQueued(topologyDS string) utils.CkReqFunc {
 		topQueueUpdateResp := resp.(tc.TopologiesQueueUpdate)
 
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("dsId", strconv.Itoa(GetDeliveryServiceId(t, topologyDS)()))
+		opts.QueryParameters.Set("dsId", strconv.Itoa(totest.GetDeliveryServiceId(t, TOSession, topologyDS)()))
 		serversResponse, _, err := TOSession.GetServers(opts)
 		assert.RequireNoError(t, err, "Expected no error when getting servers: %v", err)
 

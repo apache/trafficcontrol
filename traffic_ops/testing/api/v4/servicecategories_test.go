@@ -278,26 +278,3 @@ func validateServiceCategoriesDescSort() utils.CkReqFunc {
 		assert.Exactly(t, ascSortedList, descSortedList, "Service Categories responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
 	}
 }
-
-func CreateTestServiceCategories(t *testing.T) {
-	for _, serviceCategory := range testData.ServiceCategories {
-		resp, _, err := TOSession.CreateServiceCategory(serviceCategory, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create Service Category: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func DeleteTestServiceCategories(t *testing.T) {
-	serviceCategories, _, err := TOSession.GetServiceCategories(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Service Categories: %v - alerts: %+v", err, serviceCategories.Alerts)
-
-	for _, serviceCategory := range serviceCategories.Response {
-		alerts, _, err := TOSession.DeleteServiceCategory(serviceCategory.Name, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Service Category '%s': %v - alerts: %+v", serviceCategory.Name, err, alerts.Alerts)
-		// Retrieve the Service Category to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", serviceCategory.Name)
-		getServiceCategory, _, err := TOSession.GetServiceCategories(opts)
-		assert.NoError(t, err, "Error getting Service Category '%s' after deletion: %v - alerts: %+v", serviceCategory.Name, err, getServiceCategory.Alerts)
-		assert.Equal(t, 0, len(getServiceCategory.Response), "Expected Service Category '%s' to be deleted, but it was found in Traffic Ops", serviceCategory.Name)
-	}
-}

@@ -16,7 +16,6 @@
 package v4
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -25,6 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v4/totest"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -34,12 +34,12 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.DeliveryServiceRegexPost]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					EndpointId:    totest.GetDeliveryServiceId(t, TOSession, "ds1"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(3)),
 				},
 				"OK when VALID ID parameter": {
-					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					EndpointId:    totest.GetDeliveryServiceId(t, TOSession, "ds1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(getDSRegexID(t, "ds1"))}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
@@ -47,9 +47,9 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 			},
 			"POST": {
 				"BAD REQUEST when MISSING REGEX PATTERN": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointId: totest.GetDeliveryServiceId(t, TOSession, "ds1"), ClientSession: TOSession,
 					RequestBody: tc.DeliveryServiceRegexPost{
-						Type:      GetTypeId(t, "HOST_REGEXP"),
+						Type:      totest.GetTypeId(t, TOSession, "HOST_REGEXP"),
 						SetNumber: 3,
 						Pattern:   "",
 					},
@@ -85,41 +85,10 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 }
 
 func getDSRegexID(t *testing.T, dsName string) int {
-	resp, _, err := TOSession.GetDeliveryServiceRegexesByDSID(GetDeliveryServiceId(t, dsName)(), client.RequestOptions{})
+	resp, _, err := TOSession.GetDeliveryServiceRegexesByDSID(totest.GetDeliveryServiceId(t, TOSession, dsName)(), client.RequestOptions{})
 	assert.RequireNoError(t, err, "Get Delivery Service Regex failed with error: %v", err)
 	assert.RequireGreaterOrEqual(t, len(resp.Response), 1, "Expected delivery service regex response object length 1, but got %d", len(resp.Response))
 	assert.RequireNotNil(t, resp.Response[0].ID, "Expected id to not be nil")
 
 	return resp.Response[0].ID
-}
-
-func CreateTestDeliveryServicesRegexes(t *testing.T) {
-	for _, dsRegex := range testData.DeliveryServicesRegexes {
-		dsID := GetDeliveryServiceId(t, dsRegex.DSName)()
-		typeId := GetTypeId(t, dsRegex.TypeName)
-		dsRegexPost := tc.DeliveryServiceRegexPost{
-			Type:      typeId,
-			SetNumber: dsRegex.SetNumber,
-			Pattern:   dsRegex.Pattern,
-		}
-		alerts, _, err := TOSession.PostDeliveryServiceRegexesByDSID(dsID, dsRegexPost, client.RequestOptions{})
-		assert.NoError(t, err, "Could not create Delivery Service Regex: %v - alerts: %+v", err, alerts)
-	}
-}
-
-func DeleteTestDeliveryServicesRegexes(t *testing.T) {
-	db, err := OpenConnection()
-	assert.RequireNoError(t, err, "Cannot open db: %v", err)
-	defer func() {
-		err := db.Close()
-		assert.NoError(t, err, "Unable to close connection to db: %v", err)
-	}()
-
-	for _, regex := range testData.DeliveryServicesRegexes {
-		err = execSQL(db, fmt.Sprintf("DELETE FROM deliveryservice_regex WHERE deliveryservice = '%v' and regex ='%v';", regex.DSID, regex.ID))
-		assert.RequireNoError(t, err, "Unable to delete deliveryservice_regex by regex %v and ds %v: %v", regex.ID, regex.DSID, err)
-
-		err := execSQL(db, fmt.Sprintf("DELETE FROM regex WHERE Id = '%v';", regex.ID))
-		assert.RequireNoError(t, err, "Unable to delete regex %v: %v", regex.ID, err)
-	}
 }

@@ -28,15 +28,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v4/totest"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
-
-var fedIDs = make(map[string]int)
-
-// All prerequisite Federations are associated to this cdn and this xmlID
-var cdnName = "cdn1"
-var xmlId = "ds1"
 
 func TestCDNFederations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Tenants, CacheGroups, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, ServiceCategories, DeliveryServices, CDNFederations}, func() {
@@ -54,7 +49,7 @@ func TestCDNFederations(t *testing.T) {
 				},
 				"OK when VALID ID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(GetFederationID(t, "the.cname.com.")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(totest.GetFederationID(t, "the.cname.com.")())}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
 				},
 				"SORTED by CNAME when ORDERBY=CNAME parameter": {
@@ -105,7 +100,7 @@ func TestCDNFederations(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetFederationID(t, "google.com."),
+					EndpointId:    totest.GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.CDNFederation{
 						CName:       util.Ptr("new.cname."),
@@ -115,7 +110,7 @@ func TestCDNFederations(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNFederationUpdateFields(map[string]interface{}{"CName": "new.cname."})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:    GetFederationID(t, "booya.com."),
+					EndpointId:    totest.GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.CDNFederation{
@@ -126,7 +121,7 @@ func TestCDNFederations(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetFederationID(t, "booya.com."),
+					EndpointId:    totest.GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.CDNFederation{
 						CName:       util.Ptr("new.cname."),
@@ -145,28 +140,28 @@ func TestCDNFederations(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetCDNFederationsByName(cdnName, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetCDNFederationsByName(totest.FederationCDNName, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateCDNFederation(testCase.RequestBody, cdnName, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.CreateCDNFederation(testCase.RequestBody, totest.FederationCDNName, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateCDNFederation(testCase.RequestBody, cdnName, testCase.EndpointId(), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateCDNFederation(testCase.RequestBody, totest.FederationCDNName, testCase.EndpointId(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteCDNFederation(cdnName, testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteCDNFederation(totest.FederationCDNName, testCase.EndpointId(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts.Alerts, err)
 							}
@@ -200,7 +195,7 @@ func validateCDNFederationPagination(paginationParam string) utils.CkReqFunc {
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
-		respBase, _, err := TOSession.GetCDNFederationsByName(cdnName, opts)
+		respBase, _, err := TOSession.GetCDNFederationsByName(totest.FederationCDNName, opts)
 		assert.RequireNoError(t, err, "Cannot get Federation Users: %v - alerts: %+v", err, respBase.Alerts)
 
 		CDNfederations := respBase.Response
@@ -239,52 +234,4 @@ func validateCDNFederationIDDescSort() utils.CkReqFunc {
 		}
 		assert.Equal(t, true, sort.IntsAreSorted(CDNFederationIDs), "List is not sorted by their ids: %v", CDNFederationIDs)
 	}
-}
-
-func GetFederationID(t *testing.T, cname string) func() int {
-	return func() int {
-		ID, ok := fedIDs[cname]
-		assert.RequireEqual(t, true, ok, "Expected to find Federation CName: %s to have associated ID", cname)
-		return ID
-	}
-}
-
-func setFederationID(t *testing.T, cdnFederation tc.CDNFederation) {
-	assert.RequireNotNil(t, cdnFederation.CName, "Federation CName was nil after posting.")
-	assert.RequireNotNil(t, cdnFederation.ID, "Federation ID was nil after posting.")
-	fedIDs[*cdnFederation.CName] = *cdnFederation.ID
-}
-
-func CreateTestCDNFederations(t *testing.T) {
-	for _, federation := range testData.Federations {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("xmlId", *federation.DeliveryServiceIDs.XmlId)
-		dsResp, _, err := TOSession.GetDeliveryServices(opts)
-		assert.RequireNoError(t, err, "Could not get Delivery Service by XML ID: %v", err)
-		assert.RequireEqual(t, 1, len(dsResp.Response), "Expected one Delivery Service, but got %d", len(dsResp.Response))
-		assert.RequireNotNil(t, dsResp.Response[0].CDNName, "Expected Delivery Service CDN Name to not be nil.")
-
-		resp, _, err := TOSession.CreateCDNFederation(federation, *dsResp.Response[0].CDNName, client.RequestOptions{})
-		assert.NoError(t, err, "Could not create CDN Federations: %v - alerts: %+v", err, resp.Alerts)
-
-		// Need to save the ids, otherwise the other tests won't be able to reference the federations
-		setFederationID(t, resp.Response)
-		assert.RequireNotNil(t, resp.Response.ID, "Federation ID was nil after posting.")
-		assert.RequireNotNil(t, dsResp.Response[0].ID, "Delivery Service ID was nil.")
-		_, _, err = TOSession.CreateFederationDeliveryServices(*resp.Response.ID, []int{*dsResp.Response[0].ID}, false, client.NewRequestOptions())
-		assert.NoError(t, err, "Could not create Federation Delivery Service: %v", err)
-	}
-}
-
-func DeleteTestCDNFederations(t *testing.T) {
-	opts := client.NewRequestOptions()
-	for _, id := range fedIDs {
-		resp, _, err := TOSession.DeleteCDNFederation(cdnName, id, opts)
-		assert.NoError(t, err, "Cannot delete federation #%d: %v - alerts: %+v", id, err, resp.Alerts)
-
-		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		data, _, err := TOSession.GetCDNFederationsByName(cdnName, opts)
-		assert.Equal(t, 0, len(data.Response), "expected federation to be deleted")
-	}
-	fedIDs = make(map[string]int) // reset the global variable for the next test
 }

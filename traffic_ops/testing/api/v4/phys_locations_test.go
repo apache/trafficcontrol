@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strconv"
 	"testing"
 	"time"
 
@@ -322,28 +321,5 @@ func GetPhysicalLocationID(t *testing.T, name string) func() int {
 		assert.RequireNoError(t, err, "Get PhysLocation Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(physicalLocations.Response), "Expected response object length 1, but got %d", len(physicalLocations.Response))
 		return physicalLocations.Response[0].ID
-	}
-}
-
-func CreateTestPhysLocations(t *testing.T) {
-	for _, pl := range testData.PhysLocations {
-		resp, _, err := TOSession.CreatePhysLocation(pl, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create Physical Location '%s': %v - alerts: %+v", pl.Name, err, resp.Alerts)
-	}
-}
-
-func DeleteTestPhysLocations(t *testing.T) {
-	physicalLocations, _, err := TOSession.GetPhysLocations(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Physical Locations: %v - alerts: %+v", err, physicalLocations.Alerts)
-
-	for _, pl := range physicalLocations.Response {
-		alerts, _, err := TOSession.DeletePhysLocation(pl.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Physical Location '%s' (#%d): %v - alerts: %+v", pl.Name, pl.ID, err, alerts.Alerts)
-		// Retrieve the PhysLocation to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(pl.ID))
-		getPL, _, err := TOSession.GetPhysLocations(opts)
-		assert.NoError(t, err, "Error getting Physical Location '%s' after deletion: %v - alerts: %+v", pl.Name, err, getPL.Alerts)
-		assert.Equal(t, 0, len(getPL.Response), "Expected Physical Location '%s' to be deleted, but it was found in Traffic Ops", pl.Name)
 	}
 }

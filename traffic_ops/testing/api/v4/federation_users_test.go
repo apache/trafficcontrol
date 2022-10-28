@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v4/totest"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -41,7 +42,7 @@ func TestFederationUsers(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.FederationUserPost]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
@@ -52,58 +53,58 @@ func TestFederationUsers(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"SORTED by ID when ORDERBY=USERID parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationUserIDSort(false)),
 				},
 				"VALID when SORTORDER param is DESC": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "sortOrder": {"desc"}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationUserIDSort(true)),
 				},
 				"FIRST RESULT when LIMIT=1": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "limit": {"1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateFederationUsersPagination(GetFederationID(t, "the.cname.com.")(), "limit")),
+						validateFederationUsersPagination(totest.GetFederationID(t, "the.cname.com.")(), "limit")),
 				},
 				"SECOND RESULT when LIMIT=1 OFFSET=1": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "limit": {"1"}, "offset": {"1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateFederationUsersPagination(GetFederationID(t, "the.cname.com.")(), "offset")),
+						validateFederationUsersPagination(totest.GetFederationID(t, "the.cname.com.")(), "offset")),
 				},
 				"SECOND RESULT when LIMIT=1 PAGE=2": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "limit": {"1"}, "page": {"2"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateFederationUsersPagination(GetFederationID(t, "the.cname.com.")(), "page")),
+						validateFederationUsersPagination(totest.GetFederationID(t, "the.cname.com.")(), "page")),
 				},
 				"BAD REQUEST when INVALID LIMIT parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID OFFSET parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID PAGE parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when CHANGES made": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -111,31 +112,31 @@ func TestFederationUsers(t *testing.T) {
 			},
 			"POST": {
 				"OK when VALID request": {
-					EndpointId:    GetFederationID(t, "google.com."),
+					EndpointId:    totest.GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs: []int{
-							GetUserID(t, "readonlyuser")(),
-							GetUserID(t, "disalloweduser")(),
+							totest.GetUserID(t, TOSession, "readonlyuser")(),
+							totest.GetUserID(t, TOSession, "disalloweduser")(),
 						},
 						Replace: util.Ptr(false),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when REPLACING USERS": {
-					EndpointId:    GetFederationID(t, "booya.com."),
+					EndpointId:    totest.GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
-						IDs:     []int{GetUserID(t, "readonlyuser")()},
+						IDs:     []int{totest.GetUserID(t, TOSession, "readonlyuser")()},
 						Replace: util.Ptr(true),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when ADDING USER": {
-					EndpointId:    GetFederationID(t, "booya.com."),
+					EndpointId:    totest.GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
-						IDs:     []int{GetUserID(t, "disalloweduser")()},
+						IDs:     []int{totest.GetUserID(t, TOSession, "disalloweduser")()},
 						Replace: util.Ptr(false),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -150,7 +151,7 @@ func TestFederationUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when INVALID USER ID": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointId:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{-1},
@@ -222,43 +223,5 @@ func validateFederationUserIDSort(desc bool) utils.CkReqFunc {
 			}
 		}
 		assert.Equal(t, true, sort.IntsAreSorted(federationUserIDs), "List is not sorted by their ids: %v", federationUserIDs)
-	}
-}
-
-func CreateTestFederationUsers(t *testing.T) {
-	// Prerequisite Federation Users
-	federationUsers := map[string]tc.FederationUserPost{
-		"the.cname.com.": {
-			IDs:     []int{GetUserID(t, "admin")(), GetUserID(t, "adminuser")(), GetUserID(t, "disalloweduser")(), GetUserID(t, "readonlyuser")()},
-			Replace: util.BoolPtr(false),
-		},
-		"booya.com.": {
-			IDs:     []int{GetUserID(t, "adminuser")()},
-			Replace: util.BoolPtr(false),
-		},
-	}
-
-	for cname, federationUser := range federationUsers {
-		fedID := GetFederationID(t, cname)()
-		resp, _, err := TOSession.CreateFederationUsers(fedID, federationUser.IDs, *federationUser.Replace, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Assigning users %v to federation %d: %v - alerts: %+v", federationUser.IDs, fedID, err, resp.Alerts)
-	}
-}
-
-func DeleteTestFederationUsers(t *testing.T) {
-	for _, fedID := range fedIDs {
-		fedUsers, _, err := TOSession.GetFederationUsers(fedID, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Error getting users for federation %d: %v - alerts: %+v", fedID, err, fedUsers.Alerts)
-		for _, fedUser := range fedUsers.Response {
-			if fedUser.ID == nil {
-				t.Error("Traffic Ops returned a representation of a relationship between a user and a Federation that had null or undefined ID")
-				continue
-			}
-			alerts, _, err := TOSession.DeleteFederationUser(fedID, *fedUser.ID, client.RequestOptions{})
-			assert.NoError(t, err, "Error deleting user #%d from federation #%d: %v - alerts: %+v", *fedUser.ID, fedID, err, alerts.Alerts)
-		}
-		fedUsers, _, err = TOSession.GetFederationUsers(fedID, client.RequestOptions{})
-		assert.NoError(t, err, "Error getting users for federation %d: %v - alerts: %+v", fedID, err, fedUsers.Alerts)
-		assert.Equal(t, 0, len(fedUsers.Response), "Federation users expected 0, actual: %+v", len(fedUsers.Response))
 	}
 }

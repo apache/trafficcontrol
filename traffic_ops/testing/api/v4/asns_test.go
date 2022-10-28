@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strconv"
 	"testing"
 	"time"
 
@@ -28,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v4/totest"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -68,7 +68,7 @@ func TestASN(t *testing.T) {
 					RequestBody: map[string]interface{}{
 						"asn":            7777,
 						"cachegroupName": "originCachegroup",
-						"cachegroupId":   GetCacheGroupId(t, "originCachegroup")(),
+						"cachegroupId":   totest.GetCacheGroupId(t, TOSession, "originCachegroup")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateASNsUpdateCreateFields("7777", map[string]interface{}{"ASN": 7777})),
@@ -164,29 +164,5 @@ func GetASNID(t *testing.T, asn string) func() int {
 		assert.RequireNoError(t, err, "Get ASNs Request failed with error: %v", err)
 		assert.RequireEqual(t, len(resp.Response), 1, "Expected response object length 1, but got %d", len(resp.Response))
 		return resp.Response[0].ID
-	}
-}
-
-func CreateTestASNs(t *testing.T) {
-	for _, asn := range testData.ASNs {
-		asn.CachegroupID = GetCacheGroupId(t, asn.Cachegroup)()
-		resp, _, err := TOSession.CreateASN(asn, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create ASN: %v - alerts: %+v", err, resp)
-	}
-}
-
-func DeleteTestASNs(t *testing.T) {
-	asns, _, err := TOSession.GetASNs(client.RequestOptions{})
-	assert.NoError(t, err, "Error trying to fetch ASNs for deletion: %v - alerts: %+v", err, asns.Alerts)
-
-	for _, asn := range asns.Response {
-		alerts, _, err := TOSession.DeleteASN(asn.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Cannot delete ASN %d: %v - alerts: %+v", asn.ASN, err, alerts)
-		// Retrieve the ASN to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
-		asns, _, err := TOSession.GetASNs(opts)
-		assert.NoError(t, err, "Error trying to fetch ASN after deletion: %v - alerts: %+v", err, asns.Alerts)
-		assert.Equal(t, 0, len(asns.Response), "Expected ASN %d to be deleted, but it was found in Traffic Ops", asn.ASN)
 	}
 }

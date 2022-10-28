@@ -245,26 +245,3 @@ func GetStaticDNSEntryID(t *testing.T, host string) func() int {
 		return staticDNSEntries.Response[0].ID
 	}
 }
-
-func CreateTestStaticDNSEntries(t *testing.T) {
-	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		resp, _, err := TOSession.CreateStaticDNSEntry(staticDNSEntry, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create Static DNS Entry: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func DeleteTestStaticDNSEntries(t *testing.T) {
-	staticDNSEntries, _, err := TOSession.GetStaticDNSEntries(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Static DNS Entries: %v - alerts: %+v", err, staticDNSEntries.Alerts)
-
-	for _, staticDNSEntry := range staticDNSEntries.Response {
-		alerts, _, err := TOSession.DeleteStaticDNSEntry(staticDNSEntry.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Static DNS Entry '%s' (#%d): %v - alerts: %+v", staticDNSEntry.Host, staticDNSEntry.ID, err, alerts.Alerts)
-		// Retrieve the Static DNS Entry to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("host", staticDNSEntry.Host)
-		getStaticDNSEntry, _, err := TOSession.GetStaticDNSEntries(opts)
-		assert.NoError(t, err, "Error getting Static DNS Entry '%s' after deletion: %v - alerts: %+v", staticDNSEntry.Host, err, getStaticDNSEntry.Alerts)
-		assert.Equal(t, 0, len(getStaticDNSEntry.Response), "Expected Static DNS Entry '%s' to be deleted, but it was found in Traffic Ops", staticDNSEntry.Host)
-	}
-}

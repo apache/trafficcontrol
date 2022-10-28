@@ -18,7 +18,7 @@ package tcdata
 import (
 	"time"
 
-	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 
 	_ "github.com/lib/pq"
 )

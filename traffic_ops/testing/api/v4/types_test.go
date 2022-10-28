@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
@@ -207,61 +206,5 @@ func GetTypeID(t *testing.T, typeName string) func() int {
 		assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
 
 		return resp.Response[0].ID
-	}
-}
-
-func CreateTestTypes(t *testing.T) {
-	db, err := OpenConnection()
-	assert.RequireNoError(t, err, "cannot open db")
-
-	defer func() {
-		err := db.Close()
-		assert.NoError(t, err, "unable to close connection to db, error: %v", err)
-	}()
-	dbQueryTemplate := "INSERT INTO type (name, description, use_in_table) VALUES ('%s', '%s', '%s');"
-
-	for _, typ := range testData.Types {
-		if typ.UseInTable != "server" {
-			err = execSQL(db, fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable))
-			assert.RequireNoError(t, err, "could not create Type using database operations: %v", err)
-		} else {
-			alerts, _, err := TOSession.CreateType(typ, client.RequestOptions{})
-			assert.RequireNoError(t, err, "could not create Type: %v - alerts: %+v", err, alerts.Alerts)
-		}
-	}
-}
-
-func DeleteTestTypes(t *testing.T) {
-	db, err := OpenConnection()
-	assert.RequireNoError(t, err, "cannot open db")
-
-	defer func() {
-		err := db.Close()
-		assert.NoError(t, err, "unable to close connection to db, error: %v", err)
-	}()
-	dbDeleteTemplate := "DELETE FROM type WHERE name='%s';"
-
-	types, _, err := TOSession.GetTypes(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Types: %v - alerts: %+v", err, types.Alerts)
-
-	for _, typ := range types.Response {
-		if typ.Name == "CHECK_EXTENSION_BOOL" || typ.Name == "CHECK_EXTENSION_NUM" || typ.Name == "CHECK_EXTENSION_OPEN_SLOT" {
-			continue
-		}
-
-		if typ.UseInTable != "server" {
-			err := execSQL(db, fmt.Sprintf(dbDeleteTemplate, typ.Name))
-			assert.RequireNoError(t, err, "cannot delete Type using database operations: %v", err)
-		} else {
-			delResp, _, err := TOSession.DeleteType(typ.ID, client.RequestOptions{})
-			assert.RequireNoError(t, err, "cannot delete Type using the API: %v - alerts: %+v", err, delResp.Alerts)
-		}
-
-		// Retrieve the Type by name to see if it was deleted.
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", typ.Name)
-		types, _, err := TOSession.GetTypes(opts)
-		assert.NoError(t, err, "error fetching Types filtered by presumably deleted name: %v - alerts: %+v", err, types.Alerts)
-		assert.Equal(t, 0, len(types.Response), "expected Type '%s' to be deleted", typ.Name)
 	}
 }

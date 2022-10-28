@@ -24,6 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v4/totest"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -39,7 +40,7 @@ func TestMultipleServerCapabilities(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"serverCapabilities": append(multipleSCs, "disk", "blah"),
-						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")())),
+						"serverIds":          append(multipleServerIDs, int64(totest.GetServerID(t, TOSession, "dtrc-mid-04")())),
 						"pageType":           "server",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSSC("dtrc-mid-04", "server")),
@@ -48,7 +49,7 @@ func TestMultipleServerCapabilities(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"serverCapabilities": append(multipleSCs, "ram"),
-						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")()), int64(GetServerID(t, "dtrc-edge-08")())),
+						"serverIds":          append(multipleServerIDs, int64(totest.GetServerID(t, TOSession, "dtrc-mid-04")()), int64(totest.GetServerID(t, TOSession, "dtrc-edge-08")())),
 						"pageType":           "sc",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSSC("ram", "sc")),
@@ -57,7 +58,7 @@ func TestMultipleServerCapabilities(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"serverCapabilities": append(multipleSCs, "ram", "disk"),
-						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")()), int64(GetServerID(t, "dtrc-edge-08")())),
+						"serverIds":          append(multipleServerIDs, int64(totest.GetServerID(t, TOSession, "dtrc-mid-04")()), int64(totest.GetServerID(t, TOSession, "dtrc-edge-08")())),
 						"pageType":           "sc",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -66,7 +67,7 @@ func TestMultipleServerCapabilities(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"serverCapabilities": append(multipleSCs, "ram", "disk"),
-						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")()), int64(GetServerID(t, "dtrc-edge-08")())),
+						"serverIds":          append(multipleServerIDs, int64(totest.GetServerID(t, TOSession, "dtrc-mid-04")()), int64(totest.GetServerID(t, TOSession, "dtrc-edge-08")())),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -76,7 +77,7 @@ func TestMultipleServerCapabilities(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"serverCapabilities": append(multipleSCs, "asdf"),
-						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")()), int64(GetServerID(t, "dtrc-edge-08")())),
+						"serverIds":          append(multipleServerIDs, int64(totest.GetServerID(t, TOSession, "dtrc-mid-04")()), int64(totest.GetServerID(t, TOSession, "dtrc-edge-08")())),
 						"pageType":           "sc",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -85,7 +86,7 @@ func TestMultipleServerCapabilities(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"serverCapabilities": append(multipleSCs, "disk", "blah"),
-						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")())),
+						"serverIds":          append(multipleServerIDs, int64(totest.GetServerID(t, TOSession, "dtrc-mid-04")())),
 						"pageType":           "server",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -131,7 +132,7 @@ func validateSSC(name, pageType string) utils.CkReqFunc {
 		opts := client.NewRequestOptions()
 		switch pageType {
 		case "server":
-			opts.QueryParameters.Set("serverId", strconv.Itoa(GetServerID(t, name)()))
+			opts.QueryParameters.Set("serverId", strconv.Itoa(totest.GetServerID(t, TOSession, name)()))
 		case "sc":
 			opts.QueryParameters.Set("serverCapability", name)
 		}

@@ -17,12 +17,12 @@ package v4
 
 import (
 	"net/http"
-	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v4/totest"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -33,20 +33,20 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, []int]{
 			"POST": {
 				"BAD REQUEST assigning TOPOLOGY-BASED DS to CACHEGROUP": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup3"),
+					EndpointId:    totest.GetCacheGroupId(t, TOSession, "cachegroup3"),
 					ClientSession: TOSession,
-					RequestBody:   []int{GetDeliveryServiceId(t, "top-ds-in-cdn1")()},
+					RequestBody:   []int{totest.GetDeliveryServiceId(t, TOSession, "top-ds-in-cdn1")()},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when valid request": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup3"),
+					EndpointId:    totest.GetCacheGroupId(t, TOSession, "cachegroup3"),
 					ClientSession: TOSession,
 					RequestBody: []int{
-						GetDeliveryServiceId(t, "ds1")(),
-						GetDeliveryServiceId(t, "ds2")(),
-						GetDeliveryServiceId(t, "ds3")(),
-						GetDeliveryServiceId(t, "ds3")(),
-						GetDeliveryServiceId(t, "DS5")(),
+						totest.GetDeliveryServiceId(t, TOSession, "ds1")(),
+						totest.GetDeliveryServiceId(t, TOSession, "ds2")(),
+						totest.GetDeliveryServiceId(t, TOSession, "ds3")(),
+						totest.GetDeliveryServiceId(t, TOSession, "ds3")(),
+						totest.GetDeliveryServiceId(t, TOSession, "DS5")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCGDSServerAssignments()),
 				},
@@ -98,63 +98,4 @@ func validateCGDSServerAssignments() utils.CkReqFunc {
 			}
 		}
 	}
-}
-
-func CreateTestCachegroupsDeliveryServices(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	assert.RequireNoError(t, err, "Cannot GET DeliveryServices: %v - %v", err, dses)
-
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "cachegroup3")
-	clientCGs, _, err := TOSession.GetCacheGroups(opts)
-	assert.RequireNoError(t, err, "Cannot GET cachegroup: %v", err)
-	assert.RequireEqual(t, len(clientCGs.Response), 1, "Getting cachegroup expected 1, got %v", len(clientCGs.Response))
-	assert.RequireNotNil(t, clientCGs.Response[0].ID, "Cachegroup has a nil ID")
-
-	dsIDs := []int{}
-	for _, ds := range dses.Response {
-		if *ds.CDNName == "cdn1" && ds.Topology == nil {
-			dsIDs = append(dsIDs, *ds.ID)
-		}
-	}
-	assert.RequireGreaterOrEqual(t, len(dsIDs), 1, "No Delivery Services found in CDN 'cdn1', cannot continue.")
-	resp, _, err := TOSession.SetCacheGroupDeliveryServices(*clientCGs.Response[0].ID, dsIDs, client.RequestOptions{})
-	assert.RequireNoError(t, err, "Setting cachegroup delivery services returned error: %v", err)
-	assert.RequireGreaterOrEqual(t, len(resp.Response.ServerNames), 1, "Setting cachegroup delivery services returned success, but no servers set")
-}
-
-func setInactive(t *testing.T, dsID int) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("id", strconv.Itoa(dsID))
-	resp, _, err := TOSession.GetDeliveryServices(opts)
-	assert.RequireNoError(t, err, "Failed to fetch details for Delivery Service #%d: %v - alerts: %+v", dsID, err, resp.Alerts)
-	assert.RequireEqual(t, len(resp.Response), 1, "Expected exactly one Delivery Service to exist with ID %d, found: %d", dsID, len(resp.Response))
-
-	ds := resp.Response[0]
-	if ds.Active == nil {
-		t.Errorf("Deliver Service #%d had null or undefined 'active'", dsID)
-		ds.Active = new(bool)
-	}
-	if *ds.Active {
-		*ds.Active = false
-		_, _, err = TOSession.UpdateDeliveryService(dsID, ds, client.RequestOptions{})
-		assert.NoError(t, err, "Failed to set Delivery Service #%d to inactive: %v", dsID, err)
-	}
-}
-
-func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("limit", "1000000")
-	dss, _, err := TOSession.GetDeliveryServiceServers(opts)
-	assert.NoError(t, err, "Unexpected error retrieving server-to-Delivery-Service assignments: %v - alerts: %+v", err, dss.Alerts)
-
-	for _, ds := range dss.Response {
-		setInactive(t, *ds.DeliveryService)
-		alerts, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server, client.RequestOptions{})
-		assert.NoError(t, err, "Error deleting delivery service servers: %v - alerts: %+v", err, alerts.Alerts)
-	}
-
-	dss, _, err = TOSession.GetDeliveryServiceServers(client.RequestOptions{})
-	assert.NoError(t, err, "Unexpected error retrieving server-to-Delivery-Service assignments: %v - alerts: %+v", err, dss.Alerts)
-	assert.Equal(t, len(dss.Response), 0, "Deleting delivery service servers: Expected empty subsequent get, actual %v", len(dss.Response))
 }

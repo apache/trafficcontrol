@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v4/totest"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -52,9 +53,9 @@ func TestServerServerCapabilities(t *testing.T) {
 				},
 				"OK when VALID SERVERID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "dtrc-edge-01")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(totest.GetServerID(t, TOSession, "dtrc-edge-01")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateServerServerCapabilitiesFields(map[string]interface{}{"ServerID": GetServerID(t, "dtrc-edge-01")()})),
+						validateServerServerCapabilitiesFields(map[string]interface{}{"ServerID": totest.GetServerID(t, TOSession, "dtrc-edge-01")()})),
 				},
 				"OK when VALID SERVERHOSTNAME parameter": {
 					ClientSession: TOSession,
@@ -103,7 +104,7 @@ func TestServerServerCapabilities(t *testing.T) {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
 					RequestBody: tc.ServerServerCapability{
-						ServerID:         util.Ptr(GetServerID(t, "dtrc-mid-01")()),
+						ServerID:         util.Ptr(totest.GetServerID(t, TOSession, "dtrc-mid-01")()),
 						ServerCapability: util.Ptr("disk"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -118,14 +119,14 @@ func TestServerServerCapabilities(t *testing.T) {
 				"BAD REQUEST when MISSING SERVER CAPABILITY": {
 					ClientSession: TOSession,
 					RequestBody: tc.ServerServerCapability{
-						ServerID: util.Ptr(GetServerID(t, "dtrc-mid-01")()),
+						ServerID: util.Ptr(totest.GetServerID(t, TOSession, "dtrc-mid-01")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when SERVER CAPABILITY DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestBody: tc.ServerServerCapability{
-						ServerID:         util.Ptr(GetServerID(t, "dtrc-mid-01")()),
+						ServerID:         util.Ptr(totest.GetServerID(t, TOSession, "dtrc-mid-01")()),
 						ServerCapability: util.Ptr("bogus"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
@@ -141,7 +142,7 @@ func TestServerServerCapabilities(t *testing.T) {
 				"BAD REQUEST when SERVER TYPE NOT EDGE or MID": {
 					ClientSession: TOSession,
 					RequestBody: tc.ServerServerCapability{
-						ServerID:         util.Ptr(GetServerID(t, "trafficvault")()),
+						ServerID:         util.Ptr(totest.GetServerID(t, TOSession, "trafficvault")()),
 						ServerCapability: util.Ptr("bogus"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -150,27 +151,27 @@ func TestServerServerCapabilities(t *testing.T) {
 			"DELETE": {
 				"OK when NOT the LAST SERVER of CACHE GROUP of TOPOLOGY DS which has REQUIRED CAPABILITIES": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "dtrc-edge-01")())}, "serverCapability": {"ram"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(totest.GetServerID(t, TOSession, "dtrc-edge-01")())}, "serverCapability": {"ram"}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when LAST SERVER of CACHE GROUP of TOPOLOGY DS which has REQUIRED CAPABILITIES": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "edge-in-cdn1-only")())}, "serverCapability": {"ram"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(totest.GetServerID(t, TOSession, "edge-in-cdn1-only")())}, "serverCapability": {"ram"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when SERVER ASSIGNED TO DS with REQUIRED CAPABILITIES": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "atlanta-org-2")())}, "serverCapability": {"bar"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(totest.GetServerID(t, TOSession, "atlanta-org-2")())}, "serverCapability": {"bar"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when SERVER SERVER CAPABILITY DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "atlanta-org-1")())}, "serverCapability": {"doesntexist"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(totest.GetServerID(t, TOSession, "atlanta-org-1")())}, "serverCapability": {"doesntexist"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when MISSING SERVER CAPABILITY": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(GetServerID(t, "atlanta-org-1")())}, "serverCapability": {""}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"serverId": {strconv.Itoa(totest.GetServerID(t, TOSession, "atlanta-org-1")())}, "serverCapability": {""}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
@@ -289,27 +290,5 @@ func validateServerServerCapabilitiesPagination(paginationParam string) utils.Ck
 		case "page":
 			assert.Exactly(t, ssc[1:2], paginationResp, "expected GET Server Server Capabilities with limit = 1, page = 2 to return second result")
 		}
-	}
-}
-
-func CreateTestServerServerCapabilities(t *testing.T) {
-	for _, ssc := range testData.ServerServerCapabilities {
-		assert.RequireNotNil(t, ssc.Server, "Expected Server to not be nil.")
-		assert.RequireNotNil(t, ssc.ServerCapability, "Expected Server Capability to not be nil.")
-		serverID := GetServerID(t, *ssc.Server)()
-		ssc.ServerID = &serverID
-		resp, _, err := TOSession.CreateServerServerCapability(ssc, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not associate Capability '%s' with server '%s': %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, err, resp.Alerts)
-	}
-}
-
-func DeleteTestServerServerCapabilities(t *testing.T) {
-	sscs, _, err := TOSession.GetServerServerCapabilities(client.RequestOptions{})
-	assert.RequireNoError(t, err, "Cannot get server server capabilities: %v - alerts: %+v", err, sscs.Alerts)
-	for _, ssc := range sscs.Response {
-		assert.RequireNotNil(t, ssc.Server, "Expected Server to not be nil.")
-		assert.RequireNotNil(t, ssc.ServerCapability, "Expected Server Capability to not be nil.")
-		alerts, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability, client.RequestOptions{})
-		assert.NoError(t, err, "Could not remove Capability '%s' from server '%s' (#%d): %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, *ssc.ServerID, err, alerts.Alerts)
 	}
 }

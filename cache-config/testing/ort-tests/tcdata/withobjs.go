@@ -16,15 +16,23 @@ package tcdata
 */
 
 import (
+	"database/sql"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v4/totest"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 type TCObj int
 
 const (
-	CacheGroups TCObj = iota
+	ASN TCObj = iota
+	CacheGroups
 	CacheGroupsDeliveryServices
-	CacheGroupParameters
+	// CacheGroupParameters
 	CDNs
 	CDNFederations
 	Coordinates
@@ -36,7 +44,7 @@ const (
 	Divisions
 	FederationResolvers
 	FederationUsers
-	InvalidationJobs
+	Jobs
 	Origins
 	Parameters
 	PhysLocations
@@ -48,6 +56,7 @@ const (
 	ServerChecks
 	ServerServerCapabilities
 	Servers
+	Statuses
 	ServiceCategories
 	StaticDNSEntries
 	SteeringTargets
@@ -63,6 +72,58 @@ type TCObjFuncs struct {
 	Delete func(t *testing.T)
 }
 
+// WrapClient is a temp func that creates a func(t *testing.T) from a *toclient.Session and a func(t *testing.T, toClient *toclient.Session).
+func WrapClient(
+	cl **toclient.Session,
+	clF func(t *testing.T, toClient *toclient.Session),
+) func(t *testing.T) {
+	return func(t *testing.T) {
+		clF(t, *cl)
+	}
+}
+
+// WrapClient is a temp func that creates a func(t *testing.T) from a *toclient.Session, totest.TrafficControl, and a func(t *testing.T, toClient *toclient.Session, dat totest.TrafficControl).
+func WrapClientDat(
+	cl **toclient.Session,
+	dat *totest.TrafficControl,
+	clF func(t *testing.T, toClient *toclient.Session, dat totest.TrafficControl),
+) func(t *testing.T) {
+	return func(t *testing.T) {
+		clF(t, *cl, *dat)
+	}
+}
+
+// WrapNewClientDat is like WrapClientDat but creates a new custom TO client instead of using the global variable.
+func WrapNewClientDat(
+	r *TCData,
+	dat *totest.TrafficControl,
+	user *string,
+	pass *string,
+	clF func(t *testing.T, toClient *toclient.Session, dat totest.TrafficControl),
+) func(t *testing.T) {
+	return func(t *testing.T) {
+		cl := utils.CreateV4Session(t, r.Config.TrafficOps.URL, *user, *pass, r.Config.Default.Session.TimeoutInSecs)
+		clF(t, cl, *dat)
+	}
+}
+
+func WrapClientDatDB(
+	r *TCData,
+	cl **toclient.Session,
+	dat *totest.TrafficControl,
+	clF func(t *testing.T, toClient *toclient.Session, dat totest.TrafficControl, db *sql.DB),
+) func(t *testing.T) {
+	return func(t *testing.T) {
+		db, err := r.OpenConnection()
+		assert.RequireNoError(t, err, "Cannot open db: %v", err)
+		defer func() {
+			err := db.Close()
+			assert.NoError(t, err, "Unable to close connection to db: %v", err)
+		}()
+		clF(t, *cl, *dat, db)
+	}
+}
+
 // WithObjs creates the objs in order, runs f, and defers deleting the objs in the same order.
 //
 // Because deletion is deferred, using this ensures objects will be cleaned up if f panics or calls t.Fatal, as much as possible.
@@ -71,40 +132,42 @@ type TCObjFuncs struct {
 // All tests in the Traffic Ops API Testing framework use the same Traffic Ops instance, with persistent data. Because of this, when any test fails, all subsequent tests should be considered invalid, irrespective whether they pass or fail. Users are encouraged to use `go test -failfast`.
 func (r *TCData) WithObjs(t *testing.T, objs []TCObj, f func()) {
 	var withFuncs = map[TCObj]TCObjFuncs{
-		CacheGroups:                          {r.CreateTestCacheGroups, r.DeleteTestCacheGroups},
-		CacheGroupsDeliveryServices:          {r.CreateTestCachegroupsDeliveryServices, r.DeleteTestCachegroupsDeliveryServices},
-		CacheGroupParameters:                 {r.CreateTestCacheGroupParameters, r.DeleteTestCacheGroupParameters},
-		CDNs:                                 {r.CreateTestCDNs, r.DeleteTestCDNs},
-		CDNFederations:                       {r.CreateTestCDNFederations, r.DeleteTestCDNFederations},
-		Coordinates:                          {r.CreateTestCoordinates, r.DeleteTestCoordinates},
-		DeliveryServices:                     {r.CreateTestDeliveryServices, r.DeleteTestDeliveryServices},
-		DeliveryServicesRegexes:              {r.CreateTestDeliveryServicesRegexes, r.DeleteTestDeliveryServicesRegexes},
-		DeliveryServiceRequests:              {r.CreateTestDeliveryServiceRequests, r.DeleteTestDeliveryServiceRequests},
-		DeliveryServiceRequestComments:       {r.CreateTestDeliveryServiceRequestComments, r.DeleteTestDeliveryServiceRequestComments},
-		DeliveryServicesRequiredCapabilities: {r.CreateTestDeliveryServicesRequiredCapabilities, r.DeleteTestDeliveryServicesRequiredCapabilities},
-		Divisions:                            {r.CreateTestDivisions, r.DeleteTestDivisions},
-		FederationUsers:                      {r.CreateTestFederationUsers, r.DeleteTestFederationUsers},
-		FederationResolvers:                  {r.CreateTestFederationResolvers, r.DeleteTestFederationResolvers},
-		InvalidationJobs:                     {r.CreateTestInvalidationJobs, r.DeleteTestInvalidationJobs},
-		Origins:                              {r.CreateTestOrigins, r.DeleteTestOrigins},
-		Parameters:                           {r.CreateTestParameters, r.DeleteTestParameters},
-		PhysLocations:                        {r.CreateTestPhysLocations, r.DeleteTestPhysLocations},
-		Profiles:                             {r.CreateTestProfiles, r.DeleteTestProfiles},
-		ProfileParameters:                    {r.CreateTestProfileParameters, r.DeleteTestProfileParameters},
-		Regions:                              {r.CreateTestRegions, r.DeleteTestRegions},
-		Roles:                                {r.CreateTestRoles, r.DeleteTestRoles},
-		ServerCapabilities:                   {r.CreateTestServerCapabilities, r.DeleteTestServerCapabilities},
-		ServerChecks:                         {r.CreateTestServerChecks, r.DeleteTestServerChecks},
-		ServerServerCapabilities:             {r.CreateTestServerServerCapabilities, r.DeleteTestServerServerCapabilities},
-		Servers:                              {r.CreateTestServers, r.DeleteTestServers},
-		ServiceCategories:                    {r.CreateTestServiceCategories, r.DeleteTestServiceCategories},
-		StaticDNSEntries:                     {r.CreateTestStaticDNSEntries, r.DeleteTestStaticDNSEntries},
-		SteeringTargets:                      {r.SetupSteeringTargets, r.DeleteTestSteeringTargets},
-		Tenants:                              {r.CreateTestTenants, r.DeleteTestTenants},
-		ServerCheckExtensions:                {r.CreateTestServerCheckExtensions, r.DeleteTestServerCheckExtensions},
-		Topologies:                           {r.CreateTestTopologies, r.DeleteTestTopologies},
-		Types:                                {r.CreateTestTypes, r.DeleteTestTypes},
-		Users:                                {r.CreateTestUsers, r.DeleteTestUsers},
+		ASN:                         {WrapClientDat(&TOSession, r.TestData, totest.CreateTestASNs), WrapClient(&TOSession, totest.DeleteTestASNs)},
+		CacheGroups:                 {WrapClientDat(&TOSession, r.TestData, totest.CreateTestCacheGroups), WrapClientDat(&TOSession, r.TestData, totest.DeleteTestCacheGroups)},
+		CacheGroupsDeliveryServices: {WrapClient(&TOSession, totest.CreateTestCachegroupsDeliveryServices), WrapClient(&TOSession, totest.DeleteTestCachegroupsDeliveryServices)},
+		// CacheGroupParameters:                 {WrapClientDat(&TOSession, r.TestData, totest.CreateTestCacheGroupParameters), WrapClient(&TOSession, totest.DeleteTestCacheGroupParameters)},
+		CDNs:                                 {WrapClientDat(&TOSession, r.TestData, totest.CreateTestCDNs), WrapClient(&TOSession, totest.DeleteTestCDNs)},
+		CDNFederations:                       {WrapClientDat(&TOSession, r.TestData, totest.CreateTestCDNFederations), WrapClient(&TOSession, totest.DeleteTestCDNFederations)},
+		Coordinates:                          {WrapClientDat(&TOSession, r.TestData, totest.CreateTestCoordinates), WrapClient(&TOSession, totest.DeleteTestCoordinates)},
+		DeliveryServices:                     {WrapClientDat(&TOSession, r.TestData, totest.CreateTestDeliveryServices), WrapClient(&TOSession, totest.DeleteTestDeliveryServices)},
+		DeliveryServicesRegexes:              {WrapClientDat(&TOSession, r.TestData, totest.CreateTestDeliveryServicesRegexes), WrapClientDatDB(r, &TOSession, r.TestData, totest.DeleteTestDeliveryServicesRegexes)},
+		DeliveryServiceRequests:              {WrapClientDat(&TOSession, r.TestData, totest.CreateTestDeliveryServiceRequests), WrapClient(&TOSession, totest.DeleteTestDeliveryServiceRequests)},
+		DeliveryServiceRequestComments:       {WrapClientDat(&TOSession, r.TestData, totest.CreateTestDeliveryServiceRequestComments), WrapClient(&TOSession, totest.DeleteTestDeliveryServiceRequestComments)},
+		DeliveryServicesRequiredCapabilities: {WrapClientDat(&TOSession, r.TestData, totest.CreateTestDeliveryServicesRequiredCapabilities), WrapClient(&TOSession, totest.DeleteTestDeliveryServicesRequiredCapabilities)},
+		Divisions:                            {WrapClientDat(&TOSession, r.TestData, totest.CreateTestDivisions), WrapClient(&TOSession, totest.DeleteTestDivisions)},
+		FederationUsers:                      {WrapClient(&TOSession, totest.CreateTestFederationUsers), WrapClient(&TOSession, totest.DeleteTestFederationUsers)},
+		FederationResolvers:                  {WrapClientDat(&TOSession, r.TestData, totest.CreateTestFederationResolvers), WrapClient(&TOSession, totest.DeleteTestFederationResolvers)},
+		Jobs:                                 {WrapClientDat(&TOSession, r.TestData, totest.CreateTestJobs), WrapClient(&TOSession, totest.DeleteTestJobs)},
+		Origins:                              {WrapClientDat(&TOSession, r.TestData, totest.CreateTestOrigins), WrapClient(&TOSession, totest.DeleteTestOrigins)},
+		Parameters:                           {WrapClientDat(&TOSession, r.TestData, totest.CreateTestParameters), WrapClient(&TOSession, totest.DeleteTestParameters)},
+		PhysLocations:                        {WrapClientDat(&TOSession, r.TestData, totest.CreateTestPhysLocations), WrapClient(&TOSession, totest.DeleteTestPhysLocations)},
+		Profiles:                             {WrapClientDat(&TOSession, r.TestData, totest.CreateTestProfiles), WrapClient(&TOSession, totest.DeleteTestProfiles)},
+		ProfileParameters:                    {WrapClientDat(&TOSession, r.TestData, totest.CreateTestProfileParameters), WrapClient(&TOSession, totest.DeleteTestProfileParameters)},
+		Regions:                              {WrapClientDat(&TOSession, r.TestData, totest.CreateTestRegions), WrapClient(&TOSession, totest.DeleteTestRegions)},
+		Roles:                                {WrapClientDat(&TOSession, r.TestData, totest.CreateTestRoles), WrapClient(&TOSession, totest.DeleteTestRoles)},
+		ServerCapabilities:                   {WrapClientDat(&TOSession, r.TestData, totest.CreateTestServerCapabilities), WrapClient(&TOSession, totest.DeleteTestServerCapabilities)},
+		ServerChecks:                         {WrapNewClientDat(r, r.TestData, &r.Config.TrafficOps.Users.Extension, &r.Config.TrafficOps.UserPassword, totest.CreateTestServerChecks), WrapClient(&TOSession, totest.DeleteTestServerChecks)},
+		ServerServerCapabilities:             {WrapClientDat(&TOSession, r.TestData, totest.CreateTestServerServerCapabilities), WrapClient(&TOSession, totest.DeleteTestServerServerCapabilities)},
+		Servers:                              {WrapClientDat(&TOSession, r.TestData, totest.CreateTestServers), WrapClient(&TOSession, totest.DeleteTestServers)},
+		ServiceCategories:                    {WrapClientDat(&TOSession, r.TestData, totest.CreateTestServiceCategories), WrapClient(&TOSession, totest.DeleteTestServiceCategories)},
+		Statuses:                             {WrapClientDat(&TOSession, r.TestData, totest.CreateTestStatuses), WrapClientDat(&TOSession, r.TestData, totest.DeleteTestStatuses)},
+		StaticDNSEntries:                     {WrapClientDat(&TOSession, r.TestData, totest.CreateTestStaticDNSEntries), WrapClient(&TOSession, totest.DeleteTestStaticDNSEntries)},
+		SteeringTargets:                      {WrapNewClientDat(r, r.TestData, util.StrPtr("steering"), util.StrPtr("pa$$word"), totest.CreateTestSteeringTargets), WrapNewClientDat(r, r.TestData, util.StrPtr("steering"), util.StrPtr("pa$$word"), totest.DeleteTestSteeringTargets)},
+		Tenants:                              {WrapClientDat(&TOSession, r.TestData, totest.CreateTestTenants), WrapClient(&TOSession, totest.DeleteTestTenants)},
+		ServerCheckExtensions:                {WrapNewClientDat(r, r.TestData, &r.Config.TrafficOps.Users.Extension, &r.Config.TrafficOps.UserPassword, totest.CreateTestServerCheckExtensions), WrapNewClientDat(r, r.TestData, &r.Config.TrafficOps.Users.Extension, &r.Config.TrafficOps.UserPassword, totest.DeleteTestServerCheckExtensions)},
+		Topologies:                           {WrapClientDat(&TOSession, r.TestData, totest.CreateTestTopologies), WrapClient(&TOSession, totest.DeleteTestTopologies)},
+		Types:                                {WrapClientDatDB(r, &TOSession, r.TestData, totest.CreateTestTypes), WrapClientDatDB(r, &TOSession, r.TestData, totest.DeleteTestTypes)},
+		Users:                                {WrapClientDat(&TOSession, r.TestData, totest.CreateTestUsers), WrapClientDatDB(r, &TOSession, r.TestData, totest.ForceDeleteTestUsers)},
 	}
 
 	for _, obj := range objs {

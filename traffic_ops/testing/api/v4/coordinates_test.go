@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strconv"
 	"testing"
 	"time"
 
@@ -325,27 +324,5 @@ func GetCoordinateID(t *testing.T, coordinateName string) func() int {
 		assert.RequireNoError(t, err, "Get Coordinate Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(coordinatesResp.Response), "Expected response object length 1, but got %d", len(coordinatesResp.Response))
 		return coordinatesResp.Response[0].ID
-	}
-}
-
-func CreateTestCoordinates(t *testing.T) {
-	for _, coordinate := range testData.Coordinates {
-		resp, _, err := TOSession.CreateCoordinate(coordinate, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create coordinate: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func DeleteTestCoordinates(t *testing.T) {
-	coordinates, _, err := TOSession.GetCoordinates(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Coordinates: %v - alerts: %+v", err, coordinates.Alerts)
-	for _, coordinate := range coordinates.Response {
-		alerts, _, err := TOSession.DeleteCoordinate(coordinate.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Coordinate '%s' (#%d): %v - alerts: %+v", coordinate.Name, coordinate.ID, err, alerts.Alerts)
-		// Retrieve the Coordinate to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(coordinate.ID))
-		getCoordinate, _, err := TOSession.GetCoordinates(opts)
-		assert.NoError(t, err, "Error getting Coordinate '%s' after deletion: %v - alerts: %+v", coordinate.Name, err, getCoordinate.Alerts)
-		assert.Equal(t, 0, len(getCoordinate.Response), "Expected Coordinate '%s' to be deleted, but it was found in Traffic Ops", coordinate.Name)
 	}
 }
