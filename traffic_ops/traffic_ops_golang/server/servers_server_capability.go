@@ -449,6 +449,12 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(mssc.ServerIDs) > 1 && len(mssc.ServerCapabilities) > 1 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("not allowed to have many:many association between server and server capability. "+
+			"Only associations allowed are; 1:1, 1:many or many:1"), nil)
+		return
+	}
+
 	if len(mssc.ServerIDs) >= 1 {
 		errCode, userErr, sysErr = checkExistingServer(tx, mssc.ServerIDs, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
@@ -467,23 +473,16 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 	// Insert rows in DB
 	sid := make([]int64, len(mssc.ServerCapabilities))
 	scs := make([]string, len(mssc.ServerIDs))
-	if mssc.PageType == "server" {
-		if len(mssc.ServerCapabilities) >= 1 {
-			for i := range mssc.ServerCapabilities {
-				sid[i] = mssc.ServerIDs[0]
-			}
-			scs = mssc.ServerCapabilities
+	if mssc.PageType == "sc" {
+		for i := range mssc.ServerIDs {
+			scs[i] = mssc.ServerCapabilities[0]
 		}
-	} else if mssc.PageType == "sc" {
-		if len(mssc.ServerIDs) >= 1 {
-			for i := range mssc.ServerIDs {
-				scs[i] = mssc.ServerCapabilities[0]
-			}
-			sid = mssc.ServerIDs
-		}
-	} else {
-		scs = mssc.ServerCapabilities
 		sid = mssc.ServerIDs
+	} else {
+		for i := range mssc.ServerCapabilities {
+			sid[i] = mssc.ServerIDs[0]
+		}
+		scs = mssc.ServerCapabilities
 	}
 
 	msscQuery := `INSERT INTO server_server_capability

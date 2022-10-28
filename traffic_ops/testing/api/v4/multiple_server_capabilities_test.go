@@ -53,6 +53,15 @@ func TestMultipleServerCapabilities(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSSC("ram", "sc")),
 				},
+				"BAD REQUEST When Assigning Many:Many Relation": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"serverCapabilities": append(multipleSCs, "ram", "disk"),
+						"serverIds":          append(multipleServerIDs, int64(GetServerID(t, "dtrc-mid-04")()), int64(GetServerID(t, "dtrc-edge-08")())),
+						"pageType":           "sc",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
 			},
 			"DELETE": {
 				"OK When Delete Multiple Assigned Servers Per Capability": {
