@@ -24,4 +24,4 @@ services:
       args:
         ATS_VERSION: ${ATS_VERSION}
     # for example, ghcr.io/apache/trafficcontrol/ci/trafficserver-alpine:9.1.2
-    image: ${CONTAINER}:${ATS_VERSION}
+    image: ${CONTAINER:-ghcr.io/apache/trafficcontrol/ci/trafficserver-alpine}:${ATS_VERSION}
