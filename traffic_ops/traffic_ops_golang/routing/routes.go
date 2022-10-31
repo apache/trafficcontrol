@@ -328,7 +328,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPost, Path: `server_capabilities$`, Handler: api.CreateHandler(&servercapability.TOServerCapability{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER-CAPABILITY:CREATE", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 407447070831},
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPut, Path: `server_capabilities$`, Handler: api.UpdateHandler(&servercapability.TOServerCapability{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER-CAPABILITY:UPDATE", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 425437701091},
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodDelete, Path: `server_capabilities$`, Handler: api.DeleteHandler(&servercapability.TOServerCapability{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER-CAPABILITY:DELETE", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 43641503831},
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPut, Path: `multiple_server_capabilities/?$`, Handler: server.AssignMultipleServerCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 407924192581},
+		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPost, Path: `multiple_servers_capabilities/?$`, Handler: server.AssignMultipleServersCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:READ", "SERVER:CREATE", "SERVER-CAPABILITY:READ", "SERVER-CAPABILITY:CREATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 407924192581},
+		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodDelete, Path: `multiple_servers_capabilities/?$`, Handler: server.DeleteMultipleServersCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:READ", "SERVER:DELETE", "SERVER-CAPABILITY:READ", "SERVER-CAPABILITY:DELETE"}, Authenticated: Authenticated, Middlewares: nil, ID: 407924192781},
 
 		//Server Server Capabilities: CRUD
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodGet, Path: `server_server_capabilities/?$`, Handler: api.ReadHandler(&server.TOServerServerCapability{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 480023188931},
@@ -530,9 +531,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		/**
 		 * 4.x API
 		 */
-
-		// Assign Multiple Server Capabilities
-		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodPut, Path: `multiple_server_capabilities/?$`, Handler: server.AssignMultipleServerCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:UPDATE", "SERVER:READ", "SERVER-CAPABILITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 40792419258},
+		// Assign Multiple Servers to a capability and assign multiple capabilities to a server
+		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodPost, Path: `multiple_servers_capabilities/?$`, Handler: server.AssignMultipleServersCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:READ", "SERVER:CREATE", "SERVER-CAPABILITY:READ", "SERVER-CAPABILITY:CREATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 40792419258},
+		{Version: api.Version{Major: 4, Minor: 1}, Method: http.MethodDelete, Path: `multiple_servers_capabilities/?$`, Handler: server.DeleteMultipleServersCapabilities, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"SERVER:READ", "SERVER:DELETE", "SERVER-CAPABILITY:READ", "SERVER-CAPABILITY:DELETE"}, Authenticated: Authenticated, Middlewares: nil, ID: 40792419278},
 
 		// CDNI integration
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `OC/FCI/advertisement/?$`, Handler: cdni.GetCapabilities, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDNI-CAPACITY:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 541357729077},

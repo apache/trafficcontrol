@@ -16,6 +16,7 @@ package client
 */
 
 import (
+	"net/http"
 	"net/url"
 	"strconv"
 
@@ -27,8 +28,8 @@ import (
 // /server_server_capabilities API endpoint.
 const apiServerServerCapabilities = "/server_server_capabilities"
 
-// apiMultipleServerCapabilities is the API version-relative path to the /multiple_server_capabilities API endpoint.
-const apiMultipleServerCapabilities = "/multiple_server_capabilities"
+// apiMultipleServersCapabilities is the API version-relative path to the /multiple_servers_capabilities API endpoint.
+const apiMultipleServersCapabilities = "/multiple_servers_capabilities"
 
 // CreateServerServerCapability assigns a Server Capability to a Server.
 func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
@@ -57,9 +58,16 @@ func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerSe
 	return resp, reqInf, err
 }
 
-// AssignMultipleServerCapability assigns multiple server capabilities to a server.
-func (to *Session) AssignMultipleServerCapability(msc tc.MultipleServerCapabilities, opts RequestOptions, id int) (tc.Alerts, toclientlib.ReqInf, error) {
+// AssignMultipleServersCapabilities assigns multiple server capabilities to a server or multiple servers to a capability.
+func (to *Session) AssignMultipleServersCapabilities(mssc tc.MultipleServersCapabilities, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.put(apiMultipleServerCapabilities, opts, msc, &alerts)
+	reqInf, err := to.post(apiMultipleServersCapabilities, opts, mssc, &alerts)
+	return alerts, reqInf, err
+}
+
+// DeleteMultipleServersCapabilities deletes multiple assigned server capabilities to a server or multiple servers to a capability.
+func (to *Session) DeleteMultipleServersCapabilities(mssc tc.MultipleServersCapabilities, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	var alerts tc.Alerts
+	reqInf, err := to.req(http.MethodDelete, apiMultipleServersCapabilities, opts, mssc, &alerts)
 	return alerts, reqInf, err
 }
