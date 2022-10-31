@@ -58,7 +58,7 @@ jobs:
           fi
       - name: Load environment
         if: ${{ env.SHOULD_RUN == '1' }}
-        run: cp .env "${{ github.env }}"
+        run: cp .env '${{ github.env }}'
       - name: Build ${{ env.CONTAINER }}:${{ env.ATS_VERSION }}
         if: ${{ env.SHOULD_RUN == '1' }}
         working-directory: .github/containers/trafficserver-alpine
