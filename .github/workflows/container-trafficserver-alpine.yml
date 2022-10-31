@@ -47,7 +47,7 @@ jobs:
         working-directory: .github/containers/trafficserver-alpine
         run: docker-compose build
       - name: docker login ghcr.io
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
