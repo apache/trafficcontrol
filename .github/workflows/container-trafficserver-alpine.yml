@@ -59,7 +59,9 @@ jobs:
       - name: Load environment
         if: ${{ env.SHOULD_RUN == '1' }}
         run: cp .env '${{ github.env }}'
-      - name: Build ${{ env.CONTAINER }}:${{ env.ATS_VERSION }}
+      - name: Set image name
+        run: echo 'IMAGE_NAME=${{ env.CONTAINER }}:${{ env.ATS_VERSION }}' >> '${{ github.env }}'
+      - name: Build ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' }}
         working-directory: .github/containers/trafficserver-alpine
         run: docker-compose build
@@ -70,7 +72,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push ${{ env.CONTAINER }}:${{ env.ATS_VERSION }}
+      - name: Push ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' && github.event_name != 'pull_request' }}
         working-directory: .github/containers/trafficserver-alpine
         run: docker-compose push
