@@ -88,3 +88,42 @@ jobs:
       - name: Push ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' && github.event_name != 'pull_request' }}
         run: docker push ${{ env.IMAGE_NAME }}
+
+  combine-platforms:
+    if: ${{ (github.repository_owner == 'apache' && github.event_name != 'pull_request') || github.event_name == 'workflow_dispatch' }}
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 5
+      - name: Load environment
+        run: cp .env '${{ github.env }}'
+      - name: Set image name
+        run: |2
+          echo 'IMAGE_NAME=${{ env.CONTAINER }}' >> '${{ github.env }}' &&
+          echo 'FULL_IMAGE_NAME=${{ env.CONTAINER }}:${{ env.ATS_VERSION }}' >> '${{ github.env }}'
+      - name: Create ${{ env.FULL_IMAGE_NAME }} manifest
+        run: |2
+          set -o errexit -o xtrace
+          docker manifest create \
+            ${{ env.FULL_IMAGE_NAME }} \
+            --amend ${{ env.FULL_IMAGE_NAME }}-amd64 \
+            --amend ${{ env.FULL_IMAGE_NAME }}-arm64
+          docker manifest create \
+            ${{ env.IMAGE_NAME }}:latest \
+            --amend ${{ env.FULL_IMAGE_NAME }}-amd64 \
+            --amend ${{ env.FULL_IMAGE_NAME }}-arm64
+      - name: docker login ghcr.io
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push ${{ env.FULL_IMAGE_NAME }}
+        run: |2
+          set -o errexit -o xtrace
+          docker manifest push --purge ${{ env.FULL_IMAGE_NAME }}
+          docker manifest push --purge ${{ env.IMAGE_NAME }}:latest
