@@ -23,7 +23,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -69,9 +68,6 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 	{
 		dbghdrs := r.URL.Query().Get("debug")
 		if dbghdrs != "" {
-			// escape line endings
-			dbghdrs = strings.Replace(dbghdrs, "\n", "", -1)
-			dbghdrs = strings.Replace(dbghdrs, "\r", "", -1)
 			fmt.Println("processing debug", dbghdrs)
 			GlobalConfig.Debug = (dbghdrs == "true")
 			fmt.Println("debugging:", GlobalConfig.Debug)

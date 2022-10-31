@@ -70,21 +70,15 @@ func Logger(alog *log.Logger, next http.Handler) http.Handler {
 		// the logger interferes with hijacking
 		if isHandlerType(r) {
 			next.ServeHTTP(w, r)
-			url := strings.Replace(r.URL.String(), "\n", "", -1)
-			url = strings.Replace(url, "\r", "", -1)
-			ua := strings.Replace(r.UserAgent(), "\n", "", -1)
-			ua = strings.Replace(ua, "\r", "", -1)
-			thisRange := strings.Replace(r.Header.Get("Range"), "\n", "", -1)
-			thisRange = strings.Replace(thisRange, "\r", "", -1)
 			alog.Printf("%.3f %s \"%s\" %d b=%d ttms=%d uas=\"%s\" rr=\"%s\"\n",
 				float64(timeStart)/float64(1.e9),
 				r.Method,
-				url,
+				r.URL.String(),
 				42, // status code -- why not?
 				0,  // bytes
 				0,  // ttms
-				ua,
-				thisRange,
+				r.UserAgent(),
+				r.Header.Get("Range"),
 			)
 			return
 		}
@@ -102,22 +96,16 @@ func Logger(alog *log.Logger, next http.Handler) http.Handler {
 		rec := LogRecorder{w, 200, 0, 0}
 		next.ServeHTTP(&rec, r)
 		timeStop := time.Now().UnixNano()
-		url := strings.Replace(r.URL.String(), "\n", "", -1)
-		url = strings.Replace(url, "\r", "", -1)
-		ua := strings.Replace(r.UserAgent(), "\n", "", -1)
-		ua = strings.Replace(ua, "\r", "", -1)
-		thisRange := strings.Replace(r.Header.Get("Range"), "\n", "", -1)
-		thisRange = strings.Replace(thisRange, "\r", "", -1)
 		alog.Printf("%.3f %s \"%s\" %s %d b=%d ttms=%d uas=\"%s\" rr=\"%s\"\n",
 			float64(timeStart)/float64(1.e9),
 			r.Method,
-			url,
+			r.URL.String(),
 			tlsstr,
 			rec.Status,
 			rec.ContentBytes,
 			int64((timeStop-timeStart)/1000000),
-			ua,
-			thisRange,
+			r.UserAgent(),
+			r.Header.Get("Range"),
 		)
 
 		if GlobalConfig.Log.RequestHeaders {
@@ -131,8 +119,6 @@ func Logger(alog *log.Logger, next http.Handler) http.Handler {
 
 func DebugLog(s string) {
 	if GlobalConfig.Debug {
-		s = strings.Replace(s, "\n", "", -1)
-		s = strings.Replace(s, "\r", "", -1)
 		fmt.Println(s)
 	}
 }
