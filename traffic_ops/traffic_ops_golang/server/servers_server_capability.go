@@ -449,6 +449,18 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validate JSON body.
+	errs := tovalidate.ToErrors(validation.Errors{
+		"serverIds":          validation.Validate(mssc.ServerIDs, validation.Required),
+		"serverCapabilities": validation.Validate(mssc.ServerCapabilities, validation.Required),
+		"pageType":           validation.Validate(mssc.PageType, validation.Required),
+	})
+
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
 	if len(mssc.ServerIDs) > 1 && len(mssc.ServerCapabilities) > 1 {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("not allowed to have many:many association between server and server capability. "+
 			"Only associations allowed are; 1:1, 1:many or many:1"), nil)
@@ -473,16 +485,20 @@ func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 	// Insert rows in DB
 	sid := make([]int64, len(mssc.ServerCapabilities))
 	scs := make([]string, len(mssc.ServerIDs))
-	if mssc.PageType == "sc" {
+	switch mssc.PageType {
+	case "sc":
 		for i := range mssc.ServerIDs {
 			scs[i] = mssc.ServerCapabilities[0]
 		}
 		sid = mssc.ServerIDs
-	} else {
+	case "server":
 		for i := range mssc.ServerCapabilities {
 			sid[i] = mssc.ServerIDs[0]
 		}
 		scs = mssc.ServerCapabilities
+	default:
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("incorrect page type: '%s'. Should be 'sc' or 'server'", mssc.PageType), nil)
+		return
 	}
 
 	msscQuery := `INSERT INTO server_server_capability
@@ -535,7 +551,8 @@ func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 	var alerts tc.Alerts
 	var result sql.Result
 	var err error
-	if mssc.PageType == "sc" {
+	switch mssc.PageType {
+	case "sc":
 		dq = delQuery + `ssc.server_capability=$1`
 		if len(mssc.ServerIDs) == 1 {
 			dq = dq + ` AND ssc.server=$2`
@@ -543,7 +560,7 @@ func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 		} else {
 			result, err = tx.Exec(dq, mssc.ServerCapabilities[0])
 		}
-	} else {
+	case "server":
 		dq = delQuery + `ssc.server=$1`
 		if len(mssc.ServerCapabilities) == 1 {
 			dq = dq + ` AND ssc.server_capability=$2`
@@ -551,6 +568,9 @@ func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 		} else {
 			result, err = tx.Exec(dq, mssc.ServerIDs[0])
 		}
+	default:
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("incorrect page type:'%s'. Should be 'sc' or 'server'", mssc.PageType), nil)
+		return
 	}
 
 	if err != nil {
