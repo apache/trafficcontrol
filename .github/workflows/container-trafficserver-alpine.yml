@@ -61,10 +61,18 @@ jobs:
         run: cp .env '${{ github.env }}'
       - name: Set image name
         run: echo 'IMAGE_NAME=${{ env.CONTAINER }}:${{ env.ATS_VERSION }}' >> '${{ github.env }}'
+      - name: Install aarch64 emulator
+        # Updated 2020-02-07 but we're still using docker/binfmt instead of tonistiigi/binfmt@qemu-v6.2.0
+        # because tonistiigi/binfmt@qemu-v6.2.0 fails on building trafficserver after about an hour
+        run: docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
+      - name: Make a Docker Buildx builder
+        run: docker buildx create --name arm64-builder --use
+        # The push can be split into a separate command once docker can store
+        # multi-architecture images (docker/roadmap#371).
       - name: Build ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' }}
         working-directory: .github/containers/trafficserver-alpine
-        run: docker-compose build
+        run: docker buildx build --build-arg ATS_VERSION=${{ env.ATS_VERSION }} --tag ${{ env.IMAGE_NAME }} --platform linux/amd64,linux/arm64 --load .
       - name: docker login ghcr.io
         if: ${{ env.SHOULD_RUN == '1' }}
         uses: docker/login-action@v2
@@ -74,5 +82,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' && github.event_name != 'pull_request' }}
-        working-directory: .github/containers/trafficserver-alpine
-        run: docker-compose push
+        run: docker push ${{ env.IMAGE_NAME }}
