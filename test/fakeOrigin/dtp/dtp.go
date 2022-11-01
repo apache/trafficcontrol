@@ -68,13 +68,13 @@ func isHandlerType(r *http.Request) bool {
 
 func Logger(alog *log.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		timeStart := time.Now().UnixNano()
+		timeStart := time.Now()
 
 		// the logger interferes with hijacking
 		if isHandlerType(r) {
 			next.ServeHTTP(w, r)
 			alog.Printf("%.3f %s \"%s\" %d b=%d ttms=%d uas=\"%s\" rr=\"%s\"\n",
-				float64(timeStart)/float64(1.e9),
+				float64(timeStart.UnixNano())/float64(1.e9),
 				r.Method,
 				r.URL.String(),
 				42, // status code -- why not?
@@ -93,15 +93,14 @@ func Logger(alog *log.Logger, next http.Handler) http.Handler {
 
 		rec := LogRecorder{w, 200, 0, 0}
 		next.ServeHTTP(&rec, r)
-		timeStop := time.Now().UnixNano()
 		alog.Printf("%.3f %s \"%s\" %s %d b=%d ttms=%d uas=\"%s\" rr=\"%s\"\n",
-			float64(timeStart)/float64(1.e9),
+			float64(timeStart.UnixNano())/float64(1.e9),
 			r.Method,
 			r.URL.String(),
 			tlsstr,
 			rec.Status,
 			rec.ContentBytes,
-			int64((timeStop-timeStart)/1000000),
+			time.Since(timeStart).Milliseconds(),
 			r.UserAgent(),
 			r.Header.Get("Range"),
 		)
