@@ -42,7 +42,7 @@ func (s *TxtGen) ContentType() string {
 }
 
 func (s *TxtGen) Read(p []byte) (n int, err error) {
-	sz, err := ReadBlock(p, s.Pos, s.Size, 32, func(ct int64) []byte {
+	sz, err := ReadBlock(p, s.Pos, s.Size, ReadBlockSize, func(ct int64) []byte {
 		if s.Rnd == 0 {
 			return []byte(fmt.Sprintf("%31d\n", ct+s.Seed))
 		} else {
@@ -54,7 +54,7 @@ func (s *TxtGen) Read(p []byte) (n int, err error) {
 			h.Write(b)
 			binary.LittleEndian.PutUint64(b, uint64(s.Rnd))
 			h.Write(b)
-			return []byte(fmt.Sprintf("%31d\n", h.Sum64()&^0x8000000000000000))
+			return []byte(fmt.Sprintf("%31d\n", h.Sum64()&^ByteMask))
 		}
 	})
 

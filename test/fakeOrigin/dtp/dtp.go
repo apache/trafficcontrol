@@ -28,6 +28,9 @@ import (
 	"time"
 )
 
+const ByteMask = 0x8000000000000000
+const ReadBlockSize = 32
+
 type LogRecorder struct {
 	http.ResponseWriter
 
@@ -87,11 +90,6 @@ func Logger(alog *log.Logger, next http.Handler) http.Handler {
 		if r.TLS != nil {
 			tlsstr = tls.CipherSuiteName(r.TLS.CipherSuite)
 		}
-		/*
-			if nil != r.TLS {
-				tlsstr = fmt.Sprintf("0x%x", r.TLS.CipherSuite)
-			}
-		*/
 
 		rec := LogRecorder{w, 200, 0, 0}
 		next.ServeHTTP(&rec, r)

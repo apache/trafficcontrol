@@ -293,7 +293,6 @@ func StartHTTPListener(conf endpoint.Config, routes map[string]EndpointRoutes) e
 		ReadTimeout:  conf.ServerConf.ReadTimeout * time.Second,
 		WriteTimeout: conf.ServerConf.ReadTimeout * time.Second,
 	}
-	//return http.ListenAndServe(conf.ServerConf.BindingAddress+":"+strconv.Itoa(conf.ServerConf.HTTPListeningPort), mux)
 	return srv.ListenAndServe()
 }
 
