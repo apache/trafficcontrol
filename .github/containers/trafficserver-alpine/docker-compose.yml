@@ -24,7 +24,8 @@ services:
       args:
         ATS_VERSION: ${ATS_VERSION}
       # This docker-compose file is no longer used by the container-trafficserver-alpine.yml
-      # Github Actions workflow and is here
+      # Github Actions workflow and is here in case anyone wants to build it manually, since
+      # the emulated aarch64 GitHub Actions job takes about 3 hours to run.
       # To build the trafficserver image for only your computer's own platform, run
       #   docker-compose build
       #
