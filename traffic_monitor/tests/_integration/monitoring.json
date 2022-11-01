@@ -129,7 +129,7 @@
         "health_threshold": {}
       },
       "name": "Monitor0",
-      "type": "TRAFFIC_MONITOR"
+      "type": "RASCAL"
     }
   ]
 }

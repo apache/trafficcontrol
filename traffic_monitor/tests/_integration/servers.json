@@ -58,7 +58,7 @@
     "status": "REPORTED",
     "statusId": 0,
     "tcpPort": 80,
-    "type": "TRAFFIC_MONITOR",
+    "type": "RASCAL",
     "typeId": 0,
     "updPending": false,
     "xmppId": "",
