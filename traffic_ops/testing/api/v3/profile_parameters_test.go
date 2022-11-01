@@ -47,8 +47,8 @@ func TestProfileParameters(t *testing.T) {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestParams: url.Values{
-						"profileId":   {strconv.Itoa(GetProfileID(t, "RASCAL1")())},
-						"parameterId": {strconv.Itoa(GetParameterID(t, "peers.polling.interval", "rascal-config.txt", "60")())}},
+						"profileId":   {strconv.Itoa(GetProfileID(t, "TRAFFIC_MONITOR1")())},
+						"parameterId": {strconv.Itoa(GetParameterID(t, "peers.polling.interval", "traffic_monitor-config.txt", "60")())}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
@@ -78,7 +78,7 @@ func TestProfileParameters(t *testing.T) {
 				"BAD REQUEST when MISSING PROFILEID field": {
 					ClientSession: TOSession,
 					RequestBody: []tc.ProfileParameter{{
-						ParameterID: GetParameterID(t, "health.threshold.queryTime", "rascal.properties", "1000")(),
+						ParameterID: GetParameterID(t, "health.threshold.queryTime", "traffic_monitor.properties", "1000")(),
 					}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -98,7 +98,7 @@ func TestProfileParameters(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: []tc.ProfileParameter{{
 						ProfileID:   GetProfileID(t, "EDGE1")(),
-						ParameterID: GetParameterID(t, "health.threshold.availableBandwidthInKbps", "rascal.properties", ">1750000")(),
+						ParameterID: GetParameterID(t, "health.threshold.availableBandwidthInKbps", "traffic_monitor.properties", ">1750000")(),
 					}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},

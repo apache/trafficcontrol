@@ -112,8 +112,6 @@ SPLUNK_PROFILE
 TM_PROFILE
 	A Traffic Monitor Profile.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``RASCAL_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
-
 TP_PROFILE
 	A Traffic Portal Profile. This has no known special meaning to any Traffic Control component(s) (not even Traffic Portal itself), but its use is suggested for the profiles used by any and all Traffic Portal servers anyway.
 
@@ -497,8 +495,8 @@ For each Parameter with this Config File value on the same :ref:`Profile <profil
 
 .. _tm-related-cache-server-params:
 
-rascal.properties
-'''''''''''''''''
+traffic_monitor.properties
+''''''''''''''''''''''''''
 This Config File is meant to be on Parameters assigned to either Traffic Monitor Profiles_ or :term:`cache server` Profiles_. Its allowed :ref:`Parameter Names <parameter-name>` are all configuration options for Traffic Monitor. The :ref:`Names <parameter-name>` with meaning are as follows.
 
 .. seealso:: :ref:`health-proto`
