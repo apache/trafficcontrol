@@ -26,12 +26,12 @@ on:
     paths:
       - .env
       - .github/containers/trafficserver-alpine/**
-      - .github/workflows/containers/trafficserver-alpine.yml
+      - .github/workflows/container-trafficserver-alpine.yml
   pull_request:
     paths:
       - .env
       - .github/containers/trafficserver-alpine/**
-      - .github/workflows/containers/trafficserver-alpine.yml
+      - .github/workflows/container-trafficserver-alpine.yml
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
