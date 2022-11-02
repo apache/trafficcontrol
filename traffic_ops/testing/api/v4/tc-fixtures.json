@@ -1801,6 +1801,10 @@
         {
             "xmlId": "ds2",
             "serverNames": ["atlanta-org-2"]
+        },
+        {
+            "xmlId": "anymap-ds",
+            "serverNames": ["atlanta-edge-15"]
         }
     ],
     "divisions": [
@@ -2024,8 +2028,13 @@
             "name": "testSecure",
             "secure": true,
             "value": "hidden value"
+        },
+        {
+            "configFile": "global",
+            "name": "tm.url",
+            "secure": false,
+            "value": "https://crconfig.tm.url.test.invalid"
         }
-
     ],
     "physLocations": [
         {
