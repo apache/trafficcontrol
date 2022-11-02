@@ -886,3 +886,8 @@ func ProfilesMatch(pa []string, pb []string) bool {
 	}
 	return true
 }
+
+// IsGoDirect checks if this ds type is edge only.
+func IsGoDirect(ds DeliveryService) bool {
+	return *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive
+}
