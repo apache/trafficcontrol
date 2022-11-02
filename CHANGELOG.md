@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7125](https://github.com/apache/trafficcontrol/issues/7125) *Docs* Reflect implementation and deprecation notice for `letsencrypt/autorenew` endpoint.
 - [#7158](https://github.com/apache/trafficcontrol/issues/7158) *Traffic Vault* Fix the `reencrypt` utility to uniquely reencrypt each version of the SSL Certificates.
 - [#7137](https://github.com/apache/trafficcontrol/pull/7137) *Cache Config* parent.config simulate topology for non topo delivery services.
+- Adds an extra T3C check for validity of an ssl cert (crash fix).
 
 ## [7.0.0] - 2022-07-19
 ### Added
