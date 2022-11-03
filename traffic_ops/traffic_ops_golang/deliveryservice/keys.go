@@ -497,16 +497,17 @@ func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA strin
 		opts.Roots = rootPool
 	}
 
+	for i := 0; i < len(parsedCerts)-1; i++ {
+		current := parsedCerts[i]
+		next := parsedCerts[i+1]
+		if current.Issuer.String() != next.Subject.String() {
+			return "", "", false, false, true, nil
+		}
+	}
+
 	chain, err := cert.Verify(opts)
 	if err != nil {
 		if _, ok := err.(x509.UnknownAuthorityError); ok {
-			for i := 0; i < len(parsedCerts)-1; i++ {
-				current := parsedCerts[i]
-				next := parsedCerts[i+1]
-				if current.Issuer.String() != next.Subject.String() {
-					return "", "", false, false, true, nil
-				}
-			}
 
 			return pemCertificate, cleanPemPrivateKey, true, false, false, nil
 		}
