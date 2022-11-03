@@ -18,7 +18,7 @@
 FROM alpine:latest AS build-trafficserver
 ARG ATS_VERSION
 ADD https://downloads.apache.org/trafficserver/trafficserver-${ATS_VERSION}.tar.bz2 /tmp/
-RUN set -o errexit -o nounset; \
+RUN set -o errexit -o nounset -o xtrace; \
     cd tmp; \
     dirname=trafficserver-${ATS_VERSION}; \
     tar xf ${dirname}.tar.bz2; \
@@ -42,7 +42,11 @@ RUN set -o errexit -o nounset; \
         --prefix=/ \
         --with-user=ats \
         --with-group=ats; \
-    make -j; \
+    # Not limiting threads makes the GitHub Actions Hosted Agent lose
+    # communication with the server due to memory exhaustion, making the
+    # Action fail.
+    threads=$(( $(nproc) )); \
+    make -j $threads; \
     adduser -D ats; \
     make install DESTDIR=/tmp/built; \
     cd ..; \

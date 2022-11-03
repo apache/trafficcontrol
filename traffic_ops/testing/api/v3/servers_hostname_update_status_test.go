@@ -27,7 +27,7 @@ import (
 func TestServersHostnameUpdateStatus(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[struct{}]{
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,

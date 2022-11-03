@@ -197,8 +197,8 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		user := "-"
 		cookie, err := r.Cookie(tocookie.Name)
 		if err == nil && cookie != nil {
-			cookie, err := tocookie.Parse(secret, cookie.Value)
-			if err == nil {
+			cookie, userErr, sysErr := tocookie.Parse(secret, cookie.Value)
+			if userErr == nil && sysErr == nil {
 				user = cookie.AuthData
 			}
 		}

@@ -214,8 +214,9 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{
-		*mid1.ID: map[ServerCapability]struct{}{"FOO": {}},
-		*mid2.ID: map[ServerCapability]struct{}{"FOO": {}, "BAR": {}},
+		*server.ID: map[ServerCapability]struct{}{"FOO": {}},
+		*mid1.ID:   map[ServerCapability]struct{}{"FOO": {}},
+		*mid2.ID:   map[ServerCapability]struct{}{"FOO": {}, "BAR": {}},
 	}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{
 		*ds0.ID: map[ServerCapability]struct{}{"FOO": {}},
@@ -1746,11 +1747,11 @@ func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
 		},
 	}
 
-	server := makeTestParentServer()
-	server.Cachegroup = util.StrPtr("midCG")
-	server.Type = "MID"
-	server.CachegroupID = util.IntPtr(400)
-	server.ID = util.IntPtr(44)
+	mid := makeTestParentServer()
+	mid.Cachegroup = util.StrPtr("midCG")
+	mid.Type = "MID"
+	mid.CachegroupID = util.IntPtr(400)
+	mid.ID = util.IntPtr(44)
 
 	origin0 := makeTestParentServer()
 	origin0.Cachegroup = util.StrPtr("originCG")
@@ -1770,10 +1771,10 @@ func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
 	origin1.Type = tc.OriginTypeName
 	origin1.TypeID = util.IntPtr(991)
 
-	servers := []Server{*server, *origin0, *origin1}
+	servers := []Server{*mid, *origin0, *origin1}
 
 	serverCapabilities := map[int]map[ServerCapability]struct{}{
-		*server.ID: {
+		*mid.ID: {
 			ServerCapability("FOO"): struct{}{},
 		},
 	}
@@ -1784,8 +1785,8 @@ func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
 	}
 
 	midCG := &tc.CacheGroupNullable{}
-	midCG.Name = server.Cachegroup
-	midCG.ID = server.CachegroupID
+	midCG.Name = mid.Cachegroup
+	midCG.ID = mid.CachegroupID
 	midCG.ParentName = origin0.Cachegroup
 	midCG.ParentCachegroupID = origin0.CachegroupID
 	midCGType := tc.CacheGroupMidTypeName
@@ -1811,7 +1812,7 @@ func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
 	}
 	topologies := []tc.Topology{}
 
-	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	cfg, err := MakeParentDotConfig(dses, mid, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
 	if err != nil {
 		t.Fatal(err)
 	}

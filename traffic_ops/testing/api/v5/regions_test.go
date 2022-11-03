@@ -16,7 +16,6 @@ package v5
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -39,7 +38,7 @@ func TestRegions(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Region]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -122,10 +121,10 @@ func TestRegions(t *testing.T) {
 			"POST": {
 				"NOT FOUND when DIVISION DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":         "invalidDivision",
-						"division":     99999999,
-						"divisionName": "doesntexist",
+					RequestBody: tc.Region{
+						Name:         "invalidDivision",
+						Division:     99999999,
+						DivisionName: "doesntexist",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -134,10 +133,10 @@ func TestRegions(t *testing.T) {
 				"OK when VALID request": {
 					EndpointId:    GetRegionID(t, "cdn-region2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":         "newName",
-						"division":     GetDivisionID(t, "cdn-div2")(),
-						"divisionName": "cdn-div2",
+					RequestBody: tc.Region{
+						Name:         "newName",
+						Division:     GetDivisionID(t, "cdn-div2")(),
+						DivisionName: "cdn-div2",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateRegionsUpdateCreateFields("newName", map[string]interface{}{"Name": "newName"})),
@@ -146,20 +145,20 @@ func TestRegions(t *testing.T) {
 					EndpointId:    GetRegionID(t, "region1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: map[string]interface{}{
-						"name":         "newName",
-						"division":     GetDivisionID(t, "division1")(),
-						"divisionName": "division1",
+					RequestBody: tc.Region{
+						Name:         "newName",
+						Division:     GetDivisionID(t, "division1")(),
+						DivisionName: "division1",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetRegionID(t, "region1"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":         "newName",
-						"division":     GetDivisionID(t, "division1")(),
-						"divisionName": "division1",
+					RequestBody: tc.Region{
+						Name:         "newName",
+						Division:     GetDivisionID(t, "division1")(),
+						DivisionName: "division1",
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -187,16 +186,7 @@ func TestRegions(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					region := tc.Region{}
 					regionName := ""
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &region)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -207,14 +197,14 @@ func TestRegions(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateRegion(region, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.CreateRegion(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateRegion(testCase.EndpointId(), region, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateRegion(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

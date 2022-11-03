@@ -108,7 +108,7 @@ dl_ds_default_type_ansible_component_map:
   mso_parent_alias: ORG
   influxdb: INFLUXDB
   riak: RIAK
-  traffic_monitor: RASCAL
+  traffic_monitor: TRAFFIC_MONITOR
   traffic_ops: TRAFFIC_OPS
   traffic_opsdb: TRAFFIC_OPS_DB
   traffic_portal: TRAFFIC_PORTAL
@@ -306,7 +306,7 @@ dl_ds_default_profile_prefix_ansible_component_map:
   mso_parent_alias: '(?i)^MSO_.*'
   influxdb: '(?i)^INFLUXDB$'
   riak: '(?i)^RIAK.*'
-  traffic_monitor: '(?i)^RASCAL_.*'
+  traffic_monitor: '(?i)^TRAFFIC_MONITOR.*'
   traffic_ops: '(?i)^TRAFFIC_OPS$'
   traffic_opsdb: '(?i)^TRAFFIC_OPS_DB$'
   traffic_portal: '(?i)^TRAFFIC_PORTAL$'
@@ -937,22 +937,22 @@ dl_ds_default_profile_layers:
           configFile: plugin.config
           value: "--disable-timed-updates --config regex_revalidate.config"
         - name: health.connection.timeout
-          configFile: rascal.properties
+          configFile: traffic_monitor.properties
           value: '2000'
         - name: health.polling.url
-          configFile: rascal.properties
+          configFile: traffic_monitor.properties
           value: http://${hostname}/_astats?application=&inf.name=${interface_name}
         - name: health.threshold.kbps
-          configFile: rascal.properties
+          configFile: traffic_monitor.properties
           value: "<{{ ((Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float - (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float * ((100 - dl_ds_reserved_bandwidth_percentage | float) / 100))) | int) * 1000 }}"
         - name: health.threshold.loadavg
-          configFile: rascal.properties
+          configFile: traffic_monitor.properties
           value: "{{ Target_hardware_profile.value.load_avg_limit | default('10') }}.0"
         - name: health.threshold.queryTime
-          configFile: rascal.properties
+          configFile: traffic_monitor.properties
           value: '1500'
         - name: history.count
-          configFile: rascal.properties
+          configFile: traffic_monitor.properties
           value: '30'
         - name: CONFIG proxy.config.allocator.dontdump_iobuffers
           configFile: records.config
@@ -1302,26 +1302,26 @@ dl_ds_default_profile_layers:
 # These should be the profiles which vary by CDN association
 dl_ds_merged_profile_cdntemplates: "{{ dl_ds_default_profile_cdntemplates }}"
 dl_ds_default_profile_cdntemplates:
-  - name: "RASCAL_{{ Target_cdn_delegation }}"
+  - name: "TRAFFIC_MONITOR_{{ Target_cdn_delegation }}"
     description: "Traffic Monitor for the {{ Target_cdn_delegation }} CDN"
     cdn: "{{ Target_cdn_delegation }}"
     type: TM_PROFILE
     routingDisabled: false
     parameters:
       - name: health.polling.interval
-        configFile: rascal-config.txt
+        configFile: traffic_monitor-config.txt
         value: '6000'
         secure: 0
       - name: heartbeat.polling.interval
-        configFile: rascal-config.txt
+        configFile: traffic_monitor-config.txt
         value: '2000'
         secure: 0
       - name: peers.polling.interval
-        configFile: rascal-config.txt
+        configFile: traffic_monitor-config.txt
         value: '1000'
         secure: 0
       - name: tm.polling.interval
-        configFile: rascal-config.txt
+        configFile: traffic_monitor-config.txt
         value: '60000'
         secure: 0
   - name: "CCR_{{ Target_cdn_delegation }}"
@@ -1660,7 +1660,7 @@ dl_ds_default_profile_cdntemplates:
         configFile: parent.config
         value: 'true'
       - name: health.polling.url
-        configFile: rascal.properties
+        configFile: traffic_monitor.properties
         value: http://${hostname}/_astats?application=&inf.name=${interface_name}
   - name: "EDGE_ATS_7_{{ Target_cdn_delegation }}"
     description: "Edge cache({{ Target_cdn_delegation }}) - ATS 7"

@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"sort"
 	"testing"
@@ -36,7 +35,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.DeliveryServiceRequestComment]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -56,14 +55,19 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSortedDSRequestComments()),
 				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"PUT": {
 				"OK when VALID request": {
 					EndpointId:    GetDSRequestCommentId(t),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"deliveryServiceRequestId": GetDSRequestId(t, "test-ds1")(),
-						"value":                    "updated comment",
+					RequestBody: tc.DeliveryServiceRequestComment{
+						DeliveryServiceRequestID: GetDSRequestId(t, "test-ds1")(),
+						Value:                    "updated comment",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -71,22 +75,15 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					EndpointId:     GetDSRequestCommentId(t),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody:    map[string]interface{}{},
+					RequestBody:    tc.DeliveryServiceRequestComment{},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:     GetDSRequestCommentId(t),
 					ClientSession:  TOSession,
-					RequestBody:    map[string]interface{}{},
+					RequestBody:    tc.DeliveryServiceRequestComment{},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
-				},
-			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession:  TOSession,
-					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
-					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -94,17 +91,8 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					comment := tc.DeliveryServiceRequestComment{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &comment)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							if name == "OK when VALID ID parameter" {
 								resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceRequestCommentByIDWithHdr(testCase.EndpointId(), testCase.RequestHeaders)
@@ -120,7 +108,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestCommentByIDWithHdr(testCase.EndpointId(), comment, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestCommentByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

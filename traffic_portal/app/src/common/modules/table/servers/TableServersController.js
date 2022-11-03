@@ -156,11 +156,6 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			hide: true
 		},
 		{
-			headerName: "ASNs",
-			field: "asns",
-			hide: true
-		},
-		{
 			headerName: "Phys Location",
 			field: "physLocation",
 			hide: true

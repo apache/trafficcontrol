@@ -42,6 +42,7 @@ func getTestCDNs() []tc.CDN {
 		ID:            1,
 		Name:          "cdn1",
 		LastUpdated:   tc.TimeNoMod{Time: time.Now()},
+		TTLOverride:   50,
 	}
 	cdns = append(cdns, testCDN)
 
@@ -75,13 +76,14 @@ func TestReadCDNs(t *testing.T) {
 			ts.ID,
 			ts.LastUpdated,
 			ts.Name,
+			ts.TTLOverride,
 		)
 	}
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}, Version: &api.Version{Major: 5, Minor: 0}}
 	obj := TOCDN{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.CDNNullable{},
@@ -97,13 +99,14 @@ func TestReadCDNs(t *testing.T) {
 }
 
 func TestFuncs(t *testing.T) {
-	if strings.Index(selectQuery(), "SELECT") != 0 {
+	apiVersion := &api.Version{Major: 4, Minor: 1}
+	if strings.Index(selectQuery(apiVersion), "SELECT") != 0 {
 		t.Errorf("expected selectQuery to start with SELECT")
 	}
-	if strings.Index(insertQuery(), "INSERT") != 0 {
+	if strings.Index(insertQuery(apiVersion), "INSERT") != 0 {
 		t.Errorf("expected insertQuery to start with INSERT")
 	}
-	if strings.Index(updateQuery(), "UPDATE") != 0 {
+	if strings.Index(updateQuery(apiVersion), "UPDATE") != 0 {
 		t.Errorf("expected updateQuery to start with UPDATE")
 	}
 	if strings.Index(deleteQuery(), "DELETE") != 0 {
@@ -135,7 +138,8 @@ func TestInterfaces(t *testing.T) {
 func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	n := "not_a_valid_cdn"
-	c := TOCDN{CDNNullable: tc.CDNNullable{Name: &n}}
+	reqInfo := api.APIInfo{Tx: nil, Params: map[string]string{"dsId": "1"}, Version: &api.Version{Major: 5, Minor: 0}}
+	c := TOCDN{CDNNullable: tc.CDNNullable{Name: &n}, APIInfoImpl: api.APIInfoImpl{ReqInfo: &reqInfo}}
 	err, _ := c.Validate()
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
 
@@ -151,7 +155,7 @@ func TestValidate(t *testing.T) {
 	//  name,  domainname both valid
 	n = "This.is.2.a-Valid---CDNNAME."
 	d := `awesome-cdn.example.net`
-	c = TOCDN{CDNNullable: tc.CDNNullable{Name: &n, DomainName: &d}}
+	c = TOCDN{CDNNullable: tc.CDNNullable{Name: &n, DomainName: &d}, APIInfoImpl: api.APIInfoImpl{ReqInfo: &reqInfo}}
 	err, _ = c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)

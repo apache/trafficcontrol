@@ -199,7 +199,7 @@ type CRConfigOrError struct {
 }
 
 func GetMonitors(toClient *to.Session, includeOffline bool) ([]tc.Server, error) {
-	trafficMonitorType := "RASCAL"
+	trafficMonitorType := "TRAFFIC_MONITOR"
 	query := url.Values{}
 	query.Set("type", trafficMonitorType)
 	servers, _, err := toClient.GetServers(&query)

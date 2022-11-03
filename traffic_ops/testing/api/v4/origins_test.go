@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -26,6 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -40,7 +40,7 @@ func TestOrigins(t *testing.T) {
 
 		tenant4UserSession := utils.CreateV4Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Origin]{
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
@@ -162,113 +162,113 @@ func TestOrigins(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":            "origin1",
-						"cachegroup":      "originCachegroup",
-						"Coordinate":      "coordinate1",
-						"deliveryService": "ds1",
-						"fqdn":            "origin1.example.com",
-						"ipAddress":       "1.2.3.4",
-						"ip6Address":      "dead:beef:cafe::42",
-						"port":            1234,
-						"Profile":         "ATS_EDGE_TIER_CACHE",
-						"protocol":        "http",
-						"tenantId":        GetTenantID(t, "tenant1")(),
-						"isPrimary":       true,
+					RequestBody: tc.Origin{
+						Name:            util.Ptr("origin1"),
+						Cachegroup:      util.Ptr("originCachegroup"),
+						Coordinate:      util.Ptr("coordinate1"),
+						DeliveryService: util.Ptr("ds1"),
+						FQDN:            util.Ptr("origin1.example.com"),
+						IPAddress:       util.Ptr("1.2.3.4"),
+						IP6Address:      util.Ptr("dead:beef:cafe::42"),
+						Port:            util.Ptr(1234),
+						Profile:         util.Ptr("ATS_EDGE_TIER_CACHE"),
+						Protocol:        util.Ptr("http"),
+						TenantID:        util.Ptr(GetTenantID(t, "tenant1")()),
+						IsPrimary:       util.Ptr(true),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"FORBIDDEN when CHILD TENANT CREATES ORIGIN OUTSIDE TENANCY": {
 					ClientSession: tenant4UserSession,
-					RequestBody: map[string]interface{}{
-						"name":              "originTenancyTest",
-						"cachegroup":        "originCachegroup",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "origintenancy.example.com",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant3")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("originTenancyTest"),
+						Cachegroup:        util.Ptr("originCachegroup"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("origintenancy.example.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant3")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"NOT FOUND when CACHEGROUP DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testcg",
-						"cachegroupId":      10000000,
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "test.cachegroupId.com",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testcg"),
+						CachegroupID:      util.Ptr(10000000),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("test.cachegroupId.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when PROFILEID DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testprofile",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "test.profileId.com",
-						"profileId":         1000000,
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testprofile"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("test.profileId.com"),
+						ProfileID:         util.Ptr(1000000),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when COORDINATE DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testcoordinate",
-						"coordinateId":      10000000,
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "test.coordinate.com",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testcoordinate"),
+						CoordinateID:      util.Ptr(10000000),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("test.coordinate.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"FORBIDDEN when INVALID TENANT": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testtenant",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "test.tenant.com",
-						"protocol":          "http",
-						"tenantId":          11111111,
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testtenant"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("test.tenant.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(11111111),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"BAD REQUEST when INVALID PROTOCOL": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testprotocol",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "test.protocol.com",
-						"protocol":          "httttpppss",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testprotocol"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("test.protocol.com"),
+						Protocol:          util.Ptr("httttpppss"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV4 ADDRESS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testip",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "test.ip.com",
-						"ipAddress":         "311.255.323.412",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testip"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("test.ip.com"),
+						IPAddress:         util.Ptr("311.255.323.412"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV6 ADDRESS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testipv6",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "origin1.example.com",
-						"ip6Address":        "badipv6::addresss",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testipv6"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("origin1.example.com"),
+						IP6Address:        util.Ptr("badipv6::addresss"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -277,17 +277,17 @@ func TestOrigins(t *testing.T) {
 				"OK when VALID request": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":            "origin2",
-						"cachegroup":      "multiOriginCachegroup",
-						"Coordinate":      "coordinate2",
-						"deliveryService": "ds3",
-						"fqdn":            "originupdated.example.com",
-						"ipAddress":       "1.2.3.4",
-						"ip6Address":      "0000::1111",
-						"port":            1234,
-						"protocol":        "http",
-						"tenantId":        GetTenantID(t, "tenant2")(),
+					RequestBody: tc.Origin{
+						Name:            util.Ptr("origin2"),
+						Cachegroup:      util.Ptr("multiOriginCachegroup"),
+						Coordinate:      util.Ptr("coordinate2"),
+						DeliveryService: util.Ptr("ds3"),
+						FQDN:            util.Ptr("originupdated.example.com"),
+						IPAddress:       util.Ptr("1.2.3.4"),
+						IP6Address:      util.Ptr("0000::1111"),
+						Port:            util.Ptr(1234),
+						Protocol:        util.Ptr("http"),
+						TenantID:        util.Ptr(GetTenantID(t, "tenant2")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateOriginsUpdateCreateFields("origin2", map[string]interface{}{"Cachegroup": "multiOriginCachegroup", "Coordinate": "coordinate2", "DeliveryService": "ds3",
@@ -296,145 +296,145 @@ func TestOrigins(t *testing.T) {
 				"FORBIDDEN when CHILD TENANT updates PARENT TENANT ORIGIN": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: tenant4UserSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testtenancy",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "testtenancy.example.com",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testtenancy"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("testtenancy.example.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"NOT FOUND when ORIGIN DOESNT EXIST": {
 					EndpointId:    func() int { return 1111111 },
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testid",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "testid.example.com",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testid"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("testid.example.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when DELIVERY SERVICE DOESNT EXIST": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "origin2",
-						"deliveryServiceId": 11111111,
-						"fqdn":              "origin2.example.com",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("origin2"),
+						DeliveryServiceID: util.Ptr(11111111),
+						FQDN:              util.Ptr("origin2.example.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when CACHEGROUP DOESNT EXIST": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "origin2",
-						"cachegroupId":      1111111,
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "origin2.example.com",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("origin2"),
+						CachegroupID:      util.Ptr(1111111),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("origin2.example.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when PROFILEID DOESNT EXIST": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "origin2",
-						"cachegroup":        "originCachegroup",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "origin2.example.com",
-						"profileId":         11111111,
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("origin2"),
+						Cachegroup:        util.Ptr("originCachegroup"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("origin2.example.com"),
+						ProfileID:         util.Ptr(11111111),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when COORDINATE DOESNT EXIST": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "origin2",
-						"cachegroup":        "originCachegroup",
-						"coordinateId":      1111111,
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "origin2.example.com",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("origin2"),
+						Cachegroup:        util.Ptr("originCachegroup"),
+						CoordinateID:      util.Ptr(1111111),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("origin2.example.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"FORBIDDEN when INVALID TENANT": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "origin1",
-						"cachegroup":        "originCachegroup",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "origin1.example.com",
-						"protocol":          "http",
-						"tenantId":          1111111,
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("origin1"),
+						Cachegroup:        util.Ptr("originCachegroup"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("origin1.example.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(1111111),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"BAD REQUEST when INVALID PROTOCOL": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "origin2",
-						"cachegroup":        "originCachegroup",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "origin2.example.com",
-						"protocol":          "htttttpssss",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("origin2"),
+						Cachegroup:        util.Ptr("originCachegroup"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("origin2.example.com"),
+						Protocol:          util.Ptr("htttttpssss"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV4 ADDRESS": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "origin2",
-						"cachegroup":        "originCachegroup",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds2")(),
-						"fqdn":              "origin2.example.com",
-						"ipAddress":         "300.254.123.1",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("origin2"),
+						Cachegroup:        util.Ptr("originCachegroup"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds2")()),
+						FQDN:              util.Ptr("origin2.example.com"),
+						IPAddress:         util.Ptr("300.254.123.1"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV6 ADDRESS": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "origin2",
-						"cachegroup":        "originCachegroup",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds2")(),
-						"fqdn":              "origin2.example.com",
-						"ip6Address":        "test::42",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("origin2"),
+						Cachegroup:        util.Ptr("originCachegroup"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds2")()),
+						FQDN:              util.Ptr("origin2.example.com"),
+						IP6Address:        util.Ptr("test::42"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID PORT": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "origin2",
-						"cachegroup":        "originCachegroup",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds2")(),
-						"fqdn":              "origin2.example.com",
-						"port":              80000,
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("origin2"),
+						Cachegroup:        util.Ptr("originCachegroup"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds2")()),
+						FQDN:              util.Ptr("origin2.example.com"),
+						Port:              util.Ptr(80000),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -442,26 +442,26 @@ func TestOrigins(t *testing.T) {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: map[string]interface{}{
-						"name":            "origin2",
-						"cachegroup":      "originCachegroup",
-						"deliveryService": "ds2",
-						"fqdn":            "origin2.example.com",
-						"protocol":        "http",
-						"tenantId":        GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:            util.Ptr("origin2"),
+						Cachegroup:      util.Ptr("originCachegroup"),
+						DeliveryService: util.Ptr("ds2"),
+						FQDN:            util.Ptr("origin2.example.com"),
+						Protocol:        util.Ptr("http"),
+						TenantID:        util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":            "origin2",
-						"cachegroup":      "originCachegroup",
-						"deliveryService": "ds2",
-						"fqdn":            "origin2.example.com",
-						"protocol":        "http",
-						"tenantId":        GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:            util.Ptr("origin2"),
+						Cachegroup:      util.Ptr("originCachegroup"),
+						DeliveryService: util.Ptr("ds2"),
+						FQDN:            util.Ptr("origin2.example.com"),
+						Protocol:        util.Ptr("http"),
+						TenantID:        util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -484,15 +484,6 @@ func TestOrigins(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					origin := tc.Origin{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &origin)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -503,14 +494,14 @@ func TestOrigins(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateOrigin(origin, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.CreateOrigin(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateOrigin(testCase.EndpointId(), origin, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateOrigin(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

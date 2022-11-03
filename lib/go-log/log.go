@@ -26,6 +26,8 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-llog"
 )
 
 var (
@@ -277,4 +279,24 @@ func InitCfg(cfg Config) error {
 	}
 	Init(eventW, errW, warnW, infoW, debugW)
 	return nil
+}
+
+// LLog returns an llog.Log, for passing to libraries using llog.
+//
+// Note the returned Log will have writers tied to loggers at its time of creation.
+// Thus, it's safe to reuse LLog if an application never re-initializes the loggers,
+// such as when reloading config on a HUP signal.
+// If the application re-initializes loggers, LLog should be called again to get
+// a new llog.Log associated with the new log locations.
+func LLog() llog.Log {
+	// ltow converts a log.Logger into an io.Writer
+	// This is relatively inefficient. If performance is necessary, this package could be made to
+	// keep track of the original io.Writer, to avoid an extra function call and string copy.
+	ltow := func(lg *log.Logger) io.Writer {
+		return llog.WriterFunc(func(p []byte) (n int, err error) {
+			Logln(lg, string(p))
+			return len(p), nil
+		})
+	}
+	return llog.New(ltow(Error), ltow(Warning), ltow(Info), ltow(Debug))
 }

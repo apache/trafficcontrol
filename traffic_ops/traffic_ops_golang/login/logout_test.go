@@ -133,9 +133,9 @@ func TestLogout(t *testing.T) {
 			break
 		}
 
-		parsedCookie, err := tocookie.Parse("test", c.Value)
-		if err != nil {
-			t.Errorf("Failed to parse cookie value: %v", err)
+		parsedCookie, _, sysErr := tocookie.Parse("test", c.Value)
+		if sysErr != nil {
+			t.Errorf("Failed to parse cookie value: %v", sysErr)
 			break
 		}
 

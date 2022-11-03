@@ -578,7 +578,7 @@ func TestDeliveryServices(t *testing.T) {
 
 func validateDSExpectedFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		dsResp := resp.([]tc.DeliveryServiceV40)
+		dsResp := resp.([]tc.DeliveryServiceV4)
 		for field, expected := range expectedResp {
 			for _, ds := range dsResp {
 				switch field {
@@ -658,7 +658,7 @@ func validateDSExpectedFields(expectedResp map[string]interface{}) utils.CkReqFu
 
 func validatePagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.DeliveryServiceV40)
+		paginationResp := resp.([]tc.DeliveryServiceV4)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
@@ -680,7 +680,7 @@ func validatePagination(paginationParam string) utils.CkReqFunc {
 
 func validateDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
-		dsDescResp := resp.([]tc.DeliveryServiceV40)
+		dsDescResp := resp.([]tc.DeliveryServiceV4)
 		var descSortedList []string
 		var ascSortedList []string
 		assert.GreaterOrEqual(t, len(dsDescResp), 2, "Need at least 2 XMLIDs in Traffic Ops to test desc sort, found: %d", len(dsDescResp))

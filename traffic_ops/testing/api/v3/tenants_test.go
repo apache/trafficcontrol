@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"sort"
 	"strconv"
@@ -37,7 +36,7 @@ func TestTenants(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.Tenant]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -53,11 +52,11 @@ func TestTenants(t *testing.T) {
 			"POST": {
 				"NO ERROR when VALID request": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"active":     true,
-						"name":       "tenant5",
-						"parentName": "root",
-						"parentId":   GetTenantID(t, "root")(),
+					RequestBody: tc.Tenant{
+						Active:     true,
+						Name:       "tenant5",
+						ParentName: "root",
+						ParentID:   GetTenantID(t, "root")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), validateTenantCreateUpdateFields(map[string]interface{}{"Name": "tenant5"})),
 				},
@@ -66,11 +65,11 @@ func TestTenants(t *testing.T) {
 				"OK when VALID request": {
 					EndpointId:    GetTenantID(t, "tenant4"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"active":     false,
-						"name":       "newname",
-						"parentName": "root",
-						"parentId":   GetTenantID(t, "root")(),
+					RequestBody: tc.Tenant{
+						Active:     false,
+						Name:       "newname",
+						ParentName: "root",
+						ParentID:   GetTenantID(t, "root")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateTenantCreateUpdateFields(map[string]interface{}{"Name": "newname", "Active": false})),
@@ -78,10 +77,10 @@ func TestTenants(t *testing.T) {
 				"BAD REQUEST when ROOT TENANT": {
 					EndpointId:    GetTenantID(t, "root"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"active":     false,
-						"name":       "tenant1",
-						"parentName": "root",
+					RequestBody: tc.Tenant{
+						Active:     false,
+						Name:       "tenant1",
+						ParentName: "root",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -89,22 +88,22 @@ func TestTenants(t *testing.T) {
 					EndpointId:     GetTenantID(t, "tenant2"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody: map[string]interface{}{
-						"active":     false,
-						"name":       "tenant2",
-						"parentName": "root",
-						"parentId":   GetTenantID(t, "root")(),
+					RequestBody: tc.Tenant{
+						Active:     false,
+						Name:       "tenant2",
+						ParentName: "root",
+						ParentID:   GetTenantID(t, "root")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetTenantID(t, "tenant2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"active":     false,
-						"name":       "tenant2",
-						"parentName": "root",
-						"parentId":   GetTenantID(t, "root")(),
+					RequestBody: tc.Tenant{
+						Active:     false,
+						Name:       "tenant2",
+						ParentName: "root",
+						ParentID:   GetTenantID(t, "root")(),
 					},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -122,17 +121,8 @@ func TestTenants(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					tenant := tc.Tenant{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &tenant)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.TenantsWithHdr(testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
@@ -141,7 +131,7 @@ func TestTenants(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, err := testCase.ClientSession.CreateTenant(&tenant)
+							resp, err := testCase.ClientSession.CreateTenant(&testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								if resp != nil {
 									check(t, toclientlib.ReqInf{}, resp.Response, resp.Alerts, err)
@@ -150,7 +140,7 @@ func TestTenants(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateTenantWithHdr(strconv.Itoa(testCase.EndpointId()), &tenant, testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.UpdateTenantWithHdr(strconv.Itoa(testCase.EndpointId()), &testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								if resp != nil {
 									check(t, reqInf, resp.Response, resp.Alerts, err)

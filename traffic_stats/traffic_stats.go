@@ -48,9 +48,9 @@ import (
 )
 
 const UserAgent = "traffic-stats"
-const TrafficOpsRequestTimeout = time.Second * time.Duration(10)
 
 const (
+	defaultTrafficOpsRequestTimeout    = 10
 	defaultPollingInterval             = 10
 	defaultDailySummaryPollingInterval = 60
 	defaultConfigInterval              = 300
@@ -95,6 +95,7 @@ type StartupConfig struct {
 	ToUser                      string   `json:"toUser"`
 	ToPasswd                    string   `json:"toPasswd"`
 	ToURL                       string   `json:"toUrl"`
+	ToRequestTimeoutSeconds     int      `json:"toRequestTimeout"`
 	DisableInflux               bool     `json:"disableInflux"`
 	InfluxUser                  string   `json:"influxUser"`
 	InfluxPassword              string   `json:"influxPassword"`
@@ -516,6 +517,10 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 		config.MaxPublishSize = defaultMaxPublishSize
 	}
 
+	if config.ToRequestTimeoutSeconds <= 0 {
+		config.ToRequestTimeoutSeconds = defaultTrafficOpsRequestTimeout
+	}
+
 	if config.LogConfig != nil {
 		if err = log.InitCfg(config.LogConfig); err != nil {
 			return config, fmt.Errorf("initializing logging configuration: %w", err)
@@ -721,7 +726,7 @@ func queryDB(con influx.Client, cmd string, database string) (res []influx.Resul
 }
 
 func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummary) {
-	to, _, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, TrafficOpsRequestTimeout)
+	to, _, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, time.Duration(config.ToRequestTimeoutSeconds)*time.Second)
 	if err != nil {
 		newErr := fmt.Errorf("Could not store summary stats! Error logging in to %v: %v", config.ToURL, err)
 		errorln(newErr)
@@ -735,7 +740,7 @@ func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummary) {
 
 func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	var runningConfig RunningConfig
-	to, _, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, TrafficOpsRequestTimeout)
+	to, _, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, time.Duration(config.ToRequestTimeoutSeconds)*time.Second)
 	if err != nil {
 		msg := fmt.Sprintf("Error logging in to %v: %v", config.ToURL, err)
 		if init {

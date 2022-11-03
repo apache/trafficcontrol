@@ -16,7 +16,6 @@ package v5
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -39,7 +38,7 @@ func TestFederationUsers(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.FederationUserPost]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
@@ -103,40 +102,6 @@ func TestFederationUsers(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
-			},
-			"POST": {
-				"OK when VALID request": {
-					EndpointId:    GetFederationID(t, "google.com."),
-					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"userIds": []int{GetUserID(t, "readonlyuser")(), GetUserID(t, "disalloweduser")()}, "replace": false},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-				"OK when REPLACING USERS": {
-					EndpointId:    GetFederationID(t, "booya.com."),
-					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"userIds": []int{GetUserID(t, "readonlyuser")()}, "replace": true},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-				"OK when ADDING USER": {
-					EndpointId:    GetFederationID(t, "booya.com."),
-					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"userIds": []int{GetUserID(t, "disalloweduser")()}, "replace": false},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-				"BAD REQUEST when INVALID FEDERATION ID": {
-					EndpointId:    func() int { return -1 },
-					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"userIds": []int{}, "replace": false},
-					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
-				},
-				"BAD REQUEST when INVALID USER ID": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
-					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"userIds": []int{-1}, "replace": false},
-					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
-				},
-			},
-			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
@@ -144,22 +109,63 @@ func TestFederationUsers(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
+			"POST": {
+				"OK when VALID request": {
+					EndpointId:    GetFederationID(t, "google.com."),
+					ClientSession: TOSession,
+					RequestBody: tc.FederationUserPost{
+						IDs: []int{
+							GetUserID(t, "readonlyuser")(),
+							GetUserID(t, "disalloweduser")(),
+						},
+						Replace: util.Ptr(false),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when REPLACING USERS": {
+					EndpointId:    GetFederationID(t, "booya.com."),
+					ClientSession: TOSession,
+					RequestBody: tc.FederationUserPost{
+						IDs:     []int{GetUserID(t, "readonlyuser")()},
+						Replace: util.Ptr(true),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"OK when ADDING USER": {
+					EndpointId:    GetFederationID(t, "booya.com."),
+					ClientSession: TOSession,
+					RequestBody: tc.FederationUserPost{
+						IDs:     []int{GetUserID(t, "disalloweduser")()},
+						Replace: util.Ptr(false),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
+				"BAD REQUEST when INVALID FEDERATION ID": {
+					EndpointId:    func() int { return -1 },
+					ClientSession: TOSession,
+					RequestBody: tc.FederationUserPost{
+						IDs:     []int{},
+						Replace: util.Ptr(false),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+				"BAD REQUEST when INVALID USER ID": {
+					EndpointId:    GetFederationID(t, "the.cname.com."),
+					ClientSession: TOSession,
+					RequestBody: tc.FederationUserPost{
+						IDs:     []int{-1},
+						Replace: util.Ptr(false),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+				},
+			},
 		}
 
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					federationUser := tc.FederationUserPost{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &federationUser)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetFederationUsers(testCase.EndpointId(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -168,6 +174,7 @@ func TestFederationUsers(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
+							federationUser := testCase.RequestBody
 							alerts, reqInf, err := testCase.ClientSession.CreateFederationUsers(testCase.EndpointId(), federationUser.IDs, *federationUser.Replace, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)

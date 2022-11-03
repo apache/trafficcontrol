@@ -15,38 +15,30 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
+	"net/mail"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestUsersRegister(t *testing.T) {
 	if includeSystemTests {
 		WithObjs(t, []TCObj{Tenants, Parameters}, func() {
 
-			methodTests := utils.V4TestCase{
+			methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.UserRegistrationRequestV4]{
 				"POST": {
 					"OK when VALID request": {
 						ClientSession: TOSession,
-						RequestBody: map[string]interface{}{
-							"addressLine1":       "address of ops",
-							"addressLine2":       "place",
-							"city":               "somewhere",
-							"company":            "else",
-							"country":            "UK",
-							"email":              "opsupdated@example.com",
-							"fullName":           "Operations User Updated",
-							"localPasswd":        "pa$$word",
-							"confirmLocalPasswd": "pa$$word",
-							"role":               "operations",
-							"tenant":             "root",
-							"tenantId":           GetTenantID(t, "root")(),
-							"username":           "opsuser",
+						RequestBody: tc.UserRegistrationRequestV4{
+							Email:    rfc.EmailAddress{Address: mail.Address{Address: "opsupdated@example.com"}},
+							Role:     "operations",
+							TenantID: uint(GetTenantID(t, "root")()),
 						},
 						Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDeletion("opsupdated@example.com")),
 					},
@@ -56,18 +48,10 @@ func TestUsersRegister(t *testing.T) {
 			for method, testCases := range methodTests {
 				t.Run(method, func(t *testing.T) {
 					for name, testCase := range testCases {
-						userRegistration := tc.UserRegistrationRequestV4{}
-
-						if testCase.RequestBody != nil {
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &userRegistration)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						}
-
 						switch method {
 						case "POST":
 							t.Run(name, func(t *testing.T) {
+								userRegistration := testCase.RequestBody
 								alerts, reqInf, err := testCase.ClientSession.RegisterNewUser(userRegistration.TenantID, userRegistration.Role, userRegistration.Email, testCase.RequestOpts)
 								for _, check := range testCase.Expectations {
 									check(t, reqInf, nil, alerts, err)

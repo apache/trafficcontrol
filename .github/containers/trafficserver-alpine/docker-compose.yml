@@ -23,5 +23,23 @@ services:
       dockerfile: Dockerfile
       args:
         ATS_VERSION: ${ATS_VERSION}
+      # This docker-compose file is no longer used by the container-trafficserver-alpine.yml
+      # Github Actions workflow and is here in case anyone wants to build it manually, since
+      # the emulated aarch64 GitHub Actions job takes about 3 hours to run.
+      # To build the trafficserver image for only your computer's own platform, run
+      #   docker-compose build
+      #
+      # To build and push a single image including both linux/amd64 and linux/arm64 platforms, run
+      #   # docker/binfmt writes to /proc/sys/fs/binfmt_misc and its effects are cleared on reboot
+      #   docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
+      #   docker buildx create --use
+      #   docker buildx bake --push
+      #
+      # Running `docker buildx bake --load` will not work until docker/roadmap#371 is resolved
+      # because the image would contain more than 1 platform.
+      x-bake:
+        platforms:
+          - linux/amd64
+          - linux/arm64
     # for example, ghcr.io/apache/trafficcontrol/ci/trafficserver-alpine:9.1.2
-    image: ${CONTAINER}:${ATS_VERSION}
+    image: ${CONTAINER:-ghcr.io/apache/trafficcontrol/ci/trafficserver-alpine}:${ATS_VERSION}

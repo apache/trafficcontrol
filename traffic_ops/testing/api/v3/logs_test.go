@@ -28,16 +28,16 @@ import (
 func TestLogs(t *testing.T) {
 	WithObjs(t, []TCObj{Roles, Tenants, Users}, func() { // Objs added to create logs when this test is run alone
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[struct{}]{
 			"GET": {
 				"OK when VALID request": {
-					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						utils.ResponseLengthGreaterOrEqual(1)),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 				"RESPONSE LENGTH matches LIMIT parameter": {
-					ClientSession: TOSession, RequestParams: url.Values{"limit": {"10"}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						utils.ResponseHasLength(10)),
+					ClientSession: TOSession,
+					RequestParams: url.Values{"limit": {"10"}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(10)),
 				},
 			},
 		}

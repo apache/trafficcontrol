@@ -1,26 +1,26 @@
 {
   "cdnName": "$CDN_NAME",
   "description": "Traffic Monitor for CDN-in-a-Box",
-  "name": "RASCAL-Traffic_Monitor",
+  "name": "TRAFFIC_MONITOR",
   "type": "TM_PROFILE",
   "params": [
     {
-      "configFile": "rascal-config.txt",
+      "configFile": "traffic_monitor-config.txt",
       "name": "health.polling.interval",
       "value": "6000"
     },
     {
-      "configFile": "rascal-config.txt",
+      "configFile": "traffic_monitor-config.txt",
       "name": "heartbeat.polling.interval",
       "value": "3000"
     },
     {
-      "configFile": "rascal-config.txt",
+      "configFile": "traffic_monitor-config.txt",
       "name": "peers.polling.interval",
       "value": "3000"
     },
     {
-      "configFile": "rascal-config.txt",
+      "configFile": "traffic_monitor-config.txt",
       "name": "tm.polling.interval",
       "value": "2000"
     }

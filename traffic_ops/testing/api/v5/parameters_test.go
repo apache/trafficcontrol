@@ -34,7 +34,7 @@ import (
 func TestParameters(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters}, func() {
 
-		opsUserSession := utils.CreateV5Session(t, Config.TrafficOps.URL, "operations", "twelve", Config.Default.Session.TimeoutInSecs)
+		opsUserSession := utils.CreateV5Session(t, Config.TrafficOps.URL, "operations", Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)

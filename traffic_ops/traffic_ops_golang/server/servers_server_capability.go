@@ -20,6 +20,7 @@ package server
  */
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -297,19 +298,19 @@ func (ssc *TOServerServerCapability) Create() (error, error, int) {
 	}
 
 	// Ensure type is correct
-	correctType := true
-	if err := tx.Tx.QueryRow(scCheckServerTypeQuery(), ssc.ServerID).Scan(&correctType); err != nil {
-		return nil, fmt.Errorf("checking server type: %v", err), http.StatusInternalServerError
-	}
-	if !correctType {
-		return fmt.Errorf("server %v has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", *ssc.ServerID), nil, http.StatusBadRequest
+	var sidList []int64
+	sidList = append(sidList, int64(*ssc.ServerID))
+	errCode, userErr, sysErr := checkServerType(tx.Tx, sidList)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+
 	}
 
 	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx.Tx, int64(*ssc.ServerID))
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
-	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
@@ -357,17 +358,6 @@ server_capability,
 server) VALUES (
 :server_capability,
 :server) RETURNING server, server_capability, last_updated`
-}
-
-func scCheckServerTypeQuery() string {
-	return `
-SELECT EXISTS (
-	SELECT s.id
-	FROM server s
-	JOIN type t ON s.type = t.id
-	WHERE s.id = $1
-	AND t.use_in_table = 'server'
-	AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%'))`
 }
 
 func checkDSReqCapQuery() string {
@@ -443,8 +433,8 @@ func getDSTenantIDsByIDs(tx *sqlx.Tx, dsIDs []int64) ([]DSTenant, error) {
 	return dsTenantIDs, nil
 }
 
-// AssignMultipleServerCapabilities helps assign multiple server capabilities to a given server.
-func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
+// AssignMultipleServersCapabilities assigns multiple servers to a capability or multiple server capabilities to a server
+func AssignMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -453,77 +443,204 @@ func AssignMultipleServerCapabilities(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	var msc tc.MultipleServerCapabilities
-	if err := json.NewDecoder(r.Body).Decode(&msc); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+	var mssc tc.MultipleServersCapabilities
+	if err := json.NewDecoder(r.Body).Decode(&mssc); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("error decoding POST request body into MultipleServersCapabilities struct %w", err), nil)
 		return
 	}
 
-	// Check existence prior to checking type
-	_, exists, err := dbhelpers.GetServerNameFromID(tx, int64(msc.ServerID))
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-	}
-	if !exists {
-		userErr := fmt.Errorf("server %d does not exist", msc.ServerID)
-		api.HandleErr(w, r, tx, http.StatusNotFound, userErr, nil)
+	// validate JSON body.
+	errs := tovalidate.ToErrors(validation.Errors{
+		"serverIds":          validation.Validate(mssc.ServerIDs, validation.Required),
+		"serverCapabilities": validation.Validate(mssc.ServerCapabilities, validation.Required),
+		"pageType":           validation.Validate(mssc.PageType, validation.Required),
+	})
+
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
 		return
+	}
+
+	if len(mssc.ServerIDs) > 1 && len(mssc.ServerCapabilities) > 1 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("not allowed to have many:many association between server and server capability. "+
+			"Only associations allowed are; 1:1, 1:many or many:1"), nil)
+		return
+	}
+
+	if len(mssc.ServerIDs) >= 1 {
+		errCode, userErr, sysErr = checkExistingServer(tx, mssc.ServerIDs, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
 	}
 
 	// Ensure type is correct
-	correctType := true
-	if err := tx.QueryRow(scCheckServerTypeQuery(), msc.ServerID).Scan(&correctType); err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %w", err))
-		return
-	}
-	if !correctType {
-		userErr := fmt.Errorf("server %d has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", msc.ServerID)
-		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
-		return
-	}
-
-	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx, int64(msc.ServerID))
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), inf.User.UserName)
+	errCode, userErr, sysErr = checkServerType(tx, mssc.ServerIDs)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
-	//Delete existing rows from server_server_capability for a given server
-	_, err = tx.Exec("DELETE FROM server_server_capability ssc WHERE ssc.server=$1", msc.ServerID)
+	// Insert rows in DB
+	sid := make([]int64, len(mssc.ServerCapabilities))
+	scs := make([]string, len(mssc.ServerIDs))
+	switch mssc.PageType {
+	case "sc":
+		for i := range mssc.ServerIDs {
+			scs[i] = mssc.ServerCapabilities[0]
+		}
+		sid = mssc.ServerIDs
+	case "server":
+		for i := range mssc.ServerCapabilities {
+			sid[i] = mssc.ServerIDs[0]
+		}
+		scs = mssc.ServerCapabilities
+	default:
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("incorrect page type: '%s'. Should be 'sc' or 'server'", mssc.PageType), nil)
+		return
+	}
+
+	msscQuery := `INSERT INTO server_server_capability
+			select "server_capability", "server"
+			FROM UNNEST($1::text[], $2::int[]) AS tmp("server_capability", "server")`
+	_, err := tx.Query(msscQuery, pq.Array(scs), pq.Array(sid))
 	if err != nil {
 		useErr, sysErr, statusCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
 		return
 	}
 
-	multipleServerCapabilities := make([]string, 0, len(msc.ServerCapabilities))
-
-	mscQuery := `WITH inserted AS (
-		INSERT INTO server_server_capability
-		SELECT "server_capability", $2
-		FROM UNNEST($1::text[]) AS tmp("server_capability")
-		RETURNING server_capability
-		)
-		SELECT ARRAY_AGG(server_capability)
-		FROM (
-			SELECT server_capability
-			FROM inserted
-		) AS returned(server_capability)`
-
-	err = tx.QueryRow(mscQuery, pq.Array(msc.ServerCapabilities), msc.ServerID).Scan(pq.Array(&multipleServerCapabilities))
-	if err != nil {
-		useErr, sysErr, statusCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
-		return
+	var alerts tc.Alerts
+	if mssc.PageType == "sc" {
+		alerts = tc.CreateAlerts(tc.SuccessLevel, "Assign Server(s) to a capability")
+	} else {
+		alerts = tc.CreateAlerts(tc.SuccessLevel, "Assign Server Capability(ies) to a server")
 	}
-	msc.ServerCapabilities = multipleServerCapabilities
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "Multiple Server Capabilities assigned to a server")
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, msc)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, mssc)
 	return
+}
+
+// DeleteMultipleServersCapabilities deletes multiple servers to a capability or multiple server capabilities to a server
+func DeleteMultipleServersCapabilities(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var mssc tc.MultipleServersCapabilities
+	if err := json.NewDecoder(r.Body).Decode(&mssc); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("error decoding DELETE request body into MultipleServersCapabilities struct %w", err), nil)
+		return
+	}
+
+	if len(mssc.ServerIDs) >= 1 {
+		errCode, userErr, sysErr = checkExistingServer(tx, mssc.ServerIDs, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+	}
+
+	//Delete existing rows from server_server_capability for a given server or for a given capability
+	const delQuery = `DELETE FROM server_server_capability ssc WHERE `
+	var dq string
+	var alerts tc.Alerts
+	var result sql.Result
+	var err error
+	switch mssc.PageType {
+	case "sc":
+		dq = delQuery + `ssc.server_capability=$1`
+		if len(mssc.ServerIDs) == 1 {
+			dq = dq + ` AND ssc.server=$2`
+			result, err = tx.Exec(dq, mssc.ServerCapabilities[0], mssc.ServerIDs[0])
+		} else {
+			result, err = tx.Exec(dq, mssc.ServerCapabilities[0])
+		}
+	case "server":
+		dq = delQuery + `ssc.server=$1`
+		if len(mssc.ServerCapabilities) == 1 {
+			dq = dq + ` AND ssc.server_capability=$2`
+			result, err = tx.Exec(dq, mssc.ServerIDs[0], mssc.ServerCapabilities[0])
+		} else {
+			result, err = tx.Exec(dq, mssc.ServerIDs[0])
+		}
+	default:
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("incorrect page type:'%s'. Should be 'sc' or 'server'", mssc.PageType), nil)
+		return
+	}
+
+	if err != nil {
+		useErr, sysErr, statusCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, statusCode, useErr, sysErr)
+		return
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows were deleted from server_server_capability table: %w", err), sysErr)
+		return
+	}
+	if rowsAffected >= 1 {
+		if mssc.PageType == "sc" {
+			alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed Server(s) associated with a capability")
+		} else {
+			alerts = tc.CreateAlerts(tc.SuccessLevel, "Removed Server Capability(ies) associated with a server")
+		}
+	}
+
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, mssc)
+	return
+}
+
+// checkExistingServer checks server existence
+func checkExistingServer(tx *sql.Tx, sidList []int64, uName string) (int, error, error) {
+	for _, sid := range sidList {
+		_, exists, err := dbhelpers.GetServerNameFromID(tx, sid)
+		if err != nil {
+			return http.StatusInternalServerError, nil, err
+		}
+		if !exists {
+			userErr := fmt.Errorf("server %d does not exist", sid)
+			return http.StatusNotFound, userErr, nil
+		}
+
+		cdnName, err := dbhelpers.GetCDNNameFromServerID(tx, sid)
+		if err != nil {
+			return http.StatusInternalServerError, nil, err
+		}
+
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), uName)
+		if userErr != nil || sysErr != nil {
+			return errCode, userErr, sysErr
+		}
+	}
+	return http.StatusOK, nil, nil
+}
+
+// checkServerType checks if the server type is MID and/or EDGE
+func checkServerType(tx *sql.Tx, sids []int64) (int, error, error) {
+	var servArray []int64
+	queryType := `SELECT array_agg(s.id) 
+		FROM server s
+		JOIN type t ON s.type = t.id
+		WHERE s.id = any ($1)
+		AND t.use_in_table = 'server'
+		AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%')`
+	if err := tx.QueryRow(queryType, pq.Array(sids)).Scan(pq.Array(&servArray)); err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("checking server type: %w", err)
+	}
+	cmp := make(map[int64]bool)
+	for _, item := range servArray {
+		cmp[item] = true
+	}
+	for _, sid := range sids {
+		if _, ok := cmp[sid]; !ok {
+			userErr := fmt.Errorf("server id: %d has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", sid)
+			return http.StatusBadRequest, userErr, nil
+		}
+	}
+	return http.StatusOK, nil, nil
 }

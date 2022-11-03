@@ -94,7 +94,7 @@ describe("ServersTableComponent", () => {
 		expect(serverIsCache(s)).toBeTrue();
 		s.type = "a string that merely CONTAINS 'EDGE' instead of starting with it";
 		expect(serverIsCache(s)).toBeFalse();
-		s.type = "RASCAL";
+		s.type = "TRAFFIC_MONITOR";
 		expect(serverIsCache(s)).toBeFalse();
 	});
 

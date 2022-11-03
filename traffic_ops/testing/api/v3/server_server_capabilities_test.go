@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -26,6 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -37,7 +37,7 @@ func TestServerServerCapabilities(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.ServerServerCapability]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -71,47 +71,47 @@ func TestServerServerCapabilities(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId":         GetServerID(t, "dtrc-mid-01")(),
-						"serverCapability": "disk",
+					RequestBody: tc.ServerServerCapability{
+						ServerID:         util.Ptr(GetServerID(t, "dtrc-mid-01")()),
+						ServerCapability: util.Ptr("disk"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING SERVER ID": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverCapability": "disk",
+					RequestBody: tc.ServerServerCapability{
+						ServerCapability: util.Ptr("disk"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING SERVER CAPABILITY": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId": GetServerID(t, "dtrc-mid-01")(),
+					RequestBody: tc.ServerServerCapability{
+						ServerID: util.Ptr(GetServerID(t, "dtrc-mid-01")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when SERVER CAPABILITY DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId":         GetServerID(t, "dtrc-mid-01")(),
-						"serverCapability": "bogus",
+					RequestBody: tc.ServerServerCapability{
+						ServerID:         util.Ptr(GetServerID(t, "dtrc-mid-01")()),
+						ServerCapability: util.Ptr("bogus"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when SERVER DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId":         99999999,
-						"serverCapability": "bogus",
+					RequestBody: tc.ServerServerCapability{
+						ServerID:         util.Ptr(99999999),
+						ServerCapability: util.Ptr("bogus"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when SERVER TYPE NOT EDGE or MID": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"serverId":         GetServerID(t, "trafficvault")(),
-						"serverCapability": "bogus",
+					RequestBody: tc.ServerServerCapability{
+						ServerID:         util.Ptr(GetServerID(t, "trafficvault")()),
+						ServerCapability: util.Ptr("bogus"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -148,17 +148,10 @@ func TestServerServerCapabilities(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					ssc := tc.ServerServerCapability{}
 					var serverId *int
 					var serverHostName *string
 					var serverCapability *string
 
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &ssc)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
 					if val, ok := testCase.RequestParams["serverId"]; ok {
 						id, _ := strconv.Atoi(val[0])
 						serverId = &id
@@ -180,7 +173,7 @@ func TestServerServerCapabilities(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(ssc)
+							alerts, reqInf, err := testCase.ClientSession.CreateServerServerCapability(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

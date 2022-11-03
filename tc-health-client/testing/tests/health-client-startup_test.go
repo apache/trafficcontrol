@@ -49,7 +49,7 @@ func TestHealthClientStartup(t *testing.T) {
 		pollStateFile := "/var/log/trafficcontrol/poll-state.json"
 		atlantaMid := "atlanta-mid-16.ga.atlanta.kabletown.net"
 		dtrcMid := "dtrc-mid-02.kabletown.net"
-		rascal := "rascal01.kabletown.net"
+		traffic_monitor := "tm01.kabletown.net"
 
 		waitTime, err := time.ParseDuration("5s")
 		if err != nil {
@@ -95,14 +95,19 @@ func TestHealthClientStartup(t *testing.T) {
 
 		// we marked down mids, now test that the health client read the ATS
 		// Host Status and see's that they are down.
-		parents := cfg.Parents
-		p := parents[atlantaMid]
+		p, ok := cfg.LoadParentStatus(atlantaMid)
+		if !ok {
+			t.Fatalf("Expected %s to be in parents but it's not", atlantaMid)
+		}
 		if p.ActiveReason != false {
 			t.Fatalf("Expected %s to be marked down but it's not", atlantaMid)
 		} else {
 			fmt.Fprintf(os.Stdout, "%s is available: %v\n", atlantaMid, p.ActiveReason)
 		}
-		p = parents[dtrcMid]
+		p, ok = cfg.LoadParentStatus(dtrcMid)
+		if !ok {
+			t.Fatalf("Expected %s to be in parents but it's not", dtrcMid)
+		}
 		if p.ActiveReason != false {
 			t.Fatalf("Expected %s to be marked down but it's not", dtrcMid)
 		} else {
@@ -111,11 +116,11 @@ func TestHealthClientStartup(t *testing.T) {
 
 		// verify that the health-client was able to poll and get an available
 		// traffic monitor from TrafficOps
-		av := cfg.Cfg.TrafficMonitors[rascal]
-		if av != true {
-			t.Fatalf("Expected %s to be available but it's not", rascal)
+		_, ok = cfg.TOData.Get().Monitors[traffic_monitor]
+		if !ok {
+			t.Fatalf("Expected %s to be available but it's not", traffic_monitor)
 		} else {
-			fmt.Fprintf(os.Stdout, "%s is available: %v\n", rascal, av)
+			fmt.Fprintf(os.Stdout, "%s is available: true\n", traffic_monitor)
 		}
 
 		fmt.Fprintf(os.Stdout, "Stopping the tc-health-client\n")

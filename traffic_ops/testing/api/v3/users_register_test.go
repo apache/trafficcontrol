@@ -15,10 +15,11 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
+	"net/mail"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
@@ -29,24 +30,14 @@ func TestUsersRegister(t *testing.T) {
 	if includeSystemTests {
 		WithObjs(t, []TCObj{Tenants, Parameters}, func() {
 
-			methodTests := utils.V3TestCase{
+			methodTests := utils.V3TestCaseT[tc.UserRegistrationRequest]{
 				"POST": {
 					"OK when VALID request": {
 						ClientSession: TOSession,
-						RequestBody: map[string]interface{}{
-							"addressLine1":       "address of ops",
-							"addressLine2":       "place",
-							"city":               "somewhere",
-							"company":            "else",
-							"country":            "UK",
-							"email":              "opsupdated@example.com",
-							"fullName":           "Operations User Updated",
-							"localPasswd":        "pa$$word",
-							"confirmLocalPasswd": "pa$$word",
-							"role":               3,
-							"tenant":             "root",
-							"tenantId":           GetTenantID(t, "root")(),
-							"username":           "opsuser",
+						RequestBody: tc.UserRegistrationRequest{
+							Email:    rfc.EmailAddress{Address: mail.Address{Address: "opsupdated@example.com"}},
+							Role:     3,
+							TenantID: uint(GetTenantID(t, "root")()),
 						},
 						Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateDeletion("opsupdated@example.com")),
 					},
@@ -56,18 +47,10 @@ func TestUsersRegister(t *testing.T) {
 			for method, testCases := range methodTests {
 				t.Run(method, func(t *testing.T) {
 					for name, testCase := range testCases {
-						userRegistration := tc.UserRegistrationRequest{}
-
-						if testCase.RequestBody != nil {
-							dat, err := json.Marshal(testCase.RequestBody)
-							assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-							err = json.Unmarshal(dat, &userRegistration)
-							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-						}
-
 						switch method {
 						case "POST":
 							t.Run(name, func(t *testing.T) {
+								userRegistration := testCase.RequestBody
 								alerts, reqInf, err := testCase.ClientSession.RegisterNewUser(userRegistration.TenantID, userRegistration.Role, userRegistration.Email)
 								for _, check := range testCase.Expectations {
 									check(t, reqInf, nil, alerts, err)

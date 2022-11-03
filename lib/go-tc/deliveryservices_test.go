@@ -837,7 +837,7 @@ func BenchmarkTLSVersionsAlerts(b *testing.B) {
 			versions = append(versions, fmt.Sprintf("%d.%d", major, minor))
 		}
 	}
-	ds := DeliveryServiceV4{TLSVersions: versions}
+	ds := DeliveryServiceV40{TLSVersions: versions}
 
 	b.ReportAllocs()
 	b.ResetTimer()

@@ -16,7 +16,6 @@ package v5
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -38,7 +37,7 @@ func TestRoles(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.RoleV4]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -60,13 +59,18 @@ func TestRoles(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"name"}, "sortOrder": {"desc"}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateRoleDescSort()),
 				},
+				"OK when CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"POST": {
 				"BAD REQUEST when MISSING NAME": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"description": "missing name",
-						"permissions": []string{
+					RequestBody: tc.RoleV4{
+						Description: "missing name",
+						Permissions: []string{
 							"all-read",
 							"all-write",
 						},
@@ -75,9 +79,9 @@ func TestRoles(t *testing.T) {
 				},
 				"BAD REQUEST when MISSING DESCRIPTION": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name": "noDescription",
-						"permissions": []string{
+					RequestBody: tc.RoleV4{
+						Name: "noDescription",
+						Permissions: []string{
 							"all-read",
 							"all-write",
 						},
@@ -86,10 +90,10 @@ func TestRoles(t *testing.T) {
 				},
 				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":        "new_admin",
-						"description": "description",
-						"permissions": []string{
+					RequestBody: tc.RoleV4{
+						Name:        "new_admin",
+						Description: "description",
+						Permissions: []string{
 							"all-read",
 							"all-write",
 						},
@@ -101,10 +105,10 @@ func TestRoles(t *testing.T) {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"update_role"}}},
-					RequestBody: map[string]interface{}{
-						"name":        "new_name",
-						"description": "new updated description",
-						"permissions": []string{
+					RequestBody: tc.RoleV4{
+						Name:        "new_name",
+						Description: "new updated description",
+						Permissions: []string{
 							"all-read",
 							"all-write",
 						},
@@ -115,9 +119,9 @@ func TestRoles(t *testing.T) {
 				"BAD REQUEST when MISSING NAME": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
-					RequestBody: map[string]interface{}{
-						"description": "missing name",
-						"permissions": []string{
+					RequestBody: tc.RoleV4{
+						Description: "missing name",
+						Permissions: []string{
 							"all-read",
 							"all-write",
 						},
@@ -127,9 +131,9 @@ func TestRoles(t *testing.T) {
 				"BAD REQUEST when MISSING DESCRIPTION": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
-					RequestBody: map[string]interface{}{
-						"name": "noDescription",
-						"permissions": []string{
+					RequestBody: tc.RoleV4{
+						Name: "noDescription",
+						Permissions: []string{
 							"all-read",
 							"all-write",
 						},
@@ -139,10 +143,10 @@ func TestRoles(t *testing.T) {
 				"BAD REQUEST when ADMIN ROLE": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"admin"}}},
-					RequestBody: map[string]interface{}{
-						"name":        "adminUpdated",
-						"description": "description",
-						"permissions": []string{
+					RequestBody: tc.RoleV4{
+						Name:        "adminUpdated",
+						Description: "description",
+						Permissions: []string{
 							"all-read",
 							"all-write",
 						},
@@ -152,10 +156,10 @@ func TestRoles(t *testing.T) {
 				"NOT FOUND when ROLE DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"doesntexist"}}},
-					RequestBody: map[string]interface{}{
-						"name":        "doesntexist",
-						"description": "description",
-						"permissions": []string{
+					RequestBody: tc.RoleV4{
+						Name:        "doesntexist",
+						Description: "description",
+						Permissions: []string{
 							"all-read",
 							"all-write",
 						},
@@ -165,10 +169,10 @@ func TestRoles(t *testing.T) {
 				"BAD REQUEST when ROLE NAME ALREADY EXISTS": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"another_role"}}},
-					RequestBody: map[string]interface{}{
-						"name":        "new_admin",
-						"description": "description",
-						"permissions": []string{
+					RequestBody: tc.RoleV4{
+						Name:        "new_admin",
+						Description: "description",
+						Permissions: []string{
 							"all-read",
 							"all-write",
 						},
@@ -181,9 +185,9 @@ func TestRoles(t *testing.T) {
 						QueryParameters: url.Values{"name": {"another_role"}},
 						Header:          http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					},
-					RequestBody: map[string]interface{}{
-						"name":        "another_role",
-						"description": "super-user 3",
+					RequestBody: tc.RoleV4{
+						Name:        "another_role",
+						Description: "super-user 3",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
@@ -193,9 +197,9 @@ func TestRoles(t *testing.T) {
 						QueryParameters: url.Values{"name": {"another_role"}},
 						Header:          http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					},
-					RequestBody: map[string]interface{}{
-						"name":        "another_role",
-						"description": "super-user 3",
+					RequestBody: tc.RoleV4{
+						Name:        "another_role",
+						Description: "super-user 3",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
@@ -207,29 +211,13 @@ func TestRoles(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-			},
 		}
 
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					role := tc.RoleV4{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &role)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetRoles(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -238,14 +226,14 @@ func TestRoles(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateRole(role, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.CreateRole(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateRole(testCase.RequestOpts.QueryParameters["name"][0], role, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateRole(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

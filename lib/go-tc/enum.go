@@ -131,21 +131,17 @@ const AlgorithmConsistentHash = "consistent_hash"
 // MonitorTypeName is the Name of the Type which must be assigned to a server
 // for it to be treated as a Traffic Monitor instance by ATC.
 //
-// "Rascal" is a legacy name for Traffic Monitor.
-//
 // Note that there is, in general, no guarantee that a Type with this name
 // exists in Traffic Ops at any given time.
-const MonitorTypeName = "RASCAL"
+const MonitorTypeName = "TRAFFIC_MONITOR"
 
 // MonitorProfilePrefix is a prefix which MUST appear on the Names of Profiles
 // used by Traffic Monitor instances as servers in Traffic Ops, or they may not
 // be treated properly.
 //
-// "Rascal" is a legacy name for Traffic Monitor.
-//
 // Deprecated: This should not be a requirement for TM instances to be treated
 // properly, and new code should not check this.
-const MonitorProfilePrefix = "RASCAL"
+const MonitorProfilePrefix = "TRAFFIC_MONITOR"
 
 // RouterTypeName is the Name of the Type which must be assigned to a server
 // for it to be treated as a Traffic Router instance by ATC.

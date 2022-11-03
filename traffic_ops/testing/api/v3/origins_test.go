@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"testing"
@@ -24,6 +23,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -37,7 +37,7 @@ func TestOrigins(t *testing.T) {
 
 		tenant4UserSession := utils.CreateV3Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.Origin]{
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
@@ -90,17 +90,17 @@ func TestOrigins(t *testing.T) {
 				"OK when VALID request": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":            "origin2",
-						"cachegroup":      "multiOriginCachegroup",
-						"Coordinate":      "coordinate2",
-						"deliveryService": "ds3",
-						"fqdn":            "originupdated.example.com",
-						"ipAddress":       "1.2.3.4",
-						"ip6Address":      "0000::1111",
-						"port":            1234,
-						"protocol":        "http",
-						"tenantId":        GetTenantID(t, "tenant2")(),
+					RequestBody: tc.Origin{
+						Name:            util.Ptr("origin2"),
+						Cachegroup:      util.Ptr("multiOriginCachegroup"),
+						Coordinate:      util.Ptr("coordinate2"),
+						DeliveryService: util.Ptr("ds3"),
+						FQDN:            util.Ptr("originupdated.example.com"),
+						IPAddress:       util.Ptr("1.2.3.4"),
+						IP6Address:      util.Ptr("0000::1111"),
+						Port:            util.Ptr(1234),
+						Protocol:        util.Ptr("http"),
+						TenantID:        util.Ptr(GetTenantID(t, "tenant2")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateOriginsUpdateCreateFields("origin2", map[string]interface{}{"Cachegroup": "multiOriginCachegroup", "Coordinate": "coordinate2", "DeliveryService": "ds3",
@@ -109,24 +109,24 @@ func TestOrigins(t *testing.T) {
 				"FORBIDDEN when CHILD TENANT updates PARENT TENANT ORIGIN": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: tenant4UserSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testtenancy",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "testtenancy.example.com",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testtenancy"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("testtenancy.example.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"NOT FOUND when ORIGIN DOESNT EXIST": {
 					EndpointId:    func() int { return 1111111 },
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":              "testid",
-						"deliveryServiceId": GetDeliveryServiceId(t, "ds1")(),
-						"fqdn":              "testid.example.com",
-						"protocol":          "http",
-						"tenantId":          GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:              util.Ptr("testid"),
+						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              util.Ptr("testid.example.com"),
+						Protocol:          util.Ptr("http"),
+						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -134,26 +134,26 @@ func TestOrigins(t *testing.T) {
 					EndpointId:     GetOriginID(t, "origin2"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody: map[string]interface{}{
-						"name":            "origin2",
-						"cachegroup":      "originCachegroup",
-						"deliveryService": "ds2",
-						"fqdn":            "origin2.example.com",
-						"protocol":        "http",
-						"tenantId":        GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:            util.Ptr("origin2"),
+						Cachegroup:      util.Ptr("originCachegroup"),
+						DeliveryService: util.Ptr("ds2"),
+						FQDN:            util.Ptr("origin2.example.com"),
+						Protocol:        util.Ptr("http"),
+						TenantID:        util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"name":            "origin2",
-						"cachegroup":      "originCachegroup",
-						"deliveryService": "ds2",
-						"fqdn":            "origin2.example.com",
-						"protocol":        "http",
-						"tenantId":        GetTenantID(t, "tenant1")(),
+					RequestBody: tc.Origin{
+						Name:            util.Ptr("origin2"),
+						Cachegroup:      util.Ptr("originCachegroup"),
+						DeliveryService: util.Ptr("ds2"),
+						FQDN:            util.Ptr("origin2.example.com"),
+						Protocol:        util.Ptr("http"),
+						TenantID:        util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -176,15 +176,6 @@ func TestOrigins(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					origin := tc.Origin{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &origin)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -210,14 +201,14 @@ func TestOrigins(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateOrigin(origin)
+							resp, reqInf, err := testCase.ClientSession.CreateOrigin(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateOriginByIDWithHdr(testCase.EndpointId(), origin, testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.UpdateOriginByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

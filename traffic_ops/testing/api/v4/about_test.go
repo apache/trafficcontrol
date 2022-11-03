@@ -21,20 +21,24 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestAbout(t *testing.T) {
 
-	methodTests := utils.V4TestCase{
+	methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 		"GET": {
 			"OK when VALID request": {
-				ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				ClientSession: TOSession,
+				Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 			},
 			"UNAUTHORIZED when NOT LOGGED IN": {
-				ClientSession: NoAuthTOSession, Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+				ClientSession: NoAuthTOSession,
+				Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 			},
 		},
 	}
+
 	for method, testCases := range methodTests {
 		t.Run(method, func(t *testing.T) {
 			for name, testCase := range testCases {

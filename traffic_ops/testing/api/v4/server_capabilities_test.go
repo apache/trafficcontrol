@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -37,7 +36,7 @@ func TestServerCapabilities(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerCapability]{
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
@@ -58,12 +57,12 @@ func TestServerCapabilities(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"name": "foo"},
+					RequestBody:   tc.ServerCapability{Name: "foo"},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID NAME": {
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"name": "b@dname"},
+					RequestBody:   tc.ServerCapability{Name: "b@dname"},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
@@ -71,7 +70,7 @@ func TestServerCapabilities(t *testing.T) {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"blah"}}},
-					RequestBody:   map[string]interface{}{"name": "newname"},
+					RequestBody:   tc.ServerCapability{Name: "newname"},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServerCapabilitiesUpdateFields(map[string]interface{}{"Name": "newname"}),
 						validateSSCFieldsOnServerCapabilityUpdate("newname", map[string]interface{}{"ServerCapability": "newname"})),
@@ -79,7 +78,7 @@ func TestServerCapabilities(t *testing.T) {
 				"BAD REQUEST when NAME DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"invalid"}}},
-					RequestBody:   map[string]interface{}{"name": "newname"},
+					RequestBody:   tc.ServerCapability{Name: "newname"},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
@@ -88,7 +87,7 @@ func TestServerCapabilities(t *testing.T) {
 						QueryParameters: url.Values{"name": {"disk"}},
 						Header:          http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					},
-					RequestBody:  map[string]interface{}{"name": "newname"},
+					RequestBody:  tc.ServerCapability{Name: "newname"},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
@@ -97,7 +96,7 @@ func TestServerCapabilities(t *testing.T) {
 						QueryParameters: url.Values{"name": {"disk"}},
 						Header:          http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					},
-					RequestBody:  map[string]interface{}{"name": "newname"},
+					RequestBody:  tc.ServerCapability{Name: "newname"},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 			},
@@ -118,15 +117,6 @@ func TestServerCapabilities(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					serverCapability := tc.ServerCapability{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &serverCapability)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -137,14 +127,14 @@ func TestServerCapabilities(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateServerCapability(serverCapability, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.CreateServerCapability(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateServerCapability(testCase.RequestOpts.QueryParameters["name"][0], serverCapability, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateServerCapability(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

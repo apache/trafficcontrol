@@ -799,6 +799,14 @@ type Version struct {
 	Minor uint64
 }
 
+func (v *Version) LessThan(otherVersion *Version) bool {
+	return v.Major < otherVersion.Major || (v.Major == otherVersion.Major && v.Minor < otherVersion.Minor)
+}
+
+func (v *Version) GreaterThanOrEqualTo(otherVersion *Version) bool {
+	return !v.LessThan(otherVersion)
+}
+
 // GetRequestedAPIVersion returns a pointer to the requested API Version from the request if it exists or returns nil otherwise.
 func GetRequestedAPIVersion(path string) *Version {
 	pathParts := strings.Split(path, "/")
@@ -1082,9 +1090,9 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), nil, http.StatusUnauthorized
 	}
 
-	oldCookie, err := tocookie.Parse(secret, cookie.Value)
-	if err != nil {
-		return auth.CurrentUser{}, errors.New("unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
+	oldCookie, userErr, sysErr := tocookie.Parse(secret, cookie.Value)
+	if userErr != nil || sysErr != nil {
+		return auth.CurrentUser{}, userErr, sysErr, http.StatusUnauthorized
 	}
 
 	username := oldCookie.AuthData

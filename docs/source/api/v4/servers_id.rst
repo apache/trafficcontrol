@@ -160,9 +160,6 @@ Request Structure
 
 Response Structure
 ------------------
-:asns:             The :abbr:`ASN (Autonomous System Number)` associated with the cachegroups of the current server.
-
-	.. versionadded:: 4.1
 :cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
 :cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:            The integral, unique identifier of the CDN to which the server belongs
@@ -265,7 +262,6 @@ Response Structure
 		}
 	],
 	"response": {
-		"asns": [1,2],
 		"cachegroup": "CDN_in_a_Box_Mid",
 		"cachegroupId": 6,
 		"cdnId": 2,
@@ -359,9 +355,6 @@ Request Structure
 
 Response Structure
 ------------------
-:asns:             The :abbr:`ASN (Autonomous System Number)` associated with the cachegroups of the current server.
-
-	.. versionadded:: 4.1
 :cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belonged
 :cachegroupId:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belonged
 :cdnId:            The integral, unique identifier of the CDN to which the server belonged
@@ -460,7 +453,6 @@ Response Structure
 		}
 	],
 	"response": {
-		"asns": [1,2],
 		"cachegroup": "CDN_in_a_Box_Mid",
 		"cachegroupId": 6,
 		"cdnId": 2,

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $uibModal, $window, locationUtils, serverService, messageModel) {
+var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $uibModal, $window, locationUtils, serverService, messageModel, serverCapabilityService) {
 
 	var removeCapability = function(serverId) {
 		serverService.removeServerCapability(serverId, serverCapability.name)
@@ -66,6 +66,61 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 		locationUtils.navigateToPath('/servers/' + id);
 	};
 
+	$scope.selectServers = function () {
+        const oldServerIDs = new Set(servers.map(s=>s.serverId));
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/serverCapabilityServers/table.assignServersPerCapability.tpl.html',
+			controller: 'TableAssignServersPerCapabilityController',
+			size: 'md',
+			resolve: {
+				serverCapability: function() {
+					return serverCapability;
+				},
+				servers: function(serverService) {
+					return serverService.getServers();
+				},
+				assignedServers: function() {
+					return servers;
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedServers) {
+			const selectedServerIDs = new Set(selectedServers);
+			const toDelete = Array.from(oldServerIDs).filter(s => !selectedServerIDs.has(s));
+			const toCreate = Array.from(selectedServerIDs).filter(s => !oldServerIDs.has(s));
+			if (toCreate.length >= 1 && toDelete.length === 0) {
+				serverCapabilityService.assignServersCapabilities(toCreate, [serverCapability.name], "sc")
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+			} else if (toDelete.length >= 1 && toCreate.length === 0)  {
+				serverCapabilityService.deleteServersCapabilities(toDelete, [serverCapability.name], "sc")
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+			} else if (toCreate.length >= 1 && toDelete.length >= 1) {
+				serverCapabilityService.deleteServersCapabilities(toDelete, [serverCapability.name], "sc")
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+				serverCapabilityService.assignServersCapabilities(toCreate, [serverCapability.name], "sc")
+					.then(
+						function() {
+							$scope.refresh();
+						}
+					);
+			}
+		}, function () {
+			// do nothing
+		});
+	};
+
 	$scope.confirmRemoveCapability = function(serverId, $event) {
 		if ($event) {
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
@@ -104,5 +159,5 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 
 };
 
-TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'serverService', 'messageModel'];
+TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'serverService', 'messageModel', 'serverCapabilityService'];
 module.exports = TableServerCapabilityServersController;

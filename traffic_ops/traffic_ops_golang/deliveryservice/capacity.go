@@ -249,7 +249,7 @@ JOIN server as s ON s.profile = pr.id
 JOIN cdn as c ON c.id = s.cdn_id
 JOIN type as t ON s.type = t.id
 WHERE t.name LIKE 'EDGE%'
-AND pa.config_file = 'rascal-config.txt'
+AND pa.config_file = 'traffic_monitor-config.txt'
 AND pa.name = 'health.threshold.availableBandwidthInKbps'
 `)
 	if err != nil {

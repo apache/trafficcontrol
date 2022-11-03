@@ -225,8 +225,8 @@ to-enroll() {
 			export MY_STATUS="REPORTED"
 			;;
 		"tm" )
-			export MY_TYPE="RASCAL"
-			export MY_PROFILE="RASCAL-Traffic_Monitor"
+			export MY_TYPE="TRAFFIC_MONITOR"
+			export MY_PROFILE="TRAFFIC_MONITOR"
 			export MY_STATUS="ONLINE"
 			;;
 		"to" )
