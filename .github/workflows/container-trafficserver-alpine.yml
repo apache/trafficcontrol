@@ -26,12 +26,12 @@ on:
     paths:
       - .env
       - .github/containers/trafficserver-alpine/**
-      - .github/workflows/containers/trafficserver-alpine.yml
+      - .github/workflows/container-trafficserver-alpine.yml
   pull_request:
     paths:
       - .env
       - .github/containers/trafficserver-alpine/**
-      - .github/workflows/containers/trafficserver-alpine.yml
+      - .github/workflows/container-trafficserver-alpine.yml
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
@@ -66,9 +66,7 @@ jobs:
         run: echo 'IMAGE_NAME=${{ env.CONTAINER }}:${{ env.ATS_VERSION }}-${{ matrix.platform }}' >> '${{ github.env }}'
       - name: Install aarch64 emulator
         if: ${{ env.SHOULD_RUN == '1' && matrix.platform == 'arm64' }}
-        # Updated 2020-02-07 but we're still using docker/binfmt instead of tonistiigi/binfmt@qemu-v6.2.0
-        # because tonistiigi/binfmt@qemu-v6.2.0 fails on building trafficserver after about an hour
-        run: docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
+        run: docker run --rm --privileged tonistiigi/binfmt:qemu-v6.2.0 --install arm64
       - name: Make a Docker Buildx builder
         if: ${{ env.SHOULD_RUN == '1' && matrix.platform == 'arm64' }}
         run: docker buildx create --name arm64-builder --use
