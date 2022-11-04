@@ -2666,17 +2666,17 @@ func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairMisMatchedPr
 func TestVerifyInconsistentCertChain(t *testing.T) {
 	_, _, _, _, isInconsistent, err := verifyCertKeyPair(SelfSignedInconsistentCertChain, SelfSignedRSAPrivateKeyInvalidChain, "", true)
 	if err != nil {
-		t.Fatalf("expected mismatched to return no error")
+		t.Errorf("expected mismatched to return no error")
 	}
 	if !isInconsistent {
-		t.Fatalf("expected chain to be considered inconsistent")
+		t.Errorf("expected chain to be considered inconsistent")
 	}
 
 	_, _, _, _, isInconsistent, err = verifyCertKeyPair(SelfSignedCertChain+ValidIntermediateCert, SelfSignedRSAPrivateKeyInvalidChain, "", true)
 	if err != nil {
-		t.Fatalf("expected mismatched to return no error")
+		t.Errorf("expected mismatched to return no error")
 	}
 	if !isInconsistent {
-		t.Fatalf("expected chain to be considered inconsistent")
+		t.Errorf("expected chain to be considered inconsistent")
 	}
 }
