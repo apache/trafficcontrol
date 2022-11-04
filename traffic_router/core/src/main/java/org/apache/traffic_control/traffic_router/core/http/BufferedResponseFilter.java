@@ -31,17 +31,7 @@ public class BufferedResponseFilter extends OncePerRequestFilter {
 
 	public void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain) throws IOException, ServletException {
 		final BufferedResponse responseWrapper = new BufferedResponse(response);
-
 		chain.doFilter(request, responseWrapper);
-
-		// Close the connection without waiting for the 10-second connect timeout,
-		// in case the client does not close the connection. Even though this is
-		// the only case for which we are interested in sending Connection: close,
-		// sending it sometimes means we must always send it. From RFC 2616:
-		// > HTTP/1.1 applications that do not support persistent connections MUST
-		// > include the "close" connection option in every message.
-		response.addHeader(HttpHeaders.CONNECTION, "close");
-
 		responseWrapper.copyBodyToResponse();
 	}
 }
