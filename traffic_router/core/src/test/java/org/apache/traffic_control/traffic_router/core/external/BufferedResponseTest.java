@@ -17,9 +17,11 @@ package org.apache.traffic_control.traffic_router.core.external;
 
 import org.apache.traffic_control.traffic_router.core.http.RouterFilter;
 import org.apache.traffic_control.traffic_router.core.util.ExternalTest;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.catalina.LifecycleException;
+import org.apache.http.HttpHeaders;
 import org.apache.http.Header;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -36,6 +38,7 @@ import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,15 +64,15 @@ public class BufferedResponseTest {
 
 	@Test
 	public void itSetsContentLengthHeaderFor404() throws IOException {
-		final String encodedUrl = URLEncoder.encode("http://trafficrouter01.somedeliveryservice.somecdn.domain.foo/stuff", "utf-8");
+		final String encodedUrl = URLEncoder.encode("http://trafficrouter01.somedeliveryservice.somecdn.domain.foo/stuff", StandardCharsets.UTF_8);
 		final HttpGet httpGet = new HttpGet("http://localhost:3333/crs/deliveryservices?url=" + encodedUrl);
 		CloseableHttpResponse response = null;
 
 		try {
 			response = httpClient.execute(httpGet);
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(404));
-			assertThat(response.getFirstHeader("Transfer-Encoding"), nullValue());
-			assertThat(response.getFirstHeader("Content-Length"), notNullValue());
+			assertThat(response.getFirstHeader(HttpHeaders.TRANSFER_ENCODING), nullValue());
+			assertThat(response.getFirstHeader(HttpHeaders.CONTENT_LENGTH), notNullValue());
 		} finally {
 			if (response != null) response.close();
 		}
@@ -94,9 +97,9 @@ public class BufferedResponseTest {
 
 				try {
 					response = httpClient.execute(request);
-					final Header contentLengthHeader = response.getFirstHeader("Content-Length");
+					final Header contentLengthHeader = response.getFirstHeader(HttpHeaders.CONTENT_LENGTH);
 
-					assertThat(response.getFirstHeader("Transfer-Encoding"), nullValue());
+					assertThat(response.getFirstHeader(HttpHeaders.TRANSFER_ENCODING), nullValue());
 					assertThat(contentLengthHeader, notNullValue());
 					contentLengths.add(Integer.parseInt(contentLengthHeader.getValue()));
 				} finally {
@@ -125,14 +128,14 @@ public class BufferedResponseTest {
 
 				final ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 				final String json = EntityUtils.toString(response.getEntity());
-				final Header contentLengthHeader = response.getFirstHeader("Content-Length");
+				final Header contentLengthHeader = response.getFirstHeader(HttpHeaders.CONTENT_LENGTH);
 
 				/* If the content length is too low and cuts off the response
 				 * body, objectMapper.readTree(json) will likely throw a
 				 * JsonProcessingException.
 				 */
 				objectMapper.readTree(json);
-				assertThat(response.getFirstHeader("Transfer-Encoding"), nullValue());
+				assertThat(response.getFirstHeader(HttpHeaders.TRANSFER_ENCODING), nullValue());
 				assertThat(contentLengthHeader, notNullValue());
 				assertThat(Integer.parseInt(contentLengthHeader.getValue()), equalTo(json.length()));
 			} finally {
@@ -166,9 +169,8 @@ public class BufferedResponseTest {
 
 				try {
 					response = httpClient.execute(request);
-					final Header contentLengthHeader = response.getFirstHeader("Content-Length");
-
-					assertThat(response.getFirstHeader("Transfer-Encoding"), nullValue());
+					final Header contentLengthHeader = response.getFirstHeader(HttpHeaders.CONTENT_LENGTH);
+					assertThat(response.getFirstHeader(HttpHeaders.TRANSFER_ENCODING), nullValue());
 					assertThat(contentLengthHeader, notNullValue());
 					contentLengths.add(Integer.parseInt(contentLengthHeader.getValue()));
 				} finally {
