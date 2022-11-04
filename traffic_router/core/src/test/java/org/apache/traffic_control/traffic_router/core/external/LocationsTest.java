@@ -15,6 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.core.external;
 
+import org.apache.http.HttpHeaders;
 import org.apache.traffic_control.traffic_router.core.util.ExternalTest;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
@@ -173,6 +175,7 @@ public class LocationsTest {
 			try {
 				response = closeableHttpClient.execute(httpHead);
 				assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
+				assertThat(response.getFirstHeader(HttpHeaders.CONTENT_LENGTH), notNullValue());
 			} finally {
 				if (response != null) response.close();
 			}
