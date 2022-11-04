@@ -405,13 +405,15 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 }
 
 // getCDNInfo returns the CDN domain, and whether DNSSec is enabled
-func getCDNInfo(cdn string, tx *sql.Tx) (string, bool, error) {
+func getCDNInfo(cdn string, tx *sql.Tx) (string, bool, int, error) {
 	domain := ""
 	dnssec := false
-	if err := tx.QueryRow(`select domain_name, dnssec_enabled from cdn where name = $1`, cdn).Scan(&domain, &dnssec); err != nil {
-		return "", false, errors.New("Error querying CDN domain name: " + err.Error())
+	ttlOverride := sql.NullInt64{}
+	err := tx.QueryRow(`select domain_name, dnssec_enabled, ttl_override from cdn where name = $1`, cdn).Scan(&domain, &dnssec, &ttlOverride)
+	if err != nil {
+		err = errors.New("Error querying CDN domain name: " + err.Error())
 	}
-	return domain, dnssec, nil
+	return domain, dnssec, int(ttlOverride.Int64), err
 }
 
 // getCDNNameFromID returns the CDN name given the ID, false if the no CDN with the given ID exists, and an error if the database query fails.

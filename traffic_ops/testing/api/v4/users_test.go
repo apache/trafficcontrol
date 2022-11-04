@@ -15,7 +15,6 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -25,6 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -41,7 +41,7 @@ func TestUsers(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.UserV4]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -73,14 +73,13 @@ func TestUsers(t *testing.T) {
 			"POST": {
 				"FORBIDDEN when CHILD TENANT creates USER with PARENT TENANCY": {
 					ClientSession: tenant4UserSession,
-					RequestBody: map[string]interface{}{
-						"email":              "outsidetenancy@example.com",
-						"fullName":           "Outside Tenancy",
-						"localPasswd":        "pa$$word",
-						"confirmLocalPasswd": "pa$$word",
-						"role":               "operations",
-						"tenantId":           GetTenantID(t, "tenant3")(),
-						"username":           "outsideTenantUser",
+					RequestBody: tc.UserV4{
+						Email:         util.Ptr("outsidetenancy@example.com"),
+						FullName:      util.Ptr("Outside Tenancy"),
+						LocalPassword: util.Ptr("pa$$word"),
+						Role:          "operations",
+						TenantID:      GetTenantID(t, "tenant3")(),
+						Username:      "outsideTenantUser",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -89,21 +88,20 @@ func TestUsers(t *testing.T) {
 				"OK when VALID request": {
 					EndpointId:    GetUserID(t, "steering"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"addressLine1":       "updated line 1",
-						"addressLine2":       "updated line 2",
-						"city":               "updated city name",
-						"company":            "new company",
-						"country":            "US",
-						"email":              "steeringupdated@example.com",
-						"fullName":           "Steering User Updated",
-						"localPasswd":        "pa$$word",
-						"confirmLocalPasswd": "pa$$word",
-						"newUser":            false,
-						"role":               "steering",
-						"tenant":             "root",
-						"tenantId":           GetTenantID(t, "root")(),
-						"username":           "steering",
+					RequestBody: tc.UserV4{
+						AddressLine1:  util.Ptr("updated line 1"),
+						AddressLine2:  util.Ptr("updated line 2"),
+						City:          util.Ptr("updated city name"),
+						Company:       util.Ptr("new company"),
+						Country:       util.Ptr("US"),
+						Email:         util.Ptr("steeringupdated@example.com"),
+						FullName:      util.Ptr("Steering User Updated"),
+						LocalPassword: util.Ptr("pa$$word"),
+						NewUser:       false,
+						Role:          "steering",
+						Tenant:        util.Ptr("root"),
+						TenantID:      GetTenantID(t, "root")(),
+						Username:      "steering",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateUsersUpdateCreateFields(map[string]interface{}{"AddressLine1": "updated line 1",
@@ -113,20 +111,19 @@ func TestUsers(t *testing.T) {
 				"OK when UPDATING SELF": {
 					EndpointId:    GetUserID(t, "opsuser"),
 					ClientSession: opsUserSession,
-					RequestBody: map[string]interface{}{
-						"addressLine1":       "address of ops",
-						"addressLine2":       "place",
-						"city":               "somewhere",
-						"company":            "else",
-						"country":            "UK",
-						"email":              "ops-updated@example.com",
-						"fullName":           "Operations User Updated",
-						"localPasswd":        "pa$$word",
-						"confirmLocalPasswd": "pa$$word",
-						"role":               "operations",
-						"tenant":             "root",
-						"tenantId":           GetTenantID(t, "root")(),
-						"username":           "opsuser",
+					RequestBody: tc.UserV4{
+						AddressLine1:  util.Ptr("address of ops"),
+						AddressLine2:  util.Ptr("place"),
+						City:          util.Ptr("somewhere"),
+						Company:       util.Ptr("else"),
+						Country:       util.Ptr("UK"),
+						Email:         util.Ptr("ops-updated@example.com"),
+						FullName:      util.Ptr("Operations User Updated"),
+						LocalPassword: util.Ptr("pa$$word"),
+						Role:          "operations",
+						Tenant:        util.Ptr("root"),
+						TenantID:      GetTenantID(t, "root")(),
+						Username:      "opsuser",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateUsersUpdateCreateFields(map[string]interface{}{"Email": "ops-updated@example.com", "FullName": "Operations User Updated"})),
@@ -134,50 +131,47 @@ func TestUsers(t *testing.T) {
 				"NOT FOUND when UPDATING SELF with ROLE that DOESNT EXIST": {
 					EndpointId:    GetUserID(t, "opsuser"),
 					ClientSession: opsUserSession,
-					RequestBody: map[string]interface{}{
-						"addressLine1":       "address of ops",
-						"addressLine2":       "place",
-						"city":               "somewhere",
-						"company":            "else",
-						"country":            "UK",
-						"email":              "ops-updated@example.com",
-						"fullName":           "Operations User Updated",
-						"localPasswd":        "pa$$word",
-						"confirmLocalPasswd": "pa$$word",
-						"role":               "operations_updated",
-						"tenant":             "root",
-						"tenantId":           GetTenantID(t, "root")(),
-						"username":           "opsuser",
+					RequestBody: tc.UserV4{
+						AddressLine1:  util.Ptr("address of ops"),
+						AddressLine2:  util.Ptr("place"),
+						City:          util.Ptr("somewhere"),
+						Company:       util.Ptr("else"),
+						Country:       util.Ptr("UK"),
+						Email:         util.Ptr("ops-updated@example.com"),
+						FullName:      util.Ptr("Operations User Updated"),
+						LocalPassword: util.Ptr("pa$$word"),
+						Role:          "operations_updated",
+						Tenant:        util.Ptr("root"),
+						TenantID:      GetTenantID(t, "root")(),
+						Username:      "opsuser",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"FORBIDDEN when OPERATIONS USER updates ADMIN USER": {
 					EndpointId:    GetUserID(t, "admin"),
 					ClientSession: opsUserSession,
-					RequestBody: map[string]interface{}{
-						"email":              "oops@ops.net",
-						"fullName":           "oops",
-						"localPasswd":        "pa$$word",
-						"confirmLocalPasswd": "pa$$word",
-						"role":               "admin",
-						"tenant":             "root",
-						"tenantId":           GetTenantID(t, "root")(),
-						"username":           "admin",
+					RequestBody: tc.UserV4{
+						Email:         util.Ptr("oops@ops.net"),
+						FullName:      util.Ptr("oops"),
+						LocalPassword: util.Ptr("pa$$word"),
+						Role:          "admin",
+						Tenant:        util.Ptr("root"),
+						TenantID:      GetTenantID(t, "root")(),
+						Username:      "admin",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"FORBIDDEN when CHILD TENANT USER updates PARENT TENANT USER": {
 					EndpointId:    GetUserID(t, "tenant3user"),
 					ClientSession: tenant4UserSession,
-					RequestBody: map[string]interface{}{
-						"email":              "tenant3user@example.com",
-						"fullName":           "Parent tenant test",
-						"localPasswd":        "pa$$word",
-						"confirmLocalPasswd": "pa$$word",
-						"role":               "admin",
-						"tenant":             "tenant2",
-						"tenantId":           GetTenantID(t, "tenant2")(),
-						"username":           "tenant3user",
+					RequestBody: tc.UserV4{
+						Email:         util.Ptr("tenant3user@example.com"),
+						FullName:      util.Ptr("Parent tenant test"),
+						LocalPassword: util.Ptr("pa$$word"),
+						Role:          "admin",
+						Tenant:        util.Ptr("tenant2"),
+						TenantID:      GetTenantID(t, "tenant2")(),
+						Username:      "tenant3user",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -187,15 +181,6 @@ func TestUsers(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					user := tc.UserV4{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &user)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
@@ -206,14 +191,14 @@ func TestUsers(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateUser(user, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.CreateUser(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateUser(testCase.EndpointId(), user, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateUser(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

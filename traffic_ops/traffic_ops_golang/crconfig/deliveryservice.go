@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -43,14 +44,25 @@ const DefaultTLDTTLNS = 3600 * time.Second
 const GeoProviderMaxmindStr = "maxmindGeolocationService"
 const GeoProviderNeustarStr = "neustarGeolocationService"
 
-func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeliveryService, error) {
+func makeDSes(cdn string, domain string, ttlOverride int, tx *sql.Tx) (map[string]tc.CRConfigDeliveryService, error) {
 	dses := map[string]tc.CRConfigDeliveryService{}
 
 	admin := CDNSOAAdmin
-	expireSecondsStr := strconv.Itoa(int(CDNSOAExpire / time.Second))
-	minimumSecondsStr := strconv.Itoa(int(CDNSOAMinimum / time.Second))
-	refreshSecondsStr := strconv.Itoa(int(CDNSOARefresh / time.Second))
-	retrySecondsStr := strconv.Itoa(int(CDNSOARetry / time.Second))
+	expireSeconds := int(CDNSOAExpire / time.Second)
+	minimumSeconds := int(CDNSOAMinimum / time.Second)
+	refreshSeconds := int(CDNSOARefresh / time.Second)
+	retrySeconds := int(CDNSOARetry / time.Second)
+	if ttlOverride > 0 {
+		expireSeconds = int(math.Min(float64(ttlOverride), float64(expireSeconds)))
+		minimumSeconds = int(math.Min(float64(ttlOverride), float64(minimumSeconds)))
+		refreshSeconds = int(math.Min(float64(ttlOverride), float64(refreshSeconds)))
+		retrySeconds = int(math.Min(float64(ttlOverride), float64(retrySeconds)))
+	}
+
+	expireSecondsStr := strconv.Itoa(expireSeconds)
+	minimumSecondsStr := strconv.Itoa(minimumSeconds)
+	refreshSecondsStr := strconv.Itoa(refreshSeconds)
+	retrySecondsStr := strconv.Itoa(retrySeconds)
 	cdnSOA := &tc.SOA{
 		Admin:          &admin,
 		ExpireSeconds:  &expireSecondsStr,
@@ -75,6 +87,8 @@ func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeli
 	if err != nil {
 		return nil, errors.New("getting deliveryservice parameters: " + err.Error())
 	}
+
+	ttlOverrideDuration := time.Duration(ttlOverride) * time.Second
 
 	dsParams, err := getDSParams(serverParams)
 	if err != nil {
@@ -213,6 +227,10 @@ AND d.active = true
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
 
+		if ttlOverride > 0 && ds.TTL != nil {
+			*ds.TTL = int(math.Min(float64(ttlOverride), float64(*ds.TTL)))
+		}
+
 		// TODO prevent (lat XOR lon) in the Tx and UI
 		if missLat.Valid && missLon.Valid {
 			ds.MissLocation = &tc.CRConfigLatitudeLongitudeShort{Lat: missLat.Float64, Lon: missLon.Float64}
@@ -313,7 +331,13 @@ AND d.active = true
 				}
 			}
 		}
+		if ttlOverride > 0 && ttlOverrideDuration < nsSeconds {
+			nsSeconds = ttlOverrideDuration
+		}
 		nsSecondsStr := strconv.Itoa(int(nsSeconds / time.Second))
+		if ttlOverride > 0 && ttlOverrideDuration < soaSeconds {
+			soaSeconds = ttlOverrideDuration
+		}
 		soaSecondsStr := strconv.Itoa(int(soaSeconds / time.Second))
 		ttlStr := ""
 		if ds.TTL != nil {
@@ -336,6 +360,9 @@ AND d.active = true
 			}
 			if dnsBypassTTL.Valid {
 				i := int(dnsBypassTTL.Int64)
+				if ttlOverride > 0 {
+					i = int(math.Min(float64(ttlOverride), float64(i)))
+				}
 				bypassDest.TTL = &i
 			}
 			if dnsBypassCName.Valid && dnsBypassCName.String != "" {
@@ -411,6 +438,13 @@ AND d.active = true
 		}
 
 		ds.StaticDNSEntries = staticDNSEntries[tc.DeliveryServiceName(xmlID)]
+		if ttlOverride > 0 {
+			for xmlID := range staticDNSEntries {
+				for index := range staticDNSEntries[xmlID] {
+					staticDNSEntries[xmlID][index].TTL = ttlOverride
+				}
+			}
+		}
 
 		dses[xmlID] = ds
 	}
@@ -534,8 +568,8 @@ func getDSParams(serverParams map[string]map[string]string) (map[string]string, 
 		"tld.soa.minimum":   struct{}{},
 		"tld.soa.refresh":   struct{}{},
 		"tld.soa.retry":     struct{}{},
-		"tld.ttls.SOA":      struct{}{},
-		"tld.ttls.NS":       struct{}{},
+		tc.CrConfigTTLSOA:   struct{}{},
+		tc.CrConfigTTLNS:    struct{}{},
 		"LogRequestHeaders": struct{}{},
 	}
 	dsParams := map[string]string{}

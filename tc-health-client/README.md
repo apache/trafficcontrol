@@ -69,26 +69,28 @@ Requires Apache TrafficServer 8.1.0 or later.
 
 # OPTIONS
 
--f, -\-config-file=config-file 
-  
-Specify the config file to use.  
-Defaults to /etc/trafficcontro-health-client/tc-health-client.json
+-f, -\-config-file=config-file
 
--h, -\-help 
+  Specify the config file to use.
+  Defaults to /etc/trafficcontro-health-client/tc-health-client.json
 
-Prints command line usage and exits
+-h, -\-help
+
+  Prints command line usage and exits
 
 -l, -\-logging-dir=logging-directory
 
-Specify the directory where log files are kept.  The default location
-is **/var/log/trafficcontrol/**
+  Specify the directory where log files are kept.  The default location
+  is **/var/log/trafficcontrol/**
+
+-l, -\-logging-dir=logging-directory
 
 -v, -\-verbose
 
-Logging verbosity.  Errors are logged to the default log file 
-**/var/log/trafficcontrol/tc-health-client.log**
-To add Warnings, use -v.  To add Warnings and Informational 
-logging, use -vv.  Finally you may add Debug logging using -vvv.
+  Logging verbosity.  Errors are logged to the default log file
+  **/var/log/trafficcontrol/tc-health-client.log**
+  To add Warnings, use -v.  To add Warnings and Informational
+  logging, use -vv.  Finally you may add Debug logging using -vvv.
 
 # CONFIGURATION
 
@@ -103,21 +105,28 @@ Sample configuarion file:
     "enable-active-markdowns": false,
     "reason-code": "active",
     "to-credential-file": "/etc/credentials",
-    "to-url": "https://tp.cdn.com:443", 
+    "to-url": "https://tp.cdn.com:443",
     "to-request-timeout-seconds": "5s",
     "tm-poll-interval-seconds": "60s",
-    "tm-proxy-url", "http://sample-http-proxy.cdn.net:80",
+    "tm-proxy-url": "http://sample-http-proxy.cdn.net:80",
     "to-login-dispersion-factor": 90,
     "unavailable-poll-threshold": 2,
     "markup-poll-threshold": 1,
     "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",
     "trafficserver-bin-dir": "/opt/trafficserver/bin",
     "poll-state-json-log": "/var/log/trafficcontrol/poll-state.json",
-    "enable-poll-state-log": false
+    "enable-poll-state-log": false,
+    "parent-health-poll-ms": 10000,
+    "serve-parent-health": true,
+    "parent-health-service-port": 31337,
+    "parent-health-log-location": "/var/log/trafficcontrol/tc-health-client_parent-health.log",
+    "health-methods": ["traffic-monitor", "parent-l4", "parent-l7", "parent-service"],
+    "markdown-methods": ["traffic-monitor", "parent-l4", "parent-l7", "parent-service"],
+    "hostname": ""
   }
 ```
 
-### cdn-name 
+### cdn-name
 
 The name of the CDN that the Traffic Server host is a member of.
 
@@ -135,7 +144,7 @@ hosts in the Traffic Server **HostStatus** subsystem.
 
 ### to-credential-file
 
-The file where **Traffic Ops** credentials are read.  The file should define the 
+The file where **Traffic Ops** credentials are read.  The file should define the
 following variables:
 
 * TO_URL="https://trafficops.cdn.com"
@@ -185,7 +194,7 @@ with the parent reported as healthy.  The default threshold is 1.
 
 ### trafficserver-config-dir
 
-The location on the host where **Traffic Server** configuration files are 
+The location on the host where **Traffic Server** configuration files are
 located.
 
 ### trafficserver-bin-dir
@@ -195,7 +204,7 @@ be found.
 
 ### poll-state-json-log ###
 
-The full path to the polling state file which contains information 
+The full path to the polling state file which contains information
 about the current status of parents and the health client configuration.
 Polling state data is written to this file after each polling cycle when
 enabled, see **enable-poll-state-log**
@@ -204,6 +213,54 @@ enabled, see **enable-poll-state-log**
 
 Enable writing the Polling state to the **poll-state-json-log** after
 eache polling cycle.  Default **false**, disabled
+
+### markdown-min-interval-ms ###
+
+Minimum interval between markdown processing in milliseconds. When health polls finish, they automatically signal the markdown service to mark down accordingly. This is the minimum time to wait between processing, to avoid too much processing. To always process markdowns as soon as every health poll finishes, set to 0. Default is 5 seconds.
+
+### parent-health-l4-poll-ms ###
+
+Interval to poll for parent health via L4 in milliseconds.
+
+### parent-health-l7-poll-ms ###
+
+Interval to poll for parent health via L7 in milliseconds.
+
+### parent-health-service-poll-ms ###
+
+Interval to poll for parent health from parents' health service in milliseconds.
+
+### parent-health-service-port ###
+
+The port to serve the JSON parent health data over HTTP. To disable serving, set to < 1. Default is 0, disabled.
+
+### parent-health-log-location ###
+
+The location to log parent health changes. May be stdout, stderr, null, or a file path.
+
+### health-methods ###
+
+The health methods to poll. Options are 'traffic-monitor', 'parent-l4', 'parent-l7', and 'parent-service'.
+
+Traffic Monitor requests Traffic Monitor and uses its boolean CRStates API for health.
+
+Parent L4 polls all parents via a HTTP request. Any valid response, including HTTP error codes, is considered a success. Only a failed HTTP request is considered unhealthy.
+
+Parent L7 polls all parents via a TCP SYN. Any valid TCP ACK response within the timeout is considered healthy. Failure to receive an ACK before the timeout is considered unhealthy. Note this also sends a TCP Reset to aid the host in quickly releasing resources.
+
+Parent Service polls the tc-health-client parent service, on the same port as this host's parent service, and uses a heuristic of the parent's own available parents to determine health. The heuristic is currently 50%, but that may change or be made configurable in the future. That is, if more than 50% of a parent cache's own parents are unavailable, the parent is unhealthy.
+
+### markdown-methods ###
+
+Markdown methods are the health methods to consider when marking down parents. See health-methods. Hence, a method may be polled via health-methods and logged and served for informational purposes, without using that method to mark down parents.
+
+### num-health-workers ###
+
+The number of worker microthreads (goroutines) per health poll method.
+
+Note this only applies to Parent L4, Parent L7, and Parent Service health; the Traffic Monitor health poll is a single HTTP request and thus doesn't need workers.
+
+### hostname ###
 
 # Files
 
@@ -215,4 +272,3 @@ eache polling cycle.  Default **false**, disabled
 * Traffic Server **parent.config**
 * Traffic Server **strategies.yaml**
 * Traffic Server **traffic_ctl** command
-  

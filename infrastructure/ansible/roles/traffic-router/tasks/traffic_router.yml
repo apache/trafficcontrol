@@ -32,7 +32,7 @@
   yum:
     name:
       - java-11-openjdk
-      - tomcat-native-1.2.23
+      - tomcat-native-1.2.35
     state: present
     update_cache: yes
     use_backend: yum

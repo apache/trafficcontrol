@@ -29,7 +29,7 @@ import (
 func TestProfilesExport(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[struct{}]{
 			"GET": {
 				"OK when VALID request": {
 					EndpointId:    GetProfileID(t, "EDGE1"),

@@ -35,7 +35,7 @@ func Make(tx *sql.Tx, cdn, user, toHost, toVersion string, useClientReqHost bool
 	crc := tc.CRConfig{}
 	err := error(nil)
 
-	cdnDomain, dnssecEnabled, err := getCDNInfo(cdn, tx)
+	cdnDomain, dnssecEnabled, ttlOverride, err := getCDNInfo(cdn, tx)
 	if err != nil {
 		return nil, errors.New("Error getting CDN info: " + err.Error())
 	}
@@ -50,7 +50,7 @@ func Make(tx *sql.Tx, cdn, user, toHost, toVersion string, useClientReqHost bool
 	if crc.EdgeLocations, crc.RouterLocations, err = makeLocations(cdn, tx); err != nil {
 		return nil, errors.New("Error getting Edge Locations: " + err.Error())
 	}
-	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, tx); err != nil {
+	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, ttlOverride, tx); err != nil {
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
 	}
 	if crc.Topologies, err = topology.MakeTopologies(tx); err != nil {

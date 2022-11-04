@@ -119,7 +119,7 @@ describe("ServerDetailsComponent", () => {
 		expect(component.isCache()).toBeTrue();
 		s.type = "a string that merely CONTAINS 'EDGE' instead of starting with it";
 		expect(component.isCache()).toBeFalse();
-		s.type = "RASCAL";
+		s.type = "TRAFFIC_MONITOR";
 		expect(component.isCache()).toBeFalse();
 	});
 

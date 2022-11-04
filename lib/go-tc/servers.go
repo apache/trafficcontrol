@@ -34,7 +34,7 @@ import (
 
 // ServersV4Response is the format of a response to a GET request for API v4.x /servers.
 type ServersV4Response struct {
-	Response []ServerV41 `json:"response"`
+	Response []ServerV40 `json:"response"`
 	Summary  struct {
 		Count uint64 `json:"count"`
 	} `json:"summary"`
@@ -1019,12 +1019,6 @@ func UpdateServerPropertiesV40(profileNames []string, properties CommonServerPro
 	}
 }
 
-// ServerV41 is the representation of a Server in version 4.1 of the Traffic Ops API.
-type ServerV41 struct {
-	ServerV40
-	ASNs []int64 `json:"asns"`
-}
-
 // ServerV40 is the representation of a Server in version 4.0 of the Traffic Ops API.
 type ServerV40 struct {
 	Cachegroup        *string                  `json:"cachegroup" db:"cachegroup"`
@@ -1072,7 +1066,7 @@ type ServerV40 struct {
 
 // ServerV4 is the representation of a Server in the latest minor version of
 // version 4 of the Traffic Ops API.
-type ServerV4 = ServerV41
+type ServerV4 = ServerV40
 
 // ServerV30 is the representation of a Server in version 3 of the Traffic Ops API.
 type ServerV30 struct {

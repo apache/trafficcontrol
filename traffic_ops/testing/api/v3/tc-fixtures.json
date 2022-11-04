@@ -1580,6 +1580,10 @@
         {
             "xmlId": "ds2",
             "serverNames": ["atlanta-org-2"]
+        },
+        {
+            "xmlId": "anymap-ds",
+            "serverNames": ["atlanta-edge-15"]
         }
     ],
     "topologyBasedDeliveryServicesRequiredCapabilities": [
@@ -1697,7 +1701,7 @@
     ],
     "parameters": [
         {
-            "configFile": "rascal.properties",
+            "configFile": "traffic_monitor.properties",
             "lastUpdated": "2018-01-19T19:01:21.489534+00:00",
             "name": "history.count",
             "secure": false,
@@ -1845,6 +1849,12 @@
             "name": "location",
             "secure": false,
             "value": "/remap/config/location/parameter/"
+        },
+        {
+            "configFile": "global",
+            "name": "tm.url",
+            "secure": false,
+            "value": "https://crconfig.tm.url.test.invalid"
         }
     ],
     "physLocations": [
@@ -2063,13 +2073,13 @@
                     "value": "INT 0"
                 },
                 {
-                    "configFile": "rascal.properties",
+                    "configFile": "traffic_monitor.properties",
                     "name": "health.threshold.queryTime",
                     "secure": false,
                     "value": "1000"
                 },
                 {
-                    "configFile": "rascal.properties",
+                    "configFile": "traffic_monitor.properties",
                     "name": "health.polling.url",
                     "secure": false,
                     "value": "http://${hostname}/_astats?application=&inf.name=${interface_name}"
@@ -2081,7 +2091,7 @@
                     "value": "1"
                 },
                 {
-                    "configFile": "rascal.properties",
+                    "configFile": "traffic_monitor.properties",
                     "name": "health.connection.timeout",
                     "secure": false,
                     "value": "2000"
@@ -2286,19 +2296,19 @@
             "type": "ATS_PROFILE",
             "params": [
                 {
-                    "configFile": "rascal.properties",
+                    "configFile": "traffic_monitor.properties",
                     "name": "health.threshold.loadavg",
                     "secure": false,
                     "value": "25.0"
                 },
                 {
-                    "configFile": "rascal.properties",
+                    "configFile": "traffic_monitor.properties",
                     "name": "health.threshold.availableBandwidthInKbps",
                     "secure": false,
                     "value": ">1750000"
                 },
                 {
-                    "configFile": "rascal.properties",
+                    "configFile": "traffic_monitor.properties",
                     "name": "health.threshold.queryTime",
                     "secure": false,
                     "value": "1000"
@@ -2370,33 +2380,33 @@
         },
         {
             "cdnName": "cdn1",
-            "description": "rascal description",
+            "description": "traffic_monitor description",
             "lastUpdated": "2018-03-02T17:27:11.813052+00:00",
-            "name": "RASCAL1",
+            "name": "TRAFFIC_MONITOR1",
             "routing_disabled": false,
             "type": "TM_PROFILE",
             "params": [
                 {
-                    "configFile": "rascal.properties",
+                    "configFile": "traffic_monitor.properties",
                     "name": "health.threshold.queryTime",
                     "secure": false,
                     "value": "1000"
                 },
                 {
-                    "configFile": "rascal.properties",
+                    "configFile": "traffic_monitor.properties",
                     "name": "health.polling.url",
                     "secure": false,
                     "value": "http://${hostname}/_astats?application=&inf.name=${interface_name}"
                 },
                 {
-                    "configFile": "rascal-config.txt",
+                    "configFile": "traffic_monitor-config.txt",
                     "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
                     "name": "peers.polling.interval",
                     "secure": false,
                     "value": "60"
                 },
                 {
-                    "configFile": "rascal-config.txt",
+                    "configFile": "traffic_monitor-config.txt",
                     "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
                     "name": "health.polling.interval",
                     "secure": false,
@@ -3072,7 +3082,7 @@
             "cdnName": "cdn1",
             "domainName": "kabletown.net",
             "guid": null,
-            "hostName": "rascal01",
+            "hostName": "tm01",
             "httpsPort": 443,
             "iloIpAddress": "",
             "iloIpGateway": "",
@@ -3105,14 +3115,14 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "RASCAL1",
+            "profile": "TRAFFIC_MONITOR1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
             "status": "REPORTED",
             "tcpPort": 81,
-            "type": "RASCAL",
+            "type": "TRAFFIC_MONITOR",
             "updPending": false,
             "xmppId": "",
             "xmppPasswd": "X"
@@ -5431,9 +5441,9 @@
             "useInTable": "server"
         },
         {
-            "description": "Traffic Monitor (Rascal)",
+            "description": "Traffic Monitor",
             "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
-            "name": "RASCAL",
+            "name": "TRAFFIC_MONITOR",
             "useInTable": "server"
         }
     ],

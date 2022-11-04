@@ -37,7 +37,6 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	cfg := Cfg{
-		TrafficMonitors:        make(map[string]bool, 0),
 		HealthClientConfigFile: cf,
 	}
 

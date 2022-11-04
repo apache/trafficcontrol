@@ -27,7 +27,7 @@ import (
 func TestServersHostnameUpdateStatus(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
 
-		methodTests := utils.V5TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
@@ -48,12 +48,11 @@ func TestServersHostnameUpdateStatus(t *testing.T) {
 
 					switch method {
 					case "GET":
-						var hostName string
-						if hostNameParam, ok := testCase.RequestOpts.QueryParameters["hostName"]; ok {
-							hostName = hostNameParam[0]
+						if _, ok := testCase.RequestOpts.QueryParameters["hostName"]; !ok {
+							t.Fatalf("Query Parameter: \"hostName\" is required for GET method tests.")
 						}
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetServerUpdateStatus(hostName, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetServerUpdateStatus(testCase.RequestOpts.QueryParameters["hostName"][0], testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

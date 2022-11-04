@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"testing"
 	"time"
@@ -35,7 +34,7 @@ func TestFederationUsers(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.FederationUserPost]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					EndpointId:     GetFederationID(t, "the.cname.com."),
@@ -53,32 +52,47 @@ func TestFederationUsers(t *testing.T) {
 				"OK when VALID request": {
 					EndpointId:    GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"userIds": []int{GetUserID(t, "readonlyuser")(), GetUserID(t, "disalloweduser")()}, "replace": false},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					RequestBody: tc.FederationUserPost{
+						IDs:     []int{GetUserID(t, "readonlyuser")(), GetUserID(t, "disalloweduser")()},
+						Replace: util.Ptr(false),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when REPLACING USERS": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"userIds": []int{GetUserID(t, "readonlyuser")()}, "replace": true},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					RequestBody: tc.FederationUserPost{
+						IDs:     []int{GetUserID(t, "readonlyuser")()},
+						Replace: util.Ptr(true),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when ADDING USER": {
 					EndpointId:    GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"userIds": []int{GetUserID(t, "disalloweduser")()}, "replace": false},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					RequestBody: tc.FederationUserPost{
+						IDs:     []int{GetUserID(t, "disalloweduser")()},
+						Replace: util.Ptr(false),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when INVALID FEDERATION ID": {
 					EndpointId:    func() int { return -1 },
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"userIds": []int{}, "replace": false},
-					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+					RequestBody: tc.FederationUserPost{
+						IDs:     []int{},
+						Replace: util.Ptr(false),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when INVALID USER ID": {
 					EndpointId:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
-					RequestBody:   map[string]interface{}{"userIds": []int{-1}, "replace": false},
-					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
+					RequestBody: tc.FederationUserPost{
+						IDs:     []int{-1},
+						Replace: util.Ptr(false),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 			},
 			"GET AFTER CHANGES": {
@@ -94,17 +108,8 @@ func TestFederationUsers(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					federationUser := tc.FederationUserPost{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &federationUser)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetFederationUsersWithHdr(testCase.EndpointId(), testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
@@ -113,7 +118,7 @@ func TestFederationUsers(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateFederationUsers(testCase.EndpointId(), federationUser.IDs, *federationUser.Replace)
+							alerts, reqInf, err := testCase.ClientSession.CreateFederationUsers(testCase.EndpointId(), testCase.RequestBody.IDs, *testCase.RequestBody.Replace)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

@@ -587,7 +587,7 @@ func (s TrafficOpsSessionThreadsafe) fetchServerByHostname(hostName string) (tc.
 	for i, srv := range resp.Response {
 		num = i
 		if srv.CDNName != nil && srv.HostName != nil && *srv.HostName == hostName {
-			server = srv.ServerV40
+			server = srv
 			found = true
 			break
 		}

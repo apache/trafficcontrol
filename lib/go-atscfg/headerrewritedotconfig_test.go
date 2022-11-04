@@ -364,6 +364,249 @@ func TestGetCachegroupsInSameTopologyTier(t *testing.T) {
 	}
 }
 
+func TestGetAssignedTierPeers(t *testing.T) {
+	allCachegroups := []tc.CacheGroupNullable{
+		{
+			Name:       util.StrPtr("edge1"),
+			ParentName: util.Ptr("mid1"),
+			Type:       util.StrPtr(tc.CacheGroupEdgeTypeName),
+		},
+		{
+			Name:       util.StrPtr("edge2"),
+			ParentName: util.Ptr("mid2"),
+			Type:       util.StrPtr(tc.CacheGroupEdgeTypeName),
+		},
+		{
+			Name:       util.StrPtr("mid1"),
+			ParentName: util.Ptr("org1"),
+			Type:       util.StrPtr(tc.CacheGroupMidTypeName),
+		},
+		{
+			Name:       util.StrPtr("mid2"),
+			ParentName: util.Ptr("org1"),
+			Type:       util.StrPtr(tc.CacheGroupMidTypeName),
+		},
+		{
+			Name: util.StrPtr("org1"),
+			Type: util.StrPtr(tc.CacheGroupOriginTypeName),
+		},
+	}
+
+	edges := []Server{
+		{
+			Cachegroup: util.Ptr("edge1"),
+			CDNName:    util.Ptr("mycdn"),
+			HostName:   util.Ptr("edgeCache1"),
+			ID:         util.Ptr(1),
+			Status:     util.Ptr(string(tc.CacheStatusReported)),
+		},
+		{
+			Cachegroup: util.Ptr("edge2"),
+			CDNName:    util.Ptr("mycdn"),
+			HostName:   util.Ptr("edgeCache2"),
+			ID:         util.Ptr(2),
+			Status:     util.Ptr(string(tc.CacheStatusReported)),
+		},
+	}
+	mids := []Server{
+		{
+			Cachegroup: util.Ptr("mid1"),
+			CDNName:    util.Ptr("mycdn"),
+			HostName:   util.Ptr("midCache1"),
+			ID:         util.Ptr(3),
+			Status:     util.Ptr(string(tc.CacheStatusReported)),
+			Type:       tc.MidTypePrefix,
+		},
+		{
+			Cachegroup: util.Ptr("mid2"),
+			CDNName:    util.Ptr("mycdn"),
+			HostName:   util.Ptr("midCache2"),
+			ID:         util.Ptr(4),
+			Status:     util.Ptr(string(tc.CacheStatusReported)),
+			Type:       tc.MidTypePrefix,
+		},
+	}
+	allServers := append(edges, mids...)
+
+	topology := tc.Topology{
+		Name: "mytopology",
+		Nodes: []tc.TopologyNode{
+			{
+				Cachegroup: "edge1",
+				Parents:    []int{2},
+			},
+			{
+				Cachegroup: "edge2",
+				Parents:    []int{2},
+			},
+			{
+				Cachegroup: "org1",
+			},
+		},
+	}
+
+	allDeliveryServices := []DeliveryService{{}, {}, {}, {}}
+	allDeliveryServices[0].ID = util.Ptr(1)
+	allDeliveryServices[0].CDNName = util.Ptr("mycdn")
+	allDeliveryServices[1].ID = util.Ptr(2)
+	allDeliveryServices[1].Regional = true
+	allDeliveryServices[1].CDNName = util.Ptr("mycdn")
+	allDeliveryServices[2].Topology = util.Ptr(topology.Name)
+	allDeliveryServices[3].Topology = util.Ptr(topology.Name)
+	allDeliveryServices[3].Regional = true
+
+	type testCase struct {
+		server                 *Server
+		ds                     *DeliveryService
+		topology               tc.Topology
+		deliveryServiceServers []DeliveryServiceServer
+		dsRequiredCapabilities map[ServerCapability]struct{}
+		servers                []Server
+		cacheGroups            []tc.CacheGroupNullable
+		serverCapabilities     map[int]map[ServerCapability]struct{}
+
+		expectedHostnames []string
+	}
+	testCases := []testCase{
+		// topology
+		{
+			ds:          &allDeliveryServices[2],
+			server:      &allServers[0],
+			topology:    topology,
+			cacheGroups: allCachegroups,
+			servers:     allServers,
+
+			expectedHostnames: []string{"edgeCache1", "edgeCache2"},
+		},
+		{
+			ds:          &allDeliveryServices[3],
+			server:      &allServers[0],
+			topology:    topology,
+			cacheGroups: allCachegroups,
+			servers:     allServers,
+
+			expectedHostnames: []string{"edgeCache1"},
+		},
+		// mid
+		{
+			server:  &allServers[2],
+			ds:      &allDeliveryServices[0],
+			servers: allServers,
+			deliveryServiceServers: []DeliveryServiceServer{
+				{
+					Server:          1,
+					DeliveryService: 1,
+				},
+				{
+					Server:          2,
+					DeliveryService: 1,
+				},
+				{
+					Server:          3,
+					DeliveryService: 1,
+				},
+				{
+					Server:          4,
+					DeliveryService: 1,
+				},
+			},
+			cacheGroups: allCachegroups,
+
+			expectedHostnames: []string{"midCache1", "midCache2"},
+		},
+		{
+			server:  &allServers[2],
+			ds:      &allDeliveryServices[1],
+			servers: allServers,
+			deliveryServiceServers: []DeliveryServiceServer{
+				{
+					Server:          1,
+					DeliveryService: 2,
+				},
+				{
+					Server:          2,
+					DeliveryService: 2,
+				},
+				{
+					Server:          3,
+					DeliveryService: 2,
+				},
+				{
+					Server:          4,
+					DeliveryService: 2,
+				},
+			},
+			cacheGroups: allCachegroups,
+
+			expectedHostnames: []string{"midCache1"},
+		},
+		// edge
+		{
+			server:  &edges[0],
+			ds:      &allDeliveryServices[0],
+			servers: edges,
+			deliveryServiceServers: []DeliveryServiceServer{
+				{
+					Server:          1,
+					DeliveryService: 1,
+				},
+				{
+					Server:          2,
+					DeliveryService: 1,
+				},
+				{
+					Server:          3,
+					DeliveryService: 1,
+				},
+				{
+					Server:          4,
+					DeliveryService: 1,
+				},
+			},
+			cacheGroups: allCachegroups,
+
+			expectedHostnames: []string{"edgeCache1", "edgeCache2"},
+		},
+		{
+			server:  &edges[0],
+			ds:      &allDeliveryServices[1],
+			servers: edges,
+			deliveryServiceServers: []DeliveryServiceServer{
+				{
+					Server:          1,
+					DeliveryService: 2,
+				},
+				{
+					Server:          2,
+					DeliveryService: 2,
+				},
+				{
+					Server:          3,
+					DeliveryService: 2,
+				},
+				{
+					Server:          4,
+					DeliveryService: 2,
+				},
+			},
+			cacheGroups: allCachegroups,
+
+			expectedHostnames: []string{"edgeCache1"},
+		},
+	}
+
+	for _, tc := range testCases {
+		actualServers, _ := getAssignedTierPeers(tc.server, tc.ds, tc.topology, tc.servers, tc.deliveryServiceServers, tc.cacheGroups, tc.serverCapabilities, tc.dsRequiredCapabilities)
+		actualHostnames := []string{}
+		for _, as := range actualServers {
+			actualHostnames = append(actualHostnames, *as.HostName)
+		}
+		if !reflect.DeepEqual(tc.expectedHostnames, actualHostnames) {
+			t.Errorf("getting servers in same cachegroup tier -- expected: %v, actual: %v", tc.expectedHostnames, actualHostnames)
+		}
+	}
+}
+
 func TestMakeHeaderRewriteMidDotConfig(t *testing.T) {
 	cdnName := "mycdn"
 	hdr := "myHeaderComment"

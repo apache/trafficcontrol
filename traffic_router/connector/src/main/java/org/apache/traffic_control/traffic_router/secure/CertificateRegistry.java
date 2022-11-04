@@ -55,6 +55,15 @@ import java.util.List;
 import java.util.Map;
 
 public class CertificateRegistry {
+	private static final String HTTPS_PROPERTIES_FILE = "/opt/traffic_router/conf/https.properties";
+	private static final String HTTPS_KEY_SIZE = "https.key.size";
+	private static final String HTTPS_SIGNATURE_ALGORITHM = "https.signature.algorithm";
+	private static final String HTTPS_VALIDITY_YEARS = "https.validity.years";
+	private static final String HTTPS_CERTIFICATE_COUNTRY = "https.certificate.country";
+	private static final String HTTPS_CERTIFICATE_STATE = "https.certificate.state";
+	private static final String HTTPS_CERTIFICATE_LOCALITY = "https.certificate.locality";
+	private static final String HTTPS_CERTIFICATE_ORGANIZATION = "https.certificate.organization";
+	private static final String HTTPS_CERTIFICATE_OU = "https.certificate.organizational.unit";
 	public static final String DEFAULT_SSL_KEY = "default.invalid";
 	private static final Logger log = LogManager.getLogger(CertificateRegistry.class);
 	private CertificateDataConverter certificateDataConverter = new CertificateDataConverter();
@@ -80,8 +89,23 @@ public class CertificateRegistry {
 	@SuppressWarnings({"PMD.UseArrayListInsteadOfVector", "PMD.AvoidUsingHardCodedIP"})
 	private static HandshakeData createDefaultSsl() {
 		try {
+			final Map<String, String> httpsProperties = (new HttpsProperties(HTTPS_PROPERTIES_FILE)).getHttpsPropertiesMap();
 			final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-			keyPairGenerator.initialize(2048);
+			int keysize = 2048, validityLength = 3;
+			String country = "US", state = "CO", locality = "Denver", organization = "Apache Traffic Control",
+					organizationalUnit = ";OU=Apache Foundation; OU=Hosted by Traffic Control; OU=CDNDefault",
+					signingAlgorithm = "SHA1WithRSA";
+			if (httpsProperties != null) {
+				keysize = Integer.parseInt(httpsProperties.getOrDefault(HTTPS_KEY_SIZE, String.valueOf(keysize)));
+				country = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_COUNTRY, country);
+				state = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_STATE, state);
+				locality = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_LOCALITY, locality);
+				organization = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_ORGANIZATION, organization);
+				organizationalUnit = httpsProperties.getOrDefault(HTTPS_CERTIFICATE_OU, organizationalUnit);
+				validityLength = Integer.parseInt(httpsProperties.getOrDefault(HTTPS_VALIDITY_YEARS, String.valueOf(validityLength)));
+				signingAlgorithm = httpsProperties.getOrDefault(HTTPS_SIGNATURE_ALGORITHM, signingAlgorithm);
+			}
+			keyPairGenerator.initialize(keysize);
 			final KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
 			//Generate self signed certificate
@@ -93,20 +117,17 @@ public class CertificateRegistry {
 			// Generate cert details
 			final long now = System.currentTimeMillis();
 			final Date startDate = new Date(System.currentTimeMillis());
-
-			final X500Name dnName = new X500Name("C=US; ST=CO; L=Denver; " +
-					"O=Apache Traffic Control; OU=Apache Foundation; OU=Hosted by Traffic Control; " +
-					"OU=CDNDefault; CN="+DEFAULT_SSL_KEY);
+			final String certAttributes = "C=" + country + "; ST=" + state + "; L=" + locality + "; O=" + organization + organizationalUnit + "; CN=" + DEFAULT_SSL_KEY;
+			final X500Name dnName = new X500Name(certAttributes);
 			final BigInteger certSerialNumber = new BigInteger(Long.toString(now));
 
 			final Calendar calendar = Calendar.getInstance();
 			calendar.setTime(startDate);
-			calendar.add(Calendar.YEAR, 3);
+			calendar.add(Calendar.YEAR, validityLength);
 
 			final Date endDate = calendar.getTime();
-
 			// Build certificate
-			final ContentSigner contentSigner = new JcaContentSignerBuilder("SHA1WithRSA").build(keyPair.getPrivate());
+			final ContentSigner contentSigner = new JcaContentSignerBuilder(signingAlgorithm).build(keyPair.getPrivate());
 
 			final JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(dnName, certSerialNumber, startDate, endDate, dnName, keyPair.getPublic());
 
@@ -128,7 +149,7 @@ public class CertificateRegistry {
 			return new HandshakeData(DEFAULT_SSL_KEY, DEFAULT_SSL_KEY, chain, keyPair.getPrivate());
 		}
 		catch (Exception e) {
-			log.error("Could not generate the default certificate: "+e.getMessage(),e);
+			log.error("Could not generate the default certificate: ", e);
 			return null;
 		}
 	}
@@ -151,7 +172,7 @@ public class CertificateRegistry {
 
 	private HandshakeData createApiDefaultSsl() {
 		try {
-			final Map<String, String> httpsProperties = (new HttpsProperties()).getHttpsPropertiesMap();
+			final Map<String, String> httpsProperties = (new HttpsProperties(HTTPS_PROPERTIES_FILE)).getHttpsPropertiesMap();
 
 			final KeyStore ks = KeyStore.getInstance("JKS");
 			final String selfSignedKeystoreFile = httpsProperties.get("https.certificate.location");

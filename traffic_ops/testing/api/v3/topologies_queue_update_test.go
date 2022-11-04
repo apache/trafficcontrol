@@ -20,7 +20,6 @@ package v3
  */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -35,14 +34,14 @@ import (
 func TestTopologiesQueueUpdate(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.TopologiesQueueUpdateRequest]{
 			"POST": {
 				"OK when VALID REQUEST": {
 					ClientSession: TOSession,
 					RequestParams: url.Values{"name": {"mso-topology"}},
-					RequestBody: map[string]interface{}{
-						"action": "queue",
-						"cdnId":  GetCDNID(t, "cdn1")(),
+					RequestBody: tc.TopologiesQueueUpdateRequest{
+						Action: "queue",
+						CDNID:  int64(GetCDNID(t, "cdn1")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateTopologiesQueueUpdateFields(map[string]interface{}{"Action": "queue", "CDNID": int64(GetCDNID(t, "cdn1")()), "Topology": tc.TopologyName("mso-topology")}),
@@ -51,27 +50,27 @@ func TestTopologiesQueueUpdate(t *testing.T) {
 				"BAD REQUEST when INVALID CDNID": {
 					ClientSession: TOSession,
 					RequestParams: url.Values{"name": {"mso-topology"}},
-					RequestBody: map[string]interface{}{
-						"action": "queue",
-						"cdnId":  -1,
+					RequestBody: tc.TopologiesQueueUpdateRequest{
+						Action: "queue",
+						CDNID:  -1,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID ACTION": {
 					ClientSession: TOSession,
 					RequestParams: url.Values{"name": {"mso-topology"}},
-					RequestBody: map[string]interface{}{
-						"action": "requeue",
-						"cdnId":  GetCDNID(t, "cdn1")(),
+					RequestBody: tc.TopologiesQueueUpdateRequest{
+						Action: "requeue",
+						CDNID:  int64(GetCDNID(t, "cdn1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when TOPOLOGY DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestParams: url.Values{"name": {"nonexistent"}},
-					RequestBody: map[string]interface{}{
-						"action": "queue",
-						"cdnId":  GetCDNID(t, "cdn1")(),
+					RequestBody: tc.TopologiesQueueUpdateRequest{
+						Action: "queue",
+						CDNID:  int64(GetCDNID(t, "cdn1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -81,19 +80,10 @@ func TestTopologiesQueueUpdate(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					topQueueUpdate := tc.TopologiesQueueUpdateRequest{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &topQueueUpdate)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.TopologiesQueueUpdate(tc.TopologyName(testCase.RequestParams["name"][0]), topQueueUpdate)
+							resp, reqInf, err := testCase.ClientSession.TopologiesQueueUpdate(tc.TopologyName(testCase.RequestParams["name"][0]), testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.TopologiesQueueUpdate, resp.Alerts, err)
 							}

@@ -41,48 +41,48 @@ func checkHmac(message, messageMAC, key []byte) bool {
 	return hmac.Equal(messageMAC, expectedMAC)
 }
 
-func Parse(secret, cookie string) (*Cookie, error) {
+func Parse(secret, cookie string) (*Cookie, error, error) {
 	dashPos := strings.Index(cookie, "-")
 	if dashPos == -1 {
-		return nil, fmt.Errorf("malformed cookie '%s' - no dashes", cookie)
+		return nil, fmt.Errorf("error parsing cookie: malformed cookie '%s' - no dashes", cookie), nil
 	}
 
 	lastDashPos := strings.LastIndex(cookie, "-")
 	if lastDashPos == -1 {
-		return nil, fmt.Errorf("malformed cookie '%s' - no dashes", cookie)
+		return nil, fmt.Errorf("error parsing cookie: malformed cookie '%s' - no dashes", cookie), nil
 	}
 
 	if len(cookie) < lastDashPos+1 {
-		return nil, fmt.Errorf("malformed cookie '%s' -- no signature", cookie)
+		return nil, fmt.Errorf("error parsing cookie: malformed cookie '%s' -- no signature", cookie), nil
 	}
 
 	base64Txt := cookie[:dashPos]
 	txtBytes, err := base64.RawURLEncoding.DecodeString(base64Txt)
 	if err != nil {
-		return nil, fmt.Errorf("error decoding base64 data: %v", err)
+		return nil, nil, fmt.Errorf("error parsing cookie: error decoding base64 data: %v", err)
 	}
 	base64TxtSig := cookie[:lastDashPos-1] // the signature signs the base64 including trailing hyphens, but the Go base64 decoder doesn't want the trailing hyphens.
 
 	base64Sig := cookie[lastDashPos+1:]
 	sigBytes, err := hex.DecodeString(base64Sig)
 	if err != nil {
-		return nil, fmt.Errorf("error decoding signature: %v", err)
+		return nil, nil, fmt.Errorf("error parsing cookie: error decoding signature: %v", err)
 	}
 
 	if !checkHmac([]byte(base64TxtSig), sigBytes, []byte(secret)) {
-		return nil, fmt.Errorf("bad signature")
+		return nil, fmt.Errorf("bad signature - unauthorized, please log in"), nil
 	}
 
 	cookieData := Cookie{}
 	if err := json.Unmarshal(txtBytes, &cookieData); err != nil {
-		return nil, fmt.Errorf("error decoding base64 text '%s' to JSON: %v", string(txtBytes), err)
+		return nil, nil, fmt.Errorf("error parsing cookie: error decoding base64 text '%s' to JSON: %v", string(txtBytes), err)
 	}
 
 	if cookieData.ExpiresUnix-time.Now().Unix() < 0 {
-		return nil, fmt.Errorf("signature expired")
+		return nil, fmt.Errorf("signature expired - unauthorized, please log in"), nil
 	}
 
-	return &cookieData, nil
+	return &cookieData, nil, nil
 }
 
 func NewRawMsg(msg, key []byte) string {

@@ -757,7 +757,7 @@ func enrollServer(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateServer(tc.ServerV4{ServerV40: s}, client.RequestOptions{})
+	alerts, _, err := toSession.CreateServer(s, client.RequestOptions{})
 	if err != nil {
 		err = fmt.Errorf("error creating Server: %v - alerts: %+v", err, alerts.Alerts)
 		log.Infoln(err)

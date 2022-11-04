@@ -84,9 +84,7 @@ func TestGetEligibleServers(t *testing.T) {
 		"server_type_id",
 		"upd_pending",
 		"server_capabilities",
-		"deliveryservice_capabilities",
-		"asns",
-	}
+		"deliveryservice_capabilities"}
 	eligbleRows := sqlmock.NewRows(cols)
 
 	for _, s := range testServers {
@@ -122,7 +120,6 @@ func TestGetEligibleServers(t *testing.T) {
 			s.UpdPending,
 			[]byte(`{""}`),
 			[]byte(`{""}`),
-			[]byte(`{1,2}`),
 		)
 	}
 	mock.ExpectQuery("SELECT s.id ,").WillReturnRows(eligbleRows)

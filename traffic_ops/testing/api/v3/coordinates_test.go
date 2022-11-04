@@ -16,7 +16,6 @@ package v3
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -37,7 +36,7 @@ func TestCoordinates(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V3TestCase{
+		methodTests := utils.V3TestCaseT[tc.Coordinate]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession:  TOSession,
@@ -54,15 +53,20 @@ func TestCoordinates(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						validateCoordinateFields(map[string]interface{}{"Name": "coordinate1"})),
 				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 			},
 			"PUT": {
 				"OK when VALID request": {
 					EndpointId:    GetCoordinateID(t, "coordinate2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"latitude":  7.7,
-						"longitude": 8.8,
-						"name":      "coordinate2",
+					RequestBody: tc.Coordinate{
+						Latitude:  7.7,
+						Longitude: 8.8,
+						Name:      "coordinate2",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateCoordinateUpdateCreateFields("coordinate2", map[string]interface{}{"Latitude": 7.7, "Longitude": 8.8})),
@@ -71,30 +75,23 @@ func TestCoordinates(t *testing.T) {
 					EndpointId:     GetCoordinateID(t, "coordinate1"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					RequestBody: map[string]interface{}{
-						"latitude":  1.1,
-						"longitude": 2.2,
-						"name":      "coordinate1",
+					RequestBody: tc.Coordinate{
+						Latitude:  1.1,
+						Longitude: 2.2,
+						Name:      "coordinate1",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetCoordinateID(t, "coordinate1"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"latitude":  1.1,
-						"longitude": 2.2,
-						"name":      "coordinate1",
+					RequestBody: tc.Coordinate{
+						Latitude:  1.1,
+						Longitude: 2.2,
+						Name:      "coordinate1",
 					},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
-				},
-			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession:  TOSession,
-					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
-					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 		}
@@ -102,17 +99,8 @@ func TestCoordinates(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					coordinate := tc.Coordinate{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &coordinate)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							if name == "OK when VALID NAME parameter" {
 								resp, reqInf, err := testCase.ClientSession.GetCoordinateByNameWithHdr(testCase.RequestParams["name"][0], testCase.RequestHeaders)
@@ -128,14 +116,14 @@ func TestCoordinates(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateCoordinate(coordinate)
+							alerts, reqInf, err := testCase.ClientSession.CreateCoordinate(testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateCoordinateByIDWithHdr(testCase.EndpointId(), coordinate, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateCoordinateByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

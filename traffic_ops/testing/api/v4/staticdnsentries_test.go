@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -38,7 +37,7 @@ func TestStaticDNSEntries(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.V4TestCase{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.StaticDNSEntry]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -61,13 +60,13 @@ func TestStaticDNSEntries(t *testing.T) {
 				"OK when VALID request": {
 					EndpointId:    GetStaticDNSEntryID(t, "host2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"address":         "192.168.0.2",
-						"cachegroup":      "cachegroup2",
-						"deliveryservice": "ds2",
-						"host":            "host2",
-						"type":            "A_RECORD",
-						"ttl":             10,
+					RequestBody: tc.StaticDNSEntry{
+						Address:         "192.168.0.2",
+						CacheGroupName:  "cachegroup2",
+						DeliveryService: "ds2",
+						Host:            "host2",
+						Type:            "A_RECORD",
+						TTL:             10,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateStaticDNSEntriesUpdateCreateFields("host2", map[string]interface{}{"Address": "192.168.0.2"})),
@@ -75,52 +74,52 @@ func TestStaticDNSEntries(t *testing.T) {
 				"BAD REQUEST when INVALID IPV4 ADDRESS for A_RECORD": {
 					EndpointId:    GetStaticDNSEntryID(t, "host2"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"address":         "test.testdomain.net.",
-						"cachegroup":      "cachegroup2",
-						"deliveryservice": "ds2",
-						"host":            "host2",
-						"type":            "A_RECORD",
-						"ttl":             10,
+					RequestBody: tc.StaticDNSEntry{
+						Address:         "test.testdomain.net.",
+						CacheGroupName:  "cachegroup2",
+						DeliveryService: "ds2",
+						Host:            "host2",
+						Type:            "A_RECORD",
+						TTL:             10,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID DNS for CNAME_RECORD": {
 					EndpointId:    GetStaticDNSEntryID(t, "host1"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"address":         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-						"cachegroup":      "cachegroup1",
-						"deliveryservice": "ds1",
-						"host":            "host1",
-						"type":            "CNAME_RECORD",
-						"ttl":             0,
+					RequestBody: tc.StaticDNSEntry{
+						Address:         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+						CacheGroupName:  "cachegroup1",
+						DeliveryService: "ds1",
+						Host:            "host1",
+						Type:            "CNAME_RECORD",
+						TTL:             0,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING TRAILING PERIOD for CNAME_RECORD": {
 					EndpointId:    GetStaticDNSEntryID(t, "host1"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"address":         "cdn.test.com",
-						"cachegroup":      "cachegroup1",
-						"deliveryservice": "ds1",
-						"host":            "host1",
-						"type":            "CNAME_RECORD",
-						"ttl":             0,
+					RequestBody: tc.StaticDNSEntry{
+						Address:         "cdn.test.com",
+						CacheGroupName:  "cachegroup1",
+						DeliveryService: "ds1",
+						Host:            "host1",
+						Type:            "CNAME_RECORD",
+						TTL:             0,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV6 ADDRESS for AAAA_RECORD": {
 					EndpointId:    GetStaticDNSEntryID(t, "host3"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"address":         "192.168.0.1",
-						"cachegroup":      "cachegroup2",
-						"deliveryservice": "ds1",
-						"host":            "host3",
-						"ttl":             10,
-						"type":            "AAAA_RECORD",
+					RequestBody: tc.StaticDNSEntry{
+						Address:         "192.168.0.1",
+						CacheGroupName:  "cachegroup2",
+						DeliveryService: "ds1",
+						Host:            "host3",
+						TTL:             10,
+						Type:            "AAAA_RECORD",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -128,26 +127,26 @@ func TestStaticDNSEntries(t *testing.T) {
 					EndpointId:    GetStaticDNSEntryID(t, "host3"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: map[string]interface{}{
-						"address":         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-						"cachegroup":      "cachegroup2",
-						"deliveryservice": "ds1",
-						"host":            "host3",
-						"ttl":             10,
-						"type":            "AAAA_RECORD",
+					RequestBody: tc.StaticDNSEntry{
+						Address:         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+						CacheGroupName:  "cachegroup2",
+						DeliveryService: "ds1",
+						Host:            "host3",
+						TTL:             10,
+						Type:            "AAAA_RECORD",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointId:    GetStaticDNSEntryID(t, "host3"),
 					ClientSession: TOSession,
-					RequestBody: map[string]interface{}{
-						"address":         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-						"cachegroup":      "cachegroup2",
-						"deliveryservice": "ds1",
-						"host":            "host3",
-						"ttl":             10,
-						"type":            "AAAA_RECORD",
+					RequestBody: tc.StaticDNSEntry{
+						Address:         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+						CacheGroupName:  "cachegroup2",
+						DeliveryService: "ds1",
+						Host:            "host3",
+						TTL:             10,
+						Type:            "AAAA_RECORD",
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -158,17 +157,8 @@ func TestStaticDNSEntries(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					staticDNSEntry := tc.StaticDNSEntry{}
-
-					if testCase.RequestBody != nil {
-						dat, err := json.Marshal(testCase.RequestBody)
-						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
-						err = json.Unmarshal(dat, &staticDNSEntry)
-						assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
-					}
-
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetStaticDNSEntries(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
@@ -177,14 +167,14 @@ func TestStaticDNSEntries(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateStaticDNSEntry(staticDNSEntry, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.CreateStaticDNSEntry(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateStaticDNSEntry(testCase.EndpointId(), staticDNSEntry, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateStaticDNSEntry(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

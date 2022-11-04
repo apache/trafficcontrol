@@ -42,8 +42,8 @@ init() {
 	[ ! -z $IP ]            || IP=$(ip addr | grep 'global' | awk '{print $2}' | cut -f1 -d'/')
 	[ ! -z $DOMAIN ]        || DOMAIN="localdomain"
 	[ ! -z $CACHEGROUP ]    || CACHEGROUP="mid-east"
-	[ ! -z $TYPE ]          || TYPE="RASCAL"
-	[ ! -z $PROFILE ]       || PROFILE="RASCAL_CDN1"
+	[ ! -z $TYPE ]          || TYPE="TRAFFIC_MONITOR"
+	[ ! -z $PROFILE ]       || PROFILE="TRAFFIC_MONITOR_CDN1"
 	[ ! -z $PHYS_LOCATION ] || PHYS_LOCATION="plocation-nyc-1"
 	[ ! -z $INTERFACE ]     || INTERFACE="eth0"
 	[ ! -z $NETMASK ]       || NETMASK="255.255.0.0"

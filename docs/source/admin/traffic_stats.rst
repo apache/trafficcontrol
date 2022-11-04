@@ -50,6 +50,7 @@ Traffic Stats's configuration file can be found in :file:`/opt/traffic_stats/con
 :toUser: The username of the user as whom to connect to Traffic Ops
 :toPasswd: The password to use when authenticating with Traffic Ops
 :toUrl: The URL of the Traffic Ops server used by Traffic Stats
+:toRequestTimeout: The time, in seconds, before a client request to Traffic Ops is canceled. Defaults to 10 if no value provided
 :influxUser: Optionally specify the user to use when connecting to InfluxDB (if InfluxDB is not configured to require authentication, has no effect)
 :influxPassword: Optionally specify the password to use when connecting to InfluxDB (if InfluxDB is not configured to require authentication, has no effect)
 :pollingInterval: The interval in seconds for which Traffic Monitor will wait between polling for stats and storing them in InfluxDB

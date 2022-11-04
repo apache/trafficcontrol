@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/apache/trafficcontrol/tc-health-client/config"
 	"github.com/apache/trafficcontrol/tc-health-client/util"
+	"path/filepath"
 	"testing"
 )
 
@@ -36,32 +37,34 @@ func TestReadParentDotConfig(t *testing.T) {
 		LastModifyTime: 0,
 	}
 
-	cfg := config.Cfg{
-		TrafficMonitors:        make(map[string]bool, 0),
+	cfg := &config.Cfg{
 		HealthClientConfigFile: cf,
+		TrafficServerConfigDir: "test_files/etc/",
 	}
-
-	parentDotConfig := util.ConfigFile{
-		Filename:       "test_files/etc/parent.config",
+	parents := util.ConfigFile{
+		Filename:       filepath.Join(cfg.TrafficServerConfigDir, ParentsFile),
 		LastModifyTime: 1,
 	}
-
+	strategies := util.ConfigFile{
+		Filename:       filepath.Join(cfg.TrafficServerConfigDir, StrategiesFile),
+		LastModifyTime: 1,
+	}
 	pi := ParentInfo{
-		ParentDotConfig: parentDotConfig,
-		Cfg:             cfg,
+		ParentDotConfig:        parents,
+		StrategiesDotYaml:      strategies,
+		TrafficServerBinDir:    cfg.TrafficServerBinDir,
+		TrafficServerConfigDir: cfg.TrafficServerConfigDir,
 	}
 
-	_, err := config.LoadConfig(&cfg)
-	if err != nil {
+	if _, err := config.LoadConfig(cfg); err != nil {
 		t.Fatalf("failed to load %s: %s\n", test_config_file, err.Error())
 	}
 
-	parentStatus := make(map[string]ParentStatus)
-	if err := pi.readParentConfig(parentStatus); err != nil {
+	if err := pi.readParentConfig(); err != nil {
 		t.Fatalf("failed readParentConfig(): %s\n", err.Error())
 	}
 
-	numParents := len(parentStatus)
+	numParents := len(pi.GetParents())
 	if numParents != 8 {
 		t.Fatalf("failed readParentConfig(): expected 8 parents got %d\n", numParents)
 	}
@@ -73,32 +76,34 @@ func TestReadStrategiesDotYaml(t *testing.T) {
 		LastModifyTime: 0,
 	}
 
-	cfg := config.Cfg{
-		TrafficMonitors:        make(map[string]bool, 0),
+	cfg := &config.Cfg{
 		HealthClientConfigFile: cf,
+		TrafficServerConfigDir: "test_files/etc/",
 	}
-
-	strategiesDotYaml := util.ConfigFile{
-		Filename:       "test_files/etc/strategies.yaml",
+	parents := util.ConfigFile{
+		Filename:       filepath.Join(cfg.TrafficServerConfigDir, ParentsFile),
 		LastModifyTime: 1,
 	}
-
+	strategies := util.ConfigFile{
+		Filename:       filepath.Join(cfg.TrafficServerConfigDir, StrategiesFile),
+		LastModifyTime: 1,
+	}
 	pi := ParentInfo{
-		StrategiesDotYaml: strategiesDotYaml,
-		Cfg:               cfg,
+		ParentDotConfig:        parents,
+		StrategiesDotYaml:      strategies,
+		TrafficServerBinDir:    cfg.TrafficServerBinDir,
+		TrafficServerConfigDir: cfg.TrafficServerConfigDir,
 	}
 
-	_, err := config.LoadConfig(&cfg)
-	if err != nil {
+	if _, err := config.LoadConfig(cfg); err != nil {
 		t.Fatalf("failed to load %s: %s\n", test_config_file, err.Error())
 	}
 
-	parentStatus := make(map[string]ParentStatus)
-	if err := pi.readStrategies(parentStatus); err != nil {
+	if err := pi.readStrategies(); err != nil {
 		t.Fatalf("failed readStrategies(): %s\n", err.Error())
 	}
 
-	numParents := len(parentStatus)
+	numParents := len(pi.GetParents())
 	if numParents != 6 {
 		t.Fatalf("failed readStrategies(): expected 6 parents got %d\n", numParents)
 	}
@@ -110,28 +115,35 @@ func TestReadHostStatus(t *testing.T) {
 		LastModifyTime: 0,
 	}
 
-	cfg := config.Cfg{
-		TrafficMonitors:        make(map[string]bool, 0),
+	cfg := &config.Cfg{
 		HealthClientConfigFile: cf,
+		TrafficServerConfigDir: "test_files/etc/",
 	}
-
+	parents := util.ConfigFile{
+		Filename:       filepath.Join(cfg.TrafficServerConfigDir, ParentsFile),
+		LastModifyTime: 1,
+	}
+	strategies := util.ConfigFile{
+		Filename:       filepath.Join(cfg.TrafficServerConfigDir, StrategiesFile),
+		LastModifyTime: 1,
+	}
 	pi := ParentInfo{
-		TrafficServerBinDir: "./test_files/bin",
-		Cfg:                 cfg,
+		ParentDotConfig:        parents,
+		StrategiesDotYaml:      strategies,
+		TrafficServerBinDir:    cfg.TrafficServerBinDir,
+		TrafficServerConfigDir: cfg.TrafficServerConfigDir,
 	}
 
-	_, err := config.LoadConfig(&cfg)
-	if err != nil {
+	if _, err := config.LoadConfig(cfg); err != nil {
 		t.Fatalf("failed to load %s: %s\n", test_config_file, err.Error())
 	}
 	fmt.Println(cfg)
 
-	parentStatus := make(map[string]ParentStatus)
-	if err := pi.readHostStatus(parentStatus); err != nil {
+	if err := pi.readHostStatus(cfg); err != nil {
 		t.Fatalf("failed readHostStatus(): %s\n", err.Error())
 	}
 
-	numParents := len(parentStatus)
+	numParents := len(pi.GetParents())
 	if numParents != 14 {
 		t.Fatalf("failed readHostStatus(): expected 14 parents got %d\n", numParents)
 	}
@@ -143,17 +155,18 @@ func TestFindATrafficMonitor(t *testing.T) {
 		LastModifyTime: 0,
 	}
 
-	cfg := config.Cfg{
-		TrafficMonitors:        make(map[string]bool, 0),
+	cfg := &config.Cfg{
 		HealthClientConfigFile: cf,
+		TrafficServerConfigDir: "test_files/etc/",
 	}
+	cfgPtr := config.NewCfgPtr(cfg)
 
-	pi := ParentInfo{
-		Cfg: cfg,
-	}
-
-	_, err := config.LoadConfig(&cfg)
+	pi, err := NewParentInfo(cfgPtr)
 	if err != nil {
+		t.Fatalf("failed to create parent info: %s\n", err.Error())
+	}
+
+	if _, err := config.LoadConfig(cfg); err != nil {
 		t.Fatalf("failed to load %s: %s\n", test_config_file, err.Error())
 	}
 

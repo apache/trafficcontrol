@@ -463,7 +463,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
             // add an empty one so the dynamic form widget is visible. empty strings get stripped out on save anyhow.
             $scope.deliveryService.consistentHashQueryParams = [ '' ];
         }
-        if (deliveryService.lastUpdated !== undefined) {
+        if (deliveryService.lastUpdated) {
             deliveryService.lastUpdated = new Date(deliveryService.lastUpdated.replace("+00", "Z"));
         }
     };

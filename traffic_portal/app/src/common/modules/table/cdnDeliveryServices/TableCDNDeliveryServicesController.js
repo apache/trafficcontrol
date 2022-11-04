@@ -17,10 +17,10 @@
  * under the License.
  */
 
-function TableCDNDeliveryServicesController(cdn, deliveryServices, filter, $controller, $scope) {
+function TableCDNDeliveryServicesController(cdn, deliveryServices, steeringTargets, filter, $controller, $scope) {
 
 	// extends the TableDeliveryServicesController to inherit common methods
-	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'cdnDS', deliveryServices: deliveryServices, filter: filter, $scope: $scope }));
+	angular.extend(this, $controller('TableDeliveryServicesController', { tableName: 'cdnDS', deliveryServices: deliveryServices, steeringTargets: steeringTargets, filter: filter, $scope: $scope }));
 
 	$scope.cdn = cdn;
 	$scope.breadCrumbs = [
@@ -38,5 +38,5 @@ function TableCDNDeliveryServicesController(cdn, deliveryServices, filter, $cont
 	];
 };
 
-TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', 'filter', '$controller', '$scope'];
+TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', 'steeringTargets', 'filter', '$controller', '$scope'];
 module.exports = TableCDNDeliveryServicesController;

@@ -22,7 +22,7 @@ RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 	openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt && \
 	openssl rand 32 | base64 > /aes.key
 
-FROM node:alpine AS tpv2-dev
+FROM node:14-bullseye AS tpv2-dev
 
 ENV TC="/root/go/src/github.com/apache/trafficcontrol/"
 VOLUME /root/go/src/github.com/apache/trafficcontrol

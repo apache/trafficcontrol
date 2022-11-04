@@ -17,11 +17,13 @@ package org.apache.traffic_control.traffic_router.core.dns.protocol;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.nio.channels.Channels;
 
 import org.apache.logging.log4j.LogManager;
@@ -91,6 +93,7 @@ public class TCP extends AbstractProtocol {
         @Override
         @SuppressWarnings("PMD.EmptyCatchBlock")
         public void run() {
+            InetAddress client = null;
             if (cancel) {
                 cleanup();
                 return;
@@ -101,7 +104,7 @@ public class TCP extends AbstractProtocol {
                  DataOutputStream os = new DataOutputStream(socket.getOutputStream())
             ) {
                 socket.setSoTimeout(getReadTimeout());
-                final InetAddress client = socket.getInetAddress();
+                client = socket.getInetAddress();
 
                 final int length = is.readUnsignedShort();
                 final byte[] request = new byte[length];
@@ -112,6 +115,20 @@ public class TCP extends AbstractProtocol {
                 os.write(response);
             } catch (final WireParseException e) {
                 // This is already recorded in the access log
+            } catch (final SocketTimeoutException e) {
+                String hostAddress = "unknown";
+                if (client != null) {
+                    hostAddress = client.getHostAddress();
+                }
+                LOGGER.error("The socket with the Client at: " +
+                        hostAddress + " has timed out. Error: " + e.getMessage());
+            } catch (final EOFException e) {
+                String hostAddress = "unavailable";
+                if (client != null) {
+                    hostAddress = client.getHostAddress();
+                }
+                LOGGER.error("The client at " + hostAddress +
+                        " has closed the connection prematurely. Error: " + e.getMessage());
             } catch (final Exception e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {

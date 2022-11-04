@@ -115,9 +115,7 @@ func TestReadServers(t *testing.T) {
 		"tcp_port",
 		"server_type",
 		"server_type_id",
-		"upd_pending",
-		"asns",
-	}
+		"upd_pending"}
 
 	rows := sqlmock.NewRows(cols)
 
@@ -152,7 +150,6 @@ func TestReadServers(t *testing.T) {
 			s.Type,
 			s.TypeID,
 			s.UpdPending,
-			[]byte(`{1,2}`),
 		)
 	}
 

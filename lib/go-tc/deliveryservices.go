@@ -60,10 +60,17 @@ type DeliveryServicesResponseV40 struct {
 	Alerts
 }
 
+// DeliveryServicesResponseV41 is the type of a response from the
+// /api/4.1/deliveryservices Traffic Ops endpoint.
+type DeliveryServicesResponseV41 struct {
+	Response []DeliveryServiceV41 `json:"response"`
+	Alerts
+}
+
 // DeliveryServicesResponseV4 is the type of a response from the
 // /api/4.x/deliveryservices Traffic Ops endpoint.
 // It always points to the type for the latest minor version of APIv4.
-type DeliveryServicesResponseV4 = DeliveryServicesResponseV40
+type DeliveryServicesResponseV4 = DeliveryServicesResponseV41
 
 // DeliveryServicesNullableResponse roughly models the structure of responses
 // from Traffic Ops to GET requests made to its
@@ -253,9 +260,20 @@ type DeliveryServiceV40 struct {
 	GeoLimitCountries GeoLimitCountriesType `json:"geoLimitCountries"`
 }
 
+// DeliveryServiceV41 is a Delivery Service as it appears in version 4.1 of the
+// Traffic Ops API.
+type DeliveryServiceV41 struct {
+	DeliveryServiceV40
+
+	// Regional indicates whether the Delivery Service's MaxOriginConnections is
+	// only per Cache Group, rather than divided over all Cache Servers in child
+	// Cache Groups of the Origin.
+	Regional bool `json:"regional" db:"regional"`
+}
+
 // DeliveryServiceV4 is a Delivery Service as it appears in version 4 of the
 // Traffic Ops API - it always points to the highest minor version in APIv4.
-type DeliveryServiceV4 = DeliveryServiceV40
+type DeliveryServiceV4 = DeliveryServiceV41
 
 // These are the TLS Versions known by Apache Traffic Control to exist.
 const (
@@ -301,17 +319,7 @@ func newerTLSVersionsDisallowedMessage(old string, newer []string) string {
 	return msg.String()
 }
 
-// TLSVersionsAlerts generates warning-level alerts for the Delivery Service's
-// TLS versions array. It will warn if newer versions are disallowed while
-// older, less secure versions are allowed, if there are unrecognized versions
-// present, if the Delivery Service's Protocol does not make use of TLS
-// Versions, and whenever TLSVersions are explicitly set at all.
-//
-// This does NOT verify that the Delivery Service's TLS versions are _valid_,
-// it ONLY creates warnings based on conditions that are possibly detrimental
-// to CDN operation, but can, in fact, work.
-func (ds DeliveryServiceV4) TLSVersionsAlerts() Alerts {
-	vers := ds.TLSVersions
+func tlsVersionsAlerts(vers []string, protocol int) Alerts {
 	messages := []string{}
 
 	if len(vers) > 0 {
@@ -380,11 +388,44 @@ func (ds DeliveryServiceV4) TLSVersionsAlerts() Alerts {
 		}
 	}
 
-	if ds.Protocol != nil && *ds.Protocol == DSProtocolHTTP {
+	if protocol == DSProtocolHTTP {
 		messages = append(messages, "tlsVersions has no effect on Delivery Services with Protocol '0' (HTTP_ONLY)")
 	}
 
 	return CreateAlerts(WarnLevel, messages...)
+}
+
+// TLSVersionsAlerts generates warning-level alerts for the Delivery Service's
+// TLS versions array. It will warn if newer versions are disallowed while
+// older, less secure versions are allowed, if there are unrecognized versions
+// present, if the Delivery Service's Protocol does not make use of TLS
+// Versions, and whenever TLSVersions are explicitly set at all.
+//
+// This does NOT verify that the Delivery Service's TLS versions are _valid_,
+// it ONLY creates warnings based on conditions that are possibly detrimental
+// to CDN operation, but can, in fact, work.
+func (ds DeliveryServiceV40) TLSVersionsAlerts() Alerts {
+	vers := ds.TLSVersions
+	var protocol int
+	if ds.Protocol != nil {
+		protocol = *ds.Protocol
+	} else {
+		protocol = -1
+	}
+	return tlsVersionsAlerts(vers, protocol)
+}
+
+// TLSVersionsAlerts generates warning-level alerts for the Delivery Service's
+// TLS versions array. It will warn if newer versions are disallowed while
+// older, less secure versions are allowed, if there are unrecognized versions
+// present, if the Delivery Service's Protocol does not make use of TLS
+// Versions, and whenever TLSVersions are explicitly set at all.
+//
+// This does NOT verify that the Delivery Service's TLS versions are _valid_,
+// it ONLY creates warnings based on conditions that are possibly detrimental
+// to CDN operation, but can, in fact, work.
+func (ds DeliveryServiceV41) TLSVersionsAlerts() Alerts {
+	return ds.DeliveryServiceV40.TLSVersionsAlerts()
 }
 
 // DeliveryServiceV30 represents a Delivery Service as they appear in version
@@ -843,7 +884,16 @@ type DeliveryServiceRemovedFieldsV11 struct {
 	CacheURL *string `json:"cacheurl" db:"cacheurl"`
 }
 
-// RemoveLD1AndLD2 removes the Long Description 1 and Long Description 2 fields from a V 4.x DS, and returns the resulting struct.
+// RemoveLD1AndLD2 removes the Long Description 1 and Long Description 2 fields
+// from a V4.0 Delivery Service, and returns the resulting struct.
+func (ds *DeliveryServiceV40) RemoveLD1AndLD2() DeliveryServiceV40 {
+	ds.LongDesc1 = nil
+	ds.LongDesc2 = nil
+	return *ds
+}
+
+// RemoveLD1AndLD2 removes the Long Description 1 and Long Description 2 fields
+// from a V 4.x DS, and returns the resulting struct.
 func (ds *DeliveryServiceV4) RemoveLD1AndLD2() DeliveryServiceV4 {
 	ds.LongDesc1 = nil
 	ds.LongDesc2 = nil
@@ -883,18 +933,19 @@ func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
 	var geo GeoLimitCountriesType
 	if ds.GeoLimitCountries != nil {
 		str := *ds.GeoLimitCountries
-		geo = make([]string, 0)
 		geo = strings.Split(str, ",")
 	}
 	return DeliveryServiceV4{
-		DeliveryServiceFieldsV31:         ds.DeliveryServiceFieldsV31,
-		DeliveryServiceFieldsV30:         ds.DeliveryServiceFieldsV30,
-		DeliveryServiceFieldsV15:         ds.DeliveryServiceFieldsV15,
-		DeliveryServiceFieldsV14:         ds.DeliveryServiceFieldsV14,
-		DeliveryServiceFieldsV13:         ds.DeliveryServiceFieldsV13,
-		DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
-		TLSVersions:                      nil,
-		GeoLimitCountries:                geo,
+		DeliveryServiceV40: DeliveryServiceV40{
+			DeliveryServiceFieldsV31:         ds.DeliveryServiceFieldsV31,
+			DeliveryServiceFieldsV30:         ds.DeliveryServiceFieldsV30,
+			DeliveryServiceFieldsV15:         ds.DeliveryServiceFieldsV15,
+			DeliveryServiceFieldsV14:         ds.DeliveryServiceFieldsV14,
+			DeliveryServiceFieldsV13:         ds.DeliveryServiceFieldsV13,
+			DeliveryServiceNullableFieldsV11: ds.DeliveryServiceNullableFieldsV11,
+			TLSVersions:                      nil,
+			GeoLimitCountries:                geo,
+		},
 	}
 }
 
