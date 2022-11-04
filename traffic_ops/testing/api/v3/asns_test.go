@@ -34,40 +34,43 @@ import (
 func TestASN(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, ASN}, func() {
 
-		tomorrow := time.Now().AddDate(0, 0, 1).Format(time.RFC1123)
-		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
 		methodTests := utils.V3TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					ClientSession: TOSession, RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				"OK when CHANGES made": {
+					ClientSession:  TOSession,
+					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
+					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when VALID request": {
-					ClientSession: TOSession, Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateSorted()),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateASNsSort()),
 				},
 				"OK when VALID ASN PARAMETER": {
-					ClientSession: TOSession, RequestParams: url.Values{"asn": {"9999"}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
+					ClientSession: TOSession,
+					RequestParams: url.Values{"asn": {"9999"}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
+						validateASNsFields(map[string]interface{}{"ASN": 9999, "Cachegroup": "multiOriginCachegroup"})),
 				},
 			},
 			"PUT": {
 				"OK when VALID request": {
-					ClientSession: TOSession, EndpointId: GetASNId(t, "8888"),
+					ClientSession: TOSession, EndpointId: GetASNID(t, "8888"),
 					RequestBody: map[string]interface{}{
 						"asn":            7777,
 						"cachegroupName": "originCachegroup",
-						"cachegroupId":   -1,
+						"cachegroupId":   GetCacheGroupId(t, "originCachegroup")(),
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				},
-			},
-			"GET AFTER CHANGES": {
-				"OK when CHANGES made": {
-					ClientSession:  TOSession,
-					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}, rfc.IfUnmodifiedSince: {currentTimeRFC}},
-					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateASNsUpdateCreateFields("7777", map[string]interface{}{"ASN": 7777})),
 				},
 			},
 		}
@@ -78,13 +81,6 @@ func TestASN(t *testing.T) {
 					asn := tc.ASN{}
 
 					if testCase.RequestBody != nil {
-						if cgId, ok := testCase.RequestBody["cachegroupId"]; ok {
-							if cgId == -1 {
-								if cgName, ok := testCase.RequestBody["cachegroupName"]; ok {
-									testCase.RequestBody["cachegroupId"] = GetCacheGroupId(t, cgName.(string))()
-								}
-							}
-						}
 						dat, err := json.Marshal(testCase.RequestBody)
 						assert.NoError(t, err, "Error occurred when marshalling request body: %v", err)
 						err = json.Unmarshal(dat, &asn)
@@ -92,7 +88,7 @@ func TestASN(t *testing.T) {
 					}
 
 					switch method {
-					case "GET", "GET AFTER CHANGES":
+					case "GET":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.GetASNsWithHeader(&testCase.RequestParams, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
@@ -113,61 +109,81 @@ func TestASN(t *testing.T) {
 	})
 }
 
-func validateSorted() utils.CkReqFunc {
-	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+func validateASNsFields(expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected ASN response to not be nil.")
 		asnResp := resp.([]tc.ASN)
-		var sortedList []string
-		assert.RequireGreaterOrEqual(t, len(asnResp), 2, "Need at least 2 ASNs in Traffic Ops to test sorted, found: %d", len(asnResp))
-
-		for _, asn := range asnResp {
-			sortedList = append(sortedList, strconv.Itoa(asn.ASN))
+		for field, expected := range expectedResp {
+			for _, asn := range asnResp {
+				switch field {
+				case "ASN":
+					assert.Equal(t, expected, asn.ASN, "Expected ASN to be %v, but got %d", expected, asn.ASN)
+				case "Cachegroup":
+					assert.Equal(t, expected, asn.Cachegroup, "Expected Cachegroup to be %v, but got %s", expected, asn.Cachegroup)
+				case "CachegroupID":
+					assert.Equal(t, expected, asn.CachegroupID, "Expected CachegroupID to be %v, but got %d", expected, asn.CachegroupID)
+				case "ID":
+					assert.Equal(t, expected, asn.ID, "Expected ID to be %v, but got %d", expected, asn.ID)
+				default:
+					t.Errorf("Expected field: %v, does not exist in response", field)
+				}
+			}
 		}
-
-		res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-			return sortedList[p] < sortedList[q]
-		})
-		assert.Equal(t, res, true, "List is not sorted by their names: %v", sortedList)
 	}
 }
 
-func GetASNId(t *testing.T, ASN string) func() int {
+func validateASNsUpdateCreateFields(asn string, expectedResp map[string]interface{}) utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
+		params := url.Values{"asn": {asn}}
+		asnResp, _, err := TOSession.GetASNsWithHeader(&params, nil)
+		assert.RequireNoError(t, err, "Error getting ASN: %v", err)
+		assert.RequireEqual(t, 1, len(asnResp), "Expected one ASN returned Got: %d", len(asnResp))
+		validateASNsFields(expectedResp)(t, toclientlib.ReqInf{}, asnResp, tc.Alerts{}, nil)
+	}
+}
+
+func validateASNsSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected ASN response to not be nil.")
+		var asns []int
+		asnResp := resp.([]tc.ASN)
+		for _, asn := range asnResp {
+			asns = append(asns, asn.ASN)
+		}
+		assert.Equal(t, true, sort.IntsAreSorted(asns), "List is not sorted by their ids: %v", asns)
+	}
+}
+
+func GetASNID(t *testing.T, asn string) func() int {
 	return func() int {
-		params := url.Values{"asn": {ASN}}
-
-		resp, _, err := TOSession.GetASNsWithHeader(&params, http.Header{})
+		params := url.Values{"asn": {asn}}
+		asnResp, _, err := TOSession.GetASNsWithHeader(&params, nil)
 		assert.RequireNoError(t, err, "Get ASNs Request failed with error: %v", err)
-		assert.RequireEqual(t, len(resp), 1, "Expected response object length 1, but got %d", len(resp))
-		assert.RequireNotNil(t, &resp[0].ID, "Expected id to not be nil")
-
-		return resp[0].ID
+		assert.RequireEqual(t, len(asnResp), 1, "Expected response object length 1, but got %d", len(asnResp))
+		return asnResp[0].ID
 	}
 }
 
 func CreateTestASNs(t *testing.T) {
-	resp, _, err := TOSession.GetCacheGroupNullableByNameWithHdr(*testData.CacheGroups[0].Name, http.Header{})
-	assert.RequireNoError(t, err, "Unable to get cachgroup ID: %v - resp: %+v", err, resp)
-
 	for _, asn := range testData.ASNs {
-		asn.CachegroupID = *resp[0].ID
+		asn.CachegroupID = GetCacheGroupId(t, asn.Cachegroup)()
 		resp, _, err := TOSession.CreateASN(asn)
-		assert.NoError(t, err, "Could not create ASN: %v - resp: %+v", err, resp)
+		assert.RequireNoError(t, err, "Could not create ASN: %v - alerts: %+v", err, resp)
 	}
 }
 
 func DeleteTestASNs(t *testing.T) {
-	var header http.Header
 	params := url.Values{}
-	// Retrieve ASNs to delete
-	resp, _, err := TOSession.GetASNsWithHeader(&params, header)
-	assert.NoError(t, err, "Error trying to fetch ASNs for deletion: %v - resp: %+v", err, resp)
-	for _, asn := range resp {
-		_, _, err := TOSession.DeleteASNByASN(asn.ID)
-		assert.NoError(t, err, "Cannot delete ASN by ASN number: '%v' %v", asn.ASN, err)
+	asns, _, err := TOSession.GetASNsWithHeader(&params, nil)
+	assert.NoError(t, err, "Error trying to fetch ASNs for deletion: %v", err)
 
+	for _, asn := range asns {
+		alerts, _, err := TOSession.DeleteASNByASN(asn.ID)
+		assert.NoError(t, err, "Cannot delete ASN %d: %v - alerts: %+v", asn.ASN, err, alerts)
 		// Retrieve the ASN to see if it got deleted
 		params.Set("asn", strconv.Itoa(asn.ASN))
-		asns, _, err := TOSession.GetASNsWithHeader(&params, header)
-		assert.NoError(t, err, "Error deleting ASN: %s", err)
-		assert.Equal(t, 0, len(asns), "Expected ASN: %v to be deleted", asn.ASN)
+		getAsns, _, err := TOSession.GetASNsWithHeader(&params, nil)
+		assert.NoError(t, err, "Error trying to fetch ASN after deletion: %v", err)
+		assert.Equal(t, 0, len(getAsns), "Expected ASN %d to be deleted, but it was found in Traffic Ops", asn.ASN)
 	}
 }
