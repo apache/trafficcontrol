@@ -29,10 +29,10 @@ In order to run the tests you will need a running instance of Traffic Ops and Tr
     - _Usually 5432 - should match the value set in database.conf and the **trafficOpsDB port** in traffic-ops-test.conf_
 2. **Traffic Ops** configured port access
     - _Usually 443 or 60443 - should match the value set in cdn.conf and the **URL** in traffic-ops-test.conf_
-3. Running Postgres instance with a `to_test` database that has empty tables.
-    - To set up the `to_test` database do the following:
+3. Running Postgres instance with a database that matches the **trafficOpsDB dbname** value set in traffic-ops-test.conf
+    - For example to set up the `to_test` database do the following:
 
-         ```shell
+         ```console
          $ cd trafficcontrol/traffic_ops/app
          $ db/admin --env=test reset
          ```
@@ -41,7 +41,7 @@ In order to run the tests you will need a running instance of Traffic Ops and Tr
 
       To test if `db/admin` ran all migrations successfully, you can run the following command from the `traffic_ops/app` directory:
 
-        ```shell
+        ```console
         db/admin -env=test dbversion
         ```
       The result should be something similar to:
@@ -52,12 +52,13 @@ In order to run the tests you will need a running instance of Traffic Ops and Tr
         ```
         dbversion 20181206000000 (dirty)
         ```
+      Make sure **trafficOpsDB dbname** in traffic-ops-test.conf is set to: `to_test`
 
       For more info see: http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html?highlight=reset
 
 4. A running Traffic Ops Golang instance pointing to the `to_test` database.
 
-    ```shell
+    ```console
 	$ cd trafficcontrol/traffic_ops/traffic_ops_golang
     $ cp ../app/conf/cdn.conf $HOME/cdn.conf 
     $ go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/test/database.conf
@@ -80,36 +81,36 @@ The flags are:
 Example commands to run the tests:
 
 Test all v3 tests:
-```shell
+```console
 go test ./v3/... -v --cfg=../conf/traffic-ops-test.conf
 ```
 
 Test all v4 tests:
-```shell
+```console
 go test ./v4/... -v --cfg=../conf/traffic-ops-test.conf
 ```
 
 Test all v5 tests:
-```shell
+```console
 go test ./v5/... -v --cfg=../conf/traffic-ops-test.conf
 ```
 
 Only Test a specific endpoint:
-```shell
+```console
 go test ./v4/... -run ^TestCDNs$ -v -cfg=../conf/traffic-ops-test.conf
 ```
 
 Only Test a specific endpoint method :
-```shell
+```console
 go test ./v5/... -run ^TestCacheGroups$/GET -v -cfg=../conf/traffic-ops-test.conf
 ```
 
 Get Test Coverage:
-```shell
+```console
 go test ./v4/... -v --cfg=../conf/traffic-ops-test.conf -coverpkg=../../v4-client/... -coverprofile=cover.out
 ```
 View the cover out file in your browser:
-```shell
+```console
 go tool cover -html=cover.out
 ```
 
