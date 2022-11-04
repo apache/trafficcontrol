@@ -39,7 +39,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editTopology(t.name)" ng-repeat="t in ::topologies">
+            <tr ng-click="editTopology(t.name)" ng-repeat="t in ::topologies | orderBy :'name'">
                 <td name="name" data-search="^{{::t.name}}$">{{::t.name}}</td>
                 <td data-search="^{{::t.description}}$">{{::t.description}}</td>
                 <td >{{::t.nodes.length}}</td>

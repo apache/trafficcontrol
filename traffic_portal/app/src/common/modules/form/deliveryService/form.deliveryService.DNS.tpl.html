@@ -242,7 +242,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="topology" name="topology" class="form-control" ng-model="deliveryService.topology" ng-options="topology.name as topology.name for topology in topologies">
+                            <select id="topology" name="topology" class="form-control" ng-model="deliveryService.topology" ng-options="topology.name as topology.name for topology in topologies | orderBy:'name'">
                                 <option selected value="">None</option>
                             </select>
                             <small ng-show="deliveryService.topology"><a href="/#!/topologies/edit?name={{deliveryService.topology}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
@@ -374,7 +374,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="dscp" name="dscp" class="form-control" ng-model="deliveryService.dscp" ng-options="dcsp.value as dcsp.label for dcsp in dscps" required>
+                            <select id="dscp" name="dscp" class="form-control" ng-model="deliveryService.dscp" ng-options="dcsp.value as dcsp.label for dcsp in dscps | orderBy:'value'" required>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.dscp, 'required')">Required</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.dscp != dsCurrent.dscp">
@@ -1067,7 +1067,7 @@ under the License.
                     <div class="form-group" ng-class="{'has-error': hasError(routingConfig.maxDnsAnswers), 'has-feedback': hasError(routingConfig.maxDnsAnswers)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="maxDnsAnswers">Max DNS Answers<div class="helptooltip">
                             <div class="helptext">
-                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#max-dns-answers"> ATS documentation on Max DNS Answers: DNS-routed Delivery Service</a>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#max-dns-answers" target="_blank"> ATS documentation on Max DNS Answers: DNS-routed Delivery Service</a>
                             </div>
                         </div>
                         </label>

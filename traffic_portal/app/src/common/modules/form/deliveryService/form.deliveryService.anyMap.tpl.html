@@ -179,7 +179,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="topology" name="topology" class="form-control" ng-model="deliveryService.topology" ng-options="topology.name as topology.name for topology in topologies">
+                            <select id="topology" name="topology" class="form-control" ng-model="deliveryService.topology" ng-options="topology.name as topology.name for topology in topologies | orderBy:'name'">
                                 <option selected value="">None</option>
                             </select>
                             <small ng-show="deliveryService.topology"><a href="/#!/topologies/edit?name={{deliveryService.topology}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
