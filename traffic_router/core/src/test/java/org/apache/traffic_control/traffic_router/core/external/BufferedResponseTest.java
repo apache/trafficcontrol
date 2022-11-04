@@ -100,7 +100,7 @@ public class BufferedResponseTest {
 			}
 
 			assertThat(contentLengths.size(), equalTo(2));
-			assertThat("Expected HEAD and GET requests for " + path + "to have the same Content-Length", contentLengths.get(0), equalTo(contentLengths.get(1)));
+			assertThat("Expected HEAD and GET requests for " + path + " to have the same Content-Length", contentLengths.get(0), equalTo(contentLengths.get(1)));
 		}
 	}
 
@@ -168,7 +168,7 @@ public class BufferedResponseTest {
 			}
 
 			assertThat(contentLengths.size(), equalTo(2));
-			assertThat("Expected HEAD and GET requests for " + testHostName + path + "to have the same Content-Length", contentLengths.get(0), equalTo(contentLengths.get(1)));
+			assertThat("Expected HEAD and GET requests for " + testHostName + path + " to have the same Content-Length", contentLengths.get(0), equalTo(contentLengths.get(1)));
 		}
 	}
 }
