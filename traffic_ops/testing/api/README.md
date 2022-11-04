@@ -17,86 +17,101 @@
     under the License.
 -->
 
-# Traffic Ops API Tests
+# Traffic Ops Client / API Integration Tests
 
-The Traffic Ops Client API tests are used to validate the clients responses against those from the Traffic Ops API.  
+The Traffic Ops Client API tests are used to validate the clients responses against those from the Traffic Ops API.
 
-The v1 tests are for regression purposes, and the v2 tests were forked from them when Traffic Ops API v2 was merged. All further feature development will only occur in v2.
+## Setup
 
-In order to run the tests you will need the following:
+In order to run the tests you will need a running instance of Traffic Ops and Traffic Ops DB:
 
-1. Port access to both the Postgres port (usually 5432) that your Traffic Ops instance is using as well as the Traffic Ops configured port (usually 443 or 60443).
+1. **Traffic Ops Database** configured port access
+    - _Usually 5432 - should match the value set in database.conf and the **trafficOpsDB port** in traffic-ops-test.conf_
+2. **Traffic Ops** configured port access
+    - _Usually 443 or 60443 - should match the value set in cdn.conf and the **URL** in traffic-ops-test.conf_
+3. Running Postgres instance with a `to_test` database that has empty tables.
+    - To set up the `to_test` database do the following:
 
-2. An instance of Postgres running with a `to_test` database that has empty tables.
+         ```shell
+         $ cd trafficcontrol/traffic_ops/app
+         $ db/admin --env=test reset
+         ```
 
-    To get your to_test database setup do the following:
-    
-    ```shell
-    $ cd trafficcontrol/traffic_ops/app
-    $ db/admin --env=test reset
-    ```
+      The Traffic Ops users will be created by the tool for accessing the API once the database is accessible.
 
-    NOTE on passwords:
-    Check that the passwords defined defined for your `to_test` database match 
-    here: `trafficcontrol/traffic_ops/app/conf/test/database.conf`
-    and here: `traffic-ops-test.conf` 
+      To test if `db/admin` ran all migrations successfully, you can run the following command from the `traffic_ops/app` directory:
 
-    The Traffic Ops users will be created by the tool for accessing the API once the database is accessible.
+        ```shell
+        db/admin -env=test dbversion
+        ```
+      The result should be something similar to:
+        ```
+        dbversion 2021070800000000
+        ```
+      If migrations did not run successfully, you may see:
+        ```
+        dbversion 20181206000000 (dirty)
+        ```
 
-    Note that for the database to successfully set up the tables and run the migrations, you will the `db/admin` tool.
-    To test if `db/admin` ran all migrations successfully, you can run the following command from the `traffic_ops/app`
-    directory:
+      For more info see: http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html?highlight=reset
 
-    ```shell
-    db/admin -env=test dbversion
-    ```
-
-    The result should be something similar to:
-    ```
-    dbversion 2021070800000000
-    ```
-
-    If migrations did not run successfully, you may see:
-    ```
-    dbversion 20181206000000 (dirty)
-    ```
-
-    For more info see: http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html?highlight=reset
-
-3. A running Traffic Ops Golang instance pointing to the `to_test` database.
+4. A running Traffic Ops Golang instance pointing to the `to_test` database.
 
     ```shell
 	$ cd trafficcontrol/traffic_ops/traffic_ops_golang
-    $ cp ../app/conf/cdn.conf $HOME/cdn.conf # change `traffic_ops_golang->port` to 8443
+    $ cp ../app/conf/cdn.conf $HOME/cdn.conf 
     $ go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/test/database.conf
     ```
-    
-    In your local development environment, if the above command fails for an error similar to 
-    `ERROR: traffic_ops_golang.go:193: 2020-04-10T10:55:53.190298-06:00: cannot open /etc/pki/tls/certs/localhost.crt for read: open /etc/pki/tls/certs/localhost.crt: no such file or directory`
-    you might not have the right certificates at the right locations. Follow the procedure listed
-    [here](https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops.html#id12) to fix it. 
+   Verify that the passwords defined for your `to_test` database match:
+    - `trafficcontrol/traffic_ops/app/conf/test/database.conf`
+    - `traffic-ops-test.conf`
+
 ## Running the API Tests
-The integration tests are run using `go test` from the traffic_ops/testing/api/ directory, however, there are some flags that need to be provided in order for the tests to work.  
+
+The integration tests are run using `go test` from the **traffic_ops/testing/api/** directory, however, there are some flags that need to be provided in order for the tests to work.
 
 The flags are:
 
-* usage - API Test tool usage
-* cfg - the config file needed to run the tests
-* env - Environment variables that can be used to override specific config options that are specified in the config file
-* env_vars - Show environment variables that can be overridden
-* test_data - traffic control
+* cfg - The config file path (default traffic-ops-test.conf)
+* fixtures - The test fixtures for the API test tool (default "tc-fixtures.json)
+* includeSystemTests - Whether to enable tests that have environment dependencies beyond a database
 * run - Go runtime flag for executing a specific test case
 
-Example command to run the tests:
+Example commands to run the tests:
+
+Test all v3 tests:
 ```shell
-$ TO_URL=https://localhost:8443 go test -v -cfg=traffic-ops-test.conf -run TestCDNs
+go test ./v3/... -v --cfg=../conf/traffic-ops-test.conf
 ```
 
-or, since the cfg file location is inferred, the call could be shortened to test a specific API version with something like:
-
+Test all v4 tests:
 ```shell
-$ go test -v -run TestJobs ./v4
+go test ./v4/... -v --cfg=../conf/traffic-ops-test.conf
 ```
 
+Test all v5 tests:
+```shell
+go test ./v5/... -v --cfg=../conf/traffic-ops-test.conf
+```
 
+Only Test a specific endpoint:
+```shell
+go test ./v4/... -run ^TestCDNs$ -v -cfg=../conf/traffic-ops-test.conf
+```
+
+Only Test a specific endpoint method :
+```shell
+go test ./v5/... -run ^TestCacheGroups$/GET -v -cfg=../conf/traffic-ops-test.conf
+```
+
+Get Test Coverage:
+```shell
+go test ./v4/... -v --cfg=../conf/traffic-ops-test.conf -coverpkg=../../v4-client/... -coverprofile=cover.out
+```
+View the cover out file in your browser:
+```shell
+go tool cover -html=cover.out
+```
+
+* go test -run flag matches a regexp so if you want to ensure that only a test named TestCDNs is run use ^TestCDNs$
 * It can take several minutes for the API tests to complete, so using the `-v` flag is recommended to see progress.*
