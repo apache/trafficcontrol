@@ -66,15 +66,11 @@ public class BufferedResponseTest {
 	public void itSetsContentLengthHeaderFor404() throws IOException {
 		final String encodedUrl = URLEncoder.encode("http://trafficrouter01.somedeliveryservice.somecdn.domain.foo/stuff", StandardCharsets.UTF_8);
 		final HttpGet httpGet = new HttpGet("http://localhost:3333/crs/deliveryservices?url=" + encodedUrl);
-		CloseableHttpResponse response = null;
 
-		try {
-			response = httpClient.execute(httpGet);
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(404));
 			assertThat(response.getFirstHeader(HttpHeaders.TRANSFER_ENCODING), nullValue());
 			assertThat(response.getFirstHeader(HttpHeaders.CONTENT_LENGTH), notNullValue());
-		} finally {
-			if (response != null) response.close();
 		}
 	}
 
@@ -93,17 +89,13 @@ public class BufferedResponseTest {
 			final List<Integer> contentLengths = new ArrayList<>();
 
 			for (final HttpRequestBase request : requests) {
-				CloseableHttpResponse response = null;
 
-				try {
-					response = httpClient.execute(request);
+				try (CloseableHttpResponse response = httpClient.execute(request)) {
 					final Header contentLengthHeader = response.getFirstHeader(HttpHeaders.CONTENT_LENGTH);
 
 					assertThat(response.getFirstHeader(HttpHeaders.TRANSFER_ENCODING), nullValue());
 					assertThat(contentLengthHeader, notNullValue());
 					contentLengths.add(Integer.parseInt(contentLengthHeader.getValue()));
-				} finally {
-					if (response != null) response.close();
 				}
 			}
 
@@ -163,18 +155,15 @@ public class BufferedResponseTest {
 			final List<Integer> contentLengths = new ArrayList<>();
 
 			for (final HttpRequestBase request : requests) {
-				CloseableHttpResponse response = null;
+
 				request.setConfig(config);
 				request.addHeader("Host", testHostName);
-
-				try {
-					response = httpClient.execute(request);
+				try (CloseableHttpResponse response = httpClient.execute(request)) {
 					final Header contentLengthHeader = response.getFirstHeader(HttpHeaders.CONTENT_LENGTH);
+
 					assertThat(response.getFirstHeader(HttpHeaders.TRANSFER_ENCODING), nullValue());
 					assertThat(contentLengthHeader, notNullValue());
 					contentLengths.add(Integer.parseInt(contentLengthHeader.getValue()));
-				} finally {
-					if (response != null) response.close();
 				}
 			}
 
