@@ -133,7 +133,6 @@
 							<name>${project.parent.artifactId}</name>
 							<release>${env.BUILD_NUMBER}.${env.RHEL_VERSION}</release>
 							<license>Apache License, Version 2.0</license>
-							<needarch>x86_64</needarch>
 							<targetOS>${env.RPM_TARGET_OS}</targetOS>
 							<defineStatements>
 								<defineStatement>_source_payload w2.xzdio</defineStatement>
