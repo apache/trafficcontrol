@@ -16,10 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -o errexit
-
-
-
+set -o errexit -o nounset
 
 cd "$TC/traffic_router"
 
@@ -27,6 +24,12 @@ user=trafficrouter
 uid="$(stat -c%u "$TC")"
 gid="$(stat -c%g "$TC")"
 if [[ "$(id -u)" != "$uid" ]]; then
+	for dir in "${TC}/.m2"  */target; do
+		if [[ "$(stat -c%u "$dir")" -ne "$uid" || "$(stat -c%g "$dir")" -ne "$gid" ]] ; then
+			chown -R "${uid}:${gid}" "$dir"
+		fi
+	done
+
 	adduser -Du"$uid" "$user"
 	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
 	chown -R "${uid}:${gid}" /opt
