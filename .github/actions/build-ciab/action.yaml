@@ -18,5 +18,5 @@
 name: build-ciab
 description: Builds CDN-in-a-Box images for the standard CiaB services and the readiness service
 runs:
-  using: node12
+  using: node16
   main: build-ciab.js
