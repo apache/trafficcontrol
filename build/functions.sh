@@ -219,7 +219,9 @@ buildRpm() {
 	for package in "$@"; do
 		local pre="${package}-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}"
 		local rpm
-		rpm="${pre}.$(uname -m).rpm"
+		local arch
+		arch="$(rpm --eval %_arch)"
+		rpm="${pre}.${arch}.rpm"
 		local srpm="${pre}.src.rpm"
 		echo "Building the rpm."
 		{ set +o nounset
@@ -266,7 +268,7 @@ buildRpm() {
 			srcRPMDest="${package}.src.rpm";
 		fi
 
-		cp -f "$RPMBUILD/RPMS/$(uname -m)/$rpm" "$DIST/$rpmDest";
+		cp -f "$RPMBUILD/RPMS/${arch}/$rpm" "$DIST/$rpmDest";
 		code="$?";
 		if [[ "$code" -ne 0 ]]; then
 			echo "Could not copy $rpm to $DIST: $code" >&2;
