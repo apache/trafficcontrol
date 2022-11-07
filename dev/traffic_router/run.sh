@@ -24,8 +24,8 @@ set -o errexit
 cd "$TC/traffic_router"
 
 user=trafficrouter
-uid="$(stat -c%u .)"
-gid="$(stat -c%g .)"
+uid="$(stat -c%u "$TC")"
+gid="$(stat -c%g "$TC")"
 if [[ "$(id -u)" != "$uid" ]]; then
 	adduser -Du"$uid" "$user"
 	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group

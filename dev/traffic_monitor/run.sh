@@ -22,8 +22,8 @@ trap '[ $? -eq 0 ] && exit 0 || echo "Error on line ${LINENO} of ${0}"; exit 1' 
 
 cd "$TC/traffic_monitor"
 user=trafficmonitor
-uid="$(stat -c%u .)"
-gid="$(stat -c%g .)"
+uid="$(stat -c%u "$TC")"
+gid="$(stat -c%g "$TC")"
 if [[ "$(id -u)" != "$uid" ]]; then
 	adduser -Du"$uid" "$user"
 	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group

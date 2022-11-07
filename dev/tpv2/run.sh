@@ -18,8 +18,8 @@ set -o errexit
 cd "$TC/experimental/traffic-portal"
 
 user=tpv2
-uid="$(stat -c%u .)"
-gid="$(stat -c%g .)"
+uid="$(stat -c%u "$TC")"
+gid="$(stat -c%g "$TC")"
 if [[ "$(id -u)" != "$uid" ]]; then
 	if ! adduser -Du"$uid" "$user"; then
 		user="$(cat /etc/passwd | grep :x:1000: | cut -d: -f1)"

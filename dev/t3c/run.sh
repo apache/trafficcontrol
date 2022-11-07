@@ -24,8 +24,8 @@ trap '[ $? -eq 0 ] && exit 0 || echo "Error on line ${LINENO} of ${0}"; exit 1' 
 cd "$TC/tc-health-client"
 
 user=ats
-uid="$(stat -c%u .)"
-gid="$(stat -c%g .)"
+uid="$(stat -c%u "$TC")"
+gid="$(stat -c%g "$TC")"
 if [[ "$(id -u "$user")" != "$uid" ]]; then
 	sed -Ei "s/^(${user}:.*:)([0-9]+:){2}(.*)/\1${uid}:${gid}:\3/" /etc/passwd
 	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group

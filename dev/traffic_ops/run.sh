@@ -31,8 +31,8 @@ make traffic_ops/app/db/admin
 cd "$TC/dev/traffic_ops"
 
 user=trafficops
-uid="$(stat -c%u .)"
-gid="$(stat -c%g .)"
+uid="$(stat -c%u "$TC")"
+gid="$(stat -c%g "$TC")"
 if [[ "$(id -u)" != "$uid" ]]; then
 	"$ADMIN" -c ./dbconf.yml -s "$TC/traffic_ops/app/db/create_tables.sql" -S "$TC/traffic_ops/app/db/seeds.sql" -p "$TC/traffic_ops/app/db/patches.sql" -m "$TC/traffic_ops/app/db/migrations" reset
 	"$ADMIN" -c ./dbconf.yml -s "$TC/traffic_ops/app/db/create_tables.sql" -S "$TC/traffic_ops/app/db/seeds.sql" -p "$TC/traffic_ops/app/db/patches.sql" -m "$TC/traffic_ops/app/db/migrations" upgrade
