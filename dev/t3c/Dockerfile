@@ -35,7 +35,8 @@ RUN apk add --no-cache \
 	make \
 	# gcc and musl-dev are used to build packages using CGO
 	gcc musl-dev && \
-	go install github.com/go-delve/delve/cmd/dlv@latest
+	go install github.com/go-delve/delve/cmd/dlv@latest && \
+	rm -rf $GOPATH/pkg/*
 
 RUN echo "stats_over_http.so" >> /etc/trafficserver/plugin.config && echo "system_stats.so" >> /etc/trafficserver/plugin.config
 

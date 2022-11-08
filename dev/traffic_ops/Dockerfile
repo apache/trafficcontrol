@@ -21,7 +21,7 @@ RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 		-subj "/C=US/ST=CO/L=Denver/O=Apache/OU=Traffic Control/CN=trafficops.dev.ciab.test" && \
 	openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt && \
 	openssl rand 32 | base64 > /aes.key && \
-    chmod 644 /server.key /aes.key
+	chmod 644 /server.key /aes.key
 
 FROM golang:${GO_VERSION}-alpine AS trafficops-dev
 
@@ -33,7 +33,7 @@ EXPOSE 443 6444
 COPY --from=certbuilder /server.key /server.crt /aes.key /
 RUN apk add --no-cache make inotify-tools postgresql-client gcc libc-dev && \
 	go install github.com/go-delve/delve/cmd/dlv@latest && \
-	ln -s /root/go/bin/dlv /usr/bin/dlv
+	rm -rf $GOPATH/pkg/*
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
 COPY .pgpass /root/.pgpass
