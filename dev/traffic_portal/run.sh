@@ -22,7 +22,7 @@ uid="$(stat -c%u "$TC")"
 gid="$(stat -c%g "$TC")"
 if [[ "$(id -u)" != "$uid" ]]; then
 	for dir in "${TC}/.npm"  .[a-z]* app/dist app/dist/public node_modules; do
-		if [[ "$(stat -c%u "$dir")" -ne "$uid" || "$(stat -c%g "$dir")" -ne "$gid" ]] ; then
+		if [[ -e "$dir" ]] && [[ "$(stat -c%u "$dir")" -ne "$uid" || "$(stat -c%g "$dir")" -ne "$gid" ]] ; then
 			chown -R "${uid}:${gid}" "$dir"
 		fi
 	done
