@@ -28,6 +28,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
 
 ### Fixed
+- *Traffic Portal* Fixed topologies sort (table and Delivery Service's form)
+- [#5970](https://github.com/apache/trafficcontrol/issues/5970) *Traffic Portal* Fixed numeric sort in Delivery Service's form for DSCP
+- [#5971](https://github.com/apache/trafficcontrol/issues/5971) *Traffic Portal* Fixed Max DNS Tool Top link to open in a new page
 - [#7131](https://github.com/apache/trafficcontrol/issues/7131) *Docs* Fixed Docs for staticdnsentries API endpoint missing lastUpdated response property description in APIv3, APIv4 and APIv5.
 - [#6947](https://github.com/apache/trafficcontrol/issues/6947) *Docs* Fixed docs for `cdns/{{name}}/federations` in APIv3, APIv4 and APIv5.
 - [#6903](https://github.com/apache/trafficcontrol/issues/6903), [#6903](https://github.com/apache/trafficcontrol/issues/6903) *Docs* Fixed docs for /cdns/dnsseckeys/refresh in APIv4 and APIv5.
