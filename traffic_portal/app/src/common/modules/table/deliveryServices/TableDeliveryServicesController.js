@@ -122,7 +122,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			headerName: "Geo Limit",
 			field: "geoLimit",
 			hide: true,
-			valueFormatter: params => deliveryServiceUtils.geoLimits[params.data.geoLimit],
+			valueGetter: params => deliveryServiceUtils.geoLimits[params.data.geoLimit],
 			tooltipValueGetter: params => deliveryServiceUtils.geoLimits[params.data.geoLimit]
 		},
 		{
@@ -139,7 +139,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			headerName: "Geolocation Provider",
 			field: "geoProvider",
 			hide: true,
-			valueFormatter: params => deliveryServiceUtils.geoProviders[params.data.geoProvider],
+			valueGetter: params => deliveryServiceUtils.geoProviders[params.data.geoProvider],
 			tooltipValueGetter: params => deliveryServiceUtils.geoProviders[params.data.geoProvider]
 		},
 		{
@@ -261,21 +261,21 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			headerName: "Protocol",
 			field: "protocol",
 			hide: false,
-			valueFormatter: params => deliveryServiceUtils.protocols[params.data.protocol],
+			valueGetter: params => deliveryServiceUtils.protocols[params.data.protocol],
 			tooltipValueGetter: params => deliveryServiceUtils.protocols[params.data.protocol]
 		},
 		{
 			headerName: "Qstring Handling",
 			field: "qstringIgnore",
 			hide: true,
-			valueFormatter: params => deliveryServiceUtils.qstrings[params.data.qstringIgnore],
+			valueGetter: params => deliveryServiceUtils.qstrings[params.data.qstringIgnore],
 			tooltipValueGetter: params => deliveryServiceUtils.qstrings[params.data.qstringIgnore]
 		},
 		{
 			headerName: "Range Request Handling",
 			field: "rangeRequestHandling",
 			hide: true,
-			valueFormatter: params => deliveryServiceUtils.rrhs[params.data.rangeRequestHandling],
+			valueGetter: params => deliveryServiceUtils.rrhs[params.data.rangeRequestHandling],
 			tooltipValueGetter: params => deliveryServiceUtils.rrhs[params.data.rangeRequestHandling]
 		},
 		{
