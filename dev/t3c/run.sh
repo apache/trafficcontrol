@@ -27,6 +27,12 @@ user=ats
 uid="$(stat -c%u "$TC")"
 gid="$(stat -c%g "$TC")"
 if [[ "$(id -u "$user")" != "$uid" ]]; then
+	for dir in "${GOPATH}/bin" "${GOPATH}/pkg"; do
+		if [[ "$(stat -c%u "$dir")" -ne "$uid" || "$(stat -c%g "$dir")" -ne "$gid" ]] ; then
+			chown -R "${uid}:${gid}" "$dir"
+		fi
+	done
+
 	sed -Ei "s/^(${user}:.*:)([0-9]+:){2}(.*)/\1${uid}:${gid}:\3/" /etc/passwd
 	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
 	chown -R "${uid}:${gid}" /usr/bin "/home/${user}" /etc/trafficserver /var/log/trafficserver /var/trafficserver
