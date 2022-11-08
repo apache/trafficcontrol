@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7032](https://github.com/apache/trafficcontrol/issues/7032) *Cache Config* Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
 - [#7097](https://github.com/apache/trafficcontrol/issues/7097) *Traffic Ops, Traffic Portal, t3c* Added the `regional` field to Delivery Services, which affects whether `maxOriginConnections` should be per Cache Group
 - [#2388](https://github.com/apache/trafficcontrol/issues/2388) *Trafic Ops, Traffic Portal* Added the `TTLOverride` field to CDNs, which lets you override all TTLs in all Delivery Services of a CDN's snapshot with a single value
+- [#7176](https://github.com/apache/trafficcontrol/pull/7176) *ATC Build system* Support building ATC for the `aarch64` CPU architecture
 
 ### Changed
 - [#2564](https://github.com/apache/trafficcontrol/issues/2564) Renamed RASCAL references to TRAFFIC_MONITOR

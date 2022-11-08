@@ -35,6 +35,7 @@ PKG_COMMAND := $(TC_DIR)/pkg
 PKG_FLAGS := -v -$(RHEL_VERSION)
 BUILD_SUFFIX := _build
 BUILD_NUMBER := $(shell git rev-list HEAD 2>/dev/null | wc -l | tr -d '[[:space:]]').$(shell git rev-parse --short=8 HEAD)
+BUILD_ARCH   := $(shell rpm --eval %_arch)
 TC_VERSION := $(shell cat "$(TC_DIR)/VERSION")
 TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
 TOMCAT_RELEASE := $(shell grep '^\s*TOMCAT_RELEASE=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
@@ -44,9 +45,10 @@ ifeq ($(RHEL_VERSION),7)
 ATS_VERSION := $(shell echo "$(ATS_VERSION)" | sed -E 's/^(.*-[0-9]+\.[0-9a-f]{7})[0-9a-f]*/\1/')
 endif
 
-SPECIAL_SAUCE := $(TC_VERSION)-$(BUILD_NUMBER).el$(RHEL_VERSION).x86_64.rpm
+SPECIAL_SAUCE := $(TC_VERSION)-$(BUILD_NUMBER).el$(RHEL_VERSION).$(BUILD_ARCH).rpm
+SPECIAL_SAUCE_NOARCH := $(TC_VERSION)-$(BUILD_NUMBER).el$(RHEL_VERSION).noarch.rpm
 SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-1.el$(RHEL_VERSION).noarch.rpm
-SPECIAL_SYRUP := $(ATS_VERSION).el$(RHEL_VERSION).x86_64.rpm
+SPECIAL_SYRUP := $(ATS_VERSION).el$(RHEL_VERSION).$(BUILD_ARCH).rpm
 
 ATS_SOURCE := $(wildcard $(TC_DIR)/cache-config/testing/docker/trafficserver/**)
 TO_SOURCE := $(wildcard $(TC_DIR)/traffic_ops/**)
@@ -89,7 +91,7 @@ ATS_DIST_RPM := $(TC_DIR)/dist/trafficserver-$(SPECIAL_SYRUP)
 TM_DIST_RPM := $(TC_DIR)/dist/traffic_monitor-$(SPECIAL_SAUCE)
 TO_DIST_RPM := $(TC_DIR)/dist/traffic_ops-$(SPECIAL_SAUCE)
 TP_DIST_RPM := $(TC_DIR)/dist/traffic_portal-$(SPECIAL_SAUCE)
-TR_DIST_RPM := $(TC_DIR)/dist/traffic_router-$(SPECIAL_SAUCE)
+TR_DIST_RPM := $(TC_DIR)/dist/traffic_router-$(SPECIAL_SAUCE_NOARCH)
 TOMCAT_DIST_RPM := $(TC_DIR)/dist/tomcat-$(SPECIAL_SEASONING)
 TS_DIST_RPM := $(TC_DIR)/dist/traffic_stats-$(SPECIAL_SAUCE)
 ORT_DIST_RPM := $(TC_DIR)/dist/trafficcontrol-cache-config-$(SPECIAL_SAUCE)

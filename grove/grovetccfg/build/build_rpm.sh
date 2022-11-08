@@ -42,7 +42,7 @@ checkGroveEnvironment() {
 	BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
 	RPMBUILD="${GROVE_DIR}/rpmbuild"
 	DIST="${TC_DIR}/dist"
-	RPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}.x86_64.rpm"
+	RPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}.$(rpm --eval %_arch).rpm"
 	SRPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}.src.rpm"
 	GOOS="${GOOS:-linux}"
 	RPM_TARGET_OS="${RPM_TARGET_OS:-$GOOS}"
@@ -128,7 +128,7 @@ buildRpmGrove() {
 	# copy build RPM to .
 	[ -d "$DIST" ] || mkdir -p "$DIST";
 
-	cp -f "$RPMBUILD/RPMS/$(uname -m)/${RPM}" "$DIST/$rpmDest";
+	cp -f "$RPMBUILD/RPMS/$(rpm --eval %_arch)/${RPM}" "$DIST/$rpmDest";
 	code="$?";
 	if [[ "$code" -ne 0 ]]; then
 		echo "Could not copy $rpm to $DIST: $code" >&2;
