@@ -21,6 +21,12 @@ user=tpv2
 uid="$(stat -c%u "$TC")"
 gid="$(stat -c%g "$TC")"
 if [[ "$(id -u)" != "$uid" ]]; then
+	for dir in "${TC}/.npm" .angular node_modules; do
+		if [[ "$(stat -c%u "$dir")" -ne "$uid" || "$(stat -c%g "$dir")" -ne "$gid" ]] ; then
+			chown -R "${uid}:${gid}" "$dir"
+		fi
+	done
+
 	if ! adduser --disabled-password -u "$uid" "$user"; then
 		user="$(cat /etc/passwd | grep :x:${uid}: | cut -d: -f1)"
 	fi
