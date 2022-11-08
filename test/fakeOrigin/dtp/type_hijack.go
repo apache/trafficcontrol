@@ -1,4 +1,4 @@
-package main
+package dtp
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,5 +19,40 @@ package main
  * under the License.
  */
 
-// Version is the current version of the app, in string form.
-var Version = "0.3.0"
+import (
+	"encoding/base64"
+	"net/http"
+)
+
+func init() {
+	GlobalHandlerFuncs["hijack"] = Hijack
+}
+
+func Hijack(w http.ResponseWriter, r *http.Request, reqdat map[string]string) {
+	hj, ok := w.(http.Hijacker)
+	if !ok {
+		http.Error(w, "webserver doesn't support hijacking", http.StatusInternalServerError)
+		DebugLogf("Can't get a hijack\n")
+		return
+	}
+
+	conn, buf, err := hj.Hijack()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		DebugLogf("hijack failed: %s\n", err)
+		return
+	}
+
+	DebugLogf("Connection hijacked\n")
+
+	if str, ok := reqdat["payload"]; ok {
+		buf.WriteString(str)
+	} else if encoded, ok := reqdat["payload64"]; ok {
+		data, err := base64.StdEncoding.DecodeString(encoded)
+		if err == nil {
+			buf.Write(data)
+		}
+	}
+	buf.Flush()
+	conn.Close()
+}

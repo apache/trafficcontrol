@@ -26,6 +26,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // DefaultConfigFile is the default configuration file path
@@ -42,25 +43,34 @@ const DefaultHTTPSCertFile = "server.cert"
 
 // ServerInfo contains relevant info for serving content
 type ServerInfo struct {
-	HTTPListeningPort  int    `json:"http_port"`
-	HTTPSListeningPort int    `json:"https_port"`
-	SSLCert            string `json:"ssl_cert"`
-	SSLKey             string `json:"ssl_key"`
-	BindingAddress     string `json:"binding_address"`
-	CrossdomainFile    string `json:"crossdomain_xml_file"`
+	HTTPListeningPort  int           `json:"http_port"`
+	HTTPSListeningPort int           `json:"https_port"`
+	SSLCert            string        `json:"ssl_cert"`
+	SSLKey             string        `json:"ssl_key"`
+	BindingAddress     string        `json:"binding_address"`
+	CrossdomainFile    string        `json:"crossdomain_xml_file"`
+	ReadTimeout        time.Duration `json:"read_timeout"`
+	WriteTimeout       time.Duration `json:"write_timeout"`
 }
 
 // Endpoint defines all kinds of endpoints to be served
 type Endpoint struct {
 	ID              string              `json:"id"`
 	DiskID          string              `json:"override_disk_id,omitempty"`
-	Source          string              `json:"source"`
-	OutputDirectory string              `json:"outputdir,omitifempty"`
+	Source          string              `json:"source,omitempty"`
+	OutputDirectory string              `json:"outputdir,omitempty"`
 	EndpointType    Type                `json:"type"`
 	ManualCommand   []string            `json:"manual_command,omitempty"`
 	DefaultHeaders  map[string][]string `json:"default_headers,omitempty"`
 	NoCache         bool                `json:"no_cache,omitempty"`
 	ABRManifests    []string            `json:"abr_manifests,omitempty"`
+
+	// Testing endpoint specific config
+	LogReqHeaders  bool          `json:"log_request_headers,omitempty"`
+	LogRespHeaders bool          `json:"log_response_headers,omitempty"`
+	StallDuration  time.Duration `json:"stall_duration,omitempty"`
+	EnablePprof    bool          `json:"enable_pprof,omitempty"`
+	EnableDebug    bool          `json:"enable_debug,omitempty"`
 }
 
 // Config defines the application configuration
@@ -130,14 +140,16 @@ func ProcessConfig(out Config) (Config, error) {
 	for i := range out.Endpoints {
 		var err error
 		// Resolve relative paths to absolute paths
-		out.Endpoints[i].Source, err = filepath.Abs(out.Endpoints[i].Source)
-		if err != nil {
-			return Config{}, errors.New("resolving relative path: " + err.Error())
-		}
-		out.Endpoints[i].OutputDirectory, _ = filepath.Abs(out.Endpoints[i].OutputDirectory)
+		if out.Endpoints[i].EndpointType != Testing {
+			out.Endpoints[i].Source, err = filepath.Abs(out.Endpoints[i].Source)
+			if err != nil {
+				return Config{}, errors.New("resolving relative path: " + err.Error())
+			}
+			out.Endpoints[i].OutputDirectory, _ = filepath.Abs(out.Endpoints[i].OutputDirectory)
 
-		if out.Endpoints[i].OutputDirectory == "" {
-			out.Endpoints[i].OutputDirectory = DefaultOutputDirectory
+			if out.Endpoints[i].OutputDirectory == "" && out.Endpoints[i].EndpointType != Testing {
+				out.Endpoints[i].OutputDirectory = DefaultOutputDirectory
+			}
 		}
 		if out.Endpoints[i].DiskID == "" {
 			out.Endpoints[i].DiskID = out.Endpoints[i].ID
@@ -171,17 +183,17 @@ func LoadAndGenerateDefaultConfig(path string) (Config, error) {
 			//	return out, errors.New("Manual commands must include the %MASTERMANIFEST% token")
 			//}
 			if !contains(ep.ManualCommand, `%OUTPUTDIRECTORY%`) {
-				return out, errors.New(`Manual commands must include the %OUTPUTDIRECTORY% token`)
+				return out, errors.New(`manual commands must include the %OUTPUTDIRECTORY% token`)
 			}
 			if !contains(ep.ManualCommand, `%SOURCE%`) {
-				return out, errors.New(`Manual commands must include the %SOURCE% token`)
+				return out, errors.New(`manual commands must include the %SOURCE% token`)
 			}
 		}
 		if len(ep.ABRManifests) > 0 {
-			return out, errors.New("Paths of ABR Layer manifests must not be set via configuration")
+			return out, errors.New("paths of ABR Layer manifests must not be set via configuration")
 		}
 	}
-	out, err = ProcessConfig(out)
+	out, _ = ProcessConfig(out)
 	if err = WriteConfig(out, path); err != nil {
 		return out, errors.New("processing config file: " + err.Error())
 	}

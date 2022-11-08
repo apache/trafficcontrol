@@ -101,7 +101,7 @@ func GenerateETag(source string) string {
 	return fmt.Sprintf("\"%d\"", h.Sum32())
 }
 
-func log(handler http.Handler) http.Handler {
+func logfo(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		iw := &BodyInterceptor{w: w}
@@ -126,10 +126,11 @@ func log(handler http.Handler) http.Handler {
 		ims := strings.Replace(r.Header.Get("If-Modified-Since"), `"`, `\"`, -1)
 		ius := strings.Replace(r.Header.Get("If-Unmodified-Since"), `"`, `\"`, -1)
 		ir := strings.Replace(r.Header.Get("If-Range"), `"`, `\"`, -1)
-
+		fmt.Println("hit in log handler")
 		fmt.Printf("%s - [%s] \"%s %s %s\" %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", remoteAddr, finishTS, method, rURI, proto, rc, size, dur, refer, uas, im, inm, ims, ius, ir)
 	})
 }
+
 func strictTransportSecurity(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		iw := &BodyInterceptor{w: w}
