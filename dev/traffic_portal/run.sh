@@ -27,7 +27,7 @@ if [[ "$(id -u)" != "$uid" ]]; then
 		fi
 	done
 
-	if ! adduser -Du"$uid" "$user"; then
+	if ! adduser --disabled-password -u "$uid" "$user"; then
 		user="$(cat /etc/passwd | grep :x:${uid}: | cut -d: -f1)"
 	fi
 	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
