@@ -28,7 +28,7 @@ if [[ "$(id -u)" != "$uid" ]]; then
 	done
 
 	if ! adduser -Du"$uid" "$user"; then
-		user="$(cat /etc/passwd | grep :x:1000: | cut -d: -f1)"
+		user="$(cat /etc/passwd | grep :x:${uid}: | cut -d: -f1)"
 	fi
 	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
 	chown "${uid}:${gid}" /usr/bin
