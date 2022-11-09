@@ -232,6 +232,12 @@ func (sp ParentAbstractionServiceParent) Key() string {
 	return sp.FQDN + ":" + strconv.Itoa(sp.Port)
 }
 
+type peersSort []*ParentAbstractionServiceParent
+
+func (a peersSort) Len() int           { return len(a) }
+func (a peersSort) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a peersSort) Less(i, j int) bool { return a[i].Key() < a[j].Key() }
+
 func RemoveParentDuplicates(inputs []*ParentAbstractionServiceParent, seens map[string]struct{}) ([]*ParentAbstractionServiceParent, map[string]struct{}) {
 	if seens == nil {
 		seens = make(map[string]struct{})
