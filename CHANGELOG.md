@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7158](https://github.com/apache/trafficcontrol/issues/7158) *Traffic Vault* Fix the `reencrypt` utility to uniquely reencrypt each version of the SSL Certificates.
 - [#7137](https://github.com/apache/trafficcontrol/pull/7137) *Cache Config* parent.config simulate topology for non topo delivery services.
 - Adds an extra T3C check for validity of an ssl cert (crash fix).
+- Traffic Router now always includes a `Content-Length` header in the response.
 
 ## [7.0.0] - 2022-07-19
 ### Added
