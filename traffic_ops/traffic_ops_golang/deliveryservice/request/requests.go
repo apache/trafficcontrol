@@ -610,14 +610,14 @@ func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (res
 		return
 	}
 
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", upgraded.Downgrade())
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", upgraded.Downgrade().Downgrade())
 
 	result.Successful = true
 	result.Assignee = dsr.Assignee
 	result.XMLID = upgraded.XMLID
 	result.ChangeType = upgraded.ChangeType
 	result.Action = api.Created
-	return
+	return result
 }
 
 // Post is the handler for POST requests to /deliveryservice_requests.
