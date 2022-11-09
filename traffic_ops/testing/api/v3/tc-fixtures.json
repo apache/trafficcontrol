@@ -858,7 +858,7 @@
             "regexRemap": null,
             "regionalGeoBlocking": false,
             "remapText": null,
-            "routingName": "ccr-ds1",
+            "routingName": "cdn",
             "signed": false,
             "signingAlgorithm": null,
             "sslKeyVersion": 0,
