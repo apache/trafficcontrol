@@ -87,7 +87,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 		},
 		{
 			headerName: "DNS TTL",
-			field: "ccrDnsTtl",
+			field: "trDnsTtl",
 			hide: true,
 			filter: "agNumberColumnFilter"
 		},

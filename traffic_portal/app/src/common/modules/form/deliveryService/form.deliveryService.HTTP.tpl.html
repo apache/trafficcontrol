@@ -1145,17 +1145,17 @@ under the License.
                             </aside>
                         </div>
                     </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.ccrDnsTtl), 'has-feedback': hasError(routingConfig.ccrDnsTtl)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ccrDnsTtl">Delivery Service DNS TTL<div class="helptooltip">
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.trDnsTtl), 'has-feedback': hasError(routingConfig.trDnsTtl)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trDnsTtl">Delivery Service DNS TTL<div class="helptooltip">
                             <div class="helptext">The <abbr title="Time To Live">TTL</abbr> on the DNS record for the Traffic Router A and AAAA records. Setting too high or too low will result in poor caching performance.</div>
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="ccrDnsTtl" name="ccrDnsTtl" type="number" class="form-control" ng-model="deliveryService.ccrDnsTtl" step="1" min="0">
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">
+                            <input id="trDnsTtl" name="trDnsTtl" type="number" class="form-control" ng-model="deliveryService.trDnsTtl" step="1" min="0">
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.trDnsTtl != dsCurrent.trDnsTtl">
                                 <h3 ng-if="open()">Current Value</h3>
                                 <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.ccrDnsTtl}}</pre>
+                                <pre>{{::dsCurrent.trDnsTtl}}</pre>
                             </aside>
                         </div>
                     </div>

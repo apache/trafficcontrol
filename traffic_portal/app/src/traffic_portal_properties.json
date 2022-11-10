@@ -122,7 +122,7 @@
           "logsEnabled": false,
           "geoProvider": 0,
           "geoLimit": 0,
-          "ccrDnsTtl": 30,
+          "trDnsTtl": 30,
           "anonymousBlockingEnabled": false
         },
         "DNS": {
@@ -139,7 +139,7 @@
           "missLat": 41.881944,
           "missLong": -87.627778,
           "signingAlgorithm": null,
-          "ccrDnsTtl": 30,
+          "trDnsTtl": 30,
           "regionalGeoBlocking": false,
           "anonymousBlockingEnabled": false,
           "ecsEnabled": false,
@@ -162,7 +162,7 @@
           "missLat": 41.881944,
           "missLong": -87.627778,
           "signingAlgorithm": null,
-          "ccrDnsTtl": 3600,
+          "trDnsTtl": 3600,
           "anonymousBlockingEnabled": false,
           "consistentHashQueryParams": [],
           "ecsEnabled": false,
@@ -176,7 +176,7 @@
           "geoProvider": 0,
           "geoLimit": 0,
           "regionalGeoBlocking": false,
-          "ccrDnsTtl": 30,
+          "trDnsTtl": 30,
           "anonymousBlockingEnabled": false,
           "ecsEnabled": false
         }

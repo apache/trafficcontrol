@@ -31,10 +31,10 @@ func compareV31DSes(a, b DeliveryServiceNullableV30, t *testing.T) {
 	} else if a.AnonymousBlockingEnabled != nil && *a.AnonymousBlockingEnabled != *b.AnonymousBlockingEnabled {
 		t.Errorf("Mismatched 'AnonymousBlockingEnabled' property; one was '%v', the other was '%v'", *a.AnonymousBlockingEnabled, *b.AnonymousBlockingEnabled)
 	}
-	if (a.CCRDNSTTL == nil && b.CCRDNSTTL != nil) || (a.CCRDNSTTL != nil && b.CCRDNSTTL == nil) {
-		t.Error("Mismatched 'CCRDNSTTL' property; one was nil but the other was not.")
-	} else if a.CCRDNSTTL != nil && *a.CCRDNSTTL != *b.CCRDNSTTL {
-		t.Errorf("Mismatched 'CCRDNSTTL' property; one was '%v', the other was '%v'", *a.CCRDNSTTL, *b.CCRDNSTTL)
+	if (a.TRDNSTTL == nil && b.TRDNSTTL != nil) || (a.TRDNSTTL != nil && b.TRDNSTTL == nil) {
+		t.Error("Mismatched 'TRDNSTTL' property; one was nil but the other was not.")
+	} else if a.TRDNSTTL != nil && *a.TRDNSTTL != *b.TRDNSTTL {
+		t.Errorf("Mismatched 'TRDNSTTL' property; one was '%v', the other was '%v'", *a.TRDNSTTL, *b.TRDNSTTL)
 	}
 	if (a.CDNID == nil && b.CDNID != nil) || (a.CDNID != nil && b.CDNID == nil) {
 		t.Error("Mismatched 'CDNID' property; one was nil but the other was not.")
@@ -394,7 +394,6 @@ func compareV31DSes(a, b DeliveryServiceNullableV30, t *testing.T) {
 func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliveryServiceV4) {
 	anonymousBlockingEnabled := false
 	cacheURL := "testquest"
-	cCRDNSTTL := 42
 	cdnID := -12
 	cdnName := "cdnName"
 	checkPath := "checkPath"
@@ -459,6 +458,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	tenant := "tenant"
 	tenantID := -6551
 	topology := "topology"
+	trDNSTTL := 42
 	trResponseHeaders := "trResponseHeaders"
 	trRequestHeaders := "trRequestHeaders"
 	typ := DSTypeDNS
@@ -468,7 +468,6 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	newDS := DeliveryServiceV4{}
 	newDS.Active = new(bool)
 	newDS.AnonymousBlockingEnabled = &anonymousBlockingEnabled
-	newDS.CCRDNSTTL = &cCRDNSTTL
 	newDS.CDNID = &cdnID
 	newDS.CDNName = &cdnName
 	newDS.CheckPath = &checkPath
@@ -533,6 +532,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	newDS.TenantID = &tenantID
 	newDS.TLSVersions = []string{"1.0", "1.1", "1.2", "1.3"}
 	newDS.Topology = &topology
+	newDS.TRDNSTTL = &trDNSTTL
 	newDS.TRResponseHeaders = &trResponseHeaders
 	newDS.TRRequestHeaders = &trRequestHeaders
 	newDS.Type = &typ
@@ -550,7 +550,6 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 								DeliveryServiceNullableFieldsV11: DeliveryServiceNullableFieldsV11{
 									Active:                   &active,
 									AnonymousBlockingEnabled: &anonymousBlockingEnabled,
-									CCRDNSTTL:                &cCRDNSTTL,
 									CDNID:                    &cdnID,
 									CDNName:                  &cdnName,
 									CheckPath:                &checkPath,
@@ -599,6 +598,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 									Signed:                   signed,
 									SSLKeyVersion:            &sSLKeyVersion,
 									TenantID:                 &tenantID,
+									TRDNSTTL:                 &trDNSTTL,
 									Type:                     &typ,
 									TypeID:                   &typeID,
 									XMLID:                    &xmlid,

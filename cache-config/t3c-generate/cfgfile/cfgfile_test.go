@@ -161,7 +161,7 @@ func randDS() *atscfg.DeliveryService {
 	ds.TRRequestHeaders = util.StrPtr(test.RandStr())
 	ds.Active = util.BoolPtr(test.RandBool())
 	ds.AnonymousBlockingEnabled = util.BoolPtr(test.RandBool())
-	ds.CCRDNSTTL = util.IntPtr(test.RandInt())
+	ds.TRDNSTTL = util.IntPtr(test.RandInt())
 	ds.CDNID = util.IntPtr(test.RandInt())
 	ds.CDNName = util.StrPtr(test.RandStr())
 	ds.CheckPath = util.StrPtr(test.RandStr())

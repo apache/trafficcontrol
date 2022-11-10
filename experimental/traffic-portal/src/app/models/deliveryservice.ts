@@ -178,8 +178,6 @@ export interface DeliveryService {
 	active:                     boolean;
 	/** Whether or not anonymization services are blocked. */
 	anonymousBlockingEnabled:   boolean;
-	/** The TTL of DNS responses from the Traffic Router, in seconds. */
-	ccrDnsTtl?:                 number;
 	/** The ID of the CDN to which the Delivery Service belongs. */
 	cdnId:                      number;
 	/** The Name of the CDN to which the Delivery Service belongs. */
@@ -358,6 +356,8 @@ export interface DeliveryService {
 	 * Service belongs.
 	 */
 	tenantId:                   number;
+	/** The TTL of DNS responses from the Traffic Router, in seconds. */
+	trDnsTtl?:                  number;
 	/**
 	 * HTTP headers that should be logged from client requests by Traffic
 	 * Router.

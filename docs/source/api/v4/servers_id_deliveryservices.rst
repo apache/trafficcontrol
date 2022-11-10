@@ -72,7 +72,6 @@ Response Structure
 ------------------
 :active:                   A boolean that defines :ref:`ds-active`.
 :anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
-:ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :checkPath:                 A :ref:`ds-check-path`
@@ -144,6 +143,7 @@ Response Structure
 	.. versionadded:: 4.0
 
 :topology:          The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trDnsTtl:          The :ref:`ds-dns-ttl`
 :trRequestHeaders:  If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :type:              The :ref:`ds-types` of this :term:`Delivery Service`
@@ -171,7 +171,6 @@ Response Structure
 	{ "response": [{
 		"active": false,
 		"anonymousBlockingEnabled": false,
-		"ccrDnsTtl": 3600,
 		"cdnId": 2,
 		"cdnName": "CDN-in-a-Box",
 		"checkPath": null,
@@ -243,6 +242,7 @@ Response Structure
 		"tenantId": 1,
 		"tlsVersions": null,
 		"topology": null,
+		"trDnsTtl": 3600,
 		"trResponseHeaders": null,
 		"trRequestHeaders": null,
 		"type": "HTTP",

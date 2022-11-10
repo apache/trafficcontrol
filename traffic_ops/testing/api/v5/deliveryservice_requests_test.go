@@ -139,7 +139,6 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": generateDeliveryService(t, map[string]interface{}{
-							"ccrDnsTtl":          30,
 							"deepCachingType":    "NEVER",
 							"initialDispersion":  3,
 							"ipv6RoutingEnabled": true,
@@ -147,6 +146,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 							"orgServerFqdn":      "http://example.test",
 							"profileName":        nil,
 							"tenant":             "root",
+							"trDnsTtl":           30,
 							"xmlId":              "test-ds2",
 						}),
 						"status": "draft",
@@ -170,7 +170,6 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
 						"requested": map[string]interface{}{
-							"ccrDnsTtl":            30,
 							"deepCachingType":      "NEVER",
 							"displayName":          strings.Repeat("X", 49),
 							"dscp":                 0,
@@ -191,6 +190,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 							"regionalGeoBlocking":  true,
 							"routingName":          strings.Repeat("X", 1) + "." + strings.Repeat("X", 48),
 							"tenant":               "tenant1",
+							"trDnsTtl":             30,
 							"type":                 "HTTP",
 							"xmlId":                "X " + strings.Repeat("X", 46),
 						},
