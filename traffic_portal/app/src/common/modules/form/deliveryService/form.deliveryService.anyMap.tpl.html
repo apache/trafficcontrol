@@ -39,6 +39,7 @@ under the License.
             </div>
         </div>
         <div class="pull-right" role="group">
+            <button type="button" class="btn btn-primary" ng-click="showSensitive = !showSensitive">Toggle Sensitive Field Blur</button>
             <button type="button" class="btn btn-danger" ng-if="!settings.isNew && !settings.isRequest" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
             <button class="btn btn-success" ng-if="!settings.isRequest" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
             <button type="button" class="btn btn-primary" ng-if="!settings.isRequest && !settings.isNew" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>
@@ -372,7 +373,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="remapText" name="remapText" class="form-control private-text" ng-model="deliveryService.remapText" ng-pattern="/^[^\n\r]*$/" rows="3" required></textarea>
+                            <textarea id="remapText" name="remapText" class="form-control" ng-class="{'private-text': !showSensitive}" ng-model="deliveryService.remapText" ng-pattern="/^[^\n\r]*$/" rows="3" required></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.remapText, 'pattern')">No Line Breaks</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.remapText != dsCurrent.remapText">
                                 <h3 ng-if="open()">Current Value</h3>
