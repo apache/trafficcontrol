@@ -68,7 +68,7 @@ while inotifywait --exclude '.*(\.md|\.json|\.pl|\.rst|_test\.go|\.gitignore|__d
 		rm /var/trafficserver/server.lock;
 	fi
 	ps | grep traffic_server | grep -v grep | tr -s ' ' | cut -d ' ' -f2 | xargs kill
-	su -c traffic_server ats &
+	traffic_server &
 	# for whatever reason, without this the repeated call to inotifywait will
 	# sometimes lose track of th current directory. It spits out:
 	# Couldn't watch .: No such file or directory
