@@ -15,9 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-alias atc-start="docker-compose up -d --build";
 alias atc-build="docker-compose build";
 alias atc-stop="docker-compose kill && docker-compose down -v --remove-orphans";
+
+function atc-start {
+	if [ ! -d "vendor/golang/x" ]; then
+		go mod vendor
+	fi
+	docker-compose up -d --build
+}
 
 function atc-restart {
 	if ! atc-stop $@; then

@@ -20,9 +20,6 @@
 set -o errexit
 trap '[ $? -eq 0 ] && exit 0 || echo "Error on line ${LINENO} of ${0}"; exit 1' EXIT
 
-cd $TC
-go mod vendor
-
 cd "$TC/tc-health-client"
 go build --gcflags "all=-N -l" .
 
