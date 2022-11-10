@@ -340,12 +340,11 @@ func getDSRequiredCapabilitiesByTopology(name string, tx *sql.Tx) (map[string][]
 SELECT
   d.xml_id,
   d.cdn_id,
-  ARRAY_AGG(drc.required_capability) AS required_capabilities
+  d.required_capabilities
 FROM deliveryservice d
-JOIN deliveryservices_required_capability drc ON d.id = drc.deliveryservice_id
 WHERE
   d.topology = $1
-GROUP BY d.xml_id, d.cdn_id
+GROUP BY d.xml_id, d.cdn_id, d.required_capabilities
 `
 	rows, err := tx.Query(q, name)
 	if err != nil {

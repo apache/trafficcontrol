@@ -65,19 +65,19 @@ func (rc *RequiredCapability) NewReadObj() interface{} {
 // SelectQuery implements the api.GenericReader interface.
 func (rc *RequiredCapability) SelectQuery() string {
 	return `SELECT
-	rc.required_capability,
-	rc.deliveryservice_id,
+	UNNEST(ds.required_capabilities) as required_capability,
+	ds.id as deliveryservice_id,
 	ds.xml_id,
-	rc.last_updated
-	FROM deliveryservices_required_capability rc
-	JOIN deliveryservice ds ON ds.id = rc.deliveryservice_id`
+	ds.last_updated
+	FROM deliveryservice ds
+	`
 }
 
 // ParamColumns implements the api.GenericReader interface.
 func (rc *RequiredCapability) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		deliveryServiceQueryParam: dbhelpers.WhereColumnInfo{
-			Column:  "rc.deliveryservice_id",
+			Column:  "ds.id",
 			Checker: api.IsInt,
 		},
 		xmlIDQueryParam: dbhelpers.WhereColumnInfo{
@@ -93,8 +93,8 @@ func (rc *RequiredCapability) ParamColumns() map[string]dbhelpers.WhereColumnInf
 
 // DeleteQuery implements the api.GenericDeleter interface.
 func (rc *RequiredCapability) DeleteQuery() string {
-	return `DELETE FROM deliveryservices_required_capability
-	WHERE deliveryservice_id = :deliveryservice_id AND required_capability = :required_capability`
+	return `UPDATE deliveryservice ds SET required_capabilities = ARRAY_REMOVE((select required_capabilities from deliveryservice WHERE id=:deliveryservice_id), :required_capability)
+WHERE id=:deliveryservice_id`
 }
 
 // GetKeyFieldsInfo implements the api.Identifier interface.
@@ -292,7 +292,7 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 	}
 
 	if !dsType.IsHTTP() && !dsType.IsDNS() {
-		return errors.New("Invalid DS type. Only DNS and HTTP delivery services can have required capabilities"), nil, http.StatusBadRequest
+		return errors.New("invalid DS type. Only DNS and HTTP delivery services can have required capabilities"), nil, http.StatusBadRequest
 	}
 
 	usrErr, sysErr, rCode := rc.checkServerCap()
@@ -300,6 +300,11 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 		return usrErr, sysErr, rCode
 	}
 
+	for _, reqCap := range reqCaps {
+		if reqCap == *rc.RequiredCapability {
+			return fmt.Errorf("capability %s already exists for delivery service with ID: %d", *rc.RequiredCapability, *rc.DeliveryServiceID), nil, http.StatusBadRequest
+		}
+	}
 	if topology == nil {
 		usrErr, sysErr, rCode = rc.ensureDSServerCap()
 		if usrErr != nil || sysErr != nil {
@@ -325,7 +330,7 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 	rowsAffected := 0
 	for rows.Next() {
 		rowsAffected++
-		if err := rows.StructScan(&rc); err != nil {
+		if err := rows.Scan(&rc.DeliveryServiceID, &rc.LastUpdated); err != nil {
 			return nil, fmt.Errorf("%s create scanning: %s", rc.GetType(), err.Error()), http.StatusInternalServerError
 		}
 	}
@@ -518,18 +523,12 @@ func (rc *RequiredCapability) isTenantAuthorized() (bool, error) {
 }
 
 func rcInsertQuery() string {
-	return `INSERT INTO deliveryservices_required_capability (
-required_capability,
-deliveryservice_id) VALUES (
-:required_capability,
-:deliveryservice_id) RETURNING deliveryservice_id, required_capability, last_updated`
+	return `UPDATE deliveryservice ds SET required_capabilities = array_append((select required_capabilities from deliveryservice WHERE id=:deliveryservice_id), :required_capability)
+WHERE id=:deliveryservice_id RETURNING ds.id, ds.last_updated`
 }
 
-// language=SQL
-const HasRequiredCapabilitiesQuery = `
-SELECT EXISTS(
-	SELECT drc.required_capability
-	FROM deliveryservices_required_capability drc
-	WHERE drc.deliveryservice_id = $1
-)
+const GetRequiredCapabilitiesQuery = `
+SELECT ds.required_capabilities
+FROM deliveryservice ds
+WHERE ds.id = $1
 `

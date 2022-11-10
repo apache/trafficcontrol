@@ -268,7 +268,8 @@ type DeliveryServiceV41 struct {
 	// Regional indicates whether the Delivery Service's MaxOriginConnections is
 	// only per Cache Group, rather than divided over all Cache Servers in child
 	// Cache Groups of the Origin.
-	Regional bool `json:"regional" db:"regional"`
+	Regional             bool     `json:"regional" db:"regional"`
+	RequiredCapabilities []string `json:"requiredCapabilities" db:"required_capabilities"`
 }
 
 // DeliveryServiceV4 is a Delivery Service as it appears in version 4 of the

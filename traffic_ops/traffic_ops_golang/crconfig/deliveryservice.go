@@ -132,9 +132,7 @@ SELECT d.anonymous_blocking_enabled,
        d.miss_long,
        p.name AS profile,
        d.protocol,
-       (SELECT ARRAY_AGG(required_capability ORDER BY required_capability)
-                         FROM deliveryservices_required_capability
-                         WHERE deliveryservice_id = d.id) AS required_capabilities,
+       d.required_capabilities,
        d.topology,
        d.tr_request_headers,
        d.tr_response_headers,
