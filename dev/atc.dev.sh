@@ -19,7 +19,7 @@ alias atc-build="docker-compose build";
 alias atc-stop="docker-compose kill && docker-compose down -v --remove-orphans";
 
 function atc-start {
-	if [ ! -d "vendor/golang/x" ]; then
+	if [ ! -d "vendor/golang.org/x" ]; then
 		go mod vendor
 	fi
 	docker-compose up -d --build
