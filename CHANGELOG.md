@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - [#2564](https://github.com/apache/trafficcontrol/issues/2564) *Traffic Ops, Traffic Monitor* Renamed RASCAL references to TRAFFIC_MONITOR
+- [#7186](https://github.com/apache/trafficcontrol/pull/7186) *Traffic Ops* Required Parameters are now a part of the `DeliveryService` structure.
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
 - [#6981](https://github.com/apache/trafficcontrol/pull/6981) *Traffic Portal* Obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 - [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
