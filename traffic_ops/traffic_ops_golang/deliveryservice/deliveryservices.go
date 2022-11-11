@@ -776,9 +776,17 @@ WHERE
 	return nil, status, userErr, sysErr
 }
 func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
+	//ToDo: Srijeet change here to convert to v41
 	dsNull := tc.DeliveryServiceNullableV30(*dsV31)
 	ds := dsNull.UpgradeToV4()
 	dsV41 := ds
+	dsMap, err := dbhelpers.GetRequiredCapabilitiesOfDeliveryServices([]int{*dsV31.ID}, inf.Tx.Tx)
+	if err != nil {
+		return nil, http.StatusInternalServerError, nil, err
+	}
+	if caps, ok := dsMap[*dsV31.ID]; ok {
+		dsV41.RequiredCapabilities = caps
+	}
 	if dsV41.ID == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("cannot update a Delivery Service with nil ID")
 	}
@@ -789,11 +797,11 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		return nil, http.StatusInternalServerError, nil, fmt.Errorf("getting TLS versions for DS #%d in API version < 4.0: %w", *dsV41.ID, sysErr)
 	}
 
-	res, status, usrErr, sysErr := updateV40(w, r, inf, &dsV41.DeliveryServiceV40, false)
+	res, status, usrErr, sysErr := updateV41(w, r, inf, &dsV41, false)
 	if res == nil || usrErr != nil || sysErr != nil {
 		return nil, status, usrErr, sysErr
 	}
-	ds.DeliveryServiceV40 = *res
+	ds.DeliveryServiceV40 = res.DeliveryServiceV40
 	if dsV31.CacheURL != nil {
 		_, err := tx.Exec("UPDATE deliveryservice SET cacheurl = $1 WHERE ID = $2",
 			dsV31.CacheURL,
@@ -1399,9 +1407,8 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 }
 
 func validateRequiredCapabilities(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
-	//ToDo: fix this
 	var valid bool
-	query := `SELECT $1 @> (SELECT ARRAY_AGG(name) FROM server_capability)`
+	query := `SELECT $1 <@ (SELECT ARRAY_AGG(name) FROM server_capability)`
 	if ds.RequiredCapabilities != nil && len(ds.RequiredCapabilities) > 0 {
 		rows, err := tx.Query(query, pq.Array(ds.RequiredCapabilities))
 		if err != nil {

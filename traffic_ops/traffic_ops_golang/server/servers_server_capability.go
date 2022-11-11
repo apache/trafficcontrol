@@ -386,7 +386,7 @@ JOIN cachegroup c ON s.cachegroup = c.id
 JOIN topology_cachegroup tc ON c.name = tc.cachegroup
 JOIN deliveryservice ds ON ds.topology = tc.topology
 WHERE s.id = $1
-GROUP BY ds.xml_id, ds.tenant_id, ds.topology
+GROUP BY ds.xml_id, ds.tenant_id, ds.topology, ds.required_capabilities
 HAVING $2 = ANY(ds.required_capabilities)
 `
 }

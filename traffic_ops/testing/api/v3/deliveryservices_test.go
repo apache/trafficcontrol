@@ -17,6 +17,7 @@ package v3
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -226,8 +227,9 @@ func TestDeliveryServices(t *testing.T) {
 				"BAD REQUEST when ADDING TOPOLOGY to DS with DS REQUIRED CAPABILITY": {
 					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
-						"topology": "top-for-ds-req",
-						"xmlId":    "ds1",
+						"requiredCapabilities": []string{"foo"},
+						"topology":             "top-for-ds-req",
+						"xmlId":                "ds1",
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -361,6 +363,10 @@ func TestDeliveryServices(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
+							if name == "BAD REQUEST when ADDING TOPOLOGY to DS with DS REQUIRED CAPABILITY" {
+								fmt.Println(testCase.RequestBody)
+								fmt.Println(*ds.Topology)
+							}
 							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceV30WithHdr(testCase.EndpointId(), ds, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)

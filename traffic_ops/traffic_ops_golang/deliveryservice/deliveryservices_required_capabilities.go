@@ -84,17 +84,13 @@ func (rc *RequiredCapability) ParamColumns() map[string]dbhelpers.WhereColumnInf
 			Column:  "ds.xml_id",
 			Checker: nil,
 		},
-		requiredCapabilityQueryParam: dbhelpers.WhereColumnInfo{
-			Column:  "rc.required_capability",
-			Checker: nil,
-		},
 	}
 }
 
 // DeleteQuery implements the api.GenericDeleter interface.
 func (rc *RequiredCapability) DeleteQuery() string {
 	return `UPDATE deliveryservice ds SET required_capabilities = ARRAY_REMOVE((select required_capabilities from deliveryservice WHERE id=:deliveryservice_id), :required_capability)
-WHERE id=:deliveryservice_id`
+WHERE id=:deliveryservice_id AND EXISTS(SELECT 1 FROM deliveryservice ds WHERE id=:deliveryservice_id AND :required_capability = ANY(ds.required_capabilities))`
 }
 
 // GetKeyFieldsInfo implements the api.Identifier interface.
@@ -209,7 +205,7 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, us
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
 	if useIMS {
-		runSecond, maxTime = ims.TryIfModifiedSinceQuery(rc.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQueryRC(where, orderBy, pagination))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(rc.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return results, nil, nil, http.StatusNotModified, &maxTime
@@ -219,7 +215,10 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, us
 		log.Debugln("Non IMS request")
 	}
 	query := rc.SelectQuery() + where + orderBy + pagination
-
+	if reqdCap, ok := rc.APIInfo().Params[requiredCapabilityQueryParam]; ok {
+		query = `WITH res AS (` + query + `) SELECT res.required_capability, res.deliveryservice_id, res.xml_id, res.last_updated FROM res WHERE res.required_capability=:requiredCapability`
+		queryValues[requiredCapabilityQueryParam] = reqdCap
+	}
 	rows, err := rc.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, err, http.StatusInternalServerError, nil
@@ -239,10 +238,10 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, us
 
 func selectMaxLastUpdatedQueryRC(where string, orderBy string, pagination string) string {
 	return `SELECT max(t) from (
-		SELECT max(rc.last_updated) as t FROM deliveryservices_required_capability rc
-	JOIN deliveryservice ds ON ds.id = rc.deliveryservice_id ` + where + orderBy + pagination +
+		SELECT max(d.last_updated) as t FROM deliveryservice d` +
+		where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservices_required_capability') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice') as res`
 }
 
 // Delete implements the api.CRUDer interface.

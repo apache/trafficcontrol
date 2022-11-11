@@ -354,8 +354,9 @@ func TestDeliveryServices(t *testing.T) {
 				"BAD REQUEST when ADDING TOPOLOGY to DS with DS REQUIRED CAPABILITY": {
 					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
-						"topology": "top-for-ds-req",
-						"xmlId":    "ds1",
+						"topology":             "top-for-ds-req",
+						"xmlId":                "ds1",
+						"requiredCapabilities": []string{"foo"},
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
