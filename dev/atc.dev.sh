@@ -137,7 +137,7 @@ function atc {
 	return "$?";
 }
 
-export t3cDir="/root/go/src/github.com/apache/trafficcontrol/cache-config";
+export t3cDir="/go/src/github.com/apache/trafficcontrol/cache-config";
 
 function t3c {
 	trap 'atc-exec t3c ps | grep dlv | tr -s " " | cut -d " " -f1 | xargs docker exec trafficcontrol_t3c_1 kill' INT;

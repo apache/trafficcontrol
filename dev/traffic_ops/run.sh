@@ -17,14 +17,31 @@
 # under the License.
 
 set -o errexit
+set -o xtrace
 trap '[ $? -eq 0 ] && exit 0 || echo "Error on line ${LINENO} of ${0}"; exit 1' EXIT
+
+user=trafficops
+uid="$(stat -c%u "$TC")"
+gid="$(stat -c%g "$TC")"
+if [[ "$(id -u)" != "$uid" ]]; then
+	for dir in "${GOPATH}/bin" "${GOPATH}/pkg"; do
+		if [[ -e "$dir" ]] && [[ "$(stat -c%u "$dir")" -ne "$uid" || "$(stat -c%g "$dir")" -ne "$gid" ]] ; then
+			chown -R "${uid}:${gid}" "$dir"
+		fi
+	done
+
+	adduser -Du"$uid" "$user"
+	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
+	exec su "$user" -- "$0"
+fi
+
+cd "$TC"
 
 while ! pg_isready -h db -p 5432 -d postgres; do
 	echo "waiting for db on postgresql://db:5432/postgres";
 	sleep 3;
 done
 
-cd "$TC"
 make traffic_ops/app/db/admin
 cd "$TC/dev/traffic_ops"
 
@@ -33,7 +50,9 @@ cd "$TC/dev/traffic_ops"
 "$ADMIN" -v -c ./traffic.vault.dbconf.yml -s "$TC/traffic_ops/app/db/trafficvault/create_tables.sql" -m "$TC/traffic_ops/app/db/trafficvault/migrations" reset
 "$ADMIN" -v -c ./traffic.vault.dbconf.yml -s "$TC/traffic_ops/app/db/trafficvault/create_tables.sql" -m "$TC/traffic_ops/app/db/trafficvault/migrations" upgrade
 
+
 psql -d 'postgres://traffic_ops:twelve12@db:5432/traffic_ops_development?sslmode=disable' -f ./seed.psql
+
 
 cd "$TC/traffic_ops/traffic_ops_golang"
 

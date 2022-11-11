@@ -33,8 +33,10 @@ services:
         ports:
             - 6443:443
             - 6444:6444
+        sysctls:
+            - net.ipv4.ip_unprivileged_port_start=0
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol/
+            - .:/go/src/github.com/apache/trafficcontrol
 
     db:
         image: postgres:13.2-alpine
@@ -57,9 +59,11 @@ services:
         image: trafficportal-dev
         ports:
             - 444:443
+        sysctls:
+            - net.ipv4.ip_unprivileged_port_start=0
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol
-            - ./.npm:/root/.npm
+            - .:/go/src/github.com/apache/trafficcontrol
+            - ./.npm:/trafficportal/.npm
 
     tpv2:
         build:
@@ -72,8 +76,11 @@ services:
         image: tpv2-dev
         ports:
             - 443:443
+        sysctls:
+            - net.ipv4.ip_unprivileged_port_start=0
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol
+            - .:/go/src/github.com/apache/trafficcontrol
+            - ./.npm:/trafficportal/.npm
 
     trafficmonitor:
         build:
@@ -89,8 +96,10 @@ services:
         ports:
             - 80:80
             - 81:81
+        sysctls:
+            - net.ipv4.ip_unprivileged_port_start=0
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol
+            - .:/go/src/github.com/apache/trafficcontrol
 
     t3c:
         build:
@@ -107,8 +116,10 @@ services:
         ports:
             - 8080:80
             - 8081:8081
+        sysctls:
+            - net.ipv4.ip_unprivileged_port_start=0
         volumes:
-            - .:/root/go/src/github.com/apache/trafficcontrol
+            - .:/go/src/github.com/apache/trafficcontrol
 
     trafficrouter:
         build:
@@ -127,8 +138,11 @@ services:
             - 3333:3333
             - 2222:3443
             - 5005:5005
+        sysctls:
+            - net.ipv4.ip_unprivileged_port_start=0
         volumes:
             - .:/go/src/github.com/apache/trafficcontrol
+            - ./.m2:/home/trafficrouter/.m2
 networks:
     ciab:
         name: dev.ciab.test
