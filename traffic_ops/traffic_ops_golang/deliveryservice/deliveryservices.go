@@ -776,7 +776,6 @@ WHERE
 	return nil, status, userErr, sysErr
 }
 func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
-	//ToDo: Srijeet change here to convert to v41
 	dsNull := tc.DeliveryServiceNullableV30(*dsV31)
 	ds := dsNull.UpgradeToV4()
 	dsV41 := ds
