@@ -13,8 +13,27 @@
 #  limitations under the License.
 #
 
-set -o errexit
+set -o errexit -o nounset
 
 cd "$TC/traffic_portal"
+
+user=trafficportal
+uid="$(stat -c%u "$TC")"
+gid="$(stat -c%g "$TC")"
+if [[ "$(id -u)" != "$uid" ]]; then
+	for dir in "${TC}/.npm"  .[a-z]* app/dist app/dist/public node_modules; do
+		if [[ -e "$dir" ]] && [[ "$(stat -c%u "$dir")" -ne "$uid" || "$(stat -c%g "$dir")" -ne "$gid" ]] ; then
+			chown -R "${uid}:${gid}" "$dir"
+		fi
+	done
+
+	if ! adduser --disabled-password -u "$uid" "$user"; then
+		user="$(cat /etc/passwd | grep :x:${uid}: | cut -d: -f1)"
+	fi
+	sed -Ei "s/^(${user}:.*:)[0-9]+(:)$/\1${gid}\2/" /etc/group
+	chown "${uid}:${gid}" /usr/bin
+	exec su "$user" -- "$0"
+fi
+
 npm ci
 ./node_modules/.bin/grunt

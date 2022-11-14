@@ -16,41 +16,42 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#2101](https://github.com/apache/trafficcontrol/issues/2101) *Traffic Portal* Added the ability to tell if a Delivery Service is the target of another steering DS.
 - [#6021](https://github.com/apache/trafficcontrol/issues/6021) *Traffic Portal* Added the ability to view a change logs message in it's entirety by clicking on it.
 - [#7078](https://github.com/apache/trafficcontrol/issues/7078) *Traffic Ops, Traffic Portal* Added ability to assign multiple server capabilities to a server.
-- [#7096](https://github.com/apache/trafficcontrol/issues/7096) [Health Client] Added health client parent health
-- [#7032](https://github.com/apache/trafficcontrol/issues/7032) *Cache Config* Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
-- [#7097](https://github.com/apache/trafficcontrol/issues/7097) *Traffic Ops, Traffic Portal, t3c* Added the `regional` field to Delivery Services, which affects whether `maxOriginConnections` should be per Cache Group
+- [#7096](https://github.com/apache/trafficcontrol/issues/7096) *Traffic Control Health Client* Added health client parent health
+- [#7032](https://github.com/apache/trafficcontrol/issues/7032) *Traffic Control Cache Config (t3c)* Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
+- [#7097](https://github.com/apache/trafficcontrol/issues/7097) *Traffic Ops, Traffic Portal, Traffic Control Cache Config (t3c)* Added the `regional` field to Delivery Services, which affects whether `maxOriginConnections` should be per Cache Group
 - [#2388](https://github.com/apache/trafficcontrol/issues/2388) *Trafic Ops, Traffic Portal* Added the `TTLOverride` field to CDNs, which lets you override all TTLs in all Delivery Services of a CDN's snapshot with a single value
 - [#7176](https://github.com/apache/trafficcontrol/pull/7176) *ATC Build system* Support building ATC for the `aarch64` CPU architecture
 
 ### Changed
 - [#7191](https://github.com/apache/trafficcontrol/issues/7191) *tc-health-client* Uses Traffic Ops API 4.0. Also added reload option to systemd service file
 - [#2564](https://github.com/apache/trafficcontrol/issues/2564) Renamed RASCAL references to TRAFFIC_MONITOR
+- [#2564](https://github.com/apache/trafficcontrol/issues/2564) *Traffic Ops, Traffic Monitor* Renamed RASCAL references to TRAFFIC_MONITOR
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
 - [#6981](https://github.com/apache/trafficcontrol/pull/6981) *Traffic Portal* Obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 - [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
 
 ### Fixed
-- *Traffic Portal* Fixed search filter for Delivery Service Table
-- *Traffic Portal* Fixed topologies sort (table and Delivery Service's form)
+- [#7179](https://github.com/apache/trafficcontrol/issues/7179) *Traffic Portal* Fixed search filter for Delivery Service Table
+- [#7174](https://github.com/apache/trafficcontrol/issues/7174) *Traffic Portal* Fixed topologies sort (table and Delivery Service's form)
 - [#5970](https://github.com/apache/trafficcontrol/issues/5970) *Traffic Portal* Fixed numeric sort in Delivery Service's form for DSCP
 - [#5971](https://github.com/apache/trafficcontrol/issues/5971) *Traffic Portal* Fixed Max DNS Tool Top link to open in a new page
 - [#7131](https://github.com/apache/trafficcontrol/issues/7131) *Docs* Fixed Docs for staticdnsentries API endpoint missing lastUpdated response property description in APIv3, APIv4 and APIv5.
 - [#6947](https://github.com/apache/trafficcontrol/issues/6947) *Docs* Fixed docs for `cdns/{{name}}/federations` in APIv3, APIv4 and APIv5.
-- [#6903](https://github.com/apache/trafficcontrol/issues/6903), [#6903](https://github.com/apache/trafficcontrol/issues/6903) *Docs* Fixed docs for /cdns/dnsseckeys/refresh in APIv4 and APIv5.
+- [#6903](https://github.com/apache/trafficcontrol/issues/6903) *Docs* Fixed docs for /cdns/dnsseckeys/refresh in APIv4 and APIv5.
 - [#7049](https://github.com/apache/trafficcontrol/issues/7049), [#7052](https://github.com/apache/trafficcontrol/issues/7052) *Traffic Portal* Fixed server table's quick search and filter option for multiple profiles.
 - [#7080](https://github.com/apache/trafficcontrol/issues/7080), [#6335](https://github.com/apache/trafficcontrol/issues/6335) *Traffic Portal* Fixed redirect links for server capability.
 - [#7022](https://github.com/apache/trafficcontrol/pull/7022) *Traffic Stats* Reuse InfluxDB client handle to prevent potential connection leaks.
-- [#7021](https://github.com/apache/trafficcontrol/issues/7021) *Cache Config* Fixed cache config for Delivery Services with IP Origins.
-- [#7043](https://github.com/apache/trafficcontrol/issues/7043) Fixed cache config missing retry parameters for non-topology MSO Delivery Services going direct from edge to origin.
+- [#7021](https://github.com/apache/trafficcontrol/issues/7021) *Traffic Control Cache Config (t3c)* Fixed cache config for Delivery Services with IP Origins.
+- [#7043](https://github.com/apache/trafficcontrol/issues/7043) *Traffic Control Cache Config (t3c)* Fixed cache config missing retry parameters for non-topology MSO Delivery Services going direct from edge to origin.
 - [#7047](https://github.com/apache/trafficcontrol/issues/7047) *Traffic Ops* allow `apply_time` query parameters on the `servers/{id-name}/update` when the CDN is locked.
-- [#7163](https://github.com/apache/trafficcontrol/issues/7163) Fix cache config for multiple profiles
+- [#7163](https://github.com/apache/trafficcontrol/issues/7163) *Traffic Control Cache Config (t3c)* Fix cache config for multiple profiles
 - [#7048](https://github.com/apache/trafficcontrol/issues/7048) *Traffic Stats* Add configuration value to set the client request timeout for calls to Traffic Ops.
-- Updated Apache Tomcat from 9.0.43 to 9.0.67
+- [#7093](https://github.com/apache/trafficcontrol/issues/7093) *Traffic Router* Updated Apache Tomcat from 9.0.43 to 9.0.67
 - [#7125](https://github.com/apache/trafficcontrol/issues/7125) *Docs* Reflect implementation and deprecation notice for `letsencrypt/autorenew` endpoint.
 - [#7158](https://github.com/apache/trafficcontrol/issues/7158) *Traffic Vault* Fix the `reencrypt` utility to uniquely reencrypt each version of the SSL Certificates.
-- [#7137](https://github.com/apache/trafficcontrol/pull/7137) *Cache Config* parent.config simulate topology for non topo delivery services.
-- Adds an extra T3C check for validity of an ssl cert (crash fix).
-- Traffic Router now always includes a `Content-Length` header in the response.
+- [#7137](https://github.com/apache/trafficcontrol/pull/7137) *Traffic Control Cache Config (t3c)* parent.config simulate topology for non topo delivery services.
+- [#7153](https://github.com/apache/trafficcontrol/pull/7153) *Traffic Control Cache Config (t3c)* Adds an extra T3C check for validity of an ssl cert (crash fix).
+- [#3965](https://github.com/apache/trafficcontrol/pull/3965) *Traffic Router* Traffic Router now always includes a `Content-Length` header in the response.
 
 ## [7.0.0] - 2022-07-19
 ### Added

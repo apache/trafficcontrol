@@ -466,7 +466,6 @@ func seed() {
 	}
 	cmd := exec.Command("psql", "-h", hostIP, "-p", hostPort, "-d", dbName, "-U", dbUser, "-e", "-v", "ON_ERROR_STOP=1")
 	cmd.Stdin = bytes.NewBuffer(seedsBytes)
-	cmd.Env = append(os.Environ(), "PGPASSWORD="+dbPassword)
 	out, err := cmd.CombinedOutput()
 	fmt.Println(string(out))
 	if err != nil {
@@ -486,7 +485,6 @@ func loadSchema() {
 	}
 	cmd := exec.Command("psql", "-h", hostIP, "-p", hostPort, "-d", dbName, "-U", dbUser, "-e", "-v", "ON_ERROR_STOP=1")
 	cmd.Stdin = bytes.NewBuffer(schemaBytes)
-	cmd.Env = append(os.Environ(), "PGPASSWORD="+dbPassword)
 	out, err := cmd.CombinedOutput()
 	fmt.Println(string(out))
 	if err != nil {
@@ -505,7 +503,6 @@ func patch() {
 	}
 	cmd := exec.Command("psql", "-h", hostIP, "-p", hostPort, "-d", dbName, "-U", dbUser, "-e", "-v", "ON_ERROR_STOP=1")
 	cmd.Stdin = bytes.NewBuffer(patchesBytes)
-	cmd.Env = append(os.Environ(), "PGPASSWORD="+dbPassword)
 	out, err := cmd.CombinedOutput()
 	fmt.Printf(string(out))
 	if err != nil {
@@ -661,6 +658,10 @@ func main() {
 	if err := parseDBConfig(); err != nil {
 		die(err.Error())
 	}
+	if err := os.Setenv("PGPASSWORD", dbPassword); err != nil {
+		die("Setting PGPASSWORD: " + err.Error())
+	}
+
 	commands := make(map[string]func())
 
 	commands[cmdCreateDB] = createDB

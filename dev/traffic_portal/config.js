@@ -31,7 +31,7 @@ module.exports = {
         base_url: 'https://trafficops:443/api/'
     },
     files: {
-        static: '/root/go/src/github.com/apache/trafficcontrol/traffic_portal/app/dist/public'
+        static: '/go/src/github.com/apache/trafficcontrol/traffic_portal/app/dist/public'
     },
     log: null,
     reject_unauthorized: 0

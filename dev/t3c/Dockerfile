@@ -23,7 +23,7 @@ ENV PATH=/usr/local/go/bin:${PATH} \
 	GOPATH=/go
 ENV PATH=${GOPATH}/bin:${PATH}
 
-ENV TC="/root/go/src/github.com/apache/trafficcontrol/" GOFLAGS="--buildvcs=false"
+ENV TC="/go/src/github.com/apache/trafficcontrol" GOFLAGS="--buildvcs=false"
 VOLUME $TC
 EXPOSE 80 8081
 
@@ -35,8 +35,9 @@ RUN apk add --no-cache \
 	make \
 	# gcc and musl-dev are used to build packages using CGO
 	gcc musl-dev && \
-	go install github.com/go-delve/delve/cmd/dlv@latest
+	go install github.com/go-delve/delve/cmd/dlv@latest && \
+	rm -rf $GOPATH/pkg/*
 
 RUN echo "stats_over_http.so" >> /etc/trafficserver/plugin.config && echo "system_stats.so" >> /etc/trafficserver/plugin.config
 
-CMD /root/go/src/github.com/apache/trafficcontrol/dev/t3c/run.sh
+CMD ${TC}/dev/t3c/run.sh
