@@ -34,6 +34,7 @@ WHERE
 		OR
 		jsonb_typeof(deliveryservice -> 'multiSiteOrigin') = 'null'
 	);
+
 UPDATE public.deliveryservice_request
 SET
 	original = jsonb_set(original, '{multiSiteOrigin}', 'false')

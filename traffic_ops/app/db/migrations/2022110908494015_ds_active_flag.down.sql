@@ -39,6 +39,7 @@ WHERE
 	deliveryservice ? 'active'
 	AND
 	deliveryservice ->> 'active' = 'ACTIVE';
+
 UPDATE public.deliveryservice_request
 SET
 	deliveryservice = jsonb_set(deliveryservice, '{active}', 'false')
@@ -51,6 +52,7 @@ WHERE
 		OR
 		deliveryservice ->> 'active' = 'INACTIVE'
 	);
+
 UPDATE public.deliveryservice_request
 SET
 	original = jsonb_set(original, '{active}', 'true')
@@ -60,6 +62,7 @@ WHERE
 	original ? 'active'
 	AND
 	original ->> 'active' = 'ACTIVE';
+
 UPDATE public.deliveryservice_request
 SET
 	original = jsonb_set(original, '{active}', 'false')

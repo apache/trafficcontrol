@@ -39,6 +39,7 @@ WHERE
 	deliveryservice ? 'active'
 	AND
 	(deliveryservice -> 'active')::boolean IS TRUE;
+
 UPDATE public.deliveryservice_request
 SET
 	deliveryservice = jsonb_set(deliveryservice, '{active}', '"PRIMED"')
@@ -48,6 +49,7 @@ WHERE
 	deliveryservice ? 'active'
 	AND
 	(deliveryservice -> 'active')::boolean IS FALSE;
+
 UPDATE public.deliveryservice_request
 SET
 	original = jsonb_set(original, '{active}', '"ACTIVE"')
@@ -57,6 +59,7 @@ WHERE
 	original ? 'active'
 	AND
 	(original -> 'active')::boolean IS TRUE;
+
 UPDATE public.deliveryservice_request
 SET
 	original = jsonb_set(original, '{active}', '"PRIMED"')
