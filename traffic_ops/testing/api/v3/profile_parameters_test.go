@@ -75,6 +75,11 @@ func TestProfileParameters(t *testing.T) {
 					}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
+				"BAD REQUEST when EMPTY BODY PROVIDED": {
+					ClientSession: TOSession,
+					RequestBody:   []tc.ProfileParameter{{}},
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
 				"BAD REQUEST when MISSING PROFILEID field": {
 					ClientSession: TOSession,
 					RequestBody: []tc.ProfileParameter{{
