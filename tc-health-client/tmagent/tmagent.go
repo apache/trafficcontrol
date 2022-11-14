@@ -656,7 +656,9 @@ func (pi *ParentInfo) GetTOData(cfg *config.Cfg) error {
 		if *sv.CDNName != cfg.CDNName {
 			continue
 		}
-		if sv.Type == tc.MonitorTypeName && tc.CacheStatus(*sv.Status) == tc.CacheStatusOnline {
+		// added OR because MonitorTypeName has been updated to 'TRAFFIC_MONITOR' and TO still has then listed as 'RASCAL'
+		// this will allow it to work either way and can be removed once TO is updated.
+		if (sv.Type == tc.MonitorTypeName || sv.Type == "RASCAL") && tc.CacheStatus(*sv.Status) == tc.CacheStatusOnline {
 			fqdn := *sv.HostName + "." + *sv.DomainName
 			toData.Monitors[fqdn] = struct{}{}
 			continue
