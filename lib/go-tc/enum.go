@@ -143,6 +143,15 @@ const MonitorTypeName = "TRAFFIC_MONITOR"
 // properly, and new code should not check this.
 const MonitorProfilePrefix = "TRAFFIC_MONITOR"
 
+// RascalTypeName is the Name of the Type which must be assigned to a server
+// for it to be treated as a Traffic Monitor instance by ATC.
+//
+// "Rascal" is a legacy name for Traffic Monitor.
+//
+// Note that there is, in general, no guarantee that a Type with this name
+// exists in Traffic Ops at any given time.
+const RascalTypeName = "RASCAL"
+
 // RouterTypeName is the Name of the Type which must be assigned to a server
 // for it to be treated as a Traffic Router instance by ATC.
 //
