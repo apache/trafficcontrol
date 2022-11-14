@@ -495,6 +495,11 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 				return
 			}
 
+			if len(data) == 0 {
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no request body supplied"), nil)
+				return
+			}
+
 			objSlice, err := parseMultipleCreates(data, objectType, inf)
 			if err != nil {
 				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
