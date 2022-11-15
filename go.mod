@@ -107,7 +107,7 @@ require (
 // v0.0.0-20201118150121-817a702a9de6
 // See https://pkg.go.dev/cmd/go@go1.15.15#hdr-Module_compatibility_and_semantic_versioning for details.
 retract (
-	v1.1.5
+	v1.1.5-retractions
 	v1.1.4
 	v1.1.3
 	v1.1.2
