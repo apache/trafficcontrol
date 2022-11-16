@@ -402,6 +402,8 @@ func makeParentDotConfigData(
 		parentAbstraction.Peers = append(parentAbstraction.Peers, peer)
 	}
 
+	sort.Sort(peersSort(parentAbstraction.Peers))
+
 	cgServerIDs := map[int]struct{}{}
 	for serverID, _ := range cgServers {
 		cgServerIDs[serverID] = struct{}{}
