@@ -50,9 +50,9 @@ func TestProfiles(t *testing.T) {
 				},
 				"OK when VALID NAME parameter": {
 					ClientSession: TOSession,
-					RequestParams: url.Values{"name": {"TRAFFIC_MONITOR1"}},
+					RequestParams: url.Values{"name": {"RASCAL1"}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
-						validateProfilesFields(map[string]interface{}{"Name": "TRAFFIC_MONITOR1"})),
+						validateProfilesFields(map[string]interface{}{"Name": "RASCAL1"})),
 				},
 				"OK when VALID CDN parameter": {
 					ClientSession: TOSession,
