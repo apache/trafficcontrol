@@ -361,7 +361,7 @@ export const deliveryservices = {
 				{
 					rcName: "DSTestCap",
 					xmlID: "tpdservice2",
-					validationMessage: "deliveryservice.RequiredCapability was created."
+					validationMessage: "This endpoint is deprecated, please use the deliveryservices endpoint instead"
 				}
 			],
 			remove: [
@@ -469,7 +469,7 @@ export const deliveryservices = {
 				{
 					rcName: "DSTestCap",
 					xmlID: "optpdservice2",
-					validationMessage: "deliveryservice.RequiredCapability was created."
+					validationMessage: "This endpoint is deprecated, please use the deliveryservices endpoint instead"
 				}
 			],
 			remove: [
