@@ -57,7 +57,7 @@ func GetAssignment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dsr tc.DeliveryServiceRequestV40
+	var dsr tc.DeliveryServiceRequestV4
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
 		if err == sql.ErrNoRows {
 			errCode = http.StatusNotFound
@@ -72,7 +72,7 @@ func GetAssignment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authorized, err := isTenantAuthorized(dsr, inf)
+	authorized, err := isTenantAuthorized(dsr.Downgrade(), inf)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
@@ -162,7 +162,7 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 		req.Assignee = nil
 	}
 
-	var dsr tc.DeliveryServiceRequestV40
+	var dsr tc.DeliveryServiceRequestV4
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
 		if err == sql.ErrNoRows {
 			errCode = http.StatusNotFound
@@ -176,9 +176,11 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	dsr.SetXMLID()
+	dsrV40 := dsr.Downgrade()
+	dsrV40.SetXMLID()
+	dsr.XMLID = dsrV40.XMLID
 
-	authorized, err := isTenantAuthorized(dsr, inf)
+	authorized, err := isTenantAuthorized(dsrV40, inf)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
@@ -234,7 +236,11 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 		if dsr.Requested != nil {
 			*dsr.Requested = dsr.Requested.RemoveLD1AndLD2()
 		}
-		resp = dsr
+		if inf.Version.Major == 4 && inf.Version.Minor == 0 {
+			resp = dsr.Downgrade()
+		} else {
+			resp = dsr
+		}
 	} else {
 		resp = dsr.Downgrade()
 	}

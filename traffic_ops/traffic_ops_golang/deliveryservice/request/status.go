@@ -57,7 +57,7 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dsr tc.DeliveryServiceRequestV40
+	var dsr tc.DeliveryServiceRequestV4
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
 		if err == sql.ErrNoRows {
 			errCode = http.StatusNotFound
@@ -72,7 +72,7 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authorized, err := isTenantAuthorized(dsr, inf)
+	authorized, err := isTenantAuthorized(dsr.Downgrade(), inf)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
@@ -135,7 +135,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 
 	dsrID := inf.IntParams["id"]
 
-	var dsr tc.DeliveryServiceRequestV40
+	var dsr tc.DeliveryServiceRequestV4
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", dsrID).StructScan(&dsr); err != nil {
 		if err == sql.ErrNoRows {
 			errCode = http.StatusNotFound
@@ -149,14 +149,16 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	dsr.SetXMLID()
+	dsrV40 := dsr.Downgrade()
+	dsrV40.SetXMLID()
+	dsr.XMLID = dsrV40.XMLID
 
 	if err := dsr.Status.ValidTransition(req.Status); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
-	authorized, err := isTenantAuthorized(dsr, inf)
+	authorized, err := isTenantAuthorized(dsrV40, inf)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
@@ -172,7 +174,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 
 	// store the current original DS if the DSR is being closed
 	// (and isn't a "create" request)
-	if dsr.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
+	if dsrV40.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
 		if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
 			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}}, omitExtraLongDescFields)
 			if userErr != nil || sysErr != nil {
@@ -205,7 +207,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if err := tx.QueryRow(updateStatusQuery, req.Status, dsr.LastEditedByID, *dsr.ID).Scan(&dsr.LastUpdated); err == nil {
-		if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
+		if dsrV40.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
 			query := deliveryservice.SelectDeliveryServicesQuery + " WHERE ds.xml_id = :xmlid"
 			original, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"xmlid": dsr.XMLID}, inf.Tx)
 			if userErr != nil || sysErr != nil {
@@ -236,7 +238,11 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		if dsr.Requested != nil {
 			*dsr.Requested = dsr.Requested.RemoveLD1AndLD2()
 		}
-		resp = dsr
+		if inf.Version.Major == 4 && inf.Version.Minor == 0 {
+			resp = dsr.Downgrade()
+		} else {
+			resp = dsr
+		}
 	} else {
 		resp = dsr.Downgrade()
 	}

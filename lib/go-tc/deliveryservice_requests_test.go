@@ -148,7 +148,7 @@ func TestDeliveryServiceRequestV40_Downgrade(t *testing.T) {
 		LastEditedBy:   "last edited by",
 		LastEditedByID: nil,
 		LastUpdated:    time.Now(),
-		Requested:      &DeliveryServiceV4{},
+		Requested:      &DeliveryServiceV40{},
 		Status:         RequestStatusComplete,
 	}
 	dsr.Requested.XMLID = &xmlid
@@ -213,7 +213,7 @@ func ExampleDeliveryServiceRequestV40_SetXMLID() {
 	var dsr DeliveryServiceRequestV40
 	fmt.Println(dsr.XMLID == "")
 
-	dsr.Requested = new(DeliveryServiceV4)
+	dsr.Requested = new(DeliveryServiceV40)
 	dsr.Requested.XMLID = new(string)
 	*dsr.Requested.XMLID = "test"
 	dsr.SetXMLID()

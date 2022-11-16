@@ -78,7 +78,7 @@ func validateLegacy(dsr tc.DeliveryServiceRequestNullable, tx *sql.Tx) error {
 
 // validateV4 validates a DSR, returning - in order - a user-facing error that
 // should be shown to the client, and a system error.
-func validateV4(dsr tc.DeliveryServiceRequestV40, tx *sql.Tx) (error, error) {
+func validateV4(dsr tc.DeliveryServiceRequestV4, tx *sql.Tx) (error, error) {
 	if tx == nil {
 		return nil, errors.New("nil transaction")
 	}

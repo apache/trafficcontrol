@@ -370,9 +370,10 @@ func validatePutDSRequestFields(expectedResp map[string]interface{}) utils.CkReq
 
 func CreateTestDeliveryServiceRequests(t *testing.T) {
 	for _, dsr := range testData.DeliveryServiceRequests {
-		resetDS(dsr.Original)
-		resetDS(dsr.Requested)
-		respDSR, _, err := TOSession.CreateDeliveryServiceRequest(dsr, client.RequestOptions{})
+		dsrV41 := dsr.Upgrade()
+		resetDS(dsrV41.Original)
+		resetDS(dsrV41.Requested)
+		respDSR, _, err := TOSession.CreateDeliveryServiceRequest(dsrV41, client.RequestOptions{})
 		assert.NoError(t, err, "Could not create Delivery Service Requests: %v - alerts: %+v", err, respDSR.Alerts)
 	}
 }
