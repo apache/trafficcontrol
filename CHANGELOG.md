@@ -47,6 +47,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7048](https://github.com/apache/trafficcontrol/issues/7048) *Traffic Stats* Add configuration value to set the client request timeout for calls to Traffic Ops.
 - [#7093](https://github.com/apache/trafficcontrol/issues/7093) *Traffic Router* Updated Apache Tomcat from 9.0.43 to 9.0.67
 - [#7125](https://github.com/apache/trafficcontrol/issues/7125) *Docs* Reflect implementation and deprecation notice for `letsencrypt/autorenew` endpoint.
+- [#7046](https://github.com/apache/trafficcontrol/issues/7046) *Traffic Ops* `deliveryservices/sslkeys/add` now checks that each cert in the chain is related.
 - [#7158](https://github.com/apache/trafficcontrol/issues/7158) *Traffic Vault* Fix the `reencrypt` utility to uniquely reencrypt each version of the SSL Certificates.
 - [#7137](https://github.com/apache/trafficcontrol/pull/7137) *Traffic Control Cache Config (t3c)* parent.config simulate topology for non topo delivery services.
 - [#7153](https://github.com/apache/trafficcontrol/pull/7153) *Traffic Control Cache Config (t3c)* Adds an extra T3C check for validity of an ssl cert (crash fix).
