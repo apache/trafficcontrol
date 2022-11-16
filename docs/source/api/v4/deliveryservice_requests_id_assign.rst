@@ -42,7 +42,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/4.0/deliveryservice_requests/1/assign HTTP/1.1
+	GET /api/4.1/deliveryservice_requests/1/assign HTTP/1.1
 	User-Agent: python-requests/2.24.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -103,7 +103,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/4.0/deliveryservice_requests/1/assign HTTP/1.1
+	PUT /api/4.1/deliveryservice_requests/1/assign HTTP/1.1
 	User-Agent: python-requests/2.24.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -198,6 +198,7 @@ The response contains a full representation of the newly assigned :term:`Deliver
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
+			"requiredCapabilities": null,
 			"routingName": "video",
 			"signed": false,
 			"sslKeyVersion": 1,
@@ -279,6 +280,7 @@ The response contains a full representation of the newly assigned :term:`Deliver
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
+			"requiredCapabilities": null,
 			"routingName": "cdn",
 			"signed": false,
 			"sslKeyVersion": null,

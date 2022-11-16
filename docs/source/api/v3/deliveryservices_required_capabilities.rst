@@ -19,6 +19,8 @@
 ``deliveryservices_required_capabilities``
 ******************************************
 
+.. deprecated:: ATCv7
+
 ``GET``
 =======
 Gets all associations of :term:`Server Capability` to :term:`Delivery Services`.
@@ -102,6 +104,8 @@ Response Structure
 		]
 	}
 
+.. deprecated:: ATCv7
+
 ``POST``
 ========
 Associates a :term:`Server Capability` with a :term:`Delivery Service`.
@@ -167,6 +171,8 @@ Response Structure
 			"requiredCapability": "disk"
 		}
 	}
+
+.. deprecated:: ATCv7
 
 ``DELETE``
 ==========

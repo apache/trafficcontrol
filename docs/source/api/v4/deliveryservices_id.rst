@@ -81,6 +81,10 @@ Request Structure
 :regional:                  A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:       A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:                 :ref:`ds-raw-remap`
+:requiredCapabilities:      An array of the capabilities that this delivery service requires.
+
+	.. versionchanged:: 4.1
+
 :routingName:               The :ref:`ds-routing-name` of this :term:`Delivery Service`
 
 		.. note:: If the Delivery Service has SSL Keys, then ``routingName`` is not allowed to change as that would invalidate the SSL Key
@@ -106,7 +110,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/4.0/deliveryservices/6 HTTP/1.1
+	PUT /api/4.1/deliveryservices/6 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: python-requests/2.24.0
 	Accept-Encoding: gzip, deflate
@@ -165,6 +169,7 @@ Request Structure
 		"regexRemap": null,
 		"regional": false,
 		"regionalGeoBlocking": false,
+		"requiredCapabilities": null,
 		"routingName": "test",
 		"serviceCategory": null,
 		"signed": false,
@@ -249,6 +254,10 @@ Response Structure
 :regexRemap:            A :ref:`ds-regex-remap`
 :regional:              A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
+:requiredCapabilities:  An array of the capabilities that this delivery service requires.
+
+	.. versionchanged:: 4.1
+
 :remapText:             :ref:`ds-raw-remap`
 :serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
 :signed:                ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
@@ -355,6 +364,7 @@ Response Structure
 		"regional": false,
 		"regionalGeoBlocking": false,
 		"remapText": null,
+		"requiredCapabilities": null,
 		"routingName": "test",
 		"serviceCategory": null,
 		"signed": false,
@@ -394,7 +404,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/4.0/deliveryservices/2 HTTP/1.1
+	DELETE /api/4.1/deliveryservices/2 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

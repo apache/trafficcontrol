@@ -73,7 +73,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/4.0/deliveryservices?xmlId=demo2 HTTP/1.1
+	GET /api/4.1/deliveryservices?xmlId=demo2 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: python-requests/2.24.0
 	Accept-Encoding: gzip, deflate
@@ -148,6 +148,10 @@ Response Structure
 :regional:              A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:             :ref:`ds-raw-remap`
+:requiredCapabilities:  An array of the capabilities that this delivery service requires.
+
+	.. versionchanged:: 4.1
+
 :serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
 :signed:                ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:      Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
@@ -250,6 +254,7 @@ Response Structure
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
+			"requiredCapabilities": null,
 			"routingName": "video",
 			"serviceCategory": null,
 			"signed": false,
@@ -328,6 +333,10 @@ Request Structure
 :regional:                  A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:       A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:                 :ref:`ds-raw-remap`
+:requiredCapabilities:      An array of the capabilities that this delivery service requires.
+
+	.. versionchanged:: 4.1
+
 :serviceCategory:           The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated - or ``null`` if there is to be no such category
 :signed:                    ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:          Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
@@ -348,7 +357,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/4.0/deliveryservices HTTP/1.1
+	POST /api/4.1/deliveryservices HTTP/1.1
 	User-Agent: python-requests/2.24.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -407,6 +416,7 @@ Request Structure
 		"regexRemap": null,
 		"regional": false,
 		"regionalGeoBlocking": false,
+		"requiredCapabilities": null,
 		"routingName": "test",
 		"serviceCategory": null,
 		"signed": false,
@@ -495,6 +505,10 @@ Response Structure
 :regional:              A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:             :ref:`ds-raw-remap`
+:requiredCapabilities:  An array of the capabilities that this delivery service requires.
+
+	.. versionchanged:: 4.1
+
 :serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
 :signed:                ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:      Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
@@ -522,7 +536,7 @@ Response Structure
 	Access-Control-Allow-Origin: *
 	Content-Encoding: gzip
 	Content-Type: application/json
-	Location: /api/4.0/deliveryservices?id=6
+	Location: /api/4.1/deliveryservices?id=6
 	Permissions-Policy: interest-cohort=()
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 07 Jun 2021 23:37:37 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
@@ -606,6 +620,7 @@ Response Structure
 		"regional": false,
 		"regionalGeoBlocking": false,
 		"remapText": null,
+		"requiredCapabilities": null,
 		"routingName": "test",
 		"serviceCategory": null,
 		"signed": false,
