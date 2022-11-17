@@ -117,4 +117,4 @@ truncate --size=0 traffic.ops.log # Removes output from previous API versions an
 cd "../testing/api/v$INPUT_VERSION"
 
 cp "${resources}/traffic-ops-test.json" traffic-ops-test.conf
-go test --cfg traffic-ops-test.conf -coverpkg="../testing/api/v$INPUT_VERSION/..." -coverprofile="coveragev$INPUT_VERSION.out"
+go test --cfg traffic-ops-test.conf -coverpkg="../testing/api/v$INPUT_VERSION-client/..." -coverprofile="coveragev$INPUT_VERSION.out"
