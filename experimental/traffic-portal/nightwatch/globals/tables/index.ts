@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 
-import type { EnhancedElementInstance, EnhancedPageObject, EnhancedSectionInstance } from "nightwatch";
+import type { Awaitable, EnhancedElementInstance, EnhancedPageObject, EnhancedSectionInstance } from "nightwatch";
 
 /**
  * TableSectionCommands is the base type for page object sections representing
@@ -36,7 +36,7 @@ export const columnMenuSelector = "div.toggle-columns > button.mat-menu-trigger"
 export const searchboxSelector = "input[name='fuzzControl']";
 
 /**
- * Gets the state of an AG-Grid column by checking whether or not it's checked
+ * Gets the state of an AG-Grid column by checking whether it's checked
  * in the column visibility menu (doesn't actually verify that this means the
  * column is visible).
  *
@@ -83,7 +83,7 @@ export async function getColumnState(this: TableSectionCommands, column: string)
  * @returns The calling command section for call-chaining the way Nightwatch
  * likes to do.
  */
-export function searchText<T extends TableSectionCommands>(this: T, text: string): T  {
+export function searchText<T extends TableSectionCommands>(this: T, text: string): Awaitable<T, null> {
 	return this.setValue(searchboxSelector, text);
 }
 
@@ -96,8 +96,8 @@ export function searchText<T extends TableSectionCommands>(this: T, text: string
  * @returns The calling command section for call-chaining the way Nightwatch
  * likes to do.
  */
-export function toggleColumn<T extends TableSectionCommands>(this: T, column: string): T {
-	return this.click(columnMenuSelector).click(`mat-input[name='${column}']`).click(columnMenuSelector);
+export function toggleColumn<T extends TableSectionCommands>(this: T, column: string): Awaitable<T, null> {
+	return this.click(columnMenuSelector).click(`mat-input[name='${column}']`).click(columnMenuSelector) as Awaitable<T, null>;
 }
 
 /**
