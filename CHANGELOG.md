@@ -23,8 +23,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7176](https://github.com/apache/trafficcontrol/pull/7176) *ATC Build system* Support building ATC for the `aarch64` CPU architecture
 
 ### Changed
-- [#2564](https://github.com/apache/trafficcontrol/issues/2564) Renamed RASCAL references to TRAFFIC_MONITOR
-- [#2564](https://github.com/apache/trafficcontrol/issues/2564) *Traffic Ops, Traffic Monitor* Renamed RASCAL references to TRAFFIC_MONITOR
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
 - [#6981](https://github.com/apache/trafficcontrol/pull/6981) *Traffic Portal* Obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 - [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
@@ -48,10 +46,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7048](https://github.com/apache/trafficcontrol/issues/7048) *Traffic Stats* Add configuration value to set the client request timeout for calls to Traffic Ops.
 - [#7093](https://github.com/apache/trafficcontrol/issues/7093) *Traffic Router* Updated Apache Tomcat from 9.0.43 to 9.0.67
 - [#7125](https://github.com/apache/trafficcontrol/issues/7125) *Docs* Reflect implementation and deprecation notice for `letsencrypt/autorenew` endpoint.
+- [#7046](https://github.com/apache/trafficcontrol/issues/7046) *Traffic Ops* `deliveryservices/sslkeys/add` now checks that each cert in the chain is related.
 - [#7158](https://github.com/apache/trafficcontrol/issues/7158) *Traffic Vault* Fix the `reencrypt` utility to uniquely reencrypt each version of the SSL Certificates.
 - [#7137](https://github.com/apache/trafficcontrol/pull/7137) *Traffic Control Cache Config (t3c)* parent.config simulate topology for non topo delivery services.
 - [#7153](https://github.com/apache/trafficcontrol/pull/7153) *Traffic Control Cache Config (t3c)* Adds an extra T3C check for validity of an ssl cert (crash fix).
 - [#3965](https://github.com/apache/trafficcontrol/pull/3965) *Traffic Router* Traffic Router now always includes a `Content-Length` header in the response.
+- [#7182](https://github.com/apache/trafficcontrol/pull/7182) Sort peers used in strategy.yaml to prevent false positive for reload.
 
 ## [7.0.0] - 2022-07-19
 ### Added

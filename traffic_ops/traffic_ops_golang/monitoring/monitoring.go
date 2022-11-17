@@ -36,11 +36,11 @@ import (
 	"github.com/lib/pq"
 )
 
-const CacheMonitorConfigFile = "traffic_monitor.properties"
+const CacheMonitorConfigFile = "rascal.properties"
 
-const MonitorType = "TRAFFIC_MONITOR"
+const MonitorType = "RASCAL"
 const RouterType = "CCR"
-const MonitorConfigFile = "traffic_monitor-config.txt"
+const MonitorConfigFile = "rascal-config.txt"
 const KilobitsPerMegabit = 1000
 const DeliveryServiceStatus = "REPORTED"
 

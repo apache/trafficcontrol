@@ -51,15 +51,15 @@ func TestProfiles(t *testing.T) {
 				},
 				"OK when VALID NAME parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"TRAFFIC_MONITOR1"}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"RASCAL1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
-						validateProfilesFields(map[string]interface{}{"Name": "TRAFFIC_MONITOR1"})),
+						validateProfilesFields(map[string]interface{}{"Name": "RASCAL1"})),
 				},
 				"OK when VALID PARAM parameter": {
 					ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
 						"id":    {strconv.Itoa(GetProfileID(t, "EDGE1")())},
-						"param": {strconv.Itoa(GetParameterID(t, "health.threshold.loadavg", "traffic_monitor.properties", "25.0")())},
+						"param": {strconv.Itoa(GetParameterID(t, "health.threshold.loadavg", "rascal.properties", "25.0")())},
 					}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateProfilesFields(map[string]interface{}{"Parameter": "health.threshold.loadavg"})),
