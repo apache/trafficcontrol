@@ -119,8 +119,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        directory: ./traffic_ops/testing/api/v3/
-        files: ./coveragev3.out
+        files: coveragev3.out
         flags: traffic_ops,v3,integrationtests
         verbose: true
     - name: Upload v3 Vault logs
@@ -198,8 +197,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        directory: ./traffic_ops/testing/api/v4/
-        files: ./coveragev4.out
+        files: coveragev4.out
         flags: traffic_ops,v4,integrationtests
         verbose: true
     - name: Upload v4 Vault logs
@@ -279,8 +277,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        directory: ./traffic_ops/testing/api/v5/
-        files: ./coveragev5.out
+        files: coveragev5.out
         flags: traffic_ops,v5,integrationtests
         verbose: true
     - name: Upload v5 Vault logs
