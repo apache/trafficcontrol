@@ -247,8 +247,29 @@ func TestDeliveryServices(t *testing.T) {
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
+				"BAD REQUEST when creating DS with INVALID ACTIVE STATE": {
+					ClientSession: TOSession,
+					RequestBody: generateDeliveryService(
+						t,
+						map[string]interface{}{
+							"active": "this is a totally invalid active value",
+						},
+					),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
 			},
 			"PUT": {
+				"BAD REQUEST when INVALID ACTIVE STATE": {
+					ClientSession: TOSession,
+					EndpointID:    GetDeliveryServiceId(t, "ds1"),
+					RequestBody: generateDeliveryService(
+						t,
+						map[string]interface{}{
+							"active": "this is a totally invalid active value",
+						},
+					),
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
 				"OK when VALID request": {
 					EndpointID: GetDeliveryServiceId(t, "ds2"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
