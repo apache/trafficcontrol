@@ -56,9 +56,10 @@ otherwise unavailable, the tc-health-client will utilize the **Traffic Server**
 and **Traffic Monitor** has determined that the marked down host is now available, 
 the client will then utilize the **Traffic Server** tool to mark the host back up.
 
-Also on each polling cycle the configuration file, **tc-health-client.json** is 
-checked and a new config is reloaded if the file has changed since the last 
-polling cycle.  The **Traffic Monitors** list is refreshed from **Traffic Ops**.
+Any changes to **tc-health-client.json** will require sending a SIGHUP to the running
+process. This will cause the tc-health-client to read the config file and load any
+changes, the **Traffic Monitors** list will be refreshed from **Traffic Ops**.
+**systemctl reload tc-health-client** can also be used to send a SIGHUP.  
 
 If errors are encountered while polling a Traffic Monitor, the error is logged
 and the **Traffic Monitors** list is refreshed from **Traffic Ops**.

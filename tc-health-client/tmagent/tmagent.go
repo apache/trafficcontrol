@@ -38,7 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/tc-health-client/config"
 	"github.com/apache/trafficcontrol/tc-health-client/util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 
 	"gopkg.in/yaml.v2"
 )
@@ -636,7 +636,7 @@ func (pi *ParentInfo) GetTOData(cfg *config.Cfg) error {
 		}
 	}
 
-	srvs, _, err := toData.TOClient.GetServersWithHdr(nil, nil)
+	srvs, _, err := toData.TOClient.GetServers(toclient.NewRequestOptions())
 	if err != nil {
 		// next time we'll login again and get a new session.
 		toData.TOClient = nil

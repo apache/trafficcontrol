@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
 - [#6981](https://github.com/apache/trafficcontrol/pull/6981) *Traffic Portal* Obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 - [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
+- [#7191](https://github.com/apache/trafficcontrol/issues/7191) *tc-health-client* Uses Traffic Ops API 4.0. Also added reload option to systemd service file
 
 ### Fixed
 - [#7179](https://github.com/apache/trafficcontrol/issues/7179) *Traffic Portal* Fixed search filter for Delivery Service Table
