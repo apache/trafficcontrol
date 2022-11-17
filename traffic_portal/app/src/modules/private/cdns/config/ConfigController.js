@@ -73,6 +73,9 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 	};
 
 	function minimizeServerCapabilitiesDiff(oldTrafficServers, newTrafficServers) {
+		if (!(oldTrafficServers instanceof Object) || !(newTrafficServers instanceof Object)) {
+			return;
+		}
 		const oldServersIterator = Object.entries(oldTrafficServers).entries();
 		const newServersIterator = Object.entries(newTrafficServers).entries();
 		const capabilitiesKey = "capabilities";
@@ -88,7 +91,7 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 			}
 			const oldCapabilities = oldServer[capabilitiesKey];
 			const newCapabilities = newServer[capabilitiesKey];
-			if (!(oldCapabilities === undefined || newCapabilities === undefined)) {
+			if (!(oldCapabilities instanceof Object) || !(newCapabilities instanceof Object)) {
 				newServer[capabilitiesKey] = collectionUtils.minimizeArrayDiff(oldCapabilities, newCapabilities);
 			}
 			oldServersNext = oldServersIterator.next();
