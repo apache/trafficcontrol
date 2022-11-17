@@ -91,7 +91,7 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 			}
 			const oldCapabilities = oldServer[capabilitiesKey];
 			const newCapabilities = newServer[capabilitiesKey];
-			if (!(oldCapabilities instanceof Object) || !(newCapabilities instanceof Object)) {
+			if (oldCapabilities instanceof Object && newCapabilities instanceof Object) {
 				newServer[capabilitiesKey] = collectionUtils.minimizeArrayDiff(oldCapabilities, newCapabilities);
 			}
 			oldServersNext = oldServersIterator.next();
