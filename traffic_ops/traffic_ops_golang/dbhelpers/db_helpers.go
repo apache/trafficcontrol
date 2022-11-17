@@ -617,12 +617,16 @@ INNER JOIN type AS dt ON dt.id = ds.type
 INNER JOIN profile AS p ON p.id = s.profile
 INNER JOIN status AS st ON st.id = s.status
 WHERE ds.cdn_id = (SELECT id FROM cdn WHERE name = $1)
-AND ds.active = 'ACTIVE'
-AND dt.name != '` + tc.DSTypeAnyMap.String() + `'
+AND ds.active = $2
+AND dt.name != $3
 AND p.routing_disabled = false
-AND (st.name = '` + tc.CacheStatusOnline.String() + `' OR st.name = '` + tc.CacheStatusReported.String() + `' OR st.name = '` + tc.CacheStatusAdminDown.String() + `')
+AND (
+	st.name = $4
+	OR st.name = $5
+	OR st.name = $6
+)
 `
-	rows, err := tx.Query(q, cdn)
+	rows, err := tx.Query(q, cdn, tc.DSActiveStateActive, tc.DSTypeAnyMap, tc.CacheStatusOnline, tc.CacheStatusReported, tc.CacheStatusAdminDown)
 	if err != nil {
 		return nil, errors.New("querying server deliveryservice names by CDN: " + err.Error())
 	}

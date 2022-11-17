@@ -265,7 +265,7 @@ func TestReadGetDeliveryServices(t *testing.T) {
 		key   string
 		value driver.Value
 	}{
-		{"active", "ACTIVE"},
+		{"active", tc.DSActiveStateActive},
 		{"anonymous_blocking_enabled", false},
 		{"ccr_dns_ttl", nil},
 		{"cdn_id", 1},

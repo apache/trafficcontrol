@@ -2094,7 +2094,7 @@ FROM deliveryservice_server dss
 JOIN server s ON dss.server = s.id
 JOIN type t ON s.type = t.id
 JOIN deliveryservice ds ON dss.deliveryservice = ds.id
-WHERE t.name LIKE $1 AND ds.active = 'ACTIVE'
+WHERE t.name LIKE $1 AND ds.active = $3
 GROUP BY ds.id, ds.multi_site_origin, ds.topology
 HAVING COUNT(dss.server) = 1 AND $2 = ANY(ARRAY_AGG(dss.server));
 `
@@ -2118,7 +2118,7 @@ func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, serverType 
 		return ids, errors.New("nil transaction")
 	}
 
-	rows, err := tx.Query(lastServerTypeOfDSesQuery, like, id)
+	rows, err := tx.Query(lastServerTypeOfDSesQuery, like, id, tc.DSActiveStateActive)
 	if err != nil {
 		return ids, fmt.Errorf("querying: %v", err)
 	}

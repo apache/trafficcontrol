@@ -1383,9 +1383,9 @@ func addActive(where string, params map[string]string, queryValues map[string]in
 			return where, fmt.Errorf("active cannot parse to boolean: %w", err)
 		}
 		if b {
-			return dbhelpers.AppendWhere(where, "ds.active = 'ACTIVE'"), nil
+			return dbhelpers.AppendWhere(where, "ds.active = '"+string(tc.DSActiveStateActive)+"'"), nil
 		}
-		return dbhelpers.AppendWhere(where, "ds.active <> 'ACTIVE'"), nil
+		return dbhelpers.AppendWhere(where, "ds.active <> '"+string(tc.DSActiveStateActive)+"'"), nil
 	}
 	switch tc.DeliveryServiceActiveState(active) {
 	case tc.DSActiveStateActive:
