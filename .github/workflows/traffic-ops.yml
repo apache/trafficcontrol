@@ -188,6 +188,8 @@ jobs:
       with:
         version: 4
         smtp_address: 172.17.0.1
+    - name: Upload coverage to codecov
+      uses: codecov/codecov-action@v3
     - name: Upload v4 Vault logs
       if: ${{ steps.v4Tests.outcome != 'success' && always() }}
       uses: actions/upload-artifact@v2
