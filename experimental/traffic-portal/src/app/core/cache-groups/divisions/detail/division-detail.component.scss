@@ -11,13 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+mat-card {
+	margin: 1em auto;
+	width: 80%;
+	min-width: 350px;
 
-describe("Servers Spec", () => {
-	it("Filter by hostname", async () => {
-		const page = browser.page.servers();
-		page.navigate()
-			.waitForElementPresent("input[name=fuzzControl]");
-		page.section.serversTable.searchText("edge");
-		page.assert.urlContains("search=edge");
-	});
-});
+	mat-card-content {
+		display: grid;
+		grid-template-columns: 1fr;
+		grid-row-gap: 2em;
+		margin: 1em auto 50px;
+	}
+}

@@ -94,7 +94,7 @@ export class CacheGroupTableComponent implements OnInit {
 		}
 	];
 
-	/** Definitions for the context menu items (which act on augmented server data). */
+	/** Definitions for the context menu items (which act on augmented cache-group data). */
 	public contextMenuItems: Array<ContextMenuItem<CacheGroup>> = [
 		{
 			action: "edit",

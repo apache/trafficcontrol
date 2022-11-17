@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
+import { RequestDivision, ResponseDivision } from "trafficops-types";
 
 import type { CacheGroup } from "src/app/models";
 
@@ -20,7 +21,14 @@ import type { CacheGroup } from "src/app/models";
  */
 @Injectable()
 export class CacheGroupService {
+	private lastID = 10;
 
+	private readonly divisions: Array<ResponseDivision> = [{
+		id: 1,
+		lastUpdated: new Date(),
+		name: "Div1"
+	}
+	];
 	private readonly cacheGroups = [
 		{
 			fallbackToClosest: true,
@@ -114,5 +122,77 @@ export class CacheGroupService {
 			return cacheGroup;
 		}
 		return this.cacheGroups;
+	}
+
+	public async getDivisions(): Promise<Array<ResponseDivision>>;
+	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;
+
+	/**
+	 * Gets an array of divisions from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the ResponseDivision with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of ResponseDivision objects - or a single ResponseDivision object if 'nameOrID'
+	 * was given.
+	 */
+	public async getDivisions(nameOrID?: string | number): Promise<Array<ResponseDivision> | ResponseDivision> {
+		if(nameOrID) {
+			let division;
+			switch (typeof nameOrID) {
+				case "string":
+					division = this.divisions.find(d=>d.name === nameOrID);
+					break;
+				case "number":
+					division = this.divisions.find(d=>d.id === nameOrID);
+			}
+			if (!division) {
+				throw new Error(`no such Division: ${nameOrID}`);
+			}
+			return division;
+		}
+		return this.divisions;
+	}
+
+	/**
+	 * Replaces the current definition of a division with the one given.
+	 *
+	 * @param division The new division.
+	 * @returns The updated division.
+	 */
+	public async updateDivision(division: ResponseDivision): Promise<ResponseDivision> {
+		const id = this.divisions.findIndex(d => d.id === division.id);
+		if (id === -1) {
+			throw new Error(`no such Division: ${division.id}`);
+		}
+		this.divisions[id] = division;
+		return division;
+	}
+
+	/**
+	 * Creates a new division.
+	 *
+	 * @param division The division to create.
+	 * @returns The created division.
+	 */
+	public async createDivision(division: RequestDivision): Promise<ResponseDivision> {
+		return {
+			...division,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+	}
+
+	/**
+	 * Deletes an existing division.
+	 *
+	 * @param id Id of the division to delete.
+	 * @returns The deleted division.
+	 */
+	public async deleteDivision(id: number): Promise<ResponseDivision> {
+		const index = this.divisions.findIndex(d => d.id === id);
+		if (index === -1) {
+			throw new Error(`no such Division: ${id}`);
+		}
+		return this.divisions.splice(index, 1)[0];
 	}
 }
