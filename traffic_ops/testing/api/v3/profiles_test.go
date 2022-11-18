@@ -50,9 +50,9 @@ func TestProfiles(t *testing.T) {
 				},
 				"OK when VALID NAME parameter": {
 					ClientSession: TOSession,
-					RequestParams: url.Values{"name": {"TRAFFIC_MONITOR1"}},
+					RequestParams: url.Values{"name": {"RASCAL1"}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
-						validateProfilesFields(map[string]interface{}{"Name": "TRAFFIC_MONITOR1"})),
+						validateProfilesFields(map[string]interface{}{"Name": "RASCAL1"})),
 				},
 				"OK when VALID CDN parameter": {
 					ClientSession: TOSession,
@@ -131,7 +131,7 @@ func TestProfiles(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID REQUEST": {
-					EndpointId:    GetProfileID(t, "EDGE2"),
+					EndpointID:    GetProfileID(t, "EDGE2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Profile{
 						CDNID:           GetCDNID(t, "cdn2")(),
@@ -146,7 +146,7 @@ func TestProfiles(t *testing.T) {
 								"Name": "EDGE2UPDATED", "RoutingDisabled": false, "Type": "TR_PROFILE"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:     GetProfileID(t, "CCR1"),
+					EndpointID:     GetProfileID(t, "CCR1"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.Profile{
@@ -159,7 +159,7 @@ func TestProfiles(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetProfileID(t, "CCR1"),
+					EndpointID:    GetProfileID(t, "CCR1"),
 					ClientSession: TOSession,
 					RequestBody: tc.Profile{
 						CDNID:           GetCDNID(t, "cdn1")(),
@@ -219,14 +219,14 @@ func TestProfiles(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateProfileByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateProfileByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteProfileByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteProfileByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

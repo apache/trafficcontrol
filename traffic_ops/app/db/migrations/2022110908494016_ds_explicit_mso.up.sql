@@ -15,17 +15,34 @@
  * the License.
  */
 
-UPDATE TYPE
-SET name = 'RASCAL',
-    description = 'Rascal polling & reporting'
-WHERE name = 'TRAFFIC_MONITOR';
+UPDATE public.deliveryservice
+SET multi_site_origin = FALSE
+WHERE multi_site_origin IS NULL;
 
-UPDATE PARAMETER
-SET config_file = REPLACE(config_file, 'traffic_monitor', 'rascal')
-WHERE config_file = 'traffic_monitor-config.txt' OR config_file = 'traffic_monitor.properties';
+ALTER TABLE public.deliveryservice
+ALTER COLUMN multi_site_origin
+SET NOT NULL;
 
-UPDATE PROFILE
-SET description = REPLACE(description, 'Traffic Monitor', 'Rascal'),
-    name= REPLACE(name, 'TRAFFIC_MONITOR', 'RASCAL')
-WHERE type = 'TM_PROFILE';
+UPDATE public.deliveryservice_request
+SET
+	deliveryservice = jsonb_set(deliveryservice, '{multiSiteOrigin}', 'false')
+WHERE
+	deliveryservice IS NOT NULL
+	AND
+	(
+		NOT (deliveryservice ? 'multiSiteOrigin')
+		OR
+		jsonb_typeof(deliveryservice -> 'multiSiteOrigin') = 'null'
+	);
 
+UPDATE public.deliveryservice_request
+SET
+	original = jsonb_set(original, '{multiSiteOrigin}', 'false')
+WHERE
+	original IS NOT NULL
+	AND
+	(
+		NOT (original ? 'multiSiteOrigin')
+		OR
+		jsonb_typeof(original -> 'multiSiteOrigin') = 'null'
+	);

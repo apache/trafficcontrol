@@ -64,7 +64,7 @@ func TestASN(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					ClientSession: TOSession, EndpointId: GetASNID(t, "8888"),
+					ClientSession: TOSession, EndpointID: GetASNID(t, "8888"),
 					RequestBody: map[string]interface{}{
 						"asn":            7777,
 						"cachegroupName": "originCachegroup",
@@ -98,7 +98,7 @@ func TestASN(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateASN(testCase.EndpointId(), asn, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateASN(testCase.EndpointID(), asn, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

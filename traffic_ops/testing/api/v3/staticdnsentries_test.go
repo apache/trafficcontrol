@@ -50,7 +50,7 @@ func TestStaticDNSEntries(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetStaticDNSEntryID(t, "host2"),
+					EndpointID:    GetStaticDNSEntryID(t, "host2"),
 					ClientSession: TOSession,
 					RequestBody: tc.StaticDNSEntry{
 						Address:         "192.168.0.2",
@@ -64,7 +64,7 @@ func TestStaticDNSEntries(t *testing.T) {
 						validateStaticDNSEntriesUpdateCreateFields("host2", map[string]interface{}{"Address": "192.168.0.2"})),
 				},
 				"BAD REQUEST when INVALID IPV4 ADDRESS for A_RECORD": {
-					EndpointId:    GetStaticDNSEntryID(t, "host2"),
+					EndpointID:    GetStaticDNSEntryID(t, "host2"),
 					ClientSession: TOSession,
 					RequestBody: tc.StaticDNSEntry{
 						Address:         "test.testdomain.net.",
@@ -77,7 +77,7 @@ func TestStaticDNSEntries(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID DNS for CNAME_RECORD": {
-					EndpointId:    GetStaticDNSEntryID(t, "host1"),
+					EndpointID:    GetStaticDNSEntryID(t, "host1"),
 					ClientSession: TOSession,
 					RequestBody: tc.StaticDNSEntry{
 						Address:         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
@@ -90,7 +90,7 @@ func TestStaticDNSEntries(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING TRAILING PERIOD for CNAME_RECORD": {
-					EndpointId:    GetStaticDNSEntryID(t, "host1"),
+					EndpointID:    GetStaticDNSEntryID(t, "host1"),
 					ClientSession: TOSession,
 					RequestBody: tc.StaticDNSEntry{
 						Address:         "cdn.test.com",
@@ -103,7 +103,7 @@ func TestStaticDNSEntries(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV6 ADDRESS for AAAA_RECORD": {
-					EndpointId:    GetStaticDNSEntryID(t, "host3"),
+					EndpointID:    GetStaticDNSEntryID(t, "host3"),
 					ClientSession: TOSession,
 					RequestBody: tc.StaticDNSEntry{
 						Address:         "192.168.0.1",
@@ -116,7 +116,7 @@ func TestStaticDNSEntries(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:     GetStaticDNSEntryID(t, "host3"),
+					EndpointID:     GetStaticDNSEntryID(t, "host3"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.StaticDNSEntry{
@@ -130,7 +130,7 @@ func TestStaticDNSEntries(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetStaticDNSEntryID(t, "host3"),
+					EndpointID:    GetStaticDNSEntryID(t, "host3"),
 					ClientSession: TOSession,
 					RequestBody: tc.StaticDNSEntry{
 						Address:         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
@@ -166,14 +166,14 @@ func TestStaticDNSEntries(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, _, err := testCase.ClientSession.UpdateStaticDNSEntryByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							alerts, reqInf, _, err := testCase.ClientSession.UpdateStaticDNSEntryByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteStaticDNSEntryByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteStaticDNSEntryByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

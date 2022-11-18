@@ -47,7 +47,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when VALID ID parameter": {
-					EndpointId:    GetDSRequestCommentId(t),
+					EndpointID:    GetDSRequestCommentId(t),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
 				},
@@ -63,7 +63,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetDSRequestCommentId(t),
+					EndpointID:    GetDSRequestCommentId(t),
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServiceRequestComment{
 						DeliveryServiceRequestID: GetDSRequestId(t, "test-ds1")(),
@@ -72,14 +72,14 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Header": {
-					EndpointId:     GetDSRequestCommentId(t),
+					EndpointID:     GetDSRequestCommentId(t),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody:    tc.DeliveryServiceRequestComment{},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:     GetDSRequestCommentId(t),
+					EndpointID:     GetDSRequestCommentId(t),
 					ClientSession:  TOSession,
 					RequestBody:    tc.DeliveryServiceRequestComment{},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
@@ -95,7 +95,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
 							if name == "OK when VALID ID parameter" {
-								resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceRequestCommentByIDWithHdr(testCase.EndpointId(), testCase.RequestHeaders)
+								resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceRequestCommentByIDWithHdr(testCase.EndpointID(), testCase.RequestHeaders)
 								for _, check := range testCase.Expectations {
 									check(t, reqInf, resp, tc.Alerts{}, err)
 								}
@@ -108,7 +108,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestCommentByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestCommentByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

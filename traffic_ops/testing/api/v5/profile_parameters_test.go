@@ -48,8 +48,8 @@ func TestProfileParameters(t *testing.T) {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
-						"profileId":   {strconv.Itoa(GetProfileID(t, "TRAFFIC_MONITOR1")())},
-						"parameterId": {strconv.Itoa(GetParameterID(t, "peers.polling.interval", "traffic_monitor-config.txt", "60")())}}},
+						"profileId":   {strconv.Itoa(GetProfileID(t, "RASCAL1")())},
+						"parameterId": {strconv.Itoa(GetParameterID(t, "peers.polling.interval", "rascal-config.txt", "60")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
@@ -81,7 +81,7 @@ func TestProfileParameters(t *testing.T) {
 				"BAD REQUEST when MISSING PROFILEID field": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"parameterId": GetParameterID(t, "health.threshold.queryTime", "traffic_monitor.properties", "1000")(),
+						"parameterId": GetParameterID(t, "health.threshold.queryTime", "rascal.properties", "1000")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -101,14 +101,14 @@ func TestProfileParameters(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"profileId":   GetProfileID(t, "EDGE1")(),
-						"parameterId": GetParameterID(t, "health.threshold.availableBandwidthInKbps", "traffic_monitor.properties", ">1750000")(),
+						"parameterId": GetParameterID(t, "health.threshold.availableBandwidthInKbps", "rascal.properties", ">1750000")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetProfileID(t, "ATS_EDGE_TIER_CACHE"),
+					EndpointID:    GetProfileID(t, "ATS_EDGE_TIER_CACHE"),
 					ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
 						"parameterId": {strconv.Itoa(GetParameterID(t, "location", "set_dscp_37.config", "/etc/trafficserver/dscp")())},
@@ -162,7 +162,7 @@ func TestProfileParameters(t *testing.T) {
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
 							parameterId, _ := strconv.Atoi(testCase.RequestOpts.QueryParameters["parameterId"][0])
-							alerts, reqInf, err := testCase.ClientSession.DeleteProfileParameter(testCase.EndpointId(), parameterId, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteProfileParameter(testCase.EndpointID(), parameterId, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

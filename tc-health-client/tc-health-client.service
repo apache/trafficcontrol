@@ -23,6 +23,7 @@ Requires=trafficserver.service
 
 [Service]
 ExecStart=/usr/bin/tc-health-client -vv
+ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=5
 PIDFile=/run/tc-health-client.pid

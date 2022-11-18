@@ -274,12 +274,12 @@ inner join deliveryservice_regex as dsr on dsr.regex = r.id
 inner join deliveryservice as ds on ds.id = dsr.deliveryservice
 inner join type as dt on dt.id = ds.type
 where ds.cdn_id = (select id from cdn where name = $1)
-and ds.active = true` +
-		fmt.Sprintf(" and dt.name != '%s' ", tc.DSTypeAnyMap) + `
+and ds.active = $2
+and dt.name != $3
 and rt.name = 'HOST_REGEXP'
 order by dsr.set_number asc
 `
-	rows, err := tx.Query(q, cdn)
+	rows, err := tx.Query(q, cdn, tc.DSActiveStateActive, tc.DSTypeAnyMap)
 	if err != nil {
 		return nil, errors.New("Error server deliveryservices: " + err.Error())
 	}

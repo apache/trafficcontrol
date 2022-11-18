@@ -19,6 +19,39 @@
 
 var CollectionUtils = function() {
 
+	// minimizeArrayDiff reduces the size of an index-sensitive Array diff by
+	// making common elements in the old and new arrays have the same index.
+	this.minimizeArrayDiff = function (oldItems, newItems) {
+		const minimalDiffItems = [];
+		const addedItems = [];
+
+		let newItemsIndex, newItem;
+		const oldItemsIterator = oldItems.entries();
+		const newItemsIterator = newItems.entries();
+		for (let oldItemsNext = oldItemsIterator.next(), newItemsNext = newItemsIterator.next(); !(oldItemsNext.done || newItemsNext.done);) {
+			const [, oldItem] = oldItemsNext.value;
+			[newItemsIndex, newItem] = newItemsNext.value;
+			if (oldItem < newItem) {
+				newItemsIndex--;
+				minimalDiffItems.push(undefined);
+				oldItemsNext = oldItemsIterator.next();
+				continue;
+			} else if (oldItem > newItem) {
+				addedItems.push(newItem);
+				newItemsNext = newItemsIterator.next();
+				continue;
+			}
+			minimalDiffItems.push(newItem);
+			oldItemsNext = oldItemsIterator.next();
+			newItemsNext = newItemsIterator.next();
+		}
+		minimalDiffItems.push(...addedItems);
+		if (newItemsIndex !== undefined && newItemsIndex < newItems.length - 1) {
+			minimalDiffItems.push(...newItems.slice(newItemsIndex + 1));
+		}
+		return minimalDiffItems;
+	};
+
 	this.uniqArray = function(array1, array2, key) {
 		array1 = array1 || [];
 		array2 = array2 || [];

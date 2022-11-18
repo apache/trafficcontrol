@@ -6,7 +6,12 @@
     "type": "git",
     "url": "https://github.com/apache/trafficcontrol.git"
   },
+  "scripts": {
+    "build": "grunt build",
+    "test:ci": "karma start --single-run --browsers=ChromeHeadlessCustom karma.conf.js"
+  },
   "devDependencies": {
+    "angular-mocks": "1.8.0",
     "browserify": "16.5.1",
     "connect-livereload": "0.6.1",
     "connect-modrewrite": "0.10.2",
@@ -21,6 +26,13 @@
     "grunt-express-server": "0.5.4",
     "grunt-html2js": "0.8.0",
     "grunt-string-replace": "1.3.1",
+    "jasmine-core": "4.5.0",
+    "karma": "6.4.1",
+    "karma-browserify": "8.1.0",
+    "karma-chrome-launcher": "3.1.1",
+    "karma-coverage": "2.2.0",
+    "karma-jasmine": "5.1.0",
+    "karma-jasmine-html-reporter": "2.0.0",
     "load-grunt-config": "4.0.1",
     "morgan": "1.10.0",
     "requirejs": "2.3.6",

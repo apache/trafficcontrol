@@ -23,12 +23,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -86,7 +85,7 @@ func TestTypes(t *testing.T) {
 			},
 			"PUT": {
 				"BAD REQUEST when useInTable NOT server": {
-					EndpointId:    GetTypeID(t, "ACTIVE_DIRECTORY"),
+					EndpointID:    GetTypeID(t, "ACTIVE_DIRECTORY"),
 					ClientSession: TOSession,
 					RequestBody: tc.Type{
 						Description: "Active Directory User",
@@ -96,7 +95,7 @@ func TestTypes(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when VALID request when useInTable=server": {
-					EndpointId:    GetTypeID(t, "RIAK"),
+					EndpointID:    GetTypeID(t, "RIAK"),
 					ClientSession: TOSession,
 					RequestBody: tc.Type{
 						Description: "riak type",
@@ -109,7 +108,7 @@ func TestTypes(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetTypeID(t, "INFLUXDB"),
+					EndpointID:    GetTypeID(t, "INFLUXDB"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -136,14 +135,14 @@ func TestTypes(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateType(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateType(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteType(testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteType(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

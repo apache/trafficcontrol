@@ -151,7 +151,7 @@ func TestCacheGroups(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
 					RequestBody: tc.CacheGroupNullable{
 						Latitude:            util.Ptr(17.5),
 						Longitude:           util.Ptr(17.5),
@@ -165,7 +165,7 @@ func TestCacheGroups(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when updating CG with null Lat/Long": {
-					EndpointId: GetCacheGroupId(t, "nullLatLongCG"), ClientSession: TOSession,
+					EndpointID: GetCacheGroupId(t, "nullLatLongCG"), ClientSession: TOSession,
 					RequestBody: tc.CacheGroupNullable{
 						Name:      util.Ptr("nullLatLongCG"),
 						ShortName: util.Ptr("null-ll"),
@@ -176,7 +176,7 @@ func TestCacheGroups(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when updating TYPE of CG in TOPOLOGY": {
-					EndpointId: GetCacheGroupId(t, "topology-edge-cg-01"), ClientSession: TOSession,
+					EndpointID: GetCacheGroupId(t, "topology-edge-cg-01"), ClientSession: TOSession,
 					RequestBody: tc.CacheGroupNullable{
 						Latitude:  util.Ptr(0.0),
 						Longitude: util.Ptr(0.0),
@@ -188,7 +188,7 @@ func TestCacheGroups(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.CacheGroupNullable{
 						Name:      util.Ptr("cachegroup1"),
@@ -199,7 +199,7 @@ func TestCacheGroups(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					RequestBody: tc.CacheGroupNullable{
 						Name:      util.Ptr("cachegroup1"),
@@ -210,19 +210,19 @@ func TestCacheGroups(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup1"),
+					EndpointID:    GetCacheGroupId(t, "cachegroup1"),
 					ClientSession: NoAuthTOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"DELETE": {
 				"NOT FOUND when INVALID ID parameter": {
-					EndpointId:    func() int { return 111111 },
+					EndpointID:    func() int { return 111111 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup1"),
+					EndpointID:    GetCacheGroupId(t, "cachegroup1"),
 					ClientSession: NoAuthTOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
@@ -249,14 +249,14 @@ func TestCacheGroups(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateCacheGroup(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateCacheGroup(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteCacheGroup(testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteCacheGroup(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

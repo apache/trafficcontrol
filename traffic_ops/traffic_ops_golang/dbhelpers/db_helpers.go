@@ -106,10 +106,10 @@ WHERE tm_user.email = $1
 // This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
 func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, int) {
 	query := `
-SELECT c.username, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames 
-FROM cdn_lock c 
-    LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn 
-WHERE c.cdn=$1 
+SELECT c.username, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames
+FROM cdn_lock c
+    LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn
+WHERE c.cdn=$1
 GROUP BY c.username`
 	var userName string
 	var sharedUserNames []string
@@ -320,15 +320,15 @@ func CheckIfCurrentUserCanModifyCDNWithID(tx *sql.Tx, cdnID int64, user string) 
 // This will succeed if no other user has a hard lock on any of the CDNs that relate to the cachegroup in question.
 func CheckIfCurrentUserCanModifyCachegroup(tx *sql.Tx, cachegroupID int, user string) (error, error, int) {
 	query := `
-SELECT c.username, c.cdn, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames 
-FROM cdn_lock c LEFT JOIN cdn_lock_user u 
-    ON c.username = u.owner 
-           AND c.cdn = u.cdn 
+SELECT c.username, c.cdn, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames
+FROM cdn_lock c LEFT JOIN cdn_lock_user u
+    ON c.username = u.owner
+           AND c.cdn = u.cdn
 WHERE c.cdn IN (
-    SELECT name FROM cdn 
+    SELECT name FROM cdn
     WHERE id IN (
-        SELECT cdn_id FROM server 
-        WHERE cachegroup = ($1))) 
+        SELECT cdn_id FROM server
+        WHERE cachegroup = ($1)))
 GROUP BY c.username, c.cdn, c.soft`
 	var userName string
 	var cdn string
@@ -362,14 +362,14 @@ GROUP BY c.username, c.cdn, c.soft`
 // CheckIfCurrentUserCanModifyCachegroups checks if the current user has the lock on the cdns that are associated with the provided cachegroup IDs.
 // This will succeed if no other user has a hard lock on any of the CDNs that relate to the cachegroups in question.
 func CheckIfCurrentUserCanModifyCachegroups(tx *sql.Tx, cachegroupIDs []int, user string) (error, error, int) {
-	query := `SELECT c.username, c.cdn, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames FROM cdn_lock c 
-    LEFT JOIN cdn_lock_user u 
-        ON c.username = u.owner 
-               AND c.cdn = u.cdn 
+	query := `SELECT c.username, c.cdn, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames FROM cdn_lock c
+    LEFT JOIN cdn_lock_user u
+        ON c.username = u.owner
+               AND c.cdn = u.cdn
 WHERE c.cdn IN (
-    SELECT name FROM cdn 
+    SELECT name FROM cdn
     WHERE id IN (
-        SELECT cdn_id FROM server 
+        SELECT cdn_id FROM server
         WHERE cachegroup = ANY($1)))
         GROUP BY c.username, c.cdn, c.soft`
 	var userName string
@@ -414,7 +414,7 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 				err = colInfo.Checker(urlValue)
 			}
 			if err != nil {
-				errs = append(errs, errors.New(key+" "+err.Error()))
+				errs = append(errs, fmt.Errorf("%s %w", key, err))
 			} else {
 				criteria = colInfo.Column + "=:" + key
 				criteriaArgs = append(criteriaArgs, criteria)
@@ -617,12 +617,16 @@ INNER JOIN type AS dt ON dt.id = ds.type
 INNER JOIN profile AS p ON p.id = s.profile
 INNER JOIN status AS st ON st.id = s.status
 WHERE ds.cdn_id = (SELECT id FROM cdn WHERE name = $1)
-AND ds.active = true
-AND dt.name != '` + tc.DSTypeAnyMap.String() + `'
+AND ds.active = $2
+AND dt.name != $3
 AND p.routing_disabled = false
-AND (st.name = '` + tc.CacheStatusOnline.String() + `' OR st.name = '` + tc.CacheStatusReported.String() + `' OR st.name = '` + tc.CacheStatusAdminDown.String() + `')
+AND (
+	st.name = $4
+	OR st.name = $5
+	OR st.name = $6
+)
 `
-	rows, err := tx.Query(q, cdn)
+	rows, err := tx.Query(q, cdn, tc.DSActiveStateActive, tc.DSTypeAnyMap, tc.CacheStatusOnline, tc.CacheStatusReported, tc.CacheStatusAdminDown)
 	if err != nil {
 		return nil, errors.New("querying server deliveryservice names by CDN: " + err.Error())
 	}
@@ -1321,26 +1325,24 @@ func TopologyExists(tx *sql.Tx, name string) (bool, error) {
 // one of the Topology's Cache Groups is empty with respect to the Delivery
 // Service's CDN. Note that this can panic if ds does not have a properly set
 // CDNID.
-func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceV4) (int, error, error) {
-	statusCode, userErr, sysErr := http.StatusOK, error(nil), error(nil)
-
+func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceV5) (int, error, error) {
 	if ds.Topology == nil {
-		return statusCode, userErr, sysErr
+		return http.StatusOK, nil, nil
 	}
 
 	cacheGroupIDs, _, err := GetTopologyCachegroups(tx.Tx, *ds.Topology)
 	if err != nil {
-		return http.StatusInternalServerError, nil, fmt.Errorf("getting topology cachegroups: %v", err)
+		return http.StatusInternalServerError, nil, fmt.Errorf("getting topology cachegroups: %w", err)
 	}
 	if len(cacheGroupIDs) == 0 {
 		return http.StatusBadRequest, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
 	}
 
-	if err = topology_validation.CheckForEmptyCacheGroups(tx, cacheGroupIDs, []int{*ds.CDNID}, true, []int{}); err != nil {
-		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %w", *ds.Topology, *ds.CDNID, err), nil
+	if err = topology_validation.CheckForEmptyCacheGroups(tx, cacheGroupIDs, []int{ds.CDNID}, true, []int{}); err != nil {
+		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %w", *ds.Topology, ds.CDNID, err), nil
 	}
 
-	return statusCode, userErr, sysErr
+	return http.StatusOK, nil, nil
 }
 
 // GetTopologyCachegroups returns an array of cachegroup IDs and an array of cachegroup

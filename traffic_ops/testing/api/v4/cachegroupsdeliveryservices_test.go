@@ -33,13 +33,13 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, []int]{
 			"POST": {
 				"BAD REQUEST assigning TOPOLOGY-BASED DS to CACHEGROUP": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup3"),
+					EndpointID:    GetCacheGroupId(t, "cachegroup3"),
 					ClientSession: TOSession,
 					RequestBody:   []int{GetDeliveryServiceId(t, "top-ds-in-cdn1")()},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when valid request": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup3"),
+					EndpointID:    GetCacheGroupId(t, "cachegroup3"),
 					ClientSession: TOSession,
 					RequestBody: []int{
 						GetDeliveryServiceId(t, "ds1")(),
@@ -59,7 +59,7 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.SetCacheGroupDeliveryServices(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.SetCacheGroupDeliveryServices(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

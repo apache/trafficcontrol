@@ -73,18 +73,18 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/5.0/deliveryservices?xmlId=demo2 HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: python-requests/2.24.0
+	GET /api/5.0/deliveryservices?xmlId=test HTTP/1.1
+	User-Agent: python-requests/2.25.1
 	Accept-Encoding: gzip, deflate
 	Accept: */*
 	Connection: keep-alive
-	Cookie: mojolicious=...
+	Cookie: access_token=; mojolicious=...
+	Host: trafficops.infra.ciab.test
 
 Response Structure
 ------------------
-:active:                   A boolean that defines :ref:`ds-active`.
-:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:active:                    The :term:`Delivery Service`'s :ref:`ds-active` state
+:anonymousBlockingEnabled:  A boolean that defines :ref:`ds-anonymous-blocking`
 :ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
@@ -169,15 +169,15 @@ Response Structure
 	Content-Encoding: gzip
 	Content-Type: application/json
 	Permissions-Policy: interest-cohort=()
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 07 Jun 2021 22:52:20 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 22:46:23 GMT; Max-Age=3600; HttpOnly, access_token=; Path=/; Expires=Thu, 29 Sep 2022 22:46:23 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 07 Jun 2021 21:52:20 GMT
-	Content-Length: 847
+	Date: Thu, 29 Sep 2022 21:46:23 GMT
+	Content-Length: 842
 
 	{ "response": [
 		{
-			"active": true,
+			"active": "PRIMED",
 			"anonymousBlockingEnabled": false,
 			"ccrDnsTtl": null,
 			"cdnId": 2,
@@ -186,17 +186,16 @@ Response Structure
 			"consistentHashQueryParams": [],
 			"consistentHashRegex": null,
 			"deepCachingType": "NEVER",
-			"displayName": "Demo 2",
+			"displayName": "test",
 			"dnsBypassCname": null,
 			"dnsBypassIp": null,
 			"dnsBypassIp6": null,
 			"dnsBypassTtl": null,
 			"dscp": 0,
-			"ecsEnabled": false,
+			"ecsEnabled": true,
 			"edgeHeaderRewrite": null,
 			"exampleURLs": [
-				"http://video.demo2.mycdn.ciab.test",
-				"https://video.demo2.mycdn.ciab.test"
+				"http://test.test.mycdn.ciab.test"
 			],
 			"firstHeaderRewrite": null,
 			"fqPacingRate": null,
@@ -207,35 +206,35 @@ Response Structure
 			"globalMaxMbps": null,
 			"globalMaxTps": null,
 			"httpBypassFqdn": null,
-			"id": 1,
+			"id": 3,
 			"infoUrl": null,
 			"initialDispersion": 1,
 			"innerHeaderRewrite": null,
-			"ipv6RoutingEnabled": true,
+			"ipv6RoutingEnabled": false,
 			"lastHeaderRewrite": null,
-			"lastUpdated": "2021-06-07T21:50:03.009954Z",
+			"lastUpdated": "2022-09-29T21:33:33.407404Z",
 			"logsEnabled": true,
-			"longDesc": "DNS Delivery Service for use with a Federation",
+			"longDesc": "A Delivery Service created expressly for API documentation examples",
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",
 					"setNumber": 0,
-					"pattern": ".*\\.demo2\\..*"
+					"pattern": ".*\\.test\\..*"
 				}
 			],
 			"maxDnsAnswers": null,
 			"maxOriginConnections": 0,
-			"maxRequestHeaderBytes": 0,
+			"maxRequestHeaderBytes": 131072,
 			"midHeaderRewrite": null,
-			"missLat": 42,
-			"missLong": -88,
-			"multiSiteOrigin": true,
+			"missLat": 0,
+			"missLong": 0,
+			"multiSiteOrigin": false,
 			"originShield": null,
 			"orgServerFqdn": "http://origin.infra.ciab.test",
 			"profileDescription": null,
 			"profileId": null,
 			"profileName": null,
-			"protocol": 2,
+			"protocol": 0,
 			"qstringIgnore": 0,
 			"rangeRequestHandling": 0,
 			"rangeSliceBlockSize": null,
@@ -243,37 +242,44 @@ Response Structure
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
-			"routingName": "video",
+			"routingName": "test",
 			"serviceCategory": null,
 			"signed": false,
 			"signingAlgorithm": null,
 			"sslKeyVersion": null,
 			"tenant": "root",
 			"tenantId": 1,
-			"tlsVersions": null,
-			"topology": "demo1-top",
+			"tlsVersions": [
+				"1.2",
+				"1.3"
+			],
+			"topology": null,
 			"trResponseHeaders": null,
 			"trRequestHeaders": null,
-			"type": "DNS",
-			"typeId": 5,
-			"xmlId": "demo2"
+			"type": "HTTP",
+			"typeId": 1,
+			"xmlId": "test"
 		}
 	]}
+
 
 
 ``POST``
 ========
 Allows users to create :term:`Delivery Service`.
 
-:Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [#tenancy]_
+:Auth. Required:       Yes
+:Roles Required:       "admin" or "operations"\ [#tenancy]_
 :Permissions Required: DELIVERY-SERVICE:CREATE, DELIVERY-SERVICE:READ, CDN:READ, TYPE:READ
-:Response Type:  Array
+:Response Type:        Object
+
+	.. versionchanged:: 5.0
+		In earlier API versions, this would return an array containing the single :term:`Delivery Service` created. It is now simply the object itself. This is tracked by :issue:`6904`.
 
 Request Structure
 -----------------
-:active:                   A boolean that defines :ref:`ds-active`.
-:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:active:                    The :term:`Delivery Service`'s :ref:`ds-active` state
+:anonymousBlockingEnabled:  A boolean that defines :ref:`ds-anonymous-blocking`
 :ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :checkPath:                 A :ref:`ds-check-path`
@@ -291,7 +297,7 @@ Request Structure
 :firstHeaderRewrite:        A set of :ref:`ds-first-header-rw-rules`
 :fqPacingRate:              The :ref:`ds-fqpr`
 :geoLimit:                  An integer that defines the :ref:`ds-geo-limit`
-:geoLimitCountries:         A string containing a comma-separated list, or an array of strings defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
+:geoLimitCountries:         An array of strings defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
 :geoLimitRedirectUrl:       A :ref:`ds-geo-limit-redirect-url`\ [#geolimit]_
 :geoProvider:               The :ref:`ds-geo-provider`
 :globalMaxMbps:             The :ref:`ds-global-max-mbps`
@@ -339,17 +345,17 @@ Request Structure
 	:caption: Request Example
 
 	POST /api/5.0/deliveryservices HTTP/1.1
-	User-Agent: python-requests/2.24.0
+	User-Agent: python-requests/2.25.1
 	Accept-Encoding: gzip, deflate
 	Accept: */*
 	Connection: keep-alive
-	Cookie: mojolicious=...
-	Content-Length: 1602
+	Cookie: access_token=...; mojolicious=...
+	Content-Length: 1565
 	Content-Type: application/json
 	Host: trafficops.infra.ciab.test
 
 	{
-		"active": false,
+		"active": "PRIMED",
 		"anonymousBlockingEnabled": false,
 		"ccrDnsTtl": null,
 		"cdnId": 2,
@@ -420,8 +426,8 @@ Request Structure
 
 Response Structure
 ------------------
-:active:                   A boolean that defines :ref:`ds-active`.
-:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:active:                    The :term:`Delivery Service`'s :ref:`ds-active` state
+:anonymousBlockingEnabled:  A boolean that defines :ref:`ds-anonymous-blocking`
 :ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
@@ -505,17 +511,21 @@ Response Structure
 	Access-Control-Allow-Origin: *
 	Content-Encoding: gzip
 	Content-Type: application/json
-	Location: /api/5.0/deliveryservices?id=6
+	Location: /api/5.0/deliveryservices?id=3
 	Permissions-Policy: interest-cohort=()
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 07 Jun 2021 23:37:37 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 22:33:33 GMT; Max-Age=3600; HttpOnly, access_token=...; Path=/; Expires=Thu, 29 Sep 2022 22:33:33 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 07 Jun 2021 22:37:37 GMT
-	Content-Length: 903
+	Date: Thu, 29 Sep 2022 21:33:33 GMT
+	Content-Length: 988
 
 	{ "alerts": [
 		{
-			"text": "tlsVersions has no effect on 'HTTP' Delivery Services",
+			"text": "setting TLS Versions that are explicitly supported may break older clients that can't use the specified versions",
+			"level": "warning"
+		},
+		{
+			"text": "tlsVersions has no effect on Delivery Services with Protocol '0' (HTTP_ONLY)",
 			"level": "warning"
 		},
 		{
@@ -523,8 +533,8 @@ Response Structure
 			"level": "success"
 		}
 	],
-	"response": [{
-		"active": false,
+	"response": {
+		"active": "PRIMED",
 		"anonymousBlockingEnabled": false,
 		"ccrDnsTtl": null,
 		"cdnId": 2,
@@ -553,13 +563,13 @@ Response Structure
 		"globalMaxMbps": null,
 		"globalMaxTps": null,
 		"httpBypassFqdn": null,
-		"id": 6,
+		"id": 3,
 		"infoUrl": null,
 		"initialDispersion": 1,
 		"innerHeaderRewrite": null,
 		"ipv6RoutingEnabled": false,
 		"lastHeaderRewrite": null,
-		"lastUpdated": "2021-06-07T22:37:37.187822Z",
+		"lastUpdated": "2022-09-29T21:33:33.407404Z",
 		"logsEnabled": true,
 		"longDesc": "A Delivery Service created expressly for API documentation examples",
 		"matchList": [
@@ -606,8 +616,7 @@ Response Structure
 		"type": "HTTP",
 		"typeId": 1,
 		"xmlId": "test"
-	}]}
-
+	}}
 
 .. [#tenancy] Only those :term:`Delivery Services` assigned to :term:`Tenants` that are the requesting user's :term:`Tenant` or children thereof will appear in the output of a ``GET`` request, and the same constraints are placed on the allowed values of the ``tenantId`` field of a ``POST`` request to create a new :term:`Delivery Service`
-.. [#geoLimit] These fields must be defined if and only if ``geoLimit`` is non-zero
+.. [#geoLimit] These fields only must be defined if ``geoLimit`` is non-zero

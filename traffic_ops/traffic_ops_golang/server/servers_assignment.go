@@ -74,11 +74,11 @@ WHERE d.id IN (
 	FROM deliveryservice_server dss
 	INNER JOIN deliveryservice d ON d.id = dss.deliveryservice
 	WHERE dss.server=$1
-	AND d.active
+	AND d.active = $2
 )
-AND NOT (dss.deliveryservice = ANY($2::BIGINT[]))
-AND (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
-AND t.name LIKE $3
+AND NOT (dss.deliveryservice = ANY($3::BIGINT[]))
+AND (st.name = $4 OR st.name = $5)
+AND t.name LIKE $6
 GROUP BY d.id, d.multi_site_origin, d.topology
 HAVING COUNT(dss.server) = 1
 `
@@ -96,7 +96,7 @@ func checkForLastServerInActiveDeliveryServices(serverID int, serverType string,
 		// by definition, only EDGE-type or ORG-type servers can be assigned
 		return violations, nil
 	}
-	rows, err := tx.Query(lastServerInActiveDeliveryServicesQuery, serverID, pq.Array(dsIDs), like)
+	rows, err := tx.Query(lastServerInActiveDeliveryServicesQuery, serverID, tc.DSActiveStateActive, pq.Array(dsIDs), tc.CacheStatusOnline, tc.CacheStatusReported, like)
 	if err != nil {
 		return violations, fmt.Errorf("querying: %v", err)
 	}

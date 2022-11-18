@@ -33,28 +33,6 @@ import (
 	"github.com/go-ozzo/ozzo-validation/is"
 )
 
-// copyStringIfNotNil makes a deep copy of s - unless it's nil, in which case it
-// just returns nil.
-func copyStringIfNotNil(s *string) *string {
-	if s == nil {
-		return nil
-	}
-	ret := new(string)
-	*ret = *s
-	return ret
-}
-
-// copyIntIfNotNil makes a deep copy of i - unless it's nil, in which case it
-// just returns nil.
-func copyIntIfNotNil(i *int) *int {
-	if i == nil {
-		return nil
-	}
-	ret := new(int)
-	*ret = *i
-	return ret
-}
-
 // Upgrade converts a User to a UserV4 (as seen in API versions 4.x).
 func (u User) Upgrade() UserV4 {
 	var ret UserV4
