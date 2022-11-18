@@ -34,6 +34,8 @@ const queryParamFormat = "?profileId=%s&parameterId=%s"
 func TestProfileParameters(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
 
+		// This is a one off test to check POST with an empty JSON body
+		TestPostWithEmptyBody(t)
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
@@ -74,11 +76,6 @@ func TestProfileParameters(t *testing.T) {
 						ParameterID: 0,
 					}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-				},
-				"BAD REQUEST when EMPTY BODY PROVIDED": {
-					ClientSession: TOSession,
-					RequestBody:   []tc.ProfileParameter{{}},
-					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING PROFILEID field": {
 					ClientSession: TOSession,
@@ -166,6 +163,16 @@ func TestProfileParameters(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestPostWithEmptyBody(t *testing.T) {
+	resp, err := TOSession.Client.Post(TOSession.URL+"/api/5.0/profileparameters", "application/json", nil)
+	if err != nil {
+		t.Fatalf("error sending post to create profile parameter with an empty body: %v", err)
+	}
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected to get a 400 error code, but received %d instead", resp.StatusCode)
+	}
 }
 
 func CreateTestProfileParameters(t *testing.T) {
