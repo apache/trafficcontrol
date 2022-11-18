@@ -23,9 +23,9 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
-	"golang.org/x/net/publicsuffix"
-
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 func TestLoginFail(t *testing.T) {

@@ -133,7 +133,7 @@ func TestPhysLocations(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
+					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
 					RequestBody: tc.PhysLocation{
 						Address:   "1234 southern way",
@@ -149,7 +149,7 @@ func TestPhysLocations(t *testing.T) {
 						validatePhysicalLocationUpdateCreateFields("HotAtlanta", map[string]interface{}{"City": "NewCity"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
+					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.PhysLocation{
@@ -164,7 +164,7 @@ func TestPhysLocations(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
+					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
 					RequestBody: tc.PhysLocation{
 						Address:   "1234 southern way",
@@ -181,7 +181,7 @@ func TestPhysLocations(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetPhysicalLocationID(t, "testDelete"),
+					EndpointID:    GetPhysicalLocationID(t, "testDelete"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -208,14 +208,14 @@ func TestPhysLocations(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdatePhysLocation(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdatePhysLocation(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeletePhysLocation(testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeletePhysLocation(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

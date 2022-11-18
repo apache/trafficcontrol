@@ -24,8 +24,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestStatus(t *testing.T) {
@@ -34,12 +37,12 @@ func TestStatus(t *testing.T) {
 		name string
 	}
 	tests := []tester{
-		tester{RequestStatus("foo"), "invalid"},
-		tester{RequestStatusDraft, "draft"},
-		tester{RequestStatusSubmitted, "submitted"},
-		tester{RequestStatusRejected, "rejected"},
-		tester{RequestStatusPending, "pending"},
-		tester{RequestStatusComplete, "complete"},
+		{RequestStatus("foo"), "invalid"},
+		{RequestStatusDraft, "draft"},
+		{RequestStatusSubmitted, "submitted"},
+		{RequestStatusRejected, "rejected"},
+		{RequestStatusPending, "pending"},
+		{RequestStatusComplete, "complete"},
 	}
 
 	for _, tst := range tests {
@@ -54,11 +57,11 @@ func TestStatusTransition(t *testing.T) {
 	bad := errors.New("bad error")
 	var validTests = [][]error{
 		// To:  Dra  Sub  Rej  Pen  Com   // From:
-		[]error{nil, nil, bad, bad, bad}, // Draft
-		[]error{nil, nil, nil, nil, nil}, // Submitted
-		[]error{bad, bad, bad, bad, bad}, // Rejected
-		[]error{bad, bad, bad, nil, nil}, // Pending
-		[]error{bad, bad, bad, bad, bad}, // Complete
+		{nil, nil, bad, bad, bad}, // Draft
+		{nil, nil, nil, nil, nil}, // Submitted
+		{bad, bad, bad, bad, bad}, // Rejected
+		{bad, bad, bad, nil, nil}, // Pending
+		{bad, bad, bad, bad, bad}, // Complete
 	}
 
 	// test all transitions
@@ -222,4 +225,61 @@ func ExampleDeliveryServiceRequestV40_SetXMLID() {
 
 	// Output: true
 	// test
+}
+
+func ExampleDeliveryServiceRequestV5_String() {
+	var dsr DeliveryServiceRequestV50
+	fmt.Println(dsr.String())
+
+	// Output: DeliveryServiceRequestV5(Assignee=<nil>, AssigneeID=<nil>, Author="", AuthorID=<nil>, ChangeType="", CreatedAt=0001-01-01T00:00:00Z, ID=<nil>, LastEditedBy="", LastEditedByID=<nil>, LastUpdated=0001-01-01T00:00:00Z, Status="")
+}
+
+func ExampleDeliveryServiceRequestV5_SetXMLID() {
+	var dsr DeliveryServiceRequestV5
+	fmt.Println(dsr.XMLID == "")
+
+	dsr.Requested = new(DeliveryServiceV5)
+	dsr.Requested.XMLID = "test"
+	dsr.SetXMLID()
+
+	fmt.Println(dsr.XMLID)
+
+	// Output: true
+	// test
+}
+
+func TestDeliveryServiceRequestV4UpgradeAndV5Downgrade(t *testing.T) {
+	_, ds := dsUpgradeAndDowngradeTestingPair()
+	ds.RemoveLD1AndLD2()
+
+	dsr := DeliveryServiceRequestV4{
+		Assignee:       util.StrPtr("assignee"),
+		AssigneeID:     util.IntPtr(1),
+		Author:         "author",
+		AuthorID:       util.IntPtr(2),
+		ChangeType:     DSRChangeTypeCreate,
+		CreatedAt:      time.Time{},
+		ID:             util.IntPtr(3),
+		LastEditedBy:   "last edited by",
+		LastEditedByID: util.IntPtr(4),
+		LastUpdated:    time.Now(),
+		Requested:      &ds,
+		Status:         RequestStatusComplete,
+	}
+	cpy := dsr.Upgrade().Downgrade()
+
+	if !reflect.DeepEqual(dsr, cpy) {
+		bts, err := json.MarshalIndent(dsr, "", "\t")
+		if err != nil {
+			t.Fatalf("failed to encode original DSR after upgrade/downgrade comparison failed: %v", err)
+		}
+		t.Logf("original: %s", bts)
+		bts, err = json.MarshalIndent(cpy, "", "\t")
+		if err != nil {
+			t.Fatalf("failed to encode upgraded-then-downgraded DSR after upgrade/downgrade comparison failed: %v", err)
+		}
+		t.Logf("upgraded-then-downgraded: %s", bts)
+		t.Error("Delivery Service Request upgrade followed by downgrade should result in exact copy")
+
+	}
 }

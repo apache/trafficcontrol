@@ -69,7 +69,7 @@ func TestCDNFederations(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetFederationID(t, "google.com."),
+					EndpointID:    GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.CDNFederation{
 						CName:       util.Ptr("new.cname."),
@@ -79,7 +79,7 @@ func TestCDNFederations(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNFederationUpdateFields(map[string]interface{}{"CName": "new.cname."})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:     GetFederationID(t, "booya.com."),
+					EndpointID:     GetFederationID(t, "booya.com."),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.CDNFederation{
@@ -90,7 +90,7 @@ func TestCDNFederations(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetFederationID(t, "booya.com."),
+					EndpointID:    GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.CDNFederation{
 						CName:       util.Ptr("new.cname."),
@@ -136,14 +136,14 @@ func TestCDNFederations(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateCDNFederationsByIDWithHdr(testCase.RequestBody, cdnName, testCase.EndpointId(), testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.UpdateCDNFederationsByIDWithHdr(testCase.RequestBody, cdnName, testCase.EndpointID(), testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteCDNFederationByID(cdnName, testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteCDNFederationByID(cdnName, testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts.Alerts, err)
 							}

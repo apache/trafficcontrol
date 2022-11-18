@@ -28,9 +28,9 @@ type TrafficControl struct {
 	Capabilities                                      []tc.Capability                         `json:"capability"`
 	Coordinates                                       []tc.Coordinate                         `json:"coordinates"`
 	DeliveryServicesRegexes                           []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
-	DeliveryServiceRequests                           []tc.DeliveryServiceRequestV40          `json:"deliveryServiceRequests"`
+	DeliveryServiceRequests                           []tc.DeliveryServiceRequestV5           `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments                    []tc.DeliveryServiceRequestComment      `json:"deliveryServiceRequestComments"`
-	DeliveryServices                                  []tc.DeliveryServiceV4                  `json:"deliveryservices"`
+	DeliveryServices                                  []tc.DeliveryServiceV5                  `json:"deliveryservices"`
 	DeliveryServicesRequiredCapabilities              []tc.DeliveryServicesRequiredCapability `json:"deliveryservicesRequiredCapabilities"`
 	DeliveryServiceServerAssignments                  []tc.DeliveryServiceServers             `json:"deliveryServiceServerAssignments"`
 	TopologyBasedDeliveryServicesRequiredCapabilities []tc.DeliveryServicesRequiredCapability `json:"topologyBasedDeliveryServicesRequiredCapabilities"`

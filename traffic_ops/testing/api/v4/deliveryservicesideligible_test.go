@@ -29,7 +29,7 @@ func TestDeliveryServicesEligible(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					EndpointID:    GetDeliveryServiceId(t, "ds1"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
@@ -41,7 +41,7 @@ func TestDeliveryServicesEligible(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetDeliveryServicesEligible(testCase.EndpointId(), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServicesEligible(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

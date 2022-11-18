@@ -161,7 +161,7 @@ func TestServers(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetServerID(t, "atlanta-edge-03"),
+					EndpointID:    GetServerID(t, "atlanta-edge-03"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"id":           GetServerID(t, "atlanta-edge-03")(),
@@ -205,7 +205,7 @@ func TestServers(t *testing.T) {
 						})),
 				},
 				"BAD REQUEST when CHANGING XMPPID": {
-					EndpointId:    GetServerID(t, "atlanta-edge-16"),
+					EndpointID:    GetServerID(t, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":     GetServerID(t, "atlanta-edge-16")(),
@@ -214,7 +214,7 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"CONFLICT when UPDATING SERVER TYPE when ASSIGNED to DS": {
-					EndpointId:    GetServerID(t, "test-ds-server-assignments"),
+					EndpointID:    GetServerID(t, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "test-ds-server-assignments")(),
@@ -224,7 +224,7 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"CONFLICT when UPDATING SERVER STATUS when its the ONLY EDGE SERVER ASSIGNED": {
-					EndpointId:    GetServerID(t, "test-ds-server-assignments"),
+					EndpointID:    GetServerID(t, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":       GetServerID(t, "test-ds-server-assignments")(),
@@ -233,7 +233,7 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"CONFLICT when UPDATING SERVER STATUS when its the ONLY ORG SERVER ASSIGNED": {
-					EndpointId:    GetServerID(t, "test-mso-org-01"),
+					EndpointID:    GetServerID(t, "test-mso-org-01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":       GetServerID(t, "test-mso-org-01")(),
@@ -242,7 +242,7 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"BAD REQUEST when UPDATING CDN when LAST SERVER IN CACHEGROUP IN TOPOLOGY": {
-					EndpointId:    GetServerID(t, "midInTopologyMidCg01"),
+					EndpointID:    GetServerID(t, "midInTopologyMidCg01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "midInTopologyMidCg01")(),
@@ -253,7 +253,7 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when UPDATING CACHEGROUP when LAST SERVER IN CACHEGROUP IN TOPOLOGY": {
-					EndpointId:    GetServerID(t, "midInTopologyMidCg01"),
+					EndpointID:    GetServerID(t, "midInTopologyMidCg01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "midInTopologyMidCg01")(),
@@ -265,7 +265,7 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when IPADDRESS EXISTS with SAME PROFILE": {
-					EndpointId:    GetServerID(t, "atlanta-edge-16"),
+					EndpointID:    GetServerID(t, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"profileNames": []string{"EDGE1"},
@@ -281,19 +281,19 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when BLANK HOSTNAME": {
-					EndpointId:    GetServerID(t, "atlanta-edge-16"),
+					EndpointID:    GetServerID(t, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody:   generateServer(t, map[string]interface{}{"hostName": ""}),
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when BLANK DOMAINNAME": {
-					EndpointId:    GetServerID(t, "atlanta-edge-16"),
+					EndpointID:    GetServerID(t, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody:   generateServer(t, map[string]interface{}{"domainName": ""}),
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:    GetServerID(t, "atlanta-edge-01"),
+					EndpointID:    GetServerID(t, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: generateServer(t, map[string]interface{}{
@@ -302,7 +302,7 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetServerID(t, "atlanta-edge-01"),
+					EndpointID:    GetServerID(t, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id": GetServerID(t, "atlanta-edge-01")(),
@@ -313,12 +313,12 @@ func TestServers(t *testing.T) {
 			},
 			"DELETE": {
 				"BAD REQUEST when LAST SERVER in CACHE GROUP": {
-					EndpointId:    GetServerID(t, "midInTopologyMidCg01"),
+					EndpointID:    GetServerID(t, "midInTopologyMidCg01"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"CONFLICT when DELETING SERVER when its the ONLY EDGE SERVER ASSIGNED": {
-					EndpointId:    GetServerID(t, "test-ds-server-assignments"),
+					EndpointID:    GetServerID(t, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
@@ -361,14 +361,14 @@ func TestServers(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateServer(testCase.EndpointId(), server, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateServer(testCase.EndpointID(), server, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteServer(testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteServer(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

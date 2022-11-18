@@ -502,7 +502,7 @@ func getDeliveryServices(tx *sql.Tx, cdnName string) ([]DeliveryService, error) 
 	JOIN cdn ON cdn.id = ds.cdn_id
 	JOIN deliveryservice_regex dsr ON dsr.deliveryservice = ds.id
 	JOIN regex r ON r.id = dsr.regex
-	WHERE ds.active = true
+	WHERE ds.active = 'ACTIVE'
 	AND cdn.name=$1
 	AND r.type = (SELECT id FROM type WHERE name = 'HOST_REGEXP')
 	GROUP BY ds.xml_id, ds.global_max_tps, ds.xml_id, ds.global_max_mbps, t.name, ds.topology

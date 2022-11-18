@@ -76,7 +76,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					EndpointID:    GetDeliveryServiceRequestId(t, "test-ds1"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
@@ -90,7 +90,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when UPDATING STATUS FROM DRAFT TO SUBMITTED": {
-					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					EndpointID:    GetDeliveryServiceRequestId(t, "test-ds1"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
@@ -104,7 +104,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						validatePutDSRequestFields(map[string]interface{}{"STATUS": tc.RequestStatusSubmitted})),
 				},
 				"BAD REQUEST when using LONG DESCRIPTION 2 and 3 fields": {
-					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					EndpointID:    GetDeliveryServiceRequestId(t, "test-ds1"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
@@ -119,14 +119,14 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Header": {
-					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					EndpointID:    GetDeliveryServiceRequestId(t, "test-ds1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody:   map[string]interface{}{},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					EndpointID:    GetDeliveryServiceRequestId(t, "test-ds1"),
 					ClientSession: TOSession,
 					RequestBody:   map[string]interface{}{},
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
@@ -263,7 +263,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetDeliveryServiceRequestId(t, "test-deletion"),
+					EndpointID:    GetDeliveryServiceRequestId(t, "test-deletion"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -306,14 +306,14 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequest(testCase.EndpointId(), dsReq, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequest(testCase.EndpointID(), dsReq, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.DeleteDeliveryServiceRequest(testCase.EndpointId(), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.DeleteDeliveryServiceRequest(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
@@ -331,7 +331,7 @@ func GetDeliveryServiceRequestId(t *testing.T, xmlId string) func() int {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("xmlId", xmlId)
 		resp, _, err := TOSession.GetDeliveryServiceRequests(opts)
-		assert.RequireNoError(t, err, "Get Delivery Service Requests failed with error: %v", err)
+		assert.RequireNoError(t, err, "Get Delivery Service Request '%s' failed with error: %v", xmlId, err)
 		assert.RequireGreaterOrEqual(t, len(resp.Response), 1, "Expected delivery service requests response object length of atleast 1, but got %d", len(resp.Response))
 		assert.RequireNotNil(t, resp.Response[0].ID, "Expected id to not be nil")
 		return *resp.Response[0].ID
@@ -381,8 +381,8 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 	resp, _, err := TOSession.GetDeliveryServiceRequests(client.RequestOptions{})
 	assert.NoError(t, err, "Cannot get Delivery Service Requests: %v - alerts: %+v", err, resp.Alerts)
 	for _, request := range resp.Response {
-		alert, _, err := TOSession.DeleteDeliveryServiceRequest(*request.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Cannot delete Delivery Service Request #%d: %v - alerts: %+v", request.ID, err, alert.Alerts)
+		_, _, err := TOSession.DeleteDeliveryServiceRequest(*request.ID, client.RequestOptions{})
+		assert.NoError(t, err, "Cannot delete Delivery Service Request #%d: %v", request.ID, err)
 
 		// Retrieve the DeliveryServiceRequest to see if it got deleted
 		opts := client.NewRequestOptions()

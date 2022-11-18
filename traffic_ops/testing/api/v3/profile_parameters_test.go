@@ -105,7 +105,7 @@ func TestProfileParameters(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetProfileID(t, "ATS_EDGE_TIER_CACHE"),
+					EndpointID:    GetProfileID(t, "ATS_EDGE_TIER_CACHE"),
 					ClientSession: TOSession,
 					RequestParams: url.Values{
 						"parameterId": {strconv.Itoa(GetParameterID(t, "location", "set_dscp_37.config", "/etc/trafficserver/dscp")())},
@@ -151,7 +151,7 @@ func TestProfileParameters(t *testing.T) {
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
 							parameterId, _ := strconv.Atoi(testCase.RequestParams["parameterId"][0])
-							alerts, reqInf, err := testCase.ClientSession.DeleteParameterByProfileParameter(testCase.EndpointId(), parameterId)
+							alerts, reqInf, err := testCase.ClientSession.DeleteParameterByProfileParameter(testCase.EndpointID(), parameterId)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

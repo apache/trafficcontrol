@@ -163,7 +163,7 @@ func TestProfiles(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID REQUEST": {
-					EndpointId:    GetProfileID(t, "EDGE2"),
+					EndpointID:    GetProfileID(t, "EDGE2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Profile{
 						CDNID:           GetCDNID(t, "cdn2")(),
@@ -178,7 +178,7 @@ func TestProfiles(t *testing.T) {
 								"Name": "EDGE2UPDATED", "RoutingDisabled": false, "Type": "TR_PROFILE"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:    GetProfileID(t, "CCR1"),
+					EndpointID:    GetProfileID(t, "CCR1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.Profile{
@@ -191,7 +191,7 @@ func TestProfiles(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetProfileID(t, "CCR1"),
+					EndpointID:    GetProfileID(t, "CCR1"),
 					ClientSession: TOSession,
 					RequestBody: tc.Profile{
 						CDNID:           GetCDNID(t, "cdn1")(),
@@ -226,14 +226,14 @@ func TestProfiles(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateProfile(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateProfile(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteProfile(testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteProfile(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

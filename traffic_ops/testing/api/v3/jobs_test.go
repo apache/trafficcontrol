@@ -140,7 +140,7 @@ func TestJobs(t *testing.T) {
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteInvalidationJob(uint64(testCase.EndpointId()))
+							alerts, reqInf, err := testCase.ClientSession.DeleteInvalidationJob(uint64(testCase.EndpointID()))
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

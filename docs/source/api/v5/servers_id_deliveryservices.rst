@@ -60,18 +60,17 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/5.0/servers/10/deliveryservices HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: python-requests/2.24.0
+	GET /api/5.0/servers/1/deliveryservices HTTP/1.1
+	User-Agent: python-requests/2.25.1
 	Accept-Encoding: gzip, deflate
 	Accept: */*
 	Connection: keep-alive
-	Cookie: mojolicious=...
+	Cookie: access_token=...; mojolicious=...
 
 Response Structure
 ------------------
-:active:                   A boolean that defines :ref:`ds-active`.
-:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:active:                    The :term:`Delivery Service`'s :ref:`ds-active` state
+:anonymousBlockingEnabled:  A boolean that defines :ref:`ds-anonymous-blocking`
 :ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
@@ -154,24 +153,28 @@ Response Structure
 	Content-Encoding: gzip
 	Content-Type: application/json
 	Permissions-Policy: interest-cohort=()
-	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 08 Jun 2021 01:15:07 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 23:01:50 GMT; Max-Age=3600; HttpOnly, access_token=...; Path=/; Expires=Thu, 29 Sep 2022 23:01:50 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: RO4tVfDdqx0rEU9BqlRmvsYXmVgVNkivqr6LhJlMulfR+1bLGivP8z93jy3N9bejcMdQwl1RwJojM3MbwgXcqA==
 	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 08 Jun 2021 00:15:07 GMT
-	Content-Length: 806
+	Date: Thu, 29 Sep 2022 22:01:50 GMT
+	Content-Length: 845
 
 	{ "response": [{
-		"active": false,
+		"active": "ACTIVE",
 		"anonymousBlockingEnabled": false,
-		"ccrDnsTtl": 3600,
+		"ccrDnsTtl": null,
 		"cdnId": 2,
 		"cdnName": "CDN-in-a-Box",
 		"checkPath": null,
-		"consistentHashQueryParams": [],
+		"consistentHashQueryParams": [
+			"abc",
+			"pdq",
+			"xxx",
+			"zyx"
+		],
 		"consistentHashRegex": null,
 		"deepCachingType": "NEVER",
-		"displayName": "test",
+		"displayName": "Demo 1",
 		"dnsBypassCname": null,
 		"dnsBypassIp": null,
 		"dnsBypassIp6": null,
@@ -180,7 +183,8 @@ Response Structure
 		"ecsEnabled": false,
 		"edgeHeaderRewrite": null,
 		"exampleURLs": [
-			"http://cdn.test.mycdn.ciab.test"
+			"http://video.demo1.mycdn.ciab.test",
+			"https://video.demo1.mycdn.ciab.test"
 		],
 		"firstHeaderRewrite": null,
 		"fqPacingRate": null,
@@ -191,35 +195,35 @@ Response Structure
 		"globalMaxMbps": null,
 		"globalMaxTps": null,
 		"httpBypassFqdn": null,
-		"id": 7,
+		"id": 1,
 		"infoUrl": null,
 		"initialDispersion": 1,
 		"innerHeaderRewrite": null,
 		"ipv6RoutingEnabled": true,
 		"lastHeaderRewrite": null,
-		"lastUpdated": "2021-06-08T00:14:04.959292Z",
-		"logsEnabled": false,
+		"lastUpdated": "2022-09-29T20:58:53.07251Z",
+		"logsEnabled": true,
 		"longDesc": "Apachecon North America 2018",
 		"matchList": [
 			{
 				"type": "HOST_REGEXP",
 				"setNumber": 0,
-				"pattern": ".*\\.test\\..*"
+				"pattern": ".*\\.demo1\\..*"
 			}
 		],
 		"maxDnsAnswers": null,
 		"maxOriginConnections": 0,
 		"maxRequestHeaderBytes": 0,
 		"midHeaderRewrite": null,
-		"missLat": 41.881944,
-		"missLong": -87.627778,
-		"multiSiteOrigin": false,
+		"missLat": 42,
+		"missLong": -88,
+		"multiSiteOrigin": true,
 		"originShield": null,
 		"orgServerFqdn": "http://origin.infra.ciab.test",
 		"profileDescription": null,
 		"profileId": null,
 		"profileName": null,
-		"protocol": 0,
+		"protocol": 2,
 		"qstringIgnore": 0,
 		"rangeRequestHandling": 0,
 		"rangeSliceBlockSize": null,
@@ -227,20 +231,20 @@ Response Structure
 		"regional": false,
 		"regionalGeoBlocking": false,
 		"remapText": null,
-		"routingName": "cdn",
+		"routingName": "video",
 		"serviceCategory": null,
 		"signed": false,
 		"signingAlgorithm": null,
-		"sslKeyVersion": null,
+		"sslKeyVersion": 1,
 		"tenant": "root",
 		"tenantId": 1,
 		"tlsVersions": null,
-		"topology": null,
+		"topology": "demo1-top",
 		"trResponseHeaders": null,
 		"trRequestHeaders": null,
 		"type": "HTTP",
 		"typeId": 1,
-		"xmlId": "test"
+		"xmlId": "demo1"
 	}]}
 
 

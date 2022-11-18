@@ -33,12 +33,12 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 		methodTests := utils.V3TestCaseT[tc.DeliveryServiceRegexPost]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					EndpointID:    GetDeliveryServiceId(t, "ds1"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(3)),
 				},
 				"OK when VALID ID parameter": {
-					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					EndpointID:    GetDeliveryServiceId(t, "ds1"),
 					ClientSession: TOSession,
 					RequestParams: url.Values{"id": {strconv.Itoa(getDSRegexID(t, "ds1"))}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
@@ -46,7 +46,7 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 			},
 			"POST": {
 				"BAD REQUEST when MISSING REGEX PATTERN": {
-					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					EndpointID:    GetDeliveryServiceId(t, "ds1"),
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServiceRegexPost{
 						Type:      GetTypeId(t, "HOST_REGEXP"),
@@ -71,14 +71,14 @@ func TestDeliveryServicesRegexes(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceRegexesByDSID(testCase.EndpointId(), params)
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceRegexesByDSID(testCase.EndpointID(), params)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.PostDeliveryServiceRegexesByDSID(testCase.EndpointId(), testCase.RequestBody)
+							alerts, reqInf, err := testCase.ClientSession.PostDeliveryServiceRegexesByDSID(testCase.EndpointID(), testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

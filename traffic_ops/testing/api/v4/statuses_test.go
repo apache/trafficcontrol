@@ -62,7 +62,7 @@ func TestStatuses(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
+					EndpointID:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession: TOSession,
 					RequestBody: tc.Status{
 						Description: "new description",
@@ -72,7 +72,7 @@ func TestStatuses(t *testing.T) {
 						validateStatusesUpdateCreateFields("TEST_NULL_DESCRIPTION", map[string]interface{}{"Description": "new description"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
+					EndpointID:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.Status{
@@ -82,7 +82,7 @@ func TestStatuses(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
+					EndpointID:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession: TOSession,
 					RequestBody: tc.Status{
 						Description: "new description",
@@ -107,14 +107,14 @@ func TestStatuses(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateStatus(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateStatus(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteStatus(testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteStatus(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

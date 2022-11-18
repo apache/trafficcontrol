@@ -117,37 +117,37 @@ const (
 
 // GetDeliveryServicesByServer retrieves all Delivery Services assigned to the
 // server with the given ID.
-func (to *Session) GetDeliveryServicesByServer(id int, opts RequestOptions) (tc.DeliveryServicesResponseV4, toclientlib.ReqInf, error) {
-	var data tc.DeliveryServicesResponseV4
+func (to *Session) GetDeliveryServicesByServer(id int, opts RequestOptions) (tc.DeliveryServicesResponseV5, toclientlib.ReqInf, error) {
+	var data tc.DeliveryServicesResponseV5
 	reqInf, err := to.get(fmt.Sprintf(apiServerDeliveryServices, id), opts, &data)
 	return data, reqInf, err
 }
 
 // GetDeliveryServices returns (tenant-visible) Delivery Services.
-func (to *Session) GetDeliveryServices(opts RequestOptions) (tc.DeliveryServicesResponseV4, toclientlib.ReqInf, error) {
-	var data tc.DeliveryServicesResponseV4
+func (to *Session) GetDeliveryServices(opts RequestOptions) (tc.DeliveryServicesResponseV5, toclientlib.ReqInf, error) {
+	var data tc.DeliveryServicesResponseV5
 	reqInf, err := to.get(apiDeliveryServices, opts, &data)
 	return data, reqInf, err
 }
 
 // CreateDeliveryService creates the Delivery Service it's passed.
-func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOptions) (tc.DeliveryServicesResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV5, opts RequestOptions) (tc.DeliveryServiceResponseV5, toclientlib.ReqInf, error) {
 	var reqInf toclientlib.ReqInf
-	var resp tc.DeliveryServicesResponseV4
-	if ds.TypeID == nil && ds.Type != nil {
+	var resp tc.DeliveryServiceResponseV5
+	if ds.TypeID <= 0 && ds.Type != nil {
 		typeOpts := NewRequestOptions()
-		typeOpts.QueryParameters.Set("name", ds.Type.String())
+		typeOpts.QueryParameters.Set("name", *ds.Type)
 		ty, _, err := to.GetTypes(typeOpts)
 		if err != nil {
 			return resp, reqInf, err
 		}
 		if len(ty.Response) == 0 {
-			return resp, reqInf, fmt.Errorf("no Type named '%s'", ds.Type)
+			return resp, reqInf, fmt.Errorf("no Type named '%s'", *ds.Type)
 		}
-		ds.TypeID = &ty.Response[0].ID
+		ds.TypeID = ty.Response[0].ID
 	}
 
-	if ds.CDNID == nil && ds.CDNName != nil {
+	if ds.CDNID <= 0 && ds.CDNName != nil {
 		cdnOpts := NewRequestOptions()
 		cdnOpts.QueryParameters.Set("name", *ds.CDNName)
 		cdns, _, err := to.GetCDNs(cdnOpts)
@@ -158,7 +158,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 		if len(cdns.Response) == 0 {
 			return resp, reqInf, fmt.Errorf("no CDN named '%s'", *ds.CDNName)
 		}
-		ds.CDNID = &cdns.Response[0].ID
+		ds.CDNID = cdns.Response[0].ID
 	}
 
 	if ds.ProfileID == nil && ds.ProfileName != nil {
@@ -174,7 +174,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 		ds.ProfileID = &profiles.Response[0].ID
 	}
 
-	if ds.TenantID == nil && ds.Tenant != nil {
+	if ds.TenantID <= 0 && ds.Tenant != nil {
 		tenantOpts := NewRequestOptions()
 		tenantOpts.QueryParameters.Set("name", *ds.Tenant)
 		ten, _, err := to.GetTenants(tenantOpts)
@@ -184,7 +184,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 		if len(ten.Response) == 0 {
 			return resp, reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)
 		}
-		ds.TenantID = &ten.Response[0].ID
+		ds.TenantID = ten.Response[0].ID
 	}
 
 	reqInf, err := to.post(apiDeliveryServices, RequestOptions{Header: opts.Header}, ds, &resp)
@@ -197,8 +197,8 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 
 // UpdateDeliveryService replaces the Delivery Service identified by the
 // integral, unique identifier 'id' with the one it's passed.
-func (to *Session) UpdateDeliveryService(id int, ds tc.DeliveryServiceV4, opts RequestOptions) (tc.DeliveryServicesResponseV4, toclientlib.ReqInf, error) {
-	var data tc.DeliveryServicesResponseV4
+func (to *Session) UpdateDeliveryService(id int, ds tc.DeliveryServiceV5, opts RequestOptions) (tc.DeliveryServiceResponseV5, toclientlib.ReqInf, error) {
+	var data tc.DeliveryServiceResponseV5
 	reqInf, err := to.put(fmt.Sprintf(apiDeliveryServiceID, id), opts, ds, &data)
 	if err != nil {
 		return data, reqInf, err
@@ -343,8 +343,8 @@ func (to *Session) SafeDeliveryServiceUpdate(
 	id int,
 	r tc.DeliveryServiceSafeUpdateRequest,
 	opts RequestOptions,
-) (tc.DeliveryServiceSafeUpdateResponseV4, toclientlib.ReqInf, error) {
-	var data tc.DeliveryServiceSafeUpdateResponseV4
+) (tc.DeliveryServiceResponseV5, toclientlib.ReqInf, error) {
+	var data tc.DeliveryServiceResponseV5
 	reqInf, err := to.put(fmt.Sprintf(apiDeliveryServicesSafeUpdate, id), opts, r, &data)
 	return data, reqInf, err
 }

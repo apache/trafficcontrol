@@ -867,7 +867,6 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	}
 	var maxTime time.Time
 	var runSecond bool
-	returnable := []interface{}{}
 	params := dss.APIInfo().Params
 	tx := dss.APIInfo().Tx.Tx
 	user := dss.APIInfo().User
@@ -911,7 +910,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(dss.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return returnable, nil, nil, http.StatusNotModified, &maxTime
+			return nil, nil, nil, http.StatusNotModified, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -928,16 +927,20 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 		return nil, userErr, sysErr, http.StatusInternalServerError, nil
 	}
 
-	for _, ds := range dses {
-		if version.Major > 3 && version.Minor >= 0 {
-			ds = ds.RemoveLD1AndLD2()
+	returnable := make([]interface{}, 0, len(dses))
+	for _, d := range dses {
+		ds := d.DS
+		if version.Major > 4 {
 			returnable = append(returnable, ds)
+		} else if version.Major > 3 && version.Minor >= 0 {
+			returnable = append(returnable, ds.Downgrade())
 		} else {
+			legacyDS := ds.Downgrade()
 			if version.Minor > 0 {
-				dsV31 := ds.DowngradeToV31()
+				dsV31 := legacyDS.DowngradeToV31()
 				returnable = append(returnable, dsV31)
 			} else {
-				dsV30 := ds.DowngradeToV31().DeliveryServiceV30
+				dsV30 := legacyDS.DowngradeToV31().DeliveryServiceV30
 				returnable = append(returnable, dsV30)
 			}
 		}
@@ -992,8 +995,9 @@ FROM
 func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 	di := DSInfo{}
 	var useMSO *bool
+	var active tc.DeliveryServiceActiveState
 	if err := row.Scan(
-		&di.Active,
+		&active,
 		&di.ID,
 		&di.Name,
 		&di.Type,
@@ -1012,6 +1016,7 @@ func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 		}
 		return DSInfo{}, false, fmt.Errorf("querying delivery service server ds info: %v", err)
 	}
+	di.Active = active == tc.DSActiveStateActive
 	di.Type = tc.DSTypeFromString(string(di.Type))
 	if useMSO != nil {
 		di.UseMultiSiteOrigin = *useMSO
