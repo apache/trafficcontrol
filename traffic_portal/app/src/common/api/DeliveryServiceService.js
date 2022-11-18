@@ -17,6 +17,61 @@
  * under the License.
  */
 
+/**
+ * This is a minimal type definition for Delivery Services. Expand as necessary.
+ * @typedef DeliveryService
+ * @property {string[]} consistentHashQueryParams
+ * @property {?number|null|undefined} id
+ * @property {null|[string, ...string[]]} tlsVersions
+ */
+
+/**
+ * The type of elements in the array response to GET requests from `deliveryservices_required_capabilities`.
+ * @typedef DSRequiredCapability
+ * @property {number} deliveryServiceID
+ * @property {string} lastUpdated
+ * @property {string} requiredCapability
+ * @property {string} xmlId
+ */
+
+/**
+ * The type of elements in the array response from `steering`.
+ * @typedef SteeringDefinition
+ * @property {string} deliveryService
+ * @property {boolean} clientSteering
+ * @property {{order: number; weight: number; deliveryService: string}[]} targets
+ * @property {{deliveryService: string; pattern: string}[]} filters
+ */
+
+/**
+ * A single target of a Delivery Service.
+ * @typedef SteeringTarget
+ * @property {string} deliveryService
+ * @property {number} deliveryServiceId
+ * @property {string} target
+ * @property {number} targetId
+ * @property {string} type
+ * @property {number} typeId
+ * @property {number} value
+ */
+
+/**
+ * The result of testing a consistent hashing regular expression against Traffic
+ * Router.
+ * @typedef ConsistentHashResponse
+ * @property {string} resultingPathToConsistentHash
+ * @property {string} consistentHashRegex
+ * @property {string} requestPath
+ */
+
+/**
+ * DeliveryServiceService handles API requests dealing with Delivery Services.
+ *
+ * @param {import("angular").IHttpService} $http Angular HTTP service.
+ * @param {import("../service/utils/LocationUtils")} locationUtils Utilities for manipulating Angular routing.
+ * @param {import("../models/MessageModel")} messageModel Service for displaying messages/alerts.
+ * @param {{api:{next: string; unstable: string; stable: string}}} ENV Environment configuration.
+ */
 var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 
     this.getDeliveryServices = function(queryParams) {
