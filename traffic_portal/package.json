@@ -11,7 +11,7 @@
     "test:ci": "karma start --single-run --browsers=ChromeHeadlessCustom karma.conf.js"
   },
   "devDependencies": {
-    "angular-mocks": "1.8.0",
+    "angular-mocks": "1.8.3",
     "browserify": "16.5.1",
     "connect-livereload": "0.6.1",
     "connect-modrewrite": "0.10.2",
