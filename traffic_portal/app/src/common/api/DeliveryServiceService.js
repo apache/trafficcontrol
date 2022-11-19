@@ -22,15 +22,15 @@
  * @typedef DeliveryService
  * @property {number} cdnId
  * @property {string[]} consistentHashQueryParams
- * @property {string[]} exampleURLs
- * @property {?(number|null|undefined)} id
- * @property {string} lastUpdated
+ * @property {string[]} [exampleURLs]
+ * @property {number} [id]
+ * @property {string} [lastUpdated]
  * @property {string} routingName
  * @property {boolean} signed
- * @property {null|number} sslKeyVersion
+ * @property {null|number} [sslKeyVersion]
  * @property {null|[string, ...string[]]} tlsVersions
- * @property {?(string|null|undefined)} trResponseHeaders
- * @property {?(string|null|undefined)} type
+ * @property {string} [trResponseHeaders]
+ * @property {string|null|undefined} [type]
  * @property {number} typeId
  * @property {string} xmlId
  */
@@ -39,7 +39,7 @@
  * The type of elements in the array response to GET requests from `deliveryservices_required_capabilities`.
  * @typedef DSRequiredCapability
  * @property {number} deliveryServiceID
- * @property {string} lastUpdated
+ * @property {string} [lastUpdated]
  * @property {string} requiredCapability
  * @property {string} xmlId
  */

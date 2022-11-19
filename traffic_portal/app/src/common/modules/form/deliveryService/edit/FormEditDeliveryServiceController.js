@@ -52,7 +52,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 	 * Creates a deletion DSR and the immediately fulfills it.
 	 *
 	 * @param {import("../../../../api/DeliveryServiceService").DeliveryService} deliveryService
-	 * @param {{}} dsRequest
+	 * @param {import("../../../../api/DeliveryServiceRequestService").DeliveryServiceRequest} dsRequest
 	 * @param {string} commentValue
 	 * @returns {Promise<void>}
 	 */

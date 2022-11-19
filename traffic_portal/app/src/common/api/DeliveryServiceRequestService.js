@@ -21,8 +21,9 @@
  * This is a minimal definition of a DSR. Add to it as necessary.
  *
  * @typedef DeliveryServiceRequest
- * @property {number} id
- * @property {?import("./DeliveryServiceService").DeliveryService} requested
+ * @property {number} [id]
+ * @property {import("./DeliveryServiceService").DeliveryService} [original]
+ * @property {import("./DeliveryServiceService").DeliveryService} [requested]
  */
 
 /**
@@ -34,13 +35,13 @@
  * Represents a comment on a DSR.
  *
  * @typedef DSRComment
- * @property {number} authorId
- * @property {string} author
+ * @property {number} [authorId]
+ * @property {string} [author]
  * @property {number} deliveryServiceRequestId
- * @property {number} id
- * @property {string} lastUpdated
+ * @property {number} [id]
+ * @property {string} [lastUpdated]
  * @property {string} value
- * @property {string} xmlId
+ * @property {string} [xmlId]
  */
 
 /**
@@ -84,7 +85,7 @@ class DeliveryServiceRequestService {
 	 * Creates a new DSR.
 	 *
 	 * @param {DeliveryServiceRequest} dsRequest The DSR to be create.
-	 * @returns {Promise<DeliveryServiceRequest>} The newly created DSR.
+	 * @returns {Promise<DeliveryServiceRequest & {id: number}>} The newly created DSR.
 	 */
 	async createDeliveryServiceRequest(dsRequest) {
 
