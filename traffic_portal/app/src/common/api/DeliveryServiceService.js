@@ -71,15 +71,21 @@
  * @property {string} requestPath
  */
 
-/**
- * DeliveryServiceService handles API requests dealing with Delivery Services.
- *
- * @param {import("angular").IHttpService} $http Angular HTTP service.
- * @param {import("../service/utils/LocationUtils")} locationUtils Utilities for manipulating Angular routing.
- * @param {import("../models/MessageModel")} messageModel Service for displaying messages/alerts.
- * @param {{api:{next: string; unstable: string; stable: string}}} ENV Environment configuration.
- */
-var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
+class DeliveryServiceService {
+	/**
+	 * DeliveryServiceService handles API requests dealing with Delivery Services.
+	 *
+	 * @param {import("angular").IHttpService} $http Angular HTTP service.
+	 * @param {import("../service/utils/LocationUtils")} locationUtils Utilities for manipulating Angular routing.
+	 * @param {import("../models/MessageModel")} messageModel Service for displaying messages/alerts.
+	 * @param {{api:{next: string; unstable: string; stable: string}}} ENV Environment configuration.
+	 */
+	constructor($http, locationUtils, messageModel, ENV) {
+		this.$http = $http;
+		this.locationUtils = locationUtils;
+		this.messageModel = messageModel;
+		this.ENV = ENV;
+	}
 
 	/**
 	 * Get Delivery Services.
@@ -87,10 +93,10 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {Record<string, unknown>} params Any and all query string parameters.
 	 * @returns {Promise<DeliveryService[]>} The response property of the response.
 	 */
-	this.getDeliveryServices = async function(params) {
-		const result = await $http.get(`${ENV.api.next}deliveryservices`, {params});
+	async getDeliveryServices(params) {
+		const result = await this.$http.get(`${this.ENV.api.next}deliveryservices`, { params });
 		return result.data.response;
-	};
+	}
 
 	/**
 	 * Get the Delivery Service with the given ID.
@@ -98,10 +104,10 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {number} id The ID of the desired Delivery Service.
 	 * @returns {Promise<DeliveryService>} The requested Delivery Service.
 	 */
-	this.getDeliveryService = async function(id) {
-		const result = await $http.get(`${ENV.api.next}deliveryservices`, {params: {id}});
+	async getDeliveryService(id) {
+		const result = await this.$http.get(`${this.ENV.api.next}deliveryservices`, { params: { id } });
 		return result.data.response[0];
-	};
+	}
 
 	/**
 	 * Creates the given Delivery Service.
@@ -109,13 +115,13 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {DeliveryService} ds The Delivery Service being created.
 	 * @returns {Promise<{alerts: {level: string; text: string}[], response: DeliveryService}>} The full API response.
 	 */
-	this.createDeliveryService = async function(ds) {
+	async createDeliveryService(ds) {
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(i => i);
 
-		const response = await $http.post(`${ENV.api.next}deliveryservices`, ds);
+		const response = await this.$http.post(`${this.ENV.api.next}deliveryservices`, ds);
 		return response.data;
-	};
+	}
 
 	/**
 	 * Replaces an existing Delivery Service with the new provided definition.
@@ -123,13 +129,13 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {DeliveryService & {id: number}} ds The Delivery Service being updated (ID MUST be specified).
 	 * @returns {Promise<{alerts: {level: string; text: string}[], response: DeliveryService}>} The full API response.
 	 */
-	this.updateDeliveryService = async function(ds) {
+	async updateDeliveryService(ds) {
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(i => i);
 
-		const response = await $http.put(`${ENV.api.next}deliveryservices/${ds.id}`, ds);
+		const response = await this.$http.put(`${this.ENV.api.next}deliveryservices/${ds.id}`, ds);
 		return response.data;
-	};
+	}
 
 	/**
 	 * Deletes an existing Delivery Service.
@@ -137,10 +143,10 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {DeliveryService} ds The Delivery Service to be deleted.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]}>} The full API response
 	 */
-	this.deleteDeliveryService = async function(ds) {
-		const response = await $http.delete(`${ENV.api.next}deliveryservices/${ds.id}`);
+	async deleteDeliveryService(ds) {
+		const response = await this.$http.delete(`${this.ENV.api.next}deliveryservices/${ds.id}`);
 		return response.data;
-	};
+	}
 
 	/**
 	 * Gets the server capabilities required by the identified Delivery Service.
@@ -148,8 +154,8 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {number} deliveryServiceID The ID of the Delivery Service in question.
 	 * @returns {Promise<DSRequiredCapability[]>} The Server Capabilities required by the DS with the given ID.
 	 */
-	this.getServerCapabilities = async function(deliveryServiceID) {
-		const result = await $http.get(`${ENV.api.unstable}deliveryservices_required_capabilities`, { params: { deliveryServiceID } });
+	async getServerCapabilities(deliveryServiceID) {
+		const result = await this.$http.get(`${this.ENV.api.unstable}deliveryservices_required_capabilities`, { params: { deliveryServiceID } });
 		return result.data.response;
 	};
 
@@ -157,7 +163,10 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * Gets steering information.
 	 * @returns {Promise<SteeringDefinition[]>}
 	 */
-	this.getSteering = async () => $http.get(`${ENV.api.unstable}steering/`).then(r => r.data.response);
+	async getSteering() {
+		const r = await this.$http.get(`${this.ENV.api.unstable}steering/`)
+		return r.data.response;
+	}
 
 	/**
 	 * Adds a Capability requirement to a Delivery Service.
@@ -165,17 +174,17 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {string} requiredCapability The name of the Capability being added as a requirement.
 	 * @returns {Promise<{alerts: {text: string; level: string}[]; response: {deliveryServiceID: number; lastUpdated: string; requiredCapability: string}}>} The full API response.
 	 */
-	this.addServerCapability = async function(deliveryServiceID, requiredCapability) {
+	async addServerCapability(deliveryServiceID, requiredCapability) {
 		try {
-			const result = await $http.post(`${ENV.api.unstable}deliveryservices_required_capabilities`, { deliveryServiceID, requiredCapability});
+			const result = await this.$http.post(`${this.ENV.api.unstable}deliveryservices_required_capabilities`, { deliveryServiceID, requiredCapability });
 			return result.data;
 		} catch (err) {
 			if (err.data && err.data.alerts) {
-				messageModel.setMessages(err.data.alerts, false);
+				this.messageModel.setMessages(err.data.alerts, false);
 			}
 			throw err;
 		}
-	};
+	}
 
 	/**
 	 * Removes the requirement of a particular Capability from the identified Delivery Service.
@@ -184,17 +193,17 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {string} requiredCapability The name of the Capability being removed as a requirement.
 	 * @returns {Promise<{alerts: {text: string; level: string}[]}>} The full API response.
 	 */
-	this.removeServerCapability = async function(deliveryServiceID, requiredCapability) {
+	async removeServerCapability(deliveryServiceID, requiredCapability) {
 		try {
-			const result = await $http.delete(`${ENV.api.unstable}deliveryservices_required_capabilities`, { params: { deliveryServiceID, requiredCapability} });
+			const result = await this.$http.delete(`${this.ENV.api.unstable}deliveryservices_required_capabilities`, { params: { deliveryServiceID, requiredCapability } });
 			return result.data;
-		} catch(err) {
+		} catch (err) {
 			if (err.data && err.data.alerts) {
-				messageModel.setMessages(err.data.alerts, false);
+				this.messageModel.setMessages(err.data.alerts, false);
 			}
 			throw err;
 		}
-	};
+	}
 
 	/**
 	 * Get the Delivery Service for which the identified server is responsible for serving content.
@@ -204,10 +213,10 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {number} serverID The ID of the server in question.
 	 * @returns {Promise<DeliveryService[]>} The Delivery Services for which the identified server is responsible for serving content.
 	 */
-	this.getServerDeliveryServices = async function(serverID) {
-		const result = await $http.get(`${ENV.api.unstable}servers/${serverID}/deliveryservices`);
+	async getServerDeliveryServices(serverID) {
+		const result = await this.$http.get(`${this.ENV.api.unstable}servers/${serverID}/deliveryservices`);
 		return result.data.response;
-	};
+	}
 
 	/**
 	 * Gets the targets of the given steering Delivery Service.
@@ -215,10 +224,10 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {number} dsID The ID of the steering Delivery Service in question.
 	 * @returns {Promise<SteeringTarget[]>} The targets of the identified Delivery Service.
 	 */
-	this.getDeliveryServiceTargets = async function(dsID) {
-		const result = await $http.get(`${ENV.api.unstable}steering/${dsID}/targets`);
+	async getDeliveryServiceTargets(dsID) {
+		const result = await this.$http.get(`${this.ENV.api.unstable}steering/${dsID}/targets`);
 		return result.data.response;
-	};
+	}
 
 	/**
 	 * Gets a particular target definition for a Steering Delivery Service.
@@ -229,10 +238,10 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * target - or `undefined` if the target DS is not actually a target of the
 	 * steering DS.
 	 */
-	this.getDeliveryServiceTarget = async function(dsID, target) {
-		const result = await $http.get(`${ENV.api.unstable}steering/${dsID}/targets`, {params: {target}});
+	async getDeliveryServiceTarget(dsID, target) {
+		const result = await this.$http.get(`${this.ENV.api.unstable}steering/${dsID}/targets`, { params: { target } });
 		return result.data.response[0];
-	};
+	}
 
 	/**
 	 * Updates a particular target definition of a Steering Delivery Service.
@@ -242,18 +251,18 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {SteeringTarget} target The new, desired definition of the target.
 	 * @returns {Promise<SteeringTarget>} The steering target definition after update.
 	 */
-	this.updateDeliveryServiceTarget = async function(dsID, targetID, target) {
+	async updateDeliveryServiceTarget(dsID, targetID, target) {
 		let result;
 		try {
-			result = await $http.put(`${ENV.api.unstable}steering/${dsID}/targets/${targetID}`, target);
+			result = await this.$http.put(`${this.ENV.api.unstable}steering/${dsID}/targets/${targetID}`, target);
 		} catch (err) {
-			messageModel.setMessages(err.data.alerts, false);
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-		messageModel.setMessages(result.data.alerts, true);
-		locationUtils.navigateToPath(`/delivery-services/${dsID}/targets`);
+		this.messageModel.setMessages(result.data.alerts, true);
+		this.locationUtils.navigateToPath(`/delivery-services/${dsID}/targets`);
 		return result.data.response;
-	};
+	}
 
 	/**
 	 * Creates a new target definition for a Steering Delivery Service.
@@ -262,18 +271,18 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {number} target The definition of the new target.
 	 * @returns {Promise<SteeringTarget>} The newly created target definition.
 	 */
-	this.createDeliveryServiceTarget = async function(dsID, target) {
+	async createDeliveryServiceTarget(dsID, target) {
 		let result;
 		try {
-			result = await $http.post(`${ENV.api.unstable}steering/${dsID}/targets`, target);
-		} catch(err) {
-			messageModel.setMessages(err.data.alerts, false);
+			result = await this.$http.post(`${this.ENV.api.unstable}steering/${dsID}/targets`, target);
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-		messageModel.setMessages(result.data.alerts, true);
-		locationUtils.navigateToPath(`/delivery-services/${dsID}/targets`);
+		this.messageModel.setMessages(result.data.alerts, true);
+		this.locationUtils.navigateToPath(`/delivery-services/${dsID}/targets`);
 		return result.data.response;
-	};
+	}
 
 	/**
 	 * Removes a target from a Steering Delivery Service.
@@ -282,18 +291,18 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {number} targetID The ID of the Delivery Service being removed as a target.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]}>} The full API response.
 	 */
-	this.deleteDeliveryServiceTarget = async function(dsID, targetID) {
+	async deleteDeliveryServiceTarget(dsID, targetID) {
 		let result;
 		try {
-			result = await $http.delete(`${ENV.api.unstable}steering/${dsID}/targets/${targetID}`);
+			result = await this.$http.delete(`${this.ENV.api.unstable}steering/${dsID}/targets/${targetID}`);
 		} catch (err) {
-			messageModel.setMessages(err.data.alerts, true);
+			this.messageModel.setMessages(err.data.alerts, true);
 			throw err;
 		}
-		messageModel.setMessages(result.data.alerts, true);
-		locationUtils.navigateToPath('/delivery-services/' + dsID + '/targets');
+		this.messageModel.setMessages(result.data.alerts, true);
+		this.locationUtils.navigateToPath('/delivery-services/' + dsID + '/targets');
 		return result.data;
-	};
+	}
 
 	/**
 	 * Removes a server from a Delivery Service's directly assigned servers.
@@ -304,17 +313,17 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {number} serverID The ID of the server being removed.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]}>} The full API response.
 	 */
-	this.deleteDeliveryServiceServer = async function(dsID, serverID) {
+	async deleteDeliveryServiceServer(dsID, serverID) {
 		let result;
 		try {
-			result = await $http.delete(`${ENV.api.unstable}deliveryserviceserver/${dsID}/${serverID}`);
-		} catch(err) {
-			messageModel.setMessages(err.data.alerts, false);
+			result = await this.$http.delete(`${this.ENV.api.unstable}deliveryserviceserver/${dsID}/${serverID}`);
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-		messageModel.setMessages(result.data.alerts, false);
+		this.messageModel.setMessages(result.data.alerts, false);
 		return result.data;
-	};
+	}
 
 	/**
 	 * Assigns a set of servers to a Delivery Service *overriding any existing
@@ -326,17 +335,17 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {number[]} servers The IDs of the servers being directly assigned to the Delivery Service.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: {dsId: number; replace: true; servers: number[]}}>} The full API response.
 	 */
-	this.assignDeliveryServiceServers = async function(dsId, servers) {
+	async assignDeliveryServiceServers(dsId, servers) {
 		let result;
 		try {
-			result = await $http.post(`${ENV.api.unstable}deliveryserviceserver`, { dsId, servers, replace: true } );
-		} catch(err) {
-			messageModel.setMessages(err.data.alerts, false);
+			result = await this.$http.post(`${this.ENV.api.unstable}deliveryserviceserver`, { dsId, servers, replace: true });
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-		messageModel.setMessages(result.data.alerts, false);
+		this.messageModel.setMessages(result.data.alerts, false);
 		return result.data;
-	};
+	}
 
 	/**
 	 * Tests a consistent hashing regular expression against Traffic Router, to
@@ -347,19 +356,19 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 	 * @param {number} cdnId The ID of the CDN within which the request is to be made.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: ConsistentHashResponse}>} The full API response.
 	 */
-	this.getConsistentHashResult = async function (regex, requestPath, cdnId) {
-		const url = `${ENV.api.unstable}consistenthash`;
-		const params = {regex, requestPath, cdnId};
+	async getConsistentHashResult(regex, requestPath, cdnId) {
+		const url = `${this.ENV.api.unstable}consistenthash`;
+		const params = { regex, requestPath, cdnId };
 
 		try {
-			const result = await $http.post(url, params);
+			const result = await this.$http.post(url, params);
 			return result.data;
-		} catch(err) {
-			messageModel.setMessages(err.data.alerts, false);
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-	};
-};
+	}
+}
 
 DeliveryServiceService.$inject = ["$http", "locationUtils", "messageModel", "ENV"];
 module.exports = DeliveryServiceService;
