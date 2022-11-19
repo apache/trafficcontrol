@@ -17,6 +17,25 @@
  * under the License.
  */
 
+/**
+ * This is the controller for (almost) all tables of Delivery Services.
+ *
+ * @param {string} tableName
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService[]} deliveryServices
+ * @param {unknown[]} steeringTargets
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("angular").ILocationService} $location
+ * @param {{open: ({})=>{result: Promise<*>}}} $uibModal
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../api/DeliveryServiceRequestService")} deliveryServiceRequestService
+ * @param {import("../../../service/utils/DeliveryServiceUtils")} deliveryServiceUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ * @param {import("../../../models/UserModel")} userModel
+ */
 function TableDeliveryServicesController(tableName, deliveryServices, steeringTargets, $anchorScroll, $scope, $state, $location, $uibModal, deliveryServiceService, deliveryServiceRequestService, deliveryServiceUtils, locationUtils, messageModel, propertiesModel, userModel) {
 	$scope.tableName = tableName;
 
@@ -410,7 +429,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 	 * Opens a dialog asking the user for confirmation before deleting the given
 	 * Delivery Service.
 	 *
-	 * @param {{readonly xmlId: string;}} ds
+	 * @param {import("../../../api/DeliveryServiceService").DeliveryService} ds
 	 */
 	async function confirmDelete(ds) {
 		const params = {
@@ -443,7 +462,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 	/**
 	 * Creates a new DSR to delete the given Delivery Service.
 	 *
-	 * @param {{readonly xmlId: string}} ds
+	 * @param {import("../../../api/DeliveryServiceService").DeliveryService} ds
 	 */
 	async function createDeliveryServiceDeleteRequest(ds) {
 		const params = {
