@@ -20,8 +20,8 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li ng-if="!settings.isRequest"><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li ng-if="settings.isRequest"><a ng-click="navigateToPath('/delivery-service-requests')">Delivery Service Requests</a></li>
+            <li ng-if="!settings.isRequest"><a href="/#!/delivery-services">Delivery Services</a></li>
+            <li ng-if="settings.isRequest"><a href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
             <li ng-if="settings.isRequest" class="active">{{dsRequest.changeType}}</li>
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
@@ -50,11 +50,11 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="clone(deliveryService)">Clone Delivery Service</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/clone?dsType={{deliveryService.type}}">Clone Delivery Service</a></li>
                     <hr class="divider"/>
-                    <li role="menuitem"><a ng-click="viewCharts()">View Charts</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/charts">View Charts</a></li>
                     <hr class="divider"/>
-                    <li name="manageServersMenuItem" role="menuitem"><button class="menu-item-button" type="button" ng-click="viewServers()">Manage Servers</button></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/servers">Manage Servers</a></li>
                 </ul>
             </div>
         </div>
