@@ -209,6 +209,18 @@
 									</sources>
 								</mapping>
 								<mapping>
+									<directory>${env.LOGROTATE_SCRIPT_DIR}</directory>
+									<directoryIncluded>false</directoryIncluded>
+									<filemode>644</filemode>
+									<username>root</username>
+									<groupname>root</groupname>
+									<sources>
+										<source>
+											<location>${env.LOGROTATE_SCRIPT_LOC}</location>
+										</source>
+									</sources>
+								</mapping>
+								<mapping>
 									<directory>${deploy.dir}/webapps</directory>
 									<directoryIncluded>false</directoryIncluded>
 									<filemode>755</filemode>
