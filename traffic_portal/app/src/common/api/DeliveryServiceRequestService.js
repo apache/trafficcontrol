@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DeliveryServiceRequestService = function($http, locationUtils, messageModel, ENV) {
+var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 
 	this.getDeliveryServiceRequests = function(queryParams) {
 		return $http.get(ENV.api.unstable + 'deliveryservice_requests', {params: queryParams}).then(
@@ -149,5 +149,5 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	};
 };
 
-DeliveryServiceRequestService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
+DeliveryServiceRequestService.$inject = ['$http', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceRequestService;
