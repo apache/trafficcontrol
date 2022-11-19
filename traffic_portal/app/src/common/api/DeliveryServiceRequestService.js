@@ -21,6 +21,7 @@
  * This is a minimal definition of a DSR. Add to it as necessary.
  *
  * @typedef DeliveryServiceRequest
+ * @property {string} changeType
  * @property {number} [id]
  * @property {import("./DeliveryServiceService").DeliveryService} [original]
  * @property {import("./DeliveryServiceService").DeliveryService} [requested]

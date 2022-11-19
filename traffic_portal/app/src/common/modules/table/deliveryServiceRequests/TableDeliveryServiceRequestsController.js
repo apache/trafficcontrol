@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, $location, $document, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
+var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $scope, $state, $uibModal, $anchorScroll, $document, dateUtils, locationUtils, typeService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
 
 	/**
 	 * Gets value to display a default tooltip.
@@ -567,5 +567,5 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 
 };
 
-TableDeliveryServicesRequestsController.$inject = ['tableName', 'dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$q', '$location', '$document', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
+TableDeliveryServicesRequestsController.$inject = ['tableName', 'dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$document', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
 module.exports = TableDeliveryServicesRequestsController;
