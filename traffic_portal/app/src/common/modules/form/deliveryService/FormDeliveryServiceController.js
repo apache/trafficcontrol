@@ -17,7 +17,29 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serviceCategoryService) {
+/**
+ * This is the parent controller for all kinds of Delivery Service forms - edit,
+ * creation, request, etc.
+ *
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService} deliveryService
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService | undefined} dsCurrent
+ * @param {unknown} origin
+ * @param {unknown[]} topologies
+ * @param {string} type
+ * @param {{name: string}[]} types
+ * @param {import("angular").IScope & Record<PropertyKey, any>} $scope
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/TenantUtils")} tenantUtils
+ * @param {import("../../../service/utils/DeliveryServiceUtils")} deliveryServiceUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../api/CDNService")} cdnService
+ * @param {import("../../../api/ProfileService")} profileService
+ * @param {import("../../../api/TenantService")} tenantService
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ * @param {import("../../../models/UserModel")} userModel
+ * @param {import("../../../api/ServiceCategoryService")} serviceCategoryService
+ */
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serviceCategoryService) {
 
 	/**
 	 * This is used to cache TLS version settings when the checkbox is toggled.
@@ -394,5 +416,5 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'topologies', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'deliveryServiceService', 'cdnService', 'profileService', 'tenantService', 'propertiesModel', 'userModel', 'serviceCategoryService'];
+FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serviceCategoryService"];
 module.exports = FormDeliveryServiceController;
