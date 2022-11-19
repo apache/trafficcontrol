@@ -46,14 +46,28 @@
 /**
  * DeliveryServiceRequestService provides methods for interacting with the parts
  * of the Traffic Ops API that relate to Delivery Service Requests.
- *
- * @param {import("angular").IHttpService} $http Angular HTTP service.
- * @param {import("../models/MessageModel")} messageModel Service for displaying messages/alerts.
- * @param {{api:{next: string; unstable: string; stable: string}}} ENV Environment configuration.
  */
-var DeliveryServiceRequestService = function($http, messageModel, ENV) {
+class DeliveryServiceRequestService {
 
-	const apiVersion = ENV.api.next;
+	/**
+	 * @type {string}
+	 * @readonly
+	 * @private
+	 */
+	apiVersion;
+
+	/**
+	 *
+	 * @param {import("angular").IHttpService} $http Angular HTTP service.
+	 * @param {import("../models/MessageModel")} messageModel Service for displaying messages/alerts.
+	 * @param {{api:{next: string; unstable: string; stable: string}}} ENV Environment configuration.
+	 */
+	constructor($http, messageModel, ENV) {
+
+		this.apiVersion = ENV.api.next;
+		this.$http = $http;
+		this.messageModel = messageModel;
+	}
 
 	/**
 	 * Get Delivery Service Requests.
@@ -61,10 +75,10 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 	 * @param {Record<PropertyKey, unknown>} params
 	 * @returns {Promise<DeliveryServiceRequest[]>}
 	 */
-	this.getDeliveryServiceRequests = async function(params) {
-		const result = await $http.get(`${apiVersion}/deliveryservice_requests`, {params});
+	async getDeliveryServiceRequests(params) {
+		const result = await this.$http.get(`${this.apiVersion}/deliveryservice_requests`, { params });
 		return result.data.response;
-	};
+	}
 
 	/**
 	 * Creates a new DSR.
@@ -72,7 +86,7 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 	 * @param {DeliveryServiceRequest} dsRequest The DSR to be create.
 	 * @returns {Promise<DeliveryServiceRequest>} The newly created DSR.
 	 */
-	this.createDeliveryServiceRequest = async function(dsRequest) {
+	async createDeliveryServiceRequest(dsRequest) {
 
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		if (dsRequest.requested) {
@@ -80,13 +94,13 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 		}
 
 		try {
-			const result = await $http.post(`${apiVersion}/deliveryservice_requests`, dsRequest);
+			const result = await this.$http.post(`${this.apiVersion}/deliveryservice_requests`, dsRequest);
 			return result.data.response;
-		} catch(err) {
-			messageModel.setMessages(err.data.alerts, false);
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-	};
+	}
 
 	/**
 	 * Replaces an existing DSR with the provided, new definition.
@@ -95,7 +109,7 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 	 * @param {DeliveryServiceRequest} dsRequest The new, desired definition of the DSR.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DeliveryServiceRequest}>} The full API response.
 	 */
-	this.updateDeliveryServiceRequest = async function(id, dsRequest) {
+	async updateDeliveryServiceRequest(id, dsRequest) {
 
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		if (dsRequest.requested) {
@@ -103,13 +117,13 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 		}
 
 		try {
-			const result = await $http.put(`${apiVersion}deliveryservice_requests`, dsRequest, {params: {id}});
+			const result = await this.$http.put(`${this.apiVersion}deliveryservice_requests`, dsRequest, { params: { id } });
 			return result.data;
-		} catch(err) {
-			messageModel.setMessages(err.data.alerts, false);
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-	};
+	}
 
 	/**
 	 * Deletes the identified DSR.
@@ -117,15 +131,15 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 	 * @param {number} id The ID of the DSR to be deleted.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]}>} The full API response.
 	 */
-	this.deleteDeliveryServiceRequest = async function(id) {
+	async deleteDeliveryServiceRequest(id) {
 		try {
-			const response = await $http.delete(`${apiVersion}deliveryservice_requests`, {params: {id}});
+			const response = await this.$http.delete(`${this.apiVersion}deliveryservice_requests`, { params: { id } });
 			return response.data;
-		} catch(err) {
-			messageModel.setMessages(err.data.alerts, false);
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-	};
+	}
 
 	/**
 	 * Assigns a DS to a user.
@@ -134,15 +148,15 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 	 * @param {string} assignee The username of the user to whom the DSR is being assigned.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DeliveryServiceRequest}>} The full API response.
 	 */
-	this.assignDeliveryServiceRequest = async function(id, assignee) {
+	async assignDeliveryServiceRequest(id, assignee) {
 		try {
-			const result = await $http.put(`${apiVersion}deliveryservice_requests/${id}/assign`, { assignee });
+			const result = await this.$http.put(`${this.apiVersion}deliveryservice_requests/${id}/assign`, { assignee });
 			return result.data;
-		} catch(err) {
-			messageModel.setMessages(err.data.alerts, false);
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-	};
+	}
 
 	/**
 	 * Sets the status of a DSR.
@@ -151,15 +165,15 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 	 * @param {DSRStatus} status The new status of the DSR.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DeliveryServiceRequest}>} The full API response.
 	 */
-	this.updateDeliveryServiceRequestStatus = async function(id, status) {
+	async updateDeliveryServiceRequestStatus(id, status) {
 		try {
-			const result = await $http.put(`${apiVersion}deliveryservice_requests/${id}/status`, { status });
+			const result = await this.$http.put(`${this.apiVersion}deliveryservice_requests/${id}/status`, { status });
 			return result.data;
-		} catch(err) {
-			messageModel.setMessages(err.data.alerts, false);
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-	};
+	}
 
 	/**
 	 * Gets the comments associated with DSRs.
@@ -167,14 +181,14 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 	 * @param {Record<PropertyKey, unknown>} params Any and all query string parameters for the request.
 	 * @returns {Promise<DSRComment[]>} The requested comments.
 	 */
-	this.getDeliveryServiceRequestComments = async function(params) {
+	async getDeliveryServiceRequestComments(params) {
 		try {
-			const result = await $http.get(`${apiVersion}deliveryservice_request_comments`, {params});
+			const result = await this.$http.get(`${this.apiVersion}deliveryservice_request_comments`, { params });
 			return result.data.response;
-		} catch(err) {
+		} catch (err) {
 			throw err;
 		}
-	};
+	}
 
 	/**
 	 * Creates a new comment on a DSR.
@@ -182,10 +196,10 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 	 * @param {DSRComment} comment The new comment to be created.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DSRComment}>} The full API response.
 	 */
-	this.createDeliveryServiceRequestComment = async function(comment) {
-		const response = await  $http.post(`${apiVersion}deliveryservice_request_comments`, comment);
+	async createDeliveryServiceRequestComment(comment) {
+		const response = await this.$http.post(`${this.apiVersion}deliveryservice_request_comments`, comment);
 		return response.data;
-	};
+	}
 
 	/**
 	 * Updates an existing comment on a DSR.
@@ -193,15 +207,15 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 	 * @param {DSRComment} comment The comment as desired.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DSRComment}>} The full API response.
 	 */
-	this.updateDeliveryServiceRequestComment = async function(comment) {
+	async updateDeliveryServiceRequestComment(comment) {
 		try {
-			const result = await $http.put(`${apiVersion}deliveryservice_request_comments`, comment, {params: {id: comment.id}});
+			const result = await this.$http.put(`${this.apiVersion}deliveryservice_request_comments`, comment, { params: { id: comment.id } });
 			return result.data;
-		} catch(err) {
-			messageModel.setMessages(err.data.alerts, false);
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-	};
+	}
 
 	/**
 	 * Removes a comment from its DSR.
@@ -209,16 +223,16 @@ var DeliveryServiceRequestService = function($http, messageModel, ENV) {
 	 * @param {DSRComment} comment The comment to be deleted.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]}>} The full API response.
 	 */
-	this.deleteDeliveryServiceRequestComment = async function(comment) {
+	async deleteDeliveryServiceRequestComment(comment) {
 		try {
-			const response = await $http.delete(`${apiVersion}deliveryservice_request_comments`, {params: {id: comment.id}});
+			const response = await this.$http.delete(`${this.apiVersion}deliveryservice_request_comments`, { params: { id: comment.id } });
 			return response.data;
 		} catch (err) {
-			messageModel.setMessages(err.data.alerts, false);
+			this.messageModel.setMessages(err.data.alerts, false);
 			throw err;
 		}
-	};
-};
+	}
+}
 
 DeliveryServiceRequestService.$inject = ["$http", "messageModel", "ENV"];
 module.exports = DeliveryServiceRequestService;
