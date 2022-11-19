@@ -172,7 +172,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	 */
 	async function getCDNs() {
 		$scope.cdns = await cdnService.getCDNs();
-	};
+	}
 
 	/**
 	 * Updates the Profiles on the $scope.
@@ -182,7 +182,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		/** @type {{type: string}[]} */
 		const result = await profileService.getProfiles({ orderby: "name" });
 		$scope.profiles = result.filter(p => p.type === "DS_PROFILE");
-	};
+	}
 
 	/**
 	 * Updates the Tenants on the $scope.
@@ -194,7 +194,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		const tenant = tenants.find(t => t.id === userModel.user.tenantId);
 		$scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant?.parentId, []);
 		tenantUtils.addLevels($scope.tenants);
-	};
+	}
 
 	/**
 	 * Updates the Service Categories on the $scope.
@@ -202,7 +202,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	 */
 	async function getServiceCategories() {
 		$scope.serviceCategories = await serviceCategoryService.getServiceCategories({dsId: deliveryService.id })
-	};
+	}
 
 	$scope.deliveryService = deliveryService;
 
@@ -416,7 +416,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 			return false;
 		}
 		return formUtils.hasPropertyError($scope.generalConfig[propName], property);
-	};
+	}
 	$scope.tlsVersionHasPropertyError = tlsVersionHasPropertyError;
 
 	/**
@@ -435,7 +435,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 			return false;
 		}
 		return formUtils.hasError($scope.generalConfig[propName]);
-	};
+	}
 	$scope.tlsVersionHasError = tlsVersionHasError;
 
 	$scope.hasPropertyError = formUtils.hasPropertyError;

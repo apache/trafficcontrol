@@ -20,11 +20,14 @@
 /**
  * This is a minimal type definition for Delivery Services. Expand as necessary.
  * @typedef DeliveryService
+ * @property {number} cdnId
  * @property {string[]} consistentHashQueryParams
  * @property {string[]} exampleURLs
  * @property {?(number|null|undefined)} id
  * @property {string} lastUpdated
+ * @property {string} routingName
  * @property {boolean} signed
+ * @property {null|number} sslKeyVersion
  * @property {null|[string, ...string[]]} tlsVersions
  * @property {?(string|null|undefined)} trResponseHeaders
  * @property {?(string|null|undefined)} type
