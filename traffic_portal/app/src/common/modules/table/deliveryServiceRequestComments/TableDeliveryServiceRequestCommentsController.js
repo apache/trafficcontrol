@@ -17,7 +17,20 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function (request, $scope, $state, $stateParams, $uibModal, $anchorScroll, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
+/**
+ * The controller for the table that lists the comments of a DSR.
+ *
+ * @param {import("../../../api/DeliveryServiceRequestService").DeliveryServiceRequest} request
+ * @param {*} $scope
+ * @param {*} $stateParams
+ * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceRequestService")} deliveryServiceRequestService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
+var TableDeliveryServicesRequestsController = function (request, $scope, $stateParams, $uibModal, $anchorScroll, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
 
 	$scope.request = request[0];
 	$scope.type = $stateParams.dsType;
@@ -146,5 +159,5 @@ var TableDeliveryServicesRequestsController = function (request, $scope, $state,
 	$scope.getComments();
 };
 
-TableDeliveryServicesRequestsController.$inject = ['request', '$scope', '$state', '$stateParams', '$uibModal', '$anchorScroll', 'dateUtils', 'locationUtils', 'deliveryServiceRequestService', 'messageModel'];
+TableDeliveryServicesRequestsController.$inject = ['request', '$scope', '$stateParams', '$uibModal', '$anchorScroll', 'dateUtils', 'locationUtils', 'deliveryServiceRequestService', 'messageModel'];
 module.exports = TableDeliveryServicesRequestsController;

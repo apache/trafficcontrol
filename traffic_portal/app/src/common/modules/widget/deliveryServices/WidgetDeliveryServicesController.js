@@ -17,7 +17,19 @@
  * under the License.
  */
 
-var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, $interval, deliveryServiceService, deliveryServiceStatsService, locationUtils, dateUtils, numberUtils, propertiesModel) {
+/**
+ * @param {*} $scope
+ * @param {import("angular").ITimeoutService} $timeout
+ * @param {import("angular").IQService} $q
+ * @param {import("angular").IIntervalService} $interval
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../api/DeliveryServiceStatsService")} deliveryServiceStatsService
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../service/utils/NumberUtils")} numberUtils
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ */
+var WidgetDeliveryServicesController = function ($scope, $timeout, $q, $interval, deliveryServiceService, deliveryServiceStatsService, locationUtils, dateUtils, numberUtils, propertiesModel) {
 
 	var interval,
 		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
@@ -92,7 +104,7 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 	$scope.buildBandwidthChartData = function (series, start) {
 		var normalizedChartData = [];
 		if (angular.isDefined(series)) {
-			_.each(series.values, function (seriesItem) {
+			series.values.foreach((seriesItem) => {
 				if (moment(seriesItem[0]).isSame(start) || moment(seriesItem[0]).isAfter(start)) {
 					normalizedChartData.push([moment(seriesItem[0]).valueOf(), numberUtils.convertTo(seriesItem[1], $scope.unitSize)]); // converts data to appropriate unit
 				}
@@ -251,5 +263,5 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 	init();
 };
 
-WidgetDeliveryServicesController.$inject = ['$scope', '$timeout', '$filter', '$q', '$interval', 'deliveryServiceService', 'deliveryServiceStatsService', 'locationUtils', 'dateUtils', 'numberUtils', 'propertiesModel'];
+WidgetDeliveryServicesController.$inject = ['$scope', '$timeout', '$q', '$interval', 'deliveryServiceService', 'deliveryServiceStatsService', 'locationUtils', 'dateUtils', 'numberUtils', 'propertiesModel'];
 module.exports = WidgetDeliveryServicesController;

@@ -22,14 +22,11 @@
  *
  * @typedef DeliveryServiceRequest
  * @property {string} changeType
+ * @property {string} [createdAt]
  * @property {number} [id]
+ * @property {string} [lastUpdated]
  * @property {import("./DeliveryServiceService").DeliveryService} [original]
  * @property {import("./DeliveryServiceService").DeliveryService} [requested]
- */
-
-/**
- * The allowed values for a DSR's status.
- * @typedef {"draft" | "submitted" | "rejected" | "pending" | "complete"} DSRStatus
  */
 
 /**
@@ -164,7 +161,7 @@ class DeliveryServiceRequestService {
 	 * Sets the status of a DSR.
 	 *
 	 * @param {number} id The ID of the DSR being modified.
-	 * @param {DSRStatus} status The new status of the DSR.
+	 * @param {string} status The new status of the DSR.
 	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DeliveryServiceRequest}>} The full API response.
 	 */
 	async updateDeliveryServiceRequestStatus(id, status) {

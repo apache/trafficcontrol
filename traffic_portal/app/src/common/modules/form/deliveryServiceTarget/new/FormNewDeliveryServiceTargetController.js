@@ -17,6 +17,17 @@
  * under the License.
  */
 
+/**
+ * This is the controller for the form used to add a new Target to a Steering
+ * Delivery Service.
+ *
+ * @param {import("../../../../api/DeliveryServiceService").DeliveryService} deliveryService
+ * @param {import("../../../../api/DeliveryServiceService").SteeringTarget[]} currentTargets
+ * @param {import("../../../../api/DeliveryServiceService").SteeringTarget} target
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../api/DeliveryServiceService")} deliveryServiceService
+ */
 var FormNewDeliveryServiceTargetController = function(deliveryService, currentTargets, target, $scope, $controller, deliveryServiceService) {
 
 	// extends the FormDeliveryServiceTargetController to inherit common methods

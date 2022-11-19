@@ -228,10 +228,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	 * Gods have mercy.
 	 *
 	 * @param {import("../../../api/DeliveryServiceService").DeliveryService} ds
-	 * @returns {string} An absolutely unsafe direct HTML segment.
+	 * @returns {string | undefined} An absolutely unsafe direct HTML segment.
 	 */
 	$scope.edgeFQDNs = function(ds) {
-		return ds.exampleURLs.join("<br/>");
+		return ds.exampleURLs?.join("<br/>");
 	};
 
 	$scope.DRAFT = 0;

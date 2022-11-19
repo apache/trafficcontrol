@@ -17,7 +17,20 @@
  * under the License.
  */
 
-var TableServerCapabilityDeliveryServicesController = function(serverCapability, deliveryServices, $scope, $state, $uibModal, $window, locationUtils, deliveryServiceService, messageModel) {
+/**
+ * The controller for the table that lists the Delivery Services that require a
+ * particular Server Capability.
+ *
+ * @param {{name: string}} serverCapability
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService[]} deliveryServices
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
+var TableServerCapabilityDeliveryServicesController = function(serverCapability, deliveryServices, $scope, $state, $uibModal, locationUtils, deliveryServiceService, messageModel) {
 
 	var removeCapability = function(dsId) {
 		deliveryServiceService.removeServerCapability(dsId, serverCapability.name)
@@ -103,5 +116,5 @@ var TableServerCapabilityDeliveryServicesController = function(serverCapability,
 
 };
 
-TableServerCapabilityDeliveryServicesController.$inject = ['serverCapability', 'deliveryServices', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'deliveryServiceService', 'messageModel'];
+TableServerCapabilityDeliveryServicesController.$inject = ['serverCapability', 'deliveryServices', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'messageModel'];
 module.exports = TableServerCapabilityDeliveryServicesController;

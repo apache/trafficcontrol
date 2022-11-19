@@ -29,6 +29,7 @@
  * @property {boolean} signed
  * @property {null|number} [sslKeyVersion]
  * @property {null|[string, ...string[]]} tlsVersions
+ * @property {null|string} topology
  * @property {string} [trResponseHeaders]
  * @property {string|null|undefined} [type]
  * @property {number} typeId
@@ -93,7 +94,7 @@ class DeliveryServiceService {
 	/**
 	 * Get Delivery Services.
 	 *
-	 * @param {Record<string, unknown>} params Any and all query string parameters.
+	 * @param {Record<string, unknown>} [params] Any and all query string parameters.
 	 * @returns {Promise<DeliveryService[]>} The response property of the response.
 	 */
 	async getDeliveryServices(params) {
