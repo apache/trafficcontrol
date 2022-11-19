@@ -60,7 +60,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 			cachedTLSVersions = null;
 		}
 
-		deliveryService.tlsVersions =  null;
+		deliveryService.tlsVersions = null;
 	}
 	$scope.toggleTLSRestrict = toggleTLSRestrict;
 
@@ -226,16 +226,6 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		}
 	};
 
-	$scope.falseTrue = [
-		{ value: true, label: 'true' },
-		{ value: false, label: 'false' }
-	];
-
-	$scope.activeInactive = [
-		{ value: true, label: 'Active' },
-		{ value: false, label: 'Not Active'}
-	];
-
 	$scope.signingAlgos = [
 		{ value: null, label: 'None' },
 		{ value: 'url_sig', label: 'URL Signature Keys' },
@@ -290,24 +280,6 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		{ value: 56, label: '56 - CS7' }
 	];
 
-	$scope.deepCachingTypes = [
-		{ value: 'NEVER', label: 'NEVER' },
-		{ value: 'ALWAYS', label: 'ALWAYS' }
-	];
-
-	$scope.dispersions = [
-		{ value: 1, label: '1 - OFF' },
-		{ value: 2, label: '2' },
-		{ value: 3, label: '3' },
-		{ value: 4, label: '4' },
-		{ value: 5, label: '5' },
-		{ value: 6, label: '6' },
-		{ value: 7, label: '7' },
-		{ value: 8, label: '8' },
-		{ value: 9, label: '9' },
-		{ value: 10, label: '10' }
-	];
-
 	$scope.rrhs = [
 		{ value: 0, label: "Don't cache Range Requests" },
 		{ value: 1, label: "Use the background_fetch plugin" },
@@ -323,9 +295,6 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		{ value: 4, label: "4 - Latch on Failover" }
 	];
 
-	$scope.clone = function(ds) {
-		locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?dsType=' + ds.type);
-	};
 
 	$scope.changeSigningAlgorithm = function(signingAlgorithm) {
 		if (signingAlgorithm == null) {
@@ -357,52 +326,6 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		}
 		$scope.deliveryServiceForm.$pristine = false; // this enables the 'update' button in the ds form
 	};
-
-	$scope.viewTargets = function() {
-		$location.path($location.path() + '/targets');
-	};
-
-	$scope.viewCapabilities = function() {
-		$location.path($location.path() + '/required-server-capabilities');
-	};
-
-	$scope.viewOrigins = function() {
-		$location.path($location.path() + '/origins');
-	};
-
-	$scope.viewServers = function() {
-		$location.path($location.path() + '/servers');
-	};
-
-	$scope.viewRegexes = function() {
-		$location.path($location.path() + '/regexes');
-	};
-
-	$scope.viewJobs = function() {
-		$location.path($location.path() + '/jobs');
-	};
-
-	$scope.manageSslKeys = function() {
-		$location.path($location.path() + '/ssl-keys');
-	};
-
-	$scope.manageUrlSigKeys = function() {
-		$location.path($location.path() + '/url-sig-keys');
-	};
-
-	$scope.manageUriSigningKeys = function() {
-		$location.path($location.path() + '/uri-signing-keys');
-	};
-
-	$scope.viewStaticDnsEntries = function() {
-		$location.path($location.path() + '/static-dns-entries');
-	};
-
-	$scope.viewCharts = function() {
-		$location.path($location.path() + '/charts');
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	$scope.hasError = formUtils.hasError;
 
@@ -454,22 +377,21 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		}
 	};
 
-	var init = function () {
-		getCDNs();
-		getProfiles();
-		getTenants();
-		getServiceCategories();
-		getSteeringTargets();
-		if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
-			// add an empty one so the dynamic form widget is visible. empty strings get stripped out on save anyhow.
-			$scope.deliveryService.consistentHashQueryParams = [ '' ];
-		}
-		if (deliveryService.lastUpdated) {
-			deliveryService.lastUpdated = new Date(deliveryService.lastUpdated.replace("+00", "Z"));
-		}
-	};
-	init();
-
+	getCDNs();
+	getProfiles();
+	getTenants();
+	getServiceCategories();
+	getSteeringTargets();
+	if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
+		// add an empty one so the dynamic form widget is visible. empty strings get stripped out on save anyhow.
+		$scope.deliveryService.consistentHashQueryParams = [ "" ];
+	}
+	if (deliveryService.lastUpdated) {
+		// TS checkers hate him for this one weird trick:
+		deliveryService.lastUpdated = new Date(deliveryService.lastUpdated.replace("+00", "Z"));
+		// ... the right way to do this is with an interceptor, but nobody
+		// wants to put in that kinda work on a legacy product.
+	}
 };
 
 FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'topologies', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'deliveryServiceService', 'cdnService', 'profileService', 'tenantService', 'propertiesModel', 'userModel', 'serviceCategoryService'];
