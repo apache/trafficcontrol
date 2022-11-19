@@ -50,9 +50,17 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	$scope.showSensitive = false;
 
 	const knownVersions = new Set(["1.0", "1.1", "1.2", "1.3"]);
-	$scope.tlsVersionUnknown = v => v && !knownVersions.has(v);
+	/**
+	 * Checks if a TLS version is unknown.
+	 * @param {string} v
+	 */
+	$scope.tlsVersionUnknown = v  => v && !knownVersions.has(v);
 
 	const insecureVersions = new Set(["1.0", "1.1"]);
+	/**
+	 * Checks if a TLS version is known to be insecure.
+	 * @param {string} v
+	 */
 	$scope.tlsVersionInsecure = v => v && insecureVersions.has(v);
 
 	/**
@@ -86,12 +94,20 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 	$scope.toggleTLSRestrict = toggleTLSRestrict;
 
+	/**
+	 * Removes a TLS version at the given index.
+	 * @param {number} index
+	 */
 	$scope.removeTLSVersion = function(index) {
-		deliveryService.tlsVersions.splice(index, 1);
+		deliveryService.tlsVersions?.splice(index, 1);
 	};
 
+	/**
+	 * Adds a TLS version at the given index.
+	 * @param {number} index
+	 */
 	$scope.addTLSVersion = function(index) {
-		deliveryService.tlsVersions.splice(index+1, 0, "");
+		deliveryService.tlsVersions?.splice(index+1, 0, "");
 	};
 
 	/**
@@ -150,38 +166,42 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		}
 	}
 
-	var getCDNs = function() {
-		cdnService.getCDNs()
-			.then(function(result) {
-				$scope.cdns = result;
-			});
+	/**
+	 * Updates the CDNs on the $scope.
+	 * @returns {Promise<void>}
+	 */
+	async function getCDNs() {
+		$scope.cdns = await cdnService.getCDNs();
 	};
 
-	var getProfiles = function() {
-		profileService.getProfiles({ orderby: 'name' })
-			.then(function(result) {
-				$scope.profiles = _.filter(result, function(profile) {
-					return profile.type == 'DS_PROFILE';
-				});
-			});
+	/**
+	 * Updates the Profiles on the $scope.
+	 * @returns {Promise<void>}
+	 */
+	async function getProfiles() {
+		/** @type {{type: string}[]} */
+		const result = await profileService.getProfiles({ orderby: "name" });
+		$scope.profiles = result.filter(p => p.type === "DS_PROFILE");
 	};
 
-	var getTenants = function() {
-		tenantService.getTenant(userModel.user.tenantId)
-			.then(function(tenant) {
-				tenantService.getTenants()
-					.then(function(tenants) {
-						$scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant.parentId, []);
-						tenantUtils.addLevels($scope.tenants);
-					});
-			});
+	/**
+	 * Updates the Tenants on the $scope.
+	 * @returns {Promise<void>}
+	 */
+	async function getTenants() {
+		/** @type {{id: number; parentId: number}[]} */
+		const tenants = await tenantService.getTenants();
+		const tenant = tenants.find(t => t.id === userModel.user.tenantId);
+		$scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant?.parentId, []);
+		tenantUtils.addLevels($scope.tenants);
 	};
 
-	var getServiceCategories = function() {
-		serviceCategoryService.getServiceCategories({dsId: deliveryService.id })
-			.then(function(result) {
-				$scope.serviceCategories = result;
-			});
+	/**
+	 * Updates the Service Categories on the $scope.
+	 * @returns {Promise<void>}
+	 */
+	async function getServiceCategories() {
+		$scope.serviceCategories = await serviceCategoryService.getServiceCategories({dsId: deliveryService.id })
 	};
 
 	$scope.deliveryService = deliveryService;
@@ -194,7 +214,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
 	$scope.dsCurrent = dsCurrent; // this ds is used primarily for showing the diff between a ds request and the current DS
 
-	$scope.origin = origin[0];
+	$scope.origin = Array.isArray(origin) ? origin[0] : origin;
 
 	$scope.topologies = topologies;
 
@@ -204,8 +224,14 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
 	$scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
+	/**
+	 * Gods have mercy.
+	 *
+	 * @param {import("../../../api/DeliveryServiceService").DeliveryService} ds
+	 * @returns {string} An absolutely unsafe direct HTML segment.
+	 */
 	$scope.edgeFQDNs = function(ds) {
-		return ds.exampleURLs.join('<br/>');
+		return ds.exampleURLs.join("<br/>");
 	};
 
 	$scope.DRAFT = 0;
@@ -214,31 +240,35 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	$scope.PENDING = 3;
 	$scope.COMPLETE = 4;
 
-	$scope.saveable = function() {
-		// this may be overriden in a child class. i.e. FormEditDeliveryServiceController
-		return true;
-	};
+	// these may be overriden in a child class. i.e. FormEditDeliveryServiceController
+	$scope.saveable = () => true;
+	$scope.deletable = () => true;
 
-	$scope.deletable = function() {
-		// this may be overriden in a child class. i.e. FormEditDeliveryServiceController
-		return true;
-	};
-
-	$scope.types = _.filter(types, function(currentType) {
-		var category;
-		if (type.indexOf('ANY_MAP') != -1) {
-			category = 'ANY_MAP';
-		} else if (type.indexOf('DNS') != -1) {
-			category = 'DNS';
-		} else if (type.indexOf('HTTP') != -1) {
-			category = 'HTTP';
-		} else if (type.indexOf('STEERING') != -1) {
+	$scope.types = types.filter(currentType => {
+		let category;
+		if (type.includes("ANY_MAP")) {
+			category = "ANY_MAP";
+		} else if (type.includes("DNS")) {
+			category = "DNS";
+		} else if (type.includes("HTTP")) {
+			category = "HTTP";
+		} else if (type.includes("STEERING")) {
 			category = 'STEERING';
+		} else {
+			throw new Error(`unrecognized type: '${type}'`);
 		}
-		return currentType.name.indexOf(category) != -1;
+		return currentType.name.includes(category);
 	});
 
-	$scope.clientSteeringType = _.findWhere(types, {name: "CLIENT_STEERING"});
+	$scope.clientSteeringType = types.find(t => t.name === "CLIENT_STEERING");
+
+	/**
+	 * Checks if a given Delivery Service uses the "Client Steering" flavor of
+	 * Steering-based routing.
+	 *
+	 * @param {import("../../../api/DeliveryServiceService").DeliveryService} ds The Delivery Service in question.
+	 * @returns {boolean} `true` if `ds` uses
+	 */
 	$scope.isClientSteering = function(ds) {
 		if (ds.typeId == $scope.clientSteeringType.id) {
 			return true;
@@ -317,34 +347,51 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		{ value: 4, label: "4 - Latch on Failover" }
 	];
 
-
+	/**
+	 * Handles changes to the set signing algorithm used by the Delivery Service
+	 * by updating the legacy 'signed' property accordingly.
+	 *
+	 * @param {null|string} signingAlgorithm
+	 */
 	$scope.changeSigningAlgorithm = function(signingAlgorithm) {
-		if (signingAlgorithm == null) {
+		if (signingAlgorithm === null) {
 			deliveryService.signed = false;
 		} else {
 			deliveryService.signed = true;
 		}
 	};
 
+	/**
+	 * Encodes the given regular expression into $scope.encodedRegex.
+	 * @param {string} consistentHashRegex
+	 */
 	$scope.encodeRegex = function(consistentHashRegex) {
-		if (consistentHashRegex != undefined) {
+		if (consistentHashRegex !== undefined) {
 			$scope.encodedRegex = encodeURIComponent(consistentHashRegex);
 		} else {
-			scope.encodedRegex = "";
+			$scope.encodedRegex = "";
 		}
 	};
 
-	$scope.addQueryParam = function() {
-		$scope.deliveryService.consistentHashQueryParams.push('');
-	};
+	/**
+	 * Adds a blank consistent hashing query string parameter to the Delivery
+	 * Service.
+	 */
+	$scope.addQueryParam = () => $scope.deliveryService.consistentHashQueryParams.push("");
 
+	/**
+	 * Removes a consistent hashing query string parameter from the Delivery
+	 * Service at the given index.
+	 *
+	 * @param {number} index
+	 */
 	$scope.removeQueryParam = function(index) {
 		if ($scope.deliveryService.consistentHashQueryParams.length > 1) {
 			$scope.deliveryService.consistentHashQueryParams.splice(index, 1);
 		} else {
 			// if only one query param is left, don't remove the item from the array. instead, just blank it out
 			// so the dynamic form widget will still be visible. empty strings get stripped out on save anyhow.
-			$scope.deliveryService.consistentHashQueryParams[index] = '';
+			$scope.deliveryService.consistentHashQueryParams[index] = "";
 		}
 		$scope.deliveryServiceForm.$pristine = false; // this enables the 'update' button in the ds form
 	};
