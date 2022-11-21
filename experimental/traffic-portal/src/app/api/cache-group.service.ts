@@ -13,7 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { RequestDivision, ResponseDivision } from "trafficops-types";
+import type { RequestDivision, ResponseDivision } from "trafficops-types";
 
 import type { CacheGroup } from "src/app/models";
 
