@@ -116,6 +116,11 @@ jobs:
       with:
         version: 3
         smtp_address: 172.17.0.1
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: v3-coverage.out
+        flags: traffic_ops_integration,v3
     - name: Upload v3 Vault logs
       if: ${{ steps.v3Tests.outcome != 'success' && always() }}
       uses: actions/upload-artifact@v2
@@ -188,6 +193,11 @@ jobs:
       with:
         version: 4
         smtp_address: 172.17.0.1
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: v4-coverage.out
+        flags: traffic_ops_integration,v4
     - name: Upload v4 Vault logs
       if: ${{ steps.v4Tests.outcome != 'success' && always() }}
       uses: actions/upload-artifact@v2
@@ -262,6 +272,11 @@ jobs:
       with:
         version: 5
         smtp_address: 172.17.0.1
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: v5-coverage.out
+        flags: traffic_ops_integration,v5
     - name: Upload v5 Vault logs
       if: ${{ steps.v5Tests.outcome != 'success' && always() }}
       uses: actions/upload-artifact@v2
