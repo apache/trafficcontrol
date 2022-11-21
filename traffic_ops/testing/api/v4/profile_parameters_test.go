@@ -175,7 +175,7 @@ func TestProfileParameters(t *testing.T) {
 }
 
 func TestPostWithEmptyBody(t *testing.T) {
-	resp, err := TOSession.Client.Post(TOSession.URL+"/api/5.0/profileparameters", "application/json", nil)
+	resp, err := TOSession.Client.Post(TOSession.URL+"/api/4.0/profileparameters", "application/json", nil)
 	if err != nil {
 		t.Fatalf("error sending post to create profile parameter with an empty body: %v", err)
 	}
