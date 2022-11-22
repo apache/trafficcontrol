@@ -17,7 +17,16 @@
  * under the License.
  */
 
-var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, stringUtils, locationUtils, cdnService, messageModel) {
+/**
+ * @param {*} cdn
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {*} $uibModal
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/CDNService")} cdnService
+ */
+var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, locationUtils, cdnService) {
 
     var queueServerUpdates = function(cdn) {
         cdnService.queueServerUpdates(cdn.id);
@@ -114,5 +123,5 @@ var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, s
 
 };
 
-FormCDNController.$inject = ['cdn', '$scope', '$location', '$uibModal', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService', 'messageModel'];
+FormCDNController.$inject = ['cdn', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'cdnService'];
 module.exports = FormCDNController;

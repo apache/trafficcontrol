@@ -17,6 +17,17 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} sslKeys
+ * @param {*} $scope
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceSslKeysService")} deliveryServiceSslKeysService
+ * @param {*} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("angular").IFilterService} $filter
+ */
 var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $scope, locationUtils, deliveryServiceSslKeysService, $uibModal, $anchorScroll, formUtils, $filter) {
 
 	var setSSLKeys = function(sslKeys) {

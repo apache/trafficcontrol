@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} serverCapability
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var FormServerCapabilityController = function(serverCapability, $scope, $location, formUtils, locationUtils) {
 
 	$scope.serverCapability = serverCapability;

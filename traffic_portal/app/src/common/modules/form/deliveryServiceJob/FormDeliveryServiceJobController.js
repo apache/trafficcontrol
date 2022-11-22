@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} job
+ * @param {*} $scope
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var FormDeliveryServiceJobController = function(deliveryService, job, $scope, formUtils, locationUtils) {
 
 	$scope.deliveryService = deliveryService;

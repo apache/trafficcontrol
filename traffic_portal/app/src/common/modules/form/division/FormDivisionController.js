@@ -17,6 +17,14 @@
  * under the License.
  */
 
+/**
+ * @param {*} division
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/StringUtils")} stringUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var FormDivisionController = function(division, $scope, $location, formUtils, stringUtils, locationUtils) {
 
     $scope.division = division;

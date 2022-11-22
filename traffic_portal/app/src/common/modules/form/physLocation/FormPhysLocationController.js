@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} physLocation
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/StringUtils")} stringUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/RegionService")} regionService
+ */
 var FormPhysLocationController = function(physLocation, $scope, $location, formUtils, stringUtils, locationUtils, regionService) {
 
     var getRegions = function() {

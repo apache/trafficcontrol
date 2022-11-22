@@ -17,7 +17,17 @@
  * under the License.
  */
 
-var FormRegisterUserController = function($scope, $location, formUtils, tenantUtils, locationUtils, roleService, tenantService, userService, userModel) {
+/**
+ * @param {*} $scope
+ * @param {import("../../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../../service/utils/TenantUtils")} tenantUtils
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/RoleService")} roleService
+ * @param {import("../../../../api/TenantService")} tenantService
+ * @param {import("../../../../api/UserService")} userService
+ * @param {import("../../../../models/UserModel")} userModel
+ */
+var FormRegisterUserController = function($scope, formUtils, tenantUtils, locationUtils, roleService, tenantService, userService, userModel) {
 
 	var getRoles = function() {
 		roleService.getRoles()
@@ -61,5 +71,5 @@ var FormRegisterUserController = function($scope, $location, formUtils, tenantUt
 
 };
 
-FormRegisterUserController.$inject = ['$scope', '$location', 'formUtils', 'tenantUtils', 'locationUtils', 'roleService', 'tenantService', 'userService', 'userModel'];
+FormRegisterUserController.$inject = ['$scope', 'formUtils', 'tenantUtils', 'locationUtils', 'roleService', 'tenantService', 'userService', 'userModel'];
 module.exports = FormRegisterUserController;

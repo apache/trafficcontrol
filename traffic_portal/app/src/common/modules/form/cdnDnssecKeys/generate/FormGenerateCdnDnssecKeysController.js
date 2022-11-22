@@ -17,7 +17,19 @@
  * under the License.
  */
 
-var FormGenerateCdnDnssecKeysController = function(cdn, dnssecKeysRequest, $scope, $location, $uibModal, formUtils, locationUtils, cdnService, messageModel) {
+/** @typedef {import("moment")} moment */
+
+/**
+ * @param {*} cdn
+ * @param {*} dnssecKeysRequest
+ * @param {*} $scope
+ * @param {*} $uibModal
+ * @param {import("../../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/CDNService")} cdnService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ */
+var FormGenerateCdnDnssecKeysController = function(cdn, dnssecKeysRequest, $scope, $uibModal, formUtils, locationUtils, cdnService, messageModel) {
 
 	var generate = function() {
 		$scope.dnssecKeysRequest.effectiveDate = moment($scope.effectiveDate).utc().format();
@@ -94,5 +106,5 @@ var FormGenerateCdnDnssecKeysController = function(cdn, dnssecKeysRequest, $scop
 
 };
 
-FormGenerateCdnDnssecKeysController.$inject = ['cdn', 'dnssecKeysRequest', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'cdnService', 'messageModel'];
+FormGenerateCdnDnssecKeysController.$inject = ['cdn', 'dnssecKeysRequest', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'cdnService', 'messageModel'];
 module.exports = FormGenerateCdnDnssecKeysController;

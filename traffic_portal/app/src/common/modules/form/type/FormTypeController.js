@@ -17,7 +17,17 @@
  * under the License.
  */
 
-var FormTypeController = function(type, $scope, $location, formUtils, stringUtils, locationUtils, $uibModal, cdnService, typeService) {
+/**
+ * @param {*} type
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/StringUtils")} stringUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {*} $uibModal
+ * @param {import("../../../api/TypeService")} typeService
+ */
+var FormTypeController = function(type, $scope, $location, formUtils, stringUtils, locationUtils, $uibModal, typeService) {
 
     $scope.type = type;
 
@@ -102,5 +112,5 @@ var FormTypeController = function(type, $scope, $location, formUtils, stringUtil
 
 };
 
-FormTypeController.$inject = ['type', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', '$uibModal', 'cdnService', 'typeService'];
+FormTypeController.$inject = ['type', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', '$uibModal', 'typeService'];
 module.exports = FormTypeController;

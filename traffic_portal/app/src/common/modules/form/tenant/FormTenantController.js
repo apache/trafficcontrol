@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} tenant
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/TenantUtils")} tenantUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/TenantService")} tenantService
+ * @param {import("../../../models/UserModel")} userModel
+ */
 var FormTenantController = function(tenant, $scope, $location, formUtils, tenantUtils, locationUtils, tenantService, userModel) {
 
     var getTenants = function() {

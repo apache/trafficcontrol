@@ -17,7 +17,14 @@
  * under the License.
  */
 
-var FormServiceCategoryController = function(serviceCategory, $scope, $location, formUtils, stringUtils, locationUtils) {
+/**
+ * @param {*} serviceCategory
+ * @param {*} $scope
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/StringUtils")} stringUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
+var FormServiceCategoryController = function(serviceCategory, $scope, formUtils, stringUtils, locationUtils) {
 
     $scope.serviceCategory = serviceCategory;
 
@@ -31,5 +38,5 @@ var FormServiceCategoryController = function(serviceCategory, $scope, $location,
 
 };
 
-FormServiceCategoryController.$inject = ['serviceCategory', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];
+FormServiceCategoryController.$inject = ['serviceCategory', '$scope', 'formUtils', 'stringUtils', 'locationUtils'];
 module.exports = FormServiceCategoryController;

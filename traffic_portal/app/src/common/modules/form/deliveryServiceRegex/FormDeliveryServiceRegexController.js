@@ -17,6 +17,14 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} regex
+ * @param {*} $scope
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/TypeService")} typeService
+ */
 var FormDeliveryServiceRegexController = function(deliveryService, regex, $scope, formUtils, locationUtils, typeService) {
 
 	var getTypes = function() {

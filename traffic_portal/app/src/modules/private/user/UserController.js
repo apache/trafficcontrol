@@ -17,7 +17,20 @@
  * under the License.
  */
 
-var UserController = function($scope, $state, $location, $uibModal, formUtils, locationUtils, tenantUtils, userService, authService, roleService, tenantService, userModel) {
+/**
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {*} $uibModal
+ * @param {import("../../../common/service/utils/FormUtils")} formUtils
+ * @param {import("../../../common/service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../common/service/utils/TenantUtils")} tenantUtils
+ * @param {import("../../../common/api/UserService")} userService
+ * @param {import("../../../common/api/AuthService")} authService
+ * @param {import("../../../common/api/RoleService")} roleService
+ * @param {import("../../../common/api/TenantService")} tenantService
+ * @param {import("../../../common/models/UserModel")} userModel
+ */
+var UserController = function($scope, $location, $uibModal, formUtils, locationUtils, tenantUtils, userService, authService, roleService, tenantService, userModel) {
 
     var updateUser = function(user, options) {
         userService.updateUser(user).
@@ -97,5 +110,5 @@ var UserController = function($scope, $state, $location, $uibModal, formUtils, l
 
 };
 
-UserController.$inject = ['$scope', '$state', '$location', '$uibModal', 'formUtils', 'locationUtils', 'tenantUtils', 'userService', 'authService', 'roleService', 'tenantService', 'userModel'];
+UserController.$inject = ['$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'tenantUtils', 'userService', 'authService', 'roleService', 'tenantService', 'userModel'];
 module.exports = UserController;
