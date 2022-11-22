@@ -17,6 +17,18 @@
  * under the License.
  */
 
+/**
+ * @param {*} server
+ * @param {*} serverCapabilities
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {*} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/ServerUtils")} serverUtils
+ * @param {import("../../../api/ServerService")} serverService
+ * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../api/ServerCapabilityService")} serverCapabilityService
+ */
 var TableServerServerCapabilitiesController = function(server, serverCapabilities, $scope, $state, $uibModal, locationUtils, serverUtils, serverService, messageModel, serverCapabilityService) {
 
 	$scope.server = server[0];

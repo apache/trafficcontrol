@@ -18,8 +18,13 @@
  */
 
 /** @typedef { import('../../../common/modules/table/agGrid/CommonGridController').CGC } CGC */
-
-var CacheChecksController = function(cacheChecks, $scope, $state, $interval, locationUtils, serverUtils, propertiesModel) {
+/**
+ * @param {*} cacheChecks
+ * @param {*} $scope
+ * @param {import("../../../common/service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../common/models/PropertiesModel")} propertiesModel
+ */
+var CacheChecksController = function(cacheChecks, $scope, locationUtils, propertiesModel) {
 	$scope.cacheChecks = cacheChecks;
 
 	$scope.config = propertiesModel.properties.cacheChecks;
@@ -91,5 +96,5 @@ var CacheChecksController = function(cacheChecks, $scope, $state, $interval, loc
 	};
 };
 
-CacheChecksController.$inject = ['cacheChecks', '$scope', '$state', '$interval', 'locationUtils', 'serverUtils', 'propertiesModel'];
+CacheChecksController.$inject = ['cacheChecks', '$scope', 'locationUtils', 'propertiesModel'];
 module.exports = CacheChecksController;

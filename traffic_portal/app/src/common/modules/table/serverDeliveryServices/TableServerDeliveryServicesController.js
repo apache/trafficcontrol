@@ -18,7 +18,6 @@
  */
 
 /**
- *
  * @param {{cdnId: number; id: number; hostName: string; type: string}} server
  * @param {import("../../../api/DeliveryServiceService").DeliveryService[]} deliveryServices
  * @param {unknown[]} steeringTargets
