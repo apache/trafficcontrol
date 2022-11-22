@@ -17,69 +17,112 @@
  * under the License.
  */
 
-var TenantUtils = function () {
+/**
+ * @typedef Tenant
+ * @property {string} name
+ * @property {number} id
+ * @property {number} parentId
+ */
 
-	/*
-	 * recurse thru a hierarchical structure and
-	 * add a 'level' property to each item
+/**
+ * @typedef HierarchyTenant
+ * @property {string} [name]
+ * @property {number} [id]
+ * @property {number} [parentId]
+ * @property {HierarchyTenant[]} children
+ */
+
+/**
+ * @typedef HierarchicalStructure
+ * @property {number} [level]
+ * @property {HierarchicalStructure[]} children
+ */
+
+/**
+ * TenantUtils provides methods for dealing with Tenant hierarchies.
+ */
+class TenantUtils {
+	/**
+	 * Recurse through a hierarchical structure and add a 'level' property to
+	 * each item.
+	 *
+	 * @private
+	 * @param {HierarchicalStructure[]} arr
+	 * @param {number} level
 	 */
-	var applyLevels = function (arr, level) {
-		_.each(arr, function (item) {
+	applyLevels(arr, level) {
+		for (const item of arr) {
 			item.level = level;
-			applyLevels(item.children, level + 1);
-		});
-	};
+			this.applyLevels(item.children, level + 1);
+		}
+	}
 
-	var hierarchySortFunc = function (a, b) {
-		return a.name > b.name;
-	};
-
-	/*
-	 * sort parent groups into an array
-	 * representative of the hierarchy order
+	/**
+	 * @private
+	 * @param {{name: string}} a
+	 * @param {{name: string}} b
 	 */
-	this.hierarchySort = function (parentGroups, rootParentId, result) {
+	hierarchySortFunc(a, b) {
+		return a.name > b.name ? 1 : 0;
+	}
 
-		if (parentGroups[rootParentId] == undefined) return;
-		var arr = parentGroups[rootParentId].sort(hierarchySortFunc);
-		for (var i = 0; i < arr.length; i++) {
-			result.push(arr[i]);
-			this.hierarchySort(parentGroups, arr[i].id, result);
+	/**
+	 * Sort parent groups into an array representative of the hierarchy order.
+	 *
+	 * @param {Record<number, {id: number; name: string}[]>} parentGroups
+	 * @param {number} rootParentId
+	 * @param {{id: number; name: string}[]} result
+	 */
+	hierarchySort(parentGroups, rootParentId, result) {
+
+		if (parentGroups[rootParentId] == undefined)
+			return;
+		const arr = parentGroups[rootParentId].sort(this.hierarchySortFunc);
+		for (const item of arr) {
+			result.push(item);
+			this.hierarchySort(parentGroups, item.id, result);
 		}
 
 		return result;
-	};
+	}
 
-	/*
-	 * take a flat tenant array and
-	 * group the tenants by parentId
+	/**
+	 * Take a flat tenant array and group the tenants by parentId.
+	 *
+	 * @template {{id: number; name: string; parentId: number}} T
+	 * @param {T[]} tenants
+	 * @returns {Record<number, T[]>}
 	 */
-	this.groupTenantsByParent = function (tenants) {
+	groupTenantsByParent(tenants) {
 
-		var parentGroups = {};
+		/** @type {Record<number, T[]>} */
+		const parentGroups = {};
 
-		for (var i = 0; i < tenants.length; i++) {
-			if (parentGroups[tenants[i].parentId] == undefined) parentGroups[tenants[i].parentId] = [];
-			parentGroups[tenants[i].parentId].push(tenants[i]);
+		for (const tenant of tenants) {
+			if (!(tenant.parentId in parentGroups))
+				parentGroups[tenant.parentId] = [];
+			parentGroups[tenant.parentId].push(tenant);
 		}
 
 		return parentGroups;
 	};
 
-	/*
+	/**
 	 * Takes a flat tenant array and turns it into a hierarchical
-	 * representation of tenants based on their parent/child relationships
+	 * representation of tenants based on their parent/child relationships.
+	 *
+	 * @param {{id: number; parentId: number}[]} tenantsArr
 	 */
-	this.convertToHierarchy = function (tenantsArr) {
-		var map = {};
+	convertToHierarchy(tenantsArr) {
+		/** @type {Record<PropertyKey, HierarchyTenant} */
+		const map = {};
 
-		for (var i = 0; i < tenantsArr.length; i++) {
-			var obj = tenantsArr[i];
-			obj.children = [];
+		for (let i = 0; i < tenantsArr.length; ++i) {
+			const obj = {...tenantsArr[i], children: []};
 
 			map[obj.id] = obj;
 
-			var parent = (i == 0) ? '-' : obj.parentId; // the first item is always the top-level tenant
+			const parent = (i === 0) ? "-" : obj.parentId; // the first item is always the top-level tenant
 			if (!map[parent]) {
 				map[parent] = {
 					children: []
@@ -88,17 +131,23 @@ var TenantUtils = function () {
 			map[parent].children.push(obj);
 		}
 
-		return map['-'].children;
-	};
+		return map["-"].children;
+	}
 
-	this.addLevels = function (tenants) {
+	/**
+	 * Adds level information to a group of tenants. This manipulates the
+	 * passed collection *in place* rather than returning a new structure.
+	 *
+	 * @param {Tenant[]} tenants
+	 */
+	addLevels(tenants) {
 		// convert a flat tenant list into a hierarchy
-		var tenantHierarchy = this.convertToHierarchy(tenants);
+		const tenantHierarchy = this.convertToHierarchy(tenants);
 		// and then walk down the hierarchy to find out how deeply nested each tenant is and add a 'level' property to each tenant
-		applyLevels(tenantHierarchy, 1);
-	};
+		this.applyLevels(tenantHierarchy, 1);
+	}
 
-};
+}
 
 TenantUtils.$inject = [];
 module.exports = TenantUtils;

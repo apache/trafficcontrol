@@ -70,7 +70,7 @@ var FormOriginController = function(origin, $scope, $window, formUtils, location
     var getDeliveryServices = function() {
         deliveryServiceService.getDeliveryServices()
             .then(function(result) {
-                $scope.deliveryServices =  _.sortBy(result, 'xmlId');
+                $scope.deliveryServices = _.sortBy(result, 'xmlId');
             });
     };
 
