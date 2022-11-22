@@ -26,6 +26,25 @@ const defaultTextColor = "#515356";
 const prodTextColor = "white";
 const prodBannerColor = "#B22222";
 
+/** @typedef {import("moment")} moment */
+
+/**
+ * @param {import("angular").IRootScopeService} $rootScope
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {*} $uibModal
+ * @param {import("angular").ILocationService} $location
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../service/utils/PermissionUtils")} permissionUtils
+ * @param {import("../../api/AuthService")} authService
+ * @param {import("../../api/TrafficPortalService")} trafficPortalService
+ * @param {import("../../api/ChangeLogService")} changeLogService
+ * @param {import("../../api/CDNService")} cdnService
+ * @param {import("../../models/ChangeLogModel")} changeLogModel
+ * @param {import("../../models/UserModel")} userModel
+ * @param {import("../../models/PropertiesModel")} propertiesModel
+ */
 var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel) {
 
     let getCDNs = function(notifications) {
