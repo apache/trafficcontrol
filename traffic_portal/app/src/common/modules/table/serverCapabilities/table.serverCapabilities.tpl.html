@@ -34,11 +34,13 @@ under the License.
             <thead>
             <tr>
                 <th>Name</th>
+                <th>Description</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editServerCapability(sc.name)" ng-repeat="sc in ::serverCapabilities" context-menu="contextMenuItems">
                 <td name="name" data-search="^{{::sc.name}}$">{{::sc.name}}</td>
+                <td name="name" data-search="^{{::sc.description}}$">{{::sc.description}}</td>
             </tr>
             </tbody>
         </table>

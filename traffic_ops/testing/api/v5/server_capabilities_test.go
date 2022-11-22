@@ -57,12 +57,12 @@ func TestServerCapabilities(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody:   tc.ServerCapability{Name: "foo"},
+					RequestBody:   tc.ServerCapability{Name: "foo", Description: "foo servers"},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID NAME": {
 					ClientSession: TOSession,
-					RequestBody:   tc.ServerCapability{Name: "b@dname"},
+					RequestBody:   tc.ServerCapability{Name: "b@dname", Description: "Server Capability"},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
@@ -70,7 +70,7 @@ func TestServerCapabilities(t *testing.T) {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"blah"}}},
-					RequestBody:   tc.ServerCapability{Name: "newname"},
+					RequestBody:   tc.ServerCapability{Name: "newname", Description: "Server Capability for new name"},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServerCapabilitiesUpdateFields(map[string]interface{}{"Name": "newname"}),
 						validateSSCFieldsOnServerCapabilityUpdate("newname", map[string]interface{}{"ServerCapability": "newname"})),
@@ -78,7 +78,7 @@ func TestServerCapabilities(t *testing.T) {
 				"BAD REQUEST when NAME DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"invalid"}}},
-					RequestBody:   tc.ServerCapability{Name: "newname"},
+					RequestBody:   tc.ServerCapability{Name: "newname", Description: "Server Capability for new name"},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
@@ -87,7 +87,7 @@ func TestServerCapabilities(t *testing.T) {
 						QueryParameters: url.Values{"name": {"disk"}},
 						Header:          http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					},
-					RequestBody:  tc.ServerCapability{Name: "newname"},
+					RequestBody:  tc.ServerCapability{Name: "newname", Description: "Server Capability for new name"},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
@@ -96,7 +96,7 @@ func TestServerCapabilities(t *testing.T) {
 						QueryParameters: url.Values{"name": {"disk"}},
 						Header:          http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					},
-					RequestBody:  tc.ServerCapability{Name: "newname"},
+					RequestBody:  tc.ServerCapability{Name: "newname", Description: "Server Capability for new name"},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 			},

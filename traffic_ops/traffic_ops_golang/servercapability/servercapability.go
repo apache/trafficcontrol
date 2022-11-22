@@ -45,10 +45,12 @@ func (v *TOServerCapability) NewReadObj() interface{}       { return &tc.ServerC
 func (v *TOServerCapability) InsertQuery() string {
 	return `
 INSERT INTO server_capability (
-  name
+  name,
+  description
 )
 VALUES (
-  :name
+  :name,
+  :description
 )
 RETURNING last_updated
 `
@@ -58,6 +60,7 @@ func (v *TOServerCapability) SelectQuery() string {
 	return `
 SELECT
   name,
+  description,
   last_updated
 FROM
   server_capability sc
@@ -67,9 +70,10 @@ FROM
 func (v *TOServerCapability) updateQuery() string {
 	return `
 UPDATE server_capability sc SET
-	name = $1
-WHERE sc.name = $2
-RETURNING sc.name, sc.last_updated
+	name = $1,
+	description = $2
+WHERE sc.name = $3
+RETURNING sc.name, sc.description, sc.last_updated
 `
 }
 
@@ -110,7 +114,8 @@ func (v *TOServerCapability) GetType() string {
 func (v *TOServerCapability) Validate() (error, error) {
 	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
 	errs := validation.Errors{
-		"name": validation.Validate(v.Name, validation.Required, rule),
+		"name":        validation.Validate(v.Name, validation.Required, rule),
+		"description": validation.Validate(v.Description, validation.Required),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
@@ -136,14 +141,14 @@ func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
 	}
 
 	// udpate server capability name
-	rows, err := v.ReqInfo.Tx.Query(v.updateQuery(), v.RequestedName, v.Name)
+	rows, err := v.ReqInfo.Tx.Query(v.updateQuery(), v.RequestedName, v.Description, v.Name)
 	if err != nil {
 		return nil, fmt.Errorf("server capability update: error setting the name for server capability %v: %v", v.Name, err.Error()), http.StatusInternalServerError
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
 	for rows.Next() {
-		err = rows.Scan(&v.Name, &v.LastUpdated)
+		err = rows.Scan(&v.Name, &v.Description, &v.LastUpdated)
 		if err != nil {
 			return api.ParseDBError(err)
 		}

@@ -5431,22 +5431,28 @@
     ],
     "serverCapabilities": [
         {
-            "name": "foo"
+            "name": "foo",
+            "description": "server capability foo"
         },
         {
-            "name": "bar"
+            "name": "bar",
+            "description": "server capability bar"
         },
         {
-            "name": "ram"
+            "name": "ram",
+            "description": "server capability ram"
         },
         {
-            "name": "disk"
+            "name": "disk",
+            "description": "server capability disk"
         },
         {
-            "name": "asdf"
+            "name": "asdf",
+            "description": "server capability asdf"
         },
         {
-            "name": "blah"
+            "name": "blah",
+            "description": "server capability blah"
         }
     ],
     "serverServerCapabilities": [

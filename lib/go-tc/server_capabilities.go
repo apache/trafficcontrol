@@ -28,6 +28,7 @@ type ServerCapabilitiesResponse struct {
 // ServerCapability contains information about a given ServerCapability in Traffic Ops.
 type ServerCapability struct {
 	Name        string     `json:"name" db:"name"`
+	Description string     `json:"description" db:"description"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
