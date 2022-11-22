@@ -54,7 +54,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	 * Checks if a TLS version is unknown.
 	 * @param {string} v
 	 */
-	$scope.tlsVersionUnknown = v  => v && !knownVersions.has(v);
+	$scope.tlsVersionUnknown = v => v && !knownVersions.has(v);
 
 	const insecureVersions = new Set(["1.0", "1.1"]);
 	/**
@@ -472,6 +472,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 	if (deliveryService.lastUpdated) {
 		// TS checkers hate him for this one weird trick:
+		// @ts-ignore
 		deliveryService.lastUpdated = new Date(deliveryService.lastUpdated.replace("+00", "Z"));
 		// ... the right way to do this is with an interceptor, but nobody
 		// wants to put in that kinda work on a legacy product.

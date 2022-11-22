@@ -22,7 +22,7 @@
  *
  * @param {string} tableName
  * @param {import("../../../api/DeliveryServiceService").DeliveryService[]} deliveryServices
- * @param {unknown[]} steeringTargets
+ * @param {{deliveryService: string; targets: {deliveryService: string}[]}[]} steeringTargets
  * @param {import("angular").IAnchorScrollService} $anchorScroll
  * @param {*} $scope
  * @param {*} $state
@@ -545,7 +545,8 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 	$scope.COMPLETE = 4;
 
 	/**
-	 * @param {{readonly id: number; type: string}} ds
+	 * @deprecated This should instead just be an ng-href.
+	 * @param {{readonly id: number; type: string; xmlId: string}} ds
 	 */
 	function viewCharts(ds) {
 		if (showCustomCharts) {
