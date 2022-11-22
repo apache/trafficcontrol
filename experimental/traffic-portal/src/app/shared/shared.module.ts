@@ -18,6 +18,8 @@ import { MatMenuModule } from "@angular/material/menu";
 import { RouterModule } from "@angular/router";
 
 import { AppUIModule } from "src/app/app.ui.module";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { TpSidebarComponent } from "src/app/shared/navigation/tp-sidebar/tp-sidebar.component";
 
 import { AlertComponent } from "./alert/alert.component";
 import { LinechartDirective } from "./charts/linechart.directive";
@@ -46,6 +48,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		AlertComponent,
 		LoadingComponent,
 		TpHeaderComponent,
+		TpSidebarComponent,
 		GenericTableComponent,
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
@@ -64,6 +67,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		AlertComponent,
 		LoadingComponent,
 		TpHeaderComponent,
+		TpSidebarComponent,
 		GenericTableComponent,
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
@@ -80,7 +84,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 	],
 	providers: [
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },
-		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
+		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor }
 	]
 })
 export class SharedModule { }

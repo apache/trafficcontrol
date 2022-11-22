@@ -1,0 +1,22 @@
+mat-sidenav-container {
+	height: 100%;
+
+	mat-sidenav {
+		//width: 10em;
+
+		.mat-icon {
+			margin-right: 0;
+		}
+
+		.mat-menu-item {
+			width: 100%;
+			padding-left: 0.5em;
+			padding-right: 0.5em;
+		}
+
+		div[role=group] > .mat-tree-node > a {
+			padding-left: calc(.5em + 29px);
+		}
+	}
+
+}

@@ -1,0 +1,57 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<mat-toolbar color="primary" *ngIf="!hidden">
+	<a routerLink="/core/">
+		<img src="/assets/logo.svg" alt="ATC logo"/>
+	</a>
+	<h1>{{title ? title : 'Welcome to Traffic Portal!'}}</h1>
+	<div></div>
+	<nav id="expanded">
+		<ul>
+			<li *ngFor="let nav of horizNavs">
+				<a *ngIf="navShown(nav, 'anchor')" mat-button [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
+				<button *ngIf="navShown(nav, 'button')" mat-button (click)="navClick(nav)">{{nav.text}}</button>
+			</li>
+			<li>
+				<button mat-icon-button [matMenuTriggerFor]="expandedMenu">
+					<mat-icon>manage_accounts</mat-icon>
+				</button>
+				<mat-menu #expandedMenu="matMenu">
+					<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
+					<div *ngFor="let nav of vertNavs">
+						<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
+						<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
+					</div>
+				</mat-menu>
+			</li>
+		</ul>
+	</nav>
+	<nav id="collapsed">
+		<button mat-icon-button [matMenuTriggerFor]="collapsedMenu"><mat-icon>menu</mat-icon></button>
+		<mat-menu #collapsedMenu="matMenu">
+			<li *ngFor="let nav of horizNavs">
+				<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
+				<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
+			</li>
+			<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
+			<li *ngFor="let nav of vertNavs">
+				<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
+				<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
+			</li>
+		</mat-menu>
+	</nav>
+	<mat-menu #themeMenu="matMenu">
+		<button mat-menu-item *ngFor="let theme of themeSvc.themes" (click)="themeSvc.loadTheme(theme)">{{theme.name}}</button>
+	</mat-menu>
+</mat-toolbar>

@@ -28,6 +28,8 @@ import { CacheGroupDetailsComponent } from "./cache-groups/cache-group-details/c
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
 import { DivisionDetailComponent } from "./cache-groups/divisions/detail/division-detail.component";
 import { DivisionsTableComponent } from "./cache-groups/divisions/table/divisions-table.component";
+import { PhysLocDetailComponent } from "./cache-groups/phys-loc/detail/phys-loc-detail.component";
+import { PhysLocTableComponent } from "./cache-groups/phys-loc/table/phys-loc-table.component";
 import { RegionDetailComponent } from "./cache-groups/regions/detail/region-detail.component";
 import { RegionsTableComponent } from "./cache-groups/regions/table/regions-table.component";
 import { ChangeLogsComponent } from "./change-logs/change-logs.component";
@@ -69,11 +71,13 @@ export const ROUTES: Routes = [
 	{ component: CacheGroupDetailsComponent, path: "cache-groups/:id"},
 	{ component: TenantsComponent, path: "tenants"},
 	{ component: ChangeLogsComponent, path: "change-logs" },
-	{ component: TenantDetailsComponent, path: "tenants/:id"}
+	{ component: TenantDetailsComponent, path: "tenants/:id"},
+	{ component: PhysLocDetailComponent, path: "phys-loc/:id" },
+	{ component: PhysLocTableComponent, path: "phys-loc" },
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
- * CoreModule contains code that only logged in users will be served.
+ * CoreModule contains code that only logged-in users will be served.
  */
 @NgModule({
 	declarations: [
@@ -97,6 +101,8 @@ export const ROUTES: Routes = [
 		ChangeLogsComponent,
 		LastDaysComponent,
 		UserRegistrationDialogComponent,
+		PhysLocTableComponent,
+		PhysLocDetailComponent,
 		DivisionsTableComponent,
 		DivisionDetailComponent,
 		RegionsTableComponent,

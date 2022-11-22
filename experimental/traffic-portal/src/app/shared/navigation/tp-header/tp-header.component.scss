@@ -1,0 +1,204 @@
+/*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+mat-toolbar {
+	display: inline-flex;
+	width: 100%;
+	height: 3em;
+	padding: 5px;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+
+	transition: font-size 0.5s;
+
+	a {
+		height: 90%;
+		margin-left: 5px;
+		overflow: hidden;
+		cursor: pointer;
+		display: inline-block;
+
+		img {
+			height: 100%;
+			max-width: 3em;
+		}
+	}
+
+	h1 {
+		display: inline-block;
+		margin: auto auto auto 10px;
+	}
+
+	& > div {
+		flex: auto;
+	}
+}
+
+nav {
+	display: flex;
+
+	& >ul {
+		display: flex;
+
+		& > li > a {
+			display: flex;
+		}
+	}
+}
+
+a.mat-menu-item {
+	text-transform: uppercase;
+}
+
+nav#expanded > ul {
+
+	padding-inline-start: 0;
+
+	& > li {
+		display: inline;
+		margin: auto;
+
+		svg {
+			width: 1.1em;
+			fill: white;
+		}
+
+		button {
+			appearance: none;
+			font-family: inherit;
+			background: transparent;
+			border: none;
+			color: inherit;
+		}
+	}
+}
+
+nav#collapsed {
+	cursor: pointer;
+	text-align: center;
+
+	& > label {
+		position: relative;
+		display: inline-block;
+		width: 1.25em;
+		height: 0.8em;
+		margin-right: 0.3em;
+		border-top: 0.2em solid #fff;
+		border-bottom: 0.2em solid #fff;
+		right: 10px;
+		top: 0.85em;
+		cursor: inherit;
+
+		&::before {
+			content: "";
+			position: absolute;
+			top: 0.3em;
+			left: 0px;
+			width: 100%;
+			border-top: 0.2em solid #fff;
+		}
+
+		& ~ ul {
+			display: none;
+			position: absolute;
+			top: 3.5em;
+			right: 0.5em;
+			color: black;
+			list-style: none;
+			background-color: white;
+			border: 1px solid black;
+			border-radius: 3px;
+			margin: 0;
+			padding: 0;
+
+			li {
+				min-width: 120px;
+				display: block;
+				width: 100%;
+				height: 2.25em;
+				border-bottom: 1px solid lightgray;
+
+				a {
+					display: block;
+					height: 100%;
+					width: 100%;
+					line-height: 2.25em;
+				}
+
+				button {
+					appearance: none;
+					border: none;
+					background-color: transparent;
+					width: 100%;
+					height: 100%;
+					padding: 0;
+					line-height: 2.25em;
+					font: inherit;
+				}
+
+				&:hover {
+					background-color: lightgray;
+				}
+				&:last-child {
+					border-bottom: none;
+				}
+			}
+		}
+	}
+	input:checked ~ ul {
+		display: block;
+	}
+}
+
+@media (max-width: 630px) {
+	nav#collapsed {
+		display: inline-block;
+	}
+	nav#expanded {
+		display: none;
+	}
+}
+
+@media (min-width: 630px) {
+	nav#collapsed {
+		display: none;
+	}
+	nav#expanded {
+		display: auto;
+	}
+}
+
+@media (max-width: 480px) {
+	header > img {
+		display: none;
+	}
+}
+
+@media (max-width: 2100px) {
+	header > h1 {
+		font-size: 1.5em;
+	}
+}
+
+@media (max-width: 1650px) {
+	header > h1 {
+		font-size: 1em;
+	}
+}
+
+@media (max-width: 1230px) {
+	header > h1 {
+		display: none;
+	}
+}
