@@ -17,7 +17,17 @@
  * under the License.
  */
 
-var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state, $uibModal, $window, locationUtils, cacheGroupService, cdnService, messageModel) {
+/**
+ * @param {*} cacheGroups
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IWindowService} $window
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/CacheGroupService")} cacheGroupService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
+var TableCacheGroupsController = function(cacheGroups, $scope, $state, $uibModal, $window, locationUtils, cacheGroupService, messageModel) {
 
     let cacheGroupsTable;
 
@@ -209,5 +219,5 @@ var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state
 
 };
 
-TableCacheGroupsController.$inject = ['cacheGroups', '$location', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'cacheGroupService', 'cdnService', 'messageModel'];
+TableCacheGroupsController.$inject = ['cacheGroups', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'cacheGroupService', 'messageModel'];
 module.exports = TableCacheGroupsController;

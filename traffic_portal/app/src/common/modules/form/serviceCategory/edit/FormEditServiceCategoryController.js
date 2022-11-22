@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} serviceCategory
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/ServiceCategoryService")} serviceCategoryService
+ */
 var FormEditServiceCategoryController = function(serviceCategory, $scope, $controller, $uibModal, $anchorScroll, locationUtils, serviceCategoryService) {
 
     // extends the FormServiceCategoryController to inherit common methods

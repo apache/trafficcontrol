@@ -17,6 +17,14 @@
  * under the License.
  */
 
+/**
+ * @param {*} cdn
+ * @param {*} federations
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableCDNFederationsController = function(cdn, federations, $scope, $state, $location, locationUtils) {
 
 	$scope.cdn = cdn;

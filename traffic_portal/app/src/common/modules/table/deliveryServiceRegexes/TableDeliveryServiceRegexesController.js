@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} regexes
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;

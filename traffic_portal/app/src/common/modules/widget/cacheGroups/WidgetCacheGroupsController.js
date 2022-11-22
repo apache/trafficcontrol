@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} $scope
+ * @param {import("angular").IIntervalService} $interval
+ * @param {import("../../../api/CacheGroupService")} cacheGroupService
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ */
 var WidgetCacheGroupsController = function($scope, $interval, cacheGroupService, locationUtils, propertiesModel) {
 
 	var interval,

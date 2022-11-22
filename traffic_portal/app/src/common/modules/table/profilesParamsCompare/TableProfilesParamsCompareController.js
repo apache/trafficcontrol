@@ -17,6 +17,8 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} */
+
 /**
  * This is a controller for the table used to compare the Parameters of two
  * Profiles.
@@ -28,7 +30,7 @@
  * @param {*} $scope
  * @param {*} $state
  * @param {import("angular").IQService} $q
- * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../models/MessageModel")} messageModel
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
@@ -213,6 +215,8 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
+		// Datatables should be replaced with AG-Grid.
+		// @ts-ignore
 		$('#profilesParamsCompareTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": -1,

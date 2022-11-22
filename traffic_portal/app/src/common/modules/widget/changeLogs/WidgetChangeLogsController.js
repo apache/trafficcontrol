@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/** @typedef {import("moment")} moment */
+
+/**
+ * @param {*} $scope
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/ChangeLogService")} changeLogService
+ */
 var WidgetChangeLogsController = function($scope, locationUtils, changeLogService) {
 
 	var getChangeLogs = function() {

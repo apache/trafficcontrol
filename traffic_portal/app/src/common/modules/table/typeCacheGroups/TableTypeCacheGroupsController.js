@@ -17,7 +17,14 @@
  * under the License.
  */
 
-var TableTypeCacheGroupsController = function(type, cacheGroups, $controller, $scope, $state, locationUtils) {
+/**
+ * @param {*} type
+ * @param {*} cacheGroups
+ * @param {import("angular").IControllerService} $controller
+ * @param {*} $scope
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
+var TableTypeCacheGroupsController = function(type, cacheGroups, $controller, $scope, locationUtils) {
 
 	// extends the TableCacheGroupsController to inherit common methods
 	angular.extend(this, $controller('TableCacheGroupsController', { cacheGroups: cacheGroups, $scope: $scope }));
@@ -53,5 +60,5 @@ var TableTypeCacheGroupsController = function(type, cacheGroups, $controller, $s
 
 };
 
-TableTypeCacheGroupsController.$inject = ['type', 'cacheGroups', '$controller', '$scope', '$state', 'locationUtils'];
+TableTypeCacheGroupsController.$inject = ['type', 'cacheGroups', '$controller', '$scope', 'locationUtils'];
 module.exports = TableTypeCacheGroupsController;

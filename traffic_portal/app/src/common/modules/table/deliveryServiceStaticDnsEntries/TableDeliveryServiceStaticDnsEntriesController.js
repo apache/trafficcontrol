@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} staticDnsEntries
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableDeliveryServiceStaticDnsEntriesController = function(deliveryService, staticDnsEntries, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;

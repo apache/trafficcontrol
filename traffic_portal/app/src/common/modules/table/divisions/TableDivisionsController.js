@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {*} divisions
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableDivisionsController = function(divisions, $scope, $state, locationUtils) {
 
     $scope.divisions = divisions;

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $http, ENV) {
+var DeliveryServiceUrlSigKeysService = function(messageModel, $http, ENV) {
 
 	this.generateUrlSigKeys = function(dsXmlId) {
 		return $http.post(ENV.api.unstable + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/generate').then(
@@ -58,5 +58,5 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
 	};
 };
 
-DeliveryServiceUrlSigKeysService.$inject = ['locationUtils', 'messageModel', '$http', 'ENV'];
+DeliveryServiceUrlSigKeysService.$inject = ['messageModel', '$http', 'ENV'];
 module.exports = DeliveryServiceUrlSigKeysService;

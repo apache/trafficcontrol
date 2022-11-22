@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} division
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/DivisionService")} divisionService
+ */
 var FormEditDivisionController = function(division, $scope, $controller, $uibModal, $anchorScroll, locationUtils, divisionService) {
 
     // extends the FormDivisionController to inherit common methods

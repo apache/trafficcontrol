@@ -17,7 +17,17 @@
  * under the License.
  */
 
-var TableCDNFederationDeliveryServicesController = function(cdn, federation, deliveryServices, $scope, $state, $location, $uibModal, locationUtils, federationService) {
+/**
+ * @param {*} cdn
+ * @param {*} federation
+ * @param {*} deliveryServices
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/FederationService")} federationService
+ */
+var TableCDNFederationDeliveryServicesController = function(cdn, federation, deliveryServices, $scope, $state, $uibModal, locationUtils, federationService) {
 
 	var removeDS = function(dsId) {
 		federationService.deleteFederationDeliveryService($scope.federation.id, dsId)
@@ -105,5 +115,5 @@ var TableCDNFederationDeliveryServicesController = function(cdn, federation, del
 
 };
 
-TableCDNFederationDeliveryServicesController.$inject = ['cdn', 'federation', 'deliveryServices', '$scope', '$state', '$location', '$uibModal', 'locationUtils', 'federationService'];
+TableCDNFederationDeliveryServicesController.$inject = ['cdn', 'federation', 'deliveryServices', '$scope', '$state', '$uibModal', 'locationUtils', 'federationService'];
 module.exports = TableCDNFederationDeliveryServicesController;

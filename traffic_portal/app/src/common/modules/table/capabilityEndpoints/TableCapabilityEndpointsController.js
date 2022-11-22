@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} capability
+ * @param {*} capEndpoints
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableCapabilityEndpointsController = function(capability, capEndpoints, $scope, $state, locationUtils) {
 
 	$scope.capability = capability[0];

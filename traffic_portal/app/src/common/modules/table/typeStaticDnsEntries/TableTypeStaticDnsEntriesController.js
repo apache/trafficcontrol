@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} type
+ * @param {*} staticDnsEntries
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableTypeStaticDnsEntriesController = function(type, staticDnsEntries, $scope, $state, locationUtils) {
 
 	$scope.type = type;

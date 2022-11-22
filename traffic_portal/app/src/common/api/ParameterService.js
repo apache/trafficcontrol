@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {import("angular").IHttpService} $http
+ * @param {import("../service/utils/LocationUtils")} locationUtils
+ * @param {import("../models/MessageModel")} messageModel
+ * @param {{api: Record<PropertyKey, string>}} ENV
+ */
 var ParameterService = function($http, locationUtils, messageModel, ENV) {
 
     this.getParameters = function(queryParams) {

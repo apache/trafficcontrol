@@ -17,6 +17,8 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} */
+
 /**
  * The controller for the table that lists the Delivery Services that require a
  * particular Server Capability.
@@ -25,7 +27,7 @@
  * @param {import("../../../api/DeliveryServiceService").DeliveryService[]} deliveryServices
  * @param {*} $scope
  * @param {*} $state
- * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
  * @param {import("../../../models/MessageModel")} messageModel
@@ -107,6 +109,8 @@ var TableServerCapabilityDeliveryServicesController = function(serverCapability,
 	};
 
 	angular.element(document).ready(function () {
+		// Datatables...
+		// @ts-ignore
 		$('#serverCapabilityDeliveryServicesTable').dataTable({
 			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,

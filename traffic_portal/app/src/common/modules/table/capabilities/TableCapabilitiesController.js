@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCapabilitiesController = function(capabilities, $scope, $state, locationUtils) {
+var TableCapabilitiesController = function(capabilities, $scope, $state) {
 
 	$scope.capabilities = capabilities;
 
@@ -35,5 +35,5 @@ var TableCapabilitiesController = function(capabilities, $scope, $state, locatio
 
 };
 
-TableCapabilitiesController.$inject = ['capabilities', '$scope', '$state', 'locationUtils'];
+TableCapabilitiesController.$inject = ['capabilities', '$scope', '$state'];
 module.exports = TableCapabilitiesController;

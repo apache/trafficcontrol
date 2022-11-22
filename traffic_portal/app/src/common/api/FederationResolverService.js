@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FederationResolverService = function($http, ENV, locationUtils, messageModel) {
+var FederationResolverService = function($http, ENV, messageModel) {
 
 	this.getFederationResolvers = function(queryParams) {
 		return $http.get(ENV.api.unstable + 'federation_resolvers', {params: queryParams}).then(
@@ -57,5 +57,5 @@ var FederationResolverService = function($http, ENV, locationUtils, messageModel
 
 };
 
-FederationResolverService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
+FederationResolverService.$inject = ['$http', 'ENV', 'messageModel'];
 module.exports = FederationResolverService;

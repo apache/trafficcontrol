@@ -17,7 +17,12 @@
  * under the License.
  */
 
-var TableCdniController = function(tableName, cdniRequests, $scope, locationUtils) {
+/**
+ * @param {*} cdniRequests
+ * @param {*} $scope
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
+var TableCdniController = function(cdniRequests, $scope, locationUtils) {
 
 	$scope.cdniRequests = cdniRequests.map(
 		function(x) {
@@ -64,5 +69,5 @@ var TableCdniController = function(tableName, cdniRequests, $scope, locationUtil
 
 };
 
-TableCdniController.$inject = ['tableName', 'cdniRequests', '$scope', 'locationUtils'];
+TableCdniController.$inject = ['cdniRequests', '$scope', 'locationUtils'];
 module.exports = TableCdniController;

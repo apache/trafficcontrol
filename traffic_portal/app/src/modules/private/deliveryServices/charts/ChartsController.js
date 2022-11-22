@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../../common/service/utils/LocationUtils")} locationUtils
+ */
 var ChartsController = function(deliveryService, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;

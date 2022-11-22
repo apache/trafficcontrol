@@ -17,6 +17,19 @@
  * under the License.
  */
 
+/**
+ *
+ * @param {*} roles
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/RoleService")} roleService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ * @param {import("../../../../models/PropertiesModel")} propertiesModel
+ */
 var FormEditRoleController = function(roles, $scope, $controller, $uibModal, $anchorScroll, $location, locationUtils, roleService, messageModel, propertiesModel) {
 
 	// extends the FormRoleController to inherit common methods

@@ -17,11 +17,18 @@
  * under the License.
  */
 
-/** @typedef { import('../agGrid/CommonGridController').CGC } CGC */
-
+/**
+ * @param {*} jobs
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/JobService")} jobService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
 var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtils, jobService, messageModel) {
 
-	/** @type CGC.ColumnDefinition */
+	/** @type {import("../agGrid/CommonGridController").CGC.ColumnDefinition} */
 	$scope.columns = [
 		{
 			headerName: "Delivery Service",
@@ -72,7 +79,7 @@ var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtil
 			return x;
 		});
 
-	/** @type CGC.DropDownOption[] */
+	/** @type {import("../agGrid/CommonGridController").CGC.DropDownOption[]} */
 	$scope.dropDownOptions = [{
 		name: "createJobMenuItem",
 		onClick: function (){
@@ -82,7 +89,7 @@ var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtil
 		type: 1
 	}];
 
-	/** @type CGC.ContextMenuOption[] */
+	/** @type {import("../agGrid/CommonGridController").CGC.ContextMenuOption[]} */
 	$scope.contextMenuOptions = [{
 		onClick: function (job, $event) {
 			$scope.confirmRemoveJob(job,  $event);
@@ -91,7 +98,7 @@ var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtil
 		type: 1
 	}];
 
-	/** @type CGC.GridSettings */
+	/** @type {import("../agGrid/CommonGridController").CGC.GridSettings} */
 	$scope.gridOptions = {
 		rowClassRules: {
 			'active-job': function(params) {

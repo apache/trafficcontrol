@@ -17,6 +17,22 @@
  * under the License.
  */
 
+/**
+ * @param {*} cdn
+ * @param {*} federation
+ * @param {*} resolvers
+ * @param {*} deliveryServices
+ * @param {*} federationDeliveryServices
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/FederationService")} federationService
+ * @param {import("../../../../api/FederationResolverService")} federationResolverService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ */
 var FormEditFederationController = function(cdn, federation, resolvers, deliveryServices, federationDeliveryServices, $scope, $state, $controller, $uibModal, $anchorScroll, locationUtils, federationService, federationResolverService, messageModel) {
 
 	// extends the FormFederationController to inherit common methods
@@ -106,8 +122,8 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 			}
 		});
 		modalInstance.result.then(function() {
-			var resolvers = _.filter($scope.resolvers, function(res){ return res.id != resolverToRemove.id; });
-			var resolverIds = _.pluck(resolvers, 'id');
+			const resolvers = $scope.resolvers.filter(res => res.id !== resolverToRemove.id);
+			const resolverIds = resolvers.map(r => r.id);
 			assignFederationResolvers($scope.federation.id, resolverIds)
 		}, function () {
 			// do nothing

@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} */
+
+/**
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService} deliveryService
+ * @param {import("../../../api/DeliveryServiceService").SteeringTarget[]} targets
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableDeliveryServiceTargetsController = function(deliveryService, targets, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
@@ -38,6 +47,8 @@ var TableDeliveryServiceTargetsController = function(deliveryService, targets, $
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
+		// Datatables...
+		// @ts-ignore
 		$('#targetsTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,

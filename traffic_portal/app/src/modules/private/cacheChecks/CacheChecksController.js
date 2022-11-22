@@ -17,7 +17,6 @@
  * under the License.
  */
 
-/** @typedef { import('../../../common/modules/table/agGrid/CommonGridController').CGC } CGC */
 /**
  * @param {*} cacheChecks
  * @param {*} $scope
@@ -29,7 +28,7 @@ var CacheChecksController = function(cacheChecks, $scope, locationUtils, propert
 
 	$scope.config = propertiesModel.properties.cacheChecks;
 
-	/** @type CGC.ColumnDefinition */
+	/** @type {import("../../../common/modules/table/agGrid/CommonGridController").CGC.ColumnDefinition} */
 	$scope.columns = [
 		{
 			headerName: "Hostname",
@@ -59,7 +58,7 @@ var CacheChecksController = function(cacheChecks, $scope, locationUtils, propert
 		},
 	];
 
-	/** @type CGC.GridSettings */
+	/** @type {import("../../../common/modules/table/agGrid/CommonGridController").CGC.GridSettings} */
 	$scope.gridOptions = {
 		refreshable: true,
 		onRowClick(row) {
