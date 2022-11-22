@@ -17,11 +17,21 @@
  * under the License.
  */
 
-var CollectionUtils = function() {
-
-	// minimizeArrayDiff reduces the size of an index-sensitive Array diff by
-	// making common elements in the old and new arrays have the same index.
-	this.minimizeArrayDiff = function (oldItems, newItems) {
+/**
+ * CollectionUtils provides methods for manipulating iterable collections of
+ * arbitrary items.
+ */
+class CollectionUtils {
+	/**
+	 * minimizeArrayDiff reduces the size of an index-sensitive Array diff by
+	 * making common elements in the old and new arrays have the same index.
+	 *
+	 * @template T
+	 * @param {T[]} oldItems
+	 * @param {T[]} newItems
+	 * @returns {(T | undefined)[]}
+	 */
+	minimizeArrayDiff(oldItems, newItems) {
 		const minimalDiffItems = [];
 		const addedItems = [];
 
@@ -52,13 +62,27 @@ var CollectionUtils = function() {
 		return minimalDiffItems;
 	};
 
-	this.uniqArray = function(array1, array2, key) {
-		array1 = array1 || [];
-		array2 = array2 || [];
-
+	/**
+	 * uniqArray constructs an array from the combination of two arrays such
+	 * that the elements are only objects having unique values for their 'key'
+	 * property.
+	 *
+	 * The unique values chosen will be the first found by order of iterating
+	 * first `array1` then `array2`.
+	 *
+	 * @template {PropertyKey} U
+	 * @template {Record<U, unknown>} T
+	 * @param {T[]} array1
+	 * @param {T[]} array2
+	 * @param {U} key
+	 * @returns {T[]}
+	 */
+	uniqArray(array1, array2, key) {
+		/** @type {Set<unknown>} */
 		const keys = new Set();
+		/** @type {T[]} */
 		const uniq = new Array();
-		array1.concat(array2).forEach(function(item) {
+		array1.concat(array2).forEach(function (item) {
 			if (!keys.has(item[key])) {
 				uniq.push(item);
 				keys.add(item[key]);
@@ -66,8 +90,7 @@ var CollectionUtils = function() {
 		});
 		return uniq;
 	};
-
-};
+}
 
 CollectionUtils.$inject = [];
 module.exports = CollectionUtils;
