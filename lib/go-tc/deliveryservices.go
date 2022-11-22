@@ -283,7 +283,8 @@ type DeliveryServiceV41 struct {
 	// Regional indicates whether the Delivery Service's MaxOriginConnections is
 	// only per Cache Group, rather than divided over all Cache Servers in child
 	// Cache Groups of the Origin.
-	Regional bool `json:"regional" db:"regional"`
+	Regional             bool     `json:"regional" db:"regional"`
+	RequiredCapabilities []string `json:"requiredCapabilities" db:"required_capabilities"`
 }
 
 // DeliveryServiceV4 is a Delivery Service as it appears in version 4 of the
@@ -1437,6 +1438,8 @@ type DeliveryServiceV50 struct {
 	// use, because the input is in no way restricted, validated, or limited in
 	// scope to the Delivery Service.
 	RemapText *string `json:"remapText" db:"remap_text"`
+	// RequiredCapabilities is an array of capabilities required for this delivery service
+	RequiredCapabilities []string `json:"requiredCapabilities" db:"required_capabilities"`
 	// RoutingName defines the lowest-level DNS label used by the Delivery
 	// Service, e.g. if trafficcontrol.apache.org were a Delivery Service, it
 	// would have a RoutingName of "trafficcontrol".
@@ -1608,7 +1611,8 @@ func (ds DeliveryServiceV5) Downgrade() DeliveryServiceV4 {
 			},
 			TLSVersions: make([]string, len(ds.TLSVersions)),
 		},
-		Regional: ds.Regional,
+		Regional:             ds.Regional,
+		RequiredCapabilities: ds.RequiredCapabilities,
 	}
 
 	*downgraded.Active = ds.Active == DSActiveStateActive
@@ -1691,6 +1695,7 @@ func (ds DeliveryServiceV4) Upgrade() DeliveryServiceV5 {
 		Regional:                  ds.Regional,
 		RegionalGeoBlocking:       coalesceBool(ds.RegionalGeoBlocking, false),
 		RemapText:                 copyStringIfNotNil(ds.RemapText),
+		RequiredCapabilities:      make([]string, len(ds.RequiredCapabilities)),
 		RoutingName:               coalesceString(ds.RoutingName, ""),
 		ServiceCategory:           copyStringIfNotNil(ds.ServiceCategory),
 		Signed:                    ds.Signed,
@@ -1726,6 +1731,7 @@ func (ds DeliveryServiceV4) Upgrade() DeliveryServiceV5 {
 		copy(upgraded.MatchList, *ds.MatchList)
 	}
 	copy(upgraded.TLSVersions, ds.TLSVersions)
+	copy(upgraded.RequiredCapabilities, ds.RequiredCapabilities)
 
 	return upgraded
 }

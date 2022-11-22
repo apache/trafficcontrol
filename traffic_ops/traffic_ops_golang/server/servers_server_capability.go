@@ -363,13 +363,13 @@ server) VALUES (
 func checkDSReqCapQuery() string {
 	return `
 SELECT ARRAY(
-	SELECT dsrc.deliveryservice_id
-	FROM deliveryservices_required_capability as dsrc
-	WHERE deliveryservice_id IN (
+	SELECT ds.id
+	FROM deliveryservice as ds
+	WHERE id IN (
 		SELECT deliveryservice
 		FROM deliveryservice_server
 		WHERE server = $1)
-	AND dsrc.required_capability = $2)`
+	AND $2 = ANY(ds.required_capabilities))`
 }
 
 // get the topology-based DSes (with all their required capabilities) that a given
@@ -380,15 +380,14 @@ SELECT
   ds.xml_id,
   ds.topology,
   ds.tenant_id,
-  ARRAY_AGG(dsrc.required_capability) AS req_caps
+  ds.required_capabilities AS req_caps
 FROM server s
 JOIN cachegroup c ON s.cachegroup = c.id
 JOIN topology_cachegroup tc ON c.name = tc.cachegroup
 JOIN deliveryservice ds ON ds.topology = tc.topology
-JOIN deliveryservices_required_capability dsrc ON dsrc.deliveryservice_id = ds.id
 WHERE s.id = $1
-GROUP BY ds.xml_id, ds.tenant_id, ds.topology
-HAVING $2 = ANY(ARRAY_AGG(dsrc.required_capability))
+GROUP BY ds.xml_id, ds.tenant_id, ds.topology, ds.required_capabilities
+HAVING $2 = ANY(ds.required_capabilities)
 `
 }
 

@@ -142,6 +142,7 @@ func SetLastModifiedHeader(r *http.Request, useIMS bool) bool {
 type errWriterFunc func(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error)
 type readSuccessWriterFunc func(w http.ResponseWriter, r *http.Request, statusCode int, results interface{})
 type deleteSuccessWriterFunc func(w http.ResponseWriter, r *http.Request, message string)
+type createSuccessWriterFunc func(w http.ResponseWriter, r *http.Request, statusCode int, alerts tc.Alerts, results interface{})
 
 // ReadHandler creates a handler function from the pointer to a struct implementing the Reader interface
 //
@@ -471,17 +472,33 @@ func deleteHandlerHelper(deleter Deleter, errHandler errWriterFunc, successHandl
 //	*change log entry
 //	*forming and writing the body over the wire
 func CreateHandler(creator Creator) http.HandlerFunc {
+	return createHandlerHelper(
+		creator,
+		HandleErr,
+		func(w http.ResponseWriter, r *http.Request, statusCode int, alerts tc.Alerts, results interface{}) {
+			w.WriteHeader(statusCode)
+			if len(alerts.Alerts) > 0 {
+				WriteAlertsObj(w, r, statusCode, alerts, results)
+			} else {
+				WriteResp(w, r, results)
+			}
+
+		},
+	)
+}
+
+func createHandlerHelper(creator Creator, errHandler errWriterFunc, successHandler createSuccessWriterFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			errHandler(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
 
 		interfacePtr := reflect.ValueOf(creator)
 		if interfacePtr.Kind() != reflect.Ptr {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
+			errHandler(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
 			return
 		}
 		objectType := reflect.Indirect(interfacePtr).Type()
@@ -491,7 +508,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 		if c, ok := obj.(MultipleCreator); ok && c.AllowMultipleCreates() {
 			data, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+				errHandler(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 				return
 			}
 
@@ -502,7 +519,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 
 			objSlice, err := parseMultipleCreates(data, objectType, inf)
 			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				errHandler(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 				return
 			}
 
@@ -515,30 +532,30 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 					if sysErr != nil {
 						code = http.StatusInternalServerError
 					}
-					HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
+					errHandler(w, r, inf.Tx.Tx, code, userErr, sysErr)
 					return
 				}
 
 				if t, ok := objElem.(Tenantable); ok {
 					authorized, err := t.IsTenantAuthorized(inf.User)
 					if err != nil {
-						HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+						errHandler(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 						return
 					}
 					if !authorized {
-						HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+						errHandler(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 						return
 					}
 				}
 
 				userErr, sysErr, errCode = objElem.Create()
 				if userErr != nil || sysErr != nil {
-					HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+					errHandler(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 					return
 				}
 
 				if err = CreateChangeLog(ApiChange, Created, objElem, inf.User, inf.Tx.Tx); err != nil {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting changelog: %w", err))
+					errHandler(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting changelog: %w", err))
 					return
 				}
 			}
@@ -562,7 +579,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 					alerts.AddAlerts(objElem.(AlertsResponse).GetAlerts())
 				}
 			}
-			WriteAlertsObj(w, r, http.StatusOK, alerts, responseObj)
+			successHandler(w, r, http.StatusOK, alerts, responseObj)
 
 		} else {
 			userErr, sysErr := decodeAndValidateRequestBody(r, obj)
@@ -571,39 +588,57 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 				if sysErr != nil {
 					code = http.StatusInternalServerError
 				}
-				HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
+				errHandler(w, r, inf.Tx.Tx, code, userErr, sysErr)
 				return
 			}
 
 			if t, ok := obj.(Tenantable); ok {
 				authorized, err := t.IsTenantAuthorized(inf.User)
 				if err != nil {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+					errHandler(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 					return
 				}
 				if !authorized {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+					errHandler(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 					return
 				}
 			}
 
 			userErr, sysErr, errCode = obj.Create()
 			if userErr != nil || sysErr != nil {
-				HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+				errHandler(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 				return
 			}
 
 			if err := CreateChangeLog(ApiChange, Created, obj, inf.User, inf.Tx.Tx); err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting changelog: %w", err))
+				errHandler(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting changelog: %w", err))
 				return
 			}
 			alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was created.")
 			if alertsObj, hasAlerts := obj.(AlertsResponse); hasAlerts {
 				alerts.AddAlerts(alertsObj.GetAlerts())
 			}
-			WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
+			successHandler(w, r, http.StatusOK, alerts, obj)
 		}
 	}
+}
+
+// DeprecatedCreateHandler creates a net/http.HandlerFunc for the passed Creator object, and adds a deprecation
+// notice, optionally with a passed alternative route suggestion.
+func DeprecatedCreateHandler(creator Creator, alternative *string) http.HandlerFunc {
+	return createHandlerHelper(
+		creator,
+		func(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error) {
+			HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, alternative)
+		},
+		func(w http.ResponseWriter, r *http.Request, statusCode int, alerts tc.Alerts, results interface{}) {
+			depAlerts := CreateDeprecationAlerts(alternative)
+			for _, al := range alerts.Alerts {
+				depAlerts.Alerts = append(depAlerts.Alerts, al)
+			}
+			WriteAlertsObj(w, r, statusCode, depAlerts, results)
+		},
+	)
 }
 
 func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *APIInfo) ([]Creator, error) {

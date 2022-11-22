@@ -227,9 +227,13 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	if inf.Version.Major >= 5 {
 		resp = dsr
 	} else if inf.Version.Major >= 4 {
-		resp = dsr.Downgrade()
+		if inf.Version.Minor >= 1 {
+			resp = dsr.Downgrade()
+		} else {
+			resp = dsr.Downgrade().Downgrade()
+		}
 	} else {
-		resp = dsr.Downgrade().Downgrade()
+		resp = dsr.Downgrade().Downgrade().Downgrade()
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, message, resp)

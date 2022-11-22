@@ -147,7 +147,7 @@ t.name as server_type,
 s.type as server_type_id,
 s.config_update_time > s.config_apply_time AS upd_pending,
 ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities,
-ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability) as deliveryservice_capabilities
+(SELECT ds.required_capabilities FROM deliveryservice ds WHERE ds.id = $2) AS deliveryservice_capabilities
 `
 	idRows, err := tx.Query(fmt.Sprintf(queryFormatString, "", queryWhereClause), dsID)
 	if err != nil {
@@ -168,7 +168,7 @@ ARRAY(select drc.required_capability from deliveryservices_required_capability d
 		return nil, errors.New("unable to get server interfaces: " + err.Error())
 	}
 
-	rows, err := tx.Query(fmt.Sprintf(queryFormatString, dataFetchQuery, queryWhereClause), dsID)
+	rows, err := tx.Query(fmt.Sprintf(queryFormatString, dataFetchQuery, queryWhereClause), dsID, dsID)
 	if err != nil {
 		return nil, errors.New("querying delivery service eligible servers: " + err.Error())
 	}

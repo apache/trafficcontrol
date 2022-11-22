@@ -321,6 +321,7 @@ func TestReadGetDeliveryServices(t *testing.T) {
 		{"regional", false},
 		{"regional_geo_blocking", false},
 		{"remap_text", nil},
+		{"required_capabilities", nil},
 		{"routing_name", "video"},
 		{"service_category", nil},
 		{"signing_algorithm", nil},
