@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Switched Delivery Service active state to a three-value system, adding a state that will be used to prevent cache servers from deploying DS configuration.
 
 ### Fixed
+- [#4428](https://github.com/apache/trafficcontrol/issues/4428) *Traffic Ops* Fixed Internal Server Error with POST to `profileparameters` when POST body is empty
 - [#7179](https://github.com/apache/trafficcontrol/issues/7179) *Traffic Portal* Fixed search filter for Delivery Service Table
 - [#7174](https://github.com/apache/trafficcontrol/issues/7174) *Traffic Portal* Fixed topologies sort (table and Delivery Service's form)
 - [#5970](https://github.com/apache/trafficcontrol/issues/5970) *Traffic Portal* Fixed numeric sort in Delivery Service's form for DSCP
