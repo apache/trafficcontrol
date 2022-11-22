@@ -15,8 +15,9 @@
   },
   "engineStrict": true,
   "devDependencies": {
-    "angular-mocks": "1.8.3",
     "@types/angular": "^1.8.4",
+    "@types/moment": "^2.13.0",
+    "angular-mocks": "1.8.3",
     "browserify": "16.5.1",
     "connect-livereload": "0.6.1",
     "connect-modrewrite": "0.10.2",
