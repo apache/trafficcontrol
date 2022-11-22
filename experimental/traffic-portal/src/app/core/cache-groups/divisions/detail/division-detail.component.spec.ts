@@ -15,9 +15,11 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
+import { ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
 import { DivisionDetailComponent } from "src/app/core/cache-groups/divisions/detail/division-detail.component";
+import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
 describe("DetailComponent", () => {
 	let component: DivisionDetailComponent;
@@ -25,10 +27,12 @@ describe("DetailComponent", () => {
 	let route: ActivatedRoute;
 	let paramMap: jasmine.Spy;
 
+	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ DivisionDetailComponent ],
 			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
+			providers: [ { provide: TpHeaderService, useValue: headerSvc } ]
 		})
 			.compileComponents();
 
