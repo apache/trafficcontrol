@@ -17,10 +17,23 @@
  * under the License.
  */
 
-var UnitsFilter = function(numberUtils) {
+/**
+ * UnitsFilter is a factory for a filter that adds US-common commas to long
+ * numeric values, and optionally also units.
+ *
+ * @param {import("../service/utils/NumberUtils")} numberUtils
+ */
+function UnitsFilter(numberUtils) {
+	/**
+	 * @param {number} kilobits
+	 * @param {boolean} [prettify]
+	 */
 	return function(kilobits, prettify) {
-		var friendlyUnit = numberUtils.shrink(kilobits);
-		return (prettify) ? numberUtils.addCommas(friendlyUnit[0]) + ' ' + friendlyUnit[1] : friendlyUnit[0];
+		const [val, units] = numberUtils.shrink(kilobits);
+		if (prettify) {
+			return `${numberUtils.addCommas(val)} ${units}`;
+		}
+		return String(val);
 	};
 };
 
