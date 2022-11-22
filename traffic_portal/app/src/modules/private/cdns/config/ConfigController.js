@@ -23,7 +23,7 @@
  * @param {*} currentSnapshot
  * @param {*} newSnapshot
  * @param {*} $scope
- * @param {*} $uibModal
+ * @param {import("../../../../common/service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../../common/service/utils/LocationUtils")} locationUtils
  * @param {import("../../../../common/service/utils/CollectionUtils")} collectionUtils
  * @param {import("../../../../common/api/CDNService")} cdnService

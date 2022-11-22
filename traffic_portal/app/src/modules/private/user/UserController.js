@@ -20,7 +20,7 @@
 /**
  * @param {*} $scope
  * @param {import("angular").ILocationService} $location
- * @param {*} $uibModal
+ * @param {import("../../../common/service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../common/service/utils/FormUtils")} formUtils
  * @param {import("../../../common/service/utils/LocationUtils")} locationUtils
  * @param {import("../../../common/service/utils/TenantUtils")} tenantUtils

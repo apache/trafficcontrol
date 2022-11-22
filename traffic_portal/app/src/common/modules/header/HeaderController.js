@@ -32,7 +32,7 @@ const prodBannerColor = "#B22222";
  * @param {import("angular").IRootScopeService} $rootScope
  * @param {*} $scope
  * @param {*} $state
- * @param {*} $uibModal
+ * @param {import("../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("angular").ILocationService} $location
  * @param {import("angular").IAnchorScrollService} $anchorScroll
  * @param {import("../../service/utils/LocationUtils")} locationUtils

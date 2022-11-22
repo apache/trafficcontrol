@@ -27,11 +27,7 @@
  * @param {*} $scope
  * @param {*} $state
  * @param {import("angular").ILocationService} $location
- * @param {{open: ({})=>{result: Promise<*>}}} $uibModal
- * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
- * @param {import("../../../api/DeliveryServiceRequestService")} deliveryServiceRequestService
  * @param {import("../../../service/utils/DeliveryServiceUtils")} deliveryServiceUtils
- * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../models/MessageModel")} messageModel
  * @param {import("../../../models/PropertiesModel")} propertiesModel
  * @param {import("../../../models/UserModel")} userModel

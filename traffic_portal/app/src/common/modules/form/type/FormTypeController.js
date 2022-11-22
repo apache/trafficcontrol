@@ -24,7 +24,7 @@
  * @param {import("../../../service/utils/FormUtils")} formUtils
  * @param {import("../../../service/utils/StringUtils")} stringUtils
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
- * @param {*} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../api/TypeService")} typeService
  */
 var FormTypeController = function(type, $scope, $location, formUtils, stringUtils, locationUtils, $uibModal, typeService) {

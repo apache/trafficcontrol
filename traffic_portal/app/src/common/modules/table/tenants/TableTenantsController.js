@@ -22,7 +22,7 @@
  * @param {*} tenants
  * @param {*} $scope
  * @param {*} $state
- * @param {*} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../service/utils/FileUtils")} fileUtils
  * @param {import("../../../service/utils/TenantUtils")} tenantUtils

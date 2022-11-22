@@ -23,7 +23,7 @@
  * @param {*} $scope
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../api/DeliveryServiceSslKeysService")} deliveryServiceSslKeysService
- * @param {*} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("angular").IAnchorScrollService} $anchorScroll
  * @param {import("../../../service/utils/FormUtils")} formUtils
  * @param {import("angular").IFilterService} $filter

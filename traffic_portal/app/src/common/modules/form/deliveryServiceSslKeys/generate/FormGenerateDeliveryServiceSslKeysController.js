@@ -22,7 +22,7 @@
  * @param {*} sslKeys
  * @param {*} sslRequest
  * @param {*} $scope
- * @param {*} $uibModal
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../../api/DeliveryServiceSslKeysService")} deliveryServiceSslKeysService
  * @param {import("../../../../service/utils/FormUtils")} formUtils

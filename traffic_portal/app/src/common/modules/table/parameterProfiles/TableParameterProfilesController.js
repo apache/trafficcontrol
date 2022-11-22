@@ -24,7 +24,7 @@
  * @param {unknown[]} profiles
  * @param {*} $scope
  * @param {*} $state
- * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("angular").IWindowService} $window
  * @param {import("angular").ILocationService} $location
  * @param {import("../../../service/utils/LocationUtils")} locationUtils

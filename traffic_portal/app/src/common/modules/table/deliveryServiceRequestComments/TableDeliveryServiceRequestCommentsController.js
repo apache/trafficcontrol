@@ -23,7 +23,7 @@
  * @param {import("../../../api/DeliveryServiceRequestService").DeliveryServiceRequest} request
  * @param {*} $scope
  * @param {*} $stateParams
- * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("angular").IAnchorScrollService} $anchorScroll
  * @param {import("../../../service/utils/DateUtils")} dateUtils
  * @param {import("../../../service/utils/LocationUtils")} locationUtils

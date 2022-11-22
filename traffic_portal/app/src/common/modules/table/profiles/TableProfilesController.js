@@ -44,7 +44,7 @@
  * @param {Profile[]} profiles
  * @param {*} $scope
  * @param {import("angular").ILocationService} $location
- * @param {*} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../api/ProfileService")} profileService
  * @param {import("../../../models/MessageModel")} messageModel

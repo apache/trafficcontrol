@@ -21,7 +21,7 @@
  * @param {*} servers
  * @param {*} $scope
  * @param {*} $state
- * @param {*} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../service/utils/ServerUtils")} serverUtils
  * @param {import("../../../api/CDNService")} cdnService
