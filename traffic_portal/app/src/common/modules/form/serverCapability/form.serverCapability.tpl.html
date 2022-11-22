@@ -44,8 +44,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serverCapabilityForm.description), 'has-feedback': hasError(serverCapabilityForm.description)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12" >Description *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="description" name="description" rows="3" cols="17" class="form-control" ng-model="serverCapability.description" maxlength="256" required autofocus></textarea>
-                    <small class="input-error" ng-show="hasPropertyError(serverCapabilityForm.description, 'required')">Required</small>
+                    <textarea id="description" name="description" rows="3" cols="17" class="form-control" ng-model="serverCapability.description" maxlength="256" autofocus></textarea>
                     <span ng-show="hasError(serverCapabilityForm.description)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
