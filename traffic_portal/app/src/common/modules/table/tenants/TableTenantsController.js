@@ -17,6 +17,19 @@
  * under the License.
  */
 
+/**
+ * @param {*} currentUserTenant
+ * @param {*} tenants
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("angular").ITimeoutService} $timeout
+ * @param {*} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/FileUtils")} fileUtils
+ * @param {import("../../../service/utils/TenantUtils")} tenantUtils
+ * @param {import("../../../api/TenantService")} tenantService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
 var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, $uibModal, locationUtils, fileUtils, tenantUtils, tenantService, messageModel) {
 
     $scope.tenantTree = [];

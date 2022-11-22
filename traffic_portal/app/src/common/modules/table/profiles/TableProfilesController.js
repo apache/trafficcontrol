@@ -27,7 +27,7 @@
  * @property {string} cdnName
  * @property {string} description
  * @property {number} id
- * @property {Date} lastUpdated
+ * @property {string} lastUpdated
  * @property {string} name
  * @property {boolean} routingDisabled
  * @property {ProfileType} type
@@ -42,6 +42,13 @@
  * The controller for the Profiles table view
  *
  * @param {Profile[]} profiles
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {*} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/ProfileService")} profileService
+ * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../service/utils/FileUtils")} fileUtils
  */
 var TableProfilesController = function(profiles, $scope, $location, $uibModal, locationUtils, profileService, messageModel, fileUtils) {
 
@@ -180,7 +187,7 @@ var TableProfilesController = function(profiles, $scope, $location, $uibModal, l
 		);
 	};
 
-	/** @type CGC.DropDownOption[] */
+	/** @type {import("../agGrid/CommonGridController").CGC.DropDownOption[]} */
 	$scope.dropDownOptions = [
 		{
 			name: "createProfileMenuItem",
@@ -259,7 +266,7 @@ var TableProfilesController = function(profiles, $scope, $location, $uibModal, l
 		fileUtils.exportJSON(result, profile.name, "json");
 	};
 
-	/** @type CGC.ContextMenuOption[] */
+	/** @type {import("../agGrid/CommonGridController").CGC.ContextMenuOption[]} */
 	$scope.contextMenuOptions = [
 		{
 			getHref: profile => `#!/profiles/${profile.id}`,
@@ -310,7 +317,7 @@ var TableProfilesController = function(profiles, $scope, $location, $uibModal, l
 	];
 
 	/** Options, configuration, data and callbacks for the ag-grid table. */
-	/** @type CGC.GridSettings */
+	/** @type {import("../agGrid/CommonGridController").CGC.GridSettings} */
 	$scope.gridOptions = {
 		onRowClick: row => {
 			locationUtils.navigateToPath(`/profiles/${row.data.id}`);
@@ -329,10 +336,8 @@ var TableProfilesController = function(profiles, $scope, $location, $uibModal, l
 	};
 
 	$scope.profiles = profiles.map(
-		profile => {
-			profile.lastUpdated = new Date(profile.lastUpdated.replace(" ", "T").replace("+00", "Z"));
-			return profile;
-		}
+		profile =>
+			({...profile, lastUpdated: new Date(profile.lastUpdated.replace(" ", "T").replace("+00", "Z"))})
 	);
 };
 
