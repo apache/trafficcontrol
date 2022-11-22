@@ -12,13 +12,28 @@
  * limitations under the License.
  */
 
-describe("Tenants Spec", () => {
-	it("Loads elements", async () => {
-		browser.page.tenants().navigate()
-			.waitForElementPresent("input[name=fuzzControl]");
-		browser.elements("css selector", "div.ag-row", rows => {
-			browser.assert.ok(rows.status === 0);
-			browser.assert.ok((rows.value as []).length >= 2);
-		});
-	});
-});
+import { EnhancedPageObject } from "nightwatch";
+
+/**
+ * Defines the PageObject for Division Details.
+ */
+export type DivisionDetailPageObject = EnhancedPageObject<{}, typeof divisionDetailPageObject.elements>;
+
+const divisionDetailPageObject = {
+	elements: {
+		id: {
+			selector: "input[name='id']"
+		},
+		lastUpdated: {
+			selector: "input[name='lastUpdated']"
+		},
+		name: {
+			selector: "input[name='name']"
+		},
+		saveBtn: {
+			selector: "button[type='submit']"
+		}
+	},
+};
+
+export default divisionDetailPageObject;
