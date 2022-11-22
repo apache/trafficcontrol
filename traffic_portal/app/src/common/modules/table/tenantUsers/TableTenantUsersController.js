@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} tenant
+ * @param {*} tenantUsers
+ * @param {import("angular").IControllerService} $controller
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableTenantUsersController = function(tenant, tenantUsers, $controller, $scope, $state, dateUtils, locationUtils) {
 
 	// extends the TableUsersController to inherit common methods

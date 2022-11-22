@@ -104,7 +104,7 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $q, $interval
 	$scope.buildBandwidthChartData = function (series, start) {
 		var normalizedChartData = [];
 		if (angular.isDefined(series)) {
-			series.values.foreach((seriesItem) => {
+			series.values.forEach(seriesItem => {
 				if (moment(seriesItem[0]).isSame(start) || moment(seriesItem[0]).isAfter(start)) {
 					normalizedChartData.push([moment(seriesItem[0]).valueOf(), numberUtils.convertTo(seriesItem[1], $scope.unitSize)]); // converts data to appropriate unit
 				}

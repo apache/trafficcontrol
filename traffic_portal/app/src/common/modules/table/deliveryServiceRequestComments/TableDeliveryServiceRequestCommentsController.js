@@ -17,9 +17,9 @@
  * under the License.
  */
 
+/** @typedef {import("angular")} angular */
+
 /**
- * The controller for the table that lists the comments of a DSR.
- *
  * @param {import("../../../api/DeliveryServiceRequestService").DeliveryServiceRequest} request
  * @param {*} $scope
  * @param {*} $stateParams

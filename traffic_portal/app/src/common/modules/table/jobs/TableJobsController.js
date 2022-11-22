@@ -19,7 +19,7 @@
 
 /** @typedef { import('../agGrid/CommonGridController').CGC } CGC */
 
-var TableJobsController = function(tableName, jobs, $document, $scope, $state, $uibModal, locationUtils, jobService, messageModel, dateUtils) {
+var TableJobsController = function(jobs, $scope, $state, $uibModal, locationUtils, jobService, messageModel) {
 
 	/** @type CGC.ColumnDefinition */
 	$scope.columns = [
@@ -140,5 +140,5 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 
 };
 
-TableJobsController.$inject = ['tableName', 'jobs', '$document', '$scope', '$state', '$uibModal', 'locationUtils', 'jobService', 'messageModel', 'dateUtils'];
+TableJobsController.$inject = ['jobs', '$scope', '$state', '$uibModal', 'locationUtils', 'jobService', 'messageModel'];
 module.exports = TableJobsController;

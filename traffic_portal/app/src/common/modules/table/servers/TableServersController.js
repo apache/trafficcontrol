@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServersController = function(tableName, servers, filter, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel, $document) {
+var TableServersController = function(servers, $scope, $state, $uibModal, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel) {
 
 	/**** Constants, scope data, etc. ****/
 
@@ -563,5 +563,5 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	}
 };
 
-TableServersController.$inject = ['tableName', 'servers', 'filter', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel', "userModel", "$document"];
+TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel'];
 module.exports = TableServersController;
