@@ -16,6 +16,7 @@
   "engineStrict": true,
   "devDependencies": {
     "@types/angular": "^1.8.4",
+    "@types/jquery": "^3.5.14",
     "@types/moment": "^2.13.0",
     "angular-mocks": "1.8.3",
     "browserify": "16.5.1",
