@@ -115,7 +115,7 @@ var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, l
         });
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

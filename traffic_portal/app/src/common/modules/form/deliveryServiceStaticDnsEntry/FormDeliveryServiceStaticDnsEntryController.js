@@ -38,7 +38,7 @@ var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, stat
 
     $scope.staticDnsEntry = staticDnsEntry;
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

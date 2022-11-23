@@ -135,7 +135,7 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 		return serverCount.get("ADMIN_DOWN");
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.$on("$destroy", function() {
 		killIntervals();

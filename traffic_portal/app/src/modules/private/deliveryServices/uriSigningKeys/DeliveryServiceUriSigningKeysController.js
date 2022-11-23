@@ -29,7 +29,7 @@ var DeliveryServiceUriSigningKeysController = function($scope, deliveryService, 
 	$scope.deliveryService = deliveryService;
 	$scope.keys = keys;
 	$scope.keysString = angular.toJson(keys, 4);
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.saveKeys = function(newKeys) {
 		deliveryServiceUriSigningKeysService.setKeys(deliveryService.xmlId, newKeys).then(function() {

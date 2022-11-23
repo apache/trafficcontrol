@@ -51,7 +51,7 @@ var FormTenantController = function(tenant, $scope, $location, formUtils, tenant
         $location.path($location.path() + '/users');
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

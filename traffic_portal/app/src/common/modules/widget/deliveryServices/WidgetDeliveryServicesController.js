@@ -247,7 +247,7 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $q, $interval
 	$scope.currentDeliveryServicesPage = 1;
 	$scope.deliveryServicesPerPage = 10;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.$on("$destroy", function() {
 		killInterval();

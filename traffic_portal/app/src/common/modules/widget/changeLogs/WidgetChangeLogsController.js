@@ -37,7 +37,7 @@ var WidgetChangeLogsController = function($scope, locationUtils, changeLogServic
 		return moment(date).fromNow();
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	var init = function() {
 		getChangeLogs();

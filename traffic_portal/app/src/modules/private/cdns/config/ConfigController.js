@@ -213,7 +213,7 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $uib
 			},100);
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 

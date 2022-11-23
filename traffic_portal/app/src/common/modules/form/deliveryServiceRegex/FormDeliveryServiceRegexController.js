@@ -38,7 +38,7 @@ var FormDeliveryServiceRegexController = function(deliveryService, regex, $scope
 
 	$scope.regex = regex;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

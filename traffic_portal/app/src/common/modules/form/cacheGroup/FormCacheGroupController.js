@@ -59,7 +59,7 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
         }
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

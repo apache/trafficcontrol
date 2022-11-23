@@ -38,7 +38,7 @@ var TableCacheGroupAsnsController = function(cacheGroup, asns, $scope, $state, l
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		$('#parametersTable').dataTable({

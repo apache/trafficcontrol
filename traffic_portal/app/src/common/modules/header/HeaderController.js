@@ -82,7 +82,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
 
     $scope.changeLogs = [];
 
-    $scope.hasCapability = permissionUtils.hasCapability;
+    $scope.hasCapability = cap => permissionUtils.hasCapability(cap);
 
     $scope.isState = function(state) {
         return $state.current.name.indexOf(state) !== -1;
@@ -197,7 +197,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         });
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     var scrollToTop = function() {
         $anchorScroll(); // hacky?

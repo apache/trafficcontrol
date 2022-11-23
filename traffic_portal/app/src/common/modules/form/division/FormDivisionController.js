@@ -35,7 +35,7 @@ var FormDivisionController = function(division, $scope, $location, formUtils, st
         $location.path($location.path() + '/regions');
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

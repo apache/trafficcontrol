@@ -52,7 +52,7 @@ var FormDeliveryServiceTargetController = function(deliveryService, currentTarge
 
 	$scope.target = target;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

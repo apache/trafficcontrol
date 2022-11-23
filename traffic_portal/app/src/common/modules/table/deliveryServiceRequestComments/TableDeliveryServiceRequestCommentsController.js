@@ -154,7 +154,7 @@ var TableDeliveryServicesRequestsController = function (request, $scope, $stateP
 
 	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.getComments();
 };

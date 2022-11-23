@@ -119,7 +119,7 @@ const TableParameterProfilesController = function (parameter, profiles, $scope, 
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	const confirmDelete = function (profile) {
 		const params = {

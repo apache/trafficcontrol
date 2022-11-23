@@ -138,7 +138,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
     $scope.isOrigin = serverUtils.isOrigin;
 
-    $scope.openCharts = serverUtils.openCharts;
+    $scope.openCharts = (s, $event) => serverUtils.openCharts(s, $event);
 
     $scope.showChartsButton = propertiesModel.properties.servers.charts.show;
 
@@ -253,7 +253,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         $location.path($location.path() + '/delivery-services');
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

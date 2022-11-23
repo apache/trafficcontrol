@@ -98,7 +98,7 @@ var FormGenerateCdnDnssecKeysController = function(cdn, dnssecKeysRequest, $scop
 		});
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

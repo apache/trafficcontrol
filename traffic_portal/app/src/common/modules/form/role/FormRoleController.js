@@ -32,7 +32,7 @@ var FormRoleController = function(roles, $scope, $location, formUtils, locationU
 		$location.path($location.path() + '/users');
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

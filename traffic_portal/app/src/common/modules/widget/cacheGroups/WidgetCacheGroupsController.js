@@ -52,7 +52,7 @@ var WidgetCacheGroupsController = function($scope, $interval, cacheGroupService,
 	$scope.currentCacheGroupsPage = 1;
 	$scope.cacheGroupsPerPage = 10;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.onlinePercent = function(location) {
 		return (location.online / (location.online + location.offline)) * 100;

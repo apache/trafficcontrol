@@ -96,7 +96,7 @@ var UserController = function($scope, $location, $uibModal, formUtils, locationU
         $location.path('/users/' + $scope.user.id + '/delivery-services');
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

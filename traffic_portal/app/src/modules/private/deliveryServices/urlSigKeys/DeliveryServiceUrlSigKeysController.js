@@ -115,7 +115,7 @@ var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, 
         });
     };
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		// Datatables...

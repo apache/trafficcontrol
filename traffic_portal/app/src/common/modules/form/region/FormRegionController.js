@@ -47,7 +47,7 @@ var FormRegionController = function(region, $scope, $location, formUtils, string
         $location.path($location.path() + '/phys-locations');
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

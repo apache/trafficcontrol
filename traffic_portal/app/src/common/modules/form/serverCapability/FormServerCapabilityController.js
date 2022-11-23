@@ -36,7 +36,7 @@ var FormServerCapabilityController = function(serverCapability, $scope, $locatio
 		$location.path('/server-capabilities/delivery-services');
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

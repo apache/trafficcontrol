@@ -34,7 +34,7 @@ var FormDeliveryServiceConsistentHashRegexController = function (deliveryService
 
     $scope.pattern = consistentHashRegex;
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

@@ -34,7 +34,7 @@ var TableCapabilityEndpointsController = function(capability, capEndpoints, $sco
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		$('#capEndpointsTable').dataTable({

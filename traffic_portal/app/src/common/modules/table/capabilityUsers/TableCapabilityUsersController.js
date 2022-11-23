@@ -51,7 +51,7 @@ var TableCapabilityUsersController = function(capability, capUsers, $controller,
 		capUsersTable.rows().invalidate().draw();
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		capUsersTable = $('#capUsersTable').DataTable({

@@ -104,7 +104,7 @@ var FormTypeController = function(type, $scope, $location, formUtils, stringUtil
         $location.path($location.path() + '/static-dns-entries');
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

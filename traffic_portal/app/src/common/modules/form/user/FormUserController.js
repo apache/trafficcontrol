@@ -56,7 +56,7 @@ var FormUserController = function(user, $scope, formUtils, stringUtils, location
 
     $scope.labelize = stringUtils.labelize;
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

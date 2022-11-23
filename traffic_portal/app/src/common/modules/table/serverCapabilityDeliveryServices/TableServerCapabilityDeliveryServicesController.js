@@ -70,7 +70,7 @@ var TableServerCapabilityDeliveryServicesController = function(serverCapability,
 		}
 	];
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.confirmRemoveCapability = function(ds, $event) {
 		if ($event) {

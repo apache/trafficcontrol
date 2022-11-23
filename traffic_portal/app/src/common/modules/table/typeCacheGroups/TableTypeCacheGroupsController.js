@@ -33,7 +33,7 @@ var TableTypeCacheGroupsController = function(type, cacheGroups, $controller, $s
 
 	$scope.type = type;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.toggleVisibility = function(colName) {
 		const col = typeCacheGroupsTable.column(colName + ':name');

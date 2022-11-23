@@ -42,7 +42,7 @@ var FormFederationController = function(cdn, federation, deliveryServices, $scop
 		$location.path($location.path() + '/users');
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

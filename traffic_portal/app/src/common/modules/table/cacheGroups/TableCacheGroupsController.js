@@ -122,7 +122,7 @@ var TableCacheGroupsController = function(cacheGroups, $scope, $state, $uibModal
 
     $scope.cacheGroups = cacheGroups;
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.columns = [
         { "name": "Name", "visible": true, "searchable": true },

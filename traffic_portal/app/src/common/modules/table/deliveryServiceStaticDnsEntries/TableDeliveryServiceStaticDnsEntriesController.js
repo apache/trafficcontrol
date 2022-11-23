@@ -42,7 +42,7 @@ var TableDeliveryServiceStaticDnsEntriesController = function(deliveryService, s
 		locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entries/new');
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		$('#staticDnsEntriesTable').dataTable({

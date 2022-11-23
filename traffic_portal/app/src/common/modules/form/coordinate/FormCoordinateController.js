@@ -35,7 +35,7 @@ var FormCoordinateController = function(coordinate, $scope, formUtils, locationU
 
     $scope.coordinate = coordinate;
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

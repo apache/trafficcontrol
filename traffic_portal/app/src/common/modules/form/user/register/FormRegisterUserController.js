@@ -57,7 +57,7 @@ var FormRegisterUserController = function($scope, formUtils, tenantUtils, locati
 		return role.name;
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

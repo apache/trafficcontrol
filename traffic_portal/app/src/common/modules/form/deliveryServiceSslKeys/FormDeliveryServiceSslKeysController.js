@@ -73,7 +73,7 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.formattedExpiration = $scope.sslKeys.expiration !== undefined ? $filter('date')($scope.sslKeys.expiration, 'MM/dd/yyyy') : undefined;
 	$scope.sans = $scope.sslKeys.sans !== undefined ? sslKeys.sans.join(', ') : ""

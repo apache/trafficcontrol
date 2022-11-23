@@ -38,7 +38,7 @@ var FormJobController = function(job, $scope, formUtils, locationUtils, delivery
 
 	$scope.job = job;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

@@ -39,7 +39,7 @@ var FormStatusController = function(status, $scope, $location, formUtils, string
 
     $scope.labelize = stringUtils.labelize;
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

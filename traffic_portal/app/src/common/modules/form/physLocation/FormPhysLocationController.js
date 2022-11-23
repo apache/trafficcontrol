@@ -55,7 +55,7 @@ var FormPhysLocationController = function(physLocation, $scope, $location, formU
         $location.path($location.path() + '/servers');
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

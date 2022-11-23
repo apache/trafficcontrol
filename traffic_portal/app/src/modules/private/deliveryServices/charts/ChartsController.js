@@ -31,7 +31,7 @@ var ChartsController = function(deliveryService, $scope, $state, locationUtils) 
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 };
 

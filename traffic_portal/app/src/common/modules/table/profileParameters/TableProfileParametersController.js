@@ -147,7 +147,7 @@ var TableProfileParametersController = function(profile, parameters, $controller
 		profileParametersTable.rows().invalidate().draw();
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		// Datatables should be replaced, so their typings aren't included.

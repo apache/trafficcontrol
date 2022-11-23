@@ -35,7 +35,7 @@ var FormASNController = function(asn, $scope, formUtils, locationUtils, cacheGro
 
     $scope.asn = asn;
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

@@ -54,11 +54,11 @@ var FormCdnDnssecKeysController = function(cdn, dnssecKeys, $scope, $location, d
 
 	$scope.dateFormat = dateUtils.dateFormat;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
-	$scope.hasError = formUtils.hasError;
+	$scope.hasError = (input) => formUtils.hasError(input);
 
-	$scope.hasPropertyError = formUtils.hasPropertyError;
+	$scope.hasPropertyError = (input, property) => formUtils.hasPropertyError(input, property);
 
 	var init = function() {
 		if (dnssecKeys && dnssecKeys[cdn.name]) {

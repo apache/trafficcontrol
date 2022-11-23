@@ -65,7 +65,7 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
 	$scope.acmeProvider = "";
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 	$scope.sslRequest = setSSLRequest(sslRequest);
 
 	$scope.hasAcmeProviderError = function() {

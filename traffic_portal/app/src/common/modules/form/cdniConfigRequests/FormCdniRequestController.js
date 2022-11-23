@@ -33,7 +33,7 @@ var FormCdniRequestController = function($scope, $stateParams, $uibModal, cdniSe
 	$scope.cdniRequest.data = JSON.stringify($scope.cdniRequest.data, null, 5);
 	$scope.currentConfig = JSON.stringify(currentConfig, null, 5);
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.respondToRequest = function(approve) {
 		const titleStart = approve ? 'Approve' : 'Deny';

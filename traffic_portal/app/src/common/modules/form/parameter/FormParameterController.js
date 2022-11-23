@@ -41,7 +41,7 @@ var FormParameterController = function(parameter, $scope, $location, formUtils, 
         $location.path($location.path() + '/cache-groups');
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

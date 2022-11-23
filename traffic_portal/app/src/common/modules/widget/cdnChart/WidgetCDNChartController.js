@@ -204,7 +204,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 
 	$scope.randomId = '_' + Math.random().toString(36).substr(2, 9);
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.$on("$destroy", function() {
 		killIntervals();

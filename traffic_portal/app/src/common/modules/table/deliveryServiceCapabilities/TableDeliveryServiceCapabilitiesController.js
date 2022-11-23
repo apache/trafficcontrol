@@ -114,7 +114,7 @@ var TableDeliveryServiceCapabilitiesController = function(deliveryService, requi
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		// Datatable types don't exist in the project, and they should all be

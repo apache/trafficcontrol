@@ -88,7 +88,7 @@ var FormRegenerateKskController = function(cdn, dnssecKeysRequest, $scope, $uibM
 		});
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

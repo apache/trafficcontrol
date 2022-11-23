@@ -212,7 +212,7 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 		return (pp.selected1 !== pp.selected2);
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		// Datatables should be replaced with AG-Grid.
