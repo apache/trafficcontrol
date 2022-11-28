@@ -1731,7 +1731,11 @@ func (ds DeliveryServiceV4) Upgrade() DeliveryServiceV5 {
 		copy(upgraded.MatchList, *ds.MatchList)
 	}
 	copy(upgraded.TLSVersions, ds.TLSVersions)
-	copy(upgraded.RequiredCapabilities, ds.RequiredCapabilities)
+	if ds.RequiredCapabilities == nil {
+		upgraded.RequiredCapabilities = nil
+	} else {
+		copy(upgraded.RequiredCapabilities, ds.RequiredCapabilities)
+	}
 
 	return upgraded
 }
