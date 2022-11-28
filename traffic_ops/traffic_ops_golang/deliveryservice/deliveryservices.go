@@ -1916,7 +1916,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 	// ensure json generated from this slice won't come out as `null` if empty
 	dsQueryParams := []string{}
 
-	geoLimitCountries := util.StrPtr("")
+	geoLimitCountries := new(string)
 	for rows.Next() {
 		var ds tc.DeliveryServiceV5
 		var longDesc1 *string

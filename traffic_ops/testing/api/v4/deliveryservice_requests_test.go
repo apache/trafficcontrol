@@ -54,7 +54,9 @@ func resetDS(ds *tc.DeliveryServiceV4) {
 }
 
 func TestDeliveryServiceRequests(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, Users, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices, DeliveryServiceRequests}, func() {
+
+		t.Run("update DSR crud", testUpdateDSR)
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
@@ -324,6 +326,42 @@ func TestDeliveryServiceRequests(t *testing.T) {
 		}
 
 	})
+}
+
+func testUpdateDSR(t *testing.T) {
+	resp, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("failed to get Delivery Services: %#v - response: %+v", err, resp)
+	}
+
+	if len(resp.Response) < 1 {
+		t.Fatal("need at least one Delivery Service to test updating a DS with a DSR")
+	}
+
+	ds := resp.Response[0]
+	if ds.DisplayName == nil {
+		t.Fatalf("Traffic Ops returned a DS with a nil Display Name: %+v", ds)
+	}
+	*ds.DisplayName += " - Update DSR test"
+
+	dsr := tc.DeliveryServiceRequestV4{
+		ChangeType: tc.DSRChangeTypeUpdate,
+		Requested:  &ds,
+		Status:     tc.RequestStatusDraft,
+	}
+	creationResp, _, err := TOSession.CreateDeliveryServiceRequest(dsr, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("failed to create an update DSR: %#v - response: %+v", err, creationResp)
+	}
+
+	id := creationResp.Response.ID
+	if id == nil {
+		t.Fatalf("Traffic Ops returned a created DSR without an ID: %+v", creationResp)
+	}
+	deleteResp, _, err := TOSession.DeleteDeliveryServiceRequest(*id, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("failed to delete the created update DSR: %#v - response: %+v", err, deleteResp)
+	}
 }
 
 func GetDeliveryServiceRequestId(t *testing.T, xmlId string) func() int {

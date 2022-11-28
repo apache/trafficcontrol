@@ -507,31 +507,23 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 	}
 
 	upgraded.SetXMLID()
-	dsr.XMLID = upgraded.XMLID
-	if ok, err = dbhelpers.DSRExistsWithXMLID(dsr.XMLID, tx); err != nil {
-		err = fmt.Errorf("checking for existence of DSR with xmlid '%s'", dsr.XMLID)
+	if ok, err = dbhelpers.DSRExistsWithXMLID(upgraded.XMLID, tx); err != nil {
+		err = fmt.Errorf("checking for existence of DSR with xmlid '%s'", upgraded.XMLID)
+
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	} else if ok {
-		userErr := fmt.Errorf("an open Delivery Service Request for XMLID '%s' already exists", dsr.XMLID)
+		userErr := fmt.Errorf("an open Delivery Service Request for XMLID '%s' already exists", upgraded.XMLID)
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
-	if dsr.Original != nil {
-		if dsr.Original.LongDesc1 != nil || dsr.Original.LongDesc2 != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
-			return
-		}
-		if len(dsr.Original.TLSVersions) < 1 {
+	if upgraded.Original != nil {
+		if len(upgraded.Original.TLSVersions) < 1 {
 			upgraded.Original.TLSVersions = nil
 		}
 	}
-	if dsr.Requested != nil {
-		if dsr.Requested.LongDesc1 != nil || dsr.Requested.LongDesc2 != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
-			return
-		}
-		if len(dsr.Requested.TLSVersions) < 1 {
+	if upgraded.Requested != nil {
+		if len(upgraded.Requested.TLSVersions) < 1 {
 			upgraded.Requested.TLSVersions = nil
 		}
 	}
