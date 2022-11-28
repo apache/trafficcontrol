@@ -53,3 +53,15 @@ SET
 	original = original || '{"active": "PRIMED"}'
 WHERE
 	original ->> 'active' = 'false';
+
+UPDATE public.deliveryservice_request
+SET
+	original = original || CAST('{"lastUpdated": "' || replace(replace(original ->> 'lastUpdated', ' ', 'T'), '+00', 'Z') || '"}' AS jsonb)
+WHERE
+	original ->> 'lastUpdated' IS NOT NULL;
+
+UPDATE public.deliveryservice_request
+SET
+	deliveryservice = deliveryservice || CAST('{"lastUpdated": "' || replace(replace(deliveryservice ->> 'lastUpdated', ' ', 'T'), '+00', 'Z') || '"}' AS jsonb)
+WHERE
+	deliveryservice ->> 'lastUpdated' IS NOT NULL;

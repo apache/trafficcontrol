@@ -61,3 +61,16 @@ WHERE
 		OR
 		original ->> 'active' = 'INACTIVE'
 	);
+
+
+UPDATE public.deliveryservice_request
+SET
+	original = original || CAST('{"lastUpdated": "' || replace(replace(original ->> 'lastUpdated', 'T', ' '), 'Z', '+00') || '"}' AS jsonb)
+WHERE
+	original ->> 'lastUpdated' IS NOT NULL;
+
+UPDATE public.deliveryservice_request
+SET
+	deliveryservice = deliveryservice || CAST('{"lastUpdated": "' || replace(replace(deliveryservice ->> 'lastUpdated', 'T', ' '), 'Z', '+00') || '"}' AS jsonb)
+WHERE
+	deliveryservice ->> 'lastUpdated' IS NOT NULL;
