@@ -184,37 +184,37 @@ jobs:
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
-    TrafficControlCacheConfigGenerateUnitTests:
-      if: github.event.pull_request.draft == false
-      runs-on: ubuntu-latest
+  T3CGenerateUnitTests:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
 
-      steps:
-        - name: Checkout
-          uses: actions/checkout@master
-          with:
-            fetch-depth: 1
-            path: src/github.com/apache/trafficcontrol
-        - name: Cache Alpine Docker image
-          uses: actions/cache@v2
-          with:
-            path: ${{ github.workspace }}/docker-images
-            key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
-        - name: Import cached Alpine Docker image
-          run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-        - name: Run unit tests
-          uses: ./src/github.com/apache/trafficcontrol/.github/actions/go-test
-          with:
-            dir: ./cache-config/t3c-generate/...
-            test_name: t3c_generate
-          env:
-            GOPATH: /github/workspace
-        - name: Upload coverage to Codecov
-          uses: codecov/codecov-action@v3
-          with:
-            files: t3c_generate-coverage.out
-            flags: t3c_generate_unittests,unittests
-        - name: Save Alpine Docker image
-          run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 1
+          path: src/github.com/apache/trafficcontrol
+      - name: Cache Alpine Docker image
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/docker-images
+          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+      - name: Import cached Alpine Docker image
+        run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
+      - name: Run unit tests
+        uses: ./src/github.com/apache/trafficcontrol/.github/actions/go-test
+        with:
+          dir: ./cache-config/t3c-generate/...
+          test_name: t3c_generate
+        env:
+          GOPATH: /github/workspace
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: t3c_generate-coverage.out
+          flags: t3c_generate_unittests,unittests
+      - name: Save Alpine Docker image
+        run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
   TrafficStatsUnitTests:
     if: github.event.pull_request.draft == false
