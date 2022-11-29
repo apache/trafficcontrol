@@ -21,14 +21,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7097](https://github.com/apache/trafficcontrol/issues/7097) *Traffic Ops, Traffic Portal, Traffic Control Cache Config (t3c)* Added the `regional` field to Delivery Services, which affects whether `maxOriginConnections` should be per Cache Group
 - [#2388](https://github.com/apache/trafficcontrol/issues/2388) *Trafic Ops, Traffic Portal* Added the `TTLOverride` field to CDNs, which lets you override all TTLs in all Delivery Services of a CDN's snapshot with a single value
 - [#7176](https://github.com/apache/trafficcontrol/pull/7176) *ATC Build system* Support building ATC for the `aarch64` CPU architecture
+- [#7113](https://github.com/apache/trafficcontrol/pull/7113) *Traffic Portal* Minimize the Server Server Capability part of the *Traffic Servers* section of the Snapshot Diff
 
 ### Changed
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
 - [#6981](https://github.com/apache/trafficcontrol/pull/6981) *Traffic Portal* Obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 - [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
 - [#7191](https://github.com/apache/trafficcontrol/issues/7191) *tc-health-client* Uses Traffic Ops API 4.0. Also added reload option to systemd service file
+- [#4654](https://github.com/apache/trafficcontrol/pull/4654) *Traffic Ops, Traffic Portal* Switched Delivery Service active state to a three-value system, adding a state that will be used to prevent cache servers from deploying DS configuration.
 
 ### Fixed
+- [#4428](https://github.com/apache/trafficcontrol/issues/4428) *Traffic Ops* Fixed Internal Server Error with POST to `profileparameters` when POST body is empty
 - [#7179](https://github.com/apache/trafficcontrol/issues/7179) *Traffic Portal* Fixed search filter for Delivery Service Table
 - [#7174](https://github.com/apache/trafficcontrol/issues/7174) *Traffic Portal* Fixed topologies sort (table and Delivery Service's form)
 - [#5970](https://github.com/apache/trafficcontrol/issues/5970) *Traffic Portal* Fixed numeric sort in Delivery Service's form for DSCP

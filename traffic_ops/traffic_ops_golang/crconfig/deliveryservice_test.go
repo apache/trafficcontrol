@@ -225,7 +225,7 @@ func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryS
 			"HTTP",
 			dsName)
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("select").WithArgs(cdn, tc.DSActiveStateActive, tc.DSTypeAnyMap).WillReturnRows(rows)
 }
 
 func TestMakeDSesGeoLimit(t *testing.T) {
@@ -468,7 +468,7 @@ func MockGetDSRegexesDomains(mock sqlmock.Sqlmock, expectedMatchsets map[string]
 			}
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("select").WithArgs(cdn, tc.DSActiveStateActive).WillReturnRows(rows)
 }
 
 func TestGetDSRegexesDomains(t *testing.T) {
@@ -542,7 +542,7 @@ func MockGetStaticDNSEntries(mock sqlmock.Sqlmock, expected map[tc.DeliveryServi
 			rows = rows.AddRow(dsName, entry.Name, entry.TTL, entry.Value, entry.Type+"_RECORD")
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("select").WithArgs(cdn, tc.DSActiveStateActive).WillReturnRows(rows)
 }
 
 func TestGetStaticDNSEntries(t *testing.T) {

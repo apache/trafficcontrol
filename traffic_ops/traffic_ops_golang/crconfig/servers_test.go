@@ -435,7 +435,7 @@ func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[tc.CacheName][]stri
 			rows = rows.AddRow(cache, ds)
 		}
 	}
-	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn, tc.DSActiveStateActive, tc.DSTypeAnyMap, tc.CacheStatusOnline, tc.CacheStatusReported, tc.CacheStatusAdminDown).WillReturnRows(rows)
 }
 
 func TestGetServerDSNames(t *testing.T) {
@@ -500,7 +500,7 @@ func MockGetServerDSes(mock sqlmock.Sqlmock, expected map[tc.CacheName]map[strin
 			rows = rows.AddRow(ds, "DNS", "", pattern, false)
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("select").WithArgs(cdn, tc.DSActiveStateActive, tc.DSTypeAnyMap).WillReturnRows(rows)
 }
 
 func TestGetServerDSes(t *testing.T) {

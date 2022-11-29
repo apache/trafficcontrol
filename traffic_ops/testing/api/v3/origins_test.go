@@ -88,7 +88,7 @@ func TestOrigins(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:            util.Ptr("origin2"),
@@ -107,7 +107,7 @@ func TestOrigins(t *testing.T) {
 							"FQDN": "originupdated.example.com", "IPAddress": "1.2.3.4", "IP6Address": "0000::1111", "Port": 1234, "Protocol": "http", "Tenant": "tenant2"})),
 				},
 				"FORBIDDEN when CHILD TENANT updates PARENT TENANT ORIGIN": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: tenant4UserSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("testtenancy"),
@@ -119,7 +119,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"NOT FOUND when ORIGIN DOESNT EXIST": {
-					EndpointId:    func() int { return 1111111 },
+					EndpointID:    func() int { return 1111111 },
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("testid"),
@@ -131,7 +131,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:     GetOriginID(t, "origin2"),
+					EndpointID:     GetOriginID(t, "origin2"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.Origin{
@@ -145,7 +145,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:            util.Ptr("origin2"),
@@ -161,12 +161,12 @@ func TestOrigins(t *testing.T) {
 			},
 			"DELETE": {
 				"NOT FOUND when DOESNT EXIST": {
-					EndpointId:    func() int { return 11111111 },
+					EndpointID:    func() int { return 11111111 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"FORBIDDEN when CHILD TENANT deletes PARENT TENANT ORIGIN": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: tenant4UserSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -208,14 +208,14 @@ func TestOrigins(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateOriginByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.UpdateOriginByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteOriginByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteOriginByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

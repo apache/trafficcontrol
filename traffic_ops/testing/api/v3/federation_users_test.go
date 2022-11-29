@@ -37,20 +37,20 @@ func TestFederationUsers(t *testing.T) {
 		methodTests := utils.V3TestCaseT[tc.FederationUserPost]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					EndpointId:     GetFederationID(t, "the.cname.com."),
+					EndpointID:     GetFederationID(t, "the.cname.com."),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfModifiedSince: {tomorrow}},
 					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"BAD REQUEST when INVALID FEDERATION ID": {
-					EndpointId:    func() int { return -1 },
+					EndpointID:    func() int { return -1 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 			},
 			"POST": {
 				"OK when VALID request": {
-					EndpointId:    GetFederationID(t, "google.com."),
+					EndpointID:    GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{GetUserID(t, "readonlyuser")(), GetUserID(t, "disalloweduser")()},
@@ -59,7 +59,7 @@ func TestFederationUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when REPLACING USERS": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{GetUserID(t, "readonlyuser")()},
@@ -68,7 +68,7 @@ func TestFederationUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when ADDING USER": {
-					EndpointId:    GetFederationID(t, "booya.com."),
+					EndpointID:    GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{GetUserID(t, "disalloweduser")()},
@@ -77,7 +77,7 @@ func TestFederationUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when INVALID FEDERATION ID": {
-					EndpointId:    func() int { return -1 },
+					EndpointID:    func() int { return -1 },
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{},
@@ -86,7 +86,7 @@ func TestFederationUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when INVALID USER ID": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{-1},
@@ -97,7 +97,7 @@ func TestFederationUsers(t *testing.T) {
 			},
 			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
-					EndpointId:     GetFederationID(t, "the.cname.com."),
+					EndpointID:     GetFederationID(t, "the.cname.com."),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfModifiedSince: {currentTimeRFC}},
 					Expectations:   utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -111,14 +111,14 @@ func TestFederationUsers(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetFederationUsersWithHdr(testCase.EndpointId(), testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.GetFederationUsersWithHdr(testCase.EndpointID(), testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateFederationUsers(testCase.EndpointId(), testCase.RequestBody.IDs, *testCase.RequestBody.Replace)
+							alerts, reqInf, err := testCase.ClientSession.CreateFederationUsers(testCase.EndpointID(), testCase.RequestBody.IDs, *testCase.RequestBody.Replace)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

@@ -33,20 +33,20 @@ func TestFederationsDeliveryServices(t *testing.T) {
 		methodTests := utils.V3TestCaseT[tc.FederationDSPost]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestParams: url.Values{"dsID": {strconv.Itoa(GetDeliveryServiceId(t, "ds1")())}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when LAST DELIVERY SERVICE": {
-					EndpointId:    GetFederationID(t, "google.com."),
+					EndpointID:    GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
 					RequestParams: url.Values{"dsID": {strconv.Itoa(GetDeliveryServiceId(t, "ds2")())}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -60,14 +60,14 @@ func TestFederationsDeliveryServices(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetFederationDeliveryServicesWithHdr(testCase.EndpointId(), testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.GetFederationDeliveryServicesWithHdr(testCase.EndpointID(), testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							reqInf, err := testCase.ClientSession.CreateFederationDeliveryServices(testCase.EndpointId(), testCase.RequestBody.DSIDs, *testCase.RequestBody.Replace)
+							reqInf, err := testCase.ClientSession.CreateFederationDeliveryServices(testCase.EndpointID(), testCase.RequestBody.DSIDs, *testCase.RequestBody.Replace)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, tc.Alerts{}, err)
 							}
@@ -80,7 +80,7 @@ func TestFederationsDeliveryServices(t *testing.T) {
 								assert.RequireNoError(t, err, "Failed to convert dsID to an integer.")
 								dsID = id
 							}
-							alerts, reqInf, err := testCase.ClientSession.DeleteFederationDeliveryService(testCase.EndpointId(), dsID)
+							alerts, reqInf, err := testCase.ClientSession.DeleteFederationDeliveryService(testCase.EndpointID(), dsID)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

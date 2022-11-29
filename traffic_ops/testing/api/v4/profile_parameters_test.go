@@ -33,6 +33,8 @@ import (
 func TestProfileParameters(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
 
+		// This is a one off test to check POST with an empty JSON body
+		TestPostWithEmptyBody(t)
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
@@ -106,7 +108,7 @@ func TestProfileParameters(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetProfileID(t, "ATS_EDGE_TIER_CACHE"),
+					EndpointID:    GetProfileID(t, "ATS_EDGE_TIER_CACHE"),
 					ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
 						"parameterId": {strconv.Itoa(GetParameterID(t, "location", "set_dscp_37.config", "/etc/trafficserver/dscp")())},
@@ -160,7 +162,7 @@ func TestProfileParameters(t *testing.T) {
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
 							parameterId, _ := strconv.Atoi(testCase.RequestOpts.QueryParameters["parameterId"][0])
-							alerts, reqInf, err := testCase.ClientSession.DeleteProfileParameter(testCase.EndpointId(), parameterId, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteProfileParameter(testCase.EndpointID(), parameterId, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
@@ -170,6 +172,16 @@ func TestProfileParameters(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestPostWithEmptyBody(t *testing.T) {
+	resp, err := TOSession.Client.Post(TOSession.URL+"/api/4.0/profileparameters", "application/json", nil)
+	if err != nil {
+		t.Fatalf("error sending post to create profile parameter with an empty body: %v", err)
+	}
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected to get a 400 error code, but received %d instead", resp.StatusCode)
+	}
 }
 
 func TestProfileParameter(t *testing.T) {

@@ -125,7 +125,7 @@ func TestFederationResolvers(t *testing.T) {
 			},
 			"DELETE": {
 				"NOT FOUND when INVALID ID": {
-					EndpointId:    func() int { return 0 },
+					EndpointID:    func() int { return 0 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -152,7 +152,7 @@ func TestFederationResolvers(t *testing.T) {
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.DeleteFederationResolver(uint(testCase.EndpointId()), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.DeleteFederationResolver(uint(testCase.EndpointID()), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

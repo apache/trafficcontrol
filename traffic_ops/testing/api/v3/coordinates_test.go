@@ -61,7 +61,7 @@ func TestCoordinates(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetCoordinateID(t, "coordinate2"),
+					EndpointID:    GetCoordinateID(t, "coordinate2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Coordinate{
 						Latitude:  7.7,
@@ -72,7 +72,7 @@ func TestCoordinates(t *testing.T) {
 						validateCoordinateUpdateCreateFields("coordinate2", map[string]interface{}{"Latitude": 7.7, "Longitude": 8.8})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:     GetCoordinateID(t, "coordinate1"),
+					EndpointID:     GetCoordinateID(t, "coordinate1"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.Coordinate{
@@ -83,7 +83,7 @@ func TestCoordinates(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetCoordinateID(t, "coordinate1"),
+					EndpointID:    GetCoordinateID(t, "coordinate1"),
 					ClientSession: TOSession,
 					RequestBody: tc.Coordinate{
 						Latitude:  1.1,
@@ -123,14 +123,14 @@ func TestCoordinates(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateCoordinateByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateCoordinateByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteCoordinateByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteCoordinateByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

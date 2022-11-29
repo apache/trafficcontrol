@@ -22,7 +22,6 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -145,10 +144,10 @@ FROM deliveryservice AS d
 INNER JOIN type AS t ON t.id = d.type
 LEFT OUTER JOIN profile AS p ON p.id = d.profile
 WHERE d.cdn_id = (select id FROM cdn WHERE name = $1)
-AND d.active = true
+AND d.active = $2
+AND t.name != $3
 `
-	q += fmt.Sprintf(" and t.name != '%s'", tc.DSTypeAnyMap)
-	rows, err := tx.Query(q, cdn)
+	rows, err := tx.Query(q, cdn, tc.DSActiveStateActive, tc.DSTypeAnyMap)
 	if err != nil {
 		return nil, errors.New("querying deliveryservices: " + err.Error())
 	}
@@ -465,9 +464,9 @@ from staticdnsentry as e
 inner join deliveryservice as d on d.id = e.deliveryservice
 inner join type as t on t.id = e.type
 where d.cdn_id = (select id from cdn where name = $1)
-and d.active = true
+and d.active = $2
 `
-	rows, err := tx.Query(q, cdn)
+	rows, err := tx.Query(q, cdn, tc.DSActiveStateActive)
 	if err != nil {
 		return nil, errors.New("querying static DNS entries: " + err.Error())
 	}
@@ -500,10 +499,10 @@ inner join deliveryservice as d on d.id = dr.deliveryservice
 inner join type as t on t.id = r.type
 inner join type as dt on dt.id = d.type
 where d.cdn_id = (select id from cdn where name = $1)
-and d.active = true
+and d.active = $2
 order by dr.set_number asc
 `
-	rows, err := tx.Query(q, cdn)
+	rows, err := tx.Query(q, cdn, tc.DSActiveStateActive)
 	if err != nil {
 		return nil, nil, errors.New("querying deliveryservices: " + err.Error())
 	}

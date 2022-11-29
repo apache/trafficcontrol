@@ -36,57 +36,57 @@ func TestFederationsDeliveryServices(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.FederationDSPost]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 				"SORTED when ORDERBY=DSID parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"dsID"}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationDeliveryServicesSort(false)),
 				},
 				"SORTED when ORDERBY=DSID and SORTORDER=DESC parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"dsID"}, "sortOrder": {"desc"}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationDeliveryServicesSort(true)),
 				},
 				"FIRST RESULT when LIMIT=1": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"dsID"}, "limit": {"1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateFederationDeliveryServicesPagination(GetFederationID(t, "the.cname.com.")(), "limit")),
 				},
 				"SECOND RESULT when LIMIT=1 OFFSET=1": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"dsID"}, "limit": {"1"}, "offset": {"1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateFederationDeliveryServicesPagination(GetFederationID(t, "the.cname.com.")(), "offset")),
 				},
 				"SECOND RESULT when LIMIT=1 PAGE=2": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"dsID"}, "limit": {"1"}, "page": {"2"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateFederationDeliveryServicesPagination(GetFederationID(t, "the.cname.com.")(), "page")),
 				},
 				"BAD REQUEST when INVALID LIMIT parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID OFFSET parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID PAGE parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -94,13 +94,13 @@ func TestFederationsDeliveryServices(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsID": {strconv.Itoa(GetDeliveryServiceId(t, "ds1")())}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when LAST DELIVERY SERVICE": {
-					EndpointId:    GetFederationID(t, "google.com."),
+					EndpointID:    GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsID": {strconv.Itoa(GetDeliveryServiceId(t, "ds2")())}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -114,7 +114,7 @@ func TestFederationsDeliveryServices(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetFederationDeliveryServices(testCase.EndpointId(), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetFederationDeliveryServices(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
@@ -122,7 +122,7 @@ func TestFederationsDeliveryServices(t *testing.T) {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
 							fedDS := testCase.RequestBody
-							alerts, reqInf, err := testCase.ClientSession.CreateFederationDeliveryServices(testCase.EndpointId(), fedDS.DSIDs, *fedDS.Replace, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.CreateFederationDeliveryServices(testCase.EndpointID(), fedDS.DSIDs, *fedDS.Replace, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
@@ -135,7 +135,7 @@ func TestFederationsDeliveryServices(t *testing.T) {
 								assert.RequireNoError(t, err, "Failed to convert dsID to an integer.")
 								dsID = id
 							}
-							alerts, reqInf, err := testCase.ClientSession.DeleteFederationDeliveryService(testCase.EndpointId(), dsID, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteFederationDeliveryService(testCase.EndpointID(), dsID, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

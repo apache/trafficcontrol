@@ -46,6 +46,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Iterators;
 import org.apache.traffic_control.traffic_router.core.edge.Node.IPVersions;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
@@ -438,7 +439,7 @@ public class ZoneManager extends Resolver {
 
 	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final List<Record> superRecords, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks, final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys)
 			throws IOException {
-		final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
+		final String hostname = getTRLocalHostname(tr);
 
 		final List<Record> records = new ArrayList<Record>();
 
@@ -451,6 +452,17 @@ public class ZoneManager extends Resolver {
 		}
 
 		return records;
+	}
+
+	protected static String getTRLocalHostname(final TrafficRouter tr) throws UnknownHostException {
+		// if there is only one TR in the CRConfig, just use that TR's hostname
+		// instead of checking for the local server's hostname
+		final boolean singleTR = Iterators.size(tr.getCacheRegister().getTrafficRouters().fieldNames()) == 1;
+		if (singleTR) {
+			return tr.getCacheRegister().getTrafficRouters().fieldNames().next();
+		} else {
+			return InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
+		}
 	}
 
 	@SuppressWarnings({"PMD.ExcessiveParameterList"})

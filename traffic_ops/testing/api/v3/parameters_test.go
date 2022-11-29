@@ -60,7 +60,7 @@ func TestParameters(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID REQUEST": {
-					EndpointId:    GetParameterID(t, "LogObject.Format", "logs_xml.config", "custom_ats_2"),
+					EndpointID:    GetParameterID(t, "LogObject.Format", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Parameter{
 						ConfigFile: "updated.config",
@@ -73,7 +73,7 @@ func TestParameters(t *testing.T) {
 							map[string]interface{}{"ConfigFile": "updated.config", "Name": "updated name", "Secure": true, "Value": "updated value"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:     GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
+					EndpointID:     GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.Parameter{
@@ -84,7 +84,7 @@ func TestParameters(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
+					EndpointID:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Parameter{
 						ConfigFile: "logs_xml.config",
@@ -124,14 +124,14 @@ func TestParameters(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateParameterByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateParameterByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteParameterByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteParameterByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

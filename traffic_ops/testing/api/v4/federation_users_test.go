@@ -41,69 +41,69 @@ func TestFederationUsers(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.FederationUserPost]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"BAD REQUEST when INVALID FEDERATION ID": {
-					EndpointId:    func() int { return -1 },
+					EndpointID:    func() int { return -1 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"SORTED by ID when ORDERBY=USERID parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationUserIDSort(false)),
 				},
 				"VALID when SORTORDER param is DESC": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "sortOrder": {"desc"}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateFederationUserIDSort(true)),
 				},
 				"FIRST RESULT when LIMIT=1": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "limit": {"1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateFederationUsersPagination(GetFederationID(t, "the.cname.com.")(), "limit")),
 				},
 				"SECOND RESULT when LIMIT=1 OFFSET=1": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "limit": {"1"}, "offset": {"1"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateFederationUsersPagination(GetFederationID(t, "the.cname.com.")(), "offset")),
 				},
 				"SECOND RESULT when LIMIT=1 PAGE=2": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"userID"}, "limit": {"1"}, "page": {"2"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateFederationUsersPagination(GetFederationID(t, "the.cname.com.")(), "page")),
 				},
 				"BAD REQUEST when INVALID LIMIT parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID OFFSET parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "offset": {"0"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID PAGE parameter": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"1"}, "page": {"0"}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when CHANGES made": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -111,7 +111,7 @@ func TestFederationUsers(t *testing.T) {
 			},
 			"POST": {
 				"OK when VALID request": {
-					EndpointId:    GetFederationID(t, "google.com."),
+					EndpointID:    GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs: []int{
@@ -123,7 +123,7 @@ func TestFederationUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when REPLACING USERS": {
-					EndpointId:    GetFederationID(t, "booya.com."),
+					EndpointID:    GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{GetUserID(t, "readonlyuser")()},
@@ -132,7 +132,7 @@ func TestFederationUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when ADDING USER": {
-					EndpointId:    GetFederationID(t, "booya.com."),
+					EndpointID:    GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{GetUserID(t, "disalloweduser")()},
@@ -141,7 +141,7 @@ func TestFederationUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when INVALID FEDERATION ID": {
-					EndpointId:    func() int { return -1 },
+					EndpointID:    func() int { return -1 },
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{},
@@ -150,7 +150,7 @@ func TestFederationUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when INVALID USER ID": {
-					EndpointId:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.FederationUserPost{
 						IDs:     []int{-1},
@@ -167,7 +167,7 @@ func TestFederationUsers(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetFederationUsers(testCase.EndpointId(), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetFederationUsers(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
@@ -175,7 +175,7 @@ func TestFederationUsers(t *testing.T) {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
 							federationUser := testCase.RequestBody
-							alerts, reqInf, err := testCase.ClientSession.CreateFederationUsers(testCase.EndpointId(), federationUser.IDs, *federationUser.Replace, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.CreateFederationUsers(testCase.EndpointID(), federationUser.IDs, *federationUser.Replace, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

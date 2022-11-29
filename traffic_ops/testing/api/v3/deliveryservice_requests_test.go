@@ -53,7 +53,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					EndpointID:    GetDeliveryServiceRequestId(t, "test-ds1"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
@@ -67,7 +67,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when UPDATING STATUS FROM DRAFT TO SUBMITTED": {
-					EndpointId:    GetDeliveryServiceRequestId(t, "test-ds1"),
+					EndpointID:    GetDeliveryServiceRequestId(t, "test-ds1"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
@@ -80,14 +80,14 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Header": {
-					EndpointId:     GetDeliveryServiceRequestId(t, "test-ds1"),
+					EndpointID:     GetDeliveryServiceRequestId(t, "test-ds1"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody:    map[string]interface{}{},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:     GetDeliveryServiceRequestId(t, "test-ds1"),
+					EndpointID:     GetDeliveryServiceRequestId(t, "test-ds1"),
 					ClientSession:  TOSession,
 					RequestBody:    map[string]interface{}{},
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
@@ -224,7 +224,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetDeliveryServiceRequestId(t, "test-deletion"),
+					EndpointID:    GetDeliveryServiceRequestId(t, "test-deletion"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -274,14 +274,14 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestByIDWithHdr(testCase.EndpointId(), dsReq, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestByIDWithHdr(testCase.EndpointID(), dsReq, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteDeliveryServiceRequestByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteDeliveryServiceRequestByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

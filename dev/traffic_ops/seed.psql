@@ -294,7 +294,7 @@ INSERT INTO deliveryservice (
 	miss_long
 ) VALUES (
 	'dev-ds',
-	TRUE,
+	'ACTIVE',
 	1,
 	0,
 	(SELECT id FROM "type" WHERE "name" = 'HTTP'),

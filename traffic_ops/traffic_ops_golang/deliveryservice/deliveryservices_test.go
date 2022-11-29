@@ -30,6 +30,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
@@ -63,20 +64,20 @@ func TestGetDetails(t *testing.T) {
 	if code != http.StatusOK {
 		t.Fatalf("expected status OK 200, but got %d", code)
 	}
-	if oldDetails.OldOrgServerFqdn == nil {
+	if oldDetails.OldOrgServerFQDN == nil {
 		t.Fatalf("old org server fqdn is nil")
 	}
-	if *oldDetails.OldOrgServerFqdn != "http://123.34.32.21:9090" {
-		t.Errorf("expected old org server fqdn to be http://123.34.32.21:9090, but got %v", *oldDetails.OldOrgServerFqdn)
+	if *oldDetails.OldOrgServerFQDN != "http://123.34.32.21:9090" {
+		t.Errorf("expected old org server fqdn to be http://123.34.32.21:9090, but got %v", *oldDetails.OldOrgServerFQDN)
 	}
 	if oldDetails.OldRoutingName != "cdn" {
 		t.Errorf("expected old routing name to be cdn, but got %v", oldDetails.OldRoutingName)
 	}
-	if oldDetails.OldCdnName != "foo" {
-		t.Errorf("expected old cdn name to be foo, but got %v", oldDetails.OldCdnName)
+	if oldDetails.OldCDNName != "foo" {
+		t.Errorf("expected old cdn name to be foo, but got %v", oldDetails.OldCDNName)
 	}
-	if oldDetails.OldCdnId != 1 {
-		t.Errorf("expected old cdn id to be 1, but got %v", oldDetails.OldCdnId)
+	if oldDetails.OldCDNID != 1 {
+		t.Errorf("expected old cdn id to be 1, but got %v", oldDetails.OldCDNID)
 	}
 	if *oldDetails.OldSSLKeyVersion != 1 {
 		t.Errorf("expected old ssl_key_version to be 1, but got %v", oldDetails.OldSSLKeyVersion)
@@ -264,7 +265,7 @@ func TestReadGetDeliveryServices(t *testing.T) {
 		key   string
 		value driver.Value
 	}{
-		{"active", true},
+		{"active", tc.DSActiveStateActive},
 		{"anonymous_blocking_enabled", false},
 		{"ccr_dns_ttl", nil},
 		{"cdn_id", 1},
@@ -297,7 +298,7 @@ func TestReadGetDeliveryServices(t *testing.T) {
 		{"last_header_rewrite", nil},
 		{"last_updated", time.Now()},
 		{"logs_enabled", false},
-		{"long_desc", nil},
+		{"long_desc", ""},
 		{"long_desc_1", nil},
 		{"long_desc_2", nil},
 		{"max_dns_answers", nil},
@@ -352,8 +353,9 @@ func TestReadGetDeliveryServices(t *testing.T) {
 	regexRows := sqlmock.NewRows([]string{"ds_name", "type", "pattern", "set_number"})
 	regexRows.AddRow("demo1", "hostregexp", "", 0)
 	mock.ExpectQuery("SELECT ds\\.xml_id as ds_name, t\\.name as type, r\\.pattern, COALESCE\\(dsr\\.set_number, 0\\) FROM regex").WillReturnRows(regexRows)
+	mock.ExpectCommit()
 
-	_, userErr, sysErr, _, _ := readGetDeliveryServices(nil, nil, db.MustBegin(), &u, false)
+	_, userErr, sysErr, _, _ := readGetDeliveryServices(nil, nil, db.MustBegin(), &u, false, api.Version{Major: 5, Minor: 0})
 	if userErr != nil {
 		t.Errorf("Unexpected user error reading Delivery Services: %v", userErr)
 	}

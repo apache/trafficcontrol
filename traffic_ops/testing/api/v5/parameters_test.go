@@ -191,7 +191,7 @@ func TestParameters(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID REQUEST": {
-					EndpointId:    GetParameterID(t, "LogObject.Format", "logs_xml.config", "custom_ats_2"),
+					EndpointID:    GetParameterID(t, "LogObject.Format", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "updated.config",
@@ -204,7 +204,7 @@ func TestParameters(t *testing.T) {
 							map[string]interface{}{"ConfigFile": "updated.config", "Name": "updated name", "Secure": true, "Value": "updated value"})),
 				},
 				"OK when MISSING VALUE FIELD": {
-					EndpointId:    GetParameterID(t, "LogObject.Filename", "logs_xml.config", "custom_ats_2"),
+					EndpointID:    GetParameterID(t, "LogObject.Filename", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "logs_new.config",
@@ -217,7 +217,7 @@ func TestParameters(t *testing.T) {
 							map[string]interface{}{"ConfigFile": "logs_new.config", "Secure": true, "Value": ""})),
 				},
 				"BAD REQUEST when MISSING NAME FIELD": {
-					EndpointId:    GetParameterID(t, "astats_over_http.so", "plugin.config", ""),
+					EndpointID:    GetParameterID(t, "astats_over_http.so", "plugin.config", ""),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "missingname.config",
@@ -228,7 +228,7 @@ func TestParameters(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING CONFIGFILE FIELD": {
-					EndpointId:    GetParameterID(t, "astats_over_http.so", "plugin.config", ""),
+					EndpointID:    GetParameterID(t, "astats_over_http.so", "plugin.config", ""),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "",
@@ -239,7 +239,7 @@ func TestParameters(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
+					EndpointID:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: map[string]interface{}{
@@ -250,7 +250,7 @@ func TestParameters(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
+					EndpointID:    GetParameterID(t, "LogFormat.Name", "logs_xml.config", "custom_ats_2"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"configFile": "logs_xml.config",
@@ -263,7 +263,7 @@ func TestParameters(t *testing.T) {
 			},
 			"DELETE": {
 				"BAD REQUEST when DOESNT EXIST": {
-					EndpointId:    func() int { return 100000 },
+					EndpointID:    func() int { return 100000 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -313,14 +313,14 @@ func TestParameters(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateParameter(testCase.EndpointId(), parameter, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateParameter(testCase.EndpointID(), parameter, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteParameter(testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteParameter(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

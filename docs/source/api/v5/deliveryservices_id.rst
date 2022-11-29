@@ -23,15 +23,19 @@
 =======
 Allows users to edit an existing :term:`Delivery Service`.
 
-:Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [#tenancy]_
+:Auth. Required:       Yes
+:Roles Required:       "admin" or "operations"\ [#tenancy]_
 :Permissions Required: DELIVERY-SERVICE:UPDATE, DELIVERY-SERVICE:READ, CDN:READ, TYPE:READ
-:Response Type:  Array (should always have a length of exactly one on success)
+:Response Type:        Object
+
+	.. versionchanged:: 5.0
+		In earlier API versions, this would return an array containing the single :term:`Delivery Service` modified. It is now simply the object itself. This is tracked by :issue:`6904`.
+
 
 Request Structure
 -----------------
-:active:                   A boolean that defines :ref:`ds-active`.
-:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:active:                    The :term:`Delivery Service`'s :ref:`ds-active` state
+:anonymousBlockingEnabled:  A boolean that defines :ref:`ds-anonymous-blocking`
 :ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 
@@ -52,7 +56,7 @@ Request Structure
 :firstHeaderRewrite:        A set of :ref:`ds-first-header-rw-rules`
 :fqPacingRate:              The :ref:`ds-fqpr`
 :geoLimit:                  An integer that defines the :ref:`ds-geo-limit`
-:geoLimitCountries:         A string containing a comma-separated list, or an array of strings defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
+:geoLimitCountries:         An array of strings defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
 :geoLimitRedirectUrl:       A :ref:`ds-geo-limit-redirect-url`\ [#geolimit]_
 :geoProvider:               The :ref:`ds-geo-provider`
 :globalMaxMbps:             The :ref:`ds-global-max-mbps`
@@ -97,23 +101,23 @@ Request Structure
 :typeId:              The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
 :xmlId:               This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
-	.. note:: While this field **must** be present, it is **not** allowed to change; this must be the same as the ``xml_id`` the :term:`Delivery Service` already has. This should almost never be different from the :term:`Delivery Service`'s ``displayName``.
+	.. note:: While this field **must** be present, it is **not** allowed to change; this must be the same as the ``xml_id`` the :term:`Delivery Service` already has.
 
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/5.0/deliveryservices/6 HTTP/1.1
+	PUT /api/5.0/deliveryservices/3 HTTP/1.1
 	Host: trafficops.infra.ciab.test
-	User-Agent: python-requests/2.24.0
+	User-Agent: python-requests/2.25.1
 	Accept-Encoding: gzip, deflate
 	Accept: */*
 	Connection: keep-alive
-	Cookie: mojolicious=...
-	Content-Length: 1585
+	Cookie: access_token=...; mojolicious=...
+	Content-Length: 1548
 	Content-Type: application/json
 
 	{
-		"active": false,
+		"active": "ACTIVE",
 		"anonymousBlockingEnabled": false,
 		"ccrDnsTtl": null,
 		"cdnId": 2,
@@ -181,8 +185,8 @@ Request Structure
 
 Response Structure
 ------------------
-:active:                   A boolean that defines :ref:`ds-active`.
-:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:active:                    The :term:`Delivery Service`'s :ref:`ds-active` state
+:anonymousBlockingEnabled:  A boolean that defines :ref:`ds-anonymous-blocking`
 :ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
@@ -267,12 +271,11 @@ Response Structure
 	Content-Encoding: gzip
 	Content-Type: application/json
 	Permissions-Policy: interest-cohort=()
-	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 08 Jun 2021 00:34:04 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 22:55:09 GMT; Max-Age=3600; HttpOnly, access_token=...; Path=/; Expires=Thu, 29 Sep 2022 22:55:09 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: tTncbRoJR+pyykVbEc6nWyoFnhlJzsbge9hVZfw+WK28rzSGECZ/Q4zXTQtFjHWY5G+0Rk4w9GKrSFK3k+u5Ng==
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 07 Jun 2021 23:34:04 GMT
-	Content-Length: 840
+	Date: Thu, 29 Sep 2022 21:55:09 GMT
+	Content-Length: 838
 
 	{ "alerts": [
 		{
@@ -280,8 +283,8 @@ Response Structure
 			"level": "success"
 		}
 	],
-	"response": [{
-		"active": false,
+	"response": {
+		"active": "ACTIVE",
 		"anonymousBlockingEnabled": false,
 		"ccrDnsTtl": null,
 		"cdnId": 2,
@@ -308,13 +311,13 @@ Response Structure
 		"globalMaxMbps": null,
 		"globalMaxTps": null,
 		"httpBypassFqdn": null,
-		"id": 6,
+		"id": 3,
 		"infoUrl": null,
 		"initialDispersion": 1,
 		"innerHeaderRewrite": null,
 		"ipv6RoutingEnabled": false,
 		"lastHeaderRewrite": null,
-		"lastUpdated": "2021-06-07T23:34:04.831215Z",
+		"lastUpdated": "2022-09-29T21:55:09.170596Z",
 		"logsEnabled": true,
 		"longDesc": "A Delivery Service created expressly for API documentation examples",
 		"matchList": [
@@ -358,7 +361,7 @@ Response Structure
 		"type": "HTTP",
 		"typeId": 1,
 		"xmlId": "test"
-	}]}
+	}}
 
 
 ``DELETE``
@@ -383,12 +386,13 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/5.0/deliveryservices/2 HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	DELETE /api/5.0/deliveryservices/3 HTTP/1.1
+	User-Agent: python-requests/2.25.1
+	Accept-Encoding: gzip, deflate
 	Accept: */*
-	Cookie: mojolicious=...
-
+	Connection: keep-alive
+	Cookie: access_token=...; mojolicious=...
+	Content-Length: 0
 
 Response Structure
 ------------------
@@ -400,20 +404,25 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: w9NlQpJJEl56r6iYq/fk8o5WfAXeUS5XR9yDHvKUgPO8lYEo8YyftaSF0MPFseeOk60dk6kQo+MLYTDIAhhRxw==
+	Permissions-Policy: interest-cohort=()
+	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 22:59:08 GMT; Max-Age=3600; HttpOnly, access_token=...; Path=/; Expires=Thu, 29 Sep 2022 22:59:08 GMT; Max-Age=3600; HttpOnly
+	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 20 Nov 2018 14:56:37 GMT
-	Content-Length: 57
+	Date: Thu, 29 Sep 2022 21:59:08 GMT
+	Content-Length: 161
 
 	{ "alerts": [
 		{
 			"text": "ds was deleted.",
 			"level": "success"
+		},
+		{
+			"text": "Perform a CDN snapshot then queue updates on all servers in the cdn for the changes to take effect.",
+			"level": "info"
 		}
 	]}
 
-
 .. [#tenancy] Only those :term:`Delivery Services` assigned to :term:`Tenants` that are the requesting user's :term:`Tenant` or children thereof will appear in the output of a ``GET`` request, and the same constraints are placed on the allowed values of the ``tenantId`` field of a ``PUT`` request to update a new :term:`Delivery Service`. Furthermore, the only :term:`Delivery Services` a user may delete are those assigned to a :term:`Tenant` that is either the same :term:`Tenant` as the user's :term:`Tenant`, or a descendant thereof.
-.. [#geoLimit] These fields must be defined if and only if ``geoLimit`` is non-zero
+.. [#geoLimit] These fields only must be defined if ``geoLimit`` is non-zero
