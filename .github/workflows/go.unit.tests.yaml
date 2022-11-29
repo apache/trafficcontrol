@@ -184,7 +184,7 @@ jobs:
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
-    T3CGenerateUnitTests:
+    TrafficControlCacheConfigGenerateUnitTests:
       if: github.event.pull_request.draft == false
       runs-on: ubuntu-latest
 
