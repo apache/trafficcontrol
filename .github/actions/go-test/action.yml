@@ -21,8 +21,12 @@ inputs:
   dir:  # id of input
     description: 'Directory in which to run tests'
     required: true
+  test_name:
+    description: 'Name of the test being ran'
+    required: true
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  args:
-    - ${{ inputs.dir }}
+  env:
+    INPUT_DIR: ${{ inputs.dir }}
+    TEST_NAME: ${{ inputs.test_name }}
