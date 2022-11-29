@@ -56,7 +56,7 @@ on:
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
-  GroveUnitTests:
+  grove_unit_tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
@@ -88,7 +88,7 @@ jobs:
     - name: Save Alpine Docker image
       run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
-  GoLibUnitTests:
+  go_lib_unit_tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
@@ -120,7 +120,7 @@ jobs:
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
-  TrafficMonitorUnitTests:
+  traffic_monitor_unit_tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
@@ -152,7 +152,7 @@ jobs:
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
-  TrafficOpsUnitTests:
+  traffic_ops_unit_tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
@@ -184,7 +184,7 @@ jobs:
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
-  T3CGenerateUnitTests:
+  t3c_generate_unit_tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
@@ -216,7 +216,7 @@ jobs:
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
-  TrafficStatsUnitTests:
+  traffic_stats_unit_tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
