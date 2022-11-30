@@ -1,0 +1,45 @@
+flags:
+  golib_unit:
+    paths:
+      - ".*"
+    carryforward: true
+  grove_unit:
+    paths:
+      - ".*"
+    carryforward: true
+  t3c_generate_unit:
+    paths:
+      - ".*"
+    carryforward: true
+  traffic_monitor_unit:
+    paths:
+      - ".*"
+    carryforward: true
+  traffic_stats_unit:
+    paths:
+      - ".*"
+    carryforward: true
+  traffic_ops_unit:
+    paths:
+      - ".*"
+    carryforward: true
+  traffic_ops_integration:
+    paths:
+      - ".*"
+    carryforward: true
+  v3:
+    paths:
+      - ".*"
+    carryforward: true
+  v4:
+    paths:
+      - ".*"
+    carryforward: true
+  v5:
+    paths:
+      - ".*"
+    carryforward: true
+
+
+
+

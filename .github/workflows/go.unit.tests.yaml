@@ -84,7 +84,7 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         files: grove-coverage.out
-        flags: grove_unittests,unittests
+        flags: grove_unit
     - name: Save Alpine Docker image
       run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
@@ -116,7 +116,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: golib-coverage.out
-          flags: golib_unittests,unittests
+          flags: golib_unit
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
@@ -148,7 +148,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: traffic_monitor-coverage.out
-          flags: traffic_monitor_unittests,unittests
+          flags: traffic_monitor_unit
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
@@ -180,7 +180,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: traffic_ops-coverage.out
-          flags: traffic_ops_unittests,unittests
+          flags: traffic_ops_unit
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
@@ -212,7 +212,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: t3c_generate-coverage.out
-          flags: t3c_generate_unittests,unittests
+          flags: t3c_generate_unit
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
@@ -244,6 +244,6 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: traffic_stats-coverage.out
-          flags: traffic_stats_unittests,unittests
+          flags: traffic_stats_unit
       - name: Save Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
