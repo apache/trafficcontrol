@@ -75,8 +75,6 @@ jobs:
       with:
         dir: ./grove/...
         test_name: grove
-      env:
-        GOPATH: /github/workspace
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
@@ -104,8 +102,6 @@ jobs:
         with:
           dir: ./lib/...
           test_name: golib
-        env:
-          GOPATH: /github/workspace
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -136,8 +132,6 @@ jobs:
         with:
           dir: ./traffic_monitor/...
           test_name: traffic_monitor
-        env:
-          GOPATH: /github/workspace
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -165,8 +159,6 @@ jobs:
         with:
           dir: ./traffic_ops/traffic_ops_golang/...
           test_name: traffic_ops
-        env:
-          GOPATH: /github/workspace
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -194,8 +186,6 @@ jobs:
         with:
           dir: ./cache-config/t3c-generate/...
           test_name: t3c_generate
-        env:
-          GOPATH: /github/workspace
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -223,8 +213,6 @@ jobs:
         with:
           dir: ./traffic_stats/...
           test_name: traffic_stats
-        env:
-          GOPATH: /github/workspace
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
