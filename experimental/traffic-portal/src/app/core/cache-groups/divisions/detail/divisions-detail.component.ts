@@ -26,10 +26,10 @@ import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
  */
 @Component({
 	selector: "tp-divisions-detail",
-	styleUrls: ["./division-detail.component.scss"],
-	templateUrl: "./division-detail.component.html"
+	styleUrls: ["./divisions-detail.component.scss"],
+	templateUrl: "./divisions-detail.component.html"
 })
-export class DivisionDetailComponent implements OnInit {
+export class DivisionsDetailComponent implements OnInit {
 	public new = false;
 	public division!: ResponseDivision;
 

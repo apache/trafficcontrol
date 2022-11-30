@@ -18,19 +18,19 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
-import { DivisionDetailComponent } from "src/app/core/cache-groups/divisions/detail/division-detail.component";
+import { DivisionsDetailComponent } from "src/app/core/cache-groups/divisions/detail/divisions-detail.component";
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
 describe("DetailComponent", () => {
-	let component: DivisionDetailComponent;
-	let fixture: ComponentFixture<DivisionDetailComponent>;
+	let component: DivisionsDetailComponent;
+	let fixture: ComponentFixture<DivisionsDetailComponent>;
 	let route: ActivatedRoute;
 	let paramMap: jasmine.Spy;
 
 	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ DivisionDetailComponent ],
+			declarations: [ DivisionsDetailComponent ],
 			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
 			providers: [ { provide: TpHeaderService, useValue: headerSvc } ]
 		})
@@ -39,7 +39,7 @@ describe("DetailComponent", () => {
 		route = TestBed.inject(ActivatedRoute);
 		paramMap = spyOn(route.snapshot.paramMap, "get");
 		paramMap.and.returnValue(null);
-		fixture = TestBed.createComponent(DivisionDetailComponent);
+		fixture = TestBed.createComponent(DivisionsDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});
@@ -52,7 +52,7 @@ describe("DetailComponent", () => {
 	it("new division", async () => {
 		paramMap.and.returnValue("new");
 
-		fixture = TestBed.createComponent(DivisionDetailComponent);
+		fixture = TestBed.createComponent(DivisionsDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		await fixture.whenStable();
@@ -65,7 +65,7 @@ describe("DetailComponent", () => {
 	it("existing division", async () => {
 		paramMap.and.returnValue("1");
 
-		fixture = TestBed.createComponent(DivisionDetailComponent);
+		fixture = TestBed.createComponent(DivisionsDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		await fixture.whenStable();
