@@ -18,8 +18,6 @@
 
 set -e
 
-cd "${GOPATH}/src/github.com/apache/trafficcontrol"
-
 download_go() {
 	go_version="$(cat GO_VERSION)"
 	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz"
@@ -36,6 +34,9 @@ if [ -z "$INPUT_DIR" ]; then
 fi
 
 # Need to fetch golang.org/x/* dependencies
-go mod vendor -v
+if ! [ -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]; then
+	go mod vendor
+fi
+
 go test --buildvcs=false $INPUT_DIR  -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
 exit $?
