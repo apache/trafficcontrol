@@ -34,9 +34,7 @@ if [ -z "$INPUT_DIR" ]; then
 fi
 
 # Need to fetch golang.org/x/* dependencies
-if ! [ -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]; then
-	go mod vendor
-fi
+go mod vendor -v
 
 go test --buildvcs=false $INPUT_DIR  -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
 exit $?
