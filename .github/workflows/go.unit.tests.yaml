@@ -105,7 +105,7 @@ jobs:
           key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
       - name: Import cached Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-      - name: Run unit tests
+      - name: Run Go Lib unit tests
         uses: ./src/github.com/apache/trafficcontrol/.github/actions/go-test
         with:
           dir: ./lib/...
@@ -137,7 +137,7 @@ jobs:
           key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
       - name: Import cached Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-      - name: Run unit tests
+      - name: Run Traffic Monitor unit tests
         uses: ./src/github.com/apache/trafficcontrol/.github/actions/go-test
         with:
           dir: ./traffic_monitor/...
@@ -169,7 +169,7 @@ jobs:
           key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
       - name: Import cached Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-      - name: Run unit tests
+      - name: Run Traffic Ops unit tests
         uses: ./src/github.com/apache/trafficcontrol/.github/actions/go-test
         with:
           dir: ./traffic_ops/traffic_ops_golang/...
@@ -201,7 +201,7 @@ jobs:
           key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
       - name: Import cached Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-      - name: Run unit tests
+      - name: Run T3C Generate unit tests
         uses: ./src/github.com/apache/trafficcontrol/.github/actions/go-test
         with:
           dir: ./cache-config/t3c-generate/...
@@ -233,7 +233,7 @@ jobs:
           key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
       - name: Import cached Alpine Docker image
         run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-      - name: Run unit tests
+      - name: Run Traffic Stats unit tests
         uses: ./src/github.com/apache/trafficcontrol/.github/actions/go-test
         with:
           dir: ./traffic_stats/...
