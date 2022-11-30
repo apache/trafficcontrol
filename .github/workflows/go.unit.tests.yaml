@@ -117,9 +117,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-        with:
-          fetch-depth: 1
-          path: src/github.com/apache/trafficcontrol
       - name: Cache Alpine Docker image
         uses: actions/cache@v2
         with:
