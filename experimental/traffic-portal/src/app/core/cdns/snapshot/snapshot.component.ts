@@ -1,28 +1,23 @@
+/*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
 import { Component, EventEmitter, type OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import type { ResponseCDN, Snapshot } from "trafficops-types";
+import type { ResponseCDN, Snapshot, SnapshotStatsSection } from "trafficops-types";
 
 import { CDNService } from "src/app/api";
 import { buildDiff, type DiffVal, type Diff } from "src/app/utils/snapshot.diffing";
-
-/**
- * The type of a fully populated "stats" section of a CDN Snapshot.
- */
-interface CDNSnapshotStatsSection {
-	// These irregular property names are defined by the API, so they're not up
-	// to me to fix.
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	CDN_name: string;
-	date: Date;
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	tm_host: string;
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	tm_path: string;
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	tm_user: string;
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	tm_version: string;
-}
 
 /**
  * Produces a new blank stats section of a CDN Snapshot.
@@ -30,7 +25,7 @@ interface CDNSnapshotStatsSection {
  * @returns A CDN Snapshot 'stats' section with all of the properties
  * initialized to 'blank' or 'zero' values.
  */
-function newStatsSection(): CDNSnapshotStatsSection {
+function newStatsSection(): SnapshotStatsSection {
 	return {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		CDN_name: "",
