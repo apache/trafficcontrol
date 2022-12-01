@@ -58,6 +58,10 @@ jobs:
       - name: Run Traffic Router tests
         run: mvn -Djava.library.path=/usr/lib/x86_64-linux-gnu verify
         working-directory: ${{ github.workspace }}/traffic_router
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          flags: traffic_router
       - name: Upload Surefire and Failsafe Reports
         uses: actions/upload-artifact@v3
         if: ${{ failure() }}
