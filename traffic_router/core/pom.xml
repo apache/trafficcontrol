@@ -257,12 +257,6 @@
 
 		<dependency>
 			<groupId>org.apache.traffic_control.traffic_router</groupId>
-			<artifactId>traffic_router_connector</artifactId>
-			<version>${project.parent.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_shared</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
