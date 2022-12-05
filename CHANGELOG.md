@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - [#7231](https://github.com/apache/trafficcontrol/pull/7231) *Traffic Ops, Traffic Portal* Fixed `sharedUserNames` display while retrieving CDN locks.
+- [#7216](https://github.com/apache/trafficcontrol/pull/7216) *Traffic Portal* Fixed sort for Server's Capabilities Table
 - [#4428](https://github.com/apache/trafficcontrol/issues/4428) *Traffic Ops* Fixed Internal Server Error with POST to `profileparameters` when POST body is empty
 - [#7179](https://github.com/apache/trafficcontrol/issues/7179) *Traffic Portal* Fixed search filter for Delivery Service Table
 - [#7174](https://github.com/apache/trafficcontrol/issues/7174) *Traffic Portal* Fixed topologies sort (table and Delivery Service's form)
