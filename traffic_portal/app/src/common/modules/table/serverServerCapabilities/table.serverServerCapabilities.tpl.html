@@ -41,7 +41,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editServerCapability(sc.serverCapability)" ng-repeat="sc in ::serverCapabilities" context-menu="contextMenuItems">
+            <tr ng-click="editServerCapability(sc.serverCapability)" ng-repeat="sc in ::serverCapabilities | orderBy :'serverCapability'" context-menu="contextMenuItems">
                 <td name="name" data-search="^{{::sc.serverCapability}}$">{{::sc.serverCapability}}</td>
                 <td style="text-align: right;">
                     <a class="link action-link" title="Remove Server Capability" ng-click="confirmRemoveCapability(sc.serverCapability, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
