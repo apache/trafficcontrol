@@ -62,7 +62,6 @@ class DeliveryServiceRequestService {
 	 * @param {{api:{next: string; unstable: string; stable: string}}} ENV Environment configuration.
 	 */
 	constructor($http, messageModel, ENV) {
-
 		this.apiVersion = ENV.api.next;
 		this.$http = $http;
 		this.messageModel = messageModel;
@@ -75,7 +74,7 @@ class DeliveryServiceRequestService {
 	 * @returns {Promise<DeliveryServiceRequest[]>}
 	 */
 	async getDeliveryServiceRequests(params) {
-		const result = await this.$http.get(`${this.apiVersion}/deliveryservice_requests`, { params });
+		const result = await this.$http.get(`${this.apiVersion}deliveryservice_requests`, { params });
 		return result.data.response;
 	}
 
@@ -93,7 +92,7 @@ class DeliveryServiceRequestService {
 		}
 
 		try {
-			const result = await this.$http.post(`${this.apiVersion}/deliveryservice_requests`, dsRequest);
+			const result = await this.$http.post(`${this.apiVersion}deliveryservice_requests`, dsRequest);
 			return result.data.response;
 		} catch (err) {
 			this.messageModel.setMessages(err.data.alerts, false);
