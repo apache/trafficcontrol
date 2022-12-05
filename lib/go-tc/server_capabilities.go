@@ -28,8 +28,13 @@ type ServerCapabilitiesResponse struct {
 // ServerCapability contains information about a given ServerCapability in Traffic Ops.
 type ServerCapability struct {
 	Name        string     `json:"name" db:"name"`
-	Description string     `json:"description" db:"description"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+}
+
+// ServerCapabilityV41 contains information (in-addition to description) about a given ServerCapability  in Traffic Ops.
+type ServerCapabilityV41 struct {
+	ServerCapability
+	Description string `json:"description" db:"description"`
 }
 
 // ServerCapabilityDetailResponse contains the result data from a POST /server_capabilities request.

@@ -15,4 +15,4 @@
  * the License.
  */
 
-ALTER TABLE public.server_capability ADD COLUMN IF NOT EXISTS description text DEFAULT NULL;
+ALTER TABLE public.server_capability ADD COLUMN IF NOT EXISTS description text NOT NULL DEFAULT '';

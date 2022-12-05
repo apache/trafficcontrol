@@ -51,6 +51,9 @@ Response Structure
 ------------------
 :name:        The name of this :term:`Server Capability`
 :description: The description of this :term:`Server Capability`
+
+	.. versionadded:: 4.1
+
 :lastUpdated: The date and time at which this :term:`Server Capability` was last updated, in ISO-like format
 
 .. code-block:: http
@@ -92,6 +95,9 @@ Request Structure
 :name: The name of the :term:`Server Capability`
 :description: The description of this :term:`Server Capability`
 
+	.. versionadded:: 4.1
+
+
 .. code-block:: http
 	:caption: Request Example
 
@@ -112,6 +118,9 @@ Response Structure
 ------------------
 :name:        The name of this :term:`Server Capability`
 :description: The description of this :term:`Server Capability`
+
+	.. versionadded:: 4.1
+
 :lastUpdated: The date and time at which this :term:`Server Capability` was last updated, in ISO-like format
 
 .. code-block:: http
@@ -157,6 +166,9 @@ Request Structure
 :name: The name of the :term:`Server Capability`
 :description: The description of this :term:`Server Capability`
 
+	.. versionadded:: 4.1
+
+
 .. code-block:: http
 	:caption: Request Example
 
@@ -177,6 +189,9 @@ Response Structure
 ------------------
 :name:        The name of this :term:`Server Capability`
 :description: The description of this :term:`Server Capability`
+
+	.. versionadded:: 4.1
+
 :lastUpdated: The date and time at which this :term:`Server Capability` was last updated, in ISO-like format
 
 .. code-block:: http
