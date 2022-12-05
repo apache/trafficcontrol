@@ -36,8 +36,7 @@ import (
 	"github.com/lib/pq"
 )
 
-const readQuery = `SELECT username, cdn, message, soft, (select array_agg(u.username) AS shared_usernames from cdn_lock_user u join cdn_lock c on c.username = u.owner and c.cdn = u.cdn), last_updated FROM cdn_lock`
-
+const readQuery = `SELECT c.username, c.cdn, c.message, c.soft, c.last_updated, ARRAY_REMOVE(ARRAY_AGG(DISTINCT(u.username)), null) AS shared_usernames FROM cdn_lock_user u FULL JOIN cdn_lock c ON c.username = u.owner AND c.cdn = u.cdn`
 const insertQueryWithoutSharedUserNames = `INSERT INTO cdn_lock (username, cdn, message, soft) VALUES ($1, $2, $3, $4) RETURNING username, cdn, message, soft, last_updated`
 
 const insertQueryWithSharedUserNames = `WITH first_insert AS (
@@ -77,8 +76,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cols := map[string]dbhelpers.WhereColumnInfo{
-		"cdn":      {Column: "cdn_lock.cdn", Checker: nil},
-		"username": {Column: "cdn_lock.username", Checker: nil},
+		"cdn":      {Column: "c.cdn", Checker: nil},
+		"username": {Column: "c.username", Checker: nil},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
@@ -90,7 +89,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cdnLock := []tc.CDNLock{}
-	query := readQuery + where + orderBy + pagination
+	query := readQuery + where + orderBy + pagination + " GROUP BY c.cdn"
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("querying cdn locks: "+err.Error()))
@@ -100,7 +99,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var cLock tc.CDNLock
-		if err = rows.Scan(&cLock.UserName, &cLock.CDN, &cLock.Message, &cLock.Soft, pq.Array(&cLock.SharedUserNames), &cLock.LastUpdated); err != nil {
+		if err = rows.Scan(&cLock.UserName, &cLock.CDN, &cLock.Message, &cLock.Soft, &cLock.LastUpdated, pq.Array(&cLock.SharedUserNames)); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning cdn locks: "+err.Error()))
 			return
 		}
