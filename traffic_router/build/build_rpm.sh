@@ -39,6 +39,8 @@ buildRpmTrafficRouter () {
 
 	export STARTUP_SCRIPT_DIR="/lib/systemd/system"
 	export STARTUP_SCRIPT_LOC="../core/src/main/lib/systemd/system"
+	export LOGROTATE_SCRIPT_DIR="/etc/logrotate.d"
+	export LOGROTATE_SCRIPT_LOC="../core/src/main/lib/logrotate"
 
 	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; return 1; }
 	mvn -P rpm-build -Dmaven.test.skip=true -DminimumTPS=1 clean package ||  \

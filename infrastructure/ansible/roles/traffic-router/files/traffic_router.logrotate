@@ -1,0 +1,17 @@
+/opt/traffic_router/var/log/access.log {
+    daily
+    size 100m
+    compress
+    rotate 7
+    dateformat -%d%m%Y
+    copytruncate
+}
+
+/opt/traffic_router/var/log/traffic_router.log {
+    daily
+    size 100m
+    compress
+    rotate 7
+    dateformat -%d%m%Y
+    copytruncate
+}

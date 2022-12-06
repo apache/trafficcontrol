@@ -13,41 +13,30 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
  -->
-<Configuration>
+<!-- file deployed via ansible push, local edits are subject to be overwritten -->
+<Configuration packages="org.apache.trafficrouter.trafficrouterappender" verbose="true">
     <Appenders>
         <Console name="stdout" target="SYSTEM_OUT">
             <PatternLayout pattern="%m%n" />
         </Console>
-        <RollingFile name="traffic_router_access"
-                     fileName="${deploy.dir}/var/log/access.log"
-                     filePattern="${deploy.dir}/var/log/access.log.%i" >
-            <PatternLayout pattern="%m%n" />
-            <Policies>
-                <SizeBasedTriggeringPolicy size="200MB" />
-            </Policies>
-            <DefaultRolloverStrategy max="10" />
-            <ThresholdFilter level="INFO" />
-        </RollingFile>
-        <RollingFile name="traffic_router"
-                     fileName="${deploy.dir}/var/log/traffic_router.log"
-                     filePattern="${deploy.dir}/var/log/traffic_router.log.%i" >
-            <PatternLayout pattern="%-5p %d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%t] %c - %m%n" />
-            <Policies>
-                <SizeBasedTriggeringPolicy size="100MB" />
-            </Policies>
-            <DefaultRolloverStrategy max="1" />
-            <ThresholdFilter level="ALL" />
-        </RollingFile>
+        <File name="traffic_router" fileName="/opt/traffic_router/var/log/traffic_router.log" immediateFlush="true" append="true">
+           <PatternLayout pattern="%-5p %d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%t] %c - %m%n" />
+           <ThresholdFilter level="ALL" />
+        </File>
+        <File name="traffic_router_access" fileName="/opt/traffic_router/var/log/access.log" immediateFlush="true" append="true">
+           <PatternLayout pattern="%m%n" />
+           <ThresholdFilter level="INFO" />
+        </File>
     </Appenders>
     <Loggers>
+        <Root level="WARN" additivity="false" >
+            <AppenderRef ref="stdout" />
+        </Root>
         <Logger name="org.apache.traffic_control.traffic_router" level="INFO" additivity="false" >
             <AppenderRef ref="traffic_router" />
         </Logger>
         <Logger name="org.apache.traffic_control.traffic_router.core.access" level="INFO" additivity="false" >
             <AppenderRef ref="traffic_router_access" />
         </Logger>
-        <Root level="WARN" additivity="false" >
-            <AppenderRef ref="stdout" />
-        </Root>
     </Loggers>
 </Configuration>
