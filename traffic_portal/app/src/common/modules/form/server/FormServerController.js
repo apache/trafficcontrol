@@ -53,10 +53,10 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     };
 
 	/** @param {number} cdnId */
-    async function getProfiles(cdnId) {
-        const result = await profileService.getProfiles({ orderby: "name", cdn: cdnId })
+	async function getProfiles(cdnId) {
+		const result = await profileService.getProfiles({ orderby: "name", cdn: cdnId });
 		$scope.profiles = result.filter(profile => profile.type !== "DS_PROFILE"); // DS profiles are not intended for servers
-    };
+	};
 
     $scope.getProfileID = function(profileName) {
         for (const profile of $scope.profiles) {

@@ -31,7 +31,16 @@ var UserController = function($scope, $state, $location, $uibModal, formUtils, l
     var getRoles = function() {
         roleService.getRoles()
             .then(function(result) {
-                $scope.roles = _.sortBy(result, 'name');
+                $scope.roles = result.sort(
+                    (r1, r2) => {
+                        if (r1.name < r2.name) {
+                            return 1;
+                        } else if (r1.name > r2.name) {
+                            return -1;
+                        }
+                        return 0;
+                    }
+                );
             });
     };
 

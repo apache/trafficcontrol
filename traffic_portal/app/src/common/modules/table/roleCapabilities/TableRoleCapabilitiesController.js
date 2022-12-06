@@ -73,16 +73,16 @@ var TableRoleCapabilitiesController = function(roles, $scope, $state, $uibModal,
 				}
 			}
 		});
-		modalInstance.result.then(function() {
-			$scope.role.capabilities = _.filter($scope.role.capabilities, function(cap) { return cap != capToRemove; });
-			roleService.updateRole($scope.role, $scope.role.name)
-				.then(
-					function(result) {
-						messageModel.setMessages(result.alerts, false);
-						$scope.refresh();
-					}
-				);
-		}, function () {
+		modalInstance.result.then(() => {
+			$scope.role.capabilities = $scope.role.capabilities.filter(cap => cap !== capToRemove);
+			roleService.updateRole($scope.role, $scope.role.name).then(
+				result => {
+					messageModel.setMessages(result.alerts, false);
+					$scope.refresh();
+				}
+			);
+		},
+		() => {
 			// do nothing
 		});
 	};

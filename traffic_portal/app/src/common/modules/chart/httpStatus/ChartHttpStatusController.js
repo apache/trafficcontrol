@@ -72,20 +72,19 @@ var ChartHttpStatusController = function(deliveryService, $scope, $state, $timeo
 
 
 	var buildHttpStatusChartData = function(result, start) {
-		var normalizedChartData = [],
-			series = result.series;
+		const normalizedData = new Array();
+		const series = result.series;
 
 		if (angular.isDefined(series)) {
 			series.values.forEach(function(seriesItem) {
 				if (moment(seriesItem[0]).isSame(start) || moment(seriesItem[0]).isAfter(start)) {
-					if (_.isNumber(seriesItem[1])) {
+					if (typeof seriesItem[1] === "number") {
 						normalizedChartData.push([ moment(seriesItem[0]).valueOf(), seriesItem[1] ]);
 					}
 				}
 			});
 		}
-
-		return normalizedChartData;
+		return normalizedData;
 	};
 
 	var buildChart = function(status2xxChartData, status3xxChartData, status4xxChartData, status5xxChartData) {
