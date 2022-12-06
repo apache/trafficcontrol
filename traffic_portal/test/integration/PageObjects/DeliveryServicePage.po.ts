@@ -159,7 +159,7 @@ export class DeliveryServicePage extends BasePage {
 	 */
 	public async AssignServerToDeliveryService(serverName: string): Promise<string>{
 		await this.btnMore.click();
-		await element(by.buttonText("Manage Servers")).click();
+		await element(by.linkText("Manage Servers")).click();
 		await this.btnMore.click();
 		await element(by.partialButtonText("Assign")).click();
 		const serverCell = element(by.cssContainingText(".ag-cell-value", serverName));

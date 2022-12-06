@@ -17,7 +17,22 @@
  * under the License.
  */
 
-var TableProfileParametersController = function(profile, parameters, $controller, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService, messageModel) {
+/**
+ * This is the controller for the table that lists the Parameters used by a
+ * Profile.
+ *
+ * @param {{id: number; name: string; type: string}} profile
+ * @param {unknown[]} parameters
+ * @param {import("angular").IControllerService} $controller
+ * @param {*} $scope
+ * @param {{open: ({})=>{result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../api/ProfileParameterService")} profileParameterService
+ * @param {import("../../../api/ServerService")} serverService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
+var TableProfileParametersController = function(profile, parameters, $controller, $scope, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService, messageModel) {
 
 	// extends the TableParametersController to inherit common methods
 	angular.extend(this, $controller('TableParametersController', { parameters: parameters, $scope: $scope }));
@@ -161,5 +176,5 @@ var TableProfileParametersController = function(profile, parameters, $controller
 
 };
 
-TableProfileParametersController.$inject = ['profile', 'parameters', '$controller', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService', 'messageModel'];
+TableProfileParametersController.$inject = ['profile', 'parameters', '$controller', '$scope', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService', 'messageModel'];
 module.exports = TableProfileParametersController;

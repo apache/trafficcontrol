@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * This is the parent controller for forms used to modify or create Content
+ * Invalidation Jobs.
+ *
+ * @param {unknown} job
+ * @param {*} $scope
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ */
 var FormJobController = function(job, $scope, formUtils, locationUtils, deliveryServiceService) {
 
 	var getDeliveryServices = function() {
