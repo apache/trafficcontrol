@@ -17,6 +17,17 @@
  * under the License.
  */
 
+/**
+ * This is the controller for the form used to test consistent hashing regular
+ * expressions for a DS against Traffic Router.
+ *
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService} deliveryService
+ * @param {string|RegExp} consistentHashRegex
+ * @param {*} $scope
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ */
 var FormDeliveryServiceConsistentHashRegexController = function (deliveryService, consistentHashRegex, $scope, formUtils, locationUtils, deliveryServiceService) {
 
     $scope.deliveryService = deliveryService;

@@ -46,11 +46,11 @@ Request Structure
 	:caption: Request Example
 
 	PUT /api/5.0/deliveryservices/1/safe HTTP/1.1
-	User-Agent: python-requests/2.22.0
+	User-Agent: python-requests/2.25.1
 	Accept-Encoding: gzip, deflate
 	Accept: */*
 	Connection: keep-alive
-	Cookie: mojolicious=...
+	Cookie: access_token=...; mojolicious=...
 	Content-Length: 132
 	Content-Type: application/json
 
@@ -62,8 +62,8 @@ Request Structure
 
 Response Structure
 ------------------
-:active:                   A boolean that defines :ref:`ds-active`.
-:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:active:                    The :term:`Delivery Service`'s :ref:`ds-active` state
+:anonymousBlockingEnabled:  A boolean that defines :ref:`ds-anonymous-blocking`
 :ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
@@ -142,25 +142,29 @@ Response Structure
 	Content-Encoding: gzip
 	Content-Type: application/json
 	Permissions-Policy: interest-cohort=()
-	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 08 Jun 2021 00:53:26 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 23:30:08 GMT; Max-Age=3600; HttpOnly, access_token=...; Path=/; Expires=Thu, 29 Sep 2022 23:30:08 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: Ys/SfWWijsXCNXEqZ84oldfyXTgMe8UE/wWb53VU39OH7kWOXF1BH5Hg7Y40nCgXoWEqcaBq5+WCZg0bYuJdAA==
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 07 Jun 2021 23:53:26 GMT
-	Content-Length: 903
+	Date: Thu, 29 Sep 2022 22:30:08 GMT
+	Content-Length: 904
 
 	{ "alerts": [{
 		"text": "Delivery Service safe update successful.",
 		"level": "success"
 	}],
-	"response": [{
-		"active": true,
+	"response": {
+		"active": "ACTIVE",
 		"anonymousBlockingEnabled": false,
 		"ccrDnsTtl": null,
 		"cdnId": 2,
 		"cdnName": "CDN-in-a-Box",
 		"checkPath": null,
-		"consistentHashQueryParams": [],
+		"consistentHashQueryParams": [
+			"abc",
+			"pdq",
+			"xxx",
+			"zyx"
+		],
 		"consistentHashRegex": null,
 		"deepCachingType": "NEVER",
 		"displayName": "test",
@@ -172,8 +176,8 @@ Response Structure
 		"ecsEnabled": false,
 		"edgeHeaderRewrite": null,
 		"exampleURLs": [
-			"http://video.demo2.mycdn.ciab.test",
-			"https://video.demo2.mycdn.ciab.test"
+			"http://video.demo1.mycdn.ciab.test",
+			"https://video.demo1.mycdn.ciab.test"
 		],
 		"firstHeaderRewrite": null,
 		"fqPacingRate": null,
@@ -190,14 +194,14 @@ Response Structure
 		"innerHeaderRewrite": null,
 		"ipv6RoutingEnabled": true,
 		"lastHeaderRewrite": null,
-		"lastUpdated": "2021-06-07T23:53:26.139899Z",
+		"lastUpdated": "2022-09-29T22:30:08.574513Z",
 		"logsEnabled": true,
 		"longDesc": "this is a description of the delivery service",
 		"matchList": [
 			{
 				"type": "HOST_REGEXP",
 				"setNumber": 0,
-				"pattern": ".*\\.demo2\\..*"
+				"pattern": ".*\\.demo1\\..*"
 			}
 		],
 		"maxDnsAnswers": null,
@@ -224,17 +228,17 @@ Response Structure
 		"serviceCategory": null,
 		"signed": false,
 		"signingAlgorithm": null,
-		"sslKeyVersion": null,
+		"sslKeyVersion": 1,
 		"tenant": "root",
 		"tenantId": 1,
 		"tlsVersions": null,
 		"topology": "demo1-top",
 		"trResponseHeaders": null,
 		"trRequestHeaders": null,
-		"type": "DNS",
-		"typeId": 5,
-		"xmlId": "demo2"
-	]}
+		"type": "HTTP",
+		"typeId": 1,
+		"xmlId": "demo1"
+	}}
 
 .. [#tenancy] Only those :term:`Delivery Services` assigned to :term:`Tenants` that are the requesting user's :term:`Tenant` or children thereof may be modified with this endpoint.
-.. [#optional] If these fields are not present in the request body they are *implicitly set to* ``null``.
+.. [#optional] If ``infoUrl`` is not present in the request body it is *implicitly set to* ``null``. If ``longDesc`` isn't in the request body, it is *implicitly set to* an empty string.

@@ -15,6 +15,7 @@ package v5
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -67,30 +68,29 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 	return cdns.Response[0]
 }
 
-func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int, sslKeyVersions []string) {
-	if ds.ID == nil || ds.XMLID == nil {
-		t.Error("Cannot clean up Delivery Service with nil ID and/or XMLID")
+func cleanUp(t *testing.T, ds tc.DeliveryServiceV5, oldCDNID int, newCDNID int, sslKeyVersions []string) {
+	if ds.ID == nil {
+		t.Error("Cannot clean up Delivery Service with nil ID")
 		return
 	}
-	xmlid := *ds.XMLID
 	id := *ds.ID
 
 	opts := client.NewRequestOptions()
 	for _, version := range sslKeyVersions {
 		opts.QueryParameters.Set("version", version)
-		resp, _, err := TOSession.DeleteDeliveryServiceSSLKeys(xmlid, opts)
-		assert.NoError(t, err, "Unexpected error deleting Delivery Service SSL Keys: %v - alerts: %+v", err, resp.Alerts)
+		_, _, err := TOSession.DeleteDeliveryServiceSSLKeys(ds.XMLID, opts)
+		assert.NoError(t, err, "Unexpected error deleting Delivery Service SSL Keys: %v", err)
 	}
-	resp, _, err := TOSession.DeleteDeliveryService(id, client.RequestOptions{})
-	assert.NoError(t, err, "Unexpected error deleting Delivery Service '%s' (#%d) during cleanup: %v - alerts: %+v", xmlid, id, err, resp.Alerts)
+	_, _, err := TOSession.DeleteDeliveryService(id, client.RequestOptions{})
+	assert.NoError(t, err, "Unexpected error deleting Delivery Service '%s' (#%d) during cleanup: %v", ds.XMLID, id, err)
 
 	if oldCDNID != -1 {
-		resp2, _, err := TOSession.DeleteCDN(oldCDNID, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting CDN (#%d) during cleanup: %v - alerts: %+v", oldCDNID, err, resp2.Alerts)
+		_, _, err := TOSession.DeleteCDN(oldCDNID, client.RequestOptions{})
+		assert.NoError(t, err, "Unexpected error deleting CDN (#%d) during cleanup: %v", oldCDNID, err)
 	}
 	if newCDNID != -1 {
-		resp2, _, err := TOSession.DeleteCDN(newCDNID, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting CDN (#%d) during cleanup: %v - alerts: %+v", newCDNID, err, resp2.Alerts)
+		_, _, err := TOSession.DeleteCDN(newCDNID, client.RequestOptions{})
+		assert.NoError(t, err, "Unexpected error deleting CDN (#%d) during cleanup: %v", newCDNID, err)
 	}
 }
 
@@ -120,30 +120,31 @@ func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int, 
 //
 // BUT, will ALWAYS have nil MaxRequestHeaderBytes.
 // Note that the Tenant is hard-coded to #1.
-func getCustomDS(cdnID, typeID int, displayName, routingName, orgFQDN, dsID string) tc.DeliveryServiceV4 {
-	customDS := tc.DeliveryServiceV4{}
-	customDS.Active = util.BoolPtr(true)
-	customDS.CDNID = util.IntPtr(cdnID)
-	customDS.DSCP = util.IntPtr(0)
-	customDS.DisplayName = util.StrPtr(displayName)
-	customDS.RoutingName = util.StrPtr(routingName)
-	customDS.GeoLimit = util.IntPtr(0)
-	customDS.GeoProvider = util.IntPtr(0)
-	customDS.IPV6RoutingEnabled = util.BoolPtr(false)
-	customDS.InitialDispersion = util.IntPtr(1)
-	customDS.LogsEnabled = util.BoolPtr(true)
-	customDS.MissLat = util.FloatPtr(0)
-	customDS.MissLong = util.FloatPtr(0)
-	customDS.MultiSiteOrigin = util.BoolPtr(false)
-	customDS.OrgServerFQDN = util.StrPtr(orgFQDN)
-	customDS.Protocol = util.IntPtr(2)
-	customDS.QStringIgnore = util.IntPtr(0)
-	customDS.RangeRequestHandling = util.IntPtr(0)
-	customDS.RegionalGeoBlocking = util.BoolPtr(false)
-	customDS.TenantID = util.IntPtr(1)
-	customDS.TypeID = util.IntPtr(typeID)
-	customDS.XMLID = util.StrPtr(dsID)
-	customDS.MaxRequestHeaderBytes = nil
+func getCustomDS(cdnID, typeID int, displayName, routingName, orgFQDN, dsID string) tc.DeliveryServiceV5 {
+	customDS := tc.DeliveryServiceV5{
+		Active:                tc.DSActiveStatePrimed,
+		CDNID:                 cdnID,
+		DSCP:                  0,
+		DisplayName:           displayName,
+		RoutingName:           routingName,
+		GeoLimit:              0,
+		GeoProvider:           0,
+		IPV6RoutingEnabled:    util.BoolPtr(false),
+		InitialDispersion:     util.IntPtr(1),
+		LogsEnabled:           true,
+		MissLat:               util.FloatPtr(0),
+		MissLong:              util.FloatPtr(0),
+		MultiSiteOrigin:       false,
+		OrgServerFQDN:         util.StrPtr(orgFQDN),
+		Protocol:              util.IntPtr(2),
+		QStringIgnore:         util.IntPtr(0),
+		RangeRequestHandling:  util.IntPtr(0),
+		RegionalGeoBlocking:   false,
+		TenantID:              1,
+		TypeID:                typeID,
+		XMLID:                 dsID,
+		MaxRequestHeaderBytes: nil,
+	}
 	return customDS
 }
 
@@ -161,9 +162,8 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 
 	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	assert.RequireNoError(t, err, "Unexpected error creating a Delivery Service: %v - alerts: %+v", err, resp.Alerts)
-	assert.RequireEqual(t, len(resp.Response), 1, "Expected Delivery Service creation to return exactly one Delivery Service, got: %d", len(resp.Response))
 
-	ds := resp.Response[0]
+	ds := resp.Response
 	assert.RequireNotNil(t, ds.XMLID, "Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
 
 	ds.CDNName = &cdn.Name
@@ -175,8 +175,8 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 		Country:      util.StrPtr("CO"),
 		State:        util.StrPtr("ST"),
 	}
-	genResp, _, err := TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, sslKeyRequestFields, client.RequestOptions{})
-	assert.RequireNoError(t, err, "Unexpected error generaing SSL Keys for Delivery Service '%s': %v - alerts: %+v", *ds.XMLID, err, genResp.Alerts)
+	_, _, err = TOSession.GenerateSSLKeysForDS(ds.XMLID, *ds.CDNName, sslKeyRequestFields, client.RequestOptions{})
+	assert.RequireNoError(t, err, "Unexpected error generaing SSL Keys for Delivery Service '%s': %v", ds.XMLID, err)
 
 	defer cleanUp(t, ds, cdn.ID, -1, []string{"1"})
 
@@ -184,16 +184,15 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 	customDS2 := getCustomDS(cdn.ID, types.Response[0].ID, "displayName2", "routingName2", "https://test2.com", "dsID2")
 
 	resp, _, err = TOSession.CreateDeliveryService(customDS2, client.RequestOptions{})
-	assert.RequireNoError(t, err, "Unexpected error creating a Delivery Service: %v - alerts: %+v", err, resp.Alerts)
-	assert.RequireEqual(t, len(resp.Response), 1, "Expected Delivery Service creation to return exactly one Delivery Service, got: %d", len(resp.Response))
+	assert.RequireNoError(t, err, "Unexpected error creating a Delivery Service: %v", err)
 
-	ds2 := resp.Response[0]
+	ds2 := resp.Response
 	assert.RequireNotNil(t, ds2.XMLID, "Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
 
 	ds2.CDNName = &cdn.Name
 	sslKeyRequestFields.HostName = util.StrPtr("*.test2.com")
-	genResp, _, err = TOSession.GenerateSSLKeysForDS(*ds2.XMLID, *ds2.CDNName, sslKeyRequestFields, client.RequestOptions{})
-	assert.RequireNoError(t, err, "Unexpected error generaing SSL Keys for Delivery Service '%s': %v - alerts: %+v", *ds2.XMLID, err, genResp.Alerts)
+	_, _, err = TOSession.GenerateSSLKeysForDS(ds2.XMLID, *ds2.CDNName, sslKeyRequestFields, client.RequestOptions{})
+	assert.RequireNoError(t, err, "Unexpected error generaing SSL Keys for Delivery Service '%s': %v", ds2.XMLID, err)
 
 	var cdnKeys []tc.CDNSSLKeys
 	for tries := 0; tries < 5; tries++ {
@@ -248,13 +247,12 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 
 	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	assert.RequireNoError(t, err, "Unexpected error creating a Delivery Service: %v - alerts: %+v", err, resp.Alerts)
-	assert.RequireEqual(t, len(resp.Response), 1, "Expected Delivery Service creation to return exactly one Delivery Service, got: %d", len(resp.Response))
 
-	ds := resp.Response[0]
+	ds := resp.Response
 	assert.RequireNotNil(t, ds.XMLID, "Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
 
 	ds.CDNName = &cdn.Name
-	genResp, _, err := TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
+	genResp, _, err := TOSession.GenerateSSLKeysForDS(ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
 		BusinessUnit: util.StrPtr("BU"),
 		City:         util.StrPtr("CI"),
 		Organization: util.StrPtr("OR"),
@@ -262,7 +260,7 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 		Country:      util.StrPtr("CO"),
 		State:        util.StrPtr("ST"),
 	}, client.RequestOptions{})
-	assert.RequireNoError(t, err, "Unexpected error generating SSL Keys for Delivery Service '%s': %v - alerts: %+v", *ds.XMLID, err, genResp.Alerts)
+	assert.RequireNoError(t, err, "Unexpected error generating SSL Keys for Delivery Service '%s': %v - alerts: %+v", ds.XMLID, err, genResp.Alerts)
 
 	defer cleanUp(t, ds, cdn.ID, -1, []string{"1"})
 
@@ -270,7 +268,7 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 	for tries := 0; tries < 5; tries++ {
 		time.Sleep(time.Second)
 		var sslKeysResp tc.DeliveryServiceSSLKeysResponse
-		sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(*ds.XMLID, client.RequestOptions{})
+		sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(ds.XMLID, client.RequestOptions{})
 		*dsSSLKey = sslKeysResp.Response
 		if err == nil && dsSSLKey != nil {
 			break
@@ -278,7 +276,7 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 	}
 
 	if err != nil || dsSSLKey == nil {
-		t.Fatalf("unable to get DS %s SSL key: %v", *ds.XMLID, err)
+		t.Fatalf("unable to get DS %s SSL key: %v", ds.XMLID, err)
 	}
 	if dsSSLKey.Certificate.Key == "" {
 		t.Errorf("expected a valid key but got nothing")
@@ -314,7 +312,7 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 	for tries := 0; tries < 5; tries++ {
 		time.Sleep(time.Second)
 		var sslKeysResp tc.DeliveryServiceSSLKeysResponse
-		sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(*ds.XMLID, client.RequestOptions{})
+		sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(ds.XMLID, client.RequestOptions{})
 		*dsSSLKey = sslKeysResp.Response
 		if err == nil && dsSSLKey != nil {
 			break
@@ -322,7 +320,7 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 	}
 
 	if err != nil || dsSSLKey == nil {
-		t.Fatalf("unable to get DS %s SSL key: %v", *ds.XMLID, err)
+		t.Fatalf("unable to get DS %s SSL key: %v", ds.XMLID, err)
 	}
 	if dsSSLKey.Certificate.Key == "" {
 		t.Errorf("expected a valid key but got nothing")
@@ -332,6 +330,37 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 	}
 	if dsSSLKey.Certificate.CSR == "" {
 		t.Errorf("expected a valid CSR, but got nothing")
+	}
+
+	var otherKey *tc.DeliveryServiceSSLKeys
+	for _, ds := range testData.DeliveryServices {
+		if !(*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
+			continue
+		}
+		var err error
+		dsSSLKey := new(tc.DeliveryServiceSSLKeys)
+		for tries := 0; tries < 5; tries++ {
+			time.Sleep(time.Second)
+			var sslKeysResp tc.DeliveryServiceSSLKeysResponse
+			sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(ds.XMLID, client.RequestOptions{})
+			*dsSSLKey = sslKeysResp.Response
+			if err == nil {
+				break
+			}
+		}
+		if dsSSLKey != nil {
+			otherKey = dsSSLKey
+			break
+		}
+	}
+	err = deliveryservice.Base64DecodeCertificate(&otherKey.Certificate)
+	assert.RequireNoError(t, err, "Couldn't decode certificate: %v", err)
+
+	dsSSLKeyReq.Certificate.Crt += otherKey.Certificate.Crt
+	_, _, err = TOSession.AddSSLKeysForDS(tc.DeliveryServiceAddSSLKeysReq{DeliveryServiceSSLKeysReq: dsSSLKeyReq}, client.RequestOptions{})
+	assert.RequireNotNil(t, err, "Expected inconsistent certificate chain to be rejected")
+	if !strings.Contains(err.Error(), "intermediate chain contains certificates that do not match") {
+		t.Errorf("Expected failure with chain issue, instead got: %s", err.Error())
 	}
 }
 
@@ -345,7 +374,7 @@ func VerifySSLKeysOnDsCreationTest(t *testing.T) {
 		for tries := 0; tries < 5; tries++ {
 			time.Sleep(time.Second)
 			var sslKeysResp tc.DeliveryServiceSSLKeysResponse
-			sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(*ds.XMLID, client.RequestOptions{})
+			sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(ds.XMLID, client.RequestOptions{})
 			*dsSSLKey = sslKeysResp.Response
 			if err == nil && dsSSLKey != nil {
 				break
@@ -353,7 +382,7 @@ func VerifySSLKeysOnDsCreationTest(t *testing.T) {
 		}
 
 		if err != nil || dsSSLKey == nil {
-			t.Fatalf("unable to get DS %s SSL key: %v", *ds.XMLID, err)
+			t.Fatalf("unable to get DS %s SSL key: %v", ds.XMLID, err)
 		}
 		if dsSSLKey.Certificate.Key == "" {
 			t.Errorf("expected a valid key but got nothing")
@@ -388,16 +417,15 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 
 	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	assert.RequireNoError(t, err, "Unexpected error creating a custom Delivery Service: %v - alerts: %+v", err, resp.Alerts)
-	assert.RequireEqual(t, len(resp.Response), 1, "Expected Delivery Service creation to create exactly one Delivery Service, Traffic Ops indicates %d were created", len(resp.Response))
 
-	ds := resp.Response[0]
+	ds := resp.Response
 	assert.NotNil(t, ds.XMLID, "Traffic Ops created a Delivery Service with null or undefined XMLID")
 
 	ds.CDNName = &oldCdn.Name
 
 	defer cleanUp(t, ds, oldCdn.ID, newCdn.ID, []string{"1"})
 
-	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
+	_, _, err = TOSession.GenerateSSLKeysForDS(ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
 		BusinessUnit: util.StrPtr("BU"),
 		City:         util.StrPtr("CI"),
 		Organization: util.StrPtr("OR"),
@@ -422,13 +450,13 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	newCDNKeys, _, err := TOSession.GetCDNSSLKeys(newCdn.Name, client.RequestOptions{})
 	assert.RequireNoError(t, err, "Unable to get cdn %v keys: %v", newCdn.Name, err)
 
-	ds.RoutingName = util.StrPtr("anothername")
+	ds.RoutingName = "anothername"
 	_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
 	assert.RequireNotNil(t, err, "Should not be able to update delivery service (routing name) as it has ssl keys")
 
-	ds.RoutingName = util.StrPtr("routingName")
+	ds.RoutingName = "routingName"
 
-	ds.CDNID = &newCdn.ID
+	ds.CDNID = newCdn.ID
 	ds.CDNName = &newCdn.Name
 	_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
 	assert.RequireNotNil(t, err, "Should not be able to update delivery service (cdn) as it has ssl keys")
@@ -449,7 +477,7 @@ func GetTestDeliveryServicesURLSignatureKeys(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
-	_, _, err := TOSession.GetDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
+	_, _, err := TOSession.GetDeliveryServiceURLSignatureKeys(firstDS.XMLID, client.RequestOptions{})
 	assert.RequireNoError(t, err, "Failed to get url sig keys: %v", err)
 }
 
@@ -458,10 +486,10 @@ func CreateTestDeliveryServicesURLSignatureKeys(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
-	resp, _, err := TOSession.CreateDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
+	resp, _, err := TOSession.CreateDeliveryServiceURLSignatureKeys(firstDS.XMLID, client.RequestOptions{})
 	assert.NoError(t, err, "Unexpected error creating URL signing keys: %v - alerts: %+v", err, resp.Alerts)
 
-	firstKeys, _, err := TOSession.GetDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
+	firstKeys, _, err := TOSession.GetDeliveryServiceURLSignatureKeys(firstDS.XMLID, client.RequestOptions{})
 	assert.NoError(t, err, "Unexpected error getting URL signing keys: %v - alerts: %+v", err, firstKeys.Alerts)
 	assert.GreaterOrEqual(t, len(firstKeys.Response), 1, "failed to create URL signing keys")
 
@@ -469,10 +497,10 @@ func CreateTestDeliveryServicesURLSignatureKeys(t *testing.T) {
 	assert.RequireEqual(t, ok, true, "Expected to find 'key0' in URL signing keys, but didn't")
 
 	// Create new keys again and check that they are different
-	resp, _, err = TOSession.CreateDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
+	resp, _, err = TOSession.CreateDeliveryServiceURLSignatureKeys(firstDS.XMLID, client.RequestOptions{})
 	assert.NoError(t, err, "Unexpected error creating URL signing keys: %v - alerts: %+v", err, resp.Alerts)
 
-	secondKeys, _, err := TOSession.GetDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
+	secondKeys, _, err := TOSession.GetDeliveryServiceURLSignatureKeys(firstDS.XMLID, client.RequestOptions{})
 	assert.NoError(t, err, "Unexpected error getting URL signing keys: %v - alerts: %+v", err, secondKeys.Alerts)
 	assert.GreaterOrEqual(t, len(secondKeys.Response), 0, "Failed to create url sig keys")
 
@@ -489,7 +517,7 @@ func DeleteTestDeliveryServicesURLSignatureKeys(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
-	resp, _, err := TOSession.DeleteDeliveryServiceURLSignatureKeys(*firstDS.XMLID, client.RequestOptions{})
+	resp, _, err := TOSession.DeleteDeliveryServiceURLSignatureKeys(firstDS.XMLID, client.RequestOptions{})
 	assert.NoError(t, err, "Unexpected error deleting URL signing keys: %v - alerts: %+v", err, resp.Alerts)
 }
 
@@ -498,8 +526,8 @@ func GetTestDeliveryServicesURISigningKeys(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
-	_, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
-	assert.NoError(t, err, "Unexpected error getting URI signing keys for Delivery Service '%s': %v", *firstDS.XMLID, err)
+	_, _, err := TOSession.GetDeliveryServiceURISigningKeys(firstDS.XMLID, client.RequestOptions{})
+	assert.NoError(t, err, "Unexpected error getting URI signing keys for Delivery Service '%s': %v", firstDS.XMLID, err)
 }
 
 const (
@@ -543,10 +571,10 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 	err := json.Unmarshal([]byte(keySet1), &keyset)
 	assert.NoError(t, err, "json.UnMarshal(): expected nil error, actual: %v", err)
 
-	_, _, err = TOSession.CreateDeliveryServiceURISigningKeys(*firstDS.XMLID, keyset, client.RequestOptions{})
+	_, _, err = TOSession.CreateDeliveryServiceURISigningKeys(firstDS.XMLID, keyset, client.RequestOptions{})
 	assert.NoError(t, err, "failed to create uri sig keys: %v", err)
 
-	firstKeysBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
+	firstKeysBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(firstDS.XMLID, client.RequestOptions{})
 	assert.NoError(t, err, "Failed to get uri sig keys: %v", err)
 
 	firstKeys := tc.JWKSMap{}
@@ -563,10 +591,10 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 	err = json.Unmarshal([]byte(keySet2), &keyset2)
 	assert.NoError(t, err, "json.UnMarshal(): expected nil error, actual: %v", err)
 
-	alerts, _, err := TOSession.CreateDeliveryServiceURISigningKeys(*firstDS.XMLID, keyset2, client.RequestOptions{})
-	assert.NoError(t, err, "Unexpected error creating URI Signature Keys for Delivery Service '%s': %v - alerts: %+v", *firstDS.XMLID, err, alerts.Alerts)
+	alerts, _, err := TOSession.CreateDeliveryServiceURISigningKeys(firstDS.XMLID, keyset2, client.RequestOptions{})
+	assert.NoError(t, err, "Unexpected error creating URI Signature Keys for Delivery Service '%s': %v - alerts: %+v", firstDS.XMLID, err, alerts.Alerts)
 
-	secondKeysBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
+	secondKeysBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(firstDS.XMLID, client.RequestOptions{})
 	assert.NoError(t, err, "Failed to get uri sig keys: %v", err)
 	secondKeys := tc.JWKSMap{}
 	err = json.Unmarshal(secondKeysBytes, &secondKeys)
@@ -592,11 +620,11 @@ func DeleteTestDeliveryServicesURISigningKeys(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 	assert.RequireNotNil(t, firstDS.XMLID, "Found a Delivery Service in testing data with a null or undefined XMLID")
 
-	resp, _, err := TOSession.DeleteDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
-	assert.NoError(t, err, "Unexpected error deleting URI Signing keys for Delivery Service '%s': %v - alerts: %+v", *firstDS.XMLID, err, resp.Alerts)
+	resp, _, err := TOSession.DeleteDeliveryServiceURISigningKeys(firstDS.XMLID, client.RequestOptions{})
+	assert.NoError(t, err, "Unexpected error deleting URI Signing keys for Delivery Service '%s': %v - alerts: %+v", firstDS.XMLID, err, resp.Alerts)
 
-	emptyBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
-	assert.NoError(t, err, "Unexpected error getting URI signing keys for Delivery Service '%s': %v", *firstDS.XMLID, err)
+	emptyBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(firstDS.XMLID, client.RequestOptions{})
+	assert.NoError(t, err, "Unexpected error getting URI signing keys for Delivery Service '%s': %v", firstDS.XMLID, err)
 
 	emptyMap := make(map[string]interface{})
 	err = json.Unmarshal(emptyBytes, &emptyMap)

@@ -17,6 +17,24 @@
  * under the License.
  */
 
+/**
+ * This is a controller for the table used to compare the Parameters of two
+ * Profiles.
+ *
+ * @param {{name: string; params: {id: number}[]}} profile1
+ * @param {{name: string; params: {id: number}[]}} profile2
+ * @param {{id: number}[]} profilesParams
+ * @param {boolean} showAll
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("angular").IQService} $q
+ * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../api/ProfileParameterService")} profileParameterService
+ * @param {import("../../../api/ServerService")} serverService
+ */
 var TableProfilesParamsCompareController = function(profile1, profile2, profilesParams, showAll, $scope, $state, $q, $uibModal, messageModel, locationUtils, deliveryServiceService, profileParameterService, serverService) {
 
 	let updateProfile1 = false,
@@ -127,8 +145,8 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 	};
 
 	$scope.selectedParams = profilesParams.map(function(param) {
-		let isAssignedToProfile1 = profile1.params ? profile1.params.some(function(pp){return pp.id === param.id}) : false,
-			isAssignedToProfile2 = profile2.params ? profile2.params.some(function(pp){return pp.id === param.id}) : false;
+		let isAssignedToProfile1 = profile1.params ? profile1.params.some(pp => pp.id === param.id) : false,
+			isAssignedToProfile2 = profile2.params ? profile2.params.some(pp => pp.id === param.id) : false;
 
 		if (isAssignedToProfile1) {
 			param['origSelected1'] = true;

@@ -138,7 +138,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetDeliveryServiceId(t, "ds-top-req-cap"),
+					EndpointID:    GetDeliveryServiceId(t, "ds-top-req-cap"),
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
 						RequiredCapability: util.Ptr("ram"),
@@ -146,7 +146,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"NOT FOUND when NON-EXISTENT DELIVERYSERVICEID parameter": {
-					EndpointId:    func() int { return -1 },
+					EndpointID:    func() int { return -1 },
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
 						RequiredCapability: util.Ptr("foo"),
@@ -154,7 +154,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when NON-EXISTENT REQUIREDCAPABILITY parameter": {
-					EndpointId:    GetDeliveryServiceId(t, "ds1"),
+					EndpointID:    GetDeliveryServiceId(t, "ds1"),
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
 						RequiredCapability: util.Ptr("bogus"),
@@ -201,7 +201,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteDeliveryServicesRequiredCapability(testCase.EndpointId(), *testCase.RequestBody.RequiredCapability)
+							alerts, reqInf, err := testCase.ClientSession.DeleteDeliveryServicesRequiredCapability(testCase.EndpointID(), *testCase.RequestBody.RequiredCapability)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

@@ -2032,6 +2032,139 @@ jI///X8MUJs=
 	CASignedNoSkiAkiECDSACertificateChain           = ``
 	CASignedNoSkiAkiECDSACertificateChainPrivateKey = ``
 	CASignedNoSkiAkiECDSARootCA                     = ``
+	SelfSignedRSAPrivateKeyInvalidChain             = `
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAsARDggbjMcM3jaBnyJ67lTNEoJhQHnWrtvOPe69rp8meKXyL
+ExeoSTWe2u6stjTFH3zLD716Ph/G1ZRHpq7Kp8zloSMcKI0NsBBV82OEo3viifIX
+by5a1Lr10WMD9PW66+LpSx389HPQPuSP/NAeMy7p3xGQQQWDLLOas7sEWFZ1DPYs
+D7eF7vD6I9/ZtO7sCyRn36Hm16GnenyoTVkA/f3zelcxYfE02EezufAZuXgOB5y7
+xoQApD/gVp+XqouHZ329ZtCCHP5Jeyd6zngpG7ZZAbkVpY+jUkIzevkazHV5ire2
+m4XfGO+tOMyqbmlWi7Ts4owaQCQkZMlwK2p36QIDAQABAoIBAEDS0Snp73I8OxFl
+qdMw4lSodPXQInGVVJAkUwtyJ2u7zQvqWi3F4KxVmxN2IxVXieF2zDIXzhVjDo9J
+9LlmVixGQat+irhEem4FFiJ03Dx5O40iI49GuxztXeqnVKW6egS1pMWNXcOJg4Am
+HQE2hGjFNkx442+O4ChuXOMkVQ1S7Xz8Ejif2wheH5oMRLDqrmuXqyC9mkespct+
+g9QjMPxEXGp1wXTUzWopbGGMkofr9oL2HXX2CJX6lUAJDE1doaq8QmSkrUwKu1/6
+X8S3gqX9kAmy8ff4oAHuqmwv/uRDNGCLtmcfLvtXjDYdlC3ML1FT4B2E3ctc9Kjo
+iQkNYIECgYEAy9jPQVA2pTQQ493z3ty1QS5Pyj55qEYSqhwyw3VF8g/hehKRPuJC
+LC6PDhWgiaJCo3aiJ8Ac/ve/elSOsTlGx/oReyujk0rixvd9Sxoq2od5zJWpGySB
+kRmyb4f/1DH+p+LTGEl7pJOfbfF2b3YnCS5iSP3KS7jeLKGKI4J7rM0CgYEA3Qyt
+10RcRIOfxOXT5Sb5nF8DuPKbnJ0x2Tg6oK3pxALX5/sN3FMnld5Xl1rnPGDgaSKf
+Gk2kM1rW/6XvKu9seBAFs9bODBZUHNUP7Vv6aaxq0GWU/QTNqxkYaqdt6lLTjlP5
+FDxCKqBlon77KMaIFOEQnBKGSj2tUWO7rC/dd40CgYEAjmaY8hFs+x9SJTyp3ifk
+XvJRPwFBz3GUHE2ykKReBmldo/9Qg9NfUqn7uWUWTs+RKcv4HziviNXdZ0GmpNtU
+POLOT3L+xChuH3xIhKx0/0/goDB0f8eS06BV7F/fMYbzVKi5up+qxh9yIkWp7Ndn
+EZzbgA36wccVPaxjacb/SokCgYEA1xbxSRgRl/Fj01m3F7EXDVs+6gXX+UrUKIOY
+OKVBZCNIJ0iYshyP1jqljHc9rfiuJF815YhLEFWCAvxZfrO+Hg2pHtcTY5uOeQex
+Gct4HL9SqDlQAetcnPIsWgtU3r99b26yXUhNMeElRDq+9WxJGdfuK4+y8CaXsSyU
+fvWMUDkCgYA2HozEb1cMu676Sa4TaiF/LvOd9HFZe1DJRfk4jOKbiAgLgvNCfRrr
+WMMitU3/DUNIDPsPQxdfPIUqk4PDp5ZuZGau5AsHU2a8byOVm8SASJHv9ha4Memr
+ME8pyqZrmhowVZcsMmtVudk74bn9163d3fiiQzCKxokItxyB2MBCyA==
+-----END RSA PRIVATE KEY-----
+`
+	SelfSignedInconsistentCertChain = `
+-----BEGIN CERTIFICATE-----
+MIID9DCCAtygAwIBAgIRALsBZHSe6BK11fYqQLaGPn0wDQYJKoZIhvcNAQELBQAw
+gYoxFDASBgNVBAYTC1BsYWNlaG9sZGVyMRQwEgYDVQQIEwtQbGFjZWhvbGRlcjEU
+MBIGA1UEBxMLUGxhY2Vob2xkZXIxFDASBgNVBAoTC1BsYWNlaG9sZGVyMRQwEgYD
+VQQLEwtQbGFjZWhvbGRlcjEaMBgGA1UEAwwRKi5hc2RmMi5jaWFiLnRlc3QwHhcN
+MjIxMDEzMTgxMDIyWhcNMjMxMDEzMTgxMDIyWjCBijEUMBIGA1UEBhMLUGxhY2Vo
+b2xkZXIxFDASBgNVBAgTC1BsYWNlaG9sZGVyMRQwEgYDVQQHEwtQbGFjZWhvbGRl
+cjEUMBIGA1UEChMLUGxhY2Vob2xkZXIxFDASBgNVBAsTC1BsYWNlaG9sZGVyMRow
+GAYDVQQDDBEqLmFzZGYyLmNpYWIudGVzdDCCASIwDQYJKoZIhvcNAQEBBQADggEP
+ADCCAQoCggEBALAEQ4IG4zHDN42gZ8ieu5UzRKCYUB51q7bzj3uva6fJnil8ixMX
+qEk1ntrurLY0xR98yw+9ej4fxtWUR6auyqfM5aEjHCiNDbAQVfNjhKN74onyF28u
+WtS69dFjA/T1uuvi6Usd/PRz0D7kj/zQHjMu6d8RkEEFgyyzmrO7BFhWdQz2LA+3
+he7w+iPf2bTu7AskZ9+h5tehp3p8qE1ZAP3983pXMWHxNNhHs7nwGbl4Dgecu8aE
+AKQ/4Fafl6qLh2d9vWbQghz+SXsnes54KRu2WQG5FaWPo1JCM3r5Gsx1eYq3tpuF
+3xjvrTjMqm5pVou07OKMGkAkJGTJcCtqd+kCAwEAAaNTMFEwDgYDVR0PAQH/BAQD
+AgWgMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1UdEwEB/wQCMAAwHAYDVR0RBBUw
+E4IRKi5hc2RmMi5jaWFiLnRlc3QwDQYJKoZIhvcNAQELBQADggEBACFFXQrxyE3Y
+tlrsHc5pV2hmqvi4wAj0iFtAfq06c5UbnnCIMRkw1hKIjO2TRN3qEJKxlEklPOIr
+uwvn66sIFbB0HgEawjCxoQ+03k/ZSErxYukRmWzJ2knjFP46bxCHxRjBxUvNy47R
+DXAlyG5jhAECuxyOBaevgOlk2Eue4Bk7yM7HGCPEhC/xOEBe66rNJtbh6T2NKe9A
+q5dMWXDybkreALeRA8wnosXf5n24AMC9QKYqZ/baAvG/ASKvVqTaP9YgQ0tyJhjV
+qb6viLd41tRPW9s9Ds5ECmKxmju3Bsh1se94V83jE5nUeHg99/h5IQuFjaCVi5Zt
+6/0395yFKRA=
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIID8zCCAtugAwIBAgIQDen+PunwC7HgIIy5puEugjANBgkqhkiG9w0BAQsFADCB
+ijEUMBIGA1UEBhMLUGxhY2Vob2xkZXIxFDASBgNVBAgTC1BsYWNlaG9sZGVyMRQw
+EgYDVQQHEwtQbGFjZWhvbGRlcjEUMBIGA1UEChMLUGxhY2Vob2xkZXIxFDASBgNV
+BAsTC1BsYWNlaG9sZGVyMRowGAYDVQQDDBEqLmFzZGYzLmNpYWIudGVzdDAeFw0y
+MjEwMTMxODEzNDFaFw0yMzEwMTMxODEzNDFaMIGKMRQwEgYDVQQGEwtQbGFjZWhv
+bGRlcjEUMBIGA1UECBMLUGxhY2Vob2xkZXIxFDASBgNVBAcTC1BsYWNlaG9sZGVy
+MRQwEgYDVQQKEwtQbGFjZWhvbGRlcjEUMBIGA1UECxMLUGxhY2Vob2xkZXIxGjAY
+BgNVBAMMESouYXNkZjMuY2lhYi50ZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAscFl+DbbcaJPxpxFVglVKW8P3n+SenHhexhPpBtSiPtPXX5NsAmM
+zmDypmuyOZUNWMqyFnd5g7R/0qzCDJnB/c60QtcxSeN8TIFoUocYEU8GAe3GWnMs
+75QhhA/2ps36+JfUs7+ZALwt169EhuzX4/R0jmpm2yOtqUEQd1Q6nWxENFip1Ya7
+04+tJqtXfpS3kHjpVL6v24bW16TZbjnKSp5nYpha2KvV3fTxmas/1f+s3R2KPAvF
+yoh73pXxbG7dinVhuNCiVD1ltRrZ+WWKJLg/IFI6aj7WkvZHukgzPSBNz0BKyeN2
+cmGHTNPkyClaEmbI13TaR7fUymwGxqZBewIDAQABo1MwUTAOBgNVHQ8BAf8EBAMC
+BaAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADAcBgNVHREEFTAT
+ghEqLmFzZGYzLmNpYWIudGVzdDANBgkqhkiG9w0BAQsFAAOCAQEAERS0gDP+gRPO
+x9pCT4/yHC464N7XnQSBq8etd3JQqCQ1KhM4XxGacNRU6RbLw4haL3S5NEVJlEAw
+/ScQi4RMU3z9c6mIFTP3Ha45VFcPjK8VQeemgMjiWueVF8tKpbWBmH/RZnEkzGsK
+5O24QpIvKI37XkgBWJbkk4kDMkKve9tXoPAHMEsFXUdoUnZUh4DtP9uPWErtfcGv
+fdFz/L9Qn4sLjVWVzchGSTNiD5I6Yf0gIaSfndUgqlOK0qHL+e5njBTW60AgDTBm
+bIlRqYdgVaemmQPQWKPjMUKbnevs+FGdNk8pvPTy7/SNVjOmV0+11UR5dlLnqyzQ
+3Uh7vjRNqw==
+-----END CERTIFICATE-----
+`
+	SelfSignedCertChain = `
+-----BEGIN CERTIFICATE-----
+MIID9DCCAtygAwIBAgIRALsBZHSe6BK11fYqQLaGPn0wDQYJKoZIhvcNAQELBQAw
+gYoxFDASBgNVBAYTC1BsYWNlaG9sZGVyMRQwEgYDVQQIEwtQbGFjZWhvbGRlcjEU
+MBIGA1UEBxMLUGxhY2Vob2xkZXIxFDASBgNVBAoTC1BsYWNlaG9sZGVyMRQwEgYD
+VQQLEwtQbGFjZWhvbGRlcjEaMBgGA1UEAwwRKi5hc2RmMi5jaWFiLnRlc3QwHhcN
+MjIxMDEzMTgxMDIyWhcNMjMxMDEzMTgxMDIyWjCBijEUMBIGA1UEBhMLUGxhY2Vo
+b2xkZXIxFDASBgNVBAgTC1BsYWNlaG9sZGVyMRQwEgYDVQQHEwtQbGFjZWhvbGRl
+cjEUMBIGA1UEChMLUGxhY2Vob2xkZXIxFDASBgNVBAsTC1BsYWNlaG9sZGVyMRow
+GAYDVQQDDBEqLmFzZGYyLmNpYWIudGVzdDCCASIwDQYJKoZIhvcNAQEBBQADggEP
+ADCCAQoCggEBALAEQ4IG4zHDN42gZ8ieu5UzRKCYUB51q7bzj3uva6fJnil8ixMX
+qEk1ntrurLY0xR98yw+9ej4fxtWUR6auyqfM5aEjHCiNDbAQVfNjhKN74onyF28u
+WtS69dFjA/T1uuvi6Usd/PRz0D7kj/zQHjMu6d8RkEEFgyyzmrO7BFhWdQz2LA+3
+he7w+iPf2bTu7AskZ9+h5tehp3p8qE1ZAP3983pXMWHxNNhHs7nwGbl4Dgecu8aE
+AKQ/4Fafl6qLh2d9vWbQghz+SXsnes54KRu2WQG5FaWPo1JCM3r5Gsx1eYq3tpuF
+3xjvrTjMqm5pVou07OKMGkAkJGTJcCtqd+kCAwEAAaNTMFEwDgYDVR0PAQH/BAQD
+AgWgMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1UdEwEB/wQCMAAwHAYDVR0RBBUw
+E4IRKi5hc2RmMi5jaWFiLnRlc3QwDQYJKoZIhvcNAQELBQADggEBACFFXQrxyE3Y
+tlrsHc5pV2hmqvi4wAj0iFtAfq06c5UbnnCIMRkw1hKIjO2TRN3qEJKxlEklPOIr
+uwvn66sIFbB0HgEawjCxoQ+03k/ZSErxYukRmWzJ2knjFP46bxCHxRjBxUvNy47R
+DXAlyG5jhAECuxyOBaevgOlk2Eue4Bk7yM7HGCPEhC/xOEBe66rNJtbh6T2NKe9A
+q5dMWXDybkreALeRA8wnosXf5n24AMC9QKYqZ/baAvG/ASKvVqTaP9YgQ0tyJhjV
+qb6viLd41tRPW9s9Ds5ECmKxmju3Bsh1se94V83jE5nUeHg99/h5IQuFjaCVi5Zt
+6/0395yFKRA=
+-----END CERTIFICATE-----`
+	ValidIntermediateCert = `
+-----BEGIN CERTIFICATE-----
+MIIEvjCCA6agAwIBAgIQBtjZBNVYQ0b2ii+nVCJ+xDANBgkqhkiG9w0BAQsFADBh
+MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
+d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
+QTAeFw0yMTA0MTQwMDAwMDBaFw0zMTA0MTMyMzU5NTlaME8xCzAJBgNVBAYTAlVT
+MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxKTAnBgNVBAMTIERpZ2lDZXJ0IFRMUyBS
+U0EgU0hBMjU2IDIwMjAgQ0ExMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+AQEAwUuzZUdwvN1PWNvsnO3DZuUfMRNUrUpmRh8sCuxkB+Uu3Ny5CiDt3+PE0J6a
+qXodgojlEVbbHp9YwlHnLDQNLtKS4VbL8Xlfs7uHyiUDe5pSQWYQYE9XE0nw6Ddn
+g9/n00tnTCJRpt8OmRDtV1F0JuJ9x8piLhMbfyOIJVNvwTRYAIuE//i+p1hJInuW
+raKImxW8oHzf6VGo1bDtN+I2tIJLYrVJmuzHZ9bjPvXj1hJeRPG/cUJ9WIQDgLGB
+Afr5yjK7tI4nhyfFK3TUqNaX3sNk+crOU6JWvHgXjkkDKa77SU+kFbnO8lwZV21r
+eacroicgE7XQPUDTITAHk+qZ9QIDAQABo4IBgjCCAX4wEgYDVR0TAQH/BAgwBgEB
+/wIBADAdBgNVHQ4EFgQUt2ui6qiqhIx56rTaD5iyxZV2ufQwHwYDVR0jBBgwFoAU
+A95QNVbRTLtm8KPiGxvDl7I90VUwDgYDVR0PAQH/BAQDAgGGMB0GA1UdJQQWMBQG
+CCsGAQUFBwMBBggrBgEFBQcDAjB2BggrBgEFBQcBAQRqMGgwJAYIKwYBBQUHMAGG
+GGh0dHA6Ly9vY3NwLmRpZ2ljZXJ0LmNvbTBABggrBgEFBQcwAoY0aHR0cDovL2Nh
+Y2VydHMuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0R2xvYmFsUm9vdENBLmNydDBCBgNV
+HR8EOzA5MDegNaAzhjFodHRwOi8vY3JsMy5kaWdpY2VydC5jb20vRGlnaUNlcnRH
+bG9iYWxSb290Q0EuY3JsMD0GA1UdIAQ2MDQwCwYJYIZIAYb9bAIBMAcGBWeBDAEB
+MAgGBmeBDAECATAIBgZngQwBAgIwCAYGZ4EMAQIDMA0GCSqGSIb3DQEBCwUAA4IB
+AQCAMs5eC91uWg0Kr+HWhMvAjvqFcO3aXbMM9yt1QP6FCvrzMXi3cEsaiVi6gL3z
+ax3pfs8LulicWdSQ0/1s/dCYbbdxglvPbQtaCdB73sRD2Cqk3p5BJl+7j5nL3a7h
+qG+fh/50tx8bIKuxT8b1Z11dmzzp/2n3YWzW2fP9NsarA4h20ksudYbj/NhVfSbC
+EXffPgK2fPOre3qGNm+499iTcc+G33Mw+nur7SpZyEKEOxEXGlLzyQ4UfaJbcme6
+ce1XR2bFuAJKZTRei9AqPCCcUZlM51Ke92sRKw2Sfh3oius2FkOH6ipjv3U/697E
+A7sKPPcw7+uvTPyLNhBzPvOk
+-----END CERTIFICATE-----`
 )
 
 func TestDecodePrivateKeyPKCS8RSA2048(t *testing.T) {
@@ -2238,7 +2371,7 @@ func TestDecodePrivateKeyECDSAEncrypted(t *testing.T) {
 
 func TestVerifyAndEncodeCertificateBadData(t *testing.T) {
 	// should fail bad base64 data
-	_, _, _, _, err := verifyCertKeyPair(BadCertData, BadKeyData, "", true)
+	_, _, _, _, _, err := verifyCertKeyPair(BadCertData, BadKeyData, "", true)
 	if err == nil {
 		t.Fatalf("unexpected result: there should have been a base64 decoding failure")
 	}
@@ -2246,7 +2379,7 @@ func TestVerifyAndEncodeCertificateBadData(t *testing.T) {
 
 func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairDSA(t *testing.T) {
 	// should fail due to x509 + DSA being unsupported
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedDSACertificate, SelfSignedDSAPrivateKey, "", true)
+	_, _, _, _, _, err := verifyCertKeyPair(SelfSignedDSACertificate, SelfSignedDSAPrivateKey, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected result: the DSA PKI algorithm is unsupported")
@@ -2257,7 +2390,7 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairDSA(t *testing.T) {
 
 func TestVerifyAndEncodeCertificateSelfSignedX509v1(t *testing.T) {
 	// should successfully validate as x509v1 must remain supported
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedX509v1Certificate, SelfSignedX509v1PrivateKey, "", true)
+	certChain, certPrivateKey, unknownAuth, _, _, err := verifyCertKeyPair(SelfSignedX509v1Certificate, SelfSignedX509v1PrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: the x509v1 cert/key pair is valid and should have passed validation: %v", err)
@@ -2283,7 +2416,7 @@ func TestVerifyAndEncodeCertificateSelfSignedX509v1(t *testing.T) {
 
 func TestVerifyAndEncodeCertificateSelfSignedNoSkiAkiCertKeyPair(t *testing.T) {
 
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedNOSKIAKIRSACertificate, SelfSignedNOSKIAKIRSAPrivateKey, "", true)
+	certChain, certPrivateKey, unknownAuth, _, _, err := verifyCertKeyPair(SelfSignedNOSKIAKIRSACertificate, SelfSignedNOSKIAKIRSAPrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: a certificate verification error should have occured: %v", err)
@@ -2309,7 +2442,7 @@ func TestVerifyAndEncodeCertificateSelfSignedNoSkiAkiCertKeyPair(t *testing.T) {
 
 func TestVerifyAndEncodeCertificateSelfSignedCertKeyPair(t *testing.T) {
 
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedRSACertificate, SelfSignedRSAPrivateKey, "", true)
+	certChain, certPrivateKey, unknownAuth, _, _, err := verifyCertKeyPair(SelfSignedRSACertificate, SelfSignedRSAPrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result, a certificate verification error should have occured: %v", err)
@@ -2336,7 +2469,7 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPair(t *testing.T) {
 func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairMisMatchedPrivateKey(t *testing.T) {
 
 	// Should fail on cert/private-key mismatch
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificate, PrivateKeyPKCS1RSA2048, "", true)
+	_, _, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificate, PrivateKeyPKCS1RSA2048, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected result: a certificate/key modulus mismatch error should have occurred")
@@ -2348,7 +2481,7 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairMisMatchedPrivateKey(t *
 func TestVerifyAndEncodeCertificateSelfSignedNoServerAuthExtKeyUsage(t *testing.T) {
 
 	// Should fail due to not having the serverAuth extKeyUsage (x509v3 only)
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificateNoServerAuthExtKeyUsage, SelfSignedRSAPrivateKeyNoServerAuthExtKeyUsage, "", true)
+	_, _, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificateNoServerAuthExtKeyUsage, SelfSignedRSAPrivateKeyNoServerAuthExtKeyUsage, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected result: x509v3 certificate should have been rejected since it doesn't have the server auth extKeyUsage")
@@ -2361,7 +2494,7 @@ func TestVerifyAndEncodeCertificateSelfSignedRSANoKeyEnciphermentKeyUsage(t *tes
 
 	// Should fail due to not having the keyEncipherment keyUsage (x509v3 only)
 	// keyUsage extension must include keyEncipherment if the PKI algorithm is RSA.
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificateNoKeyEnciphermentKeyUsage, SelfSignedRSAPrivateKeyNoKeyEnciphermentKeyUsage, "", true)
+	_, _, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificateNoKeyEnciphermentKeyUsage, SelfSignedRSAPrivateKeyNoKeyEnciphermentKeyUsage, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected result: x509v3 certificate should have been rejected since it doesn't have the keyEncipherment keyUsage (required for x509v3+RSA certificates)")
@@ -2373,7 +2506,7 @@ func TestVerifyAndEncodeCertificateSelfSignedRSANoKeyEnciphermentKeyUsage(t *tes
 func TestVerifyAndEncodeCertificateCASignedCertKeyPair(t *testing.T) {
 
 	// Should succeed, but with unknown authority warning.
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedRSACertificateChain, CASignedRSACertificateChainPrivateKey, "", true)
+	certChain, certPrivateKey, unknownAuth, _, _, err := verifyCertKeyPair(CASignedRSACertificateChain, CASignedRSACertificateChainPrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: " + err.Error())
@@ -2400,7 +2533,7 @@ func TestVerifyAndEncodeCertificateCASignedCertKeyPair(t *testing.T) {
 func TestVerifyAndEncodeCertificateCASignedCertKeyPairWithRootCA(t *testing.T) {
 
 	// should succeed and be fully validated.
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedRSACertificateChain, CASignedRSACertificateChainPrivateKey, CASignedRSARootCA, true)
+	certChain, certPrivateKey, unknownAuth, _, _, err := verifyCertKeyPair(CASignedRSACertificateChain, CASignedRSACertificateChainPrivateKey, CASignedRSARootCA, true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: " + err.Error())
@@ -2427,7 +2560,7 @@ func TestVerifyAndEncodeCertificateCASignedCertKeyPairWithRootCA(t *testing.T) {
 func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPair(t *testing.T) {
 
 	// Should succeed, but with unknown authority warning.
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, "", true)
+	certChain, certPrivateKey, unknownAuth, _, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: " + err.Error())
@@ -2454,7 +2587,7 @@ func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPair(t *testing.T) {
 func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPairWithRootCA(t *testing.T) {
 
 	// should succeed and be fully validated despite not having subject/authority key identifier(s).
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, CASignedNoSkiAkiRSARootCA, true)
+	certChain, certPrivateKey, unknownAuth, _, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, CASignedNoSkiAkiRSARootCA, true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: " + err.Error())
@@ -2481,7 +2614,7 @@ func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPairWithRootCA(t *test
 func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutDigitalSignatureKeyUsage(t *testing.T) {
 	// Should fail due to unsupported private/public key algorithm
 	// keyUsage must contain the digitalSignature usage if a DSA based PKI algorithm is indicated (unlike RSA).
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificateNoDigitalSignatureKeyUsage, SelfSignedECDSAPrivateKeyNoDigitalSignatureKeyUsage, "", true)
+	_, _, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificateNoDigitalSignatureKeyUsage, SelfSignedECDSAPrivateKeyNoDigitalSignatureKeyUsage, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected result: x509v3 certificate should have been rejected since it doesn't have the digitalSignature keyUsage (required for x509v3+ECDSA certificates)")
@@ -2492,7 +2625,7 @@ func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutDigit
 
 func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPair(t *testing.T) {
 	// Should be successful as the certificate and key are valid with proper keyUsage/extendedKeyUsage.
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKey, "", true)
+	_, _, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result - valid ECDSA cert/key pair should have been validated: " + err.Error())
@@ -2501,7 +2634,7 @@ func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPair(t *testing.
 
 func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairECDisabled(t *testing.T) {
 	// Should be rejected as allowEC flag has been set to false
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKey, "", false)
+	_, _, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKey, "", false)
 
 	if err == nil {
 		t.Fatalf("unexpected result - ECDSA cert/key pair should have been rejected due to allowEC being false")
@@ -2512,7 +2645,7 @@ func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairECDisabled(t
 
 func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutParams(t *testing.T) {
 	// Test result should be successful as the certificate and key are valid with proper keyUsage/extendedKeyUsage.
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKeyWithoutParams, "", true)
+	_, _, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKeyWithoutParams, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result - valid ECDSA cert/key pair should have been validated: " + err.Error())
@@ -2521,11 +2654,29 @@ func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutParam
 
 func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairMisMatchedPrivateKey(t *testing.T) {
 	// Should fail due to mismatched ECDSA cert/private key pair
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, PrivateKeyECDSANISTPrime256V1, "", true)
+	_, _, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, PrivateKeyECDSANISTPrime256V1, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected Result: Mismatched ECDSA cert/key pair should have failed verification")
 	} else {
 		t.Logf("expected error message: %s", err.Error())
+	}
+}
+
+func TestVerifyInconsistentCertChain(t *testing.T) {
+	_, _, _, _, isInconsistent, err := verifyCertKeyPair(SelfSignedInconsistentCertChain, SelfSignedRSAPrivateKeyInvalidChain, "", true)
+	if err != nil {
+		t.Errorf("expected mismatched to return no error")
+	}
+	if !isInconsistent {
+		t.Errorf("expected chain to be considered inconsistent")
+	}
+
+	_, _, _, _, isInconsistent, err = verifyCertKeyPair(SelfSignedCertChain+ValidIntermediateCert, SelfSignedRSAPrivateKeyInvalidChain, "", true)
+	if err != nil {
+		t.Errorf("expected mismatched to return no error")
+	}
+	if !isInconsistent {
+		t.Errorf("expected chain to be considered inconsistent")
 	}
 }

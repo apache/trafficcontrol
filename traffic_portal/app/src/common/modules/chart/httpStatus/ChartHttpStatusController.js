@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ChartHttpStatusController = function(deliveryService, $scope, $state, $timeout, $filter, $q, $interval, deliveryServiceService, deliveryServiceStatsService, dateUtils, locationUtils, numberUtils, propertiesModel) {
+var ChartHttpStatusController = function(deliveryService, $scope, $timeout, $filter, $q, $interval, deliveryServiceStatsService, dateUtils, propertiesModel) {
 
 	var chartSeries,
 		chartOptions;
@@ -197,5 +197,5 @@ var ChartHttpStatusController = function(deliveryService, $scope, $state, $timeo
 
 };
 
-ChartHttpStatusController.$inject = ['deliveryService', '$scope', '$state', '$timeout', '$filter', '$q', '$interval', 'deliveryServiceService', 'deliveryServiceStatsService', 'dateUtils', 'locationUtils', 'numberUtils', 'propertiesModel'];
+ChartHttpStatusController.$inject = ['deliveryService', '$scope', '$timeout', '$filter', '$q', '$interval', 'deliveryServiceStatsService', 'dateUtils', 'propertiesModel'];
 module.exports = ChartHttpStatusController;

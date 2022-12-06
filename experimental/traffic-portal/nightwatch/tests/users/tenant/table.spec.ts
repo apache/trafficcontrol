@@ -12,15 +12,13 @@
  * limitations under the License.
  */
 
-import { NightwatchTypedCallbackResult } from "nightwatch";
-
 describe("Tenants Spec", () => {
 	it("Loads elements", async () => {
 		browser.page.tenants().navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);
-			browser.assert.ok((rows as NightwatchTypedCallbackResult<{ELEMENT: string}[]>).value.length >= 2);
+			browser.assert.ok((rows.value as []).length >= 2);
 		});
 	});
 });

@@ -124,7 +124,7 @@ func TestDeliveryServices(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"longDesc":              "changed long desc",
 						"maxDNSAnswers":         500,
@@ -139,7 +139,7 @@ func TestDeliveryServices(t *testing.T) {
 						})),
 				},
 				"OK when UPDATING MINOR VERSION FIELDS": {
-					EndpointId: GetDeliveryServiceId(t, "ds-test-minor-versions"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds-test-minor-versions"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"consistentHashQueryParams": []string{"d", "e", "f"},
 						"consistentHashRegex":       "foo",
@@ -161,21 +161,21 @@ func TestDeliveryServices(t *testing.T) {
 						})),
 				},
 				"BAD REQUEST when INVALID REMAP TEXT": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua\nline2",
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING SLICE PLUGIN SIZE": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"rangeRequestHandling": 3,
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when SLICE PLUGIN SIZE SET with INVALID RANGE REQUEST SETTING": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"rangeRequestHandling": 1,
 						"rangeSliceBlockSize":  262144,
@@ -183,7 +183,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when SLICE PLUGIN SIZE TOO SMALL": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"rangeRequestHandling": 3,
 						"rangeSliceBlockSize":  0,
@@ -191,7 +191,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when SLICE PLUGIN SIZE TOO LARGE": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"rangeRequestHandling": 3,
 						"rangeSliceBlockSize":  40000000,
@@ -199,7 +199,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when CHANGING TOPOLOGY of DS with ORG SERVERS ASSIGNED": {
-					EndpointId: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": "another-topology",
 						"xmlId":    "ds-top",
@@ -207,7 +207,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ADDING TOPOLOGY to CLIENT STEERING DS": {
-					EndpointId: GetDeliveryServiceId(t, "ds-client-steering"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds-client-steering"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": "mso-topology",
 						"xmlId":    "ds-client-steering",
@@ -216,7 +216,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when TOPOLOGY DOESNT EXIST": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": "",
 						"xmlId":    "ds1",
@@ -224,7 +224,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ADDING TOPOLOGY to DS with DS REQUIRED CAPABILITY": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": "top-for-ds-req",
 						"xmlId":    "ds1",
@@ -232,7 +232,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when ADDING TOPOLOGY to DS when NO CACHES in SAME CDN as DS": {
-					EndpointId: GetDeliveryServiceId(t, "top-ds-in-cdn2"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "top-ds-in-cdn2"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"cdnId":    GetCDNID(t, "cdn2")(),
 						"topology": "top-with-caches-in-cdn1",
@@ -241,7 +241,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when REMOVING TOPOLOGY": {
-					EndpointId: GetDeliveryServiceId(t, "ds-based-top-with-no-mids"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds-based-top-with-no-mids"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"topology": nil,
 						"xmlId":    "ds-based-top-with-no-mids",
@@ -249,7 +249,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when DS with TOPOLOGY updates HEADER REWRITE FIELDS": {
-					EndpointId: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds-top"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"firstHeaderRewrite": "foo",
 						"innerHeaderRewrite": "bar",
@@ -260,7 +260,7 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when DS with NO TOPOLOGY updates HEADER REWRITE FIELDS": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
 						"firstHeaderRewrite": "foo",
 						"innerHeaderRewrite": "bar",
@@ -269,18 +269,18 @@ func TestDeliveryServices(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when UPDATING DS OUTSIDE TENANCY": {
-					EndpointId: GetDeliveryServiceId(t, "ds3"), ClientSession: tenant4UserSession,
+					EndpointID: GetDeliveryServiceId(t, "ds3"), ClientSession: tenant4UserSession,
 					RequestBody:  generateDeliveryService(t, map[string]interface{}{"xmlId": "ds3"}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody:    generateDeliveryService(t, map[string]interface{}{"xmlId": "ds1"}),
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					RequestBody:    generateDeliveryService(t, map[string]interface{}{"xmlId": "ds1"}),
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -288,7 +288,7 @@ func TestDeliveryServices(t *testing.T) {
 			},
 			"DELETE": {
 				"ERROR when DELETING DS OUTSIDE TENANCY": {
-					EndpointId: GetDeliveryServiceId(t, "ds3"), ClientSession: tenant4UserSession,
+					EndpointID: GetDeliveryServiceId(t, "ds3"), ClientSession: tenant4UserSession,
 					Expectations: utils.CkRequest(utils.HasError()),
 				},
 			},
@@ -300,7 +300,7 @@ func TestDeliveryServices(t *testing.T) {
 			},
 			"DELIVERY SERVICES CAPACITY": {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "ds1"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
@@ -361,14 +361,14 @@ func TestDeliveryServices(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceV30WithHdr(testCase.EndpointId(), ds, testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceV30WithHdr(testCase.EndpointID(), ds, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							resp, err := testCase.ClientSession.DeleteDeliveryService(strconv.Itoa(testCase.EndpointId()))
+							resp, err := testCase.ClientSession.DeleteDeliveryService(strconv.Itoa(testCase.EndpointID()))
 							for _, check := range testCase.Expectations {
 								if resp != nil {
 									check(t, toclientlib.ReqInf{}, nil, resp.Alerts, err)
@@ -377,7 +377,7 @@ func TestDeliveryServices(t *testing.T) {
 						})
 					case "DELIVERY SERVICES CAPACITY":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceCapacityWithHdr(strconv.Itoa(testCase.EndpointId()), testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.GetDeliveryServiceCapacityWithHdr(strconv.Itoa(testCase.EndpointID()), testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, tc.Alerts{}, err)
 							}

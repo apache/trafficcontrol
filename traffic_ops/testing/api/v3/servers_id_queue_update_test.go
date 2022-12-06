@@ -32,7 +32,7 @@ func TestServersIDQueueUpdate(t *testing.T) {
 		methodTests := utils.V3TestCaseT[bool]{
 			"POST": {
 				"OK when VALID QUEUE request": {
-					EndpointId:    GetServerID(t, "atlanta-edge-01"),
+					EndpointID:    GetServerID(t, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestBody:   true,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
@@ -40,7 +40,7 @@ func TestServersIDQueueUpdate(t *testing.T) {
 						validateUpdPendingSpecificServers(map[string]bool{"atlanta-edge-01": true})),
 				},
 				"OK when VALID DEQUEUE request": {
-					EndpointId:    GetServerID(t, "atlanta-edge-01"),
+					EndpointID:    GetServerID(t, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestBody:   false,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
@@ -51,7 +51,7 @@ func TestServersIDQueueUpdate(t *testing.T) {
 					https://github.com/apache/trafficcontrol/issues/6691
 					https://github.com/apache/trafficcontrol/issues/6801
 				"NOT FOUND when NON-EXISTENT SERVER": {
-					EndpointId:    func() int { return 999999 },
+					EndpointID:    func() int { return 999999 },
 					ClientSession: TOSession,
 					RequestBody: true,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
@@ -65,7 +65,7 @@ func TestServersIDQueueUpdate(t *testing.T) {
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.SetServerQueueUpdate(testCase.EndpointId(), testCase.RequestBody)
+							resp, reqInf, err := testCase.ClientSession.SetServerQueueUpdate(testCase.EndpointID(), testCase.RequestBody)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

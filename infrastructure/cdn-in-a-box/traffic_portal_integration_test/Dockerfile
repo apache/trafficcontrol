@@ -68,6 +68,9 @@ RUN jq ' \
             "--no-sandbox", \
             "--whitelisted-ips=" \
         ] | \
+        .getPageTimeout = 120000 | \
+        .allScriptsTimeout = 300000 | \
+        .defaultTimeoutInterval = 12000 | \
         .params.junitReporter = true' \
         config.json > conf.json.tmp && \
     mv conf.json.tmp config.json

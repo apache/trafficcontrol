@@ -20,8 +20,8 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li ng-if="!settings.isRequest"><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li ng-if="settings.isRequest"><a ng-click="navigateToPath('/delivery-service-requests')">Delivery Service Requests</a></li>
+            <li ng-if="!settings.isRequest"><a href="/#!/delivery-services">Delivery Services</a></li>
+            <li ng-if="settings.isRequest"><a href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
             <li ng-if="settings.isRequest" class="active">{{dsRequest.changeType}}</li>
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
@@ -39,6 +39,7 @@ under the License.
             </div>
         </div>
         <div class="pull-right" role="group">
+			<button type="button" class="btn btn-primary" ng-click="showSensitive = !showSensitive">Toggle Sensitive Field Blur</button>
             <button type="button" class="btn btn-danger" ng-if="!settings.isNew && !settings.isRequest" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
             <button class="btn btn-success" ng-if="!settings.isRequest" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
             <button type="button" class="btn btn-primary" ng-if="!settings.isRequest && !settings.isNew" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>
@@ -49,20 +50,20 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="clone(deliveryService)">Clone Delivery Service</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/clone?dsType={{deliveryService.type}}">Clone Delivery Service</a></li>
                     <hr class="divider"/>
-                    <li role="menuitem"><a ng-click="viewCharts()">View Charts</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/charts">View Charts</a></li>
                     <hr class="divider"/>
-                    <li role="menuitem"><a ng-click="manageSslKeys()">Manage SSL Keys</a></li>
-                    <li role="menuitem"><a ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
-                    <li role="menuitem"><a ng-click="manageUriSigningKeys()">Manage URI Signing Keys</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/ssl-keys">Manage SSL Keys</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/url-sig-keys">Manage URL Sig Keys</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/uri-signing-keys">Manage URI Signing Keys</a></li>
                     <hr class="divider"/>
-                    <li role="menuitem"><a ng-click="viewJobs()">Manage Invalidation Requests</a></li>
-                    <li role="menuitem"><a ng-click="viewOrigins()">Manage Origins</a></li>
-                    <li role="menuitem"><a ng-click="viewRegexes()">Manage Regexes</a></li>
-                    <li role="menuitem"><a ng-click="viewCapabilities()">Manage Required Server Capabilities</a></li>
-                    <li name="manageServersMenuItem" role="menuitem"><button class="menu-item-button" type="button" ng-click="viewServers()">Manage Servers</button></li>
-                    <li role="menuitem"><a ng-click="viewStaticDnsEntries()">Manage Static DNS Entries</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/jobs">Manage Invalidation Requests</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/origins">Manage Origins</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/regexes">Manage Regexes</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/required-server-capabilities">Manage Required Server Capabilities</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/servers">Manage Servers</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/static-dns-entries">Manage Static DNS Entries</a></li>
                 </ul>
             </div>
         </div>
@@ -114,20 +115,25 @@ under the License.
                     </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.active), 'has-feedback': hasError(generalConfig.active)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="active">Active *<div class="helptooltip">
-                            <div class="helptext">Whether or not this Delivery Service is active on the CDN and is capable of traffic.</div>
-                        </div>
+                            <div class="helptext">Whether or not this Delivery Service is active on the CDN and is capable of traffic.
+								<br>
+								<br>
+								<a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#active" target="_blank">See Delivery Service Active States.</a>
+							</div>
+							</div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <select id="active" name="active" class="form-control" ng-model="deliveryService.active" required>
                                 <option disabled hidden value="">Select...</option>
-                                <option ng-value="true">Active</option>
-                                <option ng-value="false">Not Active</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="PRIMED">Primed</option>
+								<option value="INACTIVE">Inactive</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.active, 'required')">Required</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.active != dsCurrent.active">
                                 <h3 ng-if="open()">Current Value</h3>
                                 <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.active ? 'Active' : 'Not Active'}}</pre>
+                                <pre>{{::dsCurrent.active.split(' ').map(w => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' ')}}</pre>
                             </aside>
                         </div>
                     </div>
@@ -653,7 +659,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" class="form-control private-text" ng-model="deliveryService.edgeHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" class="form-control" ng-class="{'private-text': !showSensitive}" ng-model="deliveryService.edgeHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.edgeHeaderRewrite, 'maxlength')">Only applicable with non topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.edgeHeaderRewrite != dsCurrent.edgeHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>
@@ -678,7 +684,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="midHeaderRewrite" name="midHeaderRewrite" class="form-control private-text" ng-model="deliveryService.midHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="midHeaderRewrite" name="midHeaderRewrite" class="form-control" ng-class="{'private-text': !showSensitive}" ng-model="deliveryService.midHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.midHeaderRewrite, 'maxlength')">Only applicable with non topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.midHeaderRewrite != dsCurrent.midHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>
@@ -703,7 +709,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="firstHeaderRewrite" name="firstHeaderRewrite" class="form-control private-text" ng-model="deliveryService.firstHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="firstHeaderRewrite" name="firstHeaderRewrite" class="form-control" ng-class="{'private-text': !showSensitive}" ng-model="deliveryService.firstHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.firstHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.firstHeaderRewrite != dsCurrent.firstHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>
@@ -728,7 +734,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="innerHeaderRewrite" name="innerHeaderRewrite" class="form-control private-text" ng-model="deliveryService.innerHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="innerHeaderRewrite" name="innerHeaderRewrite" class="form-control" ng-class="{'private-text': !showSensitive}" ng-model="deliveryService.innerHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.innerHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.innerHeaderRewrite != dsCurrent.innerHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>
@@ -753,7 +759,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="lastHeaderRewrite" name="lastHeaderRewrite" class="form-control private-text" ng-model="deliveryService.lastHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <textarea id="lastHeaderRewrite" name="lastHeaderRewrite" class="form-control" ng-class="{'private-text': !showSensitive}" ng-model="deliveryService.lastHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.lastHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.lastHeaderRewrite != dsCurrent.lastHeaderRewrite">
                                 <h3 ng-if="open()">Current Value</h3>
@@ -792,7 +798,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="remapText" name="remapText" class="form-control private-text" ng-model="deliveryService.remapText" ng-pattern="/^[^\n\r]*$/" rows="3"></textarea>
+                            <textarea id="remapText" name="remapText" class="form-control" ng-class="{'private-text': !showSensitive}" ng-model="deliveryService.remapText" ng-pattern="/^[^\n\r]*$/" rows="3"></textarea>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.remapText, 'pattern')">No Line Breaks</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.remapText != dsCurrent.remapText">
                                 <h3 ng-if="open()">Current Value</h3>

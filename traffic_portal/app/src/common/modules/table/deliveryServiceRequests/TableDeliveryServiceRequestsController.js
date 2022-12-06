@@ -17,7 +17,25 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, $location, $document, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
+/**
+ * The controller for the table that lists Delivery Service Requests.
+ *
+ * @param {string} tableName
+ * @param {import("../../../api/DeliveryServiceRequestService").DeliveryServiceRequest[]} dsRequests
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("angular").IDocumentService} $document
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/TypeService")} typeService
+ * @param {import("../../../api/DeliveryServiceRequestService")} deliveryServiceRequestService
+ * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ * @param {import("../../../models/UserModel")} userModel
+ */
+var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $scope, $state, $uibModal, $anchorScroll, $document, dateUtils, locationUtils, typeService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
 
 	/**
 	 * Gets value to display a default tooltip.
@@ -124,6 +142,8 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 	/** All of the ds requests - createdAt and lastUpdated fields converted to actual Date */
 	$scope.dsRequests = dsRequests.map(
 		function(x) {
+			// The right way to do these is with an interceptor, but nobody wants
+			// to put in that kind of effort for a legacy product.
 			x.createdAt = x.createdAt ? new Date(x.createdAt.replace("+00", "Z")) : x.createdAt;
 			x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
 		});
@@ -137,10 +157,10 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
 		onCellMouseDown: function() {
-			$scope.mouseDownSelectionText = window.getSelection().toString();
+			$scope.mouseDownSelectionText = String(window.getSelection());
 		},
 		onRowClicked: function(params) {
-			const selection = window.getSelection().toString();
+			const selection = String(window.getSelection());
 			if(selection === "" || selection === $scope.mouseDownSelectionText) {
 				const typeId = (params.data.requested) ? params.data.requested.typeId : params.data.original.typeId;
 
@@ -200,7 +220,11 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			$scope.menuStyle.bottom = "unset";
 			$scope.menuStyle.right = "unset";
 			$scope.$apply();
-			const boundingRect = document.getElementById("context-menu").getBoundingClientRect();
+			const ctxMenu = document.getElementById("context-menu");
+			if (!ctxMenu) {
+				throw new Error("context-menu ID not found in the DOM")
+			}
+			const boundingRect = ctxMenu.getBoundingClientRect();
 
 			if (boundingRect.bottom > window.innerHeight){
 				$scope.menuStyle.bottom = String(window.innerHeight - params.event.clientY) + "px";
@@ -269,9 +293,9 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			}
 
 			try {
-				const ps = localStorage.getItem(tableName + "_page_size");
+				const ps = Number(localStorage.getItem(tableName + "_page_size"));
 				if (ps && ps > 0) {
-					$scope.pageSize = Number(ps);
+					$scope.pageSize = ps;
 					$scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
 				}
 			} catch (e) {
@@ -372,13 +396,13 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 	$scope.assignRequest = function (request, assign, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var params = {
-			title: 'Assign Delivery Service Request',
-			message: (assign) ? 'Are you sure you want to assign this delivery service request to yourself?' : 'Are you sure you want to unassign this delivery service request?'
+			title: "Assign Delivery Service Request",
+			message: (assign) ? "Are you sure you want to assign this delivery service request to yourself?" : "Are you sure you want to unassign this delivery service request?"
 		};
 		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
-			size: 'md',
+			templateUrl: "common/modules/dialog/confirm/dialog.confirm.tpl.html",
+			controller: "DialogConfirmController",
+			size: "md",
 			resolve: {
 				params: function () {
 					return params;
@@ -390,9 +414,9 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			deliveryServiceRequestService.assignDeliveryServiceRequest(request.id, assignee).then(function () {
 				$scope.refresh();
 				if (assign) {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was assigned' } ], false);
+					messageModel.setMessages([ { level: "success", text: "Delivery service request was assigned" } ], false);
 				} else {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was unassigned' } ], false);
+					messageModel.setMessages([ { level: "success", text: "Delivery service request was unassigned" } ], false);
 				}
 			});
 		}, function () {
@@ -400,37 +424,37 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		});
 	};
 
-	$scope.editStatus = function (request, $event) {
+	/**
+	 * @param {import("../../../api/DeliveryServiceRequestService").DeliveryServiceRequest & {id: number}} request
+	 * @param {Event} $event
+	 */
+	$scope.editStatus = async function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		var params = {
+		const params = {
 			title: "Edit Delivery Service Request Status",
-			message: 'Please select the appropriate status for this request.'
+			message: "Please select the appropriate status for this request."
 		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-			controller: 'DialogSelectController',
-			size: 'md',
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/select/dialog.select.tpl.html",
+			controller: "DialogSelectController",
+			size: "md",
 			resolve: {
-				params: function () {
-					return params;
-				},
-				collection: function () {
-					return [
-						{id: $scope.DRAFT, name: 'Save as Draft'},
-						{id: $scope.SUBMITTED, name: 'Submit for Review / Deployment'}
-					];
-				}
+				params,
+				collection: () => [
+					{id: $scope.DRAFT, name: "Save as Draft"},
+					{id: $scope.SUBMITTED, name: "Submit for Review / Deployment"}
+				]
 			}
 		});
-		modalInstance.result.then(function (action) {
-			var status = (action.id == $scope.DRAFT) ? 'draft' : 'submitted';
-			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, status).then(function () {
-				$scope.refresh();
-				messageModel.setMessages([ { level: 'success', text: 'Delivery service request status was updated' } ], false);
-			});
-		}, function () {
+		try {
+			const action = await modalInstance.result;
+			const status = (action.id == $scope.DRAFT) ? "draft" : "submitted";
+			await deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, status);
+			$scope.refresh();
+			messageModel.setMessages([ { level: "success", text: "Delivery service request status was updated" } ], false);
+		} catch {
 			// do nothing
-		});
+		}
 	};
 
 	$scope.rejectRequest = function (request, $event) {
@@ -567,5 +591,5 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 
 };
 
-TableDeliveryServicesRequestsController.$inject = ['tableName', 'dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$q', '$location', '$document', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
+TableDeliveryServicesRequestsController.$inject = ['tableName', 'dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$document', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
 module.exports = TableDeliveryServicesRequestsController;

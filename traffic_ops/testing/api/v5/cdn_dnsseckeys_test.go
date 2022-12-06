@@ -141,8 +141,7 @@ func GenerateDNSSECKeys(t *testing.T) {
 	customDS := getCustomDS(cdn.ID, types.Response[0].ID, dsXMLID, "cdn", "https://testdnssecgen.example.com", dsXMLID)
 	ds, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	assert.NoError(t, err, "Unexpected error creating Delivery Service: %v - alerts: %+v", err, ds.Alerts)
-	assert.RequireEqual(t, len(ds.Response), 1, "Expected creating a Delivery Service to create exactly one Delivery Service, Traffic Ops returned: %d", len(ds.Response))
-	assert.RequireNotNil(t, ds.Response[0].ID, nil, "Traffic Ops returned a representation for a created Delivery Service with null or undefined ID")
+	assert.RequireNotNil(t, ds.Response.ID, nil, "Traffic Ops returned a representation for a created Delivery Service with null or undefined ID")
 
 	res, _, err = TOSession.GetCDNDNSSECKeys(firstCDN.Name, client.RequestOptions{})
 	assert.RequireNoError(t, err, "Unexpected error getting CDN DNSSEC keys: %v - alerts: %+v", err, res.Alerts)
@@ -150,7 +149,7 @@ func GenerateDNSSECKeys(t *testing.T) {
 	if _, ok := res.Response[dsXMLID]; !ok {
 		t.Error("after creating a new delivery service for a DNSSEC-enabled CDN - expected: DNSSEC keys to be found for the delivery service, actual: no DNSSEC keys found for the delivery service")
 	}
-	alerts, _, err := TOSession.DeleteDeliveryService(*ds.Response[0].ID, client.RequestOptions{})
+	alerts, _, err := TOSession.DeleteDeliveryService(*ds.Response.ID, client.RequestOptions{})
 	assert.NoError(t, err, "Unexpected error deleting Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 
 	delResp, _, err := TOSession.DeleteCDNDNSSECKeys(firstCDN.Name, client.RequestOptions{})

@@ -74,7 +74,7 @@ func TestCDNs(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetCDNID(t, "cdn1"),
+					EndpointID:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
 					RequestBody: tc.CDN{
 						DNSSECEnabled: false,
@@ -85,7 +85,7 @@ func TestCDNs(t *testing.T) {
 						validateCDNUpdateFields("cdn1", map[string]interface{}{"DomainName": "domain2"})),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Headers": {
-					EndpointId:     GetCDNID(t, "cdn1"),
+					EndpointID:     GetCDNID(t, "cdn1"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.CDN{
@@ -96,7 +96,7 @@ func TestCDNs(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:     GetCDNID(t, "cdn1"),
+					EndpointID:     GetCDNID(t, "cdn1"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					RequestBody: tc.CDN{
@@ -135,14 +135,14 @@ func TestCDNs(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateCDNByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateCDNByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteCDNByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteCDNByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

@@ -13,6 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import type { RequestDivision, ResponseDivision } from "trafficops-types";
 
 import type { CacheGroup } from "src/app/models";
 
@@ -88,6 +89,77 @@ export class CacheGroupService extends APIService {
 				return [];
 			}
 		);
+	}
+
+	public async getDivisions(): Promise<Array<ResponseDivision>>;
+	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;
+
+	/**
+	 * Gets an array of divisions from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the Division with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of Division objects - or a single Division object if 'nameOrID'
+	 * was given.
+	 */
+	public async getDivisions(nameOrID?: string | number): Promise<Array<ResponseDivision> | ResponseDivision> {
+		const path = "divisions";
+		if(nameOrID) {
+			let params;
+			switch (typeof nameOrID) {
+				case "string":
+					params = {name: nameOrID};
+					break;
+				case "number":
+					params = {id: String(nameOrID)};
+			}
+			const r = await this.get<[ResponseDivision]>(path, undefined, params).toPromise();
+			return {...r[0], lastUpdated: new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"))};
+
+		}
+		const divisions = await this.get<Array<ResponseDivision>>(path).toPromise();
+		return divisions.map(
+			d => ({...d, lastUpdated: new Date((d.lastUpdated as unknown as string).replace("+00", "Z"))})
+		);
+	}
+
+	/**
+	 * Replaces the current definition of a division with the one given.
+	 *
+	 * @param division The new division.
+	 * @returns The updated division.
+	 */
+	public async updateDivision(division: ResponseDivision): Promise<ResponseDivision> {
+		const path = `divisions/${division.id}`;
+		const response = await this.put<ResponseDivision>(path, division).toPromise();
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Creates a new division.
+	 *
+	 * @param division The division to create.
+	 * @returns The created division.
+	 */
+	public async createDivision(division: RequestDivision): Promise<ResponseDivision> {
+		const response = await this.post<ResponseDivision>("divisions", division).toPromise();
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Deletes an existing division.
+	 *
+	 * @param id Id of the division to delete.
+	 * @returns The deleted division.
+	 */
+	public async deleteDivision(id: number): Promise<ResponseDivision> {
+		return this.delete<ResponseDivision>(`divisions/${id}`).toPromise();
 	}
 
 	constructor(http: HttpClient) {

@@ -33,13 +33,13 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, []int]{
 			"POST": {
 				"BAD REQUEST assigning TOPOLOGY-BASED DS to CACHEGROUP": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup3"),
+					EndpointID:    GetCacheGroupId(t, "cachegroup3"),
 					ClientSession: TOSession,
 					RequestBody:   []int{GetDeliveryServiceId(t, "top-ds-in-cdn1")()},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"OK when valid request": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup3"),
+					EndpointID:    GetCacheGroupId(t, "cachegroup3"),
 					ClientSession: TOSession,
 					RequestBody: []int{
 						GetDeliveryServiceId(t, "ds1")(),
@@ -59,7 +59,7 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.SetCacheGroupDeliveryServices(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.SetCacheGroupDeliveryServices(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
@@ -131,12 +131,8 @@ func setInactive(t *testing.T, dsID int) {
 	assert.RequireEqual(t, len(resp.Response), 1, "Expected exactly one Delivery Service to exist with ID %d, found: %d", dsID, len(resp.Response))
 
 	ds := resp.Response[0]
-	if ds.Active == nil {
-		t.Errorf("Deliver Service #%d had null or undefined 'active'", dsID)
-		ds.Active = new(bool)
-	}
-	if *ds.Active {
-		*ds.Active = false
+	if ds.Active == tc.DSActiveStateActive {
+		ds.Active = tc.DSActiveStateInactive
 		_, _, err = TOSession.UpdateDeliveryService(dsID, ds, client.RequestOptions{})
 		assert.NoError(t, err, "Failed to set Delivery Service #%d to inactive: %v", dsID, err)
 	}

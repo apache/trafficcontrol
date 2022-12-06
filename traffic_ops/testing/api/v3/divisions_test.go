@@ -61,7 +61,7 @@ func TestDivisions(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetDivisionID(t, "cdn-div2"),
+					EndpointID:    GetDivisionID(t, "cdn-div2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Division{
 						Name: "testdivision",
@@ -70,7 +70,7 @@ func TestDivisions(t *testing.T) {
 						validateDivisionUpdateCreateFields("testdivision", map[string]interface{}{"Name": "testdivision"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:     GetDivisionID(t, "division1"),
+					EndpointID:     GetDivisionID(t, "division1"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.Division{
@@ -79,7 +79,7 @@ func TestDivisions(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetDivisionID(t, "division1"),
+					EndpointID:    GetDivisionID(t, "division1"),
 					ClientSession: TOSession,
 					RequestBody: tc.Division{
 						Name: "division1",
@@ -90,7 +90,7 @@ func TestDivisions(t *testing.T) {
 			},
 			"DELETE": {
 				"BAD REQUEST when DIVISION in use by REGION": {
-					EndpointId:    GetDivisionID(t, "division1"),
+					EndpointID:    GetDivisionID(t, "division1"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -124,14 +124,14 @@ func TestDivisions(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateDivisionByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateDivisionByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteDivisionByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteDivisionByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

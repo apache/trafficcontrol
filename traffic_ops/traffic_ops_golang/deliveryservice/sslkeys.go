@@ -23,6 +23,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -116,12 +117,12 @@ func generatePutTrafficVaultSSLKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql
 
 // GeneratePlaceholderSelfSignedCert generates a self-signed SSL certificate as a placeholder when a new HTTPS
 // delivery service is created or an HTTP delivery service is updated to use HTTPS.
-func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo, context context.Context) (error, int) {
+func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV5, inf *api.APIInfo, context context.Context) (error, int) {
 	tx := inf.Tx.Tx
 	tv := inf.Vault
-	_, ok, err := tv.GetDeliveryServiceSSLKeys(*ds.XMLID, "", tx, context)
+	_, ok, err := tv.GetDeliveryServiceSSLKeys(ds.XMLID, "", tx, context)
 	if err != nil {
-		return errors.New("getting latest ssl keys for xmlId: " + *ds.XMLID + " : " + err.Error()), http.StatusInternalServerError
+		return fmt.Errorf("getting latest ssl keys for XMLID '%s': %w", ds.XMLID, err), http.StatusInternalServerError
 	}
 	if ok {
 		return nil, http.StatusOK
@@ -129,7 +130,7 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo
 
 	version := util.JSONIntStr(1)
 
-	cdnName, cdnDomain, err := dbhelpers.GetCDNNameDomain(*ds.CDNID, tx)
+	cdnName, cdnDomain, err := dbhelpers.GetCDNNameDomain(ds.CDNID, tx)
 	if err != nil {
 		return err, http.StatusInternalServerError
 	}
@@ -137,11 +138,11 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo
 	cdnNameStr := string(cdnName)
 
 	if ds.ExampleURLs == nil {
-		ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
+		ds.ExampleURLs = MakeExampleURLs(ds.Protocol, tc.DSType(*ds.Type), ds.RoutingName, ds.MatchList, cdnDomain)
 	}
 
 	hostname := strings.Split(ds.ExampleURLs[0], "://")[1]
-	if ds.Type.IsHTTP() {
+	if (*tc.DSType)(ds.Type).IsHTTP() {
 		parts := strings.Split(hostname, ".")
 		parts[0] = "*"
 		hostname = strings.Join(parts, ".")
@@ -150,9 +151,9 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo
 	req := tc.DeliveryServiceGenSSLKeysReq{
 		DeliveryServiceSSLKeysReq: tc.DeliveryServiceSSLKeysReq{
 			CDN:             &cdnNameStr,
-			DeliveryService: ds.XMLID,
+			DeliveryService: &ds.XMLID,
 			HostName:        &hostname,
-			Key:             ds.XMLID,
+			Key:             &ds.XMLID,
 			Version:         &version,
 			BusinessUnit:    util.StrPtr("Placeholder"),
 			City:            util.StrPtr("Placeholder"),
@@ -176,10 +177,10 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo
 	}
 
 	if err := generatePutTrafficVaultSSLKeys(req, tx, inf.Vault, context); err != nil {
-		return errors.New("generating and putting SSL keys: " + err.Error()), http.StatusInternalServerError
+		return fmt.Errorf("generating and putting SSL keys: %w", err), http.StatusInternalServerError
 	}
 	if err := updateSSLKeyVersion(*req.DeliveryService, req.Version.ToInt64(), tx); err != nil {
-		return errors.New("generating SSL keys for delivery service '" + *req.DeliveryService + "': " + err.Error()), http.StatusInternalServerError
+		return fmt.Errorf("generating SSL keys for delivery service '%s': %w", *req.DeliveryService, err), http.StatusInternalServerError
 	}
 
 	return nil, http.StatusOK

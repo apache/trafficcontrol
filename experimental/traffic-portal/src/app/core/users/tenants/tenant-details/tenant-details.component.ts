@@ -20,7 +20,7 @@ import { UserService } from "src/app/api";
 import { TreeData } from "src/app/models/tree-select.model";
 
 /**
- * TenantsDetailsComponent is the controller for thee tenant add/edit form.
+ * TenantsDetailsComponent is the controller for the tenant add/edit form.
  */
 @Component({
 	selector: "tp-tenant-details",
@@ -130,7 +130,6 @@ export class TenantDetailsComponent implements OnInit {
 		}
 		this.tenant = tenant;
 		this.disabled = this.isRoot();
-
 	}
 
 	/**
