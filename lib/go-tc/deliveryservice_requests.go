@@ -996,7 +996,8 @@ func (dsr DeliveryServiceRequestV5) Downgrade() DeliveryServiceRequestV4 {
 	if dsr.Requested != nil {
 		downgraded.Requested = new(DeliveryServiceV4)
 		*downgraded.Requested = dsr.Requested.Downgrade()
-	} else if dsr.Original != nil {
+	}
+	if dsr.Original != nil {
 		downgraded.Original = new(DeliveryServiceV4)
 		*downgraded.Original = dsr.Original.Downgrade()
 	}
