@@ -435,23 +435,25 @@ type DeliveryServiceRequestNullable struct {
 	XMLID           *string                     `json:"-" db:"xml_id"`
 }
 
-// Downgrade will convert an instance of DeliveryServiceRequestV4 to DeliveryServiceRequestV40
-func (dsr DeliveryServiceRequestV4) Downgrade() DeliveryServiceRequestV40 {
+// Downgrade will convert an instance of DeliveryServiceRequestV41 to DeliveryServiceRequestV40
+func (dsr DeliveryServiceRequestV41) Downgrade() DeliveryServiceRequestV40 {
 	var dsrV40 DeliveryServiceRequestV40
-	dsrV40.Assignee = dsr.Assignee
-	dsrV40.AssigneeID = dsr.AssigneeID
+	dsrV40.Assignee = copyStringIfNotNil(dsr.Assignee)
+	dsrV40.AssigneeID = copyIntIfNotNil(dsr.AssigneeID)
 	dsrV40.Author = dsr.Author
-	dsrV40.AuthorID = dsr.AuthorID
+	dsrV40.AuthorID = copyIntIfNotNil(dsr.AuthorID)
 	dsrV40.ChangeType = dsr.ChangeType
 	dsrV40.CreatedAt = dsr.CreatedAt
-	dsrV40.ID = dsr.ID
+	dsrV40.ID = copyIntIfNotNil(dsr.ID)
 	dsrV40.LastEditedBy = dsr.LastEditedBy
-	dsrV40.LastEditedByID = dsr.LastEditedByID
+	dsrV40.LastEditedByID = copyIntIfNotNil(dsr.LastEditedByID)
 	dsrV40.LastUpdated = dsr.LastUpdated
 	if dsr.Original != nil {
+		dsrV40.Original = new(DeliveryServiceV40)
 		dsrV40.Original = &dsr.Original.DeliveryServiceV40
 	}
 	if dsr.Requested != nil {
+		dsrV40.Requested = new(DeliveryServiceV40)
 		dsrV40.Requested = &dsr.Requested.DeliveryServiceV40
 	}
 	dsrV40.Status = dsr.Status
@@ -459,23 +461,25 @@ func (dsr DeliveryServiceRequestV4) Downgrade() DeliveryServiceRequestV40 {
 	return dsrV40
 }
 
-// Upgrade will convert an instance of DeliveryServiceRequestV40 to DeliveryServiceRequestV4
-func (dsrV40 DeliveryServiceRequestV40) Upgrade() DeliveryServiceRequestV4 {
+// Upgrade will convert an instance of DeliveryServiceRequestV40 to DeliveryServiceRequestV41
+func (dsrV40 DeliveryServiceRequestV40) Upgrade() DeliveryServiceRequestV41 {
 	var dsrV4 DeliveryServiceRequestV41
-	dsrV4.Assignee = dsrV40.Assignee
-	dsrV4.AssigneeID = dsrV40.AssigneeID
+	dsrV4.Assignee = copyStringIfNotNil(dsrV40.Assignee)
+	dsrV4.AssigneeID = copyIntIfNotNil(dsrV40.AssigneeID)
 	dsrV4.Author = dsrV40.Author
-	dsrV4.AuthorID = dsrV40.AuthorID
+	dsrV4.AuthorID = copyIntIfNotNil(dsrV40.AuthorID)
 	dsrV4.ChangeType = dsrV40.ChangeType
 	dsrV4.CreatedAt = dsrV40.CreatedAt
-	dsrV4.ID = dsrV40.ID
+	dsrV4.ID = copyIntIfNotNil(dsrV40.ID)
 	dsrV4.LastEditedBy = dsrV40.LastEditedBy
-	dsrV4.LastEditedByID = dsrV40.LastEditedByID
+	dsrV4.LastEditedByID = copyIntIfNotNil(dsrV40.LastEditedByID)
 	dsrV4.LastUpdated = dsrV40.LastUpdated
 	if dsrV40.Original != nil {
+		dsrV4.Original = new(DeliveryServiceV41)
 		dsrV4.Original = &DeliveryServiceV4{DeliveryServiceV40: *dsrV40.Original}
 	}
 	if dsrV40.Requested != nil {
+		dsrV4.Requested = new(DeliveryServiceV41)
 		dsrV4.Requested = &DeliveryServiceV4{DeliveryServiceV40: *dsrV40.Requested}
 	}
 	dsrV4.Status = dsrV40.Status
@@ -1116,7 +1120,7 @@ func (dsr DeliveryServiceRequestV5) Downgrade() DeliveryServiceRequestV4 {
 // Original) are copied using the DeliveryServiceV4.Upgrade method (which is
 // also deep).
 func (dsr DeliveryServiceRequestV4) Upgrade() DeliveryServiceRequestV5 {
-	downgraded := DeliveryServiceRequestV5{
+	upgraded := DeliveryServiceRequestV5{
 		Assignee:       copyStringIfNotNil(dsr.Assignee),
 		AssigneeID:     copyIntIfNotNil(dsr.AssigneeID),
 		Author:         dsr.Author,
@@ -1131,13 +1135,13 @@ func (dsr DeliveryServiceRequestV4) Upgrade() DeliveryServiceRequestV5 {
 		XMLID:          dsr.XMLID,
 	}
 	if dsr.Requested != nil {
-		downgraded.Requested = new(DeliveryServiceV5)
-		*downgraded.Requested = dsr.Requested.Upgrade()
+		upgraded.Requested = new(DeliveryServiceV5)
+		*upgraded.Requested = dsr.Requested.Upgrade()
 	} else if dsr.Original != nil {
-		downgraded.Original = new(DeliveryServiceV5)
-		*downgraded.Original = dsr.Original.Upgrade()
+		upgraded.Original = new(DeliveryServiceV5)
+		*upgraded.Original = dsr.Original.Upgrade()
 	}
-	return downgraded
+	return upgraded
 }
 
 // IsOpen returns whether or not the Delivery Service Request is still "open" -

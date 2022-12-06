@@ -1591,8 +1591,12 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 	if err := validateTypeFields(tx, ds); err != nil {
 		errs = append(errs, fmt.Errorf("type fields: %w", err))
 	}
-	if err := validateRequiredCapabilities(tx, ds); err != nil {
-		errs = append(errs, errors.New("required capabilities: "+err.Error()))
+	userErr, sysErr := validateRequiredCapabilities(tx, ds)
+	if userErr != nil {
+		errs = append(errs, errors.New("required capabilities: "+userErr.Error()))
+	}
+	if sysErr != nil {
+		errs = append(errs, errors.New("reading/ scanning required capabilities: "+sysErr.Error()))
 	}
 	if len(errs) == 0 {
 		return nil
@@ -1600,26 +1604,26 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 	return util.JoinErrs(errs)
 }
 
-func validateRequiredCapabilities(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
+func validateRequiredCapabilities(tx *sql.Tx, ds *tc.DeliveryServiceV5) (error, error) {
 	var valid bool
 	query := `SELECT $1 <@ (SELECT ARRAY_AGG(name) FROM server_capability)`
-	if ds.RequiredCapabilities != nil && len(ds.RequiredCapabilities) > 0 {
+	if len(ds.RequiredCapabilities) > 0 {
 		rows, err := tx.Query(query, pq.Array(ds.RequiredCapabilities))
 		if err != nil {
-			return err
+			return nil, err
 		}
 		defer rows.Close()
 		for rows.Next() {
 			err = rows.Scan(&valid)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			if !valid {
-				return errors.New("one or more of the required capabilities do not exist")
+				return errors.New("one or more of the required capabilities do not exist"), nil
 			}
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 func validateGeoLimitCountries(ds *tc.DeliveryServiceV5) error {
@@ -2517,7 +2521,7 @@ ds.active,
 	ds.regional,
 	ds.regional_geo_blocking,
 	ds.remap_text,
-	ds.required_capabilities,
+	COALESCE(ds.required_capabilities, '{}'),
 	ds.routing_name,
 	ds.service_category,
 	ds.signing_algorithm,

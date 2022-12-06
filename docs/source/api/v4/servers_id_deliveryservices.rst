@@ -136,7 +136,7 @@ Response Structure
 :remapText:            :ref:`ds-raw-remap`
 :requiredCapabilities: An array of the capabilities that this delivery service requires.
 
-	.. versionchanged:: 4.1
+	.. versionadded:: 4.1
 
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
@@ -238,7 +238,7 @@ Response Structure
 		"regional": false,
 		"regionalGeoBlocking": false,
 		"remapText": null,
-		"requiredCapabilities": null,
+		"requiredCapabilities": [],
 		"routingName": "cdn",
 		"serviceCategory": null,
 		"signed": false,

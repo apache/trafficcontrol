@@ -929,17 +929,10 @@ func GetDSRequiredCapabilitiesFromID(id int, tx *sql.Tx) ([]string, error) {
 	FROM deliveryservice
 	WHERE id = $1
 	ORDER BY required_capabilities`
-	rows, err := tx.Query(q, id)
-	if err != nil {
-		return nil, errors.New("querying deliveryservice required capabilities from id: " + err.Error())
-	}
-	defer rows.Close()
 
 	caps := []string{}
-	for rows.Next() {
-		if err := rows.Scan(pq.Array(&caps)); err != nil {
-			return nil, errors.New("scanning capability: " + err.Error())
-		}
+	if err := tx.QueryRow(q, id).Scan(pq.Array(&caps)); err != nil {
+		return nil, errors.New("getting/ scanning capability: " + err.Error())
 	}
 	return caps, nil
 }

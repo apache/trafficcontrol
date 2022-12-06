@@ -83,7 +83,7 @@ Request Structure
 :remapText:                 :ref:`ds-raw-remap`
 :requiredCapabilities:      An array of the capabilities that this delivery service requires.
 
-	.. versionchanged:: 4.1
+	.. versionadded:: 4.1
 
 :routingName:               The :ref:`ds-routing-name` of this :term:`Delivery Service`
 
@@ -169,7 +169,7 @@ Request Structure
 		"regexRemap": null,
 		"regional": false,
 		"regionalGeoBlocking": false,
-		"requiredCapabilities": null,
+		"requiredCapabilities": [],
 		"routingName": "test",
 		"serviceCategory": null,
 		"signed": false,
@@ -256,7 +256,7 @@ Response Structure
 :regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :requiredCapabilities:  An array of the capabilities that this delivery service requires.
 
-	.. versionchanged:: 4.1
+	.. versionadded:: 4.1
 
 :remapText:             :ref:`ds-raw-remap`
 :serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
@@ -364,7 +364,7 @@ Response Structure
 		"regional": false,
 		"regionalGeoBlocking": false,
 		"remapText": null,
-		"requiredCapabilities": null,
+		"requiredCapabilities": [],
 		"routingName": "test",
 		"serviceCategory": null,
 		"signed": false,

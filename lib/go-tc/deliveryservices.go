@@ -1438,7 +1438,7 @@ type DeliveryServiceV50 struct {
 	// use, because the input is in no way restricted, validated, or limited in
 	// scope to the Delivery Service.
 	RemapText *string `json:"remapText" db:"remap_text"`
-	// RequiredCapabilities is an array of capabilities required for this delivery service
+	// RequiredCapabilities is an array of capabilities required for this delivery service.
 	RequiredCapabilities []string `json:"requiredCapabilities" db:"required_capabilities"`
 	// RoutingName defines the lowest-level DNS label used by the Delivery
 	// Service, e.g. if trafficcontrol.apache.org were a Delivery Service, it
@@ -1731,8 +1731,8 @@ func (ds DeliveryServiceV4) Upgrade() DeliveryServiceV5 {
 		copy(upgraded.MatchList, *ds.MatchList)
 	}
 	copy(upgraded.TLSVersions, ds.TLSVersions)
-	if ds.RequiredCapabilities == nil {
-		upgraded.RequiredCapabilities = nil
+	if len(ds.RequiredCapabilities) == 0 {
+		upgraded.RequiredCapabilities = make([]string, 0)
 	} else {
 		copy(upgraded.RequiredCapabilities, ds.RequiredCapabilities)
 	}

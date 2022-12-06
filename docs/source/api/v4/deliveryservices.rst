@@ -150,7 +150,7 @@ Response Structure
 :remapText:             :ref:`ds-raw-remap`
 :requiredCapabilities:  An array of the capabilities that this delivery service requires.
 
-	.. versionchanged:: 4.1
+	.. versionadded:: 4.1
 
 :serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
 :signed:                ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
@@ -254,7 +254,7 @@ Response Structure
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
-			"requiredCapabilities": null,
+			"requiredCapabilities": [],
 			"routingName": "video",
 			"serviceCategory": null,
 			"signed": false,
@@ -335,7 +335,7 @@ Request Structure
 :remapText:                 :ref:`ds-raw-remap`
 :requiredCapabilities:      An array of the capabilities that this delivery service requires.
 
-	.. versionchanged:: 4.1
+	.. versionadded:: 4.1
 
 :serviceCategory:           The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated - or ``null`` if there is to be no such category
 :signed:                    ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
@@ -416,7 +416,7 @@ Request Structure
 		"regexRemap": null,
 		"regional": false,
 		"regionalGeoBlocking": false,
-		"requiredCapabilities": null,
+		"requiredCapabilities": [],
 		"routingName": "test",
 		"serviceCategory": null,
 		"signed": false,
@@ -507,7 +507,7 @@ Response Structure
 :remapText:             :ref:`ds-raw-remap`
 :requiredCapabilities:  An array of the capabilities that this delivery service requires.
 
-	.. versionchanged:: 4.1
+	.. versionadded:: 4.1
 
 :serviceCategory:       The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
 :signed:                ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
@@ -620,7 +620,7 @@ Response Structure
 		"regional": false,
 		"regionalGeoBlocking": false,
 		"remapText": null,
-		"requiredCapabilities": null,
+		"requiredCapabilities": [],
 		"routingName": "test",
 		"serviceCategory": null,
 		"signed": false,

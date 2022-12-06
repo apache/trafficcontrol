@@ -633,10 +633,9 @@ func DeprecatedCreateHandler(creator Creator, alternative *string) http.HandlerF
 		},
 		func(w http.ResponseWriter, r *http.Request, statusCode int, alerts tc.Alerts, results interface{}) {
 			depAlerts := CreateDeprecationAlerts(alternative)
-			for _, al := range alerts.Alerts {
-				depAlerts.Alerts = append(depAlerts.Alerts, al)
-			}
-			WriteAlertsObj(w, r, statusCode, depAlerts, results)
+			al := tc.Alerts{Alerts: depAlerts.Alerts}
+			al.AddAlerts(alerts)
+			WriteAlertsObj(w, r, statusCode, al, results)
 		},
 	)
 }

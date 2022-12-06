@@ -833,7 +833,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 		for rows.Next() {
 			if err = rows.Scan(pq.Array(&requiredCapabilities)); err != nil {
-				err = fmt.Errorf("unable to scan required capabilities for deliveryservice %d: %s", dsID, err)
+				err = fmt.Errorf("unable to scan required capabilities for deliveryservice %d: %w", dsID, err)
 				return nil, 0, nil, err, http.StatusInternalServerError, nil
 			}
 		}

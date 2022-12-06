@@ -15,22 +15,15 @@
  * the License.
  */
 
-CREATE TABLE IF NOT EXISTS deliveryservices_required_capability (
+CREATE TABLE IF NOT EXISTS public.deliveryservices_required_capability (
                                                                     required_capability TEXT NOT NULL,
-                                                                    deliveryservice_id bigint NOT NULL,
+                                                                    deliveryservice_id BIGINT NOT NULL,
                                                                     last_updated timestamp with time zone DEFAULT now() NOT NULL,
 
-    PRIMARY KEY (deliveryservice_id, required_capability)
+    CONSTRAINT ds_capability_primary PRIMARY KEY (deliveryservice_id, required_capability)
     );
 
-DO $$
-DECLARE temprow RECORD;
-BEGIN FOR temprow IN
-select id as deliveryservice_id, unnest(required_capabilities) as required_capability from deliveryservice d group by d.id, d.required_capabilities
-    LOOP
-insert into deliveryservices_required_capability ("deliveryservice_id", "required_capability") values (temprow.deliveryservice_id, temprow.required_capability);
-END LOOP;
-END $$;
+INSERT INTO public.deliveryservices_required_capability ("deliveryservice_id", "required_capability") SELECT id AS deliveryservice_id, UNNEST(required_capabilities) AS required_capability FROM deliveryservice d GROUP BY d.id, d.required_capabilities;
 
 ALTER TABLE public.deliveryservice
 DROP COLUMN required_capabilities;

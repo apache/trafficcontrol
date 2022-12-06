@@ -24,7 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7113](https://github.com/apache/trafficcontrol/pull/7113) *Traffic Portal* Minimize the Server Server Capability part of the *Traffic Servers* section of the Snapshot Diff
 
 ### Changed
-- *Traffic Ops* Required Parameters are now a part of the `DeliveryService` structure.
+- [#7224](https://github.com/apache/trafficcontrol/pull/7224) *Traffic Ops* Required Capabilities are now a part of the `DeliveryService` structure.
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
 - [#6981](https://github.com/apache/trafficcontrol/pull/6981) *Traffic Portal* Obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
 - [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
