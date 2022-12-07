@@ -473,7 +473,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	typ := DSTypeDNS
 	typeID := 22
 	xmlid := "xmlid"
-	requiredCapabilities := make([]string, 0)
+	requiredCapabilities := []string{"foo"}
 
 	newDS := DeliveryServiceV4{}
 	newDS.Active = new(bool)

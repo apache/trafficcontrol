@@ -1635,6 +1635,7 @@ func (ds DeliveryServiceV5) Downgrade() DeliveryServiceV4 {
 	if len(ds.RequiredCapabilities) == 0 {
 		downgraded.RequiredCapabilities = make([]string, 0)
 	} else {
+		downgraded.RequiredCapabilities = make([]string, len(ds.RequiredCapabilities))
 		copy(downgraded.RequiredCapabilities, ds.RequiredCapabilities)
 	}
 	return downgraded
@@ -1738,6 +1739,7 @@ func (ds DeliveryServiceV4) Upgrade() DeliveryServiceV5 {
 	if len(ds.RequiredCapabilities) == 0 {
 		upgraded.RequiredCapabilities = make([]string, 0)
 	} else {
+		upgraded.RequiredCapabilities = make([]string, len(ds.RequiredCapabilities))
 		copy(upgraded.RequiredCapabilities, ds.RequiredCapabilities)
 	}
 
