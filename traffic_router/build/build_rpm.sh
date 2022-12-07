@@ -42,6 +42,8 @@ buildRpmTrafficRouter () {
 	export LOGROTATE_SCRIPT_DIR="/etc/logrotate.d"
 	export LOGROTATE_SCRIPT_LOC="../core/src/main/lib/logrotate"
 
+	mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
+
 	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; return 1; }
 	mvn -P rpm-build -Dmaven.test.skip=true -DminimumTPS=1 clean package ||  \
 		{ echo "RPM BUILD FAILED: $?"; return 1; }
