@@ -19,7 +19,8 @@
 ``deliveryservices_required_capabilities``
 ******************************************
 
-.. deprecated:: ATCv7
+.. deprecated:: 4.1
+	This endpoint will be removed in a future release, in favor of ``required_capabilities`` being a part of :term:`Delivery Services`.
 
 ``GET``
 =======
@@ -105,8 +106,6 @@ Response Structure
 		]
 	}
 
-.. deprecated:: ATCv7
-
 ``POST``
 ========
 Associates a :term:`Server Capability` with a :term:`Delivery Service`.
@@ -173,8 +172,6 @@ Response Structure
 			"requiredCapability": "disk"
 		}
 	}
-
-.. deprecated:: ATCv7
 
 ``DELETE``
 ==========

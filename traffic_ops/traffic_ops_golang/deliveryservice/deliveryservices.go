@@ -1605,8 +1605,14 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 }
 
 func validateRequiredCapabilities(tx *sql.Tx, ds *tc.DeliveryServiceV5) (error, error) {
-	var valid bool
-	query := `SELECT $1 <@ (SELECT ARRAY_AGG(name) FROM server_capability)`
+	missing := make([]string, 0)
+	var missingCap string
+	query := `SELECT missing
+FROM (
+    SELECT UNNEST($1::TEXT[])
+    EXCEPT
+    SELECT UNNEST(ARRAY_AGG(name)) FROM server_capability) t(missing)
+`
 	if len(ds.RequiredCapabilities) > 0 {
 		rows, err := tx.Query(query, pq.Array(ds.RequiredCapabilities))
 		if err != nil {
@@ -1614,13 +1620,19 @@ func validateRequiredCapabilities(tx *sql.Tx, ds *tc.DeliveryServiceV5) (error, 
 		}
 		defer rows.Close()
 		for rows.Next() {
-			err = rows.Scan(&valid)
+			err = rows.Scan(&missingCap)
 			if err != nil {
 				return nil, err
 			}
-			if !valid {
-				return errors.New("one or more of the required capabilities do not exist"), nil
+			missing = append(missing, missingCap)
+		}
+		if len(missing) > 0 {
+			var msg string
+			for _, m := range missing {
+				msg = msg + m + " "
 			}
+			userErr := fmt.Errorf("the following capabilities do not exist: %s", msg)
+			return userErr, nil
 		}
 	}
 	return nil, nil
