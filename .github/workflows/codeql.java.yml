@@ -37,6 +37,8 @@ jobs:
       RHEL_VERSION: rhel_version
       STARTUP_SCRIPT_DIR: /startup-dir
       STARTUP_SCRIPT_LOC: ../core/src/main/lib/systemd/system
+      LOGROTATE_SCRIPT_DIR: /etc/logrotate.d
+      LOGROTATE_SCRIPT_LOC: ../core/src/main/lib/logrotate
       TOMCAT_RELEASE: tomcat_release
       TOMCAT_VERSION: tomcat_version
 

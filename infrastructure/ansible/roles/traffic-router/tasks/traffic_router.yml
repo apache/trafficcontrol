@@ -95,7 +95,7 @@
   register: tr_systemd
 
 - name: Copy traffic router logrotate file
-  file:
+  copy:
     src: traffic_router.logrotate
     dest: /etc/logrotate.d/traffic_router
     mode: 0644
