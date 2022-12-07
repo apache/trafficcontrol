@@ -94,6 +94,8 @@
 									<variableName>RPM_TARGET_OS</variableName>
 									<variableName>STARTUP_SCRIPT_DIR</variableName>
 									<variableName>STARTUP_SCRIPT_LOC</variableName>
+									<variableName>LOGROTATE_SCRIPT_DIR</variableName>
+									<variableName>LOGROTATE_SCRIPT_LOC</variableName>
 								</requireEnvironmentVariable>
 							</rules>
 							<fail>true</fail>
