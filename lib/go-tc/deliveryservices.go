@@ -1632,7 +1632,11 @@ func (ds DeliveryServiceV5) Downgrade() DeliveryServiceV4 {
 		copy(*downgraded.MatchList, ds.MatchList)
 	}
 	copy(downgraded.TLSVersions, ds.TLSVersions)
-
+	if len(ds.RequiredCapabilities) == 0 {
+		downgraded.RequiredCapabilities = make([]string, 0)
+	} else {
+		copy(downgraded.RequiredCapabilities, ds.RequiredCapabilities)
+	}
 	return downgraded
 }
 
