@@ -173,8 +173,8 @@ func GetServerCapability(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := "SELECT name, description, last_updated FROM server_capability sc"
-	query += where + orderBy + pagination
+	selectQuery := "SELECT name, description, last_updated FROM server_capability sc"
+	query := selectQuery + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("server capability read: error getting server capability(ies): %v", err.Error()))

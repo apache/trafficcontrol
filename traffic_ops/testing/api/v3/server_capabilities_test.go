@@ -46,7 +46,7 @@ func TestServerCapabilities(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when INVALID NAME": {
 					ClientSession: TOSession,
-					RequestBody:   tc.ServerCapability{Name: "b@dname", Description: "Server Capability"},
+					RequestBody:   tc.ServerCapability{Name: "b@dname"},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
