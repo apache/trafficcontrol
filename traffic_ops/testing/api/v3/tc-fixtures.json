@@ -4822,28 +4822,22 @@
     ],
     "serverCapabilities": [
         {
-            "name": "foo",
-            "description": "server capability foo"
+            "name": "foo"
         },
         {
-            "name": "bar",
-            "description": "server capability bar"
+            "name": "bar"
         },
         {
-            "name": "ram",
-            "description": "server capability ram"
+            "name": "ram"
         },
         {
-            "name": "disk",
-            "description": "server capability disk"
+            "name": "disk"
         },
         {
-            "name": "asdf",
-            "description": "server capability asdf"
+            "name": "asdf"
         },
         {
-            "name": "blah",
-            "description": "server capability blah"
+            "name": "blah"
         }
     ],
     "serverServerCapabilities": [

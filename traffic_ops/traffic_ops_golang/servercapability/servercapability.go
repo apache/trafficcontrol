@@ -20,6 +20,8 @@ package servercapability
  */
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -45,12 +47,10 @@ func (v *TOServerCapability) NewReadObj() interface{}       { return &tc.ServerC
 func (v *TOServerCapability) InsertQuery() string {
 	return `
 INSERT INTO server_capability (
-  name,
-  description
+  name
 )
 VALUES (
-  :name,
-  :description
+  :name
 )
 RETURNING last_updated
 `
@@ -60,7 +60,6 @@ func (v *TOServerCapability) SelectQuery() string {
 	return `
 SELECT
   name,
-  description,
   last_updated
 FROM
   server_capability sc
@@ -70,10 +69,9 @@ FROM
 func (v *TOServerCapability) updateQuery() string {
 	return `
 UPDATE server_capability sc SET
-	name = $1,
-	description = $2
-WHERE sc.name = $3
-RETURNING sc.name, sc.description, sc.last_updated
+	name = $1
+WHERE sc.name = $2
+RETURNING sc.name, sc.last_updated
 `
 }
 
@@ -139,20 +137,139 @@ func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
-	// udpate server capability name
-	rows, err := v.ReqInfo.Tx.Query(v.updateQuery(), v.RequestedName, v.Description, v.Name)
+	// update server capability name
+	rows, err := v.ReqInfo.Tx.Query(v.updateQuery(), v.RequestedName, v.Name)
 	if err != nil {
 		return nil, fmt.Errorf("server capability update: error setting the name for server capability %v: %v", v.Name, err.Error()), http.StatusInternalServerError
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
 	for rows.Next() {
-		err = rows.Scan(&v.Name, &v.Description, &v.LastUpdated)
+		err = rows.Scan(&v.Name, &v.LastUpdated)
 		if err != nil {
 			return api.ParseDBError(err)
 		}
 	}
 	return nil, nil, http.StatusOK
+}
+
+func GetServerCapability(w http.ResponseWriter, r *http.Request) {
+	var sc tc.ServerCapabilityV41
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"name": dbhelpers.WhereColumnInfo{Column: "sc.name"},
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	query := "SELECT name, description, last_updated FROM server_capability sc"
+	query += where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("server capability read: error getting server capability(ies): %v", err.Error()))
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	var scList []tc.ServerCapabilityV41
+	for rows.Next() {
+		if err = rows.Scan(&sc.Name, &sc.Description, &sc.LastUpdated); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting server capability(ies): "+err.Error()))
+		}
+		scList = append(scList, sc)
+	}
+
+	api.WriteResp(w, r, scList)
+	return
+}
+
+func UpdateServerCapability(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+	sc, err := readAndValidateJsonStruct(r, inf)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	//update name and description of a capability
+	requestedName := inf.Params["name"]
+	query := `UPDATE server_capability sc SET
+		name = $1,
+		description = $2
+	WHERE sc.name = $3
+	RETURNING sc.name, sc.description, sc.last_updated`
+
+	err = tx.QueryRow(query, sc.Name, sc.Description, requestedName).Scan(&sc.Name, &sc.Description, &sc.LastUpdated)
+	if err != nil && err != sql.ErrNoRows {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was updated")
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
+	return
+}
+
+func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	sc, err := readAndValidateJsonStruct(r, inf)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	// create server capability
+	query := `INSERT INTO server_capability (name, description) VALUES ($1, $2) RETURNING last_updated`
+	err = tx.QueryRow(query, sc.Name, sc.Description).Scan(&sc.LastUpdated)
+	if err != nil && err != sql.ErrNoRows {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created")
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
+	return
+}
+
+func readAndValidateJsonStruct(r *http.Request, inf *api.APIInfo) (tc.ServerCapabilityV41, error) {
+	var sc tc.ServerCapabilityV41
+	if err := json.NewDecoder(r.Body).Decode(&sc); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into ServerCapabilityV41 struct %w", err)
+		return sc, userErr
+	}
+
+	// validate JSON body
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name": validation.Validate(sc.Name, validation.Required),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return sc, userErr
+	}
+	return sc, nil
 }
 
 func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
