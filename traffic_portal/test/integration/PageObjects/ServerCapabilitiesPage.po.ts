@@ -26,6 +26,7 @@ export class ServerCapabilitiesPage extends BasePage{
 
      private btnCreateServerCapabilities = element(by.name('createServerCapabilityButton'));
      private txtSCName = element(by.id("name"))
+     private txtSCDescription = element(by.id("description"))
      private searchFilter = element(by.id('serverCapabilitiesTable_filter')).element(by.css('label input'));
      private btnDelete = element(by.buttonText('Delete'))
      private txtConfirmCapabilitiesName = element(by.name('confirmWithNameInput'));
@@ -41,15 +42,17 @@ export class ServerCapabilitiesPage extends BasePage{
       await snp.ClickConfigureMenu();
      }
 
-      public async CreateServerCapabilities(nameSC: string, outputMessage:string){
+      public async CreateServerCapabilities(nameSC: string, descriptionSC: string, outputMessage:string){
         let result = false
         let basePage = new BasePage();
         let snp= new SideNavigationPage();
         let name = nameSC+this.randomize;
+        let description = descriptionSC
         await this.btnCreateServerCapabilities.click();
         if(name != this.randomize){
           await this.txtSCName.sendKeys(name);
         }
+        await this.txtSCDescription.sendKeys(description);
         if(outputMessage == await(basePage.GetBlankErrorMessage()) || outputMessage == await(basePage.GetSyntaxErrorMessage())) {
           await snp.NavigateToServerCapabilitiesPage();
           result = true;

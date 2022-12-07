@@ -38,7 +38,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editServerCapability(sc.name)" ng-repeat="sc in ::serverCapabilities" context-menu="contextMenuItems">
+            <tr ng-click="editServerCapability(sc.name)" ng-repeat="sc in ::serverCapabilities | orderBy :'name'" context-menu="contextMenuItems">
                 <td name="name" data-search="^{{::sc.name}}$">{{::sc.name}}</td>
                 <td name="name" data-search="^{{::sc.description}}$">{{::sc.description}}</td>
             </tr>
