@@ -175,16 +175,16 @@ func GetServerCapability(w http.ResponseWriter, r *http.Request) {
 
 	selectQuery := "SELECT name, description, last_updated FROM server_capability sc"
 	query := selectQuery + where + orderBy + pagination
-	rows, err := tx.Query(query, queryValues)
+	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("server capability read: error getting server capability(ies): %v", err.Error()))
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("server capability read: error getting server capability(ies): %w", err))
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
 	var scList []tc.ServerCapabilityV41
 	for rows.Next() {
 		if err = rows.Scan(&sc.Name, &sc.Description, &sc.LastUpdated); err != nil {
-			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting server capability(ies): "+err.Error()))
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting server capability(ies): %w", err))
 		}
 		scList = append(scList, sc)
 	}

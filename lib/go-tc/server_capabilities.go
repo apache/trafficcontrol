@@ -25,6 +25,7 @@ type ServerCapabilitiesResponse struct {
 	Alerts
 }
 
+// ServerCapabilitiesResponseV41 contains the result data from a GET(v4.1 and above) /server_capabilities request.
 type ServerCapabilitiesResponseV41 struct {
 	Response []ServerCapabilityV41 `json:"response"`
 	Alerts
@@ -48,6 +49,7 @@ type ServerCapabilityDetailResponse struct {
 	Alerts
 }
 
+// ServerCapabilityDetailResponseV41 contains the result data from a POST(v4.1 and above) /server_capabilities request.
 type ServerCapabilityDetailResponseV41 struct {
 	Response ServerCapabilityV41 `json:"response"`
 	Alerts
