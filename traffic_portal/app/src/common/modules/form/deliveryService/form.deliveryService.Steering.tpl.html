@@ -128,7 +128,7 @@ under the License.
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.active != dsCurrent.active">
                                 <h3 ng-if="open()">Current Value</h3>
                                 <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.active.split(' ').map(w => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' ')}}</pre>
+                                <pre>{{::formatCurrentActive()}}</pre>
                             </aside>
                         </div>
                     </div>
