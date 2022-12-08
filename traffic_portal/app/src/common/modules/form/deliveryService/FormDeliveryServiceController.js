@@ -204,6 +204,21 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		$scope.serviceCategories = await serviceCategoryService.getServiceCategories({dsId: deliveryService.id })
 	}
 
+	/**
+	 * Formats the 'dsCurrent' active flag into a human-readable string. Returns
+	 * an empty string if dsCurrent isn't defined.
+	 *
+	 * @returns {string}
+	 */
+	function formatCurrentActive() {
+		if (!dsCurrent) {
+			return "";
+		}
+		return dsCurrent.active.split(" ").map(w => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(" ");
+	}
+
+	$scope.formatCurrentActive = formatCurrentActive;
+
 	$scope.deliveryService = deliveryService;
 
 	$scope.showGeneralConfig = true;

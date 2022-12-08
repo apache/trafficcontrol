@@ -20,6 +20,7 @@
 /**
  * This is a minimal type definition for Delivery Services. Expand as necessary.
  * @typedef DeliveryService
+ * @property {"ACTIVE" | "INACTIVE" | "PRIMED"} active
  * @property {number} cdnId
  * @property {string[]} consistentHashQueryParams
  * @property {string[]} [exampleURLs]
