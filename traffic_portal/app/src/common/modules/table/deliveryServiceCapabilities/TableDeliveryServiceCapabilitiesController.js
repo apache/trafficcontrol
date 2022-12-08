@@ -17,6 +17,19 @@
  * under the License.
  */
 
+/**
+ * The controller for the table that lists the server capabilities required by a
+ * Delivery Service.
+ *
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService & {id: number}} deliveryService
+ * @param {string[]} requiredCapabilities
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
 var TableDeliveryServiceCapabilitiesController = function(deliveryService, requiredCapabilities, $scope, $state, $uibModal, locationUtils, deliveryServiceService, messageModel) {
 
 	$scope.deliveryService = deliveryService;

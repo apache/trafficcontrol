@@ -17,7 +17,24 @@
  * under the License.
  */
 
-const TableParameterProfilesController = function (parameter, profiles, $scope, $state, $uibModal, $window, locationUtils, deliveryServiceService, profileParameterService, serverService, profileService, messageModel, fileUtils) {
+/**
+ *
+ * @param {{id: number; name: string}} parameter
+ * @param {unknown[]} profiles
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("angular").IWindowService} $window
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../api/ProfileParameterService")} profileParameterService
+ * @param {import("../../../api/ServerService")} serverService
+ * @param {import("../../../api/ProfileService")} profileService
+ * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../service/utils/FileUtils")} fileUtils
+ */
+const TableParameterProfilesController = function (parameter, profiles, $scope, $state, $uibModal, $window, $location, locationUtils, deliveryServiceService, profileParameterService, serverService, profileService, messageModel, fileUtils) {
 	const deleteProfile = function (profile) {
 		profileService.deleteProfile(profile.id)
 			.then(function (result) {
@@ -331,8 +348,7 @@ const TableParameterProfilesController = function (parameter, profiles, $scope, 
 			}
 		});
 	});
-
 };
 
-TableParameterProfilesController.$inject = ['parameter', 'profiles', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService', 'profileService', 'messageModel', 'fileUtils'];
+TableParameterProfilesController.$inject = ["parameter", "profiles", "$scope", "$state", "$uibModal", "$window", "$location", "locationUtils", "deliveryServiceService", "profileParameterService", "serverService", "profileService", "messageModel", "fileUtils"];
 module.exports = TableParameterProfilesController;

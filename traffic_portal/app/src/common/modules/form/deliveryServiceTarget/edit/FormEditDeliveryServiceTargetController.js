@@ -17,7 +17,19 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceTargetController = function(deliveryService, currentTargets, target, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService) {
+/**
+ * This is the controller for the form used to modify a Target of a Steering
+ * Delivery Service.
+ *
+ * @param {import("../../../../api/DeliveryServiceService").DeliveryService} deliveryService
+ * @param {import("../../../../api/DeliveryServiceService").SteeringTarget[]} currentTargets
+ * @param {import("../../../../api/DeliveryServiceService").SteeringTarget} target
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {*} $uibModal
+ * @param {import("../../../../api/DeliveryServiceService")} deliveryServiceService
+ */
+var FormEditDeliveryServiceTargetController = function(deliveryService, currentTargets, target, $scope, $controller, $uibModal, deliveryServiceService) {
 
 	// extends the FormDeliveryServiceTargetController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceTargetController', { deliveryService: deliveryService, currentTargets: currentTargets, target: target, $scope: $scope }));
@@ -65,5 +77,5 @@ var FormEditDeliveryServiceTargetController = function(deliveryService, currentT
 
 };
 
-FormEditDeliveryServiceTargetController.$inject = ['deliveryService', 'currentTargets', 'target', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService'];
+FormEditDeliveryServiceTargetController.$inject = ['deliveryService', 'currentTargets', 'target', '$scope', '$controller', '$uibModal', 'deliveryServiceService'];
 module.exports = FormEditDeliveryServiceTargetController;

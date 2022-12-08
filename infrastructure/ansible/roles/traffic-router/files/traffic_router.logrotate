@@ -1,4 +1,3 @@
-#!/bin/sh -l
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,27 +15,21 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -e
 
-download_go() {
-	go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
-	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz"
-	tar -C /usr/local -xzf go.tar.gz
-	rm go.tar.gz
-	export PATH="${PATH}:${GOROOT}/bin"
-	go version
+/opt/traffic_router/var/log/access.log {
+    daily
+    size 100m
+    compress
+    rotate 7
+    dateformat -%d%m%Y
+    copytruncate
 }
-download_go
 
-if [ -z "$INPUT_DIR" ]; then
-	# There's a bug in "defaults" for inputs
-	INPUT_DIR="./lib/..."
-fi
-
-# Need to fetch golang.org/x/* dependencies
-if ! [ -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]; then
-	go mod vendor
-fi
-
-go test --buildvcs=false $INPUT_DIR  -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
-exit $?
+/opt/traffic_router/var/log/traffic_router.log {
+    daily
+    size 100m
+    compress
+    rotate 7
+    dateformat -%d%m%Y
+    copytruncate
+}

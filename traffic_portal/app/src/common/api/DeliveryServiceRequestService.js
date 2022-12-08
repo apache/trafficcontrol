@@ -17,137 +17,220 @@
  * under the License.
  */
 
-var DeliveryServiceRequestService = function($http, locationUtils, messageModel, ENV) {
+/**
+ * This is a minimal definition of a DSR. Add to it as necessary.
+ *
+ * @typedef DeliveryServiceRequest
+ * @property {string} changeType
+ * @property {string} [createdAt]
+ * @property {number} [id]
+ * @property {string} [lastUpdated]
+ * @property {import("./DeliveryServiceService").DeliveryService} [original]
+ * @property {import("./DeliveryServiceService").DeliveryService} [requested]
+ */
 
-	this.getDeliveryServiceRequests = function(queryParams) {
-		return $http.get(ENV.api.unstable + 'deliveryservice_requests', {params: queryParams}).then(
-			function(result) {
-				return result.data.response;
-			},
-			function(err) {
-				throw err;
-			}
-		);
-	};
+/**
+ * Represents a comment on a DSR.
+ *
+ * @typedef DSRComment
+ * @property {number} [authorId]
+ * @property {string} [author]
+ * @property {number} deliveryServiceRequestId
+ * @property {number} [id]
+ * @property {string} [lastUpdated]
+ * @property {string} value
+ * @property {string} [xmlId]
+ */
 
-	this.createDeliveryServiceRequest = function(dsRequest) {
+/**
+ * DeliveryServiceRequestService provides methods for interacting with the parts
+ * of the Traffic Ops API that relate to Delivery Service Requests.
+ */
+class DeliveryServiceRequestService {
+
+	/**
+	 * @type {string}
+	 * @readonly
+	 * @private
+	 */
+	apiVersion;
+
+	/**
+	 *
+	 * @param {import("angular").IHttpService} $http Angular HTTP service.
+	 * @param {import("../models/MessageModel")} messageModel Service for displaying messages/alerts.
+	 * @param {{api:{next: string; unstable: string; stable: string}}} ENV Environment configuration.
+	 */
+	constructor($http, messageModel, ENV) {
+		this.apiVersion = ENV.api.next;
+		this.$http = $http;
+		this.messageModel = messageModel;
+	}
+
+	/**
+	 * Get Delivery Service Requests.
+	 *
+	 * @param {Record<PropertyKey, unknown>} params
+	 * @returns {Promise<DeliveryServiceRequest[]>}
+	 */
+	async getDeliveryServiceRequests(params) {
+		const result = await this.$http.get(`${this.apiVersion}deliveryservice_requests`, { params });
+		return result.data.response;
+	}
+
+	/**
+	 * Creates a new DSR.
+	 *
+	 * @param {DeliveryServiceRequest} dsRequest The DSR to be create.
+	 * @returns {Promise<DeliveryServiceRequest & {id: number}>} The newly created DSR.
+	 */
+	async createDeliveryServiceRequest(dsRequest) {
 
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		if (dsRequest.requested) {
-			dsRequest.requested.consistentHashQueryParams = Array.from(new Set(dsRequest.requested.consistentHashQueryParams)).filter(function(i){return i;});
+			dsRequest.requested.consistentHashQueryParams = Array.from(new Set(dsRequest.requested.consistentHashQueryParams)).filter(i => i);
 		}
 
-		return $http.post(ENV.api.unstable + "deliveryservice_requests", dsRequest).then(
-			function(result) {
-				return result.data.response;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
+		try {
+			const result = await this.$http.post(`${this.apiVersion}deliveryservice_requests`, dsRequest);
+			return result.data.response;
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
+			throw err;
+		}
+	}
 
-	this.updateDeliveryServiceRequest = function(id, dsRequest) {
+	/**
+	 * Replaces an existing DSR with the provided, new definition.
+	 *
+	 * @param {number} id The ID of the DSR being modified.
+	 * @param {DeliveryServiceRequest} dsRequest The new, desired definition of the DSR.
+	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DeliveryServiceRequest}>} The full API response.
+	 */
+	async updateDeliveryServiceRequest(id, dsRequest) {
 
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		if (dsRequest.requested) {
-			dsRequest.requested.consistentHashQueryParams = Array.from(new Set(dsRequest.requested.consistentHashQueryParams)).filter(function(i){return i;});
+			dsRequest.requested.consistentHashQueryParams = Array.from(new Set(dsRequest.requested.consistentHashQueryParams)).filter(i => i);
 		}
 
-		return $http.put(ENV.api.unstable + "deliveryservice_requests", dsRequest, {params: {id: id}}).then(
-			function(result) {
-				return result;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
+		try {
+			const result = await this.$http.put(`${this.apiVersion}deliveryservice_requests`, dsRequest, { params: { id } });
+			return result.data;
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
+			throw err;
+		}
+	}
 
-	this.deleteDeliveryServiceRequest = function(id, delay) {
-		return $http.delete(ENV.api.unstable + "deliveryservice_requests", {params: {id: id}}).then(
-			function(response) {
-				return response;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
+	/**
+	 * Deletes the identified DSR.
+	 *
+	 * @param {number} id The ID of the DSR to be deleted.
+	 * @returns {Promise<{alerts: {level: string; text: string}[]}>} The full API response.
+	 */
+	async deleteDeliveryServiceRequest(id) {
+		try {
+			const response = await this.$http.delete(`${this.apiVersion}deliveryservice_requests`, { params: { id } });
+			return response.data;
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
+			throw err;
+		}
+	}
 
-	this.assignDeliveryServiceRequest = function(id, username) {
-		return $http.put(ENV.api.unstable + "deliveryservice_requests/" + id + "/assign", { assignee: username }).then(
-			function(result) {
-				return result;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
+	/**
+	 * Assigns a DS to a user.
+	 *
+	 * @param {number} id The ID of the DSR being assigned.
+	 * @param {string} assignee The username of the user to whom the DSR is being assigned.
+	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DeliveryServiceRequest}>} The full API response.
+	 */
+	async assignDeliveryServiceRequest(id, assignee) {
+		try {
+			const result = await this.$http.put(`${this.apiVersion}deliveryservice_requests/${id}/assign`, { assignee });
+			return result.data;
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
+			throw err;
+		}
+	}
 
-	this.updateDeliveryServiceRequestStatus = function(id, status) {
-		return $http.put(ENV.api.unstable + "deliveryservice_requests/" + id + "/status", { status: status }).then(
-			function(result) {
-				return result;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
+	/**
+	 * Sets the status of a DSR.
+	 *
+	 * @param {number} id The ID of the DSR being modified.
+	 * @param {string} status The new status of the DSR.
+	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DeliveryServiceRequest}>} The full API response.
+	 */
+	async updateDeliveryServiceRequestStatus(id, status) {
+		try {
+			const result = await this.$http.put(`${this.apiVersion}deliveryservice_requests/${id}/status`, { status });
+			return result.data;
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
+			throw err;
+		}
+	}
 
-	this.getDeliveryServiceRequestComments = function(queryParams) {
-		return $http.get(ENV.api.unstable + 'deliveryservice_request_comments', {params: queryParams}).then(
-			function(result) {
-				return result.data.response;
-			},
-			function(err) {
-				throw err;
-			}
-		);
-	};
+	/**
+	 * Gets the comments associated with DSRs.
+	 *
+	 * @param {Record<PropertyKey, unknown>} params Any and all query string parameters for the request.
+	 * @returns {Promise<DSRComment[]>} The requested comments.
+	 */
+	async getDeliveryServiceRequestComments(params) {
+		try {
+			const result = await this.$http.get(`${this.apiVersion}deliveryservice_request_comments`, { params });
+			return result.data.response;
+		} catch (err) {
+			throw err;
+		}
+	}
 
-	this.createDeliveryServiceRequestComment = function(comment) {
-		return $http.post(ENV.api.unstable + "deliveryservice_request_comments", comment).then(
-			function(response) {
-				return response;
-			},
-			function(err) {
-				throw err;
-			}
-		);
-	};
+	/**
+	 * Creates a new comment on a DSR.
+	 *
+	 * @param {DSRComment} comment The new comment to be created.
+	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DSRComment}>} The full API response.
+	 */
+	async createDeliveryServiceRequestComment(comment) {
+		const response = await this.$http.post(`${this.apiVersion}deliveryservice_request_comments`, comment);
+		return response.data;
+	}
 
-	this.updateDeliveryServiceRequestComment = function(comment) {
-		return $http.put(ENV.api.unstable + "deliveryservice_request_comments", comment, {params: {id: comment.id}}).then(
-				function(result) {
-					return result;
-				},
-				function(err) {
-					messageModel.setMessages(err.data.alerts, false);
-					throw err;
-				}
-			);
-	};
+	/**
+	 * Updates an existing comment on a DSR.
+	 *
+	 * @param {DSRComment} comment The comment as desired.
+	 * @returns {Promise<{alerts: {level: string; text: string}[]; response: DSRComment}>} The full API response.
+	 */
+	async updateDeliveryServiceRequestComment(comment) {
+		try {
+			const result = await this.$http.put(`${this.apiVersion}deliveryservice_request_comments`, comment, { params: { id: comment.id } });
+			return result.data;
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
+			throw err;
+		}
+	}
 
-	this.deleteDeliveryServiceRequestComment = function(comment) {
-		return $http.delete(ENV.api.unstable + "deliveryservice_request_comments", {params: {id: comment.id}}).then(
-			function(response) {
-				return response;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
-};
+	/**
+	 * Removes a comment from its DSR.
+	 *
+	 * @param {DSRComment} comment The comment to be deleted.
+	 * @returns {Promise<{alerts: {level: string; text: string}[]}>} The full API response.
+	 */
+	async deleteDeliveryServiceRequestComment(comment) {
+		try {
+			const response = await this.$http.delete(`${this.apiVersion}deliveryservice_request_comments`, { params: { id: comment.id } });
+			return response.data;
+		} catch (err) {
+			this.messageModel.setMessages(err.data.alerts, false);
+			throw err;
+		}
+	}
+}
 
-DeliveryServiceRequestService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
+DeliveryServiceRequestService.$inject = ["$http", "messageModel", "ENV"];
 module.exports = DeliveryServiceRequestService;

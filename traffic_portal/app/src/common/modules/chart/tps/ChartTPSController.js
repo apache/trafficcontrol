@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ChartTPSController = function(deliveryService, $scope, $state, $timeout, $filter, $q, $interval, deliveryServiceService, deliveryServiceStatsService, dateUtils, locationUtils, numberUtils, propertiesModel) {
+var ChartTPSController = function(deliveryService, $scope, $timeout, $filter, $q, $interval, deliveryServiceStatsService, dateUtils, propertiesModel) {
 
 	var chartSeries,
 		chartOptions;
@@ -164,5 +164,5 @@ var ChartTPSController = function(deliveryService, $scope, $state, $timeout, $fi
 
 };
 
-ChartTPSController.$inject = ['deliveryService', '$scope', '$state', '$timeout', '$filter', '$q', '$interval', 'deliveryServiceService', 'deliveryServiceStatsService', 'dateUtils', 'locationUtils', 'numberUtils', 'propertiesModel'];
+ChartTPSController.$inject = ['deliveryService', '$scope', '$timeout', '$filter', '$q', '$interval', 'deliveryServiceStatsService', 'dateUtils', 'propertiesModel'];
 module.exports = ChartTPSController;
