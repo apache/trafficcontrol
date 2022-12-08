@@ -66,17 +66,6 @@ FROM
 `
 }
 
-func SelectQueryV41() string {
-	return `
-SELECT 
-	name, 
-	description, 
-	last_updated 
-FROM 
-	server_capability sc
-`
-}
-
 func (v *TOServerCapability) updateQuery() string {
 	return `
 UPDATE server_capability sc SET
@@ -184,8 +173,9 @@ func GetServerCapability(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := SelectQueryV41() + where + orderBy + pagination
-	rows, err := tx.NamedQuery(query, queryValues)
+	selectQuery := "SELECT name, description, last_updated FROM server_capability sc"
+	query := selectQuery + where + orderBy + pagination
+	rows, err := tx.Query(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("server capability read: error getting server capability(ies): %v", err.Error()))
 	}

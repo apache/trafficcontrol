@@ -19,9 +19,9 @@
 
 
 interface Removal {
-	caseDescription: string;
-	name: string;
 	description: string;
+	name: string;
+	capabilityDescription: string;
 	validationMessage: string;
 }
 
@@ -48,75 +48,75 @@ export const serverCapabilities = {
 			],
 			check: [
 				{
-					caseDescription: "check CSV link from Server Capabilities page",
+					description: "check CSV link from Server Capabilities page",
 					Name: "Export as CSV"
 				}
 			],
 			add: [
 				{
-					caseDescription: "can create a server capability",
+					description: "can create a server capability",
 					name: "TP_SC",
-					description: "Server Capability",
+					capabilityDescription: "Server Capability",
 					validationMessage: "server capability was created."
 				},
 				{
-					caseDescription: "can create multiple server capabilities",
+					description: "can create multiple server capabilities",
 					name: "TP_SC_2",
-					description: "Server Capability 2",
+					capabilityDescription: "Server Capability 2",
 					validationMessage: "server capability was created."
 				},
 				{
-					caseDescription: "can create multiple server capabilities",
+					description: "can create multiple server capabilities",
 					name: "TP_SC_3",
-					description: "Server Capability 3",
+					capabilityDescription: "Server Capability 3",
 					validationMessage: "server capability was created."
 				},
 				{
-					caseDescription: "can handle creating existing server capability",
+					description: "can handle creating existing server capability",
 					name: "TP_SC_2",
-					description: "Server Capability 2",
+					capabilityDescription: "Server Capability 2",
 					validationMessage: "server_capability name 'TP_SC_2' already exists."
 				},
 				{
-					caseDescription: "can handle invalid period in server capability",
+					description: "can handle invalid period in server capability",
 					name: "TP.AUTOMATED",
-					description: "Server Capability Automated",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
-					caseDescription: "can handle invalid space in server capability",
+					description: "can handle invalid space in server capability",
 					name: "TP AUTOMATED",
-					description: "Server Capability Automated",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
-					caseDescription: "can handle invalid character in server capability",
+					description: "can handle invalid character in server capability",
 					name: "TP#AUTOMATED",
-					description: "Server Capability Automated",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
-					caseDescription: "can handle an empty text field",
+					description: "can handle an empty text field",
 					name: "",
-					description: "",
+					capabilityDescription: "",
 					validationMessage: "Required"
 				}
 			],
 			remove: [
 				{
-					caseDescription: "can delete a server capability",
+					description: "can delete a server capability",
 					invalid: false,
 					name: "TP_SC",
 					validationMessage: "server capability was deleted."
 				},
 				{
-					caseDescription: "can handle an invalid delete entry",
+					description: "can handle an invalid delete entry",
 					invalid: true,
 					name: "TP_SC_2",
 					invalidName: "TP_AUTOMATED"
 				},
 				{
-					caseDescription: "can delete multiple server capabilities",
+					description: "can delete multiple server capabilities",
 					invalid: false,
 					name: "TP_SC_2",
 					validationMessage: "server capability was deleted."
@@ -133,21 +133,21 @@ export const serverCapabilities = {
 			],
 			check: [
 				{
-					caseDescription: "check CSV link from Server Capabilities page",
+					description: "check CSV link from Server Capabilities page",
 					Name: "Export as CSV"
 				}
 			],
 			add: [
 				{
-					caseDescription: "can handle readonly role creating a server capability",
+					description: "can handle readonly role creating a server capability",
 					name: "TP_SC",
-					description: "Server Capability",
+					capabilityDescription: "Server Capability",
 					validationMessage: "missing required Permissions: SERVER-CAPABILITY:CREATE"
 				}
 			],
 			remove: [
 				{
-					caseDescription: "can handle readonly role deleting a server capability",
+					description: "can handle readonly role deleting a server capability",
 					invalid: false,
 					name: "TP_SC_3",
 					validationMessage: "missing required Permissions: SERVER-CAPABILITY:DELETE"
@@ -164,75 +164,75 @@ export const serverCapabilities = {
 			],
 			check: [
 				{
-					caseDescription: "check CSV link from Server Capabilities page",
+					description: "check CSV link from Server Capabilities page",
 					Name: "Export as CSV"
 				}
 			],
 			add: [
 				{
-					caseDescription: "can create a server capability",
+					description: "can create a server capability",
 					name: "TP_SC",
-					description: "Server Capability",
+					capabilityDescription: "Server Capability",
 					validationMessage: "server capability was created."
 				},
 				{
-					caseDescription: "can create multiple server capabilities",
+					description: "can create multiple server capabilities",
 					name: "TP_SC_2",
-					description: "Server Capability 2",
+					capabilityDescription: "Server Capability 2",
 					validationMessage: "server capability was created."
 				},
 				{
-					caseDescription: "can handle creating existing server capability",
+					description: "can handle creating existing server capability",
 					name: "TP_SC_2",
-					description: "Server Capability 2",
+					capabilityDescription: "Server Capability 2",
 					validationMessage: "server_capability name 'TP_SC_2' already exists."
 				},
 				{
-					caseDescription: "can handle invalid period in server capability",
+					description: "can handle invalid period in server capability",
 					name: "TP.AUTOMATED",
-					description: "Server Capability Automated",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
-					caseDescription: "can handle invalid space in server capability",
+					description: "can handle invalid space in server capability",
 					name: "TP AUTOMATED",
-					description: "Server Capability Automated",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
-					caseDescription: "can handle invalid character in server capability",
+					description: "can handle invalid character in server capability",
 					name: "TP#AUTOMATED",
-					description: "Server Capability Automated",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
-					caseDescription: "can handle an empty text field",
+					description: "can handle an empty text field",
 					name: "",
-					description: "",
+					capabilityDescription: "",
 					validationMessage: "Required"
 				}
 			],
 			remove: [
 				{
-					caseDescription: "can delete a server capability",
+					description: "can delete a server capability",
 					name: "TP_SC",
 					invalid: false,
 					validationMessage: "server capability was deleted."
 				},
 				{
-					caseDescription: "can handle an invalid delete entry",
+					description: "can handle an invalid delete entry",
 					name: "TP_SC_2",
 					invalid: true,
 					invalidName: "TP_AUTOMATED"
 				},
 				{
-					caseDescription: "can delete multiple server capabilities",
+					description: "can delete multiple server capabilities",
 					name: "TP_SC_2",
 					invalid: false,
 					validationMessage: "server capability was deleted."
 				},
 				{
-					caseDescription: "can delete multiple server capabilities",
+					description: "can delete multiple server capabilities",
 					name: "TP_SC_3",
 					invalid: false,
 					validationMessage: "server capability was deleted."

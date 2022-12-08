@@ -40,26 +40,26 @@ serverCapabilities.tests.forEach(serverCapabilitiesData => {
                 await serverCapabilitiesPage.OpenServerCapabilityPage();
             });
             serverCapabilitiesData.check.forEach(check => {
-                it(check.caseDescription, async () => {
+                it(check.description, async () => {
                     expect(await serverCapabilitiesPage.CheckCSV(check.Name)).toBe(true);
                     await serverCapabilitiesPage.OpenServerCapabilityPage();
                 });
             });
             serverCapabilitiesData.add.forEach(add => {
-                it(add.caseDescription, async () => {
-                    expect(await serverCapabilitiesPage.CreateServerCapabilities(add.name, add.description, add.validationMessage)).toBe(true);
+                it(add.description, async () => {
+                    expect(await serverCapabilitiesPage.CreateServerCapabilities(add.name, add.capabilityDescription, add.validationMessage)).toBe(true);
                     await serverCapabilitiesPage.OpenServerCapabilityPage();
                 });
             });
             serverCapabilitiesData.remove.forEach(remove => {
                 if (remove.invalid) {
-                    it(remove.caseDescription, async () => {
+                    it(remove.description, async () => {
                         await serverCapabilitiesPage.SearchServerCapabilities(remove.name)
                         expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.invalidName, remove.validationMessage)).toBe(false);
                         await serverCapabilitiesPage.OpenServerCapabilityPage();
                     });
                 } else {
-                    it(remove.caseDescription, async () => {
+                    it(remove.description, async () => {
                         await serverCapabilitiesPage.SearchServerCapabilities(remove.name)
                         expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.name, remove.validationMessage)).toBe(true);
                         await serverCapabilitiesPage.OpenServerCapabilityPage();

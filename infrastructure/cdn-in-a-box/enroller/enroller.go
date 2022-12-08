@@ -774,7 +774,7 @@ func enrollServer(toSession *session, r io.Reader) error {
 // enrollServerCapability takes a json file and creates a ServerCapability object using the TO API
 func enrollServerCapability(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.ServerCapability
+	var s tc.ServerCapabilityV41
 	err := dec.Decode(&s)
 	if err != nil {
 		err = fmt.Errorf("error decoding Server Capability: %v", err)
