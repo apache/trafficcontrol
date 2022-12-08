@@ -21,9 +21,11 @@ import type {CommonPageObject} from "nightwatch/page_objects/common";
 import type {DeliveryServiceCardPageObject} from "nightwatch/page_objects/deliveryServiceCard";
 import type {DeliveryServiceDetailPageObject} from "nightwatch/page_objects/deliveryServiceDetail";
 import type {DeliveryServiceInvalidPageObject} from "nightwatch/page_objects/deliveryServiceInvalidationJobs";
-import type { DivisionDetailPageObject } from "nightwatch/page_objects/divisionDetail";
+import type { DivisionDetailPageObject } from "nightwatch/page_objects/divisionsDetail";
 import type { DivisionsPageObject } from "nightwatch/page_objects/divisionsTable";
 import type {LoginPageObject} from "nightwatch/page_objects/login";
+import type { RegionDetailPageObject } from "nightwatch/page_objects/regionsDetail";
+import type { RegionsPageObject } from "nightwatch/page_objects/regionsTable";
 import type {ServersPageObject} from "nightwatch/page_objects/servers";
 import type { TenantDetailPageObject } from "nightwatch/page_objects/tenantDetail";
 import type { TenantsPageObject } from "nightwatch/page_objects/tenants";
@@ -36,7 +38,7 @@ import {
 	ResponseCDN,
 	ResponseDeliveryService,
 	RequestTenant,
-	ResponseTenant, TypeFromResponse, RequestSteeringTarget, ResponseDivision, RequestDivision
+	ResponseTenant, TypeFromResponse, RequestSteeringTarget, ResponseDivision, RequestDivision, ResponseRegion, RequestRegion
 } from "trafficops-types";
 
 declare module "nightwatch" {
@@ -49,9 +51,11 @@ declare module "nightwatch" {
 		deliveryServiceCard: () => DeliveryServiceCardPageObject;
 		deliveryServiceDetail: () => DeliveryServiceDetailPageObject;
 		deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;
-		divisionsDetail: () => DivisionDetailPageObject;
+		divisionDetail: () => DivisionDetailPageObject;
 		divisionsTable: () => DivisionsPageObject;
 		login: () => LoginPageObject;
+		regionDetail: () => RegionDetailPageObject;
+		regionsTable: () => RegionsPageObject;
 		servers: () => ServersPageObject;
 		tenants: () => TenantsPageObject;
 		tenantDetail: () => TenantDetailPageObject;
@@ -81,6 +85,7 @@ export interface CreatedData {
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	division: ResponseDivision;
+	region: ResponseRegion;
 }
 
 const testData = {};
@@ -235,6 +240,15 @@ const globals = {
 			const respDivision: ResponseDivision = resp.data.response;
 			console.log(`Successfully created Division ${respDivision.name}`);
 			data.division = respDivision;
+
+			const region: RequestRegion = {
+				division: 1,
+				name: `testR${globals.uniqueString}`
+			};
+			resp = await client.post(`${apiUrl}/regions`, JSON.stringify(region));
+			const respRegion: ResponseRegion = resp.data.response;
+			console.log(`Successfully created Region ${respRegion.name}`);
+			data.region = respRegion;
 		} catch(e) {
 			console.error((e as AxiosError).message);
 			throw e;
