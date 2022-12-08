@@ -25,6 +25,11 @@ type ServerCapabilitiesResponse struct {
 	Alerts
 }
 
+type ServerCapabilitiesResponseV41 struct {
+	Response []ServerCapabilityV41 `json:"response"`
+	Alerts
+}
+
 // ServerCapability contains information about a given ServerCapability in Traffic Ops.
 type ServerCapability struct {
 	Name        string     `json:"name" db:"name"`
@@ -40,5 +45,10 @@ type ServerCapabilityV41 struct {
 // ServerCapabilityDetailResponse contains the result data from a POST /server_capabilities request.
 type ServerCapabilityDetailResponse struct {
 	Response ServerCapability `json:"response"`
+	Alerts
+}
+
+type ServerCapabilityDetailResponseV41 struct {
+	Response ServerCapabilityV41 `json:"response"`
 	Alerts
 }

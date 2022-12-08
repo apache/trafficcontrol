@@ -66,6 +66,17 @@ FROM
 `
 }
 
+func SelectQueryV41() string {
+	return `
+SELECT 
+	name, 
+	description, 
+	last_updated 
+FROM 
+	server_capability sc
+`
+}
+
 func (v *TOServerCapability) updateQuery() string {
 	return `
 UPDATE server_capability sc SET
@@ -173,8 +184,7 @@ func GetServerCapability(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectQuery := "SELECT name, description, last_updated FROM server_capability sc"
-	query := selectQuery + where + orderBy + pagination
+	query := SelectQueryV41() + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("server capability read: error getting server capability(ies): %v", err.Error()))
@@ -202,9 +212,16 @@ func UpdateServerCapability(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	tx := inf.Tx.Tx
-	sc, err := readAndValidateJsonStruct(r, inf)
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+	sc, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, sc.Name, "server_capability")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
@@ -216,13 +233,13 @@ func UpdateServerCapability(w http.ResponseWriter, r *http.Request) {
 	WHERE sc.name = $3
 	RETURNING sc.name, sc.description, sc.last_updated`
 
-	err = tx.QueryRow(query, sc.Name, sc.Description, requestedName).Scan(&sc.Name, &sc.Description, &sc.LastUpdated)
-	if err != nil && err != sql.ErrNoRows {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+	err := tx.QueryRow(query, sc.Name, sc.Description, requestedName).Scan(&sc.Name, &sc.Description, &sc.LastUpdated)
+	if err != nil && err == sql.ErrNoRows {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was updated")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, sc)
 	return
 }
 
@@ -235,26 +252,37 @@ func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 	tx := inf.Tx.Tx
 
-	sc, err := readAndValidateJsonStruct(r, inf)
+	sc, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	// check if capability already exists
+	var count int
+	err := tx.QueryRow("SELECT count(*) from server_capability where name = $1", sc.Name).Scan(&count)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server capability with name %s exists", sc.Name))
+		return
+	}
+	if count == 1 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("capability with name: %s already exists", sc.Name), nil)
 		return
 	}
 
 	// create server capability
 	query := `INSERT INTO server_capability (name, description) VALUES ($1, $2) RETURNING last_updated`
 	err = tx.QueryRow(query, sc.Name, sc.Description).Scan(&sc.LastUpdated)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err == sql.ErrNoRows {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, sc)
 	return
 }
 
-func readAndValidateJsonStruct(r *http.Request, inf *api.APIInfo) (tc.ServerCapabilityV41, error) {
+func readAndValidateJsonStruct(r *http.Request) (tc.ServerCapabilityV41, error) {
 	var sc tc.ServerCapabilityV41
 	if err := json.NewDecoder(r.Body).Decode(&sc); err != nil {
 		userErr := fmt.Errorf("error decoding POST request body into ServerCapabilityV41 struct %w", err)
@@ -262,8 +290,9 @@ func readAndValidateJsonStruct(r *http.Request, inf *api.APIInfo) (tc.ServerCapa
 	}
 
 	// validate JSON body
+	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
 	errs := tovalidate.ToErrors(validation.Errors{
-		"name": validation.Validate(sc.Name, validation.Required),
+		"name": validation.Validate(sc.Name, validation.Required, rule),
 	})
 	if len(errs) > 0 {
 		userErr := util.JoinErrs(errs)

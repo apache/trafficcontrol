@@ -36,7 +36,7 @@ func TestServerCapabilities(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerCapability]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerCapabilityV41]{
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
@@ -57,20 +57,28 @@ func TestServerCapabilities(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody:   tc.ServerCapability{Name: "foo", Description: "foo servers"},
-					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					RequestBody: tc.ServerCapabilityV41{
+						ServerCapability: tc.ServerCapability{Name: "foo"},
+						Description:      "foo servers",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID NAME": {
 					ClientSession: TOSession,
-					RequestBody:   tc.ServerCapability{Name: "b@dname", Description: "Server Capability"},
-					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					RequestBody: tc.ServerCapabilityV41{
+						ServerCapability: tc.ServerCapability{Name: "b@dname"},
+						Description:      "Server Capability",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
 			"PUT": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"blah"}}},
-					RequestBody:   tc.ServerCapability{Name: "newname", Description: "Server Capability for new name"},
+					RequestBody: tc.ServerCapabilityV41{
+						ServerCapability: tc.ServerCapability{Name: "newname"},
+						Description:      "Server Capability for new name"},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServerCapabilitiesUpdateFields(map[string]interface{}{"Name": "newname"}),
 						validateSSCFieldsOnServerCapabilityUpdate("newname", map[string]interface{}{"ServerCapability": "newname"})),
@@ -78,8 +86,11 @@ func TestServerCapabilities(t *testing.T) {
 				"BAD REQUEST when NAME DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"invalid"}}},
-					RequestBody:   tc.ServerCapability{Name: "newname", Description: "Server Capability for new name"},
-					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+					RequestBody: tc.ServerCapabilityV41{
+						ServerCapability: tc.ServerCapability{Name: "newname"},
+						Description:      "Server Capability for new name",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					ClientSession: TOSession,
@@ -87,7 +98,10 @@ func TestServerCapabilities(t *testing.T) {
 						QueryParameters: url.Values{"name": {"disk"}},
 						Header:          http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					},
-					RequestBody:  tc.ServerCapability{Name: "newname", Description: "Server Capability for new name"},
+					RequestBody: tc.ServerCapabilityV41{
+						ServerCapability: tc.ServerCapability{Name: "newname"},
+						Description:      "Server Capability for new name",
+					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
@@ -96,7 +110,10 @@ func TestServerCapabilities(t *testing.T) {
 						QueryParameters: url.Values{"name": {"disk"}},
 						Header:          http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
 					},
-					RequestBody:  tc.ServerCapability{Name: "newname", Description: "Server Capability for new name"},
+					RequestBody: tc.ServerCapabilityV41{
+						ServerCapability: tc.ServerCapability{Name: "newname"},
+						Description:      "Server Capability for new name",
+					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 			},
@@ -156,7 +173,7 @@ func TestServerCapabilities(t *testing.T) {
 func validateServerCapabilitiesUpdateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Server Capabilities response to not be nil.")
-		serverCapabilitiesResp := resp.(tc.ServerCapability)
+		serverCapabilitiesResp := resp.(tc.ServerCapabilityV41)
 		for field, expected := range expectedResp {
 			switch field {
 			case "Name":
@@ -172,7 +189,7 @@ func validateServerCapabilitiesSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Server Capabilities response to not be nil.")
 		var serverCapabilityNames []string
-		serverCapabilitiesResp := resp.([]tc.ServerCapability)
+		serverCapabilitiesResp := resp.([]tc.ServerCapabilityV41)
 		for _, serverCapability := range serverCapabilitiesResp {
 			serverCapabilityNames = append(serverCapabilityNames, serverCapability.Name)
 		}
