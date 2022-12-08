@@ -165,7 +165,10 @@ func GetServerCapability(w http.ResponseWriter, r *http.Request) {
 
 	// Query Parameters to Database Query column mappings
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name": dbhelpers.WhereColumnInfo{Column: "sc.name"},
+		"name": {Column: "sc.name", Checker: nil},
+	}
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "name"
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
@@ -208,15 +211,15 @@ func UpdateServerCapability(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	requestedName := inf.Params["name"]
 	// check if the entity was already updated
-	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, sc.Name, "server_capability")
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedName, "server_capability")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
 	//update name and description of a capability
-	requestedName := inf.Params["name"]
 	query := `UPDATE server_capability sc SET
 		name = $1,
 		description = $2
