@@ -154,7 +154,7 @@ func (v *TOServerCapability) Update(h http.Header) (error, error, int) {
 }
 
 func GetServerCapability(w http.ResponseWriter, r *http.Request) {
-	var sc tc.ServerCapabilityV41
+	var sc tc.ServerCapabilityV4
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx
 	if userErr != nil || sysErr != nil {
@@ -184,7 +184,7 @@ func GetServerCapability(w http.ResponseWriter, r *http.Request) {
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
-	var scList []tc.ServerCapabilityV41
+	scList := []tc.ServerCapabilityV4{}
 	for rows.Next() {
 		if err = rows.Scan(&sc.Name, &sc.Description, &sc.LastUpdated); err != nil {
 			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting server capability(ies): %w", err))

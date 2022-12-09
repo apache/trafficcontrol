@@ -37,6 +37,9 @@ type ServerCapability struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
+// ServerCapabilityV4 is an alias for the latest minor version for the major version 4.
+type ServerCapabilityV4 ServerCapabilityV41
+
 // ServerCapabilityV41 contains information (in-addition to description) about a given ServerCapability  in Traffic Ops.
 type ServerCapabilityV41 struct {
 	ServerCapability
