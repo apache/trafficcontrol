@@ -67,7 +67,7 @@ export class RegionsTableComponent implements OnInit {
 			headerName: "Name"
 		},
 		{
-			field: "division",
+			field: "divisionName",
 			headerName: "Division"
 		},
 		{
