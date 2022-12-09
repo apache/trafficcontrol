@@ -1,19 +1,5 @@
 package tc
 
-import (
-	"bytes"
-	"database/sql"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"strconv"
-	"strings"
-
-	"github.com/apache/trafficcontrol/lib/go-util"
-
-	"github.com/lib/pq"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -32,6 +18,20 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"bytes"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+
+	"github.com/lib/pq"
+)
 
 // ParametersResponse is the type of the response from Traffic Ops to GET
 // requests made to the /parameters and /profiles/name/{{Name}}/parameters
@@ -210,10 +210,10 @@ func (pp *PostProfileParam) Validate(tx *sql.Tx) error {
 	}
 	if pp.ParamIDs == nil {
 		errs = append(errs, errors.New("paramIds missing"))
-	} else if ok, err := ParamsExist(*pp.ParamIDs, tx); err != nil {
+	} else if ok, nonExistingIDs, err := ParamsExist(*pp.ParamIDs, tx); err != nil {
 		errs = append(errs, errors.New(fmt.Sprintf("checking parameter IDs %v existence: "+err.Error(), *pp.ParamIDs)))
 	} else if !ok {
-		errs = append(errs, errors.New(fmt.Sprintf("parameters with IDs %v don't all exist", *pp.ParamIDs)))
+		errs = append(errs, errors.New(fmt.Sprintf("parameters with IDs %v don't all exist", nonExistingIDs)))
 	}
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)
@@ -277,12 +277,15 @@ func ParamExists(id int64, tx *sql.Tx) (bool, error) {
 
 // ParamsExist returns whether parameters exist for all the given ids, and any error.
 // TODO move to helper package.
-func ParamsExist(ids []int64, tx *sql.Tx) (bool, error) {
-	count := 0
-	if err := tx.QueryRow(`SELECT count(*) from parameter where id = ANY($1)`, pq.Array(ids)).Scan(&count); err != nil {
-		return false, errors.New("querying parameters existence from id: " + err.Error())
+func ParamsExist(ids []int64, tx *sql.Tx) (bool, []int64, error) {
+	var nonExistingIDs []int64
+	if err := tx.QueryRow(`SELECT ARRAY_AGG(id) FROM UNNEST($1::INT[]) AS id WHERE id NOT IN (SELECT id FROM parameter)`, pq.Array(ids)).Scan(pq.Array(&nonExistingIDs)); err != nil {
+		return false, nil, errors.New("querying parameters existence from id: " + err.Error())
 	}
-	return count == len(ids), nil
+	if len(nonExistingIDs) >= 1 {
+		return false, nonExistingIDs, nil
+	}
+	return true, nil, nil
 }
 
 // ProfileParametersNullable is an object of the form returned by the Traffic Ops /profileparameters endpoint.
