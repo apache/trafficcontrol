@@ -22,7 +22,7 @@ RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 	openssl rand 32 | base64 > /aes.key && \
     chmod 644 /server.key /aes.key
 
-FROM node:16-alpine AS trafficportal-dev
+FROM node:18-alpine AS trafficportal-dev
 
 ENV TC="/go/src/github.com/apache/trafficcontrol"
 VOLUME $TC

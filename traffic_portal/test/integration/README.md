@@ -20,7 +20,7 @@
 This directory contains integration tests for Traffic Portal.
 
 ## Prerequisites
-* [Node](https://nodejs.org) v12 or later.
+* [Node](https://nodejs.org) version 18 or later.
 
 ## Building and Running
 To build and run the tests, one can use the `npm` (or `pnpm`) scripts.

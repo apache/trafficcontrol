@@ -47,10 +47,8 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 
 FROM os-dependencies AS node-dependencies
 # Download and install node
-RUN curl -Lo node.tar.xz https://nodejs.org/dist/v12.16.3/node-v12.16.3-linux-x64.tar.xz && \
-    tar --strip-components=1 -C /usr/local -xf node.tar.xz && \
-    rm node.tar.xz && \
-    npm i -g webdriver-manager
+RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash -
+RUN npm i -g webdriver-manager
 
 FROM node-dependencies
 

@@ -40,10 +40,8 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-* && \
 ### traffic_portal specific
 FROM common-dependencies AS traffic-portal
 
-RUN	curl -sL https://rpm.nodesource.com/setup_12.x | bash - && \
-	yum -y install \
-		make \
-		nodejs && \
+RUN	curl -sL https://rpm.nodesource.com/setup_18.x | bash - && \
+	yum -y install make && \
 	npm -g install grunt-cli sass
 
 ###

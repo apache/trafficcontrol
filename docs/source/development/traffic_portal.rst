@@ -29,7 +29,7 @@ Software Requirements
 =====================
 To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly used) environment that has the following installed:
 
-* `Node.js 12.0.x or above <https://nodejs.org/en/>`_
+* `Node.js 18.0.x or above <https://nodejs.org/en/>`_
 * `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
 * Access to a working instance of Traffic Ops
 
