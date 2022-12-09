@@ -83,6 +83,10 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 	$scope.magicNumberLabel = function(collection, magicNumber) {
 		const item = collection.find(i => i.value === magicNumber);
+		if (!item) {
+			console.error("unable to find a label for", magicNumber, "in collection:", collection);
+			return "";
+		}
 		return item.label;
 	};
 
