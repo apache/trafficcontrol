@@ -41,14 +41,14 @@ ARG TO_HOST=$TO_HOST
 RUN dnf install -y epel-release && \
     dnf install -y \
       jq \
+	  nodejs \
       openssl \
       # find is required by to-access.sh
       findutils \
       gettext \
       bind-utils \
       net-tools && \
-    dnf clean all || \
-    echo "ERROR INSTALLING PACKAGES"
+    dnf clean all
 
 ADD $TRAFFIC_PORTAL_RPM /
 RUN rpm -Uvh /$(basename $TRAFFIC_PORTAL_RPM) && \
