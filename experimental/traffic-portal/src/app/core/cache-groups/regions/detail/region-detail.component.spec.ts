@@ -71,7 +71,7 @@ describe("DetailComponent", () => {
 		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
 		expect(component.region).not.toBeNull();
-		expect(component.region.name).toBe("Div1");
+		expect(component.region.name).toBe("Reg1");
 		expect(component.new).toBeFalse();
 	});
 });
