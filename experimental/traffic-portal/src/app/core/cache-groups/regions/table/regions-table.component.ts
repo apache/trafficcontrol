@@ -130,7 +130,7 @@ export class RegionsTableComponent implements OnInit {
 				});
 				break;
 			case "edit":
-				await this.router.navigate(["/core/regions", data.id]);
+				await this.router.navigate(["/core/region", data.id]);
 				break;
 			case "viewRegions":
 				console.log("Regions not implemented");

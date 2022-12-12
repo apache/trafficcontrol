@@ -22,7 +22,7 @@ limitations under the License.
 			</mat-form-field>
 				<mat-form-field>
 					<mat-label>Division</mat-label>
-						<mat-select name="divisions"[(ngModel)]="region.division" required>
+						<mat-select name="division"[(ngModel)]="region.division" required>
 							<mat-option *ngFor="let division of divisions" [value]="division.id">{{division.name}}</mat-option>
 						</mat-select>
 				</mat-form-field>

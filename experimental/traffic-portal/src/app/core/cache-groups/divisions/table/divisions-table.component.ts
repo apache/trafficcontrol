@@ -126,7 +126,7 @@ export class DivisionsTableComponent implements OnInit {
 				});
 				break;
 			case "edit":
-				await this.router.navigate(["/core/divisions", data.id]);
+				await this.router.navigate(["/core/division", data.id]);
 				break;
 			case "viewRegions":
 				console.log("Regions not implemented");

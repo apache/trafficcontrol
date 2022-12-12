@@ -15,7 +15,7 @@
 describe("Region Detail Spec", () => {
 	it("Test region", () => {
 		const page = browser.page.regionDetail();
-		browser.url(`${page.api.launchUrl}/core/regions/${browser.globals.testData.region.id}`, res => {
+		browser.url(`${page.api.launchUrl}/core/region/${browser.globals.testData.region.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@name")
@@ -30,7 +30,7 @@ describe("Region Detail Spec", () => {
 
 	it("New region", () => {
 		const page = browser.page.regionDetail();
-		browser.url(`${page.api.launchUrl}/core/regions/new`, res => {
+		browser.url(`${page.api.launchUrl}/core/region/new`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@name")
