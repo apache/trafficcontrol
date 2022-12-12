@@ -137,21 +137,21 @@ func TestServerCapabilities(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetServerCapabilities(testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetServerCapabilitiesV41(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateServerCapability(testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.CreateServerCapabilityV41(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateServerCapability(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateServerCapabilityV41(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
@@ -199,7 +199,7 @@ func validateServerCapabilitiesSort() utils.CkReqFunc {
 
 func CreateTestServerCapabilities(t *testing.T) {
 	for _, sc := range testData.ServerCapabilities {
-		resp, _, err := TOSession.CreateServerCapability(sc, client.RequestOptions{})
+		resp, _, err := TOSession.CreateServerCapabilityV41(sc, client.RequestOptions{})
 		assert.RequireNoError(t, err, "Unexpected error creating Server Capability '%s': %v - alerts: %+v", sc.Name, err, resp.Alerts)
 	}
 }
