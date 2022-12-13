@@ -183,7 +183,7 @@ Try disabling SELinux or setting it to 'permissive'. SELinux hates letting conta
 
 Bring all components down, remove the `traffic_ops/ca` directory, and delete the volumes with `docker volume prune`. This will force the regeneration of the certificates.
 
-## Apple M1 Pro Configuration
+## Notes for Apple M1 Pro Configuration
 
 ### Code edits in the cdn-in-a-box directory
 
