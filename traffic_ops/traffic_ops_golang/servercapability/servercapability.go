@@ -181,6 +181,7 @@ func GetServerCapability(w http.ResponseWriter, r *http.Request) {
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("server capability read: error getting server capability(ies): %w", err))
+		return
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
@@ -188,6 +189,7 @@ func GetServerCapability(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		if err = rows.Scan(&sc.Name, &sc.Description, &sc.LastUpdated); err != nil {
 			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting server capability(ies): %w", err))
+			return
 		}
 		scList = append(scList, sc)
 	}
@@ -272,6 +274,60 @@ func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, sc)
+	return
+}
+
+func DeleteServerCapability(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	name := inf.Params["name"]
+	exists, err := dbhelpers.GetSCInfo(inf.Tx, name)
+	fmt.Println(exists, name)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		if name != "" {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no server capability exists by name: %s", name), nil)
+			return
+		} else {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no server capability exists for empty name: %s", name), nil)
+			return
+		}
+	}
+
+	assignedServer := 0
+	if err := inf.Tx.Get(&assignedServer, "SELECT count(server) FROM server_server_capability ssc WHERE ssc.server_capability=$1", name); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server capability delete, counting assigned servers: %w", err))
+		return
+	} else if assignedServer != 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not delete a server capability with %d assigned servers", assignedServer), nil)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM server_capability AS sc WHERE sc.name=$1", name)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete server capability: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no rows deleted for server capability"), nil)
+		return
+	}
+
+	api.WriteResp(w, r, "Successfully deleted server capability "+name)
 	return
 }
 
