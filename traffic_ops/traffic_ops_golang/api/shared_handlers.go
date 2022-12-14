@@ -476,10 +476,10 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 		creator,
 		HandleErr,
 		func(w http.ResponseWriter, r *http.Request, statusCode int, alerts tc.Alerts, results interface{}) {
-			w.WriteHeader(statusCode)
 			if len(alerts.Alerts) > 0 {
 				WriteAlertsObj(w, r, statusCode, alerts, results)
 			} else {
+				w.WriteHeader(statusCode)
 				WriteResp(w, r, results)
 			}
 
