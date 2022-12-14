@@ -1140,8 +1140,8 @@ func (dsr DeliveryServiceRequestV4) Upgrade() DeliveryServiceRequestV5 {
 	if dsr.Requested != nil {
 		upgraded.Requested = new(DeliveryServiceV5)
 		*upgraded.Requested = dsr.Requested.Upgrade()
-	} 
-  if dsr.Original != nil {
+	}
+	if dsr.Original != nil {
 		upgraded.Original = new(DeliveryServiceV5)
 		*upgraded.Original = dsr.Original.Upgrade()
 	}
