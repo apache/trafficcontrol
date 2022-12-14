@@ -51,7 +51,7 @@ RUN yum search tomcat-native
 RUN yum search jdk
 
 
-RUN yum install -y /$TMCAT /$RPM
+RUN yum install -y /$(basename $TMCAT) /$(basename $RPM)
 #RUN rm /$(basename $JDK) /$(basename $RPM)
 
 EXPOSE 53 80 3333
