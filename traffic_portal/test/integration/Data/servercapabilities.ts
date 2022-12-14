@@ -21,7 +21,6 @@
 interface Removal {
 	description: string;
 	name: string;
-	capabilityDescription: string;
 	validationMessage: string;
 }
 

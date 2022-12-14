@@ -47,12 +47,11 @@ export class ServerCapabilitiesPage extends BasePage{
         let basePage = new BasePage();
         let snp= new SideNavigationPage();
         let name = nameSC+this.randomize;
-        let capabilityDescription = descriptionSC;
         await this.btnCreateServerCapabilities.click();
         if(name != this.randomize){
           await this.txtSCName.sendKeys(name);
         }
-        await this.txtSCDescription.sendKeys(capabilityDescription);
+        await this.txtSCDescription.sendKeys(descriptionSC);
         if(outputMessage == await(basePage.GetBlankErrorMessage()) || outputMessage == await(basePage.GetSyntaxErrorMessage())) {
           await snp.NavigateToServerCapabilitiesPage();
           result = true;

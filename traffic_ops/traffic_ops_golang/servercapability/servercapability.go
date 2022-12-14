@@ -261,7 +261,7 @@ func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if count == 1 {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("capability with name: %s already exists", sc.Name), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server_capability name '%s' already exists.", sc.Name), nil)
 		return
 	}
 
@@ -272,7 +272,7 @@ func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created")
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, sc)
 	return
 }
@@ -288,7 +288,6 @@ func DeleteServerCapability(w http.ResponseWriter, r *http.Request) {
 
 	name := inf.Params["name"]
 	exists, err := dbhelpers.GetSCInfo(inf.Tx, name)
-	fmt.Println(exists, name)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
